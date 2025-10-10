@@ -1,10 +1,11 @@
 ---
-applyTo: "projects/**/*.{spec,test}.{ts,tsx,js,jsx}"
+applyTo: 'projects/**/*.{spec,test}.{ts,tsx,js,jsx}'
 ---
 
 # Unit and Component Test Instructions (Angular + Vitest)
 
 ## General Guidelines
+
 - Write all tests in TypeScript.
 - Use Vitest as the test runner.
 - Make sure to properly use Angular 21 Signal Forms functionality in tests.
@@ -21,33 +22,37 @@ applyTo: "projects/**/*.{spec,test}.{ts,tsx,js,jsx}"
   - Based on that scaffold the tests and add pseudo-code/docs for the expected behavior, with WHAT and WHY.
   - Start with the happy and simple paths, then add edge cases and error handling.
   - Start with `test.todo()` or `test.fixme()` for complex tests that need more time to implement.
-- To run tests, prefer using the `#runTests` with the `#VSCodeAPI`
+- To run tests, prefer using the `#runTests` over the terminal
   - If that does not work, use the command line:
     ```bash
-    npx vitest run --coverage
+    pnpm nx test <project-name> | filter file-or-test-name
     ```
 
 ## Test Organization & Structure
 
 ### File Organization
+
 - Use `describe` blocks to group related tests and improve readability.
 - Follow the Arrange-Act-Assert pattern for clarity and maintainability.
 - Use `beforeEach` and `afterEach` hooks to set up and clean up test environments.
 - Leverage `test.concurrent` for running independent tests in parallel to speed up execution.
 
 ### Test Coverage
+
 - Ensure all new features have corresponding tests.
 - Maintain high code coverage with **Vitest**.
 - Enable code coverage with `--coverage` to ensure all critical paths are tested.
 - Assert error paths and loading states, not just happy paths.
 
 ### Pragmatic Testing Strategy
+
 - Aim for the "widest narrow" tests: fast, isolated, and low cognitive load, while still exercising end-to-end behavior through our public API surface (Honeycomb model).
 - Bias toward tests that strengthen the earliest safety nets (fast feedback) before leaning on wide/e2e checks.
 - When tests feel brittle or overly setup-heavy, consider narrowing the System Under Test or introducing purposeful fakes instead of piling on assertions.
 - Use risk and cost to decide what deserves a test—focus on regressions we expect our library to catch rather than duplicating coverage that belongs to Vest itself.
 
 ## Unit Testing (Vitest Node)
+
 - Use for pure functions, utilities, and services without Angular dependencies.
 - No Angular TestBed or DOM required.
 - Use direct function calls and assertions.
@@ -58,12 +63,14 @@ applyTo: "projects/**/*.{spec,test}.{ts,tsx,js,jsx}"
 - Minimize the number of test doubles per test; only mock at the boundary of the SUT.
 
 ### Designing Fakes (Marmicode playbook)
+
 - Define or derive the shared interface first so the fake mirrors the real contract.
 - Implement only the methods the test actually exercises; any unexpected call must throw (fail fast over silent `undefined`).
 - Provide light-weight helpers such as `configure` or `getState` so assertions focus on observable outcomes, not interaction trivia.
 - Reuse the same fake across suites—export it once rather than recreating ad-hoc stubs in each spec file.
 
 ## Component Testing (Vitest Browser + Angular Testing Library)
+
 - Use Vitest Browser UI for all component tests whenever possible.
 - Always use `render()` from Angular Testing Library.
 - Use role-based queries (`getByRole`, `findByRole`, etc.) for DOM assertions.
@@ -79,10 +86,10 @@ applyTo: "projects/**/*.{spec,test}.{ts,tsx,js,jsx}"
 - When creating a Test Component, use Template Driven Forms.
 - Run tests in headless mode for CI pipelines and Browser UI for debugging.
 
-
 ### New Bindings API Examples
 
 **Setting Input Properties:**
+
 ```typescript
 import { inputBinding } from '@testing-library/angular';
 
@@ -104,6 +111,7 @@ await render(Component, {
 ```
 
 **Testing Output Properties:**
+
 ```typescript
 import { outputBinding } from '@testing-library/angular';
 import { vi } from 'vitest';
@@ -121,6 +129,7 @@ expect(onClickSpy).toHaveBeenCalledWith(expectedValue);
 ```
 
 **Two-Way Bindings:**
+
 ```typescript
 import { twoWayBinding } from '@testing-library/angular';
 
@@ -137,6 +146,7 @@ expect(valueSignal()).toBe('updated');
 ```
 
 ### Testing Library Best Practices
+
 - **Avoid Implementation Details**: Never access `fixture.debugElement`, `injector.get()`, or internal component/directive properties in tests.
 - **Use DOM-Focused Assertions**: Test what users see and interact with, not internal state or method return values.
 - **Prefer Accessible Queries**: Use `screen.getByRole()`, `screen.getByLabelText()`, `screen.getByText()` for better accessibility testing. Fall back to `screen.getByTestId()` when semantic queries aren't sufficient.
@@ -149,26 +159,28 @@ expect(valueSignal()).toBe('updated');
 ## Testing Strategies & Tips
 
 ### Quick Decision Matrix
-| Test Scenario                  | Approach            | Tools                                 |
-|------------------------------- |--------------------|---------------------------------------|
-| Component + Service dependency | Fake the service   | `render()` + Fake implementation      |
-| Service with HTTP calls        | Mock HTTP          | `TestBed` + `HttpTestingController`   |
-| Component with `httpResource`  | Mock HTTP          | `render()` + `HttpTestingController`  |
-| Pure functions/utils           | Direct call        | No setup needed                       |
-| Async signals/effects          | Use polling        | `expect.poll()` + `whenStable()`      |
+
+| Test Scenario                  | Approach         | Tools                                |
+| ------------------------------ | ---------------- | ------------------------------------ |
+| Component + Service dependency | Fake the service | `render()` + Fake implementation     |
+| Service with HTTP calls        | Mock HTTP        | `TestBed` + `HttpTestingController`  |
+| Component with `httpResource`  | Mock HTTP        | `render()` + `HttpTestingController` |
+| Pure functions/utils           | Direct call      | No setup needed                      |
+| Async signals/effects          | Use polling      | `expect.poll()` + `whenStable()`     |
 
 ### HttpResource
+
 - Use `HttpTestingController` to mock HTTP requests in tests.
 - For components using `httpResource`, always test loading, error, and success states.
 - Use MSW for browser-based integration/component tests if mocking at the network level.
 
 ### Async/Signals
+
 - Use `expect.poll()` for polling async signal values.
 - Always await `whenStable()` after triggering async changes.
 
 ### Evaluate Test Value
+
 - Track when a test produces false positives or misses regressions; adjust or remove low-value cases instead of letting them linger.
 - Prefer adding focused narrow tests where recurring bugs slip past wider safety nets.
 - Keep qualitative measures (team confidence, feedback speed) in mind—optimize instructions and suites for fast iteration rather than chasing coverage numbers alone.
-
-

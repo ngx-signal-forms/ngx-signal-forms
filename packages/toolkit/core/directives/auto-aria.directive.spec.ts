@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { describe, it, expect, vi } from 'vitest';
-import { TestBed } from '@angular/core/testing';
+import { render } from '@testing-library/angular';
+import { inputBinding } from '@testing-library/angular';
 import { NgxSignalFormAutoAriaDirective } from './auto-aria.directive';
 import { NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type { NgxSignalFormsConfig } from '../types';
@@ -41,7 +42,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
   };
 
   describe('Initialization and Field Name Resolution', () => {
-    it('should initialize with id attribute as field name', () => {
+    it('should initialize with id attribute as field name', async () => {
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {
         // Mock implementation
       });
@@ -54,7 +55,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         emailControl = createMockControl();
       }
 
-      TestBed.configureTestingModule({
+      const { container } = await render(TestComponent, {
         providers: [
           {
             provide: NGX_SIGNAL_FORMS_CONFIG,
@@ -66,10 +67,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         ],
       });
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
-
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       expect(input?.getAttribute('aria-invalid')).toBe('false');
 
       // Verify debug logging
@@ -81,7 +79,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
       consoleLogSpy.mockRestore();
     });
 
-    it('should initialize with name attribute as field name', () => {
+    it('should initialize with name attribute as field name', async () => {
       @Component({
         template: '<input name="username" [control]="usernameControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
@@ -90,14 +88,13 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         usernameControl = createMockControl();
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container } = await render(TestComponent);
 
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       expect(input?.getAttribute('aria-invalid')).toBe('false');
     });
 
-    it('should work with textarea elements', () => {
+    it('should work with textarea elements', async () => {
       @Component({
         template: '<textarea id="bio" [control]="bioControl()"></textarea>',
         imports: [NgxSignalFormAutoAriaDirective],
@@ -106,14 +103,13 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         bioControl = createMockControl();
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container } = await render(TestComponent);
 
-      const textarea = fixture.nativeElement.querySelector('textarea');
+      const textarea = container.querySelector('textarea');
       expect(textarea?.getAttribute('aria-invalid')).toBe('false');
     });
 
-    it('should work with select elements', () => {
+    it('should work with select elements', async () => {
       @Component({
         template: `
           <select id="country" [control]="countryControl()">
@@ -126,14 +122,13 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         countryControl = createMockControl();
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container } = await render(TestComponent);
 
-      const select = fixture.nativeElement.querySelector('select');
+      const select = container.querySelector('select');
       expect(select?.getAttribute('aria-invalid')).toBe('false');
     });
 
-    it('should NOT apply to radio inputs (excluded by selector)', () => {
+    it('should NOT apply to radio inputs (excluded by selector)', async () => {
       @Component({
         template:
           '<input type="radio" id="option1" [control]="optionControl()" />',
@@ -143,15 +138,14 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         optionControl = createMockControl();
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container } = await render(TestComponent);
 
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       // Directive should not apply, so no aria-invalid attribute
       expect(input?.hasAttribute('aria-invalid')).toBe(false);
     });
 
-    it('should NOT apply to checkbox inputs (excluded by selector)', () => {
+    it('should NOT apply to checkbox inputs (excluded by selector)', async () => {
       @Component({
         template:
           '<input type="checkbox" id="agree" [control]="agreeControl()" />',
@@ -161,14 +155,13 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         agreeControl = createMockControl();
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container } = await render(TestComponent);
 
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       expect(input?.hasAttribute('aria-invalid')).toBe(false);
     });
 
-    it('should NOT apply when ngxSignalFormAutoAriaDisabled is present', () => {
+    it('should NOT apply when ngxSignalFormAutoAriaDisabled is present', async () => {
       @Component({
         template:
           '<input id="custom" [control]="customControl()" ngxSignalFormAutoAriaDisabled />',
@@ -178,16 +171,15 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         customControl = createMockControl();
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container } = await render(TestComponent);
 
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       expect(input?.hasAttribute('aria-invalid')).toBe(false);
     });
   });
 
   describe('ARIA Invalid Attribute', () => {
-    it('should set aria-invalid to "false" when control is valid', () => {
+    it('should set aria-invalid to "false" when control is valid', async () => {
       @Component({
         template: '<input id="email" [control]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
@@ -196,14 +188,13 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         emailControl = createMockControl(false, true); // valid, touched
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container } = await render(TestComponent);
 
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       expect(input?.getAttribute('aria-invalid')).toBe('false');
     });
 
-    it('should set aria-invalid to "true" when control is invalid and touched', () => {
+    it('should set aria-invalid to "true" when control is invalid and touched', async () => {
       @Component({
         template: '<input id="email" [control]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
@@ -212,14 +203,13 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         emailControl = createMockControl(true, true); // invalid, touched
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container } = await render(TestComponent);
 
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       expect(input?.getAttribute('aria-invalid')).toBe('true');
     });
 
-    it('should set aria-invalid to "false" when control is invalid but not touched', () => {
+    it('should set aria-invalid to "false" when control is invalid but not touched', async () => {
       @Component({
         template: '<input id="email" [control]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
@@ -228,14 +218,13 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         emailControl = createMockControl(true, false); // invalid, not touched
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container } = await render(TestComponent);
 
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       expect(input?.getAttribute('aria-invalid')).toBe('false');
     });
 
-    it('should reactively update aria-invalid when control state changes', () => {
+    it('should reactively update aria-invalid when control state changes', async () => {
       const mockControl = createMockControl(false, false);
 
       @Component({
@@ -246,10 +235,9 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         emailControl = mockControl;
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container, fixture } = await render(TestComponent);
 
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       expect(input?.getAttribute('aria-invalid')).toBe('false');
 
       // Update control state: make it invalid and touched
@@ -268,7 +256,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
   });
 
   describe('ARIA DescribedBy Attribute', () => {
-    it('should NOT set aria-describedby when control is valid', () => {
+    it('should NOT set aria-describedby when control is valid', async () => {
       @Component({
         template: '<input id="email" [control]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
@@ -277,14 +265,13 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         emailControl = createMockControl(false, true); // valid, touched
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container } = await render(TestComponent);
 
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       expect(input?.hasAttribute('aria-describedby')).toBe(false);
     });
 
-    it('should set aria-describedby when control is invalid and touched', () => {
+    it('should set aria-describedby when control is invalid and touched', async () => {
       @Component({
         template: '<input id="email" [control]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
@@ -293,14 +280,13 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         emailControl = createMockControl(true, true); // invalid, touched
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container } = await render(TestComponent);
 
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       expect(input?.getAttribute('aria-describedby')).toBe('email-error');
     });
 
-    it('should NOT set aria-describedby when control is invalid but not touched', () => {
+    it('should NOT set aria-describedby when control is invalid but not touched', async () => {
       @Component({
         template: '<input id="email" [control]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
@@ -309,14 +295,13 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         emailControl = createMockControl(true, false); // invalid, not touched
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container } = await render(TestComponent);
 
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       expect(input?.hasAttribute('aria-describedby')).toBe(false);
     });
 
-    it('should use correct error ID format for nested field paths', () => {
+    it('should use correct error ID format for nested field paths', async () => {
       @Component({
         template: '<input id="address.city" [control]="cityControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
@@ -325,17 +310,16 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         cityControl = createMockControl(true, true); // invalid, touched
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container } = await render(TestComponent);
 
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       // generateErrorId currently uses dot notation
       expect(input?.getAttribute('aria-describedby')).toBe(
         'address.city-error',
       );
     });
 
-    it('should reactively update aria-describedby when control state changes', () => {
+    it('should reactively update aria-describedby when control state changes', async () => {
       const mockControl = createMockControl(false, false);
 
       @Component({
@@ -346,10 +330,9 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         emailControl = mockControl;
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container, fixture } = await render(TestComponent);
 
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       expect(input?.hasAttribute('aria-describedby')).toBe(false);
 
       // Update control state: make it invalid and touched
@@ -381,7 +364,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
   });
 
   describe('Integration with Form Config', () => {
-    it('should log debug messages when debug is enabled', () => {
+    it('should log debug messages when debug is enabled', async () => {
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {
         // Mock implementation
       });
@@ -394,7 +377,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         testControl = createMockControl();
       }
 
-      TestBed.configureTestingModule({
+      await render(TestComponent, {
         providers: [
           {
             provide: NGX_SIGNAL_FORMS_CONFIG,
@@ -406,9 +389,6 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         ],
       });
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
-
       expect(consoleLogSpy).toHaveBeenCalledWith(
         '[NgxSignalFormAutoAriaDirective] Initialized for field:',
         'test-field',
@@ -417,7 +397,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
       consoleLogSpy.mockRestore();
     });
 
-    it('should NOT log debug messages when debug is disabled', () => {
+    it('should NOT log debug messages when debug is disabled', async () => {
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {
         // Mock implementation
       });
@@ -430,7 +410,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         testControl = createMockControl();
       }
 
-      TestBed.configureTestingModule({
+      await render(TestComponent, {
         providers: [
           {
             provide: NGX_SIGNAL_FORMS_CONFIG,
@@ -442,15 +422,12 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         ],
       });
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
-
       expect(consoleLogSpy).not.toHaveBeenCalled();
 
       consoleLogSpy.mockRestore();
     });
 
-    it('should use default config when no provider is given', () => {
+    it('should use default config when no provider is given', async () => {
       @Component({
         template: '<input id="email" [control]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
@@ -459,19 +436,15 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         emailControl = createMockControl();
       }
 
-      // No providers - should use defaults
-      TestBed.configureTestingModule({});
+      const { container } = await render(TestComponent);
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
-
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       expect(input?.getAttribute('aria-invalid')).toBe('false');
     });
   });
 
   describe('Edge Cases', () => {
-    it('should handle null control gracefully', () => {
+    it('should handle null control gracefully', async () => {
       @Component({
         template: '<input id="email" [control]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
@@ -480,16 +453,15 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         emailControl = signal(null);
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container } = await render(TestComponent);
 
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       // Should not crash, should not set ARIA attributes
       expect(input?.hasAttribute('aria-invalid')).toBe(false);
       expect(input?.hasAttribute('aria-describedby')).toBe(false);
     });
 
-    it('should handle control without field state', () => {
+    it('should handle control without field state', async () => {
       @Component({
         template: '<input id="email" [control]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
@@ -506,15 +478,14 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         }));
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container } = await render(TestComponent);
 
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       // Should not crash
       expect(input).toBeTruthy();
     });
 
-    it('should handle element without resolvable field name', () => {
+    it('should handle element without resolvable field name', async () => {
       @Component({
         template: '<input [control]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
@@ -523,10 +494,9 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         emailControl = createMockControl(true, true);
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
-      fixture.detectChanges();
+      const { container } = await render(TestComponent);
 
-      const input = fixture.nativeElement.querySelector('input');
+      const input = container.querySelector('input');
       // Should still apply aria-invalid
       expect(input?.getAttribute('aria-invalid')).toBe('true');
       // But no aria-describedby since field name is null
