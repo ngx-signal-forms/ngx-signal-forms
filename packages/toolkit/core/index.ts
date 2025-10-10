@@ -22,9 +22,11 @@ export * from './utilities/assert-injector';
 export * from './utilities/inject-form-config';
 export * from './utilities/inject-form-context';
 export * from './utilities/inject-field-control';
+export * from './utilities/error-strategies';
+export * from './utilities/show-errors';
+
+// Components
+export * from './components/form-error.component';
 
 // Future exports:
 // export * from './directives/form-busy.directive';
-// export * from './components/form-error.component';
-// export * from './utilities/error-strategies';
-// export * from './utilities/show-errors';

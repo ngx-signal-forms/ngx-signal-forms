@@ -1,3 +1,5 @@
+import type { SignalLike } from '@angular/aria/ui-patterns';
+
 /**
  * Error display strategy determines when validation errors are shown to the user.
  */
@@ -9,6 +11,9 @@ export type ErrorDisplayStrategy =
 
 /**
  * Configuration options for the ngx-signal-forms toolkit.
+ *
+ * Uses SignalLike<T> from @angular/aria for flexible signal inputs.
+ * This allows configuration values to be signals, computed signals, or plain values.
  */
 export interface NgxSignalFormsConfig {
   /**
@@ -31,15 +36,17 @@ export interface NgxSignalFormsConfig {
 
   /**
    * Default error display strategy.
+   * Can be a static value, signal, or computed signal.
    * @default 'on-touch'
    */
-  defaultErrorStrategy?: ErrorDisplayStrategy;
+  defaultErrorStrategy?: SignalLike<ErrorDisplayStrategy>;
 
   /**
    * Custom field name resolver function.
    * Used to extract field names from HTML elements.
+   * Can be a static function, signal, or computed signal.
    */
-  fieldNameResolver?: (element: HTMLElement) => string | null;
+  fieldNameResolver?: SignalLike<(element: HTMLElement) => string | null>;
 
   /**
    * Throw error when field name cannot be resolved.

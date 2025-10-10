@@ -83,7 +83,7 @@ applyTo: '**'
 
 ## Testing Requirements
 
-- Prefer to use #runTests in VSCode over terminal commands
+- Always prefer `#runTests` tools in VSCode over terminal commands
 
 ### Unit Tests (Vitest)
 
