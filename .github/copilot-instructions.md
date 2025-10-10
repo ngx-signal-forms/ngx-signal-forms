@@ -48,6 +48,7 @@ applyTo: '**'
 - [ ] Kebab-case filenames
 - [ ] Single quotes for strings
 - [ ] Avoid `any` type (use `unknown`)
+- [ ] Use ES `#` private fields instead of TypeScript `private` keyword
 
 ### Form Implementation Checklist
 
@@ -137,7 +138,7 @@ Follow [`.github/instructions/commit.instructions.md`](./instructions/commit.ins
 ### Component Template
 
 ```typescript
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-example',
@@ -146,11 +147,11 @@ import { Component, signal, computed } from '@angular/core';
   template: ``,
 })
 export class ExampleComponent {
-  // Use signals for state
-  protected readonly state = signal({});
+  // Use ES # private fields for internal state
+  readonly #state = signal({});
 
   // Use computed for derived state
-  protected readonly derived = computed(() => {});
+  protected readonly derived = computed(() => this.#state());
 }
 ```
 

@@ -5,123 +5,399 @@ applyTo: '**/*.ts, **/*.html, **/*.scss, **/*.css'
 
 # Angular Development Instructions
 
-Instructions for generating high-quality Angular applications with TypeScript, using Angular Signals for state management, adhering to Angular best practices as outlined at https://angular.dev.
+High-quality Angular 21+ applications with TypeScript, using Signals for state management, following https://angular.dev best practices.
 
-## Project Context
+## Version Detection - CRITICAL
 
-- Latest Angular version (use standalone components by default)
-- TypeScript for type safety
-- Angular CLI for project setup and scaffolding
-- Follow Angular Style Guide (https://angular.dev/style-guide)
-- Use Angular Material or other modern UI libraries for consistent styling (if specified)
+**ALWAYS verify exact Angular version before generating code:**
 
-## Development Standards
+1. Check `package.json` for `@angular/core` version
+2. Verify framework versions match across all `@angular/*` packages
+3. Check TypeScript compatibility
+4. Only use features available in detected version
+5. Never assume newer APIs without verification
+
+## Core Standards
+
+### Stack
+
+- **Angular 21+** with Signal Forms and zoneless support
+- **TypeScript 5.8+** strict mode
+- **Standalone components** (no NgModules)
+- **Signal-first** state management
+- **OnPush** change detection
+- **Zoneless** compatible patterns
 
 ### Architecture
 
-- Use standalone components unless modules are explicitly required
-- Organize code by feature modules or domains for scalability
-- Implement lazy loading for feature modules to optimize performance
-- Use Angular's built-in dependency injection system effectively
-- Structure components with a clear separation of concerns (smart vs. presentational components)
+- Standalone components ONLY (NgModules are legacy)
+- Organize by feature/domain
+- Lazy load feature routes
+- Use `inject()` for DI (not constructors)
+- Smart vs presentational component separation
+- Signals for state (RxJS only for streams)
 
 ### TypeScript
 
-- Enable strict mode in `tsconfig.json` for type safety
-- Define clear interfaces and types for components, services, and models
-- Use type guards and union types for robust type checking
-- Implement proper error handling with RxJS operators (e.g., `catchError`)
-- Use typed forms (e.g., `FormGroup`, `FormControl`) for reactive forms
+- Strict mode REQUIRED
+- Clear interfaces/types for all data
+- Type guards and union types
+- Avoid `any` - use `unknown`
+- Typed forms with full inference
+- Use `satisfies` operator
+- Prefer `const` assertions and `readonly`
 
 ### Component Design
 
-- Follow Angular's component lifecycle hooks best practices
-- When using Angular >= 19, Use `input()` `output()`, `viewChild()`, `viewChildren()`, `contentChild()` and `viewChildren()` functions instead of decorators; otherwise use decorators
-- Leverage Angular's change detection strategy (default or `OnPush` for performance)
-- Keep templates clean and logic in component classes or services
-- Use Angular directives and pipes for reusable functionality
+- **OnPush change detection** REQUIRED
+- **Signal-based APIs** ONLY:
+  - `input()` not `@Input()`
+  - `output()` not `@Output()`
+  - `model()` for two-way binding
+  - `viewChild()` / `viewChildren()` not `@ViewChild()` / `@ViewChildren()`
+  - `contentChild()` / `contentChildren()` not `@ContentChild()` / `@ContentChildren()`
+- `inject()` for DI (no constructor injection)
+- Declarative templates: `@if`, `@for`, `@switch` (not `*ngIf`, `*ngFor`, `*ngSwitch`)
+- Move logic to component class or computed signals
+- Use ES `#` private fields (not TypeScript `private`)
 
-### Forms and User Input
+### Modern Template Syntax (Angular 17+)
 
-- Only use `id` attributes on form inputs for label association (`<label for="email">`)
-- Do NOT add `name` attributes to inputs - not needed with modern Angular forms or form libraries
-- Always use `ChangeDetectionStrategy.OnPush` for optimal performance with signals
-- Use `inject()` function for dependency injection instead of constructor injection
-- Prefer signal-based APIs: `input()`, `output()`, `model()`, `viewChild()`, etc. instead of decorators
-- `standalone: true` is the default in Angular 20+ (no need to specify explicitly)
+```typescript
+// Control flow
+@if (condition()) {
+  <p>Shown when true</p>
+} @else {
+  <p>Shown when false</p>
+}
 
-### Styling
+@for (item of items(); track item.id) {
+  <div>{{ item.name }}</div>
+}
 
-- Use Angular's component-level CSS encapsulation (default: ViewEncapsulation.Emulated)
-- Prefer SCSS for styling with consistent theming
-- Implement responsive design using CSS Grid, Flexbox, or Angular CDK Layout utilities
-- Follow Angular Material's theming guidelines if used
-- Maintain accessibility (a11y) with ARIA attributes and semantic HTML
-- For animations use standard css and/or the new Angular 20.2 animation features: https://angular.dev/guide/animations/css
-- Do not use the @angular/animations packages, which is deprecated.
+@switch (status()) {
+  @case ('loading') { <spinner /> }
+  @case ('error') { <error-msg /> }
+  @default { <content /> }
+}
+
+@defer (on viewport) {
+  <heavy-component />
+} @placeholder {
+  <skeleton />
+}
+```
+
+### Forms
+
+**IMPORTANT: This project focuses on Angular 21+ Signal Forms.**
+
+**For comprehensive Signal Forms guidance, see `.github/instructions/signal-forms.instructions.md`**
+
+**Quick reference:**
+
+- **Signal Forms REQUIRED** for all form implementations in this project
+- **Only use `id`** on inputs for label association
+- **No `name` attributes** needed
+- **OnPush** change detection required
+
+```typescript
+import { form, Control, required, email } from '@angular/forms/signals';
+
+@Component({
+  imports: [Control],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <input [control]="userForm.email" />
+    @if (userForm.email().invalid()) {
+      <div>{{ userForm.email().errors()[0].message }}</div>
+    }
+  `,
+})
+export class UserFormComponent {
+  readonly #userData = signal({ email: '' });
+
+  protected readonly userForm = form(this.#userData, (path) => {
+    required(path.email, { message: 'Email required' });
+    email(path.email, { message: 'Valid email required' });
+  });
+}
+```
+
+**Reactive Forms (Legacy)** - Use only for existing apps
+
+```typescript
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+
+@Component({
+  imports: [ReactiveFormsModule],
+  template: `<form [formGroup]="form"><input formControlName="email" /></form>`,
+})
+export class LegacyFormComponent {
+  readonly #fb = inject(FormBuilder);
+  protected readonly form = this.#fb.group({
+    email: ['', [Validators.required, Validators.email]],
+  });
+}
+```
 
 ### State Management
 
-- Use Angular Signals for reactive state management in components and services
-- Leverage `signal()`, `computed()`, and `effect()` for reactive state updates
-- Use writable signals for mutable state and computed signals for derived state
-- Handle loading and error states with signals and proper UI feedback
-- Use Angular's `AsyncPipe` to handle observables in templates when combining signals with RxJS
+**Signal-first - REQUIRED:**
+
+```typescript
+import { signal, computed, effect } from '@angular/core';
+
+@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <p>Count: {{ count() }}</p>
+    <p>Double: {{ doubleCount() }}</p>
+    <button (click)="increment()">+</button>
+  `,
+})
+export class CounterComponent {
+  protected readonly count = signal(0);
+  protected readonly doubleCount = computed(() => this.count() * 2);
+
+  constructor() {
+    effect(() => console.log('Count:', this.count()));
+  }
+
+  protected increment(): void {
+    this.count.update((n) => n + 1);
+  }
+}
+```
+
+**Principles:**
+
+1. Signals for reactive state (not RxJS Subjects)
+2. Computed signals for derived state
+3. Effects for side effects
+4. `linkedSignal` for state depending on inputs
+5. `resource()` for async data loading
+
+**Use RxJS only for:**
+
+- Event streams
+- HTTP (convert with `toSignal()` or `resource()`)
+- WebSockets
+- Complex async operations
 
 ### Data Fetching
 
-- Use Angular's `HttpClient` for API calls with proper typing
-- Implement RxJS operators for data transformation and error handling
-- Use Angular's `inject()` function for dependency injection in standalone components
-- Implement caching strategies (e.g., `shareReplay` for observables)
-- Store API response data in signals for reactive updates
-- Handle API errors with global interceptors for consistent error handling
+**With resource() (Angular 19+):**
 
-### Security
+```typescript
+import { resource } from '@angular/core';
 
-- Sanitize user inputs using Angular's built-in sanitization
-- Implement route guards for authentication and authorization
-- Use Angular's `HttpInterceptor` for CSRF protection and API authentication headers
-- Validate form inputs with Angular's reactive forms and custom validators
-- Follow Angular's security best practices (e.g., avoid direct DOM manipulation)
+@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    @if (userResource.isLoading()) {
+      <spinner />
+    } @else if (userResource.error()) {
+      <error-msg />
+    } @else if (userResource.hasValue()) {
+      {{ userResource.value().name }}
+    }
+  `,
+})
+export class UserProfileComponent {
+  readonly #userId = input.required<string>();
+
+  protected readonly userResource = resource({
+    request: () => ({ id: this.#userId() }),
+    loader: ({ request }) => this.userService.getUser(request.id),
+  });
+}
+```
+
+**Key principles:**
+
+- Use `resource()` for data fetching
+- `inject()` for HttpClient
+- Store data in signals
+- Handle errors gracefully
+- Use abort signals for cancellation
 
 ### Performance
 
-- Enable production builds with `ng build --prod` for optimization
-- Use lazy loading for routes to reduce initial bundle size
-- Optimize change detection with `OnPush` strategy and signals for fine-grained reactivity
-- Use trackBy in `ngFor` loops to improve rendering performance
-- Implement server-side rendering (SSR) or static site generation (SSG) with Angular Universal (if specified)
+**Critical optimizations:**
+
+1. **OnPush + Zoneless**
+
+```typescript
+// main.ts
+bootstrapApplication(AppComponent, {
+  providers: [provideZonelessChangeDetection()],
+});
+
+// All components
+@Component({ changeDetection: ChangeDetectionStrategy.OnPush })
+```
+
+2. **Defer Blocks**
+
+```typescript
+@defer (on viewport) { <heavy-chart /> }
+@defer (on interaction) { <comments /> }
+@defer (on idle) { <analytics /> }
+```
+
+3. **Optimize Rendering**
+
+```typescript
+// Use computed (not getters)
+protected readonly items = computed(() =>
+  this.data().map(/* transform */)
+);
+
+// TrackBy in loops
+@for (item of items(); track item.id) { }
+```
+
+4. **Image & Route Optimization**
+
+```typescript
+// Images
+<img ngSrc="hero.jpg" width="400" height="300" priority />
+
+// Lazy routes
+{ path: 'admin', loadComponent: () => import('./admin.component') }
+```
+
+5. **SSR + Hydration**
+
+```typescript
+providers: [provideClientHydration()];
+```
 
 ### Testing
 
-- Write unit tests for components, services, and pipes using Jasmine and Karma
-- Use Angular's `TestBed` for component testing with mocked dependencies
-- Test signal-based state updates using Angular's testing utilities
-- Write end-to-end tests with Cypress or Playwright (if specified)
-- Mock HTTP requests using `HttpClientTestingModule`
-- Ensure high test coverage for critical functionality
+**Unit Testing:**
 
-## Implementation Process
+```typescript
+import { TestBed } from '@angular/core/testing';
 
-1. Plan project structure and feature modules
-2. Define TypeScript interfaces and models
-3. Scaffold components, services, and pipes using Angular CLI
-4. Implement data services and API integrations with signal-based state
-5. Build reusable components with clear inputs and outputs
-6. Add reactive forms and validation
-7. Apply styling with SCSS and responsive design
-8. Implement lazy-loaded routes and guards
-9. Add error handling and loading states using signals
-10. Write unit and end-to-end tests
-11. Optimize performance and bundle size
+describe('Component', () => {
+  it('should work', () => {
+    const fixture = TestBed.createComponent(MyComponent);
+    expect(fixture.componentInstance.count()).toBe(0);
+  });
+});
+```
 
-## Additional Guidelines
+**E2E (Playwright):**
 
-- Follow Angular's naming conventions (e.g., `feature.component.ts`, `feature.service.ts`)
-- Use Angular CLI commands for generating boilerplate code
-- Document components and services with clear JSDoc comments
-- Ensure accessibility compliance (WCAG 2.2) where applicable
-- Use Angular's built-in i18n for internationalization (if specified)
-- Keep code DRY by creating reusable utilities and shared modules
-- Use signals consistently for state management to ensure reactive updates
+```typescript
+import { test, expect } from '@playwright/test';
+
+test('should display', async ({ page }) => {
+  await page.goto('/profile');
+  await expect(page.getByRole('heading')).toBeVisible();
+});
+```
+
+## Implementation Workflow
+
+1. **Verify Angular Version** - Check `package.json` for exact version
+2. **Plan Architecture** - Define features, signals, routes, forms
+3. **Define Models** - TypeScript interfaces, form types, API types
+4. **Scaffold** - `ng generate component/service/guard`
+5. **Implement** - OnPush, signals, inject(), declarative templates
+6. **Add Forms** - Prefer Signal Forms for new code
+7. **Data Layer** - Use `resource()` or HttpClient with signals
+8. **Route** - Lazy load with functional guards
+9. **Style** - SCSS, responsive, accessible (WCAG 2.2)
+10. **Test** - Vitest (unit), Playwright (E2E), >80% coverage
+11. **Optimize** - Zoneless, defer blocks, lazy loading
+12. **Deploy** - `ng build --configuration production`
+
+## Quick Reference
+
+### File Naming (kebab-case)
+
+- Components: `user-profile.component.ts`
+- Services: `user.service.ts`
+- Guards: `auth.guard.ts` (functional)
+- Routes: `user.routes.ts`
+
+### File Organization
+
+```
+src/app/
+├── core/           # Services, guards, interceptors
+├── shared/         # Components, directives, pipes
+├── features/       # Feature modules (lazy-loaded)
+│   └── users/
+│       ├── components/
+│       ├── services/
+│       └── users.routes.ts
+├── app.component.ts
+├── app.config.ts
+└── app.routes.ts
+```
+
+### Code Generation
+
+```bash
+ng generate component features/user-list
+ng generate service core/services/auth
+ng generate guard core/guards/auth --functional
+```
+
+### Signal-First Checklist
+
+**DO:**
+
+- ✅ `signal()` for reactive state
+- ✅ `computed()` for derived values
+- ✅ `effect()` for side effects
+- ✅ `resource()` for async data
+- ✅ `input()`, `output()`, `model()`
+- ✅ `viewChild()`, `contentChild()`
+- ✅ `inject()` for DI
+- ✅ ES `#` private fields
+
+**DON'T:**
+
+- ❌ `@Input()` / `@Output()`
+- ❌ `@ViewChild()` / `@ContentChild()`
+- ❌ Constructor injection
+- ❌ RxJS for simple state
+- ❌ NgModules
+- ❌ `*ngIf`, `*ngFor`, `*ngSwitch`
+- ❌ TypeScript `private` keyword
+
+### Zoneless Migration
+
+- [ ] OnPush change detection
+- [ ] Replace decorators with signal APIs
+- [ ] Use signals for state
+- [ ] Convert observables with `toSignal()`
+- [ ] Remove `ChangeDetectorRef`
+- [ ] Test with `provideZonelessChangeDetection()`
+
+### Accessibility (WCAG 2.2)
+
+- Semantic HTML: `<button>`, `<nav>`, `<main>`
+- ARIA attributes where needed
+- Keyboard navigation
+- Screen reader testing
+- Color contrast (4.5:1)
+- Focus indicators
+
+## Resources
+
+**Primary References for This Project:**
+
+- **Signal Forms Guide**: `.github/instructions/signal-forms.instructions.md`
+- **Angular Docs**: [https://angular.dev](https://angular.dev)
+- **Style Guide**: [https://angular.dev/style-guide](https://angular.dev/style-guide)
+
+**Additional Resources:**
+
+- **Zoneless**: [https://angular.dev/guide/zoneless](https://angular.dev/guide/zoneless)
+- **SSR**: [https://angular.dev/guide/ssr](https://angular.dev/guide/ssr)

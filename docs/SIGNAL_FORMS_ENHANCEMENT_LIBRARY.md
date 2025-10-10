@@ -24,9 +24,8 @@
 4. [API Design](#api-design)
 5. [Implementation Guide](#implementation-guide)
 6. [Usage Examples](#usage-examples)
-7. [Migration from ngx-vest-forms](#migration-from-ngx-vest-forms)
-8. [Testing Strategy](#testing-strategy)
-9. [Roadmap](#roadmap)
+7. [Testing Strategy](#testing-strategy)
+8. [Roadmap](#roadmap)
 
 ---
 
