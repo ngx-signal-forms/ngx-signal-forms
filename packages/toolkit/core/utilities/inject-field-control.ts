@@ -60,7 +60,8 @@ export function injectFieldControl(
 
       // Navigate the field path (supports nested paths like "address.city")
       const pathParts = fieldName.split('.');
-      let control = formContext.form;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let control: any = formContext.form;
 
       for (const part of pathParts) {
         if (!control || typeof control !== 'object' || !(part in control)) {

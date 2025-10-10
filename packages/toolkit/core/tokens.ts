@@ -1,5 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import type { NgxSignalFormsConfig } from './types';
+import type { NgxSignalFormContext } from './directives/form-provider.directive';
 
 /**
  * Injection token for the global ngx-signal-forms configuration.
@@ -11,7 +12,7 @@ export const NGX_SIGNAL_FORMS_CONFIG = new InjectionToken<NgxSignalFormsConfig>(
       autoAria: true,
       autoTouch: true,
       autoFormBusy: true,
-      defaultErrorStrategy: 'on-touch',
+      defaultErrorStrategy: () => 'on-touch' as const,
       strictFieldResolution: false,
       debug: false,
     }),
@@ -20,7 +21,9 @@ export const NGX_SIGNAL_FORMS_CONFIG = new InjectionToken<NgxSignalFormsConfig>(
 
 /**
  * Injection token for the form context (provided by ngxSignalFormProvider directive).
+ *
+ * @template TForm - The Signal Forms instance type
  */
-export const NGX_SIGNAL_FORM_CONTEXT = new InjectionToken<any>(
+export const NGX_SIGNAL_FORM_CONTEXT = new InjectionToken<NgxSignalFormContext>(
   'NGX_SIGNAL_FORM_CONTEXT',
 );

@@ -5,23 +5,60 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import type { SignalLike } from '@angular/aria/ui-patterns';
-import { generateErrorId } from '../utilities/field-resolution';
+import {
+  generateErrorId,
+  generateWarningId,
+} from '../utilities/field-resolution';
 import { createShowErrorsSignal } from '../utilities/show-errors';
 import type { ErrorDisplayStrategy } from '../types';
 
 /**
- * Reusable error display component with WCAG 2.2 compliance.
+ * Validation error/warning structure from Signal Forms.
+ */
+interface ValidationMessage {
+  kind: string;
+  message: string;
+}
+
+/**
+ * Reusable error and warning display component with WCAG 2.2 compliance.
  *
  * Uses SignalLike<T> from @angular/aria for flexible inputs that accept
  * signals, computed signals, or plain functions returning values.
  *
- * Features:
- * - `role="alert"` for screen reader announcements
- * - Strategy-aware error display
- * - Structured error rendering from Signal Forms
- * - Auto-generated error IDs for aria-describedby linking
+ * **Signal Forms Limitation: No Native Warning Support**
  *
- * @example
+ * Signal Forms only has "errors" - it doesn't have a built-in concept of "warnings".
+ * This component provides warnings support using a **convention-based approach**:
+ *
+ * - **Errors** (blocking): `kind` does NOT start with `'warn:'`
+ * - **Warnings** (non-blocking): `kind` starts with `'warn:'`
+ *
+ * @example Error (blocks submission)
+ * ```typescript
+ * customError({ kind: 'required', message: 'Email is required' })
+ * customError({ kind: 'email', message: 'Invalid email format' })
+ * ```
+ *
+ * @example Warning (does not block submission)
+ * ```typescript
+ * // Using warningError() helper (recommended)
+ * warningError('weak-password', 'Consider a stronger password')
+ * warningError('common-email', 'This email domain is commonly used for spam')
+ *
+ * // Or using customError() directly
+ * customError({ kind: 'warn:weak-password', message: 'Consider a stronger password' })
+ * customError({ kind: 'warn:common-email', message: 'This email domain is commonly used for spam' })
+ * ```
+ *
+ * Features:
+ * - **Errors**: `role="alert"` with `aria-live="assertive"` for immediate announcement
+ * - **Warnings**: `role="status"` with `aria-live="polite"` for non-intrusive guidance
+ * - Strategy-aware error/warning display
+ * - Structured rendering from Signal Forms
+ * - Auto-generated IDs for aria-describedby linking
+ *
+ * @example Basic Usage
  * ```html
  * <ngx-signal-form-error
  *   [field]="form.email"
@@ -30,7 +67,7 @@ import type { ErrorDisplayStrategy } from '../types';
  * />
  * ```
  *
- * @example With custom strategy (as signal or static value)
+ * @example With Custom Strategy
  * ```html
  * <ngx-signal-form-error
  *   [field]="form.password"
@@ -39,52 +76,236 @@ import type { ErrorDisplayStrategy } from '../types';
  *   [hasSubmitted]="formSubmitted"
  * />
  * ```
+ *
+ * @example Form with Warnings
+ * ```typescript
+ * import { warningError } from '@ngx-signal-forms/toolkit/core';
+ *
+ * form(signal({ password: '' }), (path) => {
+ *   required(path.password, { message: 'Password required' }); // Error
+ *   minLength(path.password, 8, { message: 'Min 8 characters' }); // Error
+ *
+ *   // Custom validation with warning
+ *   validate(path.password, (ctx) => {
+ *     const value = ctx.value();
+ *     if (value && value.length < 12) {
+ *       return warningError('short-password', 'Consider using 12+ characters for better security');
+ *     }
+ *     return null;
+ *   });
+ * });
+ * ```
  */
 @Component({
   selector: 'ngx-signal-form-error',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @if (showErrors()) {
+    <!-- Blocking Errors (ARIA role="alert" for assertive announcement) -->
+    @if (showErrors() && hasErrors()) {
       <div
         [id]="errorId()"
+        class="ngx-signal-form-error ngx-signal-form-error--error"
         role="alert"
-        class="ngx-signal-form-error"
-        aria-live="polite"
+        aria-live="assertive"
+        aria-atomic="true"
       >
         @for (error of errors(); track error.kind) {
-          <p class="ngx-signal-form-error__message">
+          <p
+            class="ngx-signal-form-error__message ngx-signal-form-error__message--error"
+          >
             {{ error.message }}
+          </p>
+        }
+      </div>
+    }
+
+    <!-- Non-blocking Warnings (ARIA role="status" for polite announcement) -->
+    @if (showWarnings() && hasWarnings()) {
+      <div
+        [id]="warningId()"
+        class="ngx-signal-form-error ngx-signal-form-error--warning"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        @for (warning of warnings(); track warning.kind) {
+          <p
+            class="ngx-signal-form-error__message ngx-signal-form-error__message--warning"
+          >
+            {{ warning.message }}
           </p>
         }
       </div>
     }
   `,
   styles: `
+    /**
+     * CSS Custom Properties (Public API)
+     *
+     * All properties prefixed with --ngx-signal-form-error-* to avoid naming conflicts.
+     * Uses @property for type-safe CSS variables with fallbacks for browsers
+     * that don't support @property (Firefox < 128).
+     */
+
+    /* Error Colors */
+    @property --ngx-signal-form-error-color {
+      syntax: '<color>';
+      inherits: true;
+      initial-value: #dc2626;
+    }
+
+    @property --ngx-signal-form-error-bg {
+      syntax: '<color>';
+      inherits: true;
+      initial-value: transparent;
+    }
+
+    @property --ngx-signal-form-error-border {
+      syntax: '<color>';
+      inherits: true;
+      initial-value: transparent;
+    }
+
+    /* Warning Colors */
+    @property --ngx-signal-form-warning-color {
+      syntax: '<color>';
+      inherits: true;
+      initial-value: #f59e0b;
+    }
+
+    @property --ngx-signal-form-warning-bg {
+      syntax: '<color>';
+      inherits: true;
+      initial-value: transparent;
+    }
+
+    @property --ngx-signal-form-warning-border {
+      syntax: '<color>';
+      inherits: true;
+      initial-value: transparent;
+    }
+
+    /* Spacing */
+    @property --ngx-signal-form-error-margin-top {
+      syntax: '<length>';
+      inherits: true;
+      initial-value: 0.375rem;
+    }
+
+    @property --ngx-signal-form-error-message-spacing {
+      syntax: '<length>';
+      inherits: true;
+      initial-value: 0.25rem;
+    }
+
+    /* Typography */
+    @property --ngx-signal-form-error-font-size {
+      syntax: '<length>';
+      inherits: true;
+      initial-value: 0.875rem;
+    }
+
+    @property --ngx-signal-form-error-line-height {
+      syntax: '<number>';
+      inherits: true;
+      initial-value: 1.25;
+    }
+
+    /* Border */
+    @property --ngx-signal-form-error-border-width {
+      syntax: '<length>';
+      inherits: true;
+      initial-value: 0px;
+    }
+
+    @property --ngx-signal-form-error-border-radius {
+      syntax: '<length>';
+      inherits: true;
+      initial-value: 0px;
+    }
+
+    /* Padding */
+    @property --ngx-signal-form-error-padding {
+      syntax: '<length>';
+      inherits: true;
+      initial-value: 0px;
+    }
+
+    /**
+     * Dark Mode Support
+     */
+    @media (prefers-color-scheme: dark) {
+      :host {
+        --ngx-signal-form-error-color: #fca5a5;
+        --ngx-signal-form-warning-color: #fcd34d;
+      }
+    }
+
+    /**
+     * Component Styles
+     */
+
+    :host {
+      display: block;
+      margin-top: var(--ngx-signal-form-error-margin-top);
+    }
+
     .ngx-signal-form-error {
-      color: var(--ngx-signal-form-error-color, #dc2626);
-      font-size: var(--ngx-signal-form-error-font-size, 0.875rem);
-      margin-top: var(--ngx-signal-form-error-margin-top, 0.25rem);
+      display: flex;
+      flex-direction: column;
+      gap: var(--ngx-signal-form-error-message-spacing);
+      padding: var(--ngx-signal-form-error-padding);
+      border-width: var(--ngx-signal-form-error-border-width);
+      border-style: solid;
+      border-radius: var(--ngx-signal-form-error-border-radius);
+      font-size: var(--ngx-signal-form-error-font-size);
+      line-height: var(--ngx-signal-form-error-line-height);
+    }
+
+    .ngx-signal-form-error--error {
+      color: var(--ngx-signal-form-error-color);
+      background-color: var(--ngx-signal-form-error-bg);
+      border-color: var(--ngx-signal-form-error-border);
+    }
+
+    .ngx-signal-form-error--warning {
+      color: var(--ngx-signal-form-warning-color);
+      background-color: var(--ngx-signal-form-warning-bg);
+      border-color: var(--ngx-signal-form-warning-border);
     }
 
     .ngx-signal-form-error__message {
       margin: 0;
-      padding: 0;
     }
 
-    .ngx-signal-form-error__message + .ngx-signal-form-error__message {
-      margin-top: var(--ngx-signal-form-error-message-spacing, 0.25rem);
+    /**
+     * Reduced Motion Support
+     */
+    @media (prefers-reduced-motion: reduce) {
+      .ngx-signal-form-error {
+        transition: none;
+      }
+    }
+
+    /**
+     * High Contrast Mode Support
+     */
+    @media (prefers-contrast: high) {
+      .ngx-signal-form-error {
+        border-width: 2px;
+      }
     }
   `,
 })
 export class NgxSignalFormErrorComponent {
   /**
-   * The Signal Forms field to display errors for.
+   * The Signal Forms field to display errors/warnings for.
    * Accepts any SignalLike that returns the field state.
    */
   readonly field = input.required<SignalLike<unknown>>();
 
   /**
-   * The field name used for generating error IDs.
+   * The field name used for generating error/warning IDs.
    * This should match the field name used in aria-describedby.
    */
   readonly fieldName = input.required<string>();
@@ -112,6 +333,13 @@ export class NgxSignalFormErrorComponent {
   );
 
   /**
+   * Computed warning ID for aria-describedby linking.
+   */
+  protected readonly warningId = computed(() =>
+    generateWarningId(this.fieldName()),
+  );
+
+  /**
    * Computed signal for error visibility based on strategy.
    */
   protected readonly showErrors = computed(() => {
@@ -123,21 +351,25 @@ export class NgxSignalFormErrorComponent {
   });
 
   /**
-   * Computed array of errors from the field state.
+   * Computed signal for warning visibility.
+   * Warnings are shown using the same strategy as errors.
    */
-  protected readonly errors = computed(() => {
+  protected readonly showWarnings = computed(() => this.showErrors());
+
+  /**
+   * All validation messages from the field.
+   */
+  readonly #allMessages = computed(() => {
     const field = this.field();
     const fieldState = typeof field === 'function' ? field() : field;
 
-    // Handle null/undefined field state
     if (!fieldState || typeof fieldState !== 'object') {
       return [];
     }
 
-    // Extract errors from Signal Forms field state
     const errorsGetter = (
       fieldState as unknown as {
-        errors?: () => Array<{ kind: string; message: string }>;
+        errors?: () => ValidationMessage[];
       }
     ).errors;
 
@@ -147,4 +379,28 @@ export class NgxSignalFormErrorComponent {
 
     return [];
   });
+
+  /**
+   * Computed array of errors (kind does NOT start with 'warn:').
+   */
+  protected readonly errors = computed(() => {
+    return this.#allMessages().filter((msg) => !msg.kind.startsWith('warn:'));
+  });
+
+  /**
+   * Computed array of warnings (kind starts with 'warn:').
+   */
+  protected readonly warnings = computed(() => {
+    return this.#allMessages().filter((msg) => msg.kind.startsWith('warn:'));
+  });
+
+  /**
+   * Whether the field has blocking errors.
+   */
+  protected readonly hasErrors = computed(() => this.errors().length > 0);
+
+  /**
+   * Whether the field has non-blocking warnings.
+   */
+  protected readonly hasWarnings = computed(() => this.warnings().length > 0);
 }

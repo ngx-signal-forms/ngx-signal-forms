@@ -15,7 +15,14 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@ngx-signal-forms/toolkit": ["packages/toolkit/index.ts"]
+      "@ngx-signal-forms/toolkit": ["packages/toolkit/index.ts"],
+      "@ngx-signal-forms/toolkit/core": ["packages/toolkit/core/public_api.ts"],
+      "@ngx-signal-forms/toolkit/form-field": [
+        "packages/toolkit/form-field/public_api.ts"
+      ],
+      "@ngx-signal-forms/toolkit/testing": [
+        "packages/toolkit/testing/public_api.ts"
+      ]
     }
   },
   "exclude": ["node_modules", "tmp"]

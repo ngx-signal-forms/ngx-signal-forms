@@ -4,13 +4,14 @@ import type { ErrorDisplayStrategy } from '../types';
 
 /**
  * Form context provided to child directives and components.
+ *
+ * @template TForm - The Signal Forms instance type
  */
-export interface NgxSignalFormContext {
+export interface NgxSignalFormContext<TForm = unknown> {
   /**
    * The Signal Forms instance.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  form: any;
+  form: TForm;
 
   /**
    * Whether the form has been submitted at least once.
@@ -32,6 +33,8 @@ export interface NgxSignalFormContext {
  * - Manages error display strategy
  * - Auto-resets on form reset
  *
+ * @template TForm - The Signal Forms instance type
+ *
  * @example
  * ```html
  * <form
@@ -45,7 +48,6 @@ export interface NgxSignalFormContext {
  * ```
  */
 @Directive({
-  // eslint-disable-next-line @angular-eslint/directive-selector
   selector: '[ngxSignalFormProvider]',
   providers: [
     {
@@ -53,7 +55,9 @@ export interface NgxSignalFormContext {
       useFactory: () => {
         const directive = inject(NgxSignalFormProviderDirective);
         return {
-          form: directive.form(),
+          get form() {
+            return directive.form();
+          },
           hasSubmitted: directive.hasSubmitted,
           errorStrategy: directive.errorStrategy,
         };
@@ -61,22 +65,19 @@ export interface NgxSignalFormContext {
     },
   ],
 })
-export class NgxSignalFormProviderDirective {
+export class NgxSignalFormProviderDirective<TForm = unknown> {
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
 
   /**
    * The Signal Forms instance to provide.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  readonly form = input.required<any>({ alias: 'ngxSignalFormProvider' });
+  readonly form = input<TForm | null>(null, { alias: 'ngxSignalFormProvider' });
 
   /**
    * Error display strategy for this form.
    * Defaults to global config or 'on-touch'.
    */
-  readonly errorStrategy = input<ErrorDisplayStrategy>(
-    this.#config.defaultErrorStrategy || 'on-touch',
-  );
+  readonly errorStrategy = input<ErrorDisplayStrategy>('on-touch');
 
   /**
    * Whether the form has been submitted at least once.
@@ -89,14 +90,14 @@ export class NgxSignalFormProviderDirective {
     // For now, we'll expose a method to mark as submitted
 
     // Monitor form state for reset
-    effect(() => {
-      const formState = this.form();
-      if (formState) {
-        // TODO: Detect form reset - Signal Forms doesn't have a built-in reset signal yet
-        // This would need to be handled by the consumer or via form state changes
-        formState(); // Read to establish dependency
-      }
-    });
+    // effect(() => {
+    //   const formState = this.form();
+    //   if (formState) {
+    // TODO: Detect form reset - Signal Forms doesn't have a built-in reset signal yet
+    // This would need to be handled by the consumer or via form state changes
+    // formState is already read above to establish dependency
+    // }
+    // });
 
     if (this.#config.debug) {
       effect(() => {

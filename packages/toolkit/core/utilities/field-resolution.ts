@@ -42,7 +42,11 @@ export function resolveFieldName(
 
   // Priority 2: Custom resolver
   if (config.fieldNameResolver) {
-    const customName = config.fieldNameResolver(element);
+    const resolver =
+      typeof config.fieldNameResolver === 'function'
+        ? config.fieldNameResolver()
+        : config.fieldNameResolver;
+    const customName = resolver(element);
     if (customName) {
       return customName;
     }
@@ -93,4 +97,20 @@ export function resolveFieldName(
  */
 export function generateErrorId(fieldName: string): string {
   return `${fieldName}-error`;
+}
+
+/**
+ * Generates a warning ID for a field, following WCAG best practices.
+ *
+ * @param fieldName - The field name
+ * @returns The warning ID in format: `{fieldName}-warning`
+ *
+ * @example
+ * ```typescript
+ * generateWarningId('password') // Returns: 'password-warning'
+ * generateWarningId('address.zipCode') // Returns: 'address.zipCode-warning'
+ * ```
+ */
+export function generateWarningId(fieldName: string): string {
+  return `${fieldName}-warning`;
 }

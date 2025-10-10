@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/angular';
-import { SftFormFieldComponent } from './form-field.component';
+import { NgxSignalFormFieldComponent } from './form-field.component';
 
 /**
- * Test suite for SftFormFieldComponent.
+ * Test suite for NgxSignalFormFieldComponent.
  *
  * Tests cover:
  * - Basic rendering and structure
@@ -20,33 +20,33 @@ import { SftFormFieldComponent } from './form-field.component';
  * - Help text support
  * - Custom error templates
  */
-describe('SftFormFieldComponent', () => {
+describe('NgxSignalFormFieldComponent', () => {
   describe('Basic rendering', () => {
     it('should render the component wrapper', async () => {
       @Component({
-        template: '<sft-form-field></sft-form-field>',
-        imports: [SftFormFieldComponent],
+        template: '<ngx-signal-form-field></ngx-signal-form-field>',
+        imports: [NgxSignalFormFieldComponent],
       })
       class TestComponent {}
 
       const { container } = await render(TestComponent);
 
-      const formField = container.querySelector('.sft-form-field');
+      const formField = container.querySelector('.ngx-signal-form-field');
       expect(formField).toBeTruthy();
     });
 
     it('should have the correct structure with content wrapper', async () => {
       @Component({
-        template: '<sft-form-field></sft-form-field>',
-        imports: [SftFormFieldComponent],
+        template: '<ngx-signal-form-field></ngx-signal-form-field>',
+        imports: [NgxSignalFormFieldComponent],
       })
       class TestComponent {}
 
       const { container } = await render(TestComponent);
 
-      const formField = container.querySelector('.sft-form-field');
+      const formField = container.querySelector('.ngx-signal-form-field');
       const contentWrapper = formField?.querySelector(
-        '.sft-form-field__content',
+        '.ngx-signal-form-field__content',
       );
 
       expect(formField).toBeTruthy();
@@ -58,12 +58,12 @@ describe('SftFormFieldComponent', () => {
     it('should project label and input content', async () => {
       @Component({
         template: `
-          <sft-form-field>
+          <ngx-signal-form-field>
             <label for="email">Email</label>
             <input id="email" type="email" />
-          </sft-form-field>
+          </ngx-signal-form-field>
         `,
-        imports: [SftFormFieldComponent],
+        imports: [NgxSignalFormFieldComponent],
       })
       class TestComponent {}
 
@@ -79,13 +79,13 @@ describe('SftFormFieldComponent', () => {
     it('should project multiple form controls', async () => {
       @Component({
         template: `
-          <sft-form-field>
+          <ngx-signal-form-field>
             <label for="username">Username</label>
             <input id="username" type="text" />
             <span class="hint">Choose a unique username</span>
-          </sft-form-field>
+          </ngx-signal-form-field>
         `,
-        imports: [SftFormFieldComponent],
+        imports: [NgxSignalFormFieldComponent],
       })
       class TestComponent {}
 
@@ -103,7 +103,7 @@ describe('SftFormFieldComponent', () => {
     it('should project complex nested content', async () => {
       @Component({
         template: `
-          <sft-form-field>
+          <ngx-signal-form-field>
             <div class="label-wrapper">
               <label for="password">Password</label>
               <button type="button">Show</button>
@@ -112,9 +112,9 @@ describe('SftFormFieldComponent', () => {
             <div class="requirements">
               <span>Min 8 characters</span>
             </div>
-          </sft-form-field>
+          </ngx-signal-form-field>
         `,
-        imports: [SftFormFieldComponent],
+        imports: [NgxSignalFormFieldComponent],
       })
       class TestComponent {}
 
@@ -133,16 +133,16 @@ describe('SftFormFieldComponent', () => {
 
     it('should handle empty content gracefully', async () => {
       @Component({
-        template: '<sft-form-field></sft-form-field>',
-        imports: [SftFormFieldComponent],
+        template: '<ngx-signal-form-field></ngx-signal-form-field>',
+        imports: [NgxSignalFormFieldComponent],
       })
       class TestComponent {}
 
       const { container } = await render(TestComponent);
 
-      const formField = container.querySelector('.sft-form-field');
+      const formField = container.querySelector('.ngx-signal-form-field');
       const contentWrapper = formField?.querySelector(
-        '.sft-form-field__content',
+        '.ngx-signal-form-field__content',
       );
 
       expect(formField).toBeTruthy();
@@ -155,19 +155,19 @@ describe('SftFormFieldComponent', () => {
     it('should apply flexbox layout styles', async () => {
       @Component({
         template: `
-          <sft-form-field>
-            <label>Test Label</label>
-            <input type="text" />
-          </sft-form-field>
+          <ngx-signal-form-field>
+            <label for="test-input">Test Label</label>
+            <input type="text" id="test-input" />
+          </ngx-signal-form-field>
         `,
-        imports: [SftFormFieldComponent],
+        imports: [NgxSignalFormFieldComponent],
       })
       class TestComponent {}
 
       const { container } = await render(TestComponent);
 
       const formField = container.querySelector(
-        '.sft-form-field',
+        '.ngx-signal-form-field',
       ) as HTMLElement;
       const styles = window.getComputedStyle(formField);
 
@@ -178,22 +178,22 @@ describe('SftFormFieldComponent', () => {
     it('should support CSS custom properties for gap', async () => {
       @Component({
         template: `
-          <sft-form-field style="--sft-form-field-gap: 1rem">
-            <label>Test</label>
-            <input type="text" />
-          </sft-form-field>
+          <ngx-signal-form-field style="--sft-form-field-gap: 1rem">
+            <label for="test-input">Test</label>
+            <input type="text" id="test-input" />
+          </ngx-signal-form-field>
         `,
-        imports: [SftFormFieldComponent],
+        imports: [NgxSignalFormFieldComponent],
       })
       class TestComponent {}
 
       const { container } = await render(TestComponent);
 
       const formField = container.querySelector(
-        '.sft-form-field',
+        '.ngx-signal-form-field',
       ) as HTMLElement;
       const customGap = formField.style.getPropertyValue(
-        '--sft-form-field-gap',
+        '--ngx-signal-form-field-gap',
       );
 
       expect(customGap).toBe('1rem');
@@ -202,22 +202,22 @@ describe('SftFormFieldComponent', () => {
     it('should support CSS custom properties for margin', async () => {
       @Component({
         template: `
-          <sft-form-field style="--sft-form-field-margin: 2rem">
-            <label>Test</label>
-            <input type="text" />
-          </sft-form-field>
+          <ngx-signal-form-field style="--sft-form-field-margin: 2rem">
+            <label for="test-input">Test</label>
+            <input type="text" id="test-input" />
+          </ngx-signal-form-field>
         `,
-        imports: [SftFormFieldComponent],
+        imports: [NgxSignalFormFieldComponent],
       })
       class TestComponent {}
 
       const { container } = await render(TestComponent);
 
       const formField = container.querySelector(
-        '.sft-form-field',
+        '.ngx-signal-form-field',
       ) as HTMLElement;
       const customMargin = formField.style.getPropertyValue(
-        '--sft-form-field-margin',
+        '--ngx-signal-form-field-margin',
       );
 
       expect(customMargin).toBe('2rem');
@@ -228,12 +228,12 @@ describe('SftFormFieldComponent', () => {
     it('should work with textarea elements', async () => {
       @Component({
         template: `
-          <sft-form-field>
+          <ngx-signal-form-field>
             <label for="bio">Bio</label>
             <textarea id="bio" rows="4"></textarea>
-          </sft-form-field>
+          </ngx-signal-form-field>
         `,
-        imports: [SftFormFieldComponent],
+        imports: [NgxSignalFormFieldComponent],
       })
       class TestComponent {}
 
@@ -249,15 +249,15 @@ describe('SftFormFieldComponent', () => {
     it('should work with select elements', async () => {
       @Component({
         template: `
-          <sft-form-field>
+          <ngx-signal-form-field>
             <label for="country">Country</label>
             <select id="country">
               <option value="us">USA</option>
               <option value="uk">UK</option>
             </select>
-          </sft-form-field>
+          </ngx-signal-form-field>
         `,
-        imports: [SftFormFieldComponent],
+        imports: [NgxSignalFormFieldComponent],
       })
       class TestComponent {}
 
@@ -273,14 +273,14 @@ describe('SftFormFieldComponent', () => {
     it('should work with checkbox inputs', async () => {
       @Component({
         template: `
-          <sft-form-field>
+          <ngx-signal-form-field>
             <label>
               <input type="checkbox" id="agree" />
               I agree to the terms
             </label>
-          </sft-form-field>
+          </ngx-signal-form-field>
         `,
-        imports: [SftFormFieldComponent],
+        imports: [NgxSignalFormFieldComponent],
       })
       class TestComponent {}
 
@@ -296,7 +296,7 @@ describe('SftFormFieldComponent', () => {
     it('should work with radio button groups', async () => {
       @Component({
         template: `
-          <sft-form-field>
+          <ngx-signal-form-field>
             <fieldset>
               <legend>Choose size</legend>
               <label>
@@ -308,9 +308,9 @@ describe('SftFormFieldComponent', () => {
                 Large
               </label>
             </fieldset>
-          </sft-form-field>
+          </ngx-signal-form-field>
         `,
-        imports: [SftFormFieldComponent],
+        imports: [NgxSignalFormFieldComponent],
       })
       class TestComponent {}
 
@@ -328,16 +328,16 @@ describe('SftFormFieldComponent', () => {
     it('should maintain label-input associations', async () => {
       @Component({
         template: `
-          <sft-form-field>
+          <ngx-signal-form-field>
             <label for="email">Email Address</label>
             <input id="email" type="email" />
-          </sft-form-field>
+          </ngx-signal-form-field>
         `,
-        imports: [SftFormFieldComponent],
+        imports: [NgxSignalFormFieldComponent],
       })
       class TestComponent {}
 
-      const { container } = await render(TestComponent);
+      await render(TestComponent);
 
       const label = screen.getByText('Email Address') as HTMLLabelElement;
       const input = screen.getByRole('textbox');
@@ -349,7 +349,7 @@ describe('SftFormFieldComponent', () => {
     it('should not interfere with aria attributes on inputs', async () => {
       @Component({
         template: `
-          <sft-form-field>
+          <ngx-signal-form-field>
             <label for="phone">Phone</label>
             <input
               id="phone"
@@ -358,9 +358,9 @@ describe('SftFormFieldComponent', () => {
               aria-required="true"
             />
             <span id="phone-hint">Include country code</span>
-          </sft-form-field>
+          </ngx-signal-form-field>
         `,
-        imports: [SftFormFieldComponent],
+        imports: [NgxSignalFormFieldComponent],
       })
       class TestComponent {}
 
@@ -376,8 +376,8 @@ describe('SftFormFieldComponent', () => {
   describe('Future iteration placeholders', () => {
     it('should have a comment indicating future error display location', async () => {
       @Component({
-        template: '<sft-form-field></sft-form-field>',
-        imports: [SftFormFieldComponent],
+        template: '<ngx-signal-form-field></ngx-signal-form-field>',
+        imports: [NgxSignalFormFieldComponent],
       })
       class TestComponent {}
 

@@ -74,11 +74,6 @@ applyTo: 'projects/**/*.{spec,test}.{ts,tsx,js,jsx}'
 - Use Vitest Browser UI for all component tests whenever possible.
 - Always use `render()` from Angular Testing Library.
 - Use role-based queries (`getByRole`, `findByRole`, etc.) for DOM assertions.
-- **NEW BINDINGS API (Angular Testing Library v18.1.0+)**: Use the `bindings` property with `inputBinding`, `outputBinding`, and `twoWayBinding` for setting component inputs/outputs.
-  - **Deprecation Notice**: `componentInputs`, `inputs`, `componentOutputs`, and `on` are deprecated in favor of `bindings`.
-  - Use `inputBinding(name, signal)` or `inputBinding(name, () => value)` for input properties.
-  - Use `outputBinding(name, callback)` for output properties (great with spy functions).
-  - Use `twoWayBinding(name, signal)` for two-way bindings (e.g., `model()` properties) - requires writable signal.
 - For user interactions, prefer `userEvent` from `@vitest/browser/context` over `@testing-library/user-event`.
 - Prefer fakes for service dependencies; use Angular's DI to provide them.
 - Always test user-facing behavior, not implementation details.
@@ -86,56 +81,116 @@ applyTo: 'projects/**/*.{spec,test}.{ts,tsx,js,jsx}'
 - When creating a Test Component, use Template Driven Forms.
 - Run tests in headless mode for CI pipelines and Browser UI for debugging.
 
-### New Bindings API Examples
+### Choosing Between Bindings API and componentProperties
+
+**Angular Testing Library v18.1.0+ and Angular v20.1+** introduced the new `bindings` API with `inputBinding`, `outputBinding`, and `twoWayBinding`. Choose the appropriate approach based on what you're rendering:
+
+#### Component-Based Rendering (Use `bindings`)
+
+When rendering **component classes directly**, use the `bindings` property:
+
+```typescript
+import { inputBinding, outputBinding, twoWayBinding } from '@angular/core';
+import { signal } from '@angular/core';
+
+// Rendering a component class
+await render(MyFormComponent, {
+  bindings: [inputBinding('initialData', signal({ name: 'John' })), outputBinding('dataSubmit', vi.fn())],
+});
+```
+
+**When to use:**
+
+- Testing standalone components with defined `input()` or `@Input()` properties
+- Testing components with `output()` or `@Output()` properties
+- Testing components with `model()` two-way bindings
+- Need type-safe, signal-based property binding
+
+**Deprecation notice:** `componentInputs`, `inputs`, `componentOutputs`, and `on` are deprecated. Use `bindings` instead for component-based rendering.
+
+#### Template-Based Rendering (Use `componentProperties`)
+
+When rendering **template strings** (e.g., testing directives in HTML context), use `componentProperties`:
+
+```typescript
+// Rendering an inline template string
+await render(
+  `<form [myDirective]="config">
+    <input [value]="data" />
+  </form>`,
+  {
+    imports: [MyDirective],
+    componentProperties: {
+      config: { enabled: true },
+      data: 'test value',
+    },
+  },
+);
+```
+
+**When to use:**
+
+- Testing directives in realistic HTML contexts
+- Template strings need access to variables
+- Testing HTML structures with multiple components/directives
+- Directive behavior testing (preferred approach)
+
+**Note:** `componentProperties` is **NOT deprecated** and remains the correct choice for template-based rendering.
+
+### Bindings API Examples (Component-Based Rendering)
 
 **Setting Input Properties:**
 
 ```typescript
-import { inputBinding } from '@testing-library/angular';
+import { inputBinding } from '@angular/core';
 
-// With signal
+// With signal (preferred for reactivity)
 const nameSignal = signal('John');
-await render(Component, {
+await render(GreetingComponent, {
   bindings: [inputBinding('name', nameSignal)],
 });
 
 // With inline function
-await render(Component, {
+await render(GreetingComponent, {
   bindings: [inputBinding('age', () => 25)],
 });
 
 // With aliased input (use alias name, not property name)
-await render(Component, {
+await render(GreetingComponent, {
   bindings: [inputBinding('greetingAlias', signal('Hello'))],
 });
+
+// Update signal after rendering
+nameSignal.set('Jane');
+fixture.detectChanges(); // Or use findBy queries for auto-retry
 ```
 
 **Testing Output Properties:**
 
 ```typescript
-import { outputBinding } from '@testing-library/angular';
+import { outputBinding } from '@angular/core';
 import { vi } from 'vitest';
 
 const onClickSpy = vi.fn();
-await render(Component, {
+await render(ButtonComponent, {
   bindings: [outputBinding('clicked', onClickSpy)],
 });
 
 // Trigger action that emits the output
 await userEvent.click(screen.getByRole('button'));
 
-// Assert output was emitted
+// Assert output was emitted with correct value
 expect(onClickSpy).toHaveBeenCalledWith(expectedValue);
 ```
 
 **Two-Way Bindings:**
 
 ```typescript
-import { twoWayBinding } from '@testing-library/angular';
+import { twoWayBinding } from '@angular/core';
 
 // For model() properties - MUST use writable signal
 const valueSignal = signal('initial');
-await render(Component, {
+await render(InputComponent, {
   bindings: [twoWayBinding('value', valueSignal)],
 });
 
@@ -143,6 +198,53 @@ await render(Component, {
 expect(valueSignal()).toBe('initial');
 await userEvent.type(screen.getByRole('textbox'), 'updated');
 expect(valueSignal()).toBe('updated');
+```
+
+### componentProperties Examples (Template-Based Rendering)
+
+**Testing Directives:**
+
+```typescript
+// Template-based rendering for directive testing
+await render(
+  `<form [ngxSignalFormProvider]="form" [errorStrategy]="strategy">
+    <input type="text" />
+  </form>`,
+  {
+    imports: [NgxSignalFormProviderDirective],
+    componentProperties: {
+      form: createMockForm(),
+      strategy: 'immediate' as ErrorDisplayStrategy,
+    },
+  },
+);
+
+// Dynamic updates with rerender
+await rerender({
+  componentProperties: {
+    form: createMockForm(),
+    strategy: 'on-touch',
+  },
+});
+```
+
+**Testing Complex HTML Structures:**
+
+```typescript
+await render(
+  `<div class="container">
+    <app-header [user]="currentUser" />
+    <app-content [items]="data" (itemClick)="onItemClick($event)" />
+  </div>`,
+  {
+    imports: [HeaderComponent, ContentComponent],
+    componentProperties: {
+      currentUser: { name: 'John', role: 'admin' },
+      data: [{ id: 1, label: 'Item 1' }],
+      onItemClick: vi.fn(),
+    },
+  },
+);
 ```
 
 ### Testing Library Best Practices
@@ -154,11 +256,25 @@ expect(valueSignal()).toBe('updated');
 - **Add Test IDs Sparingly**: Use `data-testid` attributes only when semantic queries (role, label, text) aren't sufficient for reliable element querying.
 - **Test Attribute Behavior**: Verify directive behavior through DOM attributes (e.g., `toHaveAttribute('validateRootForm', 'false')`) rather than directive properties.
 - **Focus on User Experience**: Test form validation states (`toBeValid()`, `toBeInvalid()`), element visibility (`toBeInTheDocument()`), and accessibility attributes.
-- **Use New Bindings API**: Prefer `bindings: [inputBinding(), outputBinding(), twoWayBinding()]` over deprecated `componentInputs`, `inputs`, `componentOutputs`, and `on` properties.
+- **Choose Correct Rendering Approach**:
+  - Component classes → Use `bindings: [inputBinding(), outputBinding(), twoWayBinding()]`
+  - Template strings → Use `componentProperties: { ... }`
+  - **Note**: `componentProperties` is NOT deprecated for template-based rendering
 
 ## Testing Strategies & Tips
 
-### Quick Decision Matrix
+### Quick Decision Matrix - Rendering Approach
+
+| Test Scenario                            | Rendering Method | API to Use                        | Example                                                               |
+| ---------------------------------------- | ---------------- | --------------------------------- | --------------------------------------------------------------------- |
+| Testing a component class                | Component-based  | `bindings` with `inputBinding()`  | `await render(MyComponent, { bindings: [...] })`                      |
+| Testing a directive in template          | Template-based   | `componentProperties`             | `await render('<div [myDir]="val">', { componentProperties: {...} })` |
+| Testing multiple components in HTML      | Template-based   | `componentProperties`             | `await render('<app-a [x]="y" />', { componentProperties: {...} })`   |
+| Component with `@Input()` decorators     | Component-based  | `bindings` with `inputBinding()`  | Works with both decorators and signal inputs                          |
+| Component with `output()` or `@Output()` | Component-based  | `bindings` with `outputBinding()` | `outputBinding('click', vi.fn())`                                     |
+| Component with `model()` (two-way)       | Component-based  | `bindings` with `twoWayBinding()` | `twoWayBinding('value', signal(''))`                                  |
+
+### Quick Decision Matrix - Test Approach
 
 | Test Scenario                  | Approach         | Tools                                |
 | ------------------------------ | ---------------- | ------------------------------------ |

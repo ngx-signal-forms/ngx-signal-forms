@@ -5,5 +5,5 @@
 // - @ngx-signal-forms/toolkit/testing - Testing utilities
 
 // Re-export commonly used items for convenience
-export { provideNgxSignalFormsConfig } from './core/providers/config.provider';
-export type { NgxSignalFormsConfig } from './core/types';
+export { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit/core';
+export type { NgxSignalFormsConfig } from '@ngx-signal-forms/toolkit/core';

@@ -18,7 +18,10 @@ export default [
         'error',
         {
           enforceBuildableLibDependency: true,
-          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
+          allow: [
+            '^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$',
+            '^@ngx-signal-forms/toolkit/.*$', // Allow internal package imports
+          ],
           depConstraints: [
             {
               sourceTag: '*',

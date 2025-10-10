@@ -27,7 +27,7 @@ describe('field-resolution', () => {
     it('should resolve field name from custom resolver (priority 2)', () => {
       const customResolver = vi.fn(() => 'custom-field');
       const config: NgxSignalFormsConfig = {
-        fieldNameResolver: customResolver,
+        fieldNameResolver: () => customResolver, // Wrap in SignalLike
       };
       const injector = Injector.create({
         providers: [{ provide: NGX_SIGNAL_FORMS_CONFIG, useValue: config }],
@@ -103,10 +103,11 @@ describe('field-resolution', () => {
     });
 
     it('should log warning in debug mode when field name cannot be resolved', () => {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       const consoleWarnSpy = vi
         .spyOn(console, 'warn')
-        .mockImplementation(() => {});
+        .mockImplementation(() => {
+          // Mock implementation to suppress console output during tests
+        });
       const config: NgxSignalFormsConfig = {
         strictFieldResolution: false,
         debug: true,
@@ -129,7 +130,7 @@ describe('field-resolution', () => {
     it('should prioritize data-signal-field over custom resolver', () => {
       const customResolver = vi.fn(() => 'custom-field');
       const config: NgxSignalFormsConfig = {
-        fieldNameResolver: customResolver,
+        fieldNameResolver: () => customResolver, // Wrap in SignalLike
       };
       const injector = Injector.create({
         providers: [{ provide: NGX_SIGNAL_FORMS_CONFIG, useValue: config }],
@@ -146,7 +147,7 @@ describe('field-resolution', () => {
     it('should handle custom resolver returning null', () => {
       const customResolver = vi.fn(() => null);
       const config: NgxSignalFormsConfig = {
-        fieldNameResolver: customResolver,
+        fieldNameResolver: () => customResolver, // Wrap in SignalLike
       };
       const injector = Injector.create({
         providers: [{ provide: NGX_SIGNAL_FORMS_CONFIG, useValue: config }],

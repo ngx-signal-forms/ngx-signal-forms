@@ -1,7 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/angular';
-import { inputBinding } from '@testing-library/angular';
 import { NgxSignalFormAutoAriaDirective } from './auto-aria.directive';
 import { NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type { NgxSignalFormsConfig } from '../types';

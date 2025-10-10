@@ -45,17 +45,17 @@ export const appConfig: ApplicationConfig = {
 ```typescript
 import { Component, signal } from '@angular/core';
 import { form, schema, required, email, Control } from '@angular/forms/signals';
-import { SftFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
   selector: 'app-contact',
-  imports: [SftFormFieldComponent, Control],
+  imports: [NgxSignalFormFieldComponent, Control],
   template: `
     <form (submit)="save($event)">
-      <sft-form-field [field]="contactForm.email">
+      <ngx-signal-form-field [field]="contactForm.email">
         <label for="email">Email</label>
         <input id="email" [control]="contactForm.email" />
-      </sft-form-field>
+      </ngx-signal-form-field>
 
       <button type="submit">Submit</button>
     </form>
@@ -95,7 +95,7 @@ Core directives, utilities, and configuration.
 #### Form Field (Optional)
 
 ```typescript
-import { SftFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 ```
 
 Form field wrapper component for consistent layout.

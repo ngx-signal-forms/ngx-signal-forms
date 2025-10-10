@@ -26,7 +26,7 @@ export default [
         'error',
         {
           type: 'attribute',
-          prefix: 'sft',
+          prefix: 'ngxSignalForm',
           style: 'camelCase',
         },
       ],
@@ -34,7 +34,7 @@ export default [
         'error',
         {
           type: 'element',
-          prefix: 'sft',
+          prefix: 'ngx-signal-form',
           style: 'kebab-case',
         },
       ],

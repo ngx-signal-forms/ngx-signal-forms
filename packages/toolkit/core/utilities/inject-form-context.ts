@@ -10,6 +10,7 @@ import type { NgxSignalFormContext } from '../directives/form-provider.directive
  * This pattern is inspired by ngxtension's Custom Inject Functions.
  * @see https://github.com/ngxtension/ngxtension-platform
  *
+ * @template TForm - The Signal Forms instance type
  * @param injector - Optional injector for use outside injection context
  * @returns The form context with submission state and other form-level data
  * @throws Error if FormProviderDirective is not found in the component tree
@@ -17,12 +18,12 @@ import type { NgxSignalFormContext } from '../directives/form-provider.directive
  * @example
  * ```typescript
  * // Inside injection context (component, directive, service)
- * const formContext = injectFormContext();
+ * const formContext = injectFormContext<MyFormType>();
  * const hasSubmitted = formContext.hasSubmitted();
  *
  * // Outside injection context (utility function)
  * function myUtility(injector?: Injector) {
- *   const formContext = injectFormContext(injector);
+ *   const formContext = injectFormContext<MyFormType>(injector);
  *   // Use formContext...
  * }
  *
@@ -30,7 +31,9 @@ import type { NgxSignalFormContext } from '../directives/form-provider.directive
  * const formContext = injectFormContext(TestBed.inject(Injector));
  * ```
  */
-export function injectFormContext(injector?: Injector): NgxSignalFormContext {
+export function injectFormContext<TForm = unknown>(
+  injector?: Injector,
+): NgxSignalFormContext<TForm> {
   return assertInjector(
     injectFormContext as (...args: unknown[]) => unknown,
     injector,
@@ -44,7 +47,7 @@ export function injectFormContext(injector?: Injector): NgxSignalFormContext {
         );
       }
 
-      return context;
+      return context as NgxSignalFormContext<TForm>;
     },
   );
 }

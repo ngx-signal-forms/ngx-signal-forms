@@ -207,7 +207,7 @@ describe('NgxSignalFormErrorComponent', () => {
       expect(alert.getAttribute('role')).toBe('alert');
     });
 
-    it('should have aria-live="polite" for live region updates', async () => {
+    it('should have aria-live="assertive" for errors (immediate announcement)', async () => {
       const fieldState = createMockFieldState(true, true, [
         { kind: 'required', message: 'This field is required' },
       ]);
@@ -223,7 +223,7 @@ describe('NgxSignalFormErrorComponent', () => {
       });
 
       const alert = screen.getByRole('alert');
-      expect(alert.getAttribute('aria-live')).toBe('polite');
+      expect(alert.getAttribute('aria-live')).toBe('assertive');
     });
 
     it('should have correct error ID for aria-describedby linking', async () => {
@@ -299,11 +299,9 @@ describe('NgxSignalFormErrorComponent', () => {
         ],
       });
 
-      // Component renders alert container even with no error messages
-      // This maintains aria-live region for screen readers
-      const alert = screen.getByRole('alert');
-      expect(alert).toBeInTheDocument();
-      expect(alert.textContent?.trim()).toBe('');
+      // No errors method means no errors to display
+      const alert = screen.queryByRole('alert');
+      expect(alert).toBeFalsy();
     });
 
     it('should handle empty errors array', async () => {

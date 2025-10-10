@@ -10,7 +10,7 @@ import { Directive } from '@angular/core';
  * ```
  */
 @Directive({
-  selector: '[sftPlaceholder]',
+  selector: '[ngxSignalFormPlaceholder]',
   standalone: true,
 })
 export class NgxSignalFormPlaceholderDirective {
