@@ -1,0 +1,25 @@
+{
+  "name": "@ngx-signal-forms/toolkit",
+  "version": "0.0.1",
+  "description": "Zero-intrusive toolkit for Angular Signal Forms with automatic accessibility, error display strategies, and form field wrappers",
+  "keywords": [
+    "angular",
+    "signal-forms",
+    "forms",
+    "accessibility",
+    "a11y",
+    "validation",
+    "wcag"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ngx-signal-forms/ngx-signal-forms"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@angular/common": "^20.3.0 || ^21.0.0",
+    "@angular/core": "^20.3.0 || ^21.0.0",
+    "@angular/forms": "^20.3.0 || ^21.0.0"
+  },
+  "sideEffects": false
+}

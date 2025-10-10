@@ -1,14 +1,16 @@
-# ngx-signal-forms-toolkit
+# @ngx-signal-forms/toolkit
 
 > **Zero-intrusive toolkit for Angular Signal Forms**
 >
 > Directives, components, and utilities that add automatic accessibility, error display strategies, and form field wrappers to Angular's Signal Forms API — without changing the core API.
 >
-> **Package Names (Choose One):**
+> **Package Structure:**
 >
-> - `ngx-signal-forms-toolkit` - Comprehensive utilities (recommended)
-> - `ngx-signal-forms-ux` - UX/DX enhancements focus
-> - `ngx-signal-forms-a11y` - Accessibility-first naming
+> - `@ngx-signal-forms/toolkit` - **Main package** with core directives, utilities, and form-field wrapper
+>   - Primary entry: `@ngx-signal-forms/toolkit` (core directives + utilities)
+>   - Secondary entry: `@ngx-signal-forms/toolkit/form-field` (form field wrapper - optional)
+>   - Secondary entry: `@ngx-signal-forms/toolkit/testing` (test utilities - optional)
+> - `@ngx-signal-forms/vestjs` - **Separate optional library** for Vest.js validation integration
 >
 > **Additional Resources:**
 >
@@ -65,13 +67,7 @@
 ```html
 <form (submit)="save($event)">
   <label for="email">Email</label>
-  <input
-    id="email"
-    [control]="userForm.email"
-    (blur)="userForm.email().markAsTouched()"
-    [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null"
-    [attr.aria-describedby]="userForm.email().invalid() ? 'email-error' : null"
-  />
+  <input id="email" [control]="userForm.email" (blur)="userForm.email().markAsTouched()" [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null" [attr.aria-describedby]="userForm.email().invalid() ? 'email-error' : null" />
 
   @if (userForm.email().touched() && userForm.email().invalid()) {
   <span id="email-error" role="alert">
@@ -81,9 +77,7 @@
   </span>
   }
 
-  <button type="submit" [attr.aria-busy]="isSubmitting() ? 'true' : null">
-    Submit
-  </button>
+  <button type="submit" [attr.aria-busy]="isSubmitting() ? 'true' : null">Submit</button>
 </form>
 ```
 
@@ -148,22 +142,13 @@ Automatically manages `aria-invalid` and `aria-describedby` attributes.
 **Before (Manual):**
 
 ```html
-<input
-  id="email"
-  [control]="userForm.email"
-  [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null"
-  [attr.aria-describedby]="userForm.email().invalid() ? 'email-error' : null"
-/>
-<span id="email-error" role="alert">
-  {{ userForm.email().errors() | json }}
-</span>
+<input id="email" [control]="userForm.email" [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null" [attr.aria-describedby]="userForm.email().invalid() ? 'email-error' : null" /> <span id="email-error" role="alert"> {{ userForm.email().errors() | json }} </span>
 ```
 
 **After (Automatic):**
 
 ```html
-<input id="email" [control]="userForm.email" />
-<ngx-signal-form-error [field]="userForm.email" />
+<input id="email" [control]="userForm.email" /> <ngx-signal-form-error [field]="userForm.email" />
 ```
 
 ### 2. Auto-Touch Directive
@@ -193,11 +178,7 @@ Control when errors are shown (immediate, on-touch, on-submit, manual).
 
 @Component({
   template: `
-    <form
-      [ngxSignalFormProvider]="userForm"
-      [errorStrategy]="errorMode()"
-      (submit)="save($event)"
-    >
+    <form [ngxSignalFormProvider]="userForm" [errorStrategy]="errorMode()" (submit)="save($event)">
       <!-- form fields -->
     </form>
   `,
@@ -240,32 +221,62 @@ Automatic `aria-busy` during async validation/submission.
 
 ### Package Structure
 
-```text
-ngx-signal-forms-toolkit/
-├── core/                    # Core directives + utilities
-│   ├── directives/
-│   │   ├── auto-aria.directive.ts        # Host bindings for aria-*
-│   │   ├── auto-touch.directive.ts       # Host listener for blur
-│   │   ├── form-busy.directive.ts        # Host binding for aria-busy
-│   │   └── form-provider.directive.ts    # DI provider + submission tracking
-│   ├── components/
-│   │   └── form-error.component.ts       # Reusable error renderer
-│   ├── utilities/
-│   │   ├── error-strategies.ts           # Pure functions for error visibility
-│   │   ├── field-resolution.ts           # Field name extraction logic
-│   │   └── show-errors.ts                # computeShowErrors() utility
-│   ├── providers/
-│   │   └── config.provider.ts            # Global configuration
-│   ├── tokens.ts                          # DI tokens
-│   └── types.ts                           # TypeScript types
-│
-├── form-field/              # Optional form field wrapper
-│   └── form-field.component.ts           # Layout + auto-error component
-│
-└── testing/                 # Test utilities
-    └── test-helpers.ts                    # Testing utilities
+**Main Package: `@ngx-signal-forms/toolkit`**
 
+```text
+@ngx-signal-forms/toolkit/
+├── src/
+│   ├── core/                         # Core implementation (internal)
+│   │   ├── directives/
+│   │   │   ├── auto-aria.directive.ts
+│   │   │   ├── auto-touch.directive.ts
+│   │   │   ├── form-busy.directive.ts
+│   │   │   └── form-provider.directive.ts
+│   │   ├── components/
+│   │   │   └── form-error.component.ts
+│   │   ├── utilities/
+│   │   │   ├── error-strategies.ts
+│   │   │   ├── field-resolution.ts
+│   │   │   └── show-errors.ts
+│   │   ├── providers/
+│   │   │   └── config.provider.ts
+│   │   ├── tokens.ts
+│   │   └── types.ts
+│   ├── form-field/                   # Secondary entry point
+│   │   ├── form-field.component.ts
+│   │   └── index.ts
+│   ├── testing/                      # Secondary entry point
+│   │   ├── test-helpers.ts
+│   │   └── index.ts
+│   └── index.ts                      # Primary entry (core exports)
+├── form-field/
+│   └── index.ts                      # Secondary entry point re-export
+├── testing/
+│   └── index.ts                      # Secondary entry point re-export
+├── package.json
+├── project.json
+└── README.md
 ```
+
+**Separate Package: `@ngx-signal-forms/vestjs`**
+
+```text
+@ngx-signal-forms/vestjs/
+├── src/
+│   ├── validators/                   # Vest.js validators for Signal Forms
+│   ├── adapters/                     # Vest.js to Signal Forms adapters
+│   └── index.ts
+├── package.json
+├── project.json
+└── README.md
+```
+
+**Entry Points:**
+
+- `@ngx-signal-forms/toolkit` - Core directives, utilities, error component (main entry)
+- `@ngx-signal-forms/toolkit/form-field` - Form field wrapper component (optional)
+- `@ngx-signal-forms/toolkit/testing` - Test utilities (optional, dev dependency)
+- `@ngx-signal-forms/vestjs` - Vest.js integration (separate package, can be used alongside toolkit)
 
 ### Enhancement Types
 
@@ -283,10 +294,19 @@ ngx-signal-forms-toolkit/
 @angular/core (peer)
 @angular/forms/signals (peer) ← Signal Forms API (unchanged)
         ↓
-ngx-signal-forms-toolkit/core (directives + utilities)
-        ↓
-ngx-signal-forms-toolkit/form-field (optional components)
+@ngx-signal-forms/toolkit (main package)
+├── Core directives + utilities (primary entry)
+├── /form-field (secondary entry - optional)
+└── /testing (secondary entry - optional)
+
+@ngx-signal-forms/vestjs (separate package - optional)
+├── Depends on: @angular/forms/signals
+└── Can be used alongside @ngx-signal-forms/toolkit
 ```
+
+**Shared Core Usage:**
+
+If needed in the future, core utilities could be extracted to an internal shared package that both `toolkit` and `vestjs` depend on, but for v1.0, the toolkit includes all core functionality.
 
 **Key Points:**
 
@@ -335,10 +355,7 @@ host: {
 
 ```html
 <!-- Priority 1: Explicit -->
-<input
-  data-signal-field="personalInfo.firstName"
-  [control]="userForm.personalInfo.firstName"
-/>
+<input data-signal-field="personalInfo.firstName" [control]="userForm.personalInfo.firstName" />
 
 <!-- Priority 3: ID (most common) -->
 <input id="email" [control]="userForm.email" />
@@ -408,13 +425,7 @@ protected readonly ariaBusy = computed(() => {
 **Directive:**
 
 ```typescript
-import {
-  Directive,
-  input,
-  signal,
-  computed,
-  HostListener,
-} from '@angular/core';
+import { Directive, input, signal, computed, HostListener } from '@angular/core';
 import { NGX_SIGNAL_FORM_CONTEXT } from './tokens';
 
 @Directive({
@@ -460,11 +471,7 @@ export class NgxSignalFormProviderDirective {
 **Usage:**
 
 ```html
-<form
-  [ngxSignalFormProvider]="userForm"
-  [errorStrategy]="errorMode()"
-  (submit)="save($event)"
->
+<form [ngxSignalFormProvider]="userForm" [errorStrategy]="errorMode()" (submit)="save($event)">
   <!-- Child directives automatically access form context via DI -->
   <input id="email" [control]="userForm.email" />
   <ngx-signal-form-error [field]="userForm.email" />
@@ -481,13 +488,11 @@ export class NgxSignalFormProviderDirective {
 @Component({
   selector: 'ngx-signal-form-error',
   template: `
-    @if (showErrors()) {
-      @for (error of structuredErrors(); track error.kind) {
-        <p class="ngx-signal-form-error" role="alert" [id]="errorId()">
-          {{ error.message }}
-        </p>
-      }
-    }
+    @if (showErrors()) { @for (error of structuredErrors(); track error.kind) {
+    <p class="ngx-signal-form-error" role="alert" [id]="errorId()">
+      {{ error.message }}
+    </p>
+    } }
   `,
 })
 export class NgxSignalFormErrorComponent {
@@ -508,8 +513,7 @@ export class NgxSignalFormErrorComponent {
 **Usage:**
 
 ```html
-<input id="email" [value]="emailField().value()" />
-<ngx-signal-form-error [field]="emailField()" />
+<input id="email" [value]="emailField().value()" /> <ngx-signal-form-error [field]="emailField()" />
 ```
 
 ### 3. Form Field Wrapper
@@ -527,7 +531,7 @@ export class NgxSignalFormErrorComponent {
         <ng-content />
       </div>
       @if (field()) {
-        <ngx-signal-form-error [field]="field()!" />
+      <ngx-signal-form-error [field]="field()!" />
       }
     </div>
   `,
@@ -548,36 +552,16 @@ export class NgxSignalFormField {
 **Usage:**
 
 ````html
-#### `NgxSignalFormField`
-
-**Component:**
-
-```typescript
-@Component({
-  selector: 'ngx-signal-form-field',
-  template: `
-    <div class="ngx-signal-form-field">
-      <div class="ngx-signal-form-field__content">
-        <ng-content />
-      </div>
-      @if (field()) {
-        <ngx-signal-form-error [field]="field()!" />
-      }
-    </div>
-  `,
-  styles: `
-    .ngx-signal-form-field {
-      display: flex;
-      flex-direction: column;
-      gap: var(--ngx-signal-form-field-gap, 0.5rem);
-      margin-bottom: var(--ngx-signal-form-field-margin, 1rem);
-    }
-  `
-})
-export class NgxSignalFormField {
-  // Accept the field signal
-  field = input<Signal<FieldState<any>>>();
-}
+#### `NgxSignalFormField` **Component:** ```typescript @Component({ selector: 'ngx-signal-form-field', template: `
+<div class="ngx-signal-form-field">
+  <div class="ngx-signal-form-field__content">
+    <ng-content />
+  </div>
+  @if (field()) {
+  <ngx-signal-form-error [field]="field()!" />
+  }
+</div>
+`, styles: ` .ngx-signal-form-field { display: flex; flex-direction: column; gap: var(--ngx-signal-form-field-gap, 0.5rem); margin-bottom: var(--ngx-signal-form-field-margin, 1rem); } ` }) export class NgxSignalFormField { // Accept the field signal field = input<Signal<FieldState<any>>>(); }</Signal<FieldState<any>
 ````
 
 **Usage:**
@@ -615,7 +599,7 @@ export type ErrorDisplayStrategy =
 export function computeShowErrors(
   field: Signal<FieldState<any>>,
   strategy: ErrorDisplayStrategy | Signal<ErrorDisplayStrategy>,
-  hasSubmitted: Signal<boolean>, // Must be provided by form provider or component
+  hasSubmitted: Signal<boolean> // Must be provided by form provider or component
 ): Signal<boolean> {
   return computed(() => {
     const f = field();
@@ -623,8 +607,7 @@ export function computeShowErrors(
     const touched = f.touched();
     const submitted = hasSubmitted();
 
-    const currentStrategy =
-      typeof strategy === 'function' ? strategy() : strategy;
+    const currentStrategy = typeof strategy === 'function' ? strategy() : strategy;
 
     switch (currentStrategy) {
       case 'immediate':
@@ -821,7 +804,7 @@ const contactSchema = schema<ContactModel>((path) => {
       <input id="email" type="email" [control]="contactForm.email" />
       <span id="email-error" role="alert">
         @if (contactForm.email().invalid()) {
-          {{ contactForm.email().errors() | json }}
+        {{ contactForm.email().errors() | json }}
         }
       </span>
 
@@ -847,28 +830,15 @@ export class ContactFormComponent {
 ```typescript
 import { Component, signal } from '@angular/core';
 import { form, schema, required, email, Control } from '@angular/forms/signals';
-import {
-  NgxSignalFormAutoAria,
-  NgxSignalFormAutoTouch,
-  NgxSignalFormErrorComponent,
-} from '@ngx-signal-forms/core';
+import { NgxSignalFormAutoAria, NgxSignalFormAutoTouch, NgxSignalFormErrorComponent } from '@ngx-signal-forms/core';
 
 @Component({
   selector: 'app-contact',
-  imports: [
-    NgxSignalFormAutoAria,
-    NgxSignalFormAutoTouch,
-    NgxSignalFormErrorComponent,
-    Control,
-  ],
+  imports: [NgxSignalFormAutoAria, NgxSignalFormAutoTouch, NgxSignalFormErrorComponent, Control],
   template: `
     <form (submit)="save($event)">
       <label for="email">Email</label>
-      <input
-        id="email"
-        type="email"
-        [control]="contactForm.email"
-        <!-- blur handler automatic -->
+      <input id="email" type="email" [control]="contactForm.email" <!-- blur handler automatic -- />
       />
       <ngx-signal-form-error [field]="contactForm.email" />
 
@@ -895,19 +865,11 @@ export class ContactFormComponent {
 import { Component, signal } from '@angular/core';
 import { form, schema, required, email, Control } from '@angular/forms/signals';
 import { NgxSignalFormField } from '@ngx-signal-forms/form-field';
-import {
-  NgxSignalFormAutoAria,
-  NgxSignalFormAutoTouch,
-} from '@ngx-signal-forms/core';
+import { NgxSignalFormAutoAria, NgxSignalFormAutoTouch } from '@ngx-signal-forms/core';
 
 @Component({
   selector: 'app-contact',
-  imports: [
-    NgxSignalFormField,
-    NgxSignalFormAutoAria,
-    NgxSignalFormAutoTouch,
-    Control,
-  ],
+  imports: [NgxSignalFormField, NgxSignalFormAutoAria, NgxSignalFormAutoTouch, Control],
   template: `
     <form (submit)="save($event)">
       <ngx-signal-form-field [field]="contactForm.email">
@@ -941,15 +903,7 @@ export class ContactFormComponent {
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import {
-  form,
-  schema,
-  required,
-  email,
-  minLength,
-  Control,
-  submit,
-} from '@angular/forms/signals';
+import { form, schema, required, email, minLength, Control, submit } from '@angular/forms/signals';
 import { NgxSignalFormField } from '@ngx-signal-forms/form-field';
 import {
   NgxSignalForms, // Bundle: all directives + components
@@ -976,33 +930,17 @@ const contactSchema = schema<ContactModel>((path) => {
     <fieldset>
       <legend>Error Display Mode</legend>
       <label>
-        <input
-          type="radio"
-          name="errorMode"
-          value="immediate"
-          [checked]="errorMode() === 'immediate'"
-          (change)="errorMode.set('immediate')"
-        />
+        <input type="radio" name="errorMode" value="immediate" [checked]="errorMode() === 'immediate'" (change)="errorMode.set('immediate')" />
         Immediate
       </label>
       <label>
-        <input
-          type="radio"
-          name="errorMode"
-          value="on-touch"
-          [checked]="errorMode() === 'on-touch'"
-          (change)="errorMode.set('on-touch')"
-        />
+        <input type="radio" name="errorMode" value="on-touch" [checked]="errorMode() === 'on-touch'" (change)="errorMode.set('on-touch')" />
         On Touch (Default)
       </label>
     </fieldset>
 
     <!-- Form with enhanced provider (tracks submission + manages error strategy) -->
-    <form
-      [ngxSignalFormProvider]="contactForm"
-      [errorStrategy]="errorMode()"
-      (submit)="save($event)"
-    >
+    <form [ngxSignalFormProvider]="contactForm" [errorStrategy]="errorMode()" (submit)="save($event)">
       <ngx-signal-form-field [field]="contactForm.email">
         <label for="email">Email *</label>
         <input id="email" type="email" [control]="contactForm.email" />
@@ -1010,31 +948,17 @@ const contactSchema = schema<ContactModel>((path) => {
 
       <ngx-signal-form-field [field]="contactForm.message">
         <label for="message">Message *</label>
-        <textarea
-          id="message"
-          rows="4"
-          [control]="contactForm.message"
-        ></textarea>
+        <textarea id="message" rows="4" [control]="contactForm.message"></textarea>
       </ngx-signal-form-field>
 
       <!-- Submission feedback -->
       @if (contactForm().submitError()) {
-        <div class="error" role="alert">
-          Failed to submit: {{ contactForm().submitError()!.message }}
-        </div>
+      <div class="error" role="alert">Failed to submit: {{ contactForm().submitError()!.message }}</div>
+      } @if (contactForm().submitSuccess()) {
+      <div class="success" role="status">✅ Message sent successfully!</div>
       }
 
-      @if (contactForm().submitSuccess()) {
-        <div class="success" role="status">✅ Message sent successfully!</div>
-      }
-
-      <button type="submit" [disabled]="contactForm().submitting()">
-        @if (contactForm().submitting()) {
-          Sending...
-        } @else {
-          Submit
-        }
-      </button>
+      <button type="submit" [disabled]="contactForm().submitting()">@if (contactForm().submitting()) { Sending... } @else { Submit }</button>
     </form>
   `,
 })
@@ -1135,8 +1059,7 @@ const locationForm = form(signal<LocationList>(...), (path) => {
   <input [control]="locationForm.locations[$index].city" />
 
   <!-- Error appears on the specific duplicate field -->
-  @if (locationForm.locations[$index].city().errors().length > 0) { @for (error
-  of locationForm.locations[$index].city().errors(); track error.kind) {
+  @if (locationForm.locations[$index].city().errors().length > 0) { @for (error of locationForm.locations[$index].city().errors(); track error.kind) {
   <p class="text-red-500">{{ error.message }}</p>
   } }
 </div>
@@ -1212,12 +1135,7 @@ validate(path.salePrice, ({ value, valueOf }) => {
 
 ```typescript
 import { z } from 'zod';
-import {
-  form,
-  validateStandardSchema,
-  validateAsync,
-  validateTree,
-} from '@angular/forms/signals';
+import { form, validateStandardSchema, validateAsync, validateTree } from '@angular/forms/signals';
 
 // Layer 1: Zod for data structure
 const ProductSchema = z.object({
@@ -1240,9 +1158,7 @@ const productForm = form(productModel, (path) => {
         stream: (p) => this.http.get(`/api/products/check-sku/${p.params.sku}`),
       }),
     errors: (result) => {
-      return result.exists
-        ? customError({ kind: 'sku_taken', message: 'SKU already exists' })
-        : null;
+      return result.exists ? customError({ kind: 'sku_taken', message: 'SKU already exists' }) : null;
     },
   });
 
@@ -1419,15 +1335,13 @@ protected readonly contactForm = form(this.model, contactSchema);
 **Before:**
 
 ```html
-<input id="email" [value]="form.email()" (input)="form.setEmail($event)" />
-<ngx-form-error [field]="form.emailField()" />
+<input id="email" [value]="form.email()" (input)="form.setEmail($event)" /> <ngx-form-error [field]="form.emailField()" />
 ```
 
 **After:**
 
 ```html
-<input id="email" [control]="contactForm.email" />
-<ngx-signal-form-error [field]="contactForm.email" />
+<input id="email" [control]="contactForm.email" /> <ngx-signal-form-error [field]="contactForm.email" />
 ```
 
 #### Step 4: Update Submit Logic
@@ -1476,11 +1390,7 @@ const contactSuite = staticSafeSuite<ContactModel>((data) => {
     <form (submit)="save($event)">
       <ngx-vest-form-field [field]="form.emailField()">
         <label for="email">Email</label>
-        <input
-          id="email"
-          [value]="form.email()"
-          (input)="form.setEmail($event)"
-        />
+        <input id="email" [value]="form.email()" (input)="form.setEmail($event)" />
       </ngx-vest-form-field>
       <button type="submit">Submit</button>
     </form>
@@ -1775,28 +1685,154 @@ test('should have no accessibility violations', async ({ page }) => {
 
 ### Final Recommendation
 
-**Primary Choice**: `ngx-signal-forms-toolkit`
+**Primary Choice**: `@ngx-signal-forms/toolkit` (main package with secondary entry points)
 
-**Fallback Choices** (in order of preference):
+**Package Structure:**
 
-1. `@ngx-signal-forms/toolkit` - If you can secure the scoped namespace
-2. `ngx-signal-forms-ux` - If you want to emphasize user experience
-3. `ngx-signal-forms-a11y` - If accessibility is the primary marketing focus
+1. **`@ngx-signal-forms/toolkit`** - Main package (required)
+
+   - Primary entry: Core directives, utilities, and components
+   - Secondary entry: `/form-field` - Form field wrapper (optional)
+   - Secondary entry: `/testing` - Test utilities (optional, dev dependency)
+
+2. **`@ngx-signal-forms/vestjs`** - Separate optional package
+   - Vest.js validation integration
+   - Can be used alongside the toolkit
+   - Independent versioning and releases
+
+**Why This Structure:**
+
+1. **Simplified DX**: Most users only install one package (`@ngx-signal-forms/toolkit`)
+2. **Tree-shakable**: Secondary entry points are only included when imported
+3. **Clear Separation**: Vest.js is a distinct integration, not core functionality
+4. **Easy Opt-out**: Don't want form-field wrapper? Don't import it!
+5. **Professional**: Clean, focused packages with clear purposes
+6. **Future-proof**: Can extract shared utilities later if needed by both packages
+
+**Alternative Considered** (if toolkit becomes too large):
+
+Extract core utilities to a shared internal package:
+
+- `@ngx-signal-forms/toolkit` (depends on shared core)
+- `@ngx-signal-forms/vestjs` (depends on shared core)
+- `@ngx-signal-forms/core` (internal, shared by both)
+
+But for v1.0, the monolithic toolkit approach is simpler and sufficient.
 
 ### Package Structure Options
 
-#### Option A: Monorepo with Scoped Packages (Recommended for Future Growth)
+#### Recommended: Monorepo with Toolkit as Main Package
+
+Using `@ngx-signal-forms/toolkit` as the main package with secondary entry points provides the best developer experience while maintaining flexibility.
+
+**Repository Structure:**
 
 ```text
-@ngx-signal-forms/
-  ├── toolkit          # All features (re-exports from sub-packages)
-  ├── core             # Core directives + utilities
-  ├── form-field       # Optional form field wrapper
-  ├── testing          # Test utilities
-  └── dev-tools        # Dev-mode debugging tools (v1.2.0+)
+ngx-signal-forms/                    # Repository root
+├── apps/
+│   ├── demo/                        # Demo application
+│   └── docs/                        # Documentation site (optional)
+├── packages/
+│   ├── toolkit/                     # @ngx-signal-forms/toolkit (MAIN PACKAGE)
+│   │   ├── src/
+│   │   │   ├── core/               # Internal core (directives, utilities, components)
+│   │   │   ├── form-field/         # Secondary entry point source
+│   │   │   ├── testing/            # Secondary entry point source
+│   │   │   └── index.ts            # Primary entry (exports core)
+│   │   ├── form-field/
+│   │   │   └── index.ts            # Secondary entry point
+│   │   ├── testing/
+│   │   │   └── index.ts            # Secondary entry point
+│   │   ├── package.json            # name: "@ngx-signal-forms/toolkit"
+│   │   ├── project.json            # Nx config (publishable)
+│   │   └── README.md
+│   └── vestjs/                      # @ngx-signal-forms/vestjs (SEPARATE OPTIONAL)
+│       ├── src/
+│       │   ├── validators/
+│       │   ├── adapters/
+│       │   └── index.ts
+│       ├── package.json            # name: "@ngx-signal-forms/vestjs"
+│       ├── project.json            # Nx config (publishable)
+│       └── README.md
+├── docs/                            # Markdown documentation
+├── tools/                           # Custom build tools (optional)
+├── pnpm-workspace.yaml             # pnpm workspace config
+├── nx.json                          # Nx workspace config
+├── package.json                     # Root package.json
+└── tsconfig.base.json              # Shared TypeScript config
 ```
 
-#### Option B: Single Package (Recommended for v1.0)
+**pnpm-workspace.yaml:**
+
+```yaml
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+autoInstallPeers: true
+strictPeerDependencies: false
+```
+
+**Package Exports Configuration (`@ngx-signal-forms/toolkit/package.json`):**
+
+```json
+{
+  "name": "@ngx-signal-forms/toolkit",
+  "version": "1.0.0",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "esm2022": "./esm2022/index.mjs",
+      "esm": "./esm/index.mjs",
+      "default": "./fesm2022/index.mjs"
+    },
+    "./form-field": {
+      "types": "./form-field/index.d.ts",
+      "esm2022": "./esm2022/form-field/index.mjs",
+      "esm": "./esm/form-field/index.mjs",
+      "default": "./fesm2022/form-field/index.mjs"
+    },
+    "./testing": {
+      "types": "./testing/index.d.ts",
+      "esm2022": "./esm2022/testing/index.mjs",
+      "esm": "./esm/testing/index.mjs",
+      "default": "./fesm2022/testing/index.mjs"
+    }
+  }
+}
+```
+
+**Publishing Configuration:**
+
+- `@ngx-signal-forms/toolkit` - **Main package** (core + optional secondary entries)
+- `@ngx-signal-forms/vestjs` - **Separate optional package** (Vest.js integration)
+
+**Benefits of This Approach:**
+
+1. **Simplified Installation**: Most users only need `npm install @ngx-signal-forms/toolkit`
+2. **Optional Features**: Use `@ngx-signal-forms/toolkit/form-field` only when needed
+3. **Clear Separation**: Vest.js integration is a completely separate package
+4. **Tree-shakable**: Unused secondary entry points are automatically excluded
+5. **Professional**: Single main package with optional additions
+6. **Future-proof**: Can extract shared core later if needed by both toolkit and vestjs
+
+**Usage Examples:**
+
+```typescript
+// Primary entry - core directives and utilities
+import { NgxSignalFormAutoAria, NgxSignalFormAutoTouch, NgxSignalFormErrorComponent, provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
+
+// Secondary entry - form field wrapper (optional)
+import { NgxSignalFormField } from '@ngx-signal-forms/toolkit/form-field';
+
+// Secondary entry - testing utilities (optional)
+import { createTestForm } from '@ngx-signal-forms/toolkit/testing';
+
+// Separate package - Vest.js integration (optional)
+import { vestValidator } from '@ngx-signal-forms/vestjs';
+```
+
+#### Alternative: Single Package (Not Recommended)
 
 ```text
 ngx-signal-forms-toolkit/
@@ -1806,11 +1842,13 @@ ngx-signal-forms-toolkit/
   └── index.ts         # Barrel exports
 ```
 
+This approach is simpler but limits future growth and doesn't support the planned `vestjs` extension as cleanly.
+
 ---
 
 ## Conclusion
 
-**ngx-signal-forms-toolkit** brings production-ready features to Angular Signal Forms through non-intrusive directives, components, and utilities:
+**@ngx-signal-forms/toolkit** brings production-ready features to Angular Signal Forms through non-intrusive directives, components, and utilities:
 
 - ✅ **Zero API changes** - Pure enhancement via directives and providers
 - ✅ **80% less boilerplate** - Automatic ARIA, touch, and error display
@@ -1839,12 +1877,12 @@ ngx-signal-forms-toolkit/
 
 ### Comparison with Related Libraries
 
-| Library                      | Focus                      | Validation Engine            | Enhancement Approach    |
-| ---------------------------- | -------------------------- | ---------------------------- | ----------------------- |
-| **ngx-signal-forms-toolkit** | UX + Accessibility + DX    | Signal Forms (Angular API)   | Non-intrusive utilities |
-| **ngx-vest-forms**           | Portable validation        | Vest.js (framework-agnostic) | Custom form abstraction |
-| **Angular Forms (Reactive)** | Traditional reactive forms | Built-in validators          | Core Angular API        |
-| **Angular Forms (Template)** | Template-driven forms      | Built-in validators          | Core Angular API        |
+| Library                       | Focus                      | Validation Engine            | Enhancement Approach    |
+| ----------------------------- | -------------------------- | ---------------------------- | ----------------------- |
+| **@ngx-signal-forms/toolkit** | UX + Accessibility + DX    | Signal Forms (Angular API)   | Non-intrusive utilities |
+| **ngx-vest-forms**            | Portable validation        | Vest.js (framework-agnostic) | Custom form abstraction |
+| **Angular Forms (Reactive)**  | Traditional reactive forms | Built-in validators          | Core Angular API        |
+| **Angular Forms (Template)**  | Template-driven forms      | Built-in validators          | Core Angular API        |
 
 ### When to Use Each
 
@@ -1873,20 +1911,34 @@ Both approaches are valid - choose based on your needs:
 # Install Signal Forms (Angular 21+)
 npm install @angular/forms
 
-# Install toolkit (recommended name)
-npm install ngx-signal-forms-toolkit
+# Install the toolkit (main package - includes core directives and utilities)
+npm install @ngx-signal-forms/toolkit
 
-# Alternative package names (if we choose differently)
-# npm install ngx-signal-forms-ux
-# npm install ngx-signal-forms-a11y
-# npm install @ngx-signal-forms/toolkit
+# Optional: Install Vest.js integration (separate package)
+npm install @ngx-signal-forms/vestjs
+```
+
+**Import Examples:**
+
+```typescript
+// Core features (always available from main package)
+import { NgxSignalFormAutoAria, NgxSignalFormAutoTouch, provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
+
+// Form field wrapper (secondary entry point - optional)
+import { NgxSignalFormField } from '@ngx-signal-forms/toolkit/form-field';
+
+// Testing utilities (secondary entry point - optional, dev dependency)
+import { createTestForm } from '@ngx-signal-forms/toolkit/testing';
+
+// Vest.js validators (separate package - optional)
+import { vestValidator } from '@ngx-signal-forms/vestjs';
 ```
 
 ### Minimal Setup
 
 ```typescript
 // app.config.ts
-import { provideNgxSignalFormsConfig } from 'ngx-signal-forms-toolkit';
+import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 
 export const appConfig: ApplicationConfig = {
   providers: [
