@@ -1,6 +1,6 @@
 ---
 description: 'Strategic planning and architecture assistant focused on thoughtful analysis before implementation. Helps developers understand codebases, clarify requirements, and develop comprehensive implementation strategies.'
-tools: ['codebase', 'extensions', 'fetch', 'findTestFiles', 'githubRepo', 'problems', 'search', 'searchResults', 'usages', 'vscodeAPI']
+tools: ['edit', 'search', 'angular-cli/*', '@dolmen-tools/ng-mcp-server/ask_angular_question', '@dolmen-tools/ng-mcp-server/search_angular_sources', 'context7/*', 'github/github-mcp-server/get_file_contents', 'github/github-mcp-server/list_branches', 'github/github-mcp-server/search_code', 'github/github-mcp-server/search_pull_requests', 'github/github-mcp-server/web_search', 'github/github-mcp-server/pull_request_read', 'Nx Mcp Server/nx_available_plugins', 'Nx Mcp Server/nx_docs', 'Nx Mcp Server/nx_generator_schema', 'Nx Mcp Server/nx_generators', 'Nx Mcp Server/nx_project_details', 'Nx Mcp Server/nx_run_generator', 'Nx Mcp Server/nx_visualize_graph', 'Nx Mcp Server/nx_workspace', 'Nx Mcp Server/nx_workspace_path', 'extensions', 'usages', 'vscodeAPI', 'think', 'problems', 'fetch', 'githubRepo', 'todos']
 ---
 
 # Plan Mode - Strategic Planning & Architecture Assistant
