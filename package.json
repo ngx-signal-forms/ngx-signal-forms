@@ -10,6 +10,7 @@
     "@angular/compiler": "next",
     "@angular/core": "next",
     "@angular/forms": "next",
+    "@angular/aria": "next",
     "@angular/platform-browser": "next",
     "@angular/router": "next",
     "rxjs": "~7.8.2",

@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@angular/aria':
+        specifier: next
+        version: 21.0.0-next.8(@angular/cdk@21.0.0-next.8(@angular/common@21.0.0-next.7(@angular/core@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1))
       '@angular/common':
         specifier: next
         version: 21.0.0-next.7(@angular/core@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)
@@ -339,6 +342,12 @@ packages:
       eslint: ^8.57.0 || ^9.0.0
       typescript: '*'
 
+  '@angular/aria@21.0.0-next.8':
+    resolution: {integrity: sha512-64xB+WqBLs3TLa7LcsPxMaXMq4It719F5OI8e8vk4Yz3S6jWAmEuqCgwhf9YOHp/Vi3APYQdMGkFFfmv1qzbHg==}
+    peerDependencies:
+      '@angular/cdk': 21.0.0-next.8
+      '@angular/core': ^21.0.0-0 || ^21.1.0-0 || ^21.2.0-0 || ^21.3.0-0 || ^22.0.0-0
+
   '@angular/build@21.0.0-next.7':
     resolution: {integrity: sha512-eOD++41nhcphpUSsu/bOzF+LhrCq7StkiFhavj1psfXwg6A7M+95CX+zTQBip/2PGY7Av1wTKOdfW7zqqOGY6A==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0'}
@@ -384,6 +393,13 @@ packages:
         optional: true
       vitest:
         optional: true
+
+  '@angular/cdk@21.0.0-next.8':
+    resolution: {integrity: sha512-dVgt+SMgYuYwNgtFUb/iE8nVKWoJ7d3TuRSIBDe2AE3RuOSfjjTEjypcaLj6FToKYYMVZl6+0W5o2vjWrwNL/Q==}
+    peerDependencies:
+      '@angular/common': ^21.0.0-0 || ^21.1.0-0 || ^21.2.0-0 || ^21.3.0-0 || ^22.0.0-0
+      '@angular/core': ^21.0.0-0 || ^21.1.0-0 || ^21.2.0-0 || ^21.3.0-0 || ^22.0.0-0
+      rxjs: ^6.5.3 || ^7.4.0
 
   '@angular/cli@21.0.0-next.7':
     resolution: {integrity: sha512-SuOxJYVM/qAyjnokOyxOLiwhY41Q20ntDSrS6BYCwm4qVDtKIDqA7nbG9Kd8eq1ca9QjbRfKq0NG2fDePUXokg==}
@@ -8119,6 +8135,12 @@ snapshots:
       eslint: 9.37.0(jiti@2.6.1)
       typescript: 5.9.3
 
+  '@angular/aria@21.0.0-next.8(@angular/cdk@21.0.0-next.8(@angular/common@21.0.0-next.7(@angular/core@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1))':
+    dependencies:
+      '@angular/cdk': 21.0.0-next.8(@angular/common@21.0.0-next.7(@angular/core@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)
+      '@angular/core': 21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1)
+      tslib: 2.8.1
+
   '@angular/build@21.0.0-next.7(@angular/compiler-cli@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(typescript@5.9.3))(@angular/compiler@21.0.0-next.7)(@angular/core@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1))(@angular/platform-browser@21.0.0-next.7(@angular/common@21.0.0-next.7(@angular/core@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1)))(@types/node@24.7.1)(chokidar@4.0.3)(jiti@2.6.1)(less@4.4.2)(ng-packagr@20.3.0(@angular/compiler-cli@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(typescript@5.9.3))(tslib@2.8.1)(typescript@5.9.3))(postcss@8.5.6)(sass-embedded@1.93.2)(terser@5.44.0)(tslib@2.8.1)(typescript@5.9.3)(vitest@3.2.4)(yaml@2.8.1)':
     dependencies:
       '@ampproject/remapping': 2.3.0
@@ -8171,6 +8193,14 @@ snapshots:
       - terser
       - tsx
       - yaml
+
+  '@angular/cdk@21.0.0-next.8(@angular/common@21.0.0-next.7(@angular/core@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)':
+    dependencies:
+      '@angular/common': 21.0.0-next.7(@angular/core@21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)
+      '@angular/core': 21.0.0-next.7(@angular/compiler@21.0.0-next.7)(rxjs@7.8.2)(zone.js@0.15.1)
+      parse5: 8.0.0
+      rxjs: 7.8.2
+      tslib: 2.8.1
 
   '@angular/cli@21.0.0-next.7(@types/node@24.7.1)(chokidar@4.0.3)':
     dependencies:
