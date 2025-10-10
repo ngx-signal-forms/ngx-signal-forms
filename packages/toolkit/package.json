@@ -17,9 +17,9 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "@angular/common": "^20.3.0 || ^21.0.0",
-    "@angular/core": "^20.3.0 || ^21.0.0",
-    "@angular/forms": "^20.3.0 || ^21.0.0"
+    "vite": "^7.1.9",
+    "@analogjs/vite-plugin-angular": "~1.21.2",
+    "@nx/vite": "21.6.4"
   },
   "sideEffects": false
 }

@@ -15,12 +15,12 @@ export const NGX_SIGNAL_FORMS_CONFIG = new InjectionToken<NgxSignalFormsConfig>(
       strictFieldResolution: false,
       debug: false,
     }),
-  }
+  },
 );
 
 /**
  * Injection token for the form context (provided by ngxSignalFormProvider directive).
  */
 export const NGX_SIGNAL_FORM_CONTEXT = new InjectionToken<any>(
-  'NGX_SIGNAL_FORM_CONTEXT'
+  'NGX_SIGNAL_FORM_CONTEXT',
 );

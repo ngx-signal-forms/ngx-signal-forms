@@ -17,8 +17,10 @@ export default defineConfig(() => ({
     watch: false,
     globals: true,
     environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    setupFiles: ['src/test-setup.ts'],
+    include: [
+      '{src,core,form-field,testing}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+    ],
+    setupFiles: ['./test-setup.ts'],
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../../coverage/packages/toolkit',
