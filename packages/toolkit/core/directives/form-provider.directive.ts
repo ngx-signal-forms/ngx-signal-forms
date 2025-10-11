@@ -7,7 +7,7 @@ import {
   computed,
 } from '@angular/core';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
-import type { ErrorDisplayStrategy, SignalOrValue } from '../types';
+import type { ErrorDisplayStrategy, ReactiveOrStatic } from '../types';
 
 /**
  * Form context provided to child directives and components.
@@ -85,7 +85,7 @@ export class NgxSignalFormProviderDirective<TForm = unknown> {
    * Defaults to global config or 'on-touch'.
    */
   readonly errorStrategy = input<
-    SignalOrValue<ErrorDisplayStrategy> | null | undefined
+    ReactiveOrStatic<ErrorDisplayStrategy> | null | undefined
   >(undefined);
 
   protected readonly resolvedErrorStrategy = computed(() => {

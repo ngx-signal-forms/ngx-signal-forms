@@ -1,32 +1,74 @@
-import type { Signal } from '@angular/core';
+import type { SignalLike } from '@angular/aria/ui-patterns';
 import type { DeepPartial } from 'ts-essentials';
 
 /**
- * Represents a value that can be provided as:
- * - A Signal (from `signal()` or `computed()`)
- * - A function returning the value
- * - A static value
+ * Accepts reactive (Signal/function) or static values.
  *
- * This type is compatible with Angular Signal Forms' pattern of using
- * callable functions (FieldTree) while also accepting static values.
+ * This type extends Angular's `SignalLike<T>` to also accept static values,
+ * providing maximum flexibility for APIs that can work with both reactive
+ * and non-reactive data.
  *
- * **Why this custom type?**
- * Angular doesn't export a similar type in `@angular/forms/signals`.
- * The `@angular/aria` package had `SignalLike<T>`, but it's experimental
- * and not available in the forms package.
+ * ## What is it?
+ * A union type that accepts:
+ * - `Signal<T>` - Angular signals from `signal()` or `computed()`
+ * - `() => T` - Zero-argument functions returning `T`
+ * - `T` - Static values of type `T`
  *
- * @template T The type of value
+ * ## When to use it?
+ * Use `ReactiveOrStatic<T>` for function parameters or component inputs that:
+ * - Should support both reactive and static values
+ * - Need to adapt to different usage patterns (simple vs. dynamic)
+ * - Want to provide flexibility without requiring signals everywhere
  *
- * @example
+ * ## How does it work?
+ * The type builds on `SignalLike<T>` from `@angular/aria/ui-patterns`:
+ * - `SignalLike<T>` = `Signal<T> | (() => T)` (reactive values only)
+ * - `ReactiveOrStatic<T>` = `SignalLike<T> | T` (adds static values)
+ *
+ * Values are unwrapped using `unwrapValue()` to get the actual `T`.
+ *
+ * @template T The type of value when unwrapped
+ *
+ * @example Basic usage
  * ```typescript
- * // All valid:
- * const staticStrategy: SignalOrValue<string> = 'on-touch';
- * const signalStrategy: SignalOrValue<string> = signal('on-touch');
- * const computedStrategy: SignalOrValue<string> = computed(() => 'on-touch');
- * const functionStrategy: SignalOrValue<string> = () => 'on-touch';
+ * /// All valid assignments:
+ * const static: ReactiveOrStatic<string> = 'on-touch';
+ * const signal: ReactiveOrStatic<string> = signal('on-touch');
+ * const computed: ReactiveOrStatic<string> = computed(() => 'on-touch');
+ * const fn: ReactiveOrStatic<string> = () => 'on-touch';
  * ```
+ *
+ * @example Component input
+ * ```typescript
+ * @Component({...})
+ * export class MyComponent {
+ *   // Accepts signal, function, or static strategy
+ *   readonly strategy = input<ReactiveOrStatic<ErrorDisplayStrategy>>('on-touch');
+ *
+ *   protected readonly actualStrategy = computed(() =>
+ *     unwrapValue(this.strategy())
+ *   );
+ * }
+ * ```
+ *
+ * @example Function parameter
+ * ```typescript
+ * function computeShowErrors<T>(
+ *   field: ReactiveOrStatic<FieldState<T>>,
+ *   strategy: ReactiveOrStatic<ErrorDisplayStrategy>
+ * ): Signal<boolean> {
+ *   return computed(() => {
+ *     const fieldState = unwrapValue(field);
+ *     const strategyValue = unwrapValue(strategy);
+ *     // ... use unwrapped values
+ *   });
+ * }
+ * ```
+ *
+ * @see {@link unwrapValue} To extract the static value from ReactiveOrStatic
+ * @see https://angular.dev/guide/signals Angular Signals documentation
  */
-export type SignalOrValue<T> = Signal<T> | (() => T) | T;
+export type ReactiveOrStatic<T> = SignalLike<T> | T;
 
 /**
  * Error display strategy determines when validation errors are shown to the user.
@@ -66,7 +108,7 @@ export interface NgxSignalFormsConfig {
    * Can be a static value, signal, or function.
    * @default 'on-touch'
    */
-  defaultErrorStrategy: SignalOrValue<ErrorDisplayStrategy>;
+  defaultErrorStrategy: ReactiveOrStatic<ErrorDisplayStrategy>;
 
   /**
    * Custom field name resolver function.
@@ -74,7 +116,7 @@ export interface NgxSignalFormsConfig {
    * Can be a static function, signal, or function returning a function.
    * If not provided, falls back to built-in priority: id > name
    */
-  fieldNameResolver?: SignalOrValue<(element: HTMLElement) => string | null>;
+  fieldNameResolver?: ReactiveOrStatic<(element: HTMLElement) => string | null>;
 
   /**
    * Throw error when field name cannot be resolved.

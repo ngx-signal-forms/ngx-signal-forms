@@ -12,7 +12,7 @@ import { normalizeSignalFormsConfig } from '../utilities/normalize-config';
  *
  * @example
  * ```typescript
- * // app.config.ts
+ * /// app.config.ts
  * import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
  *
  * export const appConfig: ApplicationConfig = {

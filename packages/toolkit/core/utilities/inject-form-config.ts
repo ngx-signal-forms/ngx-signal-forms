@@ -16,16 +16,16 @@ import { normalizeSignalFormsConfig } from './normalize-config';
  *
  * @example
  * ```typescript
- * // Inside injection context (component, directive, service)
+ * /// Inside injection context (component, directive, service)
  * const config = injectFormConfig();
  *
- * // Outside injection context (utility function)
+ * /// Outside injection context (utility function)
  * function myUtility(element: HTMLElement, injector?: Injector) {
  *   const config = injectFormConfig(injector);
  *   // Use config...
  * }
  *
- * // In tests
+ * /// In tests
  * const config = injectFormConfig(TestBed.inject(Injector));
  * ```
  */

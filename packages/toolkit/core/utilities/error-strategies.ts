@@ -1,71 +1,120 @@
 import type { Signal } from '@angular/core';
 import { computed } from '@angular/core';
-import type { ErrorDisplayStrategy, SignalOrValue } from '../types';
-import { unwrapSignalOrValue } from './unwrap-signal-or-value';
+import type { FieldState } from '@angular/forms/signals';
+import type { ErrorDisplayStrategy, ReactiveOrStatic } from '../types';
+import { unwrapValue } from './unwrap-signal-or-value';
 
 /**
- * Computes whether errors should be shown based on field state and error display strategy.
+ * Computes whether validation errors should be displayed based on field state and strategy.
  *
- * Accepts signals, functions, or plain values for flexible usage.
+ * ## What does it do?
+ * Creates a reactive computed signal that determines if a form field's errors should
+ * be shown to the user, based on the error display strategy and form/field state.
  *
- * @param field - Signal/function containing the field state from Signal Forms
- * @param strategy - Error display strategy (signal/function or static value)
- * @param hasSubmitted - Signal/function indicating if the form has been submitted
- * @returns Signal<boolean> indicating if errors should be displayed
+ * ## When to use it?
+ * Use `computeShowErrors()` when you need to:
+ * - Implement conditional error display logic in custom form components
+ * - Apply different error visibility strategies (immediate, on-touch, on-submit)
+ * - Create reactive error display that updates automatically with field state
+ * - Build custom form field wrappers with automatic error handling
  *
- * @example
+ * ## How does it work?
+ * 1. Accepts reactive or static inputs for field state, strategy, and submission status
+ * 2. Creates a computed signal that unwraps all inputs using {@link unwrapValue}
+ * 3. Applies strategy logic to determine if errors should be visible
+ * 4. Returns a reactive signal that updates when any input changes
+ *
+ * ## Error Display Strategies
+ * - `immediate`: Show errors as soon as field becomes invalid
+ * - `on-touch`: Show errors after field is touched (blurred) or form is submitted (WCAG recommended)
+ * - `on-submit`: Show errors only after form submission attempt
+ * - `manual`: Never show automatically (developer controls display)
+ *
+ * @template T The type of the field value
+ * @param field - The form field state (typically a FieldTree from Angular Signal Forms)
+ * @param strategy - The error display strategy
+ * @param hasSubmitted - Whether the form has been submitted
+ * @returns A computed signal returning `true` when errors should be displayed
+ *
+ * @example Basic usage with signals
  * ```typescript
- * // Works with signals
- * const showErrors = computeShowErrors(
- *   form.email,
- *   signal('on-touch'),
- *   formSubmitted
+ * const showEmailErrors = computeShowErrors(
+ *   form.email,           // FieldTree<string> (signal)
+ *   signal('on-touch'),   // Reactive strategy
+ *   formSubmitted         // Signal<boolean>
  * );
  *
- * // Works with computed signals
- * const showErrors = computeShowErrors(
- *   form.email,
- *   computed(() => conditionalStrategy()),
- *   formSubmitted
- * );
+ * /// Use in template
+ * @if (showEmailErrors()) {
+ *   <span>{{ form.email().errors()[0].message }}</span>
+ * }
+ * ```
  *
- * // Works with static values
+ * @example Static values for simplicity
+ * ```typescript
  * const showErrors = computeShowErrors(
- *   form.email,
- *   'on-touch',
- *   formSubmitted
+ *   form.password,  // FieldTree<string>
+ *   'immediate',    // Static strategy
+ *   false           // Static boolean
  * );
  * ```
+ *
+ * @example Dynamic strategy based on field type
+ * ```typescript
+ * const strategy = computed(() =>
+ *   isPasswordField() ? 'immediate' : 'on-touch'
+ * );
+ *
+ * const showErrors = computeShowErrors(
+ *   form.field,
+ *   strategy,      // Computed strategy
+ *   hasSubmitted
+ * );
+ * ```
+ *
+ * @example Custom component integration
+ * ```typescript
+ * @Component({...})
+ * export class FormFieldComponent<T> {
+ *   readonly field = input.required<FieldTree<T>>();
+ *   readonly strategy = input<ReactiveOrStatic<ErrorDisplayStrategy>>('on-touch');
+ *   readonly hasSubmitted = input<ReactiveOrStatic<boolean>>(false);
+ *
+ *   protected readonly showErrors = computed(() =>
+ *     computeShowErrors(
+ *       this.field(),
+ *       this.strategy(),
+ *       this.hasSubmitted()
+ *     )()
+ *   );
+ * }
+ * ```
+ *
+ * @see {@link ReactiveOrStatic} For understanding the flexible input types
+ * @see {@link unwrapValue} For how inputs are unwrapped internally
+ * @see {@link showErrors} For a convenience wrapper of this function
  */
 export function computeShowErrors<T>(
-  field: SignalOrValue<T>,
-  strategy: SignalOrValue<ErrorDisplayStrategy>,
-  hasSubmitted: SignalOrValue<boolean>,
+  field: ReactiveOrStatic<FieldState<T>>,
+  strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
+  hasSubmitted: ReactiveOrStatic<boolean>,
 ): Signal<boolean> {
   return computed(() => {
-    // Unwrap all SignalOrValue inputs
-    const fieldState = unwrapSignalOrValue(field);
-    const strategyValue = unwrapSignalOrValue(strategy);
-    const submitted = unwrapSignalOrValue(hasSubmitted);
+    // Unwrap all ReactiveOrStatic inputs
+    const fieldState = unwrapValue(field);
+    const strategyValue = unwrapValue(strategy);
+    const submitted = unwrapValue(hasSubmitted);
 
     // Handle null/undefined field state
     if (!fieldState || typeof fieldState !== 'object') {
       return false;
     }
 
-    // Extract field state properties
-    // Signal Forms field state has: invalid(), valid(), touched(), etc.
+    // Use official FieldState API
     const isInvalid =
-      typeof (fieldState as unknown as { invalid?: () => boolean }).invalid ===
-      'function'
-        ? (fieldState as unknown as { invalid: () => boolean }).invalid()
-        : false;
-
+      typeof fieldState.invalid === 'function' ? fieldState.invalid() : false;
     const isTouched =
-      typeof (fieldState as unknown as { touched?: () => boolean }).touched ===
-      'function'
-        ? (fieldState as unknown as { touched: () => boolean }).touched()
-        : false;
+      typeof fieldState.touched === 'function' ? fieldState.touched() : false;
 
     // Apply strategy logic
     switch (strategyValue) {
@@ -93,13 +142,72 @@ export function computeShowErrors<T>(
 }
 
 /**
- * Checks if a field should show errors based on the current strategy.
- * This is a helper that doesn't require a computed signal.
+ * Determines if errors should be shown immediately without creating a reactive signal.
  *
- * @param fieldState - The field state object from Signal Forms
+ * ## What does it do?
+ * Performs a synchronous check to determine if form field errors should be displayed,
+ * without the overhead of creating a computed signal. This is a lightweight helper
+ * for non-reactive scenarios or one-time checks.
+ *
+ * ## When to use it?
+ * Use `shouldShowErrors()` when you need to:
+ * - Check error visibility in imperative code (event handlers, functions)
+ * - Perform one-time validation checks without reactivity
+ * - Implement custom logic that doesn't need automatic updates
+ * - Reduce memory overhead when reactivity isn't needed
+ *
+ * **Use {@link computeShowErrors} instead when you need reactive updates.**
+ *
+ * ## How does it work?
+ * 1. Accepts unwrapped (static) field state, strategy, and submission status
+ * 2. Immediately evaluates the strategy logic
+ * 3. Returns a boolean result without creating signals or subscriptions
+ *
+ * @param fieldState - The field state object with `invalid()` and `touched()` methods
  * @param strategy - The error display strategy
  * @param hasSubmitted - Whether the form has been submitted
- * @returns boolean indicating if errors should be shown
+ * @returns `true` if errors should be displayed
+ *
+ * @example Imperative validation check
+ * ```typescript
+ * function handleSubmit() {
+ *   const field = form.email();
+ *   const showErrors = shouldShowErrors(field, 'on-touch', true);
+ *
+ *   if (showErrors) {
+ *     displayErrors(field.errors());
+ *   }
+ * }
+ * ```
+ *
+ * @example Custom error display logic
+ * ```typescript
+ * function getFieldCssClasses(field: FieldState<string>) {
+ *   const hasErrors = shouldShowErrors(field, 'immediate', false);
+ *   return {
+ *     'field-error': hasErrors,
+ *     'field-valid': !hasErrors && field.valid()
+ *   };
+ * }
+ * ```
+ *
+ * @example One-time validation in event handler
+ * ```typescript
+ * @Component({...})
+ * export class MyComponent {
+ *   protected handleBlur() {
+ *     const field = this.form.username();
+ *     const showErrors = shouldShowErrors(field, 'on-touch', false);
+ *
+ *     if (showErrors) {
+ *       this.logger.logValidationError(field.errors());
+ *     }
+ *   }
+ * }
+ * ```
+ *
+ * @see {@link computeShowErrors} For reactive version that creates a computed signal
+ * @see {@link ErrorDisplayStrategy} For available strategies
  */
 export function shouldShowErrors(
   fieldState: {

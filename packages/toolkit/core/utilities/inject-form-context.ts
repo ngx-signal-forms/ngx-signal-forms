@@ -17,17 +17,17 @@ import type { NgxSignalFormContext } from '../directives/form-provider.directive
  *
  * @example
  * ```typescript
- * // Inside injection context (component, directive, service)
+ * /// Inside injection context (component, directive, service)
  * const formContext = injectFormContext<MyFormType>();
  * const hasSubmitted = formContext.hasSubmitted();
  *
- * // Outside injection context (utility function)
+ * /// Outside injection context (utility function)
  * function myUtility(injector?: Injector) {
  *   const formContext = injectFormContext<MyFormType>(injector);
  *   // Use formContext...
  * }
  *
- * // In tests
+ * /// In tests
  * const formContext = injectFormContext(TestBed.inject(Injector));
  * ```
  */

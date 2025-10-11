@@ -10,7 +10,7 @@ import {
   generateWarningId,
 } from '../utilities/field-resolution';
 import { showErrors } from '../utilities/show-errors';
-import type { ErrorDisplayStrategy } from '../types';
+import type { ErrorDisplayStrategy, ReactiveOrStatic } from '../types';
 
 /**
  * Reusable error and warning display component with WCAG 2.2 compliance.
@@ -35,11 +35,11 @@ import type { ErrorDisplayStrategy } from '../types';
  *
  * @example Warning (does not block submission)
  * ```typescript
- * // Using warningError() helper (recommended)
+ * /// Using warningError() helper (recommended)
  * warningError('weak-password', 'Consider a stronger password')
  * warningError('common-email', 'This email domain is commonly used for spam')
  *
- * // Or using customError() directly
+ * /// Or using customError() directly
  * customError({ kind: 'warn:weak-password', message: 'Consider a stronger password' })
  * customError({ kind: 'warn:common-email', message: 'This email domain is commonly used for spam' })
  * ```
@@ -305,18 +305,16 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
 
   /**
    * Error display strategy.
-   * Can be a function returning strategy or a static value.
+   * Can be a SignalLike for dynamic strategy or a static value.
    * @default 'on-touch'
    */
-  readonly strategy = input<
-    (() => ErrorDisplayStrategy) | ErrorDisplayStrategy
-  >('on-touch');
+  readonly strategy = input<ReactiveOrStatic<ErrorDisplayStrategy>>('on-touch');
 
   /**
    * Signal indicating if the form has been submitted.
-   * Accepts a function that returns a boolean.
+   * Accepts a SignalLike that returns a boolean.
    */
-  readonly hasSubmitted = input.required<() => boolean>();
+  readonly hasSubmitted = input.required<ReactiveOrStatic<boolean>>();
 
   /**
    * Computed error ID for aria-describedby linking.

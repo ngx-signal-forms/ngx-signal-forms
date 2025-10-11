@@ -10,7 +10,10 @@ import {
   NgxSignalFormErrorComponent,
   NGX_SIGNAL_FORM_CONTEXT,
 } from '@ngx-signal-forms/toolkit/core';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
+import type {
+  ErrorDisplayStrategy,
+  ReactiveOrStatic,
+} from '@ngx-signal-forms/toolkit/core';
 
 /**
  * Form field wrapper component with automatic error/warning display.
@@ -55,9 +58,9 @@ import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
  *
  * @example Type Inference
  * ```typescript
- * // TypeScript knows email is FieldTree<string>
+ * /// TypeScript knows email is FieldTree<string>
  * const emailField = form.email;
- * // Component infers TValue = string automatically
+ * /// Component infers TValue = string automatically
  * ```
  */
 @Component({
@@ -106,12 +109,12 @@ export class NgxSignalFormFieldComponent<TValue = unknown> {
 
   /**
    * Error display strategy.
-   * Can be a function returning strategy or a static value.
+   * Can be a ReactiveOrStatic for dynamic strategy or a static value.
    * @default Inherited from form context or 'on-touch'
    */
-  readonly strategy = input<
-    (() => ErrorDisplayStrategy) | ErrorDisplayStrategy | null
-  >(null);
+  readonly strategy = input<ReactiveOrStatic<ErrorDisplayStrategy> | null>(
+    null,
+  );
 
   /**
    * Whether to show the automatic error display.

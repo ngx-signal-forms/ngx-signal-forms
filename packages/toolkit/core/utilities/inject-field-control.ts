@@ -20,7 +20,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
  *
  * @example
  * ```typescript
- * // Inside a directive
+ * /// Inside a directive
  * @Directive({ selector: '[myDirective]' })
  * export class MyDirective {
  *   readonly #element = inject(ElementRef);
@@ -33,7 +33,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
  *   }
  * }
  *
- * // Outside injection context
+ * /// Outside injection context
  * function myUtility(element: HTMLElement, injector: Injector) {
  *   const fieldControl = injectFieldControl(element, injector);
  *   // Use fieldControl...
