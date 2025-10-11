@@ -28,9 +28,9 @@ export default defineConfig(({ mode }) => ({
     },
     browser: {
       enabled: true,
+      name: 'chromium',
       provider: 'playwright',
       headless: true,
-      instances: [{ browser: 'chromium' }],
       // Hide Vite's error overlay element in Vitest Browser runner to avoid click interception
       scripts: [
         {

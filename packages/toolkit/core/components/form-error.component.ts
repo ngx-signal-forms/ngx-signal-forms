@@ -4,27 +4,18 @@ import {
   input,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { SignalLike } from '@angular/aria/ui-patterns';
+import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   generateErrorId,
   generateWarningId,
 } from '../utilities/field-resolution';
-import { createShowErrorsSignal } from '../utilities/show-errors';
+import { showErrors } from '../utilities/show-errors';
 import type { ErrorDisplayStrategy } from '../types';
-
-/**
- * Validation error/warning structure from Signal Forms.
- */
-interface ValidationMessage {
-  kind: string;
-  message: string;
-}
 
 /**
  * Reusable error and warning display component with WCAG 2.2 compliance.
  *
- * Uses SignalLike<T> from @angular/aria for flexible inputs that accept
- * signals, computed signals, or plain functions returning values.
+ * Accepts a FieldTree from Angular Signal Forms.
  *
  * **Signal Forms Limitation: No Native Warning Support**
  *
@@ -33,6 +24,8 @@ interface ValidationMessage {
  *
  * - **Errors** (blocking): `kind` does NOT start with `'warn:'`
  * - **Warnings** (non-blocking): `kind` starts with `'warn:'`
+ *
+ * @template TValue The type of the field value (defaults to unknown)
  *
  * @example Error (blocks submission)
  * ```typescript
@@ -297,12 +290,12 @@ interface ValidationMessage {
     }
   `,
 })
-export class NgxSignalFormErrorComponent {
+export class NgxSignalFormErrorComponent<TValue = unknown> {
   /**
    * The Signal Forms field to display errors/warnings for.
-   * Accepts any SignalLike that returns the field state.
+   * Accepts a FieldTree from Angular Signal Forms.
    */
-  readonly field = input.required<SignalLike<unknown>>();
+  readonly field = input.required<FieldTree<TValue>>();
 
   /**
    * The field name used for generating error/warning IDs.
@@ -312,18 +305,18 @@ export class NgxSignalFormErrorComponent {
 
   /**
    * Error display strategy.
-   * Can be a SignalLike for dynamic strategy or a static value.
+   * Can be a function returning strategy or a static value.
    * @default 'on-touch'
    */
   readonly strategy = input<
-    SignalLike<ErrorDisplayStrategy> | ErrorDisplayStrategy
+    (() => ErrorDisplayStrategy) | ErrorDisplayStrategy
   >('on-touch');
 
   /**
    * Signal indicating if the form has been submitted.
-   * Accepts any SignalLike that returns a boolean.
+   * Accepts a function that returns a boolean.
    */
-  readonly hasSubmitted = input.required<SignalLike<boolean>>();
+  readonly hasSubmitted = input.required<() => boolean>();
 
   /**
    * Computed error ID for aria-describedby linking.
@@ -343,25 +336,22 @@ export class NgxSignalFormErrorComponent {
    * Computed signal for error visibility based on strategy.
    */
   protected readonly showErrors = computed(() => {
-    const field = this.field();
-    return createShowErrorsSignal(field, {
-      strategy: this.strategy(),
-      hasSubmitted: this.hasSubmitted(),
-    })();
+    return showErrors(this.field(), this.strategy(), this.hasSubmitted())();
   });
 
   /**
    * Computed signal for warning visibility.
    * Warnings are shown using the same strategy as errors.
    */
-  protected readonly showWarnings = computed(() => this.showErrors());
+  protected readonly showWarnings = this.showErrors;
 
   /**
    * All validation messages from the field.
    */
   readonly #allMessages = computed(() => {
-    const field = this.field();
-    const fieldState = typeof field === 'function' ? field() : field;
+    const fieldTree = this.field();
+    // FieldTree is callable: () => FieldState
+    const fieldState = fieldTree();
 
     if (!fieldState || typeof fieldState !== 'object') {
       return [];
@@ -369,7 +359,7 @@ export class NgxSignalFormErrorComponent {
 
     const errorsGetter = (
       fieldState as unknown as {
-        errors?: () => ValidationMessage[];
+        errors?: () => ValidationError[];
       }
     ).errors;
 
@@ -384,14 +374,18 @@ export class NgxSignalFormErrorComponent {
    * Computed array of errors (kind does NOT start with 'warn:').
    */
   protected readonly errors = computed(() => {
-    return this.#allMessages().filter((msg) => !msg.kind.startsWith('warn:'));
+    return this.#allMessages().filter(
+      (msg) => msg.kind && !msg.kind.startsWith('warn:'),
+    );
   });
 
   /**
    * Computed array of warnings (kind starts with 'warn:').
    */
   protected readonly warnings = computed(() => {
-    return this.#allMessages().filter((msg) => msg.kind.startsWith('warn:'));
+    return this.#allMessages().filter(
+      (msg) => msg.kind && msg.kind.startsWith('warn:'),
+    );
   });
 
   /**

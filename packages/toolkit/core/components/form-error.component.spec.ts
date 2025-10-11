@@ -4,31 +4,39 @@ import { render, screen } from '@testing-library/angular';
 import { NgxSignalFormErrorComponent } from './form-error.component';
 
 /**
- * Helper to create mock field state for testing
+ * Helper to create mock FieldTree for testing.
+ * FieldTree<T> is a callable that returns FieldState<T>
  */
-const createMockFieldState = (
+const createMockFieldTree = (
   invalid = false,
   touched = false,
   errors: Array<{ kind: string; message: string }> = [],
 ) => {
-  return signal({
+  // Create a signal that wraps the FieldState-like object
+  const fieldState = {
     invalid: () => invalid,
     touched: () => touched,
     errors: () => errors,
-  });
+  };
+
+  // FieldTree is a callable that returns FieldState
+  const fieldTree = () => fieldState;
+
+  // Return as a signal wrapping the fieldTree function
+  return signal(fieldTree);
 };
 
 describe('NgxSignalFormErrorComponent', () => {
   describe('error rendering', () => {
     it('should render errors when field is invalid and touched (on-touch strategy)', async () => {
-      const fieldState = createMockFieldState(true, true, [
+      const fieldTree = createMockFieldTree(true, true, [
         { kind: 'required', message: 'This field is required' },
       ]);
       const hasSubmitted = signal(false);
 
       await render(NgxSignalFormErrorComponent, {
         bindings: [
-          inputBinding('field', fieldState),
+          inputBinding('field', fieldTree),
           inputBinding('fieldName', () => 'email'),
           inputBinding('strategy', () => 'on-touch'),
           inputBinding('hasSubmitted', hasSubmitted),
@@ -41,12 +49,12 @@ describe('NgxSignalFormErrorComponent', () => {
     });
 
     it('should not render errors when field is valid', async () => {
-      const fieldState = createMockFieldState(false, true, []);
+      const fieldTree = createMockFieldTree(false, true, []);
       const hasSubmitted = signal(false);
 
       await render(NgxSignalFormErrorComponent, {
         bindings: [
-          inputBinding('field', fieldState),
+          inputBinding('field', fieldTree),
           inputBinding('fieldName', () => 'email'),
           inputBinding('strategy', () => 'on-touch'),
           inputBinding('hasSubmitted', hasSubmitted),
@@ -58,14 +66,14 @@ describe('NgxSignalFormErrorComponent', () => {
     });
 
     it('should not render errors when field is invalid but not touched (on-touch strategy)', async () => {
-      const fieldState = createMockFieldState(true, false, [
+      const fieldTree = createMockFieldTree(true, false, [
         { kind: 'required', message: 'This field is required' },
       ]);
       const hasSubmitted = signal(false);
 
       await render(NgxSignalFormErrorComponent, {
         bindings: [
-          inputBinding('field', fieldState),
+          inputBinding('field', fieldTree),
           inputBinding('fieldName', () => 'email'),
           inputBinding('strategy', () => 'on-touch'),
           inputBinding('hasSubmitted', hasSubmitted),
@@ -77,7 +85,7 @@ describe('NgxSignalFormErrorComponent', () => {
     });
 
     it('should render multiple errors', async () => {
-      const fieldState = createMockFieldState(true, true, [
+      const fieldTree = createMockFieldTree(true, true, [
         { kind: 'required', message: 'This field is required' },
         { kind: 'email', message: 'Must be a valid email' },
       ]);
@@ -85,7 +93,7 @@ describe('NgxSignalFormErrorComponent', () => {
 
       const { container } = await render(NgxSignalFormErrorComponent, {
         bindings: [
-          inputBinding('field', fieldState),
+          inputBinding('field', fieldTree),
           inputBinding('fieldName', () => 'email'),
           inputBinding('strategy', () => 'on-touch'),
           inputBinding('hasSubmitted', hasSubmitted),
@@ -103,14 +111,14 @@ describe('NgxSignalFormErrorComponent', () => {
 
   describe('strategy switching', () => {
     it('should show errors immediately with immediate strategy', async () => {
-      const fieldState = createMockFieldState(true, false, [
+      const fieldTree = createMockFieldTree(true, false, [
         { kind: 'required', message: 'This field is required' },
       ]);
       const hasSubmitted = signal(false);
 
       await render(NgxSignalFormErrorComponent, {
         bindings: [
-          inputBinding('field', fieldState),
+          inputBinding('field', fieldTree),
           inputBinding('fieldName', () => 'email'),
           inputBinding('strategy', () => 'immediate'),
           inputBinding('hasSubmitted', hasSubmitted),
@@ -123,14 +131,14 @@ describe('NgxSignalFormErrorComponent', () => {
     });
 
     it('should only show errors after submit with on-submit strategy', async () => {
-      const fieldState = createMockFieldState(true, true, [
+      const fieldTree = createMockFieldTree(true, true, [
         { kind: 'required', message: 'This field is required' },
       ]);
       const hasSubmitted = signal(false);
 
       await render(NgxSignalFormErrorComponent, {
         bindings: [
-          inputBinding('field', fieldState),
+          inputBinding('field', fieldTree),
           inputBinding('fieldName', () => 'email'),
           inputBinding('strategy', () => 'on-submit'),
           inputBinding('hasSubmitted', hasSubmitted),
@@ -148,14 +156,14 @@ describe('NgxSignalFormErrorComponent', () => {
     });
 
     it('should never show errors with manual strategy', async () => {
-      const fieldState = createMockFieldState(true, true, [
+      const fieldTree = createMockFieldTree(true, true, [
         { kind: 'required', message: 'This field is required' },
       ]);
       const hasSubmitted = signal(true);
 
       await render(NgxSignalFormErrorComponent, {
         bindings: [
-          inputBinding('field', fieldState),
+          inputBinding('field', fieldTree),
           inputBinding('fieldName', () => 'email'),
           inputBinding('strategy', () => 'manual'),
           inputBinding('hasSubmitted', hasSubmitted),
@@ -167,14 +175,14 @@ describe('NgxSignalFormErrorComponent', () => {
     });
 
     it('should show errors after submit even if not touched (on-touch strategy)', async () => {
-      const fieldState = createMockFieldState(true, false, [
+      const fieldTree = createMockFieldTree(true, false, [
         { kind: 'required', message: 'This field is required' },
       ]);
       const hasSubmitted = signal(true);
 
       await render(NgxSignalFormErrorComponent, {
         bindings: [
-          inputBinding('field', fieldState),
+          inputBinding('field', fieldTree),
           inputBinding('fieldName', () => 'email'),
           inputBinding('strategy', () => 'on-touch'),
           inputBinding('hasSubmitted', hasSubmitted),
@@ -188,14 +196,14 @@ describe('NgxSignalFormErrorComponent', () => {
 
   describe('WCAG compliance', () => {
     it('should have role="alert" for screen reader announcements', async () => {
-      const fieldState = createMockFieldState(true, true, [
+      const fieldTree = createMockFieldTree(true, true, [
         { kind: 'required', message: 'This field is required' },
       ]);
       const hasSubmitted = signal(false);
 
       await render(NgxSignalFormErrorComponent, {
         bindings: [
-          inputBinding('field', fieldState),
+          inputBinding('field', fieldTree),
           inputBinding('fieldName', () => 'email'),
           inputBinding('strategy', () => 'on-touch'),
           inputBinding('hasSubmitted', hasSubmitted),
@@ -208,14 +216,14 @@ describe('NgxSignalFormErrorComponent', () => {
     });
 
     it('should have aria-live="assertive" for errors (immediate announcement)', async () => {
-      const fieldState = createMockFieldState(true, true, [
+      const fieldTree = createMockFieldTree(true, true, [
         { kind: 'required', message: 'This field is required' },
       ]);
       const hasSubmitted = signal(false);
 
       await render(NgxSignalFormErrorComponent, {
         bindings: [
-          inputBinding('field', fieldState),
+          inputBinding('field', fieldTree),
           inputBinding('fieldName', () => 'email'),
           inputBinding('strategy', () => 'on-touch'),
           inputBinding('hasSubmitted', hasSubmitted),
@@ -227,14 +235,14 @@ describe('NgxSignalFormErrorComponent', () => {
     });
 
     it('should have correct error ID for aria-describedby linking', async () => {
-      const fieldState = createMockFieldState(true, true, [
+      const fieldTree = createMockFieldTree(true, true, [
         { kind: 'required', message: 'This field is required' },
       ]);
       const hasSubmitted = signal(false);
 
       await render(NgxSignalFormErrorComponent, {
         bindings: [
-          inputBinding('field', fieldState),
+          inputBinding('field', fieldTree),
           inputBinding('fieldName', () => 'email'),
           inputBinding('strategy', () => 'on-touch'),
           inputBinding('hasSubmitted', hasSubmitted),
@@ -246,14 +254,14 @@ describe('NgxSignalFormErrorComponent', () => {
     });
 
     it('should generate correct error ID for nested fields', async () => {
-      const fieldState = createMockFieldState(true, true, [
+      const fieldTree = createMockFieldTree(true, true, [
         { kind: 'required', message: 'This field is required' },
       ]);
       const hasSubmitted = signal(false);
 
       await render(NgxSignalFormErrorComponent, {
         bindings: [
-          inputBinding('field', fieldState),
+          inputBinding('field', fieldTree),
           inputBinding('fieldName', () => 'user.profile.email'),
           inputBinding('strategy', () => 'on-touch'),
           inputBinding('hasSubmitted', hasSubmitted),
@@ -267,12 +275,12 @@ describe('NgxSignalFormErrorComponent', () => {
 
   describe('edge cases', () => {
     it('should handle null field state gracefully', async () => {
-      const fieldState = signal(null);
+      const fieldTree = signal(null);
       const hasSubmitted = signal(false);
 
       await render(NgxSignalFormErrorComponent, {
         bindings: [
-          inputBinding('field', fieldState),
+          inputBinding('field', fieldTree),
           inputBinding('fieldName', () => 'email'),
           inputBinding('strategy', () => 'on-touch'),
           inputBinding('hasSubmitted', hasSubmitted),
@@ -284,15 +292,15 @@ describe('NgxSignalFormErrorComponent', () => {
     });
 
     it('should handle field state without errors method', async () => {
-      const fieldState = signal({
+      const fieldTree = signal(() => ({
         invalid: () => true,
         touched: () => true,
-      });
+      }));
       const hasSubmitted = signal(false);
 
       await render(NgxSignalFormErrorComponent, {
         bindings: [
-          inputBinding('field', fieldState),
+          inputBinding('field', fieldTree),
           inputBinding('fieldName', () => 'email'),
           inputBinding('strategy', () => 'on-touch'),
           inputBinding('hasSubmitted', hasSubmitted),
@@ -305,12 +313,12 @@ describe('NgxSignalFormErrorComponent', () => {
     });
 
     it('should handle empty errors array', async () => {
-      const fieldState = createMockFieldState(false, true, []);
+      const fieldTree = createMockFieldTree(false, true, []);
       const hasSubmitted = signal(false);
 
       await render(NgxSignalFormErrorComponent, {
         bindings: [
-          inputBinding('field', fieldState),
+          inputBinding('field', fieldTree),
           inputBinding('fieldName', () => 'email'),
           inputBinding('strategy', () => 'on-touch'),
           inputBinding('hasSubmitted', hasSubmitted),

@@ -1,5 +1,6 @@
 import { Injector } from '@angular/core';
 import { injectFormConfig } from './inject-form-config';
+import { unwrapSignalOrValue } from './unwrap-signal-or-value';
 
 /**
  * Resolves the field name from an HTML element using a 4-tier priority system.
@@ -42,10 +43,7 @@ export function resolveFieldName(
 
   // Priority 2: Custom resolver
   if (config.fieldNameResolver) {
-    const resolver =
-      typeof config.fieldNameResolver === 'function'
-        ? config.fieldNameResolver()
-        : config.fieldNameResolver;
+    const resolver = unwrapSignalOrValue(config.fieldNameResolver);
     const customName = resolver(element);
     if (customName) {
       return customName;

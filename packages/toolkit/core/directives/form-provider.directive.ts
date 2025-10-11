@@ -1,6 +1,13 @@
-import { Directive, input, signal, effect, inject } from '@angular/core';
+import {
+  Directive,
+  input,
+  signal,
+  effect,
+  inject,
+  computed,
+} from '@angular/core';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
-import type { ErrorDisplayStrategy } from '../types';
+import type { ErrorDisplayStrategy, SignalOrValue } from '../types';
 
 /**
  * Form context provided to child directives and components.
@@ -58,8 +65,8 @@ export interface NgxSignalFormContext<TForm = unknown> {
           get form() {
             return directive.form();
           },
-          hasSubmitted: directive.hasSubmitted,
-          errorStrategy: directive.errorStrategy,
+          hasSubmitted: () => directive.hasSubmitted(),
+          errorStrategy: () => directive.resolvedErrorStrategy(),
         };
       },
     },
@@ -71,13 +78,26 @@ export class NgxSignalFormProviderDirective<TForm = unknown> {
   /**
    * The Signal Forms instance to provide.
    */
-  readonly form = input<TForm | null>(null, { alias: 'ngxSignalFormProvider' });
+  readonly form = input.required<TForm>({ alias: 'ngxSignalFormProvider' });
 
   /**
    * Error display strategy for this form.
    * Defaults to global config or 'on-touch'.
    */
-  readonly errorStrategy = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorStrategy = input<
+    SignalOrValue<ErrorDisplayStrategy> | null | undefined
+  >(undefined);
+
+  protected readonly resolvedErrorStrategy = computed(() => {
+    const provided = this.errorStrategy();
+    if (provided !== null && provided !== undefined) {
+      return typeof provided === 'function' ? provided() : provided;
+    }
+
+    // Config is already normalized with defaults
+    const configured = this.#config.defaultErrorStrategy;
+    return typeof configured === 'function' ? configured() : configured;
+  });
 
   /**
    * Whether the form has been submitted at least once.
@@ -104,7 +124,7 @@ export class NgxSignalFormProviderDirective<TForm = unknown> {
         console.log('[NgxSignalFormProviderDirective] Form state:', {
           form: this.form(),
           hasSubmitted: this.hasSubmitted(),
-          errorStrategy: this.errorStrategy(),
+          errorStrategy: this.resolvedErrorStrategy(),
         });
       });
     }

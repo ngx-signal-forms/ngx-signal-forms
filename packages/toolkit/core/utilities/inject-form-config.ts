@@ -2,6 +2,7 @@ import { Injector, inject } from '@angular/core';
 import { NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import { assertInjector } from './assert-injector';
 import type { NgxSignalFormsConfig } from '../types';
+import { normalizeSignalFormsConfig } from './normalize-config';
 
 /**
  * Custom Inject Function (CIF) for retrieving the global form configuration.
@@ -34,14 +35,7 @@ export function injectFormConfig(injector?: Injector): NgxSignalFormsConfig {
     injector,
     () => {
       const config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
-
-      // Return provided config or default
-      return (
-        config ?? {
-          strictFieldResolution: false,
-          debug: false,
-        }
-      );
+      return normalizeSignalFormsConfig(config);
     },
   );
 }

@@ -150,6 +150,35 @@ describe('injectFieldControl', () => {
     }).toThrow(/Field "address.city" not found in form/i);
   });
 
+  it('should throw error when form instance is not available (required input)', () => {
+    const config: NgxSignalFormsConfig = { strictFieldResolution: false };
+
+    const injector = Injector.create({
+      providers: [
+        {
+          provide: NGX_SIGNAL_FORM_CONTEXT,
+          useValue: {
+            get form() {
+              throw new Error(
+                'NG0950: Input is required but no value is available yet',
+              );
+            },
+            hasSubmitted: () => false,
+            errorStrategy: () => 'on-touch',
+          } satisfies NgxSignalFormContext,
+        },
+        { provide: NGX_SIGNAL_FORMS_CONFIG, useValue: config },
+      ],
+    });
+
+    const element = document.createElement('input');
+    element.setAttribute('id', 'email');
+
+    expect(() => {
+      injectFieldControl(element, injector);
+    }).toThrow(/Input is required but no value is available yet/i);
+  });
+
   it('should throw when called outside injection context without injector', () => {
     const element = document.createElement('input');
     element.setAttribute('id', 'email');

@@ -3,6 +3,9 @@ import { assertInjector } from './assert-injector';
 import { resolveFieldName } from './field-resolution';
 import { injectFormContext } from './inject-form-context';
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
 /**
  * Custom Inject Function (CIF) for retrieving a specific field control from the form.
  * Works both inside and outside Angular injection context when an injector is provided.
@@ -37,11 +40,10 @@ import { injectFormContext } from './inject-form-context';
  * }
  * ```
  */
-export function injectFieldControl(
+export function injectFieldControl<TControl = unknown>(
   element: HTMLElement | ElementRef<HTMLElement>,
   injector?: Injector,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): any {
+): TControl {
   return assertInjector(
     injectFieldControl as (...args: unknown[]) => unknown,
     injector,
@@ -58,13 +60,14 @@ export function injectFieldControl(
         );
       }
 
+      const formInstance = formContext.form;
+
       // Navigate the field path (supports nested paths like "address.city")
       const pathParts = fieldName.split('.');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let control: any = formContext.form;
+      let control: unknown = formInstance;
 
       for (const part of pathParts) {
-        if (!control || typeof control !== 'object' || !(part in control)) {
+        if (!isRecord(control) || !(part in control)) {
           throw new Error(
             `[ngx-signal-forms] Field "${fieldName}" not found in form. ` +
               `Could not access property "${part}".`,
@@ -73,7 +76,7 @@ export function injectFieldControl(
         control = control[part];
       }
 
-      return control;
+      return control as TControl;
     },
   );
 }

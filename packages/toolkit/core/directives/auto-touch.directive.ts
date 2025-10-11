@@ -1,4 +1,5 @@
 import { Directive, inject, input, HostListener } from '@angular/core';
+import type { FieldTree } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 
 /**
@@ -37,9 +38,9 @@ export class NgxSignalFormAutoTouchDirective {
 
   /**
    * The Signal Forms control for this field.
+   * Accepts a FieldTree (callable function returning FieldState).
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  readonly control = input.required<any>();
+  readonly control = input.required<FieldTree<unknown>>();
 
   /**
    * Handle blur event to mark field as touched.

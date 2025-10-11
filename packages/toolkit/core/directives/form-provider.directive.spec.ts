@@ -47,7 +47,7 @@ describe('NgxSignalFormProviderDirective', () => {
 
       await render(
         `<form [ngxSignalFormProvider]="form">
-          <context-display />
+          <ngx-signal-form-context-display />
         </form>`,
         {
           imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
@@ -65,7 +65,7 @@ describe('NgxSignalFormProviderDirective', () => {
 
       await render(
         `<form [ngxSignalFormProvider]="form" [errorStrategy]="'immediate'">
-          <context-display />
+          <ngx-signal-form-context-display />
         </form>`,
         {
           imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
@@ -78,12 +78,38 @@ describe('NgxSignalFormProviderDirective', () => {
       );
     });
 
+    it('should inherit strategy from global config', async () => {
+      const mockForm = createMockForm();
+
+      await render(
+        `<form [ngxSignalFormProvider]="form">
+            <ngx-signal-form-context-display />
+          </form>`,
+        {
+          imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
+          componentProperties: { form: mockForm },
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORMS_CONFIG,
+              useValue: {
+                defaultErrorStrategy: 'on-submit',
+              } satisfies NgxSignalFormsConfig,
+            },
+          ],
+        },
+      );
+
+      expect(screen.getByTestId('error-strategy')).toHaveTextContent(
+        'on-submit',
+      );
+    });
+
     it('should use on-submit error strategy when specified', async () => {
       const mockForm = createMockForm();
 
       await render(
         `<form [ngxSignalFormProvider]="form" [errorStrategy]="'on-submit'">
-          <context-display />
+          <ngx-signal-form-context-display />
         </form>`,
         {
           imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
@@ -101,7 +127,7 @@ describe('NgxSignalFormProviderDirective', () => {
 
       await render(
         `<form [ngxSignalFormProvider]="form">
-          <context-display />
+          <ngx-signal-form-context-display />
         </form>`,
         {
           imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
@@ -120,7 +146,7 @@ describe('NgxSignalFormProviderDirective', () => {
 
       const { rerender } = await render(
         `<form [ngxSignalFormProvider]="form" [errorStrategy]="strategy">
-          <context-display />
+          <ngx-signal-form-context-display />
         </form>`,
         {
           imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
@@ -148,7 +174,7 @@ describe('NgxSignalFormProviderDirective', () => {
 
       await render(
         `<form [ngxSignalFormProvider]="form">
-          <context-display />
+          <ngx-signal-form-context-display />
         </form>`,
         {
           imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
@@ -251,9 +277,9 @@ describe('NgxSignalFormProviderDirective', () => {
 
       await render(
         `<form [ngxSignalFormProvider]="outer" [errorStrategy]="'on-touch'">
-          <outer-display />
+          <ngx-signal-form-outer-display />
           <div [ngxSignalFormProvider]="inner" [errorStrategy]="'immediate'">
-            <inner-display />
+            <ngx-signal-form-inner-display />
           </div>
         </form>`,
         {

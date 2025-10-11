@@ -1,7 +1,10 @@
 import { Injector } from '@angular/core';
 import { describe, it, expect } from 'vitest';
 import { injectFormConfig } from './inject-form-config';
-import { NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
+import {
+  NGX_SIGNAL_FORMS_CONFIG,
+  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+} from '../tokens';
 import type { NgxSignalFormsConfig } from '../types';
 
 describe('injectFormConfig', () => {
@@ -17,7 +20,11 @@ describe('injectFormConfig', () => {
     });
 
     const result = injectFormConfig(injector);
-    expect(result).toBe(customConfig);
+    expect(result).toMatchObject({
+      strictFieldResolution: true,
+      debug: true,
+      autoAria: false,
+    });
   });
 
   it('should return default config when no config provided', () => {
@@ -25,8 +32,7 @@ describe('injectFormConfig', () => {
 
     const result = injectFormConfig(injector);
     expect(result).toEqual({
-      strictFieldResolution: false,
-      debug: false,
+      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
     });
   });
 
@@ -43,6 +49,7 @@ describe('injectFormConfig', () => {
 
     const result = injectFormConfig(injector);
     expect(result.strictFieldResolution).toBe(true);
+    expect(result.autoAria).toBe(DEFAULT_NGX_SIGNAL_FORMS_CONFIG.autoAria);
   });
 
   it('should throw when called outside injection context without injector', () => {

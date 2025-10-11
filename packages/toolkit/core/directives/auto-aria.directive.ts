@@ -7,6 +7,7 @@ import {
   input,
   signal,
 } from '@angular/core';
+import type { FieldTree } from '@angular/forms/signals';
 import {
   resolveFieldName,
   generateErrorId,
@@ -55,10 +56,9 @@ export class NgxSignalFormAutoAriaDirective {
 
   /**
    * The Signal Forms control for this field.
-   * This should be passed from the parent form.
+   * Accepts a FieldTree (callable function returning FieldState).
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  readonly control = input.required<any>();
+  readonly control = input.required<FieldTree<unknown>>();
 
   /**
    * Resolved field name for this control.

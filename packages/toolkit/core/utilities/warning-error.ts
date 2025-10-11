@@ -1,5 +1,48 @@
 import { customError } from '@angular/forms/signals';
-import type { CustomValidationError } from '@angular/forms/signals';
+import type {
+  CustomValidationError,
+  ValidationError,
+} from '@angular/forms/signals';
+
+/**
+ * Type guard to check if a validation error is a warning.
+ * Warnings are errors with `kind` starting with `'warn:'`.
+ *
+ * @param error - The validation error to check
+ * @returns `true` if the error is a warning, `false` otherwise
+ *
+ * @example
+ * ```typescript
+ * const error = customError({ kind: 'required', message: 'Field required' });
+ * const warning = warningError('weak-password', 'Consider stronger password');
+ *
+ * isWarningError(error);   // false
+ * isWarningError(warning); // true
+ * ```
+ */
+export function isWarningError(error: ValidationError): boolean {
+  return error.kind.startsWith('warn:');
+}
+
+/**
+ * Type guard to check if a validation error is a blocking error.
+ * Blocking errors are errors with `kind` NOT starting with `'warn:'`.
+ *
+ * @param error - The validation error to check
+ * @returns `true` if the error is blocking, `false` if it's a warning
+ *
+ * @example
+ * ```typescript
+ * const error = customError({ kind: 'required', message: 'Field required' });
+ * const warning = warningError('weak-password', 'Consider stronger password');
+ *
+ * isBlockingError(error);   // true
+ * isBlockingError(warning); // false
+ * ```
+ */
+export function isBlockingError(error: ValidationError): boolean {
+  return !error.kind.startsWith('warn:');
+}
 
 /**
  * Creates a warning validation error using the 'warn:' kind convention.

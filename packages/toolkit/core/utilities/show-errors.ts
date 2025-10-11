@@ -1,18 +1,17 @@
 import type { Signal } from '@angular/core';
 import { computed } from '@angular/core';
-import type { SignalLike } from '@angular/aria/ui-patterns';
-import type { ErrorDisplayStrategy } from '../types';
+import type { ErrorDisplayStrategy, SignalOrValue } from '../types';
 import { computeShowErrors as baseComputeShowErrors } from './error-strategies';
 
 /**
  * Re-export the computeShowErrors function from error-strategies.
  * This provides a cleaner import path for consumers.
  *
- * Uses SignalLike<T> from @angular/aria for flexible inputs.
+ * Accepts signals, functions, or plain values for flexible usage.
  *
- * @param field - SignalLike containing the field state from Signal Forms
- * @param strategy - Error display strategy (SignalLike or static value)
- * @param hasSubmitted - SignalLike indicating if the form has been submitted
+ * @param field - Signal/function containing the field state from Signal Forms
+ * @param strategy - Error display strategy (signal/function or static value)
+ * @param hasSubmitted - Signal/function indicating if the form has been submitted
  * @returns Signal<boolean> indicating if errors should be displayed
  *
  * @example
@@ -32,7 +31,7 @@ export const showErrors = baseComputeShowErrors;
  * Creates a computed signal that determines if errors should be shown for a field.
  * This is a convenience wrapper that handles common use cases.
  *
- * @param field - SignalLike containing the field state
+ * @param field - Signal/function containing the field state
  * @param options - Configuration options
  * @returns Signal<boolean> indicating if errors should be displayed
  *
@@ -51,10 +50,10 @@ export const showErrors = baseComputeShowErrors;
  * ```
  */
 export function createShowErrorsSignal<T>(
-  field: SignalLike<T>,
+  field: SignalOrValue<T>,
   options: {
-    strategy?: SignalLike<ErrorDisplayStrategy> | ErrorDisplayStrategy;
-    hasSubmitted: SignalLike<boolean>;
+    strategy?: SignalOrValue<ErrorDisplayStrategy>;
+    hasSubmitted: SignalOrValue<boolean>;
   },
 ): Signal<boolean> {
   const strategy = options.strategy ?? 'on-touch';

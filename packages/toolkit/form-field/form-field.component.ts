@@ -5,20 +5,12 @@ import {
   inject,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { SignalLike } from '@angular/aria/ui-patterns';
+import type { FieldTree } from '@angular/forms/signals';
 import {
   NgxSignalFormErrorComponent,
   NGX_SIGNAL_FORM_CONTEXT,
 } from '@ngx-signal-forms/toolkit/core';
-
-/**
- * Error display strategy determines when validation errors are shown to the user.
- */
-type ErrorDisplayStrategy =
-  | 'immediate' // Show errors as they occur
-  | 'on-touch' // Show after blur or submit (WCAG recommended)
-  | 'on-submit' // Show only after submit
-  | 'manual'; // Developer controls display
+import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
 
 /**
  * Form field wrapper component with automatic error/warning display.
@@ -28,6 +20,9 @@ type ErrorDisplayStrategy =
  * - Automatic error and warning display
  * - Accessibility-compliant structure
  * - Content projection for labels and inputs
+ * - Type-safe field binding with generics
+ *
+ * @template TValue The type of the field value (defaults to unknown)
  *
  * @example Basic Usage
  * ```html
@@ -57,28 +52,33 @@ type ErrorDisplayStrategy =
  *   <!-- Manual error display here -->
  * </ngx-signal-form-field>
  * ```
+ *
+ * @example Type Inference
+ * ```typescript
+ * // TypeScript knows email is FieldTree<string>
+ * const emailField = form.email;
+ * // Component infers TValue = string automatically
+ * ```
  */
 @Component({
   selector: 'ngx-signal-form-field',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgxSignalFormErrorComponent],
   template: `
-    <div class="ngx-signal-form-field">
-      <div class="ngx-signal-form-field__content">
-        <ng-content />
-      </div>
-      @if (showErrors()) {
-        <ngx-signal-form-error
-          [field]="field"
-          [fieldName]="fieldName()"
-          [strategy]="strategy()"
-          [hasSubmitted]="hasSubmitted"
-        />
-      }
+    <div class="ngx-signal-form-field__content">
+      <ng-content />
     </div>
+    @if (showErrors()) {
+      <ngx-signal-form-error
+        [field]="field()"
+        [fieldName]="fieldName()"
+        [strategy]="effectiveStrategy"
+        [hasSubmitted]="hasSubmitted"
+      />
+    }
   `,
   styles: `
-    .ngx-signal-form-field {
+    :host {
       display: flex;
       flex-direction: column;
       gap: var(--ngx-signal-form-field-gap, 0.5rem);
@@ -90,12 +90,13 @@ type ErrorDisplayStrategy =
     }
   `,
 })
-export class NgxSignalFormFieldComponent {
+export class NgxSignalFormFieldComponent<TValue = unknown> {
   /**
    * The Signal Forms field to display.
-   * Accepts any SignalLike that returns the field state.
+   * Accepts a FieldTree from Angular Signal Forms.
+   * Generic type parameter allows type inference from the provided field.
    */
-  readonly field = input.required<SignalLike<unknown>>();
+  readonly field = input.required<FieldTree<TValue>>();
 
   /**
    * The field name used for generating error IDs.
@@ -105,12 +106,12 @@ export class NgxSignalFormFieldComponent {
 
   /**
    * Error display strategy.
-   * Can be a SignalLike for dynamic strategy or a static value.
+   * Can be a function returning strategy or a static value.
    * @default Inherited from form context or 'on-touch'
    */
   readonly strategy = input<
-    SignalLike<ErrorDisplayStrategy> | ErrorDisplayStrategy
-  >('on-touch');
+    (() => ErrorDisplayStrategy) | ErrorDisplayStrategy | null
+  >(null);
 
   /**
    * Whether to show the automatic error display.
@@ -125,12 +126,22 @@ export class NgxSignalFormFieldComponent {
   readonly #formContext = inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true });
 
   /**
+   * Effective error display strategy combining component input and form context defaults.
+   */
+  protected readonly effectiveStrategy = computed(() => {
+    const explicit = this.strategy();
+    if (explicit !== null) {
+      return typeof explicit === 'function' ? explicit() : explicit;
+    }
+
+    const contextStrategy = this.#formContext?.errorStrategy?.();
+    return contextStrategy ?? 'on-touch';
+  });
+
+  /**
    * Computed signal for submission state.
    */
   protected readonly hasSubmitted = computed(() => {
-    const ctx = this.#formContext;
-    return ctx && typeof ctx === 'object' && 'hasSubmitted' in ctx
-      ? (ctx as { hasSubmitted: () => boolean }).hasSubmitted()
-      : false;
+    return this.#formContext?.hasSubmitted?.() ?? false;
   });
 }

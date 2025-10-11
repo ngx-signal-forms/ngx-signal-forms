@@ -1,17 +1,16 @@
 import type { Signal } from '@angular/core';
 import { computed } from '@angular/core';
-import type { SignalLike } from '@angular/aria/ui-patterns';
-import type { ErrorDisplayStrategy } from '../types';
+import type { ErrorDisplayStrategy, SignalOrValue } from '../types';
+import { unwrapSignalOrValue } from './unwrap-signal-or-value';
 
 /**
  * Computes whether errors should be shown based on field state and error display strategy.
  *
- * Uses SignalLike<T> from @angular/aria for flexible inputs that accept signals,
- * computed signals, or plain functions returning values.
+ * Accepts signals, functions, or plain values for flexible usage.
  *
- * @param field - SignalLike containing the field state from Signal Forms
- * @param strategy - Error display strategy (SignalLike or static value)
- * @param hasSubmitted - SignalLike indicating if the form has been submitted
+ * @param field - Signal/function containing the field state from Signal Forms
+ * @param strategy - Error display strategy (signal/function or static value)
+ * @param hasSubmitted - Signal/function indicating if the form has been submitted
  * @returns Signal<boolean> indicating if errors should be displayed
  *
  * @example
@@ -39,15 +38,15 @@ import type { ErrorDisplayStrategy } from '../types';
  * ```
  */
 export function computeShowErrors<T>(
-  field: SignalLike<T>,
-  strategy: SignalLike<ErrorDisplayStrategy> | ErrorDisplayStrategy,
-  hasSubmitted: SignalLike<boolean>,
+  field: SignalOrValue<T>,
+  strategy: SignalOrValue<ErrorDisplayStrategy>,
+  hasSubmitted: SignalOrValue<boolean>,
 ): Signal<boolean> {
   return computed(() => {
-    // Normalize SignalLike to values
-    const fieldState = typeof field === 'function' ? field() : field;
-    const submitted =
-      typeof hasSubmitted === 'function' ? hasSubmitted() : hasSubmitted;
+    // Unwrap all SignalOrValue inputs
+    const fieldState = unwrapSignalOrValue(field);
+    const strategyValue = unwrapSignalOrValue(strategy);
+    const submitted = unwrapSignalOrValue(hasSubmitted);
 
     // Handle null/undefined field state
     if (!fieldState || typeof fieldState !== 'object') {
@@ -67,10 +66,6 @@ export function computeShowErrors<T>(
       'function'
         ? (fieldState as unknown as { touched: () => boolean }).touched()
         : false;
-
-    // Get strategy value (support both SignalLike and static)
-    const strategyValue =
-      typeof strategy === 'function' ? strategy() : strategy;
 
     // Apply strategy logic
     switch (strategyValue) {
