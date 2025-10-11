@@ -18,10 +18,6 @@ Directives, components, and utilities that enhance Angular's Signal Forms with a
 npm install @ngx-signal-forms/toolkit
 ```
 
-```bash
-pnpm add @ngx-signal-forms/toolkit
-```
-
 ## Why This Library?
 
 Angular Signal Forms (introduced in v21) provides an excellent foundation for reactive forms with built-in validation and type safety. However, it doesn't include:
