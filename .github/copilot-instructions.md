@@ -87,7 +87,7 @@ applyTo: '**'
 
 ### Unit Tests (Vitest)
 
-- Follow [`.github/instructions/vitest-test.instructions.md`](./instructions/vitest-test.instructions.md)
+- Follow [`.github/instructions/vitest.instructions.md`](./instructions/vitest.instructions.md)
 - Use Testing Library patterns
 - Test behavior, not implementation
 
