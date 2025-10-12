@@ -3,13 +3,14 @@ import { describe, it, expect } from 'vitest';
 import { injectFormContext } from './inject-form-context';
 import { NGX_SIGNAL_FORM_CONTEXT } from '../tokens';
 import type { NgxSignalFormContext } from '../directives/form-provider.directive';
+import type { SubmittedStatus } from '@angular/forms/signals';
 
 describe('injectFormContext', () => {
   it('should return form context when available', () => {
     const mockForm = { email: signal({ value: '', invalid: () => false }) };
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      hasSubmitted: () => false,
+      submittedStatus: () => 'unsubmitted',
       errorStrategy: () => 'on-touch',
     };
 
@@ -36,11 +37,11 @@ describe('injectFormContext', () => {
     }).toThrow(/can only be used within an injection context/i);
   });
 
-  it('should access hasSubmitted signal from context', () => {
-    const hasSubmittedSignal = signal(true);
+  it('should access submittedStatus signal from context', () => {
+    const submittedStatusSignal = signal<SubmittedStatus>('submitted');
     const mockContext: NgxSignalFormContext = {
       form: {},
-      hasSubmitted: hasSubmittedSignal,
+      submittedStatus: submittedStatusSignal,
       errorStrategy: () => 'immediate',
     };
 
@@ -49,6 +50,6 @@ describe('injectFormContext', () => {
     });
 
     const result = injectFormContext(injector);
-    expect(result.hasSubmitted()).toBe(true);
+    expect(result.submittedStatus()).toBe('submitted');
   });
 });

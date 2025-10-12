@@ -44,7 +44,7 @@ Angular 21+ Signal Forms is an **experimental API** providing a reactive, signal
 
 ```typescript
 import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { form, Control, required, minLength, email, submit } from '@angular/forms/signals';
+import { form, Control, required, minLength, email, validate, customError, schema, submit } from '@angular/forms/signals';
 ```
 
 ### Basic Form Example
@@ -55,7 +55,7 @@ import { form, Control, required, minLength, email, submit } from '@angular/form
   imports: [Control],
   changeDetection: ChangeDetectionStrategy.OnPush, // Required
   template: `
-    <form (submit)="onSubmit($event)">
+    <form (ngSubmit)="save()">
       <input [control]="userForm.name" />
       @if (userForm.name().invalid() && userForm.name().touched()) {
         @for (error of userForm.name().errors(); track error.kind) {
@@ -75,9 +75,12 @@ export class UserFormComponent {
     email(path.email, { message: 'Valid email required' });
   });
 
-  protected readonly onSubmit = submit(this.userForm, async (data) => {
-    console.log('Form data:', data().value());
-  });
+  protected save(): void {
+    if (this.userForm().valid()) {
+      console.log('Submit:', this.#userData());
+      // Handle form submission (API call, navigation, etc.)
+    }
+  }
 }
 ```
 
@@ -248,28 +251,103 @@ export class SkillsComponent {
 
 ## Form Submission
 
+### Built-in Submission State Tracking
+
+**Angular Signal Forms includes built-in submission state tracking** via the `submittedStatus()` signal on all `FieldState` objects:
+
 ```typescript
-// Using submit() helper
+// All FieldState objects have submittedStatus signal
+this.userForm().submittedStatus(); // 'unsubmitted' | 'submitting' | 'submitted'
+
+// Built-in reset method
+this.userForm().resetSubmittedStatus();
+
+// Automatic state propagation to all descendants
+submit(this.userForm, async (field) => {
+  // submittedStatus automatically becomes 'submitting'
+  await apiCall();
+  // submittedStatus automatically becomes 'submitted'
+});
+```
+
+**Key features:**
+
+- State values: `'unsubmitted'` | `'submitting'` | `'submitted'`
+- Automatically propagates to all field descendants
+- Reset with `resetSubmittedStatus()` method
+- No manual tracking needed when using `submit()` helper
+
+### Option 1: submit() Helper (Recommended)
+
+The `submit()` helper is the **preferred pattern** for most forms. It provides:
+
+- Automatic `markAllAsTouched()` internally (shows all errors on submit)
+- Automatic `submittedStatus` state management
+- Async operation handling with pending state management
+- Server error integration
+- Type-safe form data access
+
+```typescript
+import { submit } from '@angular/forms/signals';
+
 @Component({
-  template: `<form (submit)="onSubmit($event)">...</form>`,
+  template: `<form (ngSubmit)="handleSubmit()">...</form>`,
 })
-export class MyFormComponent {
-  protected readonly onSubmit = submit(this.myForm, async (formData) => {
+export class UserFormComponent {
+  readonly #userData = signal({ email: '' });
+  protected readonly userForm = form(this.#userData /* validators */);
+
+  /// submit() helper automatically marks all fields as touched
+  readonly #submitHandler = submit(this.userForm, async (formData) => {
     try {
-      await this.saveData(formData().value());
-      return null; // Success
+      await this.apiService.save(formData().value());
+      return null; // Success - no errors
     } catch (error) {
+      // Return server errors to display on form
       return [
         {
           kind: 'save_error',
-          message: 'Failed to save',
+          message: 'Failed to save. Please try again.',
           field: formData,
         },
       ];
     }
   });
+
+  protected handleSubmit(): void {
+    void this.#submitHandler();
+  }
 }
 ```
+
+### Option 2: Direct Method (Manual Approach)
+
+For simple cases where you don't need async submission or server error handling:
+
+```typescript
+@Component({
+  template: `<form (ngSubmit)="save()">...</form>`,
+})
+export class SimpleFormComponent {
+  readonly #userData = signal({ email: '' });
+  protected readonly userForm = form(this.#userData /* validators */);
+
+  protected save(): void {
+    if (this.userForm().valid()) {
+      console.log('Submit:', this.#userData());
+      // Handle submission (e.g., call a service, navigate)
+    }
+    // Note: You'll need to manually mark fields as touched if desired
+  }
+}
+```
+
+**When to use each approach:**
+
+| Pattern               | Use Case                                  | Auto Touch | Async Support | Server Errors |
+| --------------------- | ----------------------------------------- | ---------- | ------------- | ------------- |
+| **`submit()` helper** | Most forms with validation & API calls    | ✅ Yes     | ✅ Yes        | ✅ Yes        |
+| **Direct `save()`**   | Minimal forms without async/server errors | ❌ Manual  | ⚠️ Manual     | ❌ No         |
 
 ## Best Practices
 
@@ -322,17 +400,17 @@ customError({
 
 ### Quick Reference
 
-| Reactive Forms                  | Signal Forms                                    |
-| ------------------------------- | ----------------------------------------------- |
-| `FormBuilder` + `fb.group({})`  | `signal({})` + `form(signal, validators)`       |
-| `[formGroup]="form"`            | N/A (no form directive needed)                  |
-| `formControlName="field"`       | `[control]="form.field"`                        |
-| `form.get('field')`             | `form.field()`                                  |
-| `Validators.required`           | `required(path.field, { message: '...' })`      |
-| `Validators.minLength(3)`       | `minLength(path.field, 3, { message: '...' })`  |
-| `form.value`                    | `form().value()`                                |
-| `form.valueChanges.subscribe()` | `effect(() => { const val = form().value(); })` |
-| `form.markAllAsTouched()`       | `form.field1().markAsTouched()` (per field)     |
+| Reactive Forms                  | Signal Forms                                             |
+| ------------------------------- | -------------------------------------------------------- |
+| `FormBuilder` + `fb.group({})`  | `signal({})` + `form(signal, validators)`                |
+| `[formGroup]="form"`            | N/A (no form directive needed)                           |
+| `formControlName="field"`       | `[control]="form.field"`                                 |
+| `form.get('field')`             | `form.field()`                                           |
+| `Validators.required`           | `required(path.field, { message: '...' })`               |
+| `Validators.minLength(3)`       | `minLength(path.field, 3, { message: '...' })`           |
+| `form.value`                    | `form().value()`                                         |
+| `form.valueChanges.subscribe()` | `effect(() => { const val = form().value(); })`          |
+| `form.markAllAsTouched()`       | Use `submit()` helper (auto) or manually mark each field |
 
 ### Migration Example
 
@@ -373,7 +451,7 @@ export class UserFormComponent {
 | `fieldRef.errors?.['required']`  | `form.field().errors()[0].kind === 'required'` |
 | `fieldRef.touched`               | `form.field().touched()`                       |
 | `userForm.invalid`               | `form().invalid()`                             |
-| `(ngSubmit)="onSubmit(form)"`    | `submit(form, async (data) => {...})`          |
+| `(ngSubmit)="save()"`            | `(ngSubmit)="save()"` (same)                   |
 
 ### Migration Example
 
@@ -401,7 +479,7 @@ export class UserFormComponent {
   imports: [Control],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <form (submit)="onSubmit($event)">
+    <form (ngSubmit)="save()">
       <input [control]="userForm.name" />
       @if (userForm.name().invalid()) {
         @for (error of userForm.name().errors(); track error.kind) {
@@ -417,9 +495,12 @@ export class UserFormComponent {
     required(path.name, { message: 'Name required' });
     minLength(path.name, 3, { message: 'Min 3 chars' });
   });
-  protected readonly onSubmit = submit(this.userForm, async (data) => {
-    console.log(data().value());
-  });
+
+  protected save(): void {
+    if (this.userForm().valid()) {
+      console.log('Submit:', this.#userData());
+    }
+  }
 }
 ```
 
@@ -463,12 +544,13 @@ For production applications requiring automatic accessibility, error display str
 The toolkit enhances Signal Forms with:
 
 - ✅ **Automatic ARIA attributes** (`aria-invalid`, `aria-describedby`)
-- ✅ **Auto-touch on blur** (progressive error disclosure)
 - ✅ **Error display strategies** (immediate, on-touch, on-submit, manual)
 - ✅ **Warning support** (non-blocking validation messages)
 - ✅ **Form field wrappers** (consistent layout + auto-error display)
 - ✅ **WCAG 2.2 compliance** by default
 - ✅ **67% less boilerplate** code
+
+_Note: Angular Signal Forms' `[control]` directive automatically handles marking fields as touched on blur._
 
 ### Quick Install
 
@@ -504,16 +586,7 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
 
 ### Complete Documentation
 
-See [signal-forms-toolkit.instructions.md](./signal-forms-toolkit.instructions.md) for complete documentation including:
-
-- Configuration and setup
-- All directives and components
-- Error display strategies
-- Warning support (non-blocking validation)
-- CSS customization
-- Testing utilities
-- Migration guides
-- Best practices
+See [signal-forms-toolkit.instructions.md](./signal-forms-toolkit.instructions.md) for complete documentation on the enhancement library.
 
 ---
 
@@ -529,5 +602,3 @@ See [signal-forms-toolkit.instructions.md](./signal-forms-toolkit.instructions.m
 
 - **Angular 21.0.0+**: Signal Forms experimental API
 - **Breaking Changes**: API may change before stable release
-- **Production Use**: Evaluate carefully; experimental features may have breaking changes
-- **Coexistence**: Can run alongside Reactive/Template Driven Forms during migration

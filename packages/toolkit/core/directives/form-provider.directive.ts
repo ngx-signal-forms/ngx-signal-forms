@@ -1,57 +1,105 @@
-import {
-  Directive,
-  input,
-  signal,
-  effect,
-  inject,
-  computed,
-} from '@angular/core';
+import { Directive, input, inject, computed, type Signal } from '@angular/core';
+import type {
+  FieldTree,
+  SubmittedStatus,
+  FieldState,
+} from '@angular/forms/signals';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type { ErrorDisplayStrategy, ReactiveOrStatic } from '../types';
 
 /**
- * Form context provided to child directives and components.
- *
- * @template TForm - The Signal Forms instance type
+ * Extended FieldState interface with experimental submittedStatus API.
+ * Required because Angular 21's experimental APIs may not be fully typed yet.
  */
-export interface NgxSignalFormContext<TForm = unknown> {
+interface FieldStateWithSubmittedStatus extends FieldState<unknown> {
+  submittedStatus(): SubmittedStatus;
+}
+
+/**
+ * Form context provided to child directives and components.
+ */
+export interface NgxSignalFormContext {
   /**
-   * The Signal Forms instance.
+   * The Signal Forms instance (FieldTree).
    */
-  form: TForm;
+  form: FieldTree<unknown>;
 
   /**
-   * Whether the form has been submitted at least once.
+   * Angular's built-in submission status signal.
+   * Returns 'unsubmitted' | 'submitting' | 'submitted'.
    */
-  hasSubmitted: () => boolean;
+  submittedStatus: Signal<SubmittedStatus>;
 
   /**
    * The error display strategy for this form.
    */
-  errorStrategy: () => ErrorDisplayStrategy;
+  errorStrategy: Signal<ErrorDisplayStrategy>;
 }
 
 /**
  * Provides form context to child directives and components via DI.
  *
+ * **Integrates with Angular Signal Forms built-in submission tracking.**
+ *
  * **Responsibilities**:
- * - Provides form instance to child directives
- * - Tracks form submission state
- * - Manages error display strategy
- * - Auto-resets on form reset
+ * - Provides form instance to child directives via DI
+ * - Exposes Angular's built-in `submittedStatus` signal
+ * - Manages error display strategy for the form
  *
- * @template TForm - The Signal Forms instance type
+ * **Key Features**:
+ * - **No Manual Tracking**: Uses Angular's built-in `submittedStatus()` from FieldState
+ * - **DI-based Context**: Provides form context without prop drilling
+ * - **Strategy Management**: Centralizes error display strategy for child components
  *
- * @example
+ * @example Basic usage with Angular's submit() helper
+ * ```typescript
+ * import { submit } from '@angular/forms/signals';
+ *
+ * @Component({
+ *   template: `
+ *     <form [ngxSignalFormProvider]="userForm" (ngSubmit)="handleSubmit()">
+ *       <input [control]="userForm.email" />
+ *       <ngx-signal-form-error [field]="userForm.email" fieldName="email" />
+ *       <button type="submit">Submit</button>
+ *     </form>
+ *   `
+ * })
+ * export class UserFormComponent {
+ *   readonly #model = signal({ email: '' });
+ *   protected readonly userForm = form(this.#model, emailSchema);
+ *
+ *   readonly #submitHandler = submit(this.userForm, async (formData) => {
+ *     await this.api.save(formData().value());
+ *     return null; // No server errors
+ *   });
+ *
+ *   protected handleSubmit(): void {
+ *     void this.#submitHandler(); // Angular manages submittedStatus automatically
+ *   }
+ * }
+ * ```
+ *
+ * @example With custom error strategy
  * ```html
  * <form
  *   [ngxSignalFormProvider]="userForm"
- *   [errorStrategy]="'on-touch'"
- *   (ngSubmit)="onSubmit($event)"
+ *   [errorStrategy]="'immediate'"
+ *   (ngSubmit)="handleSubmit()"
  * >
  *   <input [control]="userForm.email" />
- *   <!-- Auto-ARIA and Auto-Touch directives will use this context -->
+ *   <!-- Errors show immediately as user types -->
  * </form>
+ * ```
+ *
+ * @example Direct submission without submit() helper
+ * ```typescript
+ * protected save(): void {
+ *   // Note: This won't update submittedStatus automatically
+ *   // Use submit() helper for automatic tracking
+ *   if (this.userForm().valid()) {
+ *     console.log('Data:', this.#model());
+ *   }
+ * }
  * ```
  */
 @Directive({
@@ -65,83 +113,65 @@ export interface NgxSignalFormContext<TForm = unknown> {
           get form() {
             return directive.form();
           },
-          hasSubmitted: () => directive.hasSubmitted(),
-          errorStrategy: () => directive.resolvedErrorStrategy(),
+          submittedStatus: directive.submittedStatus,
+          errorStrategy: directive.resolvedErrorStrategy,
         };
       },
     },
   ],
 })
-export class NgxSignalFormProviderDirective<TForm = unknown> {
+export class NgxSignalFormProviderDirective {
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
 
   /**
-   * The Signal Forms instance to provide.
+   * The Signal Forms instance (FieldTree) to provide.
    */
-  readonly form = input.required<TForm>({ alias: 'ngxSignalFormProvider' });
+  readonly form = input.required<FieldTree<unknown>>({
+    alias: 'ngxSignalFormProvider',
+  });
 
   /**
    * Error display strategy for this form.
-   * Defaults to global config or 'on-touch'.
+   * Overrides the global default for all fields in this form.
    */
   readonly errorStrategy = input<
     ReactiveOrStatic<ErrorDisplayStrategy> | null | undefined
   >(undefined);
 
+  /**
+   * Resolved error display strategy (form-level or global default).
+   */
   protected readonly resolvedErrorStrategy = computed(() => {
     const provided = this.errorStrategy();
     if (provided !== null && provided !== undefined) {
       return typeof provided === 'function' ? provided() : provided;
     }
 
-    // Config is already normalized with defaults
     const configured = this.#config.defaultErrorStrategy;
     return typeof configured === 'function' ? configured() : configured;
   });
 
   /**
-   * Whether the form has been submitted at least once.
+   * Access Angular's built-in submittedStatus signal.
+   *
+   * Returns the submission status from the root FieldState:
+   * - `'unsubmitted'` - Form has never been submitted
+   * - `'submitting'` - Form is currently being submitted (async operation)
+   * - `'submitted'` - Form has been submitted at least once
+   *
+   * **Note**: This signal is automatically managed by Angular's `submit()` helper.
+   * When using `submit()`, the status transitions are handled for you.
+   *
+   * @example
+   * ```typescript
+   * const provider = inject(NGX_SIGNAL_FORM_CONTEXT);
+   * const status = provider.submittedStatus(); // 'unsubmitted' | 'submitting' | 'submitted'
+   * ```
    */
-  readonly hasSubmitted = signal(false);
-
-  constructor() {
-    // Listen for form submission via submit event
-    // Note: In real usage, this would be connected to the submit handler
-    // For now, we'll expose a method to mark as submitted
-
-    // Monitor form state for reset
-    // effect(() => {
-    //   const formState = this.form();
-    //   if (formState) {
-    // TODO: Detect form reset - Signal Forms doesn't have a built-in reset signal yet
-    // This would need to be handled by the consumer or via form state changes
-    // formState is already read above to establish dependency
-    // }
-    // });
-
-    if (this.#config.debug) {
-      effect(() => {
-        console.log('[NgxSignalFormProviderDirective] Form state:', {
-          form: this.form(),
-          hasSubmitted: this.hasSubmitted(),
-          errorStrategy: this.resolvedErrorStrategy(),
-        });
-      });
-    }
-  }
-
-  /**
-   * Mark the form as submitted.
-   * Should be called by the submit handler.
-   */
-  markAsSubmitted(): void {
-    this.hasSubmitted.set(true);
-  }
-
-  /**
-   * Reset the submission state.
-   */
-  resetSubmissionState(): void {
-    this.hasSubmitted.set(false);
-  }
+  readonly submittedStatus = computed<SubmittedStatus>(() => {
+    const fieldTree = this.form();
+    const fieldState = fieldTree();
+    // Type assertion needed because submittedStatus() is experimental in Angular 21
+    return (fieldState as FieldStateWithSubmittedStatus).submittedStatus();
+  });
 }

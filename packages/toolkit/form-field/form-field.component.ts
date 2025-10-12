@@ -76,7 +76,7 @@ import type {
         [field]="field()"
         [fieldName]="fieldName()"
         [strategy]="effectiveStrategy"
-        [hasSubmitted]="hasSubmitted"
+        [submittedStatus]="submittedStatus"
       />
     }
   `,
@@ -142,9 +142,11 @@ export class NgxSignalFormFieldComponent<TValue = unknown> {
   });
 
   /**
-   * Computed signal for submission state.
+   * Computed signal for submission status.
+   * Gets Angular's SubmittedStatus from the form provider context if available,
+   * otherwise defaults to 'unsubmitted'.
    */
-  protected readonly hasSubmitted = computed(() => {
-    return this.#formContext?.hasSubmitted?.() ?? false;
+  protected readonly submittedStatus = computed(() => {
+    return this.#formContext?.submittedStatus?.() ?? 'unsubmitted';
   });
 }

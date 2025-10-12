@@ -282,7 +282,7 @@ export class NgxSignalFormProviderDirective {
   readonly hasSubmitted = signal(false);
 
   @HostListener('submit')
-  onSubmit() {
+  save() {
     this.hasSubmitted.set(true);
   }
 

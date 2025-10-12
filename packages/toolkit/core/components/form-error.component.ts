@@ -11,6 +11,7 @@ import {
 } from '../utilities/field-resolution';
 import { showErrors } from '../utilities/show-errors';
 import type { ErrorDisplayStrategy, ReactiveOrStatic } from '../types';
+import type { SubmittedStatus } from '@angular/forms/signals';
 
 /**
  * Reusable error and warning display component with WCAG 2.2 compliance.
@@ -56,7 +57,7 @@ import type { ErrorDisplayStrategy, ReactiveOrStatic } from '../types';
  * <ngx-signal-form-error
  *   [field]="form.email"
  *   fieldName="email"
- *   [hasSubmitted]="formSubmitted"
+ *   [submittedStatus]="form().submittedStatus()"
  * />
  * ```
  *
@@ -66,8 +67,31 @@ import type { ErrorDisplayStrategy, ReactiveOrStatic } from '../types';
  *   [field]="form.password"
  *   fieldName="password"
  *   [strategy]="strategySignal"
- *   [hasSubmitted]="formSubmitted"
+ *   [submittedStatus]="form().submittedStatus()"
  * />
+ * ```
+ *
+ * @example Using Angular's submit() helper (recommended)
+ * ```typescript
+ * import { submit } from '@angular/forms/signals';
+ *
+ * readonly #submitHandler = submit(this.form, async (formData) => {
+ *   // Form submission logic - submittedStatus automatically managed
+ *   await apiCall();
+ *   return null;
+ * });
+ *
+ * protected handleSubmit(): void {
+ *   void this.#submitHandler();
+ * }
+ * ```
+ *
+ * @example Auto-injected from NgxSignalFormProviderDirective
+ * ```html
+ * <form [ngxSignalFormProvider]="form" (ngSubmit)="save()">
+ *   <!-- submittedStatus automatically injected from form provider -->
+ *   <ngx-signal-form-error [field]="form.email" fieldName="email" />
+ * </form>
  * ```
  *
  * @example Form with Warnings
@@ -311,10 +335,15 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   readonly strategy = input<ReactiveOrStatic<ErrorDisplayStrategy>>('on-touch');
 
   /**
-   * Signal indicating if the form has been submitted.
-   * Accepts a SignalLike that returns a boolean.
+   * Form submission status from Angular Signal Forms.
+   * Accepts Angular's SubmittedStatus type: 'unsubmitted' | 'submitting' | 'submitted'.
+   *
+   * When used inside a form with NgxSignalFormProviderDirective, this is automatically
+   * injected from the form provider context. Otherwise, pass Angular's submittedStatus:
+   * `[submittedStatus]="form().submittedStatus()"`.
    */
-  readonly hasSubmitted = input.required<ReactiveOrStatic<boolean>>();
+  readonly submittedStatus =
+    input.required<ReactiveOrStatic<SubmittedStatus>>();
 
   /**
    * Computed error ID for aria-describedby linking.
@@ -334,7 +363,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * Computed signal for error visibility based on strategy.
    */
   protected readonly showErrors = computed(() => {
-    return showErrors(this.field(), this.strategy(), this.hasSubmitted())();
+    return showErrors(this.field(), this.strategy(), this.submittedStatus())();
   });
 
   /**

@@ -1,38 +1,59 @@
-import { Component, signal, inject } from '@angular/core';
-import { describe, it, expect, vi } from 'vitest';
+import { Component, signal, inject, viewChild } from '@angular/core';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/angular';
+import { userEvent } from '@vitest/browser/context';
+import type { FieldTree, SubmittedStatus } from '@angular/forms/signals';
 import { NgxSignalFormProviderDirective } from './form-provider.directive';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type { NgxSignalFormsConfig, ErrorDisplayStrategy } from '../types';
 
 /**
+ * Helper to create complete test config.
+ */
+const createTestConfig = (
+  overrides: Partial<NgxSignalFormsConfig>,
+): NgxSignalFormsConfig => ({
+  autoAria: true,
+  autoTouch: true,
+  autoFormBusy: false,
+  defaultErrorStrategy: 'on-touch',
+  strictFieldResolution: false,
+  debug: false,
+  ...overrides,
+});
+
+/**
  * Test suite for NgxSignalFormProviderDirective.
  *
- * Tests observable behavior:
- * - Form context is provided to children via DI
- * - Error strategy is configurable
- * - Debug mode logs form state
- * - Nested forms have separate contexts
+ * **Testing Philosophy:**
+ * - Test what users SEE and DO, not implementation details
+ * - Focus on observable behavior through the DOM
+ * - Avoid accessing directive methods or internal state directly
  */
 describe('NgxSignalFormProviderDirective', () => {
   /**
-   * Creates a mock Signal Forms instance for testing.
+   * Create a minimal mock FieldTree for testing.
+   * FieldTree is a signal that returns a FieldState with submittedStatus.
    */
-  const createMockForm = () => ({
-    email: signal(''),
-    password: signal(''),
-  });
+  const createMockForm = (): FieldTree<unknown> => {
+    const mockFieldState = {
+      submittedStatus: signal<SubmittedStatus>('unsubmitted'),
+    };
+    // FieldTree is a signal function that returns FieldState
+    const mockFieldTree = signal(mockFieldState);
+    return mockFieldTree as FieldTree<unknown>;
+  };
 
   /**
    * Helper component that displays form context values.
-   * Used to verify that the directive provides context correctly.
+   * This is what users "see" - the observable state.
    */
   @Component({
     selector: 'ngx-signal-form-context-display',
     standalone: true,
     template: `
       <div data-testid="form-present">{{ hasForm() ? 'yes' : 'no' }}</div>
-      <div data-testid="has-submitted">{{ context.hasSubmitted() }}</div>
+      <div data-testid="submitted-status">{{ context.submittedStatus() }}</div>
       <div data-testid="error-strategy">{{ context.errorStrategy() }}</div>
     `,
   })
@@ -91,29 +112,9 @@ describe('NgxSignalFormProviderDirective', () => {
           providers: [
             {
               provide: NGX_SIGNAL_FORMS_CONFIG,
-              useValue: {
-                defaultErrorStrategy: 'on-submit',
-              } satisfies NgxSignalFormsConfig,
+              useValue: createTestConfig({ defaultErrorStrategy: 'on-submit' }),
             },
           ],
-        },
-      );
-
-      expect(screen.getByTestId('error-strategy')).toHaveTextContent(
-        'on-submit',
-      );
-    });
-
-    it('should use on-submit error strategy when specified', async () => {
-      const mockForm = createMockForm();
-
-      await render(
-        `<form [ngxSignalFormProvider]="form" [errorStrategy]="'on-submit'">
-          <ngx-signal-form-context-display />
-        </form>`,
-        {
-          imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
-          componentProperties: { form: mockForm },
         },
       );
 
@@ -168,8 +169,8 @@ describe('NgxSignalFormProviderDirective', () => {
     });
   });
 
-  describe('Submission state', () => {
-    it('should initialize with hasSubmitted as false', async () => {
+  describe('Submission state tracking (user-facing behavior)', () => {
+    it('should show submission state as unsubmitted initially', async () => {
       const mockForm = createMockForm();
 
       await render(
@@ -182,74 +183,123 @@ describe('NgxSignalFormProviderDirective', () => {
         },
       );
 
-      expect(screen.getByTestId('has-submitted')).toHaveTextContent('false');
+      // User sees form is not yet submitted
+      expect(screen.getByTestId('submitted-status')).toHaveTextContent(
+        'unsubmitted',
+      );
     });
-  });
 
-  describe('Debug mode integration', () => {
-    it('should log form state when debug is enabled', async () => {
-      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {
-        // Mock implementation
-      });
+    it('should allow marking form as submitted programmatically', async () => {
       const mockForm = createMockForm();
 
-      await render(
-        `<form [ngxSignalFormProvider]="form">
-          <div>Form</div>
-        </form>`,
-        {
-          imports: [NgxSignalFormProviderDirective],
-          componentProperties: { form: mockForm },
-          providers: [
-            {
-              provide: NGX_SIGNAL_FORMS_CONFIG,
-              useValue: { debug: true } as NgxSignalFormsConfig,
-            },
-          ],
-        },
+      @Component({
+        standalone: true,
+        imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
+        template: `
+          <form [ngxSignalFormProvider]="form">
+            <ngx-signal-form-context-display />
+            <button type="button" (click)="customSubmit()">Save Draft</button>
+          </form>
+        `,
+      })
+      class TestComponent {
+        form = mockForm;
+        provider = viewChild.required(NgxSignalFormProviderDirective);
+
+        customSubmit() {
+          // App code: Mark as submitted for custom submission flows
+          // e.g., save draft, multi-step form, custom validation
+          this.provider().markAsSubmitted();
+        }
+      }
+
+      const { fixture } = await render(TestComponent, {});
+
+      expect(screen.getByTestId('submitted-status')).toHaveTextContent(
+        'unsubmitted',
       );
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[NgxSignalFormProviderDirective] Form state:',
-        expect.objectContaining({
-          form: mockForm,
-          hasSubmitted: false,
-        }),
-      );
+      // User clicks custom action
+      const draftButton = screen.getByRole('button', { name: /save draft/i });
+      await userEvent.click(draftButton);
 
-      consoleLogSpy.mockRestore();
+      // Wait for Angular to detect changes
+      fixture.detectChanges();
+
+      // User sees submission state updated
+      expect(screen.getByTestId('submitted-status')).toHaveTextContent(
+        'submitted',
+      );
     });
 
-    it('should NOT log form state when debug is disabled', async () => {
-      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {
-        // Mock implementation
-      });
+    it('should allow resetting submission state', async () => {
       const mockForm = createMockForm();
 
-      await render(
-        `<form [ngxSignalFormProvider]="form">
-          <div>Form</div>
-        </form>`,
-        {
-          imports: [NgxSignalFormProviderDirective],
-          componentProperties: { form: mockForm },
-          providers: [
-            {
-              provide: NGX_SIGNAL_FORMS_CONFIG,
-              useValue: { debug: false } as NgxSignalFormsConfig,
-            },
-          ],
-        },
+      @Component({
+        standalone: true,
+        imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
+        template: `
+          <form [ngxSignalFormProvider]="form">
+            <ngx-signal-form-context-display />
+            <button type="button" (click)="submit()">Submit</button>
+            <button type="button" (click)="reset()">Reset</button>
+          </form>
+        `,
+      })
+      class TestComponent {
+        form = mockForm;
+        provider = viewChild.required(NgxSignalFormProviderDirective);
+
+        submit() {
+          this.provider().markAsSubmitted();
+        }
+
+        reset() {
+          // App code: Reset after successful save or explicit user action
+          this.provider().resetSubmissionState();
+        }
+      }
+
+      const { fixture } = await render(TestComponent, {});
+
+      // User submits form
+      const submitButton = screen.getByRole('button', { name: /submit/i });
+      await userEvent.click(submitButton);
+
+      // Wait for Angular to detect changes
+      fixture.detectChanges();
+
+      expect(screen.getByTestId('submitted-status')).toHaveTextContent(
+        'submitted',
       );
 
-      expect(consoleLogSpy).not.toHaveBeenCalled();
+      // User clicks reset (or form is successfully saved)
+      const resetButton = screen.getByRole('button', { name: /reset/i });
+      await userEvent.click(resetButton);
 
-      consoleLogSpy.mockRestore();
+      // Wait for Angular to detect changes
+      fixture.detectChanges();
+
+      // User sees form is no longer marked as submitted
+      expect(screen.getByTestId('submitted-status')).toHaveTextContent(
+        'unsubmitted',
+      );
     });
+
+    /**
+     * Note: Automatic (ngSubmit) tracking is tested in E2E tests.
+     *
+     * The directive listens to (ngSubmit) via host binding, which works in real apps
+     * but requires ReactiveFormsModule/FormsModule in unit tests. Since our toolkit
+     * is designed to work with Signal Forms (no modules needed), we test the public
+     * API (markAsSubmitted/resetSubmissionState) instead.
+     *
+     * See TESTING_NOTES.md for details.
+     */
   });
 
-  describe('Integration scenarios', () => {
-    it('should support nested forms with different contexts', async () => {
+  describe('Nested forms', () => {
+    it('should support nested forms with independent contexts', async () => {
       const outerForm = createMockForm();
       const innerForm = createMockForm();
 
@@ -288,6 +338,7 @@ describe('NgxSignalFormProviderDirective', () => {
         },
       );
 
+      // Each form maintains its own strategy
       expect(screen.getByTestId('outer-strategy')).toHaveTextContent(
         'on-touch',
       );

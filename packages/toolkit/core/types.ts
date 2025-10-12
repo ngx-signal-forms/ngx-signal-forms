@@ -92,12 +92,6 @@ export interface NgxSignalFormsConfig {
   autoAria: boolean;
 
   /**
-   * Enable automatic touch state on blur.
-   * @default true
-   */
-  autoTouch: boolean;
-
-  /**
    * Enable automatic aria-busy during async operations.
    * @default true
    */

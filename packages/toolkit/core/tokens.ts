@@ -7,7 +7,6 @@ import type { NgxSignalFormContext } from './directives/form-provider.directive'
  */
 export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: NgxSignalFormsConfig = {
   autoAria: true,
-  autoTouch: true,
   autoFormBusy: true,
   defaultErrorStrategy: () => 'on-touch' as const,
   strictFieldResolution: false,

@@ -1,6 +1,6 @@
 import type { Signal } from '@angular/core';
 import { computed } from '@angular/core';
-import type { FieldState } from '@angular/forms/signals';
+import type { FieldState, SubmittedStatus } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy, ReactiveOrStatic } from '../types';
 import { unwrapValue } from './unwrap-signal-or-value';
 
@@ -9,7 +9,8 @@ import { unwrapValue } from './unwrap-signal-or-value';
  *
  * ## What does it do?
  * Creates a reactive computed signal that determines if a form field's errors should
- * be shown to the user, based on the error display strategy and form/field state.
+ * be shown to the user, based on the error display strategy and Angular's built-in
+ * submission status.
  *
  * ## When to use it?
  * Use `computeShowErrors()` when you need to:
@@ -21,8 +22,9 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * ## How does it work?
  * 1. Accepts reactive or static inputs for field state, strategy, and submission status
  * 2. Creates a computed signal that unwraps all inputs using {@link unwrapValue}
- * 3. Applies strategy logic to determine if errors should be visible
- * 4. Returns a reactive signal that updates when any input changes
+ * 3. Converts Angular's `submittedStatus` to boolean (`!== 'unsubmitted'`)
+ * 4. Applies strategy logic to determine if errors should be visible
+ * 5. Returns a reactive signal that updates when any input changes
  *
  * ## Error Display Strategies
  * - `immediate`: Show errors as soon as field becomes invalid
@@ -31,17 +33,19 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * - `manual`: Never show automatically (developer controls display)
  *
  * @template T The type of the field value
- * @param field - The form field state (typically a FieldTree from Angular Signal Forms)
+ * @param field - The form field state (FieldTree from Angular Signal Forms)
  * @param strategy - The error display strategy
- * @param hasSubmitted - Whether the form has been submitted
+ * @param submittedStatus - Angular's built-in submission status signal
  * @returns A computed signal returning `true` when errors should be displayed
  *
- * @example Basic usage with signals
+ * @example With Angular's submit() helper
  * ```typescript
+ * import { submit } from '@angular/forms/signals';
+ *
  * const showEmailErrors = computeShowErrors(
- *   form.email,           // FieldTree<string> (signal)
- *   signal('on-touch'),   // Reactive strategy
- *   formSubmitted         // Signal<boolean>
+ *   form.email,
+ *   'on-touch',
+ *   computed(() => form().submittedStatus())
  * );
  *
  * /// Use in template
@@ -50,16 +54,18 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * }
  * ```
  *
- * @example Static values for simplicity
+ * @example With form provider context
  * ```typescript
+ * const context = inject(NGX_SIGNAL_FORM_CONTEXT);
+ *
  * const showErrors = computeShowErrors(
- *   form.password,  // FieldTree<string>
- *   'immediate',    // Static strategy
- *   false           // Static boolean
+ *   form.password,
+ *   'immediate',
+ *   context.submittedStatus  // Auto-injected
  * );
  * ```
  *
- * @example Dynamic strategy based on field type
+ * @example Dynamic strategy
  * ```typescript
  * const strategy = computed(() =>
  *   isPasswordField() ? 'immediate' : 'on-touch'
@@ -67,27 +73,9 @@ import { unwrapValue } from './unwrap-signal-or-value';
  *
  * const showErrors = computeShowErrors(
  *   form.field,
- *   strategy,      // Computed strategy
- *   hasSubmitted
+ *   strategy,
+ *   computed(() => form().submittedStatus())
  * );
- * ```
- *
- * @example Custom component integration
- * ```typescript
- * @Component({...})
- * export class FormFieldComponent<T> {
- *   readonly field = input.required<FieldTree<T>>();
- *   readonly strategy = input<ReactiveOrStatic<ErrorDisplayStrategy>>('on-touch');
- *   readonly hasSubmitted = input<ReactiveOrStatic<boolean>>(false);
- *
- *   protected readonly showErrors = computed(() =>
- *     computeShowErrors(
- *       this.field(),
- *       this.strategy(),
- *       this.hasSubmitted()
- *     )()
- *   );
- * }
  * ```
  *
  * @see {@link ReactiveOrStatic} For understanding the flexible input types
@@ -97,13 +85,16 @@ import { unwrapValue } from './unwrap-signal-or-value';
 export function computeShowErrors<T>(
   field: ReactiveOrStatic<FieldState<T>>,
   strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
-  hasSubmitted: ReactiveOrStatic<boolean>,
+  submittedStatus: ReactiveOrStatic<SubmittedStatus>,
 ): Signal<boolean> {
   return computed(() => {
     // Unwrap all ReactiveOrStatic inputs
     const fieldState = unwrapValue(field);
     const strategyValue = unwrapValue(strategy);
-    const submitted = unwrapValue(hasSubmitted);
+    const status = unwrapValue(submittedStatus);
+
+    // Convert submittedStatus to boolean
+    const hasSubmitted = status !== 'unsubmitted';
 
     // Handle null/undefined field state
     if (!fieldState || typeof fieldState !== 'object') {
@@ -124,11 +115,11 @@ export function computeShowErrors<T>(
 
       case 'on-touch':
         // Show errors after field is touched OR form is submitted
-        return isInvalid && (isTouched || submitted);
+        return isInvalid && (isTouched || hasSubmitted);
 
       case 'on-submit':
         // Show errors only after form submission
-        return isInvalid && submitted;
+        return isInvalid && hasSubmitted;
 
       case 'manual':
         // Don't automatically show errors - developer controls this
@@ -136,7 +127,7 @@ export function computeShowErrors<T>(
 
       default:
         // Default to 'on-touch' behavior
-        return isInvalid && (isTouched || submitted);
+        return isInvalid && (isTouched || hasSubmitted);
     }
   });
 }
@@ -160,19 +151,21 @@ export function computeShowErrors<T>(
  *
  * ## How does it work?
  * 1. Accepts unwrapped (static) field state, strategy, and submission status
- * 2. Immediately evaluates the strategy logic
- * 3. Returns a boolean result without creating signals or subscriptions
+ * 2. Converts `submittedStatus` to boolean (`!== 'unsubmitted'`)
+ * 3. Immediately evaluates the strategy logic
+ * 4. Returns a boolean result without creating signals or subscriptions
  *
  * @param fieldState - The field state object with `invalid()` and `touched()` methods
  * @param strategy - The error display strategy
- * @param hasSubmitted - Whether the form has been submitted
+ * @param submittedStatus - Angular's submission status
  * @returns `true` if errors should be displayed
  *
  * @example Imperative validation check
  * ```typescript
- * function handleSubmit() {
+ * function handleSave() {
  *   const field = form.email();
- *   const showErrors = shouldShowErrors(field, 'on-touch', true);
+ *   const status = form().submittedStatus();
+ *   const showErrors = shouldShowErrors(field, 'on-touch', status);
  *
  *   if (showErrors) {
  *     displayErrors(field.errors());
@@ -182,27 +175,12 @@ export function computeShowErrors<T>(
  *
  * @example Custom error display logic
  * ```typescript
- * function getFieldCssClasses(field: FieldState<string>) {
- *   const hasErrors = shouldShowErrors(field, 'immediate', false);
+ * function getFieldCssClasses(field: FieldState<string>, status: SubmittedStatus) {
+ *   const hasErrors = shouldShowErrors(field, 'immediate', status);
  *   return {
  *     'field-error': hasErrors,
  *     'field-valid': !hasErrors && field.valid()
  *   };
- * }
- * ```
- *
- * @example One-time validation in event handler
- * ```typescript
- * @Component({...})
- * export class MyComponent {
- *   protected handleBlur() {
- *     const field = this.form.username();
- *     const showErrors = shouldShowErrors(field, 'on-touch', false);
- *
- *     if (showErrors) {
- *       this.logger.logValidationError(field.errors());
- *     }
- *   }
  * }
  * ```
  *
@@ -215,8 +193,9 @@ export function shouldShowErrors(
     touched: () => boolean;
   },
   strategy: ErrorDisplayStrategy,
-  hasSubmitted: boolean,
+  submittedStatus: SubmittedStatus,
 ): boolean {
+  const hasSubmitted = submittedStatus !== 'unsubmitted';
   const isInvalid = fieldState.invalid();
   const isTouched = fieldState.touched();
 

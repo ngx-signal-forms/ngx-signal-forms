@@ -4,6 +4,7 @@ import { injectFieldControl } from './inject-field-control';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type { NgxSignalFormContext } from '../directives/form-provider.directive';
 import type { NgxSignalFormsConfig } from '../types';
+import type { SubmittedStatus } from '@angular/forms/signals';
 
 describe('injectFieldControl', () => {
   it('should resolve field control from form using id attribute', () => {
@@ -11,7 +12,7 @@ describe('injectFieldControl', () => {
     const mockForm = { email: emailControl };
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      hasSubmitted: () => false,
+      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
     const config: NgxSignalFormsConfig = { strictFieldResolution: false };
@@ -35,7 +36,7 @@ describe('injectFieldControl', () => {
     const mockForm = { address: { city: cityControl } };
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      hasSubmitted: () => false,
+      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
     const config: NgxSignalFormsConfig = { strictFieldResolution: false };
@@ -59,7 +60,7 @@ describe('injectFieldControl', () => {
     const mockForm = { email: emailControl };
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      hasSubmitted: () => false,
+      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
     const config: NgxSignalFormsConfig = { strictFieldResolution: false };
@@ -82,7 +83,7 @@ describe('injectFieldControl', () => {
   it('should throw error when field name cannot be resolved', () => {
     const mockContext: NgxSignalFormContext = {
       form: {},
-      hasSubmitted: () => false,
+      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
     const config: NgxSignalFormsConfig = { strictFieldResolution: false };
@@ -106,7 +107,7 @@ describe('injectFieldControl', () => {
     const mockForm = { email: signal({ value: '' }) };
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      hasSubmitted: () => false,
+      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
     const config: NgxSignalFormsConfig = { strictFieldResolution: false };
@@ -130,7 +131,7 @@ describe('injectFieldControl', () => {
     const mockForm = { address: { street: signal({ value: '' }) } };
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      hasSubmitted: () => false,
+      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
     const config: NgxSignalFormsConfig = { strictFieldResolution: false };
@@ -163,7 +164,7 @@ describe('injectFieldControl', () => {
                 'NG0950: Input is required but no value is available yet',
               );
             },
-            hasSubmitted: () => false,
+            submittedStatus: () => 'unsubmitted' as SubmittedStatus,
             errorStrategy: () => 'on-touch',
           } satisfies NgxSignalFormContext,
         },

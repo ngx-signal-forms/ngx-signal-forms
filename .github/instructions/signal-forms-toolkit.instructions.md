@@ -91,7 +91,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideNgxSignalFormsConfig({
       autoAria: true, // Enable automatic ARIA attributes
-      autoTouch: true, // Enable auto-touch on blur
       defaultErrorStrategy: 'on-touch', // Default error display strategy
     }),
   ],
@@ -99,6 +98,72 @@ export const appConfig: ApplicationConfig = {
 ```
 
 **When generating code**: Only include toolkit configuration if user needs accessibility features or has multiple forms.
+
+## Public API - Bundle Constant
+
+### NgxSignalFormToolkit
+
+**Purpose**: Provides a convenient bundle import for all essential toolkit directives and components.
+
+**When to use**: Recommended for all components using the toolkit. Reduces import boilerplate and improves developer experience.
+
+**Import from**: `@ngx-signal-forms/toolkit/core`
+
+**Example usage**:
+
+```typescript
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
+import { form, Control } from '@angular/forms/signals';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+
+@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [Control, NgxSignalFormToolkit],
+  template: `
+    <form [ngxSignalFormProvider]="userForm" (ngSubmit)="save()">
+      <input id="email" [control]="userForm.email" />
+      <ngx-signal-form-error [field]="userForm.email" fieldName="email" />
+      <button type="submit">Submit</button>
+    </form>
+  `,
+})
+export class UserFormComponent {
+  readonly #model = signal({ email: '' });
+  protected readonly userForm = form(this.#model /* validators */);
+
+  protected save(): void {
+    if (this.userForm().valid()) {
+      console.log('Submit:', this.#model());
+    }
+  }
+}
+```
+
+**Note:** The `NgxSignalFormProviderDirective` automatically exposes Angular Signal Forms' built-in `submittedStatus` signal through dependency injection. The status is managed automatically by Angular when using the `submit()` helper function. You don't need to manually track submission state.
+
+**Alternative: Individual Imports**
+
+When you only need specific directives or components:
+
+```typescript
+import {
+  NgxSignalFormProviderDirective,
+  NgxSignalFormErrorComponent
+} from '@ngx-signal-forms/toolkit/core';
+
+@Component({
+  imports: [Control, NgxSignalFormProviderDirective, NgxSignalFormErrorComponent],
+  // ...
+})
+```
+
+**Key features**:
+
+- Contains: `NgxSignalFormProviderDirective`, `NgxSignalFormAutoAriaDirective`, `NgxSignalFormErrorComponent`
+- Type-safe readonly tuple (`as const`)
+- Single import replaces three individual imports
+- Cleaner component metadata
+- Aligned with ngx-vest-forms architecture
 
 ## Public API - Directives
 
@@ -108,20 +173,20 @@ export const appConfig: ApplicationConfig = {
 
 **When to use**: Apply to `<form>` elements when you need automatic submission tracking or want to set a form-wide error display strategy.
 
-**Import from**: `@ngx-signal-forms/toolkit/core`
+**Import from**: `@ngx-signal-forms/toolkit/core` (or use `NgxSignalFormToolkit` bundle)
 
 **Example usage**:
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { form, Control } from '@angular/forms/signals';
-import { NgxSignalFormProviderDirective } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgxSignalFormProviderDirective],
+  imports: [Control, NgxSignalFormToolkit],
   template: `
-    <form [ngxSignalFormProvider]="userForm" [errorStrategy]="'on-touch'" (submit)="onSubmit($event)">
+    <form [ngxSignalFormProvider]="userForm" [errorStrategy]="'on-touch'" (ngSubmit)="save()">
       <input id="email" [control]="userForm.email" />
       <button type="submit">Submit</button>
     </form>
@@ -131,15 +196,15 @@ export class UserFormComponent {
   readonly #model = signal({ email: '' });
   protected readonly userForm = form(this.#model /* validators */);
 
-  protected onSubmit(event: Event): void {
-    event.preventDefault();
+  protected save(): void {
+    // Form submission logic
   }
 }
 ```
 
 **Key features**:
 
-- Tracks `hasSubmitted` signal automatically (resets on form reset)
+- Exposes Angular's built-in `submittedStatus` signal via dependency injection
 - Provides error display strategy to child directives
 - Provides form instance via dependency injection
 
@@ -186,22 +251,7 @@ export class UserFormComponent {
 <input [control]="form.custom" ngxSignalFormAutoAriaDisabled />
 ```
 
-### NgxSignalFormAutoTouchDirective
-
-**Purpose**: Automatically marks fields as touched on blur for progressive error disclosure.
-
-**When to use**: Automatically applied to all form controls. No explicit import needed unless you want to opt-out.
-
-**Automatic behavior**:
-
-- Calls `markAsTouched()` on blur event
-- Respects error display strategy (only triggers when appropriate)
-
-**Example - Opt-out**:
-
-```html
-<input [control]="form.custom" ngxSignalFormAutoTouchDisabled />
-```
+**Note on touch behavior**: Angular Signal Forms' `[control]` directive automatically marks fields as touched on blur. The toolkit does not need a separate auto-touch directive.
 
 ## Public API - Components
 
@@ -225,13 +275,12 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/core';
   imports: [Control, NgxSignalFormErrorComponent],
   template: `
     <input id="email" [control]="emailForm.email" />
-    <ngx-signal-form-error [field]="emailForm.email" fieldName="email" [hasSubmitted]="formSubmitted" />
+    <ngx-signal-form-error [field]="emailForm.email" fieldName="email" />
   `,
 })
 export class EmailFieldComponent {
   readonly #model = signal({ email: '' });
   protected readonly emailForm = form(this.#model /* validators */);
-  protected readonly formSubmitted = signal(false);
 }
 ```
 
@@ -239,11 +288,13 @@ export class EmailFieldComponent {
 
 - `field`: The field from your form (e.g., `form.email`)
 - `fieldName`: The field name string (must match `id` attribute for ARIA)
-- `hasSubmitted`: Signal tracking form submission state
 
 **Optional input properties**:
 
 - `strategy`: Error display strategy (defaults to `'on-touch'`)
+- `submittedStatus`: Signal tracking form submission state (auto-injected from `NgxSignalFormProviderDirective` if present)
+
+**Note:** When used inside a form with `NgxSignalFormProviderDirective`, the `submittedStatus` signal is automatically injected from Angular Signal Forms' built-in submission tracking and doesn't need to be passed manually.
 
 **Key features**:
 
@@ -272,7 +323,7 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Control, NgxSignalFormFieldComponent],
   template: `
-    <form (submit)="onSubmit($event)">
+    <form (ngSubmit)="save()">
       <ngx-signal-form-field [field]="contactForm.email" fieldName="email">
         <label for="email">Email</label>
         <input id="email" [control]="contactForm.email" />
@@ -292,8 +343,7 @@ export class ContactFormComponent {
     }),
   );
 
-  protected onSubmit(event: Event): void {
-    event.preventDefault();
+  protected save(): void {
     if (this.contactForm().valid()) {
       console.log('Form data:', this.#model());
     }
@@ -352,9 +402,9 @@ import { showErrors } from '@ngx-signal-forms/toolkit/core';
 export class ManualErrorDisplayComponent {
   readonly #model = signal({ email: '' });
   protected readonly emailForm = form(this.#model /* validators */);
-  protected readonly formSubmitted = signal(false);
+  protected readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-  protected readonly shouldShowErrors = showErrors(this.emailForm.email, 'on-touch', this.formSubmitted);
+  protected readonly shouldShowErrors = showErrors(this.emailForm.email, 'on-touch', this.submittedStatus);
 }
 ```
 
@@ -362,7 +412,7 @@ export class ManualErrorDisplayComponent {
 
 - `field`: `FieldTree<T>` - The form field
 - `strategy`: `ReactiveOrStatic<ErrorDisplayStrategy>` - Display strategy
-- `hasSubmitted`: `ReactiveOrStatic<boolean>` - Form submission state
+- `submittedStatus`: `ReactiveOrStatic<SubmittedStatus>` - Form submission state
 
 **Returns**: `Signal<boolean>` - Whether to show errors
 
@@ -377,7 +427,7 @@ export class ManualErrorDisplayComponent {
 ```typescript
 import { computeShowErrors } from '@ngx-signal-forms/toolkit/core';
 
-const shouldShow = computeShowErrors(form.password, 'immediate', false);
+const shouldShow = computeShowErrors(form.password, 'immediate', signal<SubmittedStatus>('unsubmitted'));
 ```
 
 ### combineShowErrors()
@@ -410,9 +460,9 @@ import { combineShowErrors, showErrors } from '@ngx-signal-forms/toolkit/core';
 export class FormWithBannerComponent {
   readonly #model = signal({ email: '', password: '' });
   protected readonly userForm = form(this.#model /* validators */);
-  protected readonly submitted = signal(false);
+  protected readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-  protected readonly showAnyFormErrors = combineShowErrors([showErrors(this.userForm.email, 'on-touch', this.submitted), showErrors(this.userForm.password, 'on-touch', this.submitted)]);
+  protected readonly showAnyFormErrors = combineShowErrors([showErrors(this.userForm.email, 'on-touch', this.submittedStatus), showErrors(this.userForm.password, 'on-touch', this.submittedStatus)]);
 }
 ```
 
@@ -539,7 +589,7 @@ const contactSchema = schema<ContactModel>((path) => {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Control, NgxSignalFormFieldComponent],
   template: `
-    <form (submit)="onSubmit($event)">
+    <form (ngSubmit)="save()">
       <ngx-signal-form-field [field]="contactForm.email" fieldName="email">
         <label for="email">Email</label>
         <input id="email" [control]="contactForm.email" />
@@ -558,8 +608,7 @@ export class ContactFormComponent {
   readonly #model = signal<ContactModel>({ email: '', message: '' });
   protected readonly contactForm = form(this.#model, contactSchema);
 
-  protected onSubmit(event: Event): void {
-    event.preventDefault();
+  protected save(): void {
     if (this.contactForm().valid()) {
       console.log('Form data:', this.#model());
     }
@@ -604,7 +653,7 @@ const userSchema = schema<{ email: string }>((path) => {
     </fieldset>
 
     <!-- Form with provider (tracks submission + manages strategy) -->
-    <form [ngxSignalFormProvider]="userForm" [errorStrategy]="errorStrategy()" (submit)="onSubmit($event)">
+    <form [ngxSignalFormProvider]="userForm" [errorStrategy]="errorStrategy()" (ngSubmit)="save()">
       <ngx-signal-form-field [field]="userForm.email" fieldName="email">
         <label for="email">Email</label>
         <input id="email" [control]="userForm.email" />
@@ -619,8 +668,7 @@ export class UserFormComponent {
   readonly #model = signal({ email: '' });
   protected readonly userForm = form(this.#model, userSchema);
 
-  protected onSubmit(event: Event): void {
-    event.preventDefault();
+  protected save(): void {
     // Form provider tracks submission automatically
   }
 }
@@ -698,7 +746,7 @@ const emailSchema = schema<{ email: string }>((path) => {
       </div>
     }
 
-    <button (click)="submit()">Submit</button>
+    <button (click)="save()">Submit</button>
   `,
 })
 export class ManualErrorComponent {
@@ -709,7 +757,7 @@ export class ManualErrorComponent {
   // Compute when to show errors
   protected readonly shouldShowErrors = showErrors(this.emailForm.email, 'on-touch', this.formSubmitted);
 
-  protected submit(): void {
+  protected save(): void {
     this.formSubmitted.set(true);
     if (this.emailForm().valid()) {
       console.log('Submit:', this.#model());
@@ -732,10 +780,10 @@ export class ManualErrorComponent {
 
 ```typescript
 // ✅ Good - Automatic submission tracking
-<form [ngxSignalFormProvider]="form" (submit)="onSubmit($event)">
+<form [ngxSignalFormProvider]="form" (ngSubmit)="save()">
 
 // ❌ Bad - Manual tracking required
-<form (submit)="onSubmit($event)">
+<form (ngSubmit)="save()">
 ```
 
 ### 3. Prefer Field Name from ID Attribute
@@ -822,10 +870,10 @@ import { userEvent } from '@vitest/browser/context';
 
 it('should show errors based on strategy', async () => {
   const model = signal({ email: '' });
-  const hasSubmitted = signal(false);
+  const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
   await render(MyFormComponent, {
-    bindings: [inputBinding('model', model), inputBinding('hasSubmitted', hasSubmitted)],
+    bindings: [inputBinding('model', model), inputBinding('submittedStatus', submittedStatus)],
   });
 
   const emailInput = screen.getByLabelText(/email/i);
@@ -907,7 +955,19 @@ test('should validate accessibility tree', async ({ page }) => {
 ### Primary Entry (Core)
 
 ```typescript
-import { provideNgxSignalFormsConfig, NgxSignalFormProviderDirective, NgxSignalFormAutoAriaDirective, NgxSignalFormAutoTouchDirective, NgxSignalFormErrorComponent, showErrors, computeShowErrors, combineShowErrors, warningError, isWarningError, isBlockingError, type ErrorDisplayStrategy, type ReactiveOrStatic, type NgxSignalFormsConfig } from '@ngx-signal-forms/toolkit/core';
+import { provideNgxSignalFormsConfig, NgxSignalFormProviderDirective, NgxSignalFormAutoAriaDirective, NgxSignalFormErrorComponent, showErrors, computeShowErrors, combineShowErrors, warningError, isWarningError, isBlockingError, type ErrorDisplayStrategy, type ReactiveOrStatic, type NgxSignalFormsConfig } from '@ngx-signal-forms/toolkit/core';
+```
+
+**Recommended: Bundle Import**
+
+```typescript
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+```
+
+**Alternative: Individual Imports**
+
+```typescript
+import { provideNgxSignalFormsConfig, NgxSignalFormProviderDirective, NgxSignalFormErrorComponent, NgxSignalFormAutoAriaDirective, showErrors, computeShowErrors, combineShowErrors, warningError, isWarningError, isBlockingError, type ErrorDisplayStrategy, type ReactiveOrStatic, type NgxSignalFormsConfig } from '@ngx-signal-forms/toolkit/core';
 ```
 
 ### Secondary Entry (Form Field)
@@ -934,7 +994,6 @@ import { createPlaceholderTestHelper } from '@ngx-signal-forms/toolkit/testing';
 The toolkit provides:
 
 - ✅ Automatic ARIA attributes for accessibility
-- ✅ Auto-touch on blur for progressive error disclosure
 - ✅ Error display strategies (immediate, on-touch, on-submit, manual)
 - ✅ Warning support (non-blocking validation messages)
 - ✅ Reusable form field wrapper

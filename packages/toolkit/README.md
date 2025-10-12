@@ -19,7 +19,7 @@ Zero-intrusive directives, components, and utilities for Angular Signal Forms.
 
 ## Quick Start
 
-```typescript
+````typescript
 // 1. Configure (optional)
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 
@@ -31,17 +31,20 @@ export const appConfig: ApplicationConfig = {
   ],
 };
 
-// 2. Use in components
+```typescript
+// 2. Use in components (recommended: bundle import)
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
-  imports: [Control, NgxSignalFormFieldComponent],
+  imports: [Control, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
-    <form (submit)="onSubmit($event)">
+    <form [ngxSignalFormProvider]="form" (ngSubmit)="save()">
       <ngx-signal-form-field [field]="form.email" fieldName="email">
         <label for="email">Email</label>
         <input id="email" [control]="form.email" />
       </ngx-signal-form-field>
+      <button type="submit">Submit</button>
     </form>
   `,
 })
@@ -53,7 +56,33 @@ export class MyComponent {
       required(path.email, { message: 'Email is required' });
     }),
   );
+
+  protected save(): void {
+    if (this.form().valid()) {
+      console.log('Form data:', this.model());
+    }
+  }
 }
+```
+
+> **Important:** Use `(ngSubmit)` event on the `<form>` element. The toolkit tracks submission state automatically via the form provider directive.
+
+> **Important:** Use `(ngSubmit)` event on the `<form>` element. The toolkit tracks submission state automatically via the form provider directive.
+
+### Alternative: Individual Imports
+
+If you only need specific directives or components, you can import them individually:
+
+```typescript
+import {
+  NgxSignalFormProviderDirective,
+  NgxSignalFormErrorComponent
+} from '@ngx-signal-forms/toolkit/core';
+
+@Component({
+  imports: [Control, NgxSignalFormProviderDirective, NgxSignalFormErrorComponent],
+  // ...
+})
 ```
 
 ## API
@@ -65,7 +94,10 @@ export class MyComponent {
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 import type { NgxSignalFormsConfig, ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 
-// Core - Directives, components, utilities
+// Core - Bundle import (recommended)
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+
+// Core - Individual imports (alternative)
 import { NgxSignalFormProviderDirective, NgxSignalFormErrorComponent, NgxSignalFormAutoAriaDirective, NgxSignalFormAutoTouchDirective, computeShowErrors, showErrors } from '@ngx-signal-forms/toolkit/core';
 
 // Form field wrapper (optional)
@@ -74,6 +106,35 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
 // Testing utilities (optional)
 import { createPlaceholderTestHelper } from '@ngx-signal-forms/toolkit/testing';
 ```
+
+### Bundle Constant
+
+#### NgxSignalFormToolkit
+
+The `NgxSignalFormToolkit` constant provides a convenient way to import all essential directives and components:
+
+```typescript
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+
+@Component({
+  imports: [Control, NgxSignalFormToolkit],
+  // ...
+})
+```
+
+**Contents:**
+
+- `NgxSignalFormProviderDirective` - Provides form context to child components
+- `NgxSignalFormAutoAriaDirective` - Automatically applies ARIA attributes
+- `NgxSignalFormAutoTouchDirective` - Automatically marks fields as touched on blur
+- `NgxSignalFormErrorComponent` - Displays validation errors and warnings
+
+**Benefits:**
+
+- Single import instead of four individual imports
+- Type-safe readonly tuple
+- Cleaner component metadata
+- Better developer experience
 
 ### Configuration
 
@@ -97,8 +158,24 @@ type ErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit' | 'manual';
 Provides form context to child components.
 
 ```html
-<form [ngxSignalFormProvider]="myForm" [errorStrategy]="'on-touch'"></form>
+<form [ngxSignalFormProvider]="myForm" [errorStrategy]="'on-touch'" (ngSubmit)="save()">
+  <!-- form fields -->
+  <button type="submit">Submit</button>
+</form>
 ```
+
+```typescript
+protected save(): void {
+  if (this.myForm().valid()) {
+    // Handle submission
+    console.log('Form data:', this.model());
+  }
+}
+```
+
+> **Note:** Use `(ngSubmit)` event on the `<form>` element. The toolkit tracks submission state automatically.
+
+> **Note:** Use `(ngSubmit)` event on the `<form>` element. The toolkit tracks submission state automatically.
 
 #### NgxSignalFormAutoAriaDirective
 
@@ -113,8 +190,10 @@ Automatically applied to form controls. Opt-out with `ngxSignalFormAutoTouchDisa
 #### NgxSignalFormErrorComponent
 
 ```html
-<ngx-signal-form-error [field]="form.email" fieldName="email" [strategy]="'on-touch'" [hasSubmitted]="hasSubmitted" />
+<ngx-signal-form-error [field]="form.email" fieldName="email" />
 ```
+
+**Note:** When used inside a form with `NgxSignalFormProviderDirective`, the `submittedStatus` signal is automatically injected from Angular Signal Forms' built-in submission tracking.
 
 #### NgxSignalFormFieldComponent
 
@@ -132,8 +211,11 @@ Automatically applied to form controls. Opt-out with `ngxSignalFormAutoTouchDisa
 computeShowErrors<T>(
   field: ReactiveOrStatic<FieldState<T>>,
   strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
-  hasSubmitted: ReactiveOrStatic<boolean>
+  submittedStatus: ReactiveOrStatic<SubmittedStatus>
 ): Signal<boolean>
+
+// SubmittedStatus type from Angular Signal Forms
+type SubmittedStatus = 'unsubmitted' | 'submitting' | 'submitted';
 
 // Convenience wrapper
 showErrors<T>(...): Signal<boolean>
@@ -164,3 +246,4 @@ For complete documentation and examples, see the [main repository README](../../
 ## License
 
 MIT © [ngx-signal-forms](https://github.com/ngx-signal-forms/ngx-signal-forms)
+````
