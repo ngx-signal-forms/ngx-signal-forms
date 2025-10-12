@@ -454,12 +454,76 @@ export class UserFormComponent {
    this.#userData.update((data) => ({ ...data, skills: [...data.skills, { name: '' }] }));
    ```
 
+## Enhancement Toolkit
+
+For production applications requiring automatic accessibility, error display strategies, and reduced boilerplate, consider using **`@ngx-signal-forms/toolkit`**.
+
+### Why Use the Toolkit?
+
+The toolkit enhances Signal Forms with:
+
+- ✅ **Automatic ARIA attributes** (`aria-invalid`, `aria-describedby`)
+- ✅ **Auto-touch on blur** (progressive error disclosure)
+- ✅ **Error display strategies** (immediate, on-touch, on-submit, manual)
+- ✅ **Warning support** (non-blocking validation messages)
+- ✅ **Form field wrappers** (consistent layout + auto-error display)
+- ✅ **WCAG 2.2 compliance** by default
+- ✅ **67% less boilerplate** code
+
+### Quick Install
+
+```bash
+npm install @ngx-signal-forms/toolkit
+```
+
+### Basic Example
+
+```typescript
+import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+
+@Component({
+  imports: [Control, NgxSignalFormFieldComponent],
+  template: `
+    <ngx-signal-form-field [field]="form.email" fieldName="email">
+      <label for="email">Email</label>
+      <input id="email" [control]="form.email" />
+      <!-- Automatic ARIA, touch handling, and error display -->
+    </ngx-signal-form-field>
+  `,
+})
+```
+
+### When to Use Toolkit vs Bare Signal Forms
+
+| Use Case             | Bare Signal Forms        | With Toolkit           |
+| -------------------- | ------------------------ | ---------------------- |
+| Learning/prototyping | ✅ Recommended           | ❌ Wait until familiar |
+| Production apps      | ⚠️ Manual ARIA required  | ✅ Recommended         |
+| WCAG compliance      | ❌ Manual implementation | ✅ Automatic           |
+| Complex error logic  | ❌ Manual conditions     | ✅ Strategies built-in |
+
+### Complete Documentation
+
+See [signal-forms-toolkit.instructions.md](./signal-forms-toolkit.instructions.md) for complete documentation including:
+
+- Configuration and setup
+- All directives and components
+- Error display strategies
+- Warning support (non-blocking validation)
+- CSS customization
+- Testing utilities
+- Migration guides
+- Best practices
+
+---
+
 ## Resources
 
 - [Angular Signal Forms Guide](https://www.codigotipado.com/p/mastering-angular-21-signal-forms)
 - [Angular.dev Docs](https://angular.dev)
 - [Signal Forms API](https://angular.dev/api/forms/signals)
 - [Angular Signals Guide](https://angular.dev/guide/signals)
+- [Toolkit Instructions](./signal-forms-toolkit.instructions.md) ← **Enhancement library**
 
 ## Version Notes
 

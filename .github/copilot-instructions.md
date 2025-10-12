@@ -15,10 +15,11 @@ applyTo: '**'
 
 ## Quick Reference
 
-- **Framework**: Angular 21+ with signals, standalone components
-- **Forms**: Angular 21 Signal Forms
+- **Framework**: Angular 21+ with signals, standalone components (see [angular.instructions.md](./instructions/angular.instructions.md))
+- **Forms**: Angular 21 Signal Forms (see [signal-forms.instructions.md](./instructions/signal-forms.instructions.md))
+- **Forms Enhancement**: @ngx-signal-forms/toolkit (see [signal-forms-toolkit.instructions.md](./instructions/signal-forms-toolkit.instructions.md))
 - **Testing**: Vitest (unit), Playwright (E2E)
-- **Styling**: Tailwind CSS 4.x
+- **Styling**: Tailwind CSS 4.x (see [tailwind.instructions.md](./instructions/tailwind.instructions.md))
 - **TypeScript**: 5.8+ with strict mode
 
 ## Project Structure
@@ -43,6 +44,8 @@ applyTo: '**'
 
 ### Code Quality
 
+Follow [`.github/instructions/security-and-owasp.instructions.md`](./instructions/security-and-owasp.instructions.md) for secure coding practices.
+
 - [ ] TypeScript strict mode enabled
 - [ ] Meaningful variable names
 - [ ] Kebab-case filenames
@@ -59,6 +62,8 @@ applyTo: '**'
 [TODO : Update if needed]
 
 ## Angular 21+ Checklist
+
+Follow [`.github/instructions/angular.instructions.md`](./instructions/angular.instructions.md) for comprehensive Angular coding standards.
 
 ### Must Use
 
@@ -100,6 +105,8 @@ applyTo: '**'
 
 ## Accessibility Checklist
 
+Follow [`.github/instructions/a11y.instructions.md`](./instructions/a11y.instructions.md) for comprehensive accessibility guidance.
+
 - [ ] Semantic HTML elements used
 - [ ] Labels associated with controls
 - [ ] ARIA only when HTML insufficient
@@ -127,6 +134,8 @@ Follow [`.github/instructions/commit.instructions.md`](./instructions/commit.ins
 - be concise but descriptive
 
 ## Documentation Requirements
+
+Follow [`.github/instructions/self-explanatory-code-commenting.instructions.md`](./instructions/self-explanatory-code-commenting.instructions.md) for commenting guidelines.
 
 - [ ] JSDoc for public APIs
 - [ ] Comments explain "why" not "what"
@@ -157,4 +166,29 @@ export class ExampleComponent {
 
 ## Additional Resources
 
-[ ] TODO ADD LINKS
+### Instruction Files
+
+**Core Framework & Language:**
+
+- [Angular Standards](./instructions/angular.instructions.md) - Angular 21+ coding standards and best practices
+- [TypeScript & Security](./instructions/security-and-owasp.instructions.md) - Secure coding based on OWASP Top 10
+- [Code Documentation](./instructions/self-explanatory-code-commenting.instructions.md) - Self-explanatory code with minimal comments
+
+**Forms:**
+
+- [Signal Forms](./instructions/signal-forms.instructions.md) - Angular 21+ Signal Forms API and patterns
+- [Signal Forms Toolkit](./instructions/signal-forms-toolkit.instructions.md) - Enhancement library for accessibility and UX
+
+**UI & Styling:**
+
+- [Tailwind CSS](./instructions/tailwind.instructions.md) - Tailwind CSS 4.x usage and best practices
+- [Accessibility (a11y)](./instructions/a11y.instructions.md) - WCAG 2.2 Level AA compliance guidelines
+
+**Testing:**
+
+- [Vitest](./instructions/vitest.instructions.md) - Unit testing with Vitest and Testing Library
+- [Playwright](./instructions/playwright.instructions.md) - E2E testing with Playwright
+
+**Development Workflow:**
+
+- [Commit Messages](./instructions/commit.instructions.md) - Conventional Commits specification
