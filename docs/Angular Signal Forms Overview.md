@@ -79,7 +79,13 @@ Angular Signal Forms is a new **experimental** reactive form system introduced i
 
 ```html
 <!-- You must manually implement ALL of this: -->
-<input id="email" [control]="userForm.email" (blur)="userForm.email().markAsTouched()" [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null" [attr.aria-describedby]="userForm.email().invalid() ? 'email-error' : null" />
+<input
+  id="email"
+  [control]="userForm.email"
+  (blur)="userForm.email().markAsTouched()"
+  [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null"
+  [attr.aria-describedby]="userForm.email().invalid() ? 'email-error' : null"
+/>
 
 @if (userForm.email().touched() && userForm.email().invalid()) {
 <span id="email-error" role="alert">
@@ -311,7 +317,10 @@ The `adapter` option allows you to customize how fields are created and managed 
 
    ```typescript
    class ReactiveFormsAdapter implements FieldAdapter {
-     createValidationState(node: FieldNode, options: FieldNodeOptions): ValidationState {
+     createValidationState(
+       node: FieldNode,
+       options: FieldNodeOptions,
+     ): ValidationState {
        // Return validation state that syncs with both systems
        return new HybridValidationState(node, this.reactiveFormControl);
      }
@@ -330,7 +339,12 @@ The `adapter` option allows you to customize how fields are created and managed 
    class DebugAdapter implements FieldAdapter {
      private fieldLog = new Map<string, any[]>();
 
-     newRoot<TValue>(fieldManager: FormFieldManager, model: WritableSignal<TValue>, pathNode: FieldPathNode, adapter: FieldAdapter): FieldNode {
+     newRoot<TValue>(
+       fieldManager: FormFieldManager,
+       model: WritableSignal<TValue>,
+       pathNode: FieldPathNode,
+       adapter: FieldAdapter,
+     ): FieldNode {
        const node = FieldNode.newRoot(fieldManager, model, pathNode, adapter);
 
        // Track all field accesses
@@ -359,10 +373,16 @@ The `adapter` option allows you to customize how fields are created and managed 
 ```typescript
 interface FieldAdapter {
   // How to create field structure (parent-child relationships)
-  createStructure(node: FieldNode, options: FieldNodeOptions): FieldNodeStructure;
+  createStructure(
+    node: FieldNode,
+    options: FieldNodeOptions,
+  ): FieldNodeStructure;
 
   // How to create validation state (errors, valid, pending, etc.)
-  createValidationState(node: FieldNode, options: FieldNodeOptions): ValidationState;
+  createValidationState(
+    node: FieldNode,
+    options: FieldNodeOptions,
+  ): ValidationState;
 
   // How to create field state (touched, dirty, disabled, etc.)
   createNodeState(node: FieldNode, options: FieldNodeOptions): FieldNodeState;
@@ -371,7 +391,12 @@ interface FieldAdapter {
   newChild(options: ChildFieldNodeOptions): FieldNode;
 
   // How to create root field nodes
-  newRoot<TValue>(fieldManager: FormFieldManager, model: WritableSignal<TValue>, pathNode: FieldPathNode, adapter: FieldAdapter): FieldNode;
+  newRoot<TValue>(
+    fieldManager: FormFieldManager,
+    model: WritableSignal<TValue>,
+    pathNode: FieldPathNode,
+    adapter: FieldAdapter,
+  ): FieldNode;
 }
 ```
 
@@ -584,7 +609,15 @@ console.log(firstNameField().errors()); // Get errors
 #### Built-in Validators
 
 ```typescript
-import { required, email, min, max, minLength, maxLength, pattern } from '@angular/forms/signals';
+import {
+  required,
+  email,
+  min,
+  max,
+  minLength,
+  maxLength,
+  pattern,
+} from '@angular/forms/signals';
 
 const formSchema = schema<UserModel>((path) => {
   // Required fields
@@ -608,10 +641,27 @@ const formSchema = schema<UserModel>((path) => {
 
 #### Custom Validation: `validate()`
 
+**Understanding Root-Level vs Field-Level Errors:**
+
+Signal Forms supports two types of validation errors that serve different purposes:
+
+| Error Type      | Validation Target       | Use Case                                                  | Example                        |
+| --------------- | ----------------------- | --------------------------------------------------------- | ------------------------------ |
+| **Field-Level** | `validate(path.field,`) | Single field validation                                   | Email format, required fields  |
+| **Root-Level**  | `validate(path,`        | Cross-field validation affecting the entire form          | Password matching, date ranges |
+| **Cross-Field** | `validate(path.field,`) | Field validation using other field values via `valueOf()` | Confirm password, conditional  |
+
+**Visual Distinction:**
+
+- The debugger component shows root-level errors with a **purple border** (🔗 icon)
+- Field-level errors are shown with a **red border**
+
+**When to Use Each:**
+
 ```typescript
 import { validate, customError } from '@angular/forms/signals';
 
-// Field-level validation
+// 1. FIELD-LEVEL: Validation for a single field only
 validate(path.username, ({ value }) => {
   const username = value();
   if (username.includes(' ')) {
@@ -625,7 +675,7 @@ validate(path.username, ({ value }) => {
   return []; // No errors
 });
 
-// Cross-field validation
+// 2. CROSS-FIELD (field-level with dependencies): Validate one field using another
 validate(path.confirmPassword, ({ value, valueOf }) => {
   const password = valueOf(path.password);
   const confirmPassword = value();
@@ -641,7 +691,7 @@ validate(path.confirmPassword, ({ value, valueOf }) => {
   return [];
 });
 
-// Form-level validation (using root path)
+// 3. ROOT-LEVEL: Form-wide business rules spanning multiple fields
 validate(path, ({ value }) => {
   const form = value();
   if (form.startDate > form.endDate) {
@@ -656,6 +706,45 @@ validate(path, ({ value }) => {
 });
 ```
 
+**Accessing Root-Level Errors:**
+
+Root-level errors are stored directly on the form tree and can be accessed via `formTree().errors()`:
+
+```typescript
+// In your component
+protected readonly userForm = form(userModel, schema);
+
+// Get root-level errors only (cross-field validation)
+protected readonly rootErrors = computed(() => this.userForm().errors());
+
+// Get field-level errors (recursive traversal required)
+protected readonly fieldErrors = computed(() => {
+  const errors: ValidationError[] = [];
+
+  // Recursive function to collect field errors
+  const collectFieldErrors = (fieldState: FieldState<unknown>) => {
+    const value = fieldState.value();
+
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      Object.keys(value).forEach((key) => {
+        const childField = (fieldState as any)[key]();
+        errors.push(...childField.errors());
+        collectFieldErrors(childField);
+      });
+    }
+  };
+
+  collectFieldErrors(this.userForm);
+  return errors;
+});
+
+// Check if form has root-level errors
+protected readonly hasRootErrors = computed(() => this.rootErrors().length > 0);
+
+// Check if form has field-level errors
+protected readonly hasFieldErrors = computed(() => this.fieldErrors().length > 0);
+```
+
 #### Async Validation: `validateAsync()` & `validateHttp()`
 
 ```typescript
@@ -667,7 +756,9 @@ validateAsync(path.username, async ({ value }) => {
   if (!username) return [];
 
   const exists = await checkUsernameExists(username);
-  return exists ? [customError({ kind: 'taken', message: 'Username taken' })] : [];
+  return exists
+    ? [customError({ kind: 'taken', message: 'Username taken' })]
+    : [];
 });
 
 // HTTP-based validation
@@ -677,7 +768,9 @@ validateHttp(path.email, {
     return email ? { url: `/api/check-email?email=${email}` } : undefined;
   },
   errors: (response: { available: boolean }) => {
-    return response.available ? [] : [customError({ kind: 'taken', message: 'Email already in use' })];
+    return response.available
+      ? []
+      : [customError({ kind: 'taken', message: 'Email already in use' })];
   },
 });
 ```
@@ -742,7 +835,7 @@ import { Control } from '@angular/forms/signals';
       </select>
 
       <!-- Custom component -->
-      <app-date-picker [control]="userForm.birthDate" />
+      <ngx-date-picker [control]="userForm.birthDate" />
     </form>
   `,
   imports: [Control]
@@ -903,9 +996,16 @@ import { z } from 'zod';
 
 // 1. Define Zod schema
 const UserSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters').max(20, 'Username must be less than 20 characters'),
+  username: z
+    .string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(20, 'Username must be less than 20 characters'),
   email: z.string().email('Invalid email format'),
-  age: z.number().int('Age must be an integer').min(18, 'Must be 18 or older').max(120, 'Invalid age'),
+  age: z
+    .number()
+    .int('Age must be an integer')
+    .min(18, 'Must be 18 or older')
+    .max(120, 'Invalid age'),
   website: z.string().url('Invalid URL').optional(),
 });
 
@@ -913,7 +1013,7 @@ const UserSchema = z.object({
 type User = z.infer<typeof UserSchema>;
 
 @Component({
-  selector: 'app-user-form',
+  selector: 'ngx-user-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Control],
   template: `
@@ -980,7 +1080,14 @@ You can use Zod for data validation and Signal Forms schema for UI logic:
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { form, validateStandardSchema, disabled, hidden, validate, customError } from '@angular/forms/signals';
+import {
+  form,
+  validateStandardSchema,
+  disabled,
+  hidden,
+  validate,
+  customError,
+} from '@angular/forms/signals';
 import { z } from 'zod';
 
 // Zod schema for data validation
@@ -996,7 +1103,7 @@ const ProductSchema = z.object({
 type Product = z.infer<typeof ProductSchema>;
 
 @Component({
-  selector: 'app-product-form',
+  selector: 'ngx-product-form',
   template: `
     <form>
       <!-- SKU is auto-generated, always disabled -->
@@ -1012,7 +1119,11 @@ type Product = z.infer<typeof ProductSchema>;
 
       <!-- Sale price only shows when on sale -->
       @if (!productForm.salePrice().hidden()) {
-        <input type="number" [control]="productForm.salePrice" placeholder="Sale price" />
+        <input
+          type="number"
+          [control]="productForm.salePrice"
+          placeholder="Sale price"
+        />
       }
 
       <select [control]="productForm.category">
@@ -1080,7 +1191,12 @@ import { z } from 'zod';
 
 // Define field-level schemas
 const EmailSchema = z.string().email('Invalid email');
-const PasswordSchema = z.string().min(8, 'Password must be at least 8 characters').regex(/[A-Z]/, 'Must contain uppercase letter').regex(/[a-z]/, 'Must contain lowercase letter').regex(/[0-9]/, 'Must contain number');
+const PasswordSchema = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[A-Z]/, 'Must contain uppercase letter')
+  .regex(/[a-z]/, 'Must contain lowercase letter')
+  .regex(/[0-9]/, 'Must contain number');
 
 const registrationForm = form(registrationModel, (path) => {
   // Apply to individual fields
@@ -1090,7 +1206,9 @@ const registrationForm = form(registrationModel, (path) => {
 
   // Add cross-field validation
   validate(path.confirmPassword, ({ value, valueOf }) => {
-    return value() === valueOf(path.password) ? [] : [customError({ kind: 'mismatch', message: 'Passwords must match' })];
+    return value() === valueOf(path.password)
+      ? []
+      : [customError({ kind: 'mismatch', message: 'Passwords must match' })];
   });
 });
 ```
@@ -1104,15 +1222,28 @@ This example from a weather application shows how to layer all three validation 
 ```typescript
 import { Component, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { form, validateStandardSchema, validateAsync, validateTree, customError, applyEach } from '@angular/forms/signals';
+import {
+  form,
+  validateStandardSchema,
+  validateAsync,
+  validateTree,
+  customError,
+  applyEach,
+} from '@angular/forms/signals';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { of, delay, switchMap } from 'rxjs';
 import { z } from 'zod';
 
 // 1. Zod for data structure validation
 const WeatherLocationSchema = z.object({
-  city: z.string().min(2, 'City must be at least 2 characters').max(50, 'City name is too long'),
-  country: z.string().min(2, 'Country must be at least 2 characters').max(50, 'Country name is too long'),
+  city: z
+    .string()
+    .min(2, 'City must be at least 2 characters')
+    .max(50, 'City name is too long'),
+  country: z
+    .string()
+    .min(2, 'Country must be at least 2 characters')
+    .max(50, 'Country name is too long'),
 });
 
 const WeatherFormSchema = z.object({
@@ -1128,14 +1259,17 @@ const WeatherFormSchema = z.object({
       },
       { message: 'Date cannot be in the past' },
     ),
-  locations: z.array(WeatherLocationSchema).min(1, 'At least one location required').max(5, 'Maximum 5 locations'),
+  locations: z
+    .array(WeatherLocationSchema)
+    .min(1, 'At least one location required')
+    .max(5, 'Maximum 5 locations'),
   temperatureUnit: z.enum(['celsius', 'fahrenheit']),
 });
 
 type WeatherFormData = z.infer<typeof WeatherFormSchema>;
 
 @Component({
-  selector: 'app-weather-form',
+  selector: 'ngx-weather-form',
   template: `...`,
 })
 export class WeatherFormComponent {
@@ -1200,7 +1334,12 @@ export class WeatherFormComponent {
             });
           }
 
-          const exactMatch = results.some((r: any) => r.name.toLowerCase() === ctx.value().toLowerCase() && r.country.toLowerCase() === ctx.fieldOf(location.country)().value().toLowerCase());
+          const exactMatch = results.some(
+            (r: any) =>
+              r.name.toLowerCase() === ctx.value().toLowerCase() &&
+              r.country.toLowerCase() ===
+                ctx.fieldOf(location.country)().value().toLowerCase(),
+          );
 
           if (!exactMatch) {
             return customError({
@@ -1228,7 +1367,10 @@ export class WeatherFormComponent {
 
         locations.forEach((other, otherIndex) => {
           if (index !== otherIndex) {
-            if (city === other.city.valueOf() && country === other.country.valueOf()) {
+            if (
+              city === other.city.valueOf() &&
+              country === other.country.valueOf()
+            ) {
               errors.push({
                 kind: 'duplicate_location',
                 field: ctx.field.locations[index].city,
@@ -1265,7 +1407,8 @@ export class WeatherFormComponent {
   }
 
   <!-- Errors from all layers -->
-  @if (weatherForm.locations[$index].city().errors().length > 0) { @for (error of weatherForm.locations[$index].city().errors(); track error.kind) {
+  @if (weatherForm.locations[$index].city().errors().length > 0) { @for (error
+  of weatherForm.locations[$index].city().errors(); track error.kind) {
   <p class="text-red-500">{{ error.message }}</p>
   } }
 </div>
@@ -1293,15 +1436,24 @@ import * as v from 'valibot';
 
 // Define Valibot schema
 const UserSchema = v.object({
-  username: v.pipe(v.string(), v.minLength(3, 'Username must be at least 3 characters'), v.maxLength(20, 'Username must be less than 20 characters')),
+  username: v.pipe(
+    v.string(),
+    v.minLength(3, 'Username must be at least 3 characters'),
+    v.maxLength(20, 'Username must be less than 20 characters'),
+  ),
   email: v.pipe(v.string(), v.email('Invalid email format')),
-  age: v.pipe(v.number(), v.integer('Age must be an integer'), v.minValue(18, 'Must be 18 or older'), v.maxValue(120, 'Invalid age')),
+  age: v.pipe(
+    v.number(),
+    v.integer('Age must be an integer'),
+    v.minValue(18, 'Must be 18 or older'),
+    v.maxValue(120, 'Invalid age'),
+  ),
 });
 
 type User = v.InferOutput<typeof UserSchema>;
 
 @Component({
-  selector: 'app-user-form',
+  selector: 'ngx-user-form',
   imports: [Control],
   template: `
     <form>
@@ -1347,7 +1499,8 @@ Standard schema errors are automatically converted to Signal Forms `ValidationEr
 Access them in templates:
 
 ```html
-@for (error of userForm.username().errors(); track error.kind) { @if (error.kind === 'standard-schema') {
+@for (error of userForm.username().errors(); track error.kind) { @if (error.kind
+=== 'standard-schema') {
 <span class="error">{{ error.message }}</span>
 } }
 ```
@@ -1602,9 +1755,19 @@ const forecastWeatherSchema = schema<WeatherQuery>((path) => {
 
 // Apply conditionally based on searchType
 const weatherForm = form(weatherData, (path) => {
-  applyWhenValue(path, (value): value is Extract<WeatherQuery, { searchType: 'current' }> => value.searchType === 'current', currentWeatherSchema);
+  applyWhenValue(
+    path,
+    (value): value is Extract<WeatherQuery, { searchType: 'current' }> =>
+      value.searchType === 'current',
+    currentWeatherSchema,
+  );
 
-  applyWhenValue(path, (value): value is Extract<WeatherQuery, { searchType: 'forecast' }> => value.searchType === 'forecast', forecastWeatherSchema);
+  applyWhenValue(
+    path,
+    (value): value is Extract<WeatherQuery, { searchType: 'forecast' }> =>
+      value.searchType === 'forecast',
+    forecastWeatherSchema,
+  );
 });
 ```
 
@@ -1630,7 +1793,9 @@ const emailSchema = schema<string>((path) => {
 });
 
 // Use in multiple forms
-const registrationForm = form(regData, (path) => apply(path.email, emailSchema));
+const registrationForm = form(regData, (path) =>
+  apply(path.email, emailSchema),
+);
 const profileForm = form(profileData, (path) => apply(path.email, emailSchema));
 ```
 
@@ -1751,7 +1916,11 @@ const orderForm = form(orderModel, (path) => {
   required(path.quantity);
 
   // Only apply validation if the field exists
-  applyWhenValue(path.shippingAddress, (value) => value !== undefined, addressSchema);
+  applyWhenValue(
+    path.shippingAddress,
+    (value) => value !== undefined,
+    addressSchema,
+  );
 });
 ```
 
@@ -1832,7 +2001,16 @@ const flightFormMetadata: FieldMetadata[] = [
 #### Step 2: Create Schema from Metadata
 
 ```typescript
-import { schema, required, minLength, maxLength, min, max, email, Schema } from '@angular/forms/signals';
+import {
+  schema,
+  required,
+  minLength,
+  maxLength,
+  min,
+  max,
+  email,
+  Schema,
+} from '@angular/forms/signals';
 
 export function metadataToSchema(metadata: FieldMetadata[]): Schema<unknown> {
   return schema<unknown>((path) => {
@@ -1885,7 +2063,7 @@ import { Component, input } from '@angular/core';
 import { FieldState, Control } from '@angular/forms/signals';
 
 @Component({
-  selector: 'app-dynamic-form',
+  selector: 'ngx-dynamic-form',
   imports: [Control],
   template: `
     @for (field of metadata(); track field.name) {
@@ -1907,7 +2085,11 @@ import { FieldState, Control } from '@angular/forms/signals';
               </select>
             }
             @default {
-              <input [type]="field.type ?? 'text'" [id]="field.name" [control]="fieldState" />
+              <input
+                [type]="field.type ?? 'text'"
+                [id]="field.name"
+                [control]="fieldState"
+              />
             }
           }
 
@@ -1953,14 +2135,19 @@ export class DynamicFormComponent {
 import { Component, signal } from '@angular/core';
 
 @Component({
-  selector: 'app-flight-booking',
+  selector: 'ngx-flight-booking',
   imports: [DynamicFormComponent],
   template: `
     <h2>Flight Booking</h2>
 
-    <app-dynamic-form [metadata]="flightFormMetadata" [dynamicForm]="flightForm" />
+    <ngx-dynamic-form
+      [metadata]="flightFormMetadata"
+      [dynamicForm]="flightForm"
+    />
 
-    <button (click)="save()" [disabled]="flightForm().invalid()">Book Flight</button>
+    <button (click)="save()" [disabled]="flightForm().invalid()">
+      Book Flight
+    </button>
   `,
 })
 export class FlightBookingComponent {
@@ -1973,7 +2160,10 @@ export class FlightBookingComponent {
     mealPreference: 'standard',
   });
 
-  protected readonly flightForm = form(this.flightModel, metadataToSchema(flightFormMetadata));
+  protected readonly flightForm = form(
+    this.flightModel,
+    metadataToSchema(flightFormMetadata),
+  );
 
   save() {
     if (this.flightForm().valid()) {
@@ -2023,7 +2213,10 @@ validateTree(path, (ctx) => {
     // Check for duplicates
     locations.forEach((other, otherIndex) => {
       if (index !== otherIndex) {
-        if (city === other.city.valueOf() && country === other.country.valueOf()) {
+        if (
+          city === other.city.valueOf() &&
+          country === other.country.valueOf()
+        ) {
           errors.push({
             kind: 'duplicate_location',
             field: ctx.field.locations[index].city, // 🎯 Target specific field!
@@ -2200,7 +2393,7 @@ Because form state is tied to the model signal, form UI components can be lazy-l
 
       <!-- Advanced settings load on interaction -->
       @defer (on interaction) {
-        <app-advanced-settings [form]="userForm.settings" />
+        <ngx-advanced-settings [form]="userForm.settings" />
       } @placeholder {
         <button>Show Advanced Settings</button>
       }
@@ -2213,7 +2406,7 @@ export class UserFormComponent {
 
 // Advanced settings component loads lazily
 @Component({
-  selector: 'app-advanced-settings',
+  selector: 'ngx-advanced-settings',
   template: `
     <input [control]="form().theme" />
     <input [control]="form().timezone" />
@@ -2245,7 +2438,7 @@ import { Component, input, contentChild } from '@angular/core';
 import { FieldState, Control } from '@angular/forms/signals';
 
 @Component({
-  selector: 'app-form-field',
+  selector: 'ngx-form-field',
   imports: [Control],
   template: `
     <div class="form-field" [class.has-error]="showError()">
@@ -2341,37 +2534,40 @@ export class FormFieldComponent {
 
 ```typescript
 @Component({
-  selector: 'app-user-form',
+  selector: 'ngx-user-form',
   imports: [FormFieldComponent, Control],
   template: `
     <form>
       <!-- Simple text input -->
-      <app-form-field [field]="userForm.name">
+      <ngx-form-field [field]="userForm.name">
         <label for="name">Name</label>
         <input id="name" [control]="userForm.name" />
-      </app-form-field>
+      </ngx-form-field>
 
       <!-- Email with hint -->
-      <app-form-field [field]="userForm.email" hint="We'll never share your email">
+      <ngx-form-field
+        [field]="userForm.email"
+        hint="We'll never share your email"
+      >
         <label for="email">Email</label>
         <input id="email" type="email" [control]="userForm.email" />
-      </app-form-field>
+      </ngx-form-field>
 
       <!-- Textarea -->
-      <app-form-field [field]="userForm.bio">
+      <ngx-form-field [field]="userForm.bio">
         <label for="bio">Bio</label>
         <textarea id="bio" [control]="userForm.bio" rows="4"></textarea>
-      </app-form-field>
+      </ngx-form-field>
 
       <!-- Select -->
-      <app-form-field [field]="userForm.country">
+      <ngx-form-field [field]="userForm.country">
         <label for="country">Country</label>
         <select id="country" [control]="userForm.country">
           <option value="US">United States</option>
           <option value="UK">United Kingdom</option>
           <option value="CA">Canada</option>
         </select>
-      </app-form-field>
+      </ngx-form-field>
 
       <button type="submit">Save</button>
     </form>
@@ -2391,7 +2587,7 @@ import { Component, input, computed } from '@angular/core';
 import { FieldState, ValidationError } from '@angular/forms/signals';
 
 @Component({
-  selector: 'app-validation-errors',
+  selector: 'ngx-validation-errors',
   template: `
     @if (shouldShow()) {
       <div class="validation-errors" role="alert">
@@ -2476,11 +2672,11 @@ export class ValidationErrorsComponent {
 
 ```html
 <input [control]="userForm.email" />
-<app-validation-errors [field]="userForm.email" />
+<ngx-validation-errors [field]="userForm.email" />
 
 <!-- Or with custom display strategy -->
 <input [control]="userForm.password" />
-<app-validation-errors [field]="userForm.password" showWhen="dirty" />
+<ngx-validation-errors [field]="userForm.password" showWhen="dirty" />
 ```
 
 ### Form Submit Button Component
@@ -2492,9 +2688,14 @@ import { Component, input, output } from '@angular/core';
 import { FieldState } from '@angular/forms/signals';
 
 @Component({
-  selector: 'app-submit-button',
+  selector: 'ngx-submit-button',
   template: `
-    <button type="submit" [disabled]="isDisabled()" [class]="buttonClass()" (click)="handleClick($event)">
+    <button
+      type="submit"
+      [disabled]="isDisabled()"
+      [class]="buttonClass()"
+      (click)="handleClick($event)"
+    >
       @if (form().submitting()) {
         <span class="spinner"></span>
         <span>{{ loadingText() }}</span>
@@ -2586,7 +2787,12 @@ export class SubmitButtonComponent {
     <form (ngSubmit)="save()">
       <!-- form fields -->
 
-      <app-submit-button [form]="userForm" text="Save User" loadingText="Saving..." (clicked)="save()" />
+      <ngx-submit-button
+        [form]="userForm"
+        text="Save User"
+        loadingText="Saving..."
+        (clicked)="save()"
+      />
     </form>
   `,
 })
@@ -2642,7 +2848,9 @@ const isTouched = nameField().touched(); // User interaction
 const errors = nameField().errors(); // Validation errors
 
 // Use in computed
-const displayError = computed(() => nameField().touched() && nameField().invalid());
+const displayError = computed(
+  () => nameField().touched() && nameField().invalid(),
+);
 
 // Use in effects
 effect(() => {
@@ -2716,7 +2924,9 @@ const registrationSchema = schema<RegistrationModel>((path) => {
 
   // Cross-field validation
   validate(path.confirmPassword, ({ value, valueOf }) => {
-    return value() === valueOf(path.password) ? [] : [customError({ kind: 'mismatch', message: 'Passwords must match' })];
+    return value() === valueOf(path.password)
+      ? []
+      : [customError({ kind: 'mismatch', message: 'Passwords must match' })];
   });
 });
 ```
@@ -2783,7 +2993,11 @@ const orderSchema = schema<OrderModel>((path) => {
   required(path.quantity);
 
   // Conditional validation
-  applyWhen(path.shippingAddress, ({ valueOf }) => valueOf(path.shippingRequired), addressSchema);
+  applyWhen(
+    path.shippingAddress,
+    ({ valueOf }) => valueOf(path.shippingRequired),
+    addressSchema,
+  );
 
   // Or using when option
   required(path.shippingAddress, {
@@ -2835,7 +3049,9 @@ validate(path.endDate, ({ value, valueOf, stateOf }) => {
 
   if (!startDateValid) return []; // Don't validate if start invalid
 
-  return endDate > startDate ? [] : [customError({ kind: 'range', message: 'End after start' })];
+  return endDate > startDate
+    ? []
+    : [customError({ kind: 'range', message: 'End after start' })];
 });
 ```
 
@@ -2908,7 +3124,7 @@ validate(path.field2, ({ valueOf }) => {
 
 ```typescript
 @Component({
-  selector: 'app-user-form',
+  selector: 'ngx-user-form',
   template: '...',
   imports: [Control],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -2921,9 +3137,13 @@ export class UserFormComponent {
   protected readonly userForm = form(this.userModel, userSchema);
 
   // Derived states for UI
-  protected readonly canSubmit = computed(() => this.userForm().valid() && !this.userForm().submitting());
+  protected readonly canSubmit = computed(
+    () => this.userForm().valid() && !this.userForm().submitting(),
+  );
 
-  protected readonly hasErrors = computed(() => this.userForm().invalid() && this.userForm().touched());
+  protected readonly hasErrors = computed(
+    () => this.userForm().invalid() && this.userForm().touched(),
+  );
 
   // Methods
   save() {
@@ -3058,7 +3278,7 @@ get isFormReady() {
 @Component({
   template: `
     @for (item of userForm.items().controls; track item.id()) {
-      <app-item-editor [control]="item" />
+      <ngx-item-editor [control]="item" />
     }
   `
 })
@@ -3070,7 +3290,7 @@ get isFormReady() {
 
 ```typescript
 @Component({
-  selector: 'app-field-errors',
+  selector: 'ngx-field-errors',
   template: `
     @if (field().invalid() && field().touched()) {
       <div class="error-container">
@@ -3087,7 +3307,7 @@ export class FieldErrorsComponent {
 
 // Usage
 <input [control]="userForm.email" />
-<app-field-errors [field]="userForm.email()" />
+<ngx-field-errors [field]="userForm.email()" />
 ```
 
 #### Custom Error Messages
@@ -3145,7 +3365,9 @@ describe('UserFormComponent', () => {
 
     // Assert
     expect(nameField().valid()).toBe(false);
-    expect(nameField().errors()).toContainEqual(jasmine.objectContaining({ kind: 'required' }));
+    expect(nameField().errors()).toContainEqual(
+      jasmine.objectContaining({ kind: 'required' }),
+    );
   });
 
   it('should validate email format', () => {

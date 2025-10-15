@@ -147,10 +147,15 @@ Follow [`.github/instructions/self-explanatory-code-commenting.instructions.md`]
 ### Component Template
 
 ```typescript
-import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 
 @Component({
-  selector: 'app-example',
+  selector: 'ngx-example',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [], // Add required imports
   template: ``,

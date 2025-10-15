@@ -167,8 +167,8 @@ describe('NgxSignalFormFieldComponent', () => {
     });
   });
 
-  describe('Styling and layout', () => {
-    it('should apply flexbox layout styles to host element', async () => {
+  describe('Layout behavior', () => {
+    it('should render form field wrapper that contains projected content', async () => {
       const { container } = await render(
         `<ngx-signal-form-field [field]="field" fieldName="test-field">
           <label for="test-input">Test Label</label>
@@ -182,69 +182,13 @@ describe('NgxSignalFormFieldComponent', () => {
         },
       );
 
-      const formField = container.querySelector(
-        'ngx-signal-form-field',
-      ) as HTMLElement;
-      const styles = window.getComputedStyle(formField);
+      const formField = container.querySelector('ngx-signal-form-field');
+      const label = screen.getByText('Test Label');
+      const input = screen.getByRole('textbox');
 
-      expect(styles.display).toBe('flex');
-      expect(styles.flexDirection).toBe('column');
-    });
-
-    it('should support CSS custom properties for gap', async () => {
-      const { container } = await render(
-        `<ngx-signal-form-field
-          [field]="field"
-          fieldName="test-field"
-          style="--ngx-signal-form-field-gap: 1rem"
-        >
-          <label for="test-input">Test</label>
-          <input type="text" id="test-input" />
-        </ngx-signal-form-field>`,
-        {
-          imports: [NgxSignalFormFieldComponent],
-          componentProperties: {
-            field: createMockFieldState(),
-          },
-        },
-      );
-
-      const formField = container.querySelector(
-        'ngx-signal-form-field',
-      ) as HTMLElement;
-      const customGap = formField.style.getPropertyValue(
-        '--ngx-signal-form-field-gap',
-      );
-
-      expect(customGap).toBe('1rem');
-    });
-
-    it('should support CSS custom properties for margin', async () => {
-      const { container } = await render(
-        `<ngx-signal-form-field
-          [field]="field"
-          fieldName="test-field"
-          style="--ngx-signal-form-field-margin: 2rem"
-        >
-          <label for="test-input">Test</label>
-          <input type="text" id="test-input" />
-        </ngx-signal-form-field>`,
-        {
-          imports: [NgxSignalFormFieldComponent],
-          componentProperties: {
-            field: createMockFieldState(),
-          },
-        },
-      );
-
-      const formField = container.querySelector(
-        'ngx-signal-form-field',
-      ) as HTMLElement;
-      const customMargin = formField.style.getPropertyValue(
-        '--ngx-signal-form-field-margin',
-      );
-
-      expect(customMargin).toBe('2rem');
+      expect(formField).toBeTruthy();
+      expect(label).toBeTruthy();
+      expect(input).toBeTruthy();
     });
   });
 

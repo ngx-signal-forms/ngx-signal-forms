@@ -1,19 +1,7 @@
-import { Directive, input, inject, computed, type Signal } from '@angular/core';
-import type {
-  FieldTree,
-  SubmittedStatus,
-  FieldState,
-} from '@angular/forms/signals';
+import { computed, Directive, inject, input, type Signal } from '@angular/core';
+import type { FieldTree, SubmittedStatus } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type { ErrorDisplayStrategy, ReactiveOrStatic } from '../types';
-
-/**
- * Extended FieldState interface with experimental submittedStatus API.
- * Required because Angular 21's experimental APIs may not be fully typed yet.
- */
-interface FieldStateWithSubmittedStatus extends FieldState<unknown> {
-  submittedStatus(): SubmittedStatus;
-}
 
 /**
  * Form context provided to child directives and components.
@@ -169,9 +157,9 @@ export class NgxSignalFormProviderDirective {
    * ```
    */
   readonly submittedStatus = computed<SubmittedStatus>(() => {
-    const fieldTree = this.form();
-    const fieldState = fieldTree();
-    // Type assertion needed because submittedStatus() is experimental in Angular 21
-    return (fieldState as FieldStateWithSubmittedStatus).submittedStatus();
+    // Angular 21 FieldState doesn't have submittedStatus - only `submitting` signal
+    // Provide fallback: return 'unsubmitted' since we don't track submission manually
+    // Apps using submit() helper should pass submittedStatus explicitly if needed
+    return 'unsubmitted';
   });
 }

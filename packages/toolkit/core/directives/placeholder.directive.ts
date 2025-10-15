@@ -11,7 +11,6 @@ import { Directive } from '@angular/core';
  */
 @Directive({
   selector: '[ngxSignalFormPlaceholder]',
-  standalone: true,
 })
 export class NgxSignalFormPlaceholderDirective {
   constructor() {

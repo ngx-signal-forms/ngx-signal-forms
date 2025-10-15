@@ -95,7 +95,10 @@ import { signal } from '@angular/core';
 
 // Rendering a component class
 await render(MyFormComponent, {
-  bindings: [inputBinding('initialData', signal({ name: 'John' })), outputBinding('dataSubmit', vi.fn())],
+  bindings: [
+    inputBinding('initialData', signal({ name: 'John' })),
+    outputBinding('dataSubmit', vi.fn()),
+  ],
 });
 ```
 
@@ -233,8 +236,8 @@ await rerender({
 ```typescript
 await render(
   `<div class="container">
-    <app-header [user]="currentUser" />
-    <app-content [items]="data" (itemClick)="onItemClick($event)" />
+    <ngx-header [user]="currentUser" />
+    <ngx-content [items]="data" (itemClick)="onItemClick($event)" />
   </div>`,
   {
     imports: [HeaderComponent, ContentComponent],
@@ -269,7 +272,7 @@ await render(
 | ---------------------------------------- | ---------------- | --------------------------------- | --------------------------------------------------------------------- |
 | Testing a component class                | Component-based  | `bindings` with `inputBinding()`  | `await render(MyComponent, { bindings: [...] })`                      |
 | Testing a directive in template          | Template-based   | `componentProperties`             | `await render('<div [myDir]="val">', { componentProperties: {...} })` |
-| Testing multiple components in HTML      | Template-based   | `componentProperties`             | `await render('<app-a [x]="y" />', { componentProperties: {...} })`   |
+| Testing multiple components in HTML      | Template-based   | `componentProperties`             | `await render('<ngx-a [x]="y" />', { componentProperties: {...} })`   |
 | Component with `@Input()` decorators     | Component-based  | `bindings` with `inputBinding()`  | Works with both decorators and signal inputs                          |
 | Component with `output()` or `@Output()` | Component-based  | `bindings` with `outputBinding()` | `outputBinding('click', vi.fn())`                                     |
 | Component with `model()` (two-way)       | Component-based  | `bindings` with `twoWayBinding()` | `twoWayBinding('value', signal(''))`                                  |

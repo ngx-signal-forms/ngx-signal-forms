@@ -1,0 +1,141 @@
+<form
+  [ngxSignalFormProvider]="showcaseForm"
+  [errorStrategy]="errorDisplayMode()"
+  (ngSubmit)="save()"
+  class="form-container"
+  novalidate
+>
+  <div class="space-y-6">
+    <h2 class="text-lg font-semibold">Personal Information</h2>
+
+    <!-- Name Field -->
+    <ngx-signal-form-field [field]="showcaseForm.name" fieldName="name">
+      <label class="form-label" for="name">Full Name *</label>
+      <input
+        id="name"
+        class="form-input"
+        type="text"
+        [control]="showcaseForm.name"
+        placeholder="John Doe"
+        aria-required="true"
+      />
+    </ngx-signal-form-field>
+
+    <!-- Email Field -->
+    <ngx-signal-form-field [field]="showcaseForm.email" fieldName="email">
+      <label class="form-label" for="email">Email Address *</label>
+      <input
+        id="email"
+        class="form-input"
+        type="email"
+        [control]="showcaseForm.email"
+        placeholder="john@example.com"
+        aria-required="true"
+        autocomplete="email"
+      />
+    </ngx-signal-form-field>
+
+    <!-- Website Field (Optional) -->
+    <ngx-signal-form-field [field]="showcaseForm.website" fieldName="website">
+      <label class="form-label" for="website">Website (Optional)</label>
+      <input
+        id="website"
+        class="form-input"
+        type="url"
+        [control]="showcaseForm.website"
+        placeholder="https://example.com"
+        autocomplete="url"
+      />
+    </ngx-signal-form-field>
+
+    <!-- Age Field -->
+    <ngx-signal-form-field [field]="showcaseForm.age" fieldName="age">
+      <label class="form-label" for="age">Age *</label>
+      <input
+        id="age"
+        class="form-input"
+        type="number"
+        [control]="showcaseForm.age"
+        min="18"
+        max="120"
+        placeholder="25"
+        aria-required="true"
+      />
+    </ngx-signal-form-field>
+  </div>
+
+  <div class="space-y-6">
+    <h2 class="text-lg font-semibold">Additional Details</h2>
+
+    <!-- Country Field -->
+    <ngx-signal-form-field [field]="showcaseForm.country" fieldName="country">
+      <label class="form-label" for="country">Country *</label>
+      <select
+        id="country"
+        class="form-select"
+        [control]="showcaseForm.country"
+        aria-required="true"
+      >
+        @for (country of countries; track country.value) {
+        <option [value]="country.value">{{ country.label }}</option>
+        }
+      </select>
+    </ngx-signal-form-field>
+
+    <!-- Bio Field -->
+    <ngx-signal-form-field [field]="showcaseForm.bio" fieldName="bio">
+      <label class="form-label" for="bio">Bio *</label>
+      <textarea
+        id="bio"
+        class="form-textarea"
+        [control]="showcaseForm.bio"
+        placeholder="Tell us about yourself (minimum 20 characters)..."
+        aria-required="true"
+      ></textarea>
+    </ngx-signal-form-field>
+  </div>
+
+  <div class="space-y-6">
+    <h2 class="text-lg font-semibold">Agreements</h2>
+
+    <!-- Terms and Conditions Checkbox -->
+    <ngx-signal-form-field
+      [field]="showcaseForm.agreeToTerms"
+      fieldName="agreeToTerms"
+    >
+      <label class="form-checkbox-label" for="agreeToTerms">
+        <input
+          id="agreeToTerms"
+          class="form-checkbox"
+          type="checkbox"
+          [control]="showcaseForm.agreeToTerms"
+          aria-required="true"
+        />
+        <span class="ml-2">I agree to the terms and conditions *</span>
+      </label>
+    </ngx-signal-form-field>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="mt-8 flex items-center gap-4">
+    <button
+      class="btn-primary"
+      type="submit"
+      [disabled]="showcaseForm().invalid() || showcaseForm().pending()"
+    >
+      Submit Form
+    </button>
+
+    <button class="btn-secondary" type="reset" (click)="resetForm()">
+      Reset
+    </button>
+
+    <div class="ml-auto text-sm text-gray-600 dark:text-gray-400">
+      @if (showcaseForm().valid()) {
+      <span class="text-green-600 dark:text-green-400">✓ All fields valid</span>
+      } @else {
+      <span>* Required fields</span>
+      }
+    </div>
+  </div>
+</form>

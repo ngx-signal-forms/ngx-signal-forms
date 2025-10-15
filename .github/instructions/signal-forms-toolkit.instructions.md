@@ -163,7 +163,6 @@ import {
 - Type-safe readonly tuple (`as const`)
 - Single import replaces three individual imports
 - Cleaner component metadata
-- Aligned with ngx-vest-forms architecture
 
 ## Public API - Directives
 
@@ -186,7 +185,11 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Control, NgxSignalFormToolkit],
   template: `
-    <form [ngxSignalFormProvider]="userForm" [errorStrategy]="'on-touch'" (ngSubmit)="save()">
+    <form
+      [ngxSignalFormProvider]="userForm"
+      [errorStrategy]="'on-touch'"
+      (ngSubmit)="save()"
+    >
       <input id="email" [control]="userForm.email" />
       <button type="submit">Submit</button>
     </form>
@@ -242,7 +245,11 @@ export class UserFormComponent {
 **Example - Nested paths**:
 
 ```html
-<input id="firstName" data-signal-field="personalInfo.firstName" [control]="form.personalInfo.firstName" />
+<input
+  id="firstName"
+  data-signal-field="personalInfo.firstName"
+  [control]="form.personalInfo.firstName"
+/>
 ```
 
 **Example - Opt-out**:
@@ -303,6 +310,34 @@ export class EmailFieldComponent {
 - Warnings use `role="status"` with `aria-live="polite"`
 - Respects error display strategy automatically
 - Fully styleable via CSS custom properties
+
+**Handling Root-Level vs Field-Level Errors:**
+
+The error component automatically handles both root-level (form-wide) and field-level errors:
+
+```typescript
+// Root-level errors: Pass the form tree itself
+<ngx-signal-form-error [field]="myForm" fieldName="form-root" />
+
+// Field-level errors: Pass a specific field
+<ngx-signal-form-error [field]="myForm.email" fieldName="email" />
+```
+
+**When displaying errors programmatically:**
+
+```typescript
+// Get root-level errors (cross-field validation)
+protected readonly rootErrors = computed(() => this.myForm().errors());
+
+// Display only root-level errors in a banner
+@if (rootErrors().length > 0) {
+  <div class="form-banner" role="alert">
+    @for (error of rootErrors(); track error.kind) {
+      <p>{{ error.message }}</p>
+    }
+  </div>
+}
+```
 
 ### NgxSignalFormFieldComponent
 
@@ -404,7 +439,11 @@ export class ManualErrorDisplayComponent {
   protected readonly emailForm = form(this.#model /* validators */);
   protected readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-  protected readonly shouldShowErrors = showErrors(this.emailForm.email, 'on-touch', this.submittedStatus);
+  protected readonly shouldShowErrors = showErrors(
+    this.emailForm.email,
+    'on-touch',
+    this.submittedStatus,
+  );
 }
 ```
 
@@ -427,7 +466,11 @@ export class ManualErrorDisplayComponent {
 ```typescript
 import { computeShowErrors } from '@ngx-signal-forms/toolkit/core';
 
-const shouldShow = computeShowErrors(form.password, 'immediate', signal<SubmittedStatus>('unsubmitted'));
+const shouldShow = computeShowErrors(
+  form.password,
+  'immediate',
+  signal<SubmittedStatus>('unsubmitted'),
+);
 ```
 
 ### combineShowErrors()
@@ -450,7 +493,9 @@ import { combineShowErrors, showErrors } from '@ngx-signal-forms/toolkit/core';
   imports: [Control],
   template: `
     @if (showAnyFormErrors()) {
-      <div class="form-error-banner" role="alert">Please fix the errors below before submitting</div>
+      <div class="form-error-banner" role="alert">
+        Please fix the errors below before submitting
+      </div>
     }
 
     <input id="email" [control]="userForm.email" />
@@ -462,7 +507,10 @@ export class FormWithBannerComponent {
   protected readonly userForm = form(this.#model /* validators */);
   protected readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-  protected readonly showAnyFormErrors = combineShowErrors([showErrors(this.userForm.email, 'on-touch', this.submittedStatus), showErrors(this.userForm.password, 'on-touch', this.submittedStatus)]);
+  protected readonly showAnyFormErrors = combineShowErrors([
+    showErrors(this.userForm.email, 'on-touch', this.submittedStatus),
+    showErrors(this.userForm.password, 'on-touch', this.submittedStatus),
+  ]);
 }
 ```
 
@@ -478,7 +526,13 @@ export class FormWithBannerComponent {
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { form, schema, required, minLength, validate } from '@angular/forms/signals';
+import {
+  form,
+  schema,
+  required,
+  minLength,
+  validate,
+} from '@angular/forms/signals';
 import { warningError } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 
@@ -491,7 +545,10 @@ const passwordSchema = schema<{ password: string }>((path) => {
   validate(path.password, (ctx) => {
     const value = ctx.value();
     if (value && value.length < 12) {
-      return warningError('short-password', 'Consider using 12+ characters for better security');
+      return warningError(
+        'short-password',
+        'Consider using 12+ characters for better security',
+      );
     }
     return null;
   });
@@ -532,7 +589,10 @@ export class PasswordFormComponent {
 **Example usage**:
 
 ```typescript
-import { isWarningError, isBlockingError } from '@ngx-signal-forms/toolkit/core';
+import {
+  isWarningError,
+  isBlockingError,
+} from '@ngx-signal-forms/toolkit/core';
 
 const allErrors = form.email().errors();
 const warnings = allErrors.filter(isWarningError);
@@ -552,7 +612,11 @@ console.log(`Blocking: ${blockingErrors.length}, Warnings: ${warnings.length}`);
 **Example usage**:
 
 ```typescript
-import { resolveFieldName, generateErrorId, generateWarningId } from '@ngx-signal-forms/toolkit/core';
+import {
+  resolveFieldName,
+  generateErrorId,
+  generateWarningId,
+} from '@ngx-signal-forms/toolkit/core';
 
 // Resolve field name from element
 const fieldName = resolveFieldName(element, injector);
@@ -585,7 +649,7 @@ const contactSchema = schema<ContactModel>((path) => {
 });
 
 @Component({
-  selector: 'app-contact-form',
+  selector: 'ngx-contact-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Control, NgxSignalFormFieldComponent],
   template: `
@@ -623,7 +687,11 @@ When user needs to toggle error display mode (e.g., for demos or complex UX):
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { form, schema, required, email, Control } from '@angular/forms/signals';
-import { NgxSignalFormProviderDirective, NgxSignalFormFieldComponent, type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
+import {
+  NgxSignalFormProviderDirective,
+  NgxSignalFormFieldComponent,
+  type ErrorDisplayStrategy,
+} from '@ngx-signal-forms/toolkit/core';
 
 const userSchema = schema<{ email: string }>((path) => {
   required(path.email, { message: 'Email is required' });
@@ -631,29 +699,55 @@ const userSchema = schema<{ email: string }>((path) => {
 });
 
 @Component({
-  selector: 'app-user-form',
+  selector: 'ngx-user-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgxSignalFormProviderDirective, NgxSignalFormFieldComponent],
+  imports: [
+    Control,
+    NgxSignalFormProviderDirective,
+    NgxSignalFormFieldComponent,
+  ],
   template: `
     <!-- Strategy selector -->
     <fieldset>
       <legend>Error Display Mode</legend>
       <label>
-        <input type="radio" name="errorMode" value="immediate" [checked]="errorStrategy() === 'immediate'" (change)="errorStrategy.set('immediate')" />
+        <input
+          type="radio"
+          name="errorMode"
+          value="immediate"
+          [checked]="errorStrategy() === 'immediate'"
+          (change)="errorStrategy.set('immediate')"
+        />
         Immediate
       </label>
       <label>
-        <input type="radio" name="errorMode" value="on-touch" [checked]="errorStrategy() === 'on-touch'" (change)="errorStrategy.set('on-touch')" />
+        <input
+          type="radio"
+          name="errorMode"
+          value="on-touch"
+          [checked]="errorStrategy() === 'on-touch'"
+          (change)="errorStrategy.set('on-touch')"
+        />
         On Touch (Default)
       </label>
       <label>
-        <input type="radio" name="errorMode" value="on-submit" [checked]="errorStrategy() === 'on-submit'" (change)="errorStrategy.set('on-submit')" />
+        <input
+          type="radio"
+          name="errorMode"
+          value="on-submit"
+          [checked]="errorStrategy() === 'on-submit'"
+          (change)="errorStrategy.set('on-submit')"
+        />
         On Submit
       </label>
     </fieldset>
 
     <!-- Form with provider (tracks submission + manages strategy) -->
-    <form [ngxSignalFormProvider]="userForm" [errorStrategy]="errorStrategy()" (ngSubmit)="save()">
+    <form
+      [ngxSignalFormProvider]="userForm"
+      [errorStrategy]="errorStrategy()"
+      (ngSubmit)="save()"
+    >
       <ngx-signal-form-field [field]="userForm.email" fieldName="email">
         <label for="email">Email</label>
         <input id="email" [control]="userForm.email" />
@@ -680,7 +774,14 @@ When validation should guide users without blocking submission:
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { form, schema, required, minLength, validate, Control } from '@angular/forms/signals';
+import {
+  form,
+  schema,
+  required,
+  minLength,
+  validate,
+  Control,
+} from '@angular/forms/signals';
 import { warningError } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 
@@ -693,14 +794,17 @@ const passwordSchema = schema<{ password: string }>((path) => {
   validate(path.password, (ctx) => {
     const value = ctx.value();
     if (value && value.length < 12) {
-      return warningError('short-password', 'Consider using 12+ characters for better security');
+      return warningError(
+        'short-password',
+        'Consider using 12+ characters for better security',
+      );
     }
     return null;
   });
 });
 
 @Component({
-  selector: 'app-password-form',
+  selector: 'ngx-password-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Control, NgxSignalFormFieldComponent],
   template: `
@@ -732,7 +836,7 @@ const emailSchema = schema<{ email: string }>((path) => {
 });
 
 @Component({
-  selector: 'app-manual-error-display',
+  selector: 'ngx-manual-error-display',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Control],
   template: `
@@ -755,7 +859,11 @@ export class ManualErrorComponent {
   protected readonly formSubmitted = signal(false);
 
   // Compute when to show errors
-  protected readonly shouldShowErrors = showErrors(this.emailForm.email, 'on-touch', this.formSubmitted);
+  protected readonly shouldShowErrors = showErrors(
+    this.emailForm.email,
+    'on-touch',
+    this.formSubmitted,
+  );
 
   protected save(): void {
     this.formSubmitted.set(true);
@@ -812,7 +920,10 @@ required(path.email, { message: 'Email is required' });
 // ✅ Good - Warning guides user
 validate(path.email, (ctx) => {
   if (ctx.value()?.includes('@tempmail.com')) {
-    return warningError('disposable-email', 'Disposable emails may not receive important updates');
+    return warningError(
+      'disposable-email',
+      'Disposable emails may not receive important updates',
+    );
   }
   return null;
 });
@@ -873,7 +984,10 @@ it('should show errors based on strategy', async () => {
   const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
   await render(MyFormComponent, {
-    bindings: [inputBinding('model', model), inputBinding('submittedStatus', submittedStatus)],
+    bindings: [
+      inputBinding('model', model),
+      inputBinding('submittedStatus', submittedStatus),
+    ],
   });
 
   const emailInput = screen.getByLabelText(/email/i);
@@ -955,7 +1069,21 @@ test('should validate accessibility tree', async ({ page }) => {
 ### Primary Entry (Core)
 
 ```typescript
-import { provideNgxSignalFormsConfig, NgxSignalFormProviderDirective, NgxSignalFormAutoAriaDirective, NgxSignalFormErrorComponent, showErrors, computeShowErrors, combineShowErrors, warningError, isWarningError, isBlockingError, type ErrorDisplayStrategy, type ReactiveOrStatic, type NgxSignalFormsConfig } from '@ngx-signal-forms/toolkit/core';
+import {
+  provideNgxSignalFormsConfig,
+  NgxSignalFormProviderDirective,
+  NgxSignalFormAutoAriaDirective,
+  NgxSignalFormErrorComponent,
+  showErrors,
+  computeShowErrors,
+  combineShowErrors,
+  warningError,
+  isWarningError,
+  isBlockingError,
+  type ErrorDisplayStrategy,
+  type ReactiveOrStatic,
+  type NgxSignalFormsConfig,
+} from '@ngx-signal-forms/toolkit/core';
 ```
 
 **Recommended: Bundle Import**
@@ -967,7 +1095,21 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 **Alternative: Individual Imports**
 
 ```typescript
-import { provideNgxSignalFormsConfig, NgxSignalFormProviderDirective, NgxSignalFormErrorComponent, NgxSignalFormAutoAriaDirective, showErrors, computeShowErrors, combineShowErrors, warningError, isWarningError, isBlockingError, type ErrorDisplayStrategy, type ReactiveOrStatic, type NgxSignalFormsConfig } from '@ngx-signal-forms/toolkit/core';
+import {
+  provideNgxSignalFormsConfig,
+  NgxSignalFormProviderDirective,
+  NgxSignalFormErrorComponent,
+  NgxSignalFormAutoAriaDirective,
+  showErrors,
+  computeShowErrors,
+  combineShowErrors,
+  warningError,
+  isWarningError,
+  isBlockingError,
+  type ErrorDisplayStrategy,
+  type ReactiveOrStatic,
+  type NgxSignalFormsConfig,
+} from '@ngx-signal-forms/toolkit/core';
 ```
 
 ### Secondary Entry (Form Field)

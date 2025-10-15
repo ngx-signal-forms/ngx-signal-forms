@@ -8,20 +8,20 @@ export * from './tokens';
 export * from './providers/config.provider';
 
 // Directives
-export * from './directives/placeholder.directive';
 export * from './directives/auto-aria.directive';
 export {
   NgxSignalFormProviderDirective,
   type NgxSignalFormContext,
 } from './directives/form-provider.directive';
+export * from './directives/placeholder.directive';
 
 // Utilities
-export * from './utilities/field-resolution';
 export * from './utilities/assert-injector';
+export * from './utilities/error-strategies';
+export * from './utilities/field-resolution';
+export * from './utilities/inject-field-control';
 export * from './utilities/inject-form-config';
 export * from './utilities/inject-form-context';
-export * from './utilities/inject-field-control';
-export * from './utilities/error-strategies';
 export * from './utilities/show-errors';
 export * from './utilities/warning-error';
 
@@ -32,9 +32,9 @@ export * from './components/form-error.component';
 // export * from './directives/form-busy.directive';
 
 // Convenience imports
-import { NgxSignalFormProviderDirective } from './directives/form-provider.directive';
-import { NgxSignalFormAutoAriaDirective } from './directives/auto-aria.directive';
 import { NgxSignalFormErrorComponent } from './components/form-error.component';
+import { NgxSignalFormAutoAriaDirective } from './directives/auto-aria.directive';
+import { NgxSignalFormProviderDirective } from './directives/form-provider.directive';
 
 /**
  * Bundled imports for the ngx-signal-forms toolkit core directives and components.
@@ -47,7 +47,7 @@ import { NgxSignalFormErrorComponent } from './components/form-error.component';
  * import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
  *
  * @Component({
- *   selector: 'app-my-form',
+ *   selector: 'ngx-my-form',
  *   imports: [Control, NgxSignalFormToolkit],
  *   template: `
  *     <form [ngxSignalFormProvider]="myForm">
@@ -72,7 +72,6 @@ import { NgxSignalFormErrorComponent } from './components/form-error.component';
  * - Type-safe readonly tuple
  * - Cleaner component metadata
  * - Better developer experience
- * - Aligned with ngx-vest-forms architecture
  *
  * **Alternative:**
  * You can still import individual items if you need only specific directives/components:

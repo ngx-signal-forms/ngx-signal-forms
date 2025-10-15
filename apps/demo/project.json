@@ -2,7 +2,7 @@
   "name": "demo",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "prefix": "app",
+  "prefix": "ngx",
   "sourceRoot": "apps/demo/src",
   "tags": [],
   "targets": {
@@ -12,7 +12,7 @@
       "options": {
         "outputPath": "dist/apps/demo",
         "browser": "apps/demo/src/main.ts",
-        "polyfills": ["zone.js"],
+        "polyfills": [],
         "tsConfig": "apps/demo/tsconfig.app.json",
         "assets": [
           {
@@ -20,7 +20,7 @@
             "input": "apps/demo/public"
           }
         ],
-        "styles": ["apps/demo/src/styles.css"]
+        "styles": ["apps/demo/src/styles.scss"]
       },
       "configurations": {
         "production": {

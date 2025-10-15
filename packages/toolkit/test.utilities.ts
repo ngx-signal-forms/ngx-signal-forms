@@ -1,5 +1,5 @@
 /**
- * Shared test utilities for ngx-vest-forms
+ * Shared test utilities for @ngx-signal-forms/toolkit
  *
  * This file contains reusable test helpers that can be imported by test files
  * without causing TestBed initialization conflicts.

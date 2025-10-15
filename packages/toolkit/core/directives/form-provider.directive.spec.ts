@@ -1,11 +1,11 @@
-import { Component, signal, inject, viewChild } from '@angular/core';
-import { describe, it, expect } from 'vitest';
+import { Component, inject, signal, viewChild } from '@angular/core';
+import type { FieldTree, SubmittedStatus } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@vitest/browser/context';
-import type { FieldTree, SubmittedStatus } from '@angular/forms/signals';
-import { NgxSignalFormProviderDirective } from './form-provider.directive';
+import { describe, expect, it } from 'vitest';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
-import type { NgxSignalFormsConfig, ErrorDisplayStrategy } from '../types';
+import type { ErrorDisplayStrategy, NgxSignalFormsConfig } from '../types';
+import { NgxSignalFormProviderDirective } from './form-provider.directive';
 
 /**
  * Helper to create complete test config.
@@ -50,7 +50,7 @@ describe('NgxSignalFormProviderDirective', () => {
    */
   @Component({
     selector: 'ngx-signal-form-context-display',
-    standalone: true,
+
     template: `
       <div data-testid="form-present">{{ hasForm() ? 'yes' : 'no' }}</div>
       <div data-testid="submitted-status">{{ context.submittedStatus() }}</div>
@@ -193,7 +193,6 @@ describe('NgxSignalFormProviderDirective', () => {
       const mockForm = createMockForm();
 
       @Component({
-        standalone: true,
         imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
         template: `
           <form [ngxSignalFormProvider]="form">
@@ -236,7 +235,6 @@ describe('NgxSignalFormProviderDirective', () => {
       const mockForm = createMockForm();
 
       @Component({
-        standalone: true,
         imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
         template: `
           <form [ngxSignalFormProvider]="form">
@@ -305,7 +303,7 @@ describe('NgxSignalFormProviderDirective', () => {
 
       @Component({
         selector: 'ngx-signal-form-outer-display',
-        standalone: true,
+
         template: `<div data-testid="outer-strategy">
           {{ context.errorStrategy() }}
         </div>`,
@@ -316,7 +314,7 @@ describe('NgxSignalFormProviderDirective', () => {
 
       @Component({
         selector: 'ngx-signal-form-inner-display',
-        standalone: true,
+
         template: `<div data-testid="inner-strategy">
           {{ context.errorStrategy() }}
         </div>`,

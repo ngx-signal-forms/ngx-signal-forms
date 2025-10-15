@@ -1,5 +1,5 @@
 /**
- * Test setup for ngx-vest-forms library
+ * Test setup for ngx-signal-forms library
  * Configures Angular testing environment and global test utilities for zoneless Angular
  *
  * ## Angular Signal & Effect Cleanup

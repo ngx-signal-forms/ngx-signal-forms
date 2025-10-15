@@ -56,9 +56,17 @@ Angular Signal Forms (introduced in v21) provides an excellent foundation for re
 ```html
 <form (ngSubmit)="save()">
   <label for="email">Email</label>
-  <input id="email" [control]="userForm.email" [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null" [attr.aria-describedby]="userForm.email().invalid() && userForm.email().touched() ? 'email-error' : null" />
-  @if (userForm.email().invalid() && (userForm.email().touched() || userForm().submittedStatus() === 'submitted')) {
-  <span id="email-error" role="alert"> {{ userForm.email().errors()[0].message }} </span>
+  <input
+    id="email"
+    [control]="userForm.email"
+    [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null"
+    [attr.aria-describedby]="userForm.email().invalid() && userForm.email().touched() ? 'email-error' : null"
+  />
+  @if (userForm.email().invalid() && (userForm.email().touched() ||
+  userForm().submittedStatus() === 'submitted')) {
+  <span id="email-error" role="alert">
+    {{ userForm.email().errors()[0].message }}
+  </span>
   }
   <button type="submit">Submit</button>
 </form>
@@ -90,7 +98,7 @@ import { Component, signal } from '@angular/core';
 import { form, schema, required, email, Control } from '@angular/forms/signals';
 
 @Component({
-  selector: 'app-contact',
+  selector: 'ngx-contact',
   imports: [Control],
   template: `
     <form (ngSubmit)="save()">
@@ -136,13 +144,17 @@ import { form, schema, required, email, Control } from '@angular/forms/signals';
 import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
-  selector: 'app-contact',
+  selector: 'ngx-contact',
   imports: [Control, NgxSignalFormErrorComponent],
   template: `
     <form (ngSubmit)="save()">
       <label for="email">Email</label>
       <input id="email" [control]="contactForm.email" />
-      <ngx-signal-form-error [field]="contactForm.email" fieldName="email" [submittedStatus]="submittedStatus" />
+      <ngx-signal-form-error
+        [field]="contactForm.email"
+        fieldName="email"
+        [submittedStatus]="submittedStatus"
+      />
 
       <button type="submit">Send</button>
     </form>
@@ -177,11 +189,18 @@ Don't want to manage `submittedStatus` manually? Use the form provider:
 ```typescript
 import { Component, signal } from '@angular/core';
 import { form, schema, required, email, Control } from '@angular/forms/signals';
-import { NgxSignalFormErrorComponent, NgxSignalFormProviderDirective } from '@ngx-signal-forms/toolkit/core';
+import {
+  NgxSignalFormErrorComponent,
+  NgxSignalFormProviderDirective,
+} from '@ngx-signal-forms/toolkit/core';
 
 @Component({
-  selector: 'app-contact',
-  imports: [Control, NgxSignalFormProviderDirective, NgxSignalFormErrorComponent],
+  selector: 'ngx-contact',
+  imports: [
+    Control,
+    NgxSignalFormProviderDirective,
+    NgxSignalFormErrorComponent,
+  ],
   template: `
     <form [ngxSignalFormProvider]="contactForm" (ngSubmit)="save()">
       <label for="email">Email</label>
@@ -219,13 +238,24 @@ Simplify your templates with the field wrapper component:
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { form, schema, required, email, minLength, Control } from '@angular/forms/signals';
+import {
+  form,
+  schema,
+  required,
+  email,
+  minLength,
+  Control,
+} from '@angular/forms/signals';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 import { NgxSignalFormProviderDirective } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
-  selector: 'app-signup',
-  imports: [Control, NgxSignalFormProviderDirective, NgxSignalFormFieldComponent],
+  selector: 'ngx-signup',
+  imports: [
+    Control,
+    NgxSignalFormProviderDirective,
+    NgxSignalFormFieldComponent,
+  ],
   template: `
     <form [ngxSignalFormProvider]="signupForm" (ngSubmit)="save()">
       <ngx-signal-form-field [field]="signupForm.email" fieldName="email">
@@ -238,9 +268,16 @@ import { NgxSignalFormProviderDirective } from '@ngx-signal-forms/toolkit/core';
         <input id="password" type="password" [control]="signupForm.password" />
       </ngx-signal-form-field>
 
-      <ngx-signal-form-field [field]="signupForm.confirmPassword" fieldName="confirmPassword">
+      <ngx-signal-form-field
+        [field]="signupForm.confirmPassword"
+        fieldName="confirmPassword"
+      >
         <label for="confirmPassword">Confirm Password</label>
-        <input id="confirmPassword" type="password" [control]="signupForm.confirmPassword" />
+        <input
+          id="confirmPassword"
+          type="password"
+          [control]="signupForm.confirmPassword"
+        />
       </ngx-signal-form-field>
 
       <button type="submit">Create Account</button>
@@ -263,7 +300,9 @@ export class SignupComponent {
       required(path.password, { message: 'Password is required' });
       minLength(path.password, 8, { message: 'Minimum 8 characters required' });
 
-      required(path.confirmPassword, { message: 'Please confirm your password' });
+      required(path.confirmPassword, {
+        message: 'Please confirm your password',
+      });
     }),
   );
 
@@ -305,7 +344,11 @@ provideNgxSignalFormsConfig({
 **Override per field:**
 
 ```html
-<ngx-signal-form-field [field]="form.password" fieldName="password" [strategy]="'immediate'">
+<ngx-signal-form-field
+  [field]="form.password"
+  fieldName="password"
+  [strategy]="'immediate'"
+>
   <!-- This field uses 'immediate', others use form/global default -->
 </ngx-signal-form-field>
 ```
@@ -349,7 +392,12 @@ Automatically marks fields as touched on blur:
 Display validation errors with proper ARIA attributes:
 
 ```html
-<ngx-signal-form-error [field]="form.email" fieldName="email" [strategy]="'on-touch'" [submittedStatus]="submittedStatus" />
+<ngx-signal-form-error
+  [field]="form.email"
+  fieldName="email"
+  [strategy]="'on-touch'"
+  [submittedStatus]="submittedStatus"
+/>
 ```
 
 **Features:**
@@ -415,14 +463,22 @@ export class MyFormComponent {
 
 ```typescript
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
-import type { NgxSignalFormsConfig, ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import type {
+  NgxSignalFormsConfig,
+  ErrorDisplayStrategy,
+} from '@ngx-signal-forms/toolkit';
 ```
 
 ### Secondary Entry Points
 
 ```typescript
 // Core directives, components, utilities
-import { NgxSignalFormProviderDirective, NgxSignalFormErrorComponent, NgxSignalFormAutoAriaDirective, NgxSignalFormAutoTouchDirective } from '@ngx-signal-forms/toolkit/core';
+import {
+  NgxSignalFormProviderDirective,
+  NgxSignalFormErrorComponent,
+  NgxSignalFormAutoAriaDirective,
+  NgxSignalFormAutoTouchDirective,
+} from '@ngx-signal-forms/toolkit/core';
 
 // Form field wrapper (optional)
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';

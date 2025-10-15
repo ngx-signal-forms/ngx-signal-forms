@@ -43,15 +43,30 @@ Angular 21+ Signal Forms is an **experimental API** providing a reactive, signal
 ### Required Imports
 
 ```typescript
-import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { form, Control, required, minLength, email, validate, customError, schema, submit } from '@angular/forms/signals';
+import {
+  Component,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+import {
+  form,
+  Control,
+  required,
+  minLength,
+  email,
+  validate,
+  customError,
+  schema,
+  submit,
+} from '@angular/forms/signals';
 ```
 
 ### Basic Form Example
 
 ```typescript
 @Component({
-  selector: 'app-user-form',
+  selector: 'ngx-user-form',
   imports: [Control],
   changeDetection: ChangeDetectionStrategy.OnPush, // Required
   template: `
@@ -100,7 +115,9 @@ form(signal(data), (path) => {
   max(path.quantity, 100, { message: 'Max 100 items' });
 
   // Pattern & email
-  pattern(path.phone, /^\d{3}-\d{3}-\d{4}$/, { message: 'Format: 123-456-7890' });
+  pattern(path.phone, /^\d{3}-\d{3}-\d{4}$/, {
+    message: 'Format: 123-456-7890',
+  });
   email(path.email, { message: 'Invalid email' });
 
   // Conditional
@@ -118,7 +135,23 @@ form(signal(data), (path) => {
 
 ## Custom Validation
 
-### Single Field
+### Understanding Validation Error Types
+
+Signal Forms supports two types of validation errors:
+
+| Error Type      | Validation Target       | Use Case                                                  | Example                        |
+| --------------- | ----------------------- | --------------------------------------------------------- | ------------------------------ |
+| **Field-Level** | `validate(path.field,`) | Single field validation                                   | Email format, required fields  |
+| **Root-Level**  | `validate(path,`        | Cross-field validation affecting the entire form          | Password matching, date ranges |
+| **Cross-Field** | `validate(path.field,`) | Field validation using other field values via `valueOf()` | Confirm password, conditional  |
+
+**When to use each:**
+
+- **Field-level**: Error belongs to a specific field (e.g., "Username cannot contain spaces")
+- **Root-level**: Error affects the whole form, no single field is "wrong" (e.g., "Start date must be before end date")
+- **Cross-field**: One field depends on another (e.g., "Confirm password must match password")
+
+### Single Field (Field-Level)
 
 ```typescript
 validate(path.username, (ctx) => {
@@ -132,18 +165,90 @@ validate(path.username, (ctx) => {
 });
 ```
 
-### Cross-Field
+### Root-Level (Form-Wide Validation)
 
 ```typescript
+// Example: Date range validation (neither field is individually "wrong")
 validate(path, (ctx) => {
-  const { password, confirm } = ctx.value();
-  if (password !== confirm) {
+  const { startDate, endDate } = ctx.value();
+  if (startDate && endDate && startDate > endDate) {
     return customError({
-      kind: 'password_mismatch',
-      message: 'Passwords do not match',
+      kind: 'invalid_date_range',
+      message: 'Start date must be before end date',
     });
   }
   return null;
+});
+
+// Example: Business rule spanning multiple fields
+validate(path, (ctx) => {
+  const form = ctx.value();
+  const totalItems = form.items.reduce((sum, item) => sum + item.quantity, 0);
+
+  if (totalItems > 100) {
+    return customError({
+      kind: 'cart_limit_exceeded',
+      message: 'Maximum 100 items allowed in cart',
+    });
+  }
+  return null;
+});
+```
+
+### Cross-Field (Field-Level with Dependencies)
+
+```typescript
+// Error belongs to confirmPassword field, but depends on password field
+validate(path.confirmPassword, (ctx) => {
+  const password = ctx.valueOf(path.password);
+  const confirmPassword = ctx.value();
+
+  if (password !== confirmPassword) {
+    return customError({
+      kind: 'password_mismatch',
+      message: 'Passwords must match',
+    });
+  }
+  return null;
+});
+
+// Access other fields using ctx.fieldOf()
+validate(path.improvementSuggestions, (ctx) => {
+  const value = ctx.value();
+  const rating = ctx.fieldOf(path.overallRating)().value();
+
+  if (rating > 0 && rating <= 3 && value && value.length < 10) {
+    return customError({
+      kind: 'too_short',
+      message: 'Please provide more details for low ratings',
+    });
+  }
+  return null;
+});
+```
+
+**Accessing Errors Programmatically:**
+
+```typescript
+// Get root-level errors (cross-field validation on form itself)
+protected readonly rootErrors = computed(() => this.userForm().errors());
+
+// Get field-level errors (requires recursive collection)
+protected readonly fieldErrors = computed(() => {
+  const errors: ValidationError[] = [];
+  // Recursive traversal of form tree to collect all field errors
+  const collectFieldErrors = (fieldState: FieldState<unknown>) => {
+    const value = fieldState.value();
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      Object.keys(value).forEach((key) => {
+        const childField = (fieldState as any)[key]();
+        errors.push(...childField.errors());
+        collectFieldErrors(childField);
+      });
+    }
+  };
+  collectFieldErrors(this.userForm);
+  return errors;
 });
 ```
 
@@ -151,7 +256,8 @@ validate(path, (ctx) => {
 
 ```typescript
 validateHttp(path.username, {
-  request: ({ value }) => (value() ? `/api/check-username/${value()}` : undefined),
+  request: ({ value }) =>
+    value() ? `/api/check-username/${value()}` : undefined,
   errors: (response: any, ctx) => {
     if (!response.available) {
       return customError({
@@ -186,7 +292,11 @@ form(signal(data), (path) => {
   applyEach(path.items, itemSchema);
 
   // Conditional schemas
-  applyWhenValue(path.payment, (p): p is CardPayment => p.type === 'card', cardSchema);
+  applyWhenValue(
+    path.payment,
+    (p): p is CardPayment => p.type === 'card',
+    cardSchema,
+  );
 });
 ```
 
@@ -389,7 +499,9 @@ protected readonly formState = computed(() => ({
 ```typescript
 // Provide clear, actionable messages
 required(path.email, { message: 'Email address is required' });
-minLength(path.password, 8, { message: 'Password must be at least 8 characters' });
+minLength(path.password, 8, {
+  message: 'Password must be at least 8 characters',
+});
 customError({
   kind: 'username_taken',
   message: 'This username is already taken. Please try another.',
@@ -461,7 +573,13 @@ export class UserFormComponent {
   imports: [FormsModule],
   template: `
     <form #userForm="ngForm">
-      <input name="name" [(ngModel)]="user.name" #nameField="ngModel" required minlength="3" />
+      <input
+        name="name"
+        [(ngModel)]="user.name"
+        #nameField="ngModel"
+        required
+        minlength="3"
+      />
       @if (nameField.errors?.['required']) {
         Name required
       }
@@ -532,7 +650,10 @@ export class UserFormComponent {
    this.#userData.skills.push({ name: '' });
 
    // ✅ Correct
-   this.#userData.update((data) => ({ ...data, skills: [...data.skills, { name: '' }] }));
+   this.#userData.update((data) => ({
+     ...data,
+     skills: [...data.skills, { name: '' }],
+   }));
    ```
 
 ## Enhancement Toolkit

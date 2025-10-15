@@ -37,7 +37,9 @@ class MyForm {
   email = control('', { validators: [Validators.required] });
 
   // Must create computed signal if reused
-  protected readonly showEmailErrors = computed(() => this.email.touched() && this.email.invalid());
+  protected readonly showEmailErrors = computed(
+    () => this.email.touched() && this.email.invalid(),
+  );
 }
 ```
 
@@ -129,7 +131,12 @@ interface ControlConfig<T> {
 ### 2. Add Strategy Types
 
 ```typescript
-type ErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit' | 'manual' | ErrorDisplayPredicate;
+type ErrorDisplayStrategy =
+  | 'immediate'
+  | 'on-touch'
+  | 'on-submit'
+  | 'manual'
+  | ErrorDisplayPredicate;
 
 type ErrorDisplayPredicate = (field: FieldState) => boolean;
 ```
@@ -205,7 +212,9 @@ class FormState {
 class MyForm {
   email = control('', { validators: [Validators.required] });
 
-  protected readonly showEmailErrors = computed(() => this.email.touched() && this.email.invalid());
+  protected readonly showEmailErrors = computed(
+    () => this.email.touched() && this.email.invalid(),
+  );
 }
 ```
 
@@ -268,19 +277,6 @@ class MyForm {
 
 **Angular is the only major framework missing this feature!**
 
-## Community Validation
-
-This pattern has been successfully implemented in third-party libraries:
-
-- **[ngx-vest-forms](https://github.com/ngx-vest-forms/ngx-vest-forms)** - 4 error strategies with automatic `showErrors()` generation
-- **[ngx-signal-forms/toolkit](https://github.com/ngx-signal-forms)** (planned) - Directive-based enhancement with same pattern
-
-**Community feedback**: Developers consistently request this feature, as evidenced by:
-
-- Multiple Stack Overflow questions about "when to show errors"
-- Third-party libraries implementing this exact pattern
-- Migration requests from other frameworks citing this gap
-
 ## Proposed API Design (Summary)
 
 ```typescript
@@ -325,10 +321,10 @@ userForm.hasSubmitted(); // Signal<boolean>
 
 ## References
 
-- **React Hook Form**: https://react-hook-form.com/api/useform#mode
-- **Formik**: https://formik.org/docs/api/formik#validateonblur-boolean
-- **VeeValidate**: https://vee-validate.logaretm.com/v4/guide/validation#validation-triggers
-- **WCAG 2.2**: https://www.w3.org/WAI/WCAG22/Understanding/error-identification.html
+- **React Hook Form**: <https://react-hook-form.com/api/useform#mode>
+- **Formik**: <https://formik.org/docs/api/formik#validateonblur-boolean>
+- **VeeValidate**: <https://vee-validate.logaretm.com/v4/guide/validation#validation-triggers>
+- **WCAG 2.2**: <https://www.w3.org/WAI/WCAG22/Understanding/error-identification.html>
 
 ## Related Issues
 

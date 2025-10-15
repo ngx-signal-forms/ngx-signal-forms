@@ -66,7 +66,13 @@
 ```html
 <form (ngSubmit)="save()">
   <label for="email">Email</label>
-  <input id="email" [control]="userForm.email" (blur)="userForm.email().markAsTouched()" [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null" [attr.aria-describedby]="userForm.email().invalid() ? 'email-error' : null" />
+  <input
+    id="email"
+    [control]="userForm.email"
+    (blur)="userForm.email().markAsTouched()"
+    [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null"
+    [attr.aria-describedby]="userForm.email().invalid() ? 'email-error' : null"
+  />
 
   @if (userForm.email().touched() && userForm.email().invalid()) {
   <span id="email-error" role="alert">
@@ -76,7 +82,9 @@
   </span>
   }
 
-  <button type="submit" [attr.aria-busy]="isSubmitting() ? 'true' : null">Submit</button>
+  <button type="submit" [attr.aria-busy]="isSubmitting() ? 'true' : null">
+    Submit
+  </button>
 </form>
 ```
 
@@ -141,13 +149,22 @@ Automatically manages `aria-invalid` and `aria-describedby` attributes.
 **Before (Manual):**
 
 ```html
-<input id="email" [control]="userForm.email" [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null" [attr.aria-describedby]="userForm.email().invalid() ? 'email-error' : null" /> <span id="email-error" role="alert"> {{ userForm.email().errors() | json }} </span>
+<input
+  id="email"
+  [control]="userForm.email"
+  [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null"
+  [attr.aria-describedby]="userForm.email().invalid() ? 'email-error' : null"
+/>
+<span id="email-error" role="alert">
+  {{ userForm.email().errors() | json }}
+</span>
 ```
 
 **After (Automatic):**
 
 ```html
-<input id="email" [control]="userForm.email" /> <ngx-signal-form-error [field]="userForm.email" />
+<input id="email" [control]="userForm.email" />
+<ngx-signal-form-error [field]="userForm.email" />
 ```
 
 ### 2. Auto-Touch Directive
@@ -177,7 +194,11 @@ Control when errors are shown (immediate, on-touch, on-submit, manual).
 
 @Component({
   template: `
-    <form [ngxSignalFormProvider]="userForm" [errorStrategy]="errorMode()" (ngSubmit)="save()">
+    <form
+      [ngxSignalFormProvider]="userForm"
+      [errorStrategy]="errorMode()"
+      (ngSubmit)="save()"
+    >
       <!-- form fields -->
     </form>
   `,
@@ -354,7 +375,10 @@ host: {
 
 ```html
 <!-- Priority 1: Explicit -->
-<input data-signal-field="personalInfo.firstName" [control]="userForm.personalInfo.firstName" />
+<input
+  data-signal-field="personalInfo.firstName"
+  [control]="userForm.personalInfo.firstName"
+/>
 
 <!-- Priority 3: ID (most common) -->
 <input id="email" [control]="userForm.email" />
@@ -424,7 +448,13 @@ protected readonly ariaBusy = computed(() => {
 **Directive:**
 
 ```typescript
-import { Directive, input, signal, computed, HostListener } from '@angular/core';
+import {
+  Directive,
+  input,
+  signal,
+  computed,
+  HostListener,
+} from '@angular/core';
 import { NGX_SIGNAL_FORM_CONTEXT } from './tokens';
 
 @Directive({
@@ -470,7 +500,11 @@ export class NgxSignalFormProviderDirective {
 **Usage:**
 
 ```html
-<form [ngxSignalFormProvider]="userForm" [errorStrategy]="errorMode()" (ngSubmit)="save()">
+<form
+  [ngxSignalFormProvider]="userForm"
+  [errorStrategy]="errorMode()"
+  (ngSubmit)="save()"
+>
   <!-- Child directives automatically access form context via DI -->
   <input id="email" [control]="userForm.email" />
   <ngx-signal-form-error [field]="userForm.email" />
@@ -514,7 +548,8 @@ export class NgxSignalFormErrorComponent {
 **Usage:**
 
 ```html
-<input id="email" [value]="emailField().value()" /> <ngx-signal-form-error [field]="emailField()" />
+<input id="email" [value]="emailField().value()" />
+<ngx-signal-form-error [field]="emailField()" />
 ```
 
 ### 3. Form Field Wrapper
@@ -608,7 +643,8 @@ export function computeShowErrors(
     const touched = f.touched();
     const submitted = hasSubmitted();
 
-    const currentStrategy = typeof strategy === 'function' ? strategy() : strategy;
+    const currentStrategy =
+      typeof strategy === 'function' ? strategy() : strategy;
 
     switch (currentStrategy) {
       case 'immediate':
@@ -796,7 +832,7 @@ const contactSchema = schema<ContactModel>((path) => {
 });
 
 @Component({
-  selector: 'app-contact',
+  selector: 'ngx-contact',
   imports: [NgxSignalFormAutoAria, Control],
   template: `
     <form (ngSubmit)="save()">
@@ -830,11 +866,20 @@ export class ContactFormComponent {
 ```typescript
 import { Component, signal } from '@angular/core';
 import { form, schema, required, email, Control } from '@angular/forms/signals';
-import { NgxSignalFormAutoAria, NgxSignalFormAutoTouch, NgxSignalFormErrorComponent } from '@ngx-signal-forms/core';
+import {
+  NgxSignalFormAutoAria,
+  NgxSignalFormAutoTouch,
+  NgxSignalFormErrorComponent,
+} from '@ngx-signal-forms/core';
 
 @Component({
-  selector: 'app-contact',
-  imports: [NgxSignalFormAutoAria, NgxSignalFormAutoTouch, NgxSignalFormErrorComponent, Control],
+  selector: 'ngx-contact',
+  imports: [
+    NgxSignalFormAutoAria,
+    NgxSignalFormAutoTouch,
+    NgxSignalFormErrorComponent,
+    Control,
+  ],
   template: `
     <form (ngSubmit)="save()">
       <label for="email">Email</label>
@@ -864,11 +909,19 @@ export class ContactFormComponent {
 import { Component, signal } from '@angular/core';
 import { form, schema, required, email, Control } from '@angular/forms/signals';
 import { NgxSignalFormField } from '@ngx-signal-forms/form-field';
-import { NgxSignalFormAutoAria, NgxSignalFormAutoTouch } from '@ngx-signal-forms/core';
+import {
+  NgxSignalFormAutoAria,
+  NgxSignalFormAutoTouch,
+} from '@ngx-signal-forms/core';
 
 @Component({
-  selector: 'app-contact',
-  imports: [NgxSignalFormField, NgxSignalFormAutoAria, NgxSignalFormAutoTouch, Control],
+  selector: 'ngx-contact',
+  imports: [
+    NgxSignalFormField,
+    NgxSignalFormAutoAria,
+    NgxSignalFormAutoTouch,
+    Control,
+  ],
   template: `
     <form (ngSubmit)="save()">
       <ngx-signal-form-field [field]="contactForm.email">
@@ -901,7 +954,15 @@ export class ContactFormComponent {
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { form, schema, required, email, minLength, Control, submit } from '@angular/forms/signals';
+import {
+  form,
+  schema,
+  required,
+  email,
+  minLength,
+  Control,
+  submit,
+} from '@angular/forms/signals';
 import { NgxSignalFormField } from '@ngx-signal-forms/form-field';
 import {
   NgxSignalForms, // Bundle: all directives + components
@@ -921,24 +982,40 @@ const contactSchema = schema<ContactModel>((path) => {
 });
 
 @Component({
-  selector: 'app-contact',
+  selector: 'ngx-contact',
   imports: [NgxSignalForms, NgxSignalFormField, Control],
   template: `
     <!-- Error Strategy Selector (for demo) -->
     <fieldset>
       <legend>Error Display Mode</legend>
       <label>
-        <input type="radio" name="errorMode" value="immediate" [checked]="errorMode() === 'immediate'" (change)="errorMode.set('immediate')" />
+        <input
+          type="radio"
+          name="errorMode"
+          value="immediate"
+          [checked]="errorMode() === 'immediate'"
+          (change)="errorMode.set('immediate')"
+        />
         Immediate
       </label>
       <label>
-        <input type="radio" name="errorMode" value="on-touch" [checked]="errorMode() === 'on-touch'" (change)="errorMode.set('on-touch')" />
+        <input
+          type="radio"
+          name="errorMode"
+          value="on-touch"
+          [checked]="errorMode() === 'on-touch'"
+          (change)="errorMode.set('on-touch')"
+        />
         On Touch (Default)
       </label>
     </fieldset>
 
     <!-- Form with enhanced provider (tracks submission + manages error strategy) -->
-    <form [ngxSignalFormProvider]="contactForm" [errorStrategy]="errorMode()" (ngSubmit)="save()">
+    <form
+      [ngxSignalFormProvider]="contactForm"
+      [errorStrategy]="errorMode()"
+      (ngSubmit)="save()"
+    >
       <ngx-signal-form-field [field]="contactForm.email">
         <label for="email">Email *</label>
         <input id="email" type="email" [control]="contactForm.email" />
@@ -946,12 +1023,18 @@ const contactSchema = schema<ContactModel>((path) => {
 
       <ngx-signal-form-field [field]="contactForm.message">
         <label for="message">Message *</label>
-        <textarea id="message" rows="4" [control]="contactForm.message"></textarea>
+        <textarea
+          id="message"
+          rows="4"
+          [control]="contactForm.message"
+        ></textarea>
       </ngx-signal-form-field>
 
       <!-- Submission feedback -->
       @if (contactForm().submitError()) {
-        <div class="error" role="alert">Failed to submit: {{ contactForm().submitError()!.message }}</div>
+        <div class="error" role="alert">
+          Failed to submit: {{ contactForm().submitError()!.message }}
+        </div>
       }
       @if (contactForm().submitSuccess()) {
         <div class="success" role="status">✅ Message sent successfully!</div>
@@ -1062,7 +1145,8 @@ const locationForm = form(signal<LocationList>(...), (path) => {
   <input [control]="locationForm.locations[$index].city" />
 
   <!-- Error appears on the specific duplicate field -->
-  @if (locationForm.locations[$index].city().errors().length > 0) { @for (error of locationForm.locations[$index].city().errors(); track error.kind) {
+  @if (locationForm.locations[$index].city().errors().length > 0) { @for (error
+  of locationForm.locations[$index].city().errors(); track error.kind) {
   <p class="text-red-500">{{ error.message }}</p>
   } }
 </div>
@@ -1071,7 +1155,27 @@ const locationForm = form(signal<LocationList>(...), (path) => {
 
 ### Cross-Field Validation Strategies
 
-#### Strategy 1: Dependent Field Validation
+> **Important Distinction**: Signal Forms supports both **root-level** errors (form-wide) and **field-level** errors (specific fields). Understanding when to use each improves error messaging and UX.
+
+| Error Type      | Validation Target       | Error Location                | Use Case                   |
+| --------------- | ----------------------- | ----------------------------- | -------------------------- |
+| **Field-Level** | `validate(path.field,`) | Stored on the field itself    | Single field validation    |
+| **Root-Level**  | `validate(path,`        | Stored on the form tree root  | Cross-field business rules |
+| **Cross-Field** | `validate(path.field,`) | Field error using `valueOf()` | Dependent field validation |
+
+**When to Use Root-Level Errors:**
+
+- Form-wide business rules that don't belong to a single field
+- Multi-field relationships (e.g., "start date must be before end date")
+- Complex validations where no single field is "wrong"
+
+**When to Use Field-Level (Cross-Field) Errors:**
+
+- One field depends on another (e.g., "confirm password must match password")
+- The error clearly belongs to one specific field
+- You want the error to appear next to a specific input
+
+#### Strategy 1: Dependent Field Validation (Field-Level)
 
 ```typescript
 // Password confirmation
@@ -1132,13 +1236,69 @@ validate(path.salePrice, ({ value, valueOf }) => {
 });
 ```
 
+#### Strategy 4: Root-Level Validation (Form-Wide Business Rules)
+
+Use root-level validation when the error doesn't belong to a specific field:
+
+```typescript
+// Example: Total items in cart validation
+validate(path, ({ value }) => {
+  const form = value();
+  const totalItems = form.items.reduce((sum, item) => sum + item.quantity, 0);
+
+  if (totalItems > 100) {
+    return customError({
+      kind: 'cart_limit_exceeded',
+      message: 'Maximum 100 items allowed in cart. Please reduce quantities.',
+    });
+  }
+
+  return null;
+});
+
+// Example: Date range validation (no single field is wrong)
+validate(path, ({ value }) => {
+  const form = value();
+
+  if (form.startDate && form.endDate && form.startDate > form.endDate) {
+    return customError({
+      kind: 'invalid_date_range',
+      message: 'Start date must be before end date',
+    });
+  }
+
+  return null;
+});
+```
+
+**Accessing Root-Level Errors:**
+
+Root-level errors are stored on the form tree itself:
+
+```typescript
+// Get root-level errors
+const rootErrors = computed(() => myForm().errors());
+
+// Get all field-level errors (requires recursive collection)
+const fieldErrors = computed(() => {
+  const errors: ValidationError[] = [];
+  // ... recursive collection logic
+  return errors;
+});
+```
+
 ### Hybrid Validation: Zod + Signal Forms + Async
 
 > **Real-World Pattern**: Layer different validation types for comprehensive coverage.
 
 ```typescript
 import { z } from 'zod';
-import { form, validateStandardSchema, validateAsync, validateTree } from '@angular/forms/signals';
+import {
+  form,
+  validateStandardSchema,
+  validateAsync,
+  validateTree,
+} from '@angular/forms/signals';
 
 // Layer 1: Zod for data structure
 const ProductSchema = z.object({
@@ -1161,7 +1321,9 @@ const productForm = form(productModel, (path) => {
         stream: (p) => this.http.get(`/api/products/check-sku/${p.params.sku}`),
       }),
     errors: (result) => {
-      return result.exists ? customError({ kind: 'sku_taken', message: 'SKU already exists' }) : null;
+      return result.exists
+        ? customError({ kind: 'sku_taken', message: 'SKU already exists' })
+        : null;
     },
   });
 
@@ -1336,13 +1498,15 @@ protected readonly contactForm = form(this.model, contactSchema);
 **Before:**
 
 ```html
-<input id="email" [value]="form.email()" (input)="form.setEmail($event)" /> <ngx-form-error [field]="form.emailField()" />
+<input id="email" [value]="form.email()" (input)="form.setEmail($event)" />
+<ngx-form-error [field]="form.emailField()" />
 ```
 
 **After:**
 
 ```html
-<input id="email" [control]="contactForm.email" /> <ngx-signal-form-error [field]="contactForm.email" />
+<input id="email" [control]="contactForm.email" />
+<ngx-signal-form-error [field]="contactForm.email" />
 ```
 
 #### Step 4: Update Submit Logic
@@ -1383,13 +1547,17 @@ const contactSuite = staticSafeSuite<ContactModel>((data) => {
 });
 
 @Component({
-  selector: 'app-contact',
+  selector: 'ngx-contact',
   imports: [NgxVestFormField],
   template: `
     <form (ngSubmit)="save()">
       <ngx-vest-form-field [field]="form.emailField()">
         <label for="email">Email</label>
-        <input id="email" [value]="form.email()" (input)="form.setEmail($event)" />
+        <input
+          id="email"
+          [value]="form.email()"
+          (input)="form.setEmail($event)"
+        />
       </ngx-vest-form-field>
       <button type="submit">Submit</button>
     </form>
@@ -1415,7 +1583,7 @@ const contactSchema = schema<ContactModel>((path) => {
 });
 
 @Component({
-  selector: 'app-contact',
+  selector: 'ngx-contact',
   imports: [NgxSignalFormField, Control],
   template: `
     <form (ngSubmit)="save()">
@@ -1816,7 +1984,12 @@ strictPeerDependencies: false
 
 ```typescript
 // Primary entry - core directives and utilities
-import { NgxSignalFormAutoAria, NgxSignalFormAutoTouch, NgxSignalFormErrorComponent, provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
+import {
+  NgxSignalFormAutoAria,
+  NgxSignalFormAutoTouch,
+  NgxSignalFormErrorComponent,
+  provideNgxSignalFormsConfig,
+} from '@ngx-signal-forms/toolkit';
 
 // Secondary entry - form field wrapper (optional)
 import { NgxSignalFormField } from '@ngx-signal-forms/toolkit/form-field';
@@ -1918,7 +2091,11 @@ npm install @ngx-signal-forms/vestjs
 
 ```typescript
 // Core features (always available from main package)
-import { NgxSignalFormAutoAria, NgxSignalFormAutoTouch, provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
+import {
+  NgxSignalFormAutoAria,
+  NgxSignalFormAutoTouch,
+  provideNgxSignalFormsConfig,
+} from '@ngx-signal-forms/toolkit';
 
 // Form field wrapper (secondary entry point - optional)
 import { NgxSignalFormField } from '@ngx-signal-forms/toolkit/form-field';

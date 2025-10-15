@@ -1,5 +1,52 @@
+import { provideHttpClient } from '@angular/common/http';
+import {
+  importProvidersFrom,
+  isDevMode,
+  provideZonelessChangeDetection,
+} from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
-import { App } from './app/app';
+import {
+  provideRouter,
+  withComponentInputBinding,
+  withEnabledBlockingInitialNavigation,
+  withViewTransitions,
+} from '@angular/router';
+import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
+import { provideEnvironmentNgxMask } from 'ngx-mask';
+import { AppComponent } from './app/app.component';
+import { appRoutes } from './app/app.routes';
 
-bootstrapApplication(App, appConfig).catch((err) => console.error(err));
+// Wrap in async IIFE to support top-level await in all build targets
+(async () => {
+  // Ensure JIT compiler is available in dev server (Angular Vite builder) for components
+  // that rely on templateUrl/styleUrls during E2E and local dev.
+  // Use isDevMode() to avoid importing the compiler in production builds.
+  try {
+    if (isDevMode()) {
+      await import('@angular/compiler');
+    }
+  } catch {
+    // Ignore if not available; production builds don't need it
+  }
+
+  await bootstrapApplication(AppComponent, {
+    providers: [
+      provideZonelessChangeDetection(),
+      importProvidersFrom(),
+      provideHttpClient(),
+      provideEnvironmentNgxMask({ validation: false }),
+      provideNgxSignalFormsConfig({
+        defaultErrorStrategy: 'on-touch',
+        autoAria: true,
+        strictFieldResolution: false,
+        debug: false,
+      }),
+      provideRouter(
+        appRoutes,
+        withEnabledBlockingInitialNavigation(),
+        withComponentInputBinding(),
+        withViewTransitions(),
+      ),
+    ],
+  });
+})();

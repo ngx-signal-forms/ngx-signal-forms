@@ -1,17 +1,21 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   computed,
   input,
-  ChangeDetectionStrategy,
 } from '@angular/core';
-import type { FieldTree, ValidationError } from '@angular/forms/signals';
+import type {
+  FieldTree,
+  SubmittedStatus,
+  ValidationError,
+} from '@angular/forms/signals';
+import type { ErrorDisplayStrategy, ReactiveOrStatic } from '../types';
 import {
   generateErrorId,
   generateWarningId,
 } from '../utilities/field-resolution';
+import { injectFormContext } from '../utilities/inject-form-context';
 import { showErrors } from '../utilities/show-errors';
-import type { ErrorDisplayStrategy, ReactiveOrStatic } from '../types';
-import type { SubmittedStatus } from '@angular/forms/signals';
 
 /**
  * Reusable error and warning display component with WCAG 2.2 compliance.
@@ -316,6 +320,11 @@ import type { SubmittedStatus } from '@angular/forms/signals';
 })
 export class NgxSignalFormErrorComponent<TValue = unknown> {
   /**
+   * Try to inject form context (optional - may not be available).
+   */
+  readonly #injectedContext = injectFormContext();
+
+  /**
    * The Signal Forms field to display errors/warnings for.
    * Accepts a FieldTree from Angular Signal Forms.
    */
@@ -330,9 +339,12 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   /**
    * Error display strategy.
    * Can be a SignalLike for dynamic strategy or a static value.
+   * Falls back to injected strategy from form provider if available.
    * @default 'on-touch'
    */
-  readonly strategy = input<ReactiveOrStatic<ErrorDisplayStrategy>>('on-touch');
+  readonly strategy = input<ReactiveOrStatic<ErrorDisplayStrategy> | undefined>(
+    undefined,
+  );
 
   /**
    * Form submission status from Angular Signal Forms.
@@ -342,8 +354,9 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * injected from the form provider context. Otherwise, pass Angular's submittedStatus:
    * `[submittedStatus]="form().submittedStatus()"`.
    */
-  readonly submittedStatus =
-    input.required<ReactiveOrStatic<SubmittedStatus>>();
+  readonly submittedStatus = input<
+    ReactiveOrStatic<SubmittedStatus> | undefined
+  >(undefined);
 
   /**
    * Computed error ID for aria-describedby linking.
@@ -360,11 +373,58 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   );
 
   /**
+   * Resolved error display strategy (input or injected from context).
+   */
+  readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
+    const inputStrategy = this.strategy();
+    if (inputStrategy !== undefined && inputStrategy !== null) {
+      return typeof inputStrategy === 'function'
+        ? inputStrategy()
+        : inputStrategy;
+    }
+
+    const contextStrategy = this.#injectedContext?.errorStrategy?.();
+    if (contextStrategy) {
+      return contextStrategy;
+    }
+
+    return 'on-touch'; // Default fallback
+  });
+
+  /**
+   * Resolved submitted status (input or injected from context).
+   */
+  readonly #resolvedSubmittedStatus = computed<SubmittedStatus>(() => {
+    const inputStatus = this.submittedStatus();
+    if (inputStatus !== undefined && inputStatus !== null) {
+      return typeof inputStatus === 'function' ? inputStatus() : inputStatus;
+    }
+
+    const contextStatus = this.#injectedContext?.submittedStatus?.();
+    if (contextStatus) {
+      return contextStatus;
+    }
+
+    return 'unsubmitted'; // Default fallback
+  });
+
+  /**
+   * Extract FieldState from FieldTree for use with showErrors utility.
+   * FieldTree is a callable signal: () => FieldState
+   */
+  readonly #fieldState = computed(() => {
+    const fieldTree = this.field();
+    return fieldTree(); // Call FieldTree to get FieldState
+  });
+
+  /**
    * Computed signal for error visibility based on strategy.
    */
-  protected readonly showErrors = computed(() => {
-    return showErrors(this.field(), this.strategy(), this.submittedStatus())();
-  });
+  protected readonly showErrors = showErrors(
+    this.#fieldState, // Pass computed FieldState signal
+    this.#resolvedStrategy,
+    this.#resolvedSubmittedStatus,
+  );
 
   /**
    * Computed signal for warning visibility.

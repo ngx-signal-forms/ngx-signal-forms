@@ -8,9 +8,9 @@ export * from './tokens';
 export * from './providers/config.provider';
 
 // Directives
-export * from './directives/placeholder.directive';
 export * from './directives/auto-aria.directive';
 export * from './directives/form-provider.directive';
+export * from './directives/placeholder.directive';
 
 // Components
 export * from './components/form-error.component';
@@ -26,9 +26,9 @@ export * from './utilities/warning-error';
 // export * from './utilities/show-errors';
 
 // Convenience imports
-import { NgxSignalFormProviderDirective } from './directives/form-provider.directive';
-import { NgxSignalFormAutoAriaDirective } from './directives/auto-aria.directive';
 import { NgxSignalFormErrorComponent } from './components/form-error.component';
+import { NgxSignalFormAutoAriaDirective } from './directives/auto-aria.directive';
+import { NgxSignalFormProviderDirective } from './directives/form-provider.directive';
 
 /**
  * Bundled imports for the ngx-signal-forms toolkit core directives and components.
@@ -41,7 +41,7 @@ import { NgxSignalFormErrorComponent } from './components/form-error.component';
  * import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
  *
  * @Component({
- *   selector: 'app-my-form',
+ *   selector: 'ngx-my-form',
  *   imports: [Control, NgxSignalFormToolkit],
  *   template: `
  *     <form [ngxSignalFormProvider]="myForm">
@@ -66,7 +66,6 @@ import { NgxSignalFormErrorComponent } from './components/form-error.component';
  * - Type-safe readonly tuple
  * - Cleaner component metadata
  * - Better developer experience
- * - Aligned with ngx-vest-forms architecture
  *
  * **Alternative:**
  * You can still import individual items if you need only specific directives/components:
