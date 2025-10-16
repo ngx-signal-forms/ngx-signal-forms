@@ -89,7 +89,7 @@ Angular Signal Forms (introduced in v21) provides an excellent foundation for re
 
 ## Quick Start
 
-### The Simplest Example
+**The Simplest Example**
 
 Just install and start using—automatic ARIA attributes work out of the box:
 
@@ -101,10 +101,9 @@ import { form, schema, required, email, Control } from '@angular/forms/signals';
   selector: 'ngx-contact',
   imports: [Control],
   template: `
-    <form (ngSubmit)="save()">
+    <form (ngSubmit)="save()" novalidate>
       <label for="email">Email</label>
-      <input id="email" type="email" [control]="contactForm.email" />
-
+      <input id="email" [control]="contactForm.email" type="email" />
       <button type="submit">Send</button>
     </form>
   `,
@@ -122,7 +121,7 @@ export class ContactComponent {
 
   protected save(): void {
     if (this.contactForm().valid()) {
-      console.log('Valid!', this.model());
+      console.log('Submit:', this.model());
     }
   }
 }
@@ -133,6 +132,34 @@ export class ContactComponent {
 - `aria-invalid="true"` when field is invalid and touched
 - `aria-describedby` linking to error messages
 - Touch state management on blur
+- **Important:** Always include `novalidate` attribute on `<form>` elements to prevent browser validation UI from conflicting with Angular validation display
+
+### Form Validation: The `novalidate` Attribute
+
+**CRITICAL:** All forms using Signal Forms must include the `novalidate` attribute:
+
+```html
+<!-- ✅ CORRECT - Prevents browser validation bubbles -->
+<form [ngxSignalFormProvider]="myForm" (ngSubmit)="save()" novalidate>
+  <input [control]="myForm.email" type="email" />
+  <button type="submit">Submit</button>
+</form>
+
+<!-- ❌ WRONG - Browser validation conflicts with toolkit error display -->
+<form [ngxSignalFormProvider]="myForm" (ngSubmit)="save()">
+  <input [control]="myForm.email" type="email" />
+  <button type="submit">Submit</button>
+</form>
+```
+
+**Why is `novalidate` required?**
+
+Unlike Angular's Reactive Forms and Template-driven Forms (which auto-add `novalidate`), Signal Forms doesn't automatically disable native HTML5 form validation. Without it:
+
+1. **Conflicting UX**: Browser validation bubbles appear alongside Angular error messages
+2. **Duplicate Errors**: Users see double error feedback for the same field
+3. **Styling Conflicts**: Browser's default error styling overrides your custom styles
+4. **Accessibility**: Screen readers may announce duplicate error messages
 
 ### Add Error Display (Optional)
 

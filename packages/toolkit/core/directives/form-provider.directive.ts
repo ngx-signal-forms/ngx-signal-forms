@@ -29,6 +29,10 @@ export interface NgxSignalFormContext {
  *
  * **Integrates with Angular Signal Forms built-in submission tracking.**
  *
+ * ⚠️ **CRITICAL: Always include `novalidate` on the form element.**
+ * Signal Forms doesn't auto-disable HTML5 validation like Reactive Forms does.
+ * Without `novalidate`, browser validation bubbles will conflict with Angular error display.
+ *
  * **Responsibilities**:
  * - Provides form instance to child directives via DI
  * - Exposes Angular's built-in `submittedStatus` signal
@@ -38,6 +42,7 @@ export interface NgxSignalFormContext {
  * - **No Manual Tracking**: Uses Angular's built-in `submittedStatus()` from FieldState
  * - **DI-based Context**: Provides form context without prop drilling
  * - **Strategy Management**: Centralizes error display strategy for child components
+ * - **HTML5 Validation**: Requires `novalidate` to prevent conflicting browser UI
  *
  * @example Basic usage with Angular's submit() helper
  * ```typescript
@@ -45,8 +50,9 @@ export interface NgxSignalFormContext {
  *
  * @Component({
  *   template: `
- *     <form [ngxSignalFormProvider]="userForm" (ngSubmit)="handleSubmit()">
- *       <input [control]="userForm.email" />
+ *     <!-- ✅ ALWAYS include novalidate -->
+ *     <form [ngxSignalFormProvider]="userForm" (ngSubmit)="handleSubmit()" novalidate>
+ *       <input [control]="userForm.email" type="email" />
  *       <ngx-signal-form-error [field]="userForm.email" fieldName="email" />
  *       <button type="submit">Submit</button>
  *     </form>
@@ -69,12 +75,14 @@ export interface NgxSignalFormContext {
  *
  * @example With custom error strategy
  * ```html
+ * <!-- ✅ ALWAYS include novalidate -->
  * <form
  *   [ngxSignalFormProvider]="userForm"
  *   [errorStrategy]="'immediate'"
  *   (ngSubmit)="handleSubmit()"
+ *   novalidate
  * >
- *   <input [control]="userForm.email" />
+ *   <input [control]="userForm.email" type="email" />
  *   <!-- Errors show immediately as user types -->
  * </form>
  * ```

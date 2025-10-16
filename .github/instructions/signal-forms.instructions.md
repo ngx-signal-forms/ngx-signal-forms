@@ -300,28 +300,88 @@ form(signal(data), (path) => {
 });
 ```
 
+## Form Validation & Native HTML5 Validation
+
+**CRITICAL:** Always include `novalidate` on `<form>` elements when using Signal Forms to prevent browser native validation UI from interfering with Angular's validation display.
+
+### Why `novalidate` is Required
+
+Angular Signal Forms (unlike Reactive/Template-driven forms) does **not** automatically disable native HTML5 form validation. Without `novalidate`:
+
+- **Conflicting UX**: Browser validation bubbles appear alongside your Angular error messages
+- **Poor User Experience**: Users see duplicate error feedback
+- **Inconsistent Styling**: Browser's default styles override your custom error styling
+- **Accessibility Issues**: Screen readers may announce duplicate errors
+
+### Correct Pattern
+
+```html
+<!-- ✅ ALWAYS include novalidate -->
+<form [ngxSignalFormProvider]="userForm" (ngSubmit)="save()" novalidate>
+  <input [control]="userForm.email" />
+  <button type="submit">Submit</button>
+</form>
+
+<!-- ❌ WRONG - Missing novalidate causes conflicting validation UX -->
+<form [ngxSignalFormProvider]="userForm" (ngSubmit)="save()">
+  <!-- Browser validation bubbles conflict with toolkit error display -->
+</form>
+```
+
+### Additional Best Practices
+
+Never rely on HTML5 validation attributes alone—always add Angular validators:
+
+```html
+<!-- ❌ WRONG - Relying only on HTML5 validation (won't work properly) -->
+<input [control]="userForm.email" type="email" required />
+
+<!-- ✅ CORRECT - Combine HTML5 attributes with Angular validators -->
+<input
+  id="email"
+  [control]="userForm.email"
+  type="email"
+  aria-required="true"
+/>
+
+<!-- ✅ Angular validator in component -->
+<!-- (path) => {
+  required(path.email, { message: 'Email is required' });
+  email(path.email, { message: 'Valid email format required' });
+} -->
+```
+
+**Why both?**
+
+- **HTML5 attributes** (`type="email"`, `required`, `min`, `max`): For native browser support and accessibility (labels, ARIA)
+- **Angular validators** (`required()`, `email()`, `minLength()`): For consistent validation UX and error messages
+- **`novalidate` attribute**: To prevent browser validation UI from interfering
+
 ## Template Patterns
 
 ```typescript
-// Control binding
-<input [control]="userForm.name" />
-<textarea [control]="userForm.bio" />
-<select [control]="userForm.category" />
+// Form with novalidate (required)
+<form [ngxSignalFormProvider]="userForm" (ngSubmit)="save()" novalidate>
+  <!-- Control binding -->
+  <input [control]="userForm.name" />
+  <textarea [control]="userForm.bio" />
+  <select [control]="userForm.category" />
 
-// Error display
-@if (form.email().invalid() && form.email().touched()) {
-  @for (error of form.email().errors(); track error.kind) {
-    <p>{{ error.message }}</p>
+  <!-- Error display -->
+  @if (form.email().invalid() && form.email().touched()) {
+    @for (error of form.email().errors(); track error.kind) {
+      <p>{{ error.message }}</p>
+    }
   }
-}
 
-// Form state
-<button [disabled]="form().invalid() || form().pending()">Submit</button>
+  <!-- Form state -->
+  <button [disabled]="form().invalid() || form().pending()">Submit</button>
 
-// Pending state
-@if (form.email().pending()) {
-  <span>Checking...</span>
-}
+  <!-- Pending state -->
+  @if (form.email().pending()) {
+    <span>Checking...</span>
+  }
+</form>
 ```
 
 ## Dynamic Arrays
