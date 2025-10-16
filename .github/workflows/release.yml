@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version bump type or exact version'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prerelease
+          - custom
+      custom_version:
+        description: 'Custom version (only if "custom" is selected)'
+        required: false
+        type: string
+      prerelease_id:
+        description: 'Prerelease identifier (beta, next, rc, etc.)'
+        required: false
+        type: choice
+        default: 'beta'
+        options:
+          - beta
+          - next
+          - rc
+          - alpha
+      npm_tag:
+        description: 'NPM dist-tag'
+        required: true
+        type: choice
+        default: 'latest'
+        options:
+          - latest
+          - beta
+          - next
+          - rc
+      dry_run:
+        description: 'Dry run (no actual publish)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 10.18.2
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm exec nx run toolkit:lint toolkit:test toolkit:build
+
+      - name: Determine version command
+        id: version_cmd
+        run: |
+          if [ "${{ inputs.version }}" = "custom" ]; then
+            echo "cmd=${{ inputs.custom_version }}" >> $GITHUB_OUTPUT
+          elif [ "${{ inputs.version }}" = "prerelease" ]; then
+            echo "cmd=prerelease --preid=${{ inputs.prerelease_id }}" >> $GITHUB_OUTPUT
+          else
+            echo "cmd=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Version (Dry Run)
+        if: ${{ inputs.dry_run }}
+        run: |
+          pnpm exec nx release version ${{ steps.version_cmd.outputs.cmd }} --dry-run
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Version and Publish (Real)
+        if: ${{ !inputs.dry_run }}
+        run: |
+          pnpm exec nx release --skip-publish
+          pnpm exec nx release publish --tag=${{ inputs.npm_tag }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        if: ${{ !inputs.dry_run }}
+        run: |
+          echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: ${{ steps.version_cmd.outputs.cmd }}" >> $GITHUB_STEP_SUMMARY
+          echo "- NPM Tag: ${{ inputs.npm_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Dry Run: ${{ inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
