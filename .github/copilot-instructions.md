@@ -12,6 +12,7 @@ applyTo: '**'
 - Do not make up code or API's always use real libraries and APIs. And check documentation if unsure. Use context7 if possible.
 - When reporting information to me, be very concise and to the point. But also descriptive enough to be useful.
 - Eliminate: emojis (expect checkmarks, etc), filler, hype, soft asks, conversational transitions, call-to-action appendixes
+- List any unresolved questions or ambiguities at the end of your response. If any.
 
 ## Quick Reference
 

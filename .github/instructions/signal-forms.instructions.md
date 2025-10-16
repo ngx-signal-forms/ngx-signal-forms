@@ -22,21 +22,24 @@ Angular 21+ Signal Forms is an **experimental API** providing a reactive, signal
 
 ## Angular Forms Comparison Matrix
 
-| Aspect               | **Signal Forms (✅ Recommended)** | Reactive Forms (Legacy)           | Template Driven Forms (Legacy) |
-| -------------------- | --------------------------------- | --------------------------------- | ------------------------------ |
-| **Status**           | ✅ Modern (Angular 21+)           | 🔶 Maintained                     | 🔶 Maintained                  |
-| **State Management** | Data signal (source of truth)     | FormGroup/FormControl             | Component property + ngModel   |
-| **Validation**       | Declarative functions in code     | Validator classes                 | Directives in template         |
-| **Reactivity**       | Signals (zoneless compatible)     | RxJS Observables                  | Two-way binding + Zone.js      |
-| **Type Safety**      | ✅ Full TypeScript inference      | Limited (improving)               | Minimal                        |
-| **Change Detection** | Signal-based (optimal)            | Zone-based or manual              | Zone-based                     |
-| **Boilerplate**      | ✅ Low (single `form()` call)     | High (FormBuilder required)       | Medium (FormsModule required)  |
-| **Bundle Size**      | ✅ Smaller (no RxJS for forms)    | Larger                            | Medium (FormsModule)           |
-| **Performance**      | ✅ Excellent (no Zone.js)         | Good                              | Good                           |
-| **Testing**          | ✅ Direct signal manipulation     | TestBed + subscriptions           | TestBed + DOM                  |
-| **Template Syntax**  | `[control]` directive             | `[formGroup]` + `formControlName` | `[(ngModel)]` + directives     |
-| **Learning Curve**   | Medium (signals knowledge)        | Medium (RxJS knowledge)           | Low                            |
-| **Use Case**         | ✅ All new Angular 21+ projects   | Legacy support                    | Simple forms only              |
+| Aspect               | **Signal Forms (✅ Recommended)** | Reactive Forms (Legacy)           | Template Driven Forms (Legacy)    |
+| -------------------- | --------------------------------- | --------------------------------- | --------------------------------- |
+| **Status**           | ✅ Modern (Angular 21+)           | 🔶 Maintained                     | 🔶 Maintained                     |
+| **State Management** | Data signal (source of truth)     | FormGroup/FormControl             | Component property + ngModel      |
+| **Validation**       | Declarative functions in code     | Validator classes                 | Directives in template            |
+| **Reactivity**       | Signals (zoneless compatible)     | RxJS Observables                  | Two-way binding + Zone.js         |
+| **Type Safety**      | ✅ Full TypeScript inference      | Limited (improving)               | Minimal                           |
+| **Change Detection** | Signal-based (optimal)            | Zone-based or manual              | Zone-based                        |
+| **Boilerplate**      | ✅ Low (single `form()` call)     | High (FormBuilder required)       | Medium (FormsModule required)     |
+| **Bundle Size**      | ✅ Smaller (no RxJS for forms)    | Larger                            | Medium (FormsModule)              |
+| **Performance**      | ✅ Excellent (no Zone.js)         | Good                              | Good                              |
+| **Testing**          | ✅ Direct signal manipulation     | TestBed + subscriptions           | TestBed + DOM                     |
+| **Template Syntax**  | `[control]` directive             | `[formGroup]` + `formControlName` | `[(ngModel)]` + directives        |
+| **CSS Classes**      | ❌ No `ng-*` classes added        | ✅ `ng-valid`, `ng-invalid`, etc. | ✅ `ng-valid`, `ng-invalid`, etc. |
+| **Name Attribute**   | ✅ Auto-generated from path       | ⚠️ Manual via `formControlName`   | ⚠️ Manual required                |
+| **State Signals**    | `touched()`, `dirty()` only       | `untouched`, `pristine`, etc.     | `untouched`, `pristine`, etc.     |
+| **Learning Curve**   | Medium (signals knowledge)        | Medium (RxJS knowledge)           | Low                               |
+| **Use Case**         | ✅ All new Angular 21+ projects   | Legacy support                    | Simple forms only                 |
 
 ## Quick Start
 
@@ -126,11 +129,54 @@ form(signal(data), (path) => {
     message: 'Email required for subscription',
   });
 
-  // Field state
+  // Field state management
   disabled(path.lastName, ({ valueOf }) => !valueOf(path.firstName));
   readonly(path.id);
   hidden(path.optional, ({ valueOf }) => !valueOf(path.showOptional));
 });
+```
+
+### Field State Management
+
+Signal Forms provide three state management functions for controlling field behavior:
+
+**`disabled(path, condition)`**
+
+- Sets the `disabled()` signal on the field
+- Automatically adds `disabled` HTML attribute to the input element
+- When applied to a parent group, disables all child controls
+- Disabled fields are excluded from form value
+
+**`readonly(path, condition?)`**
+
+- Sets the `readonly()` signal on the field
+- Automatically adds `readonly` HTML attribute to the input element
+- Readonly fields are included in form value but cannot be edited
+
+**`hidden(path, condition)`**
+
+- Sets the `hidden()` signal on the field
+- Does NOT affect the HTML element automatically
+- You must handle visibility in your template (e.g., `@if (!form.field().hidden())`)
+- Useful for conditional field visibility based on form state
+
+**Example - Conditional visibility:**
+
+```typescript
+form(signal(data), (path) => {
+  // Hide shipping address when "same as billing" is checked
+  hidden(path.shippingAddress, ({ valueOf }) => valueOf(path.sameAsBilling));
+});
+```
+
+```html
+<!-- In template: conditionally render based on hidden state -->
+@if (!form.shippingAddress().hidden()) {
+<div>
+  <input [control]="form.shippingAddress.street" />
+  <input [control]="form.shippingAddress.city" />
+</div>
+}
 ```
 
 ## Custom Validation
@@ -233,23 +279,41 @@ validate(path.improvementSuggestions, (ctx) => {
 // Get root-level errors (cross-field validation on form itself)
 protected readonly rootErrors = computed(() => this.userForm().errors());
 
-// Get field-level errors (requires recursive collection)
-protected readonly fieldErrors = computed(() => {
-  const errors: ValidationError[] = [];
-  // Recursive traversal of form tree to collect all field errors
-  const collectFieldErrors = (fieldState: FieldState<unknown>) => {
-    const value = fieldState.value();
-    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      Object.keys(value).forEach((key) => {
-        const childField = (fieldState as any)[key]();
-        errors.push(...childField.errors());
-        collectFieldErrors(childField);
-      });
+// Get ALL errors including child controls using errorSummary
+protected readonly allErrors = computed(() => this.userForm().errorSummary());
+
+// errorSummary() is available on each control and group
+protected readonly emailErrors = computed(() => this.userForm.email().errorSummary());
+```
+
+**Understanding `errors()` vs `errorSummary()`:**
+
+| Signal           | Scope                                          | Use Case                            |
+| ---------------- | ---------------------------------------------- | ----------------------------------- |
+| `errors()`       | Errors directly on this field/group            | Display errors for a specific field |
+| `errorSummary()` | All errors including descendant child controls | Form-level error summary/banner     |
+
+**Example - Form error banner:**
+
+```typescript
+@Component({
+  template: `
+    <!-- Display all form errors in a banner -->
+    @if (allErrors().length > 0) {
+      <div class="error-banner" role="alert">
+        <h3>Please fix the following errors:</h3>
+        <ul>
+          @for (error of allErrors(); track error.kind) {
+            <li>{{ error.message }}</li>
+          }
+        </ul>
+      </div>
     }
-  };
-  collectFieldErrors(this.userForm);
-  return errors;
-});
+  `,
+})
+export class FormComponent {
+  protected readonly allErrors = computed(() => this.userForm().errorSummary());
+}
 ```
 
 ### Async Validation
@@ -269,6 +333,112 @@ validateHttp(path.username, {
   },
 });
 ```
+
+### Inline Custom Validation with `error()`
+
+For simple, non-reusable custom validation, use the `error()` function inline:
+
+```typescript
+import { error } from '@angular/forms/signals';
+
+form(signal(data), (path) => {
+  // Inline custom validation without creating a separate validator
+  error(path.username, (ctx) => {
+    if (ctx.value().includes(' ')) {
+      return {
+        kind: 'no_spaces',
+        message: 'Username cannot contain spaces',
+      };
+    }
+    return null;
+  });
+
+  // For reusable validation, use validate() instead
+  validate(path.email, emailDomainValidator);
+});
+```
+
+**When to use `error()` vs `validate()`:**
+
+| Function     | Use Case                                      | Example                          |
+| ------------ | --------------------------------------------- | -------------------------------- |
+| `error()`    | Simple, inline, non-reusable validation logic | Field-specific business rules    |
+| `validate()` | Reusable validators across multiple forms     | Email domain checks, API lookups |
+
+## Control State Signals
+
+Each form control exposes state signals to track user interaction and control states:
+
+**State Signals:**
+
+```typescript
+// User interaction states (automatically managed)
+form.email().touched(); // true after blur (no untouched() signal)
+form.email().dirty(); // true after value change (no pristine() signal)
+
+// Programmatic state management
+form.email().markAsTouched();
+form.email().markAsDirty();
+
+// Validation states
+form.email().valid(); // true if all validators pass
+form.email().invalid(); // true if any validator fails
+form.email().pending(); // true during async validation
+
+// Control states (managed via validators)
+form.email().disabled(); // true if disabled() validator applied
+form.email().readonly(); // true if readonly() validator applied
+form.email().hidden(); // true if hidden() validator applied
+```
+
+**Important Differences from Reactive/Template Forms:**
+
+| Feature                  | Signal Forms                   | Reactive/Template Forms         |
+| ------------------------ | ------------------------------ | ------------------------------- |
+| **State Signals**        | `touched()`, `dirty()`         | Both positive/negative signals  |
+| **No Counterparts**      | No `untouched()`, `pristine()` | `untouched`, `pristine` exist   |
+| **CSS Classes**          | ❌ None added automatically    | `ng-valid`, `ng-invalid`, etc.  |
+| **Name Attribute**       | ✅ Auto-generated from path    | Manual or via `formControlName` |
+| **Validator Attributes** | ✅ Added to input element      | ❌ Not added                    |
+
+**CSS Class Migration:**
+
+Signal Forms do **not** add CSS classes like `ng-valid`, `ng-invalid`, `ng-touched`, `ng-dirty`, `ng-pristine`, or `ng-untouched` to form elements. If you rely on these for styling, you must:
+
+1. Use attribute selectors based on validator attributes:
+
+   ```css
+   /* Instead of .ng-invalid */
+   input[aria-invalid='true'] {
+     border-color: red;
+   }
+   ```
+
+2. Add classes manually based on signals:
+   ```html
+   <input
+     [control]="form.email"
+     [class.invalid]="form.email().invalid()"
+     [class.touched]="form.email().touched()"
+   />
+   ```
+
+**Name Attribute Auto-Generation:**
+
+Signal Forms automatically generate a unique `name` attribute for each control based on its path in the form model:
+
+```typescript
+form(signal({ user: { email: '' } }), (path) => {
+  required(path.user.email);
+});
+```
+
+```html
+<!-- Resulting HTML will have: name="user.email" -->
+<input [control]="form.user.email" />
+```
+
+This improves accessibility by ensuring unique names for form controls without manual configuration.
 
 ## Schema Composition
 
@@ -714,6 +884,81 @@ export class UserFormComponent {
      ...data,
      skills: [...data.skills, { name: '' }],
    }));
+   ```
+
+4. **Expecting CSS classes like `ng-invalid`**
+
+   ```typescript
+   // ❌ Wrong - Signal Forms don't add these classes
+   .ng-invalid { border-color: red; }
+
+   // ✅ Correct - Use attribute selectors or manual classes
+   input[aria-invalid="true"] { border-color: red; }
+
+   // Or add classes manually
+   <input
+     [control]="form.email"
+     [class.invalid]="form.email().invalid()"
+   />
+   ```
+
+5. **Misunderstanding `reset()` behavior**
+
+   ```typescript
+   // ⚠️ IMPORTANT: reset() resets control states but NOT values
+   form.reset(); // Resets touched, dirty, validation states
+
+   // To reset both states AND values:
+   form.reset();
+   model.set(createInitialModel()); // Manually reset the data signal
+
+   // Example with submit()
+   readonly #submitHandler = submit(this.form, async (formData) => {
+     await this.apiService.save(formData().value());
+
+     // Reset both form state and model value
+     formData.reset();
+     this.#userData.set({ email: '', name: '' });
+
+     return null;
+   });
+   ```
+
+6. **Relying on `untouched()` or `pristine()` signals**
+
+   ```typescript
+   // ❌ Wrong - These don't exist in Signal Forms
+   if (form.email().untouched()) {
+   }
+   if (form.email().pristine()) {
+   }
+
+   // ✅ Correct - Use logical negation
+   if (!form.email().touched()) {
+   }
+   if (!form.email().dirty()) {
+   }
+   ```
+
+7. **Validator attributes affecting input behavior**
+
+   ```typescript
+   // ⚠️ WARNING: Some validators add HTML attributes that affect behavior
+   maxLength(path.message, 500);
+   // Adds maxlength="500" attribute which TRUNCATES input at 500 chars
+
+   // This can be frustrating when users paste long text - it gets silently cut off
+   // Consider UX implications and provide clear feedback
+   ```
+
+8. **Forgetting `novalidate` on forms**
+
+   ```html
+   <!-- ❌ Wrong - Browser validation conflicts with Angular validation -->
+   <form (ngSubmit)="save()">
+     <!-- ✅ Correct - Always add novalidate -->
+     <form (ngSubmit)="save()" novalidate></form>
+   </form>
    ```
 
 ## Enhancement Toolkit
