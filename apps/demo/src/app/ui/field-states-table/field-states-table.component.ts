@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 
 /**
@@ -17,6 +17,7 @@ import type { FieldTree } from '@angular/forms/signals';
  */
 @Component({
   selector: 'ngx-field-states-table',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
       class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"

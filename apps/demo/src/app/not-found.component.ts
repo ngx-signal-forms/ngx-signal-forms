@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'ngx-not-found',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
   template: `
     <div class="mx-auto max-w-md py-16 text-center">

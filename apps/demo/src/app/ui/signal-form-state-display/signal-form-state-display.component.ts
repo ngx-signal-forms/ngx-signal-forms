@@ -1,5 +1,10 @@
 import { JsonPipe } from '@angular/common';
-import { Component, computed, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
 import type { FieldState } from '@angular/forms/signals';
 
 /**
@@ -21,7 +26,7 @@ import type { FieldState } from '@angular/forms/signals';
  */
 @Component({
   selector: 'ngx-signal-form-state-display',
-
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [JsonPipe],
   template: `
     <div

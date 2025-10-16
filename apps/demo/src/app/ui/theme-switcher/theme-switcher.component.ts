@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -9,6 +10,7 @@ import {
 
 @Component({
   selector: 'ngx-theme-switcher',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-toggle-wrapper' },
   imports: [],
   template: `

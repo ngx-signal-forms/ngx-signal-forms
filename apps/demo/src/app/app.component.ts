@@ -1,5 +1,6 @@
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
@@ -22,6 +23,7 @@ import { NgxThemeSwitcherComponent } from './ui/theme-switcher/theme-switcher.co
 
 @Component({
   selector: 'ngx-root',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgxThemeSwitcherComponent, RouterOutlet, RouterModule],
   templateUrl: './app.component.html',
 })
