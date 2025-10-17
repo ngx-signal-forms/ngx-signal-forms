@@ -313,7 +313,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
         <button
           type="submit"
           class="btn-primary"
-          [disabled]="productForm().invalid() || productForm().pending()"
+          aria-live="polite"
           [attr.aria-describedby]="
             showSubmissionError() ? 'submission-error' : null
           "

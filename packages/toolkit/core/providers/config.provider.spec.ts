@@ -1,10 +1,10 @@
 import { Injector } from '@angular/core';
-import { describe, it, expect } from 'vitest';
-import { provideNgxSignalFormsConfig } from './config.provider';
+import { describe, expect, it } from 'vitest';
 import {
-  NGX_SIGNAL_FORMS_CONFIG,
   DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+  NGX_SIGNAL_FORMS_CONFIG,
 } from '../tokens';
+import { provideNgxSignalFormsConfig } from './config.provider';
 
 const createInjectorFromEnvProviders = (envProviders: unknown) => {
   const providersRecord = envProviders as {
@@ -18,7 +18,6 @@ describe('provideNgxSignalFormsConfig', () => {
   it('should return environment providers', () => {
     const config = {
       autoAria: true,
-      autoTouch: false,
       defaultErrorStrategy: 'immediate' as const,
     };
 
@@ -39,7 +38,9 @@ describe('provideNgxSignalFormsConfig', () => {
 
     const resolved = injector.get(NGX_SIGNAL_FORMS_CONFIG);
     expect(resolved.autoAria).toBe(false);
-    expect(resolved.autoTouch).toBe(DEFAULT_NGX_SIGNAL_FORMS_CONFIG.autoTouch);
+    expect(resolved.defaultErrorStrategy).toBe(
+      DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy,
+    );
   });
 
   it('should work with empty config', () => {

@@ -1,4 +1,12 @@
-import { computed, Directive, inject, input, type Signal } from '@angular/core';
+import {
+  computed,
+  Directive,
+  effect,
+  inject,
+  input,
+  signal,
+  type Signal,
+} from '@angular/core';
 import type { FieldTree, SubmittedStatus } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type { ErrorDisplayStrategy, ReactiveOrStatic } from '../types';
@@ -13,8 +21,15 @@ export interface NgxSignalFormContext {
   form: FieldTree<unknown>;
 
   /**
-   * Angular's built-in submission status signal.
-   * Returns 'unsubmitted' | 'submitting' | 'submitted'.
+   * Submission status signal tracking the complete submission lifecycle.
+   *
+   * **Values**:
+   * - `'unsubmitted'` - Form has never been submitted
+   * - `'submitting'` - Form is currently being submitted (async operation in progress)
+   * - `'submitted'` - Form has been submitted at least once (persists across submissions)
+   *
+   * **Note**: This signal is automatically managed by watching Angular's `submitting()` signal.
+   * The `'submitted'` state persists until the form is reset.
    */
   submittedStatus: Signal<SubmittedStatus>;
 
@@ -27,7 +42,7 @@ export interface NgxSignalFormContext {
 /**
  * Provides form context to child directives and components via DI.
  *
- * **Integrates with Angular Signal Forms built-in submission tracking.**
+ * **Automatically tracks submission lifecycle** by watching Angular's `submitting()` signal.
  *
  * ⚠️ **CRITICAL: Always include `novalidate` on the form element.**
  * Signal Forms doesn't auto-disable HTML5 validation like Reactive Forms does.
@@ -35,14 +50,26 @@ export interface NgxSignalFormContext {
  *
  * **Responsibilities**:
  * - Provides form instance to child directives via DI
- * - Exposes Angular's built-in `submittedStatus` signal
+ * - Tracks submission lifecycle (unsubmitted → submitting → submitted)
  * - Manages error display strategy for the form
  *
  * **Key Features**:
- * - **No Manual Tracking**: Uses Angular's built-in `submittedStatus()` from FieldState
+ * - **Automatic Submission Tracking**: Detects submission completion via `submitting()` transitions
+ * - **Persistent 'submitted' State**: Once submitted, stays 'submitted' until form reset
  * - **DI-based Context**: Provides form context without prop drilling
  * - **Strategy Management**: Centralizes error display strategy for child components
  * - **HTML5 Validation**: Requires `novalidate` to prevent conflicting browser UI
+ *
+ * **Submission State Transitions**:
+ * ```
+ * unsubmitted → submitting (when submit() called)
+ *            ↓
+ *        submitted (after async operation completes)
+ *            ↓
+ *        submitting (on next submission)
+ *            ↓
+ *        submitted (stays in 'submitted' state)
+ * ```
  *
  * @example Basic usage with Angular's submit() helper
  * ```typescript
@@ -68,33 +95,35 @@ export interface NgxSignalFormContext {
  *   });
  *
  *   protected handleSubmit(): void {
- *     void this.#submitHandler(); // Angular manages submittedStatus automatically
+ *     void this.#submitHandler();
+ *     // Directive automatically tracks:
+ *     // 1. submittedStatus = 'submitting' (during async operation)
+ *     // 2. submittedStatus = 'submitted' (after completion)
  *   }
  * }
  * ```
  *
- * @example With custom error strategy
+ * @example With on-submit error strategy
  * ```html
- * <!-- ✅ ALWAYS include novalidate -->
+ * <!-- ✅ Errors only show after form submission -->
  * <form
  *   [ngxSignalFormProvider]="userForm"
- *   [errorStrategy]="'immediate'"
+ *   [errorStrategy]="'on-submit'"
  *   (ngSubmit)="handleSubmit()"
  *   novalidate
  * >
  *   <input [control]="userForm.email" type="email" />
- *   <!-- Errors show immediately as user types -->
+ *   <!-- Errors appear AFTER user clicks submit (not on blur) -->
  * </form>
  * ```
  *
- * @example Direct submission without submit() helper
+ * @example Reset submission state
  * ```typescript
- * protected save(): void {
- *   // Note: This won't update submittedStatus automatically
- *   // Use submit() helper for automatic tracking
- *   if (this.userForm().valid()) {
- *     console.log('Data:', this.#model());
- *   }
+ * protected resetForm(): void {
+ *   this.userForm().reset();  // Resets touched/dirty states
+ *   this.#model.set({ email: '' });  // Reset data
+ *   // Note: Provider's submittedStatus will reset to 'unsubmitted'
+ *   // when form().reset() is called
  * }
  * ```
  */
@@ -118,6 +147,13 @@ export interface NgxSignalFormContext {
 })
 export class NgxSignalFormProviderDirective {
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
+
+  /**
+   * Tracks whether the form has ever been submitted.
+   * Set to true when a submission completes (submitting goes true → false).
+   * Reset to false when form().reset() is called.
+   */
+  readonly #hasEverSubmitted = signal(false);
 
   /**
    * The Signal Forms instance (FieldTree) to provide.
@@ -147,27 +183,64 @@ export class NgxSignalFormProviderDirective {
     return typeof configured === 'function' ? configured() : configured;
   });
 
+  constructor() {
+    // Watch for submission lifecycle transitions
+    // When submitting goes true → false, it means submission completed
+    let previousSubmitting = false;
+
+    effect(() => {
+      const currentSubmitting = this.form()().submitting();
+
+      // Detect submission completion: was submitting, now not submitting
+      if (previousSubmitting && !currentSubmitting) {
+        this.#hasEverSubmitted.set(true);
+      }
+
+      // Detect form reset: touched() becomes false means reset() was called
+      // Reset our submission tracking when the form is reset
+      const formState = this.form()();
+      if (
+        typeof formState.touched === 'function' &&
+        !formState.touched() &&
+        this.#hasEverSubmitted()
+      ) {
+        // Form was reset, clear submission history
+        this.#hasEverSubmitted.set(false);
+      }
+
+      previousSubmitting = currentSubmitting;
+    });
+  }
+
   /**
-   * Access Angular's built-in submittedStatus signal.
+   * Submission status signal tracking the complete submission lifecycle.
    *
-   * Returns the submission status from the root FieldState:
-   * - `'unsubmitted'` - Form has never been submitted
-   * - `'submitting'` - Form is currently being submitted (async operation)
-   * - `'submitted'` - Form has been submitted at least once
+   * **State Machine**:
+   * - `'unsubmitted'` → Form has never been submitted
+   * - `'submitting'` → Form is currently being submitted (async operation)
+   * - `'submitted'` → Form completed submission (persists until reset)
    *
-   * **Note**: This signal is automatically managed by Angular's `submit()` helper.
-   * When using `submit()`, the status transitions are handled for you.
+   * **Automatic Tracking**:
+   * - Detects `submit()` helper usage by watching `submitting()` signal
+   * - Transitions to 'submitted' when async operation completes
+   * - Resets to 'unsubmitted' when `form().reset()` is called
    *
-   * @example
+   * **Usage with Error Strategies**:
+   * - `'on-submit'`: Shows errors when submittedStatus !== 'unsubmitted'
+   * - `'on-touch'`: Shows errors when touched OR submitted
+   *
+   * @example Accessing in child components
    * ```typescript
-   * const provider = inject(NGX_SIGNAL_FORM_CONTEXT);
-   * const status = provider.submittedStatus(); // 'unsubmitted' | 'submitting' | 'submitted'
+   * const context = inject(NGX_SIGNAL_FORM_CONTEXT);
+   * const status = context.submittedStatus(); // 'unsubmitted' | 'submitting' | 'submitted'
    * ```
    */
   readonly submittedStatus = computed<SubmittedStatus>(() => {
-    // Angular 21 FieldState doesn't have submittedStatus - only `submitting` signal
-    // Provide fallback: return 'unsubmitted' since we don't track submission manually
-    // Apps using submit() helper should pass submittedStatus explicitly if needed
+    const isCurrentlySubmitting = this.form()().submitting();
+    const wasSubmitted = this.#hasEverSubmitted();
+
+    if (isCurrentlySubmitting) return 'submitting';
+    if (wasSubmitted) return 'submitted';
     return 'unsubmitted';
   });
 }

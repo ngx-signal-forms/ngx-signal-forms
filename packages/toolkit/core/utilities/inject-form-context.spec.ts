@@ -1,9 +1,9 @@
 import { Injector, signal } from '@angular/core';
-import { describe, it, expect } from 'vitest';
-import { injectFormContext } from './inject-form-context';
-import { NGX_SIGNAL_FORM_CONTEXT } from '../tokens';
-import type { NgxSignalFormContext } from '../directives/form-provider.directive';
 import type { SubmittedStatus } from '@angular/forms/signals';
+import { describe, expect, it } from 'vitest';
+import type { NgxSignalFormContext } from '../directives/form-provider.directive';
+import { NGX_SIGNAL_FORM_CONTEXT } from '../tokens';
+import { injectFormContext } from './inject-form-context';
 
 describe('injectFormContext', () => {
   it('should return form context when available', () => {
@@ -23,12 +23,11 @@ describe('injectFormContext', () => {
     expect(result.form).toBe(mockForm);
   });
 
-  it('should throw error when form context not found', () => {
+  it('should return undefined when form context not found', () => {
     const injector = Injector.create({ providers: [] });
 
-    expect(() => {
-      injectFormContext(injector);
-    }).toThrow(/requires NgxSignalFormProviderDirective/i);
+    const result = injectFormContext(injector);
+    expect(result).toBeUndefined();
   });
 
   it('should throw when called outside injection context without injector', () => {

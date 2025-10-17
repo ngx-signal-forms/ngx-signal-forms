@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
 import { signal } from '@angular/core';
-import { computeShowErrors, shouldShowErrors } from './error-strategies';
-import type { ErrorDisplayStrategy } from '../types';
 import type { SubmittedStatus } from '@angular/forms/signals';
+import { describe, expect, it } from 'vitest';
+import type { ErrorDisplayStrategy } from '../types';
+import { computeShowErrors, shouldShowErrors } from './error-strategies';
 
 describe('error-strategies', () => {
   describe('computeShowErrors', () => {
@@ -60,6 +60,30 @@ describe('error-strategies', () => {
 
         invalid.set(false);
         expect(result()).toBe(false);
+      });
+
+      it('should not be affected by submission status', () => {
+        const fieldState = signal({
+          invalid: () => true,
+          touched: () => false,
+        });
+        const submittedStatus = signal<SubmittedStatus>('unsubmitted');
+
+        const result = computeShowErrors(
+          fieldState,
+          'immediate',
+          submittedStatus,
+        );
+
+        expect(result()).toBe(true);
+
+        // Should still show during submission
+        submittedStatus.set('submitting');
+        expect(result()).toBe(true);
+
+        // Should still show after submission
+        submittedStatus.set('submitted');
+        expect(result()).toBe(true);
       });
     });
 
@@ -147,6 +171,47 @@ describe('error-strategies', () => {
         touched.set(true);
         expect(result()).toBe(true);
       });
+
+      it('should show errors during submission even if not touched', () => {
+        const fieldState = signal({
+          invalid: () => true,
+          touched: () => false,
+        });
+        const submittedStatus = signal<SubmittedStatus>('submitting');
+
+        const result = computeShowErrors(
+          fieldState,
+          'on-touch',
+          submittedStatus,
+        );
+
+        expect(result()).toBe(true);
+      });
+
+      it('should maintain errors visibility throughout submission lifecycle', () => {
+        const fieldState = signal({
+          invalid: () => true,
+          touched: () => false,
+        });
+        const submittedStatus = signal<SubmittedStatus>('unsubmitted');
+
+        const result = computeShowErrors(
+          fieldState,
+          'on-touch',
+          submittedStatus,
+        );
+
+        // Initially no errors (not touched, not submitted)
+        expect(result()).toBe(false);
+
+        // During submission - errors should appear
+        submittedStatus.set('submitting');
+        expect(result()).toBe(true);
+
+        // After submission completes - errors should remain
+        submittedStatus.set('submitted');
+        expect(result()).toBe(true);
+      });
     });
 
     describe('on-submit strategy', () => {
@@ -212,6 +277,47 @@ describe('error-strategies', () => {
         submitted.set('submitted');
         expect(result()).toBe(true);
       });
+
+      it('should show errors during async submission', () => {
+        const fieldState = signal({
+          invalid: () => true,
+          touched: () => false,
+        });
+        const submittedStatus = signal<SubmittedStatus>('submitting');
+
+        const result = computeShowErrors(
+          fieldState,
+          'on-submit',
+          submittedStatus,
+        );
+
+        expect(result()).toBe(true);
+      });
+
+      it('should show errors immediately when submission starts', () => {
+        const fieldState = signal({
+          invalid: () => true,
+          touched: () => false,
+        });
+        const submittedStatus = signal<SubmittedStatus>('unsubmitted');
+
+        const result = computeShowErrors(
+          fieldState,
+          'on-submit',
+          submittedStatus,
+        );
+
+        // No errors before submission
+        expect(result()).toBe(false);
+
+        // Errors appear as soon as submission starts
+        submittedStatus.set('submitting');
+        expect(result()).toBe(true);
+
+        // Errors persist after submission completes
+        submittedStatus.set('submitted');
+        expect(result()).toBe(true);
+      });
     });
 
     describe('manual strategy', () => {
@@ -236,6 +342,26 @@ describe('error-strategies', () => {
 
         const result = computeShowErrors(fieldState, 'manual', submittedStatus);
 
+        expect(result()).toBe(false);
+      });
+
+      it('should never show errors regardless of submission status', () => {
+        const fieldState = signal({
+          invalid: () => true,
+          touched: () => true,
+        });
+        const submittedStatus = signal<SubmittedStatus>('unsubmitted');
+
+        const result = computeShowErrors(fieldState, 'manual', submittedStatus);
+
+        expect(result()).toBe(false);
+
+        // Should not show during submission
+        submittedStatus.set('submitting');
+        expect(result()).toBe(false);
+
+        // Should not show after submission
+        submittedStatus.set('submitted');
         expect(result()).toBe(false);
       });
     });

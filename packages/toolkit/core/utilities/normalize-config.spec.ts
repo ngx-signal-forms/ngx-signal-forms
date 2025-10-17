@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
-import { normalizeSignalFormsConfig } from './normalize-config';
+import { describe, expect, it, vi } from 'vitest';
 import { DEFAULT_NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
+import { normalizeSignalFormsConfig } from './normalize-config';
 
 describe('normalizeSignalFormsConfig', () => {
   it('should return defaults when config is undefined', () => {
@@ -18,7 +18,9 @@ describe('normalizeSignalFormsConfig', () => {
 
     expect(result.autoAria).toBe(false);
     expect(result.debug).toBe(true);
-    expect(result.autoTouch).toBe(DEFAULT_NGX_SIGNAL_FORMS_CONFIG.autoTouch);
+    expect(result.defaultErrorStrategy).toBe(
+      DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy,
+    );
   });
 
   it('should preserve provided defaultErrorStrategy signals', () => {

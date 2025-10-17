@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Control, form } from '@angular/forms/signals';
+import { Control, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import type { ContactFormModel } from './your-first-form.model';
@@ -24,7 +24,7 @@ import { contactFormSchema } from './your-first-form.validations';
     <form
       [ngxSignalFormProvider]="contactForm"
       [errorStrategy]="errorDisplayMode()"
-      (ngSubmit)="saveForm()"
+      (ngSubmit)="(saveForm)"
       novalidate
       class="form-container"
     >
@@ -79,11 +79,7 @@ import { contactFormSchema } from './your-first-form.validations';
 
       <!-- Form Actions -->
       <div class="form-actions">
-        <button
-          type="submit"
-          [disabled]="contactForm().invalid() || contactForm().pending()"
-          class="btn-primary"
-        >
+        <button type="submit" class="btn-primary" aria-live="polite">
           @if (contactForm().pending()) {
             Sending...
           } @else {
@@ -113,20 +109,32 @@ export class YourFirstFormComponent {
   readonly contactForm = form(this.#formData, contactFormSchema);
 
   /**
-   * Form submission handler
-   * Validates form and processes submission
+   * Form submission handler using Angular Signal Forms submit() helper.
+   *
+   * IMPORTANT: Button is NEVER disabled (accessibility best practice).
+   * - submit() automatically calls markAllAsTouched() to show all errors
+   * - Callback only executes if form is VALID
+   * - If invalid, errors are shown but submission is blocked
+   *
+   * This provides better UX than disabled buttons:
+   * - Users can always attempt submission
+   * - Invalid fields are highlighted on submit
+   * - Clear feedback about what needs fixing
    */
-  protected saveForm(): void {
-    if (this.contactForm().valid()) {
-      console.log('✅ Form submitted:', this.#formData());
-      // Reset form after successful submission
-      this.#formData.set({ name: '', email: '', message: '' });
-    } else {
-      console.log('❌ Form is invalid');
-    }
-  }
+  protected readonly saveForm = submit(this.contactForm, async (formData) => {
+    console.log('✅ Form submitted:', formData().value());
+
+    // Simulate async operation (e.g., API call)
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Reset form after successful submission
+    this.#formData.set({ name: '', email: '', message: '' });
+
+    return null; // No server errors
+  });
 
   protected resetForm(): void {
     this.#formData.set({ name: '', email: '', message: '' });
+    this.contactForm().reset();
   }
 }

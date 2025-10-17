@@ -627,18 +627,25 @@ The `submit()` helper is the **preferred pattern** for most forms. It provides:
 - Server error integration
 - Type-safe form data access
 
+**CRITICAL:** `submit()` returns a **callable function**. Bind it **without parentheses** in the template.
+
 ```typescript
 import { submit } from '@angular/forms/signals';
 
 @Component({
-  template: `<form (ngSubmit)="handleSubmit()">...</form>`,
+  template: `
+    <!-- ✅ CORRECT: Bind without parentheses -->
+    <form (ngSubmit)="(handleSubmit)">
+      <button type="submit">Submit</button>
+    </form>
+  `,
 })
 export class UserFormComponent {
   readonly #userData = signal({ email: '' });
   protected readonly userForm = form(this.#userData /* validators */);
 
-  /// submit() helper automatically marks all fields as touched
-  readonly #submitHandler = submit(this.userForm, async (formData) => {
+  /// submit() returns a callable function - store as property
+  protected readonly handleSubmit = submit(this.userForm, async (formData) => {
     try {
       await this.apiService.save(formData().value());
       return null; // Success - no errors
@@ -653,12 +660,17 @@ export class UserFormComponent {
       ];
     }
   });
-
-  protected handleSubmit(): void {
-    void this.#submitHandler();
-  }
 }
 ```
+
+**Common mistake:**
+
+```html
+<!-- ❌ WRONG: Calling with () causes TypeScript error -->
+<form (ngSubmit)="handleSubmit()"></form>
+```
+
+This causes: `TS2349: This expression is not callable. Type 'Promise<void>' has no call signatures.`
 
 ### Option 2: Direct Method (Manual Approach)
 
@@ -951,7 +963,29 @@ export class UserFormComponent {
    // Consider UX implications and provide clear feedback
    ```
 
-8. **Forgetting `novalidate` on forms**
+8. **Incorrect `submit()` binding in templates**
+
+   ```typescript
+   // ❌ Wrong - Calling with parentheses causes "Type 'Promise<void>' has no call signatures" error
+   protected readonly handleSubmit = submit(this.form, async (formData) => { ... });
+   ```
+
+   ```html
+   <form (ngSubmit)="handleSubmit()"><!-- ❌ WRONG --></form>
+   ```
+
+   ```typescript
+   // ✅ Correct - Bind without parentheses (Angular invokes it automatically)
+   protected readonly handleSubmit = submit(this.form, async (formData) => { ... });
+   ```
+
+   ```html
+   <form (ngSubmit)="handleSubmit"><!-- ✅ CORRECT --></form>
+   ```
+
+   **Why:** `submit()` returns a callable function. Angular's event binding system invokes it automatically when you bind without parentheses.
+
+9. **Forgetting `novalidate` on forms**
 
    ```html
    <!-- ❌ Wrong - Browser validation conflicts with Angular validation -->

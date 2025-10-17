@@ -1,13 +1,16 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
+  inject,
   input,
   signal,
 } from '@angular/core';
-import { Control, form } from '@angular/forms/signals';
+import { Control, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import {
+  NGX_SIGNAL_FORM_CONTEXT,
+  NgxSignalFormToolkit,
+} from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 import type { SubmissionModel } from './submission-patterns.model';
 import { submissionSchema } from './submission-patterns.validations';
@@ -16,9 +19,10 @@ import { submissionSchema } from './submission-patterns.validations';
  * Submission Patterns Component
  *
  * Demonstrates advanced submission patterns:
- * - Manual async operations with loading states
+ * - Automatic submission tracking via submit() helper
  * - Server error handling and display
  * - WCAG 2.2 compliance for error announcements
+ * - Visual feedback for submission states
  */
 @Component({
   selector: 'ngx-submission-patterns',
@@ -28,9 +32,57 @@ import { submissionSchema } from './submission-patterns.validations';
     <form
       [ngxSignalFormProvider]="registrationForm"
       [errorStrategy]="errorDisplayMode()"
-      (ngSubmit)="handleSubmit()"
+      (ngSubmit)="(handleSubmit)"
+      novalidate
       class="form-container"
     >
+      <!-- Submission state indicator -->
+      <div
+        class="mb-6 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
+      >
+        <span class="text-2xl">📊</span>
+        <div class="flex-1">
+          <div
+            class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Submission State
+          </div>
+          <div class="flex items-center gap-2">
+            @switch (formContext?.submittedStatus()) {
+              @case ('unsubmitted') {
+                <span
+                  class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                >
+                  <span class="h-2 w-2 rounded-full bg-gray-400"></span>
+                  Ready to Submit
+                </span>
+              }
+              @case ('submitting') {
+                <span
+                  class="inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                >
+                  <span
+                    class="h-2 w-2 animate-pulse rounded-full bg-purple-600"
+                  ></span>
+                  Submitting...
+                </span>
+              }
+              @case ('submitted') {
+                <span
+                  class="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200"
+                >
+                  <span class="h-2 w-2 rounded-full bg-green-600"></span>
+                  Submitted
+                </span>
+              }
+            }
+            <span class="text-xs text-gray-500 dark:text-gray-400">
+              (Automatically tracked by toolkit)
+            </span>
+          </div>
+        </div>
+      </div>
+
       <!-- Server error display (if any) -->
       @if (serverError()) {
         <div
@@ -135,14 +187,6 @@ import { submissionSchema } from './submission-patterns.validations';
         <dl class="space-y-2 text-sm">
           <div class="flex gap-2">
             <dt class="font-medium text-gray-700 dark:text-gray-300">
-              Status:
-            </dt>
-            <dd class="text-gray-600 dark:text-gray-400">
-              {{ submissionStatus() }}
-            </dd>
-          </div>
-          <div class="flex gap-2">
-            <dt class="font-medium text-gray-700 dark:text-gray-300">
               Form Valid:
             </dt>
             <dd class="text-gray-600 dark:text-gray-400">
@@ -162,8 +206,12 @@ import { submissionSchema } from './submission-patterns.validations';
 
       <!-- Form actions -->
       <div class="mt-8 flex gap-4">
-        <button type="submit" [disabled]="isSubmitting()" class="btn-primary">
-          @if (isSubmitting()) {
+        <button
+          type="submit"
+          [disabled]="formContext?.submittedStatus() === 'submitting'"
+          class="btn-primary"
+        >
+          @if (formContext?.submittedStatus() === 'submitting') {
             <span>Submitting...</span>
           } @else {
             <span>Create Account</span>
@@ -172,7 +220,7 @@ import { submissionSchema } from './submission-patterns.validations';
         <button
           type="button"
           (click)="resetForm()"
-          [disabled]="isSubmitting()"
+          [disabled]="formContext?.submittedStatus() === 'submitting'"
           class="btn-secondary"
         >
           Reset
@@ -198,6 +246,11 @@ import { submissionSchema } from './submission-patterns.validations';
 export class SubmissionPatternsComponent {
   errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
 
+  /// Form context - provides automatic submission tracking
+  protected readonly formContext = inject(NGX_SIGNAL_FORM_CONTEXT, {
+    optional: true,
+  });
+
   protected readonly model = signal<SubmissionModel>({
     username: '',
     password: '',
@@ -210,61 +263,70 @@ export class SubmissionPatternsComponent {
   /// Server error state for demonstration
   protected readonly serverError = signal<string | null>(null);
   protected readonly submissionSuccess = signal(false);
-  protected readonly isSubmitting = signal(false);
 
-  /// Computed submission status
-  protected readonly submissionStatus = computed(() => {
-    return this.isSubmitting()
-      ? 'Submitting...'
-      : this.submissionSuccess()
-        ? 'Submitted'
-        : 'Not submitted';
-  });
+  /**
+   * Form submission handler using Angular Signal Forms submit() helper.
+   *
+   * CORRECT PATTERN (per Tim Deschryver & Angular docs):
+   * 1. Call submit() ONCE to create a submit handler function
+   * 2. Store the handler as a component property
+   * 3. Bind directly to (ngSubmit) or call the handler
+   * 4. submit() returns a FUNCTION (not a Promise)
+   *
+   * The submit() helper provides:
+   * - Automatic markAllAsTouched() to show validation errors
+   * - Automatic submission state tracking (submitting → submitted)
+   * - Server error handling via return value
+   * - Type-safe access to form data
+   *
+   * Note: The callback is only invoked when the form is VALID.
+   * If invalid, the callback is skipped and submitting remains false.
+   */
+  protected readonly handleSubmit = submit(
+    this.registrationForm,
+    async (formData) => {
+      /// Clear previous states
+      this.serverError.set(null);
+      this.submissionSuccess.set(false);
 
-  protected async handleSubmit(): Promise<void> {
-    /// Clear previous states
-    this.serverError.set(null);
-    this.submissionSuccess.set(false);
-
-    /// Check if form is valid
-    if (this.registrationForm().invalid()) {
-      return;
-    }
-
-    /// Set submitting state
-    this.isSubmitting.set(true);
-
-    try {
-      /// Simulate API delay
+      /// Simulate API delay (toolkit automatically shows 'submitting' state)
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       /// Simulate server error if checkbox is checked
-      if (this.model().simulateServerError) {
+      if (formData().value().simulateServerError) {
+        const username = formData().value().username;
         this.serverError.set(
-          'Username "' +
-            this.model().username +
-            '" is already taken. Please choose another.',
+          `Username "${username}" is already taken. Please choose another.`,
         );
-        return;
+        /// Return null since we're handling error display manually
+        /// (Alternatively, could return error array for automatic display)
+        return null;
       }
 
       /// Success case
-      console.log('✅ Registration successful:', this.model());
+      console.log('✅ Registration successful:', formData().value());
       this.submissionSuccess.set(true);
-    } finally {
-      this.isSubmitting.set(false);
-    }
-  }
+
+      /// Return null to indicate no server errors
+      return null;
+    },
+  );
 
   protected resetForm(): void {
+    /// Reset form state and data
+    this.registrationForm().reset();
     this.model.set({
       username: '',
       password: '',
       confirmPassword: '',
       simulateServerError: false,
     });
+
+    /// Clear local state
     this.serverError.set(null);
     this.submissionSuccess.set(false);
-    this.isSubmitting.set(false);
+
+    /// Note: submittedStatus automatically resets to 'unsubmitted'
+    /// when form().reset() is called
   }
 }

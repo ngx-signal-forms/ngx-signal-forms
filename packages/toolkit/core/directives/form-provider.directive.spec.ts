@@ -1,7 +1,6 @@
-import { Component, inject, signal, viewChild } from '@angular/core';
-import type { FieldTree, SubmittedStatus } from '@angular/forms/signals';
+import { Component, inject, signal } from '@angular/core';
+import type { FieldTree } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
-import { userEvent } from '@vitest/browser/context';
 import { describe, expect, it } from 'vitest';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type { ErrorDisplayStrategy, NgxSignalFormsConfig } from '../types';
@@ -14,8 +13,6 @@ const createTestConfig = (
   overrides: Partial<NgxSignalFormsConfig>,
 ): NgxSignalFormsConfig => ({
   autoAria: true,
-  autoTouch: true,
-  autoFormBusy: false,
   defaultErrorStrategy: 'on-touch',
   strictFieldResolution: false,
   debug: false,
@@ -33,15 +30,34 @@ const createTestConfig = (
 describe('NgxSignalFormProviderDirective', () => {
   /**
    * Create a minimal mock FieldTree for testing.
-   * FieldTree is a signal that returns a FieldState with submittedStatus.
+   * FieldTree is a signal that returns a FieldState with submitting() and touched() methods.
+   *
+   * Returns a tuple with the mock form and helper methods to control state.
    */
-  const createMockForm = (): FieldTree<unknown> => {
+  const createMockForm = (): [
+    FieldTree<unknown>,
+    {
+      setSubmitting: (value: boolean) => void;
+      setTouched: (value: boolean) => void;
+    },
+  ] => {
+    const submittingSignal = signal(false);
+    const touchedSignal = signal(false);
+
     const mockFieldState = {
-      submittedStatus: signal<SubmittedStatus>('unsubmitted'),
+      submitting: () => submittingSignal(),
+      touched: () => touchedSignal(),
     };
+
     // FieldTree is a signal function that returns FieldState
     const mockFieldTree = signal(mockFieldState);
-    return mockFieldTree as FieldTree<unknown>;
+
+    const helpers = {
+      setSubmitting: (value: boolean) => submittingSignal.set(value),
+      setTouched: (value: boolean) => touchedSignal.set(value),
+    };
+
+    return [mockFieldTree as FieldTree<unknown>, helpers];
   };
 
   /**
@@ -64,7 +80,7 @@ describe('NgxSignalFormProviderDirective', () => {
 
   describe('Form context provision', () => {
     it('should provide form context to child components', async () => {
-      const mockForm = createMockForm();
+      const [mockForm] = createMockForm();
 
       await render(
         `<form [ngxSignalFormProvider]="form">
@@ -82,7 +98,7 @@ describe('NgxSignalFormProviderDirective', () => {
 
   describe('Error strategy configuration', () => {
     it('should use immediate error strategy when specified', async () => {
-      const mockForm = createMockForm();
+      const [mockForm] = createMockForm();
 
       await render(
         `<form [ngxSignalFormProvider]="form" [errorStrategy]="'immediate'">
@@ -100,7 +116,7 @@ describe('NgxSignalFormProviderDirective', () => {
     });
 
     it('should inherit strategy from global config', async () => {
-      const mockForm = createMockForm();
+      const [mockForm] = createMockForm();
 
       await render(
         `<form [ngxSignalFormProvider]="form">
@@ -124,7 +140,7 @@ describe('NgxSignalFormProviderDirective', () => {
     });
 
     it('should default to on-touch when no strategy provided', async () => {
-      const mockForm = createMockForm();
+      const [mockForm] = createMockForm();
 
       await render(
         `<form [ngxSignalFormProvider]="form">
@@ -142,7 +158,7 @@ describe('NgxSignalFormProviderDirective', () => {
     });
 
     it('should allow strategy to be changed dynamically', async () => {
-      const mockForm = createMockForm();
+      const [mockForm] = createMockForm();
       const strategy: ErrorDisplayStrategy = 'on-touch';
 
       const { rerender } = await render(
@@ -171,7 +187,7 @@ describe('NgxSignalFormProviderDirective', () => {
 
   describe('Submission state tracking (user-facing behavior)', () => {
     it('should show submission state as unsubmitted initially', async () => {
-      const mockForm = createMockForm();
+      const [mockForm] = createMockForm();
 
       await render(
         `<form [ngxSignalFormProvider]="form">
@@ -189,117 +205,134 @@ describe('NgxSignalFormProviderDirective', () => {
       );
     });
 
-    it('should allow marking form as submitted programmatically', async () => {
-      const mockForm = createMockForm();
+    it('should track submission completion automatically', async () => {
+      const [mockForm, helpers] = createMockForm();
 
-      @Component({
-        imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
-        template: `
-          <form [ngxSignalFormProvider]="form">
-            <ngx-signal-form-context-display />
-            <button type="button" (click)="customSubmit()">Save Draft</button>
-          </form>
-        `,
-      })
-      class TestComponent {
-        form = mockForm;
-        provider = viewChild.required(NgxSignalFormProviderDirective);
-
-        customSubmit() {
-          // App code: Mark as submitted for custom submission flows
-          // e.g., save draft, multi-step form, custom validation
-          this.provider().markAsSubmitted();
-        }
-      }
-
-      const { fixture } = await render(TestComponent, {});
+      await render(
+        `<form [ngxSignalFormProvider]="form">
+          <ngx-signal-form-context-display />
+        </form>`,
+        {
+          imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
+          componentProperties: { form: mockForm },
+        },
+      );
 
       expect(screen.getByTestId('submitted-status')).toHaveTextContent(
         'unsubmitted',
       );
 
-      // User clicks custom action
-      const draftButton = screen.getByRole('button', { name: /save draft/i });
-      await userEvent.click(draftButton);
+      // Simulate submission: submitting goes true
+      helpers.setSubmitting(true);
+      await vi.waitFor(() => {
+        expect(screen.getByTestId('submitted-status')).toHaveTextContent(
+          'submitting',
+        );
+      });
 
-      // Wait for Angular to detect changes
-      fixture.detectChanges();
+      // Simulate completion: submitting goes false
+      helpers.setSubmitting(false);
+      await vi.waitFor(() => {
+        expect(screen.getByTestId('submitted-status')).toHaveTextContent(
+          'submitted',
+        );
+      });
+    });
 
-      // User sees submission state updated
+    it('should persist submitted state across multiple submissions', async () => {
+      const [mockForm, helpers] = createMockForm();
+
+      await render(
+        `<form [ngxSignalFormProvider]="form">
+          <ngx-signal-form-context-display />
+        </form>`,
+        {
+          imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
+          componentProperties: { form: mockForm },
+        },
+      );
+
+      // First submission
+      helpers.setSubmitting(true);
+      await vi.waitFor(() => {
+        expect(screen.getByTestId('submitted-status')).toHaveTextContent(
+          'submitting',
+        );
+      });
+      helpers.setSubmitting(false);
+      await vi.waitFor(() => {
+        expect(screen.getByTestId('submitted-status')).toHaveTextContent(
+          'submitted',
+        );
+      });
+
+      // Second submission
+      helpers.setSubmitting(true);
+      await vi.waitFor(() => {
+        expect(screen.getByTestId('submitted-status')).toHaveTextContent(
+          'submitting',
+        );
+      });
+      helpers.setSubmitting(false);
+      await vi.waitFor(() => {
+        expect(screen.getByTestId('submitted-status')).toHaveTextContent(
+          'submitted',
+        );
+      });
+
+      // State persists as 'submitted'
       expect(screen.getByTestId('submitted-status')).toHaveTextContent(
         'submitted',
       );
     });
 
-    it('should allow resetting submission state', async () => {
-      const mockForm = createMockForm();
+    it('should reset submission state when form is reset', async () => {
+      const [mockForm, helpers] = createMockForm();
 
-      @Component({
-        imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
-        template: `
-          <form [ngxSignalFormProvider]="form">
-            <ngx-signal-form-context-display />
-            <button type="button" (click)="submit()">Submit</button>
-            <button type="button" (click)="reset()">Reset</button>
-          </form>
-        `,
-      })
-      class TestComponent {
-        form = mockForm;
-        provider = viewChild.required(NgxSignalFormProviderDirective);
-
-        submit() {
-          this.provider().markAsSubmitted();
-        }
-
-        reset() {
-          // App code: Reset after successful save or explicit user action
-          this.provider().resetSubmissionState();
-        }
-      }
-
-      const { fixture } = await render(TestComponent, {});
-
-      // User submits form
-      const submitButton = screen.getByRole('button', { name: /submit/i });
-      await userEvent.click(submitButton);
-
-      // Wait for Angular to detect changes
-      fixture.detectChanges();
-
-      expect(screen.getByTestId('submitted-status')).toHaveTextContent(
-        'submitted',
+      await render(
+        `<form [ngxSignalFormProvider]="form">
+          <ngx-signal-form-context-display />
+        </form>`,
+        {
+          imports: [NgxSignalFormProviderDirective, ContextDisplayComponent],
+          componentProperties: { form: mockForm },
+        },
       );
 
-      // User clicks reset (or form is successfully saved)
-      const resetButton = screen.getByRole('button', { name: /reset/i });
-      await userEvent.click(resetButton);
+      // Submit form
+      helpers.setSubmitting(true);
+      await vi.waitFor(() => {
+        expect(screen.getByTestId('submitted-status')).toHaveTextContent(
+          'submitting',
+        );
+      });
+      helpers.setSubmitting(false);
+      await vi.waitFor(() => {
+        expect(screen.getByTestId('submitted-status')).toHaveTextContent(
+          'submitted',
+        );
+      });
 
-      // Wait for Angular to detect changes
-      fixture.detectChanges();
-
-      // User sees form is no longer marked as submitted
-      expect(screen.getByTestId('submitted-status')).toHaveTextContent(
-        'unsubmitted',
-      );
+      // Simulate form reset: touched becomes false
+      helpers.setTouched(false);
+      await vi.waitFor(() => {
+        expect(screen.getByTestId('submitted-status')).toHaveTextContent(
+          'unsubmitted',
+        );
+      });
     });
 
     /**
-     * Note: Automatic (ngSubmit) tracking is tested in E2E tests.
-     *
-     * The directive listens to (ngSubmit) via host binding, which works in real apps
-     * but requires ReactiveFormsModule/FormsModule in unit tests. Since our toolkit
-     * is designed to work with Signal Forms (no modules needed), we test the public
-     * API (markAsSubmitted/resetSubmissionState) instead.
-     *
-     * See TESTING_NOTES.md for details.
+     * Note: Automatic (ngSubmit) tracking works via effect watching submitting() signal.
+     * These tests verify the effect logic by simulating the state transitions that
+     * would occur when using Angular's submit() helper.
      */
   });
 
   describe('Nested forms', () => {
     it('should support nested forms with independent contexts', async () => {
-      const outerForm = createMockForm();
-      const innerForm = createMockForm();
+      const [outerForm] = createMockForm();
+      const [innerForm] = createMockForm();
 
       @Component({
         selector: 'ngx-signal-form-outer-display',

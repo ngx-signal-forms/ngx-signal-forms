@@ -38,9 +38,12 @@ export const SUBMISSION_PATTERNS_CONTENT = {
       {
         title: 'Submission Flow',
         items: [
-          '• <strong>Validate first:</strong> Check form.valid() before submission',
-          '• <strong>Show all errors:</strong> submit() helper marks all fields as touched',
-          '• <strong>Handle loading:</strong> Use submittedStatus() signal for UI feedback',
+          '• <strong>Use submit() helper:</strong> Angular automatically manages submission state',
+          '• <strong>Automatic state tracking:</strong> Toolkit watches submitting() signal for lifecycle management',
+          '• <strong>Three states:</strong> unsubmitted → submitting (async) → submitted',
+          '• <strong>Persistent state:</strong> "submitted" persists until form.reset() called',
+          '• <strong>Show all errors:</strong> submit() helper marks all fields as touched automatically',
+          '• <strong>UI feedback:</strong> Use submittedStatus() for loading indicators and success messages',
           '• <strong>Return errors:</strong> Server errors returned from handler display automatically',
         ],
       },

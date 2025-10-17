@@ -92,12 +92,6 @@ export interface NgxSignalFormsConfig {
   autoAria: boolean;
 
   /**
-   * Enable automatic aria-busy during async operations.
-   * @default true
-   */
-  autoFormBusy: boolean;
-
-  /**
    * Default error display strategy.
    * Can be a static value, signal, or function.
    * @default 'on-touch'

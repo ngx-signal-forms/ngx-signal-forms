@@ -1,4 +1,4 @@
-import { Injector, ElementRef } from '@angular/core';
+import { ElementRef, Injector } from '@angular/core';
 import { assertInjector } from './assert-injector';
 import { resolveFieldName } from './field-resolution';
 import { injectFormContext } from './inject-form-context';
@@ -51,6 +51,14 @@ export function injectFieldControl<TControl = unknown>(
       const htmlElement =
         element instanceof ElementRef ? element.nativeElement : element;
       const formContext = injectFormContext(injector);
+
+      if (!formContext) {
+        throw new Error(
+          '[ngx-signal-forms] injectFieldControl() requires NgxSignalFormProviderDirective ' +
+            'to be present in the component tree. Add [ngxSignalFormProvider] to your form element.',
+        );
+      }
+
       const fieldName = resolveFieldName(htmlElement, injector);
 
       if (!fieldName) {

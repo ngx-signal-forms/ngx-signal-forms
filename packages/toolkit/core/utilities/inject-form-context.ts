@@ -1,7 +1,7 @@
 import { Injector, inject } from '@angular/core';
+import type { NgxSignalFormContext } from '../directives/form-provider.directive';
 import { NGX_SIGNAL_FORM_CONTEXT } from '../tokens';
 import { assertInjector } from './assert-injector';
-import type { NgxSignalFormContext } from '../directives/form-provider.directive';
 
 /**
  * Custom Inject Function (CIF) for retrieving the form context from FormProviderDirective.
@@ -11,14 +11,15 @@ import type { NgxSignalFormContext } from '../directives/form-provider.directive
  * @see https://github.com/ngxtension/ngxtension-platform
  *
  * @param injector - Optional injector for use outside injection context
- * @returns The form context with submission state and other form-level data
- * @throws Error if FormProviderDirective is not found in the component tree
+ * @returns The form context with submission state and other form-level data, or undefined if not available
  *
  * @example
  * ```typescript
  * /// Inside injection context (component, directive, service)
  * const formContext = injectFormContext();
- * const submittedStatus = formContext.submittedStatus();
+ * if (formContext) {
+ *   const submittedStatus = formContext.submittedStatus();
+ * }
  *
  * /// Outside injection context (utility function)
  * function myUtility(injector?: Injector) {
@@ -30,21 +31,15 @@ import type { NgxSignalFormContext } from '../directives/form-provider.directive
  * const formContext = injectFormContext(TestBed.inject(Injector));
  * ```
  */
-export function injectFormContext(injector?: Injector): NgxSignalFormContext {
+export function injectFormContext(
+  injector?: Injector,
+): NgxSignalFormContext | undefined {
   return assertInjector(
     injectFormContext as (...args: unknown[]) => unknown,
     injector,
     () => {
-      const context = inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true });
-
-      if (!context) {
-        throw new Error(
-          '[ngx-signal-forms] injectFormContext() requires NgxSignalFormProviderDirective to be present in the component tree. ' +
-            'Add [ngxSignalFormProvider] to your form element.',
-        );
-      }
-
-      return context;
+      // Return undefined if context is not available (component can work without provider)
+      return inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true }) ?? undefined;
     },
   );
 }

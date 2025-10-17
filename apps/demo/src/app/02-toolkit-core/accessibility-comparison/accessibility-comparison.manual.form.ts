@@ -7,7 +7,7 @@ import {
   Injector,
   signal,
 } from '@angular/core';
-import { Control, form } from '@angular/forms/signals';
+import { Control, form, submit } from '@angular/forms/signals';
 import type { AccessibilityFormModel } from './accessibility-comparison.model';
 import { accessibilityValidationSchema } from './accessibility-comparison.validations';
 
@@ -28,7 +28,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Control],
   template: `
-    <form (ngSubmit)="handleSubmit()" novalidate class="space-y-6">
+    <form (ngSubmit)="(handleSubmit)" novalidate class="space-y-6">
       <!-- Email Field - Manual ARIA Implementation -->
       <div class="form-field">
         <label
@@ -144,8 +144,8 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
       <!-- Submit Button -->
       <button
         type="submit"
-        [disabled]="signupForm().invalid() || signupForm().pending()"
-        class="flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        aria-live="polite"
+        class="flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
       >
         Sign Up (Manual Implementation)
       </button>
@@ -244,20 +244,23 @@ export class AccessibilityManualFormComponent {
     this.#touchedFields.update((touched) => new Set(touched).add(field));
   }
 
-  /// Form submission handler
-  protected handleSubmit(): void {
-    this.#isSubmitted.set(true);
-
-    if (this.signupForm().valid()) {
-      console.log('[Manual] Form submitted:', this.#formData());
-      alert(`✅ Manual form submitted!\nEmail: ${this.#formData().email}`);
+  /**
+   * Form submission handler using Angular Signal Forms submit() helper.
+   * ACCESSIBILITY: Button never disabled (best practice).
+   */
+  protected readonly handleSubmit = submit(
+    this.signupForm,
+    async (formData) => {
+      this.#isSubmitted.set(true);
+      console.log('[Manual] Form submitted:', formData().value());
+      alert(`✅ Manual form submitted!\nEmail: ${formData().value().email}`);
 
       // Reset form
       this.#formData.set({ email: '', password: '', confirmPassword: '' });
       this.#touchedFields.set(new Set());
       this.#isSubmitted.set(false);
-    } else {
-      console.warn('[Manual] Form invalid - showing all errors');
-    }
-  }
+
+      return null;
+    },
+  );
 }

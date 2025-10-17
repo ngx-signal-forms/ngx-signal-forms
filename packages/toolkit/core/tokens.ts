@@ -1,13 +1,12 @@
 import { InjectionToken } from '@angular/core';
-import type { NgxSignalFormsConfig } from './types';
 import type { NgxSignalFormContext } from './directives/form-provider.directive';
+import type { NgxSignalFormsConfig } from './types';
 
 /**
  * Default configuration applied when no explicit providers override values.
  */
 export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: NgxSignalFormsConfig = {
   autoAria: true,
-  autoFormBusy: true,
   defaultErrorStrategy: () => 'on-touch' as const,
   strictFieldResolution: false,
   debug: false,

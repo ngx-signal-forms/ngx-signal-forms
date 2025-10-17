@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
 import { inputBinding, signal } from '@angular/core';
-import { render, screen } from '@testing-library/angular';
-import { NgxSignalFormErrorComponent } from './form-error.component';
 import type { SubmittedStatus } from '@angular/forms/signals';
+import { render, screen } from '@testing-library/angular';
+import { describe, expect, it } from 'vitest';
+import { NgxSignalFormErrorComponent } from './form-error.component';
 
 /**
  * Helper to create mock FieldTree for testing.
@@ -193,6 +193,94 @@ describe('NgxSignalFormErrorComponent', () => {
       const alert = screen.getByRole('alert');
       expect(alert).toBeTruthy();
     });
+
+    it('should show errors during async submission (on-touch strategy)', async () => {
+      const fieldTree = createMockFieldTree(true, false, [
+        { kind: 'required', message: 'This field is required' },
+      ]);
+      const submittedStatus = signal<SubmittedStatus>('submitting');
+
+      await render(NgxSignalFormErrorComponent, {
+        bindings: [
+          inputBinding('field', fieldTree),
+          inputBinding('fieldName', () => 'email'),
+          inputBinding('strategy', () => 'on-touch'),
+          inputBinding('submittedStatus', submittedStatus),
+        ],
+      });
+
+      const alert = screen.getByRole('alert');
+      expect(alert).toBeTruthy();
+      expect(alert.textContent).toContain('This field is required');
+    });
+
+    it('should show errors during async submission (on-submit strategy)', async () => {
+      const fieldTree = createMockFieldTree(true, false, [
+        { kind: 'required', message: 'Email is required' },
+      ]);
+      const submittedStatus = signal<SubmittedStatus>('submitting');
+
+      await render(NgxSignalFormErrorComponent, {
+        bindings: [
+          inputBinding('field', fieldTree),
+          inputBinding('fieldName', () => 'email'),
+          inputBinding('strategy', () => 'on-submit'),
+          inputBinding('submittedStatus', submittedStatus),
+        ],
+      });
+
+      const alert = screen.getByRole('alert');
+      expect(alert).toBeTruthy();
+      expect(alert.textContent).toContain('Email is required');
+    });
+
+    it('should maintain error visibility throughout submission lifecycle', async () => {
+      const fieldTree = createMockFieldTree(true, false, [
+        { kind: 'required', message: 'This field is required' },
+      ]);
+      const submittedStatus = signal<SubmittedStatus>('unsubmitted');
+
+      const { rerender } = await render(NgxSignalFormErrorComponent, {
+        bindings: [
+          inputBinding('field', fieldTree),
+          inputBinding('fieldName', () => 'email'),
+          inputBinding('strategy', () => 'on-submit'),
+          inputBinding('submittedStatus', submittedStatus),
+        ],
+      });
+
+      // Initially no errors (not submitted)
+      let alert = screen.queryByRole('alert');
+      expect(alert).toBeFalsy();
+
+      // During submission - errors should appear
+      submittedStatus.set('submitting');
+      await rerender({
+        bindings: [
+          inputBinding('field', fieldTree),
+          inputBinding('fieldName', () => 'email'),
+          inputBinding('strategy', () => 'on-submit'),
+          inputBinding('submittedStatus', submittedStatus),
+        ],
+      });
+
+      alert = await screen.findByRole('alert');
+      expect(alert).toBeTruthy();
+
+      // After submission completes - errors should remain
+      submittedStatus.set('submitted');
+      await rerender({
+        bindings: [
+          inputBinding('field', fieldTree),
+          inputBinding('fieldName', () => 'email'),
+          inputBinding('strategy', () => 'on-submit'),
+          inputBinding('submittedStatus', submittedStatus),
+        ],
+      });
+
+      alert = screen.getByRole('alert');
+      expect(alert).toBeTruthy();
+    });
   });
 
   describe('WCAG compliance', () => {
@@ -276,7 +364,9 @@ describe('NgxSignalFormErrorComponent', () => {
 
   describe('edge cases', () => {
     it('should handle null field state gracefully', async () => {
-      const fieldTree = signal(null);
+      // FieldTree is a signal that returns a FieldState (or null in this edge case)
+      // The signal itself must be callable, so we wrap null in a function
+      const fieldTree = signal(() => null);
       const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
       await render(NgxSignalFormErrorComponent, {

@@ -10,12 +10,14 @@ Zero-intrusive directives, components, and utilities for Angular Signal Forms.
 ## Features
 
 - ✅ Automatic ARIA attributes (`aria-invalid`, `aria-describedby`)
-- ✅ Auto-touch on blur for progressive error disclosure
 - ✅ Error display strategies (immediate, on-touch, on-submit, manual)
+- ✅ Warning support (non-blocking validation messages)
 - ✅ Reusable form field wrapper with automatic error display
 - ✅ WCAG 2.2 Level AA compliant
 - ✅ Type-safe with full TypeScript inference
 - ✅ Tree-shakable with secondary entry points
+
+> **Note**: Angular Signal Forms' `[control]` directive automatically marks fields as touched on blur. No additional directive needed for touch tracking.
 
 ## Quick Start
 
@@ -98,7 +100,7 @@ import type { NgxSignalFormsConfig, ErrorDisplayStrategy } from '@ngx-signal-for
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 // Core - Individual imports (alternative)
-import { NgxSignalFormProviderDirective, NgxSignalFormErrorComponent, NgxSignalFormAutoAriaDirective, NgxSignalFormAutoTouchDirective, computeShowErrors, showErrors } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormProviderDirective, NgxSignalFormErrorComponent, NgxSignalFormAutoAriaDirective, computeShowErrors, showErrors } from '@ngx-signal-forms/toolkit/core';
 
 // Form field wrapper (optional)
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
@@ -126,12 +128,11 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 - `NgxSignalFormProviderDirective` - Provides form context to child components
 - `NgxSignalFormAutoAriaDirective` - Automatically applies ARIA attributes
-- `NgxSignalFormAutoTouchDirective` - Automatically marks fields as touched on blur
 - `NgxSignalFormErrorComponent` - Displays validation errors and warnings
 
 **Benefits:**
 
-- Single import instead of four individual imports
+- Single import instead of three individual imports
 - Type-safe readonly tuple
 - Cleaner component metadata
 - Better developer experience
@@ -141,7 +142,6 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 ```typescript
 interface NgxSignalFormsConfig {
   autoAria: boolean; // Default: true
-  autoTouch: boolean; // Default: true
   defaultErrorStrategy: ErrorDisplayStrategy; // Default: 'on-touch'
   fieldNameResolver?: (el: HTMLElement) => string | null;
   strictFieldResolution: boolean; // Default: false
@@ -181,9 +181,7 @@ protected save(): void {
 
 Automatically applied to `input[control]`, `textarea[control]`, `select[control]`.
 
-#### NgxSignalFormAutoTouchDirective
-
-Automatically applied to form controls. Opt-out with `ngxSignalFormAutoTouchDisabled`.
+Adds `aria-invalid` and `aria-describedby` attributes based on field validation state.
 
 ### Components
 

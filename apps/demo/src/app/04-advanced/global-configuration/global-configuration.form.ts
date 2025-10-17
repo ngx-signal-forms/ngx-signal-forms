@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Control, form } from '@angular/forms/signals';
+import { Control, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
@@ -31,7 +31,7 @@ import { globalConfigSchema } from './global-configuration.validations';
     <form
       [ngxSignalFormProvider]="configForm"
       [errorStrategy]="errorDisplayMode()"
-      (ngSubmit)="save()"
+      (ngSubmit)="(save)"
       class="form-container"
     >
       <!-- Info callout about global config -->
@@ -115,11 +115,7 @@ import { globalConfigSchema } from './global-configuration.validations';
 
       <!-- Form actions -->
       <div class="mt-8 flex gap-4">
-        <button
-          type="submit"
-          [disabled]="configForm().invalid()"
-          class="btn-primary"
-        >
+        <button type="submit" class="btn-primary" aria-live="polite">
           Submit Form
         </button>
         <button type="button" (click)="resetForm()" class="btn-secondary">
@@ -173,12 +169,16 @@ export class GlobalConfigurationComponent {
 
   readonly configForm = form(this.model, globalConfigSchema);
 
-  protected save(): void {
-    if (this.configForm().valid()) {
-      console.log('✅ Form submitted:', this.model());
-      alert('Form submitted successfully! Check console for data.');
-    }
-  }
+  /**
+   * Form submission handler using Angular Signal Forms submit() helper.
+   * ACCESSIBILITY: Button never disabled (best practice).
+   */
+  protected readonly save = submit(this.configForm, async (formData) => {
+    console.log('✅ Form submitted:', formData().value());
+    alert('Form submitted successfully! Check console for data.');
+
+    return null;
+  });
 
   protected resetForm(): void {
     this.model.set({

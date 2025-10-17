@@ -1,7 +1,7 @@
 import type { EnvironmentProviders } from '@angular/core';
 import { makeEnvironmentProviders } from '@angular/core';
-import type { NgxSignalFormsUserConfig } from '../types';
 import { NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
+import type { NgxSignalFormsUserConfig } from '../types';
 import { normalizeSignalFormsConfig } from '../utilities/normalize-config';
 
 /**
@@ -19,7 +19,6 @@ import { normalizeSignalFormsConfig } from '../utilities/normalize-config';
  *   providers: [
  *     provideNgxSignalFormsConfig({
  *       autoAria: true,
- *       autoTouch: true,
  *       defaultErrorStrategy: 'on-touch',
  *     }),
  *   ],

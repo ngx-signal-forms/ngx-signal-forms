@@ -142,9 +142,7 @@ import { createPasswordForm } from './warning-support.validations';
 
       <div class="form-actions">
         <button type="button" (click)="reset()">Reset</button>
-        <button type="submit" [disabled]="passwordForm().invalid()">
-          Create Account
-        </button>
+        <button type="submit" aria-live="polite">Create Account</button>
       </div>
     </form>
   `,

@@ -1,15 +1,14 @@
 import { Injector } from '@angular/core';
-import { describe, it, expect, vi } from 'vitest';
-import { resolveFieldName, generateErrorId } from './field-resolution';
+import { describe, expect, it, vi } from 'vitest';
 import { NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type { NgxSignalFormsConfig } from '../types';
+import { generateErrorId, resolveFieldName } from './field-resolution';
 
 describe('field-resolution', () => {
   describe('resolveFieldName', () => {
     it('should resolve field name from data-signal-field attribute (priority 1)', () => {
       const config: NgxSignalFormsConfig = {
         autoAria: true,
-        autoTouch: true,
       };
       const injector = Injector.create({
         providers: [{ provide: NGX_SIGNAL_FORMS_CONFIG, useValue: config }],

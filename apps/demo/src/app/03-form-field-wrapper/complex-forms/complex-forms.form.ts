@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Control, form } from '@angular/forms/signals';
+import { Control, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
@@ -27,7 +27,7 @@ import { complexFormSchema } from './complex-forms.validations';
     <form
       [ngxSignalFormProvider]="complexForm"
       [errorStrategy]="errorDisplayMode()"
-      (ngSubmit)="saveForm()"
+      (ngSubmit)="(saveForm)"
       class="form-container"
     >
       <!-- Personal Information Section -->
@@ -322,11 +322,7 @@ import { complexFormSchema } from './complex-forms.validations';
 
       <!-- Form Actions -->
       <div class="form-actions">
-        <button
-          type="submit"
-          [disabled]="complexForm().invalid()"
-          class="btn-primary"
-        >
+        <button type="submit" class="btn-primary" aria-live="polite">
           Submit Application
         </button>
         <button type="button" (click)="resetForm()" class="btn-secondary">
@@ -406,15 +402,17 @@ export class ComplexFormsComponent {
   }
 
   /**
-   * Form submission handler
+   * Form submission handler using Angular Signal Forms submit() helper.
+   * ACCESSIBILITY: Button never disabled (best practice).
    */
-  protected saveForm(): void {
-    if (this.complexForm().valid()) {
-      console.log('✅ Form submitted:', this.#formData());
-    } else {
-      console.log('❌ Form is invalid');
-    }
-  }
+  protected readonly saveForm = submit(this.complexForm, async (formData) => {
+    console.log('✅ Form submitted:', formData().value());
+
+    // Simulate async operation
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    return null;
+  });
 
   /**
    * Reset form to initial state
