@@ -120,14 +120,14 @@ When resolving field names for ARIA linking, the toolkit follows this priority:
 <input
   id="firstName"
   data-signal-field="personalInfo.firstName"
-  [control]="form.personalInfo.firstName"
+  [field]="form.personalInfo.firstName"
 />
 
 <!-- Priority 3: Use id (most common) -->
-<input id="email" [control]="form.email" />
+<input id="email" [field]="form.email" />
 
 <!-- Priority 4: Fallback to name -->
-<input name="phone" [control]="form.phone" />
+<input name="phone" [field]="form.phone" />
 ```
 
 ### Custom Field Resolver Example

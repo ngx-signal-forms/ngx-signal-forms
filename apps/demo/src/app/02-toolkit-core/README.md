@@ -112,7 +112,7 @@ This section demonstrates **complete toolkit adoption** with focus on core featu
 - ✅ Less disruptive
 - ✅ Progressive disclosure
 
-**Note:** Angular Signal Forms' `[control]` directive automatically marks fields as touched on blur.
+**Note:** Angular Signal Forms' `[field]` directive automatically marks fields as touched on blur.
 
 #### on-submit
 

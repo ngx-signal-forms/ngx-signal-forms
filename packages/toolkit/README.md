@@ -17,7 +17,7 @@ Zero-intrusive directives, components, and utilities for Angular Signal Forms.
 - ✅ Type-safe with full TypeScript inference
 - ✅ Tree-shakable with secondary entry points
 
-> **Note**: Angular Signal Forms' `[control]` directive automatically marks fields as touched on blur. No additional directive needed for touch tracking.
+> **Note**: Angular Signal Forms' `[field]` directive automatically marks fields as touched on blur. No additional directive needed for touch tracking.
 
 ## Quick Start
 
@@ -39,12 +39,12 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
-  imports: [Control, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
     <form [ngxSignalFormProvider]="form" (ngSubmit)="save()">
       <ngx-signal-form-field [field]="form.email" fieldName="email">
         <label for="email">Email</label>
-        <input id="email" [control]="form.email" />
+        <input id="email" [field]="form.email" />
       </ngx-signal-form-field>
       <button type="submit">Submit</button>
     </form>
@@ -82,7 +82,7 @@ import {
 } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
-  imports: [Control, NgxSignalFormProviderDirective, NgxSignalFormErrorComponent],
+  imports: [Field, NgxSignalFormProviderDirective, NgxSignalFormErrorComponent],
   // ...
 })
 ```
@@ -119,7 +119,7 @@ The `NgxSignalFormToolkit` constant provides a convenient way to import all esse
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
-  imports: [Control, NgxSignalFormToolkit],
+  imports: [Field, NgxSignalFormToolkit],
   // ...
 })
 ```
@@ -179,7 +179,7 @@ protected save(): void {
 
 #### NgxSignalFormAutoAriaDirective
 
-Automatically applied to `input[control]`, `textarea[control]`, `select[control]`.
+Automatically applied to `input[field]`, `textarea[field]`, `select[field]`.
 
 Adds `aria-invalid` and `aria-describedby` attributes based on field validation state.
 
@@ -198,7 +198,7 @@ Adds `aria-invalid` and `aria-describedby` attributes based on field validation 
 ```html
 <ngx-signal-form-field [field]="form.email" fieldName="email" [strategy]="'on-touch'">
   <label>Email</label>
-  <input [control]="form.email" />
+  <input [field]="form.email" />
 </ngx-signal-form-field>
 ```
 

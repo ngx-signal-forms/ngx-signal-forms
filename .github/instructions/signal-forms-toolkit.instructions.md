@@ -113,15 +113,15 @@ export const appConfig: ApplicationConfig = {
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { form, Control } from '@angular/forms/signals';
+import { form, Field } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgxSignalFormToolkit],
+  imports: [Field, NgxSignalFormToolkit],
   template: `
     <form [ngxSignalFormProvider]="userForm" (ngSubmit)="save()">
-      <input id="email" [control]="userForm.email" />
+      <input id="email" [field]="userForm.email" />
       <ngx-signal-form-error [field]="userForm.email" fieldName="email" />
       <button type="submit">Submit</button>
     </form>
@@ -152,7 +152,7 @@ import {
 } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
-  imports: [Control, NgxSignalFormProviderDirective, NgxSignalFormErrorComponent],
+  imports: [Field, NgxSignalFormProviderDirective, NgxSignalFormErrorComponent],
   // ...
 })
 ```
@@ -178,19 +178,19 @@ import {
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { form, Control } from '@angular/forms/signals';
+import { form, Field } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgxSignalFormToolkit],
+  imports: [Field, NgxSignalFormToolkit],
   template: `
     <form
       [ngxSignalFormProvider]="userForm"
       [errorStrategy]="'on-touch'"
       (ngSubmit)="save()"
     >
-      <input id="email" [control]="userForm.email" />
+      <input id="email" [field]="userForm.email" />
       <button type="submit">Submit</button>
     </form>
   `,
@@ -220,7 +220,7 @@ export class UserFormComponent {
 
 **Purpose**: Automatically applies ARIA attributes to form controls for accessibility.
 
-**When to use**: Automatically applied to all `input[control]`, `textarea[control]`, `select[control]` elements (except radio/checkbox). No explicit import needed unless you want to opt-out.
+**When to use**: Automatically applied to all `input[field]`, `textarea[field]`, `select[field]` elements (except radio/checkbox). No explicit import needed unless you want to opt-out.
 
 **Automatic behavior**:
 
@@ -238,7 +238,7 @@ export class UserFormComponent {
 **Example - Basic usage** (automatic):
 
 ```html
-<input id="email" [control]="form.email" />
+<input id="email" [field]="form.email" />
 <!-- Result: aria-invalid="true" aria-describedby="email-error" when invalid -->
 ```
 
@@ -248,17 +248,17 @@ export class UserFormComponent {
 <input
   id="firstName"
   data-signal-field="personalInfo.firstName"
-  [control]="form.personalInfo.firstName"
+  [field]="form.personalInfo.firstName"
 />
 ```
 
 **Example - Opt-out**:
 
 ```html
-<input [control]="form.custom" ngxSignalFormAutoAriaDisabled />
+<input [field]="form.custom" ngxSignalFormAutoAriaDisabled />
 ```
 
-**Note on touch behavior**: Angular Signal Forms' `[control]` directive automatically marks fields as touched on blur. The toolkit does not need a separate auto-touch directive.
+**Note on touch behavior**: Angular Signal Forms' `[field]` directive automatically marks fields as touched on blur. The toolkit does not need a separate auto-touch directive.
 
 ## Public API - Components
 
@@ -274,14 +274,14 @@ export class UserFormComponent {
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { form, Control } from '@angular/forms/signals';
+import { form, Field } from '@angular/forms/signals';
 import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgxSignalFormErrorComponent],
+  imports: [Field, NgxSignalFormErrorComponent],
   template: `
-    <input id="email" [control]="emailForm.email" />
+    <input id="email" [field]="emailForm.email" />
     <ngx-signal-form-error [field]="emailForm.email" fieldName="email" />
   `,
 })
@@ -351,17 +351,17 @@ protected readonly rootErrors = computed(() => this.myForm().errors());
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { form, schema, required, email, Control } from '@angular/forms/signals';
+import { form, schema, required, email, Field } from '@angular/forms/signals';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgxSignalFormFieldComponent],
+  imports: [Field, NgxSignalFormFieldComponent],
   template: `
     <form (ngSubmit)="save()">
       <ngx-signal-form-field [field]="contactForm.email" fieldName="email">
         <label for="email">Email</label>
-        <input id="email" [control]="contactForm.email" />
+        <input id="email" [field]="contactForm.email" />
       </ngx-signal-form-field>
 
       <button type="submit" [disabled]="contactForm().invalid()">Submit</button>
@@ -418,14 +418,14 @@ export class ContactFormComponent {
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { form, Control } from '@angular/forms/signals';
+import { form, Field } from '@angular/forms/signals';
 import { showErrors } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control],
+  imports: [Field],
   template: `
-    <input id="email" [control]="emailForm.email" />
+    <input id="email" [field]="emailForm.email" />
 
     @if (shouldShowErrors()) {
       <span id="email-error" role="alert">
@@ -485,12 +485,12 @@ const shouldShow = computeShowErrors(
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { form, Control } from '@angular/forms/signals';
+import { form, Field } from '@angular/forms/signals';
 import { combineShowErrors, showErrors } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control],
+  imports: [Field],
   template: `
     @if (showAnyFormErrors()) {
       <div class="form-error-banner" role="alert">
@@ -498,8 +498,8 @@ import { combineShowErrors, showErrors } from '@ngx-signal-forms/toolkit/core';
       </div>
     }
 
-    <input id="email" [control]="userForm.email" />
-    <input id="password" [control]="userForm.password" />
+    <input id="email" [field]="userForm.email" />
+    <input id="password" [field]="userForm.password" />
   `,
 })
 export class FormWithBannerComponent {
@@ -560,7 +560,7 @@ const passwordSchema = schema<{ password: string }>((path) => {
   template: `
     <ngx-signal-form-field [field]="passwordForm.password" fieldName="password">
       <label for="password">Password</label>
-      <input id="password" type="password" [control]="passwordForm.password" />
+      <input id="password" type="password" [field]="passwordForm.password" />
       <!-- Component automatically separates errors and warnings -->
     </ngx-signal-form-field>
   `,
@@ -634,7 +634,7 @@ When generating forms, use this pattern for consistent UX and automatic accessib
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { form, schema, required, email, Control } from '@angular/forms/signals';
+import { form, schema, required, email, Field } from '@angular/forms/signals';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 interface ContactModel {
@@ -651,17 +651,17 @@ const contactSchema = schema<ContactModel>((path) => {
 @Component({
   selector: 'ngx-contact-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgxSignalFormFieldComponent],
+  imports: [Field, NgxSignalFormFieldComponent],
   template: `
     <form (ngSubmit)="save()">
       <ngx-signal-form-field [field]="contactForm.email" fieldName="email">
         <label for="email">Email</label>
-        <input id="email" [control]="contactForm.email" />
+        <input id="email" [field]="contactForm.email" />
       </ngx-signal-form-field>
 
       <ngx-signal-form-field [field]="contactForm.message" fieldName="message">
         <label for="message">Message</label>
-        <textarea id="message" [control]="contactForm.message"></textarea>
+        <textarea id="message" [field]="contactForm.message"></textarea>
       </ngx-signal-form-field>
 
       <button type="submit" [disabled]="contactForm().invalid()">Submit</button>
@@ -686,7 +686,7 @@ When user needs to toggle error display mode (e.g., for demos or complex UX):
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { form, schema, required, email, Control } from '@angular/forms/signals';
+import { form, schema, required, email, Field } from '@angular/forms/signals';
 import {
   NgxSignalFormProviderDirective,
   NgxSignalFormFieldComponent,
@@ -701,11 +701,7 @@ const userSchema = schema<{ email: string }>((path) => {
 @Component({
   selector: 'ngx-user-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    Control,
-    NgxSignalFormProviderDirective,
-    NgxSignalFormFieldComponent,
-  ],
+  imports: [Field, NgxSignalFormProviderDirective, NgxSignalFormFieldComponent],
   template: `
     <!-- Strategy selector -->
     <fieldset>
@@ -750,7 +746,7 @@ const userSchema = schema<{ email: string }>((path) => {
     >
       <ngx-signal-form-field [field]="userForm.email" fieldName="email">
         <label for="email">Email</label>
-        <input id="email" [control]="userForm.email" />
+        <input id="email" [field]="userForm.email" />
       </ngx-signal-form-field>
 
       <button type="submit">Submit</button>
@@ -780,7 +776,7 @@ import {
   required,
   minLength,
   validate,
-  Control,
+  Field,
 } from '@angular/forms/signals';
 import { warningError } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
@@ -806,11 +802,11 @@ const passwordSchema = schema<{ password: string }>((path) => {
 @Component({
   selector: 'ngx-password-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgxSignalFormFieldComponent],
+  imports: [Field, NgxSignalFormFieldComponent],
   template: `
     <ngx-signal-form-field [field]="passwordForm.password" fieldName="password">
       <label for="password">Password</label>
-      <input id="password" type="password" [control]="passwordForm.password" />
+      <input id="password" type="password" [field]="passwordForm.password" />
       <!-- Component automatically separates errors and warnings -->
     </ngx-signal-form-field>
   `,
@@ -827,7 +823,7 @@ When you need full control over error display markup:
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { form, schema, required, email, Control } from '@angular/forms/signals';
+import { form, schema, required, email, Field } from '@angular/forms/signals';
 import { showErrors } from '@ngx-signal-forms/toolkit/core';
 
 const emailSchema = schema<{ email: string }>((path) => {
@@ -838,9 +834,9 @@ const emailSchema = schema<{ email: string }>((path) => {
 @Component({
   selector: 'ngx-manual-error-display',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control],
+  imports: [Field],
   template: `
-    <input id="email" [control]="emailForm.email" />
+    <input id="email" [field]="emailForm.email" />
 
     @if (shouldShowErrors()) {
       <div id="email-error" role="alert">
@@ -898,16 +894,16 @@ export class ManualErrorComponent {
 
 ```typescript
 // ✅ Good - Uses id (WCAG preferred)
-<input id="email" [control]="form.email" />
+<input id="email" [field]="form.email" />
 
 // ⚠️ Okay - Uses name as fallback
-<input name="email" [control]="form.email" />
+<input name="email" [field]="form.email" />
 
 // ✅ Best - Explicit for nested paths
 <input
   id="firstName"
   data-signal-field="personalInfo.firstName"
-  [control]="form.personalInfo.firstName"
+  [field]="form.personalInfo.firstName"
 />
 ```
 
@@ -1031,7 +1027,7 @@ test('should validate accessibility tree', async ({ page }) => {
   template: `
     <input
       id="email"
-      [control]="form.email"
+      [field]="form.email"
       (blur)="form.email().markAsTouched()"
       [attr.aria-invalid]="form.email().invalid() ? 'true' : null"
       [attr.aria-describedby]="form.email().invalid() ? 'email-error' : null"
@@ -1052,11 +1048,11 @@ test('should validate accessibility tree', async ({ page }) => {
 
 ```typescript
 @Component({
-  imports: [Control, NgxSignalFormFieldComponent],
+  imports: [Field, NgxSignalFormFieldComponent],
   template: `
     <ngx-signal-form-field [field]="form.email" fieldName="email">
       <label for="email">Email</label>
-      <input id="email" [control]="form.email" />
+      <input id="email" [field]="form.email" />
     </ngx-signal-form-field>
   `,
 })

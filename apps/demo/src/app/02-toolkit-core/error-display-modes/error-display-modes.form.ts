@@ -6,7 +6,7 @@ import {
   isDevMode,
   signal,
 } from '@angular/core';
-import { Control, form, submit } from '@angular/forms/signals';
+import { Field, form, submit } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
@@ -41,7 +41,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
 @Component({
   selector: 'ngx-error-display-modes-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgxSignalFormToolkit],
+  imports: [Field, NgxSignalFormToolkit],
   template: `
     <!-- Product Feedback Form -->
     <form
@@ -68,7 +68,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
             id="name"
             type="text"
             autocomplete="name"
-            [control]="productForm.name"
+            [field]="productForm.name"
             aria-describedby="name-hint"
             placeholder="Your full name"
           />
@@ -86,7 +86,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
             id="email"
             type="email"
             autocomplete="email"
-            [control]="productForm.email"
+            [field]="productForm.email"
             placeholder="your.email@company.com"
             aria-describedby="email-hint"
           />
@@ -107,7 +107,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
             id="company"
             type="text"
             autocomplete="organization"
-            [control]="productForm.company"
+            [field]="productForm.company"
             placeholder="Your company (optional)"
             aria-describedby="company-hint"
           />
@@ -137,7 +137,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
           <select
             class="form-input"
             id="productUsed"
-            [control]="productForm.productUsed"
+            [field]="productForm.productUsed"
             aria-describedby="product-hint"
           >
             <option value="">Select a product...</option>
@@ -165,7 +165,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
             type="number"
             min="1"
             max="5"
-            [control]="productForm.overallRating"
+            [field]="productForm.overallRating"
             placeholder="Rate 1-5 stars"
             aria-describedby="rating-hint"
           />
@@ -186,7 +186,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
               class="form-input"
               id="improvementSuggestions"
               rows="4"
-              [control]="productForm.improvementSuggestions"
+              [field]="productForm.improvementSuggestions"
               placeholder="Please help us understand what went wrong..."
               aria-describedby="improvement-hint improvement-counter"
             ></textarea>
@@ -219,7 +219,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
             class="form-input"
             id="detailedFeedback"
             rows="4"
-            [control]="productForm.detailedFeedback"
+            [field]="productForm.detailedFeedback"
             placeholder="Share your detailed experience..."
             aria-describedby="detailed-hint detailed-counter"
           ></textarea>
@@ -258,7 +258,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
               type="checkbox"
               name="allowFollowUp"
               class="form-checkbox"
-              [control]="productForm.allowFollowUp"
+              [field]="productForm.allowFollowUp"
             />
             <span class="ml-2"
               >Allow us to contact you for follow-up questions</span
@@ -274,7 +274,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
               type="checkbox"
               name="newsletter"
               class="form-checkbox"
-              [control]="productForm.newsletter"
+              [field]="productForm.newsletter"
             />
             <span class="ml-2">Subscribe to product updates</span>
           </label>

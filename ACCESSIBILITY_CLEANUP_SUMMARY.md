@@ -288,15 +288,15 @@ pnpm start demo
 ### Correct `submit()` Pattern
 
 ```typescript
-import { Control, form, submit } from '@angular/forms/signals';
+import { Field, form, submit } from '@angular/forms/signals';
 
 @Component({
-  imports: [Control],
+  imports: [Field],
   changeDetection: ChangeDetectionStrategy.OnPush, // Required
   template: `
     <!-- ✅ ALWAYS include novalidate -->
     <form (ngSubmit)="(saveForm)" novalidate>
-      <input [control]="myForm.email" />
+      <input [field]="myForm.email" />
 
       <!-- ✅ Never disabled, aria-live for screen readers -->
       <button type="submit" aria-live="polite">

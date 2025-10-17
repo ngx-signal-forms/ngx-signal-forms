@@ -106,11 +106,11 @@ pnpm nx test demo
 ### Angular Signal Forms (Core API)
 
 ```typescript
-import { form, Control, required, email } from '@angular/forms/signals';
+import { form, Field, required, email } from '@angular/forms/signals';
 
 @Component({
   imports: [Control],
-  template: `<input [control]="myForm.email" />`,
+  template: `<input [field]="myForm.email" />`,
 })
 class MyComponent {
   readonly #model = signal({ email: '' });
@@ -128,10 +128,10 @@ class MyComponent {
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
-  imports: [Control, NgxSignalFormToolkit],
+  imports: [Field, NgxSignalFormToolkit],
   template: `
     <form [ngxSignalFormProvider]="myForm">
-      <input [control]="myForm.email" />
+      <input [field]="myForm.email" />
       <ngx-signal-form-error [field]="myForm.email" fieldName="email" />
     </form>
   `,
@@ -143,11 +143,11 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
-  imports: [Control, NgxSignalFormFieldComponent],
+  imports: [Field, NgxSignalFormFieldComponent],
   template: `
     <ngx-signal-form-field [field]="myForm.email" fieldName="email">
       <label for="email">Email</label>
-      <input id="email" [control]="myForm.email" />
+      <input id="email" [field]="myForm.email" />
     </ngx-signal-form-field>
   `,
 })
@@ -208,7 +208,7 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
 
 **Issue:** Form not working
 
-- Verify `[control]` directive is used (not `formControlName`)
+- Verify `[field]` directive is used (not `formControlName`)
 - Check that `Control` is imported from `@angular/forms/signals`
 - Ensure signal-based model: `signal<Model>({...})`
 

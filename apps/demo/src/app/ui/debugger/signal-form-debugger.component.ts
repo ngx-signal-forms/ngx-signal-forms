@@ -30,7 +30,7 @@ import { NGX_SIGNAL_FORM_CONTEXT } from '@ngx-signal-forms/toolkit/core';
  * @example Basic usage
  * ```html
  * <form [ngxSignalFormProvider]="userForm" (ngSubmit)="handleSubmit()">
- *   <input [control]="userForm.email" />
+ *   <input [field]="userForm.email" />
  *   <ngx-signal-form-debugger [formTree]="userForm()" />
  * </form>
  * ```

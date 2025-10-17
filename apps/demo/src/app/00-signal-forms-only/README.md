@@ -56,7 +56,7 @@ form(model, (path) => {
 ✅ **Control Directive**
 
 ```html
-<input id="email" [control]="loginForm.email" />
+<input id="email" [field]="loginForm.email" />
 ```
 
 ### What Signal Forms Does NOT Provide
@@ -66,7 +66,7 @@ form(model, (path) => {
 ```html
 <!-- You must manually add: -->
 <input
-  [control]="loginForm.email"
+  [field]="loginForm.email"
   [attr.aria-invalid]="loginForm.email().invalid() ? 'true' : null"
   [attr.aria-describedby]="loginForm.email().invalid() ? 'email-error' : null"
 />
@@ -104,7 +104,7 @@ form(model, (path) => {
 ```html
 <input
   id="email"
-  [control]="loginForm.email"
+  [field]="loginForm.email"
   [attr.aria-invalid]="loginForm.email().invalid() ? 'true' : null"
   [attr.aria-describedby]="loginForm.email().invalid() ? 'email-error' : null"
 />
@@ -124,7 +124,7 @@ form(model, (path) => {
 ```html
 <ngx-signal-form-field [field]="loginForm.email" fieldName="email">
   <label for="email">Email</label>
-  <input id="email" [control]="loginForm.email" />
+  <input id="email" [field]="loginForm.email" />
 </ngx-signal-form-field>
 ```
 

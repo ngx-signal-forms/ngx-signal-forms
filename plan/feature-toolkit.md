@@ -180,9 +180,9 @@ packages/toolkit/
 
 ```typescript
 selector: `
-  input[control]:not([ngxSignalFormAutoAriaDisabled]):not([type="radio"]):not([type="checkbox"]),
-  textarea[control]:not([ngxSignalFormAutoAriaDisabled]),
-  select[control]:not([ngxSignalFormAutoAriaDisabled])
+  input[field]:not([ngxSignalFormAutoAriaDisabled]):not([type="radio"]):not([type="checkbox"]),
+  textarea[field]:not([ngxSignalFormAutoAriaDisabled]),
+  select[field]:not([ngxSignalFormAutoAriaDisabled])
 `;
 ```
 
@@ -224,9 +224,9 @@ host: {
 
 ```typescript
 selector: `
-  input[control]:not([type="checkbox"]):not([type="radio"]):not([ngxSignalFormAutoTouchDisabled]),
-  textarea[control]:not([ngxSignalFormAutoTouchDisabled]),
-  select[control]:not([ngxSignalFormAutoTouchDisabled])
+  input[field]:not([type="checkbox"]):not([type="radio"]):not([ngxSignalFormAutoTouchDisabled]),
+  textarea[field]:not([ngxSignalFormAutoTouchDisabled]),
+  select[field]:not([ngxSignalFormAutoTouchDisabled])
 `;
 ```
 
@@ -423,14 +423,19 @@ export type ErrorDisplayStrategy =
 **Implementation**:
 
 ```typescript
-export function computeShowErrors(field: Signal<FieldState<any>>, strategy: ErrorDisplayStrategy | Signal<ErrorDisplayStrategy>, hasSubmitted: Signal<boolean>): Signal<boolean> {
+export function computeShowErrors(
+  field: Signal<FieldState<any>>,
+  strategy: ErrorDisplayStrategy | Signal<ErrorDisplayStrategy>,
+  hasSubmitted: Signal<boolean>,
+): Signal<boolean> {
   return computed(() => {
     const f = field();
     const hasErrors = f.invalid();
     const touched = f.touched();
     const submitted = hasSubmitted();
 
-    const currentStrategy = typeof strategy === 'function' ? strategy() : strategy;
+    const currentStrategy =
+      typeof strategy === 'function' ? strategy() : strategy;
 
     switch (currentStrategy) {
       case 'immediate':
@@ -783,7 +788,7 @@ ngx-vest-forms v2 (PR #52) provides excellent patterns for form enhancement that
 
 ```typescript
 @Directive({
-  selector: 'input[control]:not([ngxVestFormAutoAriaDisabled])',
+  selector: 'input[field]:not([ngxVestFormAutoAriaDisabled])',
   host: {
     '[attr.aria-invalid]': 'ariaInvalid()',
     '[attr.aria-describedby]': 'ariaDescribedBy()'
@@ -1160,7 +1165,11 @@ export interface NgxSignalFormsConfig {
 }
 
 // In our utilities
-export function computeShowErrors(field: SignalLike<FieldState<any>>, strategy: SignalLike<ErrorDisplayStrategy>, hasSubmitted: SignalLike<boolean>): Signal<boolean> {
+export function computeShowErrors(
+  field: SignalLike<FieldState<any>>,
+  strategy: SignalLike<ErrorDisplayStrategy>,
+  hasSubmitted: SignalLike<boolean>,
+): Signal<boolean> {
   return computed(() => {
     const f = typeof field === 'function' ? field() : field;
     // ... implementation
@@ -1221,7 +1230,7 @@ These patterns work seamlessly with Signal Forms validation!
 
 #### 2. Directive Selector Conflicts ⚠️ MEDIUM
 
-**Risk**: `[control]` selector could conflict with other libraries.
+**Risk**: `[field]` selector could conflict with other libraries.
 
 **Mitigation**:
 

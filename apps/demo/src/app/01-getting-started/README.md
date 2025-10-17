@@ -46,7 +46,7 @@ This section demonstrates your **first experience** with the toolkit - seeing im
   template: `
     <input
       id="email"
-      [control]="form.email"
+      [field]="form.email"
       [attr.aria-invalid]="form.email().invalid() ? 'true' : null"
       [attr.aria-describedby]="form.email().invalid() ? 'email-error' : null"
     />
@@ -66,10 +66,10 @@ This section demonstrates your **first experience** with the toolkit - seeing im
 ```typescript
 // 01-getting-started/your-first-form
 @Component({
-  imports: [Control, NgxSignalFormToolkit],  // Added toolkit bundle
+  imports: [Field, NgxSignalFormToolkit],  // Added toolkit bundle
   template: `
     <form [ngxSignalFormProvider]="form">
-      <input id="email" [control]="form.email" />
+      <input id="email" [field]="form.email" />
       <!-- Auto-ARIA applied ✅ -->
 
       <ngx-signal-form-error [field]="form.email" fieldName="email" />
@@ -89,7 +89,7 @@ The toolkit provides a convenient bundle constant for all essential directives:
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
-  imports: [Control, NgxSignalFormToolkit],  // Single import
+  imports: [Field, NgxSignalFormToolkit],  // Single import
 })
 ```
 
@@ -109,7 +109,7 @@ import {
 } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
-  imports: [Control, NgxSignalFormProviderDirective, NgxSignalFormErrorComponent],
+  imports: [Field, NgxSignalFormProviderDirective, NgxSignalFormErrorComponent],
 })
 ```
 
@@ -121,13 +121,13 @@ import {
 <!-- Before: Manual ARIA -->
 <input
   id="email"
-  [control]="form.email"
+  [field]="form.email"
   [attr.aria-invalid]="form.email().invalid() ? 'true' : null"
   [attr.aria-describedby]="form.email().invalid() ? 'email-error' : null"
 />
 
 <!-- After: Automatic -->
-<input id="email" [control]="form.email" />
+<input id="email" [field]="form.email" />
 <!-- NgxSignalFormAutoAriaDirective adds:
      - aria-invalid="true" when invalid
      - aria-describedby="email-error" linking to error

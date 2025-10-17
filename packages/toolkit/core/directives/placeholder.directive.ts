@@ -6,7 +6,7 @@ import { Directive } from '@angular/core';
  *
  * @example
  * ```html
- * <input [control]="form.email" />
+ * <input [field]="form.email" />
  * ```
  */
 @Directive({

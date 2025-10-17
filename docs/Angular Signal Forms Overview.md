@@ -81,7 +81,7 @@ Angular Signal Forms is a new **experimental** reactive form system introduced i
 <!-- You must manually implement ALL of this: -->
 <input
   id="email"
-  [control]="userForm.email"
+  [field]="userForm.email"
   (blur)="userForm.email().markAsTouched()"
   [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null"
   [attr.aria-describedby]="userForm.email().invalid() ? 'email-error' : null"
@@ -813,10 +813,10 @@ import { Control } from '@angular/forms/signals';
   template: `
     <form (ngSubmit)="save()">
       <!-- Basic input -->
-      <input [control]="userForm.name" />
+      <input [field]="userForm.name" />
 
       <!-- With error display -->
-      <input [control]="userForm.email" />
+      <input [field]="userForm.email" />
       @if (userForm.email().invalid()) {
         <div class="error">
           @for (error of userForm.email().errors(); track error.kind) {
@@ -826,16 +826,16 @@ import { Control } from '@angular/forms/signals';
       }
 
       <!-- Checkbox -->
-      <input type="checkbox" [control]="userForm.newsletter" />
+      <input type="checkbox" [field]="userForm.newsletter" />
 
       <!-- Select -->
-      <select [control]="userForm.country">
+      <select [field]="userForm.country">
         <option value="US">United States</option>
         <option value="UK">United Kingdom</option>
       </select>
 
       <!-- Custom component -->
-      <ngx-date-picker [control]="userForm.birthDate" />
+      <ngx-date-picker [field]="userForm.birthDate" />
     </form>
   `,
   imports: [Control]
@@ -844,7 +844,7 @@ import { Control } from '@angular/forms/signals';
 
 #### `FormValueControl` Interface
 
-Contract for components that integrate with `[control]`.
+Contract for components that integrate with `[field]`.
 
 ```typescript
 interface FormValueControl<TValue> {
@@ -1020,7 +1020,7 @@ type User = z.infer<typeof UserSchema>;
     <form (ngSubmit)="save()">
       <div>
         <label>Username</label>
-        <input [control]="userForm.username" />
+        <input [field]="userForm.username" />
         @if (userForm.username().touched() && userForm.username().invalid()) {
           @for (error of userForm.username().errors(); track error.kind) {
             <span class="error">{{ error.message }}</span>
@@ -1030,7 +1030,7 @@ type User = z.infer<typeof UserSchema>;
 
       <div>
         <label>Email</label>
-        <input type="email" [control]="userForm.email" />
+        <input type="email" [field]="userForm.email" />
         @if (userForm.email().touched() && userForm.email().invalid()) {
           @for (error of userForm.email().errors(); track error.kind) {
             <span class="error">{{ error.message }}</span>
@@ -1040,7 +1040,7 @@ type User = z.infer<typeof UserSchema>;
 
       <div>
         <label>Age</label>
-        <input type="number" [control]="userForm.age" />
+        <input type="number" [field]="userForm.age" />
         @if (userForm.age().touched() && userForm.age().invalid()) {
           @for (error of userForm.age().errors(); track error.kind) {
             <span class="error">{{ error.message }}</span>
@@ -1107,13 +1107,13 @@ type Product = z.infer<typeof ProductSchema>;
   template: `
     <form>
       <!-- SKU is auto-generated, always disabled -->
-      <input [control]="productForm.sku" placeholder="SKU (auto)" />
+      <input [field]="productForm.sku" placeholder="SKU (auto)" />
 
-      <input [control]="productForm.name" placeholder="Product name" />
-      <input type="number" [control]="productForm.price" placeholder="Price" />
+      <input [field]="productForm.name" placeholder="Product name" />
+      <input type="number" [field]="productForm.price" placeholder="Price" />
 
       <label>
-        <input type="checkbox" [control]="productForm.onSale" />
+        <input type="checkbox" [field]="productForm.onSale" />
         On Sale
       </label>
 
@@ -1121,12 +1121,12 @@ type Product = z.infer<typeof ProductSchema>;
       @if (!productForm.salePrice().hidden()) {
         <input
           type="number"
-          [control]="productForm.salePrice"
+          [field]="productForm.salePrice"
           placeholder="Sale price"
         />
       }
 
-      <select [control]="productForm.category">
+      <select [field]="productForm.category">
         <option value="electronics">Electronics</option>
         <option value="clothing">Clothing</option>
         <option value="food">Food</option>
@@ -1399,7 +1399,7 @@ export class WeatherFormComponent {
 <!-- Shows all validation states -->
 @for (location of weatherForm.locations; track $index) {
 <div>
-  <input [control]="weatherForm.locations[$index].city" />
+  <input [field]="weatherForm.locations[$index].city" />
 
   <!-- Async validation state -->
   @if (weatherForm.locations[$index].city().pending()) {
@@ -1457,9 +1457,9 @@ type User = v.InferOutput<typeof UserSchema>;
   imports: [Control],
   template: `
     <form>
-      <input [control]="userForm.username" />
-      <input [control]="userForm.email" />
-      <input type="number" [control]="userForm.age" />
+      <input [field]="userForm.username" />
+      <input [field]="userForm.email" />
+      <input type="number" [field]="userForm.age" />
     </form>
   `,
 })
@@ -1871,7 +1871,7 @@ const orderForm = form(orderModel, (path) => {
 
 ```html
 <label>
-  <input type="checkbox" [control]="orderForm.showAdditionalDetail" />
+  <input type="checkbox" [field]="orderForm.showAdditionalDetail" />
   Need additional details?
 </label>
 
@@ -1879,7 +1879,7 @@ const orderForm = form(orderModel, (path) => {
 @if (!orderForm.additionalDetail().hidden()) {
 <div>
   <label>Additional Details</label>
-  <textarea [control]="orderForm.additionalDetail"></textarea>
+  <textarea [field]="orderForm.additionalDetail"></textarea>
 </div>
 }
 ```
@@ -1931,9 +1931,9 @@ const orderForm = form(orderModel, (path) => {
 @if (orderForm.shippingAddress) {
 <div>
   <h3>Shipping Address</h3>
-  <input [control]="orderForm.shippingAddress.street" />
-  <input [control]="orderForm.shippingAddress.city" />
-  <input [control]="orderForm.shippingAddress.zipCode" />
+  <input [field]="orderForm.shippingAddress.street" />
+  <input [field]="orderForm.shippingAddress.city" />
+  <input [field]="orderForm.shippingAddress.zipCode" />
 </div>
 }
 ```
@@ -2075,10 +2075,10 @@ import { FieldState, Control } from '@angular/forms/signals';
 
           @switch (field.type) {
             @case ('checkbox') {
-              <input type="checkbox" [id]="field.name" [control]="fieldState" />
+              <input type="checkbox" [id]="field.name" [field]="fieldState" />
             }
             @case ('select') {
-              <select [id]="field.name" [control]="fieldState">
+              <select [id]="field.name" [field]="fieldState">
                 @for (option of field.options ?? []; track option.value) {
                   <option [value]="option.value">{{ option.label }}</option>
                 }
@@ -2088,7 +2088,7 @@ import { FieldState, Control } from '@angular/forms/signals';
               <input
                 [type]="field.type ?? 'text'"
                 [id]="field.name"
-                [control]="fieldState"
+                [field]="fieldState"
               />
             }
           }
@@ -2388,8 +2388,8 @@ Because form state is tied to the model signal, form UI components can be lazy-l
   template: `
     <form>
       <!-- Critical fields load immediately -->
-      <input [control]="userForm.email" />
-      <input [control]="userForm.password" />
+      <input [field]="userForm.email" />
+      <input [field]="userForm.password" />
 
       <!-- Advanced settings load on interaction -->
       @defer (on interaction) {
@@ -2408,8 +2408,8 @@ export class UserFormComponent {
 @Component({
   selector: 'ngx-advanced-settings',
   template: `
-    <input [control]="form().theme" />
-    <input [control]="form().timezone" />
+    <input [field]="form().theme" />
+    <input [field]="form().timezone" />
     <!-- Complex UI that's not needed initially -->
   `,
 })
@@ -2541,7 +2541,7 @@ export class FormFieldComponent {
       <!-- Simple text input -->
       <ngx-form-field [field]="userForm.name">
         <label for="name">Name</label>
-        <input id="name" [control]="userForm.name" />
+        <input id="name" [field]="userForm.name" />
       </ngx-form-field>
 
       <!-- Email with hint -->
@@ -2550,19 +2550,19 @@ export class FormFieldComponent {
         hint="We'll never share your email"
       >
         <label for="email">Email</label>
-        <input id="email" type="email" [control]="userForm.email" />
+        <input id="email" type="email" [field]="userForm.email" />
       </ngx-form-field>
 
       <!-- Textarea -->
       <ngx-form-field [field]="userForm.bio">
         <label for="bio">Bio</label>
-        <textarea id="bio" [control]="userForm.bio" rows="4"></textarea>
+        <textarea id="bio" [field]="userForm.bio" rows="4"></textarea>
       </ngx-form-field>
 
       <!-- Select -->
       <ngx-form-field [field]="userForm.country">
         <label for="country">Country</label>
-        <select id="country" [control]="userForm.country">
+        <select id="country" [field]="userForm.country">
           <option value="US">United States</option>
           <option value="UK">United Kingdom</option>
           <option value="CA">Canada</option>
@@ -2671,11 +2671,11 @@ export class ValidationErrorsComponent {
 **Usage:**
 
 ```html
-<input [control]="userForm.email" />
+<input [field]="userForm.email" />
 <ngx-validation-errors [field]="userForm.email" />
 
 <!-- Or with custom display strategy -->
-<input [control]="userForm.password" />
+<input [field]="userForm.password" />
 <ngx-validation-errors [field]="userForm.password" showWhen="dirty" />
 ```
 
@@ -2823,7 +2823,7 @@ export class UserFormComponent {
 const userModel = signal<User>({ name: '', email: '' });
 const userForm = form(userModel);
 
-<input [control]="userForm.name" />
+<input [field]="userForm.name" />
 ```
 
 **Flow:**
@@ -3278,7 +3278,7 @@ get isFormReady() {
 @Component({
   template: `
     @for (item of userForm.items().controls; track item.id()) {
-      <ngx-item-editor [control]="item" />
+      <ngx-item-editor [field]="item" />
     }
   `
 })
@@ -3306,7 +3306,7 @@ export class FieldErrorsComponent {
 }
 
 // Usage
-<input [control]="userForm.email" />
+<input [field]="userForm.email" />
 <ngx-field-errors [field]="userForm.email()" />
 ```
 
@@ -3400,18 +3400,18 @@ describe('UserFormComponent', () => {
 
 ### Reactive Forms vs Signal Forms
 
-| Aspect                     | Reactive Forms                           | Signal Forms                 |
-| -------------------------- | ---------------------------------------- | ---------------------------- |
-| **Boilerplate**            | High (FormControl, FormGroup, FormArray) | Low (automatic from model)   |
-| **Type Safety**            | Limited                                  | Full TypeScript support      |
-| **Reactivity**             | RxJS Observables                         | Angular Signals              |
-| **Change Detection**       | Zone.js dependent                        | Zone-less compatible         |
-| **Validation**             | Imperative (validators array)            | Declarative (schema)         |
-| **Cross-field Validation** | Complex with custom validators           | Built-in with schema context |
-| **Async Validation**       | Observable-based                         | Signal/Promise-based         |
-| **State Management**       | Manual subscription handling             | Automatic signal updates     |
-| **Learning Curve**         | Moderate                                 | Moderate (new paradigm)      |
-| **Maturity**               | Stable, production-ready                 | Experimental                 |
+| Aspect                     | Reactive Forms                         | Signal Forms                 |
+| -------------------------- | -------------------------------------- | ---------------------------- |
+| **Boilerplate**            | High (FormField, FormGroup, FormArray) | Low (automatic from model)   |
+| **Type Safety**            | Limited                                | Full TypeScript support      |
+| **Reactivity**             | RxJS Observables                       | Angular Signals              |
+| **Change Detection**       | Zone.js dependent                      | Zone-less compatible         |
+| **Validation**             | Imperative (validators array)          | Declarative (schema)         |
+| **Cross-field Validation** | Complex with custom validators         | Built-in with schema context |
+| **Async Validation**       | Observable-based                       | Signal/Promise-based         |
+| **State Management**       | Manual subscription handling           | Automatic signal updates     |
+| **Learning Curve**         | Moderate                               | Moderate (new paradigm)      |
+| **Maturity**               | Stable, production-ready               | Experimental                 |
 
 ### Code Comparison
 
@@ -3828,7 +3828,7 @@ When migrating a Reactive Form:
 - [ ] Convert `addControl`/`removeControl` to optional fields
 - [ ] Replace `patchValue`/`setValue` with signal updates
 - [ ] Remove manual subscription cleanup (signals auto-cleanup)
-- [ ] Update templates to use `[control]` directive
+- [ ] Update templates to use `[field]` directive
 - [ ] Test thoroughly (unit + E2E)
 - [ ] Update documentation
 
@@ -3870,7 +3870,7 @@ const apiPayload = {
 @Component({
   template: `
     @if (shouldShowField) {
-      <input [control]="form.field" />
+      <input [field]="form.field" />
     }
   `
 })

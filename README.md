@@ -20,7 +20,7 @@ npm install @ngx-signal-forms/toolkit
 
 ## Why This Library?
 
-Angular Signal Forms (introduced in v21) provides an excellent foundation for reactive forms with built-in validation, type safety, automatic touch tracking via the `[control]` directive, and submission state management via `submittedStatus()`. However, it doesn't include:
+Angular Signal Forms (introduced in v21) provides an excellent foundation for reactive forms with built-in validation, type safety, automatic touch tracking via the `[field]` directive, and submission state management via `submittedStatus()`. However, it doesn't include:
 
 - ❌ Automatic ARIA attributes for accessibility (`aria-invalid`, `aria-describedby`)
 - ❌ Flexible error display strategies (immediate, on-touch, on-submit, manual)
@@ -39,7 +39,7 @@ Angular Signal Forms (introduced in v21) provides an excellent foundation for re
 | **Form Creation**       | ✅ `form()`, `schema()`, validators                        | ✅ Same (no changes)                                          |
 | **Validation**          | ✅ Built-in and custom validators                          | ✅ Same + warning support (non-blocking)                      |
 | **Field State**         | ✅ `touched()`, `dirty()`, `invalid()`, `errors()`         | ✅ Same (no changes)                                          |
-| **Touch on Blur**       | ✅ Automatic via `[control]` directive                     | ✅ Enhanced with opt-out capability                           |
+| **Touch on Blur**       | ✅ Automatic via `[field]` directive                       | ✅ Enhanced with opt-out capability                           |
 | **Submission Tracking** | ✅ Built-in `submittedStatus()` signal                     | ✅ Enhanced with DI-based context                             |
 | **ARIA Attributes**     | ❌ Manual `[attr.aria-invalid]`, `[attr.aria-describedby]` | ✅ Automatic via directive                                    |
 | **Error Display Logic** | ❌ Manual `@if` conditions in every template               | ✅ Strategy-based (immediate/on-touch/on-submit/manual)       |
@@ -58,7 +58,7 @@ Angular Signal Forms (introduced in v21) provides an excellent foundation for re
   <label for="email">Email</label>
   <input
     id="email"
-    [control]="userForm.email"
+    [field]="userForm.email"
     [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null"
     [attr.aria-describedby]="userForm.email().invalid() && userForm.email().touched() ? 'email-error' : null"
   />
@@ -78,7 +78,7 @@ Angular Signal Forms (introduced in v21) provides an excellent foundation for re
 <form [ngxSignalFormProvider]="userForm" (ngSubmit)="save()">
   <ngx-signal-form-field [field]="userForm.email" fieldName="email">
     <label for="email">Email</label>
-    <input id="email" [control]="userForm.email" />
+    <input id="email" [field]="userForm.email" />
     <!-- Automatic ARIA, touch handling, and error display with strategy -->
   </ngx-signal-form-field>
   <button type="submit">Submit</button>
@@ -95,15 +95,15 @@ Just install and start using—automatic ARIA attributes work out of the box:
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { form, schema, required, email, Control } from '@angular/forms/signals';
+import { form, schema, required, email, Field } from '@angular/forms/signals';
 
 @Component({
   selector: 'ngx-contact',
-  imports: [Control],
+  imports: [Field],
   template: `
     <form (ngSubmit)="save()" novalidate>
       <label for="email">Email</label>
-      <input id="email" [control]="contactForm.email" type="email" />
+      <input id="email" [field]="contactForm.email" type="email" />
       <button type="submit">Send</button>
     </form>
   `,
@@ -141,13 +141,13 @@ export class ContactComponent {
 ```html
 <!-- ✅ CORRECT - Prevents browser validation bubbles -->
 <form [ngxSignalFormProvider]="myForm" (ngSubmit)="save()" novalidate>
-  <input [control]="myForm.email" type="email" />
+  <input [field]="myForm.email" type="email" />
   <button type="submit">Submit</button>
 </form>
 
 <!-- ❌ WRONG - Browser validation conflicts with toolkit error display -->
 <form [ngxSignalFormProvider]="myForm" (ngSubmit)="save()">
-  <input [control]="myForm.email" type="email" />
+  <input [field]="myForm.email" type="email" />
   <button type="submit">Submit</button>
 </form>
 ```
@@ -167,16 +167,16 @@ Want to show validation errors to users? Add the error component:
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { form, schema, required, email, Control } from '@angular/forms/signals';
+import { form, schema, required, email, Field } from '@angular/forms/signals';
 import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
   selector: 'ngx-contact',
-  imports: [Control, NgxSignalFormErrorComponent],
+  imports: [Field, NgxSignalFormErrorComponent],
   template: `
     <form (ngSubmit)="save()">
       <label for="email">Email</label>
-      <input id="email" [control]="contactForm.email" />
+      <input id="email" [field]="contactForm.email" />
       <ngx-signal-form-error
         [field]="contactForm.email"
         fieldName="email"
@@ -215,7 +215,7 @@ Don't want to manage `submittedStatus` manually? Use the form provider:
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { form, schema, required, email, Control } from '@angular/forms/signals';
+import { form, schema, required, email, Field } from '@angular/forms/signals';
 import {
   NgxSignalFormErrorComponent,
   NgxSignalFormProviderDirective,
@@ -223,15 +223,11 @@ import {
 
 @Component({
   selector: 'ngx-contact',
-  imports: [
-    Control,
-    NgxSignalFormProviderDirective,
-    NgxSignalFormErrorComponent,
-  ],
+  imports: [Field, NgxSignalFormProviderDirective, NgxSignalFormErrorComponent],
   template: `
     <form [ngxSignalFormProvider]="contactForm" (ngSubmit)="save()">
       <label for="email">Email</label>
-      <input id="email" [control]="contactForm.email" />
+      <input id="email" [field]="contactForm.email" />
       <ngx-signal-form-error [field]="contactForm.email" fieldName="email" />
 
       <button type="submit">Send</button>
@@ -271,28 +267,24 @@ import {
   required,
   email,
   minLength,
-  Control,
+  Field,
 } from '@angular/forms/signals';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 import { NgxSignalFormProviderDirective } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
   selector: 'ngx-signup',
-  imports: [
-    Control,
-    NgxSignalFormProviderDirective,
-    NgxSignalFormFieldComponent,
-  ],
+  imports: [Field, NgxSignalFormProviderDirective, NgxSignalFormFieldComponent],
   template: `
     <form [ngxSignalFormProvider]="signupForm" (ngSubmit)="save()">
       <ngx-signal-form-field [field]="signupForm.email" fieldName="email">
         <label for="email">Email</label>
-        <input id="email" type="email" [control]="signupForm.email" />
+        <input id="email" type="email" [field]="signupForm.email" />
       </ngx-signal-form-field>
 
       <ngx-signal-form-field [field]="signupForm.password" fieldName="password">
         <label for="password">Password</label>
-        <input id="password" type="password" [control]="signupForm.password" />
+        <input id="password" type="password" [field]="signupForm.password" />
       </ngx-signal-form-field>
 
       <ngx-signal-form-field
@@ -303,7 +295,7 @@ import { NgxSignalFormProviderDirective } from '@ngx-signal-forms/toolkit/core';
         <input
           id="confirmPassword"
           type="password"
-          [control]="signupForm.confirmPassword"
+          [field]="signupForm.confirmPassword"
         />
       </ngx-signal-form-field>
 
@@ -343,7 +335,7 @@ export class SignupComponent {
 
 ## Error Display Strategies
 
-Control when validation errors are shown to users:
+Field when validation errors are shown to users:
 
 | Strategy    | When Errors Are Shown                            | Best For                         |
 | ----------- | ------------------------------------------------ | -------------------------------- |
@@ -390,13 +382,13 @@ Automatically manages accessibility attributes without any configuration:
 <!-- Input automatically gets: -->
 <!-- aria-invalid="true" when invalid and touched -->
 <!-- aria-describedby="email-error" when error is shown -->
-<input id="email" [control]="form.email" />
+<input id="email" [field]="form.email" />
 ```
 
 **Opt-out if needed:**
 
 ```html
-<input [control]="form.custom" ngxSignalFormAutoAriaDisabled />
+<input [field]="form.custom" ngxSignalFormAutoAriaDisabled />
 ```
 
 ### Auto-Touch Directive
@@ -405,13 +397,13 @@ Automatically marks fields as touched on blur:
 
 ```html
 <!-- On blur, form.email().markAsTouched() is called automatically -->
-<input [control]="form.email" />
+<input [field]="form.email" />
 ```
 
 **Opt-out if needed:**
 
 ```html
-<input [control]="form.manual" ngxSignalFormAutoTouchDisabled />
+<input [field]="form.manual" ngxSignalFormAutoTouchDisabled />
 ```
 
 ### Form Error Component
@@ -441,7 +433,7 @@ Consistent layout with automatic error display:
 ```html
 <ngx-signal-form-field [field]="form.username" fieldName="username">
   <label for="username">Username</label>
-  <input id="username" [control]="form.username" />
+  <input id="username" [field]="form.username" />
 </ngx-signal-form-field>
 ```
 

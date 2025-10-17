@@ -7,7 +7,7 @@ import {
   Injector,
   signal,
 } from '@angular/core';
-import { Control, form, submit } from '@angular/forms/signals';
+import { Field, form, submit } from '@angular/forms/signals';
 import type { AccessibilityFormModel } from './accessibility-comparison.model';
 import { accessibilityValidationSchema } from './accessibility-comparison.validations';
 
@@ -26,7 +26,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
 @Component({
   selector: 'ngx-accessibility-manual-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control],
+  imports: [Field],
   template: `
     <form (ngSubmit)="(handleSubmit)" novalidate class="space-y-6">
       <!-- Email Field - Manual ARIA Implementation -->
@@ -40,7 +40,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
         <input
           id="manual-email"
           type="email"
-          [control]="signupForm.email"
+          [field]="signupForm.email"
           (blur)="markFieldAsTouched('email')"
           [attr.aria-invalid]="shouldShowEmailErrors() ? 'true' : null"
           [attr.aria-describedby]="
@@ -75,7 +75,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
         <input
           id="manual-password"
           type="password"
-          [control]="signupForm.password"
+          [field]="signupForm.password"
           (blur)="markFieldAsTouched('password')"
           [attr.aria-invalid]="shouldShowPasswordErrors() ? 'true' : null"
           [attr.aria-describedby]="
@@ -110,7 +110,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
         <input
           id="manual-confirm-password"
           type="password"
-          [control]="signupForm.confirmPassword"
+          [field]="signupForm.confirmPassword"
           (blur)="markFieldAsTouched('confirmPassword')"
           [attr.aria-invalid]="
             shouldShowConfirmPasswordErrors() ? 'true' : null

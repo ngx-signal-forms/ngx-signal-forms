@@ -1,18 +1,18 @@
 import {
+  ChangeDetectionStrategy,
   Component,
-  input,
   computed,
   inject,
-  ChangeDetectionStrategy,
+  input,
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
-import {
-  NgxSignalFormErrorComponent,
-  NGX_SIGNAL_FORM_CONTEXT,
-} from '@ngx-signal-forms/toolkit/core';
 import type {
   ErrorDisplayStrategy,
   ReactiveOrStatic,
+} from '@ngx-signal-forms/toolkit/core';
+import {
+  NGX_SIGNAL_FORM_CONTEXT,
+  NgxSignalFormErrorComponent,
 } from '@ngx-signal-forms/toolkit/core';
 
 /**
@@ -31,7 +31,7 @@ import type {
  * ```html
  * <ngx-signal-form-field [field]="form.email" fieldName="email">
  *   <label for="email">Email</label>
- *   <input id="email" [control]="form.email" />
+ *   <input id="email" [field]="form.email" />
  * </ngx-signal-form-field>
  * ```
  *
@@ -43,7 +43,7 @@ import type {
  *   [strategy]="'on-submit'"
  * >
  *   <label for="password">Password</label>
- *   <input id="password" type="password" [control]="form.password" />
+ *   <input id="password" type="password" [field]="form.password" />
  * </ngx-signal-form-field>
  * ```
  *
@@ -51,7 +51,7 @@ import type {
  * ```html
  * <ngx-signal-form-field [field]="form.custom" fieldName="custom" [showErrors]="false">
  *   <label for="custom">Custom Field</label>
- *   <input id="custom" [control]="form.custom" />
+ *   <input id="custom" [field]="form.custom" />
  *   <!-- Manual error display here -->
  * </ngx-signal-form-field>
  * ```

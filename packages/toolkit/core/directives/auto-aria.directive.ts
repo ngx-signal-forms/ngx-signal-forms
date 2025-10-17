@@ -9,8 +9,8 @@ import {
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import {
-  resolveFieldName,
   generateErrorId,
+  resolveFieldName,
 } from '../utilities/field-resolution';
 import { injectFormConfig } from '../utilities/inject-form-config';
 
@@ -21,7 +21,7 @@ import { injectFormConfig } from '../utilities/inject-form-config';
  * - `aria-invalid`: Reflects the field's validation state
  * - `aria-describedby`: Links to error messages for screen readers
  *
- * **Selector Strategy**: Automatically applies to all form controls with `[control]` attribute,
+ * **Selector Strategy**: Automatically applies to all form controls with `[field]` attribute,
  * except radio buttons and checkboxes (which require special handling).
  *
  * **Opt-out**: Add `ngxSignalFormAutoAriaDisabled` attribute to disable.
@@ -30,19 +30,18 @@ import { injectFormConfig } from '../utilities/inject-form-config';
  * ```html
  * <!-- Automatic ARIA (enabled by default) -->
  * <label for="email">Email</label>
- * <input id="email" [control]="form.email" />
+ * <input id="email" [field]="form.email" />
  * <!-- Result: aria-invalid="true" aria-describedby="email-error" when invalid -->
  *
  * <!-- Opt-out -->
- * <input [control]="form.custom" ngxSignalFormAutoAriaDisabled />
+ * <input [field]="form.custom" ngxSignalFormAutoAriaDisabled />
  * ```
  */
 @Directive({
-  // eslint-disable-next-line @angular-eslint/directive-selector
   selector: `
-    input[control]:not([ngxSignalFormAutoAriaDisabled]):not([type="radio"]):not([type="checkbox"]),
-    textarea[control]:not([ngxSignalFormAutoAriaDisabled]),
-    select[control]:not([ngxSignalFormAutoAriaDisabled])
+    input[field]:not([ngxSignalFormAutoAriaDisabled]):not([type="radio"]):not([type="checkbox"]),
+    textarea[field]:not([ngxSignalFormAutoAriaDisabled]),
+    select[field]:not([ngxSignalFormAutoAriaDisabled])
   `,
   host: {
     '[attr.aria-invalid]': 'ariaInvalid()',
@@ -55,13 +54,13 @@ export class NgxSignalFormAutoAriaDirective {
   readonly #config = injectFormConfig();
 
   /**
-   * The Signal Forms control for this field.
+   * The Signal Forms field for this field.
    * Accepts a FieldTree (callable function returning FieldState).
    */
-  readonly control = input.required<FieldTree<unknown>>();
+  readonly field = input.required<FieldTree<unknown>>();
 
   /**
-   * Resolved field name for this control.
+   * Resolved field name for this field.
    */
   readonly #fieldName = signal<string | null>(null);
 
@@ -70,10 +69,10 @@ export class NgxSignalFormAutoAriaDirective {
    * Returns 'true' | 'false' | null based on field validity and error display strategy.
    */
   protected readonly ariaInvalid = computed(() => {
-    const ctrl = this.control();
-    if (!ctrl) return null;
+    const field = this.field();
+    if (!field) return null;
 
-    const fieldState = ctrl();
+    const fieldState = field();
     if (!fieldState) return null;
 
     // Only show aria-invalid when errors should be displayed
@@ -90,10 +89,10 @@ export class NgxSignalFormAutoAriaDirective {
    * Links to the error message element for screen readers.
    */
   protected readonly ariaDescribedBy = computed(() => {
-    const ctrl = this.control();
-    if (!ctrl) return null;
+    const field = this.field();
+    if (!field) return null;
 
-    const fieldState = ctrl();
+    const fieldState = field();
     if (!fieldState) return null;
 
     const invalid = fieldState.invalid();

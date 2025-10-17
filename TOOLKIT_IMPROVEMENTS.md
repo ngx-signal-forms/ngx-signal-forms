@@ -43,7 +43,7 @@ readonly submittedStatus = computed<SubmittedStatus>(() => {
 
 ### 2. ✅ Removed Redundant `autoTouch` Configuration
 
-**Issue**: Documentation and configuration mentioned an `autoTouch` feature, but Angular Signal Forms' `[control]` directive **already handles this automatically**.
+**Issue**: Documentation and configuration mentioned an `autoTouch` feature, but Angular Signal Forms' `[field]` directive **already handles this automatically**.
 
 **Changes Made**:
 
@@ -155,7 +155,7 @@ interface NgxSignalFormsConfig {
 
 ### Angular Signal Forms Built-In Features
 
-1. ✅ **Touch tracking**: `[control]` directive handles blur automatically
+1. ✅ **Touch tracking**: `[field]` directive handles blur automatically
 2. ✅ **Submission status**: `submittedStatus()` signal on all `FieldState` objects
 3. ✅ **Async tracking**: `submitting()` signal for async operations
 4. ✅ **Error summary**: `errorSummary()` for all errors including children
@@ -258,15 +258,15 @@ provideNgxSignalFormsConfig({
 **Before**:
 
 ```html
-<input [control]="form.email" ngxSignalFormAutoTouchDisabled />
+<input [field]="form.email" ngxSignalFormAutoTouchDisabled />
 ```
 
 **After**:
 
 ```html
-<!-- Touch tracking is built into Signal Forms' [control] directive -->
+<!-- Touch tracking is built into Signal Forms' [field] directive -->
 <!-- No way to disable (and you shouldn't want to for accessibility) -->
-<input [control]="form.email" />
+<input [field]="form.email" />
 ```
 
 ---

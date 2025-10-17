@@ -40,7 +40,7 @@
     "@nx/vite": "21.6.5",
     "@nx/web": "21.6.5",
     "@nx/workspace": "21.6.5",
-    "@playwright/test": "^1.56.0",
+    "@playwright/test": "^1.56.1",
     "@schematics/angular": "next",
     "@swc-node/register": "~1.11.1",
     "@swc/core": "~1.13.5",

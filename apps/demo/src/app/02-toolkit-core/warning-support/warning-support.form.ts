@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { Control, submit } from '@angular/forms/signals';
+import { Field, submit } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 import type { PasswordFormModel } from './warning-support.model';
@@ -8,7 +8,7 @@ import { createPasswordForm } from './warning-support.validations';
 @Component({
   selector: 'ngx-warning-support-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   styles: `
     :host {
       display: block;
@@ -109,7 +109,7 @@ import { createPasswordForm } from './warning-support.validations';
         <input
           id="username"
           type="text"
-          [control]="passwordForm.username"
+          [field]="passwordForm.username"
           autocomplete="username"
           placeholder="Choose a username"
         />
@@ -120,7 +120,7 @@ import { createPasswordForm } from './warning-support.validations';
         <input
           id="email"
           type="email"
-          [control]="passwordForm.email"
+          [field]="passwordForm.email"
           autocomplete="email"
           placeholder="your.email@example.com"
         />
@@ -134,7 +134,7 @@ import { createPasswordForm } from './warning-support.validations';
         <input
           id="password"
           type="password"
-          [control]="passwordForm.password"
+          [field]="passwordForm.password"
           autocomplete="new-password"
           placeholder="Enter a secure password"
         />

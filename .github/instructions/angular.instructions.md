@@ -64,7 +64,7 @@ High-quality Angular 21+ applications with TypeScript, using Signals for state m
 ### Modern Template Syntax (Angular 17+)
 
 ```typescript
-// Control flow
+// Field flow
 @if (condition()) {
   <p>Shown when true</p>
 } @else {
@@ -102,13 +102,13 @@ High-quality Angular 21+ applications with TypeScript, using Signals for state m
 - **OnPush** change detection required
 
 ```typescript
-import { form, Control, required, email } from '@angular/forms/signals';
+import { form, Field, required, email } from '@angular/forms/signals';
 
 @Component({
-  imports: [Control],
+  imports: [Field],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <input [control]="userForm.email" />
+    <input [field]="userForm.email" />
     @if (userForm.email().invalid()) {
       <div>{{ userForm.email().errors()[0].message }}</div>
     }
@@ -131,7 +131,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   imports: [ReactiveFormsModule],
-  template: `<form [formGroup]="form"><input formControlName="email" /></form>`,
+  template: `<form [formGroup]="form"><input formFieldName="email" /></form>`,
 })
 export class LegacyFormComponent {
   readonly #fb = inject(FormBuilder);

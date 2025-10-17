@@ -61,7 +61,10 @@ const passwordForm = form(signal({ password: '' }), (path) => {
   validate(path.password, (ctx) => {
     const value = ctx.value();
     if (value && value.length < 12) {
-      return warningError('short-password', 'For better security, consider using 12+ characters');
+      return warningError(
+        'short-password',
+        'For better security, consider using 12+ characters',
+      );
     }
     return null;
   });
@@ -71,7 +74,13 @@ const passwordForm = form(signal({ password: '' }), (path) => {
 #### Alternative: Using `customError()` Directly
 
 ```typescript
-import { form, required, minLength, validate, customError } from '@angular/forms/signals';
+import {
+  form,
+  required,
+  minLength,
+  validate,
+  customError,
+} from '@angular/forms/signals';
 
 const passwordForm = form(signal({ password: '' }), (path) => {
   // Errors (block submission)
@@ -122,7 +131,10 @@ const registrationForm = form(
       const domain = value.split('@')[1];
 
       if (domain && disposableDomains.includes(domain)) {
-        return warningError('disposable-email', 'Disposable email addresses may not receive important notifications');
+        return warningError(
+          'disposable-email',
+          'Disposable email addresses may not receive important notifications',
+        );
       }
       return null;
     });
@@ -138,7 +150,10 @@ const registrationForm = form(
       const hasSpecial = /[!@#$%^&*]/.test(value);
 
       if (value && (!hasNumber || !hasSpecial)) {
-        return warningError('weak-password', 'For stronger security, include numbers and special characters');
+        return warningError(
+          'weak-password',
+          'For stronger security, include numbers and special characters',
+        );
       }
       return null;
     });
@@ -168,7 +183,7 @@ The component automatically separates errors and warnings:
   <label for="email">Email *</label>
   <input
     id="email"
-    [control]="form.email"
+    [field]="form.email"
     [attr.aria-invalid]="form.email().invalid()"
     [attr.aria-describedby]="
       form.email().invalid()
@@ -178,7 +193,11 @@ The component automatically separates errors and warnings:
   />
 
   <!-- Displays both errors and warnings -->
-  <ngx-signal-form-error [field]="form.email" fieldName="email" [hasSubmitted]="hasSubmitted" />
+  <ngx-signal-form-error
+    [field]="form.email"
+    fieldName="email"
+    [hasSubmitted]="hasSubmitted"
+  />
 </form>
 ```
 
@@ -186,13 +205,33 @@ The component automatically separates errors and warnings:
 
 ```html
 <!-- Error container (if errors exist) -->
-<div id="email-error" class="ngx-signal-form-error ngx-signal-form-error--error" role="alert" aria-live="assertive" aria-atomic="true">
-  <p class="ngx-signal-form-error__message ngx-signal-form-error__message--error">Invalid email format</p>
+<div
+  id="email-error"
+  class="ngx-signal-form-error ngx-signal-form-error--error"
+  role="alert"
+  aria-live="assertive"
+  aria-atomic="true"
+>
+  <p
+    class="ngx-signal-form-error__message ngx-signal-form-error__message--error"
+  >
+    Invalid email format
+  </p>
 </div>
 
 <!-- Warning container (if warnings exist) -->
-<div id="email-warning" class="ngx-signal-form-error ngx-signal-form-error--warning" role="status" aria-live="polite" aria-atomic="true">
-  <p class="ngx-signal-form-error__message ngx-signal-form-error__message--warning">Disposable email addresses may not receive important notifications</p>
+<div
+  id="email-warning"
+  class="ngx-signal-form-error ngx-signal-form-error--warning"
+  role="status"
+  aria-live="polite"
+  aria-atomic="true"
+>
+  <p
+    class="ngx-signal-form-error__message ngx-signal-form-error__message--warning"
+  >
+    Disposable email addresses may not receive important notifications
+  </p>
 </div>
 ```
 
@@ -203,7 +242,7 @@ The form field wrapper automatically handles both:
 ```html
 <sft-form-field [field]="form.password" fieldName="password">
   <label for="password">Password *</label>
-  <input id="password" type="password" [control]="form.password" />
+  <input id="password" type="password" [field]="form.password" />
   <!-- Errors and warnings displayed automatically -->
 </sft-form-field>
 ```

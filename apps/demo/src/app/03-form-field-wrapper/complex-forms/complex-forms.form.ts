@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Control, form, submit } from '@angular/forms/signals';
+import { Field, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
@@ -22,7 +22,7 @@ import { complexFormSchema } from './complex-forms.validations';
 @Component({
   selector: 'ngx-complex-forms',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
     <form
       [ngxSignalFormProvider]="complexForm"
@@ -49,7 +49,7 @@ import { complexFormSchema } from './complex-forms.validations';
             <input
               id="firstName"
               type="text"
-              [control]="complexForm.personalInfo.firstName"
+              [field]="complexForm.personalInfo.firstName"
             />
           </ngx-signal-form-field>
 
@@ -61,7 +61,7 @@ import { complexFormSchema } from './complex-forms.validations';
             <input
               id="lastName"
               type="text"
-              [control]="complexForm.personalInfo.lastName"
+              [field]="complexForm.personalInfo.lastName"
             />
           </ngx-signal-form-field>
 
@@ -73,7 +73,7 @@ import { complexFormSchema } from './complex-forms.validations';
             <input
               id="email"
               type="email"
-              [control]="complexForm.personalInfo.email"
+              [field]="complexForm.personalInfo.email"
             />
           </ngx-signal-form-field>
 
@@ -85,7 +85,7 @@ import { complexFormSchema } from './complex-forms.validations';
             <input
               id="age"
               type="number"
-              [control]="complexForm.personalInfo.age"
+              [field]="complexForm.personalInfo.age"
               min="18"
               max="120"
             />
@@ -112,7 +112,7 @@ import { complexFormSchema } from './complex-forms.validations';
             <input
               id="street"
               type="text"
-              [control]="complexForm.addressInfo.street"
+              [field]="complexForm.addressInfo.street"
             />
           </ngx-signal-form-field>
 
@@ -125,7 +125,7 @@ import { complexFormSchema } from './complex-forms.validations';
               <input
                 id="city"
                 type="text"
-                [control]="complexForm.addressInfo.city"
+                [field]="complexForm.addressInfo.city"
               />
             </ngx-signal-form-field>
 
@@ -137,7 +137,7 @@ import { complexFormSchema } from './complex-forms.validations';
               <input
                 id="zipCode"
                 type="text"
-                [control]="complexForm.addressInfo.zipCode"
+                [field]="complexForm.addressInfo.zipCode"
                 placeholder="12345"
               />
             </ngx-signal-form-field>
@@ -147,7 +147,7 @@ import { complexFormSchema } from './complex-forms.validations';
               fieldName="country"
             >
               <label for="country">Country *</label>
-              <select id="country" [control]="complexForm.addressInfo.country">
+              <select id="country" [field]="complexForm.addressInfo.country">
                 <option value="">Select...</option>
                 <option value="US">United States</option>
                 <option value="CA">Canada</option>
@@ -182,7 +182,7 @@ import { complexFormSchema } from './complex-forms.validations';
               <input
                 [id]="'skill-' + i + '-name'"
                 type="text"
-                [control]="complexForm.skills[i].name"
+                [field]="complexForm.skills[i].name"
                 placeholder="e.g., Angular"
               />
             </ngx-signal-form-field>
@@ -195,7 +195,7 @@ import { complexFormSchema } from './complex-forms.validations';
               <input
                 [id]="'skill-' + i + '-level'"
                 type="number"
-                [control]="complexForm.skills[i].level"
+                [field]="complexForm.skills[i].level"
                 min="1"
                 max="10"
               />
@@ -240,7 +240,7 @@ import { complexFormSchema } from './complex-forms.validations';
               <label [for]="'contact-' + i + '-type'">Type *</label>
               <select
                 [id]="'contact-' + i + '-type'"
-                [control]="complexForm.contacts[i].type"
+                [field]="complexForm.contacts[i].type"
               >
                 <option value="">Select...</option>
                 <option value="email">Email</option>
@@ -256,7 +256,7 @@ import { complexFormSchema } from './complex-forms.validations';
               <input
                 [id]="'contact-' + i + '-value'"
                 type="text"
-                [control]="complexForm.contacts[i].value"
+                [field]="complexForm.contacts[i].value"
                 [placeholder]="
                   complexForm.contacts[i].type().value() === 'email'
                     ? 'user@example.com'
@@ -298,7 +298,7 @@ import { complexFormSchema } from './complex-forms.validations';
             <input
               id="newsletter"
               type="checkbox"
-              [control]="complexForm.preferences.newsletter"
+              [field]="complexForm.preferences.newsletter"
               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span class="text-sm text-gray-700 dark:text-gray-300">
@@ -310,7 +310,7 @@ import { complexFormSchema } from './complex-forms.validations';
             <input
               id="notifications"
               type="checkbox"
-              [control]="complexForm.preferences.notifications"
+              [field]="complexForm.preferences.notifications"
               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span class="text-sm text-gray-700 dark:text-gray-300">

@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Control, form, submit } from '@angular/forms/signals';
+import { Field, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
@@ -26,7 +26,7 @@ import { globalConfigSchema } from './global-configuration.validations';
 @Component({
   selector: 'ngx-global-configuration',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
     <form
       [ngxSignalFormProvider]="configForm"
@@ -69,7 +69,7 @@ import { globalConfigSchema } from './global-configuration.validations';
           <input
             id="userEmail"
             type="email"
-            [control]="configForm.userEmail"
+            [field]="configForm.userEmail"
             placeholder="user@example.com"
             class="form-input"
           />
@@ -84,7 +84,7 @@ import { globalConfigSchema } from './global-configuration.validations';
           <input
             id="userPhone"
             type="tel"
-            [control]="configForm.userPhone"
+            [field]="configForm.userPhone"
             data-signal-field="userPhone"
             placeholder="123-456-7890"
             class="form-input"
@@ -103,7 +103,7 @@ import { globalConfigSchema } from './global-configuration.validations';
           <input
             id="userWebsite"
             type="url"
-            [control]="configForm.userWebsite"
+            [field]="configForm.userWebsite"
             placeholder="https://example.com"
             class="form-input"
           />

@@ -15,7 +15,7 @@
         id="name"
         class="form-input"
         type="text"
-        [control]="showcaseForm.name"
+        [field]="showcaseForm.name"
         placeholder="John Doe"
         aria-required="true"
       />
@@ -28,7 +28,7 @@
         id="email"
         class="form-input"
         type="email"
-        [control]="showcaseForm.email"
+        [field]="showcaseForm.email"
         placeholder="john@example.com"
         aria-required="true"
         autocomplete="email"
@@ -42,7 +42,7 @@
         id="website"
         class="form-input"
         type="url"
-        [control]="showcaseForm.website"
+        [field]="showcaseForm.website"
         placeholder="https://example.com"
         autocomplete="url"
       />
@@ -55,7 +55,7 @@
         id="age"
         class="form-input"
         type="number"
-        [control]="showcaseForm.age"
+        [field]="showcaseForm.age"
         min="18"
         max="120"
         placeholder="25"
@@ -73,7 +73,7 @@
       <select
         id="country"
         class="form-select"
-        [control]="showcaseForm.country"
+        [field]="showcaseForm.country"
         aria-required="true"
       >
         @for (country of countries; track country.value) {
@@ -88,7 +88,7 @@
       <textarea
         id="bio"
         class="form-textarea"
-        [control]="showcaseForm.bio"
+        [field]="showcaseForm.bio"
         placeholder="Tell us about yourself (minimum 20 characters)..."
         aria-required="true"
       ></textarea>
@@ -108,7 +108,7 @@
           id="agreeToTerms"
           class="form-checkbox"
           type="checkbox"
-          [control]="showcaseForm.agreeToTerms"
+          [field]="showcaseForm.agreeToTerms"
           aria-required="true"
         />
         <span class="ml-2">I agree to the terms and conditions *</span>

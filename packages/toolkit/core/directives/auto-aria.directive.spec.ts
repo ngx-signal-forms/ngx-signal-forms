@@ -1,9 +1,9 @@
 import { Component, signal } from '@angular/core';
-import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/angular';
-import { NgxSignalFormAutoAriaDirective } from './auto-aria.directive';
+import { describe, expect, it, vi } from 'vitest';
 import { NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type { NgxSignalFormsConfig } from '../types';
+import { NgxSignalFormAutoAriaDirective } from './auto-aria.directive';
 
 /**
  * Test suite for NgxSignalFormAutoAriaDirective.
@@ -47,7 +47,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
       });
 
       @Component({
-        template: '<input id="email" [control]="emailControl()" />',
+        template: '<input id="email" [field]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -80,7 +80,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
 
     it('should initialize with name attribute as field name', async () => {
       @Component({
-        template: '<input name="username" [control]="usernameControl()" />',
+        template: '<input name="username" [field]="usernameControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -95,7 +95,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
 
     it('should work with textarea elements', async () => {
       @Component({
-        template: '<textarea id="bio" [control]="bioControl()"></textarea>',
+        template: '<textarea id="bio" [field]="bioControl()"></textarea>',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -111,7 +111,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
     it('should work with select elements', async () => {
       @Component({
         template: `
-          <select id="country" [control]="countryControl()">
+          <select id="country" [field]="countryControl()">
             <option value="us">USA</option>
           </select>
         `,
@@ -130,7 +130,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
     it('should NOT apply to radio inputs (excluded by selector)', async () => {
       @Component({
         template:
-          '<input type="radio" id="option1" [control]="optionControl()" />',
+          '<input type="radio" id="option1" [field]="optionControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -147,7 +147,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
     it('should NOT apply to checkbox inputs (excluded by selector)', async () => {
       @Component({
         template:
-          '<input type="checkbox" id="agree" [control]="agreeControl()" />',
+          '<input type="checkbox" id="agree" [field]="agreeControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -163,7 +163,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
     it('should NOT apply when ngxSignalFormAutoAriaDisabled is present', async () => {
       @Component({
         template:
-          '<input id="custom" [control]="customControl()" ngxSignalFormAutoAriaDisabled />',
+          '<input id="custom" [field]="customControl()" ngxSignalFormAutoAriaDisabled />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -180,7 +180,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
   describe('ARIA Invalid Attribute', () => {
     it('should set aria-invalid to "false" when control is valid', async () => {
       @Component({
-        template: '<input id="email" [control]="emailControl()" />',
+        template: '<input id="email" [field]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -195,7 +195,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
 
     it('should set aria-invalid to "true" when control is invalid and touched', async () => {
       @Component({
-        template: '<input id="email" [control]="emailControl()" />',
+        template: '<input id="email" [field]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -210,7 +210,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
 
     it('should set aria-invalid to "false" when control is invalid but not touched', async () => {
       @Component({
-        template: '<input id="email" [control]="emailControl()" />',
+        template: '<input id="email" [field]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -227,7 +227,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
       const mockControl = createMockControl(false, false);
 
       @Component({
-        template: '<input id="email" [control]="emailControl()" />',
+        template: '<input id="email" [field]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -257,7 +257,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
   describe('ARIA DescribedBy Attribute', () => {
     it('should NOT set aria-describedby when control is valid', async () => {
       @Component({
-        template: '<input id="email" [control]="emailControl()" />',
+        template: '<input id="email" [field]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -272,7 +272,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
 
     it('should set aria-describedby when control is invalid and touched', async () => {
       @Component({
-        template: '<input id="email" [control]="emailControl()" />',
+        template: '<input id="email" [field]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -287,7 +287,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
 
     it('should NOT set aria-describedby when control is invalid but not touched', async () => {
       @Component({
-        template: '<input id="email" [control]="emailControl()" />',
+        template: '<input id="email" [field]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -302,7 +302,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
 
     it('should use correct error ID format for nested field paths', async () => {
       @Component({
-        template: '<input id="address.city" [control]="cityControl()" />',
+        template: '<input id="address.city" [field]="cityControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -322,7 +322,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
       const mockControl = createMockControl(false, false);
 
       @Component({
-        template: '<input id="email" [control]="emailControl()" />',
+        template: '<input id="email" [field]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -369,7 +369,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
       });
 
       @Component({
-        template: '<input id="test-field" [control]="testControl()" />',
+        template: '<input id="test-field" [field]="testControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -402,7 +402,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
       });
 
       @Component({
-        template: '<input id="test-field" [control]="testControl()" />',
+        template: '<input id="test-field" [field]="testControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -428,7 +428,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
 
     it('should use default config when no provider is given', async () => {
       @Component({
-        template: '<input id="email" [control]="emailControl()" />',
+        template: '<input id="email" [field]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -445,7 +445,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
   describe('Edge Cases', () => {
     it('should handle null control gracefully', async () => {
       @Component({
-        template: '<input id="email" [control]="emailControl()" />',
+        template: '<input id="email" [field]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -462,7 +462,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
 
     it('should handle control without field state', async () => {
       @Component({
-        template: '<input id="email" [control]="emailControl()" />',
+        template: '<input id="email" [field]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
@@ -486,7 +486,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
 
     it('should handle element without resolvable field name', async () => {
       @Component({
-        template: '<input [control]="emailControl()" />',
+        template: '<input [field]="emailControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {

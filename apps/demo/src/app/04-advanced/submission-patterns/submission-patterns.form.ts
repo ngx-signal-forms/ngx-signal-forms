@@ -5,7 +5,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Control, form, submit } from '@angular/forms/signals';
+import { Field, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
 import {
   NGX_SIGNAL_FORM_CONTEXT,
@@ -27,7 +27,7 @@ import { submissionSchema } from './submission-patterns.validations';
 @Component({
   selector: 'ngx-submission-patterns',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
     <form
       [ngxSignalFormProvider]="registrationForm"
@@ -134,7 +134,7 @@ import { submissionSchema } from './submission-patterns.validations';
           <input
             id="username"
             type="text"
-            [control]="registrationForm.username"
+            [field]="registrationForm.username"
             placeholder="Enter username"
             class="form-input"
           />
@@ -152,7 +152,7 @@ import { submissionSchema } from './submission-patterns.validations';
           <input
             id="password"
             type="password"
-            [control]="registrationForm.password"
+            [field]="registrationForm.password"
             placeholder="Enter password"
             class="form-input"
           />
@@ -170,7 +170,7 @@ import { submissionSchema } from './submission-patterns.validations';
           <input
             id="confirmPassword"
             type="password"
-            [control]="registrationForm.confirmPassword"
+            [field]="registrationForm.confirmPassword"
             placeholder="Re-enter password"
             class="form-input"
           />
@@ -234,7 +234,7 @@ import { submissionSchema } from './submission-patterns.validations';
         >
           <input
             type="checkbox"
-            [control]="registrationForm.simulateServerError"
+            [field]="registrationForm.simulateServerError"
             class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
           />
           <span>Simulate server error (for testing)</span>

@@ -65,11 +65,11 @@ This section demonstrates the **"batteries included"** approach using `NgxSignal
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
-  imports: [Control, NgxSignalFormFieldComponent],
+  imports: [Field, NgxSignalFormFieldComponent],
   template: `
     <ngx-signal-form-field [field]="form.email" fieldName="email">
       <label for="email">Email</label>
-      <input id="email" [control]="form.email" />
+      <input id="email" [field]="form.email" />
     </ngx-signal-form-field>
   `,
 })
@@ -97,7 +97,7 @@ The component uses `<ng-content>` to project your custom content:
 <ngx-signal-form-field [field]="form.email" fieldName="email">
   <!-- Everything here is projected -->
   <label for="email">Email Address</label>
-  <input id="email" type="email" [control]="form.email" />
+  <input id="email" type="email" [field]="form.email" />
   <p class="hint">We'll never share your email</p>
 </ngx-signal-form-field>
 ```
@@ -110,13 +110,13 @@ The component uses `<ng-content>` to project your custom content:
 <!-- ~15 lines per field -->
 <div class="form-field">
   <label for="email">Email</label>
-  <input id="email" [control]="form.email" />
+  <input id="email" [field]="form.email" />
   <ngx-signal-form-error [field]="form.email" fieldName="email" />
 </div>
 
 <div class="form-field">
   <label for="password">Password</label>
-  <input id="password" type="password" [control]="form.password" />
+  <input id="password" type="password" [field]="form.password" />
   <ngx-signal-form-error [field]="form.password" fieldName="password" />
 </div>
 ```
@@ -127,12 +127,12 @@ The component uses `<ng-content>` to project your custom content:
 <!-- ~5 lines per field -->
 <ngx-signal-form-field [field]="form.email" fieldName="email">
   <label for="email">Email</label>
-  <input id="email" [control]="form.email" />
+  <input id="email" [field]="form.email" />
 </ngx-signal-form-field>
 
 <ngx-signal-form-field [field]="form.password" fieldName="password">
   <label for="password">Password</label>
-  <input id="password" type="password" [control]="form.password" />
+  <input id="password" type="password" [field]="form.password" />
 </ngx-signal-form-field>
 ```
 
@@ -212,7 +212,7 @@ validate(path, (ctx) => {
   [fieldName]="'contact-' + i"
 >
   <label [for]="'contact-' + i">Contact {{ i + 1 }}</label>
-  <input [id]="'contact-' + i" [control]="form.contacts[i].value" />
+  <input [id]="'contact-' + i" [field]="form.contacts[i].value" />
 </ngx-signal-form-field>
 }
 ```
@@ -234,7 +234,7 @@ validate(path, (ctx) => {
     <input
       id="confirmPassword"
       type="password"
-      [control]="form.confirmPassword"
+      [field]="form.confirmPassword"
     />
   </ngx-signal-form-field>
 </form>
@@ -349,12 +349,12 @@ ngx-signal-form-field {
 ```html
 <!-- ❌ Wrong: fieldName doesn't match id -->
 <ngx-signal-form-field [field]="form.email" fieldName="userEmail">
-  <input id="email" [control]="form.email" />
+  <input id="email" [field]="form.email" />
 </ngx-signal-form-field>
 
 <!-- ✅ Correct: fieldName matches id -->
 <ngx-signal-form-field [field]="form.email" fieldName="email">
-  <input id="email" [control]="form.email" />
+  <input id="email" [field]="form.email" />
 </ngx-signal-form-field>
 ```
 

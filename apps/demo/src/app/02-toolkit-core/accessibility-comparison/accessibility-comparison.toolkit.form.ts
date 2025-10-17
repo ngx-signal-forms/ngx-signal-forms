@@ -6,7 +6,7 @@ import {
   Injector,
   signal,
 } from '@angular/core';
-import { Control, form, submit } from '@angular/forms/signals';
+import { Field, form, submit } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 import type { AccessibilityFormModel } from './accessibility-comparison.model';
@@ -21,7 +21,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
 @Component({
   selector: 'ngx-accessibility-toolkit-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
     <form
       [ngxSignalFormProvider]="signupForm"
@@ -44,7 +44,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
         <input
           id="toolkit-email"
           type="email"
-          [control]="signupForm.email"
+          [field]="signupForm.email"
           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
           placeholder="you@example.com"
         />
@@ -64,7 +64,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
         <input
           id="toolkit-password"
           type="password"
-          [control]="signupForm.password"
+          [field]="signupForm.password"
           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
           placeholder="At least 8 characters"
         />
@@ -84,7 +84,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
         <input
           id="toolkit-confirm-password"
           type="password"
-          [control]="signupForm.confirmPassword"
+          [field]="signupForm.confirmPassword"
           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
           placeholder="Re-enter password"
         />

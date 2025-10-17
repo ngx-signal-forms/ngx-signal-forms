@@ -42,10 +42,10 @@ import { NgxSignalFormProviderDirective } from './directives/form-provider.direc
  *
  * @Component({
  *   selector: 'ngx-my-form',
- *   imports: [Control, NgxSignalFormToolkit],
+ *   imports: [Field, NgxSignalFormToolkit],
  *   template: `
  *     <form [ngxSignalFormProvider]="myForm">
- *       <input [control]="myForm.email" />
+ *       <input [field]="myForm.email" />
  *       <ngx-signal-form-error [field]="myForm.email" fieldName="email" />
  *     </form>
  *   `

@@ -4,7 +4,7 @@ import {
   computed,
   signal,
 } from '@angular/core';
-import { Control, form, submit } from '@angular/forms/signals';
+import { Field, form, submit } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 import {
@@ -20,7 +20,7 @@ import { fieldStatesSchema } from './field-states.validations';
 @Component({
   selector: 'ngx-field-states-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgxSignalFormToolkit],
+  imports: [Field, NgxSignalFormToolkit],
   template: `
     <form
       [ngxSignalFormProvider]="userForm"
@@ -51,7 +51,7 @@ import { fieldStatesSchema } from './field-states.validations';
           id="email"
           type="email"
           class="form-input"
-          [control]="userForm.email"
+          [field]="userForm.email"
           placeholder="you@example.com"
           aria-required="true"
         />
@@ -64,7 +64,7 @@ import { fieldStatesSchema } from './field-states.validations';
           id="username"
           type="text"
           class="form-input"
-          [control]="userForm.username"
+          [field]="userForm.username"
           placeholder="johndoe"
           aria-required="true"
         />
@@ -80,7 +80,7 @@ import { fieldStatesSchema } from './field-states.validations';
           id="password"
           type="password"
           class="form-input"
-          [control]="userForm.password"
+          [field]="userForm.password"
           placeholder="••••••••"
           aria-required="true"
         />
@@ -208,7 +208,7 @@ export class FieldStatesForm {
    * so this is mainly for demonstration purposes
    */
   protected markAllTouched(): void {
-    // Signal Forms handles touched state automatically via [control] directive
+    // Signal Forms handles touched state automatically via [field] directive
     // This method is kept for demonstration purposes
     console.log(
       'Fields are marked as touched automatically on blur in Signal Forms',

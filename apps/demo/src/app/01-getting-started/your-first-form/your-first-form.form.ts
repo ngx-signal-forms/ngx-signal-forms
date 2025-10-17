@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Control, form, submit } from '@angular/forms/signals';
+import { Field, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import type { ContactFormModel } from './your-first-form.model';
@@ -19,7 +19,7 @@ import { contactFormSchema } from './your-first-form.validations';
 @Component({
   selector: 'ngx-your-first-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgxSignalFormToolkit],
+  imports: [Field, NgxSignalFormToolkit],
   template: `
     <form
       [ngxSignalFormProvider]="contactForm"
@@ -34,7 +34,7 @@ import { contactFormSchema } from './your-first-form.validations';
         <input
           id="contact-name"
           type="text"
-          [control]="contactForm.name"
+          [field]="contactForm.name"
           class="form-input"
           placeholder="Your name"
         />
@@ -51,7 +51,7 @@ import { contactFormSchema } from './your-first-form.validations';
         <input
           id="contact-email"
           type="email"
-          [control]="contactForm.email"
+          [field]="contactForm.email"
           class="form-input"
           placeholder="you@example.com"
         />
@@ -67,7 +67,7 @@ import { contactFormSchema } from './your-first-form.validations';
         <textarea
           id="contact-message"
           rows="4"
-          [control]="contactForm.message"
+          [field]="contactForm.message"
           class="form-input"
           placeholder="Your message (min 10 characters)"
         ></textarea>

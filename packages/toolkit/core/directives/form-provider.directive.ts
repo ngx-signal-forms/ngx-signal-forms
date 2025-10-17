@@ -79,7 +79,7 @@ export interface NgxSignalFormContext {
  *   template: `
  *     <!-- ✅ ALWAYS include novalidate -->
  *     <form [ngxSignalFormProvider]="userForm" (ngSubmit)="handleSubmit()" novalidate>
- *       <input [control]="userForm.email" type="email" />
+ *       <input [field]="userForm.email" type="email" />
  *       <ngx-signal-form-error [field]="userForm.email" fieldName="email" />
  *       <button type="submit">Submit</button>
  *     </form>
@@ -112,7 +112,7 @@ export interface NgxSignalFormContext {
  *   (ngSubmit)="handleSubmit()"
  *   novalidate
  * >
- *   <input [control]="userForm.email" type="email" />
+ *   <input [field]="userForm.email" type="email" />
  *   <!-- Errors appear AFTER user clicks submit (not on blur) -->
  * </form>
  * ```
