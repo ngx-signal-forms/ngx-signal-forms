@@ -33,6 +33,7 @@ import { globalConfigSchema } from './global-configuration.validations';
       [errorStrategy]="errorDisplayMode()"
       (ngSubmit)="(save)"
       class="form-container"
+      novalidate
     >
       <!-- Info callout about global config -->
       <div

@@ -100,7 +100,11 @@ import { createPasswordForm } from './warning-support.validations';
       </div>
     }
 
-    <form [ngxSignalFormProvider]="passwordForm" (ngSubmit)="handleSubmit()">
+    <form
+      [ngxSignalFormProvider]="passwordForm"
+      (ngSubmit)="handleSubmit()"
+      novalidate
+    >
       <ngx-signal-form-field
         [field]="passwordForm.username"
         fieldName="username"
@@ -157,8 +161,19 @@ export class WarningsSupportFormComponent {
   readonly passwordForm = createPasswordForm(this.#formModel);
   protected readonly successMessage = signal<string>('');
 
-  protected async handleSubmit(): Promise<void> {
-    const submitHandler = submit(this.passwordForm, async (formData) => {
+  /**
+   * Form submission handler using Angular Signal Forms submit() helper.
+   *
+   * IMPORTANT: submit() returns a callable function that is bound directly
+   * in the template: (ngSubmit)="handleSubmit"
+   *
+   * - submit() automatically calls markAllAsTouched() to show all errors
+   * - Callback only executes if form is VALID
+   * - If invalid, errors are shown but submission is blocked
+   */
+  protected readonly handleSubmit = submit(
+    this.passwordForm,
+    async (formData) => {
       try {
         /// Simulate API call
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -182,10 +197,8 @@ export class WarningsSupportFormComponent {
           },
         ];
       }
-    });
-
-    await submitHandler;
-  }
+    },
+  );
 
   protected reset(): void {
     this.#formModel.set({

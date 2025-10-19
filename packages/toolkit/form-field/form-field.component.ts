@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  contentChild,
   inject,
   input,
 } from '@angular/core';
@@ -14,6 +15,20 @@ import {
   NGX_SIGNAL_FORM_CONTEXT,
   NgxSignalFormErrorComponent,
 } from '@ngx-signal-forms/toolkit/core';
+
+/**
+ * Counter for generating unique field IDs when fieldName is not provided.
+ * The counter is incremented using the pre-increment operator within component initialization.
+ */
+let uniqueFieldIdCounter = 0;
+
+/**
+ * Generates a unique field ID by incrementing the global counter.
+ * Each call returns a new unique ID (e.g., "field-1", "field-2", etc.).
+ */
+function generateUniqueFieldId(): string {
+  return `field-${++uniqueFieldIdCounter}`;
+}
 
 /**
  * Form field wrapper component with automatic error/warning display.
@@ -74,7 +89,7 @@ import {
     @if (showErrors()) {
       <ngx-signal-form-error
         [field]="field()"
-        [fieldName]="fieldName()"
+        [fieldName]="resolvedFieldName()"
         [strategy]="effectiveStrategy"
         [submittedStatus]="submittedStatus"
       />
@@ -102,10 +117,45 @@ export class NgxSignalFormFieldComponent<TValue = unknown> {
   readonly field = input.required<FieldTree<TValue>>();
 
   /**
-   * The field name used for generating error IDs.
-   * This should match the field name used in the form.
+   * The field name used for generating error IDs and ARIA attributes.
+   *
+   * **Automatic derivation (recommended):**
+   * When omitted, the field name is automatically derived from the input element's `id` attribute.
+   * This ensures ARIA attributes (`aria-describedby`) correctly link to error messages.
+   *
+   * **Explicit override:**
+   * Provide an explicit field name when you need to override the automatic behavior
+   * or when the input element doesn't have an `id` attribute.
+   *
+   * **Fallback:**
+   * If no explicit fieldName is provided AND no input element with an `id` is found,
+   * a unique ID is auto-generated (e.g., "field-1", "field-2").
+   *
+   * @example Automatic (recommended) - derives "email" from input's id attribute
+   * ```html
+   * <ngx-signal-form-field [field]="form.email">
+   *   <label for="email">Email</label>
+   *   <input id="email" [field]="form.email" />
+   * </ngx-signal-form-field>
+   * ```
+   *
+   * @example Explicit override
+   * ```html
+   * <ngx-signal-form-field [field]="form.email" fieldName="user-email">
+   *   <label for="user-email">Email</label>
+   *   <input id="user-email" [field]="form.email" />
+   * </ngx-signal-form-field>
+   * ```
+   *
+   * @example Fallback to auto-generated ID (when no id attribute exists)
+   * ```html
+   * <ngx-signal-form-field [field]="form.email">
+   *   <label>Email</label>
+   *   <input [field]="form.email" />
+   * </ngx-signal-form-field>
+   * ```
    */
-  readonly fieldName = input.required<string>();
+  readonly fieldName = input<string>();
 
   /**
    * Error display strategy.
@@ -127,6 +177,60 @@ export class NgxSignalFormFieldComponent<TValue = unknown> {
    * Form context (optional, for submission state tracking).
    */
   readonly #formContext = inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true });
+
+  /**
+   * Auto-generated unique field ID as fallback when no explicit fieldName or input id is found.
+   */
+  readonly #generatedFieldId = generateUniqueFieldId();
+
+  /**
+   * Query for form control elements within this form field.
+   * Used to automatically derive the field name from the element's `id` attribute.
+   *
+   * This query searches for interactive form control elements that typically have the [field] directive:
+   * - input: All input types (text, email, password, number, checkbox, radio, etc.)
+   * - textarea: Multi-line text input
+   * - select: Dropdown selection
+   * - button: Interactive buttons (type="button" with [field] for custom controls)
+   *
+   * The result is a signal containing the HTMLElement, or undefined if no matching element exists.
+   *
+   * Note: Cannot use ES private (#) because contentChild doesn't support it.
+   * Note: Uses descendants:true to find elements nested within projected content (like labels wrapping inputs).
+   */
+  private readonly inputElement = contentChild<HTMLElement>(
+    'input, textarea, select, button[type="button"]',
+    {
+      descendants: true,
+    },
+  );
+
+  /**
+   * Resolved field name computed from three sources (in priority order):
+   * 1. Explicit `fieldName` input (highest priority)
+   * 2. Input element's `id` attribute (automatic, recommended)
+   * 3. Auto-generated unique ID (fallback)
+   *
+   * This ensures ARIA attributes (`aria-describedby`) correctly link to error messages
+   * even when the developer doesn't provide an explicit `fieldName`.
+   */
+  protected readonly resolvedFieldName = computed(() => {
+    // Priority 1: Explicit fieldName input
+    const explicit = this.fieldName();
+    if (explicit !== undefined) {
+      return explicit;
+    }
+
+    // Priority 2: Derive from input element's id attribute
+    const inputEl = this.inputElement();
+    const idFromInput = inputEl?.getAttribute('id');
+    if (idFromInput) {
+      return idFromInput;
+    }
+
+    // Priority 3: Fallback to auto-generated unique ID
+    return this.#generatedFieldId;
+  });
 
   /**
    * Effective error display strategy combining component input and form context defaults.

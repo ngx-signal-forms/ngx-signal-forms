@@ -29,6 +29,7 @@ import { complexFormSchema } from './complex-forms.validations';
       [errorStrategy]="errorDisplayMode()"
       (ngSubmit)="(saveForm)"
       class="form-container"
+      novalidate
     >
       <!-- Personal Information Section -->
       <fieldset

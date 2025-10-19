@@ -25,7 +25,6 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
   template: `
     <form
       [ngxSignalFormProvider]="signupForm"
-      [errorStrategy]="'on-touch'"
       (ngSubmit)="(submitHandler)"
       novalidate
       class="space-y-6"
