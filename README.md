@@ -89,7 +89,7 @@ Angular Signal Forms (introduced in v21) provides an excellent foundation for re
 
 ## Quick Start
 
-**The Simplest Example**
+### The Simplest Example
 
 Just install and start using—automatic ARIA attributes work out of the box:
 
@@ -332,6 +332,84 @@ export class SignupComponent {
   }
 }
 ```
+
+## Form Field Components
+
+The toolkit includes a complete form field component system with Material Design outlined layout, character counting, and helper text.
+
+### NgxSignalFormFieldComponent
+
+Reusable form field wrapper with automatic error display:
+
+```html
+<ngx-signal-form-field [field]="form.email" fieldName="email">
+  <label for="email">Email</label>
+  <input id="email" [field]="form.email" />
+</ngx-signal-form-field>
+```
+
+### Outlined Layout (Material Design)
+
+Add the `outline` directive for Material Design outlined inputs with floating labels:
+
+```html
+<ngx-signal-form-field [field]="form.email" outline>
+  <label for="email">Email Address</label>
+  <input
+    id="email"
+    type="email"
+    [field]="form.email"
+    required
+    placeholder="you@example.com"
+  />
+</ngx-signal-form-field>
+```
+
+**Features:**
+
+- CSS `:has()` selector-based state detection (focus, required, disabled)
+- Customizable required marker (default: `' *'`)
+- 60+ CSS custom properties for theming
+- 95%+ browser support (Chrome 105+, Firefox 121+, Safari 15.4+, Edge 105+)
+
+### Character Count Component
+
+Display character count with progressive color states:
+
+```html
+<ngx-signal-form-field [field]="form.bio" outline>
+  <label for="bio">Bio</label>
+  <textarea id="bio" [field]="form.bio"></textarea>
+  <ngx-signal-form-field-character-count [field]="form.bio" [maxLength]="500" />
+</ngx-signal-form-field>
+```
+
+**Color states:**
+
+- **ok** (0-80%): Gray
+- **warning** (80-95%): Amber
+- **danger** (95-100%): Red
+- **exceeded** (>100%): Dark red, bold
+
+### Hint Component
+
+Display helper text for form fields:
+
+```html
+<ngx-signal-form-field [field]="form.phone" outline>
+  <label for="phone">Phone Number</label>
+  <input id="phone" [field]="form.phone" />
+  <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
+</ngx-signal-form-field>
+```
+
+### Complete Documentation
+
+For detailed API reference, CSS custom properties, migration guides, and complete examples, see:
+
+**[📖 Form Field Components Documentation](./packages/toolkit/form-field/README.md)**
+
+---
 
 ## Error Display Strategies
 

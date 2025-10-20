@@ -2,6 +2,21 @@
 
 Form field components and directives for enhanced form layouts and accessibility.
 
+## 🎨 Theming
+
+**New simplified theming architecture available!** We've reduced the CSS custom properties from 60+ to just 20 with improved derivation patterns.
+
+**[📖 Complete Theming Guide →](./THEMING.md)**
+
+Quick examples:
+
+- Dark mode theme (8 properties)
+- Brand color customization
+- Size scaling with unitless multipliers
+- Material Design inspired theme
+
+---
+
 ## Components & Directives
 
 ### NgxSignalFormFieldComponent

@@ -156,6 +156,49 @@ interface NgxSignalFormsConfig {
 type ErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit' | 'manual';
 ```
 
+---
+
+## Form Field Components
+
+The toolkit includes a complete form field component system for enhanced layouts and accessibility:
+
+### Quick Overview
+
+```typescript
+import {
+  NgxSignalFormFieldComponent,
+  NgxFloatingLabelDirective,
+  NgxSignalFormFieldHintComponent,
+  NgxSignalFormFieldCharacterCountComponent
+} from '@ngx-signal-forms/toolkit/form-field';
+```
+
+**Key Features:**
+
+- **NgxSignalFormFieldComponent** - Reusable wrapper with automatic error display
+- **NgxFloatingLabelDirective** (`outline` attribute) - Material Design outlined layout
+- **NgxSignalFormFieldCharacterCountComponent** - Progressive color states (ok → warning → danger → exceeded)
+- **NgxSignalFormFieldHintComponent** - Helper text display
+
+### Example Usage
+
+```html
+<ngx-signal-form-field [field]="form.bio" outline>
+  <label for="bio">Bio</label>
+  <textarea id="bio" [field]="form.bio"></textarea>
+  <ngx-signal-form-field-hint>Tell us about yourself</ngx-signal-form-field-hint>
+  <ngx-signal-form-field-character-count [field]="form.bio" [maxLength]="500" />
+</ngx-signal-form-field>
+```
+
+### Complete Documentation
+
+For detailed API reference, CSS custom properties, browser support, migration guides, and complete examples:
+
+**[📖 Form Field Components Documentation](./form-field/README.md)**
+
+---
+
 ### Directives
 
 #### NgxSignalFormProviderDirective
@@ -218,44 +261,13 @@ Transforms the form field into an outlined layout where the label appears inside
 </ngx-signal-form-field>
 ```
 
-**Required Field Indicator:**
+**Inputs:**
+- `showRequiredMarker` (boolean, default: `true`) - Show required field marker
+- `requiredMarker` (string, default: `' *'`) - Custom marker character(s)
 
-By default, the asterisk (*) is shown when the input has the `required` attribute or `aria-required="true"`.
+**Browser Support:** Chrome 105+, Firefox 121+, Safari 15.4+, Edge 105+ (95%+ coverage)
 
-```html
-<!-- Hide required marker -->
-<ngx-signal-form-field [field]="form.email" outline [showRequiredMarker]="false">
-  <label for="email">Email Address</label>
-  <input id="email" [field]="form.email" required />
-</ngx-signal-form-field>
-
-<!-- Custom required marker -->
-<ngx-signal-form-field [field]="form.email" outline requiredMarker="(required)">
-  <label for="email">Email Address</label>
-  <input id="email" [field]="form.email" required />
-</ngx-signal-form-field>
-
-<!-- Another custom marker -->
-<ngx-signal-form-field [field]="form.email" outline requiredMarker=" †">
-  <label for="email">Email Address</label>
-  <input id="email" [field]="form.email" required />
-</ngx-signal-form-field>
-```
-
-**Browser Support:** Requires CSS `:has()` selector (Chrome 105+, Firefox 121+, Safari 15.4+, Edge 105+) - 95%+ global coverage.
-
-**Customization:**
-
-```css
-:root {
-  --ngx-floating-field-padding: 0.5rem 0.75rem;
-  --ngx-floating-field-bg: #ffffff;
-  --ngx-floating-field-border: 1px solid rgba(50, 65, 85, 0.25);
-  --ngx-floating-field-label-font-size: 0.75rem;
-  --ngx-floating-field-input-font-size: 0.875rem;
-  --ngx-floating-field-focus-border-color: #005fcc;
-}
-```
+**For complete API, CSS custom properties, and examples, see [Form Field Documentation](./form-field/README.md#ngxfloatinglabeldirective)**
 
 #### NgxSignalFormFieldHintComponent
 
@@ -268,6 +280,8 @@ Displays helper text for form fields.
   <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
 </ngx-signal-form-field>
 ```
+
+**For complete API and positioning options, see [Form Field Documentation](./form-field/README.md#ngxsignalformfieldhintcomponent)**
 
 #### NgxSignalFormFieldCharacterCountComponent
 
@@ -285,41 +299,18 @@ Displays character count with progressive color states.
 ```
 
 **Color States:**
-- **ok** (0-80%): Default gray
+- **ok** (0-80%): Gray
 - **warning** (80-95%): Amber
 - **danger** (95-100%): Red
 - **exceeded** (>100%): Dark red, bold
 
-**Customization:**
+**Inputs:**
+- `field` (required) - The Signal Forms field
+- `maxLength` (required) - Maximum character limit
+- `showLimitColors` (boolean, default: `true`) - Enable color progression
+- `colorThresholds` (object, default: `{ warning: 80, danger: 95 }`) - Custom thresholds
 
-```css
-:root {
-  --ngx-form-field-char-count-color-ok: #6b7280;
-  --ngx-form-field-char-count-color-warning: #f59e0b;
-  --ngx-form-field-char-count-color-danger: #dc2626;
-  --ngx-form-field-char-count-color-exceeded: #991b1b;
-}
-```
-
-**Disable color progression:**
-
-```html
-<ngx-signal-form-field-character-count
-  [field]="form.bio"
-  [maxLength]="500"
-  [showLimitColors]="false"
-/>
-```
-
-**Custom thresholds:**
-
-```html
-<ngx-signal-form-field-character-count
-  [field]="form.tweet"
-  [maxLength]="280"
-  [colorThresholds]="{ warning: 90, danger: 98 }"
-/>
-```
+**For complete API, CSS custom properties, and examples, see [Form Field Documentation](./form-field/README.md#ngxsignalformfieldcharactercountcomponent)**
 
 ### Utilities
 
