@@ -27,24 +27,19 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
       [ngxSignalFormProvider]="signupForm"
       (ngSubmit)="(submitHandler)"
       novalidate
-      class="space-y-6"
+      class="form-container"
     >
       <!-- Email Field - Toolkit Handles Everything -->
       <ngx-signal-form-field
         [field]="signupForm.email"
         fieldName="toolkit-email"
       >
-        <label
-          for="toolkit-email"
-          class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
-          Email Address *
-        </label>
+        <label for="toolkit-email" class="form-label"> Email Address * </label>
         <input
           id="toolkit-email"
           type="email"
           [field]="signupForm.email"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          class="form-input"
           placeholder="you@example.com"
         />
       </ngx-signal-form-field>
@@ -54,17 +49,12 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
         [field]="signupForm.password"
         fieldName="toolkit-password"
       >
-        <label
-          for="toolkit-password"
-          class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
-          Password *
-        </label>
+        <label for="toolkit-password" class="form-label"> Password * </label>
         <input
           id="toolkit-password"
           type="password"
           [field]="signupForm.password"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          class="form-input"
           placeholder="At least 8 characters"
         />
       </ngx-signal-form-field>
@@ -74,17 +64,14 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
         [field]="signupForm.confirmPassword"
         fieldName="toolkit-confirm-password"
       >
-        <label
-          for="toolkit-confirm-password"
-          class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="toolkit-confirm-password" class="form-label">
           Confirm Password *
         </label>
         <input
           id="toolkit-confirm-password"
           type="password"
           [field]="signupForm.confirmPassword"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          class="form-input"
           placeholder="Re-enter password"
         />
       </ngx-signal-form-field>
@@ -93,7 +80,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
       <button
         type="submit"
         aria-live="polite"
-        class="flex w-full justify-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none"
+        class="btn-primary w-full justify-center bg-green-600 hover:bg-green-700 focus:ring-green-500"
       >
         Sign Up
       </button>

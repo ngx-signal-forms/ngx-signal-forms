@@ -9,100 +9,24 @@ import { createPasswordForm } from './warning-support.validations';
   selector: 'ngx-warning-support-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
-  styles: `
-    :host {
-      display: block;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-
-    .form-actions {
-      display: flex;
-      gap: 1rem;
-      justify-content: flex-end;
-      margin-top: 1rem;
-    }
-
-    button {
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 0.375rem;
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    button[type='submit'] {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-
-    button[type='submit']:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
-
-    button[type='submit']:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    button[type='button'] {
-      background: #e5e7eb;
-      color: #374151;
-    }
-
-    button[type='button']:hover {
-      background: #d1d5db;
-    }
-
-    .success-message {
-      padding: 1rem;
-      background: #d1fae5;
-      border: 1px solid #10b981;
-      border-radius: 0.375rem;
-      color: #065f46;
-      margin-bottom: 1rem;
-    }
-
-    /* Custom styling for warnings vs errors in form fields */
-    :host ::ng-deep {
-      .ngx-signal-form-error__item[data-error-type='warning'] {
-        color: #d97706;
-        background: #fef3c7;
-        border-left: 3px solid #f59e0b;
-        padding: 0.5rem 0.75rem;
-        border-radius: 0.25rem;
-        margin-top: 0.25rem;
-      }
-
-      .ngx-signal-form-error__item[data-error-type='error'] {
-        color: #dc2626;
-        background: #fee2e2;
-        border-left: 3px solid #ef4444;
-        padding: 0.5rem 0.75rem;
-        border-radius: 0.25rem;
-        margin-top: 0.25rem;
-      }
-    }
-  `,
+  host: {
+    class: 'block max-w-xl mx-auto',
+  },
   template: `
     @if (successMessage()) {
-      <div class="success-message" role="status" aria-live="polite">
+      <div
+        class="mb-4 rounded-lg bg-green-50 p-4 text-green-800 dark:bg-green-900/20 dark:text-green-200"
+        role="status"
+        aria-live="polite"
+      >
         {{ successMessage() }}
       </div>
     }
 
     <form
+      class="form-container"
       [ngxSignalFormProvider]="passwordForm"
-      (ngSubmit)="handleSubmit()"
+      (ngSubmit)="(handleSubmit)"
       novalidate
     >
       <ngx-signal-form-field

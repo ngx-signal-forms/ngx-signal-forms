@@ -28,15 +28,10 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Field],
   template: `
-    <form (ngSubmit)="(handleSubmit)" novalidate class="space-y-6">
+    <form (ngSubmit)="(handleSubmit)" novalidate class="form-container">
       <!-- Email Field - Manual ARIA Implementation -->
       <div class="form-field">
-        <label
-          for="manual-email"
-          class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
-          Email Address *
-        </label>
+        <label for="manual-email" class="form-label"> Email Address * </label>
         <input
           id="manual-email"
           type="email"
@@ -46,7 +41,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
           [attr.aria-describedby]="
             shouldShowEmailErrors() ? 'manual-email-error' : null
           "
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          class="form-input"
           placeholder="you@example.com"
         />
 
@@ -55,7 +50,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
             id="manual-email-error"
             role="alert"
             aria-live="assertive"
-            class="mt-2 text-sm text-red-600 dark:text-red-400"
+            class="form-error"
           >
             @for (error of signupForm.email().errors(); track error.kind) {
               <p>{{ error.message }}</p>
@@ -66,12 +61,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
 
       <!-- Password Field - Manual ARIA Implementation -->
       <div class="form-field">
-        <label
-          for="manual-password"
-          class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
-          Password *
-        </label>
+        <label for="manual-password" class="form-label"> Password * </label>
         <input
           id="manual-password"
           type="password"
@@ -81,7 +71,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
           [attr.aria-describedby]="
             shouldShowPasswordErrors() ? 'manual-password-error' : null
           "
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          class="form-input"
           placeholder="At least 8 characters"
         />
 
@@ -90,7 +80,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
             id="manual-password-error"
             role="alert"
             aria-live="assertive"
-            class="mt-2 text-sm text-red-600 dark:text-red-400"
+            class="form-error"
           >
             @for (error of signupForm.password().errors(); track error.kind) {
               <p>{{ error.message }}</p>
@@ -101,10 +91,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
 
       <!-- Confirm Password Field - Manual ARIA Implementation -->
       <div class="form-field">
-        <label
-          for="manual-confirm-password"
-          class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="manual-confirm-password" class="form-label">
           Confirm Password *
         </label>
         <input
@@ -120,7 +107,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
               ? 'manual-confirm-password-error'
               : null
           "
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          class="form-input"
           placeholder="Re-enter password"
         />
 
@@ -129,7 +116,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
             id="manual-confirm-password-error"
             role="alert"
             aria-live="assertive"
-            class="mt-2 text-sm text-red-600 dark:text-red-400"
+            class="form-error"
           >
             @for (
               error of signupForm.confirmPassword().errors();
@@ -142,11 +129,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
       </div>
 
       <!-- Submit Button -->
-      <button
-        type="submit"
-        aria-live="polite"
-        class="flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-      >
+      <button type="submit" aria-live="polite" class="btn-primary w-full">
         Sign Up (Manual Implementation)
       </button>
     </form>

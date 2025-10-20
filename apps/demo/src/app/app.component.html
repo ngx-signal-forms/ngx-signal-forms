@@ -7,8 +7,8 @@
     class="w-full bg-white text-gray-800 dark:bg-gray-950 dark:text-white"
   >
     <div class="flex h-16">
-      <!-- Brand Section - Left aligned -->
-      <div class="flex items-center px-4 sm:px-6 lg:px-8">
+      <!-- Brand Section - Matches sidebar width -->
+      <div class="flex w-64 items-center px-6">
         <a
           [routerLink]="'/signal-forms-only/pure-signal-form'"
           class="brand-gradient text-2xl font-bold tracking-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50"
@@ -20,7 +20,7 @@
       <!-- Navigation Section - Aligned with main content -->
       <div class="flex flex-1 items-center justify-start pl-6">
         <nav
-          class="hidden items-center gap-8 text-sm md:flex"
+          class="hidden flex-nowrap items-center gap-8 text-sm md:flex"
           aria-label="Primary navigation"
         >
           @for (category of categoriesList; track category.id) {
@@ -29,7 +29,7 @@
               routerLinkActive="active"
               [routerLinkActiveOptions]="{ exact: false }"
               #rla="routerLinkActive"
-              class="nav-grad-link"
+              class="nav-grad-link whitespace-nowrap"
               [class.active]="rla.isActive"
             >
               {{ category.label }}

@@ -11,10 +11,7 @@ import { RouterLink } from '@angular/router';
       <p class="mb-8 text-base text-gray-600 dark:text-gray-400">
         Page not found.
       </p>
-      <a
-        routerLink="/fundamentals/minimal-form"
-        class="inline-block rounded-md bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-500"
-      >
+      <a routerLink="/fundamentals/minimal-form" class="btn-primary">
         Go to Examples
       </a>
     </div>

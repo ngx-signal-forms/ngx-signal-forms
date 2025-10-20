@@ -301,6 +301,17 @@
     color: var(--color-text-muted);
   }
 
+  /* Warning vs Error styling for toolkit error component */
+  :global(.ngx-signal-form-error__item[data-error-type='warning']) {
+    @apply mt-1 rounded border-l-4 border-amber-500 bg-amber-50 px-3 py-2 text-sm text-amber-800;
+    @apply dark:bg-amber-900/20 dark:text-amber-200;
+  }
+
+  :global(.ngx-signal-form-error__item[data-error-type='error']) {
+    @apply mt-1 rounded border-l-4 border-red-500 bg-red-50 px-3 py-2 text-sm text-red-800;
+    @apply dark:bg-red-900/20 dark:text-red-200;
+  }
+
   /* Actions */
   .form-actions {
     @apply flex gap-3 pt-4;
