@@ -1,0 +1,225 @@
+/// ============================================================================
+/// STANDARD LAYOUT
+/// ============================================================================
+/// Default vertical layout with label above input.
+/// Minimal styling - developers control most appearance via projected content.
+/// ============================================================================
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ngx-form-field-gap, 0.5rem);
+  margin-bottom: var(--ngx-form-field-margin-bottom, 1rem);
+  width: var(--ngx-form-field-width, 100%);
+}
+
+.ngx-signal-form-field__content {
+  display: contents;
+}
+
+// Optional: Basic label styling for standard layout
+:host ::ng-deep label {
+  font-size: var(--ngx-form-field-label-font-size, 0.875rem);
+  font-weight: var(--ngx-form-field-label-font-weight, 500);
+  line-height: var(--ngx-form-field-label-line-height, 1.25rem);
+  color: var(--ngx-form-field-label-color, #374151);
+  margin-bottom: var(--ngx-form-field-label-margin-bottom, 0.25rem);
+}
+
+// Optional: Basic input styling for standard layout
+:host ::ng-deep input,
+:host ::ng-deep textarea,
+:host ::ng-deep select {
+  font-size: var(--ngx-form-field-input-font-size, 0.875rem);
+  font-weight: var(--ngx-form-field-input-font-weight, 400);
+  line-height: var(--ngx-form-field-input-line-height, 1.5);
+  color: var(--ngx-form-field-input-color, #1f2937);
+  padding: var(--ngx-form-field-input-padding, 0.5rem 0.75rem);
+  border: var(--ngx-form-field-input-border, 1px solid #d1d5db);
+  border-radius: var(--ngx-form-field-input-border-radius, 0.375rem);
+  background-color: var(--ngx-form-field-input-bg, #ffffff);
+  transition: var(
+    --ngx-form-field-input-transition,
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out
+  );
+
+  &:focus {
+    outline: none;
+    border-color: var(--ngx-form-field-input-focus-border-color, #3b82f6);
+    box-shadow: var(
+      --ngx-form-field-input-focus-box-shadow,
+      0 0 0 3px rgba(59, 130, 246, 0.1)
+    );
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--ngx-form-field-input-invalid-border-color, #ef4444);
+  }
+
+  &:disabled {
+    background-color: var(--ngx-form-field-input-disabled-bg, #f9fafb);
+    cursor: not-allowed;
+    opacity: var(--ngx-form-field-input-disabled-opacity, 0.6);
+  }
+}
+
+:host ::ng-deep input::placeholder,
+:host ::ng-deep textarea::placeholder {
+  color: var(--ngx-form-field-input-placeholder-color, #9ca3af);
+}
+
+// ============================================================================
+// OUTLINED LAYOUT
+// ============================================================================
+// Applied when outline directive is present.
+// Creates a container-based input appearance where the label sits inside
+// the input border, matching Material Design outlined inputs.
+
+:host(.ngx-signal-forms-outline) {
+  gap: var(--ngx-form-field-outline-gap, 0.125rem);
+}
+
+:host(.ngx-signal-forms-outline) .ngx-signal-form-field__content {
+  display: flex;
+  flex-direction: column;
+  padding: var(--ngx-form-field-outline-padding, 0.5rem 0.75rem);
+  background-color: var(--ngx-form-field-outline-bg, #ffffff);
+  border: var(
+    --ngx-form-field-outline-border,
+    1px solid rgba(50, 65, 85, 0.25)
+  );
+  border-radius: var(--ngx-form-field-outline-border-radius, 0.25rem);
+  cursor: text;
+  transition: var(
+    --ngx-form-field-outline-transition,
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out
+  );
+  min-height: var(--ngx-form-field-outline-min-height, 3.5rem);
+}
+
+// Label styling inside outlined container
+:host(.ngx-signal-forms-outline) ::ng-deep label {
+  font-family: var(
+    --ngx-form-field-outline-label-font-family,
+    'Inter Variable',
+    sans-serif
+  );
+  font-size: var(--ngx-form-field-outline-label-font-size, 0.75rem);
+  font-weight: var(--ngx-form-field-outline-label-font-weight, 400);
+  line-height: var(--ngx-form-field-outline-label-line-height, 1rem);
+  color: var(--ngx-form-field-outline-label-color, rgba(71, 91, 119, 0.75));
+  margin: 0 0 0.125rem 0;
+  cursor: text;
+}
+
+// Required marker via CSS (automatic detection using :has() selector)
+// Only shown when showRequiredMarker is true (controlled by data-show-required attribute)
+:host(.ngx-signal-forms-outline[data-show-required='true'])
+  .ngx-signal-form-field__content:has(input[required])
+  label::after,
+:host(.ngx-signal-forms-outline[data-show-required='true'])
+  .ngx-signal-form-field__content:has(input[aria-required='true'])
+  label::after,
+:host(.ngx-signal-forms-outline[data-show-required='true'])
+  .ngx-signal-form-field__content:has(textarea[required])
+  label::after,
+:host(.ngx-signal-forms-outline[data-show-required='true'])
+  .ngx-signal-form-field__content:has(textarea[aria-required='true'])
+  label::after,
+:host(.ngx-signal-forms-outline[data-show-required='true'])
+  .ngx-signal-form-field__content:has(select[required])
+  label::after,
+:host(.ngx-signal-forms-outline[data-show-required='true'])
+  .ngx-signal-form-field__content:has(select[aria-required='true'])
+  label::after {
+  content: attr(data-required-marker);
+  color: var(--ngx-form-field-outline-required-color, #dc2626);
+  font-weight: var(--ngx-form-field-outline-required-font-weight, 600);
+}
+
+// Remove default input styling (CRITICAL: container provides focus indicator)
+:host(.ngx-signal-forms-outline) ::ng-deep input,
+:host(.ngx-signal-forms-outline) ::ng-deep textarea,
+:host(.ngx-signal-forms-outline) ::ng-deep select {
+  border: none;
+  background-color: transparent;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  font-family: var(
+    --ngx-form-field-outline-input-font-family,
+    'Inter Variable',
+    sans-serif
+  );
+  font-size: var(--ngx-form-field-outline-input-font-size, 0.875rem);
+  font-weight: var(--ngx-form-field-outline-input-font-weight, 400);
+  line-height: var(--ngx-form-field-outline-input-line-height, 1.25rem);
+  color: var(--ngx-form-field-outline-input-color, #324155);
+  outline: none; // Safe: container :has() provides visible focus indicator
+}
+
+// Placeholder styling
+:host(.ngx-signal-forms-outline) ::ng-deep input::placeholder,
+:host(.ngx-signal-forms-outline) ::ng-deep textarea::placeholder {
+  color: var(
+    --ngx-form-field-outline-placeholder-color,
+    rgba(71, 91, 119, 0.5)
+  );
+}
+
+// Focus state using :has() selector (WCAG-compliant focus indicator)
+:host(.ngx-signal-forms-outline)
+  .ngx-signal-form-field__content:has(input:focus),
+:host(.ngx-signal-forms-outline)
+  .ngx-signal-form-field__content:has(textarea:focus),
+:host(.ngx-signal-forms-outline)
+  .ngx-signal-form-field__content:has(select:focus) {
+  border-color: var(--ngx-form-field-outline-focus-border-color, #005fcc);
+  box-shadow: var(
+    --ngx-form-field-outline-focus-box-shadow,
+    0 0 0 2px rgba(0, 95, 204, 0.25)
+  );
+}
+
+// Invalid state using :has() selector
+:host(.ngx-signal-forms-outline)
+  .ngx-signal-form-field__content:has(input[aria-invalid='true']),
+:host(.ngx-signal-forms-outline)
+  .ngx-signal-form-field__content:has(textarea[aria-invalid='true']),
+:host(.ngx-signal-forms-outline)
+  .ngx-signal-form-field__content:has(select[aria-invalid='true']) {
+  border-color: var(--ngx-form-field-outline-invalid-border-color, #dc2626);
+}
+
+// Invalid + focused state
+:host(.ngx-signal-forms-outline)
+  .ngx-signal-form-field__content:has(input[aria-invalid='true']:focus),
+:host(.ngx-signal-forms-outline)
+  .ngx-signal-form-field__content:has(textarea[aria-invalid='true']:focus),
+:host(.ngx-signal-forms-outline)
+  .ngx-signal-form-field__content:has(select[aria-invalid='true']:focus) {
+  box-shadow: var(
+    --ngx-form-field-outline-invalid-focus-box-shadow,
+    0 0 0 2px rgba(220, 38, 38, 0.25)
+  );
+}
+
+// Disabled state using :has() selector
+:host(.ngx-signal-forms-outline)
+  .ngx-signal-form-field__content:has(input:disabled),
+:host(.ngx-signal-forms-outline)
+  .ngx-signal-form-field__content:has(textarea:disabled),
+:host(.ngx-signal-forms-outline)
+  .ngx-signal-form-field__content:has(select:disabled) {
+  background-color: var(--ngx-form-field-outline-disabled-bg, #f3f4f6);
+  cursor: not-allowed;
+  opacity: var(--ngx-form-field-outline-disabled-opacity, 0.6);
+}
+
+:host(.ngx-signal-forms-outline) ::ng-deep input:disabled,
+:host(.ngx-signal-forms-outline) ::ng-deep textarea:disabled,
+:host(.ngx-signal-forms-outline) ::ng-deep select:disabled {
+  cursor: not-allowed;
+}

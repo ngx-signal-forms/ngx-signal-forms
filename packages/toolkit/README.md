@@ -102,8 +102,13 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 // Core - Individual imports (alternative)
 import { NgxSignalFormProviderDirective, NgxSignalFormErrorComponent, NgxSignalFormAutoAriaDirective, computeShowErrors, showErrors } from '@ngx-signal-forms/toolkit/core';
 
-// Form field wrapper (optional)
-import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+// Form field wrapper with enhanced components
+import {
+  NgxSignalFormFieldComponent,
+  NgxFloatingLabelDirective,
+  NgxSignalFormFieldHintComponent,
+  NgxSignalFormFieldCharacterCountComponent
+} from '@ngx-signal-forms/toolkit/form-field';
 
 // Testing utilities (optional)
 import { createPlaceholderTestHelper } from '@ngx-signal-forms/toolkit/testing';
@@ -200,6 +205,120 @@ Adds `aria-invalid` and `aria-describedby` attributes based on field validation 
   <label>Email</label>
   <input [field]="form.email" />
 </ngx-signal-form-field>
+```
+
+#### NgxFloatingLabelDirective
+
+Transforms the form field into an outlined layout where the label appears inside the input container, matching Material Design outlined input patterns.
+
+```html
+<ngx-signal-form-field [field]="form.email" outline>
+  <label for="email">Email Address</label>
+  <input id="email" type="email" [field]="form.email" required placeholder="you@example.com" />
+</ngx-signal-form-field>
+```
+
+**Required Field Indicator:**
+
+By default, the asterisk (*) is shown when the input has the `required` attribute or `aria-required="true"`.
+
+```html
+<!-- Hide required marker -->
+<ngx-signal-form-field [field]="form.email" outline [showRequiredMarker]="false">
+  <label for="email">Email Address</label>
+  <input id="email" [field]="form.email" required />
+</ngx-signal-form-field>
+
+<!-- Custom required marker -->
+<ngx-signal-form-field [field]="form.email" outline requiredMarker="(required)">
+  <label for="email">Email Address</label>
+  <input id="email" [field]="form.email" required />
+</ngx-signal-form-field>
+
+<!-- Another custom marker -->
+<ngx-signal-form-field [field]="form.email" outline requiredMarker=" †">
+  <label for="email">Email Address</label>
+  <input id="email" [field]="form.email" required />
+</ngx-signal-form-field>
+```
+
+**Browser Support:** Requires CSS `:has()` selector (Chrome 105+, Firefox 121+, Safari 15.4+, Edge 105+) - 95%+ global coverage.
+
+**Customization:**
+
+```css
+:root {
+  --ngx-floating-field-padding: 0.5rem 0.75rem;
+  --ngx-floating-field-bg: #ffffff;
+  --ngx-floating-field-border: 1px solid rgba(50, 65, 85, 0.25);
+  --ngx-floating-field-label-font-size: 0.75rem;
+  --ngx-floating-field-input-font-size: 0.875rem;
+  --ngx-floating-field-focus-border-color: #005fcc;
+}
+```
+
+#### NgxSignalFormFieldHintComponent
+
+Displays helper text for form fields.
+
+```html
+<ngx-signal-form-field [field]="form.phone" outline>
+  <label for="phone">Phone Number</label>
+  <input id="phone" [field]="form.phone" />
+  <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
+</ngx-signal-form-field>
+```
+
+#### NgxSignalFormFieldCharacterCountComponent
+
+Displays character count with progressive color states.
+
+```html
+<ngx-signal-form-field [field]="form.bio" outline>
+  <label for="bio">Bio</label>
+  <textarea id="bio" [field]="form.bio"></textarea>
+  <ngx-signal-form-field-character-count
+    [field]="form.bio"
+    [maxLength]="500"
+  />
+</ngx-signal-form-field>
+```
+
+**Color States:**
+- **ok** (0-80%): Default gray
+- **warning** (80-95%): Amber
+- **danger** (95-100%): Red
+- **exceeded** (>100%): Dark red, bold
+
+**Customization:**
+
+```css
+:root {
+  --ngx-form-field-char-count-color-ok: #6b7280;
+  --ngx-form-field-char-count-color-warning: #f59e0b;
+  --ngx-form-field-char-count-color-danger: #dc2626;
+  --ngx-form-field-char-count-color-exceeded: #991b1b;
+}
+```
+
+**Disable color progression:**
+
+```html
+<ngx-signal-form-field-character-count
+  [field]="form.bio"
+  [maxLength]="500"
+  [showLimitColors]="false"
+/>
+```
+
+**Custom thresholds:**
+
+```html
+<ngx-signal-form-field-character-count
+  [field]="form.tweet"
+  [maxLength]="280"
+  [colorThresholds]="{ warning: 90, danger: 98 }"
+/>
 ```
 
 ### Utilities

@@ -39,6 +39,8 @@ function generateUniqueFieldId(): string {
  * - Accessibility-compliant structure
  * - Content projection for labels and inputs
  * - Type-safe field binding with generics
+ * - Optional floating label styling (via ngxFloatingLabel directive)
+ * - Support for hints and character counts
  *
  * @template TValue The type of the field value (defaults to unknown)
  *
@@ -62,6 +64,32 @@ function generateUniqueFieldId(): string {
  * </ngx-signal-form-field>
  * ```
  *
+ * @example Outlined Layout
+ * ```html
+ * <ngx-signal-form-field [field]="form.email" outline>
+ *   <label for="email">Email Address</label>
+ *   <input id="email" type="email" [field]="form.email" required placeholder="you@example.com" />
+ * </ngx-signal-form-field>
+ * ```
+ *
+ * @example With Character Count
+ * ```html
+ * <ngx-signal-form-field [field]="form.bio" outline>
+ *   <label for="bio">Bio</label>
+ *   <textarea id="bio" [field]="form.bio"></textarea>
+ *   <ngx-signal-form-field-character-count [field]="form.bio" [maxLength]="500" />
+ * </ngx-signal-form-field>
+ * ```
+ *
+ * @example With Hint Text
+ * ```html
+ * <ngx-signal-form-field [field]="form.phone">
+ *   <label for="phone">Phone Number</label>
+ *   <input id="phone" [field]="form.phone" />
+ *   <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
+ * </ngx-signal-form-field>
+ * ```
+ *
  * @example Without Auto-Error Display
  * ```html
  * <ngx-signal-form-field [field]="form.custom" fieldName="custom" [showErrors]="false">
@@ -82,10 +110,17 @@ function generateUniqueFieldId(): string {
   selector: 'ngx-signal-form-field',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgxSignalFormErrorComponent],
+  styleUrl: './form-field.component.scss',
   template: `
     <div class="ngx-signal-form-field__content">
       <ng-content />
     </div>
+
+    <!-- Hint/character count slot (projected before errors) -->
+    <ng-content
+      select="ngx-signal-form-field-hint, ngx-signal-form-field-character-count"
+    />
+
     @if (showErrors()) {
       <ngx-signal-form-error
         [field]="field()"
@@ -93,18 +128,6 @@ function generateUniqueFieldId(): string {
         [strategy]="effectiveStrategy"
         [submittedStatus]="submittedStatus"
       />
-    }
-  `,
-  styles: `
-    :host {
-      display: flex;
-      flex-direction: column;
-      gap: var(--ngx-signal-form-field-gap, 0.5rem);
-      margin-bottom: var(--ngx-signal-form-field-margin, 1rem);
-    }
-
-    .ngx-signal-form-field__content {
-      display: contents;
     }
   `,
 })
