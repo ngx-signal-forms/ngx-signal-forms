@@ -1,6 +1,11 @@
 packages:
-  - 'apps/*'
-  - 'packages/*'
+  - apps/*
+  - packages/*
 
 autoInstallPeers: true
+
+onlyBuiltDependencies:
+  - '@swc/core'
+  - nx
+
 strictPeerDependencies: false

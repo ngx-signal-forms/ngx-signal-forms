@@ -3,7 +3,6 @@ import {
   Component,
   computed,
   input,
-  isDevMode,
   signal,
 } from '@angular/core';
 import { Field, form, submit } from '@angular/forms/signals';
@@ -45,12 +44,11 @@ const INITIAL_MODEL: ProductFeedbackModel = {
   template: `
     <!-- Product Feedback Form -->
     <form
-      [ngxSignalFormProvider]="productForm"
+      [ngxSignalForm]="productForm"
       [errorStrategy]="errorDisplayMode()"
-      (ngSubmit)="(save)"
+      (ngSubmit)="handleSubmit()"
       class="form-container"
       aria-labelledby="productFeedbackHeading"
-      novalidate
     >
       <!-- Personal Information Section -->
       <fieldset class="mb-8">
@@ -363,21 +361,29 @@ export class ErrorDisplayModesFormComponent {
   );
 
   /**
-   * Form submission handler using Angular Signal Forms submit() helper
+   * Form submission handler using Angular Signal Forms submit() helper.
+   * **Key behavior:** Callback only executes if form is VALID.
    */
-  protected readonly save = submit(this.productForm, async (formData) => {
+  protected async handleSubmit(): Promise<void> {
+    await submit(this.productForm, async () => {
+      this.#submissionAttempted.set(true);
+
+      // Simulate API call
+      alert('Thank you for your feedback! 🎉');
+
+      return null; // No server errors
+    });
+  }
+
+  /**
+   * Handle any submit attempt (valid or invalid) so the page can display the
+   * submission error banner when the form is invalid. Angular's submit() helper
+   * only invokes the callback when the form is valid, so we set the attempt
+   * flag here as well. We then delegate to the submit() helper for valid cases.
+   */
+  protected readonly onSubmitAttempt = (event: SubmitEvent): unknown => {
     this.#submissionAttempted.set(true);
-
-    if (isDevMode()) {
-      console.group('📋 Product Feedback Submission');
-      console.log('Form Data:', formData().value());
-      console.log('Current Error Display Strategy:', this.errorDisplayMode());
-      console.groupEnd();
-    }
-
-    // Simulate API call
-    alert('Thank you for your feedback! 🎉');
-
-    return null; // No server errors
-  });
+    // Delegate to the submit() helper function (callable) for valid submissions
+    return (this.handleSubmit as unknown as (e: SubmitEvent) => unknown)(event);
+  };
 }

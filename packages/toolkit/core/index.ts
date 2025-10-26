@@ -10,10 +10,9 @@ export * from './providers/config.provider';
 // Directives
 export * from './directives/auto-aria.directive';
 export {
-  NgxSignalFormProviderDirective,
+  NgxSignalFormDirective,
   type NgxSignalFormContext,
-} from './directives/form-provider.directive';
-export * from './directives/placeholder.directive';
+} from './directives/ngx-signal-form.directive';
 
 // Utilities
 export * from './utilities/assert-injector';
@@ -34,7 +33,7 @@ export * from './components/form-error.component';
 // Convenience imports
 import { NgxSignalFormErrorComponent } from './components/form-error.component';
 import { NgxSignalFormAutoAriaDirective } from './directives/auto-aria.directive';
-import { NgxSignalFormProviderDirective } from './directives/form-provider.directive';
+import { NgxSignalFormDirective } from './directives/ngx-signal-form.directive';
 
 /**
  * Bundled imports for the ngx-signal-forms toolkit core directives and components.
@@ -50,7 +49,7 @@ import { NgxSignalFormProviderDirective } from './directives/form-provider.direc
  *   selector: 'ngx-my-form',
  *   imports: [Field, NgxSignalFormToolkit],
  *   template: `
- *     <form [ngxSignalFormProvider]="myForm">
+ *     <form [ngxSignalForm]="myForm">
  *       <input [field]="myForm.email" />
  *       <ngx-signal-form-error [field]="myForm.email" fieldName="email" />
  *     </form>
@@ -63,7 +62,7 @@ import { NgxSignalFormProviderDirective } from './directives/form-provider.direc
  *
  * @remarks
  * **Contents:**
- * - {@link NgxSignalFormProviderDirective} - Provides form context to child components
+ * - {@link NgxSignalFormDirective} - Provides form context to child components
  * - {@link NgxSignalFormAutoAriaDirective} - Automatically applies ARIA attributes
  * - {@link NgxSignalFormErrorComponent} - Displays validation errors and warnings
  *
@@ -76,13 +75,13 @@ import { NgxSignalFormProviderDirective } from './directives/form-provider.direc
  * **Alternative:**
  * You can still import individual items if you need only specific directives/components:
  * ```typescript
- * import { NgxSignalFormProviderDirective, NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/core';
+ * import { ngxSignalFormDirective, NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/core';
  * ```
  *
  * @public
  */
 export const NgxSignalFormToolkit = [
-  NgxSignalFormProviderDirective,
+  NgxSignalFormDirective,
   NgxSignalFormAutoAriaDirective,
   NgxSignalFormErrorComponent,
 ] as const;

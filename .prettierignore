@@ -4,3 +4,7 @@
 /.nx/cache
 /.nx/workspace-data
 .angular
+
+# Temporarily ignore for bug testing - testing submit() with different template syntax
+apps/demo/src/app/01-getting-started/your-first-form/your-first-form.form.ts
+apps/demo/src/app/00-signal-forms-only/pure-signal-form/pure-signal-form.form.ts

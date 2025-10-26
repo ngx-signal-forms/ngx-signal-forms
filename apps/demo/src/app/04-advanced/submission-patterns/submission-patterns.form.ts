@@ -30,10 +30,9 @@ import { submissionSchema } from './submission-patterns.validations';
   imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
     <form
-      [ngxSignalFormProvider]="registrationForm"
-      [errorStrategy]="errorDisplayMode()"
-      (ngSubmit)="(handleSubmit)"
-      novalidate
+      [ngxSignalForm]="registrationForm"
+      [errorStrategy]="'on-submit'"
+      (ngSubmit)="handleSubmit()"
       class="form-container"
     >
       <!-- Submission state indicator -->
@@ -268,10 +267,10 @@ export class SubmissionPatternsComponent {
    * Form submission handler using Angular Signal Forms submit() helper.
    *
    * CORRECT PATTERN (per Tim Deschryver & Angular docs):
-   * 1. Call submit() ONCE to create a submit handler function
-   * 2. Store the handler as a component property
-   * 3. Bind directly to (ngSubmit) or call the handler
-   * 4. submit() returns a FUNCTION (not a Promise)
+   * 1. Call submit() inside a method (not as property initialization)
+   * 2. Bind the method to (ngSubmit)
+   * 3. submit() executes at the right time (during form submission)
+   * 4. No fields marked as touched on page load
    *
    * The submit() helper provides:
    * - Automatic markAllAsTouched() to show validation errors
@@ -282,9 +281,8 @@ export class SubmissionPatternsComponent {
    * Note: The callback is only invoked when the form is VALID.
    * If invalid, the callback is skipped and submitting remains false.
    */
-  protected readonly handleSubmit = submit(
-    this.registrationForm,
-    async (formData) => {
+  protected async handleSubmit(): Promise<void> {
+    await submit(this.registrationForm, async (formData) => {
       /// Clear previous states
       this.serverError.set(null);
       this.submissionSuccess.set(false);
@@ -303,14 +301,19 @@ export class SubmissionPatternsComponent {
         return null;
       }
 
-      /// Success case
-      console.log('✅ Registration successful:', formData().value());
+      /// Success - show success message and reset form
       this.submissionSuccess.set(true);
+      this.model.set({
+        username: '',
+        password: '',
+        confirmPassword: '',
+        simulateServerError: false,
+      });
+      this.registrationForm().reset();
 
-      /// Return null to indicate no server errors
       return null;
-    },
-  );
+    });
+  }
 
   protected resetForm(): void {
     /// Reset form state and data

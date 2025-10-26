@@ -1,10 +1,10 @@
-import { Injector, signal, ElementRef } from '@angular/core';
-import { describe, it, expect } from 'vitest';
-import { injectFieldControl } from './inject-field-control';
-import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
-import type { NgxSignalFormContext } from '../directives/form-provider.directive';
-import type { NgxSignalFormsConfig } from '../types';
+import { ElementRef, Injector, signal } from '@angular/core';
 import type { SubmittedStatus } from '@angular/forms/signals';
+import { describe, expect, it } from 'vitest';
+import type { NgxSignalFormContext } from '../directives/ngx-signal-form.directive';
+import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
+import type { NgxSignalFormsConfig } from '../types';
+import { injectFieldControl } from './inject-field-control';
 
 describe('injectFieldControl', () => {
   it('should resolve field control from form using id attribute', () => {
@@ -201,6 +201,6 @@ describe('injectFieldControl', () => {
 
     expect(() => {
       injectFieldControl(element, injector);
-    }).toThrow(/requires NgxSignalFormProviderDirective/i);
+    }).toThrow(/requires ngxSignalFormDirective/i);
   });
 });

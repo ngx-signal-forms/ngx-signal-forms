@@ -1,7 +1,7 @@
 import { Injector, signal } from '@angular/core';
 import type { SubmittedStatus } from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
-import type { NgxSignalFormContext } from '../directives/form-provider.directive';
+import type { NgxSignalFormContext } from '../directives/ngx-signal-form.directive';
 import { NGX_SIGNAL_FORM_CONTEXT } from '../tokens';
 import { injectFormContext } from './inject-form-context';
 

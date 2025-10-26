@@ -37,14 +37,15 @@ export const appConfig: ApplicationConfig = {
 // 2. Use in components (recommended: bundle import)
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { form, schema, required, submit, Field } from '@angular/forms/signals';
 
 @Component({
   imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
-    <form [ngxSignalFormProvider]="form" (ngSubmit)="save()">
-      <ngx-signal-form-field [field]="form.email" fieldName="email">
+    <form [ngxSignalForm]="contactForm" (ngSubmit)="handleSubmit()">
+      <ngx-signal-form-field [field]="contactForm.email" fieldName="email">
         <label for="email">Email</label>
-        <input id="email" [field]="form.email" />
+        <input id="email" [field]="contactForm.email" />
       </ngx-signal-form-field>
       <button type="submit">Submit</button>
     </form>
@@ -52,24 +53,46 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
 })
 export class MyComponent {
   protected readonly model = signal({ email: '' });
-  protected readonly form = form(
+  protected readonly contactForm = form(
     this.model,
     schema((path) => {
       required(path.email, { message: 'Email is required' });
     }),
   );
 
-  protected save(): void {
-    if (this.form().valid()) {
+  /**
+   * Form submission using Angular Signal Forms submit() helper.
+   *
+   * Pattern B: Async method wrapper that calls submit() internally.
+   * - submit() returns a callable function (not Promise directly)
+   * - Template binding: (ngSubmit)="handleSubmit()" WITH parentheses
+   * - Automatically marks all fields as touched
+   * - Only executes callback when form is VALID
+   *
+   * Alternative Pattern A (official): Store submit() result
+   * - readonly onSubmit = submit(this.contactForm, async () => {...})
+   * - Template: (ngSubmit)="onSubmit" WITHOUT parentheses
+   */
+  protected async handleSubmit(): Promise<void> {
+    await submit(this.contactForm, async () => {
+      // Handle submission (e.g., API call)
       console.log('Form data:', this.model());
-    }
+      // Reset after success
+      this.model.set({ email: '' });
+      this.contactForm().reset();
+      return null; // No server errors
+    });
   }
 }
 ```
 
-> **Important:** Use `(ngSubmit)` event on the `<form>` element. The toolkit tracks submission state automatically via the form provider directive.
+> **Important:** Angular Signal Forms' `submit()` returns a **callable function**. Two valid patterns:
+> - **Pattern A (official)**: `readonly onSubmit = submit(...)` with template `(ngSubmit)="onSubmit"` (no parentheses)
+> - **Pattern B (alternative)**: `async handleSubmit() { await submit(...) }` with template `(ngSubmit)="handleSubmit()"` (with parentheses)
+>
+> Pattern B shown above is convenient when you need additional logic around submission. Use Pattern A for simpler cases.
 
-> **Important:** Use `(ngSubmit)` event on the `<form>` element. The toolkit tracks submission state automatically via the form provider directive.
+> **Note:** The `[ngxSignalForm]` directive automatically adds `novalidate` attribute to prevent browser validation UI from conflicting with Angular validation display.
 
 ### Alternative: Individual Imports
 
@@ -77,13 +100,17 @@ If you only need specific directives or components, you can import them individu
 
 ```typescript
 import {
-  NgxSignalFormProviderDirective,
+  ngxSignalFormDirective,
   NgxSignalFormErrorComponent
 } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
-  imports: [Field, NgxSignalFormProviderDirective, NgxSignalFormErrorComponent],
-  // ...
+  imports: [Field, ngxSignalFormDirective, NgxSignalFormErrorComponent],
+  template: `
+    <form [ngxSignalForm]="myForm" (ngSubmit)="handleSubmit()">
+      <!-- fields -->
+    </form>
+  `,
 })
 ```
 
@@ -100,7 +127,7 @@ import type { NgxSignalFormsConfig, ErrorDisplayStrategy } from '@ngx-signal-for
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 // Core - Individual imports (alternative)
-import { NgxSignalFormProviderDirective, NgxSignalFormErrorComponent, NgxSignalFormAutoAriaDirective, computeShowErrors, showErrors } from '@ngx-signal-forms/toolkit/core';
+import { ngxSignalFormDirective, NgxSignalFormErrorComponent, NgxSignalFormAutoAriaDirective, computeShowErrors, showErrors } from '@ngx-signal-forms/toolkit/core';
 
 // Form field wrapper with enhanced components
 import {
@@ -131,7 +158,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 **Contents:**
 
-- `NgxSignalFormProviderDirective` - Provides form context to child components
+- `ngxSignalFormDirective` - Provides form context to child components
 - `NgxSignalFormAutoAriaDirective` - Automatically applies ARIA attributes
 - `NgxSignalFormErrorComponent` - Displays validation errors and warnings
 
@@ -201,29 +228,45 @@ For detailed API reference, CSS custom properties, browser support, migration gu
 
 ### Directives
 
-#### NgxSignalFormProviderDirective
+#### ngxSignalFormDirective
 
-Provides form context to child components.
+Provides form context to child components via dependency injection.
+
+**Automatic Features:**
+- Adds `novalidate` attribute to prevent browser validation UI
+- Tracks submission lifecycle (`submittedStatus` signal)
+- Provides form context to child directives/components
+- Manages error display strategy
 
 ```html
-<form [ngxSignalFormProvider]="myForm" [errorStrategy]="'on-touch'" (ngSubmit)="save()">
+<form [ngxSignalForm]="myForm" [errorStrategy]="'on-touch'" (ngSubmit)="handleSubmit()">
   <!-- form fields -->
   <button type="submit">Submit</button>
 </form>
 ```
 
+**Template Reference:**
+```html
+<form [ngxSignalForm]="myForm" #formDir="ngxSignalForm">
+  <!-- Access directive instance -->
+  <div>Status: {{ formDir.submittedStatus() }}</div>
+</form>
+```
+
 ```typescript
-protected save(): void {
-  if (this.myForm().valid()) {
+/**
+ * Correct submit() usage: async method that calls submit() helper
+ */
+protected async handleSubmit(): Promise<void> {
+  await submit(this.myForm, async () => {
     // Handle submission
     console.log('Form data:', this.model());
-  }
+    return null; // No server errors
+  });
 }
 ```
 
-> **Note:** Use `(ngSubmit)` event on the `<form>` element. The toolkit tracks submission state automatically.
-
-> **Note:** Use `(ngSubmit)` event on the `<form>` element. The toolkit tracks submission state automatically.
+> **Note:** Angular Signal Forms' `submit()` is an async function. Always use `(ngSubmit)="handleSubmit()"` WITH parentheses.
 
 #### NgxSignalFormAutoAriaDirective
 
@@ -239,7 +282,7 @@ Adds `aria-invalid` and `aria-describedby` attributes based on field validation 
 <ngx-signal-form-error [field]="form.email" fieldName="email" />
 ```
 
-**Note:** When used inside a form with `NgxSignalFormProviderDirective`, the `submittedStatus` signal is automatically injected from Angular Signal Forms' built-in submission tracking.
+**Note:** When used inside a form with `ngxSignalFormDirective`, the `submittedStatus` signal is automatically injected from Angular Signal Forms' built-in submission tracking.
 
 #### NgxSignalFormFieldComponent
 

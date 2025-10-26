@@ -22,12 +22,7 @@ import { fieldStatesSchema } from './field-states.validations';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Field, NgxSignalFormToolkit],
   template: `
-    <form
-      [ngxSignalFormProvider]="userForm"
-      (ngSubmit)="(save)"
-      class="form-container"
-      novalidate
-    >
+    <form [ngxSignalForm]="userForm" (ngSubmit)="handleSubmit()">
       @if (userForm().dirty()) {
         <div
           class="mb-4 rounded-lg border-l-4 border-amber-500 bg-amber-50 px-4 py-3 dark:border-amber-400 dark:bg-amber-900/20"
@@ -205,14 +200,12 @@ export class FieldStatesForm {
    * Use case: "Validate All" button, show all errors on submit
    *
    * Note: Signal Forms automatically marks fields as touched on blur,
-   * so this is mainly for demonstration purposes
+   * and the submit() helper automatically marks all fields as touched
+   * when the form is submitted.
    */
   protected markAllTouched(): void {
-    // Signal Forms handles touched state automatically via [field] directive
-    // This method is kept for demonstration purposes
-    console.log(
-      'Fields are marked as touched automatically on blur in Signal Forms',
-    );
+    // Signal Forms handles touched state automatically
+    // submit() helper marks all fields as touched on form submission
   }
 
   /**
@@ -223,8 +216,6 @@ export class FieldStatesForm {
    */
   protected markAllDirty(): void {
     // Signal Forms tracks dirty state automatically when values change
-    // This method is kept for demonstration purposes
-    console.log('Dirty state is tracked automatically in Signal Forms');
   }
 
   /**
@@ -248,11 +239,15 @@ export class FieldStatesForm {
   }
 
   /**
-   * Handle form submission using submit() helper
+   * Form submission handler using Angular Signal Forms submit() helper.
+   * **Key behavior:** Callback only executes if form is VALID.
    */
-  protected readonly save = submit(this.userForm, async (formData) => {
-    console.log('✅ Form submitted successfully!', formData().value());
-    alert('Form submitted! Check console for data.');
-    return null;
-  });
+  protected async handleSubmit(): Promise<void> {
+    await submit(this.userForm, async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      this.model.set({ username: '', email: '', password: '' });
+      this.userForm().reset();
+      return null;
+    });
+  }
 }

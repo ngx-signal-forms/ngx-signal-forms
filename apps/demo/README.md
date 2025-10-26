@@ -109,7 +109,7 @@ pnpm nx test demo
 import { form, Field, required, email } from '@angular/forms/signals';
 
 @Component({
-  imports: [Control],
+  imports: [Field],
   template: `<input [field]="myForm.email" />`,
 })
 class MyComponent {
@@ -130,7 +130,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 @Component({
   imports: [Field, NgxSignalFormToolkit],
   template: `
-    <form [ngxSignalFormProvider]="myForm">
+    <form [ngxSignalForm]="myForm">
       <input [field]="myForm.email" />
       <ngx-signal-form-error [field]="myForm.email" fieldName="email" />
     </form>

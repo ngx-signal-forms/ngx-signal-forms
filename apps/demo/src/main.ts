@@ -18,6 +18,12 @@ import { appRoutes } from './app/app.routes';
 
 // Wrap in async IIFE to support top-level await in all build targets
 (async () => {
+  // Enable debug logging globally
+  (
+    window as unknown as { __DEBUG_SHOW_ERRORS__?: boolean }
+  ).__DEBUG_SHOW_ERRORS__ = true;
+  console.log('🐛 Debug logging enabled for error strategies');
+
   // Ensure JIT compiler is available in dev server (Angular Vite builder) for components
   // that rely on templateUrl/styleUrls during E2E and local dev.
   // Use isDevMode() to avoid importing the compiler in production builds.
@@ -39,7 +45,7 @@ import { appRoutes } from './app/app.routes';
         defaultErrorStrategy: 'on-touch',
         autoAria: true,
         strictFieldResolution: false,
-        debug: false,
+        debug: true, // Enable debug logging
       }),
       provideRouter(
         appRoutes,

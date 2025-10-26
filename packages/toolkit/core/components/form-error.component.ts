@@ -90,9 +90,9 @@ import { showErrors } from '../utilities/show-errors';
  * }
  * ```
  *
- * @example Auto-injected from NgxSignalFormProviderDirective
+ * @example Auto-injected from ngxSignalFormDirective
  * ```html
- * <form [ngxSignalFormProvider]="form" (ngSubmit)="save()">
+ * <form [ngxSignalForm]="form" (ngSubmit)="save()">
  *   <!-- submittedStatus automatically injected from form provider -->
  *   <ngx-signal-form-error [field]="form.email" fieldName="email" />
  * </form>
@@ -350,7 +350,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * Form submission status from Angular Signal Forms.
    * Accepts Angular's SubmittedStatus type: 'unsubmitted' | 'submitting' | 'submitted'.
    *
-   * When used inside a form with NgxSignalFormProviderDirective, this is automatically
+   * When used inside a form with ngxSignalFormDirective, this is automatically
    * injected from the form provider context. Otherwise, pass Angular's submittedStatus:
    * `[submittedStatus]="form().submittedStatus()"`.
    */
@@ -397,12 +397,53 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   readonly #resolvedSubmittedStatus = computed<SubmittedStatus>(() => {
     const inputStatus = this.submittedStatus();
     if (inputStatus !== undefined && inputStatus !== null) {
-      return typeof inputStatus === 'function' ? inputStatus() : inputStatus;
+      const result =
+        typeof inputStatus === 'function' ? inputStatus() : inputStatus;
+
+      // DEBUG: Log resolution from input
+      if (
+        (window as unknown as { __DEBUG_SHOW_ERRORS__?: boolean })
+          .__DEBUG_SHOW_ERRORS__
+      ) {
+        console.log('[FormError] Resolved submittedStatus from INPUT:', {
+          inputStatus,
+          result,
+          fieldName: this.fieldName(),
+        });
+      }
+
+      return result;
     }
 
     const contextStatus = this.#injectedContext?.submittedStatus?.();
-    if (contextStatus) {
+    if (contextStatus !== undefined && contextStatus !== null) {
+      // DEBUG: Log resolution from context
+      if (
+        (window as unknown as { __DEBUG_SHOW_ERRORS__?: boolean })
+          .__DEBUG_SHOW_ERRORS__
+      ) {
+        console.log('[FormError] Resolved submittedStatus from CONTEXT:', {
+          contextStatus,
+          hasContext: !!this.#injectedContext,
+          fieldName: this.fieldName(),
+        });
+      }
+
       return contextStatus;
+    }
+
+    // DEBUG: Log fallback
+    if (
+      (window as unknown as { __DEBUG_SHOW_ERRORS__?: boolean })
+        .__DEBUG_SHOW_ERRORS__
+    ) {
+      console.log('[FormError] Resolved submittedStatus from FALLBACK:', {
+        inputStatus,
+        contextStatus,
+        hasContext: !!this.#injectedContext,
+        result: 'unsubmitted',
+        fieldName: this.fieldName(),
+      });
     }
 
     return 'unsubmitted'; // Default fallback
@@ -414,7 +455,40 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    */
   readonly #fieldState = computed(() => {
     const fieldTree = this.field();
-    return fieldTree(); // Call FieldTree to get FieldState
+    const fieldState = fieldTree(); // Call FieldTree to get FieldState
+
+    // DEBUG: Log the field state's touched value WITH STACK TRACE
+    if (
+      (window as unknown as { __DEBUG_SHOW_ERRORS__?: boolean })
+        .__DEBUG_SHOW_ERRORS__
+    ) {
+      const touched =
+        typeof fieldState?.touched === 'function'
+          ? fieldState.touched()
+          : 'not-a-function';
+      const invalid =
+        typeof fieldState?.invalid === 'function'
+          ? fieldState.invalid()
+          : 'not-a-function';
+
+      // Only log if touched is true to reduce noise
+      if (touched === true) {
+        console.log('[FormError] ⚠️ Field is TOUCHED on init!', {
+          fieldName: this.fieldName(),
+          touched,
+          invalid,
+        });
+        console.trace('Stack trace for touched field');
+      } else {
+        console.log('[FormError] Field state extracted:', {
+          fieldName: this.fieldName(),
+          touched,
+          invalid,
+        });
+      }
+    }
+
+    return fieldState;
   });
 
   /**

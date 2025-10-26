@@ -1,57 +1,122 @@
 import type { WritableSignal } from '@angular/core';
 import {
+  customError,
   email,
   form,
   minLength,
   required,
   schema,
+  validate,
 } from '@angular/forms/signals';
 import type { PasswordFormModel } from './warning-support.model';
 
 /**
- * NOTE: This is a simplified demo showing the CONCEPT of warnings vs errors.
+ * Password form validation schema demonstrating the toolkit's warning support.
  *
- * The toolkit provides a warningError() utility for creating non-blocking warnings.
- * Due to TypeScript complexity in this demo environment, we're showing the concept
- * with standard validation and explaining the difference in the UI.
+ * This schema shows the distinction between:
+ * - **Blocking errors**: Prevent form submission (required, minLength, email format)
+ * - **Non-blocking warnings**: Provide guidance without blocking submission
  *
- * In production apps, use the toolkit's warningError() utility which:
- * - Creates errors with kind='warn:*'
- * - Automatically separates warnings from blocking errors
- * - Uses ARIA role="status" aria-live="polite" for warnings
- * - Uses ARIA role="alert" aria-live="assertive" for errors
+ * **Warning Implementation:**
+ * Use `customError()` with `kind: 'warn:*'` to create non-blocking warnings.
+ * The toolkit's form error component automatically:
+ * - Separates warnings from blocking errors in the UI
+ * - Displays warnings with ARIA role="status" aria-live="polite" (non-intrusive)
+ * - Displays errors with ARIA role="alert" aria-live="assertive" (immediate)
+ * - Styles warnings differently (amber vs red)
  * - Allows form submission even with warnings present
- */
-
-/**
- * Password form validation schema.
  *
- * In a real app with the toolkit, you would add warning validations using:
- *
- * validate(path.password, (ctx) => {
- *   if (ctx.value() && ctx.value().length < 12) {
- *     return warningError('short-password', 'Consider 12+ characters for better security');
- *   }
- *   return null;
- * });
- *
- * The toolkit automatically separates warnings from errors and displays them differently.
+ * **Alternative:** The toolkit also provides `warningError('kind', 'message')` helper
+ * which wraps `customError({ kind: 'warn:kind', message })` for convenience.
  */
 export const passwordFormSchema = schema<PasswordFormModel>((path) => {
-  // Username validation
+  // Username validation - blocking errors
   required(path.username, { message: 'Username is required' });
   minLength(path.username, 3, {
     message: 'Username must be at least 3 characters',
   });
 
-  // Email validation
+  // Username warning - suggest longer usernames for better security
+  validate(path.username, (ctx) => {
+    const value = ctx.value();
+    if (value && value.length >= 3 && value.length < 6) {
+      return customError({
+        kind: 'warn:short-username',
+        message: 'Consider using 6+ characters for better security',
+      });
+    }
+    return null;
+  });
+
+  // Email validation - blocking errors
   required(path.email, { message: 'Email address is required' });
   email(path.email, { message: 'Please enter a valid email address' });
 
-  // Password validation
+  // Email warning - suggest avoiding common disposable email domains
+  validate(path.email, (ctx) => {
+    const value = ctx.value();
+    const disposableDomains = [
+      'tempmail.com',
+      'throwaway.email',
+      '10minutemail.com',
+    ];
+
+    if (
+      value &&
+      disposableDomains.some((domain) => value.includes(`@${domain}`))
+    ) {
+      return customError({
+        kind: 'warn:disposable-email',
+        message:
+          'Disposable email addresses may limit account recovery options',
+      });
+    }
+    return null;
+  });
+
+  // Password validation - blocking errors
   required(path.password, { message: 'Password is required' });
   minLength(path.password, 8, {
     message: 'Password must be at least 8 characters',
+  });
+
+  // Password warning - encourage stronger passwords
+  validate(path.password, (ctx) => {
+    const value = ctx.value();
+    if (value && value.length >= 8 && value.length < 12) {
+      return customError({
+        kind: 'warn:weak-password',
+        message: 'Consider using 12+ characters for better security',
+      });
+    }
+    return null;
+  });
+
+  // Password warning - suggest mixing character types
+  validate(path.password, (ctx) => {
+    const value = ctx.value();
+    if (value && value.length >= 8) {
+      const hasUpperCase = /[A-Z]/.test(value);
+      const hasLowerCase = /[a-z]/.test(value);
+      const hasNumbers = /\d/.test(value);
+      const hasSpecialChars = /[!@#$%^&*(),.?":{}|<>]/.test(value);
+
+      const typeCount = [
+        hasUpperCase,
+        hasLowerCase,
+        hasNumbers,
+        hasSpecialChars,
+      ].filter(Boolean).length;
+
+      if (typeCount < 3) {
+        return customError({
+          kind: 'warn:simple-password',
+          message:
+            'Consider mixing uppercase, lowercase, numbers, and special characters',
+        });
+      }
+    }
+    return null;
   });
 });
 

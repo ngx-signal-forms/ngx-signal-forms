@@ -88,6 +88,26 @@ describe('error-strategies', () => {
     });
 
     describe('on-touch strategy', () => {
+      it('should NOT show errors on initial load (CRITICAL BUG TEST)', () => {
+        // WHAT: This is the most important test - validates the reported bug
+        // WHY: Ensures errors don't appear immediately on page load with on-touch strategy
+        // SCENARIO: User lands on form page, all fields are empty and invalid but untouched
+        const fieldState = signal({
+          invalid: () => true, // Field is invalid (e.g., required but empty)
+          touched: () => false, // Field has NOT been interacted with yet
+        });
+        const submittedStatus = signal<SubmittedStatus>('unsubmitted');
+
+        const result = computeShowErrors(
+          fieldState,
+          'on-touch',
+          submittedStatus,
+        );
+
+        // EXPECT: NO errors should be visible on initial page load
+        expect(result()).toBe(false);
+      });
+
       it('should not show errors when field is invalid but not touched', () => {
         const fieldState = signal({
           invalid: () => true,
@@ -215,6 +235,26 @@ describe('error-strategies', () => {
     });
 
     describe('on-submit strategy', () => {
+      it('should NOT show errors on initial load (CRITICAL BUG TEST)', () => {
+        // WHAT: Validates on-submit strategy doesn't show errors before submission
+        // WHY: Critical for UX - users shouldn't see errors before attempting to submit
+        // SCENARIO: Form just loaded, fields are invalid and touched, but not submitted
+        const fieldState = signal({
+          invalid: () => true,
+          touched: () => true, // Even if touched
+        });
+        const submittedStatus = signal<SubmittedStatus>('unsubmitted');
+
+        const result = computeShowErrors(
+          fieldState,
+          'on-submit',
+          submittedStatus,
+        );
+
+        // EXPECT: NO errors until form is submitted
+        expect(result()).toBe(false);
+      });
+
       it('should not show errors when form is not submitted', () => {
         const fieldState = signal({
           invalid: () => true,

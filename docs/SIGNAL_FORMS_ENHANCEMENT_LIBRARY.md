@@ -91,7 +91,7 @@
 **Signal Forms + This Toolkit (Automatic):**
 
 ```html
-<form [ngxSignalFormProvider]="userForm" (ngSubmit)="save()">
+<form [ngxSignalForm]="userForm" (ngSubmit)="save()">
   <ngx-signal-form-field [field]="userForm.email">
     <label for="email">Email</label>
     <input id="email" [field]="userForm.email" />
@@ -195,7 +195,7 @@ Control when errors are shown (immediate, on-touch, on-submit, manual).
 @Component({
   template: `
     <form
-      [ngxSignalFormProvider]="userForm"
+      [ngxSignalForm]="userForm"
       [errorStrategy]="errorMode()"
       (ngSubmit)="save()"
     >
@@ -226,7 +226,7 @@ Consistent layout + automatic error display.
 Automatic `aria-busy` during async validation/submission.
 
 ```html
-<form [ngxSignalFormProvider]="userForm" (ngSubmit)="save()">
+<form [ngxSignalForm]="userForm" (ngSubmit)="save()">
   <!-- aria-busy="true" automatically during async -->
   <input [field]="userForm.email" />
   <button type="submit">Submit</button>
@@ -441,7 +441,7 @@ protected readonly ariaBusy = computed(() => {
 });
 ```
 
-#### `ngxSignalFormProvider`
+#### `ngxSignalForm`
 
 **Purpose:** Provides form context to child directives via DI and tracks submission state.
 
@@ -458,16 +458,16 @@ import {
 import { NGX_SIGNAL_FORM_CONTEXT } from './tokens';
 
 @Directive({
-  selector: '[ngxSignalFormProvider]',
-  exportAs: 'ngxSignalFormProvider',
+  selector: '[ngxSignalForm]',
+  exportAs: 'ngxSignalForm',
   providers: [
     {
       provide: NGX_SIGNAL_FORM_CONTEXT,
-      useExisting: NgxSignalFormProviderDirective,
+      useExisting: ngxSignalFormDirective,
     },
   ],
 })
-export class NgxSignalFormProviderDirective {
+export class ngxSignalFormDirective {
   // Inputs
   form = input.required<any>();
   errorStrategy = input<ErrorDisplayStrategy>('on-touch');
@@ -501,7 +501,7 @@ export class NgxSignalFormProviderDirective {
 
 ```html
 <form
-  [ngxSignalFormProvider]="userForm"
+  [ngxSignalForm]="userForm"
   [errorStrategy]="errorMode()"
   (ngSubmit)="save()"
 >
@@ -667,9 +667,9 @@ export function computeShowErrors(
 
 // Example: Track hasSubmitted in form provider
 @Directive({
-  selector: '[ngxSignalFormProvider]',
+  selector: '[ngxSignalForm]',
 })
-export class NgxSignalFormProviderDirective {
+export class ngxSignalFormDirective {
   form = input.required<any>();
   errorStrategy = input<ErrorDisplayStrategy>('on-touch');
 
@@ -741,7 +741,7 @@ export const appConfig: ApplicationConfig = {
 
 **Priority 2: Form Provider Directive**
 
-1. Create `[ngxSignalFormProvider]` directive
+1. Create `[ngxSignalForm]` directive
 2. Provide form instance via `NGX_SIGNAL_FORM` token
 3. Implement `getForm()` method for lazy access
 4. Test DI resolution in nested components
@@ -1012,7 +1012,7 @@ const contactSchema = schema<ContactModel>((path) => {
 
     <!-- Form with enhanced provider (tracks submission + manages error strategy) -->
     <form
-      [ngxSignalFormProvider]="contactForm"
+      [ngxSignalForm]="contactForm"
       [errorStrategy]="errorMode()"
       (ngSubmit)="save()"
     >

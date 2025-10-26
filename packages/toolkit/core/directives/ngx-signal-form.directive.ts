@@ -44,21 +44,21 @@ export interface NgxSignalFormContext {
  *
  * **Automatically tracks submission lifecycle** by watching Angular's `submitting()` signal.
  *
- * ⚠️ **CRITICAL: Always include `novalidate` on the form element.**
- * Signal Forms doesn't auto-disable HTML5 validation like Reactive Forms does.
- * Without `novalidate`, browser validation bubbles will conflict with Angular error display.
+ * **Automatically adds `novalidate` attribute** to prevent HTML5 validation UI from conflicting
+ * with Angular validation display.
  *
  * **Responsibilities**:
  * - Provides form instance to child directives via DI
  * - Tracks submission lifecycle (unsubmitted → submitting → submitted)
  * - Manages error display strategy for the form
+ * - Prevents browser validation UI by adding `novalidate` attribute
  *
  * **Key Features**:
  * - **Automatic Submission Tracking**: Detects submission completion via `submitting()` transitions
  * - **Persistent 'submitted' State**: Once submitted, stays 'submitted' until form reset
  * - **DI-based Context**: Provides form context without prop drilling
  * - **Strategy Management**: Centralizes error display strategy for child components
- * - **HTML5 Validation**: Requires `novalidate` to prevent conflicting browser UI
+ * - **HTML5 Validation**: Automatically adds `novalidate` to prevent browser validation UI
  *
  * **Submission State Transitions**:
  * ```
@@ -77,8 +77,8 @@ export interface NgxSignalFormContext {
  *
  * @Component({
  *   template: `
- *     <!-- ✅ ALWAYS include novalidate -->
- *     <form [ngxSignalFormProvider]="userForm" (ngSubmit)="handleSubmit()" novalidate>
+ *     <!-- novalidate is automatically added by the directive -->
+ *     <form [ngxSignalForm]="userForm" (ngSubmit)="handleSubmit()">
  *       <input [field]="userForm.email" type="email" />
  *       <ngx-signal-form-error [field]="userForm.email" fieldName="email" />
  *       <button type="submit">Submit</button>
@@ -105,12 +105,11 @@ export interface NgxSignalFormContext {
  *
  * @example With on-submit error strategy
  * ```html
- * <!-- ✅ Errors only show after form submission -->
+ * <!-- novalidate is automatically added -->
  * <form
- *   [ngxSignalFormProvider]="userForm"
+ *   [ngxSignalForm]="userForm"
  *   [errorStrategy]="'on-submit'"
  *   (ngSubmit)="handleSubmit()"
- *   novalidate
  * >
  *   <input [field]="userForm.email" type="email" />
  *   <!-- Errors appear AFTER user clicks submit (not on blur) -->
@@ -128,12 +127,20 @@ export interface NgxSignalFormContext {
  * ```
  */
 @Directive({
-  selector: '[ngxSignalFormProvider]',
+  selector: '[ngxSignalForm]',
+  exportAs: 'ngxSignalForm',
+  // Listen to form submit attempts so we can reflect an attempted submission
+  // even when the form is invalid (submit() callback won't run, and submitting()
+  // never flips to true). We avoid @HostListener per project rules and use host.
+  host: {
+    '(ngSubmit)': 'onFormSubmit()',
+    '[attr.novalidate]': '""',
+  },
   providers: [
     {
       provide: NGX_SIGNAL_FORM_CONTEXT,
       useFactory: () => {
-        const directive = inject(NgxSignalFormProviderDirective);
+        const directive = inject(NgxSignalFormDirective);
         return {
           get form() {
             return directive.form();
@@ -145,7 +152,7 @@ export interface NgxSignalFormContext {
     },
   ],
 })
-export class NgxSignalFormProviderDirective {
+export class NgxSignalFormDirective {
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
 
   /**
@@ -156,10 +163,38 @@ export class NgxSignalFormProviderDirective {
   readonly #hasEverSubmitted = signal(false);
 
   /**
+   * Tracks whether the user has attempted to submit the form at least once.
+   *
+   * **Why This Matters**:
+   * When a form is INVALID and the user clicks submit:
+   * - Angular's `submit()` helper marks all fields as touched
+   * - But it does NOT execute the callback (form is invalid)
+   * - Therefore `submitting()` never becomes true
+   * - Without this flag, `submittedStatus` would stay 'unsubmitted'
+   * - Errors wouldn't show with 'on-submit' strategy
+   *
+   * **Use Cases**:
+   * 1. **'on-submit' Error Strategy**: Shows errors after submit attempt, even when form is invalid
+   * 2. **Multi-step Forms**: Display validation only after user tries to proceed
+   * 3. **Clean Slate UX**: Keep form "pristine" visually until explicit submission attempt
+   * 4. **Compliance Patterns**: Some UX guidelines require explicit submission before showing errors
+   *
+   * **Example Flow**:
+   * ```
+   * User fills invalid form → Clicks submit button
+   * → submit() marks fields touched but doesn't run callback
+   * → #submitAttempted = true (via onFormSubmit host handler)
+   * → submittedStatus = 'submitted'
+   * → 'on-submit' strategy reveals validation errors
+   * ```
+   */
+  readonly #submitAttempted = signal(false);
+
+  /**
    * The Signal Forms instance (FieldTree) to provide.
    */
   readonly form = input.required<FieldTree<unknown>>({
-    alias: 'ngxSignalFormProvider',
+    alias: 'ngxSignalForm',
   });
 
   /**
@@ -202,10 +237,11 @@ export class NgxSignalFormProviderDirective {
       if (
         typeof formState.touched === 'function' &&
         !formState.touched() &&
-        this.#hasEverSubmitted()
+        (this.#hasEverSubmitted() || this.#submitAttempted())
       ) {
         // Form was reset, clear submission history
         this.#hasEverSubmitted.set(false);
+        this.#submitAttempted.set(false);
       }
 
       previousSubmitting = currentSubmitting;
@@ -238,9 +274,38 @@ export class NgxSignalFormProviderDirective {
   readonly submittedStatus = computed<SubmittedStatus>(() => {
     const isCurrentlySubmitting = this.form()().submitting();
     const wasSubmitted = this.#hasEverSubmitted();
+    const wasAttempted = this.#submitAttempted();
 
-    if (isCurrentlySubmitting) return 'submitting';
-    if (wasSubmitted) return 'submitted';
-    return 'unsubmitted';
+    const result: SubmittedStatus = isCurrentlySubmitting
+      ? 'submitting'
+      : wasSubmitted || wasAttempted
+        ? 'submitted'
+        : 'unsubmitted';
+
+    // DEBUG: Log submitted status computation
+    if (
+      (window as unknown as { __DEBUG_SHOW_ERRORS__?: boolean })
+        .__DEBUG_SHOW_ERRORS__
+    ) {
+      console.log('[FormProvider] submittedStatus computed:', {
+        isCurrentlySubmitting,
+        wasSubmitted,
+        wasAttempted,
+        result,
+      });
+    }
+
+    return result;
   });
+
+  /**
+   * Host handler for (ngSubmit) on the same form element.
+   * Ensures that an attempted submission (even when invalid) transitions
+   * the provider's submission state out of 'unsubmitted', enabling
+   * 'on-submit' error strategies to reveal validation messages.
+   */
+  protected onFormSubmit(): void {
+    // Mark that a submit was attempted at least once
+    this.#submitAttempted.set(true);
+  }
 }

@@ -1,6 +1,6 @@
 ---
 description: Use this agent when you need to debug and fix failing Playwright tests.
-tools: ['edit/createFile', 'edit/createDirectory', 'edit/editFiles', 'search/fileSearch', 'search/textSearch', 'search/listDirectory', 'search/readFile', 'chrome-devtools/*', 'angular-cli/*', 'ESLint/*', 'context7/*', 'playwright/browser_console_messages', 'playwright/browser_evaluate', 'playwright/browser_network_requests', 'playwright/browser_snapshot', 'vscodeAPI', 'changes', 'testFailure', 'todos', 'runTests']
+tools: ['edit/createFile', 'edit/createDirectory', 'edit/editFiles', 'search/fileSearch', 'search/textSearch', 'search/listDirectory', 'search/readFile', 'angular-cli/*', 'chrome-devtools/*', 'context7/*', 'ESLint/*', 'playwright/browser_console_messages', 'playwright/browser_evaluate', 'playwright/browser_network_requests', 'playwright/browser_snapshot', 'vscodeAPI', 'changes', 'testFailure', 'todos', 'runTests']
 ---
 
 You are the Playwright Test Healer, an expert test automation engineer specializing in debugging and

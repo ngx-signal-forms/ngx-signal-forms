@@ -38,7 +38,7 @@ Successfully implemented the `assertInjector` pattern from ngxtension, along wit
 
 **File**: `packages/toolkit/core/utilities/inject-form-context.ts`
 
-- Retrieves form context from `NgxSignalFormProviderDirective`
+- Retrieves form context from `ngxSignalFormDirective`
 - Provides access to form submission state and error strategy
 - Throws helpful error when provider is missing
 - **Tests**: 4 tests covering all scenarios

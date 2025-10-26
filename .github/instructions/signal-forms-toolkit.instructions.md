@@ -113,14 +113,15 @@ export const appConfig: ApplicationConfig = {
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { form, Field } from '@angular/forms/signals';
+import { form, submit, Field } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Field, NgxSignalFormToolkit],
   template: `
-    <form [ngxSignalFormProvider]="userForm" (ngSubmit)="save()">
+    <!-- novalidate automatically added by directive -->
+    <form [ngxSignalForm]="userForm" (ngSubmit)="handleSubmit()">
       <input id="email" [field]="userForm.email" />
       <ngx-signal-form-error [field]="userForm.email" fieldName="email" />
       <button type="submit">Submit</button>
@@ -131,15 +132,35 @@ export class UserFormComponent {
   readonly #model = signal({ email: '' });
   protected readonly userForm = form(this.#model /* validators */);
 
-  protected save(): void {
-    if (this.userForm().valid()) {
+  /**
+   * Form submission using Angular Signal Forms submit() helper.
+   *
+   * Pattern B: Async method wrapper that calls submit() internally.
+   * - submit() returns a callable function (not Promise directly)
+   * - Template binding: (ngSubmit)="handleSubmit()" WITH parentheses
+   * - Automatically marks all fields as touched
+   * - Only executes callback when form is VALID
+   *
+   * Alternative Pattern A (official): Store submit() result
+   * - readonly onSubmit = submit(this.userForm, async () => {...})
+   * - Template: (ngSubmit)="onSubmit" WITHOUT parentheses
+   */
+  protected async handleSubmit(): Promise<void> {
+    await submit(this.userForm, async () => {
+      // Handle submission (e.g., API call)
       console.log('Submit:', this.#model());
-    }
+      return null; // No server errors
+    });
   }
 }
 ```
 
-**Note:** The `NgxSignalFormProviderDirective` automatically exposes Angular Signal Forms' built-in `submittedStatus` signal through dependency injection. The status is managed automatically by Angular when using the `submit()` helper function. You don't need to manually track submission state.
+**Note:** The `NgxSignalFormProviderDirective` automatically exposes Angular Signal Forms' built-in `submittedStatus` signal through dependency injection. The status is managed automatically by Angular when using the `submit()` helper function.
+
+> **Important:** Angular Signal Forms' `submit()` returns a **callable function**. Two valid patterns:
+>
+> - **Pattern A (official)**: `readonly onSubmit = submit(...)` with template `(ngSubmit)="onSubmit"` (no parentheses)
+> - **Pattern B (alternative)**: `async handleSubmit() { await submit(...) }` with template `(ngSubmit)="handleSubmit()"` (with parentheses)
 
 **Alternative: Individual Imports**
 
@@ -189,6 +210,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
       [ngxSignalFormProvider]="userForm"
       [errorStrategy]="'on-touch'"
       (ngSubmit)="save()"
+      novalidate
     >
       <input id="email" [field]="userForm.email" />
       <button type="submit">Submit</button>
@@ -299,9 +321,9 @@ export class EmailFieldComponent {
 **Optional input properties**:
 
 - `strategy`: Error display strategy (defaults to `'on-touch'`)
-- `submittedStatus`: Signal tracking form submission state (auto-injected from `NgxSignalFormProviderDirective` if present)
+- `submittedStatus`: Signal tracking form submission state (auto-injected from `NgxSignalFormDirective` if present)
 
-**Note:** When used inside a form with `NgxSignalFormProviderDirective`, the `submittedStatus` signal is automatically injected from Angular Signal Forms' built-in submission tracking and doesn't need to be passed manually.
+**Note:** When used inside a form with `NgxSignalFormDirective`, the `submittedStatus` signal is automatically injected from Angular Signal Forms' built-in submission tracking and doesn't need to be passed manually.
 
 **Key features**:
 
@@ -358,7 +380,7 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Field, NgxSignalFormFieldComponent],
   template: `
-    <form (ngSubmit)="save()">
+    <form (ngSubmit)="save()" novalidate>
       <ngx-signal-form-field [field]="contactForm.email" fieldName="email">
         <label for="email">Email</label>
         <input id="email" [field]="contactForm.email" />
@@ -400,7 +422,7 @@ export class ContactFormComponent {
 
 - Content projection for labels and inputs
 - Automatic error/warning display
-- Inherits error strategy from `NgxSignalFormProviderDirective`
+- Inherits error strategy from `NgxSignalFormDirective`
 - Type-safe with generics
 - Consistent spacing via CSS custom properties
 
@@ -653,7 +675,7 @@ const contactSchema = schema<ContactModel>((path) => {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Field, NgxSignalFormFieldComponent],
   template: `
-    <form (ngSubmit)="save()">
+    <form (ngSubmit)="save()" novalidate>
       <ngx-signal-form-field [field]="contactForm.email" fieldName="email">
         <label for="email">Email</label>
         <input id="email" [field]="contactForm.email" />
@@ -739,8 +761,9 @@ const userSchema = schema<{ email: string }>((path) => {
     </fieldset>
 
     <!-- Form with provider (tracks submission + manages strategy) -->
+    <!-- novalidate automatically added -->
     <form
-      [ngxSignalFormProvider]="userForm"
+      [ngxSignalForm]="userForm"
       [errorStrategy]="errorStrategy()"
       (ngSubmit)="save()"
     >
@@ -884,7 +907,7 @@ export class ManualErrorComponent {
 
 ```typescript
 // ✅ Good - Automatic submission tracking
-<form [ngxSignalFormProvider]="form" (ngSubmit)="save()">
+<form [ngxSignalForm]="form" (ngSubmit)="save()">
 
 // ❌ Bad - Manual tracking required
 <form (ngSubmit)="save()">
@@ -1067,7 +1090,7 @@ test('should validate accessibility tree', async ({ page }) => {
 ```typescript
 import {
   provideNgxSignalFormsConfig,
-  NgxSignalFormProviderDirective,
+  NgxSignalFormDirective,
   NgxSignalFormAutoAriaDirective,
   NgxSignalFormErrorComponent,
   showErrors,
@@ -1093,7 +1116,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 ```typescript
 import {
   provideNgxSignalFormsConfig,
-  NgxSignalFormProviderDirective,
+  NgxSignalFormDirective,
   NgxSignalFormErrorComponent,
   NgxSignalFormAutoAriaDirective,
   showErrors,

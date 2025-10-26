@@ -22,10 +22,9 @@ import { contactFormSchema } from './your-first-form.validations';
   imports: [Field, NgxSignalFormToolkit],
   template: `
     <form
-      [ngxSignalFormProvider]="contactForm"
+      [ngxSignalForm]="contactForm"
       [errorStrategy]="errorDisplayMode()"
-      (ngSubmit)="(saveForm)"
-      novalidate
+      (ngSubmit)="handleSubmit()"
       class="form-container"
     >
       <!-- Name Field - Manual Layout with Toolkit Error Component -->
@@ -34,6 +33,7 @@ import { contactFormSchema } from './your-first-form.validations';
         <input
           id="contact-name"
           type="text"
+          required
           [field]="contactForm.name"
           class="form-input"
           placeholder="Your name"
@@ -51,6 +51,7 @@ import { contactFormSchema } from './your-first-form.validations';
         <input
           id="contact-email"
           type="email"
+          required
           [field]="contactForm.email"
           class="form-input"
           placeholder="you@example.com"
@@ -67,6 +68,7 @@ import { contactFormSchema } from './your-first-form.validations';
         <textarea
           id="contact-message"
           rows="4"
+          required
           [field]="contactForm.message"
           class="form-input"
           placeholder="Your message (min 10 characters)"
@@ -87,7 +89,11 @@ import { contactFormSchema } from './your-first-form.validations';
           }
         </button>
 
-        <button class="btn-secondary" type="button" (click)="resetForm()">
+        <button
+          class="btn-secondary"
+          type="button"
+          (click)="contactForm().reset()"
+        >
           Reset
         </button>
       </div>
@@ -111,27 +117,26 @@ export class YourFirstFormComponent {
   /**
    * Form submission handler using Angular Signal Forms submit() helper.
    *
-   * IMPORTANT: Button is NEVER disabled (accessibility best practice).
-   * - submit() automatically calls markAllAsTouched() to show all errors
-   * - Callback only executes if form is VALID
-   * - If invalid, errors are shown but submission is blocked
+   * The submit() helper automatically:
+   * - Marks all fields as touched (shows validation errors)
+   * - Tracks submission state (submitting → submitted)
+   * - Only executes callback when form is VALID
+   * - Provides server error handling
    *
-   * This provides better UX than disabled buttons:
-   * - Users can always attempt submission
-   * - Invalid fields are highlighted on submit
-   * - Clear feedback about what needs fixing
+   * Button is NEVER disabled (accessibility best practice).
    */
-  protected readonly saveForm = submit(this.contactForm, async (formData) => {
-    console.log('✅ Form submitted:', formData().value());
+  protected async handleSubmit(): Promise<void> {
+    await submit(this.contactForm, async () => {
+      // Simulate async operation (e.g., API call)
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    // Simulate async operation (e.g., API call)
-    await new Promise((resolve) => setTimeout(resolve, 500));
+      // Reset form after successful submission
+      this.#formData.set({ name: '', email: '', message: '' });
+      this.contactForm().reset();
 
-    // Reset form after successful submission
-    this.#formData.set({ name: '', email: '', message: '' });
-
-    return null; // No server errors
-  });
+      return null;
+    });
+  }
 
   protected resetForm(): void {
     this.#formData.set({ name: '', email: '', message: '' });

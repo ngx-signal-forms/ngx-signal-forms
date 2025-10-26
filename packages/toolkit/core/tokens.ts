@@ -1,5 +1,5 @@
 import { InjectionToken } from '@angular/core';
-import type { NgxSignalFormContext } from './directives/form-provider.directive';
+import type { NgxSignalFormContext } from './directives/ngx-signal-form.directive';
 import type { NgxSignalFormsConfig } from './types';
 
 /**
@@ -25,7 +25,7 @@ export const NGX_SIGNAL_FORMS_CONFIG = new InjectionToken<NgxSignalFormsConfig>(
 );
 
 /**
- * Injection token for the form context (provided by ngxSignalFormProvider directive).
+ * Injection token for the form context (provided by ngxSignalForm directive).
  *
  * @template TForm - The Signal Forms instance type
  */

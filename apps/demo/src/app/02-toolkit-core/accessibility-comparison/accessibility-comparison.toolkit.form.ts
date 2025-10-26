@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  effect,
-  inject,
-  Injector,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { Field, form, submit } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
@@ -24,9 +17,8 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
   imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
     <form
-      [ngxSignalFormProvider]="signupForm"
-      (ngSubmit)="(submitHandler)"
-      novalidate
+      [ngxSignalForm]="signupForm"
+      (ngSubmit)="handleSubmit()"
       class="form-container"
     >
       <!-- Email Field - Toolkit Handles Everything -->
@@ -88,7 +80,8 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
   `,
 })
 export class AccessibilityToolkitFormComponent {
-  readonly #injector = inject(Injector);
+  /** Success message announced via role="status" elsewhere on the page */
+  protected readonly successMessage = signal<string>('');
 
   /// Form data signal (single source of truth)
   readonly #formData = signal<AccessibilityFormModel>({
@@ -101,25 +94,12 @@ export class AccessibilityToolkitFormComponent {
   readonly signupForm = form(this.#formData, accessibilityValidationSchema);
 
   /// Submission handler using Angular Signal Forms submit() helper
-  protected readonly submitHandler = submit(
-    this.signupForm,
-    async (formData) => {
-      alert(`✅ Toolkit form submitted!\nEmail: ${formData().value().email}`);
-
-      // Reset form
+  protected async handleSubmit(): Promise<void> {
+    await submit(this.signupForm, async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       this.#formData.set({ email: '', password: '', confirmPassword: '' });
-
-      return null; // No server errors
-    },
-  );
-
-  /// Debug effect to show form state changes
-  // eslint-disable-next-line no-unused-private-class-members -- kept as reactive effect
-  readonly #debugEffect = effect(
-    () => {
-      const valid = this.signupForm().valid();
-      console.log('[Toolkit] Form valid:', valid);
-    },
-    { injector: this.#injector },
-  );
+      this.signupForm().reset();
+      return null;
+    });
+  }
 }

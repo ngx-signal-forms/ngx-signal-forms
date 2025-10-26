@@ -62,7 +62,7 @@ import { computeShowErrors as baseComputeShowErrors } from './error-strategies';
  *
  * @Component({
  *   template: `
- *     <form [ngxSignalFormProvider]="form">
+ *     <form [ngxSignalForm]="form">
  *       @if (shouldShowErrors()) {
  *         <span>{{ form.email().errors()[0].message }}</span>
  *       }

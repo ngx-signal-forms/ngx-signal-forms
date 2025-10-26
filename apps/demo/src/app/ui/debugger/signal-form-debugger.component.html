@@ -156,6 +156,84 @@
     </div>
   </div>
 
+  <!-- Error Visibility Strategy Indicator -->
+  <div
+    class="border-b border-gray-200 px-6 py-3 dark:border-gray-700"
+    [class.bg-green-50]="errorVisibilityInfo().errorsVisible"
+    [class.dark:bg-green-900/10]="errorVisibilityInfo().errorsVisible"
+    [class.bg-amber-50]="!errorVisibilityInfo().errorsVisible"
+    [class.dark:bg-amber-900/10]="!errorVisibilityInfo().errorsVisible"
+  >
+    <div class="flex items-start gap-3">
+      <div class="shrink-0">
+        @if (errorVisibilityInfo().errorsVisible) {
+          <svg
+            class="h-5 w-5 text-green-600 dark:text-green-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+        } @else {
+          <svg
+            class="h-5 w-5 text-amber-600 dark:text-amber-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+        }
+      </div>
+      <div class="flex-1">
+        <div class="flex items-center gap-2">
+          <span
+            class="text-sm font-semibold"
+            [class.text-green-900]="errorVisibilityInfo().errorsVisible"
+            [class.dark:text-green-100]="errorVisibilityInfo().errorsVisible"
+            [class.text-amber-900]="!errorVisibilityInfo().errorsVisible"
+            [class.dark:text-amber-100]="!errorVisibilityInfo().errorsVisible"
+          >
+            Error Display Strategy:
+          </span>
+          <span
+            class="rounded-full px-2 py-0.5 text-xs font-medium uppercase"
+            [class.bg-green-200]="errorVisibilityInfo().errorsVisible"
+            [class.text-green-900]="errorVisibilityInfo().errorsVisible"
+            [class.dark:bg-green-800]="errorVisibilityInfo().errorsVisible"
+            [class.dark:text-green-100]="errorVisibilityInfo().errorsVisible"
+            [class.bg-amber-200]="!errorVisibilityInfo().errorsVisible"
+            [class.text-amber-900]="!errorVisibilityInfo().errorsVisible"
+            [class.dark:bg-amber-800]="!errorVisibilityInfo().errorsVisible"
+            [class.dark:text-amber-100]="!errorVisibilityInfo().errorsVisible"
+          >
+            {{ errorVisibilityInfo().strategy }}
+          </span>
+        </div>
+        <p
+          class="mt-1 text-sm"
+          [class.text-green-700]="errorVisibilityInfo().errorsVisible"
+          [class.dark:text-green-300]="errorVisibilityInfo().errorsVisible"
+          [class.text-amber-700]="!errorVisibilityInfo().errorsVisible"
+          [class.dark:text-amber-300]="!errorVisibilityInfo().errorsVisible"
+        >
+          {{ errorVisibilityInfo().visibilityReason }}
+        </p>
+      </div>
+    </div>
+  </div>
+
   <!-- Collapsible Content Sections -->
   <div class="space-y-0">
     <!-- Form Model Section -->
@@ -277,15 +355,38 @@
                 <div class="space-y-3">
                   @for (error of rootBlockingErrors(); track error.kind) {
                     <div
-                      class="rounded-md border-l-4 border-purple-500 bg-purple-50 p-3 dark:bg-purple-900/20"
+                      class="rounded-md border-l-4 p-3"
+                      [class.border-purple-500]="errorVisibilityInfo().errorsVisible"
+                      [class.bg-purple-50]="errorVisibilityInfo().errorsVisible"
+                      [class.dark:bg-purple-900/20]="errorVisibilityInfo().errorsVisible"
+                      [class.border-gray-300]="!errorVisibilityInfo().errorsVisible"
+                      [class.bg-gray-50]="!errorVisibilityInfo().errorsVisible"
+                      [class.dark:bg-gray-900/20]="!errorVisibilityInfo().errorsVisible"
                     >
-                      <h6
-                        class="text-sm font-semibold text-purple-800 dark:text-purple-300"
-                      >
-                        🔗 {{ error.kind }}
-                      </h6>
+                      <div class="flex items-center justify-between">
+                        <h6
+                          class="text-sm font-semibold"
+                          [class.text-purple-800]="errorVisibilityInfo().errorsVisible"
+                          [class.dark:text-purple-300]="errorVisibilityInfo().errorsVisible"
+                          [class.text-gray-600]="!errorVisibilityInfo().errorsVisible"
+                          [class.dark:text-gray-400]="!errorVisibilityInfo().errorsVisible"
+                        >
+                          🔗 {{ error.kind }}
+                        </h6>
+                        @if (!errorVisibilityInfo().errorsVisible) {
+                          <span
+                            class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                          >
+                            Hidden by strategy
+                          </span>
+                        }
+                      </div>
                       <p
-                        class="mt-1 text-sm text-purple-700 dark:text-purple-400"
+                        class="mt-1 text-sm"
+                        [class.text-purple-700]="errorVisibilityInfo().errorsVisible"
+                        [class.dark:text-purple-400]="errorVisibilityInfo().errorsVisible"
+                        [class.text-gray-600]="!errorVisibilityInfo().errorsVisible"
+                        [class.dark:text-gray-500]="!errorVisibilityInfo().errorsVisible"
                       >
                         {{ error.message }}
                       </p>
@@ -323,14 +424,41 @@
                 <div class="space-y-3">
                   @for (error of fieldBlockingErrors(); track error.kind) {
                     <div
-                      class="rounded-md border border-red-200 bg-red-50 p-3 dark:border-red-700 dark:bg-red-900/20"
+                      class="rounded-md border p-3"
+                      [class.border-red-200]="errorVisibilityInfo().errorsVisible"
+                      [class.bg-red-50]="errorVisibilityInfo().errorsVisible"
+                      [class.dark:border-red-700]="errorVisibilityInfo().errorsVisible"
+                      [class.dark:bg-red-900/20]="errorVisibilityInfo().errorsVisible"
+                      [class.border-gray-300]="!errorVisibilityInfo().errorsVisible"
+                      [class.bg-gray-50]="!errorVisibilityInfo().errorsVisible"
+                      [class.dark:border-gray-700]="!errorVisibilityInfo().errorsVisible"
+                      [class.dark:bg-gray-900/20]="!errorVisibilityInfo().errorsVisible"
                     >
-                      <h6
-                        class="text-sm font-semibold text-red-800 dark:text-red-300"
+                      <div class="flex items-center justify-between">
+                        <h6
+                          class="text-sm font-semibold"
+                          [class.text-red-800]="errorVisibilityInfo().errorsVisible"
+                          [class.dark:text-red-300]="errorVisibilityInfo().errorsVisible"
+                          [class.text-gray-600]="!errorVisibilityInfo().errorsVisible"
+                          [class.dark:text-gray-400]="!errorVisibilityInfo().errorsVisible"
+                        >
+                          {{ error.kind }}
+                        </h6>
+                        @if (!errorVisibilityInfo().errorsVisible) {
+                          <span
+                            class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                          >
+                            Hidden by strategy
+                          </span>
+                        }
+                      </div>
+                      <p
+                        class="mt-1 text-sm"
+                        [class.text-red-700]="errorVisibilityInfo().errorsVisible"
+                        [class.dark:text-red-400]="errorVisibilityInfo().errorsVisible"
+                        [class.text-gray-600]="!errorVisibilityInfo().errorsVisible"
+                        [class.dark:text-gray-500]="!errorVisibilityInfo().errorsVisible"
                       >
-                        {{ error.kind }}
-                      </h6>
-                      <p class="mt-1 text-sm text-red-700 dark:text-red-400">
                         {{ error.message }}
                       </p>
                     </div>

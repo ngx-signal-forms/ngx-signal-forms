@@ -504,57 +504,6 @@ export { NgxSignalFormFieldCharacterCountComponent } from './form-field-characte
 export { NgxFloatingLabelDirective } from './floating-label.directive';
 ```
 
-### No Configuration Tokens
-
-This package does not provide any configuration tokens. All customization is done via:
-
-- Component inputs
-- CSS custom properties
-- Content projection
-
----
-
-## Migration Guide
-
-### From Standard Layout to Outlined Layout
-
-**Before:**
-
-```html
-<ngx-signal-form-field [field]="form.email">
-  <label for="email">Email</label>
-  <input id="email" [field]="form.email" />
-</ngx-signal-form-field>
-```
-
-**After:**
-
-```html
-<ngx-signal-form-field [field]="form.email" outline>
-  <label for="email">Email</label>
-  <input id="email" [field]="form.email" />
-</ngx-signal-form-field>
-```
-
-### From ngxFloatingLabel to outline
-
-If you used the previous `ngxFloatingLabel` selector, update to `outline`:
-
-**Before:**
-
-```html
-<ngx-signal-form-field
-  [field]="form.email"
-  ngxFloatingLabel
-></ngx-signal-form-field>
-```
-
-**After:**
-
-```html
-<ngx-signal-form-field [field]="form.email" outline></ngx-signal-form-field>
-```
-
 ---
 
 ## License

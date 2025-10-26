@@ -2,9 +2,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
-  inject,
-  Injector,
   signal,
 } from '@angular/core';
 import { Field, form, submit } from '@angular/forms/signals';
@@ -160,8 +157,6 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
   `,
 })
 export class AccessibilityManualFormComponent {
-  readonly #injector = inject(Injector);
-
   /// Form data signal (single source of truth)
   readonly #formData = signal<AccessibilityFormModel>({
     email: '',
@@ -210,18 +205,6 @@ export class AccessibilityManualFormComponent {
     );
   });
 
-  /// Debug effect to show touch state changes
-  // eslint-disable-next-line no-unused-private-class-members -- kept as reactive effect
-  readonly #debugEffect = effect(
-    () => {
-      console.log(
-        '[Manual] Touched fields:',
-        Array.from(this.#touchedFields()),
-      );
-    },
-    { injector: this.#injector },
-  );
-
   /// Manual touch tracking method (must be called on blur)
   protected markFieldAsTouched(field: keyof AccessibilityFormModel): void {
     this.#touchedFields.update((touched) => new Set(touched).add(field));
@@ -234,9 +217,8 @@ export class AccessibilityManualFormComponent {
   protected readonly handleSubmit = submit(
     this.signupForm,
     async (formData) => {
-      this.#isSubmitted.set(true);
-      console.log('[Manual] Form submitted:', formData().value());
-      alert(`✅ Manual form submitted!\nEmail: ${formData().value().email}`);
+      // Simulate async operation
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Reset form
       this.#formData.set({ email: '', password: '', confirmPassword: '' });

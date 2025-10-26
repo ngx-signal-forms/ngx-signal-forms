@@ -838,7 +838,7 @@ import { Control } from '@angular/forms/signals';
       <ngx-date-picker [field]="userForm.birthDate" />
     </form>
   `,
-  imports: [Control]
+  imports: [Field]
 })
 ```
 
@@ -1015,7 +1015,7 @@ type User = z.infer<typeof UserSchema>;
 @Component({
   selector: 'ngx-user-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control],
+  imports: [Field],
   template: `
     <form (ngSubmit)="save()">
       <div>
@@ -1454,7 +1454,7 @@ type User = v.InferOutput<typeof UserSchema>;
 
 @Component({
   selector: 'ngx-user-form',
-  imports: [Control],
+  imports: [Field],
   template: `
     <form>
       <input [field]="userForm.username" />
@@ -2064,7 +2064,7 @@ import { FieldState, Control } from '@angular/forms/signals';
 
 @Component({
   selector: 'ngx-dynamic-form',
-  imports: [Control],
+  imports: [Field],
   template: `
     @for (field of metadata(); track field.name) {
       @let fieldState = getField(field.name);
@@ -2439,7 +2439,7 @@ import { FieldState, Control } from '@angular/forms/signals';
 
 @Component({
   selector: 'ngx-form-field',
-  imports: [Control],
+  imports: [Field],
   template: `
     <div class="form-field" [class.has-error]="showError()">
       <!-- Label (projected) -->
@@ -3126,7 +3126,7 @@ validate(path.field2, ({ valueOf }) => {
 @Component({
   selector: 'ngx-user-form',
   template: '...',
-  imports: [Control],
+  imports: [Field],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserFormComponent {

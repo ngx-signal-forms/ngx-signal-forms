@@ -369,12 +369,21 @@ form(signal(data), (path) => {
 
 Each form control exposes state signals to track user interaction and control states:
 
+**Initial State:**
+
+Angular Signal Forms correctly initializes all fields with:
+
+- `touched()` = **`false`** (not yet blurred)
+- `dirty()` = **`false`** (not yet modified)
+
+This is the expected behavior for proper progressive error disclosure.
+
 **State Signals:**
 
 ```typescript
 // User interaction states (automatically managed)
-form.email().touched(); // true after blur (no untouched() signal)
-form.email().dirty(); // true after value change (no pristine() signal)
+form.email().touched(); // false initially, true after blur (no untouched() signal)
+form.email().dirty(); // false initially, true after value change (no pristine() signal)
 
 // Programmatic state management
 form.email().markAsTouched();
@@ -474,7 +483,7 @@ form(signal(data), (path) => {
 
 **CRITICAL:** Always include `novalidate` on `<form>` elements when using Signal Forms to prevent browser native validation UI from interfering with Angular's validation display.
 
-### Why `novalidate` is Required
+### Why `novalidate` is Important
 
 Angular Signal Forms (unlike Reactive/Template-driven forms) does **not** automatically disable native HTML5 form validation. Without `novalidate`:
 
@@ -483,18 +492,32 @@ Angular Signal Forms (unlike Reactive/Template-driven forms) does **not** automa
 - **Inconsistent Styling**: Browser's default styles override your custom error styling
 - **Accessibility Issues**: Screen readers may announce duplicate errors
 
-### Correct Pattern
+### Best Practice with Toolkit
+
+**When using `@ngx-signal-forms/toolkit`**, the `[ngxSignalForm]` directive automatically adds `novalidate`:
 
 ```html
-<!-- ✅ ALWAYS include novalidate -->
-<form [ngxSignalFormProvider]="userForm" (ngSubmit)="save()" novalidate>
+<!-- ✅ RECOMMENDED - Toolkit auto-adds novalidate -->
+<form [ngxSignalForm]="userForm" (ngSubmit)="save()">
+  <input [field]="userForm.email" />
+  <button type="submit">Submit</button>
+</form>
+```
+
+### Without Toolkit (Manual Pattern)
+
+If **not** using the toolkit, you must manually add `novalidate`:
+
+```html
+<!-- ✅ CORRECT - Manual novalidate required -->
+<form (ngSubmit)="save()" novalidate>
   <input [field]="userForm.email" />
   <button type="submit">Submit</button>
 </form>
 
 <!-- ❌ WRONG - Missing novalidate causes conflicting validation UX -->
-<form [ngxSignalFormProvider]="userForm" (ngSubmit)="save()">
-  <!-- Browser validation bubbles conflict with toolkit error display -->
+<form (ngSubmit)="save()">
+  <!-- Browser validation bubbles conflict with Angular validation display -->
 </form>
 ```
 
@@ -525,8 +548,8 @@ Never rely on HTML5 validation attributes alone—always add Angular validators:
 ## Template Patterns
 
 ```typescript
-// Form with novalidate (required)
-<form [ngxSignalFormProvider]="userForm" (ngSubmit)="save()" novalidate>
+// With toolkit (novalidate automatically added)
+<form [ngxSignalForm]="userForm" (ngSubmit)="save()">
   <!-- Field binding -->
   <input [field]="userForm.name" />
   <textarea [field]="userForm.bio" />
@@ -622,25 +645,27 @@ The `submit()` helper is the **preferred pattern** for most forms. It provides:
 - Server error integration
 - Type-safe form data access
 
-**CRITICAL:** `submit()` returns a **callable function**. Bind it **without parentheses** in the template.
+**IMPORTANT: `submit()` returns a callable function, not a Promise.**
+
+**Pattern A: Store submit() result (Official Pattern)**
 
 ```typescript
 import { submit } from '@angular/forms/signals';
 
 @Component({
   template: `
-    <!-- ✅ CORRECT: Bind without parentheses -->
-    <form (ngSubmit)="(handleSubmit)">
+    <!-- Bind WITHOUT parentheses when using stored result -->
+    <form (ngSubmit)="(onSubmit)" novalidate>
       <button type="submit">Submit</button>
     </form>
   `,
 })
 export class UserFormComponent {
   readonly #userData = signal({ email: '' });
-  protected readonly userForm = form(this.#userData /* validators */);
+  protected readonly userForm = form(this.#userData);
 
-  /// submit() returns a callable function - store as property
-  protected readonly handleSubmit = submit(this.userForm, async (formData) => {
+  // Store the callable function returned by submit()
+  protected readonly onSubmit = submit(this.userForm, async (formData) => {
     try {
       await this.apiService.save(formData().value());
       return null; // Success - no errors
@@ -658,14 +683,49 @@ export class UserFormComponent {
 }
 ```
 
-**Common mistake:**
+**Pattern B: Call submit() inside async method**
 
-```html
-<!-- ❌ WRONG: Calling with () causes TypeScript error -->
-<form (ngSubmit)="handleSubmit()"></form>
+```typescript
+import { submit } from '@angular/forms/signals';
+
+@Component({
+  template: `
+    <!-- Bind WITH parentheses when using async method wrapper -->
+    <form (ngSubmit)="handleSubmit()" novalidate>
+      <button type="submit">Submit</button>
+    </form>
+  `,
+})
+export class UserFormComponent {
+  readonly #userData = signal({ email: '' });
+  protected readonly userForm = form(this.#userData);
+
+  // Async method that calls submit() internally
+  protected async handleSubmit(): Promise<void> {
+    await submit(this.userForm, async (formData) => {
+      try {
+        await this.apiService.save(formData().value());
+        return null;
+      } catch (error) {
+        return [
+          {
+            kind: 'save_error',
+            message: 'Failed to save. Please try again.',
+            field: formData,
+          },
+        ];
+      }
+    });
+  }
+}
 ```
 
-This causes: `TS2349: This expression is not callable. Type 'Promise<void>' has no call signatures.`
+**Key Differences:**
+
+| Approach      | Property Type                         | Template Binding              | Use Case                                               |
+| ------------- | ------------------------------------- | ----------------------------- | ------------------------------------------------------ |
+| **Pattern A** | `readonly onSubmit = submit(...)`     | `(ngSubmit)="onSubmit"`       | Recommended for most cases                             |
+| **Pattern B** | `async handleSubmit(): Promise<void>` | `(ngSubmit)="handleSubmit()"` | When you need additional logic before/after submission |
 
 ### Option 2: Direct Method (Manual Approach)
 
@@ -695,6 +755,8 @@ export class SimpleFormComponent {
 | --------------------- | ----------------------------------------- | ---------- | ------------- | ------------- |
 | **`submit()` helper** | Most forms with validation & API calls    | ✅ Yes     | ✅ Yes        | ✅ Yes        |
 | **Direct `save()`**   | Minimal forms without async/server errors | ❌ Manual  | ⚠️ Manual     | ❌ No         |
+
+**Note:** Always include `novalidate` attribute on `<form>` elements to prevent browser validation UI from conflicting with Angular validation display.
 
 ## Best Practices
 
@@ -961,24 +1023,37 @@ export class UserFormComponent {
 8. **Incorrect `submit()` binding in templates**
 
    ```typescript
-   // ❌ Wrong - Calling with parentheses causes "Type 'Promise<void>' has no call signatures" error
-   protected readonly handleSubmit = submit(this.form, async (formData) => { ... });
+   // ✅ CORRECT Pattern A: Store submit() result, bind without parentheses
+   protected readonly onSubmit = submit(this.form, async (formData) => { ... });
    ```
 
    ```html
-   <form (ngSubmit)="handleSubmit()"><!-- ❌ WRONG --></form>
+   <form (ngSubmit)="onSubmit"><!-- ✅ CORRECT --></form>
    ```
 
    ```typescript
-   // ✅ Correct - Bind without parentheses (Angular invokes it automatically)
-   protected readonly handleSubmit = submit(this.form, async (formData) => { ... });
+   // ✅ CORRECT Pattern B: Async method wrapper, bind with parentheses
+   protected async handleSubmit(): Promise<void> {
+     await submit(this.form, async (formData) => { ... });
+   }
    ```
 
    ```html
-   <form (ngSubmit)="handleSubmit"><!-- ✅ CORRECT --></form>
+   <form (ngSubmit)="handleSubmit()"><!-- ✅ CORRECT --></form>
    ```
 
-   **Why:** `submit()` returns a callable function. Angular's event binding system invokes it automatically when you bind without parentheses.
+   ```typescript
+   // ❌ WRONG: Mixing patterns - stored result with parentheses
+   protected readonly onSubmit = submit(this.form, async () => { ... });
+   ```
+
+   ```html
+   <form (ngSubmit)="onSubmit()">
+     <!-- ❌ WRONG - Don't add () to stored result -->
+   </form>
+   ```
+
+   **Why:** `submit()` returns a callable function. Use Pattern A (store + bind without parentheses) for simplicity, or Pattern B (async method + bind with parentheses) when you need additional logic around submission.
 
 9. **Forgetting `novalidate` on forms**
 

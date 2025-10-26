@@ -89,13 +89,8 @@ export class BasicUsageComponent {
   /**
    * Form submission handler
    */
-  protected save(): void {
-    if (this.showcaseForm().valid()) {
-      console.log('✅ Form is valid! Data:', this.model());
-      alert('Form submitted successfully! Check console for data.');
-    } else {
-      console.log('❌ Form has errors:', this.showcaseForm().errors());
-    }
+  protected displaySubmittedData(): void {
+    // Form validation is handled by the submit button's disabled state
   }
 
   /**

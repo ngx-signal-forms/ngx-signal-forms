@@ -85,7 +85,7 @@ This section demonstrates **complete toolkit adoption** with focus on core featu
 **When to use:** Real-time feedback for critical fields (passwords, credit cards)
 
 ```typescript
-<form [ngxSignalFormProvider]="form" [errorStrategy]="'immediate'">
+<form [ngxSignalForm]="form" [errorStrategy]="'immediate'">
   <!-- Errors show as user types -->
 </form>
 ```
@@ -101,7 +101,7 @@ This section demonstrates **complete toolkit adoption** with focus on core featu
 **When to use:** Most forms - balances UX and accessibility
 
 ```typescript
-<form [ngxSignalFormProvider]="form" [errorStrategy]="'on-touch'">
+<form [ngxSignalForm]="form" [errorStrategy]="'on-touch'">
   <!-- Errors show after blur OR submit -->
 </form>
 ```
@@ -119,7 +119,7 @@ This section demonstrates **complete toolkit adoption** with focus on core featu
 **When to use:** Long forms where field-level errors would be overwhelming
 
 ```typescript
-<form [ngxSignalFormProvider]="form" [errorStrategy]="'on-submit'">
+<form [ngxSignalForm]="form" [errorStrategy]="'on-submit'">
   <!-- Errors show only after submit attempt -->
 </form>
 ```

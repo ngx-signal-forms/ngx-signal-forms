@@ -251,7 +251,7 @@ host: {
 - ✅ Same blur handler approach
 - ❌ Different: Uses Signal Forms `markAsTouched()` instead of Vest.js
 
-### 3. Form Provider Directive (`NgxSignalFormProvider`)
+### 3. Form Provider Directive (`ngxSignalForm`)
 
 **Purpose**: Provide form context to child directives and track submission state.
 
@@ -266,16 +266,16 @@ host: {
 
 ```typescript
 @Directive({
-  selector: '[ngxSignalFormProvider]',
-  exportAs: 'ngxSignalFormProvider',
+  selector: '[ngxSignalForm]',
+  exportAs: 'ngxSignalForm',
   providers: [
     {
       provide: NGX_SIGNAL_FORM_CONTEXT,
-      useExisting: NgxSignalFormProviderDirective,
+      useExisting: ngxSignalFormDirective,
     },
   ],
 })
-export class NgxSignalFormProviderDirective {
+export class ngxSignalFormDirective {
   form = input.required<any>();
   errorStrategy = input<ErrorDisplayStrategy>('on-touch');
 

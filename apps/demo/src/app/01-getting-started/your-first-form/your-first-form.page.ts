@@ -17,7 +17,7 @@ import { YourFirstFormComponent } from './your-first-form.form';
  * This is the middle ground between pure Signal Forms and full toolkit adoption.
  *
  * Shows:
- * - NgxSignalFormProvider for context and submission tracking
+ * - ngxSignalForm for context and submission tracking
  * - Automatic ARIA attributes
  * - NgxSignalFormErrorComponent for reusable error display
  * - Error display strategies
@@ -58,7 +58,10 @@ import { YourFirstFormComponent } from './your-first-form.form';
           [errorDisplayMode]="selectedMode()"
         />
         @if (formComponent) {
-          <ngx-signal-form-debugger [formTree]="formComponent.contactForm()" />
+          <ngx-signal-form-debugger
+            [formTree]="formComponent.contactForm"
+            [errorStrategy]="selectedMode()"
+          />
         }
       </div>
     </ngx-example-cards>

@@ -10,10 +10,10 @@ export const WARNING_SUPPORT_CONTENT = {
       {
         title: 'Form Fields & Validations',
         items: [
-          '<strong>Username:</strong> Required, min 3 characters',
-          '<strong>Email:</strong> Required, valid email format',
-          '<strong>Password:</strong> Required, min 8 characters',
-          'Warnings demonstrate non-blocking validation suggestions',
+          '<strong>Username:</strong> Required, min 3 chars (⚠️ warns if &lt; 6)',
+          '<strong>Email:</strong> Required, valid format (⚠️ warns for disposable domains)',
+          '<strong>Password:</strong> Required, min 8 chars (⚠️ warns if &lt; 12 or simple)',
+          'Warnings provide guidance without blocking submission',
         ],
       },
       {
@@ -23,7 +23,7 @@ export const WARNING_SUPPORT_CONTENT = {
           'Visual distinction: Errors (red) vs Warnings (amber)',
           'ARIA roles: <code>alert</code> (errors) vs <code>status</code> (warnings)',
           'Form submission allowed with warnings present',
-          'Password strength recommendations',
+          'Real-time password strength and username recommendations',
         ],
       },
       {
@@ -43,11 +43,11 @@ export const WARNING_SUPPORT_CONTENT = {
       {
         title: '🧪 Try This',
         items: [
-          '1. Leave Username empty → Click Submit → Blocking error prevents submission',
-          '2. Enter username "ab" (2 chars) → Error: "min 3 characters"',
-          '3. Enter "abc" → Error disappears, form can submit',
-          '4. With toolkit: Type password without special chars → See amber warning',
-          '5. With toolkit: Submit form with warnings → Submission succeeds',
+          '1. Leave fields empty → Submit → See blocking errors prevent submission',
+          '2. Enter username "abc" (3 chars) → Warning appears: "Consider 6+ characters"',
+          '3. Enter password "Short123" (8 chars) → Warning: "Consider 12+ characters"',
+          '4. Enter password "alllowercase" → Warning: "Mix uppercase, numbers, special chars"',
+          "5. Submit with warnings present → Submission succeeds! Warnings don't block.",
         ],
       },
       {
@@ -62,7 +62,7 @@ export const WARNING_SUPPORT_CONTENT = {
       {
         title: '🎯 Implementation Pattern',
         items: [
-          'Use <code>warningError("short-password", "message")</code>',
+          'Use <code>warningError("weak-password", "Consider 12+ chars...")</code>',
           'Toolkit automatically separates errors from warnings',
           'Visual styling distinguishes severity levels',
           'Screen readers announce appropriately',

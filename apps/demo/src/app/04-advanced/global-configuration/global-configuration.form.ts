@@ -29,11 +29,10 @@ import { globalConfigSchema } from './global-configuration.validations';
   imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
     <form
-      [ngxSignalFormProvider]="configForm"
+      [ngxSignalForm]="configForm"
       [errorStrategy]="errorDisplayMode()"
-      (ngSubmit)="(save)"
+      (ngSubmit)="(handleSubmit)"
       class="form-container"
-      novalidate
     >
       <!-- Info callout about global config -->
       <div
@@ -174,12 +173,14 @@ export class GlobalConfigurationComponent {
    * Form submission handler using Angular Signal Forms submit() helper.
    * ACCESSIBILITY: Button never disabled (best practice).
    */
-  protected readonly save = submit(this.configForm, async (formData) => {
-    console.log('✅ Form submitted:', formData().value());
-    alert('Form submitted successfully! Check console for data.');
-
-    return null;
-  });
+  protected async handleSubmit(): Promise<void> {
+    await submit(this.configForm, async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      this.model.set({ userEmail: '', userPhone: '', userWebsite: '' });
+      this.configForm().reset();
+      return null;
+    });
+  }
 
   protected resetForm(): void {
     this.model.set({

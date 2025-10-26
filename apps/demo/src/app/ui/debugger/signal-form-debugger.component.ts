@@ -7,7 +7,10 @@ import {
   input,
 } from '@angular/core';
 import type { FieldState } from '@angular/forms/signals';
-import { NGX_SIGNAL_FORM_CONTEXT } from '@ngx-signal-forms/toolkit/core';
+import {
+  NGX_SIGNAL_FORM_CONTEXT,
+  type ErrorDisplayStrategy,
+} from '@ngx-signal-forms/toolkit/core';
 
 /**
  * Enhanced Signal Form Debugger Component
@@ -24,12 +27,12 @@ import { NGX_SIGNAL_FORM_CONTEXT } from '@ngx-signal-forms/toolkit/core';
  * - Automatic submission status tracking (via form provider)
  *
  * **Requirements**:
- * - Must be used within a form with `[ngxSignalFormProvider]` directive
+ * - Must be used within a form with `[ngxSignalForm]` directive
  * - Form provider automatically supplies submission status
  *
  * @example Basic usage
  * ```html
- * <form [ngxSignalFormProvider]="userForm" (ngSubmit)="handleSubmit()">
+ * <form [ngxSignalForm]="userForm" (ngSubmit)="handleSubmit()">
  *   <input [field]="userForm.email" />
  *   <ngx-signal-form-debugger [formTree]="userForm()" />
  * </form>
@@ -51,11 +54,46 @@ import { NGX_SIGNAL_FORM_CONTEXT } from '@ngx-signal-forms/toolkit/core';
   styleUrl: './signal-form-debugger.component.scss',
 })
 export class SignalFormDebuggerComponent {
+  /** Safely read errorSummary() from a state-like object if available */
+  #errorSummaryOf(v: unknown): Array<{ kind: string; message?: string }> {
+    const fn = (v as { errorSummary?: () => unknown }).errorSummary;
+    if (typeof fn === 'function') {
+      const result = fn();
+      return Array.isArray(result)
+        ? (result as Array<{ kind: string; message?: string }>)
+        : [];
+    }
+    return [];
+  }
   /** Inject form context (provides submittedStatus automatically) */
   readonly #formContext = inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true });
 
-  /** The Signal Form state to display */
-  readonly formTree = input.required<FieldState<unknown>>();
+  /**
+   * The Signal Form to display.
+   * Accepts either the FieldTree function (preferred) or the FieldState root.
+   */
+  readonly formTree = input.required<unknown>();
+
+  /**
+   * The error display strategy currently in effect.
+   * Used to show which errors are hidden vs visible.
+   */
+  readonly errorStrategy = input<ErrorDisplayStrategy>('on-touch');
+
+  /** Type guard: FieldTree function (callable + indexable) */
+  readonly #isFieldTree = (
+    v: unknown,
+  ): v is { (): FieldState<unknown> } & Record<string, unknown> =>
+    typeof v === 'function';
+
+  /** Normalize to root FieldState regardless of input shape */
+  protected readonly rootState = computed<FieldState<unknown>>(() => {
+    const v = this.formTree() as unknown;
+    if (this.#isFieldTree(v)) {
+      return (v as () => FieldState<unknown>)();
+    }
+    return v as FieldState<unknown>;
+  });
 
   /** Title for the debugger display */
   readonly title = input<string>('Form State & Validation');
@@ -68,19 +106,19 @@ export class SignalFormDebuggerComponent {
   // ============================================================================
 
   /** Current form model (data values) */
-  protected readonly model = computed(() => this.formTree().value());
+  protected readonly model = computed(() => this.rootState().value());
 
   /** Is the form valid? */
-  protected readonly valid = computed(() => this.formTree().valid());
+  protected readonly valid = computed(() => this.rootState().valid());
 
   /** Is the form invalid? */
-  protected readonly invalid = computed(() => this.formTree().invalid());
+  protected readonly invalid = computed(() => this.rootState().invalid());
 
   /** Is the form dirty? */
-  protected readonly dirty = computed(() => this.formTree().dirty());
+  protected readonly dirty = computed(() => this.rootState().dirty());
 
   /** Is the form pending async validation? */
-  protected readonly pending = computed(() => this.formTree().pending());
+  protected readonly pending = computed(() => this.rootState().pending());
 
   /**
    * Submission status from Angular Signal Forms.
@@ -108,77 +146,116 @@ export class SignalFormDebuggerComponent {
   // ============================================================================
 
   /**
-   * Recursively collect field-level errors from nested descendants
-   */
-  readonly #collectFieldErrors = (
-    fieldState: FieldState<unknown>,
-  ): unknown[] => {
-    const errors: unknown[] = [];
-
-    // Get the field value to check for nested fields
-    const value = fieldState.value();
-
-    // If value is an object, recursively collect errors from nested fields
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      for (const key of Object.keys(value)) {
-        const nestedField = (fieldState as unknown as Record<string, unknown>)[
-          key
-        ];
-        if (nestedField && typeof nestedField === 'function') {
-          const nestedFieldState = nestedField();
-          if (
-            nestedFieldState &&
-            typeof nestedFieldState.errors === 'function'
-          ) {
-            // Add this field's errors
-            errors.push(...nestedFieldState.errors());
-            // Recursively collect from deeper nesting
-            errors.push(...this.#collectFieldErrors(nestedFieldState));
-          }
-        }
-      }
-    }
-
-    // If value is an array, recursively collect errors from array items
-    if (Array.isArray(value)) {
-      for (let i = 0; i < value.length; i++) {
-        const arrayField = (fieldState as unknown as Record<number, unknown>)[
-          i
-        ];
-        if (arrayField && typeof arrayField === 'function') {
-          const arrayFieldState = arrayField();
-          if (arrayFieldState && typeof arrayFieldState.errors === 'function') {
-            // Add this array item's errors
-            errors.push(...arrayFieldState.errors());
-            // Recursively collect from deeper nesting
-            errors.push(...this.#collectFieldErrors(arrayFieldState));
-          }
-        }
-      }
-    }
-
-    return errors;
-  };
-
-  /**
    * Root-level errors (cross-field validation)
    * These are errors on the form itself, not on individual fields
    */
-  protected readonly rootErrors = computed(() => this.formTree().errors());
+  protected readonly rootErrors = computed(() => this.rootState().errors());
 
   /**
-   * Field-level errors (individual field validation)
-   * These are errors from nested fields (path validations)
+   * All errors including descendants.
+   * Strategy:
+   * - If a FieldTree function is provided: traverse children and collect errors
+   * - Otherwise (FieldState): fallback to errorSummary() on the root state
    */
-  protected readonly fieldErrors = computed(() =>
-    this.#collectFieldErrors(this.formTree()),
-  );
+  protected readonly allErrors = computed(() => {
+    const input = this.formTree();
+    if (this.#isFieldTree(input)) {
+      // Traverse the FieldTree using the model shape
+      const state = (input as () => FieldState<unknown>)();
+      const value = state.value();
+      const collected: Array<{ kind: string; message?: string }> = [];
 
-  /** All validation errors (root + field) */
-  protected readonly allErrors = computed(() => [
-    ...this.rootErrors(),
-    ...this.fieldErrors(),
-  ]);
+      const visit = (tree: Record<string, unknown>, model: unknown): void => {
+        if (model && typeof model === 'object' && !Array.isArray(model)) {
+          for (const key of Object.keys(model as Record<string, unknown>)) {
+            const child = (tree as Record<string, unknown>)[key];
+            if (typeof child === 'function') {
+              const childState = (child as () => FieldState<unknown>)();
+              // Collect direct errors on this field
+              collected.push(
+                ...((childState.errors() ?? []) as Array<{
+                  kind: string;
+                  message?: string;
+                }>),
+              );
+              // Also collect any available summary from this child (defensive)
+              collected.push(...this.#errorSummaryOf(childState));
+              // Recurse deeper using the model branch
+              const nextModel = (model as Record<string, unknown>)[
+                key
+              ] as unknown;
+              visit(child as unknown as Record<string, unknown>, nextModel);
+            }
+          }
+        } else if (Array.isArray(model)) {
+          for (let i = 0; i < model.length; i++) {
+            const child = (tree as unknown as Record<number, unknown>)[i];
+            if (typeof child === 'function') {
+              const childState = (child as () => FieldState<unknown>)();
+              collected.push(
+                ...((childState.errors() ?? []) as Array<{
+                  kind: string;
+                  message?: string;
+                }>),
+              );
+              collected.push(...this.#errorSummaryOf(childState));
+              visit(child as unknown as Record<string, unknown>, model[i]);
+            }
+          }
+        }
+      };
+
+      visit(input as unknown as Record<string, unknown>, value);
+      // Prefer built-in summary when it exists (most reliable)
+      const rootSummary = this.#errorSummaryOf(state);
+      if (rootSummary.length > 0) {
+        return rootSummary;
+      }
+      // Fallback: combine root errors and collected child errors/summaries
+      return [
+        ...((state.errors?.() ?? []) as Array<{
+          kind: string;
+          message?: string;
+        }>),
+        ...collected,
+      ];
+    }
+
+    // Fallback: rely on built-in summary when only FieldState is available
+    const root = this.rootState();
+    const summary = this.#errorSummaryOf(root);
+    // If summary is unexpectedly empty but form is invalid, include root errors at least
+    return summary.length > 0
+      ? summary
+      : ((root.errors?.() ?? []) as Array<{
+          kind: string;
+          message?: string;
+        }>);
+  });
+
+  /** Field-level errors (exclude root-level ones from the summary) */
+  protected readonly fieldErrors = computed(() => {
+    const root = this.rootErrors();
+    const all = this.allErrors();
+    return all.filter(
+      (e: unknown): e is { kind: string; message: string } =>
+        typeof e === 'object' &&
+        e !== null &&
+        'kind' in e &&
+        typeof (e as { kind: string }).kind === 'string' &&
+        // Exclude any error that matches a root-level error by kind+message
+        !root.some(
+          (r) =>
+            r &&
+            typeof r === 'object' &&
+            'kind' in r &&
+            (r as { kind: string }).kind === (e as { kind: string }).kind &&
+            'message' in r &&
+            (r as { message?: string }).message ===
+              (e as { message?: string }).message,
+        ),
+    );
+  });
 
   /** Root-level blocking errors */
   protected readonly rootBlockingErrors = computed(() =>
@@ -239,9 +316,12 @@ export class SignalFormDebuggerComponent {
   );
 
   /** Does the form have any blocking errors? */
-  protected readonly hasBlockingErrors = computed(
-    () => this.blockingErrors().length > 0,
-  );
+  protected readonly hasBlockingErrors = computed(() => {
+    const count = this.blockingErrors().length;
+    if (count > 0) return true;
+    // Defensive: if the form is invalid but we couldn't extract error objects, still open the section
+    return this.invalid();
+  });
 
   /** Does the form have any root-level errors? */
   protected readonly hasRootErrors = computed(
@@ -270,6 +350,141 @@ export class SignalFormDebuggerComponent {
 
   /** Warning count */
   protected readonly warningCount = computed(() => this.warningErrors().length);
+
+  // ============================================================================
+  // Error Visibility Strategy Analysis
+  // ============================================================================
+
+  /**
+   * Determines if errors would be visible based on the current error display strategy.
+   * This is for DEBUGGING purposes - shows developers which errors are hidden by the strategy.
+   */
+  protected readonly errorVisibilityInfo = computed(() => {
+    const strategy = this.errorStrategy();
+    const submittedStatus = this.submittedStatus();
+    const rootState = this.rootState();
+
+    // Check if any fields are touched
+    const hasTouchedFields = this.#hasAnyTouchedFields(rootState);
+
+    let visibilityReason = '';
+    let errorsVisible = false;
+
+    switch (strategy) {
+      case 'immediate':
+        errorsVisible = true;
+        visibilityReason = 'Errors shown immediately as you type';
+        break;
+
+      case 'on-touch':
+        errorsVisible = hasTouchedFields || submittedStatus !== 'unsubmitted';
+        visibilityReason = hasTouchedFields
+          ? 'Errors shown because fields were touched (blurred)'
+          : submittedStatus !== 'unsubmitted'
+            ? 'Errors shown because form was submitted'
+            : '⚠️ Errors hidden until you touch (blur) fields';
+        break;
+
+      case 'on-submit':
+        errorsVisible = submittedStatus !== 'unsubmitted';
+        visibilityReason =
+          submittedStatus !== 'unsubmitted'
+            ? 'Errors shown because form was submitted'
+            : '⚠️ Errors hidden until form submission';
+        break;
+
+      case 'manual':
+        errorsVisible = false;
+        visibilityReason =
+          'Manual mode - error visibility controlled programmatically';
+        break;
+    }
+
+    return {
+      strategy,
+      errorsVisible,
+      visibilityReason,
+      hasTouchedFields,
+      submittedStatus,
+    };
+  });
+
+  /**
+   * Recursively check if any fields in the form tree have been touched.
+   */
+  #hasAnyTouchedFields(state: FieldState<unknown>): boolean {
+    // Check if this field is touched
+    if (
+      typeof state.touched === 'function' &&
+      (state.touched as () => boolean)()
+    ) {
+      return true;
+    }
+
+    // Recursively check children if this is a FieldTree
+    const input = this.formTree();
+    if (this.#isFieldTree(input)) {
+      const value = state.value();
+      return this.#checkTouchedRecursive(
+        input as unknown as Record<string, unknown>,
+        value,
+      );
+    }
+
+    return false;
+  }
+
+  #checkTouchedRecursive(
+    tree: Record<string, unknown>,
+    model: unknown,
+  ): boolean {
+    if (model && typeof model === 'object' && !Array.isArray(model)) {
+      for (const key of Object.keys(model as Record<string, unknown>)) {
+        const child = (tree as Record<string, unknown>)[key];
+        if (typeof child === 'function') {
+          const childState = (child as () => FieldState<unknown>)();
+          if (
+            typeof childState.touched === 'function' &&
+            childState.touched()
+          ) {
+            return true;
+          }
+          // Recurse deeper
+          const nextModel = (model as Record<string, unknown>)[key] as unknown;
+          if (
+            this.#checkTouchedRecursive(
+              child as unknown as Record<string, unknown>,
+              nextModel,
+            )
+          ) {
+            return true;
+          }
+        }
+      }
+    } else if (Array.isArray(model)) {
+      for (let i = 0; i < model.length; i++) {
+        const child = (tree as unknown as Record<number, unknown>)[i];
+        if (typeof child === 'function') {
+          const childState = (child as () => FieldState<unknown>)();
+          if (
+            typeof childState.touched === 'function' &&
+            childState.touched()
+          ) {
+            return true;
+          }
+          if (
+            this.#checkTouchedRecursive(
+              child as unknown as Record<string, unknown>,
+              model[i],
+            )
+          ) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
 
   /** Expose Object for template use */
   protected readonly Object = Object;

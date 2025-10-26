@@ -44,6 +44,8 @@ Angular Signal Forms (introduced in v21) provides an excellent foundation for re
 | **ARIA Attributes**     | ❌ Manual `[attr.aria-invalid]`, `[attr.aria-describedby]` | ✅ Automatic via directive                                    |
 | **Error Display Logic** | ❌ Manual `@if` conditions in every template               | ✅ Strategy-based (immediate/on-touch/on-submit/manual)       |
 | **Error Components**    | ❌ Custom error rendering per component                    | ✅ Reusable `<ngx-signal-form-error>` component               |
+| **Form Wrapper**        | ❌ Manual form setup and context                           | ✅ DI-based context via `[ngxSignalForm]` directive           |
+| **HTML5 Validation**    | ❌ Manual `novalidate` on every form                       | ✅ Automatic `novalidate` via `[ngxSignalForm]`               |
 | **Form Field Wrapper**  | ❌ Custom layout per component                             | ✅ Consistent `<ngx-signal-form-field>` wrapper               |
 | **Form Busy State**     | ❌ Manual `aria-busy` management                           | ✅ Automatic during async validation/submission (coming soon) |
 | **WCAG 2.2 Compliance** | ❌ Requires manual implementation                          | ✅ Built-in with proper ARIA roles and live regions           |
@@ -75,7 +77,7 @@ Angular Signal Forms (introduced in v21) provides an excellent foundation for re
 **With Toolkit (Automatic ARIA + Error Strategies):**
 
 ```html
-<form [ngxSignalFormProvider]="userForm" (ngSubmit)="save()">
+<form [ngxSignalForm]="userForm" (ngSubmit)="save()">
   <ngx-signal-form-field [field]="userForm.email" fieldName="email">
     <label for="email">Email</label>
     <input id="email" [field]="userForm.email" />
@@ -140,13 +142,13 @@ export class ContactComponent {
 
 ```html
 <!-- ✅ CORRECT - Prevents browser validation bubbles -->
-<form [ngxSignalFormProvider]="myForm" (ngSubmit)="save()" novalidate>
+<form [ngxSignalForm]="myForm" (ngSubmit)="save()" novalidate>
   <input [field]="myForm.email" type="email" />
   <button type="submit">Submit</button>
 </form>
 
 <!-- ❌ WRONG - Browser validation conflicts with toolkit error display -->
-<form [ngxSignalFormProvider]="myForm" (ngSubmit)="save()">
+<form [ngxSignalForm]="myForm" (ngSubmit)="save()">
   <input [field]="myForm.email" type="email" />
   <button type="submit">Submit</button>
 </form>
@@ -218,14 +220,14 @@ import { Component, signal } from '@angular/core';
 import { form, schema, required, email, Field } from '@angular/forms/signals';
 import {
   NgxSignalFormErrorComponent,
-  NgxSignalFormProviderDirective,
+  ngxSignalFormDirective,
 } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
   selector: 'ngx-contact',
-  imports: [Field, NgxSignalFormProviderDirective, NgxSignalFormErrorComponent],
+  imports: [Field, ngxSignalFormDirective, NgxSignalFormErrorComponent],
   template: `
-    <form [ngxSignalFormProvider]="contactForm" (ngSubmit)="save()">
+    <form [ngxSignalForm]="contactForm" (ngSubmit)="save()">
       <label for="email">Email</label>
       <input id="email" [field]="contactForm.email" />
       <ngx-signal-form-error [field]="contactForm.email" fieldName="email" />
@@ -270,13 +272,13 @@ import {
   Field,
 } from '@angular/forms/signals';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
-import { NgxSignalFormProviderDirective } from '@ngx-signal-forms/toolkit/core';
+import { ngxSignalFormDirective } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
   selector: 'ngx-signup',
-  imports: [Field, NgxSignalFormProviderDirective, NgxSignalFormFieldComponent],
+  imports: [Field, ngxSignalFormDirective, NgxSignalFormFieldComponent],
   template: `
-    <form [ngxSignalFormProvider]="signupForm" (ngSubmit)="save()">
+    <form [ngxSignalForm]="signupForm" (ngSubmit)="save()">
       <ngx-signal-form-field [field]="signupForm.email" fieldName="email">
         <label for="email">Email</label>
         <input id="email" type="email" [field]="signupForm.email" />
@@ -433,7 +435,7 @@ provideNgxSignalFormsConfig({
 **Override per form:**
 
 ```html
-<form [ngxSignalFormProvider]="form" [errorStrategy]="'immediate'">
+<form [ngxSignalForm]="form" [errorStrategy]="'immediate'">
   <!-- All fields use 'immediate' strategy -->
 </form>
 ```
@@ -533,7 +535,7 @@ Provides form context for error display strategies and integrates with Angular's
 ```typescript
 @Component({
   template: `
-    <form [ngxSignalFormProvider]="myForm" [errorStrategy]="'on-touch'" (ngSubmit)="save()">
+    <form [ngxSignalForm]="myForm" [errorStrategy]="'on-touch'" (ngSubmit)="save()">
       <!-- Child components automatically inherit error strategy -->
       <!-- Toolkit integrates with Angular's built-in submittedStatus -->
     </form>
@@ -571,7 +573,7 @@ import type {
 ```typescript
 // Core directives, components, utilities
 import {
-  NgxSignalFormProviderDirective,
+  ngxSignalFormDirective,
   NgxSignalFormErrorComponent,
   NgxSignalFormAutoAriaDirective,
   NgxSignalFormAutoTouchDirective,

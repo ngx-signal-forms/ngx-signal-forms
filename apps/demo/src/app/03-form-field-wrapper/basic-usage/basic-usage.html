@@ -1,9 +1,8 @@
 <form
-  [ngxSignalFormProvider]="showcaseForm"
+  [ngxSignalForm]="showcaseForm"
   [errorStrategy]="errorDisplayMode()"
-  (ngSubmit)="save()"
+  (ngSubmit)="displaySubmittedData()"
   class="form-container"
-  novalidate
 >
   <div class="space-y-6">
     <h2 class="text-lg font-semibold">Personal Information</h2>

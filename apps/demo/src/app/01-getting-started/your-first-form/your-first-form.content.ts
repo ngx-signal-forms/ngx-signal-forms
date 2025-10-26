@@ -19,7 +19,7 @@ export const YOUR_FIRST_FORM_CONTENT = {
       {
         title: 'Toolkit Features (20% Adoption)',
         items: [
-          'NgxSignalFormProvider - Form context',
+          'ngxSignalForm - Form context',
           'Automatic ARIA attributes (aria-invalid, aria-describedby)',
           'NgxSignalFormErrorComponent - Reusable error display',
           'Error display strategies (immediate, on-touch, on-submit)',

@@ -45,7 +45,7 @@ export const GLOBAL_CONFIG_CONTENT = {
       {
         title: 'Override Patterns',
         items: [
-          '• <strong>Form-level:</strong> Use <code class="code-inline">[errorStrategy]</code> on NgxSignalFormProvider to override per form',
+          '• <strong>Form-level:</strong> Use <code class="code-inline">[errorStrategy]</code> on ngxSignalForm to override per form',
           '• <strong>Field-level:</strong> Pass <code class="code-inline">[strategy]</code> to NgxSignalFormErrorComponent for individual fields',
           '• <strong>Priority:</strong> Field > Form > Global configuration',
         ],

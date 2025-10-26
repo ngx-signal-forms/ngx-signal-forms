@@ -158,10 +158,7 @@ import { submit } from '@angular/forms/signals';
 
 @Component({
   template: `
-    <form
-      [ngxSignalFormProvider]="registrationForm"
-      (ngSubmit)="handleSubmit()"
-    >
+    <form [ngxSignalForm]="registrationForm" (ngSubmit)="handleSubmit()">
       <!-- Form fields -->
 
       <button
@@ -245,11 +242,11 @@ this.registrationForm.email().submittedStatus(); // Same value
 this.registrationForm().resetSubmittedStatus();
 ```
 
-**When using the toolkit's `NgxSignalFormProviderDirective`:**
+**When using the toolkit's `ngxSignalFormDirective`:**
 
 ```typescript
 // The provider automatically exposes submittedStatus via DI
-<form [ngxSignalFormProvider]="registrationForm" (ngSubmit)="save()">
+<form [ngxSignalForm]="registrationForm" (ngSubmit)="save()">
   <!-- NgxSignalFormErrorComponent automatically receives submittedStatus -->
   <ngx-signal-form-error [field]="registrationForm.email" fieldName="email" />
 </form>

@@ -1,5 +1,5 @@
 import { Injector, inject } from '@angular/core';
-import type { NgxSignalFormContext } from '../directives/form-provider.directive';
+import type { NgxSignalFormContext } from '../directives/ngx-signal-form.directive';
 import { NGX_SIGNAL_FORM_CONTEXT } from '../tokens';
 import { assertInjector } from './assert-injector';
 

@@ -93,6 +93,11 @@ export function computeShowErrors<T>(
     const strategyValue = unwrapValue(strategy);
     const status = unwrapValue(submittedStatus);
 
+    const isInvalid =
+      typeof fieldState?.invalid === 'function' ? fieldState.invalid() : false;
+    const isTouched =
+      typeof fieldState?.touched === 'function' ? fieldState.touched() : false;
+
     // Convert submittedStatus to boolean
     const hasSubmitted = status !== 'unsubmitted';
 
@@ -101,34 +106,47 @@ export function computeShowErrors<T>(
       return false;
     }
 
-    // Use official FieldState API
-    const isInvalid =
-      typeof fieldState.invalid === 'function' ? fieldState.invalid() : false;
-    const isTouched =
-      typeof fieldState.touched === 'function' ? fieldState.touched() : false;
-
     // Apply strategy logic
+    let result: boolean;
     switch (strategyValue) {
       case 'immediate':
         // Show errors immediately as they occur
-        return isInvalid;
+        result = isInvalid;
+        break;
 
       case 'on-touch':
         // Show errors after field is touched OR form is submitted
-        return isInvalid && (isTouched || hasSubmitted);
+        result = isInvalid && (isTouched || hasSubmitted);
+        break;
 
       case 'on-submit':
         // Show errors only after form submission
-        return isInvalid && hasSubmitted;
+        result = isInvalid && hasSubmitted;
+        break;
 
       case 'manual':
         // Don't automatically show errors - developer controls this
-        return false;
+        result = false;
+        break;
 
       default:
         // Default to 'on-touch' behavior
-        return isInvalid && (isTouched || hasSubmitted);
+        result = isInvalid && (isTouched || hasSubmitted);
     }
+
+    // Debug logging
+    if ((window as { __DEBUG_SHOW_ERRORS__?: boolean }).__DEBUG_SHOW_ERRORS__) {
+      console.log('[computeShowErrors]', {
+        strategy: strategyValue,
+        isInvalid,
+        isTouched,
+        hasSubmitted,
+        result,
+        calculation: `${isInvalid} && (${isTouched} || ${hasSubmitted}) = ${result}`,
+      });
+    }
+
+    return result;
   });
 }
 

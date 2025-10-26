@@ -31,7 +31,7 @@ This section demonstrates your **first experience** with the toolkit - seeing im
 **Technologies:**
 
 - `@ngx-signal-forms/toolkit/core` - Core toolkit directives
-- `NgxSignalFormProviderDirective` - Form context
+- `ngxSignalFormDirective` - Form context
 - `NgxSignalFormErrorComponent` - Error display
 - `NgxSignalFormAutoAriaDirective` - Auto-ARIA
 
@@ -42,7 +42,7 @@ This section demonstrates your **first experience** with the toolkit - seeing im
 ```typescript
 // 00-signal-forms-only/pure-signal-form
 @Component({
-  imports: [Control],  // Only Angular Signal Forms
+  imports: [Field],  // Only Angular Signal Forms
   template: `
     <input
       id="email"
@@ -68,7 +68,7 @@ This section demonstrates your **first experience** with the toolkit - seeing im
 @Component({
   imports: [Field, NgxSignalFormToolkit],  // Added toolkit bundle
   template: `
-    <form [ngxSignalFormProvider]="form">
+    <form [ngxSignalForm]="form">
       <input id="email" [field]="form.email" />
       <!-- Auto-ARIA applied ✅ -->
 
@@ -95,7 +95,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 **What's in the bundle:**
 
-- `NgxSignalFormProviderDirective` - Form context and submission tracking
+- `ngxSignalFormDirective` - Form context and submission tracking
 - `NgxSignalFormAutoAriaDirective` - Automatic ARIA attributes
 - `NgxSignalFormErrorComponent` - Error display component
 
@@ -103,13 +103,13 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 ```typescript
 import {
-  NgxSignalFormProviderDirective,
+  ngxSignalFormDirective,
   NgxSignalFormErrorComponent,
   NgxSignalFormAutoAriaDirective,
 } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
-  imports: [Field, NgxSignalFormProviderDirective, NgxSignalFormErrorComponent],
+  imports: [Field, ngxSignalFormDirective, NgxSignalFormErrorComponent],
 })
 ```
 
@@ -170,7 +170,7 @@ import {
 **Provides context to child components:**
 
 ```html
-<form [ngxSignalFormProvider]="contactForm" (ngSubmit)="save()">
+<form [ngxSignalForm]="contactForm" (ngSubmit)="save()">
   <!-- All child form-error components inherit submission state -->
   <ngx-signal-form-error [field]="contactForm.name" fieldName="name" />
   <ngx-signal-form-error [field]="contactForm.email" fieldName="email" />

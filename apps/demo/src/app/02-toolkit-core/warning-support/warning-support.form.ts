@@ -1,6 +1,14 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
 import { Field, submit } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import {
+  NgxSignalFormToolkit,
+  type ErrorDisplayStrategy,
+} from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 import type { PasswordFormModel } from './warning-support.model';
 import { createPasswordForm } from './warning-support.validations';
@@ -25,9 +33,9 @@ import { createPasswordForm } from './warning-support.validations';
 
     <form
       class="form-container"
-      [ngxSignalFormProvider]="passwordForm"
-      (ngSubmit)="(handleSubmit)"
-      novalidate
+      [ngxSignalForm]="passwordForm"
+      [errorStrategy]="errorDisplayMode()"
+      (ngSubmit)="handleSubmit()"
     >
       <ngx-signal-form-field
         [field]="passwordForm.username"
@@ -76,6 +84,12 @@ import { createPasswordForm } from './warning-support.validations';
   `,
 })
 export class WarningsSupportFormComponent {
+  /**
+   * Error display strategy input from parent page.
+   * Allows users to switch between immediate, on-touch, on-submit, and manual modes.
+   */
+  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+
   readonly #formModel = signal<PasswordFormModel>({
     username: '',
     email: '',
@@ -86,23 +100,20 @@ export class WarningsSupportFormComponent {
   protected readonly successMessage = signal<string>('');
 
   /**
-   * Form submission handler using Angular Signal Forms submit() helper.
+   * Form submission using Angular Signal Forms' submit() helper.
    *
-   * IMPORTANT: submit() returns a callable function that is bound directly
-   * in the template: (ngSubmit)="handleSubmit"
-   *
-   * - submit() automatically calls markAllAsTouched() to show all errors
+   * **Key behaviors:**
    * - Callback only executes if form is VALID
    * - If invalid, errors are shown but submission is blocked
+   * - Warnings do NOT block submission (only blocking errors do)
+   * - Submission status is tracked via submittedStatus signal
    */
-  protected readonly handleSubmit = submit(
-    this.passwordForm,
-    async (formData) => {
+  protected async handleSubmit(): Promise<void> {
+    await submit(this.passwordForm, async (formData) => {
       try {
         /// Simulate API call
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        console.log('Form submitted:', formData().value());
         this.successMessage.set(
           '✓ Account created successfully! Notice how warnings did not block submission.',
         );
@@ -112,7 +123,6 @@ export class WarningsSupportFormComponent {
 
         return null;
       } catch (error) {
-        console.error('Submission error:', error);
         return [
           {
             kind: 'submission_error',
@@ -121,8 +131,8 @@ export class WarningsSupportFormComponent {
           },
         ];
       }
-    },
-  );
+    });
+  }
 
   protected reset(): void {
     this.#formModel.set({

@@ -24,13 +24,7 @@ import { complexFormSchema } from './complex-forms.validations';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
-    <form
-      [ngxSignalFormProvider]="complexForm"
-      [errorStrategy]="errorDisplayMode()"
-      (ngSubmit)="(saveForm)"
-      class="form-container"
-      novalidate
-    >
+    <form [ngxSignalForm]="complexForm" (ngSubmit)="handleSubmit()">
       <!-- Personal Information Section -->
       <fieldset
         class="mb-8 rounded-lg border border-gray-200 p-6 dark:border-gray-700"
@@ -404,16 +398,23 @@ export class ComplexFormsComponent {
 
   /**
    * Form submission handler using Angular Signal Forms submit() helper.
+   *
+   * CRITICAL: submit() is an async function that must be CALLED inside a method.
+   * - Template binding: (ngSubmit)="handleSubmit()" WITH parentheses
+   * - submit() signature: async function submit<T>(form, action): Promise<void>
+   * - Automatically marks all fields as touched
+   * - Only executes callback when form is VALID
+   *
    * ACCESSIBILITY: Button never disabled (best practice).
    */
-  protected readonly saveForm = submit(this.complexForm, async (formData) => {
-    console.log('✅ Form submitted:', formData().value());
+  protected async handleSubmit(): Promise<void> {
+    await submit(this.complexForm, async () => {
+      // Simulate async operation
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Simulate async operation
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    return null;
-  });
+      return null; // No server errors
+    });
+  }
 
   /**
    * Reset form to initial state
