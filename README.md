@@ -472,13 +472,29 @@ provideNgxSignalFormsConfig({
 
 ### Auto-ARIA Directive
 
-Automatically manages accessibility attributes without any configuration:
+Automatically manages accessibility attributes for all `[field]` elements:
 
 ```html
 <!-- Input automatically gets: -->
 <!-- aria-invalid="true" when invalid and touched -->
 <!-- aria-describedby="email-error" when error is shown -->
 <input id="email" [field]="form.email" />
+```
+
+> **Important:** The directive must be imported to activate (via `NgxSignalFormToolkit` bundle or individual import). It has an automatic selector (`input[field]`, `textarea[field]`, `select[field]`) but still requires being in your component's `imports` array.
+
+```typescript
+// Option 1: Bundle import (recommended)
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+@Component({
+  imports: [Field, NgxSignalFormToolkit], // ✅ Auto-ARIA activated!
+})
+
+// Option 2: Individual import
+import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit/core';
+@Component({
+  imports: [Field, NgxSignalFormAutoAriaDirective], // ✅ Auto-ARIA activated!
+})
 ```
 
 **Opt-out if needed:**

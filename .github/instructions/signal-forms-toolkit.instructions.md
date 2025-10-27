@@ -242,9 +242,27 @@ export class UserFormComponent {
 
 **Purpose**: Automatically applies ARIA attributes to form controls for accessibility.
 
-**When to use**: Automatically applied to all `input[field]`, `textarea[field]`, `select[field]` elements (except radio/checkbox). No explicit import needed unless you want to opt-out.
+**When to use**: Automatically applied to all `input[field]`, `textarea[field]`, `select[field]` elements (except radio/checkbox) when imported.
 
-**Automatic behavior**:
+**CRITICAL:** The directive must be explicitly imported to activate, even though it has an automatic selector. Angular standalone components require all directives to be in the `imports` array.
+
+**Import requirement:**
+
+```typescript
+// Recommended: Use bundle import
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+@Component({
+  imports: [Field, NgxSignalFormToolkit], // ✅ Auto-ARIA activated
+})
+
+// Alternative: Individual import
+import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit/core';
+@Component({
+  imports: [Field, NgxSignalFormAutoAriaDirective], // ✅ Auto-ARIA activated
+})
+```
+
+**Automatic behavior** (once imported):
 
 - Adds `aria-invalid="true"` when field is invalid
 - Adds `aria-describedby` linking to error message containers

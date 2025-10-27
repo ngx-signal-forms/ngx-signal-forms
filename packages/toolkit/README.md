@@ -268,9 +268,21 @@ protected async handleSubmit(): Promise<void> {
 
 #### NgxSignalFormAutoAriaDirective
 
-Automatically applied to `input[field]`, `textarea[field]`, `select[field]`.
+Automatically applied to `input[field]`, `textarea[field]`, `select[field]` elements.
 
 Adds `aria-invalid` and `aria-describedby` attributes based on field validation state.
+
+> **Important:** This directive must be imported to activate. While it has an automatic selector, Angular standalone components require explicit imports. Use `NgxSignalFormToolkit` bundle or import `NgxSignalFormAutoAriaDirective` individually.
+
+```typescript
+// With bundle (recommended)
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+@Component({ imports: [Field, NgxSignalFormToolkit] })
+
+// Or individual import
+import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit/core';
+@Component({ imports: [Field, NgxSignalFormAutoAriaDirective] })
+```
 
 ### Components
 
