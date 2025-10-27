@@ -1,6 +1,9 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "workspaceLayout": { "appsDir": "apps", "libsDir": "packages" },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "packages"
+  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
@@ -34,7 +37,10 @@
         "{workspaceRoot}/eslint.config.mjs"
       ]
     },
-    "@nx/vite:test": { "cache": true, "inputs": ["default", "^production"] },
+    "@nx/vite:test": {
+      "cache": true,
+      "inputs": ["default", "^production"]
+    },
     "@nx/angular:package": {
       "cache": true,
       "dependsOn": ["^build"],
@@ -50,7 +56,12 @@
     }
   },
   "plugins": [
-    { "plugin": "@nx/eslint/plugin", "options": { "targetName": "lint" } }
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    }
   ],
   "generators": {
     "@nx/angular:application": {
@@ -59,8 +70,13 @@
       "style": "css",
       "unitTestRunner": "vitest"
     },
-    "@nx/angular:library": { "linter": "eslint", "unitTestRunner": "vitest" },
-    "@nx/angular:component": { "style": "css" }
+    "@nx/angular:library": {
+      "linter": "eslint",
+      "unitTestRunner": "vitest"
+    },
+    "@nx/angular:component": {
+      "style": "css"
+    }
   },
   "release": {
     "projects": ["toolkit"],
@@ -79,6 +95,8 @@
       "tag": true,
       "tagMessage": "Release {version}"
     },
-    "releaseTagPattern": "v{version}"
+    "releaseTag": {
+      "pattern": "v{version}"
+    }
   }
 }
