@@ -3,6 +3,9 @@
 
 @use 'tailwindcss';
 
+/* Configure Tailwind to use class-based dark mode */
+@variant dark (.dark &);
+
 /* Modern theme tokens with brand gradient */
 @theme default {
   /* Brand colors (from logo gradient) */

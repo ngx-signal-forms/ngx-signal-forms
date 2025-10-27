@@ -1,0 +1,362 @@
+/**
+ * Custom Styled Form
+ * Demonstrates Figma design implementation using form-field CSS custom properties only.
+ * See: packages/toolkit/form-field/THEMING.md
+ */
+
+:host {
+  display: block;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+
+  // Design tokens from Figma
+  --text-base: #324155;
+  --text-secondary: rgba(71, 91, 119, 0.75);
+  --surface-card: #f8f9fa;
+  --surface-input: #ffffff;
+  --border-light: rgba(172, 178, 187, 0.25);
+  --border-dark: rgba(50, 65, 85, 0.25);
+  --icon-base: rgba(71, 91, 119, 0.75);
+  --button-secondary: #738aab;
+
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+
+  --radius-s: 4px;
+  --radius-m: 8px;
+
+  // Form-field theming (public API)
+  --ngx-form-field-gap: 2px;
+  --ngx-form-field-min-height: 56px;
+  --ngx-form-field-input-bg: var(--surface-input);
+  --ngx-form-field-border-color: var(--border-dark);
+  --ngx-form-field-radius: var(--radius-s);
+  --ngx-form-field-input-padding: var(--space-2xs) var(--space-xs);
+  --ngx-form-field-label-size: 12px;
+  --ngx-form-field-label-weight: 400;
+  --ngx-form-field-label-color: var(--text-secondary);
+  --ngx-form-field-input-size: 14px;
+  --ngx-form-field-input-color: var(--text-base);
+  --ngx-form-field-placeholder-color: var(--text-secondary);
+  --ngx-form-field-focus-color: var(--border-dark);
+  --ngx-form-field-focus-box-shadow: none;
+}
+
+// Dark mode overrides - use .dark class to respect manual theme selection
+:host-context(.dark) {
+  --text-base: #f9fafb; // Almost white for dark bg
+  --text-secondary: rgba(156, 163, 175, 0.75); // Light gray
+  --surface-card: #1f2937; // Dark gray card background
+  --surface-input: #111827; // Very dark gray for inputs
+  --border-light: rgba(75, 85, 99, 0.25); // Subtle borders
+  --border-dark: rgba(107, 114, 128, 0.4); // Visible borders
+  --icon-base: rgba(156, 163, 175, 0.75); // Light gray icons
+  --button-secondary: #60a5fa; // Lighter blue for dark bg
+}
+
+// ============================================================
+// Error/Warning Alignment with Outlined Fields
+// ============================================================
+
+// Base padding for all errors within form fields (vertical spacing)
+:host ::ng-deep ngx-signal-form-field ngx-signal-form-error {
+  padding: 0 var(--space-xs); // 0 8px - provides horizontal breathing room
+}
+
+// Additional left padding for outlined fields to align with input text
+// Outlined containers have padding: 0.5rem 0.75rem (8px vertical, 12px horizontal).
+// The 12px horizontal padding positions the input text/placeholder.
+// Errors need 12px total left padding to align perfectly with the input text.
+:host ::ng-deep ngx-signal-form-field[outline] ngx-signal-form-error {
+  padding-left: 0.75rem; // 12px - matches outlined container horizontal padding
+}
+
+// ============================================================
+// Layout Only (Figma structure)
+// ============================================================
+
+.facts-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.fact-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-m);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.fact-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  h3 {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-base);
+    margin: 0;
+  }
+
+  .number-badge {
+    background: var(--surface-input);
+    border: 1px solid var(--border-dark);
+    border-radius: var(--radius-s);
+    padding: 4px 8px;
+    width: 32px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-base);
+  }
+
+  .spacer {
+    flex: 1;
+  }
+}
+
+.fields-row {
+  display: flex;
+  gap: var(--space-lg);
+
+  > * {
+    flex: 1;
+  }
+}
+
+.offense-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-m);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+
+  h4 {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-base);
+    margin: 0;
+  }
+}
+
+.articles-section {
+  display: flex;
+  gap: var(--space-xs);
+
+  .border-line {
+    width: 4px;
+    background: var(--border-light);
+    border-radius: var(--radius-s);
+  }
+
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+
+    h5 {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-base);
+      margin: 0;
+      padding-bottom: var(--space-xs);
+      border-bottom: 1px solid var(--border-light);
+    }
+  }
+}
+
+.article-item {
+  display: flex;
+  gap: var(--space-xs);
+  align-items: flex-start;
+
+  ngx-signal-form-field {
+    flex: 1;
+  }
+
+  .icon-button {
+    margin-top: 4px; // Align with input top padding
+  }
+}
+
+.add-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-s);
+  font-weight: 500;
+  font-size: 16px;
+  color: var(--button-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease-in-out;
+
+  &:hover {
+    background: rgba(115, 138, 171, 0.08);
+  }
+
+  &:active {
+    background: rgba(115, 138, 171, 0.15);
+  }
+
+  .icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+}
+
+.add-button-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xs);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  transition: background 0.15s ease-in-out;
+
+  &:hover {
+    background: rgba(115, 138, 171, 0.08);
+  }
+
+  &:active {
+    background: rgba(115, 138, 171, 0.15);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+    color: var(--icon-base);
+  }
+}
+
+.add-fact-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-s);
+  font-weight: 500;
+  font-size: 16px;
+  color: var(--button-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease-in-out;
+
+  &:hover {
+    background: rgba(115, 138, 171, 0.08);
+  }
+
+  &:active {
+    background: rgba(115, 138, 171, 0.15);
+  }
+
+  .icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+}
+
+.offense-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+
+  .item-content {
+    flex: 1;
+  }
+
+  .remove-button {
+    padding: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: var(--radius-s);
+    transition: all 0.15s ease-in-out;
+    flex-shrink: 0;
+    margin-top: 4px;
+
+    .icon {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 1.5;
+    }
+
+    &:hover:not(:disabled) {
+      background: rgba(115, 138, 171, 0.08);
+      color: var(--button-secondary);
+    }
+
+    &:active:not(:disabled) {
+      background: rgba(115, 138, 171, 0.15);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.submit-button {
+  padding: 10px 24px;
+  background: var(--button-secondary);
+  border: 1px solid var(--button-secondary);
+  border-radius: var(--radius-s);
+  font-weight: 600;
+  font-size: 14px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+
+  &:hover:not(:disabled) {
+    background: #5c7391;
+    border-color: #5c7391;
+  }
+
+  &:active:not(:disabled) {
+    background: #4d5f77;
+    border-color: #4d5f77;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border-light);
+}

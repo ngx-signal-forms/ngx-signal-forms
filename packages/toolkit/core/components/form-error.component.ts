@@ -223,7 +223,7 @@ import { showErrors } from '../utilities/show-errors';
     @property --ngx-signal-form-error-font-size {
       syntax: '<length>';
       inherits: true;
-      initial-value: 0.875rem;
+      initial-value: 0.75rem;
     }
 
     @property --ngx-signal-form-error-line-height {

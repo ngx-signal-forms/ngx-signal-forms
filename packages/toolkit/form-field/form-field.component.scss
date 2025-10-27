@@ -62,6 +62,20 @@
   --_field-opacity-disabled: 0.6; // Disabled opacity
 }
 
+// Dark mode overrides
+@media (prefers-color-scheme: dark) {
+  :host {
+    --_field-clr-primary: #60a5fa; // Lighter blue for dark bg
+    --_field-clr-danger: #fca5a5; // Lighter red for dark bg
+    --_field-clr-text: #f9fafb; // Almost white - main text
+    --_field-clr-text-muted: #9ca3af; // Light gray - placeholders
+    --_field-clr-text-subtle: rgba(156, 163, 175, 0.75); // Subtle gray
+    --_field-clr-surface: #1f2937; // Dark gray - backgrounds
+    --_field-clr-border: #374151; // Medium gray - borders
+    --_field-clr-disabled: #111827; // Very dark gray - disabled bg
+  }
+}
+
 // ============================================================================
 // SEMANTIC COLOR SCALE (Public API - brand/state colors)
 // ============================================================================
@@ -113,7 +127,7 @@
     var(--_field-space-md) var(--_field-space-lg)
   );
   --_input-color: var(--ngx-form-field-input-color, var(--_color-text));
-  --_input-bg: var(--ngx-form-field-input-bg, var(--_color-surface));
+  --_input-bg: var(--ngx-form-field-input-bg, transparent);
   --_input-border-color: var(
     --ngx-form-field-border-color,
     var(--_color-border)
@@ -122,6 +136,10 @@
 
   // States (derive from semantic colors)
   --_focus-color: var(--ngx-form-field-focus-color, var(--_color-primary));
+  --_focus-box-shadow: var(
+    --ngx-form-field-focus-box-shadow,
+    0 0 0 3px color-mix(in srgb, var(--_focus-color) 10%, transparent)
+  );
   --_invalid-color: var(--ngx-form-field-invalid-color, var(--_color-error));
   --_disabled-bg: var(--ngx-form-field-disabled-bg, var(--_color-disabled));
   --_disabled-opacity: var(
@@ -178,8 +196,7 @@
   &:focus {
     outline: none;
     border-color: var(--_focus-color);
-    box-shadow: 0 0 0 3px
-      color-mix(in srgb, var(--_focus-color) 10%, transparent);
+    box-shadow: var(--_focus-box-shadow);
   }
 
   &[aria-invalid='true'] {
@@ -204,8 +221,8 @@
 // Reuses the same semantic tokens, just applies them differently.
 
 :host(.ngx-signal-forms-outline) {
-  // Override gap for outlined layout
-  --_gap: var(--_field-space-xs);
+  // Override gap for outlined layout (uses public API with fallback)
+  --_gap: var(--ngx-form-field-gap, var(--_field-space-xs));
 }
 
 :host(.ngx-signal-forms-outline) .ngx-signal-form-field__content {
@@ -224,9 +241,9 @@
 
 // Label inside container (smaller, subtle)
 :host(.ngx-signal-forms-outline) ::ng-deep label {
-  font-size: var(--_field-text-xs);
-  font-weight: 400;
-  color: var(--_field-clr-text-subtle);
+  font-size: var(--_label-size);
+  font-weight: var(--_label-weight);
+  color: var(--_label-color);
   margin: 0 0 var(--_field-space-xs) 0;
   cursor: text;
 }
@@ -266,7 +283,7 @@
 // States using :has() selector (container feedback)
 :host(.ngx-signal-forms-outline) .ngx-signal-form-field__content:has(:focus) {
   border-color: var(--_focus-color);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--_focus-color) 25%, transparent);
+  box-shadow: var(--_focus-box-shadow);
 }
 
 :host(.ngx-signal-forms-outline)
@@ -276,8 +293,7 @@
 
 :host(.ngx-signal-forms-outline)
   .ngx-signal-form-field__content:has([aria-invalid='true']:focus) {
-  box-shadow: 0 0 0 2px
-    color-mix(in srgb, var(--_invalid-color) 25%, transparent);
+  box-shadow: var(--_focus-box-shadow);
 }
 
 :host(.ngx-signal-forms-outline)

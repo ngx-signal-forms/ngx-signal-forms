@@ -13,6 +13,7 @@ import {
   resolveFieldName,
 } from '../utilities/field-resolution';
 import { injectFormConfig } from '../utilities/inject-form-config';
+import { isBlockingError } from '../utilities/warning-error';
 
 /**
  * Automatically manages ARIA attributes for Signal Forms controls.
@@ -67,6 +68,9 @@ export class NgxSignalFormAutoAriaDirective {
   /**
    * Computed ARIA invalid state.
    * Returns 'true' | 'false' | null based on field validity and error display strategy.
+   *
+   * Only sets aria-invalid='true' if there are blocking errors (not just warnings).
+   * Warnings have kind starting with 'warn:' and should not trigger invalid state.
    */
   protected readonly ariaInvalid = computed(() => {
     const field = this.field();
@@ -75,13 +79,14 @@ export class NgxSignalFormAutoAriaDirective {
     const fieldState = field();
     if (!fieldState) return null;
 
-    // Only show aria-invalid when errors should be displayed
-    const invalid = fieldState.invalid();
     const touched = fieldState.touched();
+    if (!touched) return 'false';
 
-    // TODO: Integrate with error display strategy from form context
-    // For now, use simple logic: show invalid if touched and invalid
-    return invalid && touched ? 'true' : 'false';
+    // Check if field has blocking errors (not just warnings)
+    const errors = fieldState.errors();
+    const hasBlockingErrors = errors.some(isBlockingError);
+
+    return hasBlockingErrors ? 'true' : 'false';
   });
 
   /**

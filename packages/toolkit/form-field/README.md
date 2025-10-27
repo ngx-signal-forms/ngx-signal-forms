@@ -17,6 +17,55 @@ Quick examples:
 
 ---
 
+## 📦 Convenience Export Bundle
+
+### NgxOutlinedFormField
+
+A convenience bundle that includes all components needed for outlined form fields. Simplifies imports when using the outlined layout.
+
+**Import:**
+
+```typescript
+import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
+```
+
+**Includes:**
+
+- `NgxSignalFormFieldComponent` - Form field wrapper
+- `NgxFloatingLabelDirective` - Outlined layout with floating label
+- `NgxSignalFormFieldHintComponent` - Helper text
+- `NgxSignalFormFieldCharacterCountComponent` - Character counter
+
+**Usage:**
+
+```typescript
+import { Field } from '@angular/forms/signals';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
+
+@Component({
+  imports: [Field, NgxSignalFormToolkit, NgxOutlinedFormField],
+  template: `
+    <form [ngxSignalForm]="contactForm">
+      <ngx-signal-form-field [field]="contactForm.email" outline>
+        <label for="email">Email</label>
+        <input id="email" [field]="contactForm.email" />
+        <ngx-signal-form-field-hint>We'll never share your email</ngx-signal-form-field-hint>
+      </ngx-signal-form-field>
+    </form>
+  `,
+})
+```
+
+**Benefits:**
+
+- ✅ Single import instead of four separate imports
+- ✅ Type-safe readonly tuple
+- ✅ Cleaner component metadata
+- ✅ Better developer experience
+
+---
+
 ## Components & Directives
 
 ### NgxSignalFormFieldComponent

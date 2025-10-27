@@ -120,6 +120,10 @@ export class AppComponent implements AfterViewInit {
           path: '/form-field-wrapper/complex-forms',
           label: 'Complex Forms',
         },
+        {
+          path: '/form-field-wrapper/custom-styled-form',
+          label: 'Custom Styled Form',
+        },
       ],
     },
     {

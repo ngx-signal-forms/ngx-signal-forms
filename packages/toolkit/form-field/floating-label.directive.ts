@@ -95,6 +95,7 @@ import { Directive, input } from '@angular/core';
  */
 @Directive({
   selector: 'ngx-signal-form-field[outline]',
+  standalone: true,
   host: {
     '[class.ngx-signal-forms-outline]': 'true',
     '[attr.data-show-required]': 'showRequiredMarker() ? "true" : null',

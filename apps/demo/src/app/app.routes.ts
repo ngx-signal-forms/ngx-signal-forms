@@ -141,6 +141,14 @@ export const appRoutes: Routes = [
           ).then((m) => m.ComplexFormsPage),
         title: 'Complex Forms - Nested Objects & Arrays',
       },
+      {
+        path: 'custom-styled-form',
+        loadComponent: () =>
+          import(
+            './03-form-field-wrapper/custom-styled-form/custom-styled-form.page'
+          ).then((m) => m.CustomStyledFormPage),
+        title: 'Custom Styled Form - CSS Custom Properties Theming',
+      },
     ],
   },
 
