@@ -93,17 +93,18 @@ Angular Signal Forms (introduced in v21) provides an excellent foundation for re
 
 ### The Simplest Example
 
-Just install and start using—automatic ARIA attributes work out of the box:
+Just install and start using—automatic ARIA attributes and form enhancements work out of the box:
 
 ```typescript
 import { Component, signal } from '@angular/core';
 import { form, schema, required, email, Field } from '@angular/forms/signals';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
   selector: 'ngx-contact',
-  imports: [Field],
+  imports: [Field, NgxSignalFormToolkit],
   template: `
-    <form (ngSubmit)="save()" novalidate>
+    <form [ngxSignalForm]="contactForm" (ngSubmit)="save()">
       <label for="email">Email</label>
       <input id="email" [field]="contactForm.email" type="email" />
       <button type="submit">Send</button>
@@ -134,34 +135,47 @@ export class ContactComponent {
 - `aria-invalid="true"` when field is invalid and touched
 - `aria-describedby` linking to error messages
 - Touch state management on blur
-- **Important:** Always include `novalidate` attribute on `<form>` elements to prevent browser validation UI from conflicting with Angular validation display
+- `novalidate` attribute automatically added to prevent browser validation UI conflicts
+- Submission state tracking via DI context
 
 ### Form Validation: The `novalidate` Attribute
 
-**CRITICAL:** All forms using Signal Forms must include the `novalidate` attribute:
+**With the toolkit's `[ngxSignalForm]` directive:** The `novalidate` attribute is **automatically added** for you—no manual attribute needed!
 
 ```html
-<!-- ✅ CORRECT - Prevents browser validation bubbles -->
-<form [ngxSignalForm]="myForm" (ngSubmit)="save()" novalidate>
-  <input [field]="myForm.email" type="email" />
-  <button type="submit">Submit</button>
-</form>
-
-<!-- ❌ WRONG - Browser validation conflicts with toolkit error display -->
+<!-- ✅ CORRECT - novalidate is automatically added by the directive -->
 <form [ngxSignalForm]="myForm" (ngSubmit)="save()">
   <input [field]="myForm.email" type="email" />
   <button type="submit">Submit</button>
 </form>
 ```
 
-**Why is `novalidate` required?**
+**Without the toolkit (bare Signal Forms):** You must manually add `novalidate` to prevent browser validation conflicts:
 
-Unlike Angular's Reactive Forms and Template-driven Forms (which auto-add `novalidate`), Signal Forms doesn't automatically disable native HTML5 form validation. Without it:
+```html
+<!-- ✅ CORRECT for bare Signal Forms - Manual novalidate required -->
+<form (ngSubmit)="save()" novalidate>
+  <input [field]="myForm.email" type="email" />
+  <button type="submit">Submit</button>
+</form>
+
+<!-- ❌ WRONG - Browser validation conflicts with Angular validation display -->
+<form (ngSubmit)="save()">
+  <input [field]="myForm.email" type="email" />
+  <button type="submit">Submit</button>
+</form>
+```
+
+**Why is `novalidate` important?**
+
+Unlike Angular's Reactive Forms and Template-driven Forms (which auto-add `novalidate`), bare Signal Forms doesn't automatically disable native HTML5 form validation. Without it:
 
 1. **Conflicting UX**: Browser validation bubbles appear alongside Angular error messages
 2. **Duplicate Errors**: Users see double error feedback for the same field
 3. **Styling Conflicts**: Browser's default error styling overrides your custom styles
 4. **Accessibility**: Screen readers may announce duplicate error messages
+
+**The toolkit solves this:** The `[ngxSignalForm]` directive automatically applies `novalidate`, so you don't have to remember!
 
 ### Add Error Display (Optional)
 
@@ -176,7 +190,7 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/core';
   selector: 'ngx-contact',
   imports: [Field, NgxSignalFormErrorComponent],
   template: `
-    <form (ngSubmit)="save()">
+    <form (ngSubmit)="save()" novalidate>
       <label for="email">Email</label>
       <input id="email" [field]="contactForm.email" />
       <ngx-signal-form-error
@@ -210,6 +224,8 @@ export class ContactComponent {
   }
 }
 ```
+
+> **Note:** This example shows using toolkit components without the `[ngxSignalForm]` directive, so you must manually add `novalidate` to the form element.
 
 ### Track Submission State Automatically (Optional)
 
@@ -581,9 +597,6 @@ import {
 
 // Form field wrapper (optional)
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
-
-// Testing utilities (optional)
-import { createPlaceholderTestHelper } from '@ngx-signal-forms/toolkit/testing';
 ```
 
 ## Browser Support

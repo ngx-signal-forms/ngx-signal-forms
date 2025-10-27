@@ -137,8 +137,6 @@ import {
   NgxSignalFormFieldCharacterCountComponent
 } from '@ngx-signal-forms/toolkit/form-field';
 
-// Testing utilities (optional)
-import { createPlaceholderTestHelper } from '@ngx-signal-forms/toolkit/testing';
 ```
 
 ### Bundle Constant

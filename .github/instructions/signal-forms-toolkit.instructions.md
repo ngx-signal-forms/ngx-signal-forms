@@ -1137,12 +1137,6 @@ import {
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 ```
 
-### Secondary Entry (Testing)
-
-```typescript
-import { createPlaceholderTestHelper } from '@ngx-signal-forms/toolkit/testing';
-```
-
 ## Resources
 
 - [Toolkit README](../../packages/toolkit/README.md)
