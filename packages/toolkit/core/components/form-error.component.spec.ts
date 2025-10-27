@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import type { SubmittedStatus } from '@angular/forms/signals';
 import { email, Field, form, required, schema } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
-import { userEvent } from '@vitest/browser/context';
 import { describe, expect, it } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { NgxSignalFormErrorComponent } from './form-error.component';
 
 describe('NgxSignalFormErrorComponent', () => {

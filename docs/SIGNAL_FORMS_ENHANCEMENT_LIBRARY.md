@@ -1613,7 +1613,7 @@ export class ContactComponent {
 
 ```typescript
 import { render, screen } from '@testing-library/angular';
-import { userEvent } from '@vitest/browser/context';
+import { userEvent } from 'vitest/browser';
 import { describe, it, expect } from 'vitest';
 import { ContactFormComponent } from './contact-form.component';
 

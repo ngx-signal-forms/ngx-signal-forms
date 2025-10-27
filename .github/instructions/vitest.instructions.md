@@ -7,7 +7,7 @@ applyTo: 'projects/**/*.{spec,test}.{ts,tsx,js,jsx}'
 ## General Guidelines
 
 - Write all tests in TypeScript.
-- Use Vitest as the test runner.
+- Use **Vitest 4+** as the test runner.
 - Make sure to properly use Angular 21 Signal Forms functionality in tests.
 - Do not make up tests for non-existent APIs or features.
 - Prefer user-facing behavior over implementation details.
@@ -22,7 +22,7 @@ applyTo: 'projects/**/*.{spec,test}.{ts,tsx,js,jsx}'
   - Based on that scaffold the tests and add pseudo-code/docs for the expected behavior, with WHAT and WHY.
   - Start with the happy and simple paths, then add edge cases and error handling.
   - Start with `test.todo()` or `test.fixme()` for complex tests that need more time to implement.
-- To run tests, prefer using the `#runTests` over the terminal
+- To run tests, prefer using the `#runTests` tool over the terminal
   - If that does not work, use the command line:
     ```bash
     pnpm nx test <project-name> | filter file-or-test-name
@@ -37,12 +37,39 @@ applyTo: 'projects/**/*.{spec,test}.{ts,tsx,js,jsx}'
 - Use `beforeEach` and `afterEach` hooks to set up and clean up test environments.
 - Leverage `test.concurrent` for running independent tests in parallel to speed up execution.
 
-### Test Coverage
+## Test Coverage
 
 - Ensure all new features have corresponding tests.
-- Maintain high code coverage with **Vitest**.
+- Maintain high code coverage with **Vitest 4+**.
 - Enable code coverage with `--coverage` to ensure all critical paths are tested.
+- **Coverage Configuration (Vitest 4):**
+  - `coverage.all` and `coverage.extensions` are removed in Vitest 4
+  - Define `coverage.include` explicitly to specify which files to cover
+  - Use `coverage.exclude` for patterns to exclude from coverage
+  - If `coverage.include` is not set, only files loaded during test run are included
+  - V8 coverage provider now uses AST-based remapping for more accurate results
+  - `coverage.ignoreEmptyLines` is removed (lines without runtime code are automatically excluded)
+  - `coverage.ignoreClassMethods` is now supported by V8 provider
 - Assert error paths and loading states, not just happy paths.
+
+**Example coverage configuration:**
+
+```typescript
+export default defineConfig({
+  test: {
+    coverage: {
+      // Include covered and uncovered files matching this pattern
+      include: ['packages/**/src/**/*.{js,jsx,ts,tsx}'],
+
+      // Exclude patterns (no need for node_modules or config files)
+      exclude: ['**/test-setup.ts', '**/*.spec.ts'],
+
+      // Provider-specific options
+      provider: 'v8', // or 'istanbul'
+    },
+  },
+});
+```
 
 ### Pragmatic Testing Strategy
 
@@ -69,17 +96,76 @@ applyTo: 'projects/**/*.{spec,test}.{ts,tsx,js,jsx}'
 - Provide light-weight helpers such as `configure` or `getState` so assertions focus on observable outcomes, not interaction trivia.
 - Reuse the same fake across suites—export it once rather than recreating ad-hoc stubs in each spec file.
 
+### Mocking Improvements (Vitest 4)
+
+**Constructor Support:**
+
+Vitest 4 properly supports spying on constructors with `vi.spyOn` and `vi.fn`:
+
+```typescript
+const cart = {
+  Apples: class Apples {
+    getApples() {
+      return 42;
+    }
+  },
+};
+
+const Spy = vi
+  .spyOn(cart, 'Apples')
+  // Use function keyword or class keyword for constructor mocks
+  .mockImplementation(function () {
+    this.getApples = () => 0;
+  })
+  // OR use class syntax
+  .mockImplementation(
+    class MockApples {
+      getApples() {
+        return 0;
+      }
+    },
+  );
+
+const mock = new Spy();
+```
+
+**Note:** Arrow functions will throw `[<anonymous> is not a constructor]` error when used with constructors.
+
+**Mocking Behavior Changes:**
+
+- `vi.fn().getMockName()` now returns `vi.fn()` by default instead of `spy`
+- `vi.restoreAllMocks` no longer resets the state of spies, only restores spies created manually with `vi.spyOn`
+- Calling `vi.spyOn` on a mock now returns the same mock
+- Automocked instance methods are properly isolated but share state with the prototype
+- Automocked methods cannot be restored with `.mockRestore()` (automocked modules with `spy: true` still work)
+- Automocked getters no longer call the original getter (return `undefined` by default)
+- `vi.fn(implementation).mockReset()` now correctly returns the mock implementation in `.getMockImplementation()`
+- `vi.fn().mock.invocationCallOrder` now starts with `1` (like Jest) instead of `0`
+
 ## Component Testing (Vitest Browser + Angular Testing Library)
 
 - Use Vitest Browser UI for all component tests whenever possible.
+- **Browser Mode is stable in Vitest 4** (no longer experimental).
 - Always use `render()` from Angular Testing Library.
 - Use role-based queries (`getByRole`, `findByRole`, etc.) for DOM assertions.
-- For user interactions, prefer `userEvent` from `@vitest/browser/context` over `@testing-library/user-event`.
+- For user interactions, prefer `userEvent` from `vitest/browser` over `@testing-library/user-event`.
+- **Vitest 4 Browser Provider:** Import browser providers from dedicated packages:
+  - `import { playwright } from '@vitest/browser-playwright'`
+  - `import { webdriverio } from '@vitest/browser-webdriverio'`
+  - `import { preview } from '@vitest/browser-preview'`
+  - The `@vitest/browser` package is no longer needed and can be removed
+- **Context imports updated:** Use `vitest/browser` instead of `@vitest/browser/context`:
+  - `import { page, userEvent } from 'vitest/browser'` (new)
+  - `import { page } from '@vitest/browser/context'` (deprecated, will be removed in future release)
 - Prefer fakes for service dependencies; use Angular's DI to provide them.
 - Always test user-facing behavior, not implementation details.
 - For async operations, always `await TestBed.inject(ApplicationRef).whenStable()` after triggering effects/signals.
 - When creating a Test Component, use Template Driven Forms.
 - Run tests in headless mode for CI pipelines and Browser UI for debugging.
+- **Debugging improvements in Vitest 4:**
+  - Use `--inspect` flag to connect to Chrome DevTools manually (playwright/webdriverio)
+  - VS Code extension supports "Debug Test" button for browser tests
+  - Vitest automatically disables `trackUnhandledErrors` option when debugging
 
 ### Choosing Between Bindings API and componentProperties
 
@@ -263,8 +349,103 @@ await render(
   - Component classes → Use `bindings: [inputBinding(), outputBinding(), twoWayBinding()]`
   - Template strings → Use `componentProperties: { ... }`
   - **Note**: `componentProperties` is NOT deprecated for template-based rendering
+- **New Vitest 4 Matchers:**
+  - `expect.assert()` - Narrowing type assertions (alternative to Chai's assert)
+  - `expect.schemaMatching()` - Validate against Standard Schema v1 (Zod, Valibot, ArkType)
+  - `expect.element().toBeInViewport()` - Check if element is in viewport (Browser Mode)
+  - `expect.element().toMatchScreenshot()` - Visual regression testing (Browser Mode)
 
 ## Testing Strategies & Tips
+
+### Visual Regression Testing (Vitest 4+)
+
+Vitest 4 adds support for visual regression testing in Browser Mode:
+
+```typescript
+import { expect, test } from 'vitest';
+import { page } from 'vitest/browser';
+
+test('hero section looks correct', async () => {
+  // Capture and compare screenshot
+  await expect(page.getByTestId('hero')).toMatchScreenshot('hero-section');
+});
+
+test('element is in viewport', async () => {
+  // Check if element is visible in viewport
+  await expect.element(page.getByText('Welcome')).toBeInViewport();
+
+  // Check if 50% of element is in viewport
+  await expect.element(page.getByText('To')).toBeInViewport({ ratio: 0.5 });
+});
+```
+
+**Playwright Traces Support:**
+
+Enable tracing with `--browser.trace=on` or in config:
+
+```typescript
+export default defineConfig({
+  test: {
+    browser: {
+      trace: 'on-first-retry', // 'off', 'on', 'on-all-retries', 'retain-on-failure'
+    },
+  },
+});
+```
+
+Traces are available in HTML reporter and can be opened with Playwright Trace Viewer.
+
+### Schema Validation in Tests
+
+Use `expect.schemaMatching()` for validating against Standard Schema v1 libraries:
+
+```typescript
+import { expect, test } from 'vitest';
+import { z } from 'zod';
+import * as v from 'valibot';
+import { type } from 'arktype';
+
+test('email validation', () => {
+  const user = { email: 'john@example.com' };
+
+  // Using Zod
+  expect(user).toEqual({
+    email: expect.schemaMatching(z.string().email()),
+  });
+
+  // Using Valibot
+  expect(user).toEqual({
+    email: expect.schemaMatching(v.pipe(v.string(), v.email())),
+  });
+
+  // Using ArkType
+  expect(user).toEqual({
+    email: expect.schemaMatching(type('string.email')),
+  });
+});
+```
+
+### Type Narrowing with expect.assert()
+
+Use `expect.assert()` for type narrowing in tests:
+
+```typescript
+interface Cat {
+  __type: 'Cat';
+  mew(): void;
+}
+interface Dog {
+  __type: 'Dog';
+  bark(): void;
+}
+type Animal = Cat | Dog;
+
+const animal: Animal = { __type: 'Dog', bark: () => {} };
+
+expect.assert(animal.__type === 'Dog');
+// TypeScript now knows animal is Dog type
+expect(animal.bark()).toBeUndefined();
+```
 
 ### Quick Decision Matrix - Rendering Approach
 

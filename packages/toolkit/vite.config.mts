@@ -1,8 +1,9 @@
 /// <reference types='vitest' />
-import { defineConfig } from 'vite';
 import angular from '@analogjs/vite-plugin-angular';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { playwright } from '@vitest/browser-playwright';
+import { defineConfig } from 'vite';
 
 export default defineConfig(({ mode }) => ({
   root: __dirname,
@@ -28,9 +29,16 @@ export default defineConfig(({ mode }) => ({
     },
     browser: {
       enabled: true,
-      name: 'chromium',
-      provider: 'playwright',
-      headless: true,
+      provider: playwright({
+        launchOptions: {
+          headless: true,
+        },
+      }),
+      instances: [
+        {
+          browser: 'chromium',
+        },
+      ],
       // Hide Vite's error overlay element in Vitest Browser runner to avoid click interception
       scripts: [
         {
@@ -71,20 +79,9 @@ export default defineConfig(({ mode }) => ({
      * @see https://cookbook.marmicode.io/angular/testing/why-vitest#vitest-isolation-modes
      */
     isolate: false,
-    poolOptions: {
-      threads: {
-        // Disable isolation for thread pool (browser mode doesn't use this, but good to be explicit)
-        isolate: false,
-      },
-      forks: {
-        // Disable isolation for fork pool (if ever used)
-        isolate: false,
-      },
-    },
     // Optimize for CI performance
     maxConcurrency: process.env['CI'] ? 1 : 5,
-    minThreads: process.env['CI'] ? 1 : undefined,
-    maxThreads: process.env['CI'] ? 2 : undefined,
+    maxWorkers: process.env['CI'] ? 2 : undefined,
   },
   define: {
     'import.meta.vitest': mode !== 'production',

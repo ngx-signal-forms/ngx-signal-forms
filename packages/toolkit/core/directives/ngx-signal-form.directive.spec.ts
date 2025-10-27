@@ -1,8 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { Field, form, required, schema, submit } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
-import { userEvent } from '@vitest/browser/context';
 import { describe, expect, it, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type { ErrorDisplayStrategy, NgxSignalFormsConfig } from '../types';
 import { NgxSignalFormDirective } from './ngx-signal-form.directive';
