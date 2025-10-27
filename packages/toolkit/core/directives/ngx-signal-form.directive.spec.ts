@@ -1,8 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { Field, form, required, schema, submit } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { userEvent } from 'vitest/browser';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type { ErrorDisplayStrategy, NgxSignalFormsConfig } from '../types';
 import { NgxSignalFormDirective } from './ngx-signal-form.directive';
@@ -230,9 +230,10 @@ describe('ngxSignalFormDirective', () => {
         'unsubmitted',
       );
 
+      const user = userEvent.setup();
       // User submits the form
       const submitButton = screen.getByRole('button', { name: /submit/i });
-      await userEvent.click(submitButton);
+      await user.click(submitButton);
 
       // After completion, should show submitted
       await vi.waitFor(
@@ -277,9 +278,10 @@ describe('ngxSignalFormDirective', () => {
 
       await render(TestComponent);
 
+      const user = userEvent.setup();
       // Submit form
       const submitButton = screen.getByRole('button', { name: /submit/i });
-      await userEvent.click(submitButton);
+      await user.click(submitButton);
 
       await vi.waitFor(() => {
         expect(screen.getByTestId('submitted-status')).toHaveTextContent(
@@ -289,7 +291,7 @@ describe('ngxSignalFormDirective', () => {
 
       // Reset form
       const resetButton = screen.getByRole('button', { name: /reset/i });
-      await userEvent.click(resetButton);
+      await user.click(resetButton);
 
       await vi.waitFor(() => {
         expect(screen.getByTestId('submitted-status')).toHaveTextContent(
@@ -325,9 +327,10 @@ describe('ngxSignalFormDirective', () => {
 
         await render(TestComponent);
 
+        const user = userEvent.setup();
         // Simulate valid form submission
         const submitButton = screen.getByRole('button', { name: /submit/i });
-        await userEvent.click(submitButton);
+        await user.click(submitButton);
 
         // Verify submission lifecycle completes
         await vi.waitFor(
@@ -371,6 +374,7 @@ describe('ngxSignalFormDirective', () => {
 
         await render(TestComponent);
 
+        const user = userEvent.setup();
         // Initial state
         expect(screen.getByTestId('submitted-status')).toHaveTextContent(
           'unsubmitted',
@@ -378,7 +382,7 @@ describe('ngxSignalFormDirective', () => {
 
         // User clicks submit on invalid form
         const submitButton = screen.getByRole('button', { name: /submit/i });
-        await userEvent.click(submitButton);
+        await user.click(submitButton);
 
         // submitAttempted flag should set status to 'submitted' even though
         // submitting() never became true (because form is invalid)
@@ -417,10 +421,11 @@ describe('ngxSignalFormDirective', () => {
 
         await render(TestComponent);
 
+        const user = userEvent.setup();
         const submitButton = screen.getByRole('button', { name: /submit/i });
 
         // First invalid submit attempt
-        await userEvent.click(submitButton);
+        await user.click(submitButton);
         await vi.waitFor(() => {
           expect(screen.getByTestId('submitted-status')).toHaveTextContent(
             'submitted',
@@ -428,7 +433,7 @@ describe('ngxSignalFormDirective', () => {
         });
 
         // Second invalid submit attempt
-        await userEvent.click(submitButton);
+        await user.click(submitButton);
         await vi.waitFor(() => {
           expect(screen.getByTestId('submitted-status')).toHaveTextContent(
             'submitted',
@@ -475,11 +480,12 @@ describe('ngxSignalFormDirective', () => {
 
         await render(TestComponent);
 
+        const user = userEvent.setup();
         const submitButton = screen.getByRole('button', { name: /submit/i });
         const resetButton = screen.getByRole('button', { name: /reset/i });
 
         // Submit invalid form
-        await userEvent.click(submitButton);
+        await user.click(submitButton);
         await vi.waitFor(() => {
           expect(screen.getByTestId('submitted-status')).toHaveTextContent(
             'submitted',
@@ -487,7 +493,7 @@ describe('ngxSignalFormDirective', () => {
         });
 
         // Reset form
-        await userEvent.click(resetButton);
+        await user.click(resetButton);
         await vi.waitFor(() => {
           expect(screen.getByTestId('submitted-status')).toHaveTextContent(
             'unsubmitted',
@@ -495,7 +501,7 @@ describe('ngxSignalFormDirective', () => {
         });
 
         // Verify state is truly reset by submitting again
-        await userEvent.click(submitButton);
+        await user.click(submitButton);
         await vi.waitFor(() => {
           expect(screen.getByTestId('submitted-status')).toHaveTextContent(
             'submitted',

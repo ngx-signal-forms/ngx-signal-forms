@@ -36,6 +36,7 @@ export default defineConfig(({ mode }) => ({
       }),
       instances: [
         {
+          name: 'toolkit-chrome',
           browser: 'chromium',
         },
       ],
@@ -80,7 +81,7 @@ export default defineConfig(({ mode }) => ({
      */
     isolate: false,
     // Optimize for CI performance
-    maxConcurrency: process.env['CI'] ? 1 : 5,
+    maxConcurrency: process.env['CI'] ? 2 : 5,
     maxWorkers: process.env['CI'] ? 2 : undefined,
   },
   define: {

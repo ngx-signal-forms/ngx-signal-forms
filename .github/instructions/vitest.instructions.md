@@ -148,20 +148,24 @@ const mock = new Spy();
 - **Browser Mode is stable in Vitest 4** (no longer experimental).
 - Always use `render()` from Angular Testing Library.
 - Use role-based queries (`getByRole`, `findByRole`, etc.) for DOM assertions.
-- For user interactions, prefer `userEvent` from `vitest/browser` over `@testing-library/user-event`.
+- **For user interactions, ALWAYS use `userEvent` from `@testing-library/user-event`** (NOT `fireEvent`).
+  - `userEvent` simulates realistic user interactions with all necessary event sequences
+  - `fireEvent` only dispatches raw DOM events and misses browser behavior
+  - Never use `fireEvent` - it bypasses important accessibility and interactability checks
 - **Vitest 4 Browser Provider:** Import browser providers from dedicated packages:
   - `import { playwright } from '@vitest/browser-playwright'`
   - `import { webdriverio } from '@vitest/browser-webdriverio'`
   - `import { preview } from '@vitest/browser-preview'`
   - The `@vitest/browser` package is no longer needed and can be removed
 - **Context imports updated:** Use `vitest/browser` instead of `@vitest/browser/context`:
-  - `import { page, userEvent } from 'vitest/browser'` (new)
+  - `import { page } from 'vitest/browser'` (new)
   - `import { page } from '@vitest/browser/context'` (deprecated, will be removed in future release)
 - Prefer fakes for service dependencies; use Angular's DI to provide them.
 - Always test user-facing behavior, not implementation details.
 - For async operations, always `await TestBed.inject(ApplicationRef).whenStable()` after triggering effects/signals.
 - When creating a Test Component, use Template Driven Forms.
 - Run tests in headless mode for CI pipelines and Browser UI for debugging.
+- **Always use `userEvent` from `@testing-library/user-event`, NEVER `fireEvent`** - see "User Interactions with userEvent" section below.
 - **Debugging improvements in Vitest 4:**
   - Use `--inspect` flag to connect to Chrome DevTools manually (playwright/webdriverio)
   - VS Code extension supports "Debug Test" button for browser tests
@@ -354,6 +358,74 @@ await render(
   - `expect.schemaMatching()` - Validate against Standard Schema v1 (Zod, Valibot, ArkType)
   - `expect.element().toBeInViewport()` - Check if element is in viewport (Browser Mode)
   - `expect.element().toMatchScreenshot()` - Visual regression testing (Browser Mode)
+
+### User Interactions with userEvent
+
+**ALWAYS use `userEvent` from `@testing-library/user-event` - NEVER use `fireEvent`**
+
+`userEvent` simulates realistic user interactions with proper event sequences and accessibility checks, while `fireEvent` only dispatches raw DOM events and misses browser behavior.
+
+**Setup pattern:**
+
+```typescript
+import { render, screen } from '@angular/core/testing';
+import { userEvent } from '@testing-library/user-event';
+
+test('user can type and submit', async () => {
+  const user = userEvent.setup(); // ✅ Setup user instance
+  await render(MyComponent);
+
+  // Use user instance for all interactions
+  const input = screen.getByRole('textbox', { name: /email/i });
+  await user.type(input, 'test@example.com'); // ✅ Correct
+  await user.click(screen.getByRole('button', { name: /submit/i }));
+
+  // ❌ WRONG - Never use fireEvent
+  // fireEvent.click(button);
+  // fireEvent.change(input, { target: { value: 'test' } });
+});
+```
+
+**Common userEvent methods (all use async/await):**
+
+```typescript
+const user = userEvent.setup();
+
+// Text input
+await user.type(element, 'text to type');
+await user.clear(element); // Clear text field
+
+// Clicking
+await user.click(element);
+await user.dblClick(element);
+
+// Keyboard
+await user.keyboard('{Enter}'); // Type Enter key
+await user.keyboard('{Control>}a{/Control}'); // Ctrl+A
+
+// Selection
+await user.selectOptions(selectElement, 'option value');
+await user.deselectOptions(selectElement, 'option value');
+
+// Hovering
+await user.hover(element);
+await user.unhover(element);
+
+// File upload
+await user.upload(inputElement, file);
+
+// Tab navigation
+await user.tab(); // Tab to next element
+await user.tab({ shift: true }); // Shift+Tab to previous
+```
+
+**Why NOT to use `fireEvent`:**
+
+- ❌ Doesn't trigger all necessary event sequences
+- ❌ Skips accessibility checks (allows clicking disabled elements, etc.)
+- ❌ Doesn't simulate realistic browser behavior
+- ❌ May miss bugs that users would catch
+- ✅ `userEvent` does all of the above
 
 ## Testing Strategies & Tips
 

@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import type { SubmittedStatus } from '@angular/forms/signals';
 import { email, Field, form, required, schema } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
+import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { userEvent } from 'vitest/browser';
 import { NgxSignalFormErrorComponent } from './form-error.component';
 
 describe('NgxSignalFormErrorComponent', () => {
@@ -138,12 +138,13 @@ describe('NgxSignalFormErrorComponent', () => {
         readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
       }
 
+      const user = userEvent.setup();
       await render(TestComponent);
 
       // Trigger touch
       const input = screen.getByRole('textbox');
-      await userEvent.click(input);
-      await userEvent.tab();
+      await user.click(input);
+      await user.tab();
 
       const alert = screen.queryByRole('alert');
       expect(alert).toBeFalsy();
@@ -285,10 +286,11 @@ describe('NgxSignalFormErrorComponent', () => {
 
       const { fixture } = await render(TestComponent);
 
+      const user = userEvent.setup();
       // Touch the field
       const input = screen.getByRole('textbox');
-      await userEvent.click(input);
-      await userEvent.tab();
+      await user.click(input);
+      await user.tab();
 
       // No error yet (on-submit strategy)
       let alert = screen.queryByRole('alert');
@@ -330,10 +332,11 @@ describe('NgxSignalFormErrorComponent', () => {
 
       await render(TestComponent);
 
+      const user = userEvent.setup();
       // Touch the field
       const input = screen.getByRole('textbox');
-      await userEvent.click(input);
-      await userEvent.tab();
+      await user.click(input);
+      await user.tab();
 
       const alert = screen.queryByRole('alert');
       expect(alert).toBeFalsy();
@@ -643,10 +646,11 @@ describe('NgxSignalFormErrorComponent', () => {
 
       await render(TestComponent);
 
+      const user = userEvent.setup();
       // Touch the field
       const input = screen.getByRole('textbox');
-      await userEvent.click(input);
-      await userEvent.tab();
+      await user.click(input);
+      await user.tab();
 
       const alert = screen.queryByRole('alert');
       expect(alert).toBeFalsy();
@@ -675,10 +679,11 @@ describe('NgxSignalFormErrorComponent', () => {
 
       await render(TestComponent);
 
+      const user = userEvent.setup();
       // Touch the field
       const input = screen.getByRole('textbox');
-      await userEvent.click(input);
-      await userEvent.tab();
+      await user.click(input);
+      await user.tab();
 
       const alert = screen.queryByRole('alert');
       expect(alert).toBeFalsy();

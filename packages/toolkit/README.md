@@ -92,7 +92,42 @@ export class MyComponent {
 >
 > Pattern B shown above is convenient when you need additional logic around submission. Use Pattern A for simpler cases.
 
-> **Note:** The `[ngxSignalForm]` directive automatically adds `novalidate` attribute to prevent browser validation UI from conflicting with Angular validation display.
+### ⚠️ Critical: The `novalidate` Attribute
+
+Signal Forms do **NOT** automatically disable HTML5 form validation like Angular's Reactive Forms do. However, the `[ngxSignalForm]` directive automatically adds the `novalidate` attribute to prevent conflicts.
+
+**What happens without `novalidate`:**
+
+1. User types invalid input (e.g., bad email format)
+2. Browser's HTML5 validation bubble appears
+3. User blurs the field → toolkit's validation error also appears
+4. User sees **BOTH** error messages (confusing!)
+5. Your carefully designed error UX is undermined
+
+**When is `novalidate` automatic?**
+
+✅ **With the directive** (automatic):
+```html
+<form [ngxSignalForm]="userForm" (ngSubmit)="handleSubmit()">
+  <!-- novalidate is automatically added -->
+</form>
+```
+
+⚠️ **Without the directive** (you must add it manually):
+```html
+<form (ngSubmit)="handleSubmit()" novalidate>
+  <!-- You must add novalidate manually -->
+</form>
+```
+
+❌ **Missing `novalidate`** (browser validation conflicts):
+```html
+<form (ngSubmit)="handleSubmit()">
+  <!-- Browser validation bubbles WILL appear alongside toolkit errors -->
+</form>
+```
+
+**Best Practice:** Always use `[ngxSignalForm]` directive for automatic `novalidate` handling.
 
 ### Alternative: Individual Imports
 
@@ -216,6 +251,101 @@ import {
 </ngx-signal-form-field>
 ```
 
+### Validator Attributes & HTML5 Truncation
+
+⚠️ **Important:** Some Signal Forms validators add HTML attributes that can affect input behavior, particularly with text truncation.
+
+#### The Silent Truncation Issue with `maxLength()`
+
+When you use `maxLength()` validator, it adds an HTML `maxlength` attribute:
+
+```typescript
+maxLength(path.bio, 500);
+// Generates: <textarea maxlength="500"></textarea>
+```
+
+**Problem:** HTML5 truncates input silently when users paste:
+
+1. User tries to paste 1000 character text
+2. Browser silently truncates at 500 chars
+3. **No error message shown** (form is valid!)
+4. User thinks their full text was accepted
+5. Surprise: Their data is incomplete!
+
+#### Solutions
+
+**Option 1: Use Character Count Component (Recommended)** ✅
+
+```typescript
+// Keep the validator for validation logic
+maxLength(path.bio, 500);
+```
+
+```html
+<!-- Add character count to show user the limit -->
+<ngx-signal-form-field [field]="form.bio">
+  <label for="bio">Bio</label>
+  <textarea id="bio" [field]="form.bio"></textarea>
+
+  <!-- User sees remaining count, preventing paste surprises -->
+  <ngx-signal-form-field-character-count
+    [field]="form.bio"
+    [maxLength]="500"
+  />
+</ngx-signal-form-field>
+```
+
+**Benefits:**
+- User sees remaining character count
+- Progressive color change (ok → warning → danger)
+- Paste behavior is visible and expected
+- Accessible with ARIA attributes
+
+**Option 2: Skip `maxLength()`, Validate in Code Only**
+
+```typescript
+// Don't use maxLength validator - no HTML attribute
+validate(path.bio, (ctx) => {
+  if (ctx.value() && ctx.value().length > 500) {
+    return customError({
+      kind: 'too_long',
+      message: 'Maximum 500 characters allowed'
+    });
+  }
+  return null;
+});
+```
+
+```html
+<!-- No maxlength attribute = no silent truncation -->
+<textarea id="bio" [field]="form.bio"></textarea>
+```
+
+**Benefits:**
+- No silent truncation
+- Clear error message when limit exceeded
+- More control over validation logic
+
+**Option 3: Skip Validator Entirely**
+
+```html
+<!-- No validation at all - user can enter any amount -->
+<textarea id="bio" [field]="form.bio"></textarea>
+```
+
+⚠️ **Not recommended** - Better to use Option 1 or 2
+
+#### Other Validators with HTML Attributes
+
+| Validator | HTML Attribute | Effect | Risk |
+|-----------|---|---|---|
+| `maxLength()` | `maxlength="n"` | Text truncates at n chars | ⚠️ Silent truncation on paste |
+| `min()` | `min="n"` | Number input won't accept < n | ✅ Clear validation |
+| `max()` | `max="n"` | Number input won't accept > n | ✅ Clear validation |
+| `pattern()` | `pattern="regex"` | HTML5 validation only | ✅ Clear validation |
+
+**Recommendation:** Use the character count component with `maxLength()` for the best UX.
+
 ### Complete Documentation
 
 For detailed API reference, CSS custom properties, browser support, migration guides, and complete examples:
@@ -265,6 +395,57 @@ protected async handleSubmit(): Promise<void> {
 ```
 
 > **Note:** Angular Signal Forms' `submit()` is an async function. Always use `(ngSubmit)="handleSubmit()"` WITH parentheses.
+
+### Form Reset Behavior
+
+**⚠️ Important:** Angular Signal Forms' `reset()` method resets **control states only**, not data values. This is a common source of confusion.
+
+**What `reset()` actually does:**
+- Sets `touched()` → `false`
+- Sets `dirty()` → `false`
+- Sets `submittedStatus()` → `'unsubmitted'`
+- **Does NOT change data values** ❌
+
+**To fully reset a form, you must reset BOTH:**
+
+```typescript
+// ❌ Incomplete - Only resets form states
+this.userForm().reset();
+// Form says it's "clean" but still shows old data!
+
+// ✅ Complete - Reset states AND data
+this.userForm().reset();
+this.#model.set({ email: '', password: '' });
+// Now form is truly reset
+```
+
+**Example with submission:**
+
+```typescript
+protected async handleSubmit(): Promise<void> {
+  await submit(this.userForm, async (formData) => {
+    try {
+      await this.apiService.saveUser(formData().value());
+
+      // ✅ Reset BOTH form states and data after successful submission
+      formData().reset();
+      this.#model.set(this.createInitialModel());
+
+      return null; // Success
+    } catch (error) {
+      return [{ kind: 'save_error', message: 'Failed to save' }];
+    }
+  });
+}
+```
+
+**Why Signal Forms work this way:**
+
+Signal Forms separate data (your signal) from form state (control states). This design:
+- ✅ Gives you control over when data changes
+- ✅ Prevents accidental data loss
+- ✅ Allows keeping data while resetting form state if needed
+- ⚠️ Requires explicit data reset after form reset
 
 #### NgxSignalFormAutoAriaDirective
 

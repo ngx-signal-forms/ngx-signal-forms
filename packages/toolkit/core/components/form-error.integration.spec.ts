@@ -14,32 +14,24 @@ describe('NgxSignalFormErrorComponent (integration)', () => {
     // Define a test component to ensure DI context for Signal Forms
     @Component({
       selector: 'test-form-error',
-      imports: [
-        Field,
-        NgxSignalFormDirective,
-        NgxSignalFormErrorComponent,
-      ],
+      imports: [Field, NgxSignalFormDirective, NgxSignalFormErrorComponent],
       template: `
-        template: `
-          <form
-            [ngxSignalForm]="contactForm"
-            [errorStrategy]="errorStrategy"
-          >
-            <input id="email" [field]="contactForm.email" />
-            <ngx-signal-form-error
-              [field]="contactForm.email"
-              fieldName="email"
-            />
-          </form>
-        `,
+        <form [ngxSignalForm]="contactForm" [errorStrategy]="errorStrategy">
+          <input id="email" [field]="contactForm.email" />
+          <ngx-signal-form-error
+            [field]="contactForm.email"
+            fieldName="email"
+          />
+        </form>
       `,
     })
     class TestFormErrorComponent {
-      readonly model = signal({ name: '' });
+      readonly model = signal({ email: '' });
+      readonly errorStrategy = 'on-touch';
       readonly contactForm = form(
         this.model,
         schema((path) => {
-          required(path.name, { message: 'Name is required' });
+          required(path.email, { message: 'Email is required' });
         }),
       );
     }
