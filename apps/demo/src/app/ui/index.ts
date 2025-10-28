@@ -1,3 +1,9 @@
+export {
+  BadgeComponent,
+  BadgeIconDirective,
+  type BadgeAppearance,
+  type BadgeVariant,
+} from './badge';
 export { CardComponent } from './card';
 export { ErrorDisplayModeSelectorComponent } from './error-display-mode-selector';
 export { ExampleCardsComponent } from './example-cards';

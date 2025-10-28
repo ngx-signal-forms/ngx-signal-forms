@@ -36,61 +36,37 @@
       <!-- Status Badge -->
       <div>
         @if (valid() && !pending()) {
-          <span
-            class="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300"
-          >
-            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
+          <ngx-badge variant="solid" appearance="success">
+            <svg ngxBadgeIcon fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+              <circle cx="8" cy="8" r="5.5" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5.5 8l1.5 1.5 3.5-3.5" />
             </svg>
             Valid
-          </span>
+          </ngx-badge>
         } @else if (pending()) {
-          <span
-            class="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
-          >
-            <svg
-              class="h-3 w-3 animate-spin"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                clip-rule="evenodd"
-              ></path>
+          <ngx-badge variant="solid" appearance="warning">
+            <svg ngxBadgeIcon class="animate-spin" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+              <path stroke-linecap="round" d="M8 2v2M8 12v2M14 8h-2M4 8H2M12.5 3.5l-1.4 1.4M4.9 10.1l-1.4 1.4M12.5 12.5l-1.4-1.4M4.9 5.9L3.5 4.5" />
             </svg>
             Validating
-          </span>
+          </ngx-badge>
         } @else if (invalid()) {
-          <span
-            class="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-300"
-          >
-            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clip-rule="evenodd"
-              ></path>
+          <ngx-badge variant="solid" appearance="danger">
+            <svg ngxBadgeIcon fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+              <circle cx="8" cy="8" r="5.5" />
+              <path stroke-linecap="round" d="M5.5 5.5l5 5M10.5 5.5l-5 5" />
             </svg>
             Invalid
-          </span>
+          </ngx-badge>
         } @else {
-          <span
-            class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400"
-          >
-            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                clip-rule="evenodd"
-              ></path>
+          <ngx-badge variant="solid" appearance="neutral">
+            <svg ngxBadgeIcon fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+              <circle cx="8" cy="8" r="5.5" />
+              <circle cx="8" cy="6" r="0.5" fill="currentColor" />
+              <path stroke-linecap="round" d="M8 8.5v3" />
             </svg>
             Idle
-          </span>
+          </ngx-badge>
         }
       </div>
     </div>
@@ -101,58 +77,65 @@
     class="border-b border-gray-200 bg-white px-6 py-3 dark:border-gray-700 dark:bg-gray-800"
   >
     <div class="flex flex-wrap gap-2">
-      <span
-        class="inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium"
-        [class.bg-green-100]="valid()"
-        [class.text-green-800]="valid()"
-        [class.border-green-300]="valid()"
-        [class.bg-red-100]="!valid()"
-        [class.text-red-800]="!valid()"
-        [class.border-red-300]="!valid()"
+      <ngx-badge variant="outline" [appearance]="valid() ? 'success' : 'danger'">
+        @if (valid()) {
+          <svg ngxBadgeIcon fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+            <circle cx="8" cy="8" r="5.5" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5.5 8l1.5 1.5 3.5-3.5" />
+          </svg>
+        } @else {
+          <svg ngxBadgeIcon fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+            <circle cx="8" cy="8" r="5.5" />
+            <path stroke-linecap="round" d="M5.5 5.5l5 5M10.5 5.5l-5 5" />
+          </svg>
+        }
+        Valid
+      </ngx-badge>
+      <ngx-badge variant="outline" [appearance]="invalid() ? 'danger' : 'neutral'">
+        @if (invalid()) {
+          <svg ngxBadgeIcon fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+            <circle cx="8" cy="8" r="5.5" />
+            <path stroke-linecap="round" d="M5.5 5.5l5 5M10.5 5.5l-5 5" />
+          </svg>
+        }
+        Invalid
+      </ngx-badge>
+      <ngx-badge variant="outline" [appearance]="dirty() ? 'warning' : 'neutral'">
+        @if (dirty()) {
+          <svg ngxBadgeIcon fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 3 3-7 7-3-3zm0 0l-2 2m13-13l-3 3" />
+          </svg>
+        }
+        Dirty
+      </ngx-badge>
+      <ngx-badge variant="outline" appearance="info">
+        @if (pending()) {
+          <svg ngxBadgeIcon class="animate-spin" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+            <path stroke-linecap="round" d="M8 2v2M8 12v2M14 8h-2M4 8H2M12.5 3.5l-1.4 1.4M4.9 10.1l-1.4 1.4M12.5 12.5l-1.4-1.4M4.9 5.9L3.5 4.5" />
+          </svg>
+        }
+        Pending
+      </ngx-badge>
+      <ngx-badge
+        variant="outline"
+        [appearance]="
+          submittedStatus() === 'submitting' ? 'info' :
+          submittedStatus() === 'submitted' ? 'success' :
+          'neutral'
+        "
       >
-        Valid: {{ valid() ? '✅' : '❌' }}
-      </span>
-      <span
-        class="inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium"
-        [class.bg-red-100]="invalid()"
-        [class.text-red-800]="invalid()"
-        [class.border-red-300]="invalid()"
-        [class.bg-gray-100]="!invalid()"
-        [class.text-gray-600]="!invalid()"
-        [class.border-gray-300]="!invalid()"
-      >
-        Invalid: {{ invalid() ? '❌' : '—' }}
-      </span>
-      <span
-        class="inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium"
-        [class.bg-amber-100]="dirty()"
-        [class.text-amber-800]="dirty()"
-        [class.border-amber-300]="dirty()"
-        [class.bg-gray-100]="!dirty()"
-        [class.text-gray-600]="!dirty()"
-        [class.border-gray-300]="!dirty()"
-      >
-        Dirty: {{ dirty() ? '📝' : '—' }}
-      </span>
-      <span
-        class="inline-flex items-center rounded-full border border-blue-300 bg-blue-50 px-3 py-1 text-sm font-medium text-blue-800 dark:border-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-      >
-        Pending: {{ pending() ? '⏳' : '—' }}
-      </span>
-      <span
-        class="inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium"
-        [class.bg-purple-100]="submittedStatus() === 'submitting'"
-        [class.text-purple-800]="submittedStatus() === 'submitting'"
-        [class.border-purple-300]="submittedStatus() === 'submitting'"
-        [class.bg-green-100]="submittedStatus() === 'submitted'"
-        [class.text-green-800]="submittedStatus() === 'submitted'"
-        [class.border-green-300]="submittedStatus() === 'submitted'"
-        [class.bg-gray-100]="submittedStatus() === 'unsubmitted'"
-        [class.text-gray-600]="submittedStatus() === 'unsubmitted'"
-        [class.border-gray-300]="submittedStatus() === 'unsubmitted'"
-      >
+        @if (submittedStatus() === 'submitting') {
+          <svg ngxBadgeIcon class="animate-spin" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+            <path stroke-linecap="round" d="M8 2v2M8 12v2M14 8h-2M4 8H2M12.5 3.5l-1.4 1.4M4.9 10.1l-1.4 1.4M12.5 12.5l-1.4-1.4M4.9 5.9L3.5 4.5" />
+          </svg>
+        } @else if (submittedStatus() === 'submitted') {
+          <svg ngxBadgeIcon fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+            <circle cx="8" cy="8" r="5.5" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5.5 8l1.5 1.5 3.5-3.5" />
+          </svg>
+        }
         Status: {{ submittedStatusDisplay() }}
-      </span>
+      </ngx-badge>
     </div>
   </div>
 
@@ -207,19 +190,12 @@
           >
             Error Display Strategy:
           </span>
-          <span
-            class="rounded-full px-2 py-0.5 text-xs font-medium uppercase"
-            [class.bg-green-200]="errorVisibilityInfo().errorsVisible"
-            [class.text-green-900]="errorVisibilityInfo().errorsVisible"
-            [class.dark:bg-green-800]="errorVisibilityInfo().errorsVisible"
-            [class.dark:text-green-100]="errorVisibilityInfo().errorsVisible"
-            [class.bg-amber-200]="!errorVisibilityInfo().errorsVisible"
-            [class.text-amber-900]="!errorVisibilityInfo().errorsVisible"
-            [class.dark:bg-amber-800]="!errorVisibilityInfo().errorsVisible"
-            [class.dark:text-amber-100]="!errorVisibilityInfo().errorsVisible"
+          <ngx-badge
+            variant="solid"
+            [appearance]="errorVisibilityInfo().errorsVisible ? 'success' : 'warning'"
           >
             {{ errorVisibilityInfo().strategy }}
-          </span>
+          </ngx-badge>
         </div>
         <p
           class="mt-1 text-sm"
@@ -317,11 +293,9 @@
         </svg>
         <span>Validation Errors</span>
         @if (blockingErrorCount() > 0) {
-          <span
-            class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-300"
-          >
+          <ngx-badge variant="solid" appearance="danger">
             {{ blockingErrorCount() }}
-          </span>
+          </ngx-badge>
         }
       </summary>
       <div class="px-6 pb-6">
@@ -374,11 +348,9 @@
                           🔗 {{ error.kind }}
                         </h6>
                         @if (!errorVisibilityInfo().errorsVisible) {
-                          <span
-                            class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-                          >
+                          <ngx-badge variant="outline" appearance="warning">
                             Hidden by strategy
-                          </span>
+                          </ngx-badge>
                         }
                       </div>
                       <p
@@ -445,11 +417,9 @@
                           {{ error.kind }}
                         </h6>
                         @if (!errorVisibilityInfo().errorsVisible) {
-                          <span
-                            class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-                          >
+                          <ngx-badge variant="outline" appearance="warning">
                             Hidden by strategy
-                          </span>
+                          </ngx-badge>
                         }
                       </div>
                       <p
@@ -530,11 +500,9 @@
             ></path>
           </svg>
           <span>Warnings (Non-blocking)</span>
-          <span
-            class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-          >
+          <ngx-badge variant="solid" appearance="warning">
             {{ warningCount() }}
-          </span>
+          </ngx-badge>
         </summary>
         <div class="px-6 pb-6">
           <div

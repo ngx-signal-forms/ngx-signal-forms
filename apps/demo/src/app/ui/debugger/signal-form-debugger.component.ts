@@ -11,6 +11,7 @@ import {
   NGX_SIGNAL_FORM_CONTEXT,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit/core';
+import { BadgeComponent, BadgeIconDirective } from '../badge';
 
 /**
  * Enhanced Signal Form Debugger Component
@@ -49,7 +50,7 @@ import {
 @Component({
   selector: 'ngx-signal-form-debugger',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [JsonPipe],
+  imports: [JsonPipe, BadgeComponent, BadgeIconDirective],
   templateUrl: './signal-form-debugger.component.html',
   styleUrl: './signal-form-debugger.component.scss',
 })
