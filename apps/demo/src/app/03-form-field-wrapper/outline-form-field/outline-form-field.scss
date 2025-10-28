@@ -1,351 +1,47 @@
 /**
  * Outline Form Field
- * Demonstrates default Figma design implementation for outlined form fields.
- * No custom CSS properties needed - uses toolkit defaults.
+ * Demonstrates default outlined form field styling with card-based layout.
+ * Uses toolkit's <ngx-card> component and Tailwind utilities.
+ * Colors match Expo Design library: https://www.figma.com/design/umjx7RAVOJYAtnoladhfZ2/Expo-Design-library
  */
 
 :host {
   display: block;
   width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-
-  // Design tokens from Figma (used for layout only, not form fields)
-  --text-base: #324155;
-  --text-secondary: rgba(71, 91, 119, 0.75);
-  --surface-card: #f8f9fa;
-  --surface-input: #ffffff;
-  --border-light: rgba(172, 178, 187, 0.25);
-  --border-dark: rgba(50, 65, 85, 0.25);
-  --icon-base: rgba(71, 91, 119, 0.75);
-  --button-secondary: #738aab;
-
-  --space-2xs: 4px;
-  --space-xs: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-
-  --radius-s: 4px;
-  --radius-m: 8px;
 }
 
-// Dark mode overrides - use .dark class to respect manual theme selection
-:host-context(.dark) {
-  // Layout tokens (cards, buttons, etc.)
-  --text-base: #f9fafb; // Almost white for dark bg
-  --text-secondary: rgba(156, 163, 175, 0.75); // Light gray
-  --surface-card: #1f2937; // Dark gray card background
-  --surface-input: #111827; // Very dark gray for inputs
-  --border-light: rgba(75, 85, 99, 0.25); // Subtle borders
-  --border-dark: rgba(107, 114, 128, 0.4); // Visible borders
-  --icon-base: rgba(156, 163, 175, 0.75); // Light gray icons
-  --button-secondary: #60a5fa; // Lighter blue for dark bg
-
-  // Form field tokens (outlined inputs)
-  --ngx-form-field-outline-bg: #111827; // Dark input background
-  --ngx-form-field-outline-border: 1px solid rgba(156, 163, 175, 0.25); // Subtle border
+// Light mode form field styling (matches Expo design library)
+:host {
+  --ngx-form-field-outline-bg: #ffffff; // var(--surface/component)
+  --ngx-form-field-outline-border: 1px solid rgba(172, 178, 187, 1); // var(--border/opaque/light) - more visible
   --ngx-form-field-outline-label-color: rgba(
-    209,
-    213,
-    219,
+    50,
+    65,
+    85,
     0.75
-  ); // Light gray label
-  --ngx-form-field-outline-input-color: #f9fafb; // Almost white text
+  ); // var(--text/secondary) - more readable
+  --ngx-form-field-outline-input-color: #324155; // var(--text/base)
   --ngx-form-field-outline-placeholder-color: rgba(
-    156,
-    163,
-    175,
-    0.35
-  ); // Much lighter placeholder for better contrast
-  --ngx-form-field-outline-focus-border-color: #60a5fa; // Lighter blue for focus
-  --ngx-form-field-outline-focus-box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.25); // Lighter blue glow
-  --ngx-form-field-outline-disabled-bg: #1f2937; // Slightly lighter for disabled
-  --ngx-form-field-outline-disabled-opacity: 0.5; // Reduced opacity for disabled
+    50,
+    65,
+    85,
+    0.5
+  ); // More readable placeholder
+  --ngx-form-field-outline-focus-border-color: #005fcc; // Primary blue
+  --ngx-form-field-outline-focus-box-shadow: 0 0 0 2px rgba(0, 95, 204, 0.25); // Primary blue glow
+  --ngx-form-field-outline-disabled-bg: #f3f4f6; // Very light gray
+  --ngx-form-field-outline-disabled-opacity: 0.6;
 }
 
-// ============================================================
-// Layout Only (Figma structure)
-// ============================================================
-
-.facts-container {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-}
-
-.fact-card {
-  background: var(--surface-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-m);
-  padding: var(--space-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.fact-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  h3 {
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--text-base);
-    margin: 0;
-  }
-
-  .number-badge {
-    background: var(--surface-input);
-    border: 1px solid var(--border-dark);
-    border-radius: var(--radius-s);
-    padding: 4px 8px;
-    width: 32px;
-    text-align: center;
-    font-size: 14px;
-    color: var(--text-base);
-  }
-
-  .spacer {
-    flex: 1;
-  }
-}
-
-.fields-row {
-  display: flex;
-  gap: var(--space-lg);
-
-  > * {
-    flex: 1;
-  }
-}
-
-.offense-card {
-  background: var(--surface-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-m);
-  padding: var(--space-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-
-  h4 {
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--text-base);
-    margin: 0;
-  }
-}
-
-.articles-section {
-  display: flex;
-  gap: var(--space-xs);
-
-  .border-line {
-    width: 4px;
-    background: var(--border-light);
-    border-radius: var(--radius-s);
-  }
-
-  .content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-
-    h5 {
-      font-weight: 600;
-      font-size: 14px;
-      color: var(--text-base);
-      margin: 0;
-      padding-bottom: var(--space-xs);
-      border-bottom: 1px solid var(--border-light);
-    }
-  }
-}
-
-.article-item {
-  display: flex;
-  gap: var(--space-xs);
-  align-items: flex-start;
-
-  ngx-signal-form-field {
-    flex: 1;
-  }
-
-  .icon-button {
-    margin-top: 4px; // Align with input top padding
-  }
-}
-
-.add-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  padding: 8px 12px;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-s);
-  font-weight: 500;
-  font-size: 16px;
-  color: var(--button-secondary);
-  cursor: pointer;
-  transition: background 0.15s ease-in-out;
-
-  &:hover {
-    background: rgba(115, 138, 171, 0.08);
-  }
-
-  &:active {
-    background: rgba(115, 138, 171, 0.15);
-  }
-
-  .icon {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-  }
-}
-
-.add-button-container {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-.icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-xs);
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-s);
-  cursor: pointer;
-  transition: background 0.15s ease-in-out;
-
-  &:hover {
-    background: rgba(115, 138, 171, 0.08);
-  }
-
-  &:active {
-    background: rgba(115, 138, 171, 0.15);
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
-    color: var(--icon-base);
-  }
-}
-
-.add-fact-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  padding: 8px 12px;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-s);
-  font-weight: 500;
-  font-size: 16px;
-  color: var(--button-secondary);
-  cursor: pointer;
-  transition: background 0.15s ease-in-out;
-
-  &:hover {
-    background: rgba(115, 138, 171, 0.08);
-  }
-
-  &:active {
-    background: rgba(115, 138, 171, 0.15);
-  }
-
-  .icon {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-  }
-}
-
-.offense-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  position: relative;
-
-  .item-content {
-    flex: 1;
-  }
-
-  .remove-button {
-    padding: 8px;
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    border-radius: var(--radius-s);
-    transition: all 0.15s ease-in-out;
-    flex-shrink: 0;
-    margin-top: 4px;
-
-    .icon {
-      width: 20px;
-      height: 20px;
-      stroke: currentColor;
-      stroke-width: 1.5;
-    }
-
-    &:hover:not(:disabled) {
-      background: rgba(115, 138, 171, 0.08);
-      color: var(--button-secondary);
-    }
-
-    &:active:not(:disabled) {
-      background: rgba(115, 138, 171, 0.15);
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-}
-
-.submit-button {
-  padding: 10px 24px;
-  background: var(--button-secondary);
-  border: 1px solid var(--button-secondary);
-  border-radius: var(--radius-s);
-  font-weight: 600;
-  font-size: 14px;
-  color: #ffffff;
-  cursor: pointer;
-  transition: all 0.15s ease-in-out;
-
-  &:hover:not(:disabled) {
-    background: #5c7391;
-    border-color: #5c7391;
-  }
-
-  &:active:not(:disabled) {
-    background: #4d5f77;
-    border-color: #4d5f77;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-
-.form-actions {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-md);
-  margin-top: var(--space-lg);
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--border-light);
+// Dark mode form field overrides for outlined inputs
+:host-context(.dark) {
+  --ngx-form-field-outline-bg: #111827;
+  --ngx-form-field-outline-border: 1px solid rgba(156, 163, 175, 0.25);
+  --ngx-form-field-outline-label-color: rgba(209, 213, 219, 0.75);
+  --ngx-form-field-outline-input-color: #f9fafb;
+  --ngx-form-field-outline-placeholder-color: rgba(156, 163, 175, 0.35);
+  --ngx-form-field-outline-focus-border-color: #60a5fa;
+  --ngx-form-field-outline-focus-box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.25);
+  --ngx-form-field-outline-disabled-bg: #1f2937;
+  --ngx-form-field-outline-disabled-opacity: 0.5;
 }

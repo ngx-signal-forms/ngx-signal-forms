@@ -2,23 +2,28 @@
   [ngxSignalForm]="showcaseForm"
   [errorStrategy]="errorDisplayMode()"
   (ngSubmit)="displaySubmittedData()"
+  class="flex flex-col gap-6"
 >
-  <div class="facts-container">
-    @for (fact of model().facts; track fact.factNumber; let factIndex = $index)
-    {
-    <div class="fact-card">
-      <!-- Fact Header -->
-      <div class="fact-header">
-        <h3>Feit</h3>
-        <div class="number-badge">{{ fact.factNumber }}</div>
-        <div class="spacer"></div>
+  @for (fact of model().facts; track fact.factNumber; let factIndex = $index) {
+  <ngx-card [headerTemplate]="factHeader">
+    <ng-template #factHeader>
+      <div class="flex items-center gap-3">
+        <span class="text-sm font-semibold">Feit</span>
+        <input
+          type="text"
+          [value]="fact.factNumber"
+          readonly
+          class="w-8 rounded border border-gray-300 px-2 py-1 text-center text-sm"
+          aria-label="Feit nummer"
+        />
+        <div class="flex-1"></div>
         <button
           type="button"
-          class="icon-button"
+          class="rounded p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-red-400"
           (click)="removeFact(factIndex)"
-          aria-label="Feit verwijderen"
+          aria-label="Feit {{ fact.factNumber }} verwijderen"
         >
-          <svg viewBox="0 0 20 20" fill="none">
+          <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none">
             <path
               d="M16.667 5H3.333M15.833 5l-.833 10c0 .917-.75 1.667-1.667 1.667H6.667c-.917 0-1.667-.75-1.667-1.667L4.167 5M7.5 5V3.333c0-.916.75-1.666 1.667-1.666h1.666c.917 0 1.667.75 1.667 1.666V5"
               stroke="currentColor"
@@ -29,53 +34,55 @@
           </svg>
         </button>
       </div>
+    </ng-template>
 
-      <!-- Fact Fields -->
-      <div class="fields-row">
-        <ngx-signal-form-field
-          [field]="showcaseForm.facts[factIndex].commitDate"
-          outline
-        >
-          <label for="commitDate-{{ factIndex }}">Pleegdatum</label>
-          <input
-            id="commitDate-{{ factIndex }}"
-            type="text"
-            [field]="showcaseForm.facts[factIndex].commitDate"
-            placeholder="DD-MM-JJJJ"
-          />
-        </ngx-signal-form-field>
-
-        <ngx-signal-form-field
-          [field]="showcaseForm.facts[factIndex].commitPeriod"
-          outline
-        >
-          <label for="commitPeriod-{{ factIndex }}">Pleegperiode</label>
-          <input
-            id="commitPeriod-{{ factIndex }}"
-            type="text"
-            [field]="showcaseForm.facts[factIndex].commitPeriod"
-            placeholder="Periode"
-          />
-        </ngx-signal-form-field>
-      </div>
-
-      <!-- Land -->
+    <!-- Fact Fields -->
+    <div class="grid gap-4 md:grid-cols-2">
       <ngx-signal-form-field
-        [field]="showcaseForm.facts[factIndex].country"
+        [field]="showcaseForm.facts[factIndex].commitDate"
         outline
       >
-        <label for="country-{{ factIndex }}">Land</label>
-        <select
-          id="country-{{ factIndex }}"
-          [field]="showcaseForm.facts[factIndex].country"
-        >
-          @for (country of countries; track country.value) {
-          <option [value]="country.value">{{ country.label }}</option>
-          }
-        </select>
+        <label for="commitDate-{{ factIndex }}">Pleegdatum</label>
+        <input
+          id="commitDate-{{ factIndex }}"
+          type="text"
+          [field]="showcaseForm.facts[factIndex].commitDate"
+          placeholder="DD-MM-JJJJ"
+        />
       </ngx-signal-form-field>
 
-      <!-- Plaats -->
+      <ngx-signal-form-field
+        [field]="showcaseForm.facts[factIndex].commitPeriod"
+        outline
+      >
+        <label for="commitPeriod-{{ factIndex }}">Pleegperiode</label>
+        <input
+          id="commitPeriod-{{ factIndex }}"
+          type="text"
+          [field]="showcaseForm.facts[factIndex].commitPeriod"
+          placeholder="Periode"
+        />
+      </ngx-signal-form-field>
+    </div>
+
+    <!-- Land -->
+    <ngx-signal-form-field
+      [field]="showcaseForm.facts[factIndex].country"
+      outline
+    >
+      <label for="country-{{ factIndex }}">Land</label>
+      <select
+        id="country-{{ factIndex }}"
+        [field]="showcaseForm.facts[factIndex].country"
+      >
+        @for (country of countries; track country.value) {
+        <option [value]="country.value">{{ country.label }}</option>
+        }
+      </select>
+    </ngx-signal-form-field>
+
+    <!-- Location Fields -->
+    <div class="grid gap-4 md:grid-cols-2">
       <ngx-signal-form-field
         [field]="showcaseForm.facts[factIndex].place"
         outline
@@ -89,7 +96,6 @@
         />
       </ngx-signal-form-field>
 
-      <!-- Gemeente -->
       <ngx-signal-form-field
         [field]="showcaseForm.facts[factIndex].municipality"
         outline
@@ -102,49 +108,48 @@
           placeholder="Gemeentenaam"
         />
       </ngx-signal-form-field>
+    </div>
 
-      <!-- Locatieaanduiding -->
-      <ngx-signal-form-field
+    <ngx-signal-form-field
+      [field]="showcaseForm.facts[factIndex].locationDescription"
+      outline
+    >
+      <label for="locationDescription-{{ factIndex }}">
+        Locatieaanduiding
+      </label>
+      <input
+        id="locationDescription-{{ factIndex }}"
+        type="text"
         [field]="showcaseForm.facts[factIndex].locationDescription"
-        outline
-      >
-        <label for="locationDescription-{{ factIndex }}">
-          Locatieaanduiding
-        </label>
-        <input
-          id="locationDescription-{{ factIndex }}"
-          type="text"
-          [field]="showcaseForm.facts[factIndex].locationDescription"
-          placeholder="Omschrijving locatie"
-        />
-      </ngx-signal-form-field>
+        placeholder="Omschrijving locatie"
+      />
+    </ngx-signal-form-field>
 
-      <!-- Pleegplaats buitenland -->
-      <ngx-signal-form-field
+    <ngx-signal-form-field
+      [field]="showcaseForm.facts[factIndex].abroadLocation"
+      outline
+    >
+      <label for="abroadLocation-{{ factIndex }}">
+        Pleegplaats buitenland
+      </label>
+      <input
+        id="abroadLocation-{{ factIndex }}"
+        type="text"
         [field]="showcaseForm.facts[factIndex].abroadLocation"
-        outline
-      >
-        <label for="abroadLocation-{{ factIndex }}"
-          >Pleegplaats buitenland</label
-        >
-        <input
-          id="abroadLocation-{{ factIndex }}"
-          type="text"
-          [field]="showcaseForm.facts[factIndex].abroadLocation"
-          placeholder="Locatie in buitenland"
-        />
-      </ngx-signal-form-field>
+        placeholder="Locatie in buitenland"
+      />
+    </ngx-signal-form-field>
 
-      <!-- Offenses Section -->
-      <div class="offenses-section">
-        <div class="section-header">
-          <h3 class="section-title">Strafbare feiten</h3>
-        </div>
+    <!-- Offenses Section -->
+    <div class="mt-4 space-y-4">
+      <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+        Strafbare feiten
+      </h4>
 
-        @for (offense of fact.offenses; track $index; let offenseIndex = $index)
-        {
-        <div class="offense-item">
-          <div class="item-content">
+      @for (offense of fact.offenses; track $index; let offenseIndex = $index) {
+      <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+        <div class="flex items-start gap-4">
+          <div class="flex-1 space-y-4">
             <ngx-signal-form-field
               [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].qualification"
               outline
@@ -160,97 +165,79 @@
               />
             </ngx-signal-form-field>
 
-            <!-- Articles Sub-Section -->
-            <div class="articles-section">
-              <div class="border-line"></div>
-              <div class="content">
-                <h5>Wetsartikelen</h5>
+            <!-- Articles -->
+            <div class="space-y-3">
+              <h5 class="text-xs font-medium text-gray-600 dark:text-gray-400">
+                Wetsartikelen
+              </h5>
 
-                @for (article of offense.articles; track $index; let
-                articleIndex = $index) {
-                <div class="article-item">
-                  <ngx-signal-form-field
+              @for (article of offense.articles; track $index; let articleIndex
+              = $index) {
+              <div class="flex items-start gap-2">
+                <ngx-signal-form-field
+                  [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles[articleIndex].article"
+                  outline
+                  class="flex-1"
+                >
+                  <label
+                    for="article-{{ factIndex }}-{{ offenseIndex }}-{{ articleIndex }}"
+                  >
+                    Wetsartikel
+                  </label>
+                  <select
+                    id="article-{{ factIndex }}-{{ offenseIndex }}-{{ articleIndex }}"
                     [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles[articleIndex].article"
-                    outline
                   >
-                    <label
-                      for="article-{{ factIndex }}-{{ offenseIndex }}-{{ articleIndex }}"
-                    >
-                      Wetsartikel
-                    </label>
-                    <select
-                      id="article-{{ factIndex }}-{{ offenseIndex }}-{{ articleIndex }}"
-                      [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles[articleIndex].article"
-                    >
-                      @for (legalArticle of legalArticles; track
-                      legalArticle.value) {
-                      <option [value]="legalArticle.value">
-                        {{ legalArticle.label }}
-                      </option>
-                      }
-                    </select>
-                  </ngx-signal-form-field>
-                  <button
-                    type="button"
-                    class="icon-button"
-                    (click)="removeArticle(factIndex, offenseIndex, articleIndex)"
-                    aria-label="Wetsartikel verwijderen"
-                  >
-                    <svg viewBox="0 0 20 20" fill="none">
-                      <path
-                        d="M5.833 5v10.833c0 .442.175.866.488 1.179.312.312.736.488 1.179.488h5c.442 0 .866-.175 1.179-.488.312-.313.488-.737.488-1.179V5m-10 0h2.5m0 0V3.333c0-.442.175-.866.488-1.179.312-.312.736-.488 1.179-.488h3.333c.442 0 .866.176 1.179.488.312.313.488.737.488 1.179V5m-6.667 0h6.667m0 0h2.5"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
-                }
-
-                <!-- Array-level validation errors for articles -->
-                <ngx-signal-form-error
-                  [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles"
-                  [fieldName]="'articles-' + factIndex + '-' + offenseIndex"
-                />
-
-                <div class="add-button-container">
-                  <button
-                    type="button"
-                    class="add-button"
-                    (click)="addArticle(factIndex, offenseIndex)"
-                  >
-                    <svg class="icon" viewBox="0 0 20 20" fill="none">
-                      <rect
-                        x="3.333"
-                        y="3.333"
-                        width="13.333"
-                        height="13.333"
-                        rx="2"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      />
-                      <path
-                        d="M10 6.667v6.666M6.667 10h6.666"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                      />
-                    </svg>
-                    Wetsartikel toevoegen
-                  </button>
-                </div>
+                    @for (legalArticle of legalArticles; track
+                    legalArticle.value) {
+                    <option [value]="legalArticle.value">
+                      {{ legalArticle.label }}
+                    </option>
+                    }
+                  </select>
+                </ngx-signal-form-field>
+                <button
+                  type="button"
+                  class="mt-8 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
+                  (click)="removeArticle(factIndex, offenseIndex, articleIndex)"
+                  aria-label="Wetsartikel verwijderen"
+                >
+                  <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none">
+                    <path
+                      d="M5.833 5v10.833c0 .442.175.866.488 1.179.312.312.736.488 1.179.488h5c.442 0 .866-.175 1.179-.488.312-.313.488-.737.488-1.179V5m-10 0h2.5m0 0V3.333c0-.442.175-.866.488-1.179.312-.312.736-.488 1.179-.488h3.333c.442 0 .866.176 1.179.488.312.313.488.737.488 1.179V5m-6.667 0h6.667m0 0h2.5"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
               </div>
+              }
+
+              <!-- Array-level validation errors for articles -->
+              <ngx-signal-form-error
+                [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles"
+                [fieldName]="'articles-' + factIndex + '-' + offenseIndex"
+              />
+
+              <button
+                type="button"
+                class="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+                (click)="addArticle(factIndex, offenseIndex)"
+              >
+                + Wetsartikel toevoegen
+              </button>
             </div>
           </div>
+
           <button
             type="button"
-            class="remove-button"
+            class="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
             (click)="removeOffense(factIndex, offenseIndex)"
             aria-label="Strafbaar feit verwijderen"
           >
-            <svg class="icon" viewBox="0 0 20 20" fill="none">
+            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none">
               <path
                 d="M16.667 5H3.333M15.833 5l-.833 10c0 .917-.75 1.667-1.667 1.667H6.667c-.917 0-1.667-.75-1.667-1.667L4.167 5M7.5 5V3.333c0-.916.75-1.666 1.667-1.666h1.666c.917 0 1.667.75 1.667 1.666V5"
                 stroke="currentColor"
@@ -261,74 +248,62 @@
             </svg>
           </button>
         </div>
-        }
-
-        <!-- Array-level validation errors for offenses -->
-        <ngx-signal-form-error
-          [field]="showcaseForm.facts[factIndex].offenses"
-          [fieldName]="'offenses-' + factIndex"
-        />
-
-        <div class="add-button-container">
-          <button
-            type="button"
-            class="add-button"
-            (click)="addOffense(factIndex)"
-          >
-            <svg class="icon" viewBox="0 0 20 20" fill="none">
-              <rect
-                x="3.333"
-                y="3.333"
-                width="13.333"
-                height="13.333"
-                rx="2"
-                stroke="currentColor"
-                stroke-width="1.5"
-              />
-              <path
-                d="M10 6.667v6.666M6.667 10h6.666"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-              />
-            </svg>
-            Strafbaar feit toevoegen
-          </button>
-        </div>
       </div>
+      }
+
+      <!-- Array-level validation errors for offenses -->
+      <ngx-signal-form-error
+        [field]="showcaseForm.facts[factIndex].offenses"
+        [fieldName]="'offenses-' + factIndex"
+      />
+
+      <button
+        type="button"
+        class="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+        (click)="addOffense(factIndex)"
+      >
+        + Strafbaar feit toevoegen
+      </button>
     </div>
-    }
-  </div>
+  </ngx-card>
+  }
 
-  <!-- Form Actions -->
-  <div class="form-actions">
-    <button type="button" class="add-fact-button" (click)="addFact()">
-      <svg class="icon" viewBox="0 0 20 20" fill="none">
-        <rect
-          x="3.333"
-          y="3.333"
-          width="13.333"
-          height="13.333"
-          rx="2"
-          stroke="currentColor"
-          stroke-width="1.5"
-        />
-        <path
-          d="M10 6.667v6.666M6.667 10h6.666"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-        />
-      </svg>
-      Feit toevoegen
-    </button>
-
-    <button
-      type="submit"
-      class="submit-button"
-      [disabled]="showcaseForm().invalid()"
+  <!-- Add Fact Button -->
+  <button
+    type="button"
+    class="rounded-lg border-2 border-dashed border-gray-300 p-6 text-center transition-colors hover:border-indigo-500 dark:border-gray-600 dark:hover:border-indigo-400"
+    (click)="addFact()"
+  >
+    <svg class="mx-auto h-8 w-8 text-gray-400" viewBox="0 0 20 20" fill="none">
+      <rect
+        x="3.333"
+        y="3.333"
+        width="13.333"
+        height="13.333"
+        rx="2"
+        stroke="currentColor"
+        stroke-width="1.5"
+      />
+      <path
+        d="M10 6.667v6.666M6.667 10h6.666"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+      />
+    </svg>
+    <span
+      class="mt-2 block text-sm font-medium text-gray-600 dark:text-gray-400"
     >
-      Opslaan
-    </button>
-  </div>
+      Feit toevoegen
+    </span>
+  </button>
+
+  <!-- Submit Button -->
+  <button
+    type="submit"
+    class="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+    [disabled]="showcaseForm().invalid()"
+  >
+    Opslaan
+  </button>
 </form>

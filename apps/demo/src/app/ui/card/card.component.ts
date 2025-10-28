@@ -1,15 +1,15 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
-  inject,
   input,
-  signal,
+  type TemplateRef,
 } from '@angular/core';
 
 @Component({
   selector: 'ngx-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NgTemplateOutlet],
   host: {
     '[class]':
       "'block rounded-xl shadow-sm ' + (variant() === 'primary-outline' ? 'border border-indigo-300 dark:border-indigo-500' : variant() === 'educational' ? 'bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20' : '')",
@@ -18,13 +18,8 @@ import {
     <div
       class="ngx-card__inner flex flex-col gap-4 rounded-xl p-6 dark:bg-gray-800"
     >
-      @if (hasHeader()) {
-        <header
-          class="mb-1 block text-sm font-semibold tracking-wide text-gray-900 uppercase dark:text-gray-100"
-          [attr.id]="labelledBy() ?? null"
-        >
-          <ng-content select="[card-header]"></ng-content>
-        </header>
+      @if (headerTemplate()) {
+        <ng-container [ngTemplateOutlet]="headerTemplate()!" />
       }
       <ng-content></ng-content>
     </div>
@@ -35,22 +30,6 @@ export class CardComponent {
   labelledBy = input<string | null>(null);
   describedBy = input<string | null>(null);
 
-  readonly #hasHeaderSignal = signal(false);
-  hasHeader = this.#hasHeaderSignal.asReadonly();
-
-  readonly #elementRef = inject(ElementRef);
-
-  /// Observe projected header presence for dynamic state (side effect in initializer)
-  // eslint-disable-next-line no-unused-private-class-members
-  readonly #headerObserver = (() => {
-    const host = this.#elementRef.nativeElement;
-    const update = () => {
-      const has = !!host.querySelector('[card-header]');
-      if (this.#hasHeaderSignal() !== has) this.#hasHeaderSignal.set(has);
-    };
-    const mo = new MutationObserver(update);
-    mo.observe(host, { childList: true, subtree: true });
-    update();
-    return mo;
-  })();
+  /// Template for card header (supports @for loops and dynamic content)
+  headerTemplate = input<TemplateRef<unknown> | null>(null);
 }

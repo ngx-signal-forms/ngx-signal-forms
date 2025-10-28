@@ -10,6 +10,7 @@ import {
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit/core';
 import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { CardComponent } from '../../ui';
 import {
   createEmptyArticle,
   createEmptyFact,
@@ -48,7 +49,7 @@ import { outlineFormFieldSchema } from './outline-form-field.validations';
 @Component({
   selector: 'ngx-outline-form-field',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Field, NgxSignalFormToolkit, NgxOutlinedFormField],
+  imports: [Field, NgxSignalFormToolkit, NgxOutlinedFormField, CardComponent],
   templateUrl: './outline-form-field.html',
   styleUrl: './outline-form-field.scss',
 })

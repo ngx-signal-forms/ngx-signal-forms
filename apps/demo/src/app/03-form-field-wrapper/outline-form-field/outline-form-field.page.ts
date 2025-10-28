@@ -62,6 +62,7 @@ import { OutlineFormFieldComponent } from './outline-form-field.form';
           #formComponent
           [errorDisplayMode]="selectedMode()"
         />
+
         @if (formComponent) {
           <ngx-signal-form-debugger [formTree]="formComponent.showcaseForm()" />
         }

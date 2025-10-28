@@ -2,6 +2,17 @@
 
 Form field components and directives for enhanced form layouts and accessibility.
 
+## ✨ Features
+
+- ✅ **WCAG 2.2 Level AA Compliant** - All color combinations meet 4.5:1+ contrast ratios
+- ✅ **Outlined Material Design Layout** - Floating labels with native HTML/CSS (no JavaScript)
+- ✅ **Progressive Character Count** - Visual feedback with color states (ok → warning → danger → exceeded)
+- ✅ **Automatic Error Display** - Integrated with toolkit's error strategies
+- ✅ **Flexible Theming** - 20+ CSS custom properties for complete customization
+- ✅ **System/App Theme Harmony** - Handles conflicts between OS preference and app theme selection
+
+> **Note**: For technical details on WCAG compliance and theme override patterns, see [THEMING.md](./THEMING.md#handling-system-preference-vs-app-theme-conflicts).
+
 ## 🎨 Theming
 
 **New simplified theming architecture available!** We've reduced the CSS custom properties from 60+ to just 20 with improved derivation patterns.

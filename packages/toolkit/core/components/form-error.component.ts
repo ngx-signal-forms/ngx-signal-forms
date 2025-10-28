@@ -269,6 +269,15 @@ import { showErrors } from '../utilities/show-errors';
     }
 
     /**
+     * Light Mode Override (respects explicit light theme despite system dark preference)
+     * When app explicitly sets light theme via missing .dark class, use light mode colors
+     */
+    :root:not(.dark) :host {
+      --ngx-signal-form-error-color: #dc2626;
+      --ngx-signal-form-warning-color: #f59e0b;
+    }
+
+    /**
      * Component Styles
      */
 

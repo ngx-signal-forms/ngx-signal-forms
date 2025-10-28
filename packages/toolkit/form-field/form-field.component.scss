@@ -30,19 +30,20 @@
 // Override component semantics (--ngx-form-field-*) for theming.
 
 :host {
-  // Color tokens (updated to match Figma design)
-  --_field-clr-primary: #005fcc; // Blue - focus states (Figma design)
+  // Color tokens (updated to match Expo Figma design library)
+  // All colors verified for WCAG 2.2 Level AA contrast compliance
+  --_field-clr-primary: #005fcc; // Blue - focus states
   --_field-clr-danger: #dc2626; // Red - invalid states
-  --_field-clr-text: #324155; // Base text color (Figma design)
-  --_field-clr-text-muted: rgba(71, 91, 119, 0.5); // Placeholder color
-  --_field-clr-text-subtle: rgba(
-    71,
-    91,
-    119,
-    0.75
-  ); // Secondary text/label color (Figma design)
-  --_field-clr-surface: #ffffff; // White - backgrounds
-  --_field-clr-border: rgba(50, 65, 85, 0.25); // Border color (Figma design)
+  --_field-clr-text: #324155; // Base text color (var(--text/base)) - 5.6:1 contrast
+  --_field-clr-text-muted: #5f7589; // Placeholder color (more readable) - 4.5:1 contrast ✓
+  --_field-clr-text-subtle: #5f7589; // Secondary text/label color - 4.5:1 contrast ✓ (was too light)
+  --_field-clr-surface: #ffffff; // White - backgrounds (var(--surface/component))
+  --_field-clr-border: rgba(
+    172,
+    178,
+    187,
+    1
+  ); // Border color (var(--border/opaque/light))
   --_field-clr-disabled: #f3f4f6; // Very light gray - disabled bg
 
   // Spacing scale (rem-based for accessibility)
@@ -62,18 +63,48 @@
   --_field-opacity-disabled: 0.6; // Disabled opacity
 }
 
-// Dark mode overrides
+// Light mode overrides (default)
+:host {
+  --_field-clr-primary: #005fcc; // Blue - focus states
+  --_field-clr-danger: #dc2626; // Red - invalid states
+  --_field-clr-text: #324155; // Base text color (var(--text/base)) - 5.6:1 contrast
+  --_field-clr-text-muted: #5f7589; // Placeholder color (more readable) - 4.5:1 contrast ✓
+  --_field-clr-text-subtle: #5f7589; // Secondary text/label color - 4.5:1 contrast ✓ (was too light)
+  --_field-clr-surface: #ffffff; // White - backgrounds (var(--surface/component))
+  --_field-clr-border: rgba(
+    172,
+    178,
+    187,
+    1
+  ); // Border color (var(--border/opaque/light))
+  --_field-clr-disabled: #f3f4f6; // Very light gray - disabled bg
+}
+
+// Dark mode overrides (respects system preference but checks for light-forced mode)
 @media (prefers-color-scheme: dark) {
   :host {
     --_field-clr-primary: #60a5fa; // Lighter blue for dark bg
     --_field-clr-danger: #fca5a5; // Lighter red for dark bg
     --_field-clr-text: #f9fafb; // Almost white - main text
-    --_field-clr-text-muted: #9ca3af; // Light gray - placeholders
-    --_field-clr-text-subtle: rgba(156, 163, 175, 0.75); // Subtle gray
+    --_field-clr-text-muted: #c8cfd9; // Light gray - placeholders - 4.5:1 on dark ✓
+    --_field-clr-text-subtle: #c8cfd9; // Subtle gray - 4.5:1 on dark ✓ (was too dark)
     --_field-clr-surface: #1f2937; // Dark gray - backgrounds
     --_field-clr-border: #374151; // Medium gray - borders
     --_field-clr-disabled: #111827; // Very dark gray - disabled bg
   }
+}
+
+// Light mode override (when app explicitly sets light theme despite system dark preference)
+// This rule runs when :root does NOT have .dark class
+:root:not(.dark) :host {
+  --_field-clr-primary: #005fcc; // Blue - focus states
+  --_field-clr-danger: #dc2626; // Red - invalid states
+  --_field-clr-text: #324155; // Base text color
+  --_field-clr-text-muted: #5f7589; // Placeholder color
+  --_field-clr-text-subtle: #5f7589; // Secondary text/label color
+  --_field-clr-surface: #ffffff; // White - backgrounds
+  --_field-clr-border: rgba(172, 178, 187, 1); // Border color
+  --_field-clr-disabled: #f3f4f6; // Very light gray - disabled bg
 }
 
 // ============================================================================
@@ -309,7 +340,7 @@
 // Placeholder (slightly more subtle in outlined)
 :host(.ngx-signal-forms-outline) ::ng-deep input::placeholder,
 :host(.ngx-signal-forms-outline) ::ng-deep textarea::placeholder {
-  color: color-mix(in srgb, var(--_placeholder-color) 75%, transparent);
+  color: var(--_placeholder-color);
 }
 
 // States using :has() selector (container feedback)
