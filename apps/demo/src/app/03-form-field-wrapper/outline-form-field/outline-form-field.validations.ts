@@ -6,10 +6,10 @@ import {
   required,
   validate,
 } from '@angular/forms/signals';
-import type { CustomStyledFormModel } from './custom-styled-form.model';
+import type { OutlineFormFieldModel } from './outline-form-field.model';
 
 /**
- * Custom Styled Form Validation Schema
+ * Outline Form Field Validation Schema
  *
  * Defines validation rules for the criminal fact entry form.
  * Validates nested arrays and ensures required fields are filled.
@@ -21,7 +21,7 @@ import type { CustomStyledFormModel } from './custom-styled-form.model';
  * - Minimum length requirements
  * - Warning for missing optional fields
  */
-export const customStyledFormSchema: SchemaFn<CustomStyledFormModel> = (
+export const outlineFormFieldSchema: SchemaFn<OutlineFormFieldModel> = (
   path,
 ) => {
   // Validate each fact entry

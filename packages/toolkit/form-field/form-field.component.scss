@@ -30,19 +30,19 @@
 // Override component semantics (--ngx-form-field-*) for theming.
 
 :host {
-  // Color tokens
-  --_field-clr-primary: #3b82f6; // Blue - focus states
-  --_field-clr-danger: #ef4444; // Red - invalid states
-  --_field-clr-text: #1f2937; // Dark gray - main text
-  --_field-clr-text-muted: #6b7280; // Medium gray - placeholders
+  // Color tokens (updated to match Figma design)
+  --_field-clr-primary: #005fcc; // Blue - focus states (Figma design)
+  --_field-clr-danger: #dc2626; // Red - invalid states
+  --_field-clr-text: #324155; // Base text color (Figma design)
+  --_field-clr-text-muted: rgba(71, 91, 119, 0.5); // Placeholder color
   --_field-clr-text-subtle: rgba(
     71,
     91,
     119,
     0.75
-  ); // Light gray - outlined labels
+  ); // Secondary text/label color (Figma design)
   --_field-clr-surface: #ffffff; // White - backgrounds
-  --_field-clr-border: #d1d5db; // Light gray - borders
+  --_field-clr-border: rgba(50, 65, 85, 0.25); // Border color (Figma design)
   --_field-clr-disabled: #f3f4f6; // Very light gray - disabled bg
 
   // Spacing scale (rem-based for accessibility)
@@ -52,13 +52,13 @@
   --_field-space-lg: 0.75rem; // 12px
   --_field-space-xl: 1rem; // 16px
 
-  // Typography scale
-  --_field-text-xs: 0.75rem; // 12px - outlined label
-  --_field-text-sm: 0.875rem; // 14px - default label/input
+  // Typography scale (updated to match Figma design)
+  --_field-text-xs: 0.75rem; // 12px - outlined label (caption)
+  --_field-text-sm: 0.875rem; // 14px - input text (body-2)
   --_field-text-base: 1rem; // 16px - large input
 
-  // Other tokens
-  --_field-radius: 0.25rem; // Border radius
+  // Other tokens (updated to match Figma design)
+  --_field-radius: 0.25rem; // 4px - Border radius (Figma design)
   --_field-opacity-disabled: 0.6; // Disabled opacity
 }
 
@@ -115,16 +115,16 @@
   --_gap: var(--ngx-form-field-gap, var(--_field-space-md));
   --_margin-bottom: var(--ngx-form-field-margin, var(--_field-space-xl));
 
-  // Label
+  // Label (updated for Figma design)
   --_label-size: var(--ngx-form-field-label-size, var(--_field-text-sm));
   --_label-weight: var(--ngx-form-field-label-weight, 500);
   --_label-color: var(--ngx-form-field-label-color, var(--_color-text));
 
-  // Input
+  // Input (updated padding for Figma design: 4px 8px)
   --_input-size: var(--ngx-form-field-input-size, var(--_field-text-sm));
   --_input-padding: var(
     --ngx-form-field-input-padding,
-    var(--_field-space-md) var(--_field-space-lg)
+    var(--_field-space-sm) var(--_field-space-md)
   );
   --_input-color: var(--ngx-form-field-input-color, var(--_color-text));
   --_input-bg: var(--ngx-form-field-input-bg, transparent);
@@ -138,7 +138,7 @@
   --_focus-color: var(--ngx-form-field-focus-color, var(--_color-primary));
   --_focus-box-shadow: var(
     --ngx-form-field-focus-box-shadow,
-    0 0 0 3px color-mix(in srgb, var(--_focus-color) 10%, transparent)
+    0 0 0 2px color-mix(in srgb, var(--_focus-color) 25%, transparent)
   );
   --_invalid-color: var(--ngx-form-field-invalid-color, var(--_color-error));
   --_disabled-bg: var(--ngx-form-field-disabled-bg, var(--_color-disabled));
@@ -239,11 +239,20 @@
   min-height: var(--ngx-form-field-min-height, 3.5rem);
 }
 
-// Label inside container (smaller, subtle)
+// Label inside container (smaller, subtle, updated for Figma design)
 :host(.ngx-signal-forms-outline) ::ng-deep label {
-  font-size: var(--_label-size);
-  font-weight: var(--_label-weight);
-  color: var(--_label-color);
+  font-size: var(
+    --ngx-form-field-outline-label-size,
+    var(--_field-text-xs)
+  ); // 12px
+  font-weight: var(
+    --ngx-form-field-outline-label-weight,
+    400
+  ); // Regular weight (Figma design)
+  color: var(
+    --ngx-form-field-outline-label-color,
+    var(--_field-clr-text-subtle)
+  ); // rgba(71, 91, 119, 0.75)
   margin: 0 0 var(--_field-space-xs) 0;
   cursor: text;
 }
@@ -269,9 +278,32 @@
   padding: 0;
   margin: 0;
   width: 100%;
-  font-size: var(--_input-size);
-  color: var(--_input-color);
+  font-size: var(
+    --ngx-form-field-outline-input-size,
+    var(--_field-text-sm)
+  ); // 14px (Figma design)
+  font-weight: var(
+    --ngx-form-field-outline-input-weight,
+    400
+  ); // Regular weight
+  color: var(
+    --ngx-form-field-outline-input-color,
+    var(--_field-clr-text)
+  ); // #324155
   outline: none; // Safe: container provides focus indicator
+  box-shadow: none; // Remove any browser default focus shadow
+
+  // Ensure no focus ring on the input itself
+  &:focus {
+    outline: none;
+    box-shadow: none;
+    border: none;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
 }
 
 // Placeholder (slightly more subtle in outlined)
@@ -305,4 +337,23 @@
 
 :host(.ngx-signal-forms-outline) ::ng-deep :disabled {
   cursor: not-allowed;
+}
+
+// ============================================================================
+// ERROR/WARNING ALIGNMENT
+// ============================================================================
+// Ensures error/warning messages align properly with form field inputs.
+// Uses CSS custom properties to avoid ::ng-deep.
+
+// Standard layout - 8px horizontal padding for breathing room
+:host {
+  --ngx-signal-form-error-padding-horizontal: var(--_field-space-md); // 8px
+}
+
+// Outlined layout - maintains same 8px padding to align with input text
+// Outlined containers have padding: 0.25rem 0.5rem (4px vertical, 8px horizontal).
+// The 8px horizontal padding positions the input text/placeholder.out
+// Errors inherit the same 8px padding to align perfectly with input text.
+:host(.ngx-signal-forms-outline) {
+  --ngx-signal-form-error-padding-horizontal: var(--_field-space-md); // 8px
 }

@@ -2,6 +2,66 @@
 
 Comprehensive guide for theming `@ngx-signal-forms/toolkit/form-field` components using CSS custom properties.
 
+## Quick Reference: CSS Custom Properties by Purpose
+
+Use this table to quickly find the right property for your theming needs:
+
+| **Purpose**                | **Property**                                        | **Default**                                                    | **Use Case**                |
+| -------------------------- | --------------------------------------------------- | -------------------------------------------------------------- | --------------------------- |
+| **Brand Colors**           |                                                     |                                                                |                             |
+| Primary/focus color        | `--ngx-form-field-outline-focus-border-color`       | `#005fcc`                                                      | Brand accent, focus states  |
+| Error/required marker      | `--ngx-form-field-outline-invalid-border-color`     | `#dc2626`                                                      | Validation errors           |
+| Required marker color      | `--ngx-form-field-outline-required-color`           | `#dc2626`                                                      | Asterisk color              |
+| **Text & Labels**          |                                                     |                                                                |                             |
+| Label text color           | `--ngx-form-field-outline-label-color`              | `rgba(71,91,119,0.75)`                                         | Label in outlined border    |
+| Input text color           | `--ngx-form-field-outline-input-color`              | `#324155`                                                      | User-entered text           |
+| Placeholder text color     | `--ngx-form-field-outline-placeholder-color`        | `rgba(71,91,119,0.5)`                                          | Placeholder hints           |
+| **Backgrounds & Borders**  |                                                     |                                                                |                             |
+| Input background           | `--ngx-form-field-outline-bg`                       | `#ffffff`                                                      | Input field background      |
+| Border default             | `--ngx-form-field-outline-border`                   | `1px solid rgba(50,65,85,0.25)`                                | Default border              |
+| Border radius              | `--ngx-form-field-outline-border-radius`            | `0.25rem`                                                      | Corner roundness            |
+| **States**                 |                                                     |                                                                |                             |
+| Focus box shadow           | `--ngx-form-field-outline-focus-box-shadow`         | `0 0 0 2px rgba(0,95,204,0.25)`                                | Focus glow effect           |
+| Invalid box shadow         | `--ngx-form-field-outline-invalid-focus-box-shadow` | `0 0 0 2px rgba(220,38,38,0.25)`                               | Error state glow            |
+| Disabled background        | `--ngx-form-field-outline-disabled-bg`              | `#f3f4f6`                                                      | Disabled field background   |
+| Disabled opacity           | `--ngx-form-field-outline-disabled-opacity`         | `0.6`                                                          | Disabled field transparency |
+| **Layout & Spacing**       |                                                     |                                                                |                             |
+| Gap between label/input    | `--ngx-form-field-outline-gap`                      | `0.125rem` (2px)                                               | Internal spacing            |
+| Input padding              | `--ngx-form-field-outline-padding`                  | `0.5rem 0.75rem`                                               | Input padding (4px 8px)     |
+| Minimum height             | `--ngx-form-field-outline-min-height`               | `3.5rem`                                                       | Container height            |
+| **Typography**             |                                                     |                                                                |                             |
+| Label font family          | `--ngx-form-field-outline-label-font-family`        | `'Inter Variable', sans-serif`                                 | Label typeface              |
+| Label font size            | `--ngx-form-field-outline-label-font-size`          | `0.75rem` (12px)                                               | Label size (caption)        |
+| Label font weight          | `--ngx-form-field-outline-label-font-weight`        | `400`                                                          | Label weight                |
+| Label line height          | `--ngx-form-field-outline-label-line-height`        | `1rem`                                                         | Label spacing               |
+| Input font family          | `--ngx-form-field-outline-input-font-family`        | `'Inter Variable', sans-serif`                                 | Input typeface              |
+| Input font size            | `--ngx-form-field-outline-input-font-size`          | `0.875rem` (14px)                                              | Input size (body-2)         |
+| Input font weight          | `--ngx-form-field-outline-input-font-weight`        | `400`                                                          | Input weight                |
+| Input line height          | `--ngx-form-field-outline-input-line-height`        | `1.25rem`                                                      | Input spacing               |
+| Required marker weight     | `--ngx-form-field-outline-required-font-weight`     | `600`                                                          | Asterisk boldness           |
+| **Error/Warning Messages** |                                                     |                                                                |                             |
+| Error horizontal padding   | `--ngx-signal-form-error-padding-horizontal`        | `0.5rem` (8px)                                                 | Error message alignment     |
+| Error font size            | `--ngx-signal-form-error-font-size`                 | `0.75rem` (12px)                                               | Error message text size     |
+| Error text color           | `--ngx-signal-form-error-color`                     | `#dc2626`                                                      | Error message color         |
+| Warning text color         | `--ngx-signal-form-warning-color`                   | `#f59e0b`                                                      | Warning message color       |
+| Error top margin           | `--ngx-signal-form-error-margin-top`                | `0.375rem`                                                     | Space above error messages  |
+| **Animations**             |                                                     |                                                                |                             |
+| Transition timing          | `--ngx-form-field-outline-transition`               | `border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out` | State changes               |
+
+### Common Theming Scenarios
+
+**Dark Mode** → Override: `bg`, `border`, `label-color`, `input-color`, `placeholder-color`, `focus-border-color`, `focus-box-shadow`, `disabled-bg`, `error-color`, `warning-color`
+
+**Brand Colors** → Override: `focus-border-color`, `focus-box-shadow`, `invalid-border-color`, `required-color`, `error-color`
+
+**Size Scaling** → Override: `padding`, `min-height`, `label-font-size`, `input-font-size`, `gap`, `error-font-size`, `error-padding-horizontal`
+
+**Custom Fonts** → Override: `label-font-family`, `input-font-family`
+
+**Error Styling** → Override: `error-padding-horizontal`, `error-font-size`, `error-color`, `warning-color`, `error-margin-top`
+
+---
+
 ## Architecture Overview
 
 The theming system uses **semantic layering** with property derivation:
@@ -87,32 +147,68 @@ Override these when you need precise control over individual aspects:
 
 ### Example 1: Dark Mode Theme
 
-Override semantic color properties to instantly transform the entire form field appearance:
+Complete dark mode theme for outlined form fields with proper contrast and readability:
 
 ```css
-/* Dark mode theme - override semantic colors only */
+/* Dark mode theme for outlined form fields */
 @media (prefers-color-scheme: dark) {
   ngx-signal-form-field {
-    /* Semantic color overrides (public API) */
-    --ngx-form-field-color-text: #f9fafb;
-    --ngx-form-field-color-text-muted: #9ca3af;
-    --ngx-form-field-color-surface: #1f2937;
-    --ngx-form-field-color-border: #374151;
-    --ngx-form-field-color-disabled: #111827;
+    /* Backgrounds & Borders */
+    --ngx-form-field-outline-bg: #111827; /* Dark input background */
+    --ngx-form-field-outline-border: 1px solid rgba(156, 163, 175, 0.25); /* Subtle border */
+    --ngx-form-field-outline-disabled-bg: #1f2937; /* Slightly lighter for disabled */
 
-    /* Adjust primary/error for better contrast in dark mode */
-    --ngx-form-field-color-primary: #60a5fa;
-    --ngx-form-field-color-error: #f87171;
+    /* Text Colors */
+    --ngx-form-field-outline-label-color: rgba(
+      209,
+      213,
+      219,
+      0.75
+    ); /* Light gray label */
+    --ngx-form-field-outline-input-color: #f9fafb; /* Almost white text */
+    --ngx-form-field-outline-placeholder-color: rgba(
+      156,
+      163,
+      175,
+      0.35
+    ); /* Lighter placeholder for better contrast */
+
+    /* Focus States - Lighter blue for dark backgrounds */
+    --ngx-form-field-outline-focus-border-color: #60a5fa; /* Lighter blue */
+    --ngx-form-field-outline-focus-box-shadow: 0 0 0 2px
+      rgba(96, 165, 250, 0.25); /* Lighter blue glow */
+
+    /* Error States - Slightly lighter red for dark backgrounds */
+    --ngx-form-field-outline-invalid-border-color: #f87171; /* Lighter red */
+    --ngx-form-field-outline-invalid-focus-box-shadow: 0 0 0 2px
+      rgba(248, 113, 113, 0.25); /* Lighter red glow */
+    --ngx-form-field-outline-required-color: #fca5a5; /* Even lighter red for asterisk */
+
+    /* Disabled State */
+    --ngx-form-field-outline-disabled-opacity: 0.5; /* Reduced opacity */
   }
 }
 ```
 
 **Result:**
 
-- All labels, inputs, placeholders automatically adapt via derivation
-- Both standard and outlined layouts themed consistently
-- Focus/invalid states maintain proper contrast
-- Only public API properties overridden (private tokens remain untouched)
+- ✅ High contrast between text and backgrounds
+- ✅ Placeholder text clearly distinguishable from input values (35% opacity)
+- ✅ Focus and error states visible against dark backgrounds
+- ✅ Required markers and validation messages maintain accessibility standards
+- ✅ Disabled fields remain subtly differentiated
+
+**Alternative: Using `:host-context(.dark)` for manual theme switching:**
+
+```css
+/* Component-scoped dark mode using .dark class on ancestor */
+:host-context(.dark) ngx-signal-form-field {
+  /* Same properties as above */
+  --ngx-form-field-outline-bg: #111827;
+  --ngx-form-field-outline-input-color: #f9fafb;
+  /* ... */
+}
+```
 
 ---
 
@@ -275,7 +371,47 @@ Target specific fields for unique styling:
 
 ---
 
-### Example 7: Outlined Layout Customization
+### Example 7: Error Message Alignment and Styling
+
+Customize error message appearance and alignment without using `::ng-deep`:
+
+```css
+/* ✅ CORRECT - Use CSS custom properties */
+ngx-signal-form-field {
+  /* Increase error padding to match custom input padding */
+  --ngx-signal-form-error-padding-horizontal: 1rem; /* Default: 0.5rem */
+
+  /* Adjust error message size and spacing */
+  --ngx-signal-form-error-font-size: 0.875rem; /* Larger: 14px instead of 12px */
+  --ngx-signal-form-error-margin-top: 0.5rem; /* More space above */
+
+  /* Custom error colors */
+  --ngx-signal-form-error-color: #991b1b; /* Darker red */
+  --ngx-signal-form-warning-color: #ea580c; /* Darker orange */
+}
+
+/* Dark mode error styling */
+@media (prefers-color-scheme: dark) {
+  ngx-signal-form-field {
+    --ngx-signal-form-error-color: #fca5a5; /* Lighter red for dark bg */
+    --ngx-signal-form-warning-color: #fcd34d; /* Lighter yellow for dark bg */
+  }
+}
+```
+
+**❌ WRONG - Don't use ::ng-deep:**
+
+```css
+/* Breaks encapsulation and may stop working in future versions */
+ngx-signal-form-field ::ng-deep .ngx-signal-form-error {
+  padding-left: 1rem;
+  font-size: 0.875rem;
+}
+```
+
+---
+
+### Example 8: Outlined Layout Customization
 
 The outlined layout reuses the same tokens but applies them differently. You can still override:
 
@@ -295,7 +431,7 @@ ngx-signal-form-field {
 
 ---
 
-### Example 8: Smooth Transitions
+### Example 9: Smooth Transitions
 
 Add smooth transitions to theme changes:
 
@@ -305,14 +441,8 @@ ngx-signal-form-field {
   /* Extend to color properties for theme transitions */
 }
 
-ngx-signal-form-field ::ng-deep input,
-ngx-signal-form-field ::ng-deep textarea {
-  transition:
-    border-color 0.15s ease-in-out,
-    box-shadow 0.15s ease-in-out,
-    background-color 0.3s ease,
-    color 0.3s ease;
-}
+/* ⚠️ AVOID ::ng-deep - Use CSS custom properties instead */
+/* See "Best Practices" section below for proper approach */
 
 /* Smooth theme toggle animation */
 [data-theme='dark'] ngx-signal-form-field {
@@ -422,7 +552,56 @@ ngx-signal-form-field {
 }
 ```
 
-### 3. Leverage `color-mix()` for Variants
+### 3. Avoid ::ng-deep - Use CSS Custom Properties Instead
+
+**❌ WRONG - Using ::ng-deep breaks encapsulation:**
+
+```css
+/* DON'T DO THIS - Breaks component encapsulation */
+ngx-signal-form-field ::ng-deep .ngx-signal-form-error {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+ngx-signal-form-field ::ng-deep input {
+  border-color: red;
+}
+```
+
+**✅ CORRECT - Override CSS custom properties:**
+
+```css
+/* Clean, maintainable approach using public API */
+ngx-signal-form-field {
+  /* Control error message padding */
+  --ngx-signal-form-error-padding-horizontal: 1rem;
+
+  /* Control input border color */
+  --ngx-form-field-border-color: red;
+  --ngx-form-field-invalid-color: darkred;
+}
+```
+
+**Why CSS custom properties are better:**
+
+- ✅ Maintains component encapsulation
+- ✅ Future-proof (won't break when component internals change)
+- ✅ Self-documenting (property names describe their purpose)
+- ✅ Easier to maintain and debug
+- ✅ Works seamlessly with Angular's view encapsulation
+
+**Available error/warning styling variables:**
+
+```css
+/* Error and warning message styling */
+--ngx-signal-form-error-padding-horizontal: 0.5rem; /* Left/right padding */
+--ngx-signal-form-error-font-size: 0.75rem; /* Text size (12px) */
+--ngx-signal-form-error-color: #dc2626; /* Error text color */
+--ngx-signal-form-warning-color: #f59e0b; /* Warning text color */
+--ngx-signal-form-error-margin-top: 0.375rem; /* Space above messages */
+```
+
+### 4. Leverage `color-mix()` for Variants
 
 ```css
 /* Generate hover/active states from base color */
@@ -435,7 +614,7 @@ ngx-signal-form-field {
 }
 ```
 
-### 4. Test with Browser DevTools
+### 5. Test with Browser DevTools
 
 Use browser DevTools to inspect computed values:
 
@@ -444,7 +623,7 @@ Use browser DevTools to inspect computed values:
 3. Search for `--ngx-form-field-` to see all active properties
 4. Check fallback chain to verify token inheritance
 
-### 5. Document Your Theme
+### 6. Document Your Theme
 
 Create a theme file with clear comments:
 

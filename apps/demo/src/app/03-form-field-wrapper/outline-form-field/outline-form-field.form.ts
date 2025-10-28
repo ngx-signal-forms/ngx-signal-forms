@@ -14,27 +14,27 @@ import {
   createEmptyArticle,
   createEmptyFact,
   createEmptyOffense,
-  type CustomStyledFormModel,
   type FactEntry,
-} from './custom-styled-form.model';
-import { customStyledFormSchema } from './custom-styled-form.validations';
+  type OutlineFormFieldModel,
+} from './outline-form-field.model';
+import { outlineFormFieldSchema } from './outline-form-field.validations';
 
 /**
- * Custom Styled Form - Demonstrates CSS Custom Properties Theming
+ * Outline Form Field - Demonstrates Default Outlined Layout
  *
- * This example showcases how to use CSS custom properties to theme
- * the NgxSignalFormFieldComponent wrapper to match a custom design system.
+ * This example showcases the default outlined form field styling
+ * that matches the Figma design system without custom CSS overrides.
  *
  * 🎨 Key Features Demonstrated:
- * - Custom CSS custom properties for complete visual control
- * - Material Design inspired outlined input layout
+ * - Default outlined input layout (Figma design)
  * - Dutch legal system form (prison sentence data entry)
  * - Nested card structure with semi-transparent backgrounds
  * - Dynamic array handling (facts, offenses, articles)
  * - Custom icons and action buttons
+ * - No custom CSS overrides needed
  *
  * 📐 Design System:
- * - Based on Figma design system with CSS variables
+ * - Based on Figma design system (default toolkit styling)
  * - Uses Inter Variable font
  * - Semi-transparent card backgrounds
  * - Subtle borders and rounded corners
@@ -42,17 +42,17 @@ import { customStyledFormSchema } from './custom-styled-form.validations';
  *
  * @example
  * ```html
- * <ngx-custom-styled-form [errorDisplayMode]="on-touch" />
+ * <ngx-outline-form-field [errorDisplayMode]="on-touch" />
  * ```
  */
 @Component({
-  selector: 'ngx-custom-styled-form',
+  selector: 'ngx-outline-form-field',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Field, NgxSignalFormToolkit, NgxOutlinedFormField],
-  templateUrl: './custom-styled-form.html',
-  styleUrl: './custom-styled-form.scss',
+  templateUrl: './outline-form-field.html',
+  styleUrl: './outline-form-field.scss',
 })
-export class CustomStyledFormComponent {
+export class OutlineFormFieldComponent {
   /**
    * Error display mode input - controls when errors are shown
    */
@@ -61,7 +61,7 @@ export class CustomStyledFormComponent {
   /**
    * Form model signal with default values (1 fact to start)
    */
-  protected readonly model = signal<CustomStyledFormModel>({
+  protected readonly model = signal<OutlineFormFieldModel>({
     facts: [createEmptyFact(1)],
   });
 
@@ -69,7 +69,7 @@ export class CustomStyledFormComponent {
    * Create form instance with validation schema
    * Exposed as public for debugger access
    */
-  readonly showcaseForm = form(this.model, customStyledFormSchema);
+  readonly showcaseForm = form(this.model, outlineFormFieldSchema);
 
   /**
    * Available countries for dropdown

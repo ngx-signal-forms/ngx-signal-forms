@@ -1,5 +1,5 @@
 /**
- * Custom Styled Form - Data Model
+ * Outline Form Field - Data Model
  *
  * Represents the form data structure for a criminal fact entry system.
  * Based on Dutch legal system for prison sentence data entry.
@@ -26,7 +26,7 @@ export interface FactEntry {
   offenses: CriminalOffense[];
 }
 
-export interface CustomStyledFormModel {
+export interface OutlineFormFieldModel {
   facts: FactEntry[];
 }
 

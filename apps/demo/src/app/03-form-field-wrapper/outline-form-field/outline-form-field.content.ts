@@ -1,19 +1,19 @@
 /**
- * Content configuration for the Custom Styled Form example.
+ * Content configuration for the Outline Form Field example.
  */
 
-export const CUSTOM_STYLED_FORM_CONTENT = {
+export const OUTLINE_FORM_FIELD_CONTENT = {
   demonstrated: {
-    icon: '🎨',
-    title: 'CSS Custom Properties Theming',
+    icon: '�',
+    title: 'Default Outlined Form Fields',
     sections: [
       {
-        title: 'Theming Approach',
+        title: 'Out-of-the-Box Styling',
         items: [
-          '<strong>Semantic Colors:</strong> Override <code>--ngx-form-field-color-*</code> properties',
+          '<strong>Figma Design:</strong> Matches default outlined form field design',
+          '<strong>No Custom CSS:</strong> Uses toolkit default styling',
           '<strong>Outlined Layout:</strong> Material Design style inputs with <code>outline</code> attribute',
-          '<strong>No Custom Markup:</strong> Pure form-field component theming',
-          '<strong>Design Tokens:</strong> Figma design system → CSS custom properties',
+          '<strong>Zero Configuration:</strong> Works immediately without theming',
         ],
       },
       {
@@ -47,24 +47,24 @@ export const CUSTOM_STYLED_FORM_CONTENT = {
   },
 
   learning: {
-    title: 'Building Custom Themes',
+    title: 'Using Outlined Form Fields',
     sections: [
       {
-        title: '🎨 CSS Theming Strategy',
+        title: '� Default Outlined Layout',
         items: [
-          '1. Define design tokens (colors, spacing, typography)',
-          '2. Map tokens to semantic form-field properties',
-          '3. Use <code>outline</code> attribute for Material Design layout',
-          '4. Control spacing with <code>--ngx-form-field-gap</code>, <code>--min-height</code>',
+          '1. Add <code>outline</code> attribute to form field',
+          '2. Use default styling (matches Figma design)',
+          '3. No CSS custom properties needed',
+          '4. Customize only if needed for brand requirements',
         ],
       },
       {
-        title: '📐 Figma to CSS Translation',
+        title: '📐 Default Design Tokens',
         items: [
-          '<strong>Extract Tokens:</strong> Colors, spacing, typography from Figma',
-          '<strong>Map Semantics:</strong> <code>--ngx-form-field-color-text: var(--text-base)</code>',
-          '<strong>Maintain Scale:</strong> Consistent spacing across all components',
-          '<strong>Use Variables:</strong> Easy theme switching and maintenance',
+          '<strong>Typography:</strong> 12px labels, 14px inputs (Inter Variable)',
+          '<strong>Spacing:</strong> 4px vertical, 8px horizontal padding',
+          '<strong>Colors:</strong> #324155 text, rgba(50,65,85,0.25) borders',
+          '<strong>Borders:</strong> 4px border radius, subtle focus states',
         ],
       },
       {
@@ -87,9 +87,9 @@ export const CUSTOM_STYLED_FORM_CONTENT = {
       },
     ],
     nextStep: {
-      text: 'Explore the toolkit source code for advanced patterns →',
-      link: 'https://github.com/ngx-signal-forms/ngx-signal-forms',
-      linkText: 'GitHub Repository',
+      text: 'Explore theming options for custom branding →',
+      link: '/packages/toolkit/form-field/THEMING.md',
+      linkText: 'Theming Documentation',
     },
   },
 } as const;

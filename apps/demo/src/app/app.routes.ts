@@ -142,12 +142,12 @@ export const appRoutes: Routes = [
         title: 'Complex Forms - Nested Objects & Arrays',
       },
       {
-        path: 'custom-styled-form',
+        path: 'outline-form-field',
         loadComponent: () =>
           import(
-            './03-form-field-wrapper/custom-styled-form/custom-styled-form.page'
-          ).then((m) => m.CustomStyledFormPage),
-        title: 'Custom Styled Form - CSS Custom Properties Theming',
+            './03-form-field-wrapper/outline-form-field/outline-form-field.page'
+          ).then((m) => m.OutlineFormFieldPage),
+        title: 'Outline Form Field - Default Outlined Styling',
       },
     ],
   },

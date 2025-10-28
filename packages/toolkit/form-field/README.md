@@ -291,11 +291,26 @@ By default, the required marker (`*`) is automatically shown when the input has 
 /* Dark mode for outlined layout */
 @media (prefers-color-scheme: dark) {
   :root {
-    --ngx-form-field-outline-bg: #1f2937;
-    --ngx-form-field-outline-border: 1px solid rgba(156, 163, 175, 0.25);
-    --ngx-form-field-outline-label-color: rgba(209, 213, 219, 0.75);
-    --ngx-form-field-outline-input-color: #f9fafb;
-    --ngx-form-field-outline-placeholder-color: rgba(156, 163, 175, 0.5);
+    --ngx-form-field-outline-bg: #111827; /* Dark input background */
+    --ngx-form-field-outline-border: 1px solid rgba(156, 163, 175, 0.25); /* Subtle border */
+    --ngx-form-field-outline-label-color: rgba(
+      209,
+      213,
+      219,
+      0.75
+    ); /* Light gray label */
+    --ngx-form-field-outline-input-color: #f9fafb; /* Almost white text */
+    --ngx-form-field-outline-placeholder-color: rgba(
+      156,
+      163,
+      175,
+      0.35
+    ); /* Lighter placeholder */
+    --ngx-form-field-outline-focus-border-color: #60a5fa; /* Lighter blue for focus */
+    --ngx-form-field-outline-focus-box-shadow: 0 0 0 2px
+      rgba(96, 165, 250, 0.25); /* Lighter blue glow */
+    --ngx-form-field-outline-disabled-bg: #1f2937; /* Slightly lighter for disabled */
+    --ngx-form-field-outline-disabled-opacity: 0.5; /* Reduced opacity */
   }
 }
 ```
@@ -317,6 +332,45 @@ Requires CSS `:has()` selector:
 - Input outline removed safely (container provides visible focus indicator)
 - Required fields automatically detected via CSS `:has()` selector
 - ARIA attributes handled by parent `NgxSignalFormFieldComponent`
+
+#### Error/Warning Alignment
+
+The form field component automatically aligns error and warning messages with the input text for a polished, professional appearance.
+
+**Standard layout:**
+
+- Errors have 8px horizontal padding (`0.5rem`) for breathing room on both sides
+
+**Outlined layout:**
+
+- Errors inherit the same 8px horizontal padding to align perfectly with the outlined container's horizontal padding
+- Ensures visual consistency and professional polish
+
+**Automatic behavior:**
+
+- No configuration needed - alignment is built-in via CSS custom property override
+- Works seamlessly with `ngx-signal-form-error` component
+- Responsive to both standard and outlined form field layouts
+- No `::ng-deep` required - uses CSS custom properties for clean encapsulation
+
+**Implementation details:**
+
+The form-field component sets the `--ngx-signal-form-error-padding-horizontal` CSS custom property, which the form-error component consumes:
+
+```scss
+/* Form field component sets the custom property */
+:host {
+  --ngx-signal-form-error-padding-horizontal: 0.5rem; /* 8px */
+}
+
+/* Form error component consumes it */
+.ngx-signal-form-error {
+  padding-left: var(--ngx-signal-form-error-padding-horizontal);
+  padding-right: var(--ngx-signal-form-error-padding-horizontal);
+}
+```
+
+**To customize:** Override `--ngx-signal-form-error-padding-horizontal` in your component styles.
 
 ---
 

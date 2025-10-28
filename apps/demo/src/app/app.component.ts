@@ -121,8 +121,8 @@ export class AppComponent implements AfterViewInit {
           label: 'Complex Forms',
         },
         {
-          path: '/form-field-wrapper/custom-styled-form',
-          label: 'Custom Styled Form',
+          path: '/form-field-wrapper/outline-form-field',
+          label: 'Outlined Form Fields',
         },
       ],
     },

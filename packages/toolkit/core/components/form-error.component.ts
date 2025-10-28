@@ -252,6 +252,12 @@ import { showErrors } from '../utilities/show-errors';
       initial-value: 0px;
     }
 
+    @property --ngx-signal-form-error-padding-horizontal {
+      syntax: '<length>';
+      inherits: true;
+      initial-value: 0.5rem;
+    }
+
     /**
      * Dark Mode Support
      */
@@ -276,6 +282,8 @@ import { showErrors } from '../utilities/show-errors';
       flex-direction: column;
       gap: var(--ngx-signal-form-error-message-spacing);
       padding: var(--ngx-signal-form-error-padding);
+      padding-left: var(--ngx-signal-form-error-padding-horizontal);
+      padding-right: var(--ngx-signal-form-error-padding-horizontal);
       border-width: var(--ngx-signal-form-error-border-width);
       border-style: solid;
       border-radius: var(--ngx-signal-form-error-border-radius);
@@ -297,6 +305,8 @@ import { showErrors } from '../utilities/show-errors';
 
     .ngx-signal-form-error__message {
       margin: 0;
+      font-size: inherit; /* Inherit font-size from parent container */
+      line-height: inherit; /* Inherit line-height from parent container */
     }
 
     /**
