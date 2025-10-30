@@ -12,7 +12,6 @@ import {
   withViewTransitions,
 } from '@angular/router';
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
-import { provideEnvironmentNgxMask } from 'ngx-mask';
 import { AppComponent } from './app/app.component';
 import { appRoutes } from './app/app.routes';
 
@@ -40,7 +39,6 @@ import { appRoutes } from './app/app.routes';
       provideZonelessChangeDetection(),
       importProvidersFrom(),
       provideHttpClient(),
-      provideEnvironmentNgxMask({ validation: false }),
       provideNgxSignalFormsConfig({
         defaultErrorStrategy: 'on-touch',
         autoAria: true,
