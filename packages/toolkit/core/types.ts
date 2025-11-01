@@ -72,12 +72,37 @@ export type ReactiveOrStatic<T> = SignalLike<T> | T;
 
 /**
  * Error display strategy determines when validation errors are shown to the user.
+ *
+ * @example Form-level strategy (all fields inherit)
+ * ```html
+ * <form [ngxSignalForm]="form" [errorStrategy]="'on-touch'">
+ *   <!-- All errors use 'on-touch' strategy -->
+ * </form>
+ * ```
+ *
+ * @example Field-level override
+ * ```html
+ * <form [ngxSignalForm]="form" [errorStrategy]="'on-touch'">
+ *   <!-- Password shows errors immediately -->
+ *   <ngx-signal-form-error
+ *     [field]="form.password"
+ *     fieldName="password"
+ *     strategy="immediate" />
+ *
+ *   <!-- Email inherits form-level 'on-touch' -->
+ *   <ngx-signal-form-error
+ *     [field]="form.email"
+ *     fieldName="email"
+ *     strategy="inherit" />
+ * </form>
+ * ```
  */
 export type ErrorDisplayStrategy =
   | 'immediate' // Show errors as they occur
   | 'on-touch' // Show after blur or submit (WCAG recommended)
   | 'on-submit' // Show only after submit
-  | 'manual'; // Developer controls display
+  | 'manual' // Developer controls display
+  | 'inherit'; // Inherit from form provider (field-level only)
 
 /**
  * Configuration options for the ngx-signal-forms toolkit.

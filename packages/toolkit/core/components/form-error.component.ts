@@ -65,7 +65,24 @@ import { showErrors } from '../utilities/show-errors';
  * />
  * ```
  *
- * @example With Custom Strategy
+ * @example With Field-Level Strategy Override
+ * ```html
+ * <form [ngxSignalForm]="form" [errorStrategy]="'on-touch'">
+ *   <!-- Password field shows errors immediately -->
+ *   <ngx-signal-form-error
+ *     [field]="form.password"
+ *     fieldName="password"
+ *     strategy="immediate" />
+ *
+ *   <!-- Email inherits form-level strategy -->
+ *   <ngx-signal-form-error
+ *     [field]="form.email"
+ *     fieldName="email"
+ *     strategy="inherit" />
+ * </form>
+ * ```
+ *
+ * @example With Dynamic Strategy
  * ```html
  * <ngx-signal-form-error
  *   [field]="form.password"
@@ -356,10 +373,35 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   readonly fieldName = input.required<string>();
 
   /**
-   * Error display strategy.
+   * Error display strategy for this specific field.
+   *
    * Can be a SignalLike for dynamic strategy or a static value.
-   * Falls back to injected strategy from form provider if available.
-   * @default 'on-touch'
+   * Use 'inherit' to explicitly inherit from form provider.
+   * If undefined, automatically inherits from form provider or defaults to 'on-touch'.
+   *
+   * **Field-Level Override Use Cases:**
+   * - Password fields: Use 'immediate' for real-time feedback
+   * - Optional fields: Use 'on-submit' to avoid premature errors
+   * - Critical fields: Use 'on-touch' for quick feedback
+   *
+   * @default undefined (inherits from form or 'on-touch')
+   *
+   * @example Field-level override
+   * ```html
+   * <form [ngxSignalForm]="form" [errorStrategy]="'on-touch'">
+   *   <!-- Override: immediate feedback for password -->
+   *   <ngx-signal-form-error
+   *     [field]="form.password"
+   *     fieldName="password"
+   *     strategy="immediate" />
+   *
+   *   <!-- Explicit inherit (same as omitting strategy) -->
+   *   <ngx-signal-form-error
+   *     [field]="form.email"
+   *     fieldName="email"
+   *     strategy="inherit" />
+   * </form>
+   * ```
    */
   readonly strategy = input<ReactiveOrStatic<ErrorDisplayStrategy> | undefined>(
     undefined,
@@ -393,21 +435,34 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
 
   /**
    * Resolved error display strategy (input or injected from context).
+   *
+   * Resolution priority:
+   * 1. Field-level strategy (if not 'inherit' or undefined)
+   * 2. Form-level strategy from context
+   * 3. Default 'on-touch'
    */
   readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
     const inputStrategy = this.strategy();
-    if (inputStrategy !== undefined && inputStrategy !== null) {
-      return typeof inputStrategy === 'function'
-        ? inputStrategy()
-        : inputStrategy;
+    const unwrappedStrategy =
+      inputStrategy !== undefined && inputStrategy !== null
+        ? typeof inputStrategy === 'function'
+          ? inputStrategy()
+          : inputStrategy
+        : undefined;
+
+    // If field-level strategy is explicitly set and not 'inherit', use it
+    if (unwrappedStrategy !== undefined && unwrappedStrategy !== 'inherit') {
+      return unwrappedStrategy;
     }
 
+    // Otherwise, inherit from form provider
     const contextStrategy = this.#injectedContext?.errorStrategy?.();
-    if (contextStrategy) {
+    if (contextStrategy && contextStrategy !== 'inherit') {
       return contextStrategy;
     }
 
-    return 'on-touch'; // Default fallback
+    // Final fallback
+    return 'on-touch';
   });
 
   /**
