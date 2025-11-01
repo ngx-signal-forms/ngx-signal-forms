@@ -161,8 +161,39 @@ export class NgxSignalFormFieldCharacterCountComponent<TValue = unknown> {
 
   /**
    * Maximum character length for the field.
+   *
+   * If not provided, the component will attempt to auto-detect the limit
+   * from the field's validation rules (maxLength validator).
+   *
+   * **Auto-detection:**
+   * - Checks field state for `maxLength()` signal
+   * - Falls back to manual input if validation doesn't define maxLength
+   *
+   * **When to provide manually:**
+   * - Display limit differs from validation limit
+   * - No maxLength validator defined
+   * - Custom validation logic determines limit
+   *
+   * @example Auto-detect from validation
+   * ```typescript
+   * // In form schema:
+   * maxLength(path.bio, 500);
+   * ```
+   * ```html
+   * <!-- maxLength auto-detected as 500 -->
+   * <ngx-signal-form-field-character-count [field]="form.bio" />
+   * ```
+   *
+   * @example Manual override
+   * ```html
+   * <!-- Display limit is 300, even if validation allows 500 -->
+   * <ngx-signal-form-field-character-count
+   *   [field]="form.bio"
+   *   [maxLength]="300"
+   * />
+   * ```
    */
-  readonly maxLength = input.required<number>();
+  readonly maxLength = input<number | undefined>(undefined);
 
   /**
    * Text alignment position.
@@ -195,6 +226,42 @@ export class NgxSignalFormFieldCharacterCountComponent<TValue = unknown> {
   });
 
   /**
+   * Resolved maximum character length.
+   *
+   * Priority:
+   * 1. Manual `maxLength` input (if provided)
+   * 2. Auto-detected from field's `maxLength()` signal
+   * 3. Fallback to 0 (no limit)
+   */
+  readonly #resolvedMaxLength = computed(() => {
+    const manualMax = this.maxLength();
+
+    // If explicitly provided, use it
+    if (manualMax !== undefined && manualMax !== null) {
+      return Math.max(0, manualMax);
+    }
+
+    // Try to auto-detect from field validation
+    const fieldValue = this.field();
+    const fieldState = fieldValue() as {
+      maxLength?: () => number;
+    };
+
+    if (
+      'maxLength' in fieldState &&
+      typeof fieldState.maxLength === 'function'
+    ) {
+      const validatorMax = fieldState.maxLength();
+      if (typeof validatorMax === 'number' && validatorMax > 0) {
+        return validatorMax;
+      }
+    }
+
+    // No limit detected
+    return 0;
+  });
+
+  /**
    * Current character length from the field value.
    */
   protected readonly currentLength = computed(() => {
@@ -208,7 +275,13 @@ export class NgxSignalFormFieldCharacterCountComponent<TValue = unknown> {
    */
   protected readonly characterCountText = computed(() => {
     const current = this.currentLength();
-    const max = Math.max(0, this.maxLength());
+    const max = this.#resolvedMaxLength();
+
+    // If no limit, just show current count
+    if (max === 0) {
+      return `${current}`;
+    }
+
     return `${current}/${max}`;
   });
 
@@ -225,10 +298,12 @@ export class NgxSignalFormFieldCharacterCountComponent<TValue = unknown> {
   protected readonly limitState = computed(() => {
     if (!this.showLimitColors()) return 'disabled';
 
-    const max = this.maxLength();
+    const max = this.#resolvedMaxLength();
     const current = this.currentLength();
+
+    // No limit defined - no color progression
     if (max <= 0) {
-      return current > 0 ? 'exceeded' : 'disabled';
+      return 'disabled';
     }
 
     const percentage = (current / max) * 100;

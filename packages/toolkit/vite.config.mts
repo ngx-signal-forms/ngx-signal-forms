@@ -27,40 +27,6 @@ export default defineConfig(({ mode }) => ({
       reportsDirectory: '../../coverage/packages/toolkit',
       provider: 'v8' as const,
     },
-    browser: {
-      enabled: true,
-      provider: playwright({
-        launchOptions: {
-          headless: true,
-        },
-      }),
-      instances: [
-        {
-          name: 'toolkit-chrome',
-          browser: 'chromium',
-        },
-      ],
-      // Hide Vite's error overlay element in Vitest Browser runner to avoid click interception
-      scripts: [
-        {
-          id: 'disable-vite-error-overlay.js',
-          content: `
-            try {
-              const style = document.createElement('style');
-              style.textContent = 'vite-error-overlay { display: none !important; pointer-events: none !important; }';
-              document.head.appendChild(style);
-              const overlay = document.querySelector('vite-error-overlay');
-              if (overlay && overlay.style) {
-                overlay.style.display = 'none';
-                overlay.style.pointerEvents = 'none';
-              }
-            } catch (e) {
-              // ignore
-            }
-          `,
-        },
-      ],
-    },
     /**
      * Test isolation configuration for Angular projects
      *

@@ -54,11 +54,11 @@ Allow per-field error strategy override for different UX requirements.
 
 ---
 
-### 2. Auto-Focus on First Invalid Field
+### 2. Auto-Focus on First Invalid Field ✅ COMPLETED
 
-**Status:** ⚪ Not started
+**Status:** ✅ Completed (November 1, 2025)
 **Effort:** Small
-**Files:** `packages/toolkit/core/utilities/focus-first-invalid.ts` (new)
+**Files:** `packages/toolkit/core/utilities/focus-first-invalid.ts`
 
 Utility to focus first invalid field after failed submission.
 
@@ -72,27 +72,26 @@ protected save(): void {
 }
 ```
 
+**Implementation:**
+
+- ✅ Created `focusFirstInvalid()` utility function
+- ✅ Recursive FieldTree traversal with depth-first search
+- ✅ DOM focus targeting via `aria-invalid="true"` attribute
+- ✅ Exported in public API
+
 **Benefits:**
 
 - Common UX pattern
 - Improves accessibility (keyboard navigation)
 - Reduces user frustration
 
-**Implementation Notes:**
-
-- Traverse FieldTree recursively
-- Find first field with `invalid() === true`
-- Query DOM for matching `[field]` directive
-- Call `.focus()` on native element
-- Return `boolean` (true if focused, false if no invalid field found)
-
 ---
 
-### 3. Form Submission Helper Utilities
+### 3. Form Submission Helper Utilities ✅ COMPLETED
 
-**Status:** ⚪ Not started
+**Status:** ✅ Completed (November 1, 2025)
 **Effort:** Small
-**Files:** `packages/toolkit/core/utilities/submission-helpers.ts` (new)
+**Files:** `packages/toolkit/core/utilities/submission-helpers.ts`
 
 Computed signals for common submission states.
 
@@ -113,25 +112,25 @@ protected readonly isSubmitting = isSubmitting(this.form);
 </button>
 ```
 
+**Implementation:**
+
+- ✅ Created `canSubmit()` - combines valid() && !submitting()
+- ✅ Created `isSubmitting()` - checks submitting state
+- ✅ Created `hasSubmitted()` - checks submitted status
+- ✅ Type-safe with runtime submittedStatus existence check
+- ✅ Exported in public API
+
 **Benefits:**
 
 - Reduces template boilerplate
 - Consistent naming across apps
 - Type-safe computed signals
 
-**API:**
-
-```typescript
-export function canSubmit(form: FieldTree<unknown>): Signal<boolean>;
-export function isSubmitting(form: FieldTree<unknown>): Signal<boolean>;
-export function hasSubmitted(form: FieldTree<unknown>): Signal<boolean>;
-```
-
 ---
 
-### 4. Character Count Auto-Detection
+### 4. Character Count Auto-Detection ✅ COMPLETED
 
-**Status:** ⚪ Not started
+**Status:** ✅ Completed (November 1, 2025)
 **Effort:** Small
 **Files:** `packages/toolkit/form-field/form-field-character-count.component.ts`
 
@@ -159,17 +158,23 @@ maxLength(path.bio, 500);
 <ngx-signal-form-field-character-count [field]="form.bio" [maxLength]="300" />
 ```
 
+**Implementation:**
+
+- ✅ Made `maxLength` input optional with default `undefined`
+- ✅ Created `#resolvedMaxLength` computed signal with 3-tier priority:
+  1. Manual `maxLength` input (if provided)
+  2. Auto-detected from `field().maxLength()` signal
+  3. Fallback to 0 (no limit)
+- ✅ Updated character count text to handle no-limit case
+- ✅ Updated limit state logic for proper color progression
+- ✅ Enhanced JSDoc documentation with examples
+
 **Benefits:**
 
 - DRY principle (single source of truth)
 - Prevents desync between validation and display
 - Backward compatible (explicit input overrides)
-
-**Implementation Notes:**
-
-- Check `field().maxLength()` signal (exists on FieldState)
-- Fallback to manual `maxLength` input if provided
-- If neither exists, hide character count or show "N/A"
+- Shows "42" instead of "42/0" when no limit detected
 
 ---
 

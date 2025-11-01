@@ -348,8 +348,10 @@ describe('NgxSignalFormFieldCharacterCountComponent', () => {
       });
 
       const element = container.querySelector('.ngx-form-field-char-count');
-      expect(element).toHaveAttribute('data-limit-state', 'exceeded');
-      expect(screen.getByText('4/0')).toBeInTheDocument();
+      // maxLength of 0 means "no limit", so state is 'disabled'
+      expect(element).toHaveAttribute('data-limit-state', 'disabled');
+      // Display shows current count only (no /0)
+      expect(screen.getByText('4')).toBeInTheDocument();
     });
 
     it('should handle negative maxLength by treating as 0', async () => {
@@ -360,7 +362,8 @@ describe('NgxSignalFormFieldCharacterCountComponent', () => {
         ],
       });
 
-      expect(screen.getByText('4/0')).toBeInTheDocument();
+      // Negative maxLength is clamped to 0, which means "no limit"
+      expect(screen.getByText('4')).toBeInTheDocument();
     });
 
     it('should handle very long text', async () => {

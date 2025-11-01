@@ -16,6 +16,8 @@ export * from './components/form-error.component';
 
 // Utilities
 export * from './utilities/field-resolution';
+export * from './utilities/focus-first-invalid';
+export * from './utilities/submission-helpers';
 export * from './utilities/warning-error';
 
 // Future exports:

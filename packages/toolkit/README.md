@@ -519,17 +519,39 @@ Displays helper text for form fields.
 
 #### NgxSignalFormFieldCharacterCountComponent
 
-Displays character count with progressive color states.
+Displays character count with progressive color states and **automatic limit detection**.
+
+**Auto-Detection (Recommended):**
+
+```typescript
+// In form schema - define validation rule
+maxLength(path.bio, 500);
+```
 
 ```html
+<!-- Character count automatically detects limit from validation -->
 <ngx-signal-form-field [field]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [field]="form.bio"></textarea>
-  <ngx-signal-form-field-character-count
-    [field]="form.bio"
-    [maxLength]="500"
-  />
+  <ngx-signal-form-field-character-count [field]="form.bio" />
 </ngx-signal-form-field>
+```
+
+**Enhancement over Angular Signal Forms:**
+- ✅ Angular Signal Forms: Validators add `maxlength` HTML attribute that silently truncates text on paste
+- ✅ Toolkit: Auto-detects limit from validation rules (DRY principle)
+- ✅ Visual feedback prevents paste truncation surprises
+- ✅ Progressive color states guide users (ok → warning → danger)
+- ✅ Manual override available when display limit differs from validation
+
+**Manual Override:**
+
+```html
+<!-- Display limit is 300, even if validation allows 500 -->
+<ngx-signal-form-field-character-count
+  [field]="form.bio"
+  [maxLength]="300"
+/>
 ```
 
 **Color States:**
@@ -540,13 +562,78 @@ Displays character count with progressive color states.
 
 **Inputs:**
 - `field` (required) - The Signal Forms field
-- `maxLength` (required) - Maximum character limit
+- `maxLength` (optional) - Maximum character limit (auto-detected if not provided)
 - `showLimitColors` (boolean, default: `true`) - Enable color progression
 - `colorThresholds` (object, default: `{ warning: 80, danger: 95 }`) - Custom thresholds
 
 **For complete API, CSS custom properties, and examples, see [Form Field Documentation](./form-field/README.md#ngxsignalformfieldcharactercountcomponent)**
 
 ### Utilities
+
+#### Focus Management
+
+```typescript
+// Focus first invalid field after failed submission
+import { focusFirstInvalid } from '@ngx-signal-forms/toolkit/core';
+
+protected save(): void {
+  if (this.userForm().invalid()) {
+    focusFirstInvalid(this.userForm);
+  }
+}
+```
+
+**Enhancement over Angular Signal Forms:**
+- ✅ Angular Signal Forms: Provides field state signals but no focus utilities
+- ✅ Toolkit: Automatic focus on first invalid field for better UX and accessibility
+
+#### Submission State Helpers
+
+```typescript
+// Convenience computed signals for common submission states
+import { canSubmit, isSubmitting, hasSubmitted } from '@ngx-signal-forms/toolkit/core';
+
+@Component({
+  template: `
+    <button type="submit" [disabled]="!canSubmit()">
+      @if (isSubmitting()) {
+        <span>Saving...</span>
+      } @else {
+        <span>Submit</span>
+      }
+    </button>
+    @if (hasSubmitted() && userForm().valid()) {
+      <div class="success">Form saved!</div>
+    }
+  `
+})
+export class MyFormComponent {
+  protected readonly canSubmit = canSubmit(this.userForm);
+  protected readonly isSubmitting = isSubmitting(this.userForm);
+  protected readonly hasSubmitted = hasSubmitted(this.userForm);
+}
+```
+
+**Enhancement over Angular Signal Forms:**
+- ✅ Angular Signal Forms: Provides `valid()`, `submitting()`, `submittedStatus()` signals
+- ✅ Toolkit: Pre-computed helper signals reduce template boilerplate by ~50%
+- ✅ Consistent naming convention across applications
+- ✅ Type-safe with automatic inference
+
+**API Reference:**
+
+```typescript
+// Check if form is valid and not submitting
+canSubmit(formTree: FieldTree<unknown>): Signal<boolean>
+
+// Check if form is currently submitting
+isSubmitting(formTree: FieldTree<unknown>): Signal<boolean>
+
+// Check if form has completed at least one submission
+hasSubmitted(formTree: FieldTree<unknown>): Signal<boolean>
+```
+
+#### Error Display Utilities
 
 ```typescript
 // Compute error visibility

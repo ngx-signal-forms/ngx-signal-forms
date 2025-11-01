@@ -34,22 +34,26 @@ Angular Signal Forms (introduced in v21) provides an excellent foundation for re
 
 ### Comparison Matrix
 
-| Feature                 | Signal Forms Alone                                         | With @ngx-signal-forms/toolkit                                |
-| ----------------------- | ---------------------------------------------------------- | ------------------------------------------------------------- |
-| **Form Creation**       | ✅ `form()`, `schema()`, validators                        | ✅ Same (no changes)                                          |
-| **Validation**          | ✅ Built-in and custom validators                          | ✅ Same + warning support (non-blocking)                      |
-| **Field State**         | ✅ `touched()`, `dirty()`, `invalid()`, `errors()`         | ✅ Same (no changes)                                          |
-| **Touch on Blur**       | ✅ Automatic via `[field]` directive                       | ✅ Enhanced with opt-out capability                           |
-| **Submission Tracking** | ✅ Built-in `submittedStatus()` signal                     | ✅ Enhanced with DI-based context                             |
-| **ARIA Attributes**     | ❌ Manual `[attr.aria-invalid]`, `[attr.aria-describedby]` | ✅ Automatic via directive                                    |
-| **Error Display Logic** | ❌ Manual `@if` conditions in every template               | ✅ Strategy-based (immediate/on-touch/on-submit/manual)       |
-| **Error Components**    | ❌ Custom error rendering per component                    | ✅ Reusable `<ngx-signal-form-error>` component               |
-| **Form Wrapper**        | ❌ Manual form setup and context                           | ✅ DI-based context via `[ngxSignalForm]` directive           |
-| **HTML5 Validation**    | ❌ Manual `novalidate` on every form                       | ✅ Automatic `novalidate` via `[ngxSignalForm]`               |
-| **Form Field Wrapper**  | ❌ Custom layout per component                             | ✅ Consistent `<ngx-signal-form-field>` wrapper               |
-| **Form Busy State**     | ❌ Manual `aria-busy` management                           | ✅ Automatic during async validation/submission (coming soon) |
-| **WCAG 2.2 Compliance** | ❌ Requires manual implementation                          | ✅ Built-in with proper ARIA roles and live regions           |
-| **Code Reduction**      | —                                                          | **~50% less template code** for forms with validation         |
+| Feature                    | Signal Forms Alone                                         | With @ngx-signal-forms/toolkit                                                 |
+| -------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **Form Creation**          | ✅ `form()`, `schema()`, validators                        | ✅ Same (no changes)                                                           |
+| **Validation**             | ✅ Built-in and custom validators                          | ✅ Same + warning support (non-blocking)                                       |
+| **Field State**            | ✅ `touched()`, `dirty()`, `invalid()`, `errors()`         | ✅ Same (no changes)                                                           |
+| **Touch on Blur**          | ✅ Automatic via `[field]` directive                       | ✅ Enhanced with opt-out capability                                            |
+| **Submission Tracking**    | ✅ Built-in `submittedStatus()` signal                     | ✅ Enhanced with DI-based context + helper utilities                           |
+| **Submission Helpers**     | ❌ Manual `form().valid() && !form().submitting()`         | ✅ `canSubmit()`, `isSubmitting()`, `hasSubmitted()` computed signals          |
+| **Focus Management**       | ❌ Manual field focus after failed submission              | ✅ `focusFirstInvalid()` utility for accessibility                             |
+| **Character Count**        | ❌ Manual tracking or duplicate limit configuration        | ✅ Auto-detects from validation rules + progressive color states               |
+| **ARIA Attributes**        | ❌ Manual `[attr.aria-invalid]`, `[attr.aria-describedby]` | ✅ Automatic via directive                                                     |
+| **Error Display Logic**    | ❌ Manual `@if` conditions in every template               | ✅ Strategy-based (immediate/on-touch/on-submit/manual) + field-level override |
+| **Error Components**       | ❌ Custom error rendering per component                    | ✅ Reusable `<ngx-signal-form-error>` component                                |
+| **Form Wrapper**           | ❌ Manual form setup and context                           | ✅ DI-based context via `[ngxSignalForm]` directive                            |
+| **HTML5 Validation**       | ❌ Manual `novalidate` on every form                       | ✅ Automatic `novalidate` via `[ngxSignalForm]`                                |
+| **Form Field Wrapper**     | ❌ Custom layout per component                             | ✅ Consistent `<ngx-signal-form-field>` wrapper                                |
+| **Material Design Layout** | ❌ Custom CSS for outlined inputs                          | ✅ Built-in `outline` directive with floating labels                           |
+| **Form Busy State**        | ❌ Manual `aria-busy` management                           | ✅ Automatic during async validation/submission (coming soon)                  |
+| **WCAG 2.2 Compliance**    | ❌ Requires manual implementation                          | ✅ Built-in with proper ARIA roles and live regions                            |
+| **Code Reduction**         | —                                                          | **~50% less template code** for forms with validation                          |
 
 ### Code Comparison
 
@@ -351,9 +355,82 @@ export class SignupComponent {
 }
 ```
 
+## High-Value Utilities
+
+The toolkit provides convenience utilities that enhance Angular Signal Forms' default functionality:
+
+### Focus Management
+
+Automatically focus the first invalid field after failed submission:
+
+```typescript
+import { focusFirstInvalid } from '@ngx-signal-forms/toolkit/core';
+
+protected save(): void {
+  if (this.userForm().invalid()) {
+    focusFirstInvalid(this.userForm);
+  }
+}
+```
+
+**Enhancement:**
+
+- ✅ Angular Signal Forms: Provides field state signals but no focus utilities
+- ✅ Toolkit: Automatic focus improves UX and meets WCAG 2.2 accessibility guidelines
+
+### Submission State Helpers
+
+Pre-computed signals for common submission states:
+
+```typescript
+import {
+  canSubmit,
+  isSubmitting,
+  hasSubmitted,
+} from '@ngx-signal-forms/toolkit/core';
+
+@Component({
+  template: `
+    <button type="submit" [disabled]="!canSubmit()">
+      @if (isSubmitting()) {
+        <span>Saving...</span>
+      } @else {
+        <span>Submit</span>
+      }
+    </button>
+  `,
+})
+export class MyFormComponent {
+  protected readonly canSubmit = canSubmit(this.userForm);
+  protected readonly isSubmitting = isSubmitting(this.userForm);
+}
+```
+
+**Enhancement:**
+
+- ✅ Angular Signal Forms: Provides `valid()`, `submitting()`, `submittedStatus()` signals
+- ✅ Toolkit: Reduces template boilerplate with pre-computed helper signals
+- ✅ Consistent naming convention
+- ✅ Type-safe with automatic inference
+
+**Available Helpers:**
+
+```typescript
+// Combines valid() && !submitting()
+canSubmit(formTree: FieldTree<unknown>): Signal<boolean>
+
+// Checks if form is currently submitting
+isSubmitting(formTree: FieldTree<unknown>): Signal<boolean>
+
+// Checks if form has completed at least one submission
+hasSubmitted(formTree: FieldTree<unknown>): Signal<boolean>
+```
+
+---
+
 ## Form Field Components
 
-The toolkit includes a complete form field component system with Material Design outlined layout, character counting, and helper text.
+The toolkit includes a complete form field component system with Material Design outlined layout, **automatic character count detection**, and helper text.
 
 ### NgxSignalFormFieldComponent
 
@@ -392,15 +469,31 @@ Add the `outline` directive for Material Design outlined inputs with floating la
 
 ### Character Count Component
 
-Display character count with progressive color states:
+Display character count with **automatic limit detection** and progressive color states:
+
+**Auto-Detection (Recommended - DRY Principle):**
+
+```typescript
+// In form schema - define validation rule once
+maxLength(path.bio, 500);
+```
 
 ```html
+<!-- Character count automatically detects limit -->
 <ngx-signal-form-field [field]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [field]="form.bio"></textarea>
-  <ngx-signal-form-field-character-count [field]="form.bio" [maxLength]="500" />
+  <ngx-signal-form-field-character-count [field]="form.bio" />
 </ngx-signal-form-field>
 ```
+
+**Enhancement over Angular Signal Forms:**
+
+- ✅ Angular Signal Forms: `maxLength()` validator adds HTML `maxlength` attribute that silently truncates text on paste
+- ✅ Toolkit: Auto-detects limit from validation rules (single source of truth)
+- ✅ Visual feedback prevents paste truncation surprises
+- ✅ Progressive color guidance (ok → warning → danger)
+- ✅ Manual override available when needed
 
 **Color states:**
 

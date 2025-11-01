@@ -199,7 +199,9 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
-        emailControl = createMockControl(true, true); // invalid, touched
+        emailControl = createMockControl(true, true, [
+          { kind: 'required', message: 'Required' },
+        ]); // invalid, touched, with error
       }
 
       const { container } = await render(TestComponent);
@@ -239,11 +241,11 @@ describe('NgxSignalFormAutoAriaDirective', () => {
       const input = container.querySelector('input');
       expect(input?.getAttribute('aria-invalid')).toBe('false');
 
-      // Update control state: make it invalid and touched
+      // Update control state: make it invalid and touched with error
       mockControl.update(() => () => ({
         invalid: signal(true),
         touched: signal(true),
-        errors: signal([]),
+        errors: signal([{ kind: 'required', message: 'Required' }]),
         valid: signal(false),
         dirty: signal(true),
         value: signal(''),
@@ -276,7 +278,9 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
-        emailControl = createMockControl(true, true); // invalid, touched
+        emailControl = createMockControl(true, true, [
+          { kind: 'required', message: 'Required' },
+        ]); // invalid, touched, with error
       }
 
       const { container } = await render(TestComponent);
@@ -306,7 +310,9 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
-        cityControl = createMockControl(true, true); // invalid, touched
+        cityControl = createMockControl(true, true, [
+          { kind: 'required', message: 'Required' },
+        ]); // invalid, touched, with error
       }
 
       const { container } = await render(TestComponent);
@@ -490,7 +496,9 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
-        emailControl = createMockControl(true, true);
+        emailControl = createMockControl(true, true, [
+          { kind: 'required', message: 'Required' },
+        ]);
       }
 
       const { container } = await render(TestComponent);
