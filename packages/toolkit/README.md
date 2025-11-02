@@ -216,6 +216,301 @@ interface NgxSignalFormsConfig {
 type ErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit' | 'manual';
 ```
 
+### Error Message Configuration
+
+The toolkit provides a flexible error message registry for customizing validation error messages. **Zero-config by default** - Standard Schema libraries (Zod, Valibot, ArkType) already include excellent error messages in the `error.message` property.
+
+#### Philosophy
+
+```typescript
+// ✅ RECOMMENDED: Zero-config approach
+// Use Standard Schema libraries - they provide great error messages!
+import { z } from 'zod';
+
+const userSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
+// The toolkit automatically uses error.message from Zod ✨
+// No additional configuration needed!
+```
+
+#### When to Use Custom Error Messages
+
+Only configure error messages when you need to:
+
+- **Override default toolkit messages** for built-in Angular validators (required, email, minLength, etc.)
+- **Centralize messages** across multiple forms for consistency (DRY principle)
+- **Support internationalization (i18n)** with dynamic locale switching
+- **Match specific design system** or brand voice requirements
+
+**When NOT to use custom error messages:**
+
+- ✅ **Using Zod, Valibot, or ArkType** - These libraries provide excellent error messages out of the box
+- ✅ **Simple forms** - Toolkit's default messages are production-ready
+- ✅ **Single-language apps** - Default messages are clear and professional
+
+**Real-world use cases:**
+
+1. **Multi-language application** - Use JSON files or ngx-translate for locale-specific messages
+2. **Design system requirements** - Match brand voice (e.g., "Oops! Email required" vs. "This field is required")
+3. **Centralized validation** - Reuse same messages across 50+ forms without repeating validator messages
+4. **Custom validators** - Provide friendly messages for domain-specific validation (e.g., `username_taken`, `password_weak`)
+
+#### 3-Tier Message Priority
+
+The toolkit resolves error messages in this order:
+
+1. **Validator message** (`error.message` property) - **Always checked first!**
+2. **Registry override** (from `provideErrorMessages()`) - Fallback if no validator message
+3. **Default toolkit message** - Final fallback for built-in Angular validators
+
+#### Basic Usage (Centralized Overrides)
+
+```typescript
+import { provideErrorMessages } from '@ngx-signal-forms/toolkit';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideErrorMessages({
+      // Override built-in Angular validators
+      required: 'This field is required',
+      email: 'Please enter a valid email address',
+
+      // Factory functions for dynamic messages
+      minLength: (params: Record<string, unknown>) =>
+        `Minimum ${(params as { minLength: number }).minLength} characters required`,
+      maxLength: (params: Record<string, unknown>) =>
+        `Maximum ${(params as { maxLength: number }).maxLength} characters allowed`,
+
+      // Custom validators
+      phone_invalid: 'Please enter a valid phone number',
+      password_weak: 'Password must contain uppercase, lowercase, and numbers',
+    }),
+  ],
+};
+```
+
+#### i18n Integration Patterns
+
+**Pattern 1: JSON Files with Locale Injection**
+
+```typescript
+// app.config.ts
+import { LOCALE_ID } from '@angular/core';
+import { provideErrorMessages } from '@ngx-signal-forms/toolkit';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    { provide: LOCALE_ID, useValue: 'en-US' },
+    provideErrorMessages(() => {
+      const locale = inject(LOCALE_ID);
+      // Dynamically import locale-specific messages
+      const messages = {
+        'en-US': {
+          required: 'This field is required',
+          email: 'Please enter a valid email',
+        },
+        'ja-JP': {
+          required: 'このフィールドは必須です',
+          email: '有効なメールアドレスを入力してください',
+        },
+      };
+      return messages[locale as keyof typeof messages] || messages['en-US'];
+    }),
+  ],
+};
+```
+
+**Pattern 2: ngx-translate Integration**
+
+```typescript
+import { TranslateService } from '@ngx-translate/core';
+import { provideErrorMessages } from '@ngx-signal-forms/toolkit';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideErrorMessages(() => {
+      const translate = inject(TranslateService);
+      return {
+        required: translate.instant('ERRORS.REQUIRED'),
+        email: translate.instant('ERRORS.EMAIL'),
+        minLength: (params: Record<string, unknown>) =>
+          translate.instant('ERRORS.MIN_LENGTH', {
+            minLength: (params as { minLength: number }).minLength
+          }),
+      };
+    }),
+  ],
+};
+```
+
+**Pattern 3: @angular/localize**
+
+```typescript
+import { provideErrorMessages } from '@ngx-signal-forms/toolkit';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideErrorMessages({
+      required: $localize`:@@error.required:This field is required`,
+      email: $localize`:@@error.email:Please enter a valid email`,
+      minLength: (params: Record<string, unknown>) => {
+        const min = (params as { minLength: number }).minLength;
+        return $localize`:@@error.minLength:Minimum ${min} characters required`;
+      },
+    }),
+  ],
+};
+```
+
+**Pattern 4: TypeScript Message Files**
+
+```typescript
+// src/app/i18n/error-messages.ts
+import type { ErrorMessageRegistry } from '@ngx-signal-forms/toolkit';
+
+export const errorMessagesEn: ErrorMessageRegistry = {
+  required: 'This field is required',
+  email: 'Please enter a valid email',
+  minLength: (params: Record<string, unknown>) =>
+    `Minimum ${(params as { minLength: number }).minLength} characters`,
+};
+
+export const errorMessagesJa: ErrorMessageRegistry = {
+  required: 'このフィールドは必須です',
+  email: '有効なメールアドレスを入力してください',
+  minLength: (params: Record<string, unknown>) =>
+    `最小${(params as { minLength: number }).minLength}文字`,
+};
+
+// app.config.ts
+import { LOCALE_ID } from '@angular/core';
+import { provideErrorMessages } from '@ngx-signal-forms/toolkit';
+import { errorMessagesEn, errorMessagesJa } from './i18n/error-messages';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    { provide: LOCALE_ID, useValue: 'en-US' },
+    provideErrorMessages(() => {
+      const locale = inject(LOCALE_ID);
+      const messages = { 'en-US': errorMessagesEn, 'ja-JP': errorMessagesJa };
+      return messages[locale as keyof typeof messages] || errorMessagesEn;
+    }),
+  ],
+};
+```
+
+#### Built-in Validator Fallbacks
+
+The toolkit provides default fallback messages for Angular Signal Forms built-in validators:
+
+| Validator | Default Message |
+|-----------|----------------|
+| `required` | "This field is required" |
+| `email` | "Please enter a valid email address" |
+| `minLength` | "Minimum {minLength} characters required" |
+| `maxLength` | "Maximum {maxLength} characters allowed" |
+| `min` | "Minimum value is {min}" |
+| `max` | "Maximum value is {max}" |
+| `pattern` | "Invalid format" |
+
+**Custom validators** fall back to error kind with underscores replaced by spaces (e.g., `phone_invalid` → "Phone invalid").
+
+#### Migration from Manual Error Mapping
+
+**Before (Manual mapping in template):**
+
+```typescript
+@Component({
+  template: `
+    @if (form.email().invalid() && form.email().touched()) {
+      @for (error of form.email().errors(); track error.kind) {
+        <div class="error">
+          @switch (error.kind) {
+            @case ('required') { Email is required }
+            @case ('email') { Invalid email format }
+            @case ('minLength') { Min {{ error.minLength }} characters }
+          }
+        </div>
+      }
+    }
+  `
+})
+```
+
+**After (Zero-config with Zod):**
+
+```typescript
+import { z } from 'zod';
+import { zodToSignal } from '@ngx-signal-forms/zod';
+
+@Component({
+  template: `
+    <ngx-signal-form-error [field]="form.email" fieldName="email" />
+    <!-- Error messages come from Zod automatically! -->
+  `
+})
+export class MyComponent {
+  protected readonly form = zodToSignal(
+    signal({ email: '' }),
+    z.object({
+      email: z.string()
+        .min(1, 'Email is required')
+        .email('Invalid email format'),
+    })
+  );
+}
+```
+
+**After (Centralized registry):**
+
+```typescript
+// app.config.ts
+provideErrorMessages({
+  required: 'Email is required',
+  email: 'Invalid email format',
+  minLength: (params) => `Min ${(params as any).minLength} characters`,
+});
+
+// component.ts
+@Component({
+  template: `
+    <ngx-signal-form-error [field]="form.email" fieldName="email" />
+    <!-- Uses centralized messages -->
+  `
+})
+```
+
+#### API Reference
+
+```typescript
+/**
+ * Error message registry interface.
+ * Supports string literals and factory functions.
+ */
+interface ErrorMessageRegistry {
+  [errorKind: string]: string | ((params: Record<string, unknown>) => string) | undefined;
+}
+
+/**
+ * Injection token for error message registry.
+ * Default: Empty object (zero-config)
+ */
+const NGX_ERROR_MESSAGES: InjectionToken<ErrorMessageRegistry>;
+
+/**
+ * Provide custom error messages.
+ *
+ * @param configOrFactory - Static config object or factory function
+ * @returns Provider for error message registry
+ */
+function provideErrorMessages(
+  configOrFactory: ErrorMessageRegistry | (() => ErrorMessageRegistry)
+): Provider;
+```
+
 ---
 
 ## Form Field Components

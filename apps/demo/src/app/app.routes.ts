@@ -175,6 +175,14 @@ export const appRoutes: Routes = [
           ).then((m) => m.SubmissionPatternsPage),
         title: 'Submission Patterns - Async & Server Errors',
       },
+      {
+        path: 'error-messages',
+        loadComponent: () =>
+          import('./04-advanced/error-messages/error-messages.page').then(
+            (m) => m.ErrorMessagesPage,
+          ),
+        title: 'Error Messages - 3-Tier Priority & i18n',
+      },
     ],
   },
 

@@ -1,4 +1,5 @@
 import type { SignalLike } from '@angular/aria/ui-patterns';
+import type { ValidationError } from '@angular/forms/signals';
 import type { DeepPartial } from 'ts-essentials';
 
 /**
@@ -178,3 +179,46 @@ export type ExtractFieldState<T> = T extends () => infer State ? State : never;
 export type ExtractFieldValue<T> = T extends { value: () => infer V }
   ? V
   : never;
+
+/**
+ * ValidationError with additional validator-specific properties.
+ *
+ * Angular's ValidationError has a strict shape (kind, message), but validators
+ * can add additional properties (minLength, min, max, pattern, etc.).
+ *
+ * This type safely represents those additional properties as Record<string, unknown>,
+ * avoiding unsafe `as any` casts while maintaining type safety.
+ *
+ * ## Why this exists
+ *
+ * When validators create errors, they often include additional data:
+ * - `minLength` validator adds `{ kind: 'minLength', minLength: 8 }`
+ * - `min` validator adds `{ kind: 'min', min: 0 }`
+ * - Custom validators can add any properties
+ *
+ * TypeScript's strict type checking prevents direct access to these properties
+ * because ValidationError's interface doesn't include them. This intersection type
+ * provides a type-safe way to access validator parameters.
+ *
+ * @example Factory function with type-safe parameter access
+ * ```typescript
+ * const registry: ErrorMessageRegistry = {
+ *   minLength: (params) => {
+ *     // params is Record<string, unknown>, need type assertion for specific properties
+ *     const min = (params as { minLength: number }).minLength;
+ *     return `Minimum ${min} characters required`;
+ *   },
+ * };
+ * ```
+ *
+ * @example Component usage
+ * ```typescript
+ * function resolveMessage(error: ValidationError): string {
+ *   // Cast to ValidationErrorWithParams for factory function calls
+ *   const errorWithParams = error as ValidationErrorWithParams;
+ *   return factoryFn(errorWithParams);
+ * }
+ * ```
+ */
+export type ValidationErrorWithParams = ValidationError &
+  Record<string, unknown>;

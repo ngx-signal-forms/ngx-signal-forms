@@ -6,6 +6,7 @@ export * from './tokens';
 
 // Providers
 export * from './providers/config.provider';
+export * from './providers/error-messages.provider';
 
 // Directives
 export * from './directives/auto-aria.directive';

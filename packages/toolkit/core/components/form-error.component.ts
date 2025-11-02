@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  inject,
   input,
 } from '@angular/core';
 import type {
@@ -9,7 +10,12 @@ import type {
   SubmittedStatus,
   ValidationError,
 } from '@angular/forms/signals';
-import type { ErrorDisplayStrategy, ReactiveOrStatic } from '../types';
+import { NGX_ERROR_MESSAGES } from '../providers/error-messages.provider';
+import type {
+  ErrorDisplayStrategy,
+  ReactiveOrStatic,
+  ValidationErrorWithParams,
+} from '../types';
 import {
   generateErrorId,
   generateWarningId,
@@ -147,7 +153,7 @@ import { showErrors } from '../utilities/show-errors';
         aria-live="assertive"
         aria-atomic="true"
       >
-        @for (error of errors(); track error.kind) {
+        @for (error of resolvedErrors(); track error.kind) {
           <p
             class="ngx-signal-form-error__message ngx-signal-form-error__message--error"
           >
@@ -166,7 +172,7 @@ import { showErrors } from '../utilities/show-errors';
         aria-live="polite"
         aria-atomic="true"
       >
-        @for (warning of warnings(); track warning.kind) {
+        @for (warning of resolvedWarnings(); track warning.kind) {
           <p
             class="ngx-signal-form-error__message ngx-signal-form-error__message--warning"
           >
@@ -359,6 +365,18 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * Try to inject form context (optional - may not be available).
    */
   readonly #injectedContext = injectFormContext();
+
+  /**
+   * Try to inject error messages registry (optional - may not be provided).
+   *
+   * Used for 3-tier message priority:
+   * 1. error.message (from validator/Zod schema) ← Use first!
+   * 2. Registry override (from provideErrorMessages())
+   * 3. Default fallback (built-in toolkit messages)
+   */
+  readonly #errorMessagesRegistry = inject(NGX_ERROR_MESSAGES, {
+    optional: true,
+  });
 
   /**
    * The Signal Forms field to display errors/warnings for.
@@ -632,4 +650,93 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * Whether the field has non-blocking warnings.
    */
   protected readonly hasWarnings = computed(() => this.warnings().length > 0);
+
+  /**
+   * Resolve error message using 3-tier priority:
+   * 1. error.message (from validator/Zod schema) ← Use first!
+   * 2. Registry override (from provideErrorMessages())
+   * 3. Default fallback (built-in toolkit messages)
+   *
+   * @param error The validation error
+   * @returns The resolved error message
+   */
+  #resolveErrorMessage(error: ValidationError): string {
+    // Tier 1: Use error.message if provided by validator (Zod/Valibot/custom)
+    if (error.message) {
+      return error.message;
+    }
+
+    // Tier 2: Check registry for override
+    if (this.#errorMessagesRegistry) {
+      const registryMessage = this.#errorMessagesRegistry[error.kind];
+      if (registryMessage !== undefined) {
+        if (typeof registryMessage === 'function') {
+          // Factory function - pass error object as params
+          // ValidationError has strict shape, but validators add properties (minLength, min, max, etc.)
+          return registryMessage(error as ValidationErrorWithParams);
+        }
+        // String literal
+        return registryMessage;
+      }
+    }
+
+    // Tier 3: Default fallback messages
+    return this.#getDefaultMessage(error);
+  }
+
+  /**
+   * Get default fallback message for built-in validators.
+   *
+   * Used when validator doesn't provide message AND registry doesn't override.
+   *
+   * @param error The validation error
+   * @returns Default error message
+   */
+  #getDefaultMessage(error: ValidationError): string {
+    const kind = error.kind;
+    // Cast to ValidationErrorWithParams to access validator-specific properties
+    const errorParams = error as ValidationErrorWithParams;
+
+    // Built-in Angular Signal Forms validators
+    switch (kind) {
+      case 'required':
+        return 'This field is required';
+      case 'email':
+        return 'Please enter a valid email address';
+      case 'minLength':
+        return `Minimum ${errorParams['minLength'] || 0} characters required`;
+      case 'maxLength':
+        return `Maximum ${errorParams['maxLength'] || 0} characters allowed`;
+      case 'min':
+        return `Minimum value is ${errorParams['min'] || 0}`;
+      case 'max':
+        return `Maximum value is ${errorParams['max'] || 0}`;
+      case 'pattern':
+        return 'Invalid format';
+      default:
+        // Custom validators: convert error kind to human-readable message
+        // e.g., 'phone_invalid' → 'Phone invalid'
+        return kind.replace(/_/g, ' ');
+    }
+  }
+
+  /**
+   * Computed array of resolved error messages (not warnings).
+   */
+  protected readonly resolvedErrors = computed(() => {
+    return this.errors().map((error) => ({
+      kind: error.kind,
+      message: this.#resolveErrorMessage(error),
+    }));
+  });
+
+  /**
+   * Computed array of resolved warning messages.
+   */
+  protected readonly resolvedWarnings = computed(() => {
+    return this.warnings().map((warning) => ({
+      kind: warning.kind,
+      message: this.#resolveErrorMessage(warning),
+    }));
+  });
 }

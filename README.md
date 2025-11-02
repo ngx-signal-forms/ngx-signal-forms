@@ -20,15 +20,17 @@ npm install @ngx-signal-forms/toolkit
 
 ## Why This Library?
 
-Angular Signal Forms (introduced in v21) provides an excellent foundation for reactive forms with built-in validation, type safety, automatic touch tracking via the `[field]` directive, and submission state management via `submittedStatus()`. However, it doesn't include:
+Angular Signal Forms (introduced in v21) provides an excellent foundation for reactive forms with built-in validation, type safety, automatic touch tracking via the `[field]` directive, and submission state management via `submittedStatus()`.
 
-- ❌ Automatic ARIA attributes for accessibility (`aria-invalid`, `aria-describedby`)
-- ❌ Flexible error display strategies (immediate, on-touch, on-submit, manual)
-- ❌ Reusable form field components with consistent layouts
-- ❌ Warning support (non-blocking validation messages)
-- ❌ DI-based configuration for form behavior
+**@ngx-signal-forms/toolkit builds on this foundation by adding:**
 
-**This toolkit fills those gaps** while maintaining 100% compatibility with Signal Forms' API and enhancing its built-in features.
+- ✅ **Automatic ARIA attributes** for accessibility (`aria-invalid`, `aria-describedby`)
+- ✅ **Flexible error display strategies** (immediate, on-touch, on-submit, manual)
+- ✅ **Reusable form field components** with consistent layouts
+- ✅ **Warning support** (non-blocking validation messages)
+- ✅ **DI-based configuration** for centralized form behavior
+
+All enhancements maintain 100% compatibility with Signal Forms' API—no breaking changes, just added capabilities you can opt into.
 
 ## What Makes It Different?
 

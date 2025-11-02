@@ -139,6 +139,10 @@ export class AppComponent implements AfterViewInit {
           path: '/advanced/submission-patterns',
           label: 'Submission Patterns',
         },
+        {
+          path: '/advanced/error-messages',
+          label: 'Error Messages',
+        },
       ],
     },
   ] as const;
