@@ -894,4 +894,189 @@ describe('NgxSignalFormFieldComponent', () => {
       expect(button?.getAttribute('type')).toBe('button');
     });
   });
+
+  describe('Prefix/Suffix Projection', () => {
+    it('should project prefix content', async () => {
+      const { container } = await render(
+        `<ngx-signal-form-field [field]="field">
+          <span prefix aria-hidden="true">🔍</span>
+          <label for="search">Search</label>
+          <input id="search" type="text" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const prefix = container.querySelector('[prefix]');
+      expect(prefix).toBeTruthy();
+      expect(prefix?.textContent).toBe('🔍');
+      expect(prefix?.getAttribute('aria-hidden')).toBe('true');
+    });
+
+    it('should project suffix content', async () => {
+      const { container } = await render(
+        `<ngx-signal-form-field [field]="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" />
+          <button suffix type="button">Show</button>
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const suffix = container.querySelector('[suffix]');
+      expect(suffix).toBeTruthy();
+      expect(suffix?.textContent).toBe('Show');
+      expect(suffix?.getAttribute('type')).toBe('button');
+    });
+
+    it('should project both prefix and suffix content', async () => {
+      const { container } = await render(
+        `<ngx-signal-form-field [field]="field">
+          <span prefix aria-hidden="true">$</span>
+          <label for="amount">Amount</label>
+          <input id="amount" type="number" />
+          <span suffix aria-hidden="true">.00</span>
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const prefix = container.querySelector('[prefix]');
+      const suffix = container.querySelector('[suffix]');
+
+      expect(prefix?.textContent).toBe('$');
+      expect(suffix?.textContent).toBe('.00');
+    });
+
+    it('should maintain proper layout with prefix', async () => {
+      const { container } = await render(
+        `<ngx-signal-form-field [field]="field">
+          <span prefix>Icon</span>
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const content = container.querySelector(
+        '.ngx-signal-form-field__content',
+      );
+      const prefix = container.querySelector('.ngx-signal-form-field__prefix');
+      const main = container.querySelector('.ngx-signal-form-field__main');
+      const suffix = container.querySelector('.ngx-signal-form-field__suffix');
+
+      expect(content).toBeTruthy();
+      expect(prefix).toBeTruthy();
+      expect(main).toBeTruthy();
+      expect(suffix).toBeTruthy();
+
+      // Verify DOM structure
+      expect(content?.contains(prefix!)).toBe(true);
+      expect(content?.contains(main!)).toBe(true);
+      expect(content?.contains(suffix!)).toBe(true);
+    });
+
+    it('should hide empty prefix slot', async () => {
+      const { container } = await render(
+        `<ngx-signal-form-field [field]="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const prefix = container.querySelector('.ngx-signal-form-field__prefix');
+      expect(prefix).toBeTruthy();
+
+      // Empty prefix should have no child elements
+      expect(prefix?.children.length).toBe(0);
+      expect(prefix?.textContent?.trim()).toBe('');
+    });
+
+    it('should hide empty suffix slot', async () => {
+      const { container } = await render(
+        `<ngx-signal-form-field [field]="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const suffix = container.querySelector('.ngx-signal-form-field__suffix');
+      expect(suffix).toBeTruthy();
+
+      // Empty suffix should have no child elements
+      expect(suffix?.children.length).toBe(0);
+      expect(suffix?.textContent?.trim()).toBe('');
+    });
+
+    it('should support interactive suffix elements', async () => {
+      const { container } = await render(
+        `<ngx-signal-form-field [field]="field">
+          <label for="search">Search</label>
+          <input id="search" type="text" />
+          <button suffix type="button">Clear</button>
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const suffixButton = container.querySelector(
+        '[suffix] button, button[suffix]',
+      );
+      expect(suffixButton).toBeTruthy();
+      expect(suffixButton?.getAttribute('type')).toBe('button');
+    });
+
+    it('should support multiple prefix elements', async () => {
+      const { container } = await render(
+        `<ngx-signal-form-field [field]="field">
+          <span prefix>@</span>
+          <label for="username">Username</label>
+          <input id="username" type="text" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const prefixes = container.querySelectorAll('[prefix]');
+      expect(prefixes.length).toBeGreaterThan(0);
+    });
+  });
 });

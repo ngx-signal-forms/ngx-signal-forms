@@ -141,6 +141,54 @@ export class LegacyFormComponent {
 }
 ```
 
+#### Custom CSS Classes (Angular 21.0.1+)
+
+**Angular Signal Forms now supports automatic CSS class injection** via `provideSignalFormsConfig({ classes: ... })`. This native feature allows you to restore the classic `ng-*` classes or define custom ones.
+
+**Built-in preset:**
+
+```typescript
+import { NG_STATUS_CLASSES, provideSignalFormsConfig } from '@angular/forms/signals';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideSignalFormsConfig({
+      classes: NG_STATUS_CLASSES, // Adds ng-valid, ng-invalid, ng-touched, etc.
+    }),
+  ],
+};
+```
+
+**Available in `NG_STATUS_CLASSES`:**
+- `ng-touched` / `ng-untouched`
+- `ng-dirty` / `ng-pristine`
+- `ng-valid` / `ng-invalid`
+- `ng-pending`
+
+**Custom classes:**
+
+```typescript
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideSignalFormsConfig({
+      classes: {
+        // Match your design system naming
+        'field-invalid': (state) => state.invalid(),
+        'field-error': (state) => state.invalid() && state.touched(),
+        'border-red-500': (state) => state.invalid() && state.touched(), // Tailwind
+      },
+    }),
+  ],
+};
+```
+
+**How it works:**
+1. The `Field` directive automatically applies/removes classes based on field state
+2. No manual `[class.xyz]` bindings needed in templates
+3. Works with any CSS framework (Tailwind, Bootstrap, etc.)
+
+**Read more:** [Custom Form Status Classes in Angular Signal Forms](https://netbasal.medium.com/custom-form-status-classes-in-angular-signal-forms-388553becd68)
+
 ### State Management
 
 **Signal-first - REQUIRED:**

@@ -1,3 +1,9 @@
+<div class="mb-6 text-center">
+  <p class="text-sm text-gray-600 dark:text-gray-400">
+    Complex nested form with outlined fields matching Figma design system
+  </p>
+</div>
+
 <form
   [ngxSignalForm]="showcaseForm"
   [errorStrategy]="errorDisplayMode()"
@@ -20,6 +26,7 @@
         <button
           type="button"
           class="rounded p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-red-400"
+          class="inline-flex items-center justify-center rounded p-2 leading-none text-gray-500 transition-colors hover:bg-gray-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-red-400"
           (click)="removeFact(factIndex)"
           aria-label="Feit {{ fact.factNumber }} verwijderen"
         >
@@ -42,6 +49,21 @@
         [field]="showcaseForm.facts[factIndex].commitDate"
         outline
       >
+        <svg
+          prefix
+          aria-hidden="true"
+          class="size-5 text-gray-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+          />
+        </svg>
         <label for="commitDate-{{ factIndex }}">Pleegdatum</label>
         <input
           id="commitDate-{{ factIndex }}"
@@ -55,6 +77,21 @@
         [field]="showcaseForm.facts[factIndex].commitPeriod"
         outline
       >
+        <svg
+          prefix
+          aria-hidden="true"
+          class="size-5 text-gray-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+          />
+        </svg>
         <label for="commitPeriod-{{ factIndex }}">Pleegperiode</label>
         <input
           id="commitPeriod-{{ factIndex }}"
@@ -87,6 +124,26 @@
         [field]="showcaseForm.facts[factIndex].place"
         outline
       >
+        <svg
+          prefix
+          aria-hidden="true"
+          class="size-5 text-gray-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+          />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
+          />
+        </svg>
         <label for="place-{{ factIndex }}">Plaats</label>
         <input
           id="place-{{ factIndex }}"
@@ -100,6 +157,26 @@
         [field]="showcaseForm.facts[factIndex].municipality"
         outline
       >
+        <svg
+          prefix
+          aria-hidden="true"
+          class="size-5 text-gray-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+          />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
+          />
+        </svg>
         <label for="municipality-{{ factIndex }}">Gemeente</label>
         <input
           id="municipality-{{ factIndex }}"
@@ -142,18 +219,45 @@
 
     <!-- Offenses Section -->
     <div class="mt-4 space-y-4">
-      <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-        Strafbare feiten
-      </h4>
-
       @for (offense of fact.offenses; track $index; let offenseIndex = $index) {
-      <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <div
+        class="rounded-lg border border-[rgba(172,178,187,0.25)] bg-[rgba(255,255,255,0.25)] p-4 dark:border-[rgba(172,178,187,0.25)]"
+      >
+        <!-- Offense Header -->
+        <div class="mb-4 flex items-center gap-3">
+          <h4 class="text-sm font-semibold text-[#324155] dark:text-gray-300">
+            Strafbaar feit
+          </h4>
+          <div class="h-px flex-1 bg-[rgba(50,65,85,0.25)]"></div>
+          <div class="flex items-center gap-2">
+            <span
+              class="rounded border border-[rgba(131,141,155,0.5)] bg-[#fafbfb] px-2 py-1 text-xs text-[#838d9b]"
+            >
+              {{ offenseIndex + 1 }}
+            </span>
+          </div>
+        </div>
         <div class="flex items-start gap-4">
           <div class="flex-1 space-y-4">
             <ngx-signal-form-field
               [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].qualification"
               outline
             >
+              <svg
+                prefix
+                aria-hidden="true"
+                class="size-5 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                />
+              </svg>
               <label for="qualification-{{ factIndex }}-{{ offenseIndex }}">
                 Kwalificatiecode
               </label>
@@ -163,90 +267,130 @@
                 [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].qualification"
                 placeholder="SR-310"
               />
+              <!-- Group-level remove: align with first input by using suffix slot -->
+              <button
+                suffix
+                type="button"
+                class="inline-flex items-center justify-center rounded p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-red-400"
+                (click)="removeOffense(factIndex, offenseIndex)"
+                aria-label="Strafbaar feit verwijderen"
+              >
+                <svg
+                  class="size-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                  />
+                </svg>
+              </button>
             </ngx-signal-form-field>
 
-            <!-- Articles -->
-            <div class="space-y-3">
-              <h5 class="text-xs font-medium text-gray-600 dark:text-gray-400">
-                Wetsartikelen
-              </h5>
-
-              @for (article of offense.articles; track $index; let articleIndex
-              = $index) {
-              <div class="flex items-start gap-2">
-                <ngx-signal-form-field
-                  [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles[articleIndex].article"
-                  outline
-                  class="flex-1"
+            <!-- Articles (Wetsartikelen) -->
+            <div class="space-y-2">
+              <!-- Wetsartikelen Header -->
+              <div class="flex items-center gap-3">
+                <h5
+                  class="text-sm font-semibold text-[#324155] dark:text-gray-300"
                 >
-                  <label
-                    for="article-{{ factIndex }}-{{ offenseIndex }}-{{ articleIndex }}"
-                  >
-                    Wetsartikel
-                  </label>
-                  <select
-                    id="article-{{ factIndex }}-{{ offenseIndex }}-{{ articleIndex }}"
-                    [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles[articleIndex].article"
-                  >
-                    @for (legalArticle of legalArticles; track
-                    legalArticle.value) {
-                    <option [value]="legalArticle.value">
-                      {{ legalArticle.label }}
-                    </option>
-                    }
-                  </select>
-                </ngx-signal-form-field>
-                <button
-                  type="button"
-                  class="mt-8 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
-                  (click)="removeArticle(factIndex, offenseIndex, articleIndex)"
-                  aria-label="Wetsartikel verwijderen"
-                >
-                  <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M5.833 5v10.833c0 .442.175.866.488 1.179.312.312.736.488 1.179.488h5c.442 0 .866-.175 1.179-.488.312-.313.488-.737.488-1.179V5m-10 0h2.5m0 0V3.333c0-.442.175-.866.488-1.179.312-.312.736-.488 1.179-.488h3.333c.442 0 .866.176 1.179.488.312.313.488.737.488 1.179V5m-6.667 0h6.667m0 0h2.5"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </button>
+                  Wetsartikelen
+                </h5>
+                <div class="h-px flex-1 bg-[rgba(50,65,85,0.25)]"></div>
               </div>
-              }
 
-              <!-- Array-level validation errors for articles -->
-              <ngx-signal-form-error
-                [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles"
-                [fieldName]="'articles-' + factIndex + '-' + offenseIndex"
-              />
+              <!-- Articles List with Left Border -->
+              <div class="flex gap-2">
+                <div
+                  class="w-1 shrink-0 rounded bg-[rgba(172,178,187,0.25)]"
+                ></div>
+                <div class="flex-1 space-y-2">
+                  @for (article of offense.articles; track $index; let
+                  articleIndex = $index) {
+                  <div class="flex items-center gap-2">
+                    <ngx-signal-form-field
+                      [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles[articleIndex].article"
+                      outline
+                      class="flex-1"
+                    >
+                      <label
+                        for="article-{{ factIndex }}-{{ offenseIndex }}-{{ articleIndex }}"
+                        >Wetsartikel</label
+                      >
+                      <select
+                        id="article-{{ factIndex }}-{{ offenseIndex }}-{{ articleIndex }}"
+                        [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles[articleIndex].article"
+                      >
+                        @for (legalArticle of legalArticles; track
+                        legalArticle.value) {
+                        <option [value]="legalArticle.value">
+                          {{ legalArticle.label }}
+                        </option>
+                        }
+                      </select>
+                      <!-- Align remove icon with the select by placing it in the field suffix slot -->
+                      <button
+                        suffix
+                        type="button"
+                        class="inline-flex items-center justify-center rounded p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-red-400"
+                        (click)="removeArticle(factIndex, offenseIndex, articleIndex)"
+                        aria-label="Wetsartikel verwijderen"
+                      >
+                        <svg
+                          class="size-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke-width="1.5"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                          />
+                        </svg>
+                      </button>
+                    </ngx-signal-form-field>
+                  </div>
+                  }
 
-              <button
-                type="button"
-                class="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
-                (click)="addArticle(factIndex, offenseIndex)"
-              >
-                + Wetsartikel toevoegen
-              </button>
+                  <!-- Array-level validation errors for articles -->
+                  <ngx-signal-form-error
+                    [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles"
+                    [fieldName]="'articles-' + factIndex + '-' + offenseIndex"
+                  />
+
+                  <button
+                    type="button"
+                    class="flex h-9 w-full items-center justify-center gap-2 rounded text-sm text-[#738aab] transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                    (click)="addArticle(factIndex, offenseIndex)"
+                  >
+                    <svg
+                      class="size-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="1.5"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 4.5v15m7.5-7.5h-15"
+                      />
+                    </svg>
+                    Wetsartikel toevoegen
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <button
-            type="button"
-            class="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
-            (click)="removeOffense(factIndex, offenseIndex)"
-            aria-label="Strafbaar feit verwijderen"
-          >
-            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M16.667 5H3.333M15.833 5l-.833 10c0 .917-.75 1.667-1.667 1.667H6.667c-.917 0-1.667-.75-1.667-1.667L4.167 5M7.5 5V3.333c0-.916.75-1.666 1.667-1.666h1.666c.917 0 1.667.75 1.667 1.666V5"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </button>
+          <!-- Move group remove button into first field as a suffix to align with input center -->
+          <div class="sr-only">&nbsp;</div>
         </div>
       </div>
       }
@@ -259,10 +403,23 @@
 
       <button
         type="button"
-        class="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+        class="flex h-9 w-full items-center justify-center gap-2 rounded text-sm text-indigo-600 transition-colors hover:bg-indigo-50 hover:text-indigo-800 dark:text-indigo-400 dark:hover:bg-indigo-950 dark:hover:text-indigo-300"
         (click)="addOffense(factIndex)"
       >
-        + Strafbaar feit toevoegen
+        <svg
+          class="size-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 4.5v15m7.5-7.5h-15"
+          />
+        </svg>
+        Strafbaar feit toevoegen
       </button>
     </div>
   </ngx-card>

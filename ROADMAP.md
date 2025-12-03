@@ -178,143 +178,36 @@ maxLength(path.bio, 500);
 
 ---
 
-### 5. Error Message Fallback Registry (Optional Override)
+### 5. Error Message Fallback Registry (Optional Override) ✅ COMPLETED
 
-**Status:** ⚪ Not started
+**Status:** ✅ Completed (November 2, 2025)
 **Effort:** Medium
-**Files:** `packages/toolkit/core/providers/error-messages.provider.ts` (new)
+**Files:** `packages/toolkit/core/providers/error-messages.provider.ts`, `packages/toolkit/core/components/form-error.component.ts`
 
 **Philosophy:** Zero-config by default. Standard Schema libraries (Zod, Valibot, ArkType) already include error messages in their validation results. This registry provides **optional overrides** for centralization and i18n.
 
-**Zero-Config Pattern (Recommended):**
+**Implementation:**
 
-```typescript
-// schemas/user.schema.ts
-import { z } from 'zod';
-
-export const userSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-});
-
-// component.ts
-form(signal(data), (path) => {
-  validateStandardSchema(path, userSchema);
-});
-
-// ✅ No configuration needed! Messages from Zod schema work automatically
-```
-
-**Centralized Override Pattern (Optional):**
-
-```typescript
-import { provideErrorMessages } from '@ngx-signal-forms/toolkit';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideErrorMessages({
-      // Override Angular Signal Forms built-in validators
-      required: 'This field is required',
-      email: 'Please enter a valid email',
-
-      // Parameterized factories for validators without custom messages
-      minLength: ({ minLength }) => `At least ${minLength} characters required`,
-
-      // Custom validators
-      username_taken: 'This username is already taken',
-      'warn:weak-password': 'Consider using 12+ characters',
-    }),
-  ],
-};
-```
-
-**i18n Integration (Angular Standard - JSON files):**
-
-```typescript
-// locales/en.json
-{
-  "validation": {
-    "required": "This field is required",
-    "email": "Please enter a valid email",
-    "minLength": "At least {minLength} characters required",
-    "username_taken": "This username is already taken"
-  }
-}
-
-// locales/ja.json
-{
-  "validation": {
-    "required": "このフィールドは必須です",
-    "email": "有効なメールアドレスを入力してください",
-    "minLength": "{minLength}文字以上必要です",
-    "username_taken": "このユーザー名は既に使用されています"
-  }
-}
-
-// app.config.ts
-import { LOCALE_ID } from '@angular/core';
-import enMessages from './locales/en.json';
-import jaMessages from './locales/ja.json';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideErrorMessages((locale: string) => {
-      const messages = locale === 'ja' ? jaMessages.validation : enMessages.validation;
-
-      return {
-        required: messages.required,
-        email: messages.email,
-        minLength: ({ minLength }) => messages.minLength.replace('{minLength}', minLength),
-        username_taken: messages.username_taken,
-      };
-    }),
-  ],
-};
-```
-
-**Alternative i18n Patterns:**
-
-```typescript
-// Pattern 1: ngx-translate integration
-import { TranslateService } from '@ngx-translate/core';
-
-provideErrorMessages({
-  required: () => inject(TranslateService).instant('validation.required'),
-  email: () => inject(TranslateService).instant('validation.email'),
-});
-
-// Pattern 2: @angular/localize integration
-provideErrorMessages({
-  required: $localize`This field is required`,
-  email: $localize`Please enter a valid email`,
-});
-
-// Pattern 3: TypeScript message files
-import { enValidationMessages, jaValidationMessages } from './messages';
-
-const locale = inject(LOCALE_ID);
-provideErrorMessages(
-  locale === 'ja' ? jaValidationMessages : enValidationMessages,
-);
-```
+- ✅ Created `NGX_ERROR_MESSAGES` injection token with empty default
+- ✅ Created `ErrorMessageRegistry` interface supporting string literals and factory functions
+- ✅ Created `provideErrorMessages()` function accepting static config or dynamic factory
+- ✅ Integrated 3-tier message priority in `NgxSignalFormErrorComponent`:
+  1. Validator message (`error.message` property) - Highest priority
+  2. Registry override (from provider) - Fallback
+  3. Default toolkit message - Final fallback
+- ✅ Added built-in fallback messages for Angular validators (required, email, minLength, etc.)
+- ✅ Comprehensive JSDoc with 4 i18n integration patterns
+- ✅ Demo example showcasing all 3 tiers
+- ✅ Tests: 16 tests across 5 suites, all passing
 
 **Benefits:**
 
-- ✅ **Zero boilerplate** - Standard Schema messages work out of the box
-- ✅ **Opt-in override** - Configure only when needed for centralization
-- ✅ **Framework agnostic** - Works with Zod, Valibot, ArkType, or any Standard Schema library
-- ✅ **Standard i18n** - Follows Angular conventions (JSON files, `@angular/localize`)
-- ✅ **No vendor lock-in** - Don't need to map every Zod/Valibot error kind
-- ✅ **Backward compatible** - Angular Signal Forms built-in validators get overrides
-
-**Implementation Notes:**
-
-- Create `NGX_ERROR_MESSAGES` injection token
-- Support string literals, factory functions, and provider functions
-- Message priority: `error.message` (from validator) → registry override → default fallback
-- Registry is **optional** - not required for Standard Schema to work
-- Use in `NgxSignalFormErrorComponent` to display messages
-- Support both static config and dynamic providers (for locale injection)
+- Zero boilerplate - Standard Schema messages work out of the box
+- Opt-in override - Configure only when needed for centralization
+- Framework agnostic - Works with Zod, Valibot, ArkType, or any Standard Schema library
+- Standard i18n - Supports JSON files, ngx-translate, @angular/localize, TypeScript files
+- No vendor lock-in - Don't need to map every Zod/Valibot error kind
+- Backward compatible - Angular Signal Forms built-in validators get overrides
 
 ---
 
@@ -380,9 +273,9 @@ Add size variants for visual hierarchy and mobile optimization.
 
 ---
 
-### 8. Prefix/Suffix Projection Slots
+### 8. Prefix/Suffix Projection Slots ✅ COMPLETED
 
-**Status:** ⚪ Not started
+**Status:** ✅ Completed (November 3, 2025)
 **Effort:** Medium
 **Files:** `packages/toolkit/form-field/form-field.component.ts`, `.scss`
 
@@ -398,10 +291,21 @@ Support icons and text before/after inputs (Material pattern).
 
 **Implementation:**
 
-- Add `<ng-content select="[prefix]">` and `[suffix]` slots
-- Position with flexbox/grid
-- Ensure proper focus states
-- Accessibility: prefix/suffix should not be focusable
+- ✅ Add `<ng-content select="[prefix]">` and `[suffix]` slots
+- ✅ Position with flexbox
+- ✅ Ensure proper focus states
+- ✅ Accessibility: prefix/suffix should not be focusable unless interactive
+- ✅ Support for both standard and outlined layouts
+- ✅ CSS custom properties for theming (gap, color)
+- ✅ Interactive elements (buttons) support with proper focus indicators
+- ✅ Empty slots hidden automatically via CSS :empty selector
+
+**Benefits:**
+
+- Modern input patterns (search with icon, password with show/hide, currency inputs)
+- Flexible and composable (supports any content - icons, text, buttons)
+- Accessible by default (decorative vs interactive handling)
+- Consistent with Material Design and other design systems
 
 ---
 
@@ -548,9 +452,29 @@ Type system improvements:
 
 ## Completed Items
 
+### ✅ Prefix/Suffix Projection Slots (November 3, 2025)
+
+Material Design-inspired prefix/suffix slots with flexbox layout, automatic empty slot hiding, and full theming support.
+
 ### ✅ Field-Level Error Strategy Override (November 1, 2025)
 
 Per-field strategy override with 'inherit' option for flexible error UX.
+
+### ✅ Auto-Focus on First Invalid Field (November 1, 2025)
+
+`focusFirstInvalid()` utility for accessibility and UX improvements.
+
+### ✅ Form Submission Helper Utilities (November 1, 2025)
+
+Computed signals (`canSubmit()`, `isSubmitting()`, `hasSubmitted()`) for reducing template boilerplate.
+
+### ✅ Character Count Auto-Detection (November 1, 2025)
+
+Auto-derives `maxLength` from field validation with optional manual override.
+
+### ✅ Error Message Fallback Registry (November 2, 2025)
+
+3-tier priority system with zero-config by default, optional centralized overrides for i18n.
 
 ### ✅ WCAG 2.2 Level AA Compliance
 

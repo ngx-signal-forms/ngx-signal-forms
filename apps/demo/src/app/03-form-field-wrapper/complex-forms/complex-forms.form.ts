@@ -64,6 +64,21 @@ import { complexFormSchema } from './complex-forms.validations';
             [field]="complexForm.personalInfo.email"
             fieldName="email"
           >
+            <svg
+              prefix
+              aria-hidden="true"
+              class="size-5 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
+              />
+            </svg>
             <label for="email">Email *</label>
             <input
               id="email"
@@ -84,6 +99,9 @@ import { complexFormSchema } from './complex-forms.validations';
               min="18"
               max="120"
             />
+            <span suffix aria-hidden="true" class="text-sm text-gray-400"
+              >years</span
+            >
           </ngx-signal-form-field>
         </div>
       </fieldset>
@@ -103,6 +121,26 @@ import { complexFormSchema } from './complex-forms.validations';
             [field]="complexForm.addressInfo.street"
             fieldName="street"
           >
+            <svg
+              prefix
+              aria-hidden="true"
+              class="size-5 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21 10.5c0 7.5-9 12-9 12s-9-4.5-9-12a9 9 0 1 1 18 0Z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 12.75a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z"
+              />
+            </svg>
             <label for="street">Street Address *</label>
             <input
               id="street"
@@ -167,7 +205,7 @@ import { complexFormSchema } from './complex-forms.validations';
 
         @for (skill of complexForm.skills; track $index; let i = $index) {
           <div
-            class="mb-4 grid grid-cols-1 items-start gap-4 md:grid-cols-[1fr,150px,auto]"
+            class="mb-4 grid grid-cols-1 items-start gap-4 md:grid-cols-[1fr,150px]"
           >
             <ngx-signal-form-field
               [field]="complexForm.skills[i].name"
@@ -180,6 +218,15 @@ import { complexFormSchema } from './complex-forms.validations';
                 [field]="complexForm.skills[i].name"
                 placeholder="e.g., Angular"
               />
+              <button
+                suffix
+                type="button"
+                (click)="removeSkill(i)"
+                class="text-gray-400 transition-colors hover:text-red-600 dark:hover:text-red-400"
+                [attr.aria-label]="'Remove skill ' + (i + 1)"
+              >
+                ✕
+              </button>
             </ngx-signal-form-field>
 
             <ngx-signal-form-field
@@ -195,17 +242,6 @@ import { complexFormSchema } from './complex-forms.validations';
                 max="10"
               />
             </ngx-signal-form-field>
-
-            <div class="flex items-end">
-              <button
-                type="button"
-                (click)="removeSkill(i)"
-                class="btn-secondary h-[42px]"
-                [attr.aria-label]="'Remove skill ' + (i + 1)"
-              >
-                Remove
-              </button>
-            </div>
           </div>
         }
 
@@ -226,7 +262,7 @@ import { complexFormSchema } from './complex-forms.validations';
 
         @for (contact of complexForm.contacts; track $index; let i = $index) {
           <div
-            class="mb-4 grid grid-cols-1 items-start gap-4 md:grid-cols-[150px,1fr,auto]"
+            class="mb-4 grid grid-cols-1 items-start gap-4 md:grid-cols-[150px,1fr]"
           >
             <ngx-signal-form-field
               [field]="complexForm.contacts[i].type"
@@ -247,6 +283,39 @@ import { complexFormSchema } from './complex-forms.validations';
               [field]="complexForm.contacts[i].value"
               [fieldName]="'contact-' + i + '-value'"
             >
+              @if (complexForm.contacts[i].type().value() === 'email') {
+                <svg
+                  prefix
+                  aria-hidden="true"
+                  class="size-5 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
+                  />
+                </svg>
+              } @else if (complexForm.contacts[i].type().value() === 'phone') {
+                <svg
+                  prefix
+                  aria-hidden="true"
+                  class="size-5 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M2.25 6.75c0 8.284 6.716 15 15 15H19.5A2.25 2.25 0 0 0 21.75 19.5v-1.372a1.125 1.125 0 0 0-.852-1.09l-4.423-1.106a1.125 1.125 0 0 0-1.257.517l-.916 1.532a12.035 12.035 0 0 1-5.292-5.292l1.532-.916a1.125 1.125 0 0 0 .517-1.257L6.962 3.852A1.125 1.125 0 0 0 5.872 3H4.5A2.25 2.25 0 0 0 2.25 5.25v1.5Z"
+                  />
+                </svg>
+              }
               <label [for]="'contact-' + i + '-value'">Value *</label>
               <input
                 [id]="'contact-' + i + '-value'"
@@ -258,18 +327,16 @@ import { complexFormSchema } from './complex-forms.validations';
                     : '+1 (555) 123-4567'
                 "
               />
-            </ngx-signal-form-field>
-
-            <div class="flex items-end">
               <button
+                suffix
                 type="button"
                 (click)="removeContact(i)"
-                class="btn-secondary h-[42px]"
+                class="text-gray-400 transition-colors hover:text-red-600 dark:hover:text-red-400"
                 [attr.aria-label]="'Remove contact ' + (i + 1)"
               >
-                Remove
+                ✕
               </button>
-            </div>
+            </ngx-signal-form-field>
           </div>
         }
 

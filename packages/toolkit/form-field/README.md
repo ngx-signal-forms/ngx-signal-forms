@@ -123,6 +123,74 @@ The component uses content projection to allow full customization:
 </ngx-signal-form-field>
 ```
 
+#### Prefix/Suffix Slots
+
+Add icons, text, or interactive elements before or after the input using `prefix` and `suffix` attributes.
+
+**Search icon prefix:**
+
+```html
+<ngx-signal-form-field [field]="form.search">
+  <span prefix aria-hidden="true">🔍</span>
+  <label for="search">Search</label>
+  <input id="search" [field]="form.search"  />
+</ngx-signal-form-field>
+```
+
+**Show/hide password button suffix:**
+
+```html
+<ngx-signal-form-field [field]="form.password">
+  <label for="password">Password</label>
+  <input
+    id="password"
+    [type]="showPassword() ? 'text' : 'password'"
+    [field]="form.password"
+  />
+  <button suffix type="button" (click)="togglePassword()">
+    {{ showPassword() ? 'Hide' : 'Show' }}
+  </button>
+</ngx-signal-form-field>
+```
+
+**Currency symbols (both prefix and suffix):**
+
+```html
+<ngx-signal-form-field [field]="form.amount">
+  <span prefix aria-hidden="true">$</span>
+  <label for="amount">Amount</label>
+  <input id="amount" type="number" [field]="form.amount" step="0.01" />
+  <span suffix aria-hidden="true">.00</span>
+</ngx-signal-form-field>
+```
+
+**Clear button with outlined layout:**
+
+```html
+<ngx-signal-form-field [field]="form.query" outline>
+  <span prefix aria-hidden="true">🔍</span>
+  <label for="query">Search</label>
+  <input id="query" [field]="form.query" />
+  @if (form.query().value()) {
+  <button
+    suffix
+    type="button"
+    (click)="clearSearch()"
+    aria-label="Clear search"
+  >
+    ✕
+  </button>
+  }
+</ngx-signal-form-field>
+```
+
+**Accessibility Notes:**
+
+- Decorative prefix/suffix icons should use `aria-hidden="true"`
+- Interactive suffix buttons need descriptive `aria-label` or visible text
+- Suffix buttons should use `type="button"` to prevent form submission
+- Prefix/suffix elements should not be focusable unless interactive
+
 #### CSS Custom Properties
 
 **Standard layout** (without `outline` directive):
@@ -158,7 +226,14 @@ The component uses content projection to allow full customization:
   --ngx-form-field-input-focus-box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   --ngx-form-field-input-invalid-border-color: #ef4444;
   --ngx-form-field-input-disabled-bg: #f9fafb;
-  --ngx-form-field-input-disabled-opacity: 0.6;
+    --ngx-form-field-input-disabled-opacity: 0.6;
+
+  /* Prefix/Suffix */
+  --ngx-form-field-prefix-gap: 0.5rem;
+  --ngx-form-field-suffix-gap: 0.5rem;
+  --ngx-form-field-prefix-color: #9ca3af;
+  --ngx-form-field-suffix-color: #9ca3af;
+}
   --ngx-form-field-input-placeholder-color: #9ca3af;
 }
 ```

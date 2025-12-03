@@ -90,6 +90,34 @@ function generateUniqueFieldId(): string {
  * </ngx-signal-form-field>
  * ```
  *
+ * @example With Prefix Icon
+ * ```html
+ * <ngx-signal-form-field [field]="form.search">
+ *   <span prefix aria-hidden="true">🔍</span>
+ *   <label for="search">Search</label>
+ *   <input id="search" [field]="form.search" />
+ * </ngx-signal-form-field>
+ * ```
+ *
+ * @example With Suffix Button
+ * ```html
+ * <ngx-signal-form-field [field]="form.password">
+ *   <label for="password">Password</label>
+ *   <input id="password" type="password" [field]="form.password" />
+ *   <button suffix type="button" (click)="togglePassword()">Show</button>
+ * </ngx-signal-form-field>
+ * ```
+ *
+ * @example With Both Prefix and Suffix
+ * ```html
+ * <ngx-signal-form-field [field]="form.amount">
+ *   <span prefix aria-hidden="true">$</span>
+ *   <label for="amount">Amount</label>
+ *   <input id="amount" type="number" [field]="form.amount" />
+ *   <span suffix aria-hidden="true">.00</span>
+ * </ngx-signal-form-field>
+ * ```
+ *
  * @example Without Auto-Error Display
  * ```html
  * <ngx-signal-form-field [field]="form.custom" fieldName="custom" [showErrors]="false">
@@ -112,8 +140,27 @@ function generateUniqueFieldId(): string {
   imports: [NgxSignalFormErrorComponent],
   styleUrl: './form-field.component.scss',
   template: `
+    <!-- Label slot (outside bordered container for traditional layout) -->
+    <div class="ngx-signal-form-field__label">
+      <ng-content select="label" />
+    </div>
+
+    <!-- Bordered input container with prefix/suffix integrated -->
     <div class="ngx-signal-form-field__content">
-      <ng-content />
+      <!-- Prefix slot (icons, text, etc.) -->
+      <div class="ngx-signal-form-field__prefix">
+        <ng-content select="[prefix]" />
+      </div>
+
+      <!-- Main content (input only - label is outside) -->
+      <div class="ngx-signal-form-field__main">
+        <ng-content />
+      </div>
+
+      <!-- Suffix slot (buttons, icons, etc.) -->
+      <div class="ngx-signal-form-field__suffix">
+        <ng-content select="[suffix]" />
+      </div>
     </div>
 
     <!-- Hint/character count slot (projected before errors) -->

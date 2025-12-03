@@ -18,6 +18,19 @@
 ///
 /// Benefits:
 /// - Easy theming: Change semantic colors, update entire appearance
+
+/// ============================================================================
+/// PREFIX/SUFFIX ARCHITECTURE
+/// ============================================================================
+/// Modern CSS pattern using :has(), :empty, and :focus-within selectors:
+/// - :has([prefix]) - Detects prefix slot content and adds left padding to input
+/// - :has([suffix]) - Detects suffix slot content and adds right padding to input
+/// - :empty - Automatically hides empty prefix/suffix slots (no JavaScript needed)
+/// - :focus-within - Container-based focus styling eliminates double focus rings
+/// - Flexbox layout - Ensures proper alignment and spacing
+/// - Interactive suffix support - Buttons in suffix inherit container focus state
+///
+/// Browser Support: Chrome 105+, Firefox 121+, Safari 15.4+, Edge 105+ (95%+ coverage)
 /// - Clear semantics: Purpose-based property names (primary/error vs clr-primary/clr-danger)
 /// - Automatic consistency: All uses of "primary" color stay in sync
 /// - Encapsulation: Private tokens can change without breaking public API
@@ -48,7 +61,7 @@
 
   // Spacing scale (rem-based for accessibility)
   --_field-space-xs: 0.125rem; // 2px
-  --_field-space-sm: 0.25rem; // 4px
+  --_field-space-sm: 0.75rem; // 12px - icon spacing
   --_field-space-md: 0.5rem; // 8px
   --_field-space-lg: 0.75rem; // 12px
   --_field-space-xl: 1rem; // 16px
@@ -61,24 +74,14 @@
   // Other tokens (updated to match Figma design)
   --_field-radius: 0.25rem; // 4px - Border radius (Figma design)
   --_field-opacity-disabled: 0.6; // Disabled opacity
+
+  // Icon/touch targets
+  --_field-icon-size: 1.25rem; // 20px – default heroicon size
+  --_field-touch-target: 2rem; // 32px – comfortable click area
 }
 
-// Light mode overrides (default)
-:host {
-  --_field-clr-primary: #005fcc; // Blue - focus states
-  --_field-clr-danger: #dc2626; // Red - invalid states
-  --_field-clr-text: #324155; // Base text color (var(--text/base)) - 5.6:1 contrast
-  --_field-clr-text-muted: #5f7589; // Placeholder color (more readable) - 4.5:1 contrast ✓
-  --_field-clr-text-subtle: #5f7589; // Secondary text/label color - 4.5:1 contrast ✓ (was too light)
-  --_field-clr-surface: #ffffff; // White - backgrounds (var(--surface/component))
-  --_field-clr-border: rgba(
-    172,
-    178,
-    187,
-    1
-  ); // Border color (var(--border/opaque/light))
-  --_field-clr-disabled: #f3f4f6; // Very light gray - disabled bg
-}
+// Light mode defaults are already set above – no need to redefine the same
+// values here. Keeping a single source prevents accidental drift.
 
 // Dark mode overrides (respects system preference but checks for light-forced mode)
 @media (prefers-color-scheme: dark) {
@@ -146,6 +149,12 @@
   --_gap: var(--ngx-form-field-gap, var(--_field-space-md));
   --_margin-bottom: var(--ngx-form-field-margin, var(--_field-space-xl));
 
+  // Prefix/Suffix
+  --_prefix-gap: var(--ngx-form-field-prefix-gap, var(--_field-space-md));
+  --_suffix-gap: var(--ngx-form-field-suffix-gap, var(--_field-space-md));
+  --_prefix-color: var(--ngx-form-field-prefix-color, var(--_color-text-muted));
+  --_suffix-color: var(--ngx-form-field-suffix-color, var(--_color-text-muted));
+
   // Label (updated for Figma design)
   --_label-size: var(--ngx-form-field-label-size, var(--_field-text-sm));
   --_label-weight: var(--ngx-form-field-label-weight, 500);
@@ -198,46 +207,192 @@
   width: 100%;
 }
 
-.ngx-signal-form-field__content {
-  display: contents;
-}
-
-// Label
-:host ::ng-deep label {
+// Label sits OUTSIDE the bordered container (traditional layout)
+.ngx-signal-form-field__label {
   font-size: var(--_label-size);
   font-weight: var(--_label-weight);
   color: var(--_label-color);
-  margin-bottom: var(--_field-space-sm);
+  // Remove intrinsic bottom margin and rely solely on the host gap
+  // This prevents double spacing (gap + margin) between label and input
+  // Default vertical spacing can still be tuned via --ngx-form-field-gap
+  margin-bottom: 0;
+  display: block;
 }
 
-// Input, textarea, select
-:host ::ng-deep input,
-:host ::ng-deep textarea,
-:host ::ng-deep select {
-  font-size: var(--_input-size);
-  color: var(--_input-color);
-  padding: var(--_input-padding);
+.ngx-signal-form-field__content {
+  display: flex;
+  align-items: center;
+  gap: 0; // No gap - prefix/suffix integrated into input
+  width: 100%;
+  position: relative;
+
+  // Border and background on container (wraps prefix + input + suffix)
   border: 1px solid var(--_input-border-color);
   border-radius: var(--_input-radius);
   background-color: var(--_input-bg);
+  padding: var(--_input-padding);
   transition:
     border-color 0.15s ease-in-out,
     box-shadow 0.15s ease-in-out;
 
-  &:focus {
-    outline: none;
+  // Focus state when any child input has focus
+  &:focus-within {
     border-color: var(--_focus-color);
     box-shadow: var(--_focus-box-shadow);
+    outline: none;
   }
 
-  &[aria-invalid='true'] {
+  // Invalid state when input has aria-invalid
+  &:has(input[aria-invalid='true']),
+  &:has(textarea[aria-invalid='true']),
+  &:has(select[aria-invalid='true']) {
     border-color: var(--_invalid-color);
   }
 
-  &:disabled {
+  // Disabled state
+  &:has(input:disabled),
+  &:has(textarea:disabled),
+  &:has(select:disabled) {
     background-color: var(--_disabled-bg);
-    cursor: not-allowed;
     opacity: var(--_disabled-opacity);
+    cursor: not-allowed;
+  }
+}
+
+.ngx-signal-form-field__main {
+  display: flex;
+  flex-direction: row; // Row since label is outside
+  align-items: center;
+  flex: 1;
+  min-width: 0; // Prevent flex item overflow
+}
+
+.ngx-signal-form-field__prefix,
+.ngx-signal-form-field__suffix {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--_prefix-color);
+  font-size: var(--_field-text-sm);
+  line-height: 1;
+  user-select: none;
+
+  // Hide empty slots
+  &:empty {
+    display: none;
+  }
+}
+
+.ngx-signal-form-field__prefix {
+  padding-right: var(--_field-space-md);
+}
+
+.ngx-signal-form-field__suffix {
+  color: var(--_suffix-color);
+  gap: var(--_suffix-gap);
+  padding-left: var(--_field-space-md);
+}
+
+// Modern :has() based dynamic padding - adjust main content when prefix/suffix present
+// NOTE: main content has no intrinsic horizontal padding, so we don't need
+// conditional padding shims when prefix/suffix exist. Removing the blocks
+// above reduces CSS without changing behavior.
+
+// Prefix/suffix content styling
+:host ::ng-deep [prefix],
+:host ::ng-deep [suffix] {
+  display: flex;
+  align-items: center;
+  user-select: none;
+  font-size: 0.875rem; // 14px - clean, readable size
+  // Remove baseline gaps so SVGs center precisely within flex container
+  line-height: 0;
+  opacity: 0.6; // More subtle, integrated look
+  color: var(--_color-text-muted);
+  transition:
+    opacity 0.15s ease-in-out,
+    color 0.15s ease-in-out;
+
+  // Normalize nested SVGs to avoid inline baseline alignment issues
+  svg {
+    display: block;
+    inline-size: var(--_field-icon-size);
+    block-size: var(--_field-icon-size);
+  }
+
+  // Interactive elements (buttons, links)
+  button,
+  a {
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: var(--_field-space-xs);
+    margin: calc(var(--_field-space-xs) * -1);
+    color: var(--_color-text-muted);
+    font-size: 1.125rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--_field-radius);
+    transition:
+      opacity 0.15s ease-in-out,
+      background-color 0.15s ease-in-out,
+      transform 0.15s ease-in-out;
+    opacity: 0.5;
+    min-inline-size: var(--_field-touch-target);
+    min-block-size: var(--_field-touch-target);
+
+    &:hover {
+      opacity: 0.8;
+      background-color: color-mix(in srgb, var(--_color-text) 6%, transparent);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      opacity: 1;
+      background-color: color-mix(in srgb, var(--_color-text) 10%, transparent);
+      transform: scale(0.98);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--_focus-color);
+      outline-offset: 2px;
+      opacity: 1;
+    }
+  }
+}
+
+// Input, textarea, select (inside main content wrapper)
+// No label styling here - label is in its own class above
+:host ::ng-deep .ngx-signal-form-field__main input,
+:host ::ng-deep .ngx-signal-form-field__main textarea,
+:host ::ng-deep .ngx-signal-form-field__main select {
+  font-size: var(--_input-size);
+  color: var(--_input-color);
+  padding: 0; // No padding - container handles it
+  border: none; // No border - container handles it
+  border-radius: 0;
+  background-color: transparent; // Transparent - container has background
+  box-shadow: none; // Ensure no inner shadow is visible inside the content wrapper
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
+  min-width: 0; // Prevent flex overflow
+  width: 100%;
+
+  &:focus {
+    outline: none;
+    // Focus styling handled by container :focus-within
+  }
+
+  &[aria-invalid='true'] {
+    // Invalid styling handled by container :has()
+  }
+
+  &:disabled {
+    // Disabled styling handled by container :has()
+    cursor: not-allowed;
   }
 
   &::placeholder {
@@ -254,11 +409,18 @@
 :host(.ngx-signal-forms-outline) {
   // Override gap for outlined layout (uses public API with fallback)
   --_gap: var(--ngx-form-field-gap, var(--_field-space-xs));
+
+  // Hide the external label div (label will be inside .ngx-signal-form-field__main)
+  .ngx-signal-form-field__label {
+    display: none;
+  }
 }
 
 :host(.ngx-signal-forms-outline) .ngx-signal-form-field__content {
   display: flex;
-  flex-direction: column;
+  flex-direction: row; // Changed from column to support prefix/suffix
+  align-items: center;
+  gap: 0; // No gap - integrated design
   padding: var(--_input-padding);
   background-color: var(--_input-bg);
   border: 1px solid var(--_input-border-color);
@@ -270,8 +432,45 @@
   min-height: var(--ngx-form-field-min-height, 3.5rem);
 }
 
+// Prefix/suffix in outlined forms - use :has() for conditional borders
+// Prefix/suffix inherit the base flex centering; only normalize spacing here
+// to avoid redundant declarations.
+:host(.ngx-signal-forms-outline) .ngx-signal-form-field__prefix,
+:host(.ngx-signal-forms-outline) .ngx-signal-form-field__suffix {
+  padding: 0;
+  margin: 0;
+}
+
+// Prefix spacing when present (no border divider)
+:host(.ngx-signal-forms-outline)
+  .ngx-signal-form-field__content:has(
+    .ngx-signal-form-field__prefix:not(:empty)
+  ) {
+  .ngx-signal-form-field__prefix {
+    padding-right: var(--_field-space-sm);
+  }
+}
+
+// Suffix spacing when present (no border divider)
+:host(.ngx-signal-forms-outline)
+  .ngx-signal-form-field__content:has(
+    .ngx-signal-form-field__suffix:not(:empty)
+  ) {
+  .ngx-signal-form-field__suffix {
+    padding-left: var(--_field-space-sm);
+  }
+}
+
+// Main content wrapper for outlined (vertical layout for label + input)
+:host(.ngx-signal-forms-outline) .ngx-signal-form-field__main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
 // Label inside container (smaller, subtle, updated for Figma design)
-:host(.ngx-signal-forms-outline) ::ng-deep label {
+:host(.ngx-signal-forms-outline) ::ng-deep .ngx-signal-form-field__main label {
   font-size: var(
     --ngx-form-field-outline-label-size,
     var(--_field-text-xs)
@@ -301,9 +500,12 @@
 }
 
 // Remove input default styling (container provides all visual feedback)
-:host(.ngx-signal-forms-outline) ::ng-deep input,
-:host(.ngx-signal-forms-outline) ::ng-deep textarea,
-:host(.ngx-signal-forms-outline) ::ng-deep select {
+:host(.ngx-signal-forms-outline) ::ng-deep .ngx-signal-form-field__main input,
+:host(.ngx-signal-forms-outline)
+  ::ng-deep
+  .ngx-signal-form-field__main
+  textarea,
+:host(.ngx-signal-forms-outline) ::ng-deep .ngx-signal-form-field__main select {
   border: none;
   background-color: transparent;
   padding: 0;
@@ -338,37 +540,20 @@
 }
 
 // Placeholder (slightly more subtle in outlined)
-:host(.ngx-signal-forms-outline) ::ng-deep input::placeholder,
-:host(.ngx-signal-forms-outline) ::ng-deep textarea::placeholder {
+:host(.ngx-signal-forms-outline)
+  ::ng-deep
+  .ngx-signal-form-field__main
+  input::placeholder,
+:host(.ngx-signal-forms-outline)
+  ::ng-deep
+  .ngx-signal-form-field__main
+  textarea::placeholder {
   color: var(--_placeholder-color);
 }
 
-// States using :has() selector (container feedback)
-:host(.ngx-signal-forms-outline) .ngx-signal-form-field__content:has(:focus) {
-  border-color: var(--_focus-color);
-  box-shadow: var(--_focus-box-shadow);
-}
-
-:host(.ngx-signal-forms-outline)
-  .ngx-signal-form-field__content:has([aria-invalid='true']) {
-  border-color: var(--_invalid-color);
-}
-
-:host(.ngx-signal-forms-outline)
-  .ngx-signal-form-field__content:has([aria-invalid='true']:focus) {
-  box-shadow: var(--_focus-box-shadow);
-}
-
-:host(.ngx-signal-forms-outline)
-  .ngx-signal-form-field__content:has(:disabled) {
-  background-color: var(--_disabled-bg);
-  cursor: not-allowed;
-  opacity: var(--_disabled-opacity);
-}
-
-:host(.ngx-signal-forms-outline) ::ng-deep :disabled {
-  cursor: not-allowed;
-}
+// States using :has()/focus-within are already defined in the base container
+// above (to avoid duplicate CSS). They apply to outlined layout as well
+// because the container element is the same.
 
 // ============================================================================
 // ERROR/WARNING ALIGNMENT
