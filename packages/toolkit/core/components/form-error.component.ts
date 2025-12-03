@@ -183,130 +183,55 @@ import { showErrors } from '../utilities/show-errors';
     }
   `,
   styles: `
-    /**
+    /*
      * CSS Custom Properties (Public API)
      *
-     * All properties prefixed with --ngx-signal-form-error-* to avoid naming conflicts.
-     * Uses @property for type-safe CSS variables with fallbacks for browsers
-     * that don't support @property (Firefox < 128).
+     * All properties prefixed with --ngx-signal-form-* for namespacing.
+     * Override these in your app or component styles to customize appearance.
+     *
+     * Example - Customize in your component:
+     *   ngx-signal-form-error {
+     *     --ngx-signal-form-error-color: #b91c1c;
+     *     --ngx-signal-form-error-bg: #fef2f2;
+     *   }
      */
+    :host {
+      /* Error Colors */
+      --ngx-signal-form-error-color: #dc2626;
+      --ngx-signal-form-error-bg: transparent;
+      --ngx-signal-form-error-border: transparent;
 
-    /* Error Colors */
-    @property --ngx-signal-form-error-color {
-      syntax: '<color>';
-      inherits: true;
-      initial-value: #dc2626;
+      /* Warning Colors */
+      --ngx-signal-form-warning-color: #f59e0b;
+      --ngx-signal-form-warning-bg: transparent;
+      --ngx-signal-form-warning-border: transparent;
+
+      /* Spacing */
+      --ngx-signal-form-error-margin-top: 0.375rem;
+      --ngx-signal-form-error-message-spacing: 0.25rem;
+
+      /* Typography */
+      --ngx-signal-form-error-font-size: 0.75rem;
+      --ngx-signal-form-error-line-height: 1.25;
+
+      /* Border */
+      --ngx-signal-form-error-border-width: 0;
+      --ngx-signal-form-error-border-radius: 0;
+
+      /* Padding */
+      --ngx-signal-form-error-padding: 0;
+      --ngx-signal-form-error-padding-horizontal: 0.5rem;
+
+      display: block;
+      margin-top: var(--ngx-signal-form-error-margin-top);
     }
 
-    @property --ngx-signal-form-error-bg {
-      syntax: '<color>';
-      inherits: true;
-      initial-value: transparent;
-    }
-
-    @property --ngx-signal-form-error-border {
-      syntax: '<color>';
-      inherits: true;
-      initial-value: transparent;
-    }
-
-    /* Warning Colors */
-    @property --ngx-signal-form-warning-color {
-      syntax: '<color>';
-      inherits: true;
-      initial-value: #f59e0b;
-    }
-
-    @property --ngx-signal-form-warning-bg {
-      syntax: '<color>';
-      inherits: true;
-      initial-value: transparent;
-    }
-
-    @property --ngx-signal-form-warning-border {
-      syntax: '<color>';
-      inherits: true;
-      initial-value: transparent;
-    }
-
-    /* Spacing */
-    @property --ngx-signal-form-error-margin-top {
-      syntax: '<length>';
-      inherits: true;
-      initial-value: 0.375rem;
-    }
-
-    @property --ngx-signal-form-error-message-spacing {
-      syntax: '<length>';
-      inherits: true;
-      initial-value: 0.25rem;
-    }
-
-    /* Typography */
-    @property --ngx-signal-form-error-font-size {
-      syntax: '<length>';
-      inherits: true;
-      initial-value: 0.75rem;
-    }
-
-    @property --ngx-signal-form-error-line-height {
-      syntax: '<number>';
-      inherits: true;
-      initial-value: 1.25;
-    }
-
-    /* Border */
-    @property --ngx-signal-form-error-border-width {
-      syntax: '<length>';
-      inherits: true;
-      initial-value: 0px;
-    }
-
-    @property --ngx-signal-form-error-border-radius {
-      syntax: '<length>';
-      inherits: true;
-      initial-value: 0px;
-    }
-
-    /* Padding */
-    @property --ngx-signal-form-error-padding {
-      syntax: '<length>';
-      inherits: true;
-      initial-value: 0px;
-    }
-
-    @property --ngx-signal-form-error-padding-horizontal {
-      syntax: '<length>';
-      inherits: true;
-      initial-value: 0.5rem;
-    }
-
-    /**
-     * Dark Mode Support
-     */
+    /* Dark mode defaults */
     @media (prefers-color-scheme: dark) {
       :host {
         --ngx-signal-form-error-color: #fca5a5;
         --ngx-signal-form-warning-color: #fcd34d;
       }
-    }
-
-    /**
-     * Light Mode Override (respects explicit light theme despite system dark preference)
-     * When app explicitly sets light theme via missing .dark class, use light mode colors
-     */
-    :root:not(.dark) :host {
-      --ngx-signal-form-error-color: #dc2626;
-      --ngx-signal-form-warning-color: #f59e0b;
-    }
-
-    /**
-     * Component Styles
-     */
-
-    :host {
-      display: block;
-      margin-top: var(--ngx-signal-form-error-margin-top);
     }
 
     .ngx-signal-form-error {
@@ -337,25 +262,19 @@ import { showErrors } from '../utilities/show-errors';
 
     .ngx-signal-form-error__message {
       margin: 0;
-      font-size: inherit; /* Inherit font-size from parent container */
-      line-height: inherit; /* Inherit line-height from parent container */
     }
 
-    /**
-     * Reduced Motion Support
-     */
+    /* Reduced Motion Support */
     @media (prefers-reduced-motion: reduce) {
       .ngx-signal-form-error {
         transition: none;
       }
     }
 
-    /**
-     * High Contrast Mode Support
-     */
+    /* High Contrast Mode Support */
     @media (prefers-contrast: high) {
-      .ngx-signal-form-error {
-        border-width: 2px;
+      :host {
+        --ngx-signal-form-error-border-width: 2px;
       }
     }
   `,
@@ -489,56 +408,15 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   readonly #resolvedSubmittedStatus = computed<SubmittedStatus>(() => {
     const inputStatus = this.submittedStatus();
     if (inputStatus !== undefined && inputStatus !== null) {
-      const result =
-        typeof inputStatus === 'function' ? inputStatus() : inputStatus;
-
-      // DEBUG: Log resolution from input
-      if (
-        (window as unknown as { __DEBUG_SHOW_ERRORS__?: boolean })
-          .__DEBUG_SHOW_ERRORS__
-      ) {
-        console.log('[FormError] Resolved submittedStatus from INPUT:', {
-          inputStatus,
-          result,
-          fieldName: this.fieldName(),
-        });
-      }
-
-      return result;
+      return typeof inputStatus === 'function' ? inputStatus() : inputStatus;
     }
 
     const contextStatus = this.#injectedContext?.submittedStatus?.();
     if (contextStatus !== undefined && contextStatus !== null) {
-      // DEBUG: Log resolution from context
-      if (
-        (window as unknown as { __DEBUG_SHOW_ERRORS__?: boolean })
-          .__DEBUG_SHOW_ERRORS__
-      ) {
-        console.log('[FormError] Resolved submittedStatus from CONTEXT:', {
-          contextStatus,
-          hasContext: !!this.#injectedContext,
-          fieldName: this.fieldName(),
-        });
-      }
-
       return contextStatus;
     }
 
-    // DEBUG: Log fallback
-    if (
-      (window as unknown as { __DEBUG_SHOW_ERRORS__?: boolean })
-        .__DEBUG_SHOW_ERRORS__
-    ) {
-      console.log('[FormError] Resolved submittedStatus from FALLBACK:', {
-        inputStatus,
-        contextStatus,
-        hasContext: !!this.#injectedContext,
-        result: 'unsubmitted',
-        fieldName: this.fieldName(),
-      });
-    }
-
-    return 'unsubmitted'; // Default fallback
+    return 'unsubmitted';
   });
 
   /**
@@ -547,40 +425,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    */
   readonly #fieldState = computed(() => {
     const fieldTree = this.field();
-    const fieldState = fieldTree(); // Call FieldTree to get FieldState
-
-    // DEBUG: Log the field state's touched value WITH STACK TRACE
-    if (
-      (window as unknown as { __DEBUG_SHOW_ERRORS__?: boolean })
-        .__DEBUG_SHOW_ERRORS__
-    ) {
-      const touched =
-        typeof fieldState?.touched === 'function'
-          ? fieldState.touched()
-          : 'not-a-function';
-      const invalid =
-        typeof fieldState?.invalid === 'function'
-          ? fieldState.invalid()
-          : 'not-a-function';
-
-      // Only log if touched is true to reduce noise
-      if (touched === true) {
-        console.log('[FormError] ⚠️ Field is TOUCHED on init!', {
-          fieldName: this.fieldName(),
-          touched,
-          invalid,
-        });
-        console.trace('Stack trace for touched field');
-      } else {
-        console.log('[FormError] Field state extracted:', {
-          fieldName: this.fieldName(),
-          touched,
-          invalid,
-        });
-      }
-    }
-
-    return fieldState;
+    return fieldTree();
   });
 
   /**
