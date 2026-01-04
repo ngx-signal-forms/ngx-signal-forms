@@ -2,7 +2,6 @@
 import angular from '@analogjs/vite-plugin-angular';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vite';
 
 export default defineConfig(({ mode }) => ({
@@ -28,24 +27,15 @@ export default defineConfig(({ mode }) => ({
       provider: 'v8' as const,
     },
     /**
-     * Test isolation configuration for Angular projects
+     * Pool configuration for Angular + Vitest 4
      *
-     * **Why isolation is disabled:**
-     * Per Marmicode's guidance, Angular's TestBed provides sufficient isolation
-     * for test files. TestBed.resetTestingModule() (called in global afterEach)
-     * ensures proper cleanup between tests.
+     * Using 'forks' pool with full isolation for Angular TestBed compatibility.
+     * Each test file runs in a true subprocess ensuring TestBed is properly
+     * initialized fresh for each file.
      *
-     * Disabling Vitest's isolation improves performance significantly:
-     * - Faster test execution (no VM/thread overhead per file)
-     * - Lower memory usage
-     * - Still maintains proper test independence via TestBed
-     *
-     * This is the same pattern used with Karma, which ran all tests in a
-     * single browser window successfully.
-     *
-     * @see https://cookbook.marmicode.io/angular/testing/why-vitest#vitest-isolation-modes
+     * @see https://vitest.dev/config/#pool
      */
-    isolate: false,
+    pool: 'forks',
     // Optimize for CI performance
     maxConcurrency: process.env['CI'] ? 2 : 5,
     maxWorkers: process.env['CI'] ? 2 : undefined,

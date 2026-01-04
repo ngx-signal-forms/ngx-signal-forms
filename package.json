@@ -38,6 +38,7 @@
     "@nx/js": "22.3.3",
     "@nx/playwright": "22.3.3",
     "@nx/vite": "22.3.3",
+    "@nx/vitest": "22.3.3",
     "@nx/web": "22.3.3",
     "@nx/workspace": "22.3.3",
     "@playwright/test": "^1.57.0",
@@ -86,5 +87,13 @@
   },
   "nx": {
     "includedScripts": []
+  },
+  "pnpm": {
+    "overrides": {
+      "@angular/core": "~21.0.6",
+      "@angular/compiler": "~21.0.6",
+      "@angular/common": "~21.0.6",
+      "@angular/platform-browser": "~21.0.6"
+    }
   }
 }
