@@ -4,8 +4,10 @@ import {
   computed,
   inject,
   input,
+  type Signal,
 } from '@angular/core';
 import type {
+  FieldState,
   FieldTree,
   SubmittedStatus,
   ValidationError,
@@ -67,7 +69,6 @@ import { showErrors } from '../utilities/show-errors';
  * <ngx-signal-form-error
  *   [field]="form.email"
  *   fieldName="email"
- *   [submittedStatus]="form().submittedStatus()"
  * />
  * ```
  *
@@ -94,7 +95,7 @@ import { showErrors } from '../utilities/show-errors';
  *   [field]="form.password"
  *   fieldName="password"
  *   [strategy]="strategySignal"
- *   [submittedStatus]="form().submittedStatus()"
+ *   [submittedStatus]="form().submitting() ? 'submitting' : form().touched() ? 'submitted' : 'unsubmitted'"
  * />
  * ```
  *
@@ -345,12 +346,13 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   );
 
   /**
-   * Form submission status from Angular Signal Forms.
+   * Form submission status derived from Angular Signal Forms.
    * Accepts Angular's SubmittedStatus type: 'unsubmitted' | 'submitting' | 'submitted'.
    *
    * When used inside a form with ngxSignalFormDirective, this is automatically
-   * injected from the form provider context. Otherwise, pass Angular's submittedStatus:
-   * `[submittedStatus]="form().submittedStatus()"`.
+   * injected from the form provider context. Otherwise, pass a SubmittedStatus
+   * derived from `submitting()`/`touched()`, e.g.:
+   * `[submittedStatus]="form().submitting() ? 'submitting' : form().touched() ? 'submitted' : 'unsubmitted'"`.
    */
   readonly submittedStatus = input<
     ReactiveOrStatic<SubmittedStatus> | undefined
@@ -430,9 +432,10 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
 
   /**
    * Computed signal for error visibility based on strategy.
+   * Type assertion needed due to FieldState/CompatFieldState union type complexity.
    */
   protected readonly showErrors = showErrors(
-    this.#fieldState, // Pass computed FieldState signal
+    this.#fieldState as Signal<FieldState<TValue>>,
     this.#resolvedStrategy,
     this.#resolvedSubmittedStatus,
   );

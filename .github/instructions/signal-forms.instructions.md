@@ -611,29 +611,36 @@ export class SkillsComponent {
 
 ### Built-in Submission State Tracking
 
-**Angular Signal Forms includes built-in submission state tracking** via the `submittedStatus()` signal on all `FieldState` objects:
+**Angular Signal Forms provides** `submitting()` signal on all `FieldState` objects, but NOT a `submittedStatus()` signal. Here's what Angular 21 provides:
 
 ```typescript
-// All FieldState objects have submittedStatus signal
-this.userForm().submittedStatus(); // 'unsubmitted' | 'submitting' | 'submitted'
+// Available on FieldState in Angular 21:
+this.userForm().submitting(); // Signal<boolean> - true during submission
+this.userForm().touched(); // Signal<boolean> - true after field blur or submit
+this.userForm().valid(); // Signal<boolean> - true when no errors
 
-// Built-in reset method
-this.userForm().resetSubmittedStatus();
+// Reset touched/dirty states (not submission status)
+this.userForm().reset(); // Resets touched, dirty to false
 
-// Automatic state propagation to all descendants
+// submit() helper marks all fields as touched and sets submitting:
 submit(this.userForm, async (field) => {
-  // submittedStatus automatically becomes 'submitting'
+  // submitting() becomes true during this callback
   await apiCall();
-  // submittedStatus automatically becomes 'submitted'
+  // submitting() becomes false after callback completes
 });
 ```
 
-**Key features:**
+**Key points about Angular 21 FieldState:**
 
-- State values: `'unsubmitted'` | `'submitting'` | `'submitted'`
-- Automatically propagates to all field descendants
-- Reset with `resetSubmittedStatus()` method
-- No manual tracking needed when using `submit()` helper
+- `submitting: Signal<boolean>` - true during form submission
+- `touched: Signal<boolean>` - true after blur or after `submit()` calls `markAllAsTouched()`
+- `reset()` - resets `touched()` and `dirty()` to false (NOT values)
+- No `submittedStatus()` signal - the toolkit derives this from `submitting()` and `touched()`
+
+**SubmittedStatus type (for toolkit usage):**
+
+- Angular exports the `SubmittedStatus` type: `'unsubmitted' | 'submitting' | 'submitted'`
+- The toolkit's `NgxSignalFormDirective` derives this from Angular's signals
 
 ### Option 1: submit() Helper (Recommended)
 

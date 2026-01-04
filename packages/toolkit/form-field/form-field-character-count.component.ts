@@ -267,7 +267,8 @@ export class NgxSignalFormFieldCharacterCountComponent<TValue = unknown> {
   protected readonly currentLength = computed(() => {
     const fieldValue = this.field();
     const value = fieldValue().value();
-    return typeof value === 'string' ? value.length : 0;
+    // Type assertion needed due to FieldState union type complexity
+    return typeof value === 'string' ? (value as string).length : 0;
   });
 
   /**

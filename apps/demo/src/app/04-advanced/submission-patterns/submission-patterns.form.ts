@@ -329,7 +329,7 @@ export class SubmissionPatternsComponent {
     this.serverError.set(null);
     this.submissionSuccess.set(false);
 
-    /// Note: submittedStatus automatically resets to 'unsubmitted'
-    /// when form().reset() is called
+    /// Note: the derived submittedStatus returns to 'unsubmitted' after
+    /// submitting() is false and the form has been reset (touched cleared)
   }
 }

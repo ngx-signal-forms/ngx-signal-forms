@@ -118,7 +118,7 @@ import type { FieldTree } from '@angular/forms/signals';
 })
 export class FieldStatesTableComponent {
   /** The form instance to display states for (Angular Signal Forms FieldTree) */
-  readonly form = input.required<FieldTree<any>>();
+  readonly form = input.required<FieldTree<unknown>>();
 
   /** Array of field names to display in the table */
   readonly fields = input.required<string[]>();

@@ -161,11 +161,11 @@ const INITIAL_MODEL: ProductFeedbackModel = {
             class="form-input"
             id="overallRating"
             type="number"
-            min="1"
-            max="5"
             [field]="productForm.overallRating"
             placeholder="Rate 1-5 stars"
             aria-describedby="rating-hint"
+            aria-valuemin="1"
+            aria-valuemax="5"
           />
           <div class="form-hint" id="rating-hint">1 = Poor, 5 = Excellent</div>
           <ngx-signal-form-error
@@ -254,7 +254,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
           <label class="form-checkbox-label">
             <input
               type="checkbox"
-              name="allowFollowUp"
+              id="allowFollowUp"
               class="form-checkbox"
               [field]="productForm.allowFollowUp"
             />
@@ -270,7 +270,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
           <label class="form-checkbox-label">
             <input
               type="checkbox"
-              name="newsletter"
+              id="newsletter"
               class="form-checkbox"
               [field]="productForm.newsletter"
             />

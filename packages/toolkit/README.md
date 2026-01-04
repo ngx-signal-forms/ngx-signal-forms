@@ -671,7 +671,7 @@ Provides form context to child components via dependency injection.
 **Template Reference:**
 ```html
 <form [ngxSignalForm]="myForm" #formDir="ngxSignalForm">
-  <!-- Access directive instance -->
+  <!-- Access directive instance (SubmittedStatus derived from submitting()/touched()) -->
   <div>Status: {{ formDir.submittedStatus() }}</div>
 </form>
 ```
@@ -698,7 +698,7 @@ protected async handleSubmit(): Promise<void> {
 **What `reset()` actually does:**
 - Sets `touched()` → `false`
 - Sets `dirty()` → `false`
-- Sets `submittedStatus()` → `'unsubmitted'`
+- Derived `submittedStatus` → `'unsubmitted'` (because touched/submitting become false)
 - **Does NOT change data values** ❌
 
 **To fully reset a form, you must reset BOTH:**
@@ -768,7 +768,7 @@ import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit/core';
 <ngx-signal-form-error [field]="form.email" fieldName="email" />
 ```
 
-**Note:** When used inside a form with `ngxSignalFormDirective`, the `submittedStatus` signal is automatically injected from Angular Signal Forms' built-in submission tracking.
+**Note:** When used inside a form with `ngxSignalFormDirective`, the `submittedStatus` signal is automatically injected. The toolkit derives this from Angular's native `submitting()` and `touched()` signals.
 
 #### NgxSignalFormFieldComponent
 
@@ -910,7 +910,8 @@ export class MyFormComponent {
 ```
 
 **Enhancement over Angular Signal Forms:**
-- ✅ Angular Signal Forms: Provides `valid()`, `submitting()`, `submittedStatus()` signals
+- ✅ Angular Signal Forms: Provides `valid()`, `submitting()`, `touched()` signals
+- ✅ Toolkit: Derives `submittedStatus` from native signals (`touched()` as proxy for submission)
 - ✅ Toolkit: Pre-computed helper signals reduce template boilerplate by ~50%
 - ✅ Consistent naming convention across applications
 - ✅ Type-safe with automatic inference

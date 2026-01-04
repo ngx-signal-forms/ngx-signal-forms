@@ -1,5 +1,5 @@
 import { computed, type Signal } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
+import type { FieldTree, SubmittedStatus } from '@angular/forms/signals';
 
 /**
  * Computed signal indicating whether a form can be submitted.
@@ -131,12 +131,50 @@ export function isSubmitting(formTree: FieldTree<unknown>): Signal<boolean> {
   });
 }
 
+function deriveSubmittedStatus(formTree: FieldTree<unknown>): SubmittedStatus {
+  const formState = formTree();
+
+  if (!formState || typeof formState !== 'object') {
+    return 'unsubmitted';
+  }
+
+  const explicitStatus =
+    'submittedStatus' in formState &&
+    typeof formState.submittedStatus === 'function'
+      ? formState.submittedStatus()
+      : undefined;
+
+  if (
+    explicitStatus === 'submitted' ||
+    explicitStatus === 'submitting' ||
+    explicitStatus === 'unsubmitted'
+  ) {
+    return explicitStatus;
+  }
+
+  const isSubmitting =
+    'submitting' in formState && typeof formState.submitting === 'function'
+      ? formState.submitting()
+      : false;
+
+  if (isSubmitting) {
+    return 'submitting';
+  }
+
+  const isTouched =
+    'touched' in formState && typeof formState.touched === 'function'
+      ? formState.touched()
+      : false;
+
+  return isTouched ? 'submitted' : 'unsubmitted';
+}
+
 /**
  * Computed signal indicating whether a form has been submitted.
  *
  * Returns `true` when:
  * - Form has completed at least one submission attempt
- * - `submittedStatus()` signal is `'submitted'`
+ * - Derived submission status resolves to `'submitted'`
  *
  * Use this to conditionally show messages or change UI after submission.
  *
@@ -176,15 +214,13 @@ export function isSubmitting(formTree: FieldTree<unknown>): Signal<boolean> {
  * This is a convenience wrapper around:
  * ```typescript
  * computed(() => {
- *   const state = form();
- *   return 'submittedStatus' in state
- *     ? state.submittedStatus() === 'submitted'
- *     : false;
+ *   const status = deriveSubmittedStatus(form);
+ *   return status === 'submitted';
  * })
  * ```
  *
- * **Note:** `submittedStatus()` is only available on root form groups, not individual fields.
- * This function safely checks for its existence before accessing it.
+ * **Note:** Angular Signal Forms does **not** expose a `submittedStatus()` signal.
+ * The toolkit derives the status from native `submitting()` and `touched()` signals.
  *
  * **When to use:**
  * - Success/confirmation messages
@@ -196,18 +232,7 @@ export function isSubmitting(formTree: FieldTree<unknown>): Signal<boolean> {
  */
 export function hasSubmitted(formTree: FieldTree<unknown>): Signal<boolean> {
   return computed(() => {
-    const formState = formTree() as {
-      submittedStatus?: () => 'unsubmitted' | 'submitting' | 'submitted';
-    };
-
-    // submittedStatus only exists on root form groups
-    if (
-      'submittedStatus' in formState &&
-      typeof formState.submittedStatus === 'function'
-    ) {
-      return formState.submittedStatus() === 'submitted';
-    }
-
-    return false;
+    const status = deriveSubmittedStatus(formTree);
+    return status === 'submitted';
   });
 }

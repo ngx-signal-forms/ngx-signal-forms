@@ -28,7 +28,7 @@ import { NgxSignalFormFieldCharacterCountComponent } from './form-field-characte
  * This is needed because form() requires Angular's injection context.
  */
 @Component({
-  selector: 'test-wrapper',
+  selector: 'ngx-signal-form-test-wrapper',
   standalone: true,
   imports: [NgxSignalFormFieldCharacterCountComponent],
   template: `

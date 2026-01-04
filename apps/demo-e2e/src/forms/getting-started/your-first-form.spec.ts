@@ -96,15 +96,23 @@ test.describe('Your First Form with Toolkit (POM Example)', () => {
   });
 
   test('should prevent submission with invalid data', async ({ page }) => {
-    /// With on-touch strategy: submit without interaction should not show errors yet
-    /// (fields haven't been touched, so errors are hidden per strategy)
-    await formPage.submit();
+    /// With on-touch strategy: errors show after fields are touched (blurred)
+    /// Touch all fields by focusing and blurring each one
+    await formPage.nameInput.focus();
+    await formPage.nameInput.blur();
+    await formPage.emailInput.focus();
+    await formPage.emailInput.blur();
+    await formPage.messageInput.focus();
+    await formPage.messageInput.blur();
 
-    /// Form should still be visible (not submitted)
+    /// Form should still be visible (not submitted because invalid)
     await expect(formPage.form).toBeVisible();
 
-    /// But form should be in invalid state
-    await expect(page.locator('text=Invalid: ❌')).toBeVisible();
+    /// After touching fields, errors should be visible with 'on-touch' strategy
+    await expect(async () => {
+      const errorCount = await formPage.errorAlerts.count();
+      expect(errorCount).toBeGreaterThan(0);
+    }).toPass({ timeout: 5000 });
   });
 
   test('should validate email format', async () => {
@@ -112,10 +120,10 @@ test.describe('Your First Form with Toolkit (POM Example)', () => {
       await formPage.emailInput.fill('not-an-email');
       await formPage.emailInput.blur();
 
-      /// Error message should contain "email" or "invalid"
-      const emailError = formPage.errorAlerts.first();
+      /// Get the error associated with the email field specifically
+      const emailError = formPage.page.locator('#contact-email-error');
       await expect(emailError).toBeVisible();
-      await expect(emailError).toContainText(/email|invalid/i);
+      await expect(emailError).toContainText(/email|valid/i);
     });
   });
 

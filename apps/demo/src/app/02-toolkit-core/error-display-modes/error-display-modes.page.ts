@@ -55,7 +55,10 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
 
           <!-- Real-time Form State -->
           @if (formComponent?.productForm(); as form) {
-            <ngx-signal-form-debugger [formTree]="form" />
+            <ngx-signal-form-debugger
+              [formTree]="form"
+              [errorStrategy]="selectedMode()"
+            />
           }
         </div>
       </ngx-example-cards>

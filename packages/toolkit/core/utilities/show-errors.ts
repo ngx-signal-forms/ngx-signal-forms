@@ -13,7 +13,7 @@ import { computeShowErrors as baseComputeShowErrors } from './error-strategies';
  * ## When to use it?
  * Use `showErrors()` when you need to:
  * - Implement error visibility logic for form fields
- * - Integrate with Angular Signal Forms' built-in `submittedStatus`
+ * - Integrate with a `SubmittedStatus` signal derived from Angular's `submitting()`/`touched()`
  * - Control when validation errors appear based on user interaction
  *
  * ## How does it work?
@@ -28,7 +28,7 @@ import { computeShowErrors as baseComputeShowErrors } from './error-strategies';
  * @template T The type of the field value
  * @param field - The form field state (FieldTree from Angular Signal Forms)
  * @param strategy - The error display strategy
- * @param submittedStatus - Angular's built-in submission status signal
+ * @param submittedStatus - Submission status signal derived from Angular's native signals
  * @returns A computed signal returning `true` when errors should be displayed
  *
  * @example With Angular's submit() helper
@@ -50,7 +50,11 @@ import { computeShowErrors as baseComputeShowErrors } from './error-strategies';
  *   protected readonly shouldShowErrors = showErrors(
  *     this.form.email,
  *     'on-touch',
- *     computed(() => this.form().submittedStatus())
+ *     computed<SubmittedStatus>(() => {
+ *       const state = this.form();
+ *       if (state.submitting()) return 'submitting';
+ *       return state.touched() ? 'submitted' : 'unsubmitted';
+ *     })
  *   );
  * }
  * ```
@@ -87,7 +91,9 @@ import { computeShowErrors as baseComputeShowErrors } from './error-strategies';
  * const shouldShowErrors = showErrors(
  *   form.password,
  *   'immediate',  // Show errors immediately
- *   computed(() => form().submittedStatus())
+ *   computed<SubmittedStatus>(() =>
+ *     form().submitting() ? 'submitting' : form().touched() ? 'submitted' : 'unsubmitted'
+ *   )
  * );
  * ```
  *
@@ -135,7 +141,9 @@ export function showErrors<T>(
  * @example With default strategy (on-touch)
  * ```typescript
  * const showEmailErrors = createShowErrorsSignal(form.email, {
- *   submittedStatus: computed(() => form().submittedStatus())
+ *   submittedStatus: computed<SubmittedStatus>(() =>
+ *     form().submitting() ? 'submitting' : form().touched() ? 'submitted' : 'unsubmitted'
+ *   )
  * });
  * ```
  *
@@ -143,7 +151,9 @@ export function showErrors<T>(
  * ```typescript
  * const showPasswordErrors = createShowErrorsSignal(form.password, {
  *   strategy: 'immediate',
- *   submittedStatus: computed(() => form().submittedStatus())
+ *   submittedStatus: computed<SubmittedStatus>(() =>
+ *     form().submitting() ? 'submitting' : form().touched() ? 'submitted' : 'unsubmitted'
+ *   )
  * });
  * ```
  *

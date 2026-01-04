@@ -33,10 +33,10 @@ import { contactFormSchema } from './your-first-form.validations';
         <input
           id="contact-name"
           type="text"
-          required
           [field]="contactForm.name"
           class="form-input"
           placeholder="Your name"
+          aria-required="true"
         />
         <!-- Toolkit handles ARIA automatically! No manual bindings needed -->
         <ngx-signal-form-error
@@ -51,10 +51,10 @@ import { contactFormSchema } from './your-first-form.validations';
         <input
           id="contact-email"
           type="email"
-          required
           [field]="contactForm.email"
           class="form-input"
           placeholder="you@example.com"
+          aria-required="true"
         />
         <ngx-signal-form-error
           [field]="contactForm.email"
@@ -68,10 +68,10 @@ import { contactFormSchema } from './your-first-form.validations';
         <textarea
           id="contact-message"
           rows="4"
-          required
           [field]="contactForm.message"
           class="form-input"
           placeholder="Your message (min 10 characters)"
+          aria-required="true"
         ></textarea>
         <ngx-signal-form-error
           [field]="contactForm.message"

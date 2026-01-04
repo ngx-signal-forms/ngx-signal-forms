@@ -1,6 +1,14 @@
-import type { SignalLike } from '@angular/aria/ui-patterns';
+import type { Signal } from '@angular/core';
 import type { ValidationError } from '@angular/forms/signals';
 import type { DeepPartial } from 'ts-essentials';
+
+/**
+ * A signal-like value that can be called to get the current value.
+ * Represents either an Angular Signal or a zero-argument function.
+ *
+ * @template T The type of value returned when called
+ */
+export type SignalLike<T> = Signal<T> | (() => T);
 
 /**
  * Accepts reactive (Signal/function) or static values.

@@ -96,8 +96,8 @@ import { complexFormSchema } from './complex-forms.validations';
               id="age"
               type="number"
               [field]="complexForm.personalInfo.age"
-              min="18"
-              max="120"
+              aria-valuemin="18"
+              aria-valuemax="120"
             />
             <span suffix aria-hidden="true" class="text-sm text-gray-400"
               >years</span
@@ -238,8 +238,8 @@ import { complexFormSchema } from './complex-forms.validations';
                 [id]="'skill-' + i + '-level'"
                 type="number"
                 [field]="complexForm.skills[i].level"
-                min="1"
-                max="10"
+                aria-valuemin="1"
+                aria-valuemax="10"
               />
             </ngx-signal-form-field>
           </div>

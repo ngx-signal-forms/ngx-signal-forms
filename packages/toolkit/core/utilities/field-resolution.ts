@@ -43,7 +43,9 @@ export function resolveFieldName(
 
   // Priority 2: Custom resolver
   if (config.fieldNameResolver) {
-    const resolver = unwrapValue(config.fieldNameResolver);
+    const resolver = unwrapValue(config.fieldNameResolver) as (
+      element: HTMLElement,
+    ) => string | null;
     const customName = resolver(element);
     if (customName) {
       return customName;

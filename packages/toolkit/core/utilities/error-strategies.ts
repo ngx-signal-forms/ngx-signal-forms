@@ -45,7 +45,9 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * const showEmailErrors = computeShowErrors(
  *   form.email,
  *   'on-touch',
- *   computed(() => form().submittedStatus())
+ *   computed<SubmittedStatus>(() =>
+ *     form().submitting() ? 'submitting' : form().touched() ? 'submitted' : 'unsubmitted'
+ *   )
  * );
  *
  * /// Use in template
@@ -74,7 +76,9 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * const showErrors = computeShowErrors(
  *   form.field,
  *   strategy,
- *   computed(() => form().submittedStatus())
+ *   computed<SubmittedStatus>(() =>
+ *     form().submitting() ? 'submitting' : form().touched() ? 'submitted' : 'unsubmitted'
+ *   )
  * );
  * ```
  *
@@ -93,10 +97,15 @@ export function computeShowErrors<T>(
     const strategyValue = unwrapValue(strategy);
     const status = unwrapValue(submittedStatus);
 
+    // Use type guards to safely access field state methods
+    const stateObj = fieldState as {
+      invalid?: () => boolean;
+      touched?: () => boolean;
+    };
     const isInvalid =
-      typeof fieldState?.invalid === 'function' ? fieldState.invalid() : false;
+      typeof stateObj?.invalid === 'function' ? stateObj.invalid() : false;
     const isTouched =
-      typeof fieldState?.touched === 'function' ? fieldState.touched() : false;
+      typeof stateObj?.touched === 'function' ? stateObj.touched() : false;
 
     // Convert submittedStatus to boolean
     const hasSubmitted = status !== 'unsubmitted';
@@ -182,7 +191,11 @@ export function computeShowErrors<T>(
  * ```typescript
  * function handleSave() {
  *   const field = form.email();
- *   const status = form().submittedStatus();
+ *   const status: SubmittedStatus = form().submitting()
+ *     ? 'submitting'
+ *     : form().touched()
+ *       ? 'submitted'
+ *       : 'unsubmitted';
  *   const showErrors = shouldShowErrors(field, 'on-touch', status);
  *
  *   if (showErrors) {

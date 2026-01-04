@@ -46,7 +46,7 @@ This section demonstrates **production-ready patterns** for real-world applicati
 **What you'll learn:**
 
 - `submit()` helper from Signal Forms
-- Automatic `submittedStatus` tracking
+- Derived submission status tracking
 - Loading state management
 - Server error handling
 - WCAG 2.2 error announcements
@@ -55,7 +55,7 @@ This section demonstrates **production-ready patterns** for real-world applicati
 **Technologies:**
 
 - Angular Signal Forms `submit()` function
-- Built-in `submittedStatus` signal
+- Toolkit-derived `submittedStatus` signal
 - Async/await patterns
 - Server error integration
 
@@ -190,7 +190,8 @@ export class RegistrationComponent {
 
   // submit() helper automatically:
   // 1. Marks all fields as touched (shows all errors on submit)
-  // 2. Manages submittedStatus signal ('unsubmitted' → 'submitting' → 'submitted')
+  // 2. Derives submission status ('unsubmitted' → 'submitting' → 'submitted')
+  //    using submitting() + touched()
   // 3. Handles async operations
   // 4. Returns server errors for display
   readonly #submitHandler = submit(this.registrationForm, async (formData) => {
@@ -226,33 +227,36 @@ export class RegistrationComponent {
 }
 ```
 
-### Built-in Submission Status Tracking
+### Submission Status Tracking (derived)
 
-Angular Signal Forms automatically tracks submission state via the `submittedStatus` signal:
+Angular Signal Forms exposes `submitting()` and `touched()` signals on every field state, but it does **not** ship a native `submittedStatus()` API. The toolkit derives a `SubmittedStatus` value for you:
 
 ```typescript
-// All FieldState objects have submittedStatus
-this.registrationForm().submittedStatus();
-// Returns: 'unsubmitted' | 'submitting' | 'submitted'
+type SubmittedStatus = 'unsubmitted' | 'submitting' | 'submitted';
 
-// Automatically propagates to all field descendants
-this.registrationForm.email().submittedStatus(); // Same value
-
-// Reset submission state
-this.registrationForm().resetSubmittedStatus();
+// Derive manually (if you are not using the directive context)
+const submittedStatus = computed<SubmittedStatus>(() => {
+  const state = this.registrationForm();
+  if (state.submitting()) return 'submitting';
+  if (state.touched()) return 'submitted';
+  return 'unsubmitted';
+});
 ```
 
-**When using the toolkit's `ngxSignalFormDirective`:**
+When you use the toolkit's `ngxSignalFormDirective`, the derived status is provided via DI for convenience:
 
-```typescript
-// The provider automatically exposes submittedStatus via DI
+```html
 <form [ngxSignalForm]="registrationForm" (ngSubmit)="save()">
   <!-- NgxSignalFormErrorComponent automatically receives submittedStatus -->
   <ngx-signal-form-error [field]="registrationForm.email" fieldName="email" />
+
+  @if (formContext?.submittedStatus() === 'submitting') {
+  <p role="status">Submitting…</p>
+  }
 </form>
 ```
 
-No manual tracking needed - the toolkit handles it automatically!
+The derived status resets to `'unsubmitted'` whenever `submitting()` is false and the form has no touched fields (for example, after calling `form().reset()` and clearing your model).
 
 ### Server Error Handling
 
@@ -346,7 +350,7 @@ return [
 **For long forms with multiple errors:**
 
 ```html
-@if (registrationForm().invalid() && registrationForm().submittedStatus() ===
+@if (registrationForm().invalid() && formContext?.submittedStatus() ===
 'submitted') {
 <div role="alert" class="error-summary">
   <h2>Please fix the following errors:</h2>
@@ -425,7 +429,7 @@ protected async save(): Promise<void> {
       // ... reset all fields
     });
 
-    this.registrationForm().resetSubmittedStatus();
+    // Submission state resets once submitting() is false and fields are untouched
   }
 }
 ```

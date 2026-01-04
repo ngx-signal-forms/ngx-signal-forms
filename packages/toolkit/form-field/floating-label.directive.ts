@@ -94,6 +94,7 @@ import { Directive, input } from '@angular/core';
  * ```
  */
 @Directive({
+  // eslint-disable-next-line @angular-eslint/directive-selector
   selector: 'ngx-signal-form-field[outline]',
   standalone: true,
   host: {

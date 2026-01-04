@@ -65,7 +65,7 @@ export const productFeedbackSchema = schema<ProductFeedbackModel>((path) => {
 
   validate(path.improvementSuggestions, (ctx) => {
     const value = ctx.value();
-    const rating = ctx.fieldOf(path.overallRating)().value();
+    const rating = ctx.valueOf(path.overallRating);
 
     if (rating > 0 && rating <= 3 && value && value.length < 10) {
       return customError({

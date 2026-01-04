@@ -180,10 +180,10 @@ import {
 **What it provides:**
 
 - Form instance (via DI)
-- Submission state tracking (from Angular Signal Forms' built-in `submittedStatus`)
+- Submission state tracking (toolkit-derived from `submitting()` + `touched()`)
 - Error display strategy (inheritable)
 
-**Note:** Angular Signal Forms automatically tracks submission state via the `submittedStatus` signal. The form provider exposes this through dependency injection - no manual tracking needed when using `(ngSubmit)`.
+**Note:** Angular Signal Forms exposes `submitting()` and `touched()` signals; the toolkit derives a `SubmittedStatus` value from them and shares it via dependency injection when you use `(ngSubmit)`.
 
 ## 📊 Code Reduction Analysis
 

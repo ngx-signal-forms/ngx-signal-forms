@@ -106,7 +106,7 @@ export class WarningsSupportFormComponent {
    * - Callback only executes if form is VALID
    * - If invalid, errors are shown but submission is blocked
    * - Warnings do NOT block submission (only blocking errors do)
-   * - Submission status is tracked via submittedStatus signal
+   * - Submission status is derived from submitting() + touched()
    */
   protected async handleSubmit(): Promise<void> {
     await submit(this.passwordForm, async (formData) => {

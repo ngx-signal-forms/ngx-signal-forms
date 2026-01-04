@@ -49,7 +49,7 @@ export class AppComponent implements AfterViewInit {
     while (route.firstChild) {
       route = route.firstChild;
     }
-    return route.snapshot.title || 'Examples';
+    return route.snapshot.title || 'Pure Signal Forms - No Toolkit (Baseline)';
   }
 
   // Keep the browser tab title in sync with the current route title

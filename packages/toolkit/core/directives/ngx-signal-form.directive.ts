@@ -143,11 +143,20 @@ export class NgxSignalFormDirective {
   });
 
   /**
-   * Derived submission status based on Angular's native signals.
+   * Submission status derived from Angular Signal Forms' native signals.
    *
-   * - `'submitting'` when `form().submitting()` is true
-   * - `'submitted'` when `form().touched()` is true (Angular's `submit()` marks all as touched)
-   * - `'unsubmitted'` otherwise
+   * Angular 21 provides `submitting()` and `touched()` signals on `FieldState`,
+   * but NOT a `submittedStatus()` signal. The toolkit derives `SubmittedStatus`
+   * from these native signals:
+   *
+   * - `'unsubmitted'` - Form hasn't been submitted yet (no form bound OR !touched && !submitting)
+   * - `'submitting'` - Form is currently being submitted (`submitting()` is true)
+   * - `'submitted'` - Form has been submitted (Angular's `submit()` marks all fields as touched)
+   *
+   * **How derivation works**:
+   * 1. If `submitting()` is true → `'submitting'`
+   * 2. If `touched()` is true (submit() calls markAllAsTouched) → `'submitted'`
+   * 3. Otherwise → `'unsubmitted'`
    *
    * Returns `'unsubmitted'` when no form is bound (using `form(ngSubmit)` selector only).
    */
@@ -155,12 +164,19 @@ export class NgxSignalFormDirective {
     const f = this.form();
     if (!f) return 'unsubmitted';
 
-    const formState = f();
-    const isSubmitting = formState.submitting();
-    const isTouched = formState.touched();
+    const fieldState = f();
 
-    if (isSubmitting) return 'submitting';
-    if (isTouched) return 'submitted';
+    // Derive SubmittedStatus from Angular's native signals
+    if (fieldState.submitting()) {
+      return 'submitting';
+    }
+
+    // Angular's submit() helper calls markAllAsTouched() internally,
+    // so we can use touched() as a proxy for "has been submitted"
+    if (fieldState.touched()) {
+      return 'submitted';
+    }
+
     return 'unsubmitted';
   });
 }

@@ -42,7 +42,7 @@
 
     <!-- Email Field with Icon Prefix -->
     <ngx-signal-form-field [field]="showcaseForm.email" fieldName="email">
-            <span prefix>
+      <span prefix>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -74,7 +74,7 @@
 
     <!-- Website Field with Protocol Prefix -->
     <ngx-signal-form-field [field]="showcaseForm.website" fieldName="website">
-            <span prefix>
+      <span prefix>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -111,10 +111,10 @@
         class="form-input"
         type="number"
         [field]="showcaseForm.age"
-        min="18"
-        max="120"
         placeholder="25"
         aria-required="true"
+        aria-valuemin="18"
+        aria-valuemax="120"
       />
       <span suffix aria-hidden="true" class="text-sm text-gray-400">years</span>
     </ngx-signal-form-field>

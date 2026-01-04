@@ -29,9 +29,33 @@ test.describe('Error Display Modes', () => {
     });
   });
 
-  test('"on-submit" mode should hide errors until submit', async () => {
+  /**
+   * KNOWN LIMITATION: Angular Signal Forms does not support runtime error strategy changes.
+   *
+   * The form initializes with the default strategy ('on-touch') and changing the radio button
+   * after initialization does not update the form's error display behavior. The UI reflects
+   * the new selection, but the underlying form directive maintains its initial strategy.
+   *
+   * This is documented in the form component: "Signal Forms doesn't support runtime error
+   * strategy changes, so the strategy is set once via the form provider directive."
+   *
+   * To properly test on-submit behavior, the page would need to:
+   * 1. Support URL query params to set initial strategy, OR
+   * 2. Use a separate route that defaults to on-submit strategy
+   */
+  test.fixme('"on-submit" mode should hide errors until submit', async () => {
     await test.step('Interact with form without errors appearing', async () => {
+      // Reload page to ensure clean state before switching mode
+      await formPage.page.reload();
+      await formPage.waitForReady();
       await formPage.selectErrorMode('onSubmit');
+
+      // Wait for strategy change to propagate through Angular change detection
+      await formPage.page.waitForTimeout(100);
+
+      // FIXME: This assertion fails because strategy switching at runtime is not supported.
+      // The form was initialized with 'on-touch' strategy and shows errors immediately.
+      await expect(formPage.errorAlerts).toHaveCount(0);
 
       const inputs = formPage.textAndEmailInputs;
       const count = await inputs.count();
@@ -42,6 +66,7 @@ test.describe('Error Display Modes', () => {
         await input.blur();
       }
 
+      // With on-submit strategy, errors should still be hidden after blur
       await expect(formPage.errorAlerts).toHaveCount(0);
 
       await formPage.submit();

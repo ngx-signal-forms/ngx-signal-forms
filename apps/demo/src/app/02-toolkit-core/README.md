@@ -201,21 +201,27 @@ validate(path.password, (ctx) => {
 ```typescript
 field().touched(); // User interacted (blur)
 field().dirty(); // Value changed
-field().pristine(); // Original value
 field().valid(); // No errors
 field().invalid(); // Has errors
 field().pending(); // Async validation in progress
+field().disabled(); // Disabled by validator
+field().readonly(); // Readonly by validator
+field().hidden(); // Hidden by validator (template controls visibility)
 ```
 
 #### Toolkit Enhancements
 
 ```typescript
+// Derive submitted status when not using the directive context
+const submittedStatus = computed(() => {
+  const state = form();
+  if (state.submitting()) return 'submitting';
+  if (state.touched()) return 'submitted';
+  return 'unsubmitted';
+});
+
 // Computed error visibility
-const showFieldErrors = showErrors(
-  form.field,
-  'on-touch',
-  form().submittedStatus(),
-);
+const showFieldErrors = showErrors(form.field, 'on-touch', submittedStatus);
 
 // Warning vs error separation
 const warnings = field().errors().filter(isWarningError);

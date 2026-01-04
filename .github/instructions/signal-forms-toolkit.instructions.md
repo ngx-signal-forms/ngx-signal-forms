@@ -145,13 +145,13 @@ import {
 **Features**:
 
 - Provides form context to child components via DI
-- Tracks submission lifecycle (`submittedStatus` signal)
+- Derives `submittedStatus` from Angular's native `submitting()` and `touched()` signals
 - Automatically adds `novalidate` attribute
 - Manages error display strategy
 
 ```typescript
 <form [ngxSignalForm]="userForm" [errorStrategy]="'on-touch'" (ngSubmit)="save()">
-  <- Add submittedStatus() signal Child components auto-inject context -->
+  <!-- submittedStatus derived from touched() - Child components auto-inject context -->
 </form>
 ```
 
