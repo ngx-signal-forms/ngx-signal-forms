@@ -41,7 +41,7 @@ import { pureSignalFormSchema } from './pure-signal-form.validations';
             id="pure-email-error"
             role="alert"
             aria-live="assertive"
-            class="form-error-text"
+            class="form-error"
           >
             @for (error of signupForm.email().errors(); track error.kind) {
               <p>{{ error.message }}</p>
@@ -71,7 +71,7 @@ import { pureSignalFormSchema } from './pure-signal-form.validations';
             id="pure-password-error"
             role="alert"
             aria-live="assertive"
-            class="form-error-text"
+            class="form-error"
           >
             @for (error of signupForm.password().errors(); track error.kind) {
               <p>{{ error.message }}</p>
@@ -107,7 +107,7 @@ import { pureSignalFormSchema } from './pure-signal-form.validations';
             id="pure-confirm-password-error"
             role="alert"
             aria-live="assertive"
-            class="form-error-text"
+            class="form-error"
           >
             @for (
               error of signupForm.confirmPassword().errors();

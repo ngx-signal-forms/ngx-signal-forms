@@ -225,4 +225,16 @@ test.describe('Pure Signal Form (Baseline)', () => {
       await expect(formPage.confirmPasswordError).toBeHidden();
     });
   });
+
+  test('should have correct error styling class', async () => {
+    await test.step('Trigger error and check class', async () => {
+      await formPage.emailInput.focus();
+      await formPage.emailInput.blur();
+      await expect(formPage.emailError).toBeVisible();
+      // Verify it uses the correct class 'form-error' which has red styling
+      await expect(formPage.emailError).toHaveClass(/form-error/);
+      // Verify it does NOT use the incorrect class 'form-error-text'
+      await expect(formPage.emailError).not.toHaveClass(/form-error-text/);
+    });
+  });
 });
