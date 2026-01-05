@@ -127,6 +127,7 @@ function findFirstInvalidField(
  * @param _fieldTree The field tree to focus (currently unused - relies on aria-invalid)
  * @returns `true` if element was found and focused, `false` otherwise
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Reserved for future field-to-element mapping
 function focusFieldElement(_fieldTree: FieldTree<unknown>): boolean {
   // Strategy: Find first element with aria-invalid="true"
   // This works if the auto-aria directive is enabled (default)

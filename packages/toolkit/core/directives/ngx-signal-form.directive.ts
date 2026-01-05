@@ -81,6 +81,7 @@ export interface NgxSignalFormContext {
  * ```
  */
 @Directive({
+  // eslint-disable-next-line @angular-eslint/directive-selector -- Directive for forms using Angular Signal Forms
   selector: 'form[ngxSignalForm], form(ngSubmit)',
   exportAs: 'ngxSignalForm',
   host: {

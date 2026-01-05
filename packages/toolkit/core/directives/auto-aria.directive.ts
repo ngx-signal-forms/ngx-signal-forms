@@ -39,6 +39,7 @@ import { isBlockingError } from '../utilities/warning-error';
  * ```
  */
 @Directive({
+  // eslint-disable-next-line @angular-eslint/directive-selector -- Targets Angular Signal Forms' [field] directive
   selector: `
     input[field]:not([ngxSignalFormAutoAriaDisabled]):not([type="radio"]):not([type="checkbox"]),
     textarea[field]:not([ngxSignalFormAutoAriaDisabled]),

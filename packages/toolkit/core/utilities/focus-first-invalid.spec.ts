@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { FieldTree } from '@angular/forms/signals';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { focusFirstInvalid } from './focus-first-invalid';
 
 /**
@@ -144,7 +144,7 @@ describe('focusFirstInvalid', () => {
       const focusSpy = vi.spyOn(input, 'focus');
 
       // Act
-      const result = focusFirstInvalid(mockField);
+      focusFirstInvalid(mockField);
 
       // Assert
       // Focus will be called but may not succeed on hidden elements
@@ -161,7 +161,7 @@ describe('focusFirstInvalid', () => {
       const focusSpy = vi.spyOn(input, 'focus');
 
       // Act
-      const result = focusFirstInvalid(mockField);
+      focusFirstInvalid(mockField);
 
       // Assert
       // Focus will be called but may not succeed on disabled elements
