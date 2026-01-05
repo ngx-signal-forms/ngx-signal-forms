@@ -1,6 +1,15 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { Field, form, submit } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import {
+  focusFirstInvalid,
+  NgxSignalFormToolkit,
+} from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 import type { AccessibilityFormModel } from './accessibility-comparison.model';
 import { accessibilityValidationSchema } from './accessibility-comparison.validations';
@@ -17,8 +26,9 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
   imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
     <form
+      #formElement
       [ngxSignalForm]="signupForm"
-      (ngSubmit)="handleSubmit()"
+      (submit)="handleSubmit($event)"
       class="form-container"
     >
       <!-- Email Field - Toolkit Handles Everything -->
@@ -80,6 +90,10 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
   `,
 })
 export class AccessibilityToolkitFormComponent {
+  /** Form element reference for scoped focus management */
+  private readonly formElement =
+    viewChild<ElementRef<HTMLFormElement>>('formElement');
+
   /** Success message announced via role="status" elsewhere on the page */
   protected readonly successMessage = signal<string>('');
 
@@ -94,8 +108,18 @@ export class AccessibilityToolkitFormComponent {
   readonly signupForm = form(this.#formData, accessibilityValidationSchema);
 
   /// Submission handler using Angular Signal Forms submit() helper
-  protected async handleSubmit(): Promise<void> {
-    await submit(this.signupForm, async () => {
+  /// Also demonstrates focusFirstInvalid for accessibility
+  protected handleSubmit(event: Event): void {
+    event.preventDefault();
+
+    /// Focus first invalid field if form is invalid (WCAG 2.2 best practice)
+    if (this.signupForm().invalid()) {
+      const formEl = this.formElement()?.nativeElement;
+      focusFirstInvalid(this.signupForm, formEl);
+      return;
+    }
+
+    submit(this.signupForm, async () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       this.#formData.set({ email: '', password: '', confirmPassword: '' });
       this.signupForm().reset();

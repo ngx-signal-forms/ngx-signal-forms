@@ -8,12 +8,15 @@ import {
   signal,
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
+import { NGX_SIGNAL_FORM_CONTEXT } from '../tokens';
+import type { ErrorDisplayStrategy } from '../types';
 import {
   generateErrorId,
+  generateWarningId,
   resolveFieldName,
 } from '../utilities/field-resolution';
 import { injectFormConfig } from '../utilities/inject-form-config';
-import { isBlockingError } from '../utilities/warning-error';
+import { isBlockingError, isWarningError } from '../utilities/warning-error';
 
 /**
  * Automatically manages ARIA attributes for Signal Forms controls.
@@ -54,6 +57,7 @@ export class NgxSignalFormAutoAriaDirective {
   readonly #element = inject(ElementRef<HTMLElement>);
   readonly #injector = inject(Injector);
   readonly #config = injectFormConfig();
+  readonly #context = inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true });
 
   /**
    * The Signal Forms field for this field.
@@ -67,11 +71,87 @@ export class NgxSignalFormAutoAriaDirective {
   readonly #fieldName = signal<string | null>(null);
 
   /**
+   * Existing aria-describedby value captured on init.
+   * Used to preserve developer-specified associations (hints, descriptions).
+   */
+  readonly #existingDescribedBy = signal<string | null>(null);
+
+  /**
+   * Computed signal that determines if errors should be shown based on error display strategy.
+   * Respects form-level ErrorDisplayStrategy from ngxSignalForm directive.
+   */
+  readonly #shouldShowErrors = computed(() => {
+    const field = this.field();
+    if (!field) return false;
+
+    const fieldState = field();
+    if (!fieldState) return false;
+
+    const errors = fieldState.errors();
+    const hasBlockingErrors = errors.some(isBlockingError);
+    if (!hasBlockingErrors) return false;
+
+    const strategy: ErrorDisplayStrategy =
+      this.#context?.errorStrategy() ?? 'on-touch';
+    const submittedStatus = this.#context?.submittedStatus() ?? 'unsubmitted';
+    const isTouched = fieldState.touched();
+    const hasSubmitted = submittedStatus !== 'unsubmitted';
+
+    switch (strategy) {
+      case 'immediate':
+        return true;
+      case 'on-touch':
+        return isTouched || hasSubmitted;
+      case 'on-submit':
+        return hasSubmitted;
+      case 'manual':
+        return false;
+      default:
+        return isTouched || hasSubmitted;
+    }
+  });
+
+  /**
+   * Computed signal that determines if warnings should be shown.
+   * Warnings use same visibility logic as errors.
+   */
+  readonly #shouldShowWarnings = computed(() => {
+    const field = this.field();
+    if (!field) return false;
+
+    const fieldState = field();
+    if (!fieldState) return false;
+
+    const errors = fieldState.errors();
+    const hasWarnings = errors.some(isWarningError);
+    if (!hasWarnings) return false;
+
+    const strategy: ErrorDisplayStrategy =
+      this.#context?.errorStrategy() ?? 'on-touch';
+    const submittedStatus = this.#context?.submittedStatus() ?? 'unsubmitted';
+    const isTouched = fieldState.touched();
+    const hasSubmitted = submittedStatus !== 'unsubmitted';
+
+    switch (strategy) {
+      case 'immediate':
+        return true;
+      case 'on-touch':
+        return isTouched || hasSubmitted;
+      case 'on-submit':
+        return hasSubmitted;
+      case 'manual':
+        return false;
+      default:
+        return isTouched || hasSubmitted;
+    }
+  });
+
+  /**
    * Computed ARIA invalid state.
    * Returns 'true' | 'false' | null based on field validity and error display strategy.
    *
-   * Only sets aria-invalid='true' if there are blocking errors (not just warnings).
-   * Warnings have kind starting with 'warn:' and should not trigger invalid state.
+   * Respects the configured ErrorDisplayStrategy, so aria-invalid='true' only
+   * appears when errors should be visible according to the strategy.
    */
   protected readonly ariaInvalid = computed(() => {
     const field = this.field();
@@ -80,42 +160,54 @@ export class NgxSignalFormAutoAriaDirective {
     const fieldState = field();
     if (!fieldState) return null;
 
-    const touched = fieldState.touched();
-    if (!touched) return 'false';
-
-    // Check if field has blocking errors (not just warnings)
-    const errors = fieldState.errors();
-    const hasBlockingErrors = errors.some(isBlockingError);
-
-    return hasBlockingErrors ? 'true' : 'false';
+    return this.#shouldShowErrors() ? 'true' : 'false';
   });
 
   /**
    * Computed ARIA describedby attribute.
-   * Links to the error message element for screen readers.
+   * Links to error/warning message elements for screen readers.
+   *
+   * Preserves existing aria-describedby values (hints, descriptions) and
+   * appends error/warning IDs when they should be shown.
    */
   protected readonly ariaDescribedBy = computed(() => {
     const field = this.field();
-    if (!field) return null;
+    if (!field) return this.#existingDescribedBy();
 
     const fieldState = field();
-    if (!fieldState) return null;
+    if (!fieldState) return this.#existingDescribedBy();
 
-    const invalid = fieldState.invalid();
-    const touched = fieldState.touched();
+    const fieldName = this.#fieldName();
+    if (!fieldName) return this.#existingDescribedBy();
 
-    // Only add aria-describedby when errors are present and should be shown
-    if (invalid && touched) {
-      const fieldName = this.#fieldName();
-      if (fieldName) {
-        return generateErrorId(fieldName);
+    const existing = this.#existingDescribedBy();
+    const parts: string[] = existing ? existing.split(' ').filter(Boolean) : [];
+
+    // Add error ID if showing errors
+    if (this.#shouldShowErrors()) {
+      const errorId = generateErrorId(fieldName);
+      if (!parts.includes(errorId)) {
+        parts.push(errorId);
       }
     }
 
-    return null;
+    // Add warning ID if showing warnings
+    if (this.#shouldShowWarnings()) {
+      const warningId = generateWarningId(fieldName);
+      if (!parts.includes(warningId)) {
+        parts.push(warningId);
+      }
+    }
+
+    return parts.length > 0 ? parts.join(' ') : null;
   });
 
   constructor() {
+    // Capture existing aria-describedby before we modify it
+    const existingDescribedBy =
+      this.#element.nativeElement.getAttribute('aria-describedby');
+    this.#existingDescribedBy.set(existingDescribedBy);
+
     // Resolve field name on initialization
     const fieldName = resolveFieldName(
       this.#element.nativeElement,
@@ -127,6 +219,7 @@ export class NgxSignalFormAutoAriaDirective {
       console.log(
         '[NgxSignalFormAutoAriaDirective] Initialized for field:',
         fieldName,
+        { existingDescribedBy },
       );
     }
   }

@@ -73,6 +73,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
       expect(consoleLogSpy).toHaveBeenCalledWith(
         '[NgxSignalFormAutoAriaDirective] Initialized for field:',
         'email',
+        { existingDescribedBy: null },
       );
 
       consoleLogSpy.mockRestore();
@@ -340,11 +341,11 @@ describe('NgxSignalFormAutoAriaDirective', () => {
       const input = container.querySelector('input');
       expect(input?.hasAttribute('aria-describedby')).toBe(false);
 
-      // Update control state: make it invalid and touched
+      // Update control state: make it invalid and touched with blocking error
       mockControl.update(() => () => ({
         invalid: signal(true),
         touched: signal(true),
-        errors: signal([]),
+        errors: signal([{ kind: 'required', message: 'Email is required' }]),
         valid: signal(false),
         dirty: signal(true),
         value: signal(''),
@@ -397,6 +398,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
       expect(consoleLogSpy).toHaveBeenCalledWith(
         '[NgxSignalFormAutoAriaDirective] Initialized for field:',
         'test-field',
+        { existingDescribedBy: null },
       );
 
       consoleLogSpy.mockRestore();
@@ -408,12 +410,15 @@ describe('NgxSignalFormAutoAriaDirective', () => {
       });
 
       @Component({
-        template: '<input id="test-field" [field]="testControl()" />',
+        template: '<input id="no-debug-field" [field]="testControl()" />',
         imports: [NgxSignalFormAutoAriaDirective],
       })
       class TestComponent {
         testControl = createMockControl();
       }
+
+      // Clear any previous calls
+      consoleLogSpy.mockClear();
 
       await render(TestComponent, {
         providers: [
@@ -427,7 +432,13 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         ],
       });
 
-      expect(consoleLogSpy).not.toHaveBeenCalled();
+      // Should not have any calls for NgxSignalFormAutoAriaDirective
+      const autoAriaCalls = consoleLogSpy.mock.calls.filter(
+        (call) =>
+          typeof call[0] === 'string' &&
+          call[0].includes('NgxSignalFormAutoAriaDirective'),
+      );
+      expect(autoAriaCalls).toHaveLength(0);
 
       consoleLogSpy.mockRestore();
     });

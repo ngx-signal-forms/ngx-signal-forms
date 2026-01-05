@@ -1,17 +1,20 @@
-# @angular/aria Integration
+# Angular Signals Integration
 
 ## Overview
 
-The `@ngx-signal-forms/toolkit` now uses `SignalLike<T>` and `WritableSignalLike<T>` type utilities from `@angular/aria/ui-patterns` to provide a more flexible and Angular-aligned API.
+The `@ngx-signal-forms/toolkit` uses `SignalLike<T>` and `ReactiveOrStatic<T>` type utilities to provide a more flexible and Angular-aligned API, allowing inputs to be static values, signals, or functions.
 
 ## What Changed
 
-### 1. Type Imports
+### 1. Type Definitions
 
-All public APIs now use `SignalLike<T>` from `@angular/aria` instead of strict `Signal<T>` types:
+All public APIs now use flexible types to accept both static and reactive inputs:
 
 ```typescript
-import type { SignalLike } from '@angular/aria/ui-patterns';
+import type {
+  SignalLike,
+  ReactiveOrStatic,
+} from '@ngx-signal-forms/toolkit/core';
 ```
 
 ### 2. Updated APIs
@@ -43,13 +46,21 @@ export interface NgxSignalFormsConfig {
 **Before:**
 
 ```typescript
-export function computeShowErrors<T>(field: Signal<T>, strategy: ErrorDisplayStrategy | Signal<ErrorDisplayStrategy>, hasSubmitted: Signal<boolean>): Signal<boolean>;
+export function computeShowErrors<T>(
+  field: Signal<T>,
+  strategy: ErrorDisplayStrategy | Signal<ErrorDisplayStrategy>,
+  hasSubmitted: Signal<boolean>,
+): Signal<boolean>;
 ```
 
 **After:**
 
 ```typescript
-export function computeShowErrors<T>(field: SignalLike<T>, strategy: SignalLike<ErrorDisplayStrategy> | ErrorDisplayStrategy, hasSubmitted: SignalLike<boolean>): Signal<boolean>;
+export function computeShowErrors<T>(
+  field: SignalLike<T>,
+  strategy: SignalLike<ErrorDisplayStrategy> | ErrorDisplayStrategy,
+  hasSubmitted: SignalLike<boolean>,
+): Signal<boolean>;
 ```
 
 #### `NgxSignalFormErrorComponent` Inputs
@@ -75,7 +86,9 @@ export class NgxSignalFormErrorComponent {
 })
 export class NgxSignalFormErrorComponent {
   readonly field = input.required<SignalLike<unknown>>();
-  readonly strategy = input<SignalLike<ErrorDisplayStrategy> | ErrorDisplayStrategy>('on-touch');
+  readonly strategy = input<
+    SignalLike<ErrorDisplayStrategy> | ErrorDisplayStrategy
+  >('on-touch');
   readonly hasSubmitted = input.required<SignalLike<boolean>>();
 }
 ```
@@ -88,7 +101,11 @@ Users can now pass signals, computed signals, or plain functions:
 
 ```typescript
 // ✅ Works with signal()
-const showErrors = computeShowErrors(form.email, signal('on-touch'), formSubmitted);
+const showErrors = computeShowErrors(
+  form.email,
+  signal('on-touch'),
+  formSubmitted,
+);
 
 // ✅ Works with computed()
 const showErrors = computeShowErrors(
@@ -101,7 +118,11 @@ const showErrors = computeShowErrors(
 const showErrors = computeShowErrors(form.email, 'on-touch', formSubmitted);
 
 // ✅ Works with plain functions
-const showErrors = computeShowErrors(form.email, () => 'on-touch', formSubmitted);
+const showErrors = computeShowErrors(
+  form.email,
+  () => 'on-touch',
+  formSubmitted,
+);
 ```
 
 ### 2. **Angular Alignment**
@@ -134,12 +155,18 @@ This is more flexible than requiring a strict `Signal<T>` type.
 All utilities normalize `SignalLike<T>` to values using a simple pattern:
 
 ```typescript
-export function computeShowErrors<T>(field: SignalLike<T>, strategy: SignalLike<ErrorDisplayStrategy> | ErrorDisplayStrategy, hasSubmitted: SignalLike<boolean>): Signal<boolean> {
+export function computeShowErrors<T>(
+  field: SignalLike<T>,
+  strategy: SignalLike<ErrorDisplayStrategy> | ErrorDisplayStrategy,
+  hasSubmitted: SignalLike<boolean>,
+): Signal<boolean> {
   return computed(() => {
     // Normalize SignalLike to values
     const fieldState = typeof field === 'function' ? field() : field;
-    const submitted = typeof hasSubmitted === 'function' ? hasSubmitted() : hasSubmitted;
-    const strategyValue = typeof strategy === 'function' ? strategy() : strategy;
+    const submitted =
+      typeof hasSubmitted === 'function' ? hasSubmitted() : hasSubmitted;
+    const strategyValue =
+      typeof strategy === 'function' ? strategy() : strategy;
 
     // ... use normalized values
   });

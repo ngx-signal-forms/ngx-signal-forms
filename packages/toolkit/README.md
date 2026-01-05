@@ -746,7 +746,11 @@ Signal Forms separate data (your signal) from form state (control states). This 
 
 Automatically applied to `input[field]`, `textarea[field]`, `select[field]` elements.
 
-Adds `aria-invalid` and `aria-describedby` attributes based on field validation state.
+**Key Features:**
+
+- **Smart Validation State**: `aria-invalid` respects your `ErrorDisplayStrategy` (e.g., only shows invalid after touch if strategy is `'on-touch'`).
+- **Additive Description**: Preserves any existing `aria-describedby` values (e.g. static help text) and appends error IDs when needed.
+- **Reference Linking**: Links inputs to error messages via `aria-describedby` for screen readers.
 
 > **Important:** This directive must be imported to activate. While it has an automatic selector, Angular standalone components require explicit imports. Use `NgxSignalFormToolkit` bundle or import `NgxSignalFormAutoAriaDirective` individually.
 
@@ -880,7 +884,7 @@ protected save(): void {
 
 **Enhancement over Angular Signal Forms:**
 - ✅ Angular Signal Forms: Provides field state signals but no focus utilities
-- ✅ Toolkit: Automatic focus on first invalid field for better UX and accessibility
+- ✅ Toolkit: Automatic focus on first invalid field (uses robust tree traversal to ensure reliability)
 
 #### Submission State Helpers
 

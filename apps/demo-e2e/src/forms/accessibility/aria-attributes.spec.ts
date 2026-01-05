@@ -99,4 +99,77 @@ test.describe('Accessibility - ARIA Attributes', () => {
       await expect(emailInput).not.toHaveAttribute('aria-invalid', 'true');
     });
   });
+
+  test('should preserve existing aria-describedby when adding error IDs', async ({
+    page,
+  }) => {
+    await page.goto('/toolkit-core/error-display-modes');
+    await page.waitForLoadState('domcontentloaded');
+
+    await test.step('Verify additive aria-describedby behavior', async () => {
+      const ratingInput = page.locator('#overallRating');
+
+      /// Verify initial aria-describedby contains only the hint
+      const initialDescribedBy = ratingInput;
+      await expect(initialDescribedBy).toHaveAttribute(
+        'aria-describedby',
+        'rating-hint',
+      );
+
+      /// Trigger validation error by entering invalid value and blurring
+      await ratingInput.fill('0');
+      await ratingInput.blur();
+
+      /// After error, aria-describedby should contain BOTH hint and error ID
+      const updatedDescribedBy =
+        await ratingInput.getAttribute('aria-describedby');
+      expect(updatedDescribedBy).toContain('rating-hint');
+      expect(updatedDescribedBy).toContain('overallRating-error');
+
+      /// Fix the value and verify error ID is removed but hint remains
+      await ratingInput.fill('4');
+      await ratingInput.blur();
+
+      const finalDescribedBy = ratingInput;
+      await expect(finalDescribedBy).toHaveAttribute(
+        'aria-describedby',
+        'rating-hint',
+      );
+    });
+  });
+
+  test('should preserve multiple existing aria-describedby IDs', async ({
+    page,
+  }) => {
+    await page.goto('/toolkit-core/error-display-modes');
+    await page.waitForLoadState('domcontentloaded');
+
+    await test.step('Verify multiple IDs are preserved', async () => {
+      /// Make improvement suggestions field visible by setting low rating
+      const ratingInput = page.locator('#overallRating');
+      await ratingInput.fill('2');
+      await ratingInput.blur();
+
+      /// Wait for conditional field to appear
+      const improvementTextarea = page.locator('#improvementSuggestions');
+      await expect(improvementTextarea).toBeVisible({ timeout: 3000 });
+
+      /// Verify initial aria-describedby contains both hint and counter
+      const initialDescribedBy =
+        await improvementTextarea.getAttribute('aria-describedby');
+      expect(initialDescribedBy).toContain('improvement-hint');
+      expect(initialDescribedBy).toContain('improvement-counter');
+
+      /// Trigger validation error by blurring empty required field
+      await improvementTextarea.focus();
+      await improvementTextarea.blur();
+
+      /// After error, aria-describedby should contain hint, counter, AND error ID
+      const updatedDescribedBy =
+        await improvementTextarea.getAttribute('aria-describedby');
+      expect(updatedDescribedBy).toContain('improvement-hint');
+      expect(updatedDescribedBy).toContain('improvement-counter');
+      expect(updatedDescribedBy).toContain('improvementSuggestions-error');
+    });
+  });
 });

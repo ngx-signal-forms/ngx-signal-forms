@@ -133,7 +133,7 @@ This library fills those gaps while preserving Signal Forms' core philosophy.
 | **Source of Truth**   | Model signal             | ✅ Same - no data duplication              |
 | **Reactivity**        | Computed signals         | ✅ Same - derived from Signal Forms state  |
 | **Validation**        | Schema-based             | ✅ Same - uses Signal Forms validators     |
-| **Touch Detection**   | Manual blur handlers     | ✅ **Enhanced** - automatic via directives |
+| **Touch Detection**   | Automatic on blur        | ✅ Same - relies on native behavior        |
 | **ARIA Attributes**   | Manual implementation    | ✅ **Enhanced** - automatic via directives |
 | **Error Display**     | Manual `@if` blocks      | ✅ **Enhanced** - strategies + components  |
 | **Form Field Layout** | Custom CSS per component | ✅ **Enhanced** - reusable wrapper         |
@@ -144,7 +144,13 @@ This library fills those gaps while preserving Signal Forms' core philosophy.
 
 ### 1. Auto-ARIA Directive
 
-Automatically manages `aria-invalid` and `aria-describedby` attributes.
+Automatically manages ARIA accessibility attributes based on field state and error display strategy.
+
+**Features:**
+
+- **Smart Validation State**: `aria-invalid` respects your `ErrorDisplayStrategy` (e.g., only shows invalid after touch if strategy is 'on-touch').
+- **Additive Description**: Preserves existing `aria-describedby` values and appends error IDs.
+- **Reference Linking**: Links inputs to error messages via `aria-describedby` for screen readers.
 
 **Before (Manual):**
 
@@ -152,8 +158,8 @@ Automatically manages `aria-invalid` and `aria-describedby` attributes.
 <input
   id="email"
   [field]="userForm.email"
-  [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null"
-  [attr.aria-describedby]="userForm.email().invalid() ? 'email-error' : null"
+  [attr.aria-invalid]="(userForm.email().touched() && userForm.email().invalid()) ? 'true' : null"
+  [attr.aria-describedby]="(userForm.email().touched() && userForm.email().invalid()) ? 'email-error' : null"
 />
 <span id="email-error" role="alert">
   {{ userForm.email().errors() | json }}
@@ -167,22 +173,9 @@ Automatically manages `aria-invalid` and `aria-describedby` attributes.
 <ngx-signal-form-error [field]="userForm.email" />
 ```
 
-### 2. Auto-Touch Directive
+### 2. Auto-Touch Handling
 
-Automatically triggers touch state on blur for progressive error disclosure.
-
-**Before (Manual):**
-
-```html
-<input [field]="userForm.email" (blur)="userForm.email().markAsTouched()" />
-```
-
-**After (Automatic):**
-
-```html
-<input [field]="userForm.email" />
-<!-- blur handler automatic -->
-```
+**Note:** Angular Signal Forms' `[field]` directive automatically marks fields as touched on blur. The toolkit relies on this native behavior and does not need a separate directive for touch tracking.
 
 ### 3. Error Display Strategies
 
