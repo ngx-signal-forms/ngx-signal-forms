@@ -289,6 +289,30 @@ const warnings = allErrors.filter(isWarningError);
 const blockingErrors = allErrors.filter(isBlockingError);
 ```
 
+### focusFirstInvalid()
+
+Focus the first invalid field after form submission for better UX and accessibility.
+
+```typescript
+import { focusFirstInvalid } from '@ngx-signal-forms/toolkit/core';
+
+protected save(): void {
+  if (this.userForm().invalid()) {
+    focusFirstInvalid(this.userForm);
+  }
+}
+```
+
+**How it works (Angular 21.1+):**
+
+1. Uses `errorSummary()` to get all validation errors (including nested fields)
+2. Takes the first error's `fieldTree` property
+3. Calls native `focusBoundControl()` on that field's state
+
+**Returns**: `boolean` - `true` if an invalid field was found and focused
+
+**Note**: Custom control directives must implement a `focus()` method for `focusBoundControl()` to work.
+
 ## Form Field Components
 
 ### NgxFloatingLabelDirective

@@ -882,9 +882,15 @@ protected save(): void {
 }
 ```
 
-**Enhancement over Angular Signal Forms:**
-- ✅ Angular Signal Forms: Provides field state signals but no focus utilities
-- ✅ Toolkit: Automatic focus on first invalid field (uses robust tree traversal to ensure reliability)
+**How it works (Angular 21.1+):**
+- Uses `errorSummary()` to get all validation errors (including nested fields)
+- Calls native `focusBoundControl()` on the first error's `fieldTree`
+- Custom controls must implement a `focus()` method for this to work
+
+**Why use this over direct `focusBoundControl()`:**
+- ✅ Single function call handles error lookup + focus
+- ✅ Returns `boolean` to indicate success/failure
+- ✅ Graceful handling when `focusBoundControl()` is unavailable
 
 #### Submission State Helpers
 

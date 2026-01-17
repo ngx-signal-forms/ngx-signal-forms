@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormField, form, submit } from '@angular/forms/signals';
 import {
   focusFirstInvalid,
@@ -90,10 +84,6 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
   `,
 })
 export class AccessibilityToolkitFormComponent {
-  /** Form element reference for scoped focus management */
-  private readonly formElement =
-    viewChild<ElementRef<HTMLFormElement>>('formElement');
-
   /** Success message announced via role="status" elsewhere on the page */
   protected readonly successMessage = signal<string>('');
 
@@ -108,14 +98,13 @@ export class AccessibilityToolkitFormComponent {
   readonly signupForm = form(this.#formData, accessibilityValidationSchema);
 
   /// Submission handler using Angular Signal Forms submit() helper
-  /// Also demonstrates focusFirstInvalid for accessibility
+  /// Uses focusBoundControl() via focusFirstInvalid() for accessibility
   protected handleSubmit(event: Event): void {
     event.preventDefault();
 
     /// Focus first invalid field if form is invalid (WCAG 2.2 best practice)
     if (this.signupForm().invalid()) {
-      const formEl = this.formElement()?.nativeElement;
-      focusFirstInvalid(this.signupForm, formEl);
+      focusFirstInvalid(this.signupForm);
       return;
     }
 
