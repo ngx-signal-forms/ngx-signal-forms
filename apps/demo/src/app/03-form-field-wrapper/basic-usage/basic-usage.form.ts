@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Field, form } from '@angular/forms/signals';
+import { FormField, form } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
@@ -43,7 +43,7 @@ import {
 @Component({
   selector: 'ngx-basic-usage',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   templateUrl: './basic-usage.html',
 })
 export class BasicUsageComponent {

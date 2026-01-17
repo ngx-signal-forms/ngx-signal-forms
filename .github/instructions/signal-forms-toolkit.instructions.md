@@ -114,11 +114,11 @@ export const appConfig: ApplicationConfig = {
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
-  imports: [Field, NgxSignalFormToolkit],
+  imports: [FormField, NgxSignalFormToolkit],
   template: `
     <form [ngxSignalForm]="userForm">
-      <input [field]="userForm.email" />
-      <ngx-signal-form-error [field]="userForm.email" fieldName="email" />
+      <input [formField]="userForm.email" />
+      <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
     </form>
   `,
 })
@@ -162,7 +162,7 @@ import {
 
 ### NgxSignalFormAutoAriaDirective
 
-**Selector**: `input[field], textarea[field], select[field]` (auto-applied when imported)
+**Selector**: `input[formField], textarea[formField], select[formField]` (auto-applied when imported)
 
 **Features**:
 
@@ -189,7 +189,7 @@ Displays validation errors and warnings with WCAG-compliant ARIA roles.
 
 ```typescript
 <ngx-signal-form-error
-  [field]="form.email"
+  [formField]="form.email"
   fieldName="email"
   [strategy]="'on-touch'"
 />
@@ -212,9 +212,9 @@ Displays validation errors and warnings with WCAG-compliant ARIA roles.
 Reusable form field wrapper with automatic error display.
 
 ```typescript
-<ngx-signal-form-field [field]="form.email" fieldName="email">
+<ngx-signal-form-field [formField]="form.email" fieldName="email">
   <label for="email">Email</label>
-  <input id="email" [field]="form.email" />
+  <input id="email" [formField]="form.email" />
 </ngx-signal-form-field>
 ```
 
@@ -298,9 +298,9 @@ const blockingErrors = allErrors.filter(isBlockingError);
 Transforms form field into Material Design outlined layout.
 
 ```typescript
-<ngx-signal-form-field [field]="form.email" outline>
+<ngx-signal-form-field [formField]="form.email" outline>
   <label for="email">Email Address</label>
-  <input id="email" type="email" [field]="form.email" required placeholder="you@example.com" />
+  <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
 </ngx-signal-form-field>
 ```
 
@@ -318,9 +318,9 @@ Transforms form field into Material Design outlined layout.
 Displays helper text for form fields.
 
 ```typescript
-<ngx-signal-form-field [field]="form.phone">
+<ngx-signal-form-field [formField]="form.phone">
   <label for="phone">Phone Number</label>
-  <input id="phone" [field]="form.phone" />
+  <input id="phone" [formField]="form.phone" />
   <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
 </ngx-signal-form-field>
 ```
@@ -332,10 +332,10 @@ Displays helper text for form fields.
 Displays character count with progressive color states.
 
 ```typescript
-<ngx-signal-form-field [field]="form.bio">
+<ngx-signal-form-field [formField]="form.bio">
   <label for="bio">Bio</label>
-  <textarea id="bio" [field]="form.bio"></textarea>
-  <ngx-signal-form-field-character-count [field]="form.bio" [maxLength]="500" />
+  <textarea id="bio" [formField]="form.bio"></textarea>
+  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 </ngx-signal-form-field>
 ```
 

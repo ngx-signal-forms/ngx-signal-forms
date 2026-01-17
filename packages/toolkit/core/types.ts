@@ -94,13 +94,13 @@ export type ReactiveOrStatic<T> = SignalLike<T> | T;
  * <form [ngxSignalForm]="form" [errorStrategy]="'on-touch'">
  *   <!-- Password shows errors immediately -->
  *   <ngx-signal-form-error
- *     [field]="form.password"
+ *     [formField]="form.password"
  *     fieldName="password"
  *     strategy="immediate" />
  *
  *   <!-- Email inherits form-level 'on-touch' -->
  *   <ngx-signal-form-error
- *     [field]="form.email"
+ *     [formField]="form.email"
  *     fieldName="email"
  *     strategy="inherit" />
  * </form>

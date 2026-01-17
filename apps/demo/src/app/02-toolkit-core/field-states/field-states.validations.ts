@@ -4,7 +4,6 @@ import {
   email,
   minLength,
   validate,
-  customError,
 } from '@angular/forms/signals';
 import type { FieldStatesModel } from './field-states.model';
 
@@ -39,10 +38,10 @@ export const fieldStatesSchema = schema<FieldStatesModel>((path) => {
   validate(path.password, (ctx) => {
     const password = ctx.value();
     if (password && !/[!@#$%^&*]/.test(password)) {
-      return customError({
+      return {
         kind: 'warn:missing-special-chars',
         message: 'Consider adding special characters (!@#$%^&*)',
-      });
+      };
     }
     return null;
   });
@@ -50,10 +49,10 @@ export const fieldStatesSchema = schema<FieldStatesModel>((path) => {
   validate(path.password, (ctx) => {
     const password = ctx.value();
     if (password && !/[A-Z]/.test(password)) {
-      return customError({
+      return {
         kind: 'warn:missing-uppercase',
         message: 'Consider adding uppercase letters for stronger security',
-      });
+      };
     }
     return null;
   });
@@ -61,10 +60,10 @@ export const fieldStatesSchema = schema<FieldStatesModel>((path) => {
   validate(path.password, (ctx) => {
     const password = ctx.value();
     if (password && !/[0-9]/.test(password)) {
-      return customError({
+      return {
         kind: 'warn:missing-numbers',
         message: 'Consider adding numbers for stronger security',
-      });
+      };
     }
     return null;
   });

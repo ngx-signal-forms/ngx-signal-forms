@@ -5,7 +5,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Field, form, submit } from '@angular/forms/signals';
+import { FormField, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
 import {
   NgxSignalFormToolkit,
@@ -28,7 +28,7 @@ import { errorMessagesSchema } from './error-messages.validations';
 @Component({
   selector: 'ngx-error-messages',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Field, NgxSignalFormToolkit, NgxOutlinedFormField],
+  imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
   providers: [
     // Demo: Centralized error messages (pattern shown in README)
     provideErrorMessages({
@@ -48,12 +48,12 @@ import { errorMessagesSchema } from './error-messages.validations';
       <!-- Form fields -->
       <div class="space-y-6">
         <!-- Email: Uses validator message (Tier 1 - highest priority) -->
-        <ngx-signal-form-field [field]="errorMessagesForm.email" outline>
+        <ngx-signal-form-field [formField]="errorMessagesForm.email" outline>
           <label for="email">Email (Validator Message - Tier 1)</label>
           <input
             id="email"
             type="email"
-            [field]="errorMessagesForm.email"
+            [formField]="errorMessagesForm.email"
             placeholder="you@example.com"
             class="form-input"
           />
@@ -63,12 +63,12 @@ import { errorMessagesSchema } from './error-messages.validations';
         </ngx-signal-form-field>
 
         <!-- Password: Uses registry override (Tier 2) -->
-        <ngx-signal-form-field [field]="errorMessagesForm.password" outline>
+        <ngx-signal-form-field [formField]="errorMessagesForm.password" outline>
           <label for="password">Password (Registry Override - Tier 2)</label>
           <input
             id="password"
             type="password"
-            [field]="errorMessagesForm.password"
+            [formField]="errorMessagesForm.password"
             placeholder="Enter password"
             class="form-input"
           />
@@ -78,11 +78,11 @@ import { errorMessagesSchema } from './error-messages.validations';
         </ngx-signal-form-field>
 
         <!-- Bio: Uses default toolkit fallback (Tier 3) -->
-        <ngx-signal-form-field [field]="errorMessagesForm.bio" outline>
+        <ngx-signal-form-field [formField]="errorMessagesForm.bio" outline>
           <label for="bio">Bio (Default Fallback - Tier 3)</label>
           <textarea
             id="bio"
-            [field]="errorMessagesForm.bio"
+            [formField]="errorMessagesForm.bio"
             rows="3"
             placeholder="Tell us about yourself"
             class="form-input"

@@ -56,8 +56,8 @@ export interface NgxSignalFormContext {
  * @Component({
  *   template: `
  *     <form [ngxSignalForm]="userForm" (ngSubmit)="handleSubmit()">
- *       <input [field]="userForm.email" type="email" />
- *       <ngx-signal-form-error [field]="userForm.email" fieldName="email" />
+ *       <input [formField]="userForm.email" type="email" />
+ *       <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
  *       <button type="submit">Submit</button>
  *     </form>
  *   `
@@ -68,7 +68,7 @@ export interface NgxSignalFormContext {
  * ```html
  * <!-- Just adds novalidate, no form context provided -->
  * <form (ngSubmit)="handleSubmit()">
- *   <input [field]="userForm.email" type="email" />
+ *   <input [formField]="userForm.email" type="email" />
  *   <button type="submit">Submit</button>
  * </form>
  * ```

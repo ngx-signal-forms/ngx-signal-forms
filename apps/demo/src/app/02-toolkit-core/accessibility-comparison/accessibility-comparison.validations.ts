@@ -1,5 +1,4 @@
 import {
-  customError,
   email,
   minLength,
   required,
@@ -34,10 +33,10 @@ export const accessibilityValidationSchema = schema<AccessibilityFormModel>(
       const password = ctx.valueOf(path.password);
 
       if (password && confirmPassword && confirmPassword !== password) {
-        return customError({
+        return {
           kind: 'password_mismatch',
           message: 'Passwords do not match',
-        });
+        };
       }
       return null;
     });

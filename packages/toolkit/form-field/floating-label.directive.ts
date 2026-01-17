@@ -15,25 +15,25 @@ import { Directive, input } from '@angular/core';
  *
  * @example Basic outlined field
  * ```html
- * <ngx-signal-form-field [field]="form.email" outline>
+ * <ngx-signal-form-field [formField]="form.email" outline>
  *   <label for="email">Email Address</label>
- *   <input id="email" type="email" [field]="form.email" required placeholder="you@example.com" />
+ *   <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
  * </ngx-signal-form-field>
  * ```
  *
  * @example Hide required marker
  * ```html
- * <ngx-signal-form-field [field]="form.email" outline [showRequiredMarker]="false">
+ * <ngx-signal-form-field [formField]="form.email" outline [showRequiredMarker]="false">
  *   <label for="email">Email Address</label>
- *   <input id="email" type="email" [field]="form.email" required placeholder="you@example.com" />
+ *   <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
  * </ngx-signal-form-field>
  * ```
  *
  * @example Custom required marker
  * ```html
- * <ngx-signal-form-field [field]="form.email" outline requiredMarker="(required)">
+ * <ngx-signal-form-field [formField]="form.email" outline requiredMarker="(required)">
  *   <label for="email">Email Address</label>
- *   <input id="email" type="email" [field]="form.email" required placeholder="you@example.com" />
+ *   <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
  * </ngx-signal-form-field>
  * ```
  *
@@ -43,18 +43,18 @@ import { Directive, input } from '@angular/core';
  *
  * @example With character count
  * ```html
- * <ngx-signal-form-field [field]="form.bio" outline>
+ * <ngx-signal-form-field [formField]="form.bio" outline>
  *   <label for="bio">Bio</label>
- *   <textarea id="bio" [field]="form.bio"></textarea>
- *   <ngx-signal-form-field-character-count [field]="form.bio" [maxLength]="500" />
+ *   <textarea id="bio" [formField]="form.bio"></textarea>
+ *   <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
  * </ngx-signal-form-field>
  * ```
  *
  * @example With hint text
  * ```html
- * <ngx-signal-form-field [field]="form.phone" outline>
+ * <ngx-signal-form-field [formField]="form.phone" outline>
  *   <label for="phone">Phone Number</label>
- *   <input id="phone" [field]="form.phone" required />
+ *   <input id="phone" [formField]="form.phone" required />
  *   <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
  * </ngx-signal-form-field>
  * ```

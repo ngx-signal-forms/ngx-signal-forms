@@ -1,5 +1,4 @@
 import {
-  customError,
   minLength,
   required,
   schema,
@@ -19,10 +18,10 @@ export const submissionSchema = schema<SubmissionModel>((path) => {
   validate(path.username, (ctx) => {
     const value = ctx.value();
     if (value && !/^[a-zA-Z0-9_]+$/.test(value)) {
-      return customError({
+      return {
         kind: 'invalid-username',
         message: 'Username can only contain letters, numbers, and underscores',
-      });
+      };
     }
     return null;
   });
@@ -38,10 +37,10 @@ export const submissionSchema = schema<SubmissionModel>((path) => {
   validate(path, (ctx) => {
     const { password, confirmPassword } = ctx.value();
     if (password && confirmPassword && password !== confirmPassword) {
-      return customError({
+      return {
         kind: 'password-mismatch',
         message: 'Passwords do not match',
-      });
+      };
     }
     return null;
   });

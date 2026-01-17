@@ -102,13 +102,13 @@ High-quality Angular 21+ applications with TypeScript, using Signals for state m
 - **OnPush** change detection required
 
 ```typescript
-import { form, Field, required, email } from '@angular/forms/signals';
+import { form, FormField, required, email } from '@angular/forms/signals';
 
 @Component({
   imports: [Field],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <input [field]="userForm.email" />
+    <input [formField]="userForm.email" />
     @if (userForm.email().invalid()) {
       <div>{{ userForm.email().errors()[0].message }}</div>
     }

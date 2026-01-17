@@ -202,7 +202,7 @@ function deriveSubmittedStatus(formTree: FieldTree<unknown>): SubmittedStatus {
  * @Component({
  *   template: `
  *     <ngx-signal-form-error
- *       [field]="form.email"
+ *       [formField]="form.email"
  *       fieldName="email"
  *       [strategy]="hasSubmitted() ? 'immediate' : 'on-touch'"
  *     />

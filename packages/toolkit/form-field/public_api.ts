@@ -23,11 +23,11 @@ import { NgxSignalFormFieldComponent } from './form-field.component';
  * import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
  *
  * @Component({
- *   imports: [Field, NgxOutlinedFormField],
+ *   imports: [FormField, NgxOutlinedFormField],
  *   template: `
- *     <ngx-signal-form-field [field]="form.email" outline>
+ *     <ngx-signal-form-field [formField]="form.email" outline>
  *       <label for="email">Email</label>
- *       <input id="email" [field]="form.email" />
+ *       <input id="email" [formField]="form.email" />
  *     </ngx-signal-form-field>
  *   `
  * })

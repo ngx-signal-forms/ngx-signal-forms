@@ -19,14 +19,14 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * @example
  * ```html
  * <!-- Priority 1: Explicit field path -->
- * <input [field]="form.address.city" data-signal-field="address.city" />
+ * <input [formField]="form.address.city" data-signal-field="address.city" />
  *
  * <!-- Priority 3: Using id (WCAG best practice) -->
  * <label for="email">Email</label>
- * <input id="email" [field]="form.email" />
+ * <input id="email" [formField]="form.email" />
  *
  * <!-- Priority 4: Using name -->
- * <input name="phone" [field]="form.phone" />
+ * <input name="phone" [formField]="form.phone" />
  * ```
  */
 export function resolveFieldName(

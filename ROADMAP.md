@@ -30,13 +30,13 @@ Allow per-field error strategy override for different UX requirements.
 ```html
 <!-- Password shows errors immediately -->
 <ngx-signal-form-error
-  [field]="form.password"
+  [formField]="form.password"
   fieldName="password"
   strategy="immediate"
 />
 
 <!-- Other fields use form-level strategy (on-touch) -->
-<ngx-signal-form-error [field]="form.email" fieldName="email" />
+<ngx-signal-form-error [formField]="form.email" fieldName="email" />
 ```
 
 **Implementation:**
@@ -145,17 +145,17 @@ maxLength(path.bio, 500);
 
 ```html
 <!-- Must repeat maxLength -->
-<ngx-signal-form-field-character-count [field]="form.bio" [maxLength]="500" />
+<ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 ```
 
 **After:**
 
 ```html
 <!-- Auto-detects maxLength from validation -->
-<ngx-signal-form-field-character-count [field]="form.bio" />
+<ngx-signal-form-field-character-count [formField]="form.bio" />
 
 <!-- Can still override if needed -->
-<ngx-signal-form-field-character-count [field]="form.bio" [maxLength]="300" />
+<ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="300" />
 ```
 
 **Implementation:**
@@ -255,11 +255,11 @@ type ErrorDisplayStrategy =
 Add size variants for visual hierarchy and mobile optimization.
 
 ```html
-<ngx-signal-form-field [field]="form.email" size="small">
-  <ngx-signal-form-field [field]="form.email" size="medium">
+<ngx-signal-form-field [formField]="form.email" size="small">
+  <ngx-signal-form-field [formField]="form.email" size="medium">
     <!-- default -->
     <ngx-signal-form-field
-      [field]="form.email"
+      [formField]="form.email"
       size="large"
     ></ngx-signal-form-field></ngx-signal-form-field
 ></ngx-signal-form-field>
@@ -282,9 +282,9 @@ Add size variants for visual hierarchy and mobile optimization.
 Support icons and text before/after inputs (Material pattern).
 
 ```html
-<ngx-signal-form-field [field]="form.search">
+<ngx-signal-form-field [formField]="form.search">
   <span prefix>🔍</span>
-  <input [field]="form.search" />
+  <input [formField]="form.search" />
   <button suffix type="button">Clear</button>
 </ngx-signal-form-field>
 ```
@@ -315,7 +315,7 @@ Support icons and text before/after inputs (Material pattern).
 **Effort:** Large
 **Files:** `packages/toolkit/core/utilities/field-resolution.ts`
 
-Auto-derive `fieldName` from `[field]` binding expression.
+Auto-derive `fieldName` from `[formField]` binding expression.
 
 **Challenge:**
 
@@ -325,7 +325,7 @@ Auto-derive `fieldName` from `[field]` binding expression.
 
 **Alternative Approach:**
 
-- Create directive that reads `[field]="form.email"` and sets `fieldName="email"`
+- Create directive that reads `[formField]="form.email"` and sets `fieldName="email"`
 - Use DI to communicate with error component
 
 **Decision:** Defer until clearer use case emerges
@@ -387,8 +387,8 @@ Advanced input components for common patterns.
 Material Design filled and underline-only layouts.
 
 ```html
-<ngx-signal-form-field [field]="form.email" filled>
-  <ngx-signal-form-field [field]="form.email" underline></ngx-signal-form-field
+<ngx-signal-form-field [formField]="form.email" filled>
+  <ngx-signal-form-field [formField]="form.email" underline></ngx-signal-form-field
 ></ngx-signal-form-field>
 ```
 
@@ -409,8 +409,8 @@ Group related fields with shared layout/styling.
 
 ```html
 <ngx-signal-form-field-group legend="Shipping Address">
-  <ngx-signal-form-field [field]="form.street">...</ngx-signal-form-field>
-  <ngx-signal-form-field [field]="form.city">...</ngx-signal-form-field>
+  <ngx-signal-form-field [formField]="form.street">...</ngx-signal-form-field>
+  <ngx-signal-form-field [formField]="form.city">...</ngx-signal-form-field>
 </ngx-signal-form-field-group>
 ```
 

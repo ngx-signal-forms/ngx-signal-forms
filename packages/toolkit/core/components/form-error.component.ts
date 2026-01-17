@@ -42,8 +42,8 @@ import { showErrors } from '../utilities/show-errors';
  *
  * @example Error (blocks submission)
  * ```typescript
- * customError({ kind: 'required', message: 'Email is required' })
- * customError({ kind: 'email', message: 'Invalid email format' })
+ * { kind: 'required', message: 'Email is required' }
+ * { kind: 'email', message: 'Invalid email format' }
  * ```
  *
  * @example Warning (does not block submission)
@@ -52,9 +52,9 @@ import { showErrors } from '../utilities/show-errors';
  * warningError('weak-password', 'Consider a stronger password')
  * warningError('common-email', 'This email domain is commonly used for spam')
  *
- * /// Or using customError() directly
- * customError({ kind: 'warn:weak-password', message: 'Consider a stronger password' })
- * customError({ kind: 'warn:common-email', message: 'This email domain is commonly used for spam' })
+ * /// Or directly with 'warn:' prefix
+ * { kind: 'warn:weak-password', message: 'Consider a stronger password' }
+ * { kind: 'warn:common-email', message: 'This email domain is commonly used for spam' }
  * ```
  *
  * Features:
@@ -67,7 +67,7 @@ import { showErrors } from '../utilities/show-errors';
  * @example Basic Usage
  * ```html
  * <ngx-signal-form-error
- *   [field]="form.email"
+ *   [formField]="form.email"
  *   fieldName="email"
  * />
  * ```
@@ -77,13 +77,13 @@ import { showErrors } from '../utilities/show-errors';
  * <form [ngxSignalForm]="form" [errorStrategy]="'on-touch'">
  *   <!-- Password field shows errors immediately -->
  *   <ngx-signal-form-error
- *     [field]="form.password"
+ *     [formField]="form.password"
  *     fieldName="password"
  *     strategy="immediate" />
  *
  *   <!-- Email inherits form-level strategy -->
  *   <ngx-signal-form-error
- *     [field]="form.email"
+ *     [formField]="form.email"
  *     fieldName="email"
  *     strategy="inherit" />
  * </form>
@@ -92,7 +92,7 @@ import { showErrors } from '../utilities/show-errors';
  * @example With Dynamic Strategy
  * ```html
  * <ngx-signal-form-error
- *   [field]="form.password"
+ *   [formField]="form.password"
  *   fieldName="password"
  *   [strategy]="strategySignal"
  *   [submittedStatus]="form().submitting() ? 'submitting' : form().touched() ? 'submitted' : 'unsubmitted'"
@@ -118,7 +118,7 @@ import { showErrors } from '../utilities/show-errors';
  * ```html
  * <form [ngxSignalForm]="form" (ngSubmit)="save()">
  *   <!-- submittedStatus automatically injected from form provider -->
- *   <ngx-signal-form-error [field]="form.email" fieldName="email" />
+ *   <ngx-signal-form-error [formField]="form.email" fieldName="email" />
  * </form>
  * ```
  *
@@ -302,7 +302,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * The Signal Forms field to display errors/warnings for.
    * Accepts a FieldTree from Angular Signal Forms.
    */
-  readonly field = input.required<FieldTree<TValue>>();
+  readonly formField = input.required<FieldTree<TValue>>();
 
   /**
    * The field name used for generating error/warning IDs.
@@ -329,13 +329,13 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * <form [ngxSignalForm]="form" [errorStrategy]="'on-touch'">
    *   <!-- Override: immediate feedback for password -->
    *   <ngx-signal-form-error
-   *     [field]="form.password"
+   *     [formField]="form.password"
    *     fieldName="password"
    *     strategy="immediate" />
    *
    *   <!-- Explicit inherit (same as omitting strategy) -->
    *   <ngx-signal-form-error
-   *     [field]="form.email"
+   *     [formField]="form.email"
    *     fieldName="email"
    *     strategy="inherit" />
    * </form>
@@ -426,7 +426,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * FieldTree is a callable signal: () => FieldState
    */
   readonly #fieldState = computed(() => {
-    const fieldTree = this.field();
+    const fieldTree = this.formField();
     return fieldTree();
   });
 
@@ -450,7 +450,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * All validation messages from the field.
    */
   readonly #allMessages = computed(() => {
-    const fieldTree = this.field();
+    const fieldTree = this.formField();
     // FieldTree is callable: () => FieldState
     const fieldState = fieldTree();
 

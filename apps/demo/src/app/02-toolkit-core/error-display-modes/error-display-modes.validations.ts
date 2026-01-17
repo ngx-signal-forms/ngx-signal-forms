@@ -1,5 +1,4 @@
 import {
-  customError,
   email,
   max,
   maxLength,
@@ -68,10 +67,10 @@ export const productFeedbackSchema = schema<ProductFeedbackModel>((path) => {
     const rating = ctx.valueOf(path.overallRating);
 
     if (rating > 0 && rating <= 3 && value && value.length < 10) {
-      return customError({
+      return {
         kind: 'too-short',
         message: 'Please provide at least 10 characters of feedback',
-      });
+      };
     }
     return null;
   });

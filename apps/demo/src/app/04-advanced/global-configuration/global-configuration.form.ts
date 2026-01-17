@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Field, form, submit } from '@angular/forms/signals';
+import { FormField, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
@@ -26,7 +26,7 @@ import { globalConfigSchema } from './global-configuration.validations';
 @Component({
   selector: 'ngx-global-configuration',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
     <form
       [ngxSignalForm]="configForm"
@@ -62,14 +62,14 @@ import { globalConfigSchema } from './global-configuration.validations';
       <div class="space-y-6">
         <!-- Email field with standard id -->
         <ngx-signal-form-field
-          [field]="configForm.userEmail"
+          [formField]="configForm.userEmail"
           fieldName="userEmail"
         >
           <label for="userEmail">Email Address *</label>
           <input
             id="userEmail"
             type="email"
-            [field]="configForm.userEmail"
+            [formField]="configForm.userEmail"
             placeholder="user@example.com"
             class="form-input"
           />
@@ -77,14 +77,14 @@ import { globalConfigSchema } from './global-configuration.validations';
 
         <!-- Phone field with custom data attribute -->
         <ngx-signal-form-field
-          [field]="configForm.userPhone"
+          [formField]="configForm.userPhone"
           fieldName="userPhone"
         >
           <label for="userPhone">Phone Number *</label>
           <input
             id="userPhone"
             type="tel"
-            [field]="configForm.userPhone"
+            [formField]="configForm.userPhone"
             data-signal-field="userPhone"
             placeholder="123-456-7890"
             class="form-input"
@@ -96,14 +96,14 @@ import { globalConfigSchema } from './global-configuration.validations';
 
         <!-- Website field (optional) -->
         <ngx-signal-form-field
-          [field]="configForm.userWebsite"
+          [formField]="configForm.userWebsite"
           fieldName="userWebsite"
         >
           <label for="userWebsite">Website</label>
           <input
             id="userWebsite"
             type="url"
-            [field]="configForm.userWebsite"
+            [formField]="configForm.userWebsite"
             placeholder="https://example.com"
             class="form-input"
           />

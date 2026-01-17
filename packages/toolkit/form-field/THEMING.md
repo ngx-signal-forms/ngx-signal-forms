@@ -506,9 +506,9 @@ Use Kevin Powell's scaling technique with a single multiplier:
 
 ```html
 <div class="form-compact">
-  <ngx-signal-form-field [field]="form.email" outline>
+  <ngx-signal-form-field [formField]="form.email" outline>
     <label for="email">Email</label>
-    <input id="email" [field]="form.email" />
+    <input id="email" [formField]="form.email" />
   </ngx-signal-form-field>
 </div>
 ```
@@ -585,9 +585,9 @@ Target specific fields for unique styling:
 **Usage:**
 
 ```html
-<ngx-signal-form-field [field]="form.email" outline class="email-field">
+<ngx-signal-form-field [formField]="form.email" outline class="email-field">
   <label for="email">Email</label>
-  <input id="email" type="email" [field]="form.email" />
+  <input id="email" type="email" [formField]="form.email" />
 </ngx-signal-form-field>
 ```
 

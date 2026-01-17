@@ -1,5 +1,4 @@
 import {
-  customError,
   email,
   minLength,
   required,
@@ -30,10 +29,10 @@ export const pureSignalFormSchema = schema<PureSignalFormModel>((path) => {
   validate(path, (ctx) => {
     const { password, confirmPassword } = ctx.value();
     if (password !== confirmPassword) {
-      return customError({
+      return {
         kind: 'password_mismatch',
         message: 'Passwords do not match',
-      });
+      };
     }
     return null;
   });

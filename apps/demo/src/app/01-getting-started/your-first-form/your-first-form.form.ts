@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Field, form, submit } from '@angular/forms/signals';
+import { FormField, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import type { ContactFormModel } from './your-first-form.model';
@@ -19,7 +19,7 @@ import { contactFormSchema } from './your-first-form.validations';
 @Component({
   selector: 'ngx-your-first-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Field, NgxSignalFormToolkit],
+  imports: [FormField, NgxSignalFormToolkit],
   template: `
     <form
       [ngxSignalForm]="contactForm"
@@ -33,14 +33,14 @@ import { contactFormSchema } from './your-first-form.validations';
         <input
           id="contact-name"
           type="text"
-          [field]="contactForm.name"
+          [formField]="contactForm.name"
           class="form-input"
           placeholder="Your name"
           aria-required="true"
         />
         <!-- Toolkit handles ARIA automatically! No manual bindings needed -->
         <ngx-signal-form-error
-          [field]="contactForm.name"
+          [formField]="contactForm.name"
           fieldName="contact-name"
         />
       </div>
@@ -51,13 +51,13 @@ import { contactFormSchema } from './your-first-form.validations';
         <input
           id="contact-email"
           type="email"
-          [field]="contactForm.email"
+          [formField]="contactForm.email"
           class="form-input"
           placeholder="you@example.com"
           aria-required="true"
         />
         <ngx-signal-form-error
-          [field]="contactForm.email"
+          [formField]="contactForm.email"
           fieldName="contact-email"
         />
       </div>
@@ -68,13 +68,13 @@ import { contactFormSchema } from './your-first-form.validations';
         <textarea
           id="contact-message"
           rows="4"
-          [field]="contactForm.message"
+          [formField]="contactForm.message"
           class="form-input"
           placeholder="Your message (min 10 characters)"
           aria-required="true"
         ></textarea>
         <ngx-signal-form-error
-          [field]="contactForm.message"
+          [formField]="contactForm.message"
           fieldName="contact-message"
         />
       </div>

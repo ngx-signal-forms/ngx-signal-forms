@@ -46,83 +46,83 @@ function generateUniqueFieldId(): string {
  *
  * @example Basic Usage
  * ```html
- * <ngx-signal-form-field [field]="form.email" fieldName="email">
+ * <ngx-signal-form-field [formField]="form.email" fieldName="email">
  *   <label for="email">Email</label>
- *   <input id="email" [field]="form.email" />
+ *   <input id="email" [formField]="form.email" />
  * </ngx-signal-form-field>
  * ```
  *
  * @example With Custom Error Strategy
  * ```html
  * <ngx-signal-form-field
- *   [field]="form.password"
+ *   [formField]="form.password"
  *   fieldName="password"
  *   [strategy]="'on-submit'"
  * >
  *   <label for="password">Password</label>
- *   <input id="password" type="password" [field]="form.password" />
+ *   <input id="password" type="password" [formField]="form.password" />
  * </ngx-signal-form-field>
  * ```
  *
  * @example Outlined Layout
  * ```html
- * <ngx-signal-form-field [field]="form.email" outline>
+ * <ngx-signal-form-field [formField]="form.email" outline>
  *   <label for="email">Email Address</label>
- *   <input id="email" type="email" [field]="form.email" required placeholder="you@example.com" />
+ *   <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
  * </ngx-signal-form-field>
  * ```
  *
  * @example With Character Count
  * ```html
- * <ngx-signal-form-field [field]="form.bio" outline>
+ * <ngx-signal-form-field [formField]="form.bio" outline>
  *   <label for="bio">Bio</label>
- *   <textarea id="bio" [field]="form.bio"></textarea>
- *   <ngx-signal-form-field-character-count [field]="form.bio" [maxLength]="500" />
+ *   <textarea id="bio" [formField]="form.bio"></textarea>
+ *   <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
  * </ngx-signal-form-field>
  * ```
  *
  * @example With Hint Text
  * ```html
- * <ngx-signal-form-field [field]="form.phone">
+ * <ngx-signal-form-field [formField]="form.phone">
  *   <label for="phone">Phone Number</label>
- *   <input id="phone" [field]="form.phone" />
+ *   <input id="phone" [formField]="form.phone" />
  *   <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
  * </ngx-signal-form-field>
  * ```
  *
  * @example With Prefix Icon
  * ```html
- * <ngx-signal-form-field [field]="form.search">
+ * <ngx-signal-form-field [formField]="form.search">
  *   <span prefix aria-hidden="true">🔍</span>
  *   <label for="search">Search</label>
- *   <input id="search" [field]="form.search" />
+ *   <input id="search" [formField]="form.search" />
  * </ngx-signal-form-field>
  * ```
  *
  * @example With Suffix Button
  * ```html
- * <ngx-signal-form-field [field]="form.password">
+ * <ngx-signal-form-field [formField]="form.password">
  *   <label for="password">Password</label>
- *   <input id="password" type="password" [field]="form.password" />
+ *   <input id="password" type="password" [formField]="form.password" />
  *   <button suffix type="button" (click)="togglePassword()">Show</button>
  * </ngx-signal-form-field>
  * ```
  *
  * @example With Both Prefix and Suffix
  * ```html
- * <ngx-signal-form-field [field]="form.amount">
+ * <ngx-signal-form-field [formField]="form.amount">
  *   <span prefix aria-hidden="true">$</span>
  *   <label for="amount">Amount</label>
- *   <input id="amount" type="number" [field]="form.amount" />
+ *   <input id="amount" type="number" [formField]="form.amount" />
  *   <span suffix aria-hidden="true">.00</span>
  * </ngx-signal-form-field>
  * ```
  *
  * @example Without Auto-Error Display
  * ```html
- * <ngx-signal-form-field [field]="form.custom" fieldName="custom" [showErrors]="false">
+ * <ngx-signal-form-field [formField]="form.custom" fieldName="custom" [showErrors]="false">
  *   <label for="custom">Custom Field</label>
- *   <input id="custom" [field]="form.custom" />
+ *   <input id="custom" [formField]="form.custom" />
  *   <!-- Manual error display here -->
  * </ngx-signal-form-field>
  * ```
@@ -170,7 +170,7 @@ function generateUniqueFieldId(): string {
 
     @if (showErrors()) {
       <ngx-signal-form-error
-        [field]="field()"
+        [formField]="formField()"
         [fieldName]="resolvedFieldName()"
         [strategy]="effectiveStrategy"
         [submittedStatus]="submittedStatus"
@@ -184,7 +184,7 @@ export class NgxSignalFormFieldComponent<TValue = unknown> {
    * Accepts a FieldTree from Angular Signal Forms.
    * Generic type parameter allows type inference from the provided field.
    */
-  readonly field = input.required<FieldTree<TValue>>();
+  readonly formField = input.required<FieldTree<TValue>>();
 
   /**
    * The field name used for generating error IDs and ARIA attributes.
@@ -203,25 +203,25 @@ export class NgxSignalFormFieldComponent<TValue = unknown> {
    *
    * @example Automatic (recommended) - derives "email" from input's id attribute
    * ```html
-   * <ngx-signal-form-field [field]="form.email">
+   * <ngx-signal-form-field [formField]="form.email">
    *   <label for="email">Email</label>
-   *   <input id="email" [field]="form.email" />
+   *   <input id="email" [formField]="form.email" />
    * </ngx-signal-form-field>
    * ```
    *
    * @example Explicit override
    * ```html
-   * <ngx-signal-form-field [field]="form.email" fieldName="user-email">
+   * <ngx-signal-form-field [formField]="form.email" fieldName="user-email">
    *   <label for="user-email">Email</label>
-   *   <input id="user-email" [field]="form.email" />
+   *   <input id="user-email" [formField]="form.email" />
    * </ngx-signal-form-field>
    * ```
    *
    * @example Fallback to auto-generated ID (when no id attribute exists)
    * ```html
-   * <ngx-signal-form-field [field]="form.email">
+   * <ngx-signal-form-field [formField]="form.email">
    *   <label>Email</label>
-   *   <input [field]="form.email" />
+   *   <input [formField]="form.email" />
    * </ngx-signal-form-field>
    * ```
    */
@@ -257,11 +257,11 @@ export class NgxSignalFormFieldComponent<TValue = unknown> {
    * Query for form control elements within this form field.
    * Used to automatically derive the field name from the element's `id` attribute.
    *
-   * This query searches for interactive form control elements that typically have the [field] directive:
+   * This query searches for interactive form control elements that typically have the [formField] directive:
    * - input: All input types (text, email, password, number, checkbox, radio, etc.)
    * - textarea: Multi-line text input
    * - select: Dropdown selection
-   * - button: Interactive buttons (type="button" with [field] for custom controls)
+   * - button: Interactive buttons (type="button" with [formField] for custom controls)
    *
    * The result is a signal containing the HTMLElement, or undefined if no matching element exists.
    *

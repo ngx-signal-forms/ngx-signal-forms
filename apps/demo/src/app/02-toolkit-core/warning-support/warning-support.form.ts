@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Field, submit } from '@angular/forms/signals';
+import { FormField, submit } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
@@ -16,7 +16,7 @@ import { createPasswordForm } from './warning-support.validations';
 @Component({
   selector: 'ngx-warning-support-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   host: {
     class: 'block max-w-xl mx-auto',
   },
@@ -38,39 +38,39 @@ import { createPasswordForm } from './warning-support.validations';
       (ngSubmit)="handleSubmit()"
     >
       <ngx-signal-form-field
-        [field]="passwordForm.username"
+        [formField]="passwordForm.username"
         fieldName="username"
       >
         <label for="username">Username</label>
         <input
           id="username"
           type="text"
-          [field]="passwordForm.username"
+          [formField]="passwordForm.username"
           autocomplete="username"
           placeholder="Choose a username"
         />
       </ngx-signal-form-field>
 
-      <ngx-signal-form-field [field]="passwordForm.email" fieldName="email">
+      <ngx-signal-form-field [formField]="passwordForm.email" fieldName="email">
         <label for="email">Email</label>
         <input
           id="email"
           type="email"
-          [field]="passwordForm.email"
+          [formField]="passwordForm.email"
           autocomplete="email"
           placeholder="your.email@example.com"
         />
       </ngx-signal-form-field>
 
       <ngx-signal-form-field
-        [field]="passwordForm.password"
+        [formField]="passwordForm.password"
         fieldName="password"
       >
         <label for="password">Password</label>
         <input
           id="password"
           type="password"
-          [field]="passwordForm.password"
+          [formField]="passwordForm.password"
           autocomplete="new-password"
           placeholder="Enter a secure password"
         />

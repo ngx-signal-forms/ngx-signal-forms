@@ -66,7 +66,7 @@ import type { FieldTree } from '@angular/forms/signals';
  * - Uses same field name resolution as auto-ARIA for consistency
  *
  * **Limitations:**
- * - Only works with fields bound via `[field]` directive
+ * - Only works with fields bound via `[formField]` directive
  * - Field must be visible and focusable in the DOM
  * - Custom controls must implement proper focus handling
  *

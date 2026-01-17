@@ -46,7 +46,7 @@ This section demonstrates your **first experience** with the toolkit - seeing im
   template: `
     <input
       id="email"
-      [field]="form.email"
+      [formField]="form.email"
       [attr.aria-invalid]="form.email().invalid() ? 'true' : null"
       [attr.aria-describedby]="form.email().invalid() ? 'email-error' : null"
     />
@@ -66,13 +66,13 @@ This section demonstrates your **first experience** with the toolkit - seeing im
 ```typescript
 // 01-getting-started/your-first-form
 @Component({
-  imports: [Field, NgxSignalFormToolkit],  // Added toolkit bundle
+  imports: [FormField, NgxSignalFormToolkit],  // Added toolkit bundle
   template: `
     <form [ngxSignalForm]="form">
-      <input id="email" [field]="form.email" />
+      <input id="email" [formField]="form.email" />
       <!-- Auto-ARIA applied ✅ -->
 
-      <ngx-signal-form-error [field]="form.email" fieldName="email" />
+      <ngx-signal-form-error [formField]="form.email" fieldName="email" />
       <!-- Auto error display ✅ -->
     </form>
   `,
@@ -89,7 +89,7 @@ The toolkit provides a convenient bundle constant for all essential directives:
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
-  imports: [Field, NgxSignalFormToolkit],  // Single import
+  imports: [FormField, NgxSignalFormToolkit],  // Single import
 })
 ```
 
@@ -109,7 +109,7 @@ import {
 } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
-  imports: [Field, ngxSignalFormDirective, NgxSignalFormErrorComponent],
+  imports: [FormField, ngxSignalFormDirective, NgxSignalFormErrorComponent],
 })
 ```
 
@@ -121,13 +121,13 @@ import {
 <!-- Before: Manual ARIA -->
 <input
   id="email"
-  [field]="form.email"
+  [formField]="form.email"
   [attr.aria-invalid]="form.email().invalid() ? 'true' : null"
   [attr.aria-describedby]="form.email().invalid() ? 'email-error' : null"
 />
 
 <!-- After: Automatic -->
-<input id="email" [field]="form.email" />
+<input id="email" [formField]="form.email" />
 <!-- NgxSignalFormAutoAriaDirective adds:
      - aria-invalid="true" when invalid
      - aria-describedby="email-error" linking to error
@@ -155,7 +155,7 @@ import {
 }
 
 <!-- After: Component (1 line) -->
-<ngx-signal-form-error [field]="form.email" fieldName="email" />
+<ngx-signal-form-error [formField]="form.email" fieldName="email" />
 ```
 
 **Features:**
@@ -172,8 +172,8 @@ import {
 ```html
 <form [ngxSignalForm]="contactForm" (ngSubmit)="save()">
   <!-- All child form-error components inherit submission state -->
-  <ngx-signal-form-error [field]="contactForm.name" fieldName="name" />
-  <ngx-signal-form-error [field]="contactForm.email" fieldName="email" />
+  <ngx-signal-form-error [formField]="contactForm.name" fieldName="name" />
+  <ngx-signal-form-error [formField]="contactForm.email" fieldName="email" />
 </form>
 ```
 

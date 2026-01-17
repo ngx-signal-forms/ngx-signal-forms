@@ -20,7 +20,7 @@ npm install @ngx-signal-forms/toolkit
 
 ## Why This Library?
 
-Angular Signal Forms (introduced in v21) provides an excellent foundation for reactive forms with built-in validation, type safety, automatic touch tracking via the `[field]` directive, and submission state management via `submittedStatus()`.
+Angular Signal Forms (introduced in v21) provides an excellent foundation for reactive forms with built-in validation, type safety, automatic touch tracking via the `[formField]` directive, and submission state management via `submittedStatus()`.
 
 **@ngx-signal-forms/toolkit builds on this foundation by adding:**
 
@@ -41,7 +41,7 @@ All enhancements maintain 100% compatibility with Signal Forms' API—no breakin
 | **Form Creation**          | ✅ `form()`, `schema()`, validators                        | ✅ Same (no changes)                                                           |
 | **Validation**             | ✅ Built-in and custom validators                          | ✅ Same + warning support (non-blocking)                                       |
 | **Field State**            | ✅ `touched()`, `dirty()`, `invalid()`, `errors()`         | ✅ Same (no changes)                                                           |
-| **Touch on Blur**          | ✅ Automatic via `[field]` directive                       | ✅ Enhanced with opt-out capability                                            |
+| **Touch on Blur**          | ✅ Automatic via `[formField]` directive                       | ✅ Enhanced with opt-out capability                                            |
 | **Submission Tracking**    | ✅ Built-in `submittedStatus()` signal                     | ✅ Enhanced with DI-based context + helper utilities                           |
 | **Submission Helpers**     | ❌ Manual `form().valid() && !form().submitting()`         | ✅ `canSubmit()`, `isSubmitting()`, `hasSubmitted()` computed signals          |
 | **Focus Management**       | ❌ Manual field focus after failed submission              | ✅ `focusFirstInvalid()` utility for accessibility                             |
@@ -66,7 +66,7 @@ All enhancements maintain 100% compatibility with Signal Forms' API—no breakin
   <label for="email">Email</label>
   <input
     id="email"
-    [field]="userForm.email"
+    [formField]="userForm.email"
     [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null"
     [attr.aria-describedby]="userForm.email().invalid() && userForm.email().touched() ? 'email-error' : null"
   />
@@ -84,9 +84,9 @@ All enhancements maintain 100% compatibility with Signal Forms' API—no breakin
 
 ```html
 <form [ngxSignalForm]="userForm" (ngSubmit)="save()">
-  <ngx-signal-form-field [field]="userForm.email" fieldName="email">
+  <ngx-signal-form-field [formField]="userForm.email" fieldName="email">
     <label for="email">Email</label>
-    <input id="email" [field]="userForm.email" />
+    <input id="email" [formField]="userForm.email" />
     <!-- Automatic ARIA, touch handling, and error display with strategy -->
   </ngx-signal-form-field>
   <button type="submit">Submit</button>
@@ -108,11 +108,11 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
   selector: 'ngx-contact',
-  imports: [Field, NgxSignalFormToolkit],
+  imports: [FormField, NgxSignalFormToolkit],
   template: `
     <form [ngxSignalForm]="contactForm" (ngSubmit)="save()">
       <label for="email">Email</label>
-      <input id="email" [field]="contactForm.email" type="email" />
+      <input id="email" [formField]="contactForm.email" type="email" />
       <button type="submit">Send</button>
     </form>
   `,
@@ -151,7 +151,7 @@ export class ContactComponent {
 ```html
 <!-- ✅ CORRECT - novalidate is automatically added by the directive -->
 <form [ngxSignalForm]="myForm" (ngSubmit)="save()">
-  <input [field]="myForm.email" type="email" />
+  <input [formField]="myForm.email" type="email" />
   <button type="submit">Submit</button>
 </form>
 ```
@@ -161,13 +161,13 @@ export class ContactComponent {
 ```html
 <!-- ✅ CORRECT for bare Signal Forms - Manual novalidate required -->
 <form (ngSubmit)="save()" novalidate>
-  <input [field]="myForm.email" type="email" />
+  <input [formField]="myForm.email" type="email" />
   <button type="submit">Submit</button>
 </form>
 
 <!-- ❌ WRONG - Browser validation conflicts with Angular validation display -->
 <form (ngSubmit)="save()">
-  <input [field]="myForm.email" type="email" />
+  <input [formField]="myForm.email" type="email" />
   <button type="submit">Submit</button>
 </form>
 ```
@@ -194,13 +194,13 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
   selector: 'ngx-contact',
-  imports: [Field, NgxSignalFormErrorComponent],
+  imports: [FormField, NgxSignalFormErrorComponent],
   template: `
     <form (ngSubmit)="save()" novalidate>
       <label for="email">Email</label>
-      <input id="email" [field]="contactForm.email" />
+      <input id="email" [formField]="contactForm.email" />
       <ngx-signal-form-error
-        [field]="contactForm.email"
+        [formField]="contactForm.email"
         fieldName="email"
         [submittedStatus]="submittedStatus"
       />
@@ -247,12 +247,12 @@ import {
 
 @Component({
   selector: 'ngx-contact',
-  imports: [Field, ngxSignalFormDirective, NgxSignalFormErrorComponent],
+  imports: [FormField, ngxSignalFormDirective, NgxSignalFormErrorComponent],
   template: `
     <form [ngxSignalForm]="contactForm" (ngSubmit)="save()">
       <label for="email">Email</label>
-      <input id="email" [field]="contactForm.email" />
-      <ngx-signal-form-error [field]="contactForm.email" fieldName="email" />
+      <input id="email" [formField]="contactForm.email" />
+      <ngx-signal-form-error [formField]="contactForm.email" fieldName="email" />
 
       <button type="submit">Send</button>
     </form>
@@ -291,35 +291,35 @@ import {
   required,
   email,
   minLength,
-  Field,
+  FormField,
 } from '@angular/forms/signals';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 import { ngxSignalFormDirective } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
   selector: 'ngx-signup',
-  imports: [Field, ngxSignalFormDirective, NgxSignalFormFieldComponent],
+  imports: [FormField, ngxSignalFormDirective, NgxSignalFormFieldComponent],
   template: `
     <form [ngxSignalForm]="signupForm" (ngSubmit)="save()">
-      <ngx-signal-form-field [field]="signupForm.email" fieldName="email">
+      <ngx-signal-form-field [formField]="signupForm.email" fieldName="email">
         <label for="email">Email</label>
-        <input id="email" type="email" [field]="signupForm.email" />
+        <input id="email" type="email" [formField]="signupForm.email" />
       </ngx-signal-form-field>
 
-      <ngx-signal-form-field [field]="signupForm.password" fieldName="password">
+      <ngx-signal-form-field [formField]="signupForm.password" fieldName="password">
         <label for="password">Password</label>
-        <input id="password" type="password" [field]="signupForm.password" />
+        <input id="password" type="password" [formField]="signupForm.password" />
       </ngx-signal-form-field>
 
       <ngx-signal-form-field
-        [field]="signupForm.confirmPassword"
+        [formField]="signupForm.confirmPassword"
         fieldName="confirmPassword"
       >
         <label for="confirmPassword">Confirm Password</label>
         <input
           id="confirmPassword"
           type="password"
-          [field]="signupForm.confirmPassword"
+          [formField]="signupForm.confirmPassword"
         />
       </ngx-signal-form-field>
 
@@ -439,9 +439,9 @@ The toolkit includes a complete form field component system with Material Design
 Reusable form field wrapper with automatic error display:
 
 ```html
-<ngx-signal-form-field [field]="form.email" fieldName="email">
+<ngx-signal-form-field [formField]="form.email" fieldName="email">
   <label for="email">Email</label>
-  <input id="email" [field]="form.email" />
+  <input id="email" [formField]="form.email" />
 </ngx-signal-form-field>
 ```
 
@@ -450,12 +450,12 @@ Reusable form field wrapper with automatic error display:
 Add the `outline` directive for Material Design outlined inputs with floating labels:
 
 ```html
-<ngx-signal-form-field [field]="form.email" outline>
+<ngx-signal-form-field [formField]="form.email" outline>
   <label for="email">Email Address</label>
   <input
     id="email"
     type="email"
-    [field]="form.email"
+    [formField]="form.email"
     required
     placeholder="you@example.com"
   />
@@ -482,10 +482,10 @@ maxLength(path.bio, 500);
 
 ```html
 <!-- Character count automatically detects limit -->
-<ngx-signal-form-field [field]="form.bio" outline>
+<ngx-signal-form-field [formField]="form.bio" outline>
   <label for="bio">Bio</label>
-  <textarea id="bio" [field]="form.bio"></textarea>
-  <ngx-signal-form-field-character-count [field]="form.bio" />
+  <textarea id="bio" [formField]="form.bio"></textarea>
+  <ngx-signal-form-field-character-count [formField]="form.bio" />
 </ngx-signal-form-field>
 ```
 
@@ -509,9 +509,9 @@ maxLength(path.bio, 500);
 Display helper text for form fields:
 
 ```html
-<ngx-signal-form-field [field]="form.phone" outline>
+<ngx-signal-form-field [formField]="form.phone" outline>
   <label for="phone">Phone Number</label>
-  <input id="phone" [field]="form.phone" />
+  <input id="phone" [formField]="form.phone" />
   <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
 </ngx-signal-form-field>
 ```
@@ -555,7 +555,7 @@ provideNgxSignalFormsConfig({
 
 ```html
 <ngx-signal-form-field
-  [field]="form.password"
+  [formField]="form.password"
   fieldName="password"
   [strategy]="'immediate'"
 >
@@ -567,35 +567,35 @@ provideNgxSignalFormsConfig({
 
 ### Auto-ARIA Directive
 
-Automatically manages accessibility attributes for all `[field]` elements:
+Automatically manages accessibility attributes for all `[formField]` elements:
 
 ```html
 <!-- Input automatically gets: -->
 <!-- aria-invalid="true" when invalid and touched -->
 <!-- aria-describedby="email-error" when error is shown -->
-<input id="email" [field]="form.email" />
+<input id="email" [formField]="form.email" />
 ```
 
-> **Important:** The directive must be imported to activate (via `NgxSignalFormToolkit` bundle or individual import). It has an automatic selector (`input[field]`, `textarea[field]`, `select[field]`) but still requires being in your component's `imports` array.
+> **Important:** The directive must be imported to activate (via `NgxSignalFormToolkit` bundle or individual import). It has an automatic selector (`input[formField]`, `textarea[formField]`, `select[formField]`) but still requires being in your component's `imports` array.
 
 ```typescript
 // Option 1: Bundle import (recommended)
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 @Component({
-  imports: [Field, NgxSignalFormToolkit], // ✅ Auto-ARIA activated!
+  imports: [FormField, NgxSignalFormToolkit], // ✅ Auto-ARIA activated!
 })
 
 // Option 2: Individual import
 import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit/core';
 @Component({
-  imports: [Field, NgxSignalFormAutoAriaDirective], // ✅ Auto-ARIA activated!
+  imports: [FormField, NgxSignalFormAutoAriaDirective], // ✅ Auto-ARIA activated!
 })
 ```
 
 **Opt-out if needed:**
 
 ```html
-<input [field]="form.custom" ngxSignalFormAutoAriaDisabled />
+<input [formField]="form.custom" ngxSignalFormAutoAriaDisabled />
 ```
 
 ### Auto-Touch Directive
@@ -604,13 +604,13 @@ Automatically marks fields as touched on blur:
 
 ```html
 <!-- On blur, form.email().markAsTouched() is called automatically -->
-<input [field]="form.email" />
+<input [formField]="form.email" />
 ```
 
 **Opt-out if needed:**
 
 ```html
-<input [field]="form.manual" ngxSignalFormAutoTouchDisabled />
+<input [formField]="form.manual" ngxSignalFormAutoTouchDisabled />
 ```
 
 ### Form Error Component
@@ -619,7 +619,7 @@ Display validation errors with proper ARIA attributes:
 
 ```html
 <ngx-signal-form-error
-  [field]="form.email"
+  [formField]="form.email"
   fieldName="email"
   [strategy]="'on-touch'"
   [submittedStatus]="submittedStatus"
@@ -638,9 +638,9 @@ Display validation errors with proper ARIA attributes:
 Consistent layout with automatic error display:
 
 ```html
-<ngx-signal-form-field [field]="form.username" fieldName="username">
+<ngx-signal-form-field [formField]="form.username" fieldName="username">
   <label for="username">Username</label>
-  <input id="username" [field]="form.username" />
+  <input id="username" [formField]="form.username" />
 </ngx-signal-form-field>
 ```
 

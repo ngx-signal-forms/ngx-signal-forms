@@ -34,7 +34,7 @@ import { BadgeComponent, BadgeIconDirective } from '../badge';
  * @example Basic usage
  * ```html
  * <form [ngxSignalForm]="userForm" (ngSubmit)="handleSubmit()">
- *   <input [field]="userForm.email" />
+ *   <input [formField]="userForm.email" />
  *   <ngx-signal-form-debugger [formTree]="userForm()" />
  * </form>
  * ```

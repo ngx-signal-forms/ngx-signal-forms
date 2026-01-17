@@ -15,11 +15,11 @@ No need to manually add `<ngx-form-error>` components - errors display automatic
 <div class="form-field">
   <label for="email">Email</label>
   <input id="email" [value]="form.email()" (input)="form.setEmail($event)" />
-  <ngx-form-error [field]="form.emailField()" />
+  <ngx-form-error [formField]="form.emailField()" />
 </div>
 
 <!-- ✅ Automatic (Form Field Showcase) -->
-<ngx-vest-form-field [field]="form.emailField()">
+<ngx-vest-form-field [formField]="form.emailField()">
   <label for="email">Email</label>
   <input id="email" [value]="form.email()" (input)="form.setEmail($event)" />
 </ngx-vest-form-field>
@@ -57,7 +57,7 @@ Works with all HTML form controls:
 ## 📚 What You'll Learn
 
 1. **Wrapper Benefits**: How `NgxVestFormField` reduces boilerplate
-2. **Automatic Errors**: Understanding the `[field]` input for auto-display
+2. **Automatic Errors**: Understanding the `[formField]` input for auto-display
 3. **Optional Validation**: Wrapper works without validation too (field input is optional)
 4. **Custom Styling**: Override CSS properties to match your design
 5. **Comparison**: See the difference vs. manual error display
@@ -125,7 +125,7 @@ npm install ngx-vest-forms/bundle
 | Boilerplate           | ~15-20 lines per field       | ✅ ~8-10 lines per field   |
 | Accessibility         | Manual ARIA implementation   | ✅ Automatic via component |
 | Maintenance           | Update each field separately | ✅ Update wrapper once     |
-| Optional Validation   | N/A                          | ✅ Works without `[field]` |
+| Optional Validation   | N/A                          | ✅ Works without `[formField]` |
 | Custom Styling        | Per-field CSS                | ✅ Global CSS variables    |
 | Works with All Inputs | Yes                          | ✅ Yes                     |
 | WCAG 2.2 Compliant    | Manual implementation        | ✅ By default              |

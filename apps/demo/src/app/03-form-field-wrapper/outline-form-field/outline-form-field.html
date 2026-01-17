@@ -46,7 +46,7 @@
     <!-- Fact Fields -->
     <div class="grid gap-4 md:grid-cols-2">
       <ngx-signal-form-field
-        [field]="showcaseForm.facts[factIndex].commitDate"
+        [formField]="showcaseForm.facts[factIndex].commitDate"
         outline
       >
         <svg
@@ -68,13 +68,13 @@
         <input
           id="commitDate-{{ factIndex }}"
           type="text"
-          [field]="showcaseForm.facts[factIndex].commitDate"
+          [formField]="showcaseForm.facts[factIndex].commitDate"
           placeholder="DD-MM-JJJJ"
         />
       </ngx-signal-form-field>
 
       <ngx-signal-form-field
-        [field]="showcaseForm.facts[factIndex].commitPeriod"
+        [formField]="showcaseForm.facts[factIndex].commitPeriod"
         outline
       >
         <svg
@@ -96,7 +96,7 @@
         <input
           id="commitPeriod-{{ factIndex }}"
           type="text"
-          [field]="showcaseForm.facts[factIndex].commitPeriod"
+          [formField]="showcaseForm.facts[factIndex].commitPeriod"
           placeholder="Periode"
         />
       </ngx-signal-form-field>
@@ -104,13 +104,13 @@
 
     <!-- Land -->
     <ngx-signal-form-field
-      [field]="showcaseForm.facts[factIndex].country"
+      [formField]="showcaseForm.facts[factIndex].country"
       outline
     >
       <label for="country-{{ factIndex }}">Land</label>
       <select
         id="country-{{ factIndex }}"
-        [field]="showcaseForm.facts[factIndex].country"
+        [formField]="showcaseForm.facts[factIndex].country"
       >
         @for (country of countries; track country.value) {
         <option [value]="country.value">{{ country.label }}</option>
@@ -121,7 +121,7 @@
     <!-- Location Fields -->
     <div class="grid gap-4 md:grid-cols-2">
       <ngx-signal-form-field
-        [field]="showcaseForm.facts[factIndex].place"
+        [formField]="showcaseForm.facts[factIndex].place"
         outline
       >
         <svg
@@ -148,13 +148,13 @@
         <input
           id="place-{{ factIndex }}"
           type="text"
-          [field]="showcaseForm.facts[factIndex].place"
+          [formField]="showcaseForm.facts[factIndex].place"
           placeholder="Plaatsnaam"
         />
       </ngx-signal-form-field>
 
       <ngx-signal-form-field
-        [field]="showcaseForm.facts[factIndex].municipality"
+        [formField]="showcaseForm.facts[factIndex].municipality"
         outline
       >
         <svg
@@ -181,14 +181,14 @@
         <input
           id="municipality-{{ factIndex }}"
           type="text"
-          [field]="showcaseForm.facts[factIndex].municipality"
+          [formField]="showcaseForm.facts[factIndex].municipality"
           placeholder="Gemeentenaam"
         />
       </ngx-signal-form-field>
     </div>
 
     <ngx-signal-form-field
-      [field]="showcaseForm.facts[factIndex].locationDescription"
+      [formField]="showcaseForm.facts[factIndex].locationDescription"
       outline
     >
       <label for="locationDescription-{{ factIndex }}">
@@ -197,13 +197,13 @@
       <input
         id="locationDescription-{{ factIndex }}"
         type="text"
-        [field]="showcaseForm.facts[factIndex].locationDescription"
+        [formField]="showcaseForm.facts[factIndex].locationDescription"
         placeholder="Omschrijving locatie"
       />
     </ngx-signal-form-field>
 
     <ngx-signal-form-field
-      [field]="showcaseForm.facts[factIndex].abroadLocation"
+      [formField]="showcaseForm.facts[factIndex].abroadLocation"
       outline
     >
       <label for="abroadLocation-{{ factIndex }}">
@@ -212,7 +212,7 @@
       <input
         id="abroadLocation-{{ factIndex }}"
         type="text"
-        [field]="showcaseForm.facts[factIndex].abroadLocation"
+        [formField]="showcaseForm.facts[factIndex].abroadLocation"
         placeholder="Locatie in buitenland"
       />
     </ngx-signal-form-field>
@@ -240,7 +240,7 @@
         <div class="flex items-start gap-4">
           <div class="flex-1 space-y-4">
             <ngx-signal-form-field
-              [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].qualification"
+              [formField]="showcaseForm.facts[factIndex].offenses[offenseIndex].qualification"
               outline
             >
               <svg
@@ -264,7 +264,7 @@
               <input
                 id="qualification-{{ factIndex }}-{{ offenseIndex }}"
                 type="text"
-                [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].qualification"
+                [formField]="showcaseForm.facts[factIndex].offenses[offenseIndex].qualification"
                 placeholder="SR-310"
               />
               <!-- Group-level remove: align with first input by using suffix slot -->
@@ -313,7 +313,7 @@
                   articleIndex = $index) {
                   <div class="flex items-center gap-2">
                     <ngx-signal-form-field
-                      [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles[articleIndex].article"
+                      [formField]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles[articleIndex].article"
                       outline
                       class="flex-1"
                     >
@@ -323,7 +323,7 @@
                       >
                       <select
                         id="article-{{ factIndex }}-{{ offenseIndex }}-{{ articleIndex }}"
-                        [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles[articleIndex].article"
+                        [formField]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles[articleIndex].article"
                       >
                         @for (legalArticle of legalArticles; track
                         legalArticle.value) {
@@ -360,7 +360,7 @@
 
                   <!-- Array-level validation errors for articles -->
                   <ngx-signal-form-error
-                    [field]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles"
+                    [formField]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles"
                     [fieldName]="'articles-' + factIndex + '-' + offenseIndex"
                   />
 
@@ -397,7 +397,7 @@
 
       <!-- Array-level validation errors for offenses -->
       <ngx-signal-form-error
-        [field]="showcaseForm.facts[factIndex].offenses"
+        [formField]="showcaseForm.facts[factIndex].offenses"
         [fieldName]="'offenses-' + factIndex"
       />
 

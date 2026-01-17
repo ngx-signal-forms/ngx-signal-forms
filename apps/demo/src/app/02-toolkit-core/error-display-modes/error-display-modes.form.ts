@@ -5,7 +5,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Field, form, submit } from '@angular/forms/signals';
+import {  form, FormField, submit } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
@@ -40,7 +40,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
 @Component({
   selector: 'ngx-error-display-modes-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Field, NgxSignalFormToolkit],
+  imports: [FormField, NgxSignalFormToolkit],
   template: `
     <!-- Product Feedback Form -->
     <form
@@ -66,14 +66,14 @@ const INITIAL_MODEL: ProductFeedbackModel = {
             id="name"
             type="text"
             autocomplete="name"
-            [field]="productForm.name"
+            [formField]="productForm.name"
             aria-describedby="name-hint"
             placeholder="Your full name"
           />
           <div class="form-hint" id="name-hint">
             We use this to personalize our response
           </div>
-          <ngx-signal-form-error [field]="productForm.name" fieldName="name" />
+          <ngx-signal-form-error [formField]="productForm.name" fieldName="name" />
         </div>
 
         <!-- Email Field -->
@@ -84,7 +84,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
             id="email"
             type="email"
             autocomplete="email"
-            [field]="productForm.email"
+            [formField]="productForm.email"
             placeholder="your.email@company.com"
             aria-describedby="email-hint"
           />
@@ -92,7 +92,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
             For follow-up questions (we respect your privacy)
           </div>
           <ngx-signal-form-error
-            [field]="productForm.email"
+            [formField]="productForm.email"
             fieldName="email"
           />
         </div>
@@ -105,7 +105,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
             id="company"
             type="text"
             autocomplete="organization"
-            [field]="productForm.company"
+            [formField]="productForm.company"
             placeholder="Your company (optional)"
             aria-describedby="company-hint"
           />
@@ -113,7 +113,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
             Helps us understand your use case
           </div>
           <ngx-signal-form-error
-            [field]="productForm.company"
+            [formField]="productForm.company"
             fieldName="company"
           />
         </div>
@@ -135,7 +135,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
           <select
             class="form-input"
             id="productUsed"
-            [field]="productForm.productUsed"
+            [formField]="productForm.productUsed"
             aria-describedby="product-hint"
           >
             <option value="">Select a product...</option>
@@ -149,7 +149,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
             Which product are you providing feedback about?
           </div>
           <ngx-signal-form-error
-            [field]="productForm.productUsed"
+            [formField]="productForm.productUsed"
             fieldName="productUsed"
           />
         </div>
@@ -161,7 +161,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
             class="form-input"
             id="overallRating"
             type="number"
-            [field]="productForm.overallRating"
+            [formField]="productForm.overallRating"
             placeholder="Rate 1-5 stars"
             aria-describedby="rating-hint"
             aria-valuemin="1"
@@ -169,7 +169,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
           />
           <div class="form-hint" id="rating-hint">1 = Poor, 5 = Excellent</div>
           <ngx-signal-form-error
-            [field]="productForm.overallRating"
+            [formField]="productForm.overallRating"
             fieldName="overallRating"
           />
         </div>
@@ -184,7 +184,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
               class="form-input"
               id="improvementSuggestions"
               rows="4"
-              [field]="productForm.improvementSuggestions"
+              [formField]="productForm.improvementSuggestions"
               placeholder="Please help us understand what went wrong..."
               aria-describedby="improvement-hint improvement-counter"
             ></textarea>
@@ -202,7 +202,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
               </span>
             </div>
             <ngx-signal-form-error
-              [field]="productForm.improvementSuggestions"
+              [formField]="productForm.improvementSuggestions"
               fieldName="improvementSuggestions"
             />
           </div>
@@ -217,7 +217,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
             class="form-input"
             id="detailedFeedback"
             rows="4"
-            [field]="productForm.detailedFeedback"
+            [formField]="productForm.detailedFeedback"
             placeholder="Share your detailed experience..."
             aria-describedby="detailed-hint detailed-counter"
           ></textarea>
@@ -235,7 +235,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
             </span>
           </div>
           <ngx-signal-form-error
-            [field]="productForm.detailedFeedback"
+            [formField]="productForm.detailedFeedback"
             fieldName="detailedFeedback"
           />
         </div>
@@ -256,7 +256,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
               type="checkbox"
               id="allowFollowUp"
               class="form-checkbox"
-              [field]="productForm.allowFollowUp"
+              [formField]="productForm.allowFollowUp"
             />
             <span class="ml-2"
               >Allow us to contact you for follow-up questions</span
@@ -272,7 +272,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
               type="checkbox"
               id="newsletter"
               class="form-checkbox"
-              [field]="productForm.newsletter"
+              [formField]="productForm.newsletter"
             />
             <span class="ml-2">Subscribe to product updates</span>
           </label>

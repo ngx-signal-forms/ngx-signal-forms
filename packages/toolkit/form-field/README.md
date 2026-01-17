@@ -55,12 +55,12 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
-  imports: [Field, NgxSignalFormToolkit, NgxOutlinedFormField],
+  imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
   template: `
     <form [ngxSignalForm]="contactForm">
-      <ngx-signal-form-field [field]="contactForm.email" outline>
+      <ngx-signal-form-field [formField]="contactForm.email" outline>
         <label for="email">Email</label>
-        <input id="email" [field]="contactForm.email" />
+        <input id="email" [formField]="contactForm.email" />
         <ngx-signal-form-field-hint>We'll never share your email</ngx-signal-form-field-hint>
       </ngx-signal-form-field>
     </form>
@@ -92,9 +92,9 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
 **Basic Usage:**
 
 ```html
-<ngx-signal-form-field [field]="form.email" fieldName="email">
+<ngx-signal-form-field [formField]="form.email" fieldName="email">
   <label for="email">Email</label>
-  <input id="email" [field]="form.email" />
+  <input id="email" [formField]="form.email" />
 </ngx-signal-form-field>
 ```
 
@@ -112,14 +112,14 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
 The component uses content projection to allow full customization:
 
 ```html
-<ngx-signal-form-field [field]="form.bio">
+<ngx-signal-form-field [formField]="form.bio">
   <!-- Labels and inputs are projected -->
   <label for="bio">Bio</label>
-  <textarea id="bio" [field]="form.bio"></textarea>
+  <textarea id="bio" [formField]="form.bio"></textarea>
 
   <!-- Hints and character counts are projected in a separate slot -->
   <ngx-signal-form-field-hint>Max 500 characters</ngx-signal-form-field-hint>
-  <ngx-signal-form-field-character-count [field]="form.bio" [maxLength]="500" />
+  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 </ngx-signal-form-field>
 ```
 
@@ -130,22 +130,22 @@ Add icons, text, or interactive elements before or after the input using `prefix
 **Search icon prefix:**
 
 ```html
-<ngx-signal-form-field [field]="form.search">
+<ngx-signal-form-field [formField]="form.search">
   <span prefix aria-hidden="true">🔍</span>
   <label for="search">Search</label>
-  <input id="search" [field]="form.search"  />
+  <input id="search" [formField]="form.search"  />
 </ngx-signal-form-field>
 ```
 
 **Show/hide password button suffix:**
 
 ```html
-<ngx-signal-form-field [field]="form.password">
+<ngx-signal-form-field [formField]="form.password">
   <label for="password">Password</label>
   <input
     id="password"
     [type]="showPassword() ? 'text' : 'password'"
-    [field]="form.password"
+    [formField]="form.password"
   />
   <button suffix type="button" (click)="togglePassword()">
     {{ showPassword() ? 'Hide' : 'Show' }}
@@ -156,10 +156,10 @@ Add icons, text, or interactive elements before or after the input using `prefix
 **Currency symbols (both prefix and suffix):**
 
 ```html
-<ngx-signal-form-field [field]="form.amount">
+<ngx-signal-form-field [formField]="form.amount">
   <span prefix aria-hidden="true">$</span>
   <label for="amount">Amount</label>
-  <input id="amount" type="number" [field]="form.amount" step="0.01" />
+  <input id="amount" type="number" [formField]="form.amount" step="0.01" />
   <span suffix aria-hidden="true">.00</span>
 </ngx-signal-form-field>
 ```
@@ -167,10 +167,10 @@ Add icons, text, or interactive elements before or after the input using `prefix
 **Clear button with outlined layout:**
 
 ```html
-<ngx-signal-form-field [field]="form.query" outline>
+<ngx-signal-form-field [formField]="form.query" outline>
   <span prefix aria-hidden="true">🔍</span>
   <label for="query">Search</label>
-  <input id="query" [field]="form.query" />
+  <input id="query" [formField]="form.query" />
   @if (form.query().value()) {
   <button
     suffix
@@ -254,12 +254,12 @@ import { NgxFloatingLabelDirective } from '@ngx-signal-forms/toolkit/form-field'
 **Basic Usage:**
 
 ```html
-<ngx-signal-form-field [field]="form.email" outline>
+<ngx-signal-form-field [formField]="form.email" outline>
   <label for="email">Email Address</label>
   <input
     id="email"
     type="email"
-    [field]="form.email"
+    [formField]="form.email"
     required
     placeholder="you@example.com"
   />
@@ -281,21 +281,21 @@ By default, the required marker (`*`) is automatically shown when the input has 
 
 ```html
 <ngx-signal-form-field
-  [field]="form.email"
+  [formField]="form.email"
   outline
   [showRequiredMarker]="false"
 >
   <label for="email">Email</label>
-  <input id="email" [field]="form.email" required />
+  <input id="email" [formField]="form.email" required />
 </ngx-signal-form-field>
 ```
 
 **Custom required marker - "(required)":**
 
 ```html
-<ngx-signal-form-field [field]="form.email" outline requiredMarker="(required)">
+<ngx-signal-form-field [formField]="form.email" outline requiredMarker="(required)">
   <label for="email">Email</label>
-  <input id="email" [field]="form.email" required />
+  <input id="email" [formField]="form.email" required />
 </ngx-signal-form-field>
 <!-- Result: "Email(required)" -->
 ```
@@ -303,9 +303,9 @@ By default, the required marker (`*`) is automatically shown when the input has 
 **Custom required marker - dagger (†):**
 
 ```html
-<ngx-signal-form-field [field]="form.email" outline requiredMarker=" †">
+<ngx-signal-form-field [formField]="form.email" outline requiredMarker=" †">
   <label for="email">Email</label>
-  <input id="email" [field]="form.email" required />
+  <input id="email" [formField]="form.email" required />
 </ngx-signal-form-field>
 <!-- Result: "Email †" -->
 ```
@@ -473,9 +473,9 @@ import { NgxSignalFormFieldHintComponent } from '@ngx-signal-forms/toolkit/form-
 **Usage:**
 
 ```html
-<ngx-signal-form-field [field]="form.phone" outline>
+<ngx-signal-form-field [formField]="form.phone" outline>
   <label for="phone">Phone Number</label>
-  <input id="phone" [field]="form.phone" />
+  <input id="phone" [formField]="form.phone" />
   <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
 </ngx-signal-form-field>
 ```
@@ -512,10 +512,10 @@ import { NgxSignalFormFieldCharacterCountComponent } from '@ngx-signal-forms/too
 **Usage:**
 
 ```html
-<ngx-signal-form-field [field]="form.bio" outline>
+<ngx-signal-form-field [formField]="form.bio" outline>
   <label for="bio">Bio</label>
-  <textarea id="bio" [field]="form.bio"></textarea>
-  <ngx-signal-form-field-character-count [field]="form.bio" [maxLength]="500" />
+  <textarea id="bio" [formField]="form.bio"></textarea>
+  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 </ngx-signal-form-field>
 ```
 
@@ -543,7 +543,7 @@ The component automatically changes color based on character count:
 
 ```html
 <ngx-signal-form-field-character-count
-  [field]="form.bio"
+  [formField]="form.bio"
   [maxLength]="500"
   [showLimitColors]="false"
 />
@@ -553,7 +553,7 @@ The component automatically changes color based on character count:
 
 ```html
 <ngx-signal-form-field-character-count
-  [field]="form.tweet"
+  [formField]="form.tweet"
   [maxLength]="280"
   [colorThresholds]="{ warning: 90, danger: 98 }"
 />
@@ -583,7 +583,7 @@ import {
   required,
   email,
   maxLength,
-  Field,
+  FormField,
 } from '@angular/forms/signals';
 import {
   NgxSignalFormFieldComponent,
@@ -608,7 +608,7 @@ const contactSchema = schema<ContactForm>((path) => {
   selector: 'app-contact-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    Field,
+    FormField,
     NgxSignalFormFieldComponent,
     NgxFloatingLabelDirective,
     NgxSignalFormFieldHintComponent,
@@ -618,7 +618,7 @@ const contactSchema = schema<ContactForm>((path) => {
     <form (ngSubmit)="save()">
       <!-- Outlined email field with custom required marker -->
       <ngx-signal-form-field
-        [field]="contactForm.email"
+        [formField]="contactForm.email"
         outline
         requiredMarker=" (required)"
       >
@@ -626,7 +626,7 @@ const contactSchema = schema<ContactForm>((path) => {
         <input
           id="email"
           type="email"
-          [field]="contactForm.email"
+          [formField]="contactForm.email"
           required
           placeholder="you@example.com"
         />
@@ -636,16 +636,16 @@ const contactSchema = schema<ContactForm>((path) => {
       </ngx-signal-form-field>
 
       <!-- Outlined message field with character count -->
-      <ngx-signal-form-field [field]="contactForm.message" outline>
+      <ngx-signal-form-field [formField]="contactForm.message" outline>
         <label for="message">Message</label>
         <textarea
           id="message"
-          [field]="contactForm.message"
+          [formField]="contactForm.message"
           required
           rows="4"
         ></textarea>
         <ngx-signal-form-field-character-count
-          [field]="contactForm.message"
+          [formField]="contactForm.message"
           [maxLength]="500"
         />
       </ngx-signal-form-field>

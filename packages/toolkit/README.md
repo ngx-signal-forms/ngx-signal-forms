@@ -17,7 +17,7 @@ Zero-intrusive directives, components, and utilities for Angular Signal Forms.
 - ✅ Type-safe with full TypeScript inference
 - ✅ Tree-shakable with secondary entry points
 
-> **Note**: Angular Signal Forms' `[field]` directive automatically marks fields as touched on blur. No additional directive needed for touch tracking.
+> **Note**: Angular Signal Forms' `[formField]` directive automatically marks fields as touched on blur. No additional directive needed for touch tracking.
 
 ## Quick Start
 
@@ -40,12 +40,12 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
 import { form, schema, required, submit, Field } from '@angular/forms/signals';
 
 @Component({
-  imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
     <form [ngxSignalForm]="contactForm" (ngSubmit)="handleSubmit()">
-      <ngx-signal-form-field [field]="contactForm.email" fieldName="email">
+      <ngx-signal-form-field [formField]="contactForm.email" fieldName="email">
         <label for="email">Email</label>
-        <input id="email" [field]="contactForm.email" />
+        <input id="email" [formField]="contactForm.email" />
       </ngx-signal-form-field>
       <button type="submit">Submit</button>
     </form>
@@ -140,7 +140,7 @@ import {
 } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
-  imports: [Field, ngxSignalFormDirective, NgxSignalFormErrorComponent],
+  imports: [FormField, ngxSignalFormDirective, NgxSignalFormErrorComponent],
   template: `
     <form [ngxSignalForm]="myForm" (ngSubmit)="handleSubmit()">
       <!-- fields -->
@@ -184,7 +184,7 @@ The `NgxSignalFormToolkit` constant provides a convenient way to import all esse
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 @Component({
-  imports: [Field, NgxSignalFormToolkit],
+  imports: [FormField, NgxSignalFormToolkit],
   // ...
 })
 ```
@@ -448,7 +448,7 @@ import { zodToSignal } from '@ngx-signal-forms/zod';
 
 @Component({
   template: `
-    <ngx-signal-form-error [field]="form.email" fieldName="email" />
+    <ngx-signal-form-error [formField]="form.email" fieldName="email" />
     <!-- Error messages come from Zod automatically! -->
   `
 })
@@ -477,7 +477,7 @@ provideErrorMessages({
 // component.ts
 @Component({
   template: `
-    <ngx-signal-form-error [field]="form.email" fieldName="email" />
+    <ngx-signal-form-error [formField]="form.email" fieldName="email" />
     <!-- Uses centralized messages -->
   `
 })
@@ -538,11 +538,11 @@ import {
 ### Example Usage
 
 ```html
-<ngx-signal-form-field [field]="form.bio" outline>
+<ngx-signal-form-field [formField]="form.bio" outline>
   <label for="bio">Bio</label>
-  <textarea id="bio" [field]="form.bio"></textarea>
+  <textarea id="bio" [formField]="form.bio"></textarea>
   <ngx-signal-form-field-hint>Tell us about yourself</ngx-signal-form-field-hint>
-  <ngx-signal-form-field-character-count [field]="form.bio" [maxLength]="500" />
+  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 </ngx-signal-form-field>
 ```
 
@@ -578,13 +578,13 @@ maxLength(path.bio, 500);
 
 ```html
 <!-- Add character count to show user the limit -->
-<ngx-signal-form-field [field]="form.bio">
+<ngx-signal-form-field [formField]="form.bio">
   <label for="bio">Bio</label>
-  <textarea id="bio" [field]="form.bio"></textarea>
+  <textarea id="bio" [formField]="form.bio"></textarea>
 
   <!-- User sees remaining count, preventing paste surprises -->
   <ngx-signal-form-field-character-count
-    [field]="form.bio"
+    [formField]="form.bio"
     [maxLength]="500"
   />
 </ngx-signal-form-field>
@@ -613,7 +613,7 @@ validate(path.bio, (ctx) => {
 
 ```html
 <!-- No maxlength attribute = no silent truncation -->
-<textarea id="bio" [field]="form.bio"></textarea>
+<textarea id="bio" [formField]="form.bio"></textarea>
 ```
 
 **Benefits:**
@@ -625,7 +625,7 @@ validate(path.bio, (ctx) => {
 
 ```html
 <!-- No validation at all - user can enter any amount -->
-<textarea id="bio" [field]="form.bio"></textarea>
+<textarea id="bio" [formField]="form.bio"></textarea>
 ```
 
 ⚠️ **Not recommended** - Better to use Option 1 or 2
@@ -744,7 +744,7 @@ Signal Forms separate data (your signal) from form state (control states). This 
 
 #### NgxSignalFormAutoAriaDirective
 
-Automatically applied to `input[field]`, `textarea[field]`, `select[field]` elements.
+Automatically applied to `input[formField]`, `textarea[formField]`, `select[formField]` elements.
 
 **Key Features:**
 
@@ -757,11 +757,11 @@ Automatically applied to `input[field]`, `textarea[field]`, `select[field]` elem
 ```typescript
 // With bundle (recommended)
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
-@Component({ imports: [Field, NgxSignalFormToolkit] })
+@Component({ imports: [FormField, NgxSignalFormToolkit] })
 
 // Or individual import
 import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit/core';
-@Component({ imports: [Field, NgxSignalFormAutoAriaDirective] })
+@Component({ imports: [FormField, NgxSignalFormAutoAriaDirective] })
 ```
 
 ### Components
@@ -769,7 +769,7 @@ import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit/core';
 #### NgxSignalFormErrorComponent
 
 ```html
-<ngx-signal-form-error [field]="form.email" fieldName="email" />
+<ngx-signal-form-error [formField]="form.email" fieldName="email" />
 ```
 
 **Note:** When used inside a form with `ngxSignalFormDirective`, the `submittedStatus` signal is automatically injected. The toolkit derives this from Angular's native `submitting()` and `touched()` signals.
@@ -777,9 +777,9 @@ import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit/core';
 #### NgxSignalFormFieldComponent
 
 ```html
-<ngx-signal-form-field [field]="form.email" fieldName="email" [strategy]="'on-touch'">
+<ngx-signal-form-field [formField]="form.email" fieldName="email" [strategy]="'on-touch'">
   <label>Email</label>
-  <input [field]="form.email" />
+  <input [formField]="form.email" />
 </ngx-signal-form-field>
 ```
 
@@ -788,9 +788,9 @@ import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit/core';
 Transforms the form field into an outlined layout where the label appears inside the input container, matching Material Design outlined input patterns.
 
 ```html
-<ngx-signal-form-field [field]="form.email" outline>
+<ngx-signal-form-field [formField]="form.email" outline>
   <label for="email">Email Address</label>
-  <input id="email" type="email" [field]="form.email" required placeholder="you@example.com" />
+  <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
 </ngx-signal-form-field>
 ```
 
@@ -807,9 +807,9 @@ Transforms the form field into an outlined layout where the label appears inside
 Displays helper text for form fields.
 
 ```html
-<ngx-signal-form-field [field]="form.phone" outline>
+<ngx-signal-form-field [formField]="form.phone" outline>
   <label for="phone">Phone Number</label>
-  <input id="phone" [field]="form.phone" />
+  <input id="phone" [formField]="form.phone" />
   <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
 </ngx-signal-form-field>
 ```
@@ -829,10 +829,10 @@ maxLength(path.bio, 500);
 
 ```html
 <!-- Character count automatically detects limit from validation -->
-<ngx-signal-form-field [field]="form.bio" outline>
+<ngx-signal-form-field [formField]="form.bio" outline>
   <label for="bio">Bio</label>
-  <textarea id="bio" [field]="form.bio"></textarea>
-  <ngx-signal-form-field-character-count [field]="form.bio" />
+  <textarea id="bio" [formField]="form.bio"></textarea>
+  <ngx-signal-form-field-character-count [formField]="form.bio" />
 </ngx-signal-form-field>
 ```
 
@@ -848,7 +848,7 @@ maxLength(path.bio, 500);
 ```html
 <!-- Display limit is 300, even if validation allows 500 -->
 <ngx-signal-form-field-character-count
-  [field]="form.bio"
+  [formField]="form.bio"
   [maxLength]="300"
 />
 ```

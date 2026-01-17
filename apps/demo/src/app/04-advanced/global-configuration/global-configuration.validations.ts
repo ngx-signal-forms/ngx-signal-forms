@@ -1,5 +1,4 @@
 import {
-  customError,
   email,
   required,
   schema,
@@ -20,10 +19,10 @@ export const globalConfigSchema = schema<GlobalConfigModel>((path) => {
   validate(path.userPhone, (ctx) => {
     const value = ctx.value();
     if (value && !/^\d{3}-\d{3}-\d{4}$/.test(value)) {
-      return customError({
+      return {
         kind: 'invalid-phone',
         message: 'Phone must be in format: 123-456-7890',
-      });
+      };
     }
     return null;
   });
@@ -32,10 +31,10 @@ export const globalConfigSchema = schema<GlobalConfigModel>((path) => {
   validate(path.userWebsite, (ctx) => {
     const value = ctx.value();
     if (value && value.trim() && !/^https?:\/\/.+\..+/i.test(value)) {
-      return customError({
+      return {
         kind: 'invalid-url',
         message: 'Website must be a valid URL',
-      });
+      };
     }
     return null;
   });

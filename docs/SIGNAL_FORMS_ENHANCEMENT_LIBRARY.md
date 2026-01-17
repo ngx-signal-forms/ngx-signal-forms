@@ -46,7 +46,7 @@
 | **Field State Primitives** | ✅ `touched()`, `dirty()`, `invalid()`, `errors()`, `value()` | —                                                                 | —                           |
 | **Manual Touch**           | ✅ `markAsTouched()` method                                   | —                                                                 | —                           |
 | **Async Validation**       | ✅ `validateAsync()` with resources                           | —                                                                 | —                           |
-| **Control Directive**      | ✅ `[field]` for two-way binding                              | —                                                                 | —                           |
+| **Control Directive**      | ✅ `[formField]` for two-way binding                              | —                                                                 | —                           |
 |                            |                                                               |                                                                   |                             |
 | **Auto-Touch on Blur**     | ❌ Manual `(blur)` handlers required                          | ✅ Automatic via directive                                        | Directive (host listener)   |
 | **ARIA Attributes**        | ❌ Manual `[attr.aria-invalid]` required                      | ✅ Automatic `aria-invalid` and `aria-describedby`                | Directive (host bindings)   |
@@ -68,7 +68,7 @@
   <label for="email">Email</label>
   <input
     id="email"
-    [field]="userForm.email"
+    [formField]="userForm.email"
     (blur)="userForm.email().markAsTouched()"
     [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null"
     [attr.aria-describedby]="userForm.email().invalid() ? 'email-error' : null"
@@ -92,9 +92,9 @@
 
 ```html
 <form [ngxSignalForm]="userForm" (ngSubmit)="save()">
-  <ngx-signal-form-field [field]="userForm.email">
+  <ngx-signal-form-field [formField]="userForm.email">
     <label for="email">Email</label>
-    <input id="email" [field]="userForm.email" />
+    <input id="email" [formField]="userForm.email" />
     <!-- Auto-touch, auto-ARIA, auto-error display -->
   </ngx-signal-form-field>
 
@@ -157,7 +157,7 @@ Automatically manages ARIA accessibility attributes based on field state and err
 ```html
 <input
   id="email"
-  [field]="userForm.email"
+  [formField]="userForm.email"
   [attr.aria-invalid]="(userForm.email().touched() && userForm.email().invalid()) ? 'true' : null"
   [attr.aria-describedby]="(userForm.email().touched() && userForm.email().invalid()) ? 'email-error' : null"
 />
@@ -169,13 +169,13 @@ Automatically manages ARIA accessibility attributes based on field state and err
 **After (Automatic):**
 
 ```html
-<input id="email" [field]="userForm.email" />
-<ngx-signal-form-error [field]="userForm.email" />
+<input id="email" [formField]="userForm.email" />
+<ngx-signal-form-error [formField]="userForm.email" />
 ```
 
 ### 2. Auto-Touch Handling
 
-**Note:** Angular Signal Forms' `[field]` directive automatically marks fields as touched on blur. The toolkit relies on this native behavior and does not need a separate directive for touch tracking.
+**Note:** Angular Signal Forms' `[formField]` directive automatically marks fields as touched on blur. The toolkit relies on this native behavior and does not need a separate directive for touch tracking.
 
 ### 3. Error Display Strategies
 
@@ -208,9 +208,9 @@ export class MyComponent {
 Consistent layout + automatic error display.
 
 ```html
-<ngx-signal-form-field [field]="userForm.email">
+<ngx-signal-form-field [formField]="userForm.email">
   <label for="email">Email</label>
-  <input id="email" [field]="userForm.email" />
+  <input id="email" [formField]="userForm.email" />
 </ngx-signal-form-field>
 ```
 
@@ -221,7 +221,7 @@ Automatic `aria-busy` during async validation/submission.
 ```html
 <form [ngxSignalForm]="userForm" (ngSubmit)="save()">
   <!-- aria-busy="true" automatically during async -->
-  <input [field]="userForm.email" />
+  <input [formField]="userForm.email" />
   <button type="submit">Submit</button>
 </form>
 ```
@@ -324,7 +324,7 @@ If needed in the future, core utilities could be extracted to an internal shared
 **Key Points:**
 
 - ✅ No wrapper around Signal Forms API
-- ✅ Directives attach to existing `[field]` bindings
+- ✅ Directives attach to existing `[formField]` bindings
 - ✅ Components work with Signal Forms field state
 - ✅ Utilities are pure functions taking Signal Forms signals
 - ✅ Providers use Angular DI, don't modify form creation
@@ -342,9 +342,9 @@ If needed in the future, core utilities could be extracted to an internal shared
 
 ```typescript
 selector: `
-  input[field]:not([ngxSignalFormAutoAriaDisabled]):not([type="radio"]):not([type="checkbox"]),
-  textarea[field]:not([ngxSignalFormAutoAriaDisabled]),
-  select[field]:not([ngxSignalFormAutoAriaDisabled])
+  input[formField]:not([ngxSignalFormAutoAriaDisabled]):not([type="radio"]):not([type="checkbox"]),
+  textarea[formField]:not([ngxSignalFormAutoAriaDisabled]),
+  select[formField]:not([ngxSignalFormAutoAriaDisabled])
 `;
 ```
 
@@ -370,17 +370,17 @@ host: {
 <!-- Priority 1: Explicit -->
 <input
   data-signal-field="personalInfo.firstName"
-  [field]="userForm.personalInfo.firstName"
+  [formField]="userForm.personalInfo.firstName"
 />
 
 <!-- Priority 3: ID (most common) -->
-<input id="email" [field]="userForm.email" />
+<input id="email" [formField]="userForm.email" />
 
 <!-- Priority 4: Name -->
-<input name="phoneNumber" [field]="userForm.phoneNumber" />
+<input name="phoneNumber" [formField]="userForm.phoneNumber" />
 
 <!-- Opt-out -->
-<input ngxSignalFormAutoAriaDisabled [field]="userForm.someField" />
+<input ngxSignalFormAutoAriaDisabled [formField]="userForm.someField" />
 ```
 
 #### `ngxSignalFormAutoTouch`
@@ -389,9 +389,9 @@ host: {
 
 ```typescript
 selector: `
-  input[field]:not([type="checkbox"]):not([type="radio"]):not([ngxSignalFormAutoTouchDisabled]),
-  textarea[field]:not([ngxSignalFormAutoTouchDisabled]),
-  select[field]:not([ngxSignalFormAutoTouchDisabled])
+  input[formField]:not([type="checkbox"]):not([type="radio"]):not([ngxSignalFormAutoTouchDisabled]),
+  textarea[formField]:not([ngxSignalFormAutoTouchDisabled]),
+  select[formField]:not([ngxSignalFormAutoTouchDisabled])
 `;
 ```
 
@@ -499,8 +499,8 @@ export class ngxSignalFormDirective {
   (ngSubmit)="save()"
 >
   <!-- Child directives automatically access form context via DI -->
-  <input id="email" [field]="userForm.email" />
-  <ngx-signal-form-error [field]="userForm.email" />
+  <input id="email" [formField]="userForm.email" />
+  <ngx-signal-form-error [formField]="userForm.email" />
 </form>
 ```
 
@@ -542,7 +542,7 @@ export class NgxSignalFormErrorComponent {
 
 ```html
 <input id="email" [value]="emailField().value()" />
-<ngx-signal-form-error [field]="emailField()" />
+<ngx-signal-form-error [formField]="emailField()" />
 ```
 
 ### 3. Form Field Wrapper
@@ -560,7 +560,7 @@ export class NgxSignalFormErrorComponent {
         <ng-content />
       </div>
       @if (field()) {
-        <ngx-signal-form-error [field]="field()!" />
+        <ngx-signal-form-error [formField]="field()!" />
       }
     </div>
   `,
@@ -587,7 +587,7 @@ export class NgxSignalFormField {
     <ng-content />
   </div>
   @if (field()) {
-  <ngx-signal-form-error [field]="field()!" />
+  <ngx-signal-form-error [formField]="field()!" />
   }
 </div>
 `, styles: ` .ngx-signal-form-field { display: flex; flex-direction: column; gap: var(--ngx-signal-form-field-gap, 0.5rem); margin-bottom: var(--ngx-signal-form-field-margin, 1rem); } ` }) export class NgxSignalFormField { // Accept the field signal field = input<Signal<FieldState<any>>>(); }</Signal<FieldState<any>
@@ -596,9 +596,9 @@ export class NgxSignalFormField {
 **Usage:**
 
 ```html
-<ngx-signal-form-field [field]="userForm.email">
+<ngx-signal-form-field [formField]="userForm.email">
   <label for="email">Email</label>
-  <input id="email" [field]="userForm.email" />
+  <input id="email" [formField]="userForm.email" />
 </ngx-signal-form-field>
 ```
 
@@ -831,7 +831,7 @@ const contactSchema = schema<ContactModel>((path) => {
     <form (ngSubmit)="save()">
       <!-- Auto aria-invalid + aria-describedby -->
       <label for="email">Email</label>
-      <input id="email" type="email" [field]="contactForm.email" />
+      <input id="email" type="email" [formField]="contactForm.email" />
       <span id="email-error" role="alert">
         @if (contactForm.email().invalid()) {
           {{ contactForm.email().errors() | json }}
@@ -871,14 +871,14 @@ import {
     NgxSignalFormAutoAria,
     NgxSignalFormAutoTouch,
     NgxSignalFormErrorComponent,
-    Field,
+    FormField,
   ],
   template: `
     <form (ngSubmit)="save()">
       <label for="email">Email</label>
-      <input id="email" type="email" [field]="contactForm.email" <!-- blur handler automatic -- />
+      <input id="email" type="email" [formField]="contactForm.email" <!-- blur handler automatic -- />
       />
-      <ngx-signal-form-error [field]="contactForm.email" />
+      <ngx-signal-form-error [formField]="contactForm.email" />
 
       <button type="submit">Submit</button>
     </form>
@@ -913,18 +913,18 @@ import {
     NgxSignalFormField,
     NgxSignalFormAutoAria,
     NgxSignalFormAutoTouch,
-    Field,
+    FormField,
   ],
   template: `
     <form (ngSubmit)="save()">
-      <ngx-signal-form-field [field]="contactForm.email">
+      <ngx-signal-form-field [formField]="contactForm.email">
         <label for="email">Email</label>
-        <input id="email" type="email" [field]="contactForm.email" />
+        <input id="email" type="email" [formField]="contactForm.email" />
       </ngx-signal-form-field>
 
-      <ngx-signal-form-field [field]="contactForm.message">
+      <ngx-signal-form-field [formField]="contactForm.message">
         <label for="message">Message</label>
-        <textarea id="message" [field]="contactForm.message"></textarea>
+        <textarea id="message" [formField]="contactForm.message"></textarea>
       </ngx-signal-form-field>
 
       <button type="submit">Submit</button>
@@ -953,7 +953,7 @@ import {
   required,
   email,
   minLength,
-  Field,
+  FormField,
   submit,
 } from '@angular/forms/signals';
 import { NgxSignalFormField } from '@ngx-signal-forms/form-field';
@@ -1009,17 +1009,17 @@ const contactSchema = schema<ContactModel>((path) => {
       [errorStrategy]="errorMode()"
       (ngSubmit)="save()"
     >
-      <ngx-signal-form-field [field]="contactForm.email">
+      <ngx-signal-form-field [formField]="contactForm.email">
         <label for="email">Email *</label>
-        <input id="email" type="email" [field]="contactForm.email" />
+        <input id="email" type="email" [formField]="contactForm.email" />
       </ngx-signal-form-field>
 
-      <ngx-signal-form-field [field]="contactForm.message">
+      <ngx-signal-form-field [formField]="contactForm.message">
         <label for="message">Message *</label>
         <textarea
           id="message"
           rows="4"
-          [field]="contactForm.message"
+          [formField]="contactForm.message"
         ></textarea>
       </ngx-signal-form-field>
 
@@ -1135,7 +1135,7 @@ const locationForm = form(signal<LocationList>(...), (path) => {
 ```html
 @for (location of locationForm.locations; track $index) {
 <div>
-  <input [field]="locationForm.locations[$index].city" />
+  <input [formField]="locationForm.locations[$index].city" />
 
   <!-- Error appears on the specific duplicate field -->
   @if (locationForm.locations[$index].city().errors().length > 0) { @for (error
@@ -1492,14 +1492,14 @@ protected readonly contactForm = form(this.model, contactSchema);
 
 ```html
 <input id="email" [value]="form.email()" (input)="form.setEmail($event)" />
-<ngx-form-error [field]="form.emailField()" />
+<ngx-form-error [formField]="form.emailField()" />
 ```
 
 **After:**
 
 ```html
-<input id="email" [field]="contactForm.email" />
-<ngx-signal-form-error [field]="contactForm.email" />
+<input id="email" [formField]="contactForm.email" />
+<ngx-signal-form-error [formField]="contactForm.email" />
 ```
 
 #### Step 4: Update Submit Logic
@@ -1544,7 +1544,7 @@ const contactSuite = staticSafeSuite<ContactModel>((data) => {
   imports: [NgxVestFormField],
   template: `
     <form (ngSubmit)="save()">
-      <ngx-vest-form-field [field]="form.emailField()">
+      <ngx-vest-form-field [formField]="form.emailField()">
         <label for="email">Email</label>
         <input
           id="email"
@@ -1580,9 +1580,9 @@ const contactSchema = schema<ContactModel>((path) => {
   imports: [NgxSignalFormField, Control],
   template: `
     <form (ngSubmit)="save()">
-      <ngx-signal-form-field [field]="contactForm.email">
+      <ngx-signal-form-field [formField]="contactForm.email">
         <label for="email">Email</label>
-        <input id="email" [field]="contactForm.email" />
+        <input id="email" [formField]="contactForm.email" />
       </ngx-signal-form-field>
       <button type="submit">Submit</button>
     </form>
@@ -1729,8 +1729,8 @@ test('should have no accessibility violations', async ({ page }) => {
 
 **Core Directives & Components:**
 
-- ✅ Auto-ARIA directive (`[field]` selector with host bindings)
-- ✅ Auto-touch directive (`[field]` selector with blur listener)
+- ✅ Auto-ARIA directive (`[formField]` selector with host bindings)
+- ✅ Auto-touch directive (`[formField]` selector with blur listener)
 - ✅ Form busy directive (form-level `aria-busy` host binding)
 - ✅ Form provider directive (DI context + submission tracking)
 - ✅ Error display component (reusable error renderer)

@@ -120,14 +120,14 @@ When resolving field names for ARIA linking, the toolkit follows this priority:
 <input
   id="firstName"
   data-signal-field="personalInfo.firstName"
-  [field]="form.personalInfo.firstName"
+  [formField]="form.personalInfo.firstName"
 />
 
 <!-- Priority 3: Use id (most common) -->
-<input id="email" [field]="form.email" />
+<input id="email" [formField]="form.email" />
 
 <!-- Priority 4: Fallback to name -->
-<input name="phone" [field]="form.phone" />
+<input name="phone" [formField]="form.phone" />
 ```
 
 ### Custom Field Resolver Example
@@ -248,7 +248,7 @@ When you use the toolkit's `ngxSignalFormDirective`, the derived status is provi
 ```html
 <form [ngxSignalForm]="registrationForm" (ngSubmit)="save()">
   <!-- NgxSignalFormErrorComponent automatically receives submittedStatus -->
-  <ngx-signal-form-error [field]="registrationForm.email" fieldName="email" />
+  <ngx-signal-form-error [formField]="registrationForm.email" fieldName="email" />
 
   @if (formContext?.submittedStatus() === 'submitting') {
   <p role="status">Submitting…</p>

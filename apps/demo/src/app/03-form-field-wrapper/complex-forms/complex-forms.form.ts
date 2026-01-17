@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Field, form, submit } from '@angular/forms/signals';
+import { FormField, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
@@ -22,7 +22,7 @@ import { complexFormSchema } from './complex-forms.validations';
 @Component({
   selector: 'ngx-complex-forms',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
     <form [ngxSignalForm]="complexForm" (ngSubmit)="handleSubmit()">
       <!-- Personal Information Section -->
@@ -37,31 +37,31 @@ import { complexFormSchema } from './complex-forms.validations';
 
         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
           <ngx-signal-form-field
-            [field]="complexForm.personalInfo.firstName"
+            [formField]="complexForm.personalInfo.firstName"
             fieldName="firstName"
           >
             <label for="firstName">First Name *</label>
             <input
               id="firstName"
               type="text"
-              [field]="complexForm.personalInfo.firstName"
+              [formField]="complexForm.personalInfo.firstName"
             />
           </ngx-signal-form-field>
 
           <ngx-signal-form-field
-            [field]="complexForm.personalInfo.lastName"
+            [formField]="complexForm.personalInfo.lastName"
             fieldName="lastName"
           >
             <label for="lastName">Last Name *</label>
             <input
               id="lastName"
               type="text"
-              [field]="complexForm.personalInfo.lastName"
+              [formField]="complexForm.personalInfo.lastName"
             />
           </ngx-signal-form-field>
 
           <ngx-signal-form-field
-            [field]="complexForm.personalInfo.email"
+            [formField]="complexForm.personalInfo.email"
             fieldName="email"
           >
             <svg
@@ -83,19 +83,19 @@ import { complexFormSchema } from './complex-forms.validations';
             <input
               id="email"
               type="email"
-              [field]="complexForm.personalInfo.email"
+              [formField]="complexForm.personalInfo.email"
             />
           </ngx-signal-form-field>
 
           <ngx-signal-form-field
-            [field]="complexForm.personalInfo.age"
+            [formField]="complexForm.personalInfo.age"
             fieldName="age"
           >
             <label for="age">Age *</label>
             <input
               id="age"
               type="number"
-              [field]="complexForm.personalInfo.age"
+              [formField]="complexForm.personalInfo.age"
               aria-valuemin="18"
               aria-valuemax="120"
             />
@@ -118,7 +118,7 @@ import { complexFormSchema } from './complex-forms.validations';
 
         <div class="grid grid-cols-1 gap-6">
           <ngx-signal-form-field
-            [field]="complexForm.addressInfo.street"
+            [formField]="complexForm.addressInfo.street"
             fieldName="street"
           >
             <svg
@@ -145,42 +145,42 @@ import { complexFormSchema } from './complex-forms.validations';
             <input
               id="street"
               type="text"
-              [field]="complexForm.addressInfo.street"
+              [formField]="complexForm.addressInfo.street"
             />
           </ngx-signal-form-field>
 
           <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
             <ngx-signal-form-field
-              [field]="complexForm.addressInfo.city"
+              [formField]="complexForm.addressInfo.city"
               fieldName="city"
             >
               <label for="city">City *</label>
               <input
                 id="city"
                 type="text"
-                [field]="complexForm.addressInfo.city"
+                [formField]="complexForm.addressInfo.city"
               />
             </ngx-signal-form-field>
 
             <ngx-signal-form-field
-              [field]="complexForm.addressInfo.zipCode"
+              [formField]="complexForm.addressInfo.zipCode"
               fieldName="zipCode"
             >
               <label for="zipCode">Zip Code *</label>
               <input
                 id="zipCode"
                 type="text"
-                [field]="complexForm.addressInfo.zipCode"
+                [formField]="complexForm.addressInfo.zipCode"
                 placeholder="12345"
               />
             </ngx-signal-form-field>
 
             <ngx-signal-form-field
-              [field]="complexForm.addressInfo.country"
+              [formField]="complexForm.addressInfo.country"
               fieldName="country"
             >
               <label for="country">Country *</label>
-              <select id="country" [field]="complexForm.addressInfo.country">
+              <select id="country" [formField]="complexForm.addressInfo.country">
                 <option value="">Select...</option>
                 <option value="US">United States</option>
                 <option value="CA">Canada</option>
@@ -208,14 +208,14 @@ import { complexFormSchema } from './complex-forms.validations';
             class="mb-4 grid grid-cols-1 items-start gap-4 md:grid-cols-[1fr,150px]"
           >
             <ngx-signal-form-field
-              [field]="complexForm.skills[i].name"
+              [formField]="complexForm.skills[i].name"
               [fieldName]="'skill-' + i + '-name'"
             >
               <label [for]="'skill-' + i + '-name'">Skill Name *</label>
               <input
                 [id]="'skill-' + i + '-name'"
                 type="text"
-                [field]="complexForm.skills[i].name"
+                [formField]="complexForm.skills[i].name"
                 placeholder="e.g., Angular"
               />
               <button
@@ -230,14 +230,14 @@ import { complexFormSchema } from './complex-forms.validations';
             </ngx-signal-form-field>
 
             <ngx-signal-form-field
-              [field]="complexForm.skills[i].level"
+              [formField]="complexForm.skills[i].level"
               [fieldName]="'skill-' + i + '-level'"
             >
               <label [for]="'skill-' + i + '-level'">Level (1-10) *</label>
               <input
                 [id]="'skill-' + i + '-level'"
                 type="number"
-                [field]="complexForm.skills[i].level"
+                [formField]="complexForm.skills[i].level"
                 aria-valuemin="1"
                 aria-valuemax="10"
               />
@@ -265,13 +265,13 @@ import { complexFormSchema } from './complex-forms.validations';
             class="mb-4 grid grid-cols-1 items-start gap-4 md:grid-cols-[150px,1fr]"
           >
             <ngx-signal-form-field
-              [field]="complexForm.contacts[i].type"
+              [formField]="complexForm.contacts[i].type"
               [fieldName]="'contact-' + i + '-type'"
             >
               <label [for]="'contact-' + i + '-type'">Type *</label>
               <select
                 [id]="'contact-' + i + '-type'"
-                [field]="complexForm.contacts[i].type"
+                [formField]="complexForm.contacts[i].type"
               >
                 <option value="">Select...</option>
                 <option value="email">Email</option>
@@ -280,7 +280,7 @@ import { complexFormSchema } from './complex-forms.validations';
             </ngx-signal-form-field>
 
             <ngx-signal-form-field
-              [field]="complexForm.contacts[i].value"
+              [formField]="complexForm.contacts[i].value"
               [fieldName]="'contact-' + i + '-value'"
             >
               @if (complexForm.contacts[i].type().value() === 'email') {
@@ -320,7 +320,7 @@ import { complexFormSchema } from './complex-forms.validations';
               <input
                 [id]="'contact-' + i + '-value'"
                 type="text"
-                [field]="complexForm.contacts[i].value"
+                [formField]="complexForm.contacts[i].value"
                 [placeholder]="
                   complexForm.contacts[i].type().value() === 'email'
                     ? 'user@example.com'
@@ -360,7 +360,7 @@ import { complexFormSchema } from './complex-forms.validations';
             <input
               id="newsletter"
               type="checkbox"
-              [field]="complexForm.preferences.newsletter"
+              [formField]="complexForm.preferences.newsletter"
               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span class="text-sm text-gray-700 dark:text-gray-300">
@@ -372,7 +372,7 @@ import { complexFormSchema } from './complex-forms.validations';
             <input
               id="notifications"
               type="checkbox"
-              [field]="complexForm.preferences.notifications"
+              [formField]="complexForm.preferences.notifications"
               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span class="text-sm text-gray-700 dark:text-gray-300">

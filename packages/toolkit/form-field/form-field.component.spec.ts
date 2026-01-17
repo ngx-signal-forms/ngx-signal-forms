@@ -37,7 +37,7 @@ describe('NgxSignalFormFieldComponent', () => {
       });
 
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field" fieldName="custom-email">
+        `<ngx-signal-form-field [formField]="field" fieldName="custom-email">
           <label for="email">Email</label>
           <input id="email" type="email" />
         </ngx-signal-form-field>`,
@@ -68,7 +68,7 @@ describe('NgxSignalFormFieldComponent', () => {
       });
 
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <label>Email</label>
           <input type="email" />
         </ngx-signal-form-field>`,
@@ -99,13 +99,13 @@ describe('NgxSignalFormFieldComponent', () => {
 
       const { container } = await render(
         `<div>
-          <ngx-signal-form-field [field]="field1">
+          <ngx-signal-form-field [formField]="field1">
             <input id="input1" type="text" />
           </ngx-signal-form-field>
-          <ngx-signal-form-field [field]="field2">
+          <ngx-signal-form-field [formField]="field2">
             <input id="input2" type="text" />
           </ngx-signal-form-field>
-          <ngx-signal-form-field [field]="field3">
+          <ngx-signal-form-field [formField]="field3">
             <input id="input3" type="text" />
           </ngx-signal-form-field>
         </div>`,
@@ -153,13 +153,13 @@ describe('NgxSignalFormFieldComponent', () => {
 
       const { container } = await render(
         `<div>
-          <ngx-signal-form-field [field]="field1" fieldName="email">
+          <ngx-signal-form-field [formField]="field1" fieldName="email">
             <input id="email" type="email" />
           </ngx-signal-form-field>
-          <ngx-signal-form-field [field]="field2">
+          <ngx-signal-form-field [formField]="field2">
             <input id="password" type="password" />
           </ngx-signal-form-field>
-          <ngx-signal-form-field [field]="field3" fieldName="confirm">
+          <ngx-signal-form-field [formField]="field3" fieldName="confirm">
             <input id="confirm" type="password" />
           </ngx-signal-form-field>
         </div>`,
@@ -197,7 +197,7 @@ describe('NgxSignalFormFieldComponent', () => {
       });
 
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field" fieldName="">
+        `<ngx-signal-form-field [formField]="field" fieldName="">
           <input type="text" />
         </ngx-signal-form-field>`,
         {
@@ -224,7 +224,7 @@ describe('NgxSignalFormFieldComponent', () => {
       });
 
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <input type="text" />
         </ngx-signal-form-field>`,
         {
@@ -269,7 +269,7 @@ describe('NgxSignalFormFieldComponent', () => {
       });
 
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <label for="email">Email</label>
           <input id="email" type="email" />
         </ngx-signal-form-field>`,
@@ -303,7 +303,7 @@ describe('NgxSignalFormFieldComponent', () => {
       });
 
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field" fieldName="custom-email">
+        `<ngx-signal-form-field [formField]="field" fieldName="custom-email">
           <label for="email">Email</label>
           <input id="email" type="email" />
         </ngx-signal-form-field>`,
@@ -330,7 +330,7 @@ describe('NgxSignalFormFieldComponent', () => {
       });
 
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <label>
             Email
             <input id="email" type="email" />
@@ -369,7 +369,7 @@ describe('NgxSignalFormFieldComponent', () => {
       });
 
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <label for="bio">Bio</label>
           <textarea id="bio"></textarea>
         </ngx-signal-form-field>`,
@@ -396,7 +396,7 @@ describe('NgxSignalFormFieldComponent', () => {
       });
 
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <label for="country">Country</label>
           <select id="country">
             <option value="">Select...</option>
@@ -426,7 +426,7 @@ describe('NgxSignalFormFieldComponent', () => {
       });
 
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <label for="picker">Color Picker</label>
           <button id="picker" type="button">Pick Color</button>
         </ngx-signal-form-field>`,
@@ -449,7 +449,7 @@ describe('NgxSignalFormFieldComponent', () => {
   describe('Basic rendering', () => {
     it('should render the component with host element', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field" fieldName="test-field">
+        `<ngx-signal-form-field [formField]="field" fieldName="test-field">
         </ngx-signal-form-field>`,
         {
           imports: [NgxSignalFormFieldComponent],
@@ -465,7 +465,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should have the correct structure with content wrapper', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field" fieldName="test-field">
+        `<ngx-signal-form-field [formField]="field" fieldName="test-field">
         </ngx-signal-form-field>`,
         {
           imports: [NgxSignalFormFieldComponent],
@@ -488,7 +488,7 @@ describe('NgxSignalFormFieldComponent', () => {
   describe('Content projection', () => {
     it('should project label and input content', async () => {
       await render(
-        `<ngx-signal-form-field [field]="field" fieldName="test-field">
+        `<ngx-signal-form-field [formField]="field" fieldName="test-field">
           <label for="email">Email</label>
           <input id="email" type="email" />
         </ngx-signal-form-field>`,
@@ -509,7 +509,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should project multiple form controls', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field" fieldName="test-field">
+        `<ngx-signal-form-field [formField]="field" fieldName="test-field">
           <label for="username">Username</label>
           <input id="username" type="text" />
           <span class="hint">Choose a unique username</span>
@@ -533,7 +533,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should project complex nested content', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field" fieldName="test-field">
+        `<ngx-signal-form-field [formField]="field" fieldName="test-field">
           <div class="label-wrapper">
             <label for="password">Password</label>
             <button type="button">Show</button>
@@ -564,7 +564,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should handle empty content gracefully', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field" fieldName="test-field">
+        `<ngx-signal-form-field [formField]="field" fieldName="test-field">
         </ngx-signal-form-field>`,
         {
           imports: [NgxSignalFormFieldComponent],
@@ -588,7 +588,7 @@ describe('NgxSignalFormFieldComponent', () => {
   describe('Layout behavior', () => {
     it('should render form field wrapper that contains projected content', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field" fieldName="test-field">
+        `<ngx-signal-form-field [formField]="field" fieldName="test-field">
           <label for="test-input">Test Label</label>
           <input type="text" id="test-input" />
         </ngx-signal-form-field>`,
@@ -613,7 +613,7 @@ describe('NgxSignalFormFieldComponent', () => {
   describe('Integration scenarios', () => {
     it('should work with textarea elements', async () => {
       await render(
-        `<ngx-signal-form-field [field]="field" fieldName="test-field">
+        `<ngx-signal-form-field [formField]="field" fieldName="test-field">
           <label for="bio">Bio</label>
           <textarea id="bio" rows="4"></textarea>
         </ngx-signal-form-field>`,
@@ -634,7 +634,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should work with select elements', async () => {
       await render(
-        `<ngx-signal-form-field [field]="field" fieldName="test-field">
+        `<ngx-signal-form-field [formField]="field" fieldName="test-field">
           <label for="country">Country</label>
           <select id="country">
             <option value="us">USA</option>
@@ -658,7 +658,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should work with checkbox inputs', async () => {
       await render(
-        `<ngx-signal-form-field [field]="field" fieldName="test-field">
+        `<ngx-signal-form-field [formField]="field" fieldName="test-field">
           <label>
             <input type="checkbox" id="agree" />
             I agree to the terms
@@ -681,7 +681,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should work with radio button groups', async () => {
       await render(
-        `<ngx-signal-form-field [field]="field" fieldName="test-field">
+        `<ngx-signal-form-field [formField]="field" fieldName="test-field">
           <fieldset>
             <legend>Choose size</legend>
             <label>
@@ -713,7 +713,7 @@ describe('NgxSignalFormFieldComponent', () => {
   describe('Accessibility', () => {
     it('should maintain label-input associations', async () => {
       await render(
-        `<ngx-signal-form-field [field]="field" fieldName="test-field">
+        `<ngx-signal-form-field [formField]="field" fieldName="test-field">
           <label for="email">Email Address</label>
           <input id="email" type="email" />
         </ngx-signal-form-field>`,
@@ -734,7 +734,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should not interfere with aria attributes on inputs', async () => {
       await render(
-        `<ngx-signal-form-field [field]="field" fieldName="test-field">
+        `<ngx-signal-form-field [formField]="field" fieldName="test-field">
           <label for="phone">Phone</label>
           <input
             id="phone"
@@ -768,7 +768,7 @@ describe('NgxSignalFormFieldComponent', () => {
       });
 
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field" fieldName="test-field">
+        `<ngx-signal-form-field [formField]="field" fieldName="test-field">
           <label for="test">Test</label>
           <input id="test" type="text" />
         </ngx-signal-form-field>`,
@@ -793,7 +793,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
       const { container } = await render(
         `<ngx-signal-form-field
-          [field]="field"
+          [formField]="field"
           fieldName="test-field"
           [showErrors]="false"
         >
@@ -816,7 +816,7 @@ describe('NgxSignalFormFieldComponent', () => {
   describe('Form element support', () => {
     it('should resolve field name from input element', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <label for="username">Username</label>
           <input id="username" type="text" />
         </ngx-signal-form-field>`,
@@ -835,7 +835,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should resolve field name from textarea element', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <label for="description">Description</label>
           <textarea id="description"></textarea>
         </ngx-signal-form-field>`,
@@ -854,7 +854,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should resolve field name from select element', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <label for="country">Country</label>
           <select id="country">
             <option value="us">United States</option>
@@ -876,7 +876,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should resolve field name from button element', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <label for="custom-control">Custom Control</label>
           <button id="custom-control" type="button">Select Value</button>
         </ngx-signal-form-field>`,
@@ -898,7 +898,7 @@ describe('NgxSignalFormFieldComponent', () => {
   describe('Prefix/Suffix Projection', () => {
     it('should project prefix content', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <span prefix aria-hidden="true">🔍</span>
           <label for="search">Search</label>
           <input id="search" type="text" />
@@ -919,7 +919,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should project suffix content', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <label for="password">Password</label>
           <input id="password" type="password" />
           <button suffix type="button">Show</button>
@@ -940,7 +940,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should project both prefix and suffix content', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <span prefix aria-hidden="true">$</span>
           <label for="amount">Amount</label>
           <input id="amount" type="number" />
@@ -963,7 +963,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should maintain proper layout with prefix', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <span prefix>Icon</span>
           <label for="email">Email</label>
           <input id="email" type="email" />
@@ -996,7 +996,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should hide empty prefix slot', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <label for="email">Email</label>
           <input id="email" type="email" />
         </ngx-signal-form-field>`,
@@ -1018,7 +1018,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should hide empty suffix slot', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <label for="email">Email</label>
           <input id="email" type="email" />
         </ngx-signal-form-field>`,
@@ -1040,7 +1040,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should support interactive suffix elements', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <label for="search">Search</label>
           <input id="search" type="text" />
           <button suffix type="button">Clear</button>
@@ -1062,7 +1062,7 @@ describe('NgxSignalFormFieldComponent', () => {
 
     it('should support multiple prefix elements', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [field]="field">
+        `<ngx-signal-form-field [formField]="field">
           <span prefix>@</span>
           <label for="username">Username</label>
           <input id="username" type="text" />

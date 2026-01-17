@@ -34,7 +34,7 @@ Angular 21+ Signal Forms is an **experimental API** providing a reactive, signal
 | **Bundle Size**      | ✅ Smaller (no RxJS for forms)    | Larger                            | Medium (FormsModule)              |
 | **Performance**      | ✅ Excellent (no Zone.js)         | Good                              | Good                              |
 | **Testing**          | ✅ Direct signal manipulation     | TestBed + subscriptions           | TestBed + DOM                     |
-| **Template Syntax**  | `[field]` directive               | `[formGroup]` + `formControlName` | `[(ngModel)]` + directives        |
+| **Template Syntax**  | `[formField]` directive               | `[formGroup]` + `formControlName` | `[(ngModel)]` + directives        |
 | **CSS Classes**      | ❌ No `ng-*` classes added        | ✅ `ng-valid`, `ng-invalid`, etc. | ✅ `ng-valid`, `ng-invalid`, etc. |
 | **Name Attribute**   | ✅ Auto-generated from path       | ⚠️ Manual via `formControlName`   | ⚠️ Manual required                |
 | **State Signals**    | `touched()`, `dirty()` only       | `untouched`, `pristine`, etc.     | `untouched`, `pristine`, etc.     |
@@ -54,7 +54,7 @@ import {
 } from '@angular/core';
 import {
   form,
-  Field,
+  FormField,
   required,
   minLength,
   email,
@@ -74,7 +74,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush, // Required
   template: `
     <form (ngSubmit)="save()">
-      <input [field]="userForm.name" />
+      <input [formField]="userForm.name" />
       @if (userForm.name().invalid() && userForm.name().touched()) {
         @for (error of userForm.name().errors(); track error.kind) {
           <div>{{ error.message }}</div>
@@ -173,8 +173,8 @@ form(signal(data), (path) => {
 <!-- In template: conditionally render based on hidden state -->
 @if (!form.shippingAddress().hidden()) {
 <div>
-  <input [field]="form.shippingAddress.street" />
-  <input [field]="form.shippingAddress.city" />
+  <input [formField]="form.shippingAddress.street" />
+  <input [formField]="form.shippingAddress.city" />
 </div>
 }
 ```
@@ -426,7 +426,7 @@ Signal Forms do **not** add CSS classes like `ng-valid`, `ng-invalid`, `ng-touch
 2. Add classes manually based on signals:
    ```html
    <input
-     [field]="form.email"
+     [formField]="form.email"
      [class.invalid]="form.email().invalid()"
      [class.touched]="form.email().touched()"
    />
@@ -444,7 +444,7 @@ form(signal({ user: { email: '' } }), (path) => {
 
 ```html
 <!-- Resulting HTML will have: name="user.email" -->
-<input [field]="form.user.email" />
+<input [formField]="form.user.email" />
 ```
 
 This improves accessibility by ensuring unique names for form controls without manual configuration.
@@ -499,7 +499,7 @@ Angular Signal Forms (unlike Reactive/Template-driven forms) does **not** automa
 ```html
 <!-- ✅ RECOMMENDED - Toolkit auto-adds novalidate -->
 <form [ngxSignalForm]="userForm" (ngSubmit)="save()">
-  <input [field]="userForm.email" />
+  <input [formField]="userForm.email" />
   <button type="submit">Submit</button>
 </form>
 ```
@@ -511,7 +511,7 @@ If **not** using the toolkit, you must manually add `novalidate`:
 ```html
 <!-- ✅ CORRECT - Manual novalidate required -->
 <form (ngSubmit)="save()" novalidate>
-  <input [field]="userForm.email" />
+  <input [formField]="userForm.email" />
   <button type="submit">Submit</button>
 </form>
 
@@ -527,10 +527,10 @@ Never rely on HTML5 validation attributes alone—always add Angular validators:
 
 ```html
 <!-- ❌ WRONG - Relying only on HTML5 validation (won't work properly) -->
-<input [field]="userForm.email" type="email" required />
+<input [formField]="userForm.email" type="email" required />
 
 <!-- ✅ CORRECT - Combine HTML5 attributes with Angular validators -->
-<input id="email" [field]="userForm.email" type="email" aria-required="true" />
+<input id="email" [formField]="userForm.email" type="email" aria-required="true" />
 
 <!-- ✅ Angular validator in component -->
 <!-- (path) => {
@@ -551,9 +551,9 @@ Never rely on HTML5 validation attributes alone—always add Angular validators:
 // With toolkit (novalidate automatically added)
 <form [ngxSignalForm]="userForm" (ngSubmit)="save()">
   <!-- Field binding -->
-  <input [field]="userForm.name" />
-  <textarea [field]="userForm.bio" />
-  <select [field]="userForm.category" />
+  <input [formField]="userForm.name" />
+  <textarea [formField]="userForm.bio" />
+  <select [formField]="userForm.category" />
 
   <!-- Error display -->
   @if (form.email().invalid() && form.email().touched()) {
@@ -578,7 +578,7 @@ Never rely on HTML5 validation attributes alone—always add Angular validators:
 @Component({
   template: `
     @for (skill of skillsForm.skills; track $index; let i = $index) {
-      <input [field]="skillsForm.skills[i].name" />
+      <input [formField]="skillsForm.skills[i].name" />
       <button (click)="removeSkill(i)">Remove</button>
     }
     <button (click)="addSkill()">Add</button>
@@ -822,7 +822,7 @@ customError({
 | ------------------------------- | -------------------------------------------------------- |
 | `FormBuilder` + `fb.group({})`  | `signal({})` + `form(signal, validators)`                |
 | `[formGroup]="form"`            | N/A (no form directive needed)                           |
-| `formFieldName="field"`         | `[field]="form.field"`                                   |
+| `formFieldName="field"`         | `[formField]="form.field"`                                   |
 | `form.get('field')`             | `form.field()`                                           |
 | `Validators.required`           | `required(path.field, { message: '...' })`               |
 | `Validators.minLength(3)`       | `minLength(path.field, 3, { message: '...' })`           |
@@ -863,7 +863,7 @@ export class UserFormComponent {
 | Template Driven Forms            | Signal Forms                                   |
 | -------------------------------- | ---------------------------------------------- |
 | `FormsModule`                    | `Control` directive                            |
-| `[(ngModel)]="model.field"`      | `[field]="form.field"`                         |
+| `[(ngModel)]="model.field"`      | `[formField]="form.field"`                         |
 | `#fieldRef="ngModel"`            | Direct access: `form.field()`                  |
 | `<input required minlength="3">` | Code-based: `required(path.field, {...})`      |
 | `fieldRef.errors?.['required']`  | `form.field().errors()[0].kind === 'required'` |
@@ -904,7 +904,7 @@ export class UserFormComponent {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form (ngSubmit)="save()">
-      <input [field]="userForm.name" />
+      <input [formField]="userForm.name" />
       @if (userForm.name().invalid()) {
         @for (error of userForm.name().errors(); track error.kind) {
           <div>{{ error.message }}</div>
@@ -973,7 +973,7 @@ export class UserFormComponent {
 
    // Or add classes manually
    <input
-     [field]="form.email"
+     [formField]="form.email"
      [class.invalid]="form.email().invalid()"
    />
    ```
@@ -1087,7 +1087,7 @@ The toolkit enhances Signal Forms with:
 - ✅ **WCAG 2.2 compliance** by default
 - ✅ **67% less boilerplate** code
 
-_Note: Angular Signal Forms' `[field]` directive automatically handles marking fields as touched on blur._
+_Note: Angular Signal Forms' `[formField]` directive automatically handles marking fields as touched on blur._
 
 ### Quick Install
 
@@ -1101,11 +1101,11 @@ npm install @ngx-signal-forms/toolkit
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
-  imports: [Field, NgxSignalFormFieldComponent],
+  imports: [FormField, NgxSignalFormFieldComponent],
   template: `
-    <ngx-signal-form-field [field]="form.email" fieldName="email">
+    <ngx-signal-form-field [formField]="form.email" fieldName="email">
       <label for="email">Email</label>
-      <input id="email" [field]="form.email" />
+      <input id="email" [formField]="form.email" />
       <!-- Automatic ARIA, touch handling, and error display -->
     </ngx-signal-form-field>
   `,

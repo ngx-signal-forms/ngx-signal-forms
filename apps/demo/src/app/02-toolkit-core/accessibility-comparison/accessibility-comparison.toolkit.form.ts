@@ -5,7 +5,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { Field, form, submit } from '@angular/forms/signals';
+import { FormField, form, submit } from '@angular/forms/signals';
 import {
   focusFirstInvalid,
   NgxSignalFormToolkit,
@@ -23,7 +23,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
 @Component({
   selector: 'ngx-accessibility-toolkit-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
     <form
       #formElement
@@ -33,14 +33,14 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
     >
       <!-- Email Field - Toolkit Handles Everything -->
       <ngx-signal-form-field
-        [field]="signupForm.email"
+        [formField]="signupForm.email"
         fieldName="toolkit-email"
       >
         <label for="toolkit-email" class="form-label"> Email Address * </label>
         <input
           id="toolkit-email"
           type="email"
-          [field]="signupForm.email"
+          [formField]="signupForm.email"
           class="form-input"
           placeholder="you@example.com"
         />
@@ -48,14 +48,14 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
 
       <!-- Password Field - Toolkit Handles Everything -->
       <ngx-signal-form-field
-        [field]="signupForm.password"
+        [formField]="signupForm.password"
         fieldName="toolkit-password"
       >
         <label for="toolkit-password" class="form-label"> Password * </label>
         <input
           id="toolkit-password"
           type="password"
-          [field]="signupForm.password"
+          [formField]="signupForm.password"
           class="form-input"
           placeholder="At least 8 characters"
         />
@@ -63,7 +63,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
 
       <!-- Confirm Password Field - Toolkit Handles Everything -->
       <ngx-signal-form-field
-        [field]="signupForm.confirmPassword"
+        [formField]="signupForm.confirmPassword"
         fieldName="toolkit-confirm-password"
       >
         <label for="toolkit-confirm-password" class="form-label">
@@ -72,7 +72,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
         <input
           id="toolkit-confirm-password"
           type="password"
-          [field]="signupForm.confirmPassword"
+          [formField]="signupForm.confirmPassword"
           class="form-input"
           placeholder="Re-enter password"
         />

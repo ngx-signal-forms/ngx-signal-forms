@@ -80,7 +80,7 @@ export const OUTLINE_FORM_FIELD_CONTENT = {
         title: '✅ Array Validation Pattern',
         items: [
           '<strong>Field-Level:</strong> <code>ngx-signal-form-field</code> auto-shows errors for individual inputs',
-          '<strong>Array-Level:</strong> Use <code>&lt;ngx-signal-form-error [field]="form.array"&gt;</code> for combined errors',
+          '<strong>Array-Level:</strong> Use <code>&lt;ngx-signal-form-error [formField]="form.array"&gt;</code> for combined errors',
           '<strong>Use customError():</strong> All validators must return <code>customError({ kind, message })</code>',
           '<strong>Examples:</strong> Duplicate detection, minimum array length, cross-item validations',
         ],

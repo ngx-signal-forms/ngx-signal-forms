@@ -180,9 +180,9 @@ packages/toolkit/
 
 ```typescript
 selector: `
-  input[field]:not([ngxSignalFormAutoAriaDisabled]):not([type="radio"]):not([type="checkbox"]),
-  textarea[field]:not([ngxSignalFormAutoAriaDisabled]),
-  select[field]:not([ngxSignalFormAutoAriaDisabled])
+  input[formField]:not([ngxSignalFormAutoAriaDisabled]):not([type="radio"]):not([type="checkbox"]),
+  textarea[formField]:not([ngxSignalFormAutoAriaDisabled]),
+  select[formField]:not([ngxSignalFormAutoAriaDisabled])
 `;
 ```
 
@@ -224,9 +224,9 @@ host: {
 
 ```typescript
 selector: `
-  input[field]:not([type="checkbox"]):not([type="radio"]):not([ngxSignalFormAutoTouchDisabled]),
-  textarea[field]:not([ngxSignalFormAutoTouchDisabled]),
-  select[field]:not([ngxSignalFormAutoTouchDisabled])
+  input[formField]:not([type="checkbox"]):not([type="radio"]):not([ngxSignalFormAutoTouchDisabled]),
+  textarea[formField]:not([ngxSignalFormAutoTouchDisabled]),
+  select[formField]:not([ngxSignalFormAutoTouchDisabled])
 `;
 ```
 
@@ -381,7 +381,7 @@ protected readonly ariaBusy = computed(() => {
         <ng-content />
       </div>
       @if (field()) {
-        <ngx-signal-form-error [field]="field()!" />
+        <ngx-signal-form-error [formField]="field()!" />
       }
     </div>
   `,
@@ -788,7 +788,7 @@ ngx-vest-forms v2 (PR #52) provides excellent patterns for form enhancement that
 
 ```typescript
 @Directive({
-  selector: 'input[field]:not([ngxVestFormAutoAriaDisabled])',
+  selector: 'input[formField]:not([ngxVestFormAutoAriaDisabled])',
   host: {
     '[attr.aria-invalid]': 'ariaInvalid()',
     '[attr.aria-describedby]': 'ariaDescribedBy()'
@@ -845,7 +845,7 @@ type ErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit' | 'manual';
   template: `
     <div class="form-field">
       <div class="content"><ng-content /></div>
-      <ngx-form-error [field]="field()" />
+      <ngx-form-error [formField]="field()" />
     </div>
   `
 })
@@ -1230,7 +1230,7 @@ These patterns work seamlessly with Signal Forms validation!
 
 #### 2. Directive Selector Conflicts ⚠️ MEDIUM
 
-**Risk**: `[field]` selector could conflict with other libraries.
+**Risk**: `[formField]` selector could conflict with other libraries.
 
 **Mitigation**:
 

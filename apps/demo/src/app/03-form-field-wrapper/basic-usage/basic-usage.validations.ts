@@ -1,5 +1,4 @@
 import {
-  customError,
   email,
   max,
   maxLength,
@@ -73,10 +72,10 @@ export const basicUsageSchema = schema<BasicUsageModel>((path) => {
     const value = ctx.value();
     if (value && value.trim()) {
       if (!/^https?:\/\/.+\..+/i.test(value)) {
-        return customError({
+        return {
           kind: 'invalid-url',
           message: 'Website must be a valid URL',
-        });
+        };
       }
     }
     return null;
@@ -102,10 +101,10 @@ export const basicUsageSchema = schema<BasicUsageModel>((path) => {
   // Checkbox
   validate(path.agreeToTerms, (ctx) => {
     if (!ctx.value()) {
-      return customError({
+      return {
         kind: 'required',
         message: 'You must agree to the terms and conditions',
-      });
+      };
     }
     return null;
   });

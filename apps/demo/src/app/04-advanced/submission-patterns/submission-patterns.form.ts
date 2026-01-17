@@ -5,7 +5,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Field, form, submit } from '@angular/forms/signals';
+import { FormField, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
 import {
   NGX_SIGNAL_FORM_CONTEXT,
@@ -27,7 +27,7 @@ import { submissionSchema } from './submission-patterns.validations';
 @Component({
   selector: 'ngx-submission-patterns',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Field, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
     <form
       [ngxSignalForm]="registrationForm"
@@ -126,14 +126,14 @@ import { submissionSchema } from './submission-patterns.validations';
       <div class="space-y-6">
         <!-- Username field -->
         <ngx-signal-form-field
-          [field]="registrationForm.username"
+          [formField]="registrationForm.username"
           fieldName="username"
         >
           <label for="username">Username *</label>
           <input
             id="username"
             type="text"
-            [field]="registrationForm.username"
+            [formField]="registrationForm.username"
             placeholder="Enter username"
             class="form-input"
           />
@@ -144,14 +144,14 @@ import { submissionSchema } from './submission-patterns.validations';
 
         <!-- Password field -->
         <ngx-signal-form-field
-          [field]="registrationForm.password"
+          [formField]="registrationForm.password"
           fieldName="password"
         >
           <label for="password">Password *</label>
           <input
             id="password"
             type="password"
-            [field]="registrationForm.password"
+            [formField]="registrationForm.password"
             placeholder="Enter password"
             class="form-input"
           />
@@ -162,14 +162,14 @@ import { submissionSchema } from './submission-patterns.validations';
 
         <!-- Confirm Password field -->
         <ngx-signal-form-field
-          [field]="registrationForm.confirmPassword"
+          [formField]="registrationForm.confirmPassword"
           fieldName="confirmPassword"
         >
           <label for="confirmPassword">Confirm Password *</label>
           <input
             id="confirmPassword"
             type="password"
-            [field]="registrationForm.confirmPassword"
+            [formField]="registrationForm.confirmPassword"
             placeholder="Re-enter password"
             class="form-input"
           />
@@ -233,7 +233,7 @@ import { submissionSchema } from './submission-patterns.validations';
         >
           <input
             type="checkbox"
-            [field]="registrationForm.simulateServerError"
+            [formField]="registrationForm.simulateServerError"
             class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
           />
           <span>Simulate server error (for testing)</span>

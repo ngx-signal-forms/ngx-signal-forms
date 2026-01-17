@@ -65,11 +65,11 @@ This section demonstrates the **"batteries included"** approach using `NgxSignal
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
-  imports: [Field, NgxSignalFormFieldComponent],
+  imports: [FormField, NgxSignalFormFieldComponent],
   template: `
-    <ngx-signal-form-field [field]="form.email" fieldName="email">
+    <ngx-signal-form-field [formField]="form.email" fieldName="email">
       <label for="email">Email</label>
-      <input id="email" [field]="form.email" />
+      <input id="email" [formField]="form.email" />
     </ngx-signal-form-field>
   `,
 })
@@ -94,10 +94,10 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
 The component uses `<ng-content>` to project your custom content:
 
 ```html
-<ngx-signal-form-field [field]="form.email" fieldName="email">
+<ngx-signal-form-field [formField]="form.email" fieldName="email">
   <!-- Everything here is projected -->
   <label for="email">Email Address</label>
-  <input id="email" type="email" [field]="form.email" />
+  <input id="email" type="email" [formField]="form.email" />
   <p class="hint">We'll never share your email</p>
 </ngx-signal-form-field>
 ```
@@ -110,14 +110,14 @@ The component uses `<ng-content>` to project your custom content:
 <!-- ~15 lines per field -->
 <div class="form-field">
   <label for="email">Email</label>
-  <input id="email" [field]="form.email" />
-  <ngx-signal-form-error [field]="form.email" fieldName="email" />
+  <input id="email" [formField]="form.email" />
+  <ngx-signal-form-error [formField]="form.email" fieldName="email" />
 </div>
 
 <div class="form-field">
   <label for="password">Password</label>
-  <input id="password" type="password" [field]="form.password" />
-  <ngx-signal-form-error [field]="form.password" fieldName="password" />
+  <input id="password" type="password" [formField]="form.password" />
+  <ngx-signal-form-error [formField]="form.password" fieldName="password" />
 </div>
 ```
 
@@ -125,14 +125,14 @@ The component uses `<ng-content>` to project your custom content:
 
 ```html
 <!-- ~5 lines per field -->
-<ngx-signal-form-field [field]="form.email" fieldName="email">
+<ngx-signal-form-field [formField]="form.email" fieldName="email">
   <label for="email">Email</label>
-  <input id="email" [field]="form.email" />
+  <input id="email" [formField]="form.email" />
 </ngx-signal-form-field>
 
-<ngx-signal-form-field [field]="form.password" fieldName="password">
+<ngx-signal-form-field [formField]="form.password" fieldName="password">
   <label for="password">Password</label>
-  <input id="password" type="password" [field]="form.password" />
+  <input id="password" type="password" [formField]="form.password" />
 </ngx-signal-form-field>
 ```
 
@@ -208,11 +208,11 @@ validate(path, (ctx) => {
 ```html
 @for (contact of form.contacts; track $index; let i = $index) {
 <ngx-signal-form-field
-  [field]="form.contacts[i].value"
+  [formField]="form.contacts[i].value"
   [fieldName]="'contact-' + i"
 >
   <label [for]="'contact-' + i">Contact {{ i + 1 }}</label>
-  <input [id]="'contact-' + i" [field]="form.contacts[i].value" />
+  <input [id]="'contact-' + i" [formField]="form.contacts[i].value" />
 </ngx-signal-form-field>
 }
 ```
@@ -226,7 +226,7 @@ validate(path, (ctx) => {
 <form [ngxSignalForm]="form" [errorStrategy]="'on-touch'">
   <!-- But password confirmation shows immediately -->
   <ngx-signal-form-field
-    [field]="form.confirmPassword"
+    [formField]="form.confirmPassword"
     fieldName="confirmPassword"
     [strategy]="'immediate'"
   >
@@ -234,7 +234,7 @@ validate(path, (ctx) => {
     <input
       id="confirmPassword"
       type="password"
-      [field]="form.confirmPassword"
+      [formField]="form.confirmPassword"
     />
   </ngx-signal-form-field>
 </form>
@@ -348,13 +348,13 @@ ngx-signal-form-field {
 
 ```html
 <!-- ❌ Wrong: fieldName doesn't match id -->
-<ngx-signal-form-field [field]="form.email" fieldName="userEmail">
-  <input id="email" [field]="form.email" />
+<ngx-signal-form-field [formField]="form.email" fieldName="userEmail">
+  <input id="email" [formField]="form.email" />
 </ngx-signal-form-field>
 
 <!-- ✅ Correct: fieldName matches id -->
-<ngx-signal-form-field [field]="form.email" fieldName="email">
-  <input id="email" [field]="form.email" />
+<ngx-signal-form-field [formField]="form.email" fieldName="email">
+  <input id="email" [formField]="form.email" />
 </ngx-signal-form-field>
 ```
 

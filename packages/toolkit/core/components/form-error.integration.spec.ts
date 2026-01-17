@@ -1,5 +1,5 @@
 import { Component, signal } from '@angular/core';
-import { Field, form, required, schema } from '@angular/forms/signals';
+import { FormField, form, required, schema } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxSignalFormDirective } from '../directives/ngx-signal-form.directive';
@@ -14,12 +14,12 @@ describe('NgxSignalFormErrorComponent (integration)', () => {
     // Define a test component to ensure DI context for Signal Forms
     @Component({
       selector: 'test-form-error',
-      imports: [Field, NgxSignalFormDirective, NgxSignalFormErrorComponent],
+      imports: [FormField, NgxSignalFormDirective, NgxSignalFormErrorComponent],
       template: `
         <form [ngxSignalForm]="contactForm" [errorStrategy]="errorStrategy">
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
           />
         </form>

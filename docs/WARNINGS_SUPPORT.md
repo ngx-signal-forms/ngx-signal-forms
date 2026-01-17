@@ -183,7 +183,7 @@ The component automatically separates errors and warnings:
   <label for="email">Email *</label>
   <input
     id="email"
-    [field]="form.email"
+    [formField]="form.email"
     [attr.aria-invalid]="form.email().invalid()"
     [attr.aria-describedby]="
       form.email().invalid()
@@ -194,7 +194,7 @@ The component automatically separates errors and warnings:
 
   <!-- Displays both errors and warnings -->
   <ngx-signal-form-error
-    [field]="form.email"
+    [formField]="form.email"
     fieldName="email"
     [hasSubmitted]="hasSubmitted"
   />
@@ -240,9 +240,9 @@ The component automatically separates errors and warnings:
 The form field wrapper automatically handles both:
 
 ```html
-<sft-form-field [field]="form.password" fieldName="password">
+<sft-form-field [formField]="form.password" fieldName="password">
   <label for="password">Password *</label>
-  <input id="password" type="password" [field]="form.password" />
+  <input id="password" type="password" [formField]="form.password" />
   <!-- Errors and warnings displayed automatically -->
 </sft-form-field>
 ```

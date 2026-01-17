@@ -245,21 +245,21 @@ Should this be v1.1 or v1.x? Description text is common in forms but not critica
 
 ```html
 <!-- Option A: Separate component -->
-<ngx-signal-form-field [field]="form.email" outline>
+<ngx-signal-form-field [formField]="form.email" outline>
   <label for="email">Email Address</label>
   <ngx-signal-form-field-description>
     Enter the email you use for business communications
   </ngx-signal-form-field-description>
-  <input id="email" [field]="form.email" />
+  <input id="email" [formField]="form.email" />
 </ngx-signal-form-field>
 
 <!-- Option B: Slot-based (more flexible) -->
-<ngx-signal-form-field [field]="form.email" outline>
+<ngx-signal-form-field [formField]="form.email" outline>
   <label for="email">Email Address</label>
   <span slot="description"
     >Enter the email you use for business communications</span
   >
-  <input id="email" [field]="form.email" />
+  <input id="email" [formField]="form.email" />
 </ngx-signal-form-field>
 ```
 
@@ -289,16 +289,16 @@ Should this be v1.1 or v1.x? Description text is common in forms but not critica
 
 ```html
 <!-- Prefix icon (left side) -->
-<ngx-signal-form-field [field]="form.startDate" outline>
+<ngx-signal-form-field [formField]="form.startDate" outline>
   <label for="startDate">Start Date</label>
   <svg slot="prefix" class="calendar-icon">...</svg>
-  <input id="startDate" [field]="form.startDate" type="date" />
+  <input id="startDate" [formField]="form.startDate" type="date" />
 </ngx-signal-form-field>
 
 <!-- Suffix icon (right side) -->
-<ngx-signal-form-field [field]="form.username" outline>
+<ngx-signal-form-field [formField]="form.username" outline>
   <label for="username">Username</label>
-  <input id="username" [field]="form.username" />
+  <input id="username" [formField]="form.username" />
   @if (form.username().pending()) {
   <svg slot="suffix" class="spinner">...</svg>
   } @else if (form.username().valid()) {
@@ -307,10 +307,10 @@ Should this be v1.1 or v1.x? Description text is common in forms but not critica
 </ngx-signal-form-field>
 
 <!-- Both prefix and suffix -->
-<ngx-signal-form-field [field]="form.amount" outline>
+<ngx-signal-form-field [formField]="form.amount" outline>
   <label for="amount">Amount</label>
   <span slot="prefix">$</span>
-  <input id="amount" [field]="form.amount" type="number" />
+  <input id="amount" [formField]="form.amount" type="number" />
   <span slot="suffix">USD</span>
 </ngx-signal-form-field>
 ```
@@ -392,7 +392,7 @@ export class NgxFloatingLabelDirective {}
 **Proposed API:**
 
 ```html
-<ngx-signal-form-field-group [field]="form.interests" legend="Interests">
+<ngx-signal-form-field-group [formField]="form.interests" legend="Interests">
   <ngx-signal-form-field-checkbox value="sports">
     Sports
   </ngx-signal-form-field-checkbox>
@@ -404,7 +404,7 @@ export class NgxFloatingLabelDirective {}
   </ngx-signal-form-field-checkbox>
 </ngx-signal-form-field-group>
 
-<ngx-signal-form-field-group [field]="form.plan" legend="Plan">
+<ngx-signal-form-field-group [formField]="form.plan" legend="Plan">
   <ngx-signal-form-field-radio value="free">Free</ngx-signal-form-field-radio>
   <ngx-signal-form-field-radio value="pro">Pro</ngx-signal-form-field-radio>
   <ngx-signal-form-field-radio value="enterprise"
@@ -423,8 +423,8 @@ Requires new component architecture (group state management, keyboard navigation
 **Priority:** Low | **Effort:** Low (1 hour)
 
 ```html
-<ngx-signal-form-field [field]="form.search" size="sm" outline>
-  <input [field]="form.search" />
+<ngx-signal-form-field [formField]="form.search" size="sm" outline>
+  <input [formField]="form.search" />
 </ngx-signal-form-field>
 ```
 
@@ -438,8 +438,8 @@ Requires new component architecture (group state management, keyboard navigation
 
 ```html
 <ngx-signal-form-row columns="2" gap="1rem">
-  <ngx-signal-form-field [field]="form.firstName">...</ngx-signal-form-field>
-  <ngx-signal-form-field [field]="form.lastName">...</ngx-signal-form-field>
+  <ngx-signal-form-field [formField]="form.firstName">...</ngx-signal-form-field>
+  <ngx-signal-form-field [formField]="form.lastName">...</ngx-signal-form-field>
 </ngx-signal-form-row>
 ```
 
@@ -566,7 +566,7 @@ All v1.0 code continues to work without modification. New features are opt-in.
 
 ```typescript
 // Repeated per component
-<ngx-signal-form-field [field]="form.email" outline [showRequiredMarker]="true">
+<ngx-signal-form-field [formField]="form.email" outline [showRequiredMarker]="true">
 ```
 
 **After (v1.1):**
@@ -580,7 +580,7 @@ providers: [
 ]
 
 // Components - No need to repeat
-<ngx-signal-form-field [field]="form.email" outline>
+<ngx-signal-form-field [formField]="form.email" outline>
 ```
 
 #### Customize Readonly Appearance

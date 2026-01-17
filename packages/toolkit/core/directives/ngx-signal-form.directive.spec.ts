@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { Field, form, required, schema, submit } from '@angular/forms/signals';
+import { FormField, form, required, schema, submit } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -202,11 +202,11 @@ describe('ngxSignalFormDirective', () => {
     it('should track submission lifecycle with submit() helper', async () => {
       @Component({
         selector: 'ngx-test-submit-tracking',
-        imports: [Field, NgxSignalFormDirective, ContextDisplayComponent],
+        imports: [FormField, NgxSignalFormDirective, ContextDisplayComponent],
         template: `
           <form [ngxSignalForm]="contactForm" (ngSubmit)="handleSubmit()">
             <ngx-signal-form-context-display />
-            <input id="email" [field]="contactForm.email" />
+            <input id="email" [formField]="contactForm.email" />
             <button type="submit">Submit</button>
           </form>
         `,
@@ -249,11 +249,11 @@ describe('ngxSignalFormDirective', () => {
     it('should reset submission state when form is reset', async () => {
       @Component({
         selector: 'ngx-test-reset',
-        imports: [Field, NgxSignalFormDirective, ContextDisplayComponent],
+        imports: [FormField, NgxSignalFormDirective, ContextDisplayComponent],
         template: `
           <form [ngxSignalForm]="contactForm" (ngSubmit)="handleSubmit()">
             <ngx-signal-form-context-display />
-            <input id="email" [field]="contactForm.email" />
+            <input id="email" [formField]="contactForm.email" />
             <button type="submit">Submit</button>
             <button type="button" (click)="resetForm()">Reset</button>
           </form>
@@ -304,11 +304,11 @@ describe('ngxSignalFormDirective', () => {
       it('should handle valid form submission with both handlers', async () => {
         @Component({
           selector: 'ngx-test-combined',
-          imports: [Field, NgxSignalFormDirective, ContextDisplayComponent],
+          imports: [FormField, NgxSignalFormDirective, ContextDisplayComponent],
           template: `
             <form [ngxSignalForm]="contactForm" (ngSubmit)="onSubmit()">
               <ngx-signal-form-context-display />
-              <input id="email" [field]="contactForm.email" />
+              <input id="email" [formField]="contactForm.email" />
               <button type="submit">Submit</button>
             </form>
           `,
@@ -346,11 +346,11 @@ describe('ngxSignalFormDirective', () => {
       it('should show submitted status for invalid form (submit attempt without submitting transition)', async () => {
         @Component({
           selector: 'ngx-test-invalid',
-          imports: [Field, NgxSignalFormDirective, ContextDisplayComponent],
+          imports: [FormField, NgxSignalFormDirective, ContextDisplayComponent],
           template: `
             <form [ngxSignalForm]="contactForm" (ngSubmit)="onSubmit()">
               <ngx-signal-form-context-display />
-              <input id="email" [field]="contactForm.email" />
+              <input id="email" [formField]="contactForm.email" />
               <button type="submit">Submit</button>
             </form>
           `,
@@ -396,11 +396,11 @@ describe('ngxSignalFormDirective', () => {
       it('should maintain consistent state across multiple invalid submission attempts', async () => {
         @Component({
           selector: 'ngx-test-multi-invalid',
-          imports: [Field, NgxSignalFormDirective, ContextDisplayComponent],
+          imports: [FormField, NgxSignalFormDirective, ContextDisplayComponent],
           template: `
             <form [ngxSignalForm]="contactForm" (ngSubmit)="onSubmit()">
               <ngx-signal-form-context-display />
-              <input id="email" [field]="contactForm.email" />
+              <input id="email" [formField]="contactForm.email" />
               <button type="submit">Submit</button>
             </form>
           `,
@@ -449,11 +449,11 @@ describe('ngxSignalFormDirective', () => {
       it('should reset submitAttempted when form is reset', async () => {
         @Component({
           selector: 'ngx-test-reset-attempt',
-          imports: [Field, NgxSignalFormDirective, ContextDisplayComponent],
+          imports: [FormField, NgxSignalFormDirective, ContextDisplayComponent],
           template: `
             <form [ngxSignalForm]="contactForm" (ngSubmit)="onSubmit()">
               <ngx-signal-form-context-display />
-              <input id="email" [field]="contactForm.email" />
+              <input id="email" [formField]="contactForm.email" />
               <button type="submit">Submit</button>
               <button type="button" (click)="resetForm()">Reset</button>
             </form>

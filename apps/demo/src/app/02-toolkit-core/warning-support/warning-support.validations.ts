@@ -1,6 +1,5 @@
 import type { WritableSignal } from '@angular/core';
 import {
-  customError,
   email,
   form,
   minLength,
@@ -40,10 +39,10 @@ export const passwordFormSchema = schema<PasswordFormModel>((path) => {
   validate(path.username, (ctx) => {
     const value = ctx.value();
     if (value && value.length >= 3 && value.length < 6) {
-      return customError({
+      return {
         kind: 'warn:short-username',
         message: 'Consider using 6+ characters for better security',
-      });
+      };
     }
     return null;
   });
@@ -65,11 +64,11 @@ export const passwordFormSchema = schema<PasswordFormModel>((path) => {
       value &&
       disposableDomains.some((domain) => value.includes(`@${domain}`))
     ) {
-      return customError({
+      return {
         kind: 'warn:disposable-email',
         message:
           'Disposable email addresses may limit account recovery options',
-      });
+      };
     }
     return null;
   });
@@ -84,10 +83,10 @@ export const passwordFormSchema = schema<PasswordFormModel>((path) => {
   validate(path.password, (ctx) => {
     const value = ctx.value();
     if (value && value.length >= 8 && value.length < 12) {
-      return customError({
+      return {
         kind: 'warn:weak-password',
         message: 'Consider using 12+ characters for better security',
-      });
+      };
     }
     return null;
   });
@@ -109,11 +108,11 @@ export const passwordFormSchema = schema<PasswordFormModel>((path) => {
       ].filter(Boolean).length;
 
       if (typeCount < 3) {
-        return customError({
+        return {
           kind: 'warn:simple-password',
           message:
             'Consider mixing uppercase, lowercase, numbers, and special characters',
-        });
+        };
       }
     }
     return null;

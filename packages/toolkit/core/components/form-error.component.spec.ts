@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import type { SubmittedStatus } from '@angular/forms/signals';
-import { email, Field, form, required, schema } from '@angular/forms/signals';
+import { email, FormField, form, required, schema } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -11,12 +11,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should NOT show errors on initial render with untouched field (on-touch strategy)', async () => {
       @Component({
         selector: 'ngx-test-initial-render',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'on-touch'"
             [submittedStatus]="submittedStatus()"
@@ -44,12 +44,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should NOT show errors when form is unsubmitted and field untouched (on-submit strategy)', async () => {
       @Component({
         selector: 'ngx-test-on-submit-untouched',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'on-submit'"
             [submittedStatus]="submittedStatus()"
@@ -78,12 +78,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should render errors when field is invalid and touched (on-touch strategy)', async () => {
       @Component({
         selector: 'ngx-test-touched-invalid',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'on-touch'"
             [submittedStatus]="submittedStatus()"
@@ -115,12 +115,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should not render errors when field is valid', async () => {
       @Component({
         selector: 'ngx-test-valid-field',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'on-touch'"
             [submittedStatus]="submittedStatus()"
@@ -153,12 +153,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should not render errors when field is invalid but not touched (on-touch strategy)', async () => {
       @Component({
         selector: 'ngx-test-invalid-untouched',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'on-touch'"
             [submittedStatus]="submittedStatus()"
@@ -186,12 +186,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should render multiple errors', async () => {
       @Component({
         selector: 'ngx-test-multiple-errors',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'immediate'"
             [submittedStatus]="submittedStatus()"
@@ -227,12 +227,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should show errors immediately with immediate strategy)', async () => {
       @Component({
         selector: 'ngx-test-immediate-strategy',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'immediate'"
             [submittedStatus]="submittedStatus()"
@@ -261,12 +261,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should only show errors after submit with on-submit strategy', async () => {
       @Component({
         selector: 'ngx-test-on-submit-strategy',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'on-submit'"
             [submittedStatus]="submittedStatus()"
@@ -307,12 +307,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should never show errors with manual strategy', async () => {
       @Component({
         selector: 'ngx-test-manual-strategy',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'manual'"
             [submittedStatus]="submittedStatus()"
@@ -345,12 +345,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should show errors after submit even if not touched (on-touch strategy)', async () => {
       @Component({
         selector: 'ngx-test-submitted-untouched',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'on-touch'"
             [submittedStatus]="submittedStatus()"
@@ -377,12 +377,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should show errors during async submission (on-touch strategy)', async () => {
       @Component({
         selector: 'ngx-test-submitting-on-touch',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'on-touch'"
             [submittedStatus]="submittedStatus()"
@@ -410,12 +410,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should show errors during async submission (on-submit strategy)', async () => {
       @Component({
         selector: 'ngx-test-submitting-on-submit',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'on-submit'"
             [submittedStatus]="submittedStatus()"
@@ -443,12 +443,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should maintain error visibility throughout submission lifecycle', async () => {
       @Component({
         selector: 'ngx-test-submission-lifecycle',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'on-submit'"
             [submittedStatus]="submittedStatus()"
@@ -492,12 +492,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should have role="alert" for screen reader announcements', async () => {
       @Component({
         selector: 'ngx-test-wcag-role',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'immediate'"
             [submittedStatus]="submittedStatus()"
@@ -525,12 +525,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should have aria-live="assertive" for errors (immediate announcement)', async () => {
       @Component({
         selector: 'ngx-test-aria-live',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'immediate'"
             [submittedStatus]="submittedStatus()"
@@ -557,12 +557,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should have correct error ID for aria-describedby linking', async () => {
       @Component({
         selector: 'ngx-test-error-id',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'immediate'"
             [submittedStatus]="submittedStatus()"
@@ -589,15 +589,15 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should generate correct error ID for nested fields', async () => {
       @Component({
         selector: 'ngx-test-nested-field-id',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
           <input
             id="user.profile.email"
-            [field]="contactForm.user.profile.email"
+            [formField]="contactForm.user.profile.email"
           />
           <ngx-signal-form-error
-            [field]="contactForm.user.profile.email"
+            [formField]="contactForm.user.profile.email"
             fieldName="user.profile.email"
             [strategy]="'immediate'"
             [submittedStatus]="submittedStatus()"
@@ -626,12 +626,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should handle field without errors gracefully', async () => {
       @Component({
         selector: 'ngx-test-no-errors',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'on-touch'"
             [submittedStatus]="submittedStatus()"
@@ -659,12 +659,12 @@ describe('NgxSignalFormErrorComponent', () => {
     it('should handle empty errors array', async () => {
       @Component({
         selector: 'ngx-test-empty-errors',
-        imports: [Field, NgxSignalFormErrorComponent],
+        imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="email" [field]="contactForm.email" />
+          <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
-            [field]="contactForm.email"
+            [formField]="contactForm.email"
             fieldName="email"
             [strategy]="'on-touch'"
             [submittedStatus]="submittedStatus()"

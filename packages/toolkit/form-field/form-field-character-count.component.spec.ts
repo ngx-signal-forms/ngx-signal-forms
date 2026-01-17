@@ -34,7 +34,7 @@ import { NgxSignalFormFieldCharacterCountComponent } from './form-field-characte
   template: `
     @if (colorThresholds(); as thresholds) {
       <ngx-signal-form-field-character-count
-        [field]="testForm.text"
+        [formField]="testForm.text"
         [maxLength]="maxLength()"
         [position]="position()"
         [showLimitColors]="showLimitColors()"
@@ -42,7 +42,7 @@ import { NgxSignalFormFieldCharacterCountComponent } from './form-field-characte
       />
     } @else {
       <ngx-signal-form-field-character-count
-        [field]="testForm.text"
+        [formField]="testForm.text"
         [maxLength]="maxLength()"
         [position]="position()"
         [showLimitColors]="showLimitColors()"

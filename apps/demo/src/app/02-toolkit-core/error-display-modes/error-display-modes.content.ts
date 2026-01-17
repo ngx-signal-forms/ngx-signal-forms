@@ -49,7 +49,7 @@ export const ERROR_DISPLAY_MODES_CONTENT = {
           '<strong>Immediate:</strong> Type in Name field → Errors appear instantly',
           '<strong>On Touch:</strong> Click field → Tab away → Errors appear',
           '<strong>On Submit:</strong> Click Submit → All errors show at once',
-          '<strong>Manual:</strong> Full Field, no automatic error display',
+          '<strong>Manual:</strong> Full FormField, no automatic error display',
         ],
       },
       {

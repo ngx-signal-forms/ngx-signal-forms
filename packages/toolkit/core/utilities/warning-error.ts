@@ -1,8 +1,4 @@
-import { customError } from '@angular/forms/signals';
-import type {
-  CustomValidationError,
-  ValidationError,
-} from '@angular/forms/signals';
+import type { ValidationError } from '@angular/forms/signals';
 
 /**
  * Type guard to check if a validation error is a warning.
@@ -13,7 +9,7 @@ import type {
  *
  * @example
  * ```typescript
- * const error = customError({ kind: 'required', message: 'Field required' });
+ * const error = { kind: 'required', message: 'Field required' };
  * const warning = warningError('weak-password', 'Consider stronger password');
  *
  * isWarningError(error);   // false
@@ -33,7 +29,7 @@ export function isWarningError(error: ValidationError): boolean {
  *
  * @example
  * ```typescript
- * const error = customError({ kind: 'required', message: 'Field required' });
+ * const error = { kind: 'required', message: 'Field required' };
  * const warning = warningError('weak-password', 'Consider stronger password');
  *
  * isBlockingError(error);   // true
@@ -104,14 +100,14 @@ export function isBlockingError(error: ValidationError): boolean {
  * });
  * ```
  *
- * @see {@link https://angular.dev/api/forms/signals/customError | customError API}
+ * @see {@link https://angular.dev/api/forms/signals/ValidationError | ValidationError API}
  */
 export function warningError(
   kind: string,
   message?: string,
-): CustomValidationError {
-  return customError({
+): ValidationError {
+  return {
     kind: `warn:${kind}`,
     message,
-  });
+  };
 }

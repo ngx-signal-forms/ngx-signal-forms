@@ -63,7 +63,7 @@ export const YOUR_FIRST_FORM_CONTENT = {
         title: '📊 Code Reduction Breakdown',
         items: [
           '<strong>Pure Signal Forms:</strong> 9 ARIA bindings, 3 visibility functions, manual touch',
-          '<strong>Basic Toolkit:</strong> All automated, just [field] + error component',
+          '<strong>Basic Toolkit:</strong> All automated, just [formField] + error component',
           '<strong>Next Level:</strong> Form field wrapper reduces 24% more',
         ],
       },

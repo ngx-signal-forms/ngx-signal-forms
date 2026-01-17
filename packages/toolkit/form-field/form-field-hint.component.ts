@@ -14,9 +14,9 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  *
  * @example Basic hint text
  * ```html
- * <ngx-signal-form-field [field]="form.phone">
+ * <ngx-signal-form-field [formField]="form.phone">
  *   <label for="phone">Phone Number</label>
- *   <input id="phone" [field]="form.phone" />
+ *   <input id="phone" [formField]="form.phone" />
  *   <ngx-signal-form-field-hint>
  *     Format: 123-456-7890
  *   </ngx-signal-form-field-hint>

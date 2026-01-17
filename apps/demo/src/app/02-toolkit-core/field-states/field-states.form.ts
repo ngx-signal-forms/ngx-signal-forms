@@ -4,7 +4,7 @@ import {
   computed,
   signal,
 } from '@angular/core';
-import { Field, form, submit } from '@angular/forms/signals';
+import { FormField, form, submit } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 import {
@@ -20,7 +20,7 @@ import { fieldStatesSchema } from './field-states.validations';
 @Component({
   selector: 'ngx-field-states-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Field, NgxSignalFormToolkit],
+  imports: [FormField, NgxSignalFormToolkit],
   template: `
     <form [ngxSignalForm]="userForm" (ngSubmit)="handleSubmit()">
       @if (userForm().dirty()) {
@@ -46,11 +46,11 @@ import { fieldStatesSchema } from './field-states.validations';
           id="email"
           type="email"
           class="form-input"
-          [field]="userForm.email"
+          [formField]="userForm.email"
           placeholder="you@example.com"
           aria-required="true"
         />
-        <ngx-signal-form-error [field]="userForm.email" fieldName="email" />
+        <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
       </div>
 
       <div class="form-field">
@@ -59,12 +59,12 @@ import { fieldStatesSchema } from './field-states.validations';
           id="username"
           type="text"
           class="form-input"
-          [field]="userForm.username"
+          [formField]="userForm.username"
           placeholder="johndoe"
           aria-required="true"
         />
         <ngx-signal-form-error
-          [field]="userForm.username"
+          [formField]="userForm.username"
           fieldName="username"
         />
       </div>
@@ -75,12 +75,12 @@ import { fieldStatesSchema } from './field-states.validations';
           id="password"
           type="password"
           class="form-input"
-          [field]="userForm.password"
+          [formField]="userForm.password"
           placeholder="••••••••"
           aria-required="true"
         />
         <ngx-signal-form-error
-          [field]="userForm.password"
+          [formField]="userForm.password"
           fieldName="password"
         />
 

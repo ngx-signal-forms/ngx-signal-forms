@@ -1,7 +1,6 @@
 import {
   type SchemaFn,
   applyEach,
-  customError,
   minLength,
   required,
   validate,
@@ -41,10 +40,10 @@ export const outlineFormFieldSchema: SchemaFn<OutlineFormFieldModel> = (
       const municipality = ctx.value();
 
       if (country === 'Nederland' && !municipality) {
-        return customError({
+        return {
           kind: 'required_when_nl',
           message: 'Gemeente is verplicht voor Nederland',
-        });
+        };
       }
       return null;
     });
@@ -55,10 +54,10 @@ export const outlineFormFieldSchema: SchemaFn<OutlineFormFieldModel> = (
       const abroadLocation = ctx.value();
 
       if (country && country !== 'Nederland' && !abroadLocation) {
-        return customError({
+        return {
           kind: 'required_when_abroad',
           message: 'Buitenlandse locatie is verplicht',
-        });
+        };
       }
       return null;
     });
@@ -67,11 +66,11 @@ export const outlineFormFieldSchema: SchemaFn<OutlineFormFieldModel> = (
     validate(factPath.place, (ctx) => {
       const place = ctx.value();
       if (!place || place.trim().length === 0) {
-        return customError({
+        return {
           kind: 'warn:missing_place',
           message:
             'Overweeg een plaatsbeschrijving toe te voegen voor duidelijkheid',
-        });
+        };
       }
       return null;
     });
@@ -80,10 +79,10 @@ export const outlineFormFieldSchema: SchemaFn<OutlineFormFieldModel> = (
     validate(factPath.locationDescription, (ctx) => {
       const description = ctx.value();
       if (description && description.length > 0 && description.length < 10) {
-        return customError({
+        return {
           kind: 'too_short',
           message: 'Locatiebeschrijving moet minimaal 10 karakters bevatten',
-        });
+        };
       }
       return null;
     });
@@ -104,10 +103,10 @@ export const outlineFormFieldSchema: SchemaFn<OutlineFormFieldModel> = (
       validate(offensePath.articles, (ctx) => {
         const articles = ctx.value();
         if (!articles || articles.length === 0) {
-          return customError({
+          return {
             kind: 'no_articles',
             message: 'Tenminste één wetsartikel is verplicht',
-          });
+          };
         }
         return null;
       }); // Validate each article within the offense
@@ -125,11 +124,11 @@ export const outlineFormFieldSchema: SchemaFn<OutlineFormFieldModel> = (
           // Pattern: "SR-" + digits + optional letter (e.g., "SR-310" or "SR-310a")
           const pattern = /^SR-\d+[a-z]?$/i;
           if (!pattern.test(article.trim())) {
-            return customError({
+            return {
               kind: 'warn:invalid_format',
               message:
                 'Wetsartikel heeft meestal formaat: "SR-310" of "SR-310a"',
-            });
+            };
           }
           return null;
         });
@@ -150,10 +149,10 @@ export const outlineFormFieldSchema: SchemaFn<OutlineFormFieldModel> = (
         );
 
         if (duplicates.length > 0) {
-          return customError({
+          return {
             kind: 'duplicate_articles',
             message: `Dubbele wetsartikelen gevonden: ${[...new Set(duplicates)].join(', ')}`,
-          });
+          };
         }
 
         return null;
@@ -164,10 +163,10 @@ export const outlineFormFieldSchema: SchemaFn<OutlineFormFieldModel> = (
     validate(factPath.offenses, (ctx) => {
       const offenses = ctx.value();
       if (!offenses || offenses.length === 0) {
-        return customError({
+        return {
           kind: 'no_offenses',
           message: 'Tenminste één strafbaar feit is verplicht',
-        });
+        };
       }
       return null;
     });

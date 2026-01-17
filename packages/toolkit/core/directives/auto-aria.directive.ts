@@ -25,7 +25,7 @@ import { isBlockingError, isWarningError } from '../utilities/warning-error';
  * - `aria-invalid`: Reflects the field's validation state
  * - `aria-describedby`: Links to error messages for screen readers
  *
- * **Selector Strategy**: Automatically applies to all form controls with `[field]` attribute,
+ * **Selector Strategy**: Automatically applies to all form controls with `[formField]` attribute,
  * except radio buttons and checkboxes (which require special handling).
  *
  * **Opt-out**: Add `ngxSignalFormAutoAriaDisabled` attribute to disable.
@@ -34,19 +34,19 @@ import { isBlockingError, isWarningError } from '../utilities/warning-error';
  * ```html
  * <!-- Automatic ARIA (enabled by default) -->
  * <label for="email">Email</label>
- * <input id="email" [field]="form.email" />
+ * <input id="email" [formField]="form.email" />
  * <!-- Result: aria-invalid="true" aria-describedby="email-error" when invalid -->
  *
  * <!-- Opt-out -->
- * <input [field]="form.custom" ngxSignalFormAutoAriaDisabled />
+ * <input [formField]="form.custom" ngxSignalFormAutoAriaDisabled />
  * ```
  */
 @Directive({
-  // eslint-disable-next-line @angular-eslint/directive-selector -- Targets Angular Signal Forms' [field] directive
+  // eslint-disable-next-line @angular-eslint/directive-selector -- Targets Angular Signal Forms' [formField] directive
   selector: `
-    input[field]:not([ngxSignalFormAutoAriaDisabled]):not([type="radio"]):not([type="checkbox"]),
-    textarea[field]:not([ngxSignalFormAutoAriaDisabled]),
-    select[field]:not([ngxSignalFormAutoAriaDisabled])
+    input[formField]:not([ngxSignalFormAutoAriaDisabled]):not([type="radio"]):not([type="checkbox"]),
+    textarea[formField]:not([ngxSignalFormAutoAriaDisabled]),
+    select[formField]:not([ngxSignalFormAutoAriaDisabled])
   `,
   host: {
     '[attr.aria-invalid]': 'ariaInvalid()',
@@ -63,7 +63,7 @@ export class NgxSignalFormAutoAriaDirective {
    * The Signal Forms field for this field.
    * Accepts a FieldTree (callable function returning FieldState).
    */
-  readonly field = input.required<FieldTree<unknown>>();
+  readonly formField = input.required<FieldTree<unknown>>();
 
   /**
    * Resolved field name for this field.
@@ -81,7 +81,7 @@ export class NgxSignalFormAutoAriaDirective {
    * Respects form-level ErrorDisplayStrategy from ngxSignalForm directive.
    */
   readonly #shouldShowErrors = computed(() => {
-    const field = this.field();
+    const field = this.formField();
     if (!field) return false;
 
     const fieldState = field();
@@ -116,7 +116,7 @@ export class NgxSignalFormAutoAriaDirective {
    * Warnings use same visibility logic as errors.
    */
   readonly #shouldShowWarnings = computed(() => {
-    const field = this.field();
+    const field = this.formField();
     if (!field) return false;
 
     const fieldState = field();
@@ -154,7 +154,7 @@ export class NgxSignalFormAutoAriaDirective {
    * appears when errors should be visible according to the strategy.
    */
   protected readonly ariaInvalid = computed(() => {
-    const field = this.field();
+    const field = this.formField();
     if (!field) return null;
 
     const fieldState = field();
@@ -171,7 +171,7 @@ export class NgxSignalFormAutoAriaDirective {
    * appends error/warning IDs when they should be shown.
    */
   protected readonly ariaDescribedBy = computed(() => {
-    const field = this.field();
+    const field = this.formField();
     if (!field) return this.#existingDescribedBy();
 
     const fieldState = field();

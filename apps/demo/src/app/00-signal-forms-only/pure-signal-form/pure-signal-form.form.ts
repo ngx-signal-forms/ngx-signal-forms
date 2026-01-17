@@ -4,7 +4,7 @@ import {
   computed,
   signal,
 } from '@angular/core';
-import { Field, form, submit } from '@angular/forms/signals';
+import { FormField, form, submit } from '@angular/forms/signals';
 import type { PureSignalFormModel } from './pure-signal-form.model';
 import { pureSignalFormSchema } from './pure-signal-form.validations';
 
@@ -17,7 +17,7 @@ import { pureSignalFormSchema } from './pure-signal-form.validations';
 @Component({
   selector: 'ngx-pure-signal-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Field],
+  imports: [FormField],
   template: `
     <form (ngSubmit)="handleSubmit()" novalidate class="form-container">
       <!-- Email Field - Manual ARIA Implementation -->
@@ -26,7 +26,7 @@ import { pureSignalFormSchema } from './pure-signal-form.validations';
         <input
           id="pure-email"
           type="email"
-          [field]="signupForm.email"
+          [formField]="signupForm.email"
           (blur)="markFieldAsTouched('email')"
           [attr.aria-invalid]="shouldShowEmailErrors() ? 'true' : null"
           [attr.aria-describedby]="
@@ -56,7 +56,7 @@ import { pureSignalFormSchema } from './pure-signal-form.validations';
         <input
           id="pure-password"
           type="password"
-          [field]="signupForm.password"
+          [formField]="signupForm.password"
           (blur)="markFieldAsTouched('password')"
           [attr.aria-invalid]="shouldShowPasswordErrors() ? 'true' : null"
           [attr.aria-describedby]="
@@ -88,7 +88,7 @@ import { pureSignalFormSchema } from './pure-signal-form.validations';
         <input
           id="pure-confirm-password"
           type="password"
-          [field]="signupForm.confirmPassword"
+          [formField]="signupForm.confirmPassword"
           (blur)="markFieldAsTouched('confirmPassword')"
           [attr.aria-invalid]="
             shouldShowConfirmPasswordErrors() ? 'true' : null

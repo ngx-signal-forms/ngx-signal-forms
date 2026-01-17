@@ -23,11 +23,11 @@ import type { FieldTree } from '@angular/forms/signals';
  *
  * @example Basic character count
  * ```html
- * <ngx-signal-form-field [field]="form.bio">
+ * <ngx-signal-form-field [formField]="form.bio">
  *   <label for="bio">Bio</label>
- *   <textarea id="bio" [field]="form.bio"></textarea>
+ *   <textarea id="bio" [formField]="form.bio"></textarea>
  *   <ngx-signal-form-field-character-count
- *     [field]="form.bio"
+ *     [formField]="form.bio"
  *     [maxLength]="500"
  *   />
  * </ngx-signal-form-field>
@@ -36,7 +36,7 @@ import type { FieldTree } from '@angular/forms/signals';
  * @example Left-aligned
  * ```html
  * <ngx-signal-form-field-character-count
- *   [field]="form.tweet"
+ *   [formField]="form.tweet"
  *   [maxLength]="280"
  *   position="left"
  * />
@@ -45,7 +45,7 @@ import type { FieldTree } from '@angular/forms/signals';
  * @example Disable color progression
  * ```html
  * <ngx-signal-form-field-character-count
- *   [field]="form.message"
+ *   [formField]="form.message"
  *   [maxLength]="1000"
  *   [showLimitColors]="false"
  * />
@@ -54,7 +54,7 @@ import type { FieldTree } from '@angular/forms/signals';
  * @example Custom thresholds
  * ```html
  * <ngx-signal-form-field-character-count
- *   [field]="form.description"
+ *   [formField]="form.description"
  *   [maxLength]="500"
  *   [colorThresholds]="{ warning: 90, danger: 98 }"
  * />
@@ -157,7 +157,7 @@ export class NgxSignalFormFieldCharacterCountComponent<TValue = unknown> {
    * Form field to track character count from.
    * Must contain a value compatible with string length calculation.
    */
-  readonly field = input.required<FieldTree<TValue>>();
+  readonly formField = input.required<FieldTree<TValue>>();
 
   /**
    * Maximum character length for the field.
@@ -181,14 +181,14 @@ export class NgxSignalFormFieldCharacterCountComponent<TValue = unknown> {
    * ```
    * ```html
    * <!-- maxLength auto-detected as 500 -->
-   * <ngx-signal-form-field-character-count [field]="form.bio" />
+   * <ngx-signal-form-field-character-count [formField]="form.bio" />
    * ```
    *
    * @example Manual override
    * ```html
    * <!-- Display limit is 300, even if validation allows 500 -->
    * <ngx-signal-form-field-character-count
-   *   [field]="form.bio"
+   *   [formField]="form.bio"
    *   [maxLength]="300"
    * />
    * ```
@@ -242,7 +242,7 @@ export class NgxSignalFormFieldCharacterCountComponent<TValue = unknown> {
     }
 
     // Try to auto-detect from field validation
-    const fieldValue = this.field();
+    const fieldValue = this.formField();
     const fieldState = fieldValue() as {
       maxLength?: () => number;
     };
@@ -265,7 +265,7 @@ export class NgxSignalFormFieldCharacterCountComponent<TValue = unknown> {
    * Current character length from the field value.
    */
   protected readonly currentLength = computed(() => {
-    const fieldValue = this.field();
+    const fieldValue = this.formField();
     const value = fieldValue().value();
     // Type assertion needed due to FieldState union type complexity
     return typeof value === 'string' ? (value as string).length : 0;
