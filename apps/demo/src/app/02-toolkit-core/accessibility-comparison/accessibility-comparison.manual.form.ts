@@ -25,7 +25,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField],
   template: `
-    <form (ngSubmit)="(handleSubmit)" novalidate class="form-container">
+    <form (submit)="handleSubmit($event)" novalidate class="form-container">
       <!-- Email Field - Manual ARIA Implementation -->
       <div class="form-field">
         <label for="manual-email" class="form-label"> Email Address * </label>
@@ -214,9 +214,9 @@ export class AccessibilityManualFormComponent {
    * Form submission handler using Angular Signal Forms submit() helper.
    * ACCESSIBILITY: Button never disabled (best practice).
    */
-  protected readonly handleSubmit = submit(
-    this.signupForm,
-    async (formData) => {
+  protected async handleSubmit(event: Event): Promise<void> {
+    event.preventDefault();
+    await submit(this.signupForm, async () => {
       // Simulate async operation
       await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -226,6 +226,6 @@ export class AccessibilityManualFormComponent {
       this.#isSubmitted.set(false);
 
       return null;
-    },
-  );
+    });
+  }
 }

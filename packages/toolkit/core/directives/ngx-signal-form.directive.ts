@@ -38,7 +38,7 @@ export interface NgxSignalFormContext {
  *
  * **Selectors**:
  * - `form[ngxSignalForm]` - Explicit binding with full form context
- * - `form(ngSubmit)` - Auto-applies only (adds `novalidate` attribute)
+ * - `form(submit)` - Auto-applies only (adds `novalidate` attribute)
  *
  * **Automatically adds `novalidate`** to prevent HTML5 validation UI from conflicting
  * with Angular Signal Forms validation display.
@@ -55,7 +55,7 @@ export interface NgxSignalFormContext {
  * ```typescript
  * @Component({
  *   template: `
- *     <form [ngxSignalForm]="userForm" (ngSubmit)="handleSubmit()">
+ *     <form [ngxSignalForm]="userForm" (submit)="handleSubmit($event)">
  *       <input [formField]="userForm.email" type="email" />
  *       <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
  *       <button type="submit">Submit</button>
@@ -67,7 +67,7 @@ export interface NgxSignalFormContext {
  * @example Auto-apply novalidate only (minimal usage)
  * ```html
  * <!-- Just adds novalidate, no form context provided -->
- * <form (ngSubmit)="handleSubmit()">
+ * <form (submit)="handleSubmit($event)">
  *   <input [formField]="userForm.email" type="email" />
  *   <button type="submit">Submit</button>
  * </form>
@@ -75,14 +75,14 @@ export interface NgxSignalFormContext {
  *
  * @example With error strategy
  * ```html
- * <form [ngxSignalForm]="userForm" [errorStrategy]="'on-submit'" (ngSubmit)="handleSubmit()">
+ * <form [ngxSignalForm]="userForm" [errorStrategy]="'on-submit'" (submit)="handleSubmit($event)">
  *   <!-- Errors appear only after form submission -->
  * </form>
  * ```
  */
 @Directive({
   // eslint-disable-next-line @angular-eslint/directive-selector -- Directive for forms using Angular Signal Forms
-  selector: 'form[ngxSignalForm], form(ngSubmit)',
+  selector: 'form[ngxSignalForm], form(submit)',
   exportAs: 'ngxSignalForm',
   host: {
     '[attr.novalidate]': '""',
@@ -115,7 +115,7 @@ export class NgxSignalFormDirective {
 
   /**
    * The Signal Forms instance (FieldTree) to provide.
-   * Optional when using `form(ngSubmit)` selector (only adds `novalidate`).
+   * Optional when using `form(submit)` selector (only adds `novalidate`).
    * Required when using `[ngxSignalForm]` for full form context.
    */
   readonly form = input<FieldTree<unknown> | undefined>(undefined, {
@@ -159,7 +159,7 @@ export class NgxSignalFormDirective {
    * 2. If `touched()` is true (submit() calls markAllAsTouched) → `'submitted'`
    * 3. Otherwise → `'unsubmitted'`
    *
-   * Returns `'unsubmitted'` when no form is bound (using `form(ngSubmit)` selector only).
+   * Returns `'unsubmitted'` when no form is bound (using `form(submit)` selector only).
    */
   readonly submittedStatus = computed<SubmittedStatus>(() => {
     const f = this.form();

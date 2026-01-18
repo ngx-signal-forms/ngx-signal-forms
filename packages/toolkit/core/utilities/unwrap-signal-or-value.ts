@@ -47,11 +47,11 @@ import type { ReactiveOrStatic } from '../types';
  *   strategy: ReactiveOrStatic<ErrorDisplayStrategy>
  * ): Signal<boolean> {
  *   return computed(() => {
- *     // Unwrap to get actual values inside computed
+ *     /// Unwrap to get actual values inside computed
  *     const fieldState = unwrapValue(field);
  *     const strategyValue = unwrapValue(strategy);
  *
- *     // Now work with concrete values
+ *     /// Now work with concrete values
  *     return fieldState.invalid() && strategyValue === 'immediate';
  *   });
  * }

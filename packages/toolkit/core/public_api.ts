@@ -20,6 +20,7 @@ export * from './utilities/field-resolution';
 export * from './utilities/focus-first-invalid';
 export * from './utilities/submission-helpers';
 export * from './utilities/warning-error';
+export * from './utilities/status-classes';
 
 // Future exports:
 // export * from './directives/form-busy.directive';

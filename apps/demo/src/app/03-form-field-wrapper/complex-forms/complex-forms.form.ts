@@ -24,7 +24,7 @@ import { complexFormSchema } from './complex-forms.validations';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
-    <form [ngxSignalForm]="complexForm" (ngSubmit)="handleSubmit()">
+    <form [ngxSignalForm]="complexForm" (submit)="handleSubmit($event)">
       <!-- Personal Information Section -->
       <fieldset
         class="mb-8 rounded-lg border border-gray-200 p-6 dark:border-gray-700"
@@ -180,7 +180,10 @@ import { complexFormSchema } from './complex-forms.validations';
               fieldName="country"
             >
               <label for="country">Country *</label>
-              <select id="country" [formField]="complexForm.addressInfo.country">
+              <select
+                id="country"
+                [formField]="complexForm.addressInfo.country"
+              >
                 <option value="">Select...</option>
                 <option value="US">United States</option>
                 <option value="CA">Canada</option>
@@ -466,15 +469,17 @@ export class ComplexFormsComponent {
   /**
    * Form submission handler using Angular Signal Forms submit() helper.
    *
-   * CRITICAL: submit() is an async function that must be CALLED inside a method.
-   * - Template binding: (ngSubmit)="handleSubmit()" WITH parentheses
+   * CRITICAL: Signal Forms use native DOM submit event, NOT ngSubmit.
+   * - Template binding: (submit)="handleSubmit($event)" with $event
+   * - Handler must call event.preventDefault() to prevent page reload
    * - submit() signature: async function submit<T>(form, action): Promise<void>
    * - Automatically marks all fields as touched
    * - Only executes callback when form is VALID
    *
    * ACCESSIBILITY: Button never disabled (best practice).
    */
-  protected async handleSubmit(): Promise<void> {
+  protected async handleSubmit(event: Event): Promise<void> {
+    event.preventDefault();
     await submit(this.complexForm, async () => {
       // Simulate async operation
       await new Promise((resolve) => setTimeout(resolve, 500));

@@ -5,7 +5,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import {  form, FormField, submit } from '@angular/forms/signals';
+import { form, FormField, submit } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
@@ -46,7 +46,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
     <form
       [ngxSignalForm]="productForm"
       [errorStrategy]="errorDisplayMode()"
-      (ngSubmit)="handleSubmit()"
+      (submit)="handleSubmit($event)"
       class="form-container"
       aria-labelledby="productFeedbackHeading"
     >
@@ -73,7 +73,10 @@ const INITIAL_MODEL: ProductFeedbackModel = {
           <div class="form-hint" id="name-hint">
             We use this to personalize our response
           </div>
-          <ngx-signal-form-error [formField]="productForm.name" fieldName="name" />
+          <ngx-signal-form-error
+            [formField]="productForm.name"
+            fieldName="name"
+          />
         </div>
 
         <!-- Email Field -->
@@ -364,7 +367,8 @@ export class ErrorDisplayModesFormComponent {
    * Form submission handler using Angular Signal Forms submit() helper.
    * **Key behavior:** Callback only executes if form is VALID.
    */
-  protected async handleSubmit(): Promise<void> {
+  protected async handleSubmit(event: Event): Promise<void> {
+    event.preventDefault();
     await submit(this.productForm, async () => {
       this.#submissionAttempted.set(true);
 

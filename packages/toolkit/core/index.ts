@@ -6,6 +6,9 @@ export * from './tokens';
 
 // Providers
 export * from './providers/config.provider';
+export * from './providers/error-messages.provider';
+export { ngxStatusClasses, provideNgxStatusClasses } from './utilities/status-classes';
+export type { NgxStatusClassesOptions } from './utilities/status-classes';
 
 // Directives
 export * from './directives/auto-aria.directive';

@@ -34,7 +34,7 @@ Angular 21+ Signal Forms is an **experimental API** providing a reactive, signal
 | **Bundle Size**      | ✅ Smaller (no RxJS for forms)    | Larger                            | Medium (FormsModule)              |
 | **Performance**      | ✅ Excellent (no Zone.js)         | Good                              | Good                              |
 | **Testing**          | ✅ Direct signal manipulation     | TestBed + subscriptions           | TestBed + DOM                     |
-| **Template Syntax**  | `[formField]` directive               | `[formGroup]` + `formControlName` | `[(ngModel)]` + directives        |
+| **Template Syntax**  | `[formField]` directive           | `[formGroup]` + `formControlName` | `[(ngModel)]` + directives        |
 | **CSS Classes**      | ❌ No `ng-*` classes added        | ✅ `ng-valid`, `ng-invalid`, etc. | ✅ `ng-valid`, `ng-invalid`, etc. |
 | **Name Attribute**   | ✅ Auto-generated from path       | ⚠️ Manual via `formControlName`   | ⚠️ Manual required                |
 | **State Signals**    | `touched()`, `dirty()` only       | `untouched`, `pristine`, etc.     | `untouched`, `pristine`, etc.     |
@@ -73,7 +73,7 @@ import {
   imports: [Field],
   changeDetection: ChangeDetectionStrategy.OnPush, // Required
   template: `
-    <form (ngSubmit)="save()">
+    <form (submit)="save($event)" novalidate>
       <input [formField]="userForm.name" />
       @if (userForm.name().invalid() && userForm.name().touched()) {
         @for (error of userForm.name().errors(); track error.kind) {
@@ -93,7 +93,8 @@ export class UserFormComponent {
     email(path.email, { message: 'Valid email required' });
   });
 
-  protected save(): void {
+  protected save(event: Event): void {
+    event.preventDefault();
     if (this.userForm().valid()) {
       console.log('Submit:', this.#userData());
       // Handle form submission (API call, navigation, etc.)
@@ -498,7 +499,7 @@ Angular Signal Forms (unlike Reactive/Template-driven forms) does **not** automa
 
 ```html
 <!-- ✅ RECOMMENDED - Toolkit auto-adds novalidate -->
-<form [ngxSignalForm]="userForm" (ngSubmit)="save()">
+<form [ngxSignalForm]="userForm" (submit)="save($event)">
   <input [formField]="userForm.email" />
   <button type="submit">Submit</button>
 </form>
@@ -510,13 +511,13 @@ If **not** using the toolkit, you must manually add `novalidate`:
 
 ```html
 <!-- ✅ CORRECT - Manual novalidate required -->
-<form (ngSubmit)="save()" novalidate>
+<form (submit)="save($event)" novalidate>
   <input [formField]="userForm.email" />
   <button type="submit">Submit</button>
 </form>
 
 <!-- ❌ WRONG - Missing novalidate causes conflicting validation UX -->
-<form (ngSubmit)="save()">
+<form (submit)="save($event)">
   <!-- Browser validation bubbles conflict with Angular validation display -->
 </form>
 ```
@@ -530,7 +531,12 @@ Never rely on HTML5 validation attributes alone—always add Angular validators:
 <input [formField]="userForm.email" type="email" required />
 
 <!-- ✅ CORRECT - Combine HTML5 attributes with Angular validators -->
-<input id="email" [formField]="userForm.email" type="email" aria-required="true" />
+<input
+  id="email"
+  [formField]="userForm.email"
+  type="email"
+  aria-required="true"
+/>
 
 <!-- ✅ Angular validator in component -->
 <!-- (path) => {
@@ -549,7 +555,7 @@ Never rely on HTML5 validation attributes alone—always add Angular validators:
 
 ```typescript
 // With toolkit (novalidate automatically added)
-<form [ngxSignalForm]="userForm" (ngSubmit)="save()">
+<form [ngxSignalForm]="userForm" (submit)="save($event)">
   <!-- Field binding -->
   <input [formField]="userForm.name" />
   <textarea [formField]="userForm.bio" />
@@ -652,17 +658,16 @@ The `submit()` helper is the **preferred pattern** for most forms. It provides:
 - Server error integration
 - Type-safe form data access
 
-**IMPORTANT: `submit()` returns a callable function, not a Promise.**
+**IMPORTANT: Signal Forms use native DOM `submit` event, NOT `ngSubmit`.**
 
-**Pattern A: Store submit() result (Official Pattern)**
+**Recommended Pattern:**
 
 ```typescript
 import { submit } from '@angular/forms/signals';
 
 @Component({
   template: `
-    <!-- Bind WITHOUT parentheses when using stored result -->
-    <form (ngSubmit)="(onSubmit)" novalidate>
+    <form (submit)="handleSubmit($event)" novalidate>
       <button type="submit">Submit</button>
     </form>
   `,
@@ -671,49 +676,14 @@ export class UserFormComponent {
   readonly #userData = signal({ email: '' });
   protected readonly userForm = form(this.#userData);
 
-  // Store the callable function returned by submit()
-  protected readonly onSubmit = submit(this.userForm, async (formData) => {
-    try {
-      await this.apiService.save(formData().value());
-      return null; // Success - no errors
-    } catch (error) {
-      // Return server errors to display on form
-      return [
-        {
-          kind: 'save_error',
-          message: 'Failed to save. Please try again.',
-          field: formData,
-        },
-      ];
-    }
-  });
-}
-```
-
-**Pattern B: Call submit() inside async method**
-
-```typescript
-import { submit } from '@angular/forms/signals';
-
-@Component({
-  template: `
-    <!-- Bind WITH parentheses when using async method wrapper -->
-    <form (ngSubmit)="handleSubmit()" novalidate>
-      <button type="submit">Submit</button>
-    </form>
-  `,
-})
-export class UserFormComponent {
-  readonly #userData = signal({ email: '' });
-  protected readonly userForm = form(this.#userData);
-
-  // Async method that calls submit() internally
-  protected async handleSubmit(): Promise<void> {
+  protected async handleSubmit(event: Event): Promise<void> {
+    event.preventDefault();
     await submit(this.userForm, async (formData) => {
       try {
         await this.apiService.save(formData().value());
-        return null;
+        return null; // Success - no errors
       } catch (error) {
+        // Return server errors to display on form
         return [
           {
             kind: 'save_error',
@@ -727,12 +697,18 @@ export class UserFormComponent {
 }
 ```
 
-**Key Differences:**
+**Why `event.preventDefault()` is required:**
 
-| Approach      | Property Type                         | Template Binding              | Use Case                                               |
-| ------------- | ------------------------------------- | ----------------------------- | ------------------------------------------------------ |
-| **Pattern A** | `readonly onSubmit = submit(...)`     | `(ngSubmit)="onSubmit"`       | Recommended for most cases                             |
-| **Pattern B** | `async handleSubmit(): Promise<void>` | `(ngSubmit)="handleSubmit()"` | When you need additional logic before/after submission |
+Signal Forms use native DOM `submit` event (NOT Angular's `ngSubmit`). Without `preventDefault()`, the browser will reload the page.
+
+**Key Requirements:**
+
+| Requirement     | Description                                          |
+| --------------- | ---------------------------------------------------- |
+| Event binding   | `(submit)="handleSubmit($event)"` - native DOM event |
+| Event parameter | `event: Event` - must be passed from template        |
+| Prevent default | `event.preventDefault()` - prevents page reload      |
+| novalidate      | Add to `<form>` to prevent browser validation UI     |
 
 ### Option 2: Direct Method (Manual Approach)
 
@@ -740,13 +716,14 @@ For simple cases where you don't need async submission or server error handling:
 
 ```typescript
 @Component({
-  template: `<form (ngSubmit)="save()">...</form>`,
+  template: `<form (submit)="save($event)" novalidate>...</form>`,
 })
 export class SimpleFormComponent {
   readonly #userData = signal({ email: '' });
   protected readonly userForm = form(this.#userData /* validators */);
 
-  protected save(): void {
+  protected save(event: Event): void {
+    event.preventDefault();
     if (this.userForm().valid()) {
       console.log('Submit:', this.#userData());
       // Handle submission (e.g., call a service, navigate)
@@ -822,7 +799,7 @@ customError({
 | ------------------------------- | -------------------------------------------------------- |
 | `FormBuilder` + `fb.group({})`  | `signal({})` + `form(signal, validators)`                |
 | `[formGroup]="form"`            | N/A (no form directive needed)                           |
-| `formFieldName="field"`         | `[formField]="form.field"`                                   |
+| `formFieldName="field"`         | `[formField]="form.field"`                               |
 | `form.get('field')`             | `form.field()`                                           |
 | `Validators.required`           | `required(path.field, { message: '...' })`               |
 | `Validators.minLength(3)`       | `minLength(path.field, 3, { message: '...' })`           |
@@ -860,16 +837,16 @@ export class UserFormComponent {
 
 ### Quick Reference
 
-| Template Driven Forms            | Signal Forms                                   |
-| -------------------------------- | ---------------------------------------------- |
-| `FormsModule`                    | `Control` directive                            |
-| `[(ngModel)]="model.field"`      | `[formField]="form.field"`                         |
-| `#fieldRef="ngModel"`            | Direct access: `form.field()`                  |
-| `<input required minlength="3">` | Code-based: `required(path.field, {...})`      |
-| `fieldRef.errors?.['required']`  | `form.field().errors()[0].kind === 'required'` |
-| `fieldRef.touched`               | `form.field().touched()`                       |
-| `userForm.invalid`               | `form().invalid()`                             |
-| `(ngSubmit)="save()"`            | `(ngSubmit)="save()"` (same)                   |
+| Template Driven Forms            | Signal Forms                                         |
+| -------------------------------- | ---------------------------------------------------- |
+| `FormsModule`                    | `Control` directive                                  |
+| `[(ngModel)]="model.field"`      | `[formField]="form.field"`                           |
+| `#fieldRef="ngModel"`            | Direct access: `form.field()`                        |
+| `<input required minlength="3">` | Code-based: `required(path.field, {...})`            |
+| `fieldRef.errors?.['required']`  | `form.field().errors()[0].kind === 'required'`       |
+| `fieldRef.touched`               | `form.field().touched()`                             |
+| `userForm.invalid`               | `form().invalid()`                                   |
+| `(ngSubmit)="save()"`            | `(submit)="save($event)"` + `event.preventDefault()` |
 
 ### Migration Example
 
@@ -903,7 +880,7 @@ export class UserFormComponent {
   imports: [Field],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <form (ngSubmit)="save()">
+    <form (submit)="save($event)" novalidate>
       <input [formField]="userForm.name" />
       @if (userForm.name().invalid()) {
         @for (error of userForm.name().errors(); track error.kind) {
@@ -920,7 +897,8 @@ export class UserFormComponent {
     minLength(path.name, 3, { message: 'Min 3 chars' });
   });
 
-  protected save(): void {
+  protected save(event: Event): void {
+    event.preventDefault();
     if (this.userForm().valid()) {
       console.log('Submit:', this.#userData());
     }
@@ -1027,48 +1005,42 @@ export class UserFormComponent {
    // Consider UX implications and provide clear feedback
    ```
 
-8. **Incorrect `submit()` binding in templates**
+8. **Using `ngSubmit` instead of native `submit` event**
 
    ```typescript
-   // ✅ CORRECT Pattern A: Store submit() result, bind without parentheses
-   protected readonly onSubmit = submit(this.form, async (formData) => { ... });
+   // ❌ WRONG: ngSubmit is for Reactive/Template-driven forms
+   // Signal Forms do NOT use ngSubmit
    ```
 
    ```html
-   <form (ngSubmit)="onSubmit"><!-- ✅ CORRECT --></form>
+   <form (ngSubmit)="save()"><!-- ❌ WRONG --></form>
    ```
 
    ```typescript
-   // ✅ CORRECT Pattern B: Async method wrapper, bind with parentheses
-   protected async handleSubmit(): Promise<void> {
-     await submit(this.form, async (formData) => { ... });
+   // ✅ CORRECT: Use native DOM submit event with event.preventDefault()
+   protected save(event: Event): void {
+     event.preventDefault();
+     // ... handle submission
    }
    ```
 
    ```html
-   <form (ngSubmit)="handleSubmit()"><!-- ✅ CORRECT --></form>
+   <form (submit)="save($event)" novalidate><!-- ✅ CORRECT --></form>
    ```
 
-   ```typescript
-   // ❌ WRONG: Mixing patterns - stored result with parentheses
-   protected readonly onSubmit = submit(this.form, async () => { ... });
-   ```
-
-   ```html
-   <form (ngSubmit)="onSubmit()">
-     <!-- ❌ WRONG - Don't add () to stored result -->
-   </form>
-   ```
-
-   **Why:** `submit()` returns a callable function. Use Pattern A (store + bind without parentheses) for simplicity, or Pattern B (async method + bind with parentheses) when you need additional logic around submission.
+   **Why:** Signal Forms use native DOM `submit` event. `ngSubmit` is from Angular's `NgForm` directive which is part of Reactive/Template-driven forms, NOT Signal Forms.
 
 9. **Forgetting `novalidate` on forms**
 
    ```html
    <!-- ❌ Wrong - Browser validation conflicts with Angular validation -->
-   <form (ngSubmit)="save()">
-     <!-- ✅ Correct - Always add novalidate -->
-     <form (ngSubmit)="save()" novalidate></form>
+   <form (submit)="save($event)">
+     <!-- Browser validation bubbles will appear -->
+   </form>
+
+   <!-- ✅ Correct - Always add novalidate -->
+   <form (submit)="save($event)" novalidate>
+     <!-- Your Angular validation works cleanly -->
    </form>
    ```
 

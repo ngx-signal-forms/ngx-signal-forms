@@ -22,7 +22,7 @@ import { fieldStatesSchema } from './field-states.validations';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit],
   template: `
-    <form [ngxSignalForm]="userForm" (ngSubmit)="handleSubmit()">
+    <form [ngxSignalForm]="userForm" (submit)="handleSubmit($event)">
       @if (userForm().dirty()) {
         <div
           class="mb-4 rounded-lg border-l-4 border-amber-500 bg-amber-50 px-4 py-3 dark:border-amber-400 dark:bg-amber-900/20"
@@ -242,7 +242,8 @@ export class FieldStatesForm {
    * Form submission handler using Angular Signal Forms submit() helper.
    * **Key behavior:** Callback only executes if form is VALID.
    */
-  protected async handleSubmit(): Promise<void> {
+  protected async handleSubmit(event: Event): Promise<void> {
+    event.preventDefault();
     await submit(this.userForm, async () => {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       this.model.set({ username: '', email: '', password: '' });

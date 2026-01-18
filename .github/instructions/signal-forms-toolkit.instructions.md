@@ -150,7 +150,7 @@ import {
 - Manages error display strategy
 
 ```typescript
-<form [ngxSignalForm]="userForm" [errorStrategy]="'on-touch'" (ngSubmit)="save()">
+<form [ngxSignalForm]="userForm" [errorStrategy]="'on-touch'" (submit)="save($event)">
   <!-- submittedStatus derived from touched() - Child components auto-inject context -->
 </form>
 ```

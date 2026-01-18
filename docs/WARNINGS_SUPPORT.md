@@ -179,7 +179,7 @@ const registrationForm = form(
 The component automatically separates errors and warnings:
 
 ```html
-<form (ngSubmit)="save()">
+<form (submit)="save($event)" novalidate>
   <label for="email">Email *</label>
   <input
     id="email"

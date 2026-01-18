@@ -31,7 +31,7 @@ import { globalConfigSchema } from './global-configuration.validations';
     <form
       [ngxSignalForm]="configForm"
       [errorStrategy]="errorDisplayMode()"
-      (ngSubmit)="(handleSubmit)"
+      (submit)="handleSubmit($event)"
       class="form-container"
     >
       <!-- Info callout about global config -->
@@ -173,7 +173,8 @@ export class GlobalConfigurationComponent {
    * Form submission handler using Angular Signal Forms submit() helper.
    * ACCESSIBILITY: Button never disabled (best practice).
    */
-  protected async handleSubmit(): Promise<void> {
+  protected async handleSubmit(event: Event): Promise<void> {
+    event.preventDefault();
     await submit(this.configForm, async () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       this.model.set({ userEmail: '', userPhone: '', userWebsite: '' });

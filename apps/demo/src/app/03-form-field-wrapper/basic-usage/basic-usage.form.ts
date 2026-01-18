@@ -89,7 +89,8 @@ export class BasicUsageComponent {
   /**
    * Form submission handler
    */
-  protected displaySubmittedData(): void {
+  protected displaySubmittedData(event: Event): void {
+    event.preventDefault();
     // Form validation is handled by the submit button's disabled state
   }
 

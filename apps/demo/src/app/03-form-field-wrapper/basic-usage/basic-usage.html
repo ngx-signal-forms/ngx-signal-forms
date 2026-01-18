@@ -7,7 +7,7 @@
 <form
   [ngxSignalForm]="showcaseForm"
   [errorStrategy]="errorDisplayMode()"
-  (ngSubmit)="displaySubmittedData()"
+  (submit)="displaySubmittedData($event)"
   class="form-container"
 >
   <div class="space-y-6">
@@ -73,7 +73,10 @@
     </ngx-signal-form-field>
 
     <!-- Website Field with Protocol Prefix -->
-    <ngx-signal-form-field [formField]="showcaseForm.website" fieldName="website">
+    <ngx-signal-form-field
+      [formField]="showcaseForm.website"
+      fieldName="website"
+    >
       <span prefix>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -124,7 +127,10 @@
     <h2 class="text-lg font-semibold">Additional Details</h2>
 
     <!-- Country Field -->
-    <ngx-signal-form-field [formField]="showcaseForm.country" fieldName="country">
+    <ngx-signal-form-field
+      [formField]="showcaseForm.country"
+      fieldName="country"
+    >
       <label class="form-label" for="country">Country *</label>
       <select
         id="country"

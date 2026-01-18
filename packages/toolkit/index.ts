@@ -6,4 +6,5 @@
 
 // Re-export commonly used items for convenience
 export { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit/core';
-export type { NgxSignalFormsConfig } from '@ngx-signal-forms/toolkit/core';
+export { ngxStatusClasses, provideNgxStatusClasses } from '@ngx-signal-forms/toolkit/core';
+export type { NgxSignalFormsConfig, NgxStatusClassesOptions } from '@ngx-signal-forms/toolkit/core';

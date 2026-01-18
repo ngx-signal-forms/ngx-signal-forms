@@ -267,15 +267,16 @@ test('should NOT show errors on initial load (CRITICAL BUG CHECK)', async ({
 **Fix Needed:**
 
 ```typescript
-// ✅ CORRECT - Properly bind submit handler
-<form (ngSubmit)="save()">
+// ✅ CORRECT - Use native (submit) event with preventDefault
+<form (submit)="save($event)">
 
-// OR use submit() helper correctly
-protected readonly save = submit(this.form, async (formData) => {
-  // ...
-});
-
-<form (ngSubmit)="(save)">  // Bind without parentheses
+// In component:
+protected save(event: Event): void {
+  event.preventDefault();
+  submit(this.form, async (formData) => {
+    // ...
+  });
+}
 ```
 
 **Affected Tests:**
@@ -379,8 +380,8 @@ Migrated `accessibility.spec.ts` (17 tests) to organized structure:
 | Issue | Status | Fix |
 | ----- | ------ | --- |
 | Initial error display | ✅ Tests prevent | Add initial load tests |
-| Submit handler binding | 🔧 Identified | Fix (ngSubmit) binding |
-| Missing novalidate | 🔧 Identified | Add to all forms |
+| Submit handler binding | ✅ Fixed | Use (submit) with preventDefault |
+| Missing novalidate | ✅ Fixed | Added to all forms / directive auto-adds |
 
 ---
 

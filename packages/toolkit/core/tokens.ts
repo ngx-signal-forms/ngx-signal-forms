@@ -10,6 +10,7 @@ export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: NgxSignalFormsConfig = {
   defaultErrorStrategy: () => 'on-touch' as const,
   strictFieldResolution: false,
   debug: false,
+  defaultFormFieldAppearance: undefined,
 };
 
 /**

@@ -42,7 +42,7 @@ import { errorMessagesSchema } from './error-messages.validations';
     <form
       [ngxSignalForm]="errorMessagesForm"
       [errorStrategy]="errorDisplayMode()"
-      (ngSubmit)="(handleSubmit)"
+      (submit)="handleSubmit($event)"
       class="form-container"
     >
       <!-- Form fields -->
@@ -178,11 +178,14 @@ export class ErrorMessagesComponent {
    * Form submission handler using Angular Signal Forms submit() helper.
    * ACCESSIBILITY: Button never disabled (best practice).
    */
-  protected readonly handleSubmit = submit(this.errorMessagesForm, async () => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    this.model.set({ email: '', password: '', bio: '' });
-    return null;
-  });
+  protected async handleSubmit(event: Event): Promise<void> {
+    event.preventDefault();
+    await submit(this.errorMessagesForm, async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      this.model.set({ email: '', password: '', bio: '' });
+      return null;
+    });
+  }
 
   protected resetForm(): void {
     this.model.set({

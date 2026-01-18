@@ -72,15 +72,20 @@ test.describe('Demo Application - Navigation & Shell', () => {
             'Error Display Modes',
             'Warning Support',
             'Field States',
+            'CSS Status Classes',
           ],
         },
         {
           category: '/form-field-wrapper',
-          links: ['Basic Usage', 'Complex Forms'],
+          links: ['Basic Usage', 'Complex Forms', 'Outlined Form Fields'],
         },
         {
           category: '/advanced',
-          links: ['Global Configuration'],
+          links: [
+            'Global Configuration',
+            'Submission Patterns',
+            'Error Messages',
+          ],
         },
       ];
 
@@ -114,9 +119,13 @@ test.describe('Demo Application - Navigation & Shell', () => {
         '/toolkit-core/error-display-modes',
         '/toolkit-core/warning-support',
         '/toolkit-core/field-states',
+        '/toolkit-core/css-status-classes',
         '/form-field-wrapper/basic-usage',
         '/form-field-wrapper/complex-forms',
+        '/form-field-wrapper/outline-form-field',
         '/advanced/global-configuration',
+        '/advanced/submission-patterns',
+        '/advanced/error-messages',
       ];
 
       for (const examplePath of examples) {

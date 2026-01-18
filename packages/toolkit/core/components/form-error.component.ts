@@ -104,7 +104,7 @@ import { showErrors } from '../utilities/show-errors';
  * import { submit } from '@angular/forms/signals';
  *
  * readonly #submitHandler = submit(this.form, async (formData) => {
- *   // Form submission logic - submittedStatus automatically managed
+ *   /// Form submission logic - submittedStatus automatically managed
  *   await apiCall();
  *   return null;
  * });
@@ -116,7 +116,7 @@ import { showErrors } from '../utilities/show-errors';
  *
  * @example Auto-injected from ngxSignalFormDirective
  * ```html
- * <form [ngxSignalForm]="form" (ngSubmit)="save()">
+ * <form [ngxSignalForm]="form" (submit)="save($event)">
  *   <!-- submittedStatus automatically injected from form provider -->
  *   <ngx-signal-form-error [formField]="form.email" fieldName="email" />
  * </form>
@@ -130,7 +130,7 @@ import { showErrors } from '../utilities/show-errors';
  *   required(path.password, { message: 'Password required' }); // Error
  *   minLength(path.password, 8, { message: 'Min 8 characters' }); // Error
  *
- *   // Custom validation with warning
+ *   /// Custom validation with warning
  *   validate(path.password, (ctx) => {
  *     const value = ctx.value();
  *     if (value && value.length < 12) {

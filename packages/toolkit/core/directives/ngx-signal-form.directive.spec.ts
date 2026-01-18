@@ -1,5 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormField, form, required, schema, submit } from '@angular/forms/signals';
+import {
+  form,
+  FormField,
+  required,
+  schema,
+  submit,
+} from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -204,7 +210,7 @@ describe('ngxSignalFormDirective', () => {
         selector: 'ngx-test-submit-tracking',
         imports: [FormField, NgxSignalFormDirective, ContextDisplayComponent],
         template: `
-          <form [ngxSignalForm]="contactForm" (ngSubmit)="handleSubmit()">
+          <form [ngxSignalForm]="contactForm" (submit)="handleSubmit($event)">
             <ngx-signal-form-context-display />
             <input id="email" [formField]="contactForm.email" />
             <button type="submit">Submit</button>
@@ -215,7 +221,8 @@ describe('ngxSignalFormDirective', () => {
         readonly #model = signal({ email: 'test@example.com' });
         readonly contactForm = form(this.#model);
 
-        async handleSubmit() {
+        async handleSubmit(event: Event) {
+          event.preventDefault();
           await submit(this.contactForm, async () => {
             // Simulate async operation
             await new Promise((resolve) => setTimeout(resolve, 50));
@@ -251,7 +258,7 @@ describe('ngxSignalFormDirective', () => {
         selector: 'ngx-test-reset',
         imports: [FormField, NgxSignalFormDirective, ContextDisplayComponent],
         template: `
-          <form [ngxSignalForm]="contactForm" (ngSubmit)="handleSubmit()">
+          <form [ngxSignalForm]="contactForm" (submit)="handleSubmit($event)">
             <ngx-signal-form-context-display />
             <input id="email" [formField]="contactForm.email" />
             <button type="submit">Submit</button>
@@ -263,7 +270,8 @@ describe('ngxSignalFormDirective', () => {
         readonly #model = signal({ email: 'test@example.com' });
         readonly contactForm = form(this.#model);
 
-        async handleSubmit() {
+        async handleSubmit(event: Event) {
+          event.preventDefault();
           await submit(this.contactForm, async () => {
             await new Promise((resolve) => setTimeout(resolve, 50));
             return null;
@@ -306,7 +314,7 @@ describe('ngxSignalFormDirective', () => {
           selector: 'ngx-test-combined',
           imports: [FormField, NgxSignalFormDirective, ContextDisplayComponent],
           template: `
-            <form [ngxSignalForm]="contactForm" (ngSubmit)="onSubmit()">
+            <form [ngxSignalForm]="contactForm" (submit)="onSubmit($event)">
               <ngx-signal-form-context-display />
               <input id="email" [formField]="contactForm.email" />
               <button type="submit">Submit</button>
@@ -317,7 +325,8 @@ describe('ngxSignalFormDirective', () => {
           readonly #model = signal({ email: 'test@example.com' });
           readonly contactForm = form(this.#model);
 
-          async onSubmit() {
+          async onSubmit(event: Event) {
+            event.preventDefault();
             await submit(this.contactForm, async () => {
               await new Promise((resolve) => setTimeout(resolve, 50));
               return null;
@@ -348,7 +357,7 @@ describe('ngxSignalFormDirective', () => {
           selector: 'ngx-test-invalid',
           imports: [FormField, NgxSignalFormDirective, ContextDisplayComponent],
           template: `
-            <form [ngxSignalForm]="contactForm" (ngSubmit)="onSubmit()">
+            <form [ngxSignalForm]="contactForm" (submit)="onSubmit($event)">
               <ngx-signal-form-context-display />
               <input id="email" [formField]="contactForm.email" />
               <button type="submit">Submit</button>
@@ -364,7 +373,8 @@ describe('ngxSignalFormDirective', () => {
             }),
           );
 
-          async onSubmit() {
+          async onSubmit(event: Event) {
+            event.preventDefault();
             await submit(this.contactForm, async () => {
               // This won't execute because form is invalid
               return null;
@@ -398,7 +408,7 @@ describe('ngxSignalFormDirective', () => {
           selector: 'ngx-test-multi-invalid',
           imports: [FormField, NgxSignalFormDirective, ContextDisplayComponent],
           template: `
-            <form [ngxSignalForm]="contactForm" (ngSubmit)="onSubmit()">
+            <form [ngxSignalForm]="contactForm" (submit)="onSubmit($event)">
               <ngx-signal-form-context-display />
               <input id="email" [formField]="contactForm.email" />
               <button type="submit">Submit</button>
@@ -414,7 +424,8 @@ describe('ngxSignalFormDirective', () => {
             }),
           );
 
-          async onSubmit() {
+          async onSubmit(event: Event) {
+            event.preventDefault();
             await submit(this.contactForm, async () => null);
           }
         }
@@ -451,7 +462,7 @@ describe('ngxSignalFormDirective', () => {
           selector: 'ngx-test-reset-attempt',
           imports: [FormField, NgxSignalFormDirective, ContextDisplayComponent],
           template: `
-            <form [ngxSignalForm]="contactForm" (ngSubmit)="onSubmit()">
+            <form [ngxSignalForm]="contactForm" (submit)="onSubmit($event)">
               <ngx-signal-form-context-display />
               <input id="email" [formField]="contactForm.email" />
               <button type="submit">Submit</button>
@@ -468,7 +479,8 @@ describe('ngxSignalFormDirective', () => {
             }),
           );
 
-          async onSubmit() {
+          async onSubmit(event: Event) {
+            event.preventDefault();
             await submit(this.contactForm, async () => null);
           }
 

@@ -39,7 +39,7 @@ export const outlineFormFieldSchema: SchemaFn<OutlineFormFieldModel> = (
       const country = ctx.valueOf(factPath.country);
       const municipality = ctx.value();
 
-      if (country === 'Nederland' && !municipality) {
+      if (country === 'NL' && !municipality) {
         return {
           kind: 'required_when_nl',
           message: 'Gemeente is verplicht voor Nederland',
@@ -53,7 +53,7 @@ export const outlineFormFieldSchema: SchemaFn<OutlineFormFieldModel> = (
       const country = ctx.valueOf(factPath.country);
       const abroadLocation = ctx.value();
 
-      if (country && country !== 'Nederland' && !abroadLocation) {
+      if (country && country !== 'NL' && !abroadLocation) {
         return {
           kind: 'required_when_abroad',
           message: 'Buitenlandse locatie is verplicht',

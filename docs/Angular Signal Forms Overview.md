@@ -811,7 +811,7 @@ import { Control } from '@angular/forms/signals';
 
 @Component({
   template: `
-    <form (ngSubmit)="save()">
+    <form (submit)="save($event)" novalidate>
       <!-- Basic input -->
       <input [formField]="userForm.name" />
 
@@ -1017,7 +1017,7 @@ type User = z.infer<typeof UserSchema>;
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Field],
   template: `
-    <form (ngSubmit)="save()">
+    <form (submit)="save($event)" novalidate>
       <div>
         <label>Username</label>
         <input [formField]="userForm.username" />
@@ -1110,7 +1110,11 @@ type Product = z.infer<typeof ProductSchema>;
       <input [formField]="productForm.sku" placeholder="SKU (auto)" />
 
       <input [formField]="productForm.name" placeholder="Product name" />
-      <input type="number" [formField]="productForm.price" placeholder="Price" />
+      <input
+        type="number"
+        [formField]="productForm.price"
+        placeholder="Price"
+      />
 
       <label>
         <input type="checkbox" [formField]="productForm.onSale" />
@@ -2075,7 +2079,11 @@ import { FieldState, Control } from '@angular/forms/signals';
 
           @switch (field.type) {
             @case ('checkbox') {
-              <input type="checkbox" [id]="field.name" [formField]="fieldState" />
+              <input
+                type="checkbox"
+                [id]="field.name"
+                [formField]="fieldState"
+              />
             }
             @case ('select') {
               <select [id]="field.name" [formField]="fieldState">
@@ -2784,7 +2792,7 @@ export class SubmitButtonComponent {
 ```typescript
 @Component({
   template: `
-    <form (ngSubmit)="save()">
+    <form (submit)="save($event)" novalidate>
       <!-- form fields -->
 
       <ngx-submit-button

@@ -1,4 +1,5 @@
 import {
+  booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -13,6 +14,7 @@ import type {
 } from '@ngx-signal-forms/toolkit/core';
 import {
   NGX_SIGNAL_FORM_CONTEXT,
+  NGX_SIGNAL_FORMS_CONFIG,
   NgxSignalFormErrorComponent,
 } from '@ngx-signal-forms/toolkit/core';
 
@@ -139,6 +141,9 @@ function generateUniqueFieldId(): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgxSignalFormErrorComponent],
   styleUrl: './form-field.component.scss',
+  host: {
+    '[attr.outline]': 'isOutline() ? "" : null',
+  },
   template: `
     <!-- Label slot (outside bordered container for traditional layout) -->
     <div class="ngx-signal-form-field__label">
@@ -244,6 +249,34 @@ export class NgxSignalFormFieldComponent<TValue = unknown> {
   readonly showErrors = input<boolean>(true);
 
   /**
+   * Enable outlined form field appearance.
+   * When true, applies Material Design outlined input styling.
+   *
+   * @default Inherited from NgxSignalFormsConfig.defaultFormFieldAppearance
+   *
+   * @example Explicit outline
+   * ```html
+   * <ngx-signal-form-field [formField]="form.email" outline>
+   *   <label for="email">Email</label>
+   *   <input id="email" [formField]="form.email" />
+   * </ngx-signal-form-field>
+   * ```
+   *
+   * @example Global default via config
+   * ```typescript
+   * provideNgxSignalFormsConfig({
+   *   defaultFormFieldAppearance: 'outline',
+   * });
+   * ```
+   */
+  readonly outline = input(false, { transform: booleanAttribute });
+
+  /**
+   * Toolkit configuration for default appearance.
+   */
+  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
+
+  /**
    * Form context (optional, for submission state tracking).
    */
   readonly #formContext = inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true });
@@ -274,6 +307,20 @@ export class NgxSignalFormFieldComponent<TValue = unknown> {
       descendants: true,
     },
   );
+
+  /**
+   * Computed signal determining if outline appearance should be applied.
+   * Respects explicit outline input, falls back to config default.
+   */
+  protected readonly isOutline = computed(() => {
+    // Priority 1: Explicit outline input
+    if (this.outline()) {
+      return true;
+    }
+
+    // Priority 2: Config default
+    return this.#config.defaultFormFieldAppearance === 'outline';
+  });
 
   /**
    * Resolved field name computed from three sources (in priority order):

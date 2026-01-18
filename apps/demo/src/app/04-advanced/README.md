@@ -158,7 +158,7 @@ import { submit } from '@angular/forms/signals';
 
 @Component({
   template: `
-    <form [ngxSignalForm]="registrationForm" (ngSubmit)="handleSubmit()">
+    <form [ngxSignalForm]="registrationForm" (submit)="handleSubmit($event)">
       <!-- Form fields -->
 
       <button
@@ -221,7 +221,8 @@ export class RegistrationComponent {
     }
   });
 
-  protected handleSubmit(): void {
+  protected handleSubmit(event: Event): void {
+    event.preventDefault();
     void this.#submitHandler();
   }
 }
@@ -246,9 +247,12 @@ const submittedStatus = computed<SubmittedStatus>(() => {
 When you use the toolkit's `ngxSignalFormDirective`, the derived status is provided via DI for convenience:
 
 ```html
-<form [ngxSignalForm]="registrationForm" (ngSubmit)="save()">
+<form [ngxSignalForm]="registrationForm" (submit)="save($event)">
   <!-- NgxSignalFormErrorComponent automatically receives submittedStatus -->
-  <ngx-signal-form-error [formField]="registrationForm.email" fieldName="email" />
+  <ngx-signal-form-error
+    [formField]="registrationForm.email"
+    fieldName="email"
+  />
 
   @if (formContext?.submittedStatus() === 'submitting') {
   <p role="status">Submitting…</p>
@@ -517,7 +521,7 @@ export const appConfig: ApplicationConfig = {
 
 **Problem:** `submittedStatus` always 'unsubmitted'
 
-**Solution:** Use `(ngSubmit)` on form element
+**Solution:** Use native `(submit)` event with `event.preventDefault()`
 
 ```html
 <!-- ❌ Wrong: Manual submit handling -->
@@ -525,10 +529,17 @@ export const appConfig: ApplicationConfig = {
   <button (click)="save()">Submit</button>
 </form>
 
-<!-- ✅ Correct: Use ngSubmit event -->
-<form (ngSubmit)="save()">
+<!-- ✅ Correct: Use native submit event with preventDefault -->
+<form (submit)="save($event)">
   <button type="submit">Submit</button>
 </form>
+```
+
+```typescript
+protected save(event: Event): void {
+  event.preventDefault();
+  // Handle form submission
+}
 ```
 
 ### Server errors not displaying

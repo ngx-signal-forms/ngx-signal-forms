@@ -119,7 +119,10 @@ The component uses content projection to allow full customization:
 
   <!-- Hints and character counts are projected in a separate slot -->
   <ngx-signal-form-field-hint>Max 500 characters</ngx-signal-form-field-hint>
-  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+  <ngx-signal-form-field-character-count
+    [formField]="form.bio"
+    [maxLength]="500"
+  />
 </ngx-signal-form-field>
 ```
 
@@ -133,7 +136,7 @@ Add icons, text, or interactive elements before or after the input using `prefix
 <ngx-signal-form-field [formField]="form.search">
   <span prefix aria-hidden="true">🔍</span>
   <label for="search">Search</label>
-  <input id="search" [formField]="form.search"  />
+  <input id="search" [formField]="form.search" />
 </ngx-signal-form-field>
 ```
 
@@ -293,7 +296,11 @@ By default, the required marker (`*`) is automatically shown when the input has 
 **Custom required marker - "(required)":**
 
 ```html
-<ngx-signal-form-field [formField]="form.email" outline requiredMarker="(required)">
+<ngx-signal-form-field
+  [formField]="form.email"
+  outline
+  requiredMarker="(required)"
+>
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" required />
 </ngx-signal-form-field>
@@ -515,7 +522,10 @@ import { NgxSignalFormFieldCharacterCountComponent } from '@ngx-signal-forms/too
 <ngx-signal-form-field [formField]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+  <ngx-signal-form-field-character-count
+    [formField]="form.bio"
+    [maxLength]="500"
+  />
 </ngx-signal-form-field>
 ```
 
@@ -615,7 +625,7 @@ const contactSchema = schema<ContactForm>((path) => {
     NgxSignalFormFieldCharacterCountComponent,
   ],
   template: `
-    <form (ngSubmit)="save()">
+    <form (submit)="save($event)" novalidate>
       <!-- Outlined email field with custom required marker -->
       <ngx-signal-form-field
         [formField]="contactForm.email"
@@ -669,7 +679,8 @@ export class ContactFormComponent {
   readonly #model = signal<ContactForm>({ email: '', message: '' });
   protected readonly contactForm = form(this.#model, contactSchema);
 
-  protected save(): void {
+  protected save(event: Event): void {
+    event.preventDefault();
     if (this.contactForm().valid()) {
       console.log('Form data:', this.#model());
     }

@@ -32,7 +32,7 @@ import { submissionSchema } from './submission-patterns.validations';
     <form
       [ngxSignalForm]="registrationForm"
       [errorStrategy]="'on-submit'"
-      (ngSubmit)="handleSubmit()"
+      (submit)="handleSubmit($event)"
       class="form-container"
     >
       <!-- Submission state indicator -->
@@ -266,11 +266,10 @@ export class SubmissionPatternsComponent {
   /**
    * Form submission handler using Angular Signal Forms submit() helper.
    *
-   * CORRECT PATTERN (per Tim Deschryver & Angular docs):
-   * 1. Call submit() inside a method (not as property initialization)
-   * 2. Bind the method to (ngSubmit)
-   * 3. submit() executes at the right time (during form submission)
-   * 4. No fields marked as touched on page load
+   * CRITICAL: Signal Forms use native DOM submit event, NOT ngSubmit.
+   * - Template binding: (submit)="handleSubmit($event)" with $event
+   * - Handler must call event.preventDefault() to prevent page reload
+   * - submit() helper signature: async function submit<T>(form, action): Promise<void>
    *
    * The submit() helper provides:
    * - Automatic markAllAsTouched() to show validation errors
@@ -281,7 +280,8 @@ export class SubmissionPatternsComponent {
    * Note: The callback is only invoked when the form is VALID.
    * If invalid, the callback is skipped and submitting remains false.
    */
-  protected async handleSubmit(): Promise<void> {
+  protected async handleSubmit(event: Event): Promise<void> {
+    event.preventDefault();
     await submit(this.registrationForm, async (formData) => {
       /// Clear previous states
       this.serverError.set(null);

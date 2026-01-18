@@ -7,7 +7,7 @@
 <form
   [ngxSignalForm]="showcaseForm"
   [errorStrategy]="errorDisplayMode()"
-  (ngSubmit)="displaySubmittedData()"
+  (submit)="displaySubmittedData($event)"
   class="flex flex-col gap-6"
 >
   @for (fact of model().facts; track fact.factNumber; let factIndex = $index) {

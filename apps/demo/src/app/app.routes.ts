@@ -115,6 +115,14 @@ export const appRoutes: Routes = [
           ),
         title: 'Field States - dirty, touched, invalid',
       },
+      {
+        path: 'css-status-classes',
+        loadComponent: () =>
+          import(
+            './02-toolkit-core/css-status-classes/css-status-classes.component'
+          ).then((m) => m.CssStatusClassesComponent),
+        title: 'CSS Status Classes - Sync with Error Display',
+      },
     ],
   },
 

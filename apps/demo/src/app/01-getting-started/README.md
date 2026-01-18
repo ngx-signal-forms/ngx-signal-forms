@@ -170,7 +170,7 @@ import {
 **Provides context to child components:**
 
 ```html
-<form [ngxSignalForm]="contactForm" (ngSubmit)="save()">
+<form [ngxSignalForm]="contactForm" (submit)="save($event)">
   <!-- All child form-error components inherit submission state -->
   <ngx-signal-form-error [formField]="contactForm.name" fieldName="name" />
   <ngx-signal-form-error [formField]="contactForm.email" fieldName="email" />
@@ -183,7 +183,7 @@ import {
 - Submission state tracking (toolkit-derived from `submitting()` + `touched()`)
 - Error display strategy (inheritable)
 
-**Note:** Angular Signal Forms exposes `submitting()` and `touched()` signals; the toolkit derives a `SubmittedStatus` value from them and shares it via dependency injection when you use `(ngSubmit)`.
+**Note:** Angular Signal Forms exposes `submitting()` and `touched()` signals; the toolkit derives a `SubmittedStatus` value from them and shares it via dependency injection when you use `(submit)` with `event.preventDefault()`.
 
 ## 📊 Code Reduction Analysis
 

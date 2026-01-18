@@ -46,7 +46,7 @@
 | **Field State Primitives** | ✅ `touched()`, `dirty()`, `invalid()`, `errors()`, `value()` | —                                                                 | —                           |
 | **Manual Touch**           | ✅ `markAsTouched()` method                                   | —                                                                 | —                           |
 | **Async Validation**       | ✅ `validateAsync()` with resources                           | —                                                                 | —                           |
-| **Control Directive**      | ✅ `[formField]` for two-way binding                              | —                                                                 | —                           |
+| **Control Directive**      | ✅ `[formField]` for two-way binding                          | —                                                                 | —                           |
 |                            |                                                               |                                                                   |                             |
 | **Auto-Touch on Blur**     | ❌ Manual `(blur)` handlers required                          | ✅ Automatic via directive                                        | Directive (host listener)   |
 | **ARIA Attributes**        | ❌ Manual `[attr.aria-invalid]` required                      | ✅ Automatic `aria-invalid` and `aria-describedby`                | Directive (host bindings)   |
@@ -64,7 +64,7 @@
 **Signal Forms Alone (Manual Implementation):**
 
 ```html
-<form (ngSubmit)="save()">
+<form (submit)="save($event)" novalidate>
   <label for="email">Email</label>
   <input
     id="email"
@@ -91,7 +91,7 @@
 **Signal Forms + This Toolkit (Automatic):**
 
 ```html
-<form [ngxSignalForm]="userForm" (ngSubmit)="save()">
+<form [ngxSignalForm]="userForm" (submit)="save($event)">
   <ngx-signal-form-field [formField]="userForm.email">
     <label for="email">Email</label>
     <input id="email" [formField]="userForm.email" />
@@ -190,7 +190,7 @@ Control when errors are shown (immediate, on-touch, on-submit, manual).
     <form
       [ngxSignalForm]="userForm"
       [errorStrategy]="errorMode()"
-      (ngSubmit)="save()"
+      (submit)="save($event)"
     >
       <!-- form fields -->
     </form>
@@ -200,6 +200,13 @@ export class MyComponent {
   protected readonly errorMode = signal<ErrorDisplayStrategy>('on-touch');
   protected readonly model = signal({ email: '', message: '' });
   protected readonly userForm = form(this.model, userSchema);
+
+  protected save(event: Event): void {
+    event.preventDefault();
+    if (this.userForm().valid()) {
+      console.log('Saved:', this.model());
+    }
+  }
 }
 ```
 
@@ -219,7 +226,7 @@ Consistent layout + automatic error display.
 Automatic `aria-busy` during async validation/submission.
 
 ```html
-<form [ngxSignalForm]="userForm" (ngSubmit)="save()">
+<form [ngxSignalForm]="userForm" (submit)="save($event)">
   <!-- aria-busy="true" automatically during async -->
   <input [formField]="userForm.email" />
   <button type="submit">Submit</button>
@@ -496,7 +503,7 @@ export class ngxSignalFormDirective {
 <form
   [ngxSignalForm]="userForm"
   [errorStrategy]="errorMode()"
-  (ngSubmit)="save()"
+  (submit)="save($event)"
 >
   <!-- Child directives automatically access form context via DI -->
   <input id="email" [formField]="userForm.email" />
@@ -828,7 +835,7 @@ const contactSchema = schema<ContactModel>((path) => {
   selector: 'ngx-contact',
   imports: [NgxSignalFormAutoAria, Control],
   template: `
-    <form (ngSubmit)="save()">
+    <form (submit)="save($event)" novalidate>
       <!-- Auto aria-invalid + aria-describedby -->
       <label for="email">Email</label>
       <input id="email" type="email" [formField]="contactForm.email" />
@@ -846,7 +853,8 @@ export class ContactFormComponent {
   protected readonly model = signal<ContactModel>({ email: '', message: '' });
   protected readonly contactForm = form(this.model, contactSchema);
 
-  protected save(): void {
+  protected save(event: Event): void {
+    event.preventDefault();
     if (this.contactForm().valid()) {
       console.log('Valid:', this.model());
     }
@@ -874,7 +882,7 @@ import {
     FormField,
   ],
   template: `
-    <form (ngSubmit)="save()">
+    <form (submit)="save($event)" novalidate>
       <label for="email">Email</label>
       <input id="email" type="email" [formField]="contactForm.email" <!-- blur handler automatic -- />
       />
@@ -888,7 +896,8 @@ export class ContactFormComponent {
   protected readonly model = signal<ContactModel>({ email: '', message: '' });
   protected readonly contactForm = form(this.model, contactSchema);
 
-  protected save(): void {
+  protected save(event: Event): void {
+    event.preventDefault();
     if (this.contactForm().valid()) {
       console.log('Valid:', this.model());
     }
@@ -916,7 +925,7 @@ import {
     FormField,
   ],
   template: `
-    <form (ngSubmit)="save()">
+    <form (submit)="save($event)" novalidate>
       <ngx-signal-form-field [formField]="contactForm.email">
         <label for="email">Email</label>
         <input id="email" type="email" [formField]="contactForm.email" />
@@ -935,7 +944,8 @@ export class ContactFormComponent {
   protected readonly model = signal<ContactModel>({ email: '', message: '' });
   protected readonly contactForm = form(this.model, contactSchema);
 
-  protected save(): void {
+  protected save(event: Event): void {
+    event.preventDefault();
     if (this.contactForm().valid()) {
       console.log('Valid:', this.model());
     }
@@ -1007,7 +1017,7 @@ const contactSchema = schema<ContactModel>((path) => {
     <form
       [ngxSignalForm]="contactForm"
       [errorStrategy]="errorMode()"
-      (ngSubmit)="save()"
+      (submit)="save($event)"
     >
       <ngx-signal-form-field [formField]="contactForm.email">
         <label for="email">Email *</label>
@@ -1388,7 +1398,7 @@ protected readonly saveHandler = submit(this.contactForm, async (formState) => {
 });
 
 // In template
-<form (ngSubmit)="save()">
+<form (submit)="save($event)" novalidate>
   <!-- fields -->
 
   <!-- Built-in submission state -->
@@ -1543,7 +1553,7 @@ const contactSuite = staticSafeSuite<ContactModel>((data) => {
   selector: 'ngx-contact',
   imports: [NgxVestFormField],
   template: `
-    <form (ngSubmit)="save()">
+    <form (submit)="save($event)" novalidate>
       <ngx-vest-form-field [formField]="form.emailField()">
         <label for="email">Email</label>
         <input
@@ -1559,7 +1569,8 @@ const contactSuite = staticSafeSuite<ContactModel>((data) => {
 export class ContactComponent {
   form = createVestForm(signal({ email: '' }), contactSuite);
 
-  async save(): void {
+  async save(event: Event): Promise<void> {
+    event.preventDefault();
     const result = await this.form.save();
     if (result.valid) console.log(result.data);
   }
@@ -1579,7 +1590,7 @@ const contactSchema = schema<ContactModel>((path) => {
   selector: 'ngx-contact',
   imports: [NgxSignalFormField, Control],
   template: `
-    <form (ngSubmit)="save()">
+    <form (submit)="save($event)" novalidate>
       <ngx-signal-form-field [formField]="contactForm.email">
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" />
@@ -1592,7 +1603,8 @@ export class ContactComponent {
   model = signal({ email: '' });
   contactForm = form(this.model, contactSchema);
 
-  save(): void {
+  save(event: Event): void {
+    event.preventDefault();
     if (this.contactForm().valid()) console.log(this.model());
   }
 }

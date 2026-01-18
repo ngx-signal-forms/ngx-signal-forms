@@ -19,7 +19,7 @@ import { pureSignalFormSchema } from './pure-signal-form.validations';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField],
   template: `
-    <form (ngSubmit)="handleSubmit()" novalidate class="form-container">
+    <form (submit)="handleSubmit($event)" novalidate class="form-container">
       <!-- Email Field - Manual ARIA Implementation -->
       <div class="form-field">
         <label for="pure-email" class="form-label">Email Address *</label>
@@ -149,11 +149,13 @@ export class PureSignalFormComponent {
   /**
    * Form submission handler using Angular Signal Forms submit() helper.
    *
-   * **Key behavior:** Callback only executes if form is VALID.
-   * If invalid, form is not submitted (errors displayed via manual logic).
+   * **Key behavior:** Signal Forms use native DOM submit event, not ngSubmit.
+   * Must call preventDefault() to avoid page reload.
+   * Callback only executes if form is VALID.
    */
-  protected async handleSubmit(): Promise<void> {
-    await submit(this.signupForm, async () => {
+  protected handleSubmit(event: Event): void {
+    event.preventDefault();
+    submit(this.signupForm, async () => {
       // Simulate async operation
       await new Promise((resolve) => setTimeout(resolve, 500));
 

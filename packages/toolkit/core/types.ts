@@ -151,6 +151,22 @@ export interface NgxSignalFormsConfig {
    * @default false
    */
   debug: boolean;
+
+  /**
+   * Default appearance for form fields.
+   * When set, all NgxSignalFormFieldComponent instances will use this appearance
+   * unless explicitly overridden with the `outline` attribute.
+   *
+   * @default undefined (no global default)
+   *
+   * @example Global outline mode
+   * ```typescript
+   * provideNgxSignalFormsConfig({
+   *   defaultFormFieldAppearance: 'outline',
+   * });
+   * ```
+   */
+  defaultFormFieldAppearance?: 'default' | 'outline';
 }
 
 /**

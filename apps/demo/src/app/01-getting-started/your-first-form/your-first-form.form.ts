@@ -24,7 +24,7 @@ import { contactFormSchema } from './your-first-form.validations';
     <form
       [ngxSignalForm]="contactForm"
       [errorStrategy]="errorDisplayMode()"
-      (ngSubmit)="handleSubmit()"
+      (submit)="handleSubmit($event)"
       class="form-container"
     >
       <!-- Name Field - Manual Layout with Toolkit Error Component -->
@@ -125,7 +125,8 @@ export class YourFirstFormComponent {
    *
    * Button is NEVER disabled (accessibility best practice).
    */
-  protected async handleSubmit(): Promise<void> {
+  protected async handleSubmit(event: Event): Promise<void> {
+    event.preventDefault();
     await submit(this.contactForm, async () => {
       // Simulate async operation (e.g., API call)
       await new Promise((resolve) => setTimeout(resolve, 1500));
