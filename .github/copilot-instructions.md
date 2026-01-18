@@ -56,7 +56,28 @@ Follow [`.github/instructions/security-and-owasp.instructions.md`](./instruction
 
 ### Form Implementation Checklist
 
-[TODO: Update if needed]
+**Signal Forms Migration Checklist:**
+
+- [ ] Use `signal()` for form data model (source of truth)
+- [ ] Use `form()` with validators, NOT `FormBuilder`
+- [ ] Use `[formField]` directive, NOT `formControlName`
+- [ ] Use `(submit)="handler($event)"` with `event.preventDefault()`, NOT `ngSubmit`
+- [ ] Add `novalidate` attribute to `<form>` elements
+- [ ] Use `OnPush` change detection
+- [ ] Call signals as functions: `form.field().invalid()` NOT `form.field.invalid()`
+- [ ] Use `!touched()` / `!dirty()` (no `untouched()` / `pristine()` signals)
+- [ ] Use immutable updates: `signal.update()` NOT direct mutation
+- [ ] Reset both form AND model: `form.reset()` + `model.set(initialValue)`
+
+**Common Pitfalls:**
+
+| Issue          | Wrong                      | Correct                                                |
+| -------------- | -------------------------- | ------------------------------------------------------ |
+| Signal calls   | `form.email.invalid()`     | `form.email().invalid()`                               |
+| Submit event   | `(ngSubmit)="save()"`      | `(submit)="save($event)"`                              |
+| CSS classes    | `.ng-invalid { }`          | `[aria-invalid="true"] { }`                            |
+| State negation | `form.email().untouched()` | `!form.email().touched()`                              |
+| Array mutation | `data.items.push(x)`       | `signal.update(d => ({...d, items: [...d.items, x]}))` |
 
 ### Example Pattern
 

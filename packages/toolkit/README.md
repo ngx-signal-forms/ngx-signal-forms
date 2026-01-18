@@ -90,7 +90,7 @@ export class MyComponent {
 
 ### ⚠️ Critical: The `novalidate` Attribute
 
-Signal Forms do **NOT** automatically disable HTML5 form validation like Angular's Reactive Forms do. However, the `[ngxSignalForm]` directive automatically adds the `novalidate` attribute to prevent conflicts.
+Signal Forms do **NOT** automatically disable HTML5 form validation like Angular's Reactive Forms do. The toolkit handles this automatically when you import `NgxSignalFormToolkit`.
 
 **What happens without `novalidate`:**
 
@@ -100,33 +100,54 @@ Signal Forms do **NOT** automatically disable HTML5 form validation like Angular
 4. User sees **BOTH** error messages (confusing!)
 5. Your carefully designed error UX is undermined
 
-**When is `novalidate` automatic?**
+**Automatic `novalidate` (when NgxSignalFormToolkit is imported):**
 
-✅ **With the directive** (automatic):
+The directive has selector `form[ngxSignalForm], form(submit)` — meaning `novalidate` is **automatically added** to ANY form with a `(submit)` handler:
+
+```html
+<!-- ✅ novalidate auto-applied (has submit handler) -->
+<form (submit)="handleSubmit($event)">
+  <input [formField]="form.email" />
+</form>
+
+<!-- ✅ novalidate auto-applied + full form context -->
+<form [ngxSignalForm]="userForm" (submit)="handleSubmit($event)">
+  <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
+</form>
+```
+
+**When do you need `[ngxSignalForm]` binding?**
+
+The explicit binding is only required when you need **form context** for child components:
+
+| Use Case                                      | `(submit)` only | `[ngxSignalForm]` needed |
+| --------------------------------------------- | --------------- | ------------------------ |
+| Auto `novalidate`                             | ✅              | ✅                       |
+| `NgxSignalFormErrorComponent` auto-injection  | ❌              | ✅                       |
+| `NgxSignalFormAutoAriaDirective` full context | ❌              | ✅                       |
+| `[errorStrategy]` form-level override         | ❌              | ✅                       |
+| Access `submittedStatus` signal               | ❌              | ✅                       |
+
+**Minimal usage** (no toolkit error components):
+
+```html
+<form (submit)="handleSubmit($event)">
+  <!-- novalidate auto-applied, but no form context for child components -->
+  <input [formField]="form.email" />
+  @if (form.email().invalid() && form.email().touched()) {
+  <div class="error">{{ form.email().errors()[0].message }}</div>
+  }
+</form>
+```
+
+**Full toolkit usage** (recommended):
 
 ```html
 <form [ngxSignalForm]="userForm" (submit)="handleSubmit($event)">
-  <!-- novalidate is automatically added -->
+  <!-- Form context available for child components -->
+  <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
 </form>
 ```
-
-⚠️ **Without the directive** (you must add it manually):
-
-```html
-<form (submit)="handleSubmit($event)" novalidate>
-  <!-- You must add novalidate manually -->
-</form>
-```
-
-❌ **Missing `novalidate`** (browser validation conflicts):
-
-```html
-<form (submit)="handleSubmit($event)" novalidate>
-  <!-- Without [ngxSignalForm], you must add novalidate manually -->
-</form>
-```
-
-**Best Practice:** Always use `[ngxSignalForm]` directive for automatic `novalidate` handling.
 
 ### Alternative: Individual Imports
 
@@ -168,8 +189,16 @@ import {
   ngxSignalFormDirective,
   NgxSignalFormErrorComponent,
   NgxSignalFormAutoAriaDirective,
-  computeShowErrors,
+  // Error display utilities
   showErrors,
+  combineShowErrors,
+  computeShowErrors,
+  shouldShowErrors,
+  // Context injection functions (CIFs)
+  injectFormContext,
+  injectFormConfig,
+  // Reactive utilities
+  unwrapValue,
 } from '@ngx-signal-forms/toolkit/core';
 
 // Form field wrapper with enhanced components
@@ -1253,7 +1282,7 @@ hasSubmitted(formTree: FieldTree<unknown>): Signal<boolean>
 #### Error Display Utilities
 
 ```typescript
-// Compute error visibility
+// Compute error visibility (reactive - returns Signal<boolean>)
 computeShowErrors<T>(
   field: ReactiveOrStatic<FieldState<T>>,
   strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
@@ -1263,13 +1292,151 @@ computeShowErrors<T>(
 // SubmittedStatus type from Angular Signal Forms
 type SubmittedStatus = 'unsubmitted' | 'submitting' | 'submitted';
 
-// Convenience wrapper
-showErrors<T>(...): Signal<boolean>
+// Convenience wrapper (most common usage)
+showErrors<T>(
+  field: FieldTree<T>,
+  strategy: ErrorDisplayStrategy,
+  submittedStatus: Signal<SubmittedStatus>
+): Signal<boolean>
+
+// Combine multiple error visibility signals (OR logic)
+combineShowErrors(signals: Signal<boolean>[]): Signal<boolean>
+
+// Non-reactive check (for imperative code)
+shouldShowErrors(
+  fieldState: FieldState<unknown>,
+  strategy: ErrorDisplayStrategy,
+  submittedStatus: SubmittedStatus
+): boolean
 
 // Field name resolution
 resolveFieldName(element: HTMLElement, injector: Injector): string | null
 generateErrorId(fieldName: string): string
 generateWarningId(fieldName: string): string
+```
+
+**Usage Examples:**
+
+```typescript
+import {
+  showErrors,
+  combineShowErrors,
+  computeShowErrors,
+  shouldShowErrors,
+} from '@ngx-signal-forms/toolkit/core';
+
+// Simple usage - most common
+protected readonly emailShowErrors = showErrors(
+  this.userForm.email,
+  'on-touch',
+  this.submittedStatus,
+);
+
+// Check if ANY field should show errors
+protected readonly showAnyErrors = combineShowErrors([
+  showErrors(this.userForm.email, 'on-touch', this.submittedStatus),
+  showErrors(this.userForm.password, 'on-touch', this.submittedStatus),
+]);
+
+// Imperative check (non-reactive)
+if (shouldShowErrors(this.userForm.email(), 'on-touch', 'submitted')) {
+  // Field should display errors
+}
+```
+
+#### Context Injection Functions (CIFs)
+
+CIFs provide access to toolkit context in custom directives and components.
+
+```typescript
+import {
+  injectFormContext,
+  injectFormConfig,
+} from '@ngx-signal-forms/toolkit/core';
+```
+
+**injectFormContext()**
+
+Injects the form context provided by `NgxSignalFormDirective`. Returns `undefined` if not inside a form with the directive.
+
+```typescript
+import { injectFormContext } from '@ngx-signal-forms/toolkit/core';
+
+@Directive({ selector: '[myCustomDirective]' })
+export class MyCustomDirective {
+  readonly #formContext = injectFormContext();
+
+  constructor() {
+    if (this.#formContext) {
+      // Access form context
+      console.log('Form:', this.#formContext.form);
+      console.log('Strategy:', this.#formContext.errorStrategy());
+      console.log('Status:', this.#formContext.submittedStatus());
+    }
+  }
+}
+```
+
+**injectFormConfig()**
+
+Injects the global toolkit configuration. Returns normalized config with defaults applied.
+
+```typescript
+import { injectFormConfig } from '@ngx-signal-forms/toolkit/core';
+
+@Component({
+  /* ... */
+})
+export class MyComponent {
+  readonly #config = injectFormConfig();
+
+  constructor() {
+    console.log('Auto ARIA:', this.#config.autoAria);
+    console.log('Default strategy:', this.#config.defaultErrorStrategy);
+    console.log('Debug mode:', this.#config.debug);
+  }
+}
+```
+
+**Optional injector parameter:**
+
+Both CIFs accept an optional `Injector` parameter for use outside injection context:
+
+```typescript
+// Inside injection context (normal usage)
+const context = injectFormContext();
+
+// Outside injection context (e.g., in a callback)
+const context = injectFormContext(this.injector);
+```
+
+#### Reactive Utilities
+
+**unwrapValue()**
+
+Extracts the current value from a `ReactiveOrStatic<T>` type. Useful for normalizing values that may be signals, functions, or static values.
+
+```typescript
+import { unwrapValue } from '@ngx-signal-forms/toolkit/core';
+import type { ReactiveOrStatic } from '@ngx-signal-forms/toolkit/core';
+
+function processStrategy(strategy: ReactiveOrStatic<ErrorDisplayStrategy>) {
+  // Works with signal, function, or static value
+  const currentStrategy = unwrapValue(strategy);
+  // currentStrategy is now ErrorDisplayStrategy (not Signal or function)
+}
+
+// Example usage
+const staticStrategy: ReactiveOrStatic<ErrorDisplayStrategy> = 'on-touch';
+const signalStrategy: ReactiveOrStatic<ErrorDisplayStrategy> =
+  signal('on-touch');
+const computedStrategy: ReactiveOrStatic<ErrorDisplayStrategy> = computed(
+  () => 'on-touch',
+);
+
+unwrapValue(staticStrategy); // 'on-touch'
+unwrapValue(signalStrategy); // 'on-touch'
+unwrapValue(computedStrategy); // 'on-touch'
 ```
 
 ## Development

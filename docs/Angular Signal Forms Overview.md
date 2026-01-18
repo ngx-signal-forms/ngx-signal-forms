@@ -69,9 +69,8 @@ Angular Signal Forms is a new **experimental** reactive form system introduced i
 
 **What Signal Forms DOES NOT PROVIDE:**
 
-- ❌ **Automatic blur handlers** - You must add `(blur)="field().markAsTouched()"` manually
 - ❌ **Error visibility logic** - You must write `@if (touched() && invalid())` conditions yourself
-- ❌ **Submission state tracking** - You must track `hasSubmitted` in your component
+- ❌ **Derived submitted status** - No `submittedStatus()` API (derive from `submitting()`/`touched()` if needed)
 - ❌ **Error display strategies** - No built-in support for "immediate", "on-touch", "on-submit" modes
 - ❌ **Automatic ARIA attributes** - No automatic `aria-invalid` or `aria-describedby`
 
@@ -82,7 +81,6 @@ Angular Signal Forms is a new **experimental** reactive form system introduced i
 <input
   id="email"
   [formField]="userForm.email"
-  (blur)="userForm.email().markAsTouched()"
   [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null"
   [attr.aria-describedby]="userForm.email().invalid() ? 'email-error' : null"
 />
@@ -98,13 +96,12 @@ Angular Signal Forms is a new **experimental** reactive form system introduced i
 
 **For Automatic Error Display & Accessibility:**
 
-See the [**Signal Forms Enhancement Library**](docs/SIGNAL_FORMS_ENHANCEMENT_LIBRARY.md) which provides:
+See the [**Signal Forms Enhancement Library**](./SIGNAL_FORMS_ENHANCEMENT_LIBRARY.md) which provides:
 
-- ✅ Automatic blur handlers via `autoTouch` directive
-- ✅ Error display strategies (`immediate`, `on-touch`, `on-submit`, `manual`)
 - ✅ Automatic ARIA attributes (`aria-invalid`, `aria-describedby`)
+- ✅ Error display strategies (`immediate`, `on-touch`, `on-submit`, `manual`)
 - ✅ Form field wrappers with built-in error display
-- ✅ Submission state tracking via form provider
+- ✅ Derived `submittedStatus` via form provider
 - ✅ WCAG 2.2 compliance by default
 
 ---

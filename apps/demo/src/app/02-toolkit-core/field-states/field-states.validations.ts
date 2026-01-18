@@ -1,8 +1,9 @@
 import {
-  schema,
-  required,
+  debounce,
   email,
   minLength,
+  required,
+  schema,
   validate,
 } from '@angular/forms/signals';
 import type { FieldStatesModel } from './field-states.model';
@@ -21,7 +22,8 @@ export const fieldStatesSchema = schema<FieldStatesModel>((path) => {
   required(path.email, { message: 'Email is required' });
   email(path.email, { message: 'Email format is invalid' });
 
-  // Username validation
+  // Username validation with debounce (useful for async validation scenarios)
+  debounce(path.username, 300);
   required(path.username, { message: 'Username is required' });
   minLength(path.username, 3, {
     message: 'Username must be at least 3 characters',

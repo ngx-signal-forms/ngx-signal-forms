@@ -16,17 +16,16 @@ export * from './directives/ngx-signal-form.directive';
 export * from './components/form-error.component';
 
 // Utilities
+export * from './utilities/error-strategies';
 export * from './utilities/field-resolution';
 export * from './utilities/focus-first-invalid';
-export * from './utilities/submission-helpers';
-export * from './utilities/warning-error';
+export { injectFormConfig } from './utilities/inject-form-config';
+export { injectFormContext } from './utilities/inject-form-context';
+export * from './utilities/show-errors';
 export * from './utilities/status-classes';
-
-// Future exports:
-// export * from './directives/form-busy.directive';
-// export * from './components/form-error.component';
-// export * from './utilities/error-strategies';
-// export * from './utilities/show-errors';
+export * from './utilities/submission-helpers';
+export { unwrapValue } from './utilities/unwrap-signal-or-value';
+export * from './utilities/warning-error';
 
 // Convenience imports
 import { NgxSignalFormErrorComponent } from './components/form-error.component';

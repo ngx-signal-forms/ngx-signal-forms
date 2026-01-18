@@ -1,6 +1,6 @@
 ---
 description: '@ngx-signal-forms/toolkit - Enhancement library for Angular Signal Forms'
-applyTo: 'packages/toolkit/**/*.{ts,html,scss,css}'
+applyTo: '{apps,packages}/**/*.{ts,html,scss,css}'
 ---
 
 # @ngx-signal-forms/toolkit - Coding Instructions
@@ -11,10 +11,21 @@ Enhancement toolkit for Angular 21+ Signal Forms providing automatic accessibili
 
 ## Technology Stack
 
-- **Angular**: `>=21.0.0-next.0` (peer dependency)
+- **Angular**: `>=21.1.0` (peer dependency) - requires `[formField]` directive, `focusBoundControl()`, `errorSummary()`
 - **TypeScript**: `5.8+` with strict mode
 - **Testing**: Vitest (unit), Playwright (E2E)
 - **Architecture**: Standalone components, signal-based, OnPush change detection, zoneless-compatible
+
+### Angular 21.1+ Requirements
+
+The toolkit requires Angular 21.1+ for these features:
+
+| Feature                 | Used By               | Description                            |
+| ----------------------- | --------------------- | -------------------------------------- |
+| `[formField]` directive | All components        | Renamed from `[field]` in 21.1         |
+| `focusBoundControl()`   | `focusFirstInvalid()` | Focus UI control bound to a field      |
+| `errorSummary()`        | `focusFirstInvalid()` | Get all errors including nested fields |
+| `formFieldBindings`     | Auto ARIA directive   | Track bound FormField directives       |
 
 ## Project Structure
 
@@ -23,14 +34,15 @@ packages/toolkit/
 ├── core/                           # @ngx-signal-forms/toolkit/core
 │   ├── components/                 # NgxSignalFormErrorComponent
 │   ├── directives/                 # NgxSignalFormDirective, NgxSignalFormAutoAriaDirective
-│   ├── providers/                  # provideNgxSignalFormsConfig
-│   ├── utilities/                  # Helper functions
+│   ├── providers/                  # provideNgxSignalFormsConfig, provideErrorMessages
+│   ├── utilities/                  # Helper functions (submission-helpers, show-errors, etc.)
 │   └── public_api.ts               # Public exports + NgxSignalFormToolkit bundle
 └── form-field/                     # @ngx-signal-forms/toolkit/form-field
     ├── form-field.component.ts     # Main wrapper component
     ├── floating-label.directive.ts # Outlined Material Design layout
     ├── form-field-hint.component.ts
-    └── form-field-character-count.component.ts
+    ├── form-field-character-count.component.ts
+    └── public_api.ts               # Public exports + NgxOutlinedFormField bundle
 ```
 
 ## Core Design Principles
@@ -64,7 +76,8 @@ type ErrorDisplayStrategy =
   | 'immediate' // Real-time (as user types)
   | 'on-touch' // After blur or submit (WCAG recommended - DEFAULT)
   | 'on-submit' // Only after form submission
-  | 'manual'; // Programmatic control
+  | 'manual' // Programmatic control
+  | 'inherit'; // Inherit from form provider (field-level only)
 ```
 
 ### Warning Convention
@@ -99,6 +112,7 @@ export const appConfig: ApplicationConfig = {
     provideNgxSignalFormsConfig({
       autoAria: true, // Default
       defaultErrorStrategy: 'on-touch', // Default
+      defaultFormFieldAppearance: 'outline', // Optional: 'default' | 'outline'
       strictFieldResolution: false, // Default
       debug: false, // Default
     }),
@@ -126,6 +140,24 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 
 **Contains**: `NgxSignalFormDirective`, `NgxSignalFormAutoAriaDirective`, `NgxSignalFormErrorComponent`
 
+### Form Field Bundle Import
+
+```typescript
+import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
+
+@Component({
+  imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
+  template: `
+    <ngx-signal-form-field [formField]="form.email" outline>
+      <label for="email">Email</label>
+      <input id="email" [formField]="form.email" />
+    </ngx-signal-form-field>
+  `,
+})
+```
+
+**Contains**: `NgxSignalFormFieldComponent`, `NgxFloatingLabelDirective`, `NgxSignalFormFieldHintComponent`, `NgxSignalFormFieldCharacterCountComponent`
+
 ### Individual Imports (Alternative)
 
 ```typescript
@@ -140,25 +172,43 @@ import {
 
 ### NgxSignalFormDirective
 
-**Selector**: `[ngxSignalForm]`
+**Selector**: `form[ngxSignalForm], form(submit)` (auto-applied to forms with submit handler)
 
-**Features**:
+**Automatic Features (both selectors)**:
+
+- Adds `novalidate` attribute to prevent HTML5 validation conflicts
+
+**Context Features (requires `[ngxSignalForm]` binding)**:
 
 - Provides form context to child components via DI
 - Derives `submittedStatus` from Angular's native `submitting()` and `touched()` signals
-- Automatically adds `novalidate` attribute
 - Manages error display strategy
 
+**When to use `[ngxSignalForm]` binding:**
+
+| Use Case                                     | `(submit)` only | `[ngxSignalForm]` needed |
+| -------------------------------------------- | --------------- | ------------------------ |
+| Auto `novalidate`                            | ✅              | ✅                       |
+| `NgxSignalFormErrorComponent` auto-injection | ❌              | ✅                       |
+| `[errorStrategy]` form-level override        | ❌              | ✅                       |
+| Access `submittedStatus` signal              | ❌              | ✅                       |
+
 ```typescript
+// Minimal (novalidate only)
+<form (submit)="save($event)">
+  <input [formField]="userForm.email" />
+</form>
+
+// Full context (recommended with toolkit components)
 <form [ngxSignalForm]="userForm" [errorStrategy]="'on-touch'" (submit)="save($event)">
-  <!-- submittedStatus derived from touched() - Child components auto-inject context -->
+  <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
 </form>
 ```
 
 **Input Properties**:
 
-- `ngxSignalForm` (required): The form instance (FieldTree)
-- `errorStrategy` (optional): Error display strategy
+- `ngxSignalForm` (optional): The form instance (FieldTree) - required for form context
+- `errorStrategy` (optional): Error display strategy override
 
 ### NgxSignalFormAutoAriaDirective
 
@@ -312,6 +362,236 @@ protected save(): void {
 **Returns**: `boolean` - `true` if an invalid field was found and focused
 
 **Note**: Custom control directives must implement a `focus()` method for `focusBoundControl()` to work.
+
+### ngxStatusClasses()
+
+Generates CSS class configuration that syncs with your error display strategy. Angular 21.1+'s `provideSignalFormsConfig` applies classes immediately by default, but toolkit's error messages use `'on-touch'` strategy. This utility aligns both.
+
+**Use case:** Prevent red borders appearing immediately while error messages wait until field is touched.
+
+```typescript
+import { provideSignalFormsConfig } from '@angular/forms/signals';
+import { ngxStatusClasses } from '@ngx-signal-forms/toolkit';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideSignalFormsConfig({
+      classes: ngxStatusClasses({
+        strategy: 'on-touch', // Sync with toolkit's error display
+        invalidClass: 'is-invalid', // Optional: custom class names
+      }),
+    }),
+  ],
+};
+```
+
+**Alternative convenience provider:**
+
+```typescript
+import { provideNgxStatusClasses } from '@ngx-signal-forms/toolkit';
+
+providers: [provideNgxStatusClasses({ strategy: 'on-touch' })];
+```
+
+**Options:**
+
+- `strategy`: `'on-touch'` (default) | `'immediate'`
+- `validClass`, `invalidClass`, `touchedClass`, `untouchedClass`, `dirtyClass`, `pristineClass`: Custom class names
+
+### Submission Helpers
+
+Convenience computed signals for common submission states:
+
+```typescript
+import {
+  canSubmit,
+  isSubmitting,
+  hasSubmitted,
+} from '@ngx-signal-forms/toolkit/core';
+
+@Component({
+  template: `
+    <button type="submit" [disabled]="!canSubmit()">
+      @if (isSubmitting()) {
+        <span>Saving...</span>
+      } @else {
+        <span>Submit</span>
+      }
+    </button>
+    @if (hasSubmitted() && userForm().valid()) {
+      <div class="success">Form saved!</div>
+    }
+  `,
+})
+export class MyFormComponent {
+  protected readonly canSubmit = canSubmit(this.userForm);
+  protected readonly isSubmitting = isSubmitting(this.userForm);
+  protected readonly hasSubmitted = hasSubmitted(this.userForm);
+}
+```
+
+| Helper           | Returns `true` when                        |
+| ---------------- | ------------------------------------------ |
+| `canSubmit()`    | Form is valid AND not currently submitting |
+| `isSubmitting()` | Form submission is in progress             |
+| `hasSubmitted()` | Form has completed at least one submission |
+
+**Note**: Angular Signal Forms does NOT expose a `submittedStatus()` signal. The toolkit derives the status from native `submitting()` and `touched()` signals.
+
+### provideErrorMessages()
+
+Optional error message registry for customizing validation error display.
+
+**Philosophy**: Zero-config by default. Standard Schema libraries (Zod, Valibot, ArkType) include error messages. This provider is only needed for:
+
+- Centralized message management (DRY principle)
+- Internationalization (i18n)
+- Customizing built-in Angular Signal Forms validators
+
+**Message Priority (3-tier system)**:
+
+1. **Validator message** - From Zod/Valibot schema (used first!)
+2. **Registry override** - From this provider (optional)
+3. **Default fallback** - Toolkit's built-in messages
+
+```typescript
+import { provideErrorMessages } from '@ngx-signal-forms/toolkit/core';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideErrorMessages({
+      required: 'This field is required',
+      email: 'Please enter a valid email address',
+      minLength: (params) =>
+        `At least ${(params as { minLength: number }).minLength} characters`,
+    }),
+  ],
+};
+```
+
+**i18n Example:**
+
+```typescript
+import { LOCALE_ID } from '@angular/core';
+import { provideErrorMessages } from '@ngx-signal-forms/toolkit/core';
+
+provideErrorMessages(() => {
+  const locale = inject(LOCALE_ID);
+  const messages = locale === 'ja' ? jaMessages : enMessages;
+  return {
+    required: messages.required,
+    email: messages.email,
+  };
+});
+```
+
+### computeShowErrors() / shouldShowErrors()
+
+Lower-level utilities for computing error visibility. Most users should use `showErrors()` instead.
+
+```typescript
+import { computeShowErrors, shouldShowErrors } from '@ngx-signal-forms/toolkit/core';
+
+// Reactive version - returns Signal<boolean>
+// Accepts ReactiveOrStatic<T> for all parameters (signals, functions, or static values)
+protected readonly showEmailErrors = computeShowErrors(
+  this.form.email,      // ReactiveOrStatic<FieldState<T>>
+  'on-touch',           // ReactiveOrStatic<ErrorDisplayStrategy>
+  this.submittedStatus, // ReactiveOrStatic<SubmittedStatus>
+);
+
+// Non-reactive version - returns boolean
+// Use for imperative code (e.g., in event handlers)
+if (shouldShowErrors(this.form.email(), 'on-touch', 'submitted')) {
+  // Field should display errors
+}
+```
+
+### Context Injection Functions (CIFs)
+
+CIFs provide access to toolkit context in custom directives and components.
+
+**injectFormContext()**
+
+Injects the form context provided by `NgxSignalFormDirective`. Returns `undefined` if not inside a form with the directive.
+
+```typescript
+import { injectFormContext } from '@ngx-signal-forms/toolkit/core';
+
+@Directive({ selector: '[myCustomDirective]' })
+export class MyCustomDirective {
+  readonly #formContext = injectFormContext();
+
+  constructor() {
+    if (this.#formContext) {
+      // Access form context
+      console.log('Form:', this.#formContext.form);
+      console.log('Strategy:', this.#formContext.errorStrategy());
+      console.log('Status:', this.#formContext.submittedStatus());
+    }
+  }
+}
+```
+
+**injectFormConfig()**
+
+Injects the global toolkit configuration. Returns normalized config with defaults applied.
+
+```typescript
+import { injectFormConfig } from '@ngx-signal-forms/toolkit/core';
+
+@Component({
+  /* ... */
+})
+export class MyComponent {
+  readonly #config = injectFormConfig();
+
+  constructor() {
+    console.log('Auto ARIA:', this.#config.autoAria);
+    console.log('Default strategy:', this.#config.defaultErrorStrategy);
+    console.log('Debug mode:', this.#config.debug);
+  }
+}
+```
+
+**Optional injector parameter:**
+
+Both CIFs accept an optional `Injector` parameter for use outside injection context:
+
+```typescript
+// Inside injection context (normal usage)
+const context = injectFormContext();
+
+// Outside injection context (e.g., in a callback)
+const context = injectFormContext(this.injector);
+```
+
+### unwrapValue()
+
+Extracts the current value from a `ReactiveOrStatic<T>` type. Useful for normalizing values that may be signals, functions, or static values.
+
+```typescript
+import { unwrapValue } from '@ngx-signal-forms/toolkit/core';
+import type { ReactiveOrStatic } from '@ngx-signal-forms/toolkit/core';
+
+function processStrategy(strategy: ReactiveOrStatic<ErrorDisplayStrategy>) {
+  // Works with signal, function, or static value
+  const currentStrategy = unwrapValue(strategy);
+  // currentStrategy is now ErrorDisplayStrategy (not Signal or function)
+}
+
+// Example usage
+const staticStrategy: ReactiveOrStatic<ErrorDisplayStrategy> = 'on-touch';
+const signalStrategy: ReactiveOrStatic<ErrorDisplayStrategy> =
+  signal('on-touch');
+const computedStrategy: ReactiveOrStatic<ErrorDisplayStrategy> = computed(
+  () => 'on-touch',
+);
+
+unwrapValue(staticStrategy); // 'on-touch'
+unwrapValue(signalStrategy); // 'on-touch'
+unwrapValue(computedStrategy); // 'on-touch'
+```
 
 ## Form Field Components
 
@@ -557,6 +837,6 @@ test('should validate accessibility tree', async ({ page }) => {
 
 - [Toolkit README](../../packages/toolkit/README.md)
 - [Form Field Documentation](../../packages/toolkit/form-field/README.md)
-- [Signal Forms Instructions](./signal-forms.instructions.md)
+- [Signal Forms Instructions](./angular-signal-forms.instructions.md)
 - [Angular Signal Forms API](https://angular.dev/api/forms/signals)
 - [WCAG 2.2 Guidelines](https://www.w3.org/WAI/WCAG22/quickref/)

@@ -21,6 +21,7 @@ Analysis of Figma designs and current `@ngx-signal-forms/toolkit/form-field` imp
 6. **Auto-Required Marker** - CSS `:has()` selector-based detection with customizable character
 7. **WCAG 2.2 Level AA Compliance** - Built-in accessibility
 8. **Error Display Integration** - Automatic error/warning display with configurable strategies
+9. **Prefix/Suffix Slots** - Icons or text adornments via `prefix`/`suffix` attributes
 
 ### Architecture
 
@@ -43,7 +44,7 @@ NgxSignalFormFieldComponent
 2. ✅ Focus states with border color changes (implemented)
 3. ✅ Error states with red borders (implemented)
 4. 📝 Description text between label and input (gap)
-5. 📝 Icons inside inputs (prefix/suffix) (gap)
+5. ✅ Icons inside inputs (prefix/suffix) (implemented)
 6. 📝 Select dropdowns with custom chevrons (gap)
 7. ✅ Disabled states (implemented)
 8. 📝 Readonly states (partial - needs visual distinction)
@@ -274,64 +275,10 @@ Should this be v1.1 or v1.x? Description text is common in forms but not critica
 
 ---
 
-#### 2. Icon Support (Prefix/Suffix Slots) 📝
+#### 2. Prefix/Suffix Slots (Shipped) ✅
 
-**Priority:** Medium | **Effort:** Medium (2-3 hours)
-
-**Use Cases:**
-
-- Calendar icon for date inputs
-- Search icon for search fields
-- Currency symbols ($, €, £)
-- Loading spinners during async validation
-
-**Proposed API:**
-
-```html
-<!-- Prefix icon (left side) -->
-<ngx-signal-form-field [formField]="form.startDate" outline>
-  <label for="startDate">Start Date</label>
-  <svg slot="prefix" class="calendar-icon">...</svg>
-  <input id="startDate" [formField]="form.startDate" type="date" />
-</ngx-signal-form-field>
-
-<!-- Suffix icon (right side) -->
-<ngx-signal-form-field [formField]="form.username" outline>
-  <label for="username">Username</label>
-  <input id="username" [formField]="form.username" />
-  @if (form.username().pending()) {
-  <svg slot="suffix" class="spinner">...</svg>
-  } @else if (form.username().valid()) {
-  <svg slot="suffix" class="check-icon">...</svg>
-  }
-</ngx-signal-form-field>
-
-<!-- Both prefix and suffix -->
-<ngx-signal-form-field [formField]="form.amount" outline>
-  <label for="amount">Amount</label>
-  <span slot="prefix">$</span>
-  <input id="amount" [formField]="form.amount" type="number" />
-  <span slot="suffix">USD</span>
-</ngx-signal-form-field>
-```
-
-**Implementation:**
-
-- Two content projection slots: `[slot="prefix"]` and `[slot="suffix"]`
-- Positioned inside outlined container with proper spacing
-- Support both SVG icons and text addons
-- CSS custom properties for icon sizing and spacing
-
-**CSS Custom Properties:**
-
-```css
---ngx-form-field-outline-prefix-spacing: 0.5rem;
---ngx-form-field-outline-suffix-spacing: 0.5rem;
---ngx-form-field-outline-icon-size: 1.25rem;
---ngx-form-field-outline-icon-color: rgba(71, 91, 119, 0.75);
-```
-
-**Recommendation:** Target for v1.x (requires template restructuring).
+Prefix/suffix support has shipped and can be used with the `prefix`/`suffix`
+attributes on projected elements. See the form-field README for examples.
 
 ---
 
@@ -438,7 +385,9 @@ Requires new component architecture (group state management, keyboard navigation
 
 ```html
 <ngx-signal-form-row columns="2" gap="1rem">
-  <ngx-signal-form-field [formField]="form.firstName">...</ngx-signal-form-field>
+  <ngx-signal-form-field [formField]="form.firstName"
+    >...</ngx-signal-form-field
+  >
   <ngx-signal-form-field [formField]="form.lastName">...</ngx-signal-form-field>
 </ngx-signal-form-row>
 ```
@@ -453,7 +402,7 @@ Requires new component architecture (group state management, keyboard navigation
 | **Enhanced Readonly State** | ⭐⭐     | Low    | Medium | **v1.1**      | ✅ Include |
 | **Better Select Styling**   | ⭐⭐     | Low    | Medium | **v1.1**      | ✅ Include |
 | **Description Component**   | ⭐⭐     | Low    | Medium | **v1.1/v1.x** | 🤔 TBD     |
-| **Icon Support (slots)**    | ⭐⭐⭐   | Medium | High   | **v1.x**      | 📝 Defer   |
+| **Icon Support (slots)**    | ⭐⭐⭐   | Medium | High   | **v1.0**      | ✅ Shipped |
 | **Checkbox/Radio Groups**   | ⭐⭐⭐   | High   | High   | **v2.0**      | 📝 Future  |
 | **Size Variants**           | ⭐       | Low    | Low    | **v2.0**      | 📝 Future  |
 | **Multi-Column Layout**     | ⭐       | Low    | Low    | **v2.0**      | 📝 Future  |

@@ -179,25 +179,12 @@ const registrationForm = form(
 The component automatically separates errors and warnings:
 
 ```html
-<form (submit)="save($event)" novalidate>
+<form [ngxSignalForm]="form" (submit)="save($event)">
   <label for="email">Email *</label>
-  <input
-    id="email"
-    [formField]="form.email"
-    [attr.aria-invalid]="form.email().invalid()"
-    [attr.aria-describedby]="
-      form.email().invalid()
-        ? 'email-error email-warning'
-        : null
-    "
-  />
+  <input id="email" [formField]="form.email" />
 
   <!-- Displays both errors and warnings -->
-  <ngx-signal-form-error
-    [formField]="form.email"
-    fieldName="email"
-    [hasSubmitted]="hasSubmitted"
-  />
+  <ngx-signal-form-error [formField]="form.email" fieldName="email" />
 </form>
 ```
 
@@ -235,16 +222,16 @@ The component automatically separates errors and warnings:
 </div>
 ```
 
-### Using SftFormFieldComponent
+### Using NgxSignalFormFieldComponent
 
 The form field wrapper automatically handles both:
 
 ```html
-<sft-form-field [formField]="form.password" fieldName="password">
+<ngx-signal-form-field [formField]="form.password" fieldName="password">
   <label for="password">Password *</label>
   <input id="password" type="password" [formField]="form.password" />
   <!-- Errors and warnings displayed automatically -->
-</sft-form-field>
+</ngx-signal-form-field>
 ```
 
 ## Styling
@@ -403,21 +390,20 @@ const onSubmit = async () => {
 
 ### Checking for Warnings
 
-Since warnings are technically "errors" in Signal Forms, you need to check the `kind` field:
+Since warnings are technically "errors" in Signal Forms, you can filter by the `kind` field or use toolkit helpers:
 
 ```typescript
+import {
+  isBlockingError,
+  isWarningError,
+} from '@ngx-signal-forms/toolkit/core';
+
 const hasWarnings = computed(() => {
-  return form
-    .email()
-    .errors()
-    .some((err) => err.kind.startsWith('warn:'));
+  return form.email().errors().some(isWarningError);
 });
 
 const hasBlockingErrors = computed(() => {
-  return form
-    .email()
-    .errors()
-    .some((err) => !err.kind.startsWith('warn:'));
+  return form.email().errors().some(isBlockingError);
 });
 ```
 
