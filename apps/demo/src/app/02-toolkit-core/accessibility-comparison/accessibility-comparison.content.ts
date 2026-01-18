@@ -8,64 +8,63 @@ export const ACCESSIBILITY_COMPARISON_CONTENT = {
     title: 'WCAG 2.2 Accessibility Showcase',
     sections: [
       {
-        title: 'Form Fields & Validations',
+        title: 'Three Implementation Levels',
         items: [
-          '<strong>Email:</strong> Required, valid email format',
-          '<strong>Password:</strong> Required, min 8 characters',
-          '<strong>Confirm Password:</strong> Required, must match password',
-          'Side-by-side: Manual vs Automated implementation',
+          '<strong>Manual:</strong> No toolkit, all ARIA attributes manually added (~95 lines)',
+          '<strong>Minimal Toolkit:</strong> Auto-ARIA only, no [ngxSignalForm] (~55 lines)',
+          '<strong>Full Toolkit:</strong> Complete with [ngxSignalForm] and error components (~31 lines)',
+          'Side-by-side comparison shows progressive enhancement',
         ],
       },
       {
-        title: 'Automated Accessibility Features',
+        title: 'What [ngxSignalForm] Adds',
         items: [
-          'Automatic ARIA attributes (aria-invalid, aria-describedby)',
-          'Automatic touch state tracking and error visibility',
-          'WCAG 2.2 Level AA compliance guaranteed',
-          '67% code reduction with toolkit',
-          'Live inspection tools for testing',
+          "✅ <code>'on-submit'</code> error strategy support",
+          '✅ Form-level <code>[errorStrategy]</code> override',
+          '✅ Access to <code>submittedStatus</code> signal in child components',
+          "❌ Without it: <code>'on-touch'</code> strategy still works perfectly!",
         ],
       },
       {
-        title: 'Testing Tools',
+        title: 'When to Use Each Level',
         items: [
-          'Browser DevTools Accessibility Inspector',
-          'ARIA attribute inspection',
-          'Screen reader testing guidance',
-          'Keyboard navigation verification',
+          '<strong>Manual:</strong> Learning how accessibility works under the hood',
+          '<strong>Minimal:</strong> Custom error UI but want automatic ARIA',
+          '<strong>Full:</strong> Most projects - complete accessibility + error display',
         ],
       },
     ],
   },
   learning: {
-    title: 'Accessibility Testing Guide',
+    title: 'Choosing Your Approach',
     sections: [
       {
-        title: '🧪 Manual Testing Steps',
+        title: '🔧 Minimal Toolkit (No [ngxSignalForm])',
+        items: [
+          'Import <code>NgxSignalFormToolkit</code> + <code>NgxSignalFormFieldComponent</code>',
+          'Use <code>(submit)="handler($event)"</code> on form',
+          'Automatic: <code>novalidate</code>, <code>aria-invalid</code>, <code>aria-describedby</code>',
+          'Automatic: Error display via <code>&lt;ngx-signal-form-field&gt;</code>',
+          "Use when: Most forms with default <code>'on-touch'</code> strategy",
+        ],
+      },
+      {
+        title: '✅ Full Toolkit (With [ngxSignalForm])',
+        items: [
+          'Add <code>[ngxSignalForm]="form"</code> binding',
+          'Unlocks: <code>&lt;ngx-signal-form-error&gt;</code> component',
+          'Unlocks: Form-level <code>[errorStrategy]</code> override',
+          'Unlocks: <code>submittedStatus</code> via DI in children',
+          'Use when: Most projects (recommended)',
+        ],
+      },
+      {
+        title: '🧪 Testing Your Implementation',
         items: [
           '1. Use browser DevTools → Accessibility tab',
           '2. Inspect aria-invalid, aria-describedby attributes',
           '3. Test keyboard navigation (Tab, Enter)',
-          '4. Compare manual vs toolkit implementations',
-          '5. Use screen reader (NVDA, JAWS, VoiceOver)',
-        ],
-      },
-      {
-        title: '📊 Code Comparison',
-        items: [
-          '<strong>Manual:</strong> 9 ARIA bindings, 3 error functions, ~140 lines',
-          '<strong>Toolkit:</strong> 0 ARIA bindings, 0 error functions, ~45 lines',
-          '<strong>Reduction:</strong> 67% less code with better accessibility',
-          '<strong>Maintenance:</strong> Single source of truth for ARIA logic',
-        ],
-      },
-      {
-        title: '✅ WCAG 2.2 Compliance',
-        items: [
-          '<strong>Error Identification:</strong> aria-invalid for all invalid fields',
-          '<strong>Error Suggestion:</strong> Clear, descriptive error messages',
-          '<strong>Error Prevention:</strong> Progressive disclosure (on-touch)',
-          '<strong>Keyboard Access:</strong> All functionality keyboard-accessible',
+          '4. Use screen reader (NVDA, JAWS, VoiceOver)',
         ],
       },
     ],

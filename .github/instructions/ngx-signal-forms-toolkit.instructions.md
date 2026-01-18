@@ -130,9 +130,11 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 @Component({
   imports: [FormField, NgxSignalFormToolkit],
   template: `
-    <form [ngxSignalForm]="userForm">
+    <!-- ✅ Works WITHOUT [ngxSignalForm] for default 'on-touch' strategy -->
+    <form (submit)="save($event)">
       <input [formField]="userForm.email" />
       <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
+      <button type="submit">Submit</button>
     </form>
   `,
 })
@@ -168,6 +170,42 @@ import {
 } from '@ngx-signal-forms/toolkit/core';
 ```
 
+## Simplified Architecture
+
+### Key Insight: `[ngxSignalForm]` is Optional for Most Use Cases
+
+The toolkit is designed so that **most forms work without `[ngxSignalForm]`**. The default `'on-touch'` strategy only checks `field.invalid() && field.touched()` - no form context needed.
+
+**Why this works:** Angular's `submit()` helper calls `markAllAsTouched()` before your async handler, so `touched()` becomes true for all fields after both blur AND submit.
+
+### Feature Comparison: With vs Without `[ngxSignalForm]`
+
+| Feature                                    | Without `[ngxSignalForm]` | With `[ngxSignalForm]` |
+| ------------------------------------------ | :-----------------------: | :--------------------: |
+| Auto `novalidate` on form                  |            ✅             |           ✅           |
+| Auto `aria-invalid` when touched + invalid |            ✅             |           ✅           |
+| Auto `aria-describedby` linking            |            ✅             |           ✅           |
+| `<ngx-signal-form-error>` (`'on-touch'`)   |         ✅ Works          |        ✅ Works        |
+| `<ngx-signal-form-field>` (`'on-touch'`)   |      ✅ Auto errors       |     ✅ Auto errors     |
+| `<ngx-signal-form-error>` (`'on-submit'`)  |       ❌ No context       |        ✅ Works        |
+| Form-level `[errorStrategy]` override      |            ❌             |           ✅           |
+| `submittedStatus` signal via DI            |            ❌             |           ✅           |
+
+### When to Use Each Approach
+
+**Without `[ngxSignalForm]` (Recommended for most forms):**
+
+- Using default `'on-touch'` error strategy
+- Want automatic ARIA attributes and error display
+- Simpler template with less boilerplate
+
+**With `[ngxSignalForm]` (Only when needed):**
+
+- Need `'on-submit'` error strategy (requires `submittedStatus`)
+- Need form-level `[errorStrategy]` override
+- Need `submittedStatus` in custom components
+- Building complex multi-step forms
+
 ## Core Directives
 
 ### NgxSignalFormDirective
@@ -184,30 +222,25 @@ import {
 - Derives `submittedStatus` from Angular's native `submitting()` and `touched()` signals
 - Manages error display strategy
 
-**When to use `[ngxSignalForm]` binding:**
-
-| Use Case                                     | `(submit)` only | `[ngxSignalForm]` needed |
-| -------------------------------------------- | --------------- | ------------------------ |
-| Auto `novalidate`                            | ✅              | ✅                       |
-| `NgxSignalFormErrorComponent` auto-injection | ❌              | ✅                       |
-| `[errorStrategy]` form-level override        | ❌              | ✅                       |
-| Access `submittedStatus` signal              | ❌              | ✅                       |
-
 ```typescript
-// Minimal (novalidate only)
+// ✅ Recommended: Works for most forms (no [ngxSignalForm] needed)
 <form (submit)="save($event)">
-  <input [formField]="userForm.email" />
+  <ngx-signal-form-field [formField]="form.email">
+    <label for="email">Email</label>
+    <input id="email" [formField]="form.email" />
+  </ngx-signal-form-field>
+  <button type="submit">Submit</button>
 </form>
 
-// Full context (recommended with toolkit components)
-<form [ngxSignalForm]="userForm" [errorStrategy]="'on-touch'" (submit)="save($event)">
+// Only needed for 'on-submit' strategy or form-level overrides
+<form [ngxSignalForm]="userForm" [errorStrategy]="'on-submit'" (submit)="save($event)">
   <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
 </form>
 ```
 
 **Input Properties**:
 
-- `ngxSignalForm` (optional): The form instance (FieldTree) - required for form context
+- `ngxSignalForm` (optional): The form instance (FieldTree) - only needed for `'on-submit'` strategy
 - `errorStrategy` (optional): Error display strategy override
 
 ### NgxSignalFormAutoAriaDirective
@@ -237,12 +270,23 @@ import {
 
 Displays validation errors and warnings with WCAG-compliant ARIA roles.
 
+**Simplified Usage (Default `'on-touch'` Strategy):**
+
 ```typescript
-<ngx-signal-form-error
-  [formField]="form.email"
-  fieldName="email"
-  [strategy]="'on-touch'"
-/>
+<!-- ✅ Works WITHOUT [ngxSignalForm] - errors show after blur OR submit -->
+<form (submit)="save($event)">
+  <input id="email" [formField]="form.email" />
+  <ngx-signal-form-error [formField]="form.email" fieldName="email" />
+</form>
+```
+
+**With Form Context (For `'on-submit'` Strategy):**
+
+```typescript
+<!-- Requires [ngxSignalForm] for submittedStatus signal -->
+<form [ngxSignalForm]="form" [errorStrategy]="'on-submit'" (submit)="save($event)">
+  <ngx-signal-form-error [formField]="form.email" fieldName="email" />
+</form>
 ```
 
 **Required Inputs**:
@@ -252,8 +296,8 @@ Displays validation errors and warnings with WCAG-compliant ARIA roles.
 
 **Optional Inputs**:
 
-- `strategy`: Error display strategy
-- `submittedStatus`: Form submission state (auto-injected from directive)
+- `strategy`: Error display strategy (default: `'on-touch'`)
+- `submittedStatus`: Form submission state (auto-injected when inside `[ngxSignalForm]}`, optional for `'on-touch'`)
 
 ### NgxSignalFormFieldComponent
 
@@ -290,13 +334,22 @@ Reusable form field wrapper with automatic error display.
 
 ### showErrors()
 
+Convenience wrapper for computing error visibility. The `submittedStatus` parameter is **optional** for `'on-touch'` strategy.
+
 ```typescript
 import { showErrors } from '@ngx-signal-forms/toolkit/core';
 
+// ✅ Simplified: Works without submittedStatus for 'on-touch'
 protected readonly shouldShowErrors = showErrors(
   this.form.email,        // FieldTree
   'on-touch',             // ErrorDisplayStrategy
-  this.submittedStatus,   // SubmittedStatus signal
+);
+
+// With submittedStatus (for 'on-submit' strategy)
+protected readonly shouldShowErrors = showErrors(
+  this.form.email,
+  'on-submit',
+  this.submittedStatus,   // Required for 'on-submit'
 );
 ```
 
@@ -320,9 +373,10 @@ validate(path.password, (ctx) => {
 ```typescript
 import { combineShowErrors, showErrors } from '@ngx-signal-forms/toolkit/core';
 
+// ✅ Simplified: No submittedStatus needed for 'on-touch'
 protected readonly showAnyFormErrors = combineShowErrors([
-  showErrors(this.userForm.email, 'on-touch', this.submittedStatus),
-  showErrors(this.userForm.password, 'on-touch', this.submittedStatus),
+  showErrors(this.userForm.email, 'on-touch'),
+  showErrors(this.userForm.password, 'on-touch'),
 ]);
 ```
 
@@ -497,7 +551,7 @@ import { computeShowErrors, shouldShowErrors } from '@ngx-signal-forms/toolkit/c
 protected readonly showEmailErrors = computeShowErrors(
   this.form.email,      // ReactiveOrStatic<FieldState<T>>
   'on-touch',           // ReactiveOrStatic<ErrorDisplayStrategy>
-  this.submittedStatus, // ReactiveOrStatic<SubmittedStatus>
+  this.submittedStatus, // ReactiveOrStatic<SubmittedStatus> - OPTIONAL for 'on-touch'
 );
 
 // Non-reactive version - returns boolean

@@ -140,7 +140,9 @@ describe('error-strategies', () => {
         expect(result()).toBe(true);
       });
 
-      it('should show errors when field is invalid and form is submitted', () => {
+      it('should NOT show errors when field is invalid but untouched even if submitted', () => {
+        // Simplified architecture: on-touch only checks touched()
+        // Angular's submit() calls markAllAsTouched(), so touched() handles submission
         const fieldState = signal({
           invalid: () => true,
           touched: () => false,
@@ -153,7 +155,8 @@ describe('error-strategies', () => {
           submittedStatus,
         );
 
-        expect(result()).toBe(true);
+        // submittedStatus is ignored for on-touch - only touched() matters
+        expect(result()).toBe(false);
       });
 
       it('should not show errors when field is valid even if touched', () => {
@@ -192,7 +195,9 @@ describe('error-strategies', () => {
         expect(result()).toBe(true);
       });
 
-      it('should show errors during submission even if not touched', () => {
+      it('should NOT show errors during submission if not touched', () => {
+        // Simplified architecture: on-touch only checks touched()
+        // In real usage, Angular's submit() would have called markAllAsTouched()
         const fieldState = signal({
           invalid: () => true,
           touched: () => false,
@@ -205,13 +210,17 @@ describe('error-strategies', () => {
           submittedStatus,
         );
 
-        expect(result()).toBe(true);
+        // submittedStatus is ignored for on-touch - only touched() matters
+        expect(result()).toBe(false);
       });
 
-      it('should maintain errors visibility throughout submission lifecycle', () => {
+      it('should only show errors when touched() changes (submission lifecycle)', () => {
+        // Simplified architecture: on-touch only checks touched()
+        // Angular's submit() calls markAllAsTouched(), which sets touched() to true
+        const touched = signal(false);
         const fieldState = signal({
           invalid: () => true,
-          touched: () => false,
+          touched: () => touched(),
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
@@ -221,14 +230,14 @@ describe('error-strategies', () => {
           submittedStatus,
         );
 
-        // Initially no errors (not touched, not submitted)
+        // Initially no errors (not touched)
         expect(result()).toBe(false);
 
-        // During submission - errors should appear
-        submittedStatus.set('submitting');
+        // Simulate what Angular's submit() does: markAllAsTouched()
+        touched.set(true);
         expect(result()).toBe(true);
 
-        // After submission completes - errors should remain
+        // submittedStatus changes don't affect on-touch strategy
         submittedStatus.set('submitted');
         expect(result()).toBe(true);
       });

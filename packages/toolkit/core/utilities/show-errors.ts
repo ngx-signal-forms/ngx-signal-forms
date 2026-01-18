@@ -8,33 +8,37 @@ import { computeShowErrors as baseComputeShowErrors } from './error-strategies';
  *
  * ## What does it do?
  * Creates a reactive computed signal that determines if a form field's errors should
- * be shown to the user based on the error display strategy and form submission status.
+ * be shown to the user based on the error display strategy.
+ *
+ * ## Simplified Architecture (aligned with Angular Signal Forms)
+ *
+ * Angular's `submit()` helper calls `markAllAsTouched()`, which means `field.touched()`
+ * becomes true for all fields after submission. This makes `submittedStatus` **optional**
+ * for the default `'on-touch'` strategy - we just check `field.touched()`.
  *
  * ## When to use it?
  * Use `showErrors()` when you need to:
  * - Implement error visibility logic for form fields
- * - Integrate with a `SubmittedStatus` signal derived from Angular's `submitting()`/`touched()`
  * - Control when validation errors appear based on user interaction
  *
  * ## How does it work?
- * 1. Accepts field state, error display strategy, and submission status
+ * 1. Accepts field state, error display strategy, and optional submission status
  * 2. Evaluates whether errors should be shown based on the strategy:
  *    - `'immediate'`: Errors shown as soon as field is invalid
- *    - `'on-touch'`: Errors shown after blur or submit (WCAG recommended)
+ *    - `'on-touch'`: Errors shown after blur or submit (WCAG recommended) - **default**
  *    - `'on-submit'`: Errors shown only after form submission
- *    - `'manual'`: Developer controls visibility (always returns `true`)
- * 3. Returns a computed signal that updates when field state or submission status changes
+ *    - `'manual'`: Developer controls visibility (always returns `false`)
+ * 3. Returns a computed signal that updates when field state changes
  *
  * @template T The type of the field value
  * @param field - The form field state (FieldTree from Angular Signal Forms)
- * @param strategy - The error display strategy
- * @param submittedStatus - Submission status signal derived from Angular's native signals
+ * @param strategy - The error display strategy (defaults to 'on-touch')
+ * @param submittedStatus - Optional: Only needed for 'on-submit' strategy
  * @returns A computed signal returning `true` when errors should be displayed
  *
- * @example With Angular's submit() helper
+ * @example Simple usage (recommended - no submittedStatus needed)
  * ```typescript
- * import { submit } from '@angular/forms/signals';
- * import { showErrors } from '@ngx-signal-forms/toolkit/utilities';
+ * import { showErrors } from '@ngx-signal-forms/toolkit/core';
  *
  * @Component({
  *   template: `
@@ -47,53 +51,24 @@ import { computeShowErrors as baseComputeShowErrors } from './error-strategies';
  *   readonly #model = signal({ email: '' });
  *   protected readonly form = form(this.#model, emailSchema);
  *
+ *   // Simple! Angular's submit() marks fields touched, so this just works.
  *   protected readonly shouldShowErrors = showErrors(
  *     this.form.email,
- *     'on-touch',
- *     computed<SubmittedStatus>(() => {
- *       const state = this.form();
- *       if (state.submitting()) return 'submitting';
- *       return state.touched() ? 'submitted' : 'unsubmitted';
- *     })
+ *     'on-touch'
  *   );
  * }
  * ```
  *
- * @example With form provider context (recommended)
+ * @example With on-submit strategy (needs submittedStatus)
  * ```typescript
- * import { inject } from '@angular/core';
- * import { NGX_SIGNAL_FORM_CONTEXT } from '@ngx-signal-forms/toolkit/core';
- *
- * @Component({
- *   template: `
- *     <form [ngxSignalForm]="form">
- *       @if (shouldShowErrors()) {
- *         <span>{{ form.email().errors()[0].message }}</span>
- *       }
- *     </form>
- *   `
- * })
- * class MyComponent {
- *   readonly #context = inject(NGX_SIGNAL_FORM_CONTEXT);
- *   readonly #model = signal({ email: '' });
- *   protected readonly form = form(this.#model, emailSchema);
- *
- *   protected readonly shouldShowErrors = showErrors(
- *     this.form.email,
- *     'on-touch',
- *     this.#context.submittedStatus  // Auto-injected from provider
- *   );
- * }
- * ```
- *
- * @example Static strategy
- * ```typescript
- * const shouldShowErrors = showErrors(
- *   form.password,
- *   'immediate',  // Show errors immediately
- *   computed<SubmittedStatus>(() =>
- *     form().submitting() ? 'submitting' : form().touched() ? 'submitted' : 'unsubmitted'
- *   )
+ * protected readonly shouldShowErrors = showErrors(
+ *   this.form.email,
+ *   'on-submit',
+ *   computed<SubmittedStatus>(() => {
+ *     const state = this.form();
+ *     if (state.submitting()) return 'submitting';
+ *     return state.touched() ? 'submitted' : 'unsubmitted';
+ *   })
  * );
  * ```
  *
@@ -104,7 +79,7 @@ import { computeShowErrors as baseComputeShowErrors } from './error-strategies';
 export function showErrors<T>(
   field: ReactiveOrStatic<FieldState<T>>,
   strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
-  submittedStatus: ReactiveOrStatic<SubmittedStatus>,
+  submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
 ): Signal<boolean> {
   return baseComputeShowErrors(field, strategy, submittedStatus);
 }

@@ -39,8 +39,8 @@ Angular Signal Forms (introduced in v21) provides an excellent foundation for re
 | **ARIA Attributes**        | ❌ Manual `[attr.aria-invalid]`, `[attr.aria-describedby]` | ✅ Automatic via directive                                                     |
 | **Error Display Logic**    | ❌ Manual `@if` conditions in every template               | ✅ Strategy-based (immediate/on-touch/on-submit/manual) + field-level override |
 | **Error Components**       | ❌ Custom error rendering per component                    | ✅ Reusable `<ngx-signal-form-error>` component                                |
-| **Form Wrapper**           | ❌ Manual form setup and context                           | ✅ DI-based context via `[ngxSignalForm]` directive                            |
-| **HTML5 Validation**       | ❌ Manual `novalidate` on every form                       | ✅ Automatic `novalidate` via `[ngxSignalForm]`                                |
+| **Form Wrapper**           | ❌ Manual form setup and context                           | ✅ Optional `[ngxSignalForm]` for `'on-submit'` strategy                       |
+| **HTML5 Validation**       | ❌ Manual `novalidate` on every form                       | ✅ Automatic `novalidate` on any form with `(submit)`                          |
 | **CSS Status Classes**     | ⚠️ Manual via `provideSignalFormsConfig` (21.1+)           | ✅ `ngxStatusClasses()` syncs with error display strategy                      |
 | **Form Field Wrapper**     | ❌ Custom layout per component                             | ✅ Consistent `<ngx-signal-form-field>` wrapper                                |
 | **Material Design Layout** | ❌ Custom CSS for outlined inputs                          | ✅ Built-in `outline` directive with floating labels                           |
@@ -72,10 +72,11 @@ Angular Signal Forms (introduced in v21) provides an excellent foundation for re
 </form>
 ```
 
-### With Toolkit (Automatic ARIA + Error Strategies)
+### With Toolkit (Automatic ARIA + Error Display)
 
 ```html
-<form [ngxSignalForm]="userForm" (submit)="save($event)">
+<!-- No [ngxSignalForm] needed for default 'on-touch' strategy! -->
+<form (submit)="save($event)">
   <ngx-signal-form-field [formField]="userForm.email" fieldName="email">
     <label for="email">Email</label>
     <input id="email" [formField]="userForm.email" />
@@ -84,15 +85,15 @@ Angular Signal Forms (introduced in v21) provides an excellent foundation for re
 </form>
 ```
 
-**Result:** ~15 lines → ~7 lines (53% reduction), with ARIA compliance, error display strategies, and consistent UX.
+**Result:** ~15 lines → ~6 lines (60% reduction), with ARIA compliance, automatic error display, and consistent UX.
 
 ---
 
 ## Quick Start
 
-### 1. The Simplest Example
+### 1. Basic Form with Auto Error Display
 
-Import and use—automatic ARIA and `novalidate` work out of the box:
+The toolkit works out of the box—no special form wrapper needed:
 
 ```typescript
 import { Component, signal } from '@angular/core';
@@ -104,14 +105,17 @@ import {
   FormField,
 } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
   selector: 'app-contact',
-  imports: [FormField, NgxSignalFormToolkit],
+  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
     <form (submit)="save($event)">
-      <label for="email">Email</label>
-      <input id="email" [formField]="contactForm.email" type="email" />
+      <ngx-signal-form-field [formField]="contactForm.email" fieldName="email">
+        <label for="email">Email</label>
+        <input id="email" [formField]="contactForm.email" type="email" />
+      </ngx-signal-form-field>
       <button type="submit">Send</button>
     </form>
   `,
@@ -136,27 +140,24 @@ export class ContactComponent {
 }
 ```
 
-**What you get automatically** (just by importing `NgxSignalFormToolkit`):
+**What you get automatically:**
 
-- `aria-invalid="true"` when field is invalid and touched
-- `novalidate` attribute on the form
+- ✅ `novalidate` attribute (prevents browser validation bubbles)
+- ✅ `aria-invalid` and `aria-describedby` for accessibility
+- ✅ Error display after blur OR submit (default `'on-touch'` strategy)
+- ✅ Proper `role="alert"` for screen readers
 
-> **Note:** Add `[ngxSignalForm]="contactForm"` when you need `<ngx-signal-form-error>` components (DI context required), form-level `[errorStrategy]` override, or access to `submittedStatus` signal.
+> **How it works:** Angular's `submit()` calls `markAllAsTouched()`, so errors appear after both blur AND submit—without any form wrapper!
 
-> **Tip:** For production forms, use Angular's `submit()` helper which automatically marks all fields as touched, manages `submitting()` state, and handles server errors. See [Form Submission](./packages/toolkit/README.md#form-submission) for details.
+### 2. Advanced: Show Errors Only After Submit
 
-### 2. Add Error Display
-
-Show validation errors with the error component:
+If you need errors to appear **only** after form submission (not on blur), add `[ngxSignalForm]`:
 
 ```typescript
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
-import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
-
 @Component({
-  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
-    <form [ngxSignalForm]="contactForm" (submit)="save($event)">
+    <!-- [ngxSignalForm] provides submission context for 'on-submit' strategy -->
+    <form [ngxSignalForm]="contactForm" [errorStrategy]="'on-submit'" (submit)="save($event)">
       <ngx-signal-form-field [formField]="contactForm.email" fieldName="email">
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" />
@@ -167,7 +168,15 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
 })
 ```
 
-**→ [Complete error display options](./packages/toolkit/README.md#components)**
+**When to use `[ngxSignalForm]`:**
+
+| Use Case                                 | Default Form | With `[ngxSignalForm]` |
+| ---------------------------------------- | :----------: | :--------------------: |
+| Errors on blur + submit (`'on-touch'`)   |      ✅      |           ✅           |
+| Errors only after submit (`'on-submit'`) |      ❌      |           ✅           |
+| Form-level `[errorStrategy]` override    |      ❌      |           ✅           |
+
+**Most forms don't need `[ngxSignalForm]`**—the default `'on-touch'` strategy covers both blur and submit.
 
 ### 3. Outlined Layout (Material Design-ish)
 
@@ -208,17 +217,21 @@ Automatic `aria-invalid` and `aria-describedby` attributes on all form controls.
 
 ### Error Display Strategies
 
-Control when validation errors appear: immediately, after touch, after submit, or manually.
+Control when validation errors appear:
+
+| Strategy               | Shows Errors         | Requires `[ngxSignalForm]` |
+| ---------------------- | -------------------- | :------------------------: |
+| `'on-touch'` (default) | After blur or submit |           ❌ No            |
+| `'immediate'`          | As user types        |           ❌ No            |
+| `'on-submit'`          | Only after submit    |           ✅ Yes           |
+| `'manual'`             | Programmatic control |           ❌ No            |
 
 ```typescript
-// Global configuration
-provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-touch' });
+// Per-field override (no form wrapper needed)
+<ngx-signal-form-field [formField]="form.email" [strategy]="'immediate'">
 
-// Per-form override
-<form [ngxSignalForm]="form" [errorStrategy]="'immediate'">
-
-// Per-field override
-<ngx-signal-form-field [strategy]="'on-submit'">
+// Per-form override (requires [ngxSignalForm] for 'on-submit' only)
+<form [ngxSignalForm]="form" [errorStrategy]="'on-submit'">
 ```
 
 **→ [Strategy configuration](./packages/toolkit/README.md#configuration)**

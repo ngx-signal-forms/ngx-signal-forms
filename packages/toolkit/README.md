@@ -38,12 +38,19 @@ export const appConfig: ApplicationConfig = {
 // 2. Use in components (recommended: bundle import)
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
-import { form, schema, required, submit, Field } from '@angular/forms/signals';
+import {
+  form,
+  schema,
+  required,
+  submit,
+  FormField,
+} from '@angular/forms/signals';
 
 @Component({
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
   template: `
-    <form [ngxSignalForm]="contactForm" (submit)="handleSubmit($event)">
+    <!-- ✅ NO [ngxSignalForm] needed for default 'on-touch' strategy! -->
+    <form (submit)="handleSubmit($event)">
       <ngx-signal-form-field [formField]="contactForm.email" fieldName="email">
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" />
@@ -118,33 +125,69 @@ The directive has selector `form[ngxSignalForm], form(submit)` — meaning `nova
 
 **When do you need `[ngxSignalForm]` binding?**
 
-The explicit binding is only required when you need **form context** for child components:
+The `[ngxSignalForm]` binding provides **form context** for child components via dependency injection. However, for the **default `'on-touch'` strategy**, error components work **without** `[ngxSignalForm]` because they only need `field.invalid() && field.touched()`.
 
-| Use Case                                      | `(submit)` only | `[ngxSignalForm]` needed |
-| --------------------------------------------- | --------------- | ------------------------ |
-| Auto `novalidate`                             | ✅              | ✅                       |
-| `NgxSignalFormErrorComponent` auto-injection  | ❌              | ✅                       |
-| `NgxSignalFormAutoAriaDirective` full context | ❌              | ✅                       |
-| `[errorStrategy]` form-level override         | ❌              | ✅                       |
-| Access `submittedStatus` signal               | ❌              | ✅                       |
+#### Feature Comparison: With vs Without `[ngxSignalForm]`
 
-**Minimal usage** (no toolkit error components):
+| Feature                                    | Without `[ngxSignalForm]` | With `[ngxSignalForm]` |
+| ------------------------------------------ | :-----------------------: | :--------------------: |
+| Auto `novalidate` on form                  |            ✅             |           ✅           |
+| Auto `aria-invalid` when touched + invalid |            ✅             |           ✅           |
+| Auto `aria-describedby` linking            |            ✅             |           ✅           |
+| `<ngx-signal-form-error>` (`'on-touch'`)   |         ✅ Works          |        ✅ Works        |
+| `<ngx-signal-form-field>` (`'on-touch'`)   |      ✅ Auto errors       |     ✅ Auto errors     |
+| `<ngx-signal-form-error>` (`'on-submit'`)  |       ❌ No context       |        ✅ Works        |
+| Form-level `[errorStrategy]` override      |            ❌             |           ✅           |
+| `submittedStatus` signal via DI            |            ❌             |           ✅           |
 
-```html
-<form (submit)="handleSubmit($event)">
-  <!-- novalidate auto-applied, but no form context for child components -->
-  <input [formField]="form.email" />
-  @if (form.email().invalid() && form.email().touched()) {
-  <div class="error">{{ form.email().errors()[0].message }}</div>
-  }
-</form>
+**Key insight:** The `'on-touch'` strategy only checks `field.invalid() && field.touched()`. Since Angular's `submit()` helper calls `markAllAsTouched()`, errors appear after both blur AND submit - without needing `submittedStatus`.
+
+#### When to Use Each Approach
+
+**Minimal Toolkit** (without `[ngxSignalForm]`) — Use when:
+
+- You want automatic ARIA attributes and error display with `'on-touch'` strategy
+- You're gradually migrating an existing form
+- Your design system uses the default error display timing
+- **Works for most use cases!**
+
+**Full Toolkit** (with `[ngxSignalForm]`) — Use when:
+
+- You need `'on-submit'` error strategy (requires `submittedStatus`)
+- You need form-level `[errorStrategy]` override
+- You need `submittedStatus` in custom components
+- You're building complex multi-step forms
+
+#### Example: Minimal Toolkit (Error Components Work!)
+
+```typescript
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+
+@Component({
+  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  template: `
+    <!-- ✅ Error components work WITHOUT [ngxSignalForm] for 'on-touch' strategy -->
+    <form (submit)="handleSubmit($event)">
+      <ngx-signal-form-field [formField]="form.email" fieldName="email">
+        <label for="email">Email</label>
+        <input id="email" [formField]="form.email" />
+      </ngx-signal-form-field>
+      <button type="submit">Submit</button>
+    </form>
+  `,
+})
 ```
 
-**Full toolkit usage** (recommended):
+#### Example: Full Toolkit (For `'on-submit'` Strategy)
 
 ```html
-<form [ngxSignalForm]="userForm" (submit)="handleSubmit($event)">
-  <!-- Form context available for child components -->
+<!-- Use [ngxSignalForm] when you need 'on-submit' strategy or submittedStatus -->
+<form
+  [ngxSignalForm]="userForm"
+  [errorStrategy]="'on-submit'"
+  (submit)="handleSubmit($event)"
+>
   <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
 </form>
 ```

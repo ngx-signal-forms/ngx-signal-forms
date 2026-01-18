@@ -30,6 +30,17 @@ import { showErrors } from '../utilities/show-errors';
  *
  * Accepts a FieldTree from Angular Signal Forms.
  *
+ * ## Simplified Architecture (aligned with Angular Signal Forms)
+ *
+ * This component **does not require** `[ngxSignalForm]` directive for the default
+ * `'on-touch'` strategy. Angular's `submit()` helper calls `markAllAsTouched()`,
+ * so `field.touched()` becomes true after submission - we just check that.
+ *
+ * **When to use `[ngxSignalForm]`:**
+ * - Form-level `errorStrategy` override
+ * - Auto-linked `aria-describedby` (via auto-aria directive)
+ * - Access to form context in custom components
+ *
  * **Signal Forms Limitation: No Native Warning Support**
  *
  * Signal Forms only has "errors" - it doesn't have a built-in concept of "warnings".
@@ -39,6 +50,22 @@ import { showErrors } from '../utilities/show-errors';
  * - **Warnings** (non-blocking): `kind` starts with `'warn:'`
  *
  * @template TValue The type of the field value (defaults to unknown)
+ *
+ * @example Simplest Usage (no ngxSignalForm needed!)
+ * ```html
+ * <form (submit)="save($event)" novalidate>
+ *   <input [formField]="form.email" />
+ *   <ngx-signal-form-error [formField]="form.email" fieldName="email" />
+ *   <button type="submit">Submit</button>
+ * </form>
+ * ```
+ *
+ * @example With Form-Level Strategy Override
+ * ```html
+ * <form [ngxSignalForm]="form" [errorStrategy]="'immediate'">
+ *   <ngx-signal-form-error [formField]="form.email" fieldName="email" />
+ * </form>
+ * ```
  *
  * @example Error (blocks submission)
  * ```typescript
@@ -50,11 +77,9 @@ import { showErrors } from '../utilities/show-errors';
  * ```typescript
  * /// Using warningError() helper (recommended)
  * warningError('weak-password', 'Consider a stronger password')
- * warningError('common-email', 'This email domain is commonly used for spam')
  *
  * /// Or directly with 'warn:' prefix
  * { kind: 'warn:weak-password', message: 'Consider a stronger password' }
- * { kind: 'warn:common-email', message: 'This email domain is commonly used for spam' }
  * ```
  *
  * Features:
@@ -63,83 +88,6 @@ import { showErrors } from '../utilities/show-errors';
  * - Strategy-aware error/warning display
  * - Structured rendering from Signal Forms
  * - Auto-generated IDs for aria-describedby linking
- *
- * @example Basic Usage
- * ```html
- * <ngx-signal-form-error
- *   [formField]="form.email"
- *   fieldName="email"
- * />
- * ```
- *
- * @example With Field-Level Strategy Override
- * ```html
- * <form [ngxSignalForm]="form" [errorStrategy]="'on-touch'">
- *   <!-- Password field shows errors immediately -->
- *   <ngx-signal-form-error
- *     [formField]="form.password"
- *     fieldName="password"
- *     strategy="immediate" />
- *
- *   <!-- Email inherits form-level strategy -->
- *   <ngx-signal-form-error
- *     [formField]="form.email"
- *     fieldName="email"
- *     strategy="inherit" />
- * </form>
- * ```
- *
- * @example With Dynamic Strategy
- * ```html
- * <ngx-signal-form-error
- *   [formField]="form.password"
- *   fieldName="password"
- *   [strategy]="strategySignal"
- *   [submittedStatus]="form().submitting() ? 'submitting' : form().touched() ? 'submitted' : 'unsubmitted'"
- * />
- * ```
- *
- * @example Using Angular's submit() helper (recommended)
- * ```typescript
- * import { submit } from '@angular/forms/signals';
- *
- * readonly #submitHandler = submit(this.form, async (formData) => {
- *   /// Form submission logic - submittedStatus automatically managed
- *   await apiCall();
- *   return null;
- * });
- *
- * protected handleSubmit(): void {
- *   void this.#submitHandler();
- * }
- * ```
- *
- * @example Auto-injected from ngxSignalFormDirective
- * ```html
- * <form [ngxSignalForm]="form" (submit)="save($event)">
- *   <!-- submittedStatus automatically injected from form provider -->
- *   <ngx-signal-form-error [formField]="form.email" fieldName="email" />
- * </form>
- * ```
- *
- * @example Form with Warnings
- * ```typescript
- * import { warningError } from '@ngx-signal-forms/toolkit/core';
- *
- * form(signal({ password: '' }), (path) => {
- *   required(path.password, { message: 'Password required' }); // Error
- *   minLength(path.password, 8, { message: 'Min 8 characters' }); // Error
- *
- *   /// Custom validation with warning
- *   validate(path.password, (ctx) => {
- *     const value = ctx.value();
- *     if (value && value.length < 12) {
- *       return warningError('short-password', 'Consider using 12+ characters for better security');
- *     }
- *     return null;
- *   });
- * });
- * ```
  */
 @Component({
   selector: 'ngx-signal-form-error',
@@ -183,102 +131,7 @@ import { showErrors } from '../utilities/show-errors';
       </div>
     }
   `,
-  styles: `
-    /*
-     * CSS Custom Properties (Public API)
-     *
-     * All properties prefixed with --ngx-signal-form-* for namespacing.
-     * Override these in your app or component styles to customize appearance.
-     *
-     * Example - Customize in your component:
-     *   ngx-signal-form-error {
-     *     --ngx-signal-form-error-color: #b91c1c;
-     *     --ngx-signal-form-error-bg: #fef2f2;
-     *   }
-     */
-    :host {
-      /* Error Colors */
-      --ngx-signal-form-error-color: #dc2626;
-      --ngx-signal-form-error-bg: transparent;
-      --ngx-signal-form-error-border: transparent;
-
-      /* Warning Colors */
-      --ngx-signal-form-warning-color: #f59e0b;
-      --ngx-signal-form-warning-bg: transparent;
-      --ngx-signal-form-warning-border: transparent;
-
-      /* Spacing */
-      --ngx-signal-form-error-margin-top: 0.375rem;
-      --ngx-signal-form-error-message-spacing: 0.25rem;
-
-      /* Typography */
-      --ngx-signal-form-error-font-size: 0.75rem;
-      --ngx-signal-form-error-line-height: 1.25;
-
-      /* Border */
-      --ngx-signal-form-error-border-width: 0;
-      --ngx-signal-form-error-border-radius: 0;
-
-      /* Padding */
-      --ngx-signal-form-error-padding: 0;
-      --ngx-signal-form-error-padding-horizontal: 0.5rem;
-
-      display: block;
-      margin-top: var(--ngx-signal-form-error-margin-top);
-    }
-
-    /* Dark mode defaults */
-    @media (prefers-color-scheme: dark) {
-      :host {
-        --ngx-signal-form-error-color: #fca5a5;
-        --ngx-signal-form-warning-color: #fcd34d;
-      }
-    }
-
-    .ngx-signal-form-error {
-      display: flex;
-      flex-direction: column;
-      gap: var(--ngx-signal-form-error-message-spacing);
-      padding: var(--ngx-signal-form-error-padding);
-      padding-left: var(--ngx-signal-form-error-padding-horizontal);
-      padding-right: var(--ngx-signal-form-error-padding-horizontal);
-      border-width: var(--ngx-signal-form-error-border-width);
-      border-style: solid;
-      border-radius: var(--ngx-signal-form-error-border-radius);
-      font-size: var(--ngx-signal-form-error-font-size);
-      line-height: var(--ngx-signal-form-error-line-height);
-    }
-
-    .ngx-signal-form-error--error {
-      color: var(--ngx-signal-form-error-color);
-      background-color: var(--ngx-signal-form-error-bg);
-      border-color: var(--ngx-signal-form-error-border);
-    }
-
-    .ngx-signal-form-error--warning {
-      color: var(--ngx-signal-form-warning-color);
-      background-color: var(--ngx-signal-form-warning-bg);
-      border-color: var(--ngx-signal-form-warning-border);
-    }
-
-    .ngx-signal-form-error__message {
-      margin: 0;
-    }
-
-    /* Reduced Motion Support */
-    @media (prefers-reduced-motion: reduce) {
-      .ngx-signal-form-error {
-        transition: none;
-      }
-    }
-
-    /* High Contrast Mode Support */
-    @media (prefers-contrast: high) {
-      :host {
-        --ngx-signal-form-error-border-width: 2px;
-      }
-    }
-  `,
+  styleUrl: './form-error.component.scss',
 })
 export class NgxSignalFormErrorComponent<TValue = unknown> {
   /**
@@ -346,13 +199,17 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   );
 
   /**
-   * Form submission status derived from Angular Signal Forms.
-   * Accepts Angular's SubmittedStatus type: 'unsubmitted' | 'submitting' | 'submitted'.
+   * Form submission status (optional).
    *
-   * When used inside a form with ngxSignalFormDirective, this is automatically
-   * injected from the form provider context. Otherwise, pass a SubmittedStatus
-   * derived from `submitting()`/`touched()`, e.g.:
-   * `[submittedStatus]="form().submitting() ? 'submitting' : form().touched() ? 'submitted' : 'unsubmitted'"`.
+   * **For `'on-touch'` strategy (default): This input is NOT needed.**
+   * Angular's `submit()` calls `markAllAsTouched()`, so `field.touched()` is true
+   * after submission. The component uses `field.touched()` directly.
+   *
+   * **For `'on-submit'` strategy:** Pass a SubmittedStatus signal to distinguish
+   * between "never submitted" and "submitted but field not yet touched".
+   *
+   * When used inside a form with `ngxSignalFormDirective`, this is automatically
+   * injected from the form provider context.
    */
   readonly submittedStatus = input<
     ReactiveOrStatic<SubmittedStatus> | undefined
@@ -406,20 +263,24 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
 
   /**
    * Resolved submitted status (input or injected from context).
+   * Returns undefined if not provided - this is fine for 'on-touch' strategy.
    */
-  readonly #resolvedSubmittedStatus = computed<SubmittedStatus>(() => {
-    const inputStatus = this.submittedStatus();
-    if (inputStatus !== undefined && inputStatus !== null) {
-      return typeof inputStatus === 'function' ? inputStatus() : inputStatus;
-    }
+  readonly #resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(
+    () => {
+      const inputStatus = this.submittedStatus();
+      if (inputStatus !== undefined && inputStatus !== null) {
+        return typeof inputStatus === 'function' ? inputStatus() : inputStatus;
+      }
 
-    const contextStatus = this.#injectedContext?.submittedStatus?.();
-    if (contextStatus !== undefined && contextStatus !== null) {
-      return contextStatus;
-    }
+      const contextStatus = this.#injectedContext?.submittedStatus?.();
+      if (contextStatus !== undefined && contextStatus !== null) {
+        return contextStatus;
+      }
 
-    return 'unsubmitted';
-  });
+      // Return undefined - showErrors() handles this for 'on-touch' strategy
+      return undefined;
+    },
+  );
 
   /**
    * Extract FieldState from FieldTree for use with showErrors utility.

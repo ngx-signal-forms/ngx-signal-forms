@@ -1,12 +1,12 @@
-import { describe, it, expect } from 'vitest';
 import { signal, WritableSignal } from '@angular/core';
-import {
-  showErrors,
-  createShowErrorsSignal,
-  combineShowErrors,
-} from './show-errors';
-import type { ErrorDisplayStrategy } from '../types';
 import type { SubmittedStatus } from '@angular/forms/signals';
+import { describe, expect, it } from 'vitest';
+import type { ErrorDisplayStrategy } from '../types';
+import {
+  combineShowErrors,
+  createShowErrorsSignal,
+  showErrors,
+} from './show-errors';
 
 /**
  * Test suite for show-errors utility functions.
@@ -126,7 +126,9 @@ describe('show-errors utilities', () => {
       expect(result()).toBe(false);
     });
 
-    it('should react to submittedStatus changes with on-touch strategy', () => {
+    it('should NOT react to submittedStatus changes with on-touch strategy', () => {
+      // Simplified architecture: on-touch only checks touched()
+      // Angular's submit() calls markAllAsTouched(), so touched() handles submission
       const fieldState = createMockFieldState(true, false);
       const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
@@ -137,8 +139,9 @@ describe('show-errors utilities', () => {
 
       expect(result()).toBe(false);
 
+      // submittedStatus is ignored for on-touch - only touched() matters
       submittedStatus.set('submitted');
-      expect(result()).toBe(true);
+      expect(result()).toBe(false);
     });
 
     it('should work with on-submit strategy', () => {

@@ -1,6 +1,12 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import type { SubmittedStatus } from '@angular/forms/signals';
-import { email, FormField, form, required, schema } from '@angular/forms/signals';
+import {
+  email,
+  form,
+  FormField,
+  required,
+  schema,
+} from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -342,7 +348,9 @@ describe('NgxSignalFormErrorComponent', () => {
       expect(alert).toBeFalsy();
     });
 
-    it('should show errors after submit even if not touched (on-touch strategy)', async () => {
+    it('should NOT show errors after submit if not touched (on-touch strategy)', async () => {
+      // Simplified architecture: on-touch only checks touched()
+      // Angular's submit() calls markAllAsTouched(), so in real usage touched() would be true
       @Component({
         selector: 'ngx-test-submitted-untouched',
         imports: [FormField, NgxSignalFormErrorComponent],
@@ -370,11 +378,14 @@ describe('NgxSignalFormErrorComponent', () => {
 
       await render(TestComponent);
 
-      const alert = screen.getByRole('alert');
-      expect(alert).toBeTruthy();
+      // submittedStatus is ignored for on-touch - field must be touched
+      const alert = screen.queryByRole('alert');
+      expect(alert).toBeFalsy();
     });
 
-    it('should show errors during async submission (on-touch strategy)', async () => {
+    it('should NOT show errors during async submission if not touched (on-touch strategy)', async () => {
+      // Simplified architecture: on-touch only checks touched()
+      // In real usage, Angular's submit() would have called markAllAsTouched()
       @Component({
         selector: 'ngx-test-submitting-on-touch',
         imports: [FormField, NgxSignalFormErrorComponent],
@@ -402,9 +413,9 @@ describe('NgxSignalFormErrorComponent', () => {
 
       await render(TestComponent);
 
-      const alert = screen.getByRole('alert');
-      expect(alert).toBeTruthy();
-      expect(alert.textContent).toContain('This field is required');
+      // submittedStatus is ignored for on-touch - field must be touched
+      const alert = screen.queryByRole('alert');
+      expect(alert).toBeFalsy();
     });
 
     it('should show errors during async submission (on-submit strategy)', async () => {

@@ -811,6 +811,41 @@ describe('NgxSignalFormFieldComponent', () => {
       const errorComponent = container.querySelector('ngx-signal-form-error');
       expect(errorComponent).toBeFalsy();
     });
+
+    it('should display errors WITHOUT [ngxSignalForm] context for on-touch strategy', async () => {
+      /**
+       * KEY CAPABILITY: NgxSignalFormFieldComponent works WITHOUT [ngxSignalForm] directive
+       * for the default 'on-touch' strategy.
+       *
+       * The 'on-touch' strategy only checks `field.invalid() && field.touched()`.
+       * It does NOT require `submittedStatus` signal from form context.
+       *
+       * This means users can use <ngx-signal-form-field> for simple forms without
+       * needing to add [ngxSignalForm] to their <form> element.
+       */
+      const invalidField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'required', message: 'Email is required' }],
+      });
+
+      // No [ngxSignalForm] context - just the component in isolation
+      await render(
+        `<ngx-signal-form-field [formField]="field" fieldName="email">
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: invalidField,
+          },
+        },
+      );
+
+      // Error should display because on-touch only needs invalid + touched
+      expect(screen.getByRole('alert')).toHaveTextContent('Email is required');
+    });
   });
 
   describe('Form element support', () => {
