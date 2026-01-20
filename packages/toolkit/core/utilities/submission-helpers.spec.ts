@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest';
 import { signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import type { FieldTree } from '@angular/forms/signals';
-import { canSubmit, isSubmitting, hasSubmitted } from './submission-helpers';
+import { describe, expect, it, vi } from 'vitest';
+import { canSubmit, hasSubmitted, isSubmitting } from './submission-helpers';
 
 /**
  * Test suite for submission helper utilities.
@@ -133,7 +134,9 @@ describe('Submission Helpers', () => {
         // Arrange: Different data types
         const stringForm = createMockForm(true, false) as FieldTree<string>;
         const numberForm = createMockForm(true, false) as FieldTree<number>;
-        const objectForm = createMockForm(true, false) as FieldTree<{ name: string }>;
+        const objectForm = createMockForm(true, false) as FieldTree<{
+          name: string;
+        }>;
 
         // Act & Assert: Should all work
         expect(canSubmit(stringForm)()).toBe(true);
@@ -223,114 +226,114 @@ describe('Submission Helpers', () => {
 
   describe('hasSubmitted', () => {
     describe('Happy Path', () => {
-      it('should return true when form has been submitted', () => {
-        // Arrange: Form with submitted status
-        const mockForm = createMockFormWithStatus('submitted');
+      it('should return false initially when form has not been submitted', () => {
+        // Arrange: Form with submitting = false
+        const submittingState = signal(false);
+        const mockForm = createMockFormWithSubmitting(() => submittingState());
 
-        // Act
-        const result = hasSubmitted(mockForm);
+        // Act: Call in injection context (hasSubmitted uses effect internally)
+        const result = TestBed.runInInjectionContext(() =>
+          hasSubmitted(mockForm),
+        );
 
-        // Assert
-        expect(result()).toBe(true);
-      });
-
-      it('should return false when form is unsubmitted', () => {
-        // Arrange: Unsubmitted form
-        const mockForm = createMockFormWithStatus('unsubmitted');
-
-        // Act
-        const result = hasSubmitted(mockForm);
-
-        // Assert
+        // Assert: Initially not submitted
         expect(result()).toBe(false);
       });
 
-      it('should return false when form is submitting', () => {
-        // Arrange: Currently submitting (not yet submitted)
-        const mockForm = createMockFormWithStatus('submitting');
+      it('should return false when form is currently submitting', () => {
+        // Arrange: Form currently submitting
+        const submittingState = signal(true);
+        const mockForm = createMockFormWithSubmitting(() => submittingState());
 
         // Act
-        const result = hasSubmitted(mockForm);
+        const result = TestBed.runInInjectionContext(() =>
+          hasSubmitted(mockForm),
+        );
 
-        // Assert
+        // Assert: Not yet submitted (still in progress)
         expect(result()).toBe(false);
       });
 
-      it('should update reactively when submission completes', () => {
+      it('should return true after submission completes (submitting: true → false)', async () => {
         // Arrange: Simulate submission lifecycle
-        const status = signal<'unsubmitted' | 'submitting' | 'submitted'>('unsubmitted');
-        const mockForm = createMockFormWithStatus(() => status());
-        const result = hasSubmitted(mockForm);
+        const submittingState = signal(false);
+        const mockForm = createMockFormWithSubmitting(() => submittingState());
+
+        // Act: Create hasSubmitted in injection context
+        const result = TestBed.runInInjectionContext(() =>
+          hasSubmitted(mockForm),
+        );
 
         // Assert: Initially not submitted
         expect(result()).toBe(false);
 
-        // Act: Start submitting
-        status.set('submitting');
+        // Act: Start submission
+        submittingState.set(true);
+        await TestBed.inject(
+          (await import('@angular/core')).ApplicationRef,
+        ).whenStable();
         expect(result()).toBe(false);
 
-        // Act: Complete submission
-        status.set('submitted');
+        // Act: Complete submission (the key transition)
+        submittingState.set(false);
+        await TestBed.inject(
+          (await import('@angular/core')).ApplicationRef,
+        ).whenStable();
 
-        // Assert: Now submitted
+        // Assert: Now submitted (transition detected)
         expect(result()).toBe(true);
       });
     });
 
-    describe('Edge Cases - Missing submittedStatus', () => {
-      it('should return false when form has no submittedStatus signal', () => {
-        // Arrange: Field without submittedStatus (non-root field)
-        const mockField = signal({
-          value: () => ({}),
-          valid: () => true,
-          invalid: () => false,
-          touched: () => false,
-          dirty: () => false,
-          errors: () => [],
-          pending: () => false,
-          disabled: () => false,
-          readonly: () => false,
-          hidden: () => false,
-          submitting: () => false,
-          // No submittedStatus
-          reset: vi.fn(),
-          markAsTouched: vi.fn(),
-          markAsDirty: vi.fn(),
-          resetSubmittedStatus: vi.fn(),
-          errorSummary: () => [],
-        });
+    describe('Reset Detection', () => {
+      it('should return false after form reset (touched: true → false)', async () => {
+        // Arrange: Form that was submitted
+        const submittingState = signal(false);
+        const touchedState = signal(false);
+        const mockForm = createMockFormWithSubmittingAndTouched(
+          () => submittingState(),
+          () => touchedState(),
+        );
 
-        // Act
-        const result = hasSubmitted(mockField as unknown as FieldTree<unknown>);
+        const result = TestBed.runInInjectionContext(() =>
+          hasSubmitted(mockForm),
+        );
 
-        // Assert: Should handle missing property gracefully
+        // Simulate full submission cycle
+        submittingState.set(true);
+        touchedState.set(true);
+        await TestBed.inject(
+          (await import('@angular/core')).ApplicationRef,
+        ).whenStable();
+
+        submittingState.set(false);
+        await TestBed.inject(
+          (await import('@angular/core')).ApplicationRef,
+        ).whenStable();
+
+        // Assert: Form is submitted
+        expect(result()).toBe(true);
+
+        // Act: Reset form (touched goes false)
+        touchedState.set(false);
+        await TestBed.inject(
+          (await import('@angular/core')).ApplicationRef,
+        ).whenStable();
+
+        // Assert: Back to unsubmitted
         expect(result()).toBe(false);
       });
+    });
 
-      it('should return false when submittedStatus is undefined', () => {
-        // Arrange: Form with undefined submittedStatus
-        const mockForm = signal({
-          value: () => ({}),
-          valid: () => true,
-          invalid: () => false,
-          touched: () => false,
-          dirty: () => false,
-          errors: () => [],
-          pending: () => false,
-          disabled: () => false,
-          readonly: () => false,
-          hidden: () => false,
-          submitting: () => false,
-          submittedStatus: () => undefined,
-          reset: vi.fn(),
-          markAsTouched: vi.fn(),
-          markAsDirty: vi.fn(),
-          resetSubmittedStatus: vi.fn(),
-          errorSummary: () => [],
-        });
+    describe('Edge Cases', () => {
+      it('should return false when form state is null/undefined', () => {
+        // Arrange: Form signal that returns null
+        const mockForm = signal(null) as unknown as FieldTree<unknown>;
 
         // Act
-        const result = hasSubmitted(mockForm as unknown as FieldTree<unknown>);
+        const result = TestBed.runInInjectionContext(() =>
+          hasSubmitted(mockForm),
+        );
 
         // Assert
         expect(result()).toBe(false);
@@ -344,33 +347,41 @@ describe('Submission Helpers', () => {
           email: string;
           message: string;
         }
-        const mockForm = createMockFormWithStatus('submitted') as FieldTree<ContactForm>;
+        const submittingState = signal(false);
+        const mockForm = createMockFormWithSubmitting(() =>
+          submittingState(),
+        ) as FieldTree<ContactForm>;
 
         // Act
-        const result = hasSubmitted(mockForm);
+        const result = TestBed.runInInjectionContext(() =>
+          hasSubmitted(mockForm),
+        );
 
         // Assert
-        expect(result()).toBe(true);
+        expect(result()).toBe(false);
       });
     });
   });
 
   describe('Integration - Combined Usage', () => {
-    it('should work together for complete submission flow', () => {
+    it('should work together for complete submission flow', async () => {
       // Arrange: Simulate full submission lifecycle
       const isValid = signal(false);
       const isSubmittingState = signal(false);
-      const status = signal<'unsubmitted' | 'submitting' | 'submitted'>('unsubmitted');
+      const touchedState = signal(false);
 
-      const mockForm = createMockFormComplete(
+      const mockForm = createMockFormCompleteWithTouched(
         () => isValid(),
         () => isSubmittingState(),
-        () => status(),
+        () => touchedState(),
       );
 
       const canSubmitResult = canSubmit(mockForm);
       const isSubmittingResult = isSubmitting(mockForm);
-      const hasSubmittedResult = hasSubmitted(mockForm);
+      // hasSubmitted needs injection context
+      const hasSubmittedResult = TestBed.runInInjectionContext(() =>
+        hasSubmitted(mockForm),
+      );
 
       // Assert: Initial state (invalid, not submitting, not submitted)
       expect(canSubmitResult()).toBe(false);
@@ -387,7 +398,10 @@ describe('Submission Helpers', () => {
 
       // Act: Start submission
       isSubmittingState.set(true);
-      status.set('submitting');
+      touchedState.set(true);
+      await TestBed.inject(
+        (await import('@angular/core')).ApplicationRef,
+      ).whenStable();
 
       // Assert: Submitting state
       expect(canSubmitResult()).toBe(false); // Can't submit while submitting
@@ -396,7 +410,9 @@ describe('Submission Helpers', () => {
 
       // Act: Complete submission
       isSubmittingState.set(false);
-      status.set('submitted');
+      await TestBed.inject(
+        (await import('@angular/core')).ApplicationRef,
+      ).whenStable();
 
       // Assert: Submitted state
       expect(canSubmitResult()).toBe(true); // Can submit again
@@ -417,7 +433,8 @@ function createMockForm(
   submitting: boolean | (() => boolean),
 ): FieldTree<unknown> {
   const validFn = typeof valid === 'function' ? valid : () => valid;
-  const submittingFn = typeof submitting === 'function' ? submitting : () => submitting;
+  const submittingFn =
+    typeof submitting === 'function' ? submitting : () => submitting;
 
   return signal({
     value: () => ({}),
@@ -446,7 +463,11 @@ function createMockForm(
  * @param status - Submitted status (string or signal function)
  */
 function createMockFormWithStatus(
-  status: 'unsubmitted' | 'submitting' | 'submitted' | (() => 'unsubmitted' | 'submitting' | 'submitted' | undefined),
+  status:
+    | 'unsubmitted'
+    | 'submitting'
+    | 'submitted'
+    | (() => 'unsubmitted' | 'submitting' | 'submitted' | undefined),
 ): FieldTree<unknown> {
   const statusFn = typeof status === 'function' ? status : () => status;
 
@@ -472,22 +493,19 @@ function createMockFormWithStatus(
 }
 
 /**
- * Helper: Create mock FieldTree with all submission-related signals.
+ * Helper: Create mock FieldTree with controllable submitting signal.
+ * Used for testing hasSubmitted which internally tracks submitting transitions.
  *
- * @param valid - Validity state function
  * @param submitting - Submitting state function
- * @param status - Submitted status function
  */
-function createMockFormComplete(
-  valid: () => boolean,
+function createMockFormWithSubmitting(
   submitting: () => boolean,
-  status: () => 'unsubmitted' | 'submitting' | 'submitted',
 ): FieldTree<unknown> {
   return signal({
     value: () => ({}),
-    valid,
-    invalid: () => !valid(),
-    touched: () => false,
+    valid: () => true,
+    invalid: () => false,
+    touched: () => true, // Default to touched (forms are touched after interaction)
     dirty: () => false,
     errors: () => [],
     pending: () => false,
@@ -495,7 +513,73 @@ function createMockFormComplete(
     readonly: () => false,
     hidden: () => false,
     submitting,
-    submittedStatus: status,
+    submittedStatus: () => 'unsubmitted' as const,
+    reset: vi.fn(),
+    markAsTouched: vi.fn(),
+    markAsDirty: vi.fn(),
+    resetSubmittedStatus: vi.fn(),
+    errorSummary: () => [],
+  }) as unknown as FieldTree<unknown>;
+}
+
+/**
+ * Helper: Create mock FieldTree with controllable submitting and touched signals.
+ * Used for testing reset detection (when touched transitions from true to false).
+ *
+ * @param submitting - Submitting state function
+ * @param touched - Touched state function
+ */
+function createMockFormWithSubmittingAndTouched(
+  submitting: () => boolean,
+  touched: () => boolean,
+): FieldTree<unknown> {
+  return signal({
+    value: () => ({}),
+    valid: () => true,
+    invalid: () => false,
+    touched,
+    dirty: () => false,
+    errors: () => [],
+    pending: () => false,
+    disabled: () => false,
+    readonly: () => false,
+    hidden: () => false,
+    submitting,
+    submittedStatus: () => 'unsubmitted' as const,
+    reset: vi.fn(),
+    markAsTouched: vi.fn(),
+    markAsDirty: vi.fn(),
+    resetSubmittedStatus: vi.fn(),
+    errorSummary: () => [],
+  }) as unknown as FieldTree<unknown>;
+}
+
+/**
+ * Helper: Create mock FieldTree with all submission-related signals including touched.
+ * Used for integration tests that need full control.
+ *
+ * @param valid - Validity state function
+ * @param submitting - Submitting state function
+ * @param touched - Touched state function
+ */
+function createMockFormCompleteWithTouched(
+  valid: () => boolean,
+  submitting: () => boolean,
+  touched: () => boolean,
+): FieldTree<unknown> {
+  return signal({
+    value: () => ({}),
+    valid,
+    invalid: () => !valid(),
+    touched,
+    dirty: () => false,
+    errors: () => [],
+    pending: () => false,
+    disabled: () => false,
+    readonly: () => false,
+    hidden: () => false,
+    submitting,
+    submittedStatus: () => 'unsubmitted' as const,
     reset: vi.fn(),
     markAsTouched: vi.fn(),
     markAsDirty: vi.fn(),

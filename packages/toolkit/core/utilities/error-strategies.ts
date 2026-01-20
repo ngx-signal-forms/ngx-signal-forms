@@ -108,47 +108,25 @@ export function computeShowErrors<T>(
 
     // Only unwrap submittedStatus if provided (for 'on-submit' strategy)
     const status = submittedStatus ? unwrapValue(submittedStatus) : undefined;
-    const hasSubmitted = status !== undefined && status !== 'unsubmitted';
+    const fallbackStatus = status ?? (isTouched ? 'submitted' : 'unsubmitted');
 
-    // Apply strategy logic
-    let result: boolean;
-    switch (strategyValue) {
-      case 'immediate':
-        // Show errors immediately as they occur
-        result = isInvalid;
-        break;
+    const result = shouldShowErrors(
+      {
+        invalid: () => isInvalid,
+        touched: () => isTouched,
+      },
+      strategyValue,
+      fallbackStatus,
+    );
 
-      case 'on-touch':
-        // Show errors after field is touched (blur OR submit)
-        // Angular's submit() calls markAllAsTouched(), so touched() is true after submit
-        result = isInvalid && isTouched;
-        break;
-
-      case 'on-submit':
-        // Show errors only after form submission
-        // If submittedStatus provided, use it; otherwise fall back to touched()
-        // (touched becomes true after submit() calls markAllAsTouched())
-        result =
-          isInvalid && (hasSubmitted || (status === undefined && isTouched));
-        break;
-
-      case 'manual':
-        // Don't automatically show errors - developer controls this
-        result = false;
-        break;
-
-      default:
-        // Default to 'on-touch' behavior
-        result = isInvalid && isTouched;
-    }
-
-    // Debug logging
-    if ((window as { __DEBUG_SHOW_ERRORS__?: boolean }).__DEBUG_SHOW_ERRORS__) {
+    if (
+      typeof window !== 'undefined' &&
+      (window as { __DEBUG_SHOW_ERRORS__?: boolean }).__DEBUG_SHOW_ERRORS__
+    ) {
       console.log('[computeShowErrors]', {
         strategy: strategyValue,
         isInvalid,
         isTouched,
-        hasSubmitted,
         submittedStatusProvided: status !== undefined,
         result,
       });
@@ -234,7 +212,7 @@ export function shouldShowErrors(
       return isInvalid;
 
     case 'on-touch':
-      return isInvalid && (isTouched || hasSubmitted);
+      return isInvalid && isTouched;
 
     case 'on-submit':
       return isInvalid && hasSubmitted;
@@ -243,6 +221,6 @@ export function shouldShowErrors(
       return false;
 
     default:
-      return isInvalid && (isTouched || hasSubmitted);
+      return isInvalid && isTouched;
   }
 }

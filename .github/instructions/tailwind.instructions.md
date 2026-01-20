@@ -1,9 +1,10 @@
 ---
 description: Tailwind CSS usage rules for styling (2025 best practices)
-applyTo: 'projects/examples/**/*.{html,js,jsx,ts,tsx,css,scss,sass,md,mdx}'
+applyTo: 'apps/**/*.{html,js,jsx,ts,tsx,css,scss,sass,md,mdx}'
 ---
 
 ## General Guidelines
+
 - Use Tailwind utility classes for consistent styling, with custom CSS only for special cases
 - Organize classes logically (layout, spacing, color, typography)
 - Use responsive and state variants (e.g., sm:, md:, lg:, hover:, focus:, dark:) in markup
@@ -11,6 +12,7 @@ applyTo: 'projects/examples/**/*.{html,js,jsx,ts,tsx,css,scss,sass,md,mdx}'
 - Rely on Tailwind classes rather than inline styles or external CSS files for a unified design language
 
 ## Configuration (CSS Files)
+
 - Use the `@theme` directive to define custom design tokens like fonts, breakpoints, and colors
 - Prefer modern color formats such as `oklch` for better color gamut support, defining them in the `:root` scope
 - Take advantage of automatic content detection, which eliminates the need for a `content` array in configuration
@@ -19,6 +21,7 @@ applyTo: 'projects/examples/**/*.{html,js,jsx,ts,tsx,css,scss,sass,md,mdx}'
 - Extend Tailwind with custom utilities using the `@utility` directive in CSS files
 
 ## Styling (CSS Files)
+
 - Incorporate 3D transform utilities like `rotate-x-*`, `rotate-y-*`, and `scale-z-*` for advanced visual effects
 - Implement container queries with `@container`, `@max-*`, and `@min-*` utilities for adaptive layouts
 - Use arbitrary values and properties with square bracket notation (e.g., `[mask-type:luminance]` or `top-[117px]`)
@@ -27,6 +30,7 @@ applyTo: 'projects/examples/**/*.{html,js,jsx,ts,tsx,css,scss,sass,md,mdx}'
 - Check browser support for advanced features like `@starting-style` using resources like caniuse
 
 ## Components (HTML)
+
 - Apply Tailwind utility classes directly in HTML for styling components
   - But prefer the `:host{}` instead of a wrapper div
   - For forms use css / utility classes.
@@ -36,6 +40,7 @@ applyTo: 'projects/examples/**/*.{html,js,jsx,ts,tsx,css,scss,sass,md,mdx}'
 - Use `aria-hidden="true"` or `role="presentation"` when applying utilities like `hidden` or `sr-only`
 
 ## Components (TypeScript/JavaScript)
+
 - Prefer TypeScript over JavaScript for component files to ensure type safety when applying Tailwind classes
 - Use dynamic utility classes with template literals or arrays (e.g., `className={`p-${padding} bg-${color}`}`)
 - Validate dynamic values with TypeScript types
@@ -43,6 +48,7 @@ applyTo: 'projects/examples/**/*.{html,js,jsx,ts,tsx,css,scss,sass,md,mdx}'
 - Favor functional components over class-based ones in frameworks like React
 
 ## Project-Wide Systems
+
 - Leverage the Oxide engine's fast build times for performance optimization
 - Avoid manual content configuration unless explicitly required
 - Maintain consistency by using theme variables defined in CSS configuration files

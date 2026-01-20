@@ -1010,7 +1010,7 @@ Provides form context to child components via dependency injection.
 **Automatic Features:**
 
 - Adds `novalidate` attribute to prevent browser validation UI
-- Tracks submission lifecycle (`submittedStatus` signal)
+- Tracks submission lifecycle (`submittedStatus` signal) using reactive effects
 - Provides form context to child directives/components
 - Manages error display strategy
 
@@ -1029,7 +1029,7 @@ Provides form context to child components via dependency injection.
 
 ```html
 <form [ngxSignalForm]="myForm" #formDir="ngxSignalForm">
-  <!-- Access directive instance (SubmittedStatus derived from submitting()/touched()) -->
+  <!-- Access directive instance (SubmittedStatus derived from submitting() transitions) -->
   <div>Status: {{ formDir.submittedStatus() }}</div>
 </form>
 ```
@@ -1134,7 +1134,7 @@ import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit/core';
 <ngx-signal-form-error [formField]="form.email" fieldName="email" />
 ```
 
-**Note:** When used inside a form with `ngxSignalFormDirective`, the `submittedStatus` signal is automatically injected. The toolkit derives this from Angular's native `submitting()` and `touched()` signals.
+**Note:** When used inside a form with `ngxSignalFormDirective`, the `submittedStatus` signal is automatically injected. The toolkit derives this from Angular's native `submitting()` signal transitions.
 
 #### NgxSignalFormFieldComponent
 
@@ -1304,7 +1304,7 @@ export class MyFormComponent {
 **Enhancement over Angular Signal Forms:**
 
 - ✅ Angular Signal Forms: Provides `valid()`, `submitting()`, `touched()` signals
-- ✅ Toolkit: Derives `submittedStatus` from native signals (`touched()` as proxy for submission)
+- ✅ Toolkit: Derives `submittedStatus` from native `submitting()` signal transitions
 - ✅ Toolkit: Pre-computed helper signals reduce template boilerplate by ~50%
 - ✅ Consistent naming convention across applications
 - ✅ Type-safe with automatic inference
@@ -1319,8 +1319,11 @@ canSubmit(formTree: FieldTree<unknown>): Signal<boolean>
 isSubmitting(formTree: FieldTree<unknown>): Signal<boolean>
 
 // Check if form has completed at least one submission
+// NOTE: Requires injection context (uses effect() internally)
 hasSubmitted(formTree: FieldTree<unknown>): Signal<boolean>
 ```
+
+> **Note:** `hasSubmitted()` uses `effect()` internally to track state transitions. It must be called within an **injection context** (property initializer or constructor).
 
 #### Error Display Utilities
 

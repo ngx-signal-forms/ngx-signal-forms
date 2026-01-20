@@ -164,15 +164,8 @@ export class ngxSignalFormDirective {
   });
   errorStrategy = input<ErrorDisplayStrategy | undefined>(undefined);
 
-  // Derived submission status from submitting()/touched()
-  readonly submittedStatus = computed<SubmittedStatus>(() => {
-    const f = this.form();
-    if (!f) return 'unsubmitted';
-    const state = f();
-    if (state.submitting()) return 'submitting';
-    if (state.touched()) return 'submitted';
-    return 'unsubmitted';
-  });
+  // Derived submission status from submitting() transitions (uses effect internally)
+  readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
 }
 ```
 
@@ -265,7 +258,8 @@ export type ErrorDisplayStrategy =
  * Computes whether to show errors based on the error display strategy.
  *
  * Note: Signal Forms doesn't provide a submittedStatus signal. The toolkit derives
- * it from `submitting()` and `touched()` signals (see examples below).
+ * it from `submitting()` and `touched()` signals using effect()-based transition tracking
+ * in `ngxSignalFormDirective`.
  */
 export function computeShowErrors(
   field: Signal<FieldState<any>>,
@@ -300,13 +294,6 @@ export function computeShowErrors(
     }
   });
 }
-
-// Example: Derive submittedStatus locally (or use ngxSignalFormDirective)
-const submittedStatus = computed<SubmittedStatus>(() => {
-  if (form().submitting()) return 'submitting';
-  if (form().touched()) return 'submitted';
-  return 'unsubmitted';
-});
 ```
 
 ### 5. Configuration

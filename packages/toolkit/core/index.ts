@@ -7,7 +7,10 @@ export * from './tokens';
 // Providers
 export * from './providers/config.provider';
 export * from './providers/error-messages.provider';
-export { ngxStatusClasses, provideNgxStatusClasses } from './utilities/status-classes';
+export {
+  ngxStatusClasses,
+  provideNgxStatusClasses,
+} from './utilities/status-classes';
 export type { NgxStatusClassesOptions } from './utilities/status-classes';
 
 // Directives
@@ -19,12 +22,12 @@ export {
 
 // Utilities
 export * from './utilities/assert-injector';
-export * from './utilities/error-strategies';
+export { shouldShowErrors } from './utilities/error-strategies';
 export * from './utilities/field-resolution';
 export * from './utilities/inject-field-control';
 export * from './utilities/inject-form-config';
 export * from './utilities/inject-form-context';
-export * from './utilities/show-errors';
+export { combineShowErrors, showErrors } from './utilities/show-errors';
 export * from './utilities/warning-error';
 
 // Components

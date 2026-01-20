@@ -1,4 +1,12 @@
-import { computed, Directive, inject, input, type Signal } from '@angular/core';
+import {
+  computed,
+  Directive,
+  effect,
+  inject,
+  input,
+  signal,
+  type Signal,
+} from '@angular/core';
 import type { FieldTree, SubmittedStatus } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type { ErrorDisplayStrategy, ReactiveOrStatic } from '../types';
@@ -19,11 +27,13 @@ export interface NgxSignalFormContext {
    * Derived submission status based on Angular's native signals.
    *
    * **Values**:
-   * - `'unsubmitted'` - Form hasn't been touched yet
+   * - `'unsubmitted'` - Form hasn't been submitted yet
    * - `'submitting'` - Form is currently being submitted (`submitting()` is true)
-   * - `'submitted'` - Form has been touched (Angular's `submit()` marks all fields as touched)
+   * - `'submitted'` - Form has completed at least one submission attempt
    *
-   * This is derived from Angular's `submitting()` and `touched()` signals.
+   * This is derived from Angular's `submitting()` signal by tracking
+   * submit lifecycle transitions. Resets to `'unsubmitted'` when `form.reset()`
+   * is called (detected via `touched()` becoming false).
    */
   submittedStatus: Signal<SubmittedStatus>;
 
@@ -34,7 +44,7 @@ export interface NgxSignalFormContext {
 }
 
 /**
- * Provides form context to child directives and components via DI.
+ * Directive to provide Signal Forms context to child components.
  *
  * **Selectors**:
  * - `form[ngxSignalForm]` - Explicit binding with full form context
@@ -49,7 +59,8 @@ export interface NgxSignalFormContext {
  * 3. Error display strategy management (when using `[ngxSignalForm]`)
  *
  * **Philosophy**: Stay close to Angular Signal Forms API.
- * The directive derives `submittedStatus` from Angular's native `submitting()` and `touched()` signals.
+ * The directive derives `submittedStatus` from Angular's native `submitting()`
+ * signal by tracking submit transitions.
  *
  * @example Explicit form binding (recommended for toolkit components)
  * ```typescript
@@ -68,7 +79,7 @@ export interface NgxSignalFormContext {
  * ```html
  * <!-- Just adds novalidate, no form context provided -->
  * <form (submit)="handleSubmit($event)">
- *   <input [formField]="userForm.email" type="email" />
+ *   <input [formField]="form.email" />
  *   <button type="submit">Submit</button>
  * </form>
  * ```
@@ -112,6 +123,9 @@ export interface NgxSignalFormContext {
 })
 export class NgxSignalFormDirective {
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
+  readonly #hasSubmitted = signal(false);
+  readonly #wasSubmitting = signal(false);
+  readonly #wasTouched = signal(false);
 
   /**
    * The Signal Forms instance (FieldTree) to provide.
@@ -146,18 +160,21 @@ export class NgxSignalFormDirective {
   /**
    * Submission status derived from Angular Signal Forms' native signals.
    *
-   * Angular 21 provides `submitting()` and `touched()` signals on `FieldState`,
+   * Angular 21 provides a `submitting()` signal on `FieldState`,
    * but NOT a `submittedStatus()` signal. The toolkit derives `SubmittedStatus`
    * from these native signals:
    *
-   * - `'unsubmitted'` - Form hasn't been submitted yet (no form bound OR !touched && !submitting)
+   * - `'unsubmitted'` - Form hasn't been submitted yet (no form bound OR no submit attempts)
    * - `'submitting'` - Form is currently being submitted (`submitting()` is true)
-   * - `'submitted'` - Form has been submitted (Angular's `submit()` marks all fields as touched)
+   * - `'submitted'` - Form has completed a submission (tracked via `submitting()` transition)
    *
    * **How derivation works**:
    * 1. If `submitting()` is true → `'submitting'`
-   * 2. If `touched()` is true (submit() calls markAllAsTouched) → `'submitted'`
+   * 2. If a submission completed (submitting went from true to false) → `'submitted'`
    * 3. Otherwise → `'unsubmitted'`
+   *
+   * **Reset behavior**: When `form.reset()` is called, the status returns to `'unsubmitted'`.
+   * This is detected by watching for `touched()` becoming `false` after being `true`.
    *
    * Returns `'unsubmitted'` when no form is bound (using `form(submit)` selector only).
    */
@@ -172,12 +189,41 @@ export class NgxSignalFormDirective {
       return 'submitting';
     }
 
-    // Angular's submit() helper calls markAllAsTouched() internally,
-    // so we can use touched() as a proxy for "has been submitted"
-    if (fieldState.touched()) {
+    if (this.#hasSubmitted()) {
       return 'submitted';
     }
 
     return 'unsubmitted';
   });
+
+  constructor() {
+    effect(() => {
+      const formTree = this.form();
+      if (!formTree) {
+        this.#wasSubmitting.set(false);
+        this.#wasTouched.set(false);
+        return;
+      }
+
+      const formState = formTree();
+      const isSubmitting = formState.submitting();
+      const isTouched = formState.touched();
+      const wasSubmitting = this.#wasSubmitting();
+      const wasTouched = this.#wasTouched();
+
+      // Detect submit completion: submitting went from true to false
+      if (wasSubmitting && !isSubmitting) {
+        this.#hasSubmitted.set(true);
+      }
+
+      // Detect reset: touched went from true to false (form.reset() clears touched)
+      // Only reset if not currently submitting to avoid false positives
+      if (wasTouched && !isTouched && !isSubmitting) {
+        this.#hasSubmitted.set(false);
+      }
+
+      this.#wasSubmitting.set(isSubmitting);
+      this.#wasTouched.set(isTouched);
+    });
+  }
 }

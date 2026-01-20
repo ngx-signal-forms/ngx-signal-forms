@@ -1,4 +1,10 @@
-import { computed, type Signal } from '@angular/core';
+import {
+  assertInInjectionContext,
+  computed,
+  effect,
+  signal,
+  type Signal,
+} from '@angular/core';
 import type { FieldTree, SubmittedStatus } from '@angular/forms/signals';
 
 /**
@@ -131,42 +137,55 @@ export function isSubmitting(formTree: FieldTree<unknown>): Signal<boolean> {
   });
 }
 
-function deriveSubmittedStatus(formTree: FieldTree<unknown>): SubmittedStatus {
-  const formState = formTree();
+function createSubmittedStatusTracker(
+  formTree: FieldTree<unknown>,
+): Signal<SubmittedStatus> {
+  assertInInjectionContext(createSubmittedStatusTracker);
 
-  if (!formState || typeof formState !== 'object') {
-    return 'unsubmitted';
-  }
+  const hasSubmitted = signal(false);
+  const wasSubmitting = signal(false);
+  const wasTouched = signal(false);
 
-  const explicitStatus =
-    'submittedStatus' in formState &&
-    typeof formState.submittedStatus === 'function'
-      ? formState.submittedStatus()
-      : undefined;
+  effect(() => {
+    const formState = formTree();
+    if (!formState) {
+      wasSubmitting.set(false);
+      wasTouched.set(false);
+      return;
+    }
 
-  if (
-    explicitStatus === 'submitted' ||
-    explicitStatus === 'submitting' ||
-    explicitStatus === 'unsubmitted'
-  ) {
-    return explicitStatus;
-  }
+    const isSubmitting = formState.submitting();
+    const isTouched = formState.touched();
+    const prevSubmitting = wasSubmitting();
+    const prevTouched = wasTouched();
 
-  const isSubmitting =
-    'submitting' in formState && typeof formState.submitting === 'function'
-      ? formState.submitting()
-      : false;
+    // Detect submit completion: submitting went from true to false
+    if (prevSubmitting && !isSubmitting) {
+      hasSubmitted.set(true);
+    }
 
-  if (isSubmitting) {
-    return 'submitting';
-  }
+    // Detect reset: touched went from true to false (form.reset() clears touched)
+    // Only reset if not currently submitting to avoid false positives
+    if (prevTouched && !isTouched && !isSubmitting) {
+      hasSubmitted.set(false);
+    }
 
-  const isTouched =
-    'touched' in formState && typeof formState.touched === 'function'
-      ? formState.touched()
-      : false;
+    wasSubmitting.set(isSubmitting);
+    wasTouched.set(isTouched);
+  });
 
-  return isTouched ? 'submitted' : 'unsubmitted';
+  return computed(() => {
+    const formState = formTree();
+    if (!formState) {
+      return 'unsubmitted';
+    }
+
+    if (formState.submitting()) {
+      return 'submitting';
+    }
+
+    return hasSubmitted() ? 'submitted' : 'unsubmitted';
+  });
 }
 
 /**
@@ -211,16 +230,15 @@ function deriveSubmittedStatus(formTree: FieldTree<unknown>): SubmittedStatus {
  * ```
  *
  * @remarks
- * This is a convenience wrapper around:
- * ```typescript
- * computed(() => {
- *   const status = deriveSubmittedStatus(form);
- *   return status === 'submitted';
- * })
- * ```
+ * **Injection context required**: This function uses `effect()` internally and must
+ * be called within an injection context (e.g., property initializer or constructor).
  *
  * **Note:** Angular Signal Forms does **not** expose a `submittedStatus()` signal.
- * The toolkit derives the status from native `submitting()` and `touched()` signals.
+ * The toolkit derives the status by tracking transitions of the native
+ * `submitting()` signal.
+ *
+ * **Reset behavior**: When `form.reset()` is called, this returns to `false`.
+ * This is detected by watching for `touched()` becoming `false`.
  *
  * **When to use:**
  * - Success/confirmation messages
@@ -231,8 +249,9 @@ function deriveSubmittedStatus(formTree: FieldTree<unknown>): SubmittedStatus {
  * @public
  */
 export function hasSubmitted(formTree: FieldTree<unknown>): Signal<boolean> {
+  const submittedStatus = createSubmittedStatusTracker(formTree);
+
   return computed(() => {
-    const status = deriveSubmittedStatus(formTree);
-    return status === 'submitted';
+    return submittedStatus() === 'submitted';
   });
 }

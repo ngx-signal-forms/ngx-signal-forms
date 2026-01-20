@@ -4,6 +4,7 @@ import {
   Component,
   computed,
   contentChild,
+  effect,
   inject,
   input,
 } from '@angular/core';
@@ -370,4 +371,15 @@ export class NgxSignalFormFieldComponent<TValue = unknown> {
   protected readonly submittedStatus = computed(() => {
     return this.#formContext?.submittedStatus?.() ?? 'unsubmitted';
   });
+
+  constructor() {
+    effect(() => {
+      const inputEl = this.inputElement();
+      const fieldName = this.resolvedFieldName();
+
+      if (inputEl) {
+        inputEl.setAttribute('data-signal-field', fieldName);
+      }
+    });
+  }
 }

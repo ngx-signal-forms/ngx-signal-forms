@@ -1,6 +1,6 @@
 ---
 description: '@ngx-signal-forms/toolkit - Enhancement library for Angular Signal Forms'
-applyTo: '{apps,packages}/**/*.{ts,html,scss,css}'
+applyTo: '{apps}/**/*.{ts,html,scss,css}'
 ---
 
 # @ngx-signal-forms/toolkit - Coding Instructions
@@ -219,7 +219,7 @@ The toolkit is designed so that **most forms work without `[ngxSignalForm]`**. T
 **Context Features (requires `[ngxSignalForm]` binding)**:
 
 - Provides form context to child components via DI
-- Derives `submittedStatus` from Angular's native `submitting()` and `touched()` signals
+- Derives `submittedStatus` from Angular's native `submitting()` transitions via `effect()`
 - Manages error display strategy
 
 ```typescript
@@ -297,7 +297,7 @@ Displays validation errors and warnings with WCAG-compliant ARIA roles.
 **Optional Inputs**:
 
 - `strategy`: Error display strategy (default: `'on-touch'`)
-- `submittedStatus`: Form submission state (auto-injected when inside `[ngxSignalForm]}`, optional for `'on-touch'`)
+- `submittedStatus`: Form submission state (auto-injected when inside `[ngxSignalForm]}`, optional for `'on-touch'`. If provided manually, must be a `Signal<SubmittedStatus>`)
 
 ### NgxSignalFormFieldComponent
 
@@ -490,7 +490,9 @@ export class MyFormComponent {
 | `isSubmitting()` | Form submission is in progress             |
 | `hasSubmitted()` | Form has completed at least one submission |
 
-**Note**: Angular Signal Forms does NOT expose a `submittedStatus()` signal. The toolkit derives the status from native `submitting()` and `touched()` signals.
+> **Note:** `hasSubmitted()` uses `effect()` internally. It **MUST** be called within an **injection context** (property initializer or constructor).
+
+**Note**: Angular Signal Forms does NOT expose a `submittedStatus()` signal. The toolkit derives the status from native `submitting()` transitions.
 
 ### provideErrorMessages()
 

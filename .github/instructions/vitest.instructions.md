@@ -1,5 +1,5 @@
 ---
-applyTo: 'projects/**/*.{spec,test}.{ts,tsx,js,jsx}'
+applyTo: 'packages/**/*.{spec,test}.{ts,tsx,js,jsx}'
 ---
 
 # Unit and Component Test Instructions (Angular + Vitest)

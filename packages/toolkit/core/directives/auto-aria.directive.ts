@@ -10,6 +10,7 @@ import {
 import type { FieldTree } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORM_CONTEXT } from '../tokens';
 import type { ErrorDisplayStrategy } from '../types';
+import { shouldShowErrors } from '../utilities/error-strategies';
 import {
   generateErrorId,
   generateWarningId,
@@ -94,21 +95,8 @@ export class NgxSignalFormAutoAriaDirective {
     const strategy: ErrorDisplayStrategy =
       this.#context?.errorStrategy() ?? 'on-touch';
     const submittedStatus = this.#context?.submittedStatus() ?? 'unsubmitted';
-    const isTouched = fieldState.touched();
-    const hasSubmitted = submittedStatus !== 'unsubmitted';
 
-    switch (strategy) {
-      case 'immediate':
-        return true;
-      case 'on-touch':
-        return isTouched || hasSubmitted;
-      case 'on-submit':
-        return hasSubmitted;
-      case 'manual':
-        return false;
-      default:
-        return isTouched || hasSubmitted;
-    }
+    return shouldShowErrors(fieldState, strategy, submittedStatus);
   });
 
   /**
@@ -129,21 +117,15 @@ export class NgxSignalFormAutoAriaDirective {
     const strategy: ErrorDisplayStrategy =
       this.#context?.errorStrategy() ?? 'on-touch';
     const submittedStatus = this.#context?.submittedStatus() ?? 'unsubmitted';
-    const isTouched = fieldState.touched();
-    const hasSubmitted = submittedStatus !== 'unsubmitted';
 
-    switch (strategy) {
-      case 'immediate':
-        return true;
-      case 'on-touch':
-        return isTouched || hasSubmitted;
-      case 'on-submit':
-        return hasSubmitted;
-      case 'manual':
-        return false;
-      default:
-        return isTouched || hasSubmitted;
-    }
+    return shouldShowErrors(
+      {
+        invalid: () => true,
+        touched: () => fieldState.touched(),
+      },
+      strategy,
+      submittedStatus,
+    );
   });
 
   /**
