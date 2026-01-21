@@ -18,7 +18,7 @@
     "sharedGlobals": [
       "{workspaceRoot}/.github/workflows/ci.yml",
       "{workspaceRoot}/.github/workflows/release.yml",
-      "{workspaceRoot}/.github/workflows/release-beta.yml"
+      "{workspaceRoot}/.github/workflows/release-next.yml"
     ]
   },
   "nxCloudId": "68ebfa2fab08d69a339a9973",
@@ -80,9 +80,6 @@
   },
   "release": {
     "projects": ["toolkit"],
-    "version": {
-      "preVersionCommand": "pnpm dlx nx run-many -t build"
-    },
     "changelog": {
       "workspaceChangelog": {
         "createRelease": "github"
