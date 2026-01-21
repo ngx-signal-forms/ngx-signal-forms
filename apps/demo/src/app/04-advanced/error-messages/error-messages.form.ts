@@ -41,7 +41,7 @@ import { errorMessagesSchema } from './error-messages.validations';
   template: `
     <form
       [ngxSignalForm]="errorMessagesForm"
-      [errorStrategy]="errorDisplayMode()"
+      [errorStrategy]="errorDisplayMode"
       (submit)="handleSubmit($event)"
       class="form-container"
     >

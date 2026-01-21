@@ -30,7 +30,7 @@ import { globalConfigSchema } from './global-configuration.validations';
   template: `
     <form
       [ngxSignalForm]="configForm"
-      [errorStrategy]="errorDisplayMode()"
+      [errorStrategy]="errorDisplayMode"
       (submit)="handleSubmit($event)"
       class="form-container"
     >

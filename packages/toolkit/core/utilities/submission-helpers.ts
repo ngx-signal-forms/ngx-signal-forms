@@ -5,7 +5,12 @@ import {
   signal,
   type Signal,
 } from '@angular/core';
-import type { FieldTree, SubmittedStatus } from '@angular/forms/signals';
+import type {
+  FieldTree,
+  SubmittedStatus,
+  ValidationError,
+} from '@angular/forms/signals';
+import { isBlockingError } from './warning-error';
 
 /**
  * Computed signal indicating whether a form can be submitted.
@@ -254,4 +259,224 @@ export function hasSubmitted(formTree: FieldTree<unknown>): Signal<boolean> {
   return computed(() => {
     return submittedStatus() === 'submitted';
   });
+}
+
+/**
+ * Checks whether a form has only warnings (no blocking errors).
+ *
+ * **Signal Forms limitation:** Angular Signal Forms treats ALL ValidationErrors
+ * as blockers - it doesn't distinguish warnings from errors. The `submit()` helper
+ * only executes the callback if `form().valid()` is true.
+ *
+ * This utility provides WCAG-compliant warning support by checking if all
+ * errors are warnings (kind starts with 'warn:').
+ *
+ * @param errors Array of ValidationError from the form
+ * @returns `true` if all errors are warnings (non-blocking), `false` if any blocking errors exist
+ *
+ * @example
+ * ```typescript
+ * const formErrors = userForm().errors();
+ * if (hasOnlyWarnings(formErrors)) {
+ *   // Safe to submit - only warnings present
+ * }
+ * ```
+ *
+ * @public
+ */
+export function hasOnlyWarnings(errors: ValidationError[]): boolean {
+  if (errors.length === 0) return true;
+  return errors.every((error) => !isBlockingError(error));
+}
+
+/**
+ * Gets blocking errors only (excludes warnings).
+ *
+ * Filters out warning errors (kind starting with 'warn:') and returns
+ * only blocking errors that should prevent form submission.
+ *
+ * @param errors Array of ValidationError from the form
+ * @returns Array of blocking errors only
+ *
+ * @example
+ * ```typescript
+ * const blockingErrors = getBlockingErrors(userForm().errors());
+ * if (blockingErrors.length === 0) {
+ *   // Can submit - no blocking errors
+ * }
+ * ```
+ *
+ * @public
+ */
+export function getBlockingErrors(
+  errors: ValidationError[],
+): ValidationError[] {
+  return errors.filter(isBlockingError);
+}
+
+/**
+ * Computed signal indicating whether a form can be submitted with warnings.
+ *
+ * Unlike `canSubmit()` which requires `form().valid()` (no errors at all),
+ * this allows submission when only warning errors exist.
+ *
+ * **WCAG Compliance:**
+ * Per WCAG 2.2, warnings are guidance that should NOT block form submission.
+ * This function enables that pattern with Signal Forms.
+ *
+ * Returns `true` when:
+ * - Form has no blocking errors (warnings are allowed)
+ * - Form is not currently submitting
+ * - Form is not pending (async validation complete)
+ *
+ * @param formTree The form tree to check submission readiness for
+ * @returns Signal that emits `true` when form can be submitted (warnings allowed)
+ *
+ * @example With warnings allowed
+ * ```typescript
+ * import { canSubmitWithWarnings } from '@ngx-signal-forms/toolkit/core';
+ *
+ * @Component({
+ *   template: `
+ *     <button type="submit" [disabled]="!canSubmitWithWarnings()">
+ *       Submit
+ *     </button>
+ *     <!-- Warnings display but don't block submit -->
+ *   `
+ * })
+ * export class MyFormComponent {
+ *   protected readonly canSubmitWithWarnings = canSubmitWithWarnings(this.userForm);
+ * }
+ * ```
+ *
+ * @public
+ */
+export function canSubmitWithWarnings(
+  formTree: FieldTree<unknown>,
+): Signal<boolean> {
+  return computed(() => {
+    const formState = formTree();
+    if (formState.submitting() || formState.pending()) {
+      return false;
+    }
+
+    const errors = formState.errors();
+    const blockingErrors = getBlockingErrors(errors);
+    return blockingErrors.length === 0;
+  });
+}
+
+/**
+ * Submits a form, allowing warnings to pass through.
+ *
+ * **Difference from Angular's `submit()`:**
+ * - `submit()`: Blocks if form has ANY ValidationErrors (warnings included)
+ * - `submitWithWarnings()`: Only blocks on BLOCKING errors (allows warnings)
+ *
+ * **WCAG Compliance:**
+ * Per WCAG 2.2 SC 3.3.1 and 3.3.3, warnings should provide guidance without
+ * blocking user actions. This function enables that pattern.
+ *
+ * **Behavior:**
+ * 1. Marks all fields as touched via `submit()` (shows all errors/warnings)
+ * 2. Checks for BLOCKING errors only (ignores warnings)
+ * 3. If no blocking errors, executes the action callback
+ * 4. Manages submitting state during async operation
+ *
+ * **Implementation Note:**
+ * This uses Angular's `submit()` helper internally, which calls `markAllAsTouched()`
+ * and manages the `submitting()` state. However, we intercept before the callback
+ * to check for blocking errors instead of `form().invalid()`.
+ *
+ * @param formTree The form tree to submit
+ * @param action Async action to execute if no blocking errors
+ * @returns Promise that resolves when submission completes
+ *
+ * @example
+ * ```typescript
+ * import { submitWithWarnings } from '@ngx-signal-forms/toolkit/core';
+ *
+ * protected async handleSubmit(event: Event): Promise<void> {
+ *   event.preventDefault();
+ *
+ *   await submitWithWarnings(this.userForm, async () => {
+ *     /// This runs even if warnings exist, but not if blocking errors exist
+ *     await this.api.save(this.userForm().value());
+ *   });
+ * }
+ * ```
+ *
+ * @see canSubmitWithWarnings - Computed signal for button disabled state
+ * @see warningError - Helper to create warning ValidationErrors
+ * @see isWarningError - Type guard for warning checks
+ *
+ * @public
+ */
+export async function submitWithWarnings<TModel>(
+  formTree: FieldTree<TModel>,
+  action: () => Promise<void>,
+): Promise<void> {
+  const formState = formTree();
+
+  // Mark all fields as touched to show all validation feedback
+  // We need to traverse all fields since FieldState doesn't have markAllAsTouched()
+  markAllFieldsAsTouched(formTree);
+
+  // Check for blocking errors only (allow warnings)
+  const allErrors = formState.errorSummary();
+  const blockingErrors = getBlockingErrors(allErrors);
+
+  if (blockingErrors.length > 0) {
+    // Has blocking errors - don't submit
+    return;
+  }
+
+  // No blocking errors - execute the action
+  await action();
+}
+
+/**
+ * Recursively marks all fields in a form tree as touched.
+ *
+ * Angular Signal Forms doesn't expose `markAllAsTouched()` on FieldState,
+ * so we traverse the form tree and call `markAsTouched()` on each field.
+ *
+ * @internal
+ */
+function markAllFieldsAsTouched(field: FieldTree<unknown>): void {
+  const state = field();
+  state.markAsTouched();
+
+  // Check if this field has children (object or array)
+  // Signal Forms fields have dynamic properties for child fields
+  for (const key of Object.keys(field)) {
+    if (key === 'length' || typeof key === 'symbol') continue;
+
+    const child = (field as Record<string, unknown>)[key];
+    if (typeof child === 'function' && isFieldTree(child)) {
+      markAllFieldsAsTouched(child as FieldTree<unknown>);
+    }
+  }
+}
+
+/**
+ * Type guard to check if a value is a FieldTree.
+ * A FieldTree is a function that returns a FieldState with specific methods.
+ *
+ * @internal
+ */
+function isFieldTree(value: unknown): boolean {
+  if (typeof value !== 'function') return false;
+
+  try {
+    const result = (value as () => unknown)();
+    return (
+      result !== null &&
+      typeof result === 'object' &&
+      'markAsTouched' in result &&
+      typeof (result as Record<string, unknown>)['markAsTouched'] === 'function'
+    );
+  } catch {
+    return false;
+  }
 }

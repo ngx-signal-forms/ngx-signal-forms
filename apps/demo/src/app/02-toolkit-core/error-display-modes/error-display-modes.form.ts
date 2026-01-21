@@ -45,7 +45,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
     <!-- Product Feedback Form -->
     <form
       [ngxSignalForm]="productForm"
-      [errorStrategy]="errorDisplayMode()"
+      [errorStrategy]="errorDisplayMode"
       (submit)="submitFeedback($event)"
       class="form-container"
       aria-labelledby="productFeedbackHeading"

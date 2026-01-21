@@ -4,9 +4,11 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { FormField, submit } from '@angular/forms/signals';
+import { FormField } from '@angular/forms/signals';
 import {
+  canSubmitWithWarnings,
   NgxSignalFormToolkit,
+  submitWithWarnings,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
@@ -34,7 +36,7 @@ import { createPasswordForm } from './warning-support.validations';
     <form
       class="form-container"
       [ngxSignalForm]="passwordForm"
-      [errorStrategy]="errorDisplayMode()"
+      [errorStrategy]="errorDisplayMode"
       (submit)="handleSubmit($event)"
     >
       <ngx-signal-form-field
@@ -81,7 +83,7 @@ import { createPasswordForm } from './warning-support.validations';
         <button
           type="submit"
           aria-live="polite"
-          [disabled]="passwordForm().pending()"
+          [disabled]="!canSubmitWithWarnings() || passwordForm().pending()"
         >
           @if (passwordForm().pending()) {
             Creating Account...
@@ -110,38 +112,33 @@ export class WarningsSupportFormComponent {
   protected readonly successMessage = signal<string>('');
 
   /**
-   * Form submission using Angular Signal Forms' submit() helper.
+   * Computed signal for button disabled state.
+   * Uses canSubmitWithWarnings() to allow submission when only warnings exist.
+   */
+  protected readonly canSubmitWithWarnings = canSubmitWithWarnings(
+    this.passwordForm,
+  );
+
+  /**
+   * Form submission using submitWithWarnings() from the toolkit.
    *
-   * **Key behaviors:**
-   * - Callback only executes if form is VALID
-   * - If invalid, errors are shown but submission is blocked
+   * **WCAG Compliant Behavior:**
    * - Warnings do NOT block submission (only blocking errors do)
-   * - Submission status is derived from submitting() + touched()
+   * - All fields are marked as touched to show feedback
+   * - Blocking errors prevent submission
    */
   protected async handleSubmit(event: Event): Promise<void> {
     event.preventDefault();
-    await submit(this.passwordForm, async (formData) => {
-      try {
-        /// Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+    await submitWithWarnings(this.passwordForm, async () => {
+      /// Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        this.successMessage.set(
-          '✓ Account created successfully! Notice how warnings did not block submission.',
-        );
+      this.successMessage.set(
+        '✓ Account created successfully! Notice how warnings did not block submission.',
+      );
 
-        /// Clear success message after 5 seconds
-        setTimeout(() => this.successMessage.set(''), 5000);
-
-        return null;
-      } catch {
-        return [
-          {
-            kind: 'submission_error',
-            message: 'Failed to create account. Please try again.',
-            field: formData,
-          },
-        ];
-      }
+      /// Clear success message after 5 seconds
+      setTimeout(() => this.successMessage.set(''), 5000);
     });
   }
 
