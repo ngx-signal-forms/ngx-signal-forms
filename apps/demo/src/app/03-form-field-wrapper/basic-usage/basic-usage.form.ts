@@ -4,12 +4,12 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { FormField, form } from '@angular/forms/signals';
+import { FormField, form, submit } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit/core';
-import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 import {
   basicUsageSchema,
   type BasicUsageModel,
@@ -43,7 +43,7 @@ import {
 @Component({
   selector: 'ngx-basic-usage',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
   templateUrl: './basic-usage.html',
 })
 export class BasicUsageComponent {
@@ -55,7 +55,7 @@ export class BasicUsageComponent {
   /**
    * Form model signal with default values
    */
-  protected readonly model = signal<BasicUsageModel>({
+  readonly #model = signal<BasicUsageModel>({
     name: '',
     email: '',
     website: '',
@@ -69,7 +69,7 @@ export class BasicUsageComponent {
    * Create form instance with validation schema and error strategy
    * Exposed as public for debugger access
    */
-  readonly showcaseForm = form(this.model, basicUsageSchema);
+  readonly showcaseForm = form(this.#model, basicUsageSchema);
 
   /**
    * Available countries for dropdown
@@ -87,18 +87,22 @@ export class BasicUsageComponent {
   ];
 
   /**
-   * Form submission handler
+   * Form submission handler using submit() helper
    */
-  protected displaySubmittedData(event: Event): void {
+  protected saveData(event: Event): void {
     event.preventDefault();
-    // Form validation is handled by the submit button's disabled state
+    submit(this.showcaseForm, async () => {
+      console.log('Form submitted:', this.#model());
+      return null;
+    });
   }
 
   /**
    * Reset form to initial values
    */
   protected resetForm(): void {
-    this.model.set({
+    this.showcaseForm().reset();
+    this.#model.set({
       name: '',
       email: '',
       website: '',

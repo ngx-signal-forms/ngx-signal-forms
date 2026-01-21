@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { FormField, form } from '@angular/forms/signals';
+import { FormField, form, submit } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
@@ -67,15 +67,18 @@ export class OutlineFormFieldComponent {
   /**
    * Form model signal with default values (1 fact to start)
    */
-  protected readonly model = signal<OutlineFormFieldModel>({
+  readonly #model = signal<OutlineFormFieldModel>({
     facts: [createEmptyFact(1)],
   });
+
+  /** Expose model for template iteration (read-only) */
+  protected readonly model = this.#model.asReadonly();
 
   /**
    * Create form instance with validation schema
    * Exposed as public for debugger access
    */
-  readonly showcaseForm = form(this.model, outlineFormFieldSchema);
+  readonly showcaseForm = form(this.#model, outlineFormFieldSchema);
 
   /**
    * Available countries for dropdown
@@ -105,7 +108,7 @@ export class OutlineFormFieldComponent {
    * Add a new fact to the form
    */
   protected addFact(): void {
-    this.model.update((current) => {
+    this.#model.update((current) => {
       const nextNumber =
         Math.max(...current.facts.map((f) => f.factNumber)) + 1;
       return {
@@ -118,7 +121,7 @@ export class OutlineFormFieldComponent {
    * Remove a fact from the form
    */
   protected removeFact(index: number): void {
-    this.model.update((current) => ({
+    this.#model.update((current) => ({
       facts: current.facts.filter((_, i) => i !== index),
     }));
   }
@@ -135,7 +138,7 @@ export class OutlineFormFieldComponent {
    * Add an offense to a fact
    */
   protected addOffense(factIndex: number): void {
-    this.model.update((current) => {
+    this.#model.update((current) => {
       const facts = [...current.facts];
       facts[factIndex] = {
         ...facts[factIndex],
@@ -149,7 +152,7 @@ export class OutlineFormFieldComponent {
    * Remove an offense from a fact
    */
   protected removeOffense(factIndex: number, offenseIndex: number): void {
-    this.model.update((current) => {
+    this.#model.update((current) => {
       const facts = [...current.facts];
       facts[factIndex] = {
         ...facts[factIndex],
@@ -165,7 +168,7 @@ export class OutlineFormFieldComponent {
    * Add a legal article to an offense
    */
   protected addArticle(factIndex: number, offenseIndex: number): void {
-    this.model.update((current) => {
+    this.#model.update((current) => {
       const facts = [...current.facts];
       const offenses = [...facts[factIndex].offenses];
       offenses[offenseIndex] = {
@@ -185,7 +188,7 @@ export class OutlineFormFieldComponent {
     offenseIndex: number,
     articleIndex: number,
   ): void {
-    this.model.update((current) => {
+    this.#model.update((current) => {
       const facts = [...current.facts];
       const offenses = [...facts[factIndex].offenses];
       offenses[offenseIndex] = {
@@ -200,10 +203,13 @@ export class OutlineFormFieldComponent {
   }
 
   /**
-   * Form submission handler
+   * Form submission handler using submit() helper
    */
-  protected displaySubmittedData(event: Event): void {
+  protected saveCase(event: Event): void {
     event.preventDefault();
-    console.log('Form submitted:', this.model());
+    submit(this.showcaseForm, async () => {
+      console.log('Form submitted:', this.#model());
+      return null;
+    });
   }
 }

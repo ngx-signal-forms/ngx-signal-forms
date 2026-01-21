@@ -46,7 +46,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
     <form
       [ngxSignalForm]="productForm"
       [errorStrategy]="errorDisplayMode()"
-      (submit)="handleSubmit($event)"
+      (submit)="submitFeedback($event)"
       class="form-container"
       aria-labelledby="productFeedbackHeading"
     >
@@ -55,7 +55,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
         <legend
           class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100"
         >
-          👤 Personal Information
+          Personal Information
         </legend>
 
         <!-- Name Field -->
@@ -127,7 +127,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
         <legend
           class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100"
         >
-          📝 Your Feedback
+          Your Feedback
         </legend>
 
         <!-- Product Used -->
@@ -315,11 +315,16 @@ const INITIAL_MODEL: ProductFeedbackModel = {
           type="submit"
           class="btn-primary"
           aria-live="polite"
+          [disabled]="productForm().pending()"
           [attr.aria-describedby]="
             showSubmissionError() ? 'submission-error' : null
           "
         >
-          Submit Feedback
+          @if (productForm().pending()) {
+            Submitting...
+          } @else {
+            Submit Feedback
+          }
         </button>
       </div>
     </form>
@@ -329,10 +334,10 @@ export class ErrorDisplayModesFormComponent {
   /** The error display strategy to use for form validation */
   readonly errorDisplayMode = input.required<ErrorDisplayStrategy>();
 
-  private readonly model = signal<ProductFeedbackModel>({ ...INITIAL_MODEL });
+  readonly #model = signal<ProductFeedbackModel>({ ...INITIAL_MODEL });
 
   /** Form instance using Signal Forms */
-  readonly productForm = form(this.model, productFeedbackSchema);
+  readonly productForm = form(this.#model, productFeedbackSchema);
 
   /** Computed signal for showing improvement suggestions field */
   protected readonly showImprovementSuggestions = computed(() => {
@@ -363,31 +368,16 @@ export class ErrorDisplayModesFormComponent {
     this.productForm().pending(),
   );
 
-  /**
-   * Form submission handler using Angular Signal Forms submit() helper.
-   * **Key behavior:** Callback only executes if form is VALID.
-   */
-  protected async handleSubmit(event: Event): Promise<void> {
+  protected async submitFeedback(event: Event): Promise<void> {
     event.preventDefault();
-    await submit(this.productForm, async () => {
-      this.#submissionAttempted.set(true);
 
+    this.#submissionAttempted.set(true);
+
+    await submit(this.productForm, async () => {
       // Simulate API call
-      alert('Thank you for your feedback! 🎉');
+      alert('Thank you for your feedback!');
 
       return null; // No server errors
     });
   }
-
-  /**
-   * Handle any submit attempt (valid or invalid) so the page can display the
-   * submission error banner when the form is invalid. Angular's submit() helper
-   * only invokes the callback when the form is valid, so we set the attempt
-   * flag here as well. We then delegate to the submit() helper for valid cases.
-   */
-  protected readonly onSubmitAttempt = (event: SubmitEvent): unknown => {
-    this.#submissionAttempted.set(true);
-    // Delegate to the submit() helper function (callable) for valid submissions
-    return (this.handleSubmit as unknown as (e: SubmitEvent) => unknown)(event);
-  };
 }

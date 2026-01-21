@@ -7,14 +7,14 @@ import {
 import { FormField, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
-import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 import type { ComplexFormModel } from './complex-forms.model';
 import { complexFormSchema } from './complex-forms.validations';
 
 /**
  * Complex Forms Component
  *
- * Demonstrates NgxSignalFormFieldComponent with:
+ * Demonstrates NgxOutlinedFormField with:
  * - Nested object structures
  * - Dynamic arrays (add/remove items)
  * - Maximum code reduction with form field wrapper
@@ -22,7 +22,7 @@ import { complexFormSchema } from './complex-forms.validations';
 @Component({
   selector: 'ngx-complex-forms',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
   template: `
     <form [ngxSignalForm]="complexForm" (submit)="handleSubmit($event)">
       <!-- Personal Information Section -->
@@ -387,8 +387,17 @@ import { complexFormSchema } from './complex-forms.validations';
 
       <!-- Form Actions -->
       <div class="form-actions">
-        <button type="submit" class="btn-primary" aria-live="polite">
-          Submit Application
+        <button
+          type="submit"
+          class="btn-primary"
+          aria-live="polite"
+          [disabled]="complexForm().pending()"
+        >
+          @if (complexForm().pending()) {
+            Submitting...
+          } @else {
+            Submit Application
+          }
         </button>
         <button type="button" (click)="resetForm()" class="btn-secondary">
           Reset
@@ -402,7 +411,7 @@ export class ComplexFormsComponent {
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
 
   /** Form data model */
-  readonly #formData = signal<ComplexFormModel>({
+  readonly #model = signal<ComplexFormModel>({
     personalInfo: {
       firstName: '',
       lastName: '',
@@ -424,13 +433,13 @@ export class ComplexFormsComponent {
   });
 
   /** Create form with validation schema */
-  readonly complexForm = form(this.#formData, complexFormSchema);
+  readonly complexForm = form(this.#model, complexFormSchema);
 
   /**
    * Add new skill to the array
    */
   protected addSkill(): void {
-    this.#formData.update((data) => ({
+    this.#model.update((data) => ({
       ...data,
       skills: [...data.skills, { name: '', level: 1 }],
     }));
@@ -440,7 +449,7 @@ export class ComplexFormsComponent {
    * Remove skill at index
    */
   protected removeSkill(index: number): void {
-    this.#formData.update((data) => ({
+    this.#model.update((data) => ({
       ...data,
       skills: data.skills.filter((_, i) => i !== index),
     }));
@@ -450,7 +459,7 @@ export class ComplexFormsComponent {
    * Add new contact to the array
    */
   protected addContact(): void {
-    this.#formData.update((data) => ({
+    this.#model.update((data) => ({
       ...data,
       contacts: [...data.contacts, { type: 'email', value: '' }],
     }));
@@ -460,7 +469,7 @@ export class ComplexFormsComponent {
    * Remove contact at index
    */
   protected removeContact(index: number): void {
-    this.#formData.update((data) => ({
+    this.#model.update((data) => ({
       ...data,
       contacts: data.contacts.filter((_, i) => i !== index),
     }));
@@ -469,7 +478,7 @@ export class ComplexFormsComponent {
   /**
    * Form submission handler using Angular Signal Forms submit() helper.
    *
-   * CRITICAL: Signal Forms use native DOM submit event, NOT ngSubmit.
+   * CRITICAL: SigsubmitApplicatione native DOM submit event, NOT ngSubmit.
    * - Template binding: (submit)="handleSubmit($event)" with $event
    * - Handler must call event.preventDefault() to prevent page reload
    * - submit() signature: async function submit<T>(form, action): Promise<void>
@@ -492,7 +501,7 @@ export class ComplexFormsComponent {
    * Reset form to initial state
    */
   protected resetForm(): void {
-    this.#formData.set({
+    this.#model.set({
       personalInfo: {
         firstName: '',
         lastName: '',

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { FormField, form, submit } from '@angular/forms/signals';
+import { form, FormField, submit } from '@angular/forms/signals';
 import {
   focusFirstInvalid,
   NgxSignalFormToolkit,
@@ -78,7 +78,11 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
         aria-live="polite"
         class="btn-primary w-full justify-center bg-green-600 hover:bg-green-700 focus:ring-green-500"
       >
-        Sign Up
+        @if (signupForm().pending()) {
+          Subscribing...
+        } @else {
+          Sign Up
+        }
       </button>
     </form>
   `,
@@ -88,18 +92,18 @@ export class AccessibilityToolkitFormComponent {
   protected readonly successMessage = signal<string>('');
 
   /// Form data signal (single source of truth)
-  readonly #formData = signal<AccessibilityFormModel>({
+  readonly #model = signal<AccessibilityFormModel>({
     email: '',
     password: '',
     confirmPassword: '',
   });
 
   /// Form instance with validation
-  readonly signupForm = form(this.#formData, accessibilityValidationSchema);
+  readonly signupForm = form(this.#model, accessibilityValidationSchema);
 
   /// Submission handler using Angular Signal Forms submit() helper
   /// Uses focusBoundControl() via focusFirstInvalid() for accessibility
-  protected handleSubmit(event: Event): void {
+  protected async handleSubmit(event: Event): Promise<void> {
     event.preventDefault();
 
     /// Focus first invalid field if form is invalid (WCAG 2.2 best practice)
@@ -108,9 +112,9 @@ export class AccessibilityToolkitFormComponent {
       return;
     }
 
-    submit(this.signupForm, async () => {
+    await submit(this.signupForm, async () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      this.#formData.set({ email: '', password: '', confirmPassword: '' });
+      this.#model.set({ email: '', password: '', confirmPassword: '' });
       this.signupForm().reset();
       return null;
     });

@@ -127,7 +127,11 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
 
       <!-- Submit Button -->
       <button type="submit" aria-live="polite" class="btn-primary w-full">
-        Sign Up (Manual Implementation)
+        @if (signupForm().pending()) {
+          Subscribing...
+        } @else {
+          Sign Up (Manual Implementation)
+        }
       </button>
     </form>
 
@@ -158,7 +162,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
 })
 export class AccessibilityManualFormComponent {
   /// Form data signal (single source of truth)
-  readonly #formData = signal<AccessibilityFormModel>({
+  readonly #model = signal<AccessibilityFormModel>({
     email: '',
     password: '',
     confirmPassword: '',
@@ -174,7 +178,7 @@ export class AccessibilityManualFormComponent {
 
   /// Form instance with validation
   protected readonly signupForm = form(
-    this.#formData,
+    this.#model,
     accessibilityValidationSchema,
   );
 
@@ -221,7 +225,7 @@ export class AccessibilityManualFormComponent {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Reset form
-      this.#formData.set({ email: '', password: '', confirmPassword: '' });
+      this.#model.set({ email: '', password: '', confirmPassword: '' });
       this.#touchedFields.set(new Set());
       this.#isSubmitted.set(false);
 

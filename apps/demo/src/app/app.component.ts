@@ -149,6 +149,33 @@ export class AppComponent implements AfterViewInit {
         },
       ],
     },
+    {
+      id: 'new-demos',
+      label: 'New Demos',
+      pattern: /^\/new-demos\//,
+      links: [
+        {
+          path: '/new-demos/dynamic-list',
+          label: 'Dynamic Lists',
+        },
+        {
+          path: '/new-demos/nested-groups',
+          label: 'Nested Groups',
+        },
+        {
+          path: '/new-demos/async-validation',
+          label: 'Async Validation',
+        },
+        {
+          path: '/new-demos/stepper-form',
+          label: 'Stepper Form',
+        },
+        {
+          path: '/new-demos/cross-field-validation',
+          label: 'Cross-Field Validation',
+        },
+      ],
+    },
   ] as const;
 
   protected readonly categoriesList = this.categories;

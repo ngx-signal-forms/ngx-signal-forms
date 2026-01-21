@@ -24,7 +24,7 @@ import { contactFormSchema } from './your-first-form.validations';
     <form
       [ngxSignalForm]="contactForm"
       [errorStrategy]="errorDisplayMode()"
-      (submit)="handleSubmit($event)"
+      (submit)="sendMessage($event)"
       class="form-container"
     >
       <!-- Name Field - Manual Layout with Toolkit Error Component -->
@@ -92,7 +92,7 @@ import { contactFormSchema } from './your-first-form.validations';
         <button
           class="btn-secondary"
           type="button"
-          (click)="contactForm().reset()"
+          (click)="resetForm()"
         >
           Reset
         </button>
@@ -105,14 +105,14 @@ export class YourFirstFormComponent {
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
 
   /** Form data model */
-  readonly #formData = signal<ContactFormModel>({
+  readonly #model = signal<ContactFormModel>({
     name: '',
     email: '',
     message: '',
   });
 
   /** Create form with validation schema */
-  readonly contactForm = form(this.#formData, contactFormSchema);
+  readonly contactForm = form(this.#model, contactFormSchema);
 
   /**
    * Form submission handler using Angular Signal Forms submit() helper.
@@ -125,14 +125,14 @@ export class YourFirstFormComponent {
    *
    * Button is NEVER disabled (accessibility best practice).
    */
-  protected async handleSubmit(event: Event): Promise<void> {
+  protected async sendMessage(event: Event): Promise<void> {
     event.preventDefault();
     await submit(this.contactForm, async () => {
       // Simulate async operation (e.g., API call)
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Reset form after successful submission
-      this.#formData.set({ name: '', email: '', message: '' });
+      this.#model.set({ name: '', email: '', message: '' });
       this.contactForm().reset();
 
       return null;
@@ -140,7 +140,7 @@ export class YourFirstFormComponent {
   }
 
   protected resetForm(): void {
-    this.#formData.set({ name: '', email: '', message: '' });
+    this.#model.set({ name: '', email: '', message: '' });
     this.contactForm().reset();
   }
 }

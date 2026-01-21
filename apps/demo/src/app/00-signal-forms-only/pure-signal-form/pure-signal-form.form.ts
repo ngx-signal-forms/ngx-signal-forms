@@ -19,7 +19,7 @@ import { pureSignalFormSchema } from './pure-signal-form.validations';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField],
   template: `
-    <form (submit)="handleSubmit($event)" novalidate class="form-container">
+    <form (submit)="saveContact($event)" novalidate class="form-container">
       <!-- Email Field - Manual ARIA Implementation -->
       <div class="form-field">
         <label for="pure-email" class="form-label">Email Address *</label>
@@ -123,7 +123,7 @@ import { pureSignalFormSchema } from './pure-signal-form.validations';
       <div class="form-actions">
         <button type="submit" class="btn-primary" aria-live="polite">
           @if (signupForm().pending()) {
-            Submitting...
+            Saving...
           } @else {
             Sign Up
           }
@@ -134,14 +134,14 @@ import { pureSignalFormSchema } from './pure-signal-form.validations';
 })
 export class PureSignalFormComponent {
   /** Form data model */
-  readonly #formData = signal<PureSignalFormModel>({
+  readonly #model = signal<PureSignalFormModel>({
     email: '',
     password: '',
     confirmPassword: '',
   });
 
   /** Create form with Angular Signal Forms */
-  readonly signupForm = form(this.#formData, pureSignalFormSchema);
+  readonly signupForm = form(this.#model, pureSignalFormSchema);
 
   /** Manual touch state tracking (required for error display logic) */
   readonly #touchedFields = signal<Set<string>>(new Set());
@@ -153,14 +153,14 @@ export class PureSignalFormComponent {
    * Must call preventDefault() to avoid page reload.
    * Callback only executes if form is VALID.
    */
-  protected handleSubmit(event: Event): void {
+  protected saveContact(event: Event): void {
     event.preventDefault();
     submit(this.signupForm, async () => {
       // Simulate async operation
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Reset form after successful submission
-      this.#formData.set({ email: '', password: '', confirmPassword: '' });
+      this.#model.set({ email: '', password: '', confirmPassword: '' });
 
       return null; // No server errors
     });

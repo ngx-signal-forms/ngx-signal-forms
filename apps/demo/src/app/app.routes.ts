@@ -50,9 +50,9 @@ export const appRoutes: Routes = [
       {
         path: 'pure-signal-form',
         loadComponent: () =>
-          import(
-            './00-signal-forms-only/pure-signal-form/pure-signal-form.page'
-          ).then((m) => m.PureSignalFormPageComponent),
+          import('./00-signal-forms-only/pure-signal-form/pure-signal-form.page').then(
+            (m) => m.PureSignalFormPageComponent,
+          ),
         title: 'Pure Signal Forms - No Toolkit (Baseline)',
       },
     ],
@@ -68,9 +68,9 @@ export const appRoutes: Routes = [
       {
         path: 'your-first-form',
         loadComponent: () =>
-          import(
-            './01-getting-started/your-first-form/your-first-form.page'
-          ).then((m) => m.YourFirstFormPageComponent),
+          import('./01-getting-started/your-first-form/your-first-form.page').then(
+            (m) => m.YourFirstFormPageComponent,
+          ),
         title: 'Your First Form - Getting Started with Toolkit',
       },
     ],
@@ -86,17 +86,17 @@ export const appRoutes: Routes = [
       {
         path: 'accessibility-comparison',
         loadComponent: () =>
-          import(
-            './02-toolkit-core/accessibility-comparison/accessibility-comparison.page'
-          ).then((m) => m.AccessibilityComparisonPageComponent),
+          import('./02-toolkit-core/accessibility-comparison/accessibility-comparison.page').then(
+            (m) => m.AccessibilityComparisonPageComponent,
+          ),
         title: 'Accessibility Comparison - Manual vs Toolkit',
       },
       {
         path: 'error-display-modes',
         loadComponent: () =>
-          import(
-            './02-toolkit-core/error-display-modes/error-display-modes.page'
-          ).then((m) => m.ErrorDisplayModesPageComponent),
+          import('./02-toolkit-core/error-display-modes/error-display-modes.page').then(
+            (m) => m.ErrorDisplayModesPageComponent,
+          ),
         title: 'Error Display Strategies - Progressive Disclosure',
       },
       {
@@ -118,9 +118,9 @@ export const appRoutes: Routes = [
       {
         path: 'css-status-classes',
         loadComponent: () =>
-          import(
-            './02-toolkit-core/css-status-classes/css-status-classes.component'
-          ).then((m) => m.CssStatusClassesComponent),
+          import('./02-toolkit-core/css-status-classes/css-status-classes.page').then(
+            (m) => m.CssStatusClassesPageComponent,
+          ),
         title: 'CSS Status Classes - Sync with Error Display',
       },
     ],
@@ -144,17 +144,17 @@ export const appRoutes: Routes = [
       {
         path: 'complex-forms',
         loadComponent: () =>
-          import(
-            './03-form-field-wrapper/complex-forms/complex-forms.page'
-          ).then((m) => m.ComplexFormsPage),
+          import('./03-form-field-wrapper/complex-forms/complex-forms.page').then(
+            (m) => m.ComplexFormsPage,
+          ),
         title: 'Complex Forms - Nested Objects & Arrays',
       },
       {
         path: 'outline-form-field',
         loadComponent: () =>
-          import(
-            './03-form-field-wrapper/outline-form-field/outline-form-field.page'
-          ).then((m) => m.OutlineFormFieldPage),
+          import('./03-form-field-wrapper/outline-form-field/outline-form-field.page').then(
+            (m) => m.OutlineFormFieldPage,
+          ),
         title: 'Outline Form Field - Default Outlined Styling',
       },
     ],
@@ -170,17 +170,17 @@ export const appRoutes: Routes = [
       {
         path: 'global-configuration',
         loadComponent: () =>
-          import(
-            './04-advanced/global-configuration/global-configuration.page'
-          ).then((m) => m.GlobalConfigurationPage),
+          import('./04-advanced/global-configuration/global-configuration.page').then(
+            (m) => m.GlobalConfigurationPage,
+          ),
         title: 'Global Configuration - Toolkit Defaults',
       },
       {
         path: 'submission-patterns',
         loadComponent: () =>
-          import(
-            './04-advanced/submission-patterns/submission-patterns.page'
-          ).then((m) => m.SubmissionPatternsPage),
+          import('./04-advanced/submission-patterns/submission-patterns.page').then(
+            (m) => m.SubmissionPatternsPage,
+          ),
         title: 'Submission Patterns - Async & Server Errors',
       },
       {
@@ -190,6 +190,56 @@ export const appRoutes: Routes = [
             (m) => m.ErrorMessagesPage,
           ),
         title: 'Error Messages - 3-Tier Priority & i18n',
+      },
+    ],
+  },
+
+  // ========================================
+  // NEW DEMOS (Advanced Patterns)
+  // ========================================
+  {
+    path: 'new-demos',
+    children: [
+      { path: '', redirectTo: 'dynamic-list', pathMatch: 'full' },
+      {
+        path: 'dynamic-list',
+        loadComponent: () =>
+          import('./05-new-demos/dynamic-list/dynamic-list.page').then(
+            (m) => m.DynamicListPageComponent,
+          ),
+        title: 'Dynamic Lists - Form Arrays',
+      },
+      {
+        path: 'nested-groups',
+        loadComponent: () =>
+          import('./05-new-demos/nested-groups/nested-groups.page').then(
+            (m) => m.NestedGroupsPageComponent,
+          ),
+        title: 'Nested Groups - Complex Data Structures',
+      },
+      {
+        path: 'async-validation',
+        loadComponent: () =>
+          import('./05-new-demos/async-validation/async-validation.page').then(
+            (m) => m.AsyncValidationPageComponent,
+          ),
+        title: 'Async Validation - Server Side Checks',
+      },
+      {
+        path: 'stepper-form',
+        loadComponent: () =>
+          import('./05-new-demos/stepper-form/stepper-form.page').then(
+            (m) => m.StepperFormPageComponent,
+          ),
+        title: 'Stepper Form - Multi-step Wizard',
+      },
+      {
+        path: 'cross-field-validation',
+        loadComponent: () =>
+          import('./05-new-demos/cross-field-validation/cross-field-validation.page').then(
+            (m) => m.CrossFieldValidationPageComponent,
+          ),
+        title: 'Cross-Field Validation - Dependent Fields',
       },
     ],
   },

@@ -36,10 +36,10 @@ interface UserForm {
     NgxFloatingLabelDirective,
     NgxSignalFormFieldHintComponent,
   ],
-  templateUrl: './css-status-classes.component.html',
-  styleUrls: ['./css-status-classes.component.scss'],
+  templateUrl: './css-status-classes.page.html',
+  styleUrls: ['./css-status-classes.page.scss'],
 })
-export class CssStatusClassesComponent {
+export class CssStatusClassesPageComponent {
   readonly #immediateModel = signal<UserForm>({ email: '', password: '' });
   readonly #onTouchModel = signal<UserForm>({ email: '', password: '' });
   readonly #nativeModel = signal<UserForm>({ email: '', password: '' });

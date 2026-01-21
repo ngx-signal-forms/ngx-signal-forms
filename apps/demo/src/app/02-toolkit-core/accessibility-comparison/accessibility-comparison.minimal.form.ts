@@ -79,12 +79,12 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
         />
       </ngx-signal-form-field>
 
-      <button
-        type="submit"
-        class="btn-primary"
-        [disabled]="signupForm().invalid()"
-      >
-        Submit
+      <button type="submit" class="btn-primary">
+        @if (signupForm().pending()) {
+          Subscribing...
+        } @else {
+          Submit
+        }
       </button>
     </form>
 

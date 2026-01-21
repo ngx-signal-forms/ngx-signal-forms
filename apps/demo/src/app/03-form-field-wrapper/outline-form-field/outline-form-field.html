@@ -7,7 +7,7 @@
 <form
   [ngxSignalForm]="showcaseForm"
   [errorStrategy]="errorDisplayMode()"
-  (submit)="displaySubmittedData($event)"
+  (submit)="saveCase($event)"
   class="flex flex-col gap-6"
 >
   @for (fact of model().facts; track fact.factNumber; let factIndex = $index) {
@@ -458,9 +458,9 @@
   <!-- Submit Button -->
   <button
     type="submit"
-    class="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-600"
-    [disabled]="showcaseForm().invalid()"
+    class="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+    [disabled]="showcaseForm().pending()"
   >
-    Opslaan
+    @if (showcaseForm().pending()) { Opslaan... } @else { Opslaan }
   </button>
 </form>

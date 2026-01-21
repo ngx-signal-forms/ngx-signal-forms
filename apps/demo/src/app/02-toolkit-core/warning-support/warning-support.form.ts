@@ -78,7 +78,17 @@ import { createPasswordForm } from './warning-support.validations';
 
       <div class="form-actions">
         <button type="button" (click)="reset()">Reset</button>
-        <button type="submit" aria-live="polite">Create Account</button>
+        <button
+          type="submit"
+          aria-live="polite"
+          [disabled]="passwordForm().pending()"
+        >
+          @if (passwordForm().pending()) {
+            Creating Account...
+          } @else {
+            Create Account
+          }
+        </button>
       </div>
     </form>
   `,
@@ -123,7 +133,7 @@ export class WarningsSupportFormComponent {
         setTimeout(() => this.successMessage.set(''), 5000);
 
         return null;
-      } catch (error) {
+      } catch {
         return [
           {
             kind: 'submission_error',
@@ -136,6 +146,7 @@ export class WarningsSupportFormComponent {
   }
 
   protected reset(): void {
+    this.passwordForm().reset();
     this.#formModel.set({
       username: '',
       email: '',

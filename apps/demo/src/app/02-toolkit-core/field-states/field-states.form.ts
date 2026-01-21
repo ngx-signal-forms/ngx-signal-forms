@@ -22,7 +22,7 @@ import { fieldStatesSchema } from './field-states.validations';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit],
   template: `
-    <form [ngxSignalForm]="userForm" (submit)="handleSubmit($event)">
+    <form [ngxSignalForm]="userForm" (submit)="saveChanges($event)">
       @if (userForm().dirty()) {
         <div
           class="mb-4 rounded-lg border-l-4 border-amber-500 bg-amber-50 px-4 py-3 dark:border-amber-400 dark:bg-amber-900/20"
@@ -171,12 +171,10 @@ import { fieldStatesSchema } from './field-states.validations';
   `,
 })
 export class FieldStatesForm {
-  private readonly model = signal<FieldStatesModel>(
-    createInitialFieldStatesModel(),
-  );
+  readonly #model = signal<FieldStatesModel>(createInitialFieldStatesModel());
 
   /** Public form instance for state tracking in parent page */
-  readonly userForm = form(this.model, fieldStatesSchema);
+  readonly userForm = form(this.#model, fieldStatesSchema);
 
   /** Computed signal for password warnings display */
   protected readonly showPasswordWarnings = computed(() => {
@@ -224,7 +222,7 @@ export class FieldStatesForm {
    */
   protected prefillForm(): void {
     // Simulate server data - set values directly on model
-    this.model.set({
+    this.#model.set({
       email: 'user@example.com',
       username: 'johndoe',
       password: 'securepass123',
@@ -235,18 +233,18 @@ export class FieldStatesForm {
    * Reset form to initial state
    */
   protected resetForm(): void {
-    this.model.set(createInitialFieldStatesModel());
+    this.#model.set(createInitialFieldStatesModel());
   }
 
   /**
    * Form submission handler using Angular Signal Forms submit() helper.
    * **Key behavior:** Callback only executes if form is VALID.
    */
-  protected async handleSubmit(event: Event): Promise<void> {
+  protected async saveChanges(event: Event): Promise<void> {
     event.preventDefault();
     await submit(this.userForm, async () => {
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      this.model.set({ username: '', email: '', password: '' });
+      this.#model.set({ username: '', email: '', password: '' });
       this.userForm().reset();
       return null;
     });

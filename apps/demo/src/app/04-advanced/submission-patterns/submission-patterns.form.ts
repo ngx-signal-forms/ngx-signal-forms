@@ -5,9 +5,11 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { FormField, form, submit } from '@angular/forms/signals';
+import { form, FormField, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
 import {
+  canSubmit,
+  isSubmitting,
   NGX_SIGNAL_FORM_CONTEXT,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit/core';
@@ -20,6 +22,7 @@ import { submissionSchema } from './submission-patterns.validations';
  *
  * Demonstrates advanced submission patterns:
  * - Automatic submission tracking via submit() helper
+ * - Toolkit submission helpers (canSubmit, isSubmitting)
  * - Server error handling and display
  * - WCAG 2.2 compliance for error announcements
  * - Visual feedback for submission states
@@ -32,7 +35,7 @@ import { submissionSchema } from './submission-patterns.validations';
     <form
       [ngxSignalForm]="registrationForm"
       [errorStrategy]="'on-submit'"
-      (submit)="handleSubmit($event)"
+      (submit)="registerUser($event)"
       class="form-container"
     >
       <!-- Submission state indicator -->
@@ -176,12 +179,12 @@ import { submissionSchema } from './submission-patterns.validations';
         </ngx-signal-form-field>
       </div>
 
-      <!-- Submission state info -->
+      <!-- Submission state info with helper values -->
       <div
         class="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
       >
         <h4 class="mb-2 font-semibold text-gray-900 dark:text-gray-100">
-          Submission State
+          Submission State (Using Toolkit Helpers)
         </h4>
         <dl class="space-y-2 text-sm">
           <div class="flex gap-2">
@@ -190,6 +193,22 @@ import { submissionSchema } from './submission-patterns.validations';
             </dt>
             <dd class="text-gray-600 dark:text-gray-400">
               {{ registrationForm().valid() ? 'Yes' : 'No' }}
+            </dd>
+          </div>
+          <div class="flex gap-2">
+            <dt class="font-medium text-gray-700 dark:text-gray-300">
+              canSubmit():
+            </dt>
+            <dd class="text-gray-600 dark:text-gray-400">
+              {{ canSubmitForm() ? 'Yes' : 'No' }}
+            </dd>
+          </div>
+          <div class="flex gap-2">
+            <dt class="font-medium text-gray-700 dark:text-gray-300">
+              isSubmitting():
+            </dt>
+            <dd class="text-gray-600 dark:text-gray-400">
+              {{ isFormSubmitting() ? 'Yes' : 'No' }}
             </dd>
           </div>
           <div class="flex gap-2">
@@ -203,14 +222,14 @@ import { submissionSchema } from './submission-patterns.validations';
         </dl>
       </div>
 
-      <!-- Form actions -->
+      <!-- Form actions using toolkit submission helpers -->
       <div class="mt-8 flex gap-4">
         <button
           type="submit"
-          [disabled]="formContext?.submittedStatus() === 'submitting'"
+          [disabled]="!canSubmitForm() || isFormSubmitting()"
           class="btn-primary"
         >
-          @if (formContext?.submittedStatus() === 'submitting') {
+          @if (isFormSubmitting()) {
             <span>Submitting...</span>
           } @else {
             <span>Create Account</span>
@@ -219,7 +238,7 @@ import { submissionSchema } from './submission-patterns.validations';
         <button
           type="button"
           (click)="resetForm()"
-          [disabled]="formContext?.submittedStatus() === 'submitting'"
+          [disabled]="isFormSubmitting()"
           class="btn-secondary"
         >
           Reset
@@ -250,14 +269,20 @@ export class SubmissionPatternsComponent {
     optional: true,
   });
 
-  protected readonly model = signal<SubmissionModel>({
+  readonly #model = signal<SubmissionModel>({
     username: '',
     password: '',
     confirmPassword: '',
     simulateServerError: false,
   });
 
-  readonly registrationForm = form(this.model, submissionSchema);
+  protected readonly model = this.#model.asReadonly();
+
+  readonly registrationForm = form(this.#model, submissionSchema);
+
+  /// Toolkit submission helpers - reduces template boilerplate
+  protected readonly canSubmitForm = canSubmit(this.registrationForm);
+  protected readonly isFormSubmitting = isSubmitting(this.registrationForm);
 
   /// Server error state for demonstration
   protected readonly serverError = signal<string | null>(null);
@@ -280,7 +305,7 @@ export class SubmissionPatternsComponent {
    * Note: The callback is only invoked when the form is VALID.
    * If invalid, the callback is skipped and submitting remains false.
    */
-  protected async handleSubmit(event: Event): Promise<void> {
+  protected async registerUser(event: Event): Promise<void> {
     event.preventDefault();
     await submit(this.registrationForm, async (formData) => {
       /// Clear previous states
@@ -303,7 +328,7 @@ export class SubmissionPatternsComponent {
 
       /// Success - show success message and reset form
       this.submissionSuccess.set(true);
-      this.model.set({
+      this.#model.set({
         username: '',
         password: '',
         confirmPassword: '',
@@ -318,7 +343,7 @@ export class SubmissionPatternsComponent {
   protected resetForm(): void {
     /// Reset form state and data
     this.registrationForm().reset();
-    this.model.set({
+    this.#model.set({
       username: '',
       password: '',
       confirmPassword: '',

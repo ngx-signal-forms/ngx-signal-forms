@@ -115,8 +115,17 @@ import { globalConfigSchema } from './global-configuration.validations';
 
       <!-- Form actions -->
       <div class="mt-8 flex gap-4">
-        <button type="submit" class="btn-primary" aria-live="polite">
-          Submit Form
+        <button
+          type="submit"
+          class="btn-primary"
+          aria-live="polite"
+          [disabled]="configForm().pending()"
+        >
+          @if (configForm().pending()) {
+            Saving...
+          } @else {
+            Submit Form
+          }
         </button>
         <button type="button" (click)="resetForm()" class="btn-secondary">
           Reset
@@ -161,13 +170,13 @@ import { globalConfigSchema } from './global-configuration.validations';
 export class GlobalConfigurationComponent {
   errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
 
-  protected readonly model = signal<GlobalConfigModel>({
+  readonly #model = signal<GlobalConfigModel>({
     userEmail: '',
     userPhone: '',
     userWebsite: '',
   });
 
-  readonly configForm = form(this.model, globalConfigSchema);
+  readonly configForm = form(this.#model, globalConfigSchema);
 
   /**
    * Form submission handler using Angular Signal Forms submit() helper.
@@ -177,14 +186,15 @@ export class GlobalConfigurationComponent {
     event.preventDefault();
     await submit(this.configForm, async () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      this.model.set({ userEmail: '', userPhone: '', userWebsite: '' });
+      this.#model.set({ userEmail: '', userPhone: '', userWebsite: '' });
       this.configForm().reset();
       return null;
     });
   }
 
   protected resetForm(): void {
-    this.model.set({
+    this.configForm().reset();
+    this.#model.set({
       userEmail: '',
       userPhone: '',
       userWebsite: '',

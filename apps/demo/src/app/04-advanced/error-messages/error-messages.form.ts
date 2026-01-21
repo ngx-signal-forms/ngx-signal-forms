@@ -95,8 +95,17 @@ import { errorMessagesSchema } from './error-messages.validations';
 
       <!-- Form actions -->
       <div class="mt-8 flex gap-4">
-        <button type="submit" class="btn-primary" aria-live="polite">
-          Submit Form
+        <button
+          type="submit"
+          class="btn-primary"
+          aria-live="polite"
+          [disabled]="errorMessagesForm().pending()"
+        >
+          @if (errorMessagesForm().pending()) {
+            Submitting...
+          } @else {
+            Submit Form
+          }
         </button>
         <button type="button" (click)="resetForm()" class="btn-secondary">
           Reset
@@ -136,13 +145,13 @@ import { errorMessagesSchema } from './error-messages.validations';
 export class ErrorMessagesComponent {
   errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
 
-  protected readonly model = signal<ErrorMessagesModel>({
+  readonly #model = signal<ErrorMessagesModel>({
     email: '',
     password: '',
     bio: '',
   });
 
-  readonly errorMessagesForm = form(this.model, errorMessagesSchema);
+  readonly errorMessagesForm = form(this.#model, errorMessagesSchema);
 
   constructor() {
     // Reset form state on initialization to ensure fields start as untouched
@@ -182,13 +191,15 @@ export class ErrorMessagesComponent {
     event.preventDefault();
     await submit(this.errorMessagesForm, async () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      this.model.set({ email: '', password: '', bio: '' });
+      this.#model.set({ email: '', password: '', bio: '' });
+      this.errorMessagesForm().reset();
       return null;
     });
   }
 
   protected resetForm(): void {
-    this.model.set({
+    this.errorMessagesForm().reset();
+    this.#model.set({
       email: '',
       password: '',
       bio: '',
