@@ -10,8 +10,8 @@ test.describe('Outline Form Field - Complex Nested Form', () => {
     await expect(page.getByText('Feit', { exact: true })).toBeVisible();
     await expect(page.getByLabel('Feit nummer')).toHaveValue('1');
 
-    // Submit button should be disabled initially (empty required fields)
-    await expect(page.getByRole('button', { name: 'Opslaan' })).toBeDisabled();
+    // Submit button remains enabled to allow validation feedback on submit
+    await expect(page.getByRole('button', { name: 'Opslaan' })).toBeEnabled();
   });
 
   test('should add and remove facts', async ({ page }) => {

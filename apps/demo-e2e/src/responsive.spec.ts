@@ -16,9 +16,18 @@ test.describe('Demo - Page Loading', () => {
         '/toolkit-core/error-display-modes',
         '/toolkit-core/warning-support',
         '/toolkit-core/field-states',
+        '/toolkit-core/css-status-classes',
         '/form-field-wrapper/basic-usage',
         '/form-field-wrapper/complex-forms',
+        '/form-field-wrapper/outline-form-field',
         '/advanced/global-configuration',
+        '/advanced/submission-patterns',
+        '/advanced/error-messages',
+        '/new-demos/dynamic-list',
+        '/new-demos/nested-groups',
+        '/new-demos/async-validation',
+        '/new-demos/stepper-form',
+        '/new-demos/cross-field-validation',
       ];
 
       for (const route of routes) {
@@ -47,9 +56,6 @@ test.describe('Demo - Page Loading', () => {
       for (const route of routes) {
         await page.goto(route);
         await page.waitForLoadState('domcontentloaded');
-
-        // Wait for Angular to render
-        await page.waitForTimeout(500);
 
         const form = page.locator('form').first();
         await expect(form).toBeVisible({ timeout: 5000 });

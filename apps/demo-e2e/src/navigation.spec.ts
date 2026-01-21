@@ -111,7 +111,7 @@ test.describe('Demo Application - Navigation & Shell', () => {
   });
 
   test('should navigate to each demo example', async ({ page }) => {
-    await test.step('Navigate through all 9 examples', async () => {
+    await test.step('Navigate through all demo examples', async () => {
       const examples = [
         '/signal-forms-only/pure-signal-form',
         '/getting-started/your-first-form',
@@ -126,6 +126,11 @@ test.describe('Demo Application - Navigation & Shell', () => {
         '/advanced/global-configuration',
         '/advanced/submission-patterns',
         '/advanced/error-messages',
+        '/new-demos/dynamic-list',
+        '/new-demos/nested-groups',
+        '/new-demos/async-validation',
+        '/new-demos/stepper-form',
+        '/new-demos/cross-field-validation',
       ];
 
       for (const examplePath of examples) {

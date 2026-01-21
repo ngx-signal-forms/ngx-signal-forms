@@ -18,26 +18,48 @@ test.describe('Accessibility - ARIA Attributes', () => {
     await page.waitForLoadState('domcontentloaded');
   });
 
-  test('should have aria-invalid attribute on inputs', async ({ page }) => {
-    await test.step('Verify aria-invalid attribute exists', async () => {
-      const toolkitForm = page.locator('form').nth(1);
-      const emailInput = toolkitForm.locator('input[type="email"]').first();
+  test('should have aria-invalid attribute on all three forms', async ({
+    page,
+  }) => {
+    await test.step('Verify Manual form (form 0)', async () => {
+      const manualForm = page.locator('form').nth(0);
+      const emailInput = manualForm.locator('input[type="email"]').first();
 
-      // Trigger validation by touching the field
       await emailInput.focus();
       await emailInput.blur();
 
       await expect(emailInput).toHaveAttribute('aria-invalid', /(true|false)/);
     });
+
+    await test.step('Verify Minimal toolkit form (form 1)', async () => {
+      const minimalForm = page.locator('form').nth(1);
+      const emailInput = minimalForm.locator('input[type="email"]').first();
+
+      await emailInput.focus();
+      await emailInput.blur();
+
+      await expect(emailInput).toHaveAttribute('aria-invalid', /(true|false)/);
+    });
+
+    await test.step('Verify Full toolkit form with [ngxSignalForm] (form 2)', async () => {
+      const fullForm = page.locator('form').nth(2);
+      const emailInput = fullForm.locator('input[type="email"]').first();
+
+      await emailInput.focus();
+      await emailInput.blur();
+
+      // Full form should have aria-invalid managed by auto-ARIA directive
+      await expect(emailInput).toHaveAttribute('aria-invalid', 'true');
+    });
   });
 
-  test('should have aria-describedby linking to error messages', async ({
+  test('should have aria-describedby linking to error messages on Full toolkit form', async ({
     page,
   }) => {
-    await test.step('Verify aria-describedby linkage', async () => {
-      /// Get the toolkit form (second form on page) and verify ARIA attributes exist
-      const form = page.locator('form').nth(1);
-      const emailInput = form.locator('input[type="email"]').first();
+    await test.step('Verify aria-describedby linkage on Full form with auto-ARIA', async () => {
+      // Get the Full toolkit form (third form, index 2) which uses [ngxSignalForm]
+      const fullForm = page.locator('form').nth(2);
+      const emailInput = fullForm.locator('input[type="email"]').first();
 
       // Trigger validation visibility by touching (blur) the field; the
       // Auto-ARIA directive links error container IDs via aria-describedby
@@ -45,6 +67,10 @@ test.describe('Accessibility - ARIA Attributes', () => {
       await emailInput.blur();
 
       await expect(emailInput).toHaveAttribute('aria-describedby');
+
+      // Verify the describedby value contains the error ID
+      const describedby = await emailInput.getAttribute('aria-describedby');
+      expect(describedby).toContain('error');
     });
   });
 
