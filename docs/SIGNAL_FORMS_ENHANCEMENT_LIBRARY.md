@@ -410,7 +410,14 @@ export const appConfig: ApplicationConfig = {
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { form, schema, required, email, Control } from '@angular/forms/signals';
+import {
+  form,
+  schema,
+  required,
+  email,
+  Control,
+  submit,
+} from '@angular/forms/signals';
 import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit/core';
 
 interface ContactModel {
@@ -446,11 +453,11 @@ export class ContactFormComponent {
   protected readonly model = signal<ContactModel>({ email: '', message: '' });
   protected readonly contactForm = form(this.model, contactSchema);
 
-  protected save(event: Event): void {
+  protected async save(event: Event): Promise<void> {
     event.preventDefault();
-    if (this.contactForm().valid()) {
+    await submit(this.contactForm, async () => {
       console.log('Valid:', this.model());
-    }
+    });
   }
 }
 ```
@@ -459,7 +466,14 @@ export class ContactFormComponent {
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { form, schema, required, email, Control } from '@angular/forms/signals';
+import {
+  form,
+  schema,
+  required,
+  email,
+  Control,
+  submit,
+} from '@angular/forms/signals';
 import {
   NgxSignalFormAutoAriaDirective,
   NgxSignalFormErrorComponent,
@@ -489,11 +503,11 @@ export class ContactFormComponent {
   protected readonly model = signal<ContactModel>({ email: '', message: '' });
   protected readonly contactForm = form(this.model, contactSchema);
 
-  protected save(event: Event): void {
+  protected async save(event: Event): Promise<void> {
     event.preventDefault();
-    if (this.contactForm().valid()) {
+    await submit(this.contactForm, async () => {
       console.log('Valid:', this.model());
-    }
+    });
   }
 }
 ```
@@ -502,7 +516,14 @@ export class ContactFormComponent {
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { form, schema, required, email, Control } from '@angular/forms/signals';
+import {
+  form,
+  schema,
+  required,
+  email,
+  Control,
+  submit,
+} from '@angular/forms/signals';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit/core';
 
@@ -533,11 +554,11 @@ export class ContactFormComponent {
   protected readonly model = signal<ContactModel>({ email: '', message: '' });
   protected readonly contactForm = form(this.model, contactSchema);
 
-  protected save(event: Event): void {
+  protected async save(event: Event): Promise<void> {
     event.preventDefault();
-    if (this.contactForm().valid()) {
+    await submit(this.contactForm, async () => {
       console.log('Valid:', this.model());
-    }
+    });
   }
 }
 ```
@@ -1117,10 +1138,11 @@ protected async save() {
 **After:**
 
 ```typescript
-protected async save(): void {
-  if (this.contactForm().valid()) {
+protected async save(event: Event): Promise<void> {
+  event.preventDefault();
+  await submit(this.contactForm, async () => {
     await this.api.save(this.model());
-  }
+  });
 }
 ```
 
@@ -1167,7 +1189,14 @@ export class ContactComponent {
 
 // ===== Signal Forms + Enhancement Library =====
 import { Component, signal } from '@angular/core';
-import { form, schema, required, email, Control } from '@angular/forms/signals';
+import {
+  form,
+  schema,
+  required,
+  email,
+  Control,
+  submit,
+} from '@angular/forms/signals';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 const contactSchema = schema<ContactModel>((path) => {
@@ -1192,9 +1221,11 @@ export class ContactComponent {
   model = signal({ email: '' });
   contactForm = form(this.model, contactSchema);
 
-  save(event: Event): void {
+  async save(event: Event): Promise<void> {
     event.preventDefault();
-    if (this.contactForm().valid()) console.log(this.model());
+    await submit(this.contactForm, async () => {
+      console.log(this.model());
+    });
   }
 }
 ```

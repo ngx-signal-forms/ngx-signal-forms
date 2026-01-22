@@ -58,11 +58,11 @@ export class UserFormComponent {
     email(path.email, { message: 'Valid email required' });
   });
 
-  protected save(event: Event): void {
+  protected async save(event: Event): Promise<void> {
     event.preventDefault();
-    if (this.userForm().valid()) {
+    await submit(this.userForm, async () => {
       console.log('Submit:', this.#userData());
-    }
+    });
   }
 }
 ```
@@ -196,17 +196,6 @@ protected async handleSubmit(event: Event): Promise<void> {
 - Calls `markAllAsTouched()` to show all errors
 - Manages `submitting()` signal state
 - Handles server error integration
-
-### Manual Approach
-
-```typescript
-protected save(event: Event): void {
-  event.preventDefault();
-  if (this.userForm().valid()) {
-    console.log(this.#userData());
-  }
-}
-```
 
 **Critical:** Always use `(submit)="handler($event)"` with `event.preventDefault()`. Signal Forms use native DOM events, NOT `ngSubmit`.
 

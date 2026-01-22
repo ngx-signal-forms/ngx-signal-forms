@@ -988,7 +988,12 @@ Ensure you have Zod v3.23+ which includes StandardSchemaV1 support.
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { form, validateStandardSchema, Control } from '@angular/forms/signals';
+import {
+  form,
+  validateStandardSchema,
+  Control,
+  submit,
+} from '@angular/forms/signals';
 import { z } from 'zod';
 
 // 1. Define Zod schema
@@ -1062,11 +1067,12 @@ export class UserFormComponent {
     validateStandardSchema(path, UserSchema);
   });
 
-  save() {
-    if (this.userForm().valid()) {
+  async save(event: Event) {
+    event.preventDefault();
+    await submit(this.userForm, async () => {
       console.log('Valid user:', this.userModel());
       // Save to API
-    }
+    });
   }
 }
 ```
@@ -2138,6 +2144,7 @@ export class DynamicFormComponent {
 
 ```typescript
 import { Component, signal } from '@angular/core';
+import { form, submit } from '@angular/forms/signals';
 
 @Component({
   selector: 'ngx-flight-booking',
@@ -2150,7 +2157,7 @@ import { Component, signal } from '@angular/core';
       [dynamicForm]="flightForm"
     />
 
-    <button (click)="save()" [disabled]="flightForm().invalid()">
+    <button (click)="save($event)" [disabled]="flightForm().invalid()">
       Book Flight
     </button>
   `,
@@ -2170,11 +2177,12 @@ export class FlightBookingComponent {
     metadataToSchema(flightFormMetadata),
   );
 
-  save() {
-    if (this.flightForm().valid()) {
+  async save(event: Event) {
+    event.preventDefault();
+    await submit(this.flightForm, async () => {
       console.log('Booking:', this.flightModel());
       // Submit to API
-    }
+    });
   }
 }
 ```

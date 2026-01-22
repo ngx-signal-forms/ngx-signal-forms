@@ -103,6 +103,7 @@ import {
   required,
   email,
   FormField,
+  submit,
 } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
@@ -133,9 +134,9 @@ export class ContactComponent {
 
   protected save(event: Event): void {
     event.preventDefault();
-    if (this.contactForm().valid()) {
+    submit(this.contactForm, async () => {
       console.log('Submit:', this.model());
-    }
+    });
   }
 }
 ```

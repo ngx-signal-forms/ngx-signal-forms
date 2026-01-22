@@ -594,6 +594,7 @@ import {
   email,
   maxLength,
   FormField,
+  submit,
 } from '@angular/forms/signals';
 import {
   NgxSignalFormFieldComponent,
@@ -681,9 +682,9 @@ export class ContactFormComponent {
 
   protected save(event: Event): void {
     event.preventDefault();
-    if (this.contactForm().valid()) {
+    submit(this.contactForm, async () => {
       console.log('Form data:', this.#model());
-    }
+    });
   }
 }
 ```
