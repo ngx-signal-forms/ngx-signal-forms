@@ -1,0 +1,15 @@
+:host {
+  --ngx-signal-form-fieldset-gap: 0.5rem;
+
+  display: block;
+}
+
+.ngx-signal-form-fieldset__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ngx-signal-form-fieldset-gap);
+}
+
+.ngx-signal-form-fieldset__messages {
+  margin-top: var(--ngx-signal-form-fieldset-gap);
+}

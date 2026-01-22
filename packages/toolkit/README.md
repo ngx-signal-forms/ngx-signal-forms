@@ -247,6 +247,7 @@ import {
 // Form field wrapper with enhanced components
 import {
   NgxSignalFormFieldComponent,
+  NgxSignalFormFieldsetComponent,
   NgxFloatingLabelDirective,
   NgxSignalFormFieldHintComponent,
   NgxSignalFormFieldCharacterCountComponent,
@@ -867,6 +868,7 @@ The toolkit includes a complete form field component system for enhanced layouts
 ```typescript
 import {
   NgxSignalFormFieldComponent,
+  NgxSignalFormFieldsetComponent,
   NgxFloatingLabelDirective,
   NgxSignalFormFieldHintComponent,
   NgxSignalFormFieldCharacterCountComponent,
@@ -876,6 +878,7 @@ import {
 **Key Features:**
 
 - **NgxSignalFormFieldComponent** - Reusable wrapper with automatic error display
+- **NgxSignalFormFieldsetComponent** - Group related fields with aggregated error/warning display
 - **NgxFloatingLabelDirective** (`outline` attribute) - Material Design outlined layout
 - **NgxSignalFormFieldCharacterCountComponent** - Progressive color states (ok → warning → danger → exceeded)
 - **NgxSignalFormFieldHintComponent** - Helper text display
@@ -1242,6 +1245,113 @@ maxLength(path.bio, 500);
 - `colorThresholds` (object, default: `{ warning: 80, danger: 95 }`) - Custom thresholds
 
 **For complete API, CSS custom properties, and examples, see [Form Field Documentation](./form-field/README.md#ngxsignalformfieldcharactercountcomponent)**
+
+#### NgxSignalFormFieldsetComponent
+
+Groups related form fields with **aggregated error/warning display**. Similar to HTML `<fieldset>`, but with validation message aggregation and deduplication.
+
+**Basic Usage - Group with Aggregated Errors:**
+
+```html
+<ngx-signal-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
+  <legend class="fieldset-legend">Shipping Address</legend>
+
+  <ngx-signal-form-field [formField]="form.address.street" outline>
+    <label for="street">Street</label>
+    <input id="street" [formField]="form.address.street" />
+  </ngx-signal-form-field>
+
+  <ngx-signal-form-field [formField]="form.address.city" outline>
+    <label for="city">City</label>
+    <input id="city" [formField]="form.address.city" />
+  </ngx-signal-form-field>
+
+  <!-- Aggregated errors appear at bottom of fieldset -->
+</ngx-signal-form-fieldset>
+```
+
+**Attribute Selector Usage (recommended for semantic fieldsets):**
+
+```html
+<fieldset
+  ngxSignalFormFieldset
+  [fieldsetField]="form.address"
+  fieldsetId="address"
+>
+  <legend class="fieldset-legend">Shipping Address</legend>
+  <!-- Fields content -->
+</fieldset>
+```
+
+**Non-fieldset Wrapper Usage (when fieldset semantics do not apply):**
+
+```html
+<div ngxSignalFormFieldset [fieldsetField]="form.address" fieldsetId="address">
+  <!-- Fields content -->
+</div>
+```
+
+**Custom Field Collection:**
+
+```html
+<!-- Override which fields to aggregate errors from -->
+<ngx-signal-form-fieldset
+  [fieldsetField]="form"
+  [fields]="[form.password, form.confirmPassword]"
+  fieldsetId="passwords"
+>
+  <!-- Fields content -->
+</ngx-signal-form-fieldset>
+```
+
+**Features:**
+
+- ✅ **Aggregated Errors**: Collects errors from all nested fields via `errorSummary()`
+- ✅ **Deduplication**: Same error message shown only once even if multiple fields have it
+- ✅ **Warning Support**: Non-blocking warnings (with `warn:` prefix) shown when no errors exist
+- ✅ **WCAG 2.2 Compliant**: Errors use `role="alert"`, warnings use `role="status"`
+- ✅ **Strategy Aware**: Respects `ErrorDisplayStrategy` from form context or input
+
+**Inputs:**
+
+- `fieldsetField` (required) - The Signal Forms field tree to aggregate errors from
+- `fields` (optional) - Explicit list of fields for custom groupings
+- `fieldsetId` (optional) - Unique identifier for generating error/warning IDs
+- `strategy` (optional) - Error display strategy (`'immediate'` | `'on-touch'` | `'on-submit'` | `'inherit'`)
+- `showErrors` (boolean, default: `true`) - Whether to display aggregated error messages
+
+**Host CSS Classes:**
+
+- `.ngx-signal-form-fieldset` - Always applied
+- `.ngx-signal-form-fieldset--invalid` - Applied when showing errors
+- `.ngx-signal-form-fieldset--warning` - Applied when showing warnings (no errors)
+
+**CSS Custom Properties:**
+
+```css
+ngx-signal-form-fieldset {
+  /* Layout */
+  --ngx-signal-form-fieldset-gap: 1rem; /* Gap between fields */
+  --ngx-signal-form-fieldset-padding: 1rem; /* Content padding */
+
+  /* Border styling for invalid state */
+  --ngx-signal-form-fieldset-invalid-border: 2px solid #dc2626;
+  --ngx-signal-form-fieldset-warning-border: 2px solid #f59e0b;
+
+  /* Background */
+  --ngx-signal-form-fieldset-bg: transparent;
+  --ngx-signal-form-fieldset-invalid-bg: rgba(220, 38, 38, 0.05);
+  --ngx-signal-form-fieldset-warning-bg: rgba(245, 158, 11, 0.05);
+}
+```
+
+**Why use fieldsets over individual field errors?**
+
+- Group validation (e.g., "password must match confirm password") applies to multiple fields
+- Reduces visual noise when many fields have the same validation rule
+- Better UX for complex forms with related field groups (addresses, passwords, etc.)
+
+**For complete API, CSS custom properties, and examples, see [Form Field Documentation](./form-field/README.md#ngxsignalformfieldsetcomponent)**
 
 ### Utilities
 

@@ -1,0 +1,256 @@
+<div class="mb-6 text-center">
+  <p class="text-sm text-gray-600 dark:text-gray-400">
+    Group related form fields and display aggregated validation errors
+  </p>
+</div>
+
+<form
+  [ngxSignalForm]="fieldsetForm"
+  [errorStrategy]="errorDisplayMode"
+  (submit)="saveData($event)"
+  class="form-container"
+>
+  <!-- Shipping Address Fieldset -->
+  <fieldset
+    ngx-signal-form-fieldset
+    [fieldsetField]="fieldsetForm.shippingAddress"
+    fieldsetId="shipping-address"
+    class="fieldset-demo"
+  >
+    <legend class="fieldset-legend">Shipping Address</legend>
+    <p class="fieldset-description">
+      Errors from all address fields are aggregated below the fieldset.
+    </p>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <ngx-signal-form-field
+        [formField]="fieldsetForm.shippingAddress.street"
+        fieldName="shippingStreet"
+        class="sm:col-span-2"
+      >
+        <label for="shippingStreet" class="form-label">Street Address *</label>
+        <input
+          id="shippingStreet"
+          class="form-input"
+          type="text"
+          [formField]="fieldsetForm.shippingAddress.street"
+          placeholder="123 Main Street"
+          aria-required="true"
+        />
+      </ngx-signal-form-field>
+
+      <ngx-signal-form-field
+        [formField]="fieldsetForm.shippingAddress.city"
+        fieldName="shippingCity"
+      >
+        <label for="shippingCity" class="form-label">City *</label>
+        <input
+          id="shippingCity"
+          class="form-input"
+          type="text"
+          [formField]="fieldsetForm.shippingAddress.city"
+          placeholder="New York"
+          aria-required="true"
+        />
+      </ngx-signal-form-field>
+
+      <ngx-signal-form-field
+        [formField]="fieldsetForm.shippingAddress.zipCode"
+        fieldName="shippingZipCode"
+      >
+        <label for="shippingZipCode" class="form-label">ZIP Code *</label>
+        <input
+          id="shippingZipCode"
+          class="form-input"
+          type="text"
+          [formField]="fieldsetForm.shippingAddress.zipCode"
+          placeholder="10001"
+          aria-required="true"
+        />
+      </ngx-signal-form-field>
+
+      <ngx-signal-form-field
+        [formField]="fieldsetForm.shippingAddress.country"
+        fieldName="shippingCountry"
+        class="sm:col-span-2"
+      >
+        <label for="shippingCountry" class="form-label">Country *</label>
+        <select
+          id="shippingCountry"
+          class="form-select"
+          [formField]="fieldsetForm.shippingAddress.country"
+          aria-required="true"
+        >
+          @for (country of countries; track country.value) {
+          <option [value]="country.value">{{ country.label }}</option>
+          }
+        </select>
+      </ngx-signal-form-field>
+    </div>
+  </fieldset>
+
+  <!-- Same as Shipping Checkbox -->
+  <div class="my-6">
+    <label class="flex cursor-pointer items-center gap-2">
+      <input
+        type="checkbox"
+        class="form-checkbox"
+        [formField]="fieldsetForm.billingSameAsShipping"
+      />
+      <span class="text-sm">Billing address is the same as shipping</span>
+    </label>
+  </div>
+
+  <!-- Billing Address Fieldset - Shown when different from shipping -->
+  @if (!fieldsetForm.billingSameAsShipping().value()) {
+  <fieldset
+    ngx-signal-form-fieldset
+    [fieldsetField]="fieldsetForm.billingAddress"
+    fieldsetId="billing-address"
+    class="fieldset-demo"
+  >
+    <legend class="fieldset-legend">Billing Address</legend>
+    <p class="fieldset-description">
+      Separate billing address for invoice delivery.
+    </p>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <ngx-signal-form-field
+        [formField]="fieldsetForm.billingAddress.street"
+        fieldName="billingStreet"
+        class="sm:col-span-2"
+      >
+        <label for="billingStreet" class="form-label">Street Address *</label>
+        <input
+          id="billingStreet"
+          class="form-input"
+          type="text"
+          [formField]="fieldsetForm.billingAddress.street"
+          placeholder="456 Business Ave"
+          aria-required="true"
+        />
+      </ngx-signal-form-field>
+
+      <ngx-signal-form-field
+        [formField]="fieldsetForm.billingAddress.city"
+        fieldName="billingCity"
+      >
+        <label for="billingCity" class="form-label">City *</label>
+        <input
+          id="billingCity"
+          class="form-input"
+          type="text"
+          [formField]="fieldsetForm.billingAddress.city"
+          placeholder="Los Angeles"
+          aria-required="true"
+        />
+      </ngx-signal-form-field>
+
+      <ngx-signal-form-field
+        [formField]="fieldsetForm.billingAddress.zipCode"
+        fieldName="billingZipCode"
+      >
+        <label for="billingZipCode" class="form-label">ZIP Code *</label>
+        <input
+          id="billingZipCode"
+          class="form-input"
+          type="text"
+          [formField]="fieldsetForm.billingAddress.zipCode"
+          placeholder="90001"
+          aria-required="true"
+        />
+      </ngx-signal-form-field>
+
+      <ngx-signal-form-field
+        [formField]="fieldsetForm.billingAddress.country"
+        fieldName="billingCountry"
+        class="sm:col-span-2"
+      >
+        <label for="billingCountry" class="form-label">Country *</label>
+        <select
+          id="billingCountry"
+          class="form-select"
+          [formField]="fieldsetForm.billingAddress.country"
+          aria-required="true"
+        >
+          @for (country of countries; track country.value) {
+          <option [value]="country.value">{{ country.label }}</option>
+          }
+        </select>
+      </ngx-signal-form-field>
+    </div>
+  </fieldset>
+  }
+
+  <!-- Credentials Fieldset -->
+  <fieldset
+    ngx-signal-form-fieldset
+    [fieldsetField]="fieldsetForm.credentials"
+    fieldsetId="credentials"
+    class="fieldset-demo"
+  >
+    <legend class="fieldset-legend">Account Credentials</legend>
+    <p class="fieldset-description">
+      Cross-field validation: passwords must match. Errors shown at group level.
+    </p>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <ngx-signal-form-field
+        [formField]="fieldsetForm.credentials.password"
+        fieldName="password"
+      >
+        <label for="password" class="form-label">Password *</label>
+        <input
+          id="password"
+          class="form-input"
+          type="password"
+          [formField]="fieldsetForm.credentials.password"
+          placeholder="Enter password (min 8 chars)"
+          aria-required="true"
+          autocomplete="new-password"
+        />
+      </ngx-signal-form-field>
+
+      <ngx-signal-form-field
+        [formField]="fieldsetForm.credentials.confirmPassword"
+        fieldName="confirmPassword"
+      >
+        <label for="confirmPassword" class="form-label"
+          >Confirm Password *</label
+        >
+        <input
+          id="confirmPassword"
+          class="form-input"
+          type="password"
+          [formField]="fieldsetForm.credentials.confirmPassword"
+          placeholder="Confirm your password"
+          aria-required="true"
+          autocomplete="new-password"
+        />
+      </ngx-signal-form-field>
+    </div>
+  </fieldset>
+
+  <!-- Form Actions -->
+  <div class="mt-8 flex items-center gap-4">
+    <button
+      class="btn-primary"
+      type="submit"
+      [disabled]="fieldsetForm().pending()"
+    >
+      @if (fieldsetForm().pending()) { Saving... } @else { Submit Order }
+    </button>
+
+    <button class="btn-secondary" type="reset" (click)="resetForm()">
+      Reset
+    </button>
+
+    <div class="ml-auto text-sm text-gray-600 dark:text-gray-400">
+      @if (fieldsetForm().valid()) {
+      <span class="text-green-600 dark:text-green-400">✓ All fields valid</span>
+      } @else {
+      <span>* Required fields</span>
+      }
+    </div>
+  </div>
+</form>

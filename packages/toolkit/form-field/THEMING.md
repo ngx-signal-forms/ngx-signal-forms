@@ -47,6 +47,15 @@ Use this table to quickly find the right property for your theming needs:
 | Error text color           | `--ngx-signal-form-error-color`                     | `#dc2626`                                                      | Error message color         | ✅ 5.91:1       |
 | Warning text color         | `--ngx-signal-form-warning-color`                   | `#f59e0b`                                                      | Warning message color       | ✅ 6.98:1       |
 | Error top margin           | `--ngx-signal-form-error-margin-top`                | `0.375rem`                                                     | Space above error messages  | —               |
+| **Fieldset Grouping**      |                                                     |                                                                |                             |                 |
+| Fieldset gap               | `--ngx-signal-form-fieldset-gap`                    | `1rem`                                                         | Gap between grouped fields  | —               |
+| Fieldset padding           | `--ngx-signal-form-fieldset-padding`                | `1rem`                                                         | Content padding             | —               |
+| Fieldset border radius     | `--ngx-signal-form-fieldset-border-radius`          | `0.5rem`                                                       | Corner roundness            | —               |
+| Fieldset background        | `--ngx-signal-form-fieldset-bg`                     | `transparent`                                                  | Default background          | —               |
+| Fieldset invalid bg        | `--ngx-signal-form-fieldset-invalid-bg`             | `rgba(220,38,38,0.05)`                                         | Error state background      | —               |
+| Fieldset warning bg        | `--ngx-signal-form-fieldset-warning-bg`             | `rgba(245,158,11,0.05)`                                        | Warning state background    | —               |
+| Fieldset invalid border    | `--ngx-signal-form-fieldset-invalid-border-color`   | `#dc2626`                                                      | Error state border          | ✅ 5.91:1       |
+| Fieldset warning border    | `--ngx-signal-form-fieldset-warning-border-color`   | `#f59e0b`                                                      | Warning state border        | ✅ 6.98:1       |
 | **Animations**             |                                                     |                                                                |                             |                 |
 | Transition timing          | `--ngx-form-field-outline-transition`               | `border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out` | State changes               | —               |
 
@@ -61,6 +70,8 @@ Use this table to quickly find the right property for your theming needs:
 **Custom Fonts** → Override: `label-font-family`, `input-font-family`
 
 **Error Styling** → Override: `error-padding-horizontal`, `error-font-size`, `error-color`, `warning-color`, `error-margin-top`
+
+**Fieldset Styling** → Override: `fieldset-gap`, `fieldset-padding`, `fieldset-border-radius`, `fieldset-bg`, `fieldset-invalid-bg`, `fieldset-warning-bg`, `fieldset-invalid-border-color`, `fieldset-warning-border-color`
 
 ---
 
@@ -675,6 +686,70 @@ ngx-signal-form-field {
   transition:
     --ngx-form-field-color-text 0.3s ease,
     --ngx-form-field-color-surface 0.3s ease;
+}
+```
+
+---
+
+### Example 10: Fieldset Grouping Styling
+
+Customize the appearance of fieldset groupings for related form fields:
+
+```css
+/* Custom fieldset styling */
+ngx-signal-form-fieldset {
+  /* Layout */
+  --ngx-signal-form-fieldset-gap: 1.5rem; /* More space between fields */
+  --ngx-signal-form-fieldset-padding: 1.5rem;
+  --ngx-signal-form-fieldset-border-radius: 0.75rem;
+
+  /* Default background */
+  --ngx-signal-form-fieldset-bg: rgba(0, 0, 0, 0.02);
+
+  /* Invalid state styling */
+  --ngx-signal-form-fieldset-invalid-bg: rgba(220, 38, 38, 0.08);
+  --ngx-signal-form-fieldset-invalid-border-color: #dc2626;
+
+  /* Warning state styling */
+  --ngx-signal-form-fieldset-warning-bg: rgba(245, 158, 11, 0.08);
+  --ngx-signal-form-fieldset-warning-border-color: #f59e0b;
+}
+
+/* Dark mode fieldset styling */
+@media (prefers-color-scheme: dark) {
+  ngx-signal-form-fieldset {
+    --ngx-signal-form-fieldset-bg: rgba(255, 255, 255, 0.02);
+    --ngx-signal-form-fieldset-invalid-bg: rgba(248, 113, 113, 0.1);
+    --ngx-signal-form-fieldset-invalid-border-color: #f87171;
+    --ngx-signal-form-fieldset-warning-bg: rgba(251, 191, 36, 0.1);
+    --ngx-signal-form-fieldset-warning-border-color: #fbbf24;
+  }
+}
+```
+
+**Usage with legend element:**
+
+```html
+<ngx-signal-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
+  <legend class="fieldset-legend">Shipping Address</legend>
+  <!-- Form fields here -->
+</ngx-signal-form-fieldset>
+```
+
+**Legend styling example:**
+
+```css
+.fieldset-legend {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1f2937;
+  margin-bottom: 0.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .fieldset-legend {
+    color: #f9fafb;
+  }
 }
 ```
 

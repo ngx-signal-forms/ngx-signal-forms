@@ -2,11 +2,13 @@ export * from './floating-label.directive';
 export * from './form-field-character-count.component';
 export * from './form-field-hint.component';
 export * from './form-field.component';
+export * from './form-fieldset.component';
 
 import { NgxFloatingLabelDirective } from './floating-label.directive';
 import { NgxSignalFormFieldCharacterCountComponent } from './form-field-character-count.component';
 import { NgxSignalFormFieldHintComponent } from './form-field-hint.component';
 import { NgxSignalFormFieldComponent } from './form-field.component';
+import { NgxSignalFormFieldsetComponent } from './form-fieldset.component';
 
 /**
  * Convenience bundle for outlined form field components.
@@ -38,4 +40,29 @@ export const NgxOutlinedFormField = [
   NgxFloatingLabelDirective,
   NgxSignalFormFieldHintComponent,
   NgxSignalFormFieldCharacterCountComponent,
+] as const;
+
+/**
+ * Convenience bundle for the basic form field wrapper.
+ *
+ * @example
+ * ```typescript
+ * import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
+ *
+ * @Component({
+ *   imports: [FormField, NgxFormField],
+ *   template: `
+ *     <ngx-signal-form-field [formField]="form.email">
+ *       <label for="email">Email</label>
+ *       <input id="email" [formField]="form.email" />
+ *     </ngx-signal-form-field>
+ *   `
+ * })
+ * ```
+ */
+export const NgxFormField = [
+  NgxSignalFormFieldComponent,
+  NgxSignalFormFieldHintComponent,
+  NgxSignalFormFieldCharacterCountComponent,
+  NgxSignalFormFieldsetComponent,
 ] as const;

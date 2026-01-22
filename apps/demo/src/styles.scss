@@ -381,6 +381,23 @@
     color: var(--color-text-muted);
   }
 
+  /* Fieldset demo styling */
+  .fieldset-demo {
+    @apply rounded-lg border p-6;
+    border-color: var(--color-border);
+    background: var(--color-bg-elevated);
+  }
+
+  .fieldset-legend {
+    @apply px-2 text-lg font-semibold;
+    color: var(--color-text);
+  }
+
+  .fieldset-description {
+    @apply -mt-2 mb-4 text-sm;
+    color: var(--color-text-muted);
+  }
+
   /* Inline code styling */
   .code-inline {
     @apply rounded bg-indigo-50 px-1.5 py-0.5 font-mono text-sm;

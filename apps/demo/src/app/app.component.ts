@@ -125,6 +125,10 @@ export class AppComponent implements AfterViewInit {
           label: 'Complex Forms',
         },
         {
+          path: '/form-field-wrapper/fieldset',
+          label: 'Fieldset',
+        },
+        {
           path: '/form-field-wrapper/outline-form-field',
           label: 'Outlined Form Fields',
         },

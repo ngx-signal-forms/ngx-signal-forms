@@ -7,6 +7,7 @@ Form field components and directives for enhanced form layouts and accessibility
 - ✅ **WCAG 2.2 Level AA Compliant** - All color combinations meet 4.5:1+ contrast ratios
 - ✅ **Outlined Material Design Layout** - Floating labels with native HTML/CSS (no JavaScript)
 - ✅ **Progressive Character Count** - Visual feedback with color states (ok → warning → danger → exceeded)
+- ✅ **Fieldset Grouping** - Group related fields with aggregated error/warning display
 - ✅ **Automatic Error Display** - Integrated with toolkit's error strategies
 - ✅ **Flexible Theming** - 20+ CSS custom properties for complete customization
 - ✅ **System/App Theme Harmony** - Handles conflicts between OS preference and app theme selection
@@ -610,6 +611,130 @@ The component automatically changes color based on character count:
 
 ---
 
+### NgxSignalFormFieldsetComponent
+
+Groups related form fields with aggregated error/warning display. Similar to HTML `<fieldset>`, but with validation message aggregation and deduplication.
+
+**Import:**
+
+```typescript
+import { NgxSignalFormFieldsetComponent } from '@ngx-signal-forms/toolkit/form-field';
+```
+
+**Basic Usage:**
+
+```html
+<ngx-signal-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
+  <legend class="fieldset-legend">Shipping Address</legend>
+
+  <ngx-signal-form-field [formField]="form.address.street" outline>
+    <label for="street">Street</label>
+    <input id="street" [formField]="form.address.street" />
+  </ngx-signal-form-field>
+
+  <ngx-signal-form-field [formField]="form.address.city" outline>
+    <label for="city">City</label>
+    <input id="city" [formField]="form.address.city" />
+  </ngx-signal-form-field>
+
+  <!-- Aggregated errors appear at bottom of fieldset -->
+</ngx-signal-form-fieldset>
+```
+
+**Attribute Selector Usage (recommended for semantic fieldsets):**
+
+```html
+<fieldset
+  ngxSignalFormFieldset
+  [fieldsetField]="form.address"
+  fieldsetId="address"
+>
+  <legend class="fieldset-legend">Shipping Address</legend>
+  <!-- Fields content -->
+</fieldset>
+```
+
+**Non-fieldset Wrapper Usage (when fieldset semantics do not apply):**
+
+```html
+<div ngxSignalFormFieldset [fieldsetField]="form.address" fieldsetId="address">
+  <!-- Fields content -->
+</div>
+```
+
+**Custom Field Collection:**
+
+```html
+<!-- Override which fields to aggregate errors from -->
+<ngx-signal-form-fieldset
+  [fieldsetField]="form"
+  [fields]="[form.password, form.confirmPassword]"
+  fieldsetId="passwords"
+>
+  <legend class="fieldset-legend">Password</legend>
+  <!-- Fields content -->
+</ngx-signal-form-fieldset>
+```
+
+#### Features
+
+- ✅ **Aggregated Errors**: Collects errors from all nested fields via `errorSummary()`
+- ✅ **Deduplication**: Same error message shown only once even if multiple fields have it
+- ✅ **Warning Support**: Non-blocking warnings (with `warn:` prefix) shown when no errors exist
+- ✅ **WCAG 2.2 Compliant**: Errors use `role="alert"`, warnings use `role="status"`
+- ✅ **Strategy Aware**: Respects `ErrorDisplayStrategy` from form context or input
+
+#### Inputs
+
+| Input           | Type                           | Default             | Description                                        |
+| --------------- | ------------------------------ | ------------------- | -------------------------------------------------- |
+| `fieldsetField` | `FieldTree<TFieldset>`         | _required_          | The Signal Forms field tree to aggregate from      |
+| `fields`        | `FieldTree<unknown>[] \| null` | `null`              | Explicit list of fields for custom groupings       |
+| `fieldsetId`    | `string \| undefined`          | Auto-generated      | Unique identifier for generating error/warning IDs |
+| `strategy`      | `ErrorDisplayStrategy \| null` | Inherited from form | Error display strategy                             |
+| `showErrors`    | `boolean`                      | `true`              | Whether to display aggregated error messages       |
+
+#### Host CSS Classes
+
+- `.ngx-signal-form-fieldset` - Always applied
+- `.ngx-signal-form-fieldset--invalid` - Applied when showing errors
+- `.ngx-signal-form-fieldset--warning` - Applied when showing warnings (no errors)
+
+#### CSS Custom Properties
+
+```css
+ngx-signal-form-fieldset {
+  /* Layout */
+  --ngx-signal-form-fieldset-gap: 1rem;
+  --ngx-signal-form-fieldset-padding: 1rem;
+  --ngx-signal-form-fieldset-border-radius: 0.5rem;
+
+  /* Background */
+  --ngx-signal-form-fieldset-bg: transparent;
+  --ngx-signal-form-fieldset-invalid-bg: rgba(220, 38, 38, 0.05);
+  --ngx-signal-form-fieldset-warning-bg: rgba(245, 158, 11, 0.05);
+
+  /* Border */
+  --ngx-signal-form-fieldset-invalid-border-color: #dc2626;
+  --ngx-signal-form-fieldset-warning-border-color: #f59e0b;
+}
+```
+
+#### Why use fieldsets over individual field errors?
+
+- **Group validation**: Errors like "password must match confirm password" apply to multiple fields
+- **Reduced visual noise**: Same validation rule message shown only once
+- **Better UX for complex forms**: Related field groups (addresses, passwords, etc.) are clearly organized
+
+#### Accessibility
+
+- Uses `NgxSignalFormErrorComponent` internally for consistent ARIA attributes
+- Errors use `role="alert"` with `aria-live="assertive"` for immediate screen reader announcement
+- Warnings use `role="status"` with `aria-live="polite"`
+- `aria-busy="true"` is set when the fieldset has pending validation
+
+---
+
 ## Complete Example
 
 ```typescript
@@ -725,15 +850,8 @@ export class ContactFormComponent {
 ```typescript
 // Components
 export { NgxSignalFormFieldComponent } from './form-field.component';
-export { NgxSignalFormFieldHintComponent } from './form-field-hint.component';
-export { NgxSignalFormFieldCharacterCountComponent } from './form-field-character-count.component';
-
-// Directives
-export { NgxFloatingLabelDirective } from './floating-label.directive';
-```
-
----
-
+export { NgxSignalFormFieldsetComponent } from './form-fieldset.component';
 ## License
 
 MIT © [ngx-signal-forms](https://github.com/ngx-signal-forms/ngx-signal-forms)
+```

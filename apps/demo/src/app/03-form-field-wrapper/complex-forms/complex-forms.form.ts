@@ -7,7 +7,10 @@ import {
 import { FormField, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
+import {
+  NgxOutlinedFormField,
+  NgxSignalFormFieldsetComponent,
+} from '@ngx-signal-forms/toolkit/form-field';
 import type { ComplexFormModel } from './complex-forms.model';
 import { complexFormSchema } from './complex-forms.validations';
 
@@ -22,12 +25,19 @@ import { complexFormSchema } from './complex-forms.validations';
 @Component({
   selector: 'ngx-complex-forms',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxOutlinedFormField,
+    NgxSignalFormFieldsetComponent,
+  ],
   template: `
     <form [ngxSignalForm]="complexForm" (submit)="handleSubmit($event)">
       <!-- Personal Information Section -->
-      <fieldset
-        class="mb-8 rounded-lg border border-gray-200 p-6 dark:border-gray-700"
+      <ngx-signal-form-fieldset
+        [fieldsetField]="complexForm.personalInfo"
+        fieldsetId="personal-info"
+        class="mb-8"
       >
         <legend
           class="px-2 text-lg font-semibold text-gray-900 dark:text-gray-100"
@@ -104,11 +114,13 @@ import { complexFormSchema } from './complex-forms.validations';
             >
           </ngx-signal-form-field>
         </div>
-      </fieldset>
+      </ngx-signal-form-fieldset>
 
       <!-- Address Information Section -->
-      <fieldset
-        class="mb-8 rounded-lg border border-gray-200 p-6 dark:border-gray-700"
+      <ngx-signal-form-fieldset
+        [fieldsetField]="complexForm.addressInfo"
+        fieldsetId="address-info"
+        class="mb-8"
       >
         <legend
           class="px-2 text-lg font-semibold text-gray-900 dark:text-gray-100"
@@ -194,11 +206,13 @@ import { complexFormSchema } from './complex-forms.validations';
             </ngx-signal-form-field>
           </div>
         </div>
-      </fieldset>
+      </ngx-signal-form-fieldset>
 
       <!-- Skills Section (Dynamic Array) -->
-      <fieldset
-        class="mb-8 rounded-lg border border-gray-200 p-6 dark:border-gray-700"
+      <ngx-signal-form-fieldset
+        [fieldsetField]="complexForm.skills"
+        fieldsetId="skills"
+        class="mb-8"
       >
         <legend
           class="px-2 text-lg font-semibold text-gray-900 dark:text-gray-100"
@@ -251,11 +265,13 @@ import { complexFormSchema } from './complex-forms.validations';
         <button type="button" (click)="addSkill()" class="btn-secondary mt-2">
           + Add Skill
         </button>
-      </fieldset>
+      </ngx-signal-form-fieldset>
 
       <!-- Contacts Section (Dynamic Array with Types) -->
-      <fieldset
-        class="mb-8 rounded-lg border border-gray-200 p-6 dark:border-gray-700"
+      <ngx-signal-form-fieldset
+        [fieldsetField]="complexForm.contacts"
+        fieldsetId="contacts"
+        class="mb-8"
       >
         <legend
           class="px-2 text-lg font-semibold text-gray-900 dark:text-gray-100"
@@ -346,11 +362,13 @@ import { complexFormSchema } from './complex-forms.validations';
         <button type="button" (click)="addContact()" class="btn-secondary mt-2">
           + Add Contact
         </button>
-      </fieldset>
+      </ngx-signal-form-fieldset>
 
       <!-- Preferences Section -->
-      <fieldset
-        class="mb-8 rounded-lg border border-gray-200 p-6 dark:border-gray-700"
+      <ngx-signal-form-fieldset
+        [fieldsetField]="complexForm.preferences"
+        fieldsetId="preferences"
+        class="mb-8"
       >
         <legend
           class="px-2 text-lg font-semibold text-gray-900 dark:text-gray-100"
@@ -383,7 +401,7 @@ import { complexFormSchema } from './complex-forms.validations';
             </span>
           </label>
         </div>
-      </fieldset>
+      </ngx-signal-form-fieldset>
 
       <!-- Form Actions -->
       <div class="form-actions">

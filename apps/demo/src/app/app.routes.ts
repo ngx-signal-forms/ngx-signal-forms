@@ -150,6 +150,14 @@ export const appRoutes: Routes = [
         title: 'Complex Forms - Nested Objects & Arrays',
       },
       {
+        path: 'fieldset',
+        loadComponent: () =>
+          import('./03-form-field-wrapper/fieldset/fieldset.page').then(
+            (m) => m.FieldsetPage,
+          ),
+        title: 'Fieldset - Aggregated Errors for Grouped Fields',
+      },
+      {
         path: 'outline-form-field',
         loadComponent: () =>
           import('./03-form-field-wrapper/outline-form-field/outline-form-field.page').then(

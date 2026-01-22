@@ -24,28 +24,60 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
     });
 
     test('should have multiple form controls', async () => {
-      // Ensure at least one control is rendered before counting
       await expect(page.allFormControls.first()).toBeVisible();
       const controlCount = await page.allFormControls.count();
       expect(controlCount).toBeGreaterThan(0);
     });
 
     test('should count form field wrappers', async () => {
-      // Wait for wrapper components to render to avoid race conditions
       await expect(page.formFields.first()).toBeVisible();
       const count = await page.countFormFields();
       expect(count).toBeGreaterThan(0);
     });
   });
 
+  test.describe('Fieldset Grouping', () => {
+    test('should render all fieldset sections', async () => {
+      await expect(page.personalInfoFieldset).toBeVisible();
+      await expect(page.addressInfoFieldset).toBeVisible();
+      await expect(page.skillsFieldset).toBeVisible();
+      await expect(page.contactsFieldset).toBeVisible();
+      await expect(page.preferencesFieldset).toBeVisible();
+    });
+
+    test('should have exactly 5 fieldsets', async () => {
+      await expect(page.fieldsets.first()).toBeVisible();
+      const count = await page.countFieldsets();
+      expect(count).toBe(5);
+    });
+
+    test('should display aggregated errors in fieldset after submit', async () => {
+      await page.submit();
+
+      // Touch a field to trigger error display
+      await page.allFormControls.first().focus();
+      await page.allFormControls.first().blur();
+
+      // Check that fieldset displays aggregated errors
+      await expect(
+        page.getFieldsetErrorsByLegend(/Personal Information/i).first(),
+      ).toBeVisible({ timeout: 5000 });
+    });
+
+    test('fieldsets should have proper accessibility structure', async () => {
+      // Check fieldset component renders content including a legend
+      const legend = page.personalInfoFieldset.locator('legend');
+      await expect(legend).toBeVisible();
+      await expect(legend).toContainText('Personal Information');
+    });
+  });
+
   test.describe('Auto Error Display', () => {
     test('should automatically display errors with field wrapper', async () => {
-      // Interact with first input to trigger validation
       const firstInput = page.allFormControls.first();
       await firstInput.focus();
       await firstInput.blur();
 
-      // Error should appear automatically
       await expect(page.errorAlerts.first()).toBeVisible();
     });
   });
@@ -58,13 +90,9 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
     test('should handle submission attempt with invalid data', async () => {
       await page.submit();
 
-      // Some environments apply submitted status asynchronously;
-      // give Angular a nudge by blurring the first control after submit.
       await page.allFormControls.first().focus();
       await page.allFormControls.first().blur();
 
-      // Errors should appear after submission. Accept either explicit alerts
-      // or aria-invalid attributes on inputs for resilient assertions.
       await Promise.any([
         (async () => {
           await expect(page.errorAlerts.first()).toBeVisible();
