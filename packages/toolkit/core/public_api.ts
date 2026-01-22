@@ -39,7 +39,7 @@ import { NgxSignalFormDirective } from './directives/ngx-signal-form.directive';
  *
  * @example
  * ```typescript
- * import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+ * import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
  *
  * @Component({
  *   selector: 'ngx-my-form',
@@ -71,7 +71,7 @@ import { NgxSignalFormDirective } from './directives/ngx-signal-form.directive';
  * **Alternative:**
  * You can still import individual items if you need only specific directives/components:
  * ```typescript
- * import { ngxSignalFormDirective, NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/core';
+ * import { ngxSignalFormDirective, NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit';
  * ```
  *
  * @public

@@ -30,7 +30,7 @@ This section demonstrates your **first experience** with the toolkit - seeing im
 
 **Technologies:**
 
-- `@ngx-signal-forms/toolkit/core` - Core toolkit directives
+- `@ngx-signal-forms/toolkit` - Core toolkit directives
 - `ngxSignalFormDirective` - Form context
 - `NgxSignalFormErrorComponent` - Error display
 - `NgxSignalFormAutoAriaDirective` - Auto-ARIA
@@ -86,7 +86,7 @@ This section demonstrates your **first experience** with the toolkit - seeing im
 The toolkit provides a convenient bundle constant for all essential directives:
 
 ```typescript
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 @Component({
   imports: [FormField, NgxSignalFormToolkit],  // Single import
@@ -106,7 +106,7 @@ import {
   ngxSignalFormDirective,
   NgxSignalFormErrorComponent,
   NgxSignalFormAutoAriaDirective,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 
 @Component({
   imports: [FormField, ngxSignalFormDirective, NgxSignalFormErrorComponent],

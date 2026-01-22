@@ -5,7 +5,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormField, form, submit } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 import {
   createInitialFieldStatesModel,

@@ -51,7 +51,7 @@ import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 ```typescript
 import { Field } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({

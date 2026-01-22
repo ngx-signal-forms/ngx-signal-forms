@@ -26,7 +26,7 @@ import { isBlockingError } from './warning-error';
  *
  * @example Disable submit button
  * ```typescript
- * import { canSubmit } from '@ngx-signal-forms/toolkit/core';
+ * import { canSubmit } from '@ngx-signal-forms/toolkit';
  *
  * @Component({
  *   template: `
@@ -96,7 +96,7 @@ export function canSubmit(formTree: FieldTree<unknown>): Signal<boolean> {
  *
  * @example Show loading spinner
  * ```typescript
- * import { isSubmitting } from '@ngx-signal-forms/toolkit/core';
+ * import { isSubmitting } from '@ngx-signal-forms/toolkit';
  *
  * @Component({
  *   template: `
@@ -207,7 +207,7 @@ function createSubmittedStatusTracker(
  *
  * @example Show success message
  * ```typescript
- * import { hasSubmitted } from '@ngx-signal-forms/toolkit/core';
+ * import { hasSubmitted } from '@ngx-signal-forms/toolkit';
  *
  * @Component({
  *   template: `
@@ -334,7 +334,7 @@ export function getBlockingErrors(
  *
  * @example With warnings allowed
  * ```typescript
- * import { canSubmitWithWarnings } from '@ngx-signal-forms/toolkit/core';
+ * import { canSubmitWithWarnings } from '@ngx-signal-forms/toolkit';
  *
  * @Component({
  *   template: `
@@ -394,7 +394,7 @@ export function canSubmitWithWarnings(
  *
  * @example
  * ```typescript
- * import { submitWithWarnings } from '@ngx-signal-forms/toolkit/core';
+ * import { submitWithWarnings } from '@ngx-signal-forms/toolkit';
  *
  * protected async handleSubmit(event: Event): Promise<void> {
  *   event.preventDefault();

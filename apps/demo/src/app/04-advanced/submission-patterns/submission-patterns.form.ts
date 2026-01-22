@@ -6,13 +6,13 @@ import {
   signal,
 } from '@angular/core';
 import { form, FormField, submit } from '@angular/forms/signals';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
+import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import {
   canSubmit,
   isSubmitting,
   NGX_SIGNAL_FORM_CONTEXT,
   NgxSignalFormToolkit,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 import type { SubmissionModel } from './submission-patterns.model';
 import { submissionSchema } from './submission-patterns.validations';

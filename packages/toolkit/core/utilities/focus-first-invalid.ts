@@ -16,7 +16,7 @@ import type { FieldTree } from '@angular/forms/signals';
  *
  * @example Basic usage
  * ```typescript
- * import { focusFirstInvalid } from '@ngx-signal-forms/toolkit/core';
+ * import { focusFirstInvalid } from '@ngx-signal-forms/toolkit';
  *
  * protected save(): void {
  *   if (this.userForm().invalid()) {
@@ -28,7 +28,7 @@ import type { FieldTree } from '@angular/forms/signals';
  * @example With submit() helper
  * ```typescript
  * import { submit } from '@angular/forms/signals';
- * import { focusFirstInvalid } from '@ngx-signal-forms/toolkit/core';
+ * import { focusFirstInvalid } from '@ngx-signal-forms/toolkit';
  *
  * protected readonly onSubmit = submit(this.userForm, async (formData) => {
  *   /// submit() only runs this callback when form is valid

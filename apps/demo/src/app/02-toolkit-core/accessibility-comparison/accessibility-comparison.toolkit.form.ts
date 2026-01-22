@@ -3,7 +3,7 @@ import { form, FormField, submit } from '@angular/forms/signals';
 import {
   focusFirstInvalid,
   NgxSignalFormToolkit,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 import type { AccessibilityFormModel } from './accessibility-comparison.model';
 import { accessibilityValidationSchema } from './accessibility-comparison.validations';

@@ -5,8 +5,8 @@ import {
   signal,
 } from '@angular/core';
 import { FormField, form, submit } from '@angular/forms/signals';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import type { ContactFormModel } from './your-first-form.model';
 import { contactFormSchema } from './your-first-form.validations';
 

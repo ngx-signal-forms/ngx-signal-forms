@@ -8,7 +8,7 @@ import {
   schema,
   submit,
 } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 interface Address {

@@ -38,7 +38,7 @@ import { computeShowErrors as baseComputeShowErrors } from './error-strategies';
  *
  * @example Simple usage (recommended - no submittedStatus needed)
  * ```typescript
- * import { showErrors } from '@ngx-signal-forms/toolkit/core';
+ * import { showErrors } from '@ngx-signal-forms/toolkit';
  *
  * @Component({
  *   template: `

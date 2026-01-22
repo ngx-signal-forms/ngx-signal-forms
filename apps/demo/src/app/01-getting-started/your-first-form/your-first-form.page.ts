@@ -4,7 +4,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
+import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { YOUR_FIRST_FORM_CONTENT } from './your-first-form.content';

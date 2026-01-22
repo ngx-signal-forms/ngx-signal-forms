@@ -36,7 +36,7 @@ export const appConfig: ApplicationConfig = {
 
 ```typescript
 // 2. Use in components (recommended: bundle import)
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 import {
   form,
@@ -161,7 +161,7 @@ The `[ngxSignalForm]` binding provides **form context** for child components via
 #### Example: Minimal Toolkit (Error Components Work!)
 
 ```typescript
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
@@ -200,7 +200,7 @@ If you only need specific directives or components, you can import them individu
 import {
   ngxSignalFormDirective,
   NgxSignalFormErrorComponent
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 
 @Component({
   imports: [FormField, ngxSignalFormDirective, NgxSignalFormErrorComponent],
@@ -225,7 +225,7 @@ import type {
 } from '@ngx-signal-forms/toolkit';
 
 // Core - Bundle import (recommended)
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 // Core - Individual imports (alternative)
 import {
@@ -242,7 +242,7 @@ import {
   injectFormConfig,
   // Reactive utilities
   unwrapValue,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 
 // Form field wrapper with enhanced components
 import {
@@ -260,7 +260,7 @@ import {
 The `NgxSignalFormToolkit` constant provides a convenient way to import all essential directives and components:
 
 ```typescript
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 @Component({
   imports: [FormField, NgxSignalFormToolkit],
@@ -1118,11 +1118,11 @@ Automatically applied to `input[formField]`, `textarea[formField]`, `select[form
 
 ```typescript
 // With bundle (recommended)
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 @Component({ imports: [FormField, NgxSignalFormToolkit] })
 
 // Or individual import
-import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit';
 @Component({ imports: [FormField, NgxSignalFormAutoAriaDirective] })
 ```
 
@@ -1249,7 +1249,7 @@ maxLength(path.bio, 500);
 
 ```typescript
 // Focus first invalid field after failed submission
-import { focusFirstInvalid } from '@ngx-signal-forms/toolkit/core';
+import { focusFirstInvalid } from '@ngx-signal-forms/toolkit';
 
 protected save(): void {
   if (this.userForm().invalid()) {
@@ -1278,7 +1278,7 @@ import {
   canSubmit,
   isSubmitting,
   hasSubmitted,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 
 @Component({
   template: `
@@ -1369,7 +1369,7 @@ import {
   combineShowErrors,
   computeShowErrors,
   shouldShowErrors,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 
 // Simple usage - most common
 protected readonly emailShowErrors = showErrors(
@@ -1395,10 +1395,7 @@ if (shouldShowErrors(this.userForm.email(), 'on-touch', 'submitted')) {
 CIFs provide access to toolkit context in custom directives and components.
 
 ```typescript
-import {
-  injectFormContext,
-  injectFormConfig,
-} from '@ngx-signal-forms/toolkit/core';
+import { injectFormContext, injectFormConfig } from '@ngx-signal-forms/toolkit';
 ```
 
 **injectFormContext()**
@@ -1406,7 +1403,7 @@ import {
 Injects the form context provided by `NgxSignalFormDirective`. Returns `undefined` if not inside a form with the directive.
 
 ```typescript
-import { injectFormContext } from '@ngx-signal-forms/toolkit/core';
+import { injectFormContext } from '@ngx-signal-forms/toolkit';
 
 @Directive({ selector: '[myCustomDirective]' })
 export class MyCustomDirective {
@@ -1428,7 +1425,7 @@ export class MyCustomDirective {
 Injects the global toolkit configuration. Returns normalized config with defaults applied.
 
 ```typescript
-import { injectFormConfig } from '@ngx-signal-forms/toolkit/core';
+import { injectFormConfig } from '@ngx-signal-forms/toolkit';
 
 @Component({
   /* ... */
@@ -1463,8 +1460,8 @@ const context = injectFormContext(this.injector);
 Extracts the current value from a `ReactiveOrStatic<T>` type. Useful for normalizing values that may be signals, functions, or static values.
 
 ```typescript
-import { unwrapValue } from '@ngx-signal-forms/toolkit/core';
-import type { ReactiveOrStatic } from '@ngx-signal-forms/toolkit/core';
+import { unwrapValue } from '@ngx-signal-forms/toolkit';
+import type { ReactiveOrStatic } from '@ngx-signal-forms/toolkit';
 
 function processStrategy(strategy: ReactiveOrStatic<ErrorDisplayStrategy>) {
   // Works with signal, function, or static value

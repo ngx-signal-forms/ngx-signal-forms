@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, model } from '@angular/core';
-import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
+import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 
 export type ErrorDisplayModeConfig = {
   mode: ErrorDisplayStrategy;

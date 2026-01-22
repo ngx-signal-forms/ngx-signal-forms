@@ -12,12 +12,12 @@ import type { FieldTree } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
   ReactiveOrStatic,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 import {
   NGX_SIGNAL_FORM_CONTEXT,
   NGX_SIGNAL_FORMS_CONFIG,
   NgxSignalFormErrorComponent,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 
 /**
  * Counter for generating unique field IDs when fieldName is not provided.

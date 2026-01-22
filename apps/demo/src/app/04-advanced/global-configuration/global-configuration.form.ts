@@ -5,8 +5,8 @@ import {
   signal,
 } from '@angular/core';
 import { FormField, form, submit } from '@angular/forms/signals';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 import type { GlobalConfigModel } from './global-configuration.model';
 import { globalConfigSchema } from './global-configuration.validations';

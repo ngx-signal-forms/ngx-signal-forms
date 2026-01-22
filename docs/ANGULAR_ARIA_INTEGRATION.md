@@ -11,10 +11,7 @@ The `@ngx-signal-forms/toolkit` uses `SignalLike<T>` and `ReactiveOrStatic<T>` t
 All public APIs now use flexible types to accept both static and reactive inputs:
 
 ```typescript
-import type {
-  SignalLike,
-  ReactiveOrStatic,
-} from '@ngx-signal-forms/toolkit/core';
+import type { SignalLike, ReactiveOrStatic } from '@ngx-signal-forms/toolkit';
 ```
 
 ### 2. Updated APIs

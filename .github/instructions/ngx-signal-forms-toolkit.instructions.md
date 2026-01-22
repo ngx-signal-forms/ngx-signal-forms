@@ -31,7 +31,7 @@ The toolkit requires Angular 21.1+ for these features:
 
 ```
 packages/toolkit/
-├── core/                           # @ngx-signal-forms/toolkit/core
+├── core/                           # Secondary entry (re-exported by toolkit)
 │   ├── components/                 # NgxSignalFormErrorComponent
 │   ├── directives/                 # NgxSignalFormDirective, NgxSignalFormAutoAriaDirective
 │   ├── providers/                  # provideNgxSignalFormsConfig, provideErrorMessages
@@ -62,7 +62,7 @@ packages/toolkit/
 Accepts signals, functions, or static values:
 
 ```typescript
-import type { ReactiveOrStatic } from '@ngx-signal-forms/toolkit/core';
+import type { ReactiveOrStatic } from '@ngx-signal-forms/toolkit';
 
 const static: ReactiveOrStatic<ErrorDisplayStrategy> = 'on-touch';
 const sig: ReactiveOrStatic<ErrorDisplayStrategy> = signal('on-touch');
@@ -86,7 +86,7 @@ type ErrorDisplayStrategy =
 - **Warnings** (non-blocking): `kind` starts with `'warn:'`
 
 ```typescript
-import { warningError } from '@ngx-signal-forms/toolkit/core';
+import { warningError } from '@ngx-signal-forms/toolkit';
 
 // Error (blocks submission)
 customError({ kind: 'required', message: 'Email required' });
@@ -105,7 +105,7 @@ warningError('weak-password', 'Consider 12+ characters');
 ### Global Config (Optional)
 
 ```typescript
-import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit/core';
+import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -125,7 +125,7 @@ export const appConfig: ApplicationConfig = {
 ### Bundle Import (Recommended)
 
 ```typescript
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 @Component({
   imports: [FormField, NgxSignalFormToolkit],
@@ -167,7 +167,7 @@ import {
   NgxSignalFormDirective,
   NgxSignalFormAutoAriaDirective,
   NgxSignalFormErrorComponent,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 ```
 
 ## Simplified Architecture
@@ -337,7 +337,7 @@ Reusable form field wrapper with automatic error display.
 Convenience wrapper for computing error visibility. The `submittedStatus` parameter is **optional** for `'on-touch'` strategy.
 
 ```typescript
-import { showErrors } from '@ngx-signal-forms/toolkit/core';
+import { showErrors } from '@ngx-signal-forms/toolkit';
 
 // ✅ Simplified: Works without submittedStatus for 'on-touch'
 protected readonly shouldShowErrors = showErrors(
@@ -358,7 +358,7 @@ protected readonly shouldShowErrors = showErrors(
 ### warningError()
 
 ```typescript
-import { warningError } from '@ngx-signal-forms/toolkit/core';
+import { warningError } from '@ngx-signal-forms/toolkit';
 
 validate(path.password, (ctx) => {
   if (ctx.value().length < 12) {
@@ -371,7 +371,7 @@ validate(path.password, (ctx) => {
 ### combineShowErrors()
 
 ```typescript
-import { combineShowErrors, showErrors } from '@ngx-signal-forms/toolkit/core';
+import { combineShowErrors, showErrors } from '@ngx-signal-forms/toolkit';
 
 // ✅ Simplified: No submittedStatus needed for 'on-touch'
 protected readonly showAnyFormErrors = combineShowErrors([
@@ -383,10 +383,7 @@ protected readonly showAnyFormErrors = combineShowErrors([
 ### isWarningError() / isBlockingError()
 
 ```typescript
-import {
-  isWarningError,
-  isBlockingError,
-} from '@ngx-signal-forms/toolkit/core';
+import { isWarningError, isBlockingError } from '@ngx-signal-forms/toolkit';
 
 const allErrors = form.email().errors();
 const warnings = allErrors.filter(isWarningError);
@@ -398,7 +395,7 @@ const blockingErrors = allErrors.filter(isBlockingError);
 Focus the first invalid field after form submission for better UX and accessibility.
 
 ```typescript
-import { focusFirstInvalid } from '@ngx-signal-forms/toolkit/core';
+import { focusFirstInvalid } from '@ngx-signal-forms/toolkit';
 
 protected save(): void {
   if (this.userForm().invalid()) {
@@ -461,7 +458,7 @@ import {
   canSubmit,
   isSubmitting,
   hasSubmitted,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 
 @Component({
   template: `
@@ -511,7 +508,7 @@ Optional error message registry for customizing validation error display.
 3. **Default fallback** - Toolkit's built-in messages
 
 ```typescript
-import { provideErrorMessages } from '@ngx-signal-forms/toolkit/core';
+import { provideErrorMessages } from '@ngx-signal-forms/toolkit';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -529,7 +526,7 @@ export const appConfig: ApplicationConfig = {
 
 ```typescript
 import { LOCALE_ID } from '@angular/core';
-import { provideErrorMessages } from '@ngx-signal-forms/toolkit/core';
+import { provideErrorMessages } from '@ngx-signal-forms/toolkit';
 
 provideErrorMessages(() => {
   const locale = inject(LOCALE_ID);
@@ -546,7 +543,7 @@ provideErrorMessages(() => {
 Lower-level utilities for computing error visibility. Most users should use `showErrors()` instead.
 
 ```typescript
-import { computeShowErrors, shouldShowErrors } from '@ngx-signal-forms/toolkit/core';
+import { computeShowErrors, shouldShowErrors } from '@ngx-signal-forms/toolkit';
 
 // Reactive version - returns Signal<boolean>
 // Accepts ReactiveOrStatic<T> for all parameters (signals, functions, or static values)
@@ -572,7 +569,7 @@ CIFs provide access to toolkit context in custom directives and components.
 Injects the form context provided by `NgxSignalFormDirective`. Returns `undefined` if not inside a form with the directive.
 
 ```typescript
-import { injectFormContext } from '@ngx-signal-forms/toolkit/core';
+import { injectFormContext } from '@ngx-signal-forms/toolkit';
 
 @Directive({ selector: '[myCustomDirective]' })
 export class MyCustomDirective {
@@ -594,7 +591,7 @@ export class MyCustomDirective {
 Injects the global toolkit configuration. Returns normalized config with defaults applied.
 
 ```typescript
-import { injectFormConfig } from '@ngx-signal-forms/toolkit/core';
+import { injectFormConfig } from '@ngx-signal-forms/toolkit';
 
 @Component({
   /* ... */
@@ -627,8 +624,8 @@ const context = injectFormContext(this.injector);
 Extracts the current value from a `ReactiveOrStatic<T>` type. Useful for normalizing values that may be signals, functions, or static values.
 
 ```typescript
-import { unwrapValue } from '@ngx-signal-forms/toolkit/core';
-import type { ReactiveOrStatic } from '@ngx-signal-forms/toolkit/core';
+import { unwrapValue } from '@ngx-signal-forms/toolkit';
+import type { ReactiveOrStatic } from '@ngx-signal-forms/toolkit';
 
 function processStrategy(strategy: ReactiveOrStatic<ErrorDisplayStrategy>) {
   // Works with signal, function, or static value

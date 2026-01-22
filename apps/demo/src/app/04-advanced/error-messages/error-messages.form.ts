@@ -6,11 +6,11 @@ import {
   signal,
 } from '@angular/core';
 import { FormField, form, submit } from '@angular/forms/signals';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
+import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import {
   NgxSignalFormToolkit,
   provideErrorMessages,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 import type { ErrorMessagesModel } from './error-messages.model';
 import { errorMessagesSchema } from './error-messages.validations';

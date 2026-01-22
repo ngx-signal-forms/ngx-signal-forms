@@ -63,7 +63,7 @@ Allow per-field error strategy override for different UX requirements.
 Utility to focus first invalid field after failed submission.
 
 ```typescript
-import { focusFirstInvalid } from '@ngx-signal-forms/toolkit/core';
+import { focusFirstInvalid } from '@ngx-signal-forms/toolkit';
 
 protected save(): void {
   if (this.form().invalid()) {
@@ -96,7 +96,7 @@ protected save(): void {
 Computed signals for common submission states.
 
 ```typescript
-import { canSubmit, isSubmitting } from '@ngx-signal-forms/toolkit/core';
+import { canSubmit, isSubmitting } from '@ngx-signal-forms/toolkit';
 
 protected readonly canSubmit = canSubmit(this.form);
 protected readonly isSubmitting = isSubmitting(this.form);
@@ -145,7 +145,10 @@ maxLength(path.bio, 500);
 
 ```html
 <!-- Must repeat maxLength -->
-<ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+<ngx-signal-form-field-character-count
+  [formField]="form.bio"
+  [maxLength]="500"
+/>
 ```
 
 **After:**
@@ -155,7 +158,10 @@ maxLength(path.bio, 500);
 <ngx-signal-form-field-character-count [formField]="form.bio" />
 
 <!-- Can still override if needed -->
-<ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="300" />
+<ngx-signal-form-field-character-count
+  [formField]="form.bio"
+  [maxLength]="300"
+/>
 ```
 
 **Implementation:**
@@ -388,7 +394,10 @@ Material Design filled and underline-only layouts.
 
 ```html
 <ngx-signal-form-field [formField]="form.email" filled>
-  <ngx-signal-form-field [formField]="form.email" underline></ngx-signal-form-field
+  <ngx-signal-form-field
+    [formField]="form.email"
+    underline
+  ></ngx-signal-form-field
 ></ngx-signal-form-field>
 ```
 

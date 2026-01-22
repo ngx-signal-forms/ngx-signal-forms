@@ -10,7 +10,7 @@ import {
   NgxSignalFormToolkit,
   submitWithWarnings,
   type ErrorDisplayStrategy,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 import type { PasswordFormModel } from './warning-support.model';
 import { createPasswordForm } from './warning-support.validations';

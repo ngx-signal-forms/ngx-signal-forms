@@ -125,7 +125,7 @@ class MyComponent {
 
 ```typescript
 // Level 1: Auto-ARIA + Error Component (20% toolkit)
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 @Component({
   imports: [FormField, NgxSignalFormToolkit],
@@ -215,7 +215,7 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
 **Issue:** Toolkit directives not working
 
 - Import `NgxSignalFormToolkit` bundle (recommended)
-- Or import individual directives from `@ngx-signal-forms/toolkit/core`
+- Or import individual directives from `@ngx-signal-forms/toolkit`
 - Verify toolkit is built: `pnpm nx build toolkit`
 
 ### Accessibility Issues

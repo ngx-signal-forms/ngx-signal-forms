@@ -44,8 +44,7 @@ packages/toolkit/
 
 **Entry Points:**
 
-- `@ngx-signal-forms/toolkit` - Providers and shared types
-- `@ngx-signal-forms/toolkit/core` - Core directives, utilities, components
+- `@ngx-signal-forms/toolkit` - Providers, directives, utilities, components
 - `@ngx-signal-forms/toolkit/form-field` - Form field wrapper (optional)
 
 ## Installation
@@ -70,7 +69,7 @@ import {
   NgxSignalFormAutoAriaDirective,
   NgxSignalFormDirective,
   NgxSignalFormErrorComponent,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 ```
 
 ### Secondary Entry (Form Field - Optional)

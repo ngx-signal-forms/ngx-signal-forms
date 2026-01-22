@@ -8,7 +8,7 @@ import { FormField, form, submit } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 import { CardComponent } from '../../ui';
 import {

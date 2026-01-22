@@ -13,7 +13,7 @@ import {
   required,
   submit,
 } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import {
   NgxFloatingLabelDirective,
   NgxSignalFormFieldComponent,

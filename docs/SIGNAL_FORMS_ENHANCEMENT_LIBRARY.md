@@ -10,8 +10,7 @@
 
 **Package Structure:**
 
-- `@ngx-signal-forms/toolkit` - Providers and shared types
-- `@ngx-signal-forms/toolkit/core` - Core directives, utilities, components
+- `@ngx-signal-forms/toolkit` - Providers, directives, utilities, components
 - `@ngx-signal-forms/toolkit/form-field` - Optional form-field wrapper
 
 **Why This Structure:**
@@ -22,8 +21,7 @@
 
 **Package Structure:**
 
-- `@ngx-signal-forms/toolkit` - Providers and shared types
-- `@ngx-signal-forms/toolkit/core` - Core directives, utilities, components
+- `@ngx-signal-forms/toolkit` - Providers, directives, utilities, components
 - `@ngx-signal-forms/toolkit/form-field` - Optional form-field wrapper
 
 **Why This Structure:**
@@ -63,7 +61,6 @@ ngx-signal-forms/                    # Repository root
 @angular/forms/signals (peer) ← Signal Forms API (unchanged)
         ↓
 @ngx-signal-forms/toolkit (main package)
-├── /core (directives, utilities, components)
 └── /form-field (secondary entry - optional)
 ```
 
@@ -418,7 +415,7 @@ import {
   Control,
   submit,
 } from '@angular/forms/signals';
-import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit';
 
 interface ContactModel {
   email: string;
@@ -477,7 +474,7 @@ import {
 import {
   NgxSignalFormAutoAriaDirective,
   NgxSignalFormErrorComponent,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 
 @Component({
   selector: 'ngx-contact',
@@ -525,7 +522,7 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
-import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit';
 
 @Component({
   selector: 'ngx-contact',
@@ -580,7 +577,7 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
 import {
   NgxSignalFormToolkit, // Bundle: all directives + components
   type ErrorDisplayStrategy,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 
 interface ContactModel {
   email: string;
@@ -1477,8 +1474,7 @@ test('should have no accessibility violations', async ({ page }) => {
 
 **Package Structure:**
 
-- `@ngx-signal-forms/toolkit` - Providers and shared types
-- `@ngx-signal-forms/toolkit/core` - Core directives, utilities, components
+- `@ngx-signal-forms/toolkit` - Providers, directives, utilities, components
 - `@ngx-signal-forms/toolkit/form-field` - Optional form-field wrapper
 
 **Why This Structure:**
@@ -1599,7 +1595,7 @@ import {
   NgxSignalFormAutoAriaDirective,
   NgxSignalFormDirective,
   NgxSignalFormErrorComponent,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 
 // Form field wrapper (optional)
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';

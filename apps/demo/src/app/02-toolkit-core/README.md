@@ -173,7 +173,7 @@ const showErrors = computeShowErrors(
 #### Creating Warnings
 
 ```typescript
-import { warningError } from '@ngx-signal-forms/toolkit/core';
+import { warningError } from '@ngx-signal-forms/toolkit';
 
 validate(path.password, (ctx) => {
   const value = ctx.value();

@@ -105,7 +105,7 @@ import {
   FormField,
   submit,
 } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
@@ -259,7 +259,7 @@ provideSignalFormsConfig({
 Automatically focus the first invalid field after failed submission:
 
 ```typescript
-import { focusFirstInvalid } from '@ngx-signal-forms/toolkit/core';
+import { focusFirstInvalid } from '@ngx-signal-forms/toolkit';
 
 protected save(): void {
   if (this.userForm().invalid()) {
@@ -275,7 +275,7 @@ protected save(): void {
 Pre-computed signals for common submission states:
 
 ```typescript
-import { canSubmit, isSubmitting, hasSubmitted } from '@ngx-signal-forms/toolkit/core';
+import { canSubmit, isSubmitting, hasSubmitted } from '@ngx-signal-forms/toolkit';
 
 protected readonly canSubmit = canSubmit(this.userForm);
 protected readonly isSubmitting = isSubmitting(this.userForm);
@@ -316,7 +316,7 @@ provideErrorMessages({
 Show warnings that don't prevent form submission:
 
 ```typescript
-import { warningError } from '@ngx-signal-forms/toolkit/core';
+import { warningError } from '@ngx-signal-forms/toolkit';
 
 validate(path.password, (ctx) => {
   if (ctx.value().length < 12) {
@@ -337,7 +337,7 @@ validate(path.password, (ctx) => {
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 
 // Core directives, components, utilities
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 // Form field wrapper components
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';

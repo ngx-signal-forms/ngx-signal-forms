@@ -10,7 +10,7 @@ import type { FieldState } from '@angular/forms/signals';
 import {
   NGX_SIGNAL_FORM_CONTEXT,
   type ErrorDisplayStrategy,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 import { BadgeComponent, BadgeIconDirective } from '../badge';
 
 /**
