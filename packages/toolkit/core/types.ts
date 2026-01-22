@@ -3,6 +3,19 @@ import type { ValidationError } from '@angular/forms/signals';
 import type { DeepPartial } from 'ts-essentials';
 
 /**
+ * Submission status of a form.
+ *
+ * Note: Angular Signal Forms does not export this type, so we define it locally.
+ * This matches the expected behavior for tracking form submission state.
+ *
+ * @remarks
+ * - `'unsubmitted'` - Form has not been submitted yet
+ * - `'submitting'` - Form is currently being submitted
+ * - `'submitted'` - Form has been submitted (regardless of success/failure)
+ */
+export type SubmittedStatus = 'unsubmitted' | 'submitting' | 'submitted';
+
+/**
  * A signal-like value that can be called to get the current value.
  * Represents either an Angular Signal or a zero-argument function.
  *

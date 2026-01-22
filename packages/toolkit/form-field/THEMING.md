@@ -23,6 +23,8 @@ Use this table to quickly find the right property for your theming needs:
 | **States**                 |                                                     |                                                                |                             |                 |
 | Focus box shadow           | `--ngx-form-field-outline-focus-box-shadow`         | `0 0 0 2px rgba(0,95,204,0.25)`                                | Focus glow effect           | ✅ 4.5:1        |
 | Invalid box shadow         | `--ngx-form-field-outline-invalid-focus-box-shadow` | `0 0 0 2px rgba(220,38,38,0.25)`                               | Error state glow            | ✅ 4.5:1        |
+| Warning border color       | `--ngx-form-field-warning-color`                    | `#f59e0b`                                                      | Warning state border        | ✅ 6.98:1       |
+| Warning box shadow         | `--ngx-form-field-warning-box-shadow`               | `0 0 0 2px rgba(245,158,11,0.25)`                              | Warning state glow          | ✅ 4.5:1        |
 | Disabled background        | `--ngx-form-field-outline-disabled-bg`              | `#f3f4f6`                                                      | Disabled field background   | —               |
 | Disabled opacity           | `--ngx-form-field-outline-disabled-opacity`         | `0.6`                                                          | Disabled field transparency | —               |
 | **Layout & Spacing**       |                                                     |                                                                |                             |                 |
@@ -52,7 +54,7 @@ Use this table to quickly find the right property for your theming needs:
 
 **Dark Mode** → Override: `bg`, `border`, `label-color`, `input-color`, `placeholder-color`, `focus-border-color`, `focus-box-shadow`, `disabled-bg`, `error-color`, `warning-color`
 
-**Brand Colors** → Override: `focus-border-color`, `focus-box-shadow`, `invalid-border-color`, `required-color`, `error-color`
+**Brand Colors** → Override: `focus-border-color`, `focus-box-shadow`, `invalid-border-color`, `warning-color`, `required-color`, `error-color`
 
 **Size Scaling** → Override: `padding`, `min-height`, `label-font-size`, `input-font-size`, `gap`, `error-font-size`, `error-padding-horizontal`
 
@@ -102,6 +104,7 @@ Override these for consistent brand theming across all field states:
 /* Brand/State Colors */
 --ngx-form-field-color-primary: #3b82f6; /* Focus states, brand accent */
 --ngx-form-field-color-error: #ef4444; /* Validation errors, required markers */
+--ngx-form-field-color-warning: #f59e0b; /* Non-blocking warnings */
 --ngx-form-field-color-text: #1f2937; /* Labels, input text */
 --ngx-form-field-color-text-muted: #6b7280; /* Placeholders, hints */
 --ngx-form-field-color-surface: #ffffff; /* Input backgrounds */
@@ -134,6 +137,7 @@ Override these when you need precise control over individual aspects:
 /* States */
 --ngx-form-field-focus-color: /* derives from --color-primary */ --ngx-form-field-invalid-color:
   /* derives from --color-error */
+  --ngx-form-field-warning-color: /* derives from --color-warning */
   --ngx-form-field-disabled-bg: /* derives from --color-disabled */
   --ngx-form-field-disabled-opacity: 0.6;
 

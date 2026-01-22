@@ -117,11 +117,18 @@
 // Override these for brand theming.
 
 :host {
+  // Warning color token (amber/orange for non-blocking issues)
+  --_field-clr-warning: #f59e0b; // Amber - warning states
+
   --_color-primary: var(
     --ngx-form-field-color-primary,
     var(--_field-clr-primary)
   );
   --_color-error: var(--ngx-form-field-color-error, var(--_field-clr-danger));
+  --_color-warning: var(
+    --ngx-form-field-color-warning,
+    var(--_field-clr-warning)
+  );
   --_color-text: var(--ngx-form-field-color-text, var(--_field-clr-text));
   --_color-text-muted: var(
     --ngx-form-field-color-text-muted,
@@ -136,6 +143,18 @@
     --ngx-form-field-color-disabled,
     var(--_field-clr-disabled)
   );
+}
+
+// Dark mode warning color override
+@media (prefers-color-scheme: dark) {
+  :host {
+    --_field-clr-warning: #fcd34d; // Lighter amber for dark bg
+  }
+}
+
+// Light mode override for warning
+:root:not(.dark) :host {
+  --_field-clr-warning: #f59e0b; // Amber - warning states
 }
 
 // ============================================================================
@@ -181,6 +200,11 @@
     0 0 0 2px color-mix(in srgb, var(--_focus-color) 25%, transparent)
   );
   --_invalid-color: var(--ngx-form-field-invalid-color, var(--_color-error));
+  --_warning-color: var(--ngx-form-field-warning-color, var(--_color-warning));
+  --_warning-box-shadow: var(
+    --ngx-form-field-warning-box-shadow,
+    0 0 0 2px color-mix(in srgb, var(--_warning-color) 25%, transparent)
+  );
   --_disabled-bg: var(--ngx-form-field-disabled-bg, var(--_color-disabled));
   --_disabled-opacity: var(
     --ngx-form-field-disabled-opacity,
@@ -256,6 +280,16 @@
     background-color: var(--_disabled-bg);
     opacity: var(--_disabled-opacity);
     cursor: not-allowed;
+  }
+}
+
+// Warning state styling (applied via host class when field has warnings but no errors)
+:host(.ngx-signal-form-field--warning) .ngx-signal-form-field__content {
+  border-color: var(--_warning-color);
+
+  &:focus-within {
+    border-color: var(--_warning-color);
+    box-shadow: var(--_warning-box-shadow);
   }
 }
 

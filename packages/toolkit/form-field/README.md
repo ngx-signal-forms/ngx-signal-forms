@@ -194,6 +194,31 @@ Add icons, text, or interactive elements before or after the input using `prefix
 - Suffix buttons should use `type="button"` to prevent form submission
 - Prefix/suffix elements should not be focusable unless interactive
 
+#### Warning Support
+
+The form field component supports non-blocking warnings in addition to blocking errors. Warnings are displayed when:
+
+1. The field has warnings (validation errors with `kind` starting with `'warn:'`)
+2. The field has NO blocking errors (errors take visual priority)
+
+**Warning convention:** Use the `'warn:'` prefix on the error `kind` to indicate a warning:
+
+```typescript
+// Error (blocks submission)
+{ kind: 'required', message: 'Email is required' }
+
+// Warning (does not block submission)
+{ kind: 'warn:weak-password', message: 'Consider a stronger password' }
+```
+
+**Visual behavior:**
+
+- **Errors present:** Error styling (red border), warnings hidden
+- **Only warnings:** Warning styling (amber border), warnings shown
+- **Neither:** Default styling
+
+**Note:** If you don't want warnings, simply don't define validators that produce them. The validator controls what feedback is displayed.
+
 #### CSS Custom Properties
 
 **Standard layout** (without `outline` directive):
@@ -228,8 +253,10 @@ Add icons, text, or interactive elements before or after the input using `prefix
   --ngx-form-field-input-focus-border-color: #3b82f6;
   --ngx-form-field-input-focus-box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   --ngx-form-field-input-invalid-border-color: #ef4444;
+  --ngx-form-field-input-warning-border-color: #f59e0b;
+  --ngx-form-field-input-warning-box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
   --ngx-form-field-input-disabled-bg: #f9fafb;
-    --ngx-form-field-input-disabled-opacity: 0.6;
+  --ngx-form-field-input-disabled-opacity: 0.6;
 
   /* Prefix/Suffix */
   --ngx-form-field-prefix-gap: 0.5rem;

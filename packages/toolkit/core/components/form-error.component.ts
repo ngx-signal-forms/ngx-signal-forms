@@ -9,13 +9,13 @@ import {
 import type {
   FieldState,
   FieldTree,
-  SubmittedStatus,
   ValidationError,
 } from '@angular/forms/signals';
 import { NGX_ERROR_MESSAGES } from '../providers/error-messages.provider';
 import type {
   ErrorDisplayStrategy,
   ReactiveOrStatic,
+  SubmittedStatus,
   ValidationErrorWithParams,
 } from '../types';
 import {

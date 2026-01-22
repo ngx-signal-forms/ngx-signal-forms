@@ -24,10 +24,12 @@ export {
 export * from './utilities/assert-injector';
 export { shouldShowErrors } from './utilities/error-strategies';
 export * from './utilities/field-resolution';
+export * from './utilities/focus-first-invalid';
 export * from './utilities/inject-field-control';
 export * from './utilities/inject-form-config';
 export * from './utilities/inject-form-context';
 export { combineShowErrors, showErrors } from './utilities/show-errors';
+export * from './utilities/submission-helpers';
 export * from './utilities/warning-error';
 
 // Components

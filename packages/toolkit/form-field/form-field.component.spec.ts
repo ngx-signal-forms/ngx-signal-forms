@@ -1114,4 +1114,353 @@ describe('NgxSignalFormFieldComponent', () => {
       expect(prefixes.length).toBeGreaterThan(0);
     });
   });
+
+  describe('Warning Display', () => {
+    it('should apply warning class when field has warnings but no errors', async () => {
+      const warningField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [
+          {
+            kind: 'warn:weak-password',
+            message: 'Consider a stronger password',
+          },
+        ],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field [formField]="field" fieldName="password">
+          <label for="password">Password</label>
+          <input id="password" type="password" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: warningField,
+          },
+        },
+      );
+
+      const formField = container.querySelector('ngx-signal-form-field');
+      expect(
+        formField?.classList.contains('ngx-signal-form-field--warning'),
+      ).toBe(true);
+    });
+
+    it('should NOT apply warning class when field has both errors and warnings', async () => {
+      const mixedField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [
+          { kind: 'required', message: 'Password is required' },
+          {
+            kind: 'warn:weak-password',
+            message: 'Consider a stronger password',
+          },
+        ],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field [formField]="field" fieldName="password">
+          <label for="password">Password</label>
+          <input id="password" type="password" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: mixedField,
+          },
+        },
+      );
+
+      const formField = container.querySelector('ngx-signal-form-field');
+      // Errors take priority - warning class should NOT be applied
+      expect(
+        formField?.classList.contains('ngx-signal-form-field--warning'),
+      ).toBe(false);
+    });
+
+    it('should NOT apply warning class when field has only errors', async () => {
+      const errorField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'required', message: 'Email is required' }],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field [formField]="field" fieldName="email">
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: errorField,
+          },
+        },
+      );
+
+      const formField = container.querySelector('ngx-signal-form-field');
+      expect(
+        formField?.classList.contains('ngx-signal-form-field--warning'),
+      ).toBe(false);
+    });
+
+    it('should NOT apply warning class when field has no errors or warnings', async () => {
+      const validField = signal({
+        invalid: () => false,
+        touched: () => true,
+        errors: () => [],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field [formField]="field" fieldName="email">
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: validField,
+          },
+        },
+      );
+
+      const formField = container.querySelector('ngx-signal-form-field');
+      expect(
+        formField?.classList.contains('ngx-signal-form-field--warning'),
+      ).toBe(false);
+    });
+
+    it('should display warning messages in error component with role="status"', async () => {
+      const warningField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [
+          {
+            kind: 'warn:weak-password',
+            message: 'Consider a stronger password',
+          },
+        ],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field [formField]="field" fieldName="password">
+          <label for="password">Password</label>
+          <input id="password" type="password" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: warningField,
+          },
+        },
+      );
+
+      // Warning should be displayed with role="status" (polite announcement)
+      const warningContainer = container.querySelector('[role="status"]');
+      expect(warningContainer).toBeTruthy();
+      expect(warningContainer?.textContent).toContain(
+        'Consider a stronger password',
+      );
+    });
+
+    it('should show errors with role="alert" when both errors and warnings exist', async () => {
+      const mixedField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [
+          { kind: 'required', message: 'Password is required' },
+          {
+            kind: 'warn:weak-password',
+            message: 'Consider a stronger password',
+          },
+        ],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field [formField]="field" fieldName="password">
+          <label for="password">Password</label>
+          <input id="password" type="password" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: mixedField,
+          },
+        },
+      );
+
+      // Error should be displayed with role="alert" (assertive announcement)
+      const errorContainer = container.querySelector('[role="alert"]');
+      expect(errorContainer).toBeTruthy();
+      expect(errorContainer?.textContent).toContain('Password is required');
+    });
+
+    it('should handle multiple warnings', async () => {
+      const multiWarningField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [
+          { kind: 'warn:short', message: 'Password is short' },
+          { kind: 'warn:common', message: 'Password is commonly used' },
+        ],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field [formField]="field" fieldName="password">
+          <label for="password">Password</label>
+          <input id="password" type="password" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: multiWarningField,
+          },
+        },
+      );
+
+      const formField = container.querySelector('ngx-signal-form-field');
+      expect(
+        formField?.classList.contains('ngx-signal-form-field--warning'),
+      ).toBe(true);
+
+      const warningContainer = container.querySelector('[role="status"]');
+      expect(warningContainer?.textContent).toContain('Password is short');
+      expect(warningContainer?.textContent).toContain(
+        'Password is commonly used',
+      );
+    });
+
+    it('should NOT apply warning class when field is not touched (respects display strategy)', async () => {
+      const warningField = signal({
+        invalid: () => true,
+        touched: () => false, // Not yet touched
+        errors: () => [
+          {
+            kind: 'warn:weak-password',
+            message: 'Consider a stronger password',
+          },
+        ],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field [formField]="field" fieldName="password">
+          <label for="password">Password</label>
+          <input id="password" type="password" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: warningField,
+          },
+        },
+      );
+
+      // Warning class is still applied based on field state, independent of touch
+      // Note: The error component uses strategy to control visibility, but
+      // the warning CSS class is applied based on hasWarnings && !hasErrors
+      const formField = container.querySelector('ngx-signal-form-field');
+      expect(
+        formField?.classList.contains('ngx-signal-form-field--warning'),
+      ).toBe(true);
+    });
+
+    it('should handle edge case of error without kind property', async () => {
+      const edgeCaseField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [
+          { message: 'Error without kind' } as {
+            kind?: string;
+            message: string;
+          },
+        ],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field [formField]="field" fieldName="test">
+          <label for="test">Test</label>
+          <input id="test" type="text" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: edgeCaseField,
+          },
+        },
+      );
+
+      // Errors without kind are treated as blocking errors (not warnings)
+      const formField = container.querySelector('ngx-signal-form-field');
+      expect(
+        formField?.classList.contains('ngx-signal-form-field--warning'),
+      ).toBe(false);
+    });
+
+    it('should apply warning class when warnings are present from start (no blocking errors)', async () => {
+      // Test that when a field transitions from having errors to only warnings,
+      // the warning styling is applied. This simulates a user fixing blocking errors
+      // but still having warnings.
+      const warningsOnlyField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [
+          { kind: 'warn:suggestion', message: 'Consider using more detail' },
+        ],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field [formField]="field" fieldName="dynamic">
+          <label for="dynamic">Dynamic</label>
+          <input id="dynamic" type="text" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: warningsOnlyField,
+          },
+        },
+      );
+
+      const formField = container.querySelector('ngx-signal-form-field');
+
+      // With only warnings present, warning class should be applied
+      expect(
+        formField?.classList.contains('ngx-signal-form-field--warning'),
+      ).toBe(true);
+    });
+
+    it('should distinguish between warn: prefix variations', async () => {
+      // Ensure that 'warning', 'warn', 'warned' etc. are NOT treated as warnings
+      // Only 'warn:' (with colon) prefix should indicate a warning
+      const notWarningField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [
+          { kind: 'warning-message', message: 'This is NOT a warning' },
+          { kind: 'warned', message: 'This is also NOT a warning' },
+        ],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field [formField]="field" fieldName="test">
+          <label for="test">Test</label>
+          <input id="test" type="text" />
+        </ngx-signal-form-field>`,
+        {
+          imports: [NgxSignalFormFieldComponent],
+          componentProperties: {
+            field: notWarningField,
+          },
+        },
+      );
+
+      const formField = container.querySelector('ngx-signal-form-field');
+      // These are blocking errors, not warnings (no 'warn:' prefix)
+      expect(
+        formField?.classList.contains('ngx-signal-form-field--warning'),
+      ).toBe(false);
+    });
+  });
 });

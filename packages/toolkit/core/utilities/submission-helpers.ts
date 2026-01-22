@@ -5,11 +5,8 @@ import {
   signal,
   type Signal,
 } from '@angular/core';
-import type {
-  FieldTree,
-  SubmittedStatus,
-  ValidationError,
-} from '@angular/forms/signals';
+import type { FieldTree, ValidationError } from '@angular/forms/signals';
+import type { SubmittedStatus } from '../types';
 import { isBlockingError } from './warning-error';
 
 /**

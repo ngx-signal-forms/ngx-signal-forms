@@ -164,6 +164,37 @@ test.describe('Warning Support Demo', () => {
       const statuses = page.page.locator('[role="status"]');
       await expect(statuses.first()).toBeVisible();
     });
+
+    test('should apply warning CSS class when only warnings exist (no blocking errors)', async () => {
+      // Fill username with short value to trigger warning only (no blocking error)
+      await page.usernameInput.fill('user'); // 4 chars - valid but triggers warning
+      await page.usernameInput.blur();
+
+      // Password field (field with only warning, no error)
+      const usernameFormField = page.page.locator(
+        'ngx-signal-form-field:has(input#username)',
+      );
+
+      // Should have warning class applied
+      await expect(usernameFormField).toHaveClass(
+        /ngx-signal-form-field--warning/,
+      );
+    });
+
+    test('should NOT apply warning CSS class when blocking errors exist', async () => {
+      // Fill with invalid values that trigger blocking errors
+      await page.usernameInput.fill('ab'); // 2 chars - triggers blocking minLength error
+      await page.usernameInput.blur();
+
+      const usernameFormField = page.page.locator(
+        'ngx-signal-form-field:has(input#username)',
+      );
+
+      // Should NOT have warning class - errors take priority
+      await expect(usernameFormField).not.toHaveClass(
+        /ngx-signal-form-field--warning/,
+      );
+    });
   });
 
   test.describe('Form Validation', () => {

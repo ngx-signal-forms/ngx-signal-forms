@@ -1,6 +1,10 @@
 import { computed, type Signal } from '@angular/core';
-import type { FieldState, SubmittedStatus } from '@angular/forms/signals';
-import type { ErrorDisplayStrategy, ReactiveOrStatic } from '../types';
+import type { FieldState } from '@angular/forms/signals';
+import type {
+  ErrorDisplayStrategy,
+  ReactiveOrStatic,
+  SubmittedStatus,
+} from '../types';
 import { computeShowErrors as baseComputeShowErrors } from './error-strategies';
 
 /**

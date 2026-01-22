@@ -7,9 +7,13 @@ import {
   signal,
   type Signal,
 } from '@angular/core';
-import type { FieldTree, SubmittedStatus } from '@angular/forms/signals';
+import type { FieldTree } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
-import type { ErrorDisplayStrategy, ReactiveOrStatic } from '../types';
+import type {
+  ErrorDisplayStrategy,
+  ReactiveOrStatic,
+  SubmittedStatus,
+} from '../types';
 
 /**
  * Form context provided to child directives and components.

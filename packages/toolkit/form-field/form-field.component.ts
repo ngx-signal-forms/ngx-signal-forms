@@ -8,7 +8,7 @@ import {
   inject,
   input,
 } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
+import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
   ReactiveOrStatic,
@@ -144,6 +144,7 @@ function generateUniqueFieldId(): string {
   styleUrl: './form-field.component.scss',
   host: {
     '[attr.outline]': 'isOutline() ? "" : null',
+    '[class.ngx-signal-form-field--warning]': 'showWarningState()',
   },
   template: `
     <!-- Label slot (outside bordered container for traditional layout) -->
@@ -370,6 +371,61 @@ export class NgxSignalFormFieldComponent<TValue = unknown> {
    */
   protected readonly submittedStatus = computed(() => {
     return this.#formContext?.submittedStatus?.() ?? 'unsubmitted';
+  });
+
+  /**
+   * All validation messages from the field.
+   * Used to detect errors vs warnings.
+   */
+  readonly #allMessages = computed(() => {
+    const fieldTree = this.formField();
+    const fieldState = fieldTree();
+
+    if (!fieldState || typeof fieldState !== 'object') {
+      return [];
+    }
+
+    const errorsGetter = (
+      fieldState as unknown as {
+        errors?: () => ValidationError[];
+      }
+    ).errors;
+
+    if (typeof errorsGetter === 'function') {
+      return errorsGetter() || [];
+    }
+
+    return [];
+  });
+
+  /**
+   * Whether field has blocking errors (kind does NOT start with 'warn:').
+   * Used to determine if warning styling should be applied.
+   */
+  protected readonly hasErrors = computed(() => {
+    return this.#allMessages().some(
+      (msg) => msg.kind && !msg.kind.startsWith('warn:'),
+    );
+  });
+
+  /**
+   * Whether field has warnings (kind starts with 'warn:').
+   * Warnings are displayed only when there are no errors.
+   */
+  protected readonly hasWarnings = computed(() => {
+    return this.#allMessages().some(
+      (msg) => msg.kind && msg.kind.startsWith('warn:'),
+    );
+  });
+
+  /**
+   * Whether to apply warning styling to the form field container.
+   * Warning styling is shown only when:
+   * 1. Field has warnings
+   * 2. Field has NO errors (errors take visual priority)
+   */
+  protected readonly showWarningState = computed(() => {
+    return this.hasWarnings() && !this.hasErrors();
   });
 
   constructor() {
