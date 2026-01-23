@@ -1,6 +1,8 @@
 # @ngx-signal-forms/toolkit
 
-> **Enhancement toolkit for Angular Signal Forms with automatic accessibility and progressive error disclosure**
+> 🚧 **Under Construction / Work in Progress**
+>
+> This library is currently in active development. APIs may change before the first stable release.
 
 [![Github Stars](https://badgen.net/github/stars/nngx-signal-forms/nngx-signal-forms?color=yellow&label=Github%20🌟)](https://github.com/nngx-signal-forms/nngx-signal-forms)
 [![Next Release](https://badgen.net/npm/v/nngx-signal-forms/beta?label=Next&color=orange)](https://www.npmjs.com/package/nngx-signal-forms?activeTab=versions)
@@ -9,6 +11,8 @@
 [![Bundle Size](https://badgen.net/bundlephobia/minzip/nngx-signal-forms)](https://bundlephobia.com/package/nngx-signal-forms)
 [![License](https://badgen.net/npm/license/nngx-signal-forms)](https://opensource.org/licenses/MIT)
 [![Build Status](https://badgen.net/github/checks/nngx-signal-forms/nngx-signal-forms)](https://github.com/nngx-signal-forms/nngx-signal-forms/actions)
+
+> **Enhancement toolkit for Angular Signal Forms with automatic accessibility and progressive error disclosure**
 
 Directives, components, and utilities that enhance Angular's Signal Forms with automatic accessibility features, flexible error display strategies, and reusable form field wrappers—all without modifying the core Signal Forms API.
 
