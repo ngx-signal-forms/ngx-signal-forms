@@ -2,8 +2,8 @@
   "name": "@ngx-signal-forms/toolkit-core",
   "version": "0.0.0",
   "peerDependencies": {
-    "@angular/common": "next",
-    "@angular/core": "next"
+    "@angular/common": "~21.1.0",
+    "@angular/core": "~21.1.0"
   },
   "dependencies": {
     "tslib": "^2.8.1"

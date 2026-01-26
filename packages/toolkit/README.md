@@ -1592,6 +1592,14 @@ unwrapValue(signalStrategy); // 'on-touch'
 unwrapValue(computedStrategy); // 'on-touch'
 ```
 
+## API Stability Policy
+
+The toolkit follows [Semantic Versioning 2.0.0](https://semver.org/).
+
+- **Public API**: Defined by the package entry points (`@ngx-signal-forms/toolkit`, `@ngx-signal-forms/toolkit/form-field`).
+- **Beta Releases**: Versions marked as `beta` or `rc` may introduce breaking changes without a major version bump.
+- **Internal APIs**: Symbols not exported via public entry points are considered internal and may change at any time.
+
 ## Development
 
 ```bash

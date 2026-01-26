@@ -94,14 +94,14 @@ import { showErrors } from '../utilities/show-errors';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- Blocking Errors (ARIA role="alert" for assertive announcement) -->
-    @if (showErrors() && hasErrors()) {
-      <div
-        [id]="errorId()"
-        class="ngx-signal-form-error ngx-signal-form-error--error"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-      >
+    <div
+      [id]="errorId()"
+      class="ngx-signal-form-error ngx-signal-form-error--error"
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+    >
+      @if (showErrors() && hasErrors()) {
         @for (error of resolvedErrors(); track error.kind) {
           <p
             class="ngx-signal-form-error__message ngx-signal-form-error__message--error"
@@ -109,18 +109,18 @@ import { showErrors } from '../utilities/show-errors';
             {{ error.message }}
           </p>
         }
-      </div>
-    }
+      }
+    </div>
 
     <!-- Non-blocking Warnings (ARIA role="status" for polite announcement) -->
-    @if (showWarnings() && hasWarnings()) {
-      <div
-        [id]="warningId()"
-        class="ngx-signal-form-error ngx-signal-form-error--warning"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
+    <div
+      [id]="warningId()"
+      class="ngx-signal-form-error ngx-signal-form-error--warning"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      @if (showWarnings() && hasWarnings()) {
         @for (warning of resolvedWarnings(); track warning.kind) {
           <p
             class="ngx-signal-form-error__message ngx-signal-form-error__message--warning"
@@ -128,8 +128,8 @@ import { showErrors } from '../utilities/show-errors';
             {{ warning.message }}
           </p>
         }
-      </div>
-    }
+      }
+    </div>
   `,
   styleUrl: './form-error.component.scss',
 })
