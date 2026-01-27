@@ -279,6 +279,8 @@ provideSignalFormsConfig({
 
 **→ [Status classes guide](./packages/toolkit/README.md#automatic-status-classes)**
 
+**→ [CSS Framework Integration](./docs/CSS_FRAMEWORK_INTEGRATION.md)** — Bootstrap 5.3, Tailwind CSS 4, Angular Material
+
 ### Focus Management
 
 Automatically focus the first invalid field after failed submission:
@@ -378,6 +380,7 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
 | -------------------------------------------------------------------- | ----------------------------------------------------------- |
 | **[Toolkit API Reference](./packages/toolkit/README.md)**            | Complete API documentation with all options and examples    |
 | **[Form Field Components](./packages/toolkit/form-field/README.md)** | Form field wrapper, outlined layout, hints, character count |
+| **[CSS Framework Integration](./docs/CSS_FRAMEWORK_INTEGRATION.md)** | Bootstrap 5.3, Tailwind CSS 4, Angular Material setup       |
 | **[Theming Guide](./packages/toolkit/form-field/THEMING.md)**        | CSS custom properties, dark mode, brand customization       |
 | **[Warnings Support](./docs/WARNINGS_SUPPORT.md)**                   | Non-blocking validation messages                            |
 | **[Package Architecture](./docs/PACKAGE_ARCHITECTURE.md)**           | Library structure and design decisions                      |

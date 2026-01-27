@@ -252,6 +252,17 @@ import {
   NgxSignalFormFieldHintComponent,
   NgxSignalFormFieldCharacterCountComponent,
 } from '@ngx-signal-forms/toolkit/form-field';
+
+// Headless primitives (renderless directives)
+import {
+  NgxHeadlessErrorStateDirective,
+  NgxHeadlessCharacterCountDirective,
+  NgxHeadlessFieldsetDirective,
+  NgxHeadlessFieldNameDirective,
+  NgxHeadlessToolkit,
+  createErrorState,
+  createCharacterCount,
+} from '@ngx-signal-forms/toolkit/headless';
 ```
 
 ### Bundle Constant
@@ -486,6 +497,8 @@ provideSignalFormsConfig({
   }),
 });
 ```
+
+**→ [CSS Framework Integration Guide](../../docs/CSS_FRAMEWORK_INTEGRATION.md)** — Complete setup for Bootstrap 5.3, Tailwind CSS 4, and Angular Material.
 
 #### ⚠️ Important: Don't Mix Approaches
 
@@ -1353,6 +1366,99 @@ ngx-signal-form-fieldset {
 
 **For complete API, CSS custom properties, and examples, see [Form Field Documentation](./form-field/README.md#ngxsignalformfieldsetcomponent)**
 
+---
+
+## Headless Primitives
+
+For complete styling control, the toolkit provides **headless (renderless) directives** that expose signals without any UI. Build custom form components that match your exact design system.
+
+```typescript
+import {
+  NgxHeadlessErrorStateDirective,
+  NgxHeadlessCharacterCountDirective,
+  NgxHeadlessFieldsetDirective,
+  NgxHeadlessFieldNameDirective,
+  NgxHeadlessToolkit, // Bundle import
+} from '@ngx-signal-forms/toolkit/headless';
+```
+
+### Quick Example
+
+```html
+<div
+  ngxSignalFormHeadlessErrorState
+  #errorState="errorState"
+  [field]="form.email"
+  fieldName="email"
+>
+  <input [formField]="form.email" />
+
+  @if (errorState.showErrors() && errorState.hasErrors()) {
+  <div class="my-error-style">
+    @for (error of errorState.resolvedErrors(); track error.kind) {
+    <span>{{ error.message }}</span>
+    }
+  </div>
+  }
+</div>
+```
+
+### Use as Host Directives
+
+All headless directives work with Angular's Directive Composition API:
+
+```typescript
+@Component({
+  selector: 'my-form-field',
+  hostDirectives: [
+    {
+      directive: NgxHeadlessErrorStateDirective,
+      inputs: ['field', 'fieldName', 'strategy'],
+    },
+  ],
+})
+export class MyFormFieldComponent {
+  protected readonly errorState = inject(NgxHeadlessErrorStateDirective);
+}
+```
+
+### Available Primitives
+
+| Directive                            | Purpose                  | Signals Exposed                                   |
+| ------------------------------------ | ------------------------ | ------------------------------------------------- |
+| `NgxHeadlessErrorStateDirective`     | Error/warning display    | `showErrors`, `hasErrors`, `resolvedErrors`, etc. |
+| `NgxHeadlessCharacterCountDirective` | Character limit tracking | `currentLength`, `remaining`, `limitState`, etc.  |
+| `NgxHeadlessFieldsetDirective`       | Group validation         | `aggregatedErrors`, `hasErrors`, `isValid`, etc.  |
+| `NgxHeadlessFieldNameDirective`      | ID generation            | `resolvedFieldName`, `errorId`, `warningId`       |
+
+### Utility Functions
+
+```typescript
+import {
+  createErrorState,
+  createCharacterCount,
+  // Field state utilities
+  readFieldFlag,
+  readErrors,
+  dedupeValidationErrors,
+  createUniqueId,
+} from '@ngx-signal-forms/toolkit/headless';
+
+// Programmatic usage without directives
+const errorState = createErrorState({ field: form.email, fieldName: 'email' });
+const charCount = createCharacterCount({ field: form.bio, maxLength: 500 });
+
+// Field state reading (safe with null/undefined)
+const isInvalid = readFieldFlag(form.email(), 'invalid');
+const errors = readErrors(form.address()); // uses errorSummary() or errors()
+const uniqueErrors = dedupeValidationErrors(errors);
+const id = createUniqueId('field'); // 'field-1'
+```
+
+**[📖 Full Headless Documentation](./headless/README.md)** - Complete API reference, host directive patterns, and comparison with styled components.
+
+---
+
 ### Utilities
 
 #### Focus Management
@@ -1616,6 +1722,12 @@ pnpm nx test toolkit --coverage
 ## Documentation
 
 For complete documentation and examples, see the [main repository README](../../README.md).
+
+### Guides
+
+- **[CSS Framework Integration](../../docs/CSS_FRAMEWORK_INTEGRATION.md)** — Bootstrap 5.3, Tailwind CSS 4, Angular Material
+- **[Form Field Theming](./form-field/THEMING.md)** — CSS custom properties, dark mode
+- **[Warnings Support](../../docs/WARNINGS_SUPPORT.md)** — Non-blocking validation messages
 
 ## License
 

@@ -33,9 +33,20 @@ packages/toolkit/
 │   └── public_api.ts
 ├── form-field/                          # Optional form-field entry
 │   ├── form-field.component.ts
+│   ├── form-fieldset.component.ts
 │   ├── floating-label.directive.ts
 │   ├── form-field-hint.component.ts
 │   ├── form-field-character-count.component.ts
+│   └── public_api.ts
+├── headless/                            # Headless primitives entry
+│   ├── src/
+│   │   └── lib/
+│   │       ├── error-state.directive.ts
+│   │       ├── character-count.directive.ts
+│   │       ├── fieldset.directive.ts
+│   │       ├── field-name.directive.ts
+│   │       └── utilities.ts            # Shared utility functions
+│   ├── index.ts
 │   └── public_api.ts
 ├── index.ts                             # Primary entry (providers/types)
 ├── README.md
@@ -46,6 +57,7 @@ packages/toolkit/
 
 - `@ngx-signal-forms/toolkit` - Providers, directives, utilities, components
 - `@ngx-signal-forms/toolkit/form-field` - Form field wrapper (optional)
+- `@ngx-signal-forms/toolkit/headless` - Headless primitives (optional)
 
 ## Installation
 
@@ -78,6 +90,23 @@ import {
 import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
 ```
 
+### Secondary Entry (Headless Primitives - Optional)
+
+```typescript
+import {
+  NgxHeadlessErrorStateDirective,
+  NgxHeadlessCharacterCountDirective,
+  NgxHeadlessFieldsetDirective,
+  NgxHeadlessFieldNameDirective,
+  createErrorState,
+  createCharacterCount,
+  readFieldFlag,
+  readErrors,
+  dedupeValidationErrors,
+  createUniqueId,
+} from '@ngx-signal-forms/toolkit/headless';
+```
+
 ## Dependency Graph
 
 ```
@@ -87,7 +116,8 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
 @ngx-signal-forms/toolkit (main package)
 ├── Primary: Providers/types
 ├── /core (directives, utilities, components)
-└── /form-field (optional secondary entry)
+├── /form-field (optional secondary entry)
+└── /headless (optional secondary entry - renderless primitives)
 ```
 
 ## Key Design Decisions
@@ -105,6 +135,14 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
 2. **Tree-shakable**: Only included when imported
 3. **Part of Toolkit**: Conceptually belongs to the main package
 4. **Smaller Bundle**: Not included unless explicitly imported
+
+### Why Headless is a Secondary Entry
+
+1. **Renderless Primitives**: State-only directives without UI rendering
+2. **Shared Utilities**: Common functions (`readFieldFlag`, `readErrors`, `dedupeValidationErrors`, `createUniqueId`) used by both form-field and custom components
+3. **Design System Integration**: Perfect for custom component libraries
+4. **Host Directive Composition**: Works with Angular's Directive Composition API
+5. **Minimal Bundle**: Include only what you need
 
 ## Future Considerations
 

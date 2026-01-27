@@ -8,7 +8,7 @@ applyTo: '**'
 ## LLM Output
 
 - Provide code snippets, explanations, and suggestions that align with the project's architecture and best practices.
-- Ensure all code adheres to TypeScript strict mode and Angular 20+ standards.
+- Ensure all code adheres to TypeScript strict mode and Angular 21+ standards.
 - Do not make up code or API's always use real libraries and APIs. And check documentation if unsure. Use context7 if possible.
 - When reporting information to me, be very concise and to the point. But also descriptive enough to be useful.
 - Eliminate: emojis (expect checkmarks, etc), filler, hype, soft asks, conversational transitions, call-to-action appendixes
@@ -16,9 +16,9 @@ applyTo: '**'
 
 ## Quick Reference
 
-- **Framework**: Angular 21+ with signals, standalone components (see [angular.instructions.md](./instructions/angular.instructions.md))
-- **Forms**: Angular 21 Signal Forms (see [signal-forms.instructions.md](./instructions/signal-forms.instructions.md))
-- **Forms Enhancement**: @ngx-signal-forms/toolkit (see [signal-forms-toolkit.instructions.md](./instructions/signal-forms-toolkit.instructions.md))
+- **Framework**: Angular 21.1+ with signals, standalone components (see [angular.instructions.md](./instructions/angular.instructions.md))
+- **Forms**: Angular 21.1 Signal Forms (see [angular-signal-forms.instructions.md](./instructions/angular-signal-forms.instructions.md))
+- **Forms Enhancement**: @ngx-signal-forms/toolkit (see [ngx-signal-forms-toolkit.instructions.md](./instructions/ngx-signal-forms-toolkit.instructions.md))
 - **Testing**: Vitest (unit), Playwright (E2E)
 - **Styling**: Tailwind CSS 4.x (see [tailwind.instructions.md](./instructions/tailwind.instructions.md))
 - **TypeScript**: 5.8+ with strict mode
@@ -27,11 +27,24 @@ applyTo: '**'
 
 ### Library Entry Points
 
-[TODO: Update if needed]
+| Entry Point                            | Description                            |
+| -------------------------------------- | -------------------------------------- |
+| `@ngx-signal-forms/toolkit`            | Core providers, directives, utilities  |
+| `@ngx-signal-forms/toolkit/form-field` | Optional form field wrapper components |
+| `@ngx-signal-forms/toolkit/headless`   | Headless primitives (coming soon)      |
 
 ### Developer Commands
 
-[TODO: Update if needed]
+| Command                    | Description                 |
+| -------------------------- | --------------------------- |
+| `pnpm nx test toolkit`     | Run toolkit unit tests      |
+| `pnpm nx build toolkit`    | Build toolkit library       |
+| `pnpm nx lint toolkit`     | Lint toolkit code           |
+| `pnpm nx serve demo`       | Start demo app (dev server) |
+| `pnpm nx build demo`       | Build demo app              |
+| `pnpm nx e2e demo-e2e`     | Run E2E tests               |
+| `pnpm nx run-many -t test` | Run all tests               |
+| `pnpm nx run-many -t lint` | Lint all projects           |
 
 ## Core Guidelines
 
@@ -81,7 +94,53 @@ Follow [`.github/instructions/security-and-owasp.instructions.md`](./instruction
 
 ### Example Pattern
 
-[TODO : Update if needed]
+```typescript
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
+import { form, Validators } from '@angular/forms';
+import {
+  provideNgxToolkit,
+  ngxAutoAria,
+  ngxStatusClasses,
+} from '@ngx-signal-forms/toolkit';
+
+interface UserData {
+  email: string;
+  name: string;
+}
+
+@Component({
+  selector: 'app-user-form',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  hostDirectives: [
+    ngxAutoAria(),
+    ngxStatusClasses({ invalidClass: 'is-invalid' }),
+  ],
+  providers: [provideNgxToolkit()],
+  template: `
+    <form novalidate (submit)="onSubmit($event)">
+      <input type="email" [formField]="userForm.email" />
+      @if (userForm.email().touched() && userForm.email().invalid()) {
+        <span class="error">Valid email required</span>
+      }
+      <button type="submit" [disabled]="userForm.invalid()">Submit</button>
+    </form>
+  `,
+})
+export class UserFormComponent {
+  readonly #userData = signal<UserData>({ email: '', name: '' });
+  protected readonly userForm = form(this.#userData, {
+    email: [Validators.required, Validators.email],
+    name: [Validators.required],
+  });
+
+  protected onSubmit(event: Event): void {
+    event.preventDefault();
+    if (this.userForm.valid()) {
+      console.log(this.#userData());
+    }
+  }
+}
+```
 
 ## Angular 21+ Checklist
 
@@ -203,13 +262,14 @@ export class ExampleComponent {
 
 **Forms:**
 
-- [Signal Forms](./instructions/signal-forms.instructions.md) - Angular 21+ Signal Forms API and patterns
-- [Signal Forms Toolkit](./instructions/signal-forms-toolkit.instructions.md) - Enhancement library for accessibility and UX
+- [Signal Forms](./instructions/angular-signal-forms.instructions.md) - Angular 21+ Signal Forms API and patterns
+- [Signal Forms Toolkit](./instructions/ngx-signal-forms-toolkit.instructions.md) - Enhancement library for accessibility and UX
 
 **UI & Styling:**
 
 - [Tailwind CSS](./instructions/tailwind.instructions.md) - Tailwind CSS 4.x usage and best practices
 - [Accessibility (a11y)](./instructions/a11y.instructions.md) - WCAG 2.2 Level AA compliance guidelines
+- [CSS Framework Integration](../docs/CSS_FRAMEWORK_INTEGRATION.md) - Bootstrap, Tailwind, Angular Material setup
 
 **Testing:**
 
