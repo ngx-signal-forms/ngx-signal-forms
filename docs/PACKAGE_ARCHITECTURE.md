@@ -11,7 +11,7 @@ single publishable package:
 
 ### @ngx-signal-forms/toolkit (Main Package)
 
-```
+```bash
 packages/toolkit/
 ├── core/                               # Core implementation (public entry)
 │   ├── components/
