@@ -112,6 +112,17 @@ export class AppComponent implements AfterViewInit {
       ],
     },
     {
+      id: 'headless',
+      label: 'Headless',
+      pattern: /^\/headless\//,
+      links: [
+        {
+          path: '/headless/error-state',
+          label: 'Error State + Character Count',
+        },
+      ],
+    },
+    {
       id: 'form-field-wrapper',
       label: 'Form Field Wrapper',
       pattern: /^\/form-field-wrapper\//,
@@ -135,47 +146,40 @@ export class AppComponent implements AfterViewInit {
       ],
     },
     {
-      id: 'advanced',
-      label: 'Advanced',
-      pattern: /^\/advanced\//,
+      id: 'advanced-scenarios',
+      label: 'Advanced Scenarios',
+      pattern: /^\/advanced-scenarios\//,
       links: [
         {
-          path: '/advanced/global-configuration',
+          path: '/advanced-scenarios/global-configuration',
           label: 'Global Configuration',
         },
         {
-          path: '/advanced/submission-patterns',
+          path: '/advanced-scenarios/submission-patterns',
           label: 'Submission Patterns',
         },
         {
-          path: '/advanced/error-messages',
+          path: '/advanced-scenarios/error-messages',
           label: 'Error Messages',
         },
-      ],
-    },
-    {
-      id: 'new-demos',
-      label: 'New Demos',
-      pattern: /^\/new-demos\//,
-      links: [
         {
-          path: '/new-demos/dynamic-list',
+          path: '/advanced-scenarios/dynamic-list',
           label: 'Dynamic Lists',
         },
         {
-          path: '/new-demos/nested-groups',
+          path: '/advanced-scenarios/nested-groups',
           label: 'Nested Groups',
         },
         {
-          path: '/new-demos/async-validation',
+          path: '/advanced-scenarios/async-validation',
           label: 'Async Validation',
         },
         {
-          path: '/new-demos/stepper-form',
+          path: '/advanced-scenarios/stepper-form',
           label: 'Stepper Form',
         },
         {
-          path: '/new-demos/cross-field-validation',
+          path: '/advanced-scenarios/cross-field-validation',
           label: 'Cross-Field Validation',
         },
       ],

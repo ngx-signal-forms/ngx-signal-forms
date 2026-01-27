@@ -45,19 +45,19 @@ import type { FieldState } from '@angular/forms/signals';
             <span
               class="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800"
             >
-              ✓ Valid
+              Valid
             </span>
           } @else if (formState().pending()) {
             <span
               class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800"
             >
-              ⏳ Validating
+              Validating
             </span>
           } @else {
             <span
               class="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-800"
             >
-              ✗ Invalid ({{ errorCount() }} errors)
+              Invalid ({{ errorCount() }} errors)
             </span>
           }
         </div>
@@ -70,7 +70,7 @@ import type { FieldState } from '@angular/forms/signals';
           <h4
             class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300"
           >
-            📦 Model Values
+            Model Values
           </h4>
           <pre
             class="overflow-x-auto rounded bg-gray-50 p-3 text-xs dark:bg-gray-900"
@@ -83,7 +83,7 @@ import type { FieldState } from '@angular/forms/signals';
             <h4
               class="mb-2 text-sm font-semibold text-red-700 dark:text-red-300"
             >
-              ❌ Validation Errors
+              Validation Errors
             </h4>
             <div class="space-y-2">
               @for (error of formState().errors(); track error.kind) {
@@ -103,7 +103,7 @@ import type { FieldState } from '@angular/forms/signals';
           <h4
             class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300"
           >
-            🔄 Form States
+            Form States
           </h4>
           <div class="grid grid-cols-2 gap-2 text-xs">
             <div class="rounded bg-gray-50 p-2 dark:bg-gray-900">

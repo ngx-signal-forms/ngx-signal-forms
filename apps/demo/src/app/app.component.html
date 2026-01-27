@@ -2,6 +2,12 @@
 <div
   class="min-h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100"
 >
+  <a
+    href="#maincontent"
+    class="sr-only focus:not-sr-only focus:fixed focus:top-6 focus:left-6 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-gray-900 focus:shadow dark:focus:bg-gray-900 dark:focus:text-gray-100"
+  >
+    Skip to main content
+  </a>
   <!-- Top Bar - Full Width -->
   <header
     class="w-full bg-white text-gray-800 dark:bg-gray-950 dark:text-white"
@@ -84,8 +90,10 @@
             rel="noopener"
             aria-label="Angular Signal Forms API"
             class="hover:text-purple-900 dark:hover:text-white"
-            >📘</a
           >
+            <span aria-hidden="true">📘</span>
+            <span class="sr-only">Angular Signal Forms API</span>
+          </a>
           <a
             href="https://github.com/ngx-signal-forms/ngx-signal-forms"
             target="_blank"
@@ -108,14 +116,18 @@
             rel="noopener"
             aria-label="Bluesky"
             class="hover:text-purple-900 dark:hover:text-white"
-            >🜁</a
           >
+            <span aria-hidden="true">🜁</span>
+            <span class="sr-only">Bluesky</span>
+          </a>
         </div>
       </div>
     </aside>
 
     <!-- Main Content -->
     <main
+      id="maincontent"
+      tabindex="-1"
       class="flex-1 overflow-hidden rounded-tl-3xl bg-gradient-to-tr from-blue-100 via-purple-50 to-indigo-200 dark:bg-gradient-to-tr dark:from-gray-900 dark:via-blue-950 dark:to-indigo-900"
     >
       <div class="h-full overflow-y-auto p-6 lg:p-8">

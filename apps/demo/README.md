@@ -7,12 +7,13 @@
 This demo follows a **progressive learning path** from vanilla Angular Signal Forms to full toolkit adoption:
 
 ```text
-📂 Demo Structure (9 Examples)
+📂 Demo Structure
 ├─ 00-signal-forms-only/     [0% toolkit]  ← Baseline: What Signal Forms looks like
 ├─ 01-getting-started/       [20% toolkit] ← First steps with toolkit
-├─ 02-toolkit-core/          [100%]        ← Core toolkit features (4 examples)
-├─ 03-form-field-wrapper/    [100%]        ← Form field component (2 examples)
-└─ 04-advanced/              [100%]        ← Production patterns (2 examples)
+├─ 02-toolkit-core/          [100%]        ← Core toolkit features
+├─ 05-headless/              [100%]        ← Headless primitives
+├─ 03-form-field-wrapper/    [100%]        ← Form field component
+└─ 04-advanced/              [100%]        ← Advanced scenarios & production patterns
 ```
 
 ## 📚 Learning Path
@@ -56,7 +57,17 @@ Deep dive into core toolkit features.
 | **warning-support**          | Non-blocking validation        | Warnings vs errors, WCAG compliance     |
 | **field-states**             | State visualization            | touched, dirty, pending, invalid states |
 
-### Level 4: Form Field Wrapper (100% Toolkit)
+### Level 4: Headless (100% Toolkit)
+
+**Path:** `05-headless/`
+
+Renderless primitives for custom UI.
+
+- ✅ Strategy-aware error visibility with `NgxHeadlessErrorState`
+- ✅ Character count and limits with `NgxHeadlessCharacterCount`
+- ✅ Full control over markup and styling
+
+### Level 5: Form Field Wrapper (100% Toolkit)
 
 **Path:** `03-form-field-wrapper/`
 
@@ -67,16 +78,22 @@ Deep dive into core toolkit features.
 | **basic-usage**   | NgxSignalFormFieldComponent | Content projection, automatic error display     |
 | **complex-forms** | Real-world registration     | 8 fields, nested objects, password confirmation |
 
-### Level 5: Advanced Patterns (100% Toolkit)
+### Level 6: Advanced Scenarios (100% Toolkit)
 
 **Path:** `04-advanced/`
 
 Production-ready patterns for real applications.
 
-| Example                  | Focus                       | What You Learn                                |
-| ------------------------ | --------------------------- | --------------------------------------------- |
-| **global-configuration** | provideNgxSignalFormsConfig | Custom defaults, field resolution, debug mode |
-| **submission-patterns**  | Async submission            | Loading states, server errors, WCAG patterns  |
+| Example                    | Focus                       | What You Learn                                |
+| -------------------------- | --------------------------- | --------------------------------------------- |
+| **global-configuration**   | provideNgxSignalFormsConfig | Custom defaults, field resolution, debug mode |
+| **submission-patterns**    | Async submission            | Loading states, server errors, WCAG patterns  |
+| **error-messages**         | Error message registry      | 3-tier priority, i18n                         |
+| **dynamic-list**           | Arrays                      | Adding/removing items with signals            |
+| **nested-groups**          | Deep structures             | Multi-level form models                       |
+| **async-validation**       | Server checks               | Pending states and async errors               |
+| **stepper-form**           | Wizard flows                | Step validation and progression               |
+| **cross-field-validation** | Dependent logic             | Validations using sibling field values        |
 
 ## Quick Start
 
@@ -98,8 +115,9 @@ pnpm nx test demo
 1. Start at **Signal Forms Only** to see the baseline
 2. Progress to **Getting Started** for first toolkit benefits
 3. Explore **Toolkit Core** for deep feature understanding
-4. Try **Form Field Wrapper** for production-ready patterns
-5. Study **Advanced** for complex scenarios
+4. Explore **Headless** for custom UI composition
+5. Try **Form Field Wrapper** for production-ready patterns
+6. Study **Advanced Scenarios** for complex flows
 
 ## Key Concepts
 

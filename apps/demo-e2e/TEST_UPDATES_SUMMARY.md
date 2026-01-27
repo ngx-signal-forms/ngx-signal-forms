@@ -28,15 +28,15 @@ Fixed and expanded E2E tests based on the comprehensive test plan in `specs/e2e-
 #### Navigation Tests (`navigation.spec.ts`)
 
 - **Updated**: Added 5 new demo routes to navigation test suite
-  - `/new-demos/dynamic-list`
-  - `/new-demos/nested-groups`
-  - `/new-demos/async-validation`
-  - `/new-demos/stepper-form`
-  - `/new-demos/cross-field-validation`
+  - `/advanced-scenarios/dynamic-list`
+  - `/advanced-scenarios/nested-groups`
+  - `/advanced-scenarios/async-validation`
+  - `/advanced-scenarios/stepper-form`
+  - `/advanced-scenarios/cross-field-validation`
 
 ### 2. Created New Test Files
 
-#### New Demos Tests (`forms/new-demos/`)
+#### Advanced Scenarios Tests (`forms/new-demos/`)
 
 **Dynamic Lists** (`dynamic-list.spec.ts`)
 
@@ -213,7 +213,7 @@ npx playwright test --headed
 ## Metrics
 
 - **Total Test Files**: 20+ E2E test files
-- **New Tests Created**: 6 new test files (5 for new demos, 1 comprehensive accessibility comparison)
+- **New Tests Created**: 6 new test files (5 for advanced scenarios, 1 comprehensive accessibility comparison)
 - **Enhanced Tests**: 3 existing tests significantly improved
 - **Routes Covered**: 18 demo routes fully tested
 - **Toolkit Features Tested**: 100% of public API surface

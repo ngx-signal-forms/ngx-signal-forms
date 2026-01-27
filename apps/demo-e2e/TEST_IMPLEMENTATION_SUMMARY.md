@@ -101,12 +101,12 @@ Following TEST_ARCHITECTURE.md structure:
 
 ### New Page Objects
 
-| File                                 | Class                         | Route                               | Status |
-| ------------------------------------ | ----------------------------- | ----------------------------------- | ------ |
-| `warning-support.page.ts`            | `WarningSupportPage`          | `/toolkit-core/warning-support`     | ✅ New |
-| `form-field-wrapper-complex.page.ts` | `FormFieldWrapperComplexPage` | `/form-field-wrapper/complex-forms` | ✅ New |
-| `global-configuration.page.ts`       | `GlobalConfigurationPage`     | `/advanced/global-configuration`    | ✅ New |
-| `submission-patterns.page.ts`        | `SubmissionPatternsPage`      | `/advanced/submission-patterns`     | ✅ New |
+| File                                 | Class                         | Route                                      | Status |
+| ------------------------------------ | ----------------------------- | ------------------------------------------ | ------ |
+| `warning-support.page.ts`            | `WarningSupportPage`          | `/toolkit-core/warning-support`            | ✅ New |
+| `form-field-wrapper-complex.page.ts` | `FormFieldWrapperComplexPage` | `/form-field-wrapper/complex-forms`        | ✅ New |
+| `global-configuration.page.ts`       | `GlobalConfigurationPage`     | `/advanced-scenarios/global-configuration` | ✅ New |
+| `submission-patterns.page.ts`        | `SubmissionPatternsPage`      | `/advanced-scenarios/submission-patterns`  | ✅ New |
 
 ### Existing Page Objects
 
@@ -201,7 +201,7 @@ describe('Advanced - Submission Patterns', () => {
 - ✅ One POM per route/component
 - ✅ Descriptive test names
 - ✅ `test.step()` for complex tests
-- ✅ Organized by feature (`specs/toolkit-core/`, `specs/advanced/`, etc.)
+- ✅ Organized by feature (`forms/toolkit-core/`, `forms/advanced/`, etc.)
 
 ### Code Quality
 

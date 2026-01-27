@@ -3,7 +3,7 @@ import { BaseFormPage } from './base-form.page';
 
 /**
  * Page Object for "Advanced - Submission Patterns" demo
- * Route: /advanced/submission-patterns
+ * Route: /advanced-scenarios/submission-patterns
  *
  * Demonstrates async form submission patterns
  */
@@ -18,7 +18,7 @@ export class SubmissionPatternsPage extends BaseFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/advanced/submission-patterns');
+    await this.page.goto('/advanced-scenarios/submission-patterns');
     await this.waitForReady();
   }
 

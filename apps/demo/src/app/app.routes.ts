@@ -7,8 +7,9 @@ import { Routes } from '@angular/router';
  * 0. Signal Forms Only - Baseline without toolkit (manual ARIA)
  * 1. Getting Started - Comprehensive introduction to Signal Forms + Toolkit
  * 2. Toolkit Core - Core toolkit features (auto-ARIA, errors, warnings, field states)
- * 3. Form Field Wrapper - Advanced layout automation (coming soon)
- * 4. Advanced - Global config, submission patterns, server errors (coming soon)
+ * 3. Headless - Renderless primitives for custom design systems
+ * 4. Form Field Wrapper - Pre-built UI components with automatic error display
+ * 5. Advanced Scenarios - Global config, submission patterns, complex forms
  */
 
 export const appRoutes: Routes = [
@@ -16,27 +17,6 @@ export const appRoutes: Routes = [
   {
     path: '',
     redirectTo: 'signal-forms-only/pure-signal-form',
-    pathMatch: 'full',
-  },
-
-  // Legacy redirect (minimal-form merged into basic-validation)
-  {
-    path: 'fundamentals/minimal-form',
-    redirectTo: 'getting-started/basic-validation',
-    pathMatch: 'full',
-  },
-
-  // Legacy redirect (accessibility-showcase renamed to accessibility-comparison)
-  {
-    path: 'toolkit/accessibility-showcase',
-    redirectTo: 'toolkit-core/accessibility-comparison',
-    pathMatch: 'full',
-  },
-
-  // Legacy redirect (form-field-showcase moved to form-field-wrapper/basic-usage)
-  {
-    path: 'toolkit/form-field-showcase',
-    redirectTo: 'form-field-wrapper/basic-usage',
     pathMatch: 'full',
   },
 
@@ -127,6 +107,24 @@ export const appRoutes: Routes = [
   },
 
   // ========================================
+  // HEADLESS
+  // ========================================
+  {
+    path: 'headless',
+    children: [
+      { path: '', redirectTo: 'error-state', pathMatch: 'full' },
+      {
+        path: 'error-state',
+        loadComponent: () =>
+          import('./03-headless/error-state/error-state.page').then(
+            (m) => m.HeadlessErrorStatePageComponent,
+          ),
+        title: 'Headless Error State - Custom UI with Signals',
+      },
+    ],
+  },
+
+  // ========================================
   // FORM FIELD WRAPPER
   // ========================================
   {
@@ -136,7 +134,7 @@ export const appRoutes: Routes = [
       {
         path: 'basic-usage',
         loadComponent: () =>
-          import('./03-form-field-wrapper/basic-usage/basic-usage.page').then(
+          import('./04-form-field-wrapper/basic-usage/basic-usage.page').then(
             (m) => m.BasicUsagePage,
           ),
         title: 'Basic Usage - Form Field Wrapper',
@@ -144,7 +142,7 @@ export const appRoutes: Routes = [
       {
         path: 'complex-forms',
         loadComponent: () =>
-          import('./03-form-field-wrapper/complex-forms/complex-forms.page').then(
+          import('./04-form-field-wrapper/complex-forms/complex-forms.page').then(
             (m) => m.ComplexFormsPage,
           ),
         title: 'Complex Forms - Nested Objects & Arrays',
@@ -152,7 +150,7 @@ export const appRoutes: Routes = [
       {
         path: 'fieldset',
         loadComponent: () =>
-          import('./03-form-field-wrapper/fieldset/fieldset.page').then(
+          import('./04-form-field-wrapper/fieldset/fieldset.page').then(
             (m) => m.FieldsetPage,
           ),
         title: 'Fieldset - Aggregated Errors for Grouped Fields',
@@ -160,7 +158,7 @@ export const appRoutes: Routes = [
       {
         path: 'outline-form-field',
         loadComponent: () =>
-          import('./03-form-field-wrapper/outline-form-field/outline-form-field.page').then(
+          import('./04-form-field-wrapper/outline-form-field/outline-form-field.page').then(
             (m) => m.OutlineFormFieldPage,
           ),
         title: 'Outline Form Field - Default Outlined Styling',
@@ -169,16 +167,16 @@ export const appRoutes: Routes = [
   },
 
   // ========================================
-  // ADVANCED
+  // ADVANCED SCENARIOS
   // ========================================
   {
-    path: 'advanced',
+    path: 'advanced-scenarios',
     children: [
       { path: '', redirectTo: 'global-configuration', pathMatch: 'full' },
       {
         path: 'global-configuration',
         loadComponent: () =>
-          import('./04-advanced/global-configuration/global-configuration.page').then(
+          import('./05-advanced/global-configuration/global-configuration.page').then(
             (m) => m.GlobalConfigurationPage,
           ),
         title: 'Global Configuration - Toolkit Defaults',
@@ -186,7 +184,7 @@ export const appRoutes: Routes = [
       {
         path: 'submission-patterns',
         loadComponent: () =>
-          import('./04-advanced/submission-patterns/submission-patterns.page').then(
+          import('./05-advanced/submission-patterns/submission-patterns.page').then(
             (m) => m.SubmissionPatternsPage,
           ),
         title: 'Submission Patterns - Async & Server Errors',
@@ -194,25 +192,15 @@ export const appRoutes: Routes = [
       {
         path: 'error-messages',
         loadComponent: () =>
-          import('./04-advanced/error-messages/error-messages.page').then(
+          import('./05-advanced/error-messages/error-messages.page').then(
             (m) => m.ErrorMessagesPage,
           ),
         title: 'Error Messages - 3-Tier Priority & i18n',
       },
-    ],
-  },
-
-  // ========================================
-  // NEW DEMOS (Advanced Patterns)
-  // ========================================
-  {
-    path: 'new-demos',
-    children: [
-      { path: '', redirectTo: 'dynamic-list', pathMatch: 'full' },
       {
         path: 'dynamic-list',
         loadComponent: () =>
-          import('./05-new-demos/dynamic-list/dynamic-list.page').then(
+          import('./05-advanced/dynamic-list/dynamic-list.page').then(
             (m) => m.DynamicListPageComponent,
           ),
         title: 'Dynamic Lists - Form Arrays',
@@ -220,7 +208,7 @@ export const appRoutes: Routes = [
       {
         path: 'nested-groups',
         loadComponent: () =>
-          import('./05-new-demos/nested-groups/nested-groups.page').then(
+          import('./05-advanced/nested-groups/nested-groups.page').then(
             (m) => m.NestedGroupsPageComponent,
           ),
         title: 'Nested Groups - Complex Data Structures',
@@ -228,7 +216,7 @@ export const appRoutes: Routes = [
       {
         path: 'async-validation',
         loadComponent: () =>
-          import('./05-new-demos/async-validation/async-validation.page').then(
+          import('./05-advanced/async-validation/async-validation.page').then(
             (m) => m.AsyncValidationPageComponent,
           ),
         title: 'Async Validation - Server Side Checks',
@@ -236,7 +224,7 @@ export const appRoutes: Routes = [
       {
         path: 'stepper-form',
         loadComponent: () =>
-          import('./05-new-demos/stepper-form/stepper-form.page').then(
+          import('./05-advanced/stepper-form/stepper-form.page').then(
             (m) => m.StepperFormPageComponent,
           ),
         title: 'Stepper Form - Multi-step Wizard',
@@ -244,7 +232,7 @@ export const appRoutes: Routes = [
       {
         path: 'cross-field-validation',
         loadComponent: () =>
-          import('./05-new-demos/cross-field-validation/cross-field-validation.page').then(
+          import('./05-advanced/cross-field-validation/cross-field-validation.page').then(
             (m) => m.CrossFieldValidationPageComponent,
           ),
         title: 'Cross-Field Validation - Dependent Fields',
