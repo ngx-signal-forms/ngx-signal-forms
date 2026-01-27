@@ -116,10 +116,19 @@ import {
   `,
   styles: `
     .ngx-form-field-char-count {
-      font-size: var(--ngx-form-field-char-count-font-size, 0.75rem);
-      line-height: var(--ngx-form-field-char-count-line-height, 1rem);
+      font-size: var(
+        --ngx-form-field-char-count-font-size,
+        var(--ngx-signal-form-feedback-font-size, 0.75rem)
+      );
+      line-height: var(
+        --ngx-form-field-char-count-line-height,
+        var(--ngx-signal-form-feedback-line-height, 1.25)
+      );
       color: var(--ngx-form-field-char-count-color-ok, rgba(71, 91, 119, 0.75));
-      margin-top: var(--ngx-form-field-char-count-margin-top, 0.25rem);
+      margin-top: var(
+        --ngx-form-field-char-count-margin-top,
+        var(--ngx-signal-form-feedback-margin-top, 0.25rem)
+      );
       transition:
         color 0.2s ease,
         font-weight 0.2s ease;

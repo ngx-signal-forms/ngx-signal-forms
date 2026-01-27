@@ -10,9 +10,11 @@ The toolkit solves this with **status class synchronization** — aligning CSS c
 
 ## The Problem
 
-By default, Angular Signal Forms applies status classes (`ng-invalid`, `ng-valid`) **immediately** when validation fails:
+By default, Angular Signal Forms does **not** apply status classes like `ng-invalid` and `ng-valid` unless you configure them via `provideSignalFormsConfig` (or the `NG_STATUS_CLASSES` preset).
+See [Status Classes Documentation](../packages/toolkit/README.md#automatic-status-classes) & [Angular Forms Signals Migration Guide](https://angular.dev/guide/forms/signals/migration#automatic-status-classes) for details.
+When enabled, `invalid()` reflects validation errors immediately, so those classes apply as soon as validation fails:
 
-```
+```console
 ❌ Default Behavior (Poor UX):
 ┌─────────────────────────────┐
 │ Email [red border]          │  ← Field turns red immediately
@@ -24,7 +26,7 @@ User thinks: "Why is this red? What did I do wrong?"
 
 The toolkit synchronizes CSS classes with error message display:
 
-```
+```console
 ✅ With Toolkit (Good UX):
 ┌─────────────────────────────┐
 │ Email [normal border]       │  ← No visual change while typing
@@ -117,15 +119,25 @@ For better accessibility, use the toolkit's error component instead of Bootstrap
 </form>
 ```
 
-Style the toolkit's error component to match Bootstrap:
+Use Bootstrap tokens via CSS custom properties (no component overrides):
 
 ```scss
-ngx-signal-form-error {
-  display: block;
-  width: 100%;
-  margin-top: 0.25rem;
-  font-size: 0.875em;
-  color: var(--bs-form-invalid-color, #dc3545);
+/* Bootstrap theme mapping for toolkit form-field */
+ngx-signal-form-field {
+  --ngx-form-field-color-primary: var(--bs-primary, #0d6efd);
+  --ngx-form-field-color-border: var(--bs-border-color, #dee2e6);
+  --ngx-form-field-color-text: var(--bs-body-color, #212529);
+  --ngx-form-field-color-text-muted: var(--bs-secondary-color, #6c757d);
+  --ngx-form-field-color-surface: var(--bs-body-bg, #ffffff);
+  --ngx-form-field-color-disabled: var(--bs-secondary-bg, #e9ecef);
+  --ngx-form-field-color-error: var(--bs-form-invalid-color, #dc3545);
+  --ngx-form-field-color-warning: var(--bs-warning, #ffc107);
+
+  /* Optional alignment tweaks to match Bootstrap spacing */
+  --ngx-form-field-input-padding: 0.375rem 0.75rem;
+  --ngx-form-field-radius: var(--bs-border-radius, 0.375rem);
+  --ngx-signal-form-error-font-size: 0.875rem;
+  --ngx-signal-form-error-margin-top: 0.25rem;
 }
 ```
 

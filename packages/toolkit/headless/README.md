@@ -19,6 +19,24 @@ Traditional form components couple **state management** with **visual presentati
 - 🧩 **Composable architecture** - Combine primitives into custom components
 - 🎯 **Host directive composition** - Use as `hostDirectives` in your own components
 
+## Why not just Angular Signal Forms?
+
+Headless primitives remove repetitive template logic while keeping Signal Forms as the source of truth.
+
+**What you still do with plain Signal Forms:**
+
+- Re-implement error timing checks (`touched`, `submitted`, `strategy`)
+- Rebuild error message mapping in every component
+- Manually wire ARIA IDs and `aria-describedby` for custom UIs
+
+**What headless gives you:**
+
+- Shared, strategy-aware visibility (`showErrors()`)
+- Ready-to-render, resolved messages (`resolvedErrors()`)
+- Stable IDs for ARIA (`errorId()`, `warningId()`)
+
+You keep full control over markup and styling while avoiding boilerplate.
+
 ## Installation
 
 Included with `@ngx-signal-forms/toolkit`:
@@ -58,6 +76,71 @@ Apply a headless directive and use `exportAs` to access signals in your template
 </div>
 ```
 
+**More complete example (with validation and ARIA):**
+
+```typescript
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { form, required, email, schema } from '@angular/forms/signals';
+
+interface LoginModel {
+  email: string;
+}
+
+@Component({
+  selector: 'app-login',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <form novalidate (submit)="onSubmit($event)">
+      <div
+        ngxSignalFormHeadlessErrorState
+        #errorState="errorState"
+        [field]="loginForm.email"
+        fieldName="email"
+        [strategy]="'on-touch'"
+      >
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          [formField]="loginForm.email"
+          [attr.aria-invalid]="errorState.hasErrors() ? 'true' : null"
+          [attr.aria-describedby]="
+            errorState.showErrors() ? errorState.errorId() : null
+          "
+        />
+
+        @if (errorState.showErrors() && errorState.hasErrors()) {
+          <div [id]="errorState.errorId()" role="alert" class="my-custom-error">
+            @for (error of errorState.resolvedErrors(); track error.kind) {
+              <span>{{ error.message }}</span>
+            }
+          </div>
+        }
+      </div>
+
+      <button type="submit" [disabled]="loginForm.invalid()">Submit</button>
+    </form>
+  `,
+})
+export class LoginComponent {
+  readonly #model = signal<LoginModel>({ email: '' });
+  protected readonly loginForm = form(
+    this.#model,
+    schema((path) => {
+      required(path.email, { message: 'Email is required' });
+      email(path.email, { message: 'Email must be valid' });
+    }),
+  );
+
+  protected onSubmit(event: Event): void {
+    event.preventDefault();
+    if (this.loginForm.valid()) {
+      console.log(this.#model());
+    }
+  }
+}
+```
+
 ### Using as Host Directives (Composition API)
 
 Headless directives are designed to work with Angular's [Directive Composition API](https://angular.dev/guide/directives/directive-composition-api):
@@ -87,6 +170,50 @@ import { NgxHeadlessErrorStateDirective } from '@ngx-signal-forms/toolkit/headle
 export class MyFormFieldComponent {
   // Inject the host directive to access its signals
   protected readonly errorState = inject(NgxHeadlessErrorStateDirective);
+}
+```
+
+**Usage with `my-form-field`:**
+
+```typescript
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { form, required, schema } from '@angular/forms/signals';
+import { MyFormFieldComponent } from './my-form-field.component';
+
+interface ProfileModel {
+  name: string;
+}
+
+@Component({
+  selector: 'app-profile',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [MyFormFieldComponent],
+  template: `
+    <form novalidate (submit)="onSubmit($event)">
+      <my-form-field [field]="profileForm.name" fieldName="name">
+        <label for="name">Name</label>
+        <input id="name" [formField]="profileForm.name" />
+      </my-form-field>
+
+      <button type="submit" [disabled]="profileForm.invalid()">Save</button>
+    </form>
+  `,
+})
+export class ProfileComponent {
+  readonly #model = signal<ProfileModel>({ name: '' });
+  protected readonly profileForm = form(
+    this.#model,
+    schema((path) => {
+      required(path.name, { message: 'Name is required' });
+    }),
+  );
+
+  protected onSubmit(event: Event): void {
+    event.preventDefault();
+    if (this.profileForm.valid()) {
+      console.log(this.#model());
+    }
+  }
 }
 ```
 

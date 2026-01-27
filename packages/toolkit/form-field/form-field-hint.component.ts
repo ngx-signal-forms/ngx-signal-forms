@@ -64,10 +64,19 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   `,
   styles: `
     .ngx-form-field-hint {
-      font-size: var(--ngx-form-field-hint-font-size, 0.75rem);
-      line-height: var(--ngx-form-field-hint-line-height, 1rem);
+      font-size: var(
+        --ngx-form-field-hint-font-size,
+        var(--ngx-signal-form-feedback-font-size, 0.75rem)
+      );
+      line-height: var(
+        --ngx-form-field-hint-line-height,
+        var(--ngx-signal-form-feedback-line-height, 1.25)
+      );
       color: var(--ngx-form-field-hint-color, rgba(71, 91, 119, 0.75));
-      margin-top: var(--ngx-form-field-hint-margin-top, 0.25rem);
+      margin-top: var(
+        --ngx-form-field-hint-margin-top,
+        var(--ngx-signal-form-feedback-margin-top, 0.25rem)
+      );
     }
 
     :host([position='left']) .ngx-form-field-hint {

@@ -13,7 +13,13 @@
 // Light mode form field styling (matches Expo design library)
 :host {
   --ngx-form-field-outline-bg: #ffffff; // var(--surface/component)
-  --ngx-form-field-outline-border: 1px solid rgba(172, 178, 187, 1); // var(--border/opaque/light) - more visible
+  --ngx-form-field-input-bg: #ffffff; // var(--surface/component)
+  --ngx-form-field-border-color: rgba(
+    172,
+    178,
+    187,
+    1
+  ); // var(--border/opaque/light) - more visible
   --ngx-form-field-outline-label-color: rgba(
     50,
     65,
@@ -21,27 +27,27 @@
     0.75
   ); // var(--text/secondary) - more readable
   --ngx-form-field-outline-input-color: #324155; // var(--text/base)
-  --ngx-form-field-outline-placeholder-color: rgba(
+  --ngx-form-field-placeholder-color: rgba(
     50,
     65,
     85,
     0.5
   ); // More readable placeholder
-  --ngx-form-field-outline-focus-border-color: #005fcc; // Primary blue
-  --ngx-form-field-outline-focus-box-shadow: 0 0 0 2px rgba(0, 95, 204, 0.25); // Primary blue glow
-  --ngx-form-field-outline-disabled-bg: #f3f4f6; // Very light gray
-  --ngx-form-field-outline-disabled-opacity: 0.6;
+  --ngx-form-field-focus-color: #005fcc; // Primary blue
+  --ngx-form-field-focus-box-shadow: 0 0 0 2px rgba(0, 95, 204, 0.25); // Primary blue glow
+  --ngx-form-field-disabled-bg: #f3f4f6; // Very light gray
+  --ngx-form-field-disabled-opacity: 0.6;
 }
 
 // Dark mode form field overrides for outlined inputs
 :host-context(.dark) {
-  --ngx-form-field-outline-bg: #111827;
-  --ngx-form-field-outline-border: 1px solid rgba(156, 163, 175, 0.25);
+  --ngx-form-field-input-bg: #111827;
+  --ngx-form-field-border-color: rgba(156, 163, 175, 0.25);
   --ngx-form-field-outline-label-color: rgba(209, 213, 219, 0.75);
   --ngx-form-field-outline-input-color: #f9fafb;
-  --ngx-form-field-outline-placeholder-color: rgba(156, 163, 175, 0.35);
-  --ngx-form-field-outline-focus-border-color: #60a5fa;
-  --ngx-form-field-outline-focus-box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.25);
-  --ngx-form-field-outline-disabled-bg: #1f2937;
-  --ngx-form-field-outline-disabled-opacity: 0.5;
+  --ngx-form-field-placeholder-color: rgba(156, 163, 175, 0.35);
+  --ngx-form-field-focus-color: #60a5fa;
+  --ngx-form-field-focus-box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.25);
+  --ngx-form-field-disabled-bg: #1f2937;
+  --ngx-form-field-disabled-opacity: 0.5;
 }

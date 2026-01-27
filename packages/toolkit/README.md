@@ -19,6 +19,28 @@ Zero-intrusive directives, components, and utilities for Angular Signal Forms.
 
 > **Note**: Angular Signal Forms' `[formField]` directive automatically marks fields as touched on blur. No additional directive needed for touch tracking.
 
+## 🎨 Theming
+
+The toolkit uses a layered theming architecture based on CSS Custom Properties.
+
+- **Shared Feedback Layer**: Controls typography and spacing for errors, warnings, and hints.
+- **Semantic Layer**: Controls colors based on intent (primary, error, warning).
+
+To customize the `ngx-signal-form-error` component (included in this package), use the feedback variables:
+
+```css
+:root {
+  /* Affects all errors and warnings */
+  --ngx-signal-form-feedback-font-size: 0.875rem;
+  --ngx-signal-form-feedback-line-height: 1.25;
+  --ngx-signal-form-feedback-margin-top: 0.5rem;
+  --ngx-signal-form-feedback-padding-horizontal: 0;
+  --ngx-signal-form-error-color: #dc2626;
+}
+```
+
+For comprehensive theming of the Form Field wrapper and Fieldset, see the **[Form Field Theming Guide](./form-field/THEMING.md)**.
+
 ## Quick Start
 
 ```typescript

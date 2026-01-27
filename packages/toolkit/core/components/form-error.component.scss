@@ -23,12 +23,23 @@
   --ngx-signal-form-warning-border: transparent;
 
   /* Spacing */
-  --ngx-signal-form-error-margin-top: 0.375rem;
+  --_feedback-margin-top: var(--ngx-signal-form-feedback-margin-top, 0.25rem);
+  --ngx-signal-form-error-margin-top: var(--_feedback-margin-top);
   --ngx-signal-form-error-message-spacing: 0.25rem;
 
   /* Typography */
-  --ngx-signal-form-error-font-size: 0.75rem;
-  --ngx-signal-form-error-line-height: 1.25;
+  /* Allow upstream override via feedback variables */
+  --_feedback-font-size: var(--ngx-signal-form-feedback-font-size, 0.75rem);
+  --_feedback-line-height: var(--ngx-signal-form-feedback-line-height, 1.25);
+
+  --ngx-signal-form-error-font-size: var(
+    --ngx-signal-form-error-font-size-override,
+    var(--_feedback-font-size)
+  );
+  --ngx-signal-form-error-line-height: var(
+    --ngx-signal-form-error-line-height-override,
+    var(--_feedback-line-height)
+  );
 
   /* Border */
   --ngx-signal-form-error-border-width: 0;

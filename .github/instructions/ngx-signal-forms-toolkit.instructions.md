@@ -158,19 +158,65 @@ import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 })
 ```
 
-**Contains**: `NgxSignalFormFieldComponent`, `NgxFloatingLabelDirective`, `NgxSignalFormFieldHintComponent`, `NgxSignalFormFieldCharacterCountComponent`
+**Contains**: `NgxSignalFormFieldComponent`, `NgxFloatingLabelDirective`, `NgxSignalFormFieldHintComponent`, `NgxSignalFormFieldCharacterCountComponent`, `NgxSignalFormFieldsetComponent`
 
 ### Individual Imports (Alternative)
 
 ```typescript
 import {
-  NgxSignalFormDirective,
-  NgxSignalFormAutoAriaDirective,
+  /* Lines 167-169 omitted */
   NgxSignalFormErrorComponent,
 } from '@ngx-signal-forms/toolkit';
 ```
 
-## Simplified Architecture
+## Theming & Styling
+
+The toolkit uses a 4-layer CSS Custom Property architecture.
+
+### Layer 1: Shared Feedback (Base)
+
+Controls typography and spacing for all feedback elements (Error, Hint, Char Count).
+**Use these for global consistency.**
+
+- `--ngx-signal-form-feedback-font-size` (Default: `0.75rem`)
+- `--ngx-signal-form-feedback-line-height` (Default: `1.25`)
+- `--ngx-signal-form-feedback-margin-top` (Default: `0.25rem`)
+- `--ngx-signal-form-feedback-padding-horizontal` (Default: `0`)
+
+Shared feedback variables (full list): `font-size`, `line-height`, `margin-top`, `padding-horizontal`.
+
+### Layer 2: Semantic Colors
+
+Controls colors based on intent.
+
+- `--ngx-form-field-color-primary`: Focus states
+- `--ngx-form-field-color-error`: Invalid states
+- `--ngx-form-field-color-warning`: Warning states
+- `--ngx-form-field-color-text`: Input text
+
+### Layer 3: Component Overrides
+
+Specific overrides for individual components.
+
+- `ngx-signal-form-error`: `--ngx-signal-form-error-color`
+- `ngx-signal-form-fieldset`: `--ngx-signal-form-fieldset-gap`
+
+See `packages/toolkit/form-field/THEMING.md` for the full API.
+
+### Theming Do / Don’t
+
+**Do** use CSS custom properties as the public API:
+
+```css
+ngx-signal-form-field {
+  --ngx-form-field-color-primary: #3b82f6;
+  --ngx-signal-form-feedback-font-size: 0.875rem;
+}
+```
+
+**Don’t** use `::ng-deep` or override internal selectors.
+
+## Architecture
 
 ### Key Insight: `[ngxSignalForm]` is Optional for Most Use Cases
 
@@ -198,6 +244,8 @@ The toolkit is designed so that **most forms work without `[ngxSignalForm]`**. T
 - Using default `'on-touch'` error strategy
 - Want automatic ARIA attributes and error display
 - Simpler template with less boilerplate
+
+**Avoid `[ngxSignalForm]` when you don’t need form-level strategy overrides** — it adds context you’re not using and increases boilerplate.
 
 **With `[ngxSignalForm]` (Only when needed):**
 
@@ -890,6 +938,7 @@ test('should validate accessibility tree', async ({ page }) => {
 
 - [Toolkit README](../../packages/toolkit/README.md)
 - [Form Field Documentation](../../packages/toolkit/form-field/README.md)
+- [CSS Framework Integration](../../docs/CSS_FRAMEWORK_INTEGRATION.md)
 - [Signal Forms Instructions](./angular-signal-forms.instructions.md)
 - [Angular Signal Forms API](https://angular.dev/api/forms/signals)
 - [WCAG 2.2 Guidelines](https://www.w3.org/WAI/WCAG22/quickref/)

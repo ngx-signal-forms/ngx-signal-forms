@@ -16,16 +16,34 @@ Form field components and directives for enhanced form layouts and accessibility
 
 ## 🎨 Theming
 
-**New simplified theming architecture available!** We've reduced the CSS custom properties from 60+ to just 20 with improved derivation patterns.
+All components in this entry point (`ngx-signal-form-field`, `ngx-signal-form-fieldset`) and their dependencies (`ngx-signal-form-error`) share a unified theming system based on CSS Custom Properties.
 
-**[📖 Complete Theming Guide →](./THEMING.md)**
+**[📖 Read the Complete Theming Guide →](./THEMING.md)**
 
-Quick examples:
+### Supported Components
 
-- Dark mode theme (8 properties)
-- Brand color customization
-- Size scaling with unitless multipliers
-- Material Design inspired theme
+- **`ngx-signal-form-field`**: Outlined layout, borders, colors, spacing.
+- **`ngx-signal-form-fieldset`**: Grouping gap and indentation.
+- **`ngx-signal-form-error`**: Shared feedback typography and colors.
+- **`ngx-signal-form-field-hint`**: Helper text colors and spacing.
+- **`ngx-signal-form-field-character-count`**: Progressive color states.
+
+### Quick Customization
+
+Override these root variables to affect all components at once:
+
+```css
+:root {
+  /* Scale the entire system */
+  --ngx-signal-form-feedback-font-size: 0.875rem;
+
+  /* Brand Colors */
+  --ngx-form-field-color-primary: #3b82f6; /* Focus rings & active borders */
+  --ngx-form-field-color-error: #ef4444; /* Error state */
+}
+```
+
+For a full list of all 20+ variables including layout, typography, and dark mode support, see the [Theming Guide](./THEMING.md).
 
 ---
 
@@ -527,7 +545,11 @@ import { NgxSignalFormFieldHintComponent } from '@ngx-signal-forms/toolkit/form-
 
 ```css
 :root {
-  --ngx-form-field-hint-font-size: 0.75rem;
+  /* Inherits from shared feedback layer by default */
+  --ngx-form-field-hint-font-size: var(
+    --ngx-signal-form-feedback-font-size,
+    0.75rem
+  );
   --ngx-form-field-hint-color: #6b7280;
 }
 ```
@@ -601,7 +623,11 @@ The component automatically changes color based on character count:
 
 ```css
 :root {
-  --ngx-form-field-char-count-font-size: 0.75rem;
+  /* Inherits from shared feedback layer by default */
+  --ngx-form-field-char-count-font-size: var(
+    --ngx-signal-form-feedback-font-size,
+    0.75rem
+  );
   --ngx-form-field-char-count-color-ok: #6b7280;
   --ngx-form-field-char-count-color-warning: #f59e0b;
   --ngx-form-field-char-count-color-danger: #dc2626;

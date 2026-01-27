@@ -597,7 +597,14 @@
 
 // Standard layout - 8px horizontal padding for breathing room
 :host {
-  --ngx-signal-form-error-padding-horizontal: var(--_field-space-md); // 8px
+  // Use feedback layer variable if available, otherwise fallback to internal token
+  --_feedback-padding-horizontal: var(
+    --ngx-signal-form-feedback-padding-horizontal,
+    var(--_field-space-md)
+  );
+  --ngx-signal-form-error-padding-horizontal: var(
+    --_feedback-padding-horizontal
+  );
 }
 
 // Outlined layout - maintains same 8px padding to align with input text
@@ -605,5 +612,7 @@
 // The 8px horizontal padding positions the input text/placeholder.out
 // Errors inherit the same 8px padding to align perfectly with input text.
 :host(.ngx-signal-forms-outline) {
-  --ngx-signal-form-error-padding-horizontal: var(--_field-space-md); // 8px
+  --ngx-signal-form-error-padding-horizontal: var(
+    --_feedback-padding-horizontal
+  );
 }
