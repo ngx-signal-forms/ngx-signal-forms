@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
     globals: true,
     environment: 'jsdom',
     include: [
-      '{src,core,form-field,testing}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      '{src,core,form-field,headless,testing}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
     ],
     setupFiles: ['./test-setup.ts'],
     reporters: ['default'],

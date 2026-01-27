@@ -30,6 +30,7 @@ export * from './utilities/inject-form-config';
 export * from './utilities/inject-form-context';
 export { combineShowErrors, showErrors } from './utilities/show-errors';
 export * from './utilities/submission-helpers';
+export { unwrapValue } from './utilities/unwrap-signal-or-value';
 export * from './utilities/warning-error';
 
 // Components

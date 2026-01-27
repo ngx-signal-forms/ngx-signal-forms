@@ -4,13 +4,8 @@ import {
   Component,
   computed,
   input,
-  signal,
 } from '@angular/core';
-import type {
-  FieldState,
-  FieldTree,
-  ValidationError,
-} from '@angular/forms/signals';
+import type { FieldState, FieldTree } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
   ReactiveOrStatic,
@@ -18,82 +13,17 @@ import type {
 import {
   injectFormConfig,
   injectFormContext,
+  isBlockingError,
   isWarningError,
   NgxSignalFormErrorComponent,
   showErrors,
 } from '@ngx-signal-forms/toolkit';
-
-/**
- * Boolean state keys available on FieldState.
- *
- * Angular Signal Forms does not export this type directly, but FieldState
- * exposes these as `Signal<boolean>` properties. We define it locally for
- * type-safe access to state flags.
- *
- * @see {@link https://angular.dev/api/forms/signals/FieldState FieldState API}
- */
-type BooleanStateKey = 'invalid' | 'valid' | 'touched' | 'dirty' | 'pending';
-
-/**
- * Type representing the shape of FieldState for reading error summary.
- * Used for duck-typing access to error properties.
- */
-type StateLike = {
-  invalid?: () => boolean;
-  valid?: () => boolean;
-  touched?: () => boolean;
-  dirty?: () => boolean;
-  pending?: () => boolean;
-  errorSummary?: () => ValidationError[];
-  errors?: () => ValidationError[];
-};
-
-let nextFieldsetId = 0;
-
-function readFlag(state: unknown, key: BooleanStateKey): boolean {
-  if (!state || typeof state !== 'object') {
-    return false;
-  }
-
-  const fn = (state as Record<BooleanStateKey, (() => boolean) | undefined>)[
-    key
-  ];
-  return typeof fn === 'function' ? fn() : false;
-}
-
-function readErrorSummary(state: unknown): ValidationError[] {
-  if (!state || typeof state !== 'object') {
-    return [];
-  }
-
-  const summary = (state as StateLike).errorSummary;
-  if (typeof summary === 'function') {
-    return summary() ?? [];
-  }
-
-  const errors = (state as StateLike).errors;
-  if (typeof errors === 'function') {
-    return errors() ?? [];
-  }
-
-  return [];
-}
-
-function dedupeMessages(messages: ValidationError[]): ValidationError[] {
-  const seen = new Set<string>();
-  const result: ValidationError[] = [];
-
-  for (const message of messages) {
-    const key = `${message.kind}::${message.message ?? ''}`;
-    if (seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-    result.push(message);
-  }
-
-  return result;
-}
+import {
+  createUniqueId,
+  dedupeValidationErrors,
+  readErrors,
+  readFieldFlag,
+} from '@ngx-signal-forms/toolkit/headless';
 
 /**
  * Form fieldset component for grouping related form fields with aggregated error/warning display.
@@ -165,7 +95,7 @@ function dedupeMessages(messages: ValidationError[]): ValidationError[] {
     @if (showErrors() && (shouldShowErrors() || shouldShowWarnings())) {
       <div class="ngx-signal-form-fieldset__messages">
         <ngx-signal-form-error
-          [formField]="syntheticField()"
+          [errors]="filteredErrorsSignal"
           [fieldName]="resolvedFieldsetId()"
           [strategy]="resolvedStrategy()"
           [submittedStatus]="submittedStatus()"
@@ -216,7 +146,7 @@ export class NgxSignalFormFieldsetComponent<TFieldset = unknown> {
    */
   readonly showErrors = input(true, { transform: booleanAttribute });
 
-  readonly #generatedFieldsetId = `fieldset-${++nextFieldsetId}`;
+  readonly #generatedFieldsetId = createUniqueId('fieldset');
 
   readonly resolvedFieldsetId = computed(() => {
     return this.fieldsetId() ?? this.#generatedFieldsetId;
@@ -254,84 +184,72 @@ export class NgxSignalFormFieldsetComponent<TFieldset = unknown> {
 
   /**
    * Aggregated and deduplicated validation messages.
+   * Uses headless utilities for reading and deduplication.
    */
   readonly #allMessages = computed(() => {
     const override = this.fields();
 
     if (override && override.length > 0) {
-      const messages = override.flatMap((field) => readErrorSummary(field()));
-      return dedupeMessages(messages);
+      const messages = override.flatMap((field) => readErrors(field()));
+      return dedupeValidationErrors(messages);
     }
 
-    return dedupeMessages(readErrorSummary(this.#fieldsetState()));
+    return dedupeValidationErrors(readErrors(this.#fieldsetState()));
   });
 
   /**
    * Blocking errors (kind does NOT start with 'warn:').
+   * Uses shared `isBlockingError` utility from toolkit.
    */
-  readonly errors = computed(() => {
-    return this.#allMessages().filter((error) => !isWarningError(error));
-  });
+  readonly blockingErrors = computed(() =>
+    this.#allMessages().filter(isBlockingError),
+  );
 
   /**
    * Non-blocking warnings (kind starts with 'warn:').
+   * Uses shared `isWarningError` utility from toolkit.
    */
-  readonly warnings = computed(() => {
-    return this.#allMessages().filter((error) => isWarningError(error));
-  });
+  readonly warningErrors = computed(() =>
+    this.#allMessages().filter(isWarningError),
+  );
 
   readonly isInvalid = computed(() =>
-    readFlag(this.#fieldsetState(), 'invalid'),
+    readFieldFlag(this.#fieldsetState(), 'invalid'),
   );
-  readonly isValid = computed(() => readFlag(this.#fieldsetState(), 'valid'));
+  readonly isValid = computed(() =>
+    readFieldFlag(this.#fieldsetState(), 'valid'),
+  );
   readonly isTouched = computed(() =>
-    readFlag(this.#fieldsetState(), 'touched'),
+    readFieldFlag(this.#fieldsetState(), 'touched'),
   );
-  readonly isDirty = computed(() => readFlag(this.#fieldsetState(), 'dirty'));
+  readonly isDirty = computed(() =>
+    readFieldFlag(this.#fieldsetState(), 'dirty'),
+  );
   readonly isPending = computed(() =>
-    readFlag(this.#fieldsetState(), 'pending'),
+    readFieldFlag(this.#fieldsetState(), 'pending'),
   );
 
   readonly shouldShowErrors = computed(() => {
-    return this.#showErrorsSignal() && this.errors().length > 0;
+    return this.#showErrorsSignal() && this.blockingErrors().length > 0;
   });
 
   readonly shouldShowWarnings = computed(() => {
     if (this.shouldShowErrors()) {
       return false;
     }
-    return this.#showErrorsSignal() && this.warnings().length > 0;
+    return this.#showErrorsSignal() && this.warningErrors().length > 0;
   });
 
   /**
-   * Creates a synthetic FieldTree for NgxSignalFormErrorComponent.
+   * Filtered errors signal for NgxSignalFormErrorComponent.
    *
-   * NgxSignalFormErrorComponent expects a FieldTree, but we need to pass
-   * our aggregated/deduplicated errors. We create a minimal synthetic
-   * field that satisfies the component's interface.
-   *
-   * **Key Behavior:** Only passes blocking errors OR warnings, never both.
-   * This ensures warnings are suppressed when errors exist (UX best practice).
+   * Passes blocking errors OR warnings, never both.
+   * Warnings are suppressed when errors exist (UX best practice).
    */
-  readonly syntheticField = computed(() => {
-    const state = this.#fieldsetState();
-
-    /// Suppress warnings when blocking errors exist (UX best practice)
-    /// NgxSignalFormErrorComponent would show both, so we filter at source
-    const messages = this.errors().length > 0 ? this.errors() : this.warnings();
-
-    /// Create a synthetic FieldState with our filtered errors
-    const syntheticState = {
-      errors: signal(messages),
-      invalid: () => readFlag(state, 'invalid'),
-      valid: () => readFlag(state, 'valid'),
-      touched: () => readFlag(state, 'touched'),
-      dirty: () => readFlag(state, 'dirty'),
-      pending: () => readFlag(state, 'pending'),
-    };
-
-    /// Return a callable that returns the state (FieldTree signature)
-    return (() => syntheticState) as unknown as FieldTree<TFieldset>;
+  protected readonly filteredErrorsSignal = computed(() => {
+    return this.blockingErrors().length > 0
+      ? this.blockingErrors()
+      : this.warningErrors();
   });
 
   readonly describedByIds = computed(() => {

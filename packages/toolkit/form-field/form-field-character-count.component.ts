@@ -5,15 +5,22 @@ import {
   input,
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
+import {
+  createCharacterCount,
+  type CharacterCountLimitState,
+} from '@ngx-signal-forms/toolkit/headless';
 
 /**
  * Form field character count component with progressive color states.
+ *
+ * This styled wrapper uses the headless `createCharacterCount()` utility internally,
+ * demonstrating how to build custom character count displays with full styling control.
  *
  * Displays current/maximum character count with visual feedback as the limit is approached.
  * Color progression indicates usage level: ok → warning → danger → exceeded.
  *
  * Key features:
- * - Reactive character counting from form field
+ * - Reactive character counting via headless utility
  * - Progressive color states (configurable thresholds)
  * - Optional disable color progression
  * - Themeable via CSS custom properties
@@ -93,6 +100,8 @@ import type { FieldTree } from '@angular/forms/signals';
  * - Ensure color is not the only indicator (text content also changes)
  * - Color contrast meets WCAG 2.2 Level AA (4.5:1 minimum)
  * - Consider announcing state changes for screen readers (future enhancement)
+ *
+ * @see {@link createCharacterCount} for the underlying headless utility
  */
 @Component({
   selector: 'ngx-signal-form-field-character-count',
@@ -100,7 +109,7 @@ import type { FieldTree } from '@angular/forms/signals';
   template: `
     <div
       class="ngx-form-field-char-count"
-      [attr.data-limit-state]="limitState()"
+      [attr.data-limit-state]="displayLimitState()"
     >
       {{ characterCountText() }}
     </div>
@@ -226,27 +235,17 @@ export class NgxSignalFormFieldCharacterCountComponent<TValue = unknown> {
   });
 
   /**
-   * Resolved maximum character length.
-   *
-   * Priority:
-   * 1. Manual `maxLength` input (if provided)
-   * 2. Auto-detected from field's `maxLength()` signal
-   * 3. Fallback to 0 (no limit)
+   * Resolved maximum length with auto-detection from field validation.
    */
   readonly #resolvedMaxLength = computed(() => {
     const manualMax = this.maxLength();
 
-    // If explicitly provided, use it
     if (manualMax !== undefined && manualMax !== null) {
       return Math.max(0, manualMax);
     }
 
-    // Try to auto-detect from field validation
-    const fieldValue = this.formField();
-    const fieldState = fieldValue() as {
-      maxLength?: () => number;
-    };
-
+    /// Try to auto-detect from field validation
+    const fieldState = this.formField()() as { maxLength?: () => number };
     if (
       'maxLength' in fieldState &&
       typeof fieldState.maxLength === 'function'
@@ -257,17 +256,34 @@ export class NgxSignalFormFieldCharacterCountComponent<TValue = unknown> {
       }
     }
 
-    // No limit detected
     return 0;
+  });
+
+  /**
+   * Headless character count state from the toolkit.
+   * Provides currentLength, remaining, limitState, etc.
+   */
+  readonly #charCountState = computed(() => {
+    const max = this.#resolvedMaxLength();
+    if (max === 0) return null;
+
+    const thresholds = this.colorThresholds();
+    return createCharacterCount({
+      field: this.formField() as FieldTree<string | null | undefined>,
+      maxLength: max,
+      warningThreshold: thresholds.warning / 100,
+      dangerThreshold: thresholds.danger / 100,
+    });
   });
 
   /**
    * Current character length from the field value.
    */
   protected readonly currentLength = computed(() => {
-    const fieldValue = this.formField();
-    const value = fieldValue().value();
-    // Type assertion needed due to FieldState union type complexity
+    const state = this.#charCountState();
+    if (state) return state.currentLength();
+
+    const value = this.formField()().value() as unknown;
     return typeof value === 'string' ? (value as string).length : 0;
   });
 
@@ -278,46 +294,21 @@ export class NgxSignalFormFieldCharacterCountComponent<TValue = unknown> {
     const current = this.currentLength();
     const max = this.#resolvedMaxLength();
 
-    // If no limit, just show current count
-    if (max === 0) {
-      return `${current}`;
-    }
-
+    if (max === 0) return `${current}`;
     return `${current}/${max}`;
   });
 
   /**
-   * Current limit state based on percentage of limit used.
-   *
-   * States:
-   * - `disabled`: Color progression is disabled
-   * - `ok`: Below warning threshold
-   * - `warning`: Between warning and danger thresholds
-   * - `danger`: Between danger threshold and 100%
-   * - `exceeded`: Above 100% (over limit)
+   * Current limit state for display, accounting for disabled color progression.
    */
-  protected readonly limitState = computed(() => {
+  protected readonly displayLimitState = computed<
+    CharacterCountLimitState | 'disabled'
+  >(() => {
     if (!this.showLimitColors()) return 'disabled';
 
-    const max = this.#resolvedMaxLength();
-    const current = this.currentLength();
+    const state = this.#charCountState();
+    if (!state) return 'disabled';
 
-    // No limit defined - no color progression
-    if (max <= 0) {
-      return 'disabled';
-    }
-
-    const percentage = (current / max) * 100;
-    const thresholds = this.colorThresholds();
-    const warningThreshold = Math.max(0, Math.min(100, thresholds.warning));
-    const dangerThreshold = Math.max(
-      warningThreshold,
-      Math.min(100, thresholds.danger),
-    );
-
-    if (current > max) return 'exceeded';
-    if (percentage >= dangerThreshold) return 'danger';
-    if (percentage >= warningThreshold) return 'warning';
-    return 'ok';
+    return state.limitState();
   });
 }

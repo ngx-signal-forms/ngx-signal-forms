@@ -94,14 +94,14 @@ import { showErrors } from '../utilities/show-errors';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- Blocking Errors (ARIA role="alert" for assertive announcement) -->
-    <div
-      [id]="errorId()"
-      class="ngx-signal-form-error ngx-signal-form-error--error"
-      role="alert"
-      aria-live="assertive"
-      aria-atomic="true"
-    >
-      @if (showErrors() && hasErrors()) {
+    @if (showErrors() && hasErrors()) {
+      <div
+        [id]="errorId()"
+        class="ngx-signal-form-error ngx-signal-form-error--error"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
         @for (error of resolvedErrors(); track error.kind) {
           <p
             class="ngx-signal-form-error__message ngx-signal-form-error__message--error"
@@ -109,18 +109,18 @@ import { showErrors } from '../utilities/show-errors';
             {{ error.message }}
           </p>
         }
-      }
-    </div>
+      </div>
+    }
 
     <!-- Non-blocking Warnings (ARIA role="status" for polite announcement) -->
-    <div
-      [id]="warningId()"
-      class="ngx-signal-form-error ngx-signal-form-error--warning"
-      role="status"
-      aria-live="polite"
-      aria-atomic="true"
-    >
-      @if (showWarnings() && hasWarnings()) {
+    @if (showWarnings() && hasWarnings()) {
+      <div
+        [id]="warningId()"
+        class="ngx-signal-form-error ngx-signal-form-error--warning"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         @for (warning of resolvedWarnings(); track warning.kind) {
           <p
             class="ngx-signal-form-error__message ngx-signal-form-error__message--warning"
@@ -128,8 +128,8 @@ import { showErrors } from '../utilities/show-errors';
             {{ warning.message }}
           </p>
         }
-      }
-    </div>
+      </div>
+    }
   `,
   styleUrl: './form-error.component.scss',
 })
@@ -154,8 +154,35 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   /**
    * The Signal Forms field to display errors/warnings for.
    * Accepts a FieldTree from Angular Signal Forms.
+   *
+   * **Use `formField` for single fields:**
+   * Automatically extracts errors from the field's state.
+   *
+   * **Use `errors` input for aggregated/custom errors:**
+   * Pass a pre-filtered ValidationError[] signal directly (e.g., from fieldsets).
    */
-  readonly formField = input.required<FieldTree<TValue>>();
+  readonly formField = input<FieldTree<TValue>>();
+
+  /**
+   * Direct errors input for pre-aggregated/custom error arrays.
+   *
+   * When provided, this takes priority over extracting errors from `formField`.
+   * Useful for:
+   * - Fieldsets that aggregate errors from multiple fields
+   * - Custom components that compute their own error lists
+   * - Testing with mock error data
+   *
+   * @example Fieldset with aggregated errors
+   * ```html
+   * <ngx-signal-form-error
+   *   [errors]="aggregatedErrors"
+   *   [fieldName]="'address'"
+   *   [strategy]="strategy()"
+   *   [submittedStatus]="submittedStatus()"
+   * />
+   * ```
+   */
+  readonly errors = input<Signal<ValidationError[]>>();
 
   /**
    * The field name used for generating error/warning IDs.
@@ -285,21 +312,37 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   /**
    * Extract FieldState from FieldTree for use with showErrors utility.
    * FieldTree is a callable signal: () => FieldState
+   *
+   * Returns null when using direct errors input (no field available).
    */
   readonly #fieldState = computed(() => {
     const fieldTree = this.formField();
-    return fieldTree();
+    return fieldTree ? fieldTree() : null;
   });
 
   /**
    * Computed signal for error visibility based on strategy.
    * Type assertion needed due to FieldState/CompatFieldState union type complexity.
+   *
+   * When using direct errors input (no formField), defaults to showing errors
+   * since the parent component controls visibility.
    */
-  protected readonly showErrors = showErrors(
-    this.#fieldState as Signal<FieldState<TValue>>,
-    this.#resolvedStrategy,
-    this.#resolvedSubmittedStatus,
-  );
+  protected readonly showErrors = computed(() => {
+    const fieldState = this.#fieldState();
+
+    // When using direct errors (no formField), always show
+    // The parent component (e.g., fieldset) controls visibility
+    if (!fieldState) {
+      return true;
+    }
+
+    // Use strategy-based visibility for single fields
+    return showErrors(
+      () => fieldState as FieldState<TValue>,
+      this.#resolvedStrategy,
+      this.#resolvedSubmittedStatus,
+    )();
+  });
 
   /**
    * Computed signal for warning visibility.
@@ -308,11 +351,25 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   protected readonly showWarnings = this.showErrors;
 
   /**
-   * All validation messages from the field.
+   * All validation messages from the field or direct errors input.
+   *
+   * Priority:
+   * 1. Direct `errors` input (for aggregated/custom errors)
+   * 2. Extract from `formField` FieldTree
    */
   readonly #allMessages = computed(() => {
+    // Priority 1: Direct errors input
+    const directErrors = this.errors();
+    if (directErrors) {
+      return directErrors();
+    }
+
+    // Priority 2: Extract from formField
     const fieldTree = this.formField();
-    // FieldTree is callable: () => FieldState
+    if (!fieldTree) {
+      return [];
+    }
+
     const fieldState = fieldTree();
 
     if (!fieldState || typeof fieldState !== 'object') {
@@ -333,9 +390,9 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   });
 
   /**
-   * Computed array of errors (kind does NOT start with 'warn:').
+   * Computed array of blocking errors (kind does NOT start with 'warn:').
    */
-  protected readonly errors = computed(() => {
+  readonly #blockingErrors = computed(() => {
     return this.#allMessages().filter(
       (msg) => msg.kind && !msg.kind.startsWith('warn:'),
     );
@@ -344,7 +401,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   /**
    * Computed array of warnings (kind starts with 'warn:').
    */
-  protected readonly warnings = computed(() => {
+  readonly #warningErrors = computed(() => {
     return this.#allMessages().filter(
       (msg) => msg.kind && msg.kind.startsWith('warn:'),
     );
@@ -353,12 +410,16 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   /**
    * Whether the field has blocking errors.
    */
-  protected readonly hasErrors = computed(() => this.errors().length > 0);
+  protected readonly hasErrors = computed(
+    () => this.#blockingErrors().length > 0,
+  );
 
   /**
    * Whether the field has non-blocking warnings.
    */
-  protected readonly hasWarnings = computed(() => this.warnings().length > 0);
+  protected readonly hasWarnings = computed(
+    () => this.#warningErrors().length > 0,
+  );
 
   /**
    * Resolve error message using 3-tier priority:
@@ -433,7 +494,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * Computed array of resolved error messages (not warnings).
    */
   protected readonly resolvedErrors = computed(() => {
-    return this.errors().map((error) => ({
+    return this.#blockingErrors().map((error) => ({
       kind: error.kind,
       message: this.#resolveErrorMessage(error),
     }));
@@ -443,7 +504,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * Computed array of resolved warning messages.
    */
   protected readonly resolvedWarnings = computed(() => {
-    return this.warnings().map((warning) => ({
+    return this.#warningErrors().map((warning) => ({
       kind: warning.kind,
       message: this.#resolveErrorMessage(warning),
     }));

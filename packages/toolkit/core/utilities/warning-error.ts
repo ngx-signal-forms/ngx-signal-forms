@@ -17,7 +17,7 @@ import type { ValidationError } from '@angular/forms/signals';
  * ```
  */
 export function isWarningError(error: ValidationError): boolean {
-  return error.kind.startsWith('warn:');
+  return Boolean(error?.kind?.startsWith('warn:'));
 }
 
 /**
@@ -25,7 +25,7 @@ export function isWarningError(error: ValidationError): boolean {
  * Blocking errors are errors with `kind` NOT starting with `'warn:'`.
  *
  * @param error - The validation error to check
- * @returns `true` if the error is blocking, `false` if it's a warning
+ * @returns `true` if the error is blocking, `false` if it's a warning or invalid
  *
  * @example
  * ```typescript
@@ -37,7 +37,7 @@ export function isWarningError(error: ValidationError): boolean {
  * ```
  */
 export function isBlockingError(error: ValidationError): boolean {
-  return !error.kind.startsWith('warn:');
+  return Boolean(error?.kind && !error.kind.startsWith('warn:'));
 }
 
 /**
@@ -102,10 +102,7 @@ export function isBlockingError(error: ValidationError): boolean {
  *
  * @see {@link https://angular.dev/api/forms/signals/ValidationError | ValidationError API}
  */
-export function warningError(
-  kind: string,
-  message?: string,
-): ValidationError {
+export function warningError(kind: string, message?: string): ValidationError {
   return {
     kind: `warn:${kind}`,
     message,

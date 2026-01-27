@@ -14,6 +14,8 @@ import type {
   ReactiveOrStatic,
 } from '@ngx-signal-forms/toolkit';
 import {
+  isBlockingError,
+  isWarningError,
   NGX_SIGNAL_FORM_CONTEXT,
   NGX_SIGNAL_FORMS_CONFIG,
   NgxSignalFormErrorComponent,
@@ -375,48 +377,35 @@ export class NgxSignalFormFieldComponent<TValue = unknown> {
 
   /**
    * All validation messages from the field.
-   * Used to detect errors vs warnings.
+   * Uses safe duck-typing access pattern.
    */
   readonly #allMessages = computed(() => {
-    const fieldTree = this.formField();
-    const fieldState = fieldTree();
+    const fieldState = this.formField()();
 
     if (!fieldState || typeof fieldState !== 'object') {
-      return [];
+      return [] as ValidationError[];
     }
 
-    const errorsGetter = (
-      fieldState as unknown as {
-        errors?: () => ValidationError[];
-      }
-    ).errors;
-
-    if (typeof errorsGetter === 'function') {
-      return errorsGetter() || [];
-    }
-
-    return [];
+    const errorsGetter = (fieldState as { errors?: () => ValidationError[] })
+      .errors;
+    return typeof errorsGetter === 'function' ? (errorsGetter() ?? []) : [];
   });
 
   /**
-   * Whether field has blocking errors (kind does NOT start with 'warn:').
-   * Used to determine if warning styling should be applied.
+   * Whether field has blocking errors.
+   * Uses shared `isBlockingError` utility from headless.
    */
-  protected readonly hasErrors = computed(() => {
-    return this.#allMessages().some(
-      (msg) => msg.kind && !msg.kind.startsWith('warn:'),
-    );
-  });
+  protected readonly hasErrors = computed(() =>
+    this.#allMessages().some(isBlockingError),
+  );
 
   /**
-   * Whether field has warnings (kind starts with 'warn:').
-   * Warnings are displayed only when there are no errors.
+   * Whether field has warnings.
+   * Uses shared `isWarningError` utility from headless.
    */
-  protected readonly hasWarnings = computed(() => {
-    return this.#allMessages().some(
-      (msg) => msg.kind && msg.kind.startsWith('warn:'),
-    );
-  });
+  protected readonly hasWarnings = computed(() =>
+    this.#allMessages().some(isWarningError),
+  );
 
   /**
    * Whether to apply warning styling to the form field container.
