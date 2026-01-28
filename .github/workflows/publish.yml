@@ -43,7 +43,7 @@ jobs:
         run: pnpm exec nx run-many -t build -p toolkit
 
       - name: Publish packages
-        run: pnpm exec nx release publish --yes
+        run: pnpm exec nx release publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true'
