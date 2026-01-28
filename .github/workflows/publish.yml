@@ -1,0 +1,49 @@
+name: Publish
+
+# Nx recommended pattern: publish when tags are pushed
+# Flow: nx release --skip-publish (locally) → git push --tags → this workflow publishes
+on:
+  push:
+    tags:
+      - v*.*.*
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Nx Report
+        run: pnpm exec nx report
+
+      - name: Build
+        run: pnpm exec nx run-many -t build -p toolkit
+
+      - name: Publish packages
+        run: pnpm exec nx release publish --yes
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'

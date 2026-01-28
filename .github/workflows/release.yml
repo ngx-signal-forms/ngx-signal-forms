@@ -50,10 +50,12 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: pnpm/action-setup@v4
@@ -74,6 +76,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Nx Report
+        run: pnpm exec nx report
 
       - name: Verify Quality (Lint, Test, Build, E2E)
         run: pnpm exec nx run-many -t lint test build e2e-ci -p toolkit demo-e2e
@@ -99,10 +104,12 @@ jobs:
       - name: Version and Publish (Real)
         if: ${{ !inputs.dry_run }}
         run: |
-          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --tag=${{ inputs.npm_tag }} --yes
+          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --yes
+          pnpm exec nx release publish --tag=${{ inputs.npm_tag }} --yes
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
 
       - name: Summary
         if: ${{ !inputs.dry_run }}

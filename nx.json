@@ -18,7 +18,8 @@
     "sharedGlobals": [
       "{workspaceRoot}/.github/workflows/ci.yml",
       "{workspaceRoot}/.github/workflows/release.yml",
-      "{workspaceRoot}/.github/workflows/release-next.yml"
+      "{workspaceRoot}/.github/workflows/release-next.yml",
+      "{workspaceRoot}/.github/workflows/publish.yml"
     ]
   },
   "nxCloudId": "68ebfa2fab08d69a339a9973",

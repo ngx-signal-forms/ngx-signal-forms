@@ -17,15 +17,16 @@ permissions:
 jobs:
   release-next:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 10.18.2
           run_install: false
 
       - uses: actions/setup-node@v4
@@ -40,23 +41,20 @@ jobs:
       - name: Verify Quality (Lint, Test, Build, E2E)
         run: pnpm exec nx run-many -t lint test build e2e-ci -p toolkit demo-e2e
 
+      - name: Nx Report
+        run: pnpm exec nx report
+
       - name: Release Next
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Short SHA for version
           SHA_SHORT=$(git rev-parse --short HEAD)
           NEXT_VERSION="0.0.0-next.$SHA_SHORT"
-
           echo "Releasing version: $NEXT_VERSION"
 
-          # Version without committing or tagging
+          # Version without git operations
           pnpm exec nx release version --specifier $NEXT_VERSION --git-tag=false --stage-changes=false --generator-options='{"skipLockFileUpdate": true}' --yes
 
-          # Publish to npm with next tag
-          pnpm exec nx release publish --tag=next --provenance --yes
+          # Publish to npm with next tag and provenance
+          pnpm exec nx release publish --tag=next --yes
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true'

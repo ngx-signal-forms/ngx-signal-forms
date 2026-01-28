@@ -25,8 +25,11 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          filter: tree:0
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
