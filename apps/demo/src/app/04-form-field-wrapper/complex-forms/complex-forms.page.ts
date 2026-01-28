@@ -30,6 +30,13 @@ import { ComplexFormsComponent } from './complex-forms.form';
 @Component({
   selector: 'ngx-complex-forms-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+  `,
   imports: [
     ErrorDisplayModeSelectorComponent,
     ExampleCardsComponent,
@@ -50,10 +57,7 @@ import { ComplexFormsComponent } from './complex-forms.form';
     />
 
     <!-- Error Display Mode Selector -->
-    <ngx-error-display-mode-selector
-      [(selectedMode)]="errorDisplayMode"
-      class="mb-6"
-    />
+    <ngx-error-display-mode-selector [(selectedMode)]="errorDisplayMode" />
     <ngx-split-layout>
       <ngx-complex-forms [errorDisplayMode]="errorDisplayMode()" left />
 

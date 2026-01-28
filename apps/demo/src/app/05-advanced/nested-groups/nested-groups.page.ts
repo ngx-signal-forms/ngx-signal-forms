@@ -11,6 +11,13 @@ import { NestedGroupsComponent } from './nested-groups.form';
 @Component({
   selector: 'ngx-nested-groups-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+  `,
   imports: [
     NestedGroupsComponent,
     ExampleCardsComponent,

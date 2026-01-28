@@ -25,6 +25,13 @@ import { PureSignalFormComponent } from './pure-signal-form.form';
 @Component({
   selector: 'ngx-pure-signal-form-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+  `,
   imports: [
     PureSignalFormComponent,
     ExampleCardsComponent,
@@ -42,7 +49,7 @@ import { PureSignalFormComponent } from './pure-signal-form.form';
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
     />
-    <ngx-split-layout class="mt-8">
+    <ngx-split-layout>
       <ngx-pure-signal-form left />
 
       @if (formRef(); as form) {

@@ -50,7 +50,7 @@ const profileSchema = schema<UserProfile>((path) => {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
   template: `
-    <div class="p-6">
+    <div class="px-6 pt-0 pb-6">
       <h2 class="mb-4 text-2xl font-bold">Nested Groups Demo</h2>
       <p class="mb-6 text-gray-600 dark:text-gray-400">
         Complex form with deeply nested data structures.

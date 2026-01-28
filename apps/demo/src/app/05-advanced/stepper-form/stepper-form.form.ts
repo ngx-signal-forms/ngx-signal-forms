@@ -41,7 +41,7 @@ const wizardSchema = schema<WizardData>((path) => {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
   template: `
-    <div class="p-6">
+    <div class="px-6 pt-0 pb-6">
       <h2 class="mb-6 text-2xl font-bold">Multi-Step Registration</h2>
 
       <!-- Stepper Header -->

@@ -26,6 +26,13 @@ import { ErrorMessagesComponent } from './error-messages.form';
 @Component({
   selector: 'ngx-error-messages-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+  `,
   imports: [
     ErrorMessagesComponent,
     ExampleCardsComponent,
@@ -46,10 +53,7 @@ import { ErrorMessagesComponent } from './error-messages.form';
     />
 
     <!-- Error Display Mode Selector -->
-    <ngx-error-display-mode-selector
-      [(selectedMode)]="errorDisplayMode"
-      class="mb-6"
-    />
+    <ngx-error-display-mode-selector [(selectedMode)]="errorDisplayMode" />
     <ngx-split-layout>
       <ngx-error-messages [errorDisplayMode]="errorDisplayMode()" left />
 

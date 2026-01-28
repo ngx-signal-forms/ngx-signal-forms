@@ -11,6 +11,13 @@ import { DynamicListComponent } from './dynamic-list.form';
 @Component({
   selector: 'ngx-dynamic-list-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+  `,
   imports: [
     DynamicListComponent,
     ExampleCardsComponent,

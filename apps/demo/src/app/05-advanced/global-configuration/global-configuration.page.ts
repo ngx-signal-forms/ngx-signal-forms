@@ -24,6 +24,13 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
 @Component({
   selector: 'ngx-global-configuration-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+  `,
   imports: [
     GlobalConfigurationComponent,
     ExampleCardsComponent,
@@ -44,10 +51,7 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
     />
 
     <!-- Error Display Mode Selector -->
-    <ngx-error-display-mode-selector
-      [(selectedMode)]="errorDisplayMode"
-      class="mb-6"
-    />
+    <ngx-error-display-mode-selector [(selectedMode)]="errorDisplayMode" />
     <ngx-split-layout>
       <ngx-global-configuration [errorDisplayMode]="errorDisplayMode()" left />
 

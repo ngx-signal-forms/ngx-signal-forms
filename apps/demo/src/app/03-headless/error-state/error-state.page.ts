@@ -11,6 +11,13 @@ import { HeadlessErrorStateComponent } from './error-state.form';
 @Component({
   selector: 'ngx-headless-error-state-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+  `,
   imports: [
     HeadlessErrorStateComponent,
     ExampleCardsComponent,

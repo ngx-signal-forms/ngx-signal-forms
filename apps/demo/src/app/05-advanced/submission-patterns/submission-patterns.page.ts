@@ -23,6 +23,13 @@ import { SubmissionPatternsComponent } from './submission-patterns.form';
 @Component({
   selector: 'ngx-submission-patterns-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+  `,
   imports: [
     SubmissionPatternsComponent,
     ExampleCardsComponent,
@@ -43,10 +50,7 @@ import { SubmissionPatternsComponent } from './submission-patterns.form';
     />
 
     <!-- Error Display Mode Selector -->
-    <ngx-error-display-mode-selector
-      [(selectedMode)]="errorDisplayMode"
-      class="mb-6"
-    />
+    <ngx-error-display-mode-selector [(selectedMode)]="errorDisplayMode" />
 
     <ngx-split-layout>
       <ngx-submission-patterns [errorDisplayMode]="errorDisplayMode()" left />

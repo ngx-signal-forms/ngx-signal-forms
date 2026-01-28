@@ -11,6 +11,13 @@ import { StepperFormComponent } from './stepper-form.form';
 @Component({
   selector: 'ngx-stepper-form-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+  `,
   imports: [
     StepperFormComponent,
     ExampleCardsComponent,

@@ -11,6 +11,13 @@ import { AsyncValidationComponent } from './async-validation.form';
 @Component({
   selector: 'ngx-async-validation-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+  `,
   imports: [
     AsyncValidationComponent,
     ExampleCardsComponent,

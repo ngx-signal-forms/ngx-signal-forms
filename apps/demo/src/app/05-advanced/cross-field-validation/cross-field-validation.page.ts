@@ -11,6 +11,13 @@ import { CrossFieldValidationComponent } from './cross-field-validation.form';
 @Component({
   selector: 'ngx-cross-field-validation-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+  `,
   imports: [
     CrossFieldValidationComponent,
     ExampleCardsComponent,
