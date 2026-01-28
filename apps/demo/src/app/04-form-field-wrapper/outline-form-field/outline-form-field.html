@@ -45,7 +45,7 @@
 
     <!-- Fact Fields -->
     <div class="grid gap-4 md:grid-cols-2">
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="showcaseForm.facts[factIndex].commitDate"
         outline
       >
@@ -71,9 +71,9 @@
           [formField]="showcaseForm.facts[factIndex].commitDate"
           placeholder="DD-MM-JJJJ"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
 
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="showcaseForm.facts[factIndex].commitPeriod"
         outline
       >
@@ -99,11 +99,11 @@
           [formField]="showcaseForm.facts[factIndex].commitPeriod"
           placeholder="Periode"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
     </div>
 
     <!-- Land -->
-    <ngx-signal-form-field
+    <ngx-signal-form-field-wrapper
       [formField]="showcaseForm.facts[factIndex].country"
       outline
     >
@@ -116,11 +116,11 @@
         <option [value]="country.value">{{ country.label }}</option>
         }
       </select>
-    </ngx-signal-form-field>
+    </ngx-signal-form-field-wrapper>
 
     <!-- Location Fields -->
     <div class="grid gap-4 md:grid-cols-2">
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="showcaseForm.facts[factIndex].place"
         outline
       >
@@ -151,9 +151,9 @@
           [formField]="showcaseForm.facts[factIndex].place"
           placeholder="Plaatsnaam"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
 
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="showcaseForm.facts[factIndex].municipality"
         outline
       >
@@ -184,10 +184,10 @@
           [formField]="showcaseForm.facts[factIndex].municipality"
           placeholder="Gemeentenaam"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
     </div>
 
-    <ngx-signal-form-field
+    <ngx-signal-form-field-wrapper
       [formField]="showcaseForm.facts[factIndex].locationDescription"
       outline
     >
@@ -200,9 +200,9 @@
         [formField]="showcaseForm.facts[factIndex].locationDescription"
         placeholder="Omschrijving locatie"
       />
-    </ngx-signal-form-field>
+    </ngx-signal-form-field-wrapper>
 
-    <ngx-signal-form-field
+    <ngx-signal-form-field-wrapper
       [formField]="showcaseForm.facts[factIndex].abroadLocation"
       outline
     >
@@ -215,7 +215,7 @@
         [formField]="showcaseForm.facts[factIndex].abroadLocation"
         placeholder="Locatie in buitenland"
       />
-    </ngx-signal-form-field>
+    </ngx-signal-form-field-wrapper>
 
     <!-- Offenses Section -->
     <div class="mt-4 space-y-4">
@@ -239,7 +239,7 @@
         </div>
         <div class="flex items-start gap-4">
           <div class="flex-1 space-y-4">
-            <ngx-signal-form-field
+            <ngx-signal-form-field-wrapper
               [formField]="showcaseForm.facts[factIndex].offenses[offenseIndex].qualification"
               outline
             >
@@ -289,7 +289,7 @@
                   />
                 </svg>
               </button>
-            </ngx-signal-form-field>
+            </ngx-signal-form-field-wrapper>
 
             <!-- Articles (Wetsartikelen) -->
             <div class="space-y-2">
@@ -312,7 +312,7 @@
                   @for (article of offense.articles; track $index; let
                   articleIndex = $index) {
                   <div class="flex items-center gap-2">
-                    <ngx-signal-form-field
+                    <ngx-signal-form-field-wrapper
                       [formField]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles[articleIndex].article"
                       outline
                       class="flex-1"
@@ -354,7 +354,7 @@
                           />
                         </svg>
                       </button>
-                    </ngx-signal-form-field>
+                    </ngx-signal-form-field-wrapper>
                   </div>
                   }
 

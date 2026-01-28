@@ -13,7 +13,7 @@ import {
   NGX_SIGNAL_FORM_CONTEXT,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
 import type { SubmissionModel } from './submission-patterns.model';
 import { submissionSchema } from './submission-patterns.validations';
 
@@ -30,7 +30,11 @@ import { submissionSchema } from './submission-patterns.validations';
 @Component({
   selector: 'ngx-submission-patterns',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxSignalFormFieldWrapperComponent,
+  ],
   template: `
     <form
       [ngxSignalForm]="registrationForm"
@@ -128,7 +132,7 @@ import { submissionSchema } from './submission-patterns.validations';
       <!-- Form fields -->
       <div class="space-y-6">
         <!-- Username field -->
-        <ngx-signal-form-field
+        <ngx-signal-form-field-wrapper
           [formField]="registrationForm.username"
           fieldName="username"
         >
@@ -143,10 +147,10 @@ import { submissionSchema } from './submission-patterns.validations';
           <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
             Letters, numbers, and underscores only
           </p>
-        </ngx-signal-form-field>
+        </ngx-signal-form-field-wrapper>
 
         <!-- Password field -->
-        <ngx-signal-form-field
+        <ngx-signal-form-field-wrapper
           [formField]="registrationForm.password"
           fieldName="password"
         >
@@ -161,10 +165,10 @@ import { submissionSchema } from './submission-patterns.validations';
           <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
             At least 8 characters
           </p>
-        </ngx-signal-form-field>
+        </ngx-signal-form-field-wrapper>
 
         <!-- Confirm Password field -->
-        <ngx-signal-form-field
+        <ngx-signal-form-field-wrapper
           [formField]="registrationForm.confirmPassword"
           fieldName="confirmPassword"
         >
@@ -176,7 +180,7 @@ import { submissionSchema } from './submission-patterns.validations';
             placeholder="Re-enter password"
             class="form-input"
           />
-        </ngx-signal-form-field>
+        </ngx-signal-form-field-wrapper>
       </div>
 
       <!-- Submission state info with helper values -->

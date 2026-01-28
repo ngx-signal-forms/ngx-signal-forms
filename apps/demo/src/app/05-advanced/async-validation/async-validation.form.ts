@@ -48,7 +48,7 @@ const registrationSchema = schema<Registration>((path) => {
       </p>
 
       <form (submit)="register($event)" class="max-w-md space-y-6">
-        <ngx-signal-form-field [formField]="regForm.username" outline>
+        <ngx-signal-form-field-wrapper [formField]="regForm.username" outline>
           <label for="username">Username</label>
           <input
             id="username"
@@ -65,10 +65,10 @@ const registrationSchema = schema<Registration>((path) => {
             </span>
           }
 
-          <ngx-signal-form-field-hint>
+          <ngx-signal-form-field-wrapper-hint>
             Availability is checked automatically
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field>
+          </ngx-signal-form-field-wrapper-hint>
+        </ngx-signal-form-field-wrapper>
 
         <div class="flex gap-4">
           <button

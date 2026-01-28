@@ -41,7 +41,7 @@ If Signal Forms initializes fields as touched (or the form-field wrapper is inad
 
 **Investigation Needed:**
 
-1. Check if `NgxSignalFormFieldComponent` calls any touch methods
+1. Check if `NgxSignalFormFieldWrapperComponent` calls any touch methods
 2. Check if the demo form's `createPasswordForm()` is modifying state
 3. Verify Signal Forms' default initialization of `touched()` signal
 

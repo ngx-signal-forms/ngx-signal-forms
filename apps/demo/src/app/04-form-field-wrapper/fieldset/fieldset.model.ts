@@ -1,7 +1,7 @@
 /**
  * Fieldset Demo Model - Demonstrates grouped form fields with aggregated errors
  *
- * This model showcases the NgxSignalFormFieldsetComponent with:
+ * This model showcases the NgxSignalFormFieldset with:
  * - Grouped address fields with shared validation display
  * - Password fields with cross-field validation
  * - Nested fieldsets within a larger form
@@ -19,6 +19,10 @@ export interface PasswordModel {
   confirmPassword: string;
 }
 
+export interface DeliveryModel {
+  method: string;
+}
+
 export interface FieldsetDemoModel {
   /// Shipping address (grouped with fieldset)
   shippingAddress: AddressModel;
@@ -28,6 +32,9 @@ export interface FieldsetDemoModel {
 
   /// Password fields (cross-field validation demo)
   credentials: PasswordModel;
+
+  /// Delivery method selection
+  delivery: DeliveryModel;
 
   /// Billing same as shipping
   billingSameAsShipping: boolean;

@@ -13,7 +13,7 @@ import { ComplexFormsComponent } from './complex-forms.form';
 /**
  * Complex Forms Page
  *
- * Demonstrates NgxSignalFormFieldComponent with:
+ * Demonstrates NgxSignalFormFieldWrapperComponent with:
  * - Nested object validation (personalInfo, addressInfo)
  * - Dynamic arrays (skills, contacts)
  * - Add/remove array items
@@ -36,7 +36,7 @@ import { ComplexFormsComponent } from './complex-forms.form';
       <h1 class="page-title">Complex Forms with Form Field Wrapper</h1>
       <p class="page-subtitle">
         Nested objects, dynamic arrays, and maximum code reduction with
-        NgxSignalFormFieldComponent
+        NgxSignalFormFieldWrapperComponent
       </p>
     </header>
 

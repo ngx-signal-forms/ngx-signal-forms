@@ -14,27 +14,27 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  *
  * @example Basic hint text
  * ```html
- * <ngx-signal-form-field [formField]="form.phone">
+ * <ngx-signal-form-field-wrapper [formField]="form.phone">
  *   <label for="phone">Phone Number</label>
  *   <input id="phone" [formField]="form.phone" />
- *   <ngx-signal-form-field-hint>
+ *   <ngx-signal-form-field-wrapper-hint>
  *     Format: 123-456-7890
- *   </ngx-signal-form-field-hint>
- * </ngx-signal-form-field>
+ *   </ngx-signal-form-field-wrapper-hint>
+ * </ngx-signal-form-field-wrapper>
  * ```
  *
  * @example With position control
  * ```html
- * <ngx-signal-form-field-hint position="left">
+ * <ngx-signal-form-field-wrapper-hint position="left">
  *   Use at least 8 characters
- * </ngx-signal-form-field-hint>
+ * </ngx-signal-form-field-wrapper-hint>
  * ```
  *
  * @example Rich content
  * ```html
- * <ngx-signal-form-field-hint>
+ * <ngx-signal-form-field-wrapper-hint>
  *   <strong>Tip:</strong> Use keywords that describe your product
- * </ngx-signal-form-field-hint>
+ * </ngx-signal-form-field-wrapper-hint>
  * ```
  *
  * Customization:
@@ -55,7 +55,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  * - Consider using aria-describedby to link hint to input (handled by parent component)
  */
 @Component({
-  selector: 'ngx-signal-form-field-hint',
+  selector: 'ngx-signal-form-field-wrapper-hint',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="ngx-form-field-hint">

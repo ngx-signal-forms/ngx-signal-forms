@@ -30,19 +30,19 @@ import {
  *
  * @example Basic character count
  * ```html
- * <ngx-signal-form-field [formField]="form.bio">
+ * <ngx-signal-form-field-wrapper [formField]="form.bio">
  *   <label for="bio">Bio</label>
  *   <textarea id="bio" [formField]="form.bio"></textarea>
- *   <ngx-signal-form-field-character-count
+ *   <ngx-signal-form-field-wrapper-character-count
  *     [formField]="form.bio"
  *     [maxLength]="500"
  *   />
- * </ngx-signal-form-field>
+ * </ngx-signal-form-field-wrapper>
  * ```
  *
  * @example Left-aligned
  * ```html
- * <ngx-signal-form-field-character-count
+ * <ngx-signal-form-field-wrapper-character-count
  *   [formField]="form.tweet"
  *   [maxLength]="280"
  *   position="left"
@@ -51,7 +51,7 @@ import {
  *
  * @example Disable color progression
  * ```html
- * <ngx-signal-form-field-character-count
+ * <ngx-signal-form-field-wrapper-character-count
  *   [formField]="form.message"
  *   [maxLength]="1000"
  *   [showLimitColors]="false"
@@ -60,7 +60,7 @@ import {
  *
  * @example Custom thresholds
  * ```html
- * <ngx-signal-form-field-character-count
+ * <ngx-signal-form-field-wrapper-character-count
  *   [formField]="form.description"
  *   [maxLength]="500"
  *   [colorThresholds]="{ warning: 90, danger: 98 }"
@@ -104,7 +104,7 @@ import {
  * @see {@link createCharacterCount} for the underlying headless utility
  */
 @Component({
-  selector: 'ngx-signal-form-field-character-count',
+  selector: 'ngx-signal-form-field-wrapper-character-count',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
@@ -199,13 +199,13 @@ export class NgxSignalFormFieldCharacterCountComponent<TValue = unknown> {
    * ```
    * ```html
    * <!-- maxLength auto-detected as 500 -->
-   * <ngx-signal-form-field-character-count [formField]="form.bio" />
+   * <ngx-signal-form-field-wrapper-character-count [formField]="form.bio" />
    * ```
    *
    * @example Manual override
    * ```html
    * <!-- Display limit is 300, even if validation allows 500 -->
-   * <ngx-signal-form-field-character-count
+   * <ngx-signal-form-field-wrapper-character-count
    *   [formField]="form.bio"
    *   [maxLength]="300"
    * />

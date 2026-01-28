@@ -172,12 +172,12 @@ test.describe('Warning Support Demo', () => {
 
       // Password field (field with only warning, no error)
       const usernameFormField = page.page.locator(
-        'ngx-signal-form-field:has(input#username)',
+        'ngx-signal-form-field-wrapper:has(input#username)',
       );
 
       // Should have warning class applied
       await expect(usernameFormField).toHaveClass(
-        /ngx-signal-form-field--warning/,
+        /ngx-signal-form-field-wrapper--warning/,
       );
     });
 
@@ -187,12 +187,12 @@ test.describe('Warning Support Demo', () => {
       await page.usernameInput.blur();
 
       const usernameFormField = page.page.locator(
-        'ngx-signal-form-field:has(input#username)',
+        'ngx-signal-form-field-wrapper:has(input#username)',
       );
 
       // Should NOT have warning class - errors take priority
       await expect(usernameFormField).not.toHaveClass(
-        /ngx-signal-form-field--warning/,
+        /ngx-signal-form-field-wrapper--warning/,
       );
     });
   });

@@ -92,7 +92,10 @@ const wizardSchema = schema<WizardData>((path) => {
           >
             <h3 class="text-lg font-semibold">Account Details</h3>
 
-            <ngx-signal-form-field [formField]="wizardForm.email" outline>
+            <ngx-signal-form-field-wrapper
+              [formField]="wizardForm.email"
+              outline
+            >
               <label for="email">Email Address</label>
               <input
                 id="email"
@@ -100,9 +103,12 @@ const wizardSchema = schema<WizardData>((path) => {
                 [formField]="wizardForm.email"
                 class="form-input"
               />
-            </ngx-signal-form-field>
+            </ngx-signal-form-field-wrapper>
 
-            <ngx-signal-form-field [formField]="wizardForm.password" outline>
+            <ngx-signal-form-field-wrapper
+              [formField]="wizardForm.password"
+              outline
+            >
               <label for="password">Password</label>
               <input
                 id="password"
@@ -110,7 +116,7 @@ const wizardSchema = schema<WizardData>((path) => {
                 [formField]="wizardForm.password"
                 class="form-input"
               />
-            </ngx-signal-form-field>
+            </ngx-signal-form-field-wrapper>
           </div>
         }
 
@@ -121,16 +127,22 @@ const wizardSchema = schema<WizardData>((path) => {
           >
             <h3 class="text-lg font-semibold">Personal Profile</h3>
 
-            <ngx-signal-form-field [formField]="wizardForm.fullName" outline>
+            <ngx-signal-form-field-wrapper
+              [formField]="wizardForm.fullName"
+              outline
+            >
               <label for="fullName">Full Name</label>
               <input
                 id="fullName"
                 [formField]="wizardForm.fullName"
                 class="form-input"
               />
-            </ngx-signal-form-field>
+            </ngx-signal-form-field-wrapper>
 
-            <ngx-signal-form-field [formField]="wizardForm.phone" outline>
+            <ngx-signal-form-field-wrapper
+              [formField]="wizardForm.phone"
+              outline
+            >
               <label for="phone">Phone Number</label>
               <input
                 id="phone"
@@ -138,7 +150,7 @@ const wizardSchema = schema<WizardData>((path) => {
                 [formField]="wizardForm.phone"
                 class="form-input"
               />
-            </ngx-signal-form-field>
+            </ngx-signal-form-field-wrapper>
           </div>
         }
 

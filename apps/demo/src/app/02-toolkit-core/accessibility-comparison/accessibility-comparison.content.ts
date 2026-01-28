@@ -41,10 +41,10 @@ export const ACCESSIBILITY_COMPARISON_CONTENT = {
       {
         title: '🔧 Minimal Toolkit (No [ngxSignalForm])',
         items: [
-          'Import <code>NgxSignalFormToolkit</code> + <code>NgxSignalFormFieldComponent</code>',
+          'Import <code>NgxSignalFormToolkit</code> + <code>NgxSignalFormFieldWrapperComponent</code>',
           'Use <code>(submit)="handler($event)"</code> on form',
           'Automatic: <code>novalidate</code>, <code>aria-invalid</code>, <code>aria-describedby</code>',
-          'Automatic: Error display via <code>&lt;ngx-signal-form-field&gt;</code>',
+          'Automatic: Error display via <code>&lt;ngx-signal-form-field-wrapper&gt;</code>',
           "Use when: Most forms with default <code>'on-touch'</code> strategy",
         ],
       },

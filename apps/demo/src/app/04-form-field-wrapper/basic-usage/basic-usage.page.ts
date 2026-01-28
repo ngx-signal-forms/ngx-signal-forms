@@ -13,7 +13,7 @@ import { BasicUsageComponent } from './basic-usage.form';
 /**
  * Basic Usage of Form Field Wrapper
  *
- * Demonstrates the NgxSignalFormFieldComponent wrapper which provides:
+ * Demonstrates the NgxSignalFormFieldWrapperComponent wrapper which provides:
  * - **Automatic Error Display**: No need to manually add `<ngx-signal-form-error>`
  * - **Consistent Layout**: Standardized spacing via CSS custom properties
  * - **Multiple Field Types**: Works with all form controls
@@ -36,7 +36,7 @@ import { BasicUsageComponent } from './basic-usage.form';
       <h1 class="page-title">Form Field Wrapper - Basic Usage</h1>
       <p class="page-subtitle">
         Automatic error display and consistent layout with
-        NgxSignalFormFieldComponent
+        NgxSignalFormFieldWrapperComponent
       </p>
     </header>
 

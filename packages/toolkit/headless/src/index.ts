@@ -46,6 +46,7 @@ export {
   createErrorState,
   createUniqueId,
   dedupeValidationErrors,
+  readDirectErrors,
   readErrors,
   readFieldFlag,
   type BooleanStateKey,

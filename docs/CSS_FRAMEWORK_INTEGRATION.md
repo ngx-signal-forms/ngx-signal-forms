@@ -123,7 +123,7 @@ Use Bootstrap tokens via CSS custom properties (no component overrides):
 
 ```scss
 /* Bootstrap theme mapping for toolkit form-field */
-ngx-signal-form-field {
+ngx-signal-form-field-wrapper {
   --ngx-form-field-color-primary: var(--bs-primary, #0d6efd);
   --ngx-form-field-color-border: var(--bs-border-color, #dee2e6);
   --ngx-form-field-color-text: var(--bs-body-color, #212529);

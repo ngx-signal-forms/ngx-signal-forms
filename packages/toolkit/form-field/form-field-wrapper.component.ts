@@ -51,85 +51,85 @@ function generateUniqueFieldId(): string {
  *
  * @example Basic Usage
  * ```html
- * <ngx-signal-form-field [formField]="form.email" fieldName="email">
+ * <ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
  *   <label for="email">Email</label>
  *   <input id="email" [formField]="form.email" />
- * </ngx-signal-form-field>
+ * </ngx-signal-form-field-wrapper>
  * ```
  *
  * @example With Custom Error Strategy
  * ```html
- * <ngx-signal-form-field
+ * <ngx-signal-form-field-wrapper
  *   [formField]="form.password"
  *   fieldName="password"
  *   [strategy]="'on-submit'"
  * >
  *   <label for="password">Password</label>
  *   <input id="password" type="password" [formField]="form.password" />
- * </ngx-signal-form-field>
+ * </ngx-signal-form-field-wrapper>
  * ```
  *
  * @example Outlined Layout
  * ```html
- * <ngx-signal-form-field [formField]="form.email" outline>
+ * <ngx-signal-form-field-wrapper [formField]="form.email" outline>
  *   <label for="email">Email Address</label>
  *   <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
- * </ngx-signal-form-field>
+ * </ngx-signal-form-field-wrapper>
  * ```
  *
  * @example With Character Count
  * ```html
- * <ngx-signal-form-field [formField]="form.bio" outline>
+ * <ngx-signal-form-field-wrapper [formField]="form.bio" outline>
  *   <label for="bio">Bio</label>
  *   <textarea id="bio" [formField]="form.bio"></textarea>
- *   <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
- * </ngx-signal-form-field>
+ *   <ngx-signal-form-field-wrapper-character-count [formField]="form.bio" [maxLength]="500" />
+ * </ngx-signal-form-field-wrapper>
  * ```
  *
  * @example With Hint Text
  * ```html
- * <ngx-signal-form-field [formField]="form.phone">
+ * <ngx-signal-form-field-wrapper [formField]="form.phone">
  *   <label for="phone">Phone Number</label>
  *   <input id="phone" [formField]="form.phone" />
- *   <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
- * </ngx-signal-form-field>
+ *   <ngx-signal-form-field-wrapper-hint>Format: 123-456-7890</ngx-signal-form-field-wrapper-hint>
+ * </ngx-signal-form-field-wrapper>
  * ```
  *
  * @example With Prefix Icon
  * ```html
- * <ngx-signal-form-field [formField]="form.search">
+ * <ngx-signal-form-field-wrapper [formField]="form.search">
  *   <span prefix aria-hidden="true">🔍</span>
  *   <label for="search">Search</label>
  *   <input id="search" [formField]="form.search" />
- * </ngx-signal-form-field>
+ * </ngx-signal-form-field-wrapper>
  * ```
  *
  * @example With Suffix Button
  * ```html
- * <ngx-signal-form-field [formField]="form.password">
+ * <ngx-signal-form-field-wrapper [formField]="form.password">
  *   <label for="password">Password</label>
  *   <input id="password" type="password" [formField]="form.password" />
  *   <button suffix type="button" (click)="togglePassword()">Show</button>
- * </ngx-signal-form-field>
+ * </ngx-signal-form-field-wrapper>
  * ```
  *
  * @example With Both Prefix and Suffix
  * ```html
- * <ngx-signal-form-field [formField]="form.amount">
+ * <ngx-signal-form-field-wrapper [formField]="form.amount">
  *   <span prefix aria-hidden="true">$</span>
  *   <label for="amount">Amount</label>
  *   <input id="amount" type="number" [formField]="form.amount" />
  *   <span suffix aria-hidden="true">.00</span>
- * </ngx-signal-form-field>
+ * </ngx-signal-form-field-wrapper>
  * ```
  *
  * @example Without Auto-Error Display
  * ```html
- * <ngx-signal-form-field [formField]="form.custom" fieldName="custom" [showErrors]="false">
+ * <ngx-signal-form-field-wrapper [formField]="form.custom" fieldName="custom" [showErrors]="false">
  *   <label for="custom">Custom Field</label>
  *   <input id="custom" [formField]="form.custom" />
  *   <!-- Manual error display here -->
- * </ngx-signal-form-field>
+ * </ngx-signal-form-field-wrapper>
  * ```
  *
  * @example Type Inference
@@ -140,41 +140,41 @@ function generateUniqueFieldId(): string {
  * ```
  */
 @Component({
-  selector: 'ngx-signal-form-field',
+  selector: 'ngx-signal-form-field-wrapper',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgxSignalFormErrorComponent],
-  styleUrl: './form-field.component.scss',
+  styleUrl: './form-field-wrapper.component.scss',
   host: {
     '[attr.outline]': 'isOutline() ? "" : null',
-    '[class.ngx-signal-form-field--warning]': 'showWarningState()',
+    '[class.ngx-signal-form-field-wrapper--warning]': 'showWarningState()',
   },
   template: `
     <!-- Label slot (outside bordered container for traditional layout) -->
-    <div class="ngx-signal-form-field__label">
+    <div class="ngx-signal-form-field-wrapper__label">
       <ng-content select="label" />
     </div>
 
     <!-- Bordered input container with prefix/suffix integrated -->
-    <div class="ngx-signal-form-field__content">
+    <div class="ngx-signal-form-field-wrapper__content">
       <!-- Prefix slot (icons, text, etc.) -->
-      <div class="ngx-signal-form-field__prefix">
+      <div class="ngx-signal-form-field-wrapper__prefix">
         <ng-content select="[prefix]" />
       </div>
 
       <!-- Main content (input only - label is outside) -->
-      <div class="ngx-signal-form-field__main">
+      <div class="ngx-signal-form-field-wrapper__main">
         <ng-content />
       </div>
 
       <!-- Suffix slot (buttons, icons, etc.) -->
-      <div class="ngx-signal-form-field__suffix">
+      <div class="ngx-signal-form-field-wrapper__suffix">
         <ng-content select="[suffix]" />
       </div>
     </div>
 
     <!-- Hint/character count slot (projected before errors) -->
     <ng-content
-      select="ngx-signal-form-field-hint, ngx-signal-form-field-character-count"
+      select="ngx-signal-form-field-wrapper-hint, ngx-signal-form-field-wrapper-character-count"
     />
 
     @if (showErrors()) {
@@ -187,7 +187,7 @@ function generateUniqueFieldId(): string {
     }
   `,
 })
-export class NgxSignalFormFieldComponent<TValue = unknown> {
+export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   /**
    * The Signal Forms field to display.
    * Accepts a FieldTree from Angular Signal Forms.
@@ -212,26 +212,26 @@ export class NgxSignalFormFieldComponent<TValue = unknown> {
    *
    * @example Automatic (recommended) - derives "email" from input's id attribute
    * ```html
-   * <ngx-signal-form-field [formField]="form.email">
+   * <ngx-signal-form-field-wrapper [formField]="form.email">
    *   <label for="email">Email</label>
    *   <input id="email" [formField]="form.email" />
-   * </ngx-signal-form-field>
+   * </ngx-signal-form-field-wrapper>
    * ```
    *
    * @example Explicit override
    * ```html
-   * <ngx-signal-form-field [formField]="form.email" fieldName="user-email">
+   * <ngx-signal-form-field-wrapper [formField]="form.email" fieldName="user-email">
    *   <label for="user-email">Email</label>
    *   <input id="user-email" [formField]="form.email" />
-   * </ngx-signal-form-field>
+   * </ngx-signal-form-field-wrapper>
    * ```
    *
    * @example Fallback to auto-generated ID (when no id attribute exists)
    * ```html
-   * <ngx-signal-form-field [formField]="form.email">
+   * <ngx-signal-form-field-wrapper [formField]="form.email">
    *   <label>Email</label>
    *   <input [formField]="form.email" />
-   * </ngx-signal-form-field>
+   * </ngx-signal-form-field-wrapper>
    * ```
    */
   readonly fieldName = input<string>();
@@ -260,10 +260,10 @@ export class NgxSignalFormFieldComponent<TValue = unknown> {
    *
    * @example Explicit outline
    * ```html
-   * <ngx-signal-form-field [formField]="form.email" outline>
+   * <ngx-signal-form-field-wrapper [formField]="form.email" outline>
    *   <label for="email">Email</label>
    *   <input id="email" [formField]="form.email" />
-   * </ngx-signal-form-field>
+   * </ngx-signal-form-field-wrapper>
    * ```
    *
    * @example Global default via config

@@ -68,7 +68,10 @@ const bookingSchema = schema<Booking>((path) => {
 
       <form (submit)="bookStay($event)" class="max-w-md space-y-6">
         <div class="grid grid-cols-2 gap-4">
-          <ngx-signal-form-field [formField]="bookingForm.checkIn" outline>
+          <ngx-signal-form-field-wrapper
+            [formField]="bookingForm.checkIn"
+            outline
+          >
             <label for="checkIn">Check-In</label>
             <input
               id="checkIn"
@@ -76,9 +79,12 @@ const bookingSchema = schema<Booking>((path) => {
               [formField]="bookingForm.checkIn"
               class="form-input"
             />
-          </ngx-signal-form-field>
+          </ngx-signal-form-field-wrapper>
 
-          <ngx-signal-form-field [formField]="bookingForm.checkOut" outline>
+          <ngx-signal-form-field-wrapper
+            [formField]="bookingForm.checkOut"
+            outline
+          >
             <label for="checkOut">Check-Out</label>
             <input
               id="checkOut"
@@ -86,10 +92,10 @@ const bookingSchema = schema<Booking>((path) => {
               [formField]="bookingForm.checkOut"
               class="form-input"
             />
-          </ngx-signal-form-field>
+          </ngx-signal-form-field-wrapper>
         </div>
 
-        <ngx-signal-form-field [formField]="bookingForm.guests" outline>
+        <ngx-signal-form-field-wrapper [formField]="bookingForm.guests" outline>
           <label for="guests">Guests</label>
           <input
             id="guests"
@@ -97,9 +103,12 @@ const bookingSchema = schema<Booking>((path) => {
             [formField]="bookingForm.guests"
             class="form-input"
           />
-        </ngx-signal-form-field>
+        </ngx-signal-form-field-wrapper>
 
-        <ngx-signal-form-field [formField]="bookingForm.promoCode" outline>
+        <ngx-signal-form-field-wrapper
+          [formField]="bookingForm.promoCode"
+          outline
+        >
           <label for="promo">Promo Code</label>
           <input
             id="promo"
@@ -108,10 +117,10 @@ const bookingSchema = schema<Booking>((path) => {
             placeholder="Try 'SMALLGROUP'"
             class="form-input uppercase"
           />
-          <ngx-signal-form-field-hint>
+          <ngx-signal-form-field-wrapper-hint>
             Valid only for ≤ 4 guests
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field>
+          </ngx-signal-form-field-wrapper-hint>
+        </ngx-signal-form-field-wrapper>
 
         <div class="flex gap-4">
           <button

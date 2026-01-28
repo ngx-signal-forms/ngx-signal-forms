@@ -73,10 +73,10 @@ Renderless primitives for custom UI.
 
 "Batteries included" approach with the form field component.
 
-| Example           | Focus                       | What You Learn                                  |
-| ----------------- | --------------------------- | ----------------------------------------------- |
-| **basic-usage**   | NgxSignalFormFieldComponent | Content projection, automatic error display     |
-| **complex-forms** | Real-world registration     | 8 fields, nested objects, password confirmation |
+| Example           | Focus                              | What You Learn                                  |
+| ----------------- | ---------------------------------- | ----------------------------------------------- |
+| **basic-usage**   | NgxSignalFormFieldWrapperComponent | Content projection, automatic error display     |
+| **complex-forms** | Real-world registration            | 8 fields, nested objects, password confirmation |
 
 ### Level 6: Advanced Scenarios (100% Toolkit)
 
@@ -158,15 +158,15 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 ```typescript
 // Level 2: Form Field Wrapper (100% toolkit)
-import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
-  imports: [FormField, NgxSignalFormFieldComponent],
+  imports: [FormField, NgxSignalFormFieldWrapperComponent],
   template: `
-    <ngx-signal-form-field [formField]="myForm.email" fieldName="email">
+    <ngx-signal-form-field-wrapper [formField]="myForm.email" fieldName="email">
       <label for="email">Email</label>
       <input id="email" [formField]="myForm.email" />
-    </ngx-signal-form-field>
+    </ngx-signal-form-field-wrapper>
   `,
 })
 ```

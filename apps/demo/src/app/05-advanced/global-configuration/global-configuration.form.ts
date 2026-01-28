@@ -7,7 +7,7 @@ import {
 import { FormField, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
 import type { GlobalConfigModel } from './global-configuration.model';
 import { globalConfigSchema } from './global-configuration.validations';
 
@@ -26,7 +26,11 @@ import { globalConfigSchema } from './global-configuration.validations';
 @Component({
   selector: 'ngx-global-configuration',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxSignalFormFieldWrapperComponent,
+  ],
   template: `
     <form
       [ngxSignalForm]="configForm"
@@ -61,7 +65,7 @@ import { globalConfigSchema } from './global-configuration.validations';
       <!-- Form fields -->
       <div class="space-y-6">
         <!-- Email field with standard id -->
-        <ngx-signal-form-field
+        <ngx-signal-form-field-wrapper
           [formField]="configForm.userEmail"
           fieldName="userEmail"
         >
@@ -73,10 +77,10 @@ import { globalConfigSchema } from './global-configuration.validations';
             placeholder="user@example.com"
             class="form-input"
           />
-        </ngx-signal-form-field>
+        </ngx-signal-form-field-wrapper>
 
         <!-- Phone field with custom data attribute -->
-        <ngx-signal-form-field
+        <ngx-signal-form-field-wrapper
           [formField]="configForm.userPhone"
           fieldName="userPhone"
         >
@@ -92,10 +96,10 @@ import { globalConfigSchema } from './global-configuration.validations';
           <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
             Format: 123-456-7890
           </p>
-        </ngx-signal-form-field>
+        </ngx-signal-form-field-wrapper>
 
         <!-- Website field (optional) -->
-        <ngx-signal-form-field
+        <ngx-signal-form-field-wrapper
           [formField]="configForm.userWebsite"
           fieldName="userWebsite"
         >
@@ -110,7 +114,7 @@ import { globalConfigSchema } from './global-configuration.validations';
           <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
             Optional - Must be a valid URL if provided
           </p>
-        </ngx-signal-form-field>
+        </ngx-signal-form-field-wrapper>
       </div>
 
       <!-- Form actions -->

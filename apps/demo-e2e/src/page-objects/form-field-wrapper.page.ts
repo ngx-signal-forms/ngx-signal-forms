@@ -12,7 +12,9 @@ export class FormFieldWrapperPage extends BaseFormPage {
   constructor(page: Page) {
     super(page);
     this.nameInput = this.getInputById('name');
-    this.formFieldComponents = this.page.locator('ngx-signal-form-field');
+    this.formFieldComponents = this.page.locator(
+      'ngx-signal-form-field-wrapper',
+    );
   }
 
   async goto(): Promise<void> {

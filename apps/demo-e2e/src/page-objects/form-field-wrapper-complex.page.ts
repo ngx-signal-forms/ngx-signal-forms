@@ -24,21 +24,23 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
    * Get all form field wrapper components
    */
   get formFields(): Locator {
-    return this.page.locator('ngx-signal-form-field');
+    return this.page.locator('ngx-signal-form-field-wrapper');
   }
 
   /**
-   * Get all fieldset grouping components
+   * Get all fieldset grouping components (both element and attribute usage)
    */
   get fieldsets(): Locator {
-    return this.page.locator('ngx-signal-form-fieldset');
+    return this.page.locator(
+      'ngx-signal-form-fieldset, fieldset[ngxSignalFormFieldset]',
+    );
   }
 
   /**
    * Get fieldset by legend text content
    */
   getFieldsetByLegend(legendText: string | RegExp): Locator {
-    return this.page.locator('ngx-signal-form-fieldset').filter({
+    return this.fieldsets.filter({
       has: this.page.locator('legend', { hasText: legendText }),
     });
   }
@@ -76,6 +78,13 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
    */
   get preferencesFieldset(): Locator {
     return this.getFieldsetByLegend(/Preferences/i);
+  }
+
+  /**
+   * Get contact method radios within preferences
+   */
+  get preferencesContactRadios(): Locator {
+    return this.preferencesFieldset.getByRole('radio');
   }
 
   /**

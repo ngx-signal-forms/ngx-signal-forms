@@ -1,7 +1,7 @@
 /**
  * Basic Usage Example
  *
- * Demonstrates the NgxSignalFormFieldComponent wrapper with automatic error display.
+ * Demonstrates the NgxSignalFormFieldWrapperComponent wrapper with automatic error display.
  */
 
 export * from './basic-usage.content';

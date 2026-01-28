@@ -65,7 +65,7 @@ const profileSchema = schema<UserProfile>((path) => {
             Personal Information
           </h3>
           <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <ngx-signal-form-field
+            <ngx-signal-form-field-wrapper
               [formField]="profileForm.personalInfo.firstName"
               outline
             >
@@ -75,9 +75,9 @@ const profileSchema = schema<UserProfile>((path) => {
                 [formField]="profileForm.personalInfo.firstName"
                 class="form-input"
               />
-            </ngx-signal-form-field>
+            </ngx-signal-form-field-wrapper>
 
-            <ngx-signal-form-field
+            <ngx-signal-form-field-wrapper
               [formField]="profileForm.personalInfo.lastName"
               outline
             >
@@ -87,10 +87,10 @@ const profileSchema = schema<UserProfile>((path) => {
                 [formField]="profileForm.personalInfo.lastName"
                 class="form-input"
               />
-            </ngx-signal-form-field>
+            </ngx-signal-form-field-wrapper>
 
             <div class="md:col-span-2">
-              <ngx-signal-form-field
+              <ngx-signal-form-field-wrapper
                 [formField]="profileForm.personalInfo.email"
                 outline
               >
@@ -101,7 +101,7 @@ const profileSchema = schema<UserProfile>((path) => {
                   [formField]="profileForm.personalInfo.email"
                   class="form-input"
                 />
-              </ngx-signal-form-field>
+              </ngx-signal-form-field-wrapper>
             </div>
           </div>
         </section>
@@ -115,7 +115,7 @@ const profileSchema = schema<UserProfile>((path) => {
           </h3>
           <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
             <div class="md:col-span-12">
-              <ngx-signal-form-field
+              <ngx-signal-form-field-wrapper
                 [formField]="profileForm.shippingAddress.street"
                 outline
               >
@@ -125,11 +125,11 @@ const profileSchema = schema<UserProfile>((path) => {
                   [formField]="profileForm.shippingAddress.street"
                   class="form-input"
                 />
-              </ngx-signal-form-field>
+              </ngx-signal-form-field-wrapper>
             </div>
 
             <div class="md:col-span-8">
-              <ngx-signal-form-field
+              <ngx-signal-form-field-wrapper
                 [formField]="profileForm.shippingAddress.city"
                 outline
               >
@@ -139,11 +139,11 @@ const profileSchema = schema<UserProfile>((path) => {
                   [formField]="profileForm.shippingAddress.city"
                   class="form-input"
                 />
-              </ngx-signal-form-field>
+              </ngx-signal-form-field-wrapper>
             </div>
 
             <div class="md:col-span-4">
-              <ngx-signal-form-field
+              <ngx-signal-form-field-wrapper
                 [formField]="profileForm.shippingAddress.zipCode"
                 outline
               >
@@ -153,7 +153,7 @@ const profileSchema = schema<UserProfile>((path) => {
                   [formField]="profileForm.shippingAddress.zipCode"
                   class="form-input"
                 />
-              </ngx-signal-form-field>
+              </ngx-signal-form-field-wrapper>
             </div>
           </div>
         </section>
@@ -175,7 +175,7 @@ const profileSchema = schema<UserProfile>((path) => {
 
           <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
             <div class="md:col-span-12">
-              <ngx-signal-form-field
+              <ngx-signal-form-field-wrapper
                 [formField]="profileForm.billingAddress.street"
                 outline
               >
@@ -185,11 +185,11 @@ const profileSchema = schema<UserProfile>((path) => {
                   [formField]="profileForm.billingAddress.street"
                   class="form-input"
                 />
-              </ngx-signal-form-field>
+              </ngx-signal-form-field-wrapper>
             </div>
 
             <div class="md:col-span-8">
-              <ngx-signal-form-field
+              <ngx-signal-form-field-wrapper
                 [formField]="profileForm.billingAddress.city"
                 outline
               >
@@ -199,11 +199,11 @@ const profileSchema = schema<UserProfile>((path) => {
                   [formField]="profileForm.billingAddress.city"
                   class="form-input"
                 />
-              </ngx-signal-form-field>
+              </ngx-signal-form-field-wrapper>
             </div>
 
             <div class="md:col-span-4">
-              <ngx-signal-form-field
+              <ngx-signal-form-field-wrapper
                 [formField]="profileForm.billingAddress.zipCode"
                 outline
               >
@@ -213,7 +213,7 @@ const profileSchema = schema<UserProfile>((path) => {
                   [formField]="profileForm.billingAddress.zipCode"
                   class="form-input"
                 />
-              </ngx-signal-form-field>
+              </ngx-signal-form-field-wrapper>
             </div>
           </div>
         </section>

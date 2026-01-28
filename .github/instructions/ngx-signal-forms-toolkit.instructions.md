@@ -38,7 +38,7 @@ packages/toolkit/
 │   ├── utilities/                  # Helper functions (submission-helpers, show-errors, etc.)
 │   └── public_api.ts               # Public exports + NgxSignalFormToolkit bundle
 └── form-field/                     # @ngx-signal-forms/toolkit/form-field
-    ├── form-field.component.ts     # Main wrapper component
+    ├── form-field-wrapper.component.ts # Main wrapper component
     ├── floating-label.directive.ts # Outlined Material Design layout
     ├── form-field-hint.component.ts
     ├── form-field-character-count.component.ts
@@ -150,15 +150,15 @@ import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 @Component({
   imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
   template: `
-    <ngx-signal-form-field [formField]="form.email" outline>
+    <ngx-signal-form-field-wrapper [formField]="form.email" outline>
       <label for="email">Email</label>
       <input id="email" [formField]="form.email" />
-    </ngx-signal-form-field>
+    </ngx-signal-form-field-wrapper>
   `,
 })
 ```
 
-**Contains**: `NgxSignalFormFieldComponent`, `NgxFloatingLabelDirective`, `NgxSignalFormFieldHintComponent`, `NgxSignalFormFieldCharacterCountComponent`, `NgxSignalFormFieldsetComponent`
+**Contains**: `NgxSignalFormFieldWrapperComponent`, `NgxFloatingLabelDirective`, `NgxSignalFormFieldHintComponent`, `NgxSignalFormFieldCharacterCountComponent`, `NgxSignalFormFieldset`
 
 ### Individual Imports (Alternative)
 
@@ -208,7 +208,7 @@ See `packages/toolkit/form-field/THEMING.md` for the full API.
 **Do** use CSS custom properties as the public API:
 
 ```css
-ngx-signal-form-field {
+ngx-signal-form-field-wrapper {
   --ngx-form-field-color-primary: #3b82f6;
   --ngx-signal-form-feedback-font-size: 0.875rem;
 }
@@ -226,16 +226,16 @@ The toolkit is designed so that **most forms work without `[ngxSignalForm]`**. T
 
 ### Feature Comparison: With vs Without `[ngxSignalForm]`
 
-| Feature                                    | Without `[ngxSignalForm]` | With `[ngxSignalForm]` |
-| ------------------------------------------ | :-----------------------: | :--------------------: |
-| Auto `novalidate` on form                  |            ✅             |           ✅           |
-| Auto `aria-invalid` when touched + invalid |            ✅             |           ✅           |
-| Auto `aria-describedby` linking            |            ✅             |           ✅           |
-| `<ngx-signal-form-error>` (`'on-touch'`)   |         ✅ Works          |        ✅ Works        |
-| `<ngx-signal-form-field>` (`'on-touch'`)   |      ✅ Auto errors       |     ✅ Auto errors     |
-| `<ngx-signal-form-error>` (`'on-submit'`)  |       ❌ No context       |        ✅ Works        |
-| Form-level `[errorStrategy]` override      |            ❌             |           ✅           |
-| `submittedStatus` signal via DI            |            ❌             |           ✅           |
+| Feature                                          | Without `[ngxSignalForm]` | With `[ngxSignalForm]` |
+| ------------------------------------------------ | :-----------------------: | :--------------------: |
+| Auto `novalidate` on form                        |            ✅             |           ✅           |
+| Auto `aria-invalid` when touched + invalid       |            ✅             |           ✅           |
+| Auto `aria-describedby` linking                  |            ✅             |           ✅           |
+| `<ngx-signal-form-error>` (`'on-touch'`)         |         ✅ Works          |        ✅ Works        |
+| `<ngx-signal-form-field-wrapper>` (`'on-touch'`) |      ✅ Auto errors       |     ✅ Auto errors     |
+| `<ngx-signal-form-error>` (`'on-submit'`)        |       ❌ No context       |        ✅ Works        |
+| Form-level `[errorStrategy]` override            |            ❌             |           ✅           |
+| `submittedStatus` signal via DI                  |            ❌             |           ✅           |
 
 ### When to Use Each Approach
 
@@ -273,10 +273,10 @@ The toolkit is designed so that **most forms work without `[ngxSignalForm]`**. T
 ```typescript
 // ✅ Recommended: Works for most forms (no [ngxSignalForm] needed)
 <form (submit)="save($event)">
-  <ngx-signal-form-field [formField]="form.email">
+  <ngx-signal-form-field-wrapper [formField]="form.email">
     <label for="email">Email</label>
     <input id="email" [formField]="form.email" />
-  </ngx-signal-form-field>
+  </ngx-signal-form-field-wrapper>
   <button type="submit">Submit</button>
 </form>
 
@@ -347,17 +347,17 @@ Displays validation errors and warnings with WCAG-compliant ARIA roles.
 - `strategy`: Error display strategy (default: `'on-touch'`)
 - `submittedStatus`: Form submission state (auto-injected when inside `[ngxSignalForm]}`, optional for `'on-touch'`. If provided manually, must be a `Signal<SubmittedStatus>`)
 
-### NgxSignalFormFieldComponent
+### NgxSignalFormFieldWrapperComponent
 
-**Selector**: `ngx-signal-form-field`
+**Selector**: `ngx-signal-form-field-wrapper`
 
 Reusable form field wrapper with automatic error display.
 
 ```typescript
-<ngx-signal-form-field [formField]="form.email" fieldName="email">
+<ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 **Required Inputs**:
@@ -377,6 +377,59 @@ Reusable form field wrapper with automatic error display.
 - Inherits error strategy from form directive
 - Type-safe with generics
 - Supports `outline` attribute for Material Design layout
+
+### NgxSignalFormFieldset
+
+**Selector**: `ngx-signal-form-fieldset, [ngxSignalFormFieldset]`
+
+Groups related form fields with aggregated error/warning display.
+
+```html
+<!-- Group-Only Mode (default) - when nested fields show their own errors -->
+<ngx-signal-form-fieldset [fieldsetField]="form.passwords">
+  <ngx-signal-form-field-wrapper [formField]="form.passwords.password" outline
+    >...</ngx-signal-form-field-wrapper
+  >
+  <ngx-signal-form-field-wrapper [formField]="form.passwords.confirm" outline
+    >...</ngx-signal-form-field-wrapper
+  >
+  <!-- Fieldset shows ONLY cross-field error: "Passwords must match" -->
+</ngx-signal-form-fieldset>
+
+<!-- Aggregated Mode - fieldset shows all errors for plain inputs -->
+<fieldset
+  ngxSignalFormFieldset
+  [fieldsetField]="form.address"
+  includeNestedErrors
+>
+  <input [formField]="form.address.street" />
+  <input [formField]="form.address.city" />
+  <!-- Fieldset shows ALL errors: "Street required", "City required" -->
+</fieldset>
+```
+
+**Required Inputs**:
+
+- `fieldsetField`: The Signal Forms field tree to aggregate from
+
+**Optional Inputs**:
+
+- `fieldsetId`: Unique identifier for generating error/warning IDs
+- `fields`: Explicit list of fields for custom groupings
+- `strategy`: Error display strategy (inherits from form context)
+- `showErrors`: Toggle automatic error display (default: `true`)
+- `includeNestedErrors`: Error aggregation mode (default: `false`)
+
+**Error Display Modes** (`includeNestedErrors`):
+
+- `false` (default): Shows ONLY group-level errors via `errors()`. Use when nested fields display their own errors via `NgxSignalFormField` (avoids duplication).
+- `true`: Shows ALL errors via `errorSummary()`. Use when nested fields do NOT display their own errors (e.g., plain inputs).
+
+**Host CSS Classes**:
+
+- `.ngx-signal-form-fieldset` - Always applied
+- `.ngx-signal-form-fieldset--invalid` - Applied when showing errors
+- `.ngx-signal-form-fieldset--warning` - Applied when showing warnings (no errors)
 
 ## Utilities
 
@@ -698,15 +751,15 @@ unwrapValue(computedStrategy); // 'on-touch'
 
 ### NgxFloatingLabelDirective
 
-**Selector**: `ngx-signal-form-field[outline]`
+**Selector**: `ngx-signal-form-field-wrapper[outline]`
 
 Transforms form field into Material Design outlined layout.
 
 ```typescript
-<ngx-signal-form-field [formField]="form.email" outline>
+<ngx-signal-form-field-wrapper [formField]="form.email" outline>
   <label for="email">Email Address</label>
   <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 **Inputs**:
@@ -718,30 +771,30 @@ Transforms form field into Material Design outlined layout.
 
 ### NgxSignalFormFieldHintComponent
 
-**Selector**: `ngx-signal-form-field-hint`
+**Selector**: `ngx-signal-form-field-wrapper-hint`
 
 Displays helper text for form fields.
 
 ```typescript
-<ngx-signal-form-field [formField]="form.phone">
+<ngx-signal-form-field-wrapper [formField]="form.phone">
   <label for="phone">Phone Number</label>
   <input id="phone" [formField]="form.phone" />
-  <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
-</ngx-signal-form-field>
+  <ngx-signal-form-field-wrapper-hint>Format: 123-456-7890</ngx-signal-form-field-wrapper-hint>
+</ngx-signal-form-field-wrapper>
 ```
 
 ### NgxSignalFormFieldCharacterCountComponent
 
-**Selector**: `ngx-signal-form-field-character-count`
+**Selector**: `ngx-signal-form-field-wrapper-character-count`
 
 Displays character count with progressive color states.
 
 ```typescript
-<ngx-signal-form-field [formField]="form.bio">
+<ngx-signal-form-field-wrapper [formField]="form.bio">
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
-</ngx-signal-form-field>
+  <ngx-signal-form-field-wrapper-character-count [formField]="form.bio" [maxLength]="500" />
+</ngx-signal-form-field-wrapper>
 ```
 
 **Required Inputs**:
@@ -789,10 +842,10 @@ All components support CSS custom properties for theming. Prefix: `--ngx-signal-
 
 ```css
 :root {
-  --ngx-signal-form-field-gap: 0.375rem;
-  --ngx-signal-form-field-label-color: #374151;
-  --ngx-signal-form-field-border-color: #d1d5db;
-  --ngx-signal-form-field-border-radius: 0.375rem;
+  --ngx-signal-form-field-wrapper-gap: 0.375rem;
+  --ngx-signal-form-field-wrapper-label-color: #374151;
+  --ngx-signal-form-field-wrapper-border-color: #d1d5db;
+  --ngx-signal-form-field-wrapper-border-radius: 0.375rem;
 }
 ```
 

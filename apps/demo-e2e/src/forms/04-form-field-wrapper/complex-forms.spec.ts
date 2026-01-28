@@ -45,10 +45,14 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       await expect(page.preferencesFieldset).toBeVisible();
     });
 
-    test('should have exactly 5 fieldsets', async () => {
+    test('should have exactly 6 fieldsets', async () => {
       await expect(page.fieldsets.first()).toBeVisible();
       const count = await page.countFieldsets();
-      expect(count).toBe(5);
+      expect(count).toBe(6);
+    });
+
+    test('should render contact method radio group in preferences', async () => {
+      await expect(page.preferencesContactRadios).toHaveCount(3);
     });
 
     test('should display aggregated errors in fieldset after submit', async () => {
@@ -79,6 +83,15 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       await firstInput.blur();
 
       await expect(page.errorAlerts.first()).toBeVisible();
+    });
+
+    test('should show preference contact method errors after touch', async () => {
+      await page.preferencesContactRadios.first().focus();
+      await page.preferencesContactRadios.first().blur();
+
+      await expect(
+        page.getFieldsetErrorsByLegend(/Preferred contact method/i).first(),
+      ).toBeVisible();
     });
   });
 

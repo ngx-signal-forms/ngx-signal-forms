@@ -11,14 +11,18 @@ import {
   submitWithWarnings,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
 import type { PasswordFormModel } from './warning-support.model';
 import { createPasswordForm } from './warning-support.validations';
 
 @Component({
   selector: 'ngx-warning-support-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxSignalFormFieldWrapperComponent,
+  ],
   host: {
     class: 'block max-w-xl mx-auto',
   },
@@ -39,7 +43,7 @@ import { createPasswordForm } from './warning-support.validations';
       [errorStrategy]="errorDisplayMode"
       (submit)="handleSubmit($event)"
     >
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="passwordForm.username"
         fieldName="username"
       >
@@ -51,9 +55,12 @@ import { createPasswordForm } from './warning-support.validations';
           autocomplete="username"
           placeholder="Choose a username"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
 
-      <ngx-signal-form-field [formField]="passwordForm.email" fieldName="email">
+      <ngx-signal-form-field-wrapper
+        [formField]="passwordForm.email"
+        fieldName="email"
+      >
         <label for="email">Email</label>
         <input
           id="email"
@@ -62,9 +69,9 @@ import { createPasswordForm } from './warning-support.validations';
           autocomplete="email"
           placeholder="your.email@example.com"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
 
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="passwordForm.password"
         fieldName="password"
       >
@@ -76,7 +83,7 @@ import { createPasswordForm } from './warning-support.validations';
           autocomplete="new-password"
           placeholder="Enter a secure password"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
 
       <div class="form-actions">
         <button type="button" (click)="reset()">Reset</button>

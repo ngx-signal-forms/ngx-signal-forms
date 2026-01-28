@@ -16,17 +16,17 @@ Form field components and directives for enhanced form layouts and accessibility
 
 ## 🎨 Theming
 
-All components in this entry point (`ngx-signal-form-field`, `ngx-signal-form-fieldset`) and their dependencies (`ngx-signal-form-error`) share a unified theming system based on CSS Custom Properties.
+All components in this entry point (`ngx-signal-form-field-wrapper`, `ngx-signal-form-fieldset`) and their dependencies (`ngx-signal-form-error`) share a unified theming system based on CSS Custom Properties.
 
 **[📖 Read the Complete Theming Guide →](./THEMING.md)**
 
 ### Supported Components
 
-- **`ngx-signal-form-field`**: Outlined layout, borders, colors, spacing.
+- **`ngx-signal-form-field-wrapper`**: Outlined layout, borders, colors, spacing.
 - **`ngx-signal-form-fieldset`**: Grouping gap and indentation.
 - **`ngx-signal-form-error`**: Shared feedback typography and colors.
-- **`ngx-signal-form-field-hint`**: Helper text colors and spacing.
-- **`ngx-signal-form-field-character-count`**: Progressive color states.
+- **`ngx-signal-form-field-wrapper-hint`**: Helper text colors and spacing.
+- **`ngx-signal-form-field-wrapper-character-count`**: Progressive color states.
 
 ### Quick Customization
 
@@ -61,7 +61,7 @@ import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 **Includes:**
 
-- `NgxSignalFormFieldComponent` - Form field wrapper
+- `NgxSignalFormFieldWrapperComponent` - Form field wrapper
 - `NgxFloatingLabelDirective` - Outlined layout with floating label
 - `NgxSignalFormFieldHintComponent` - Helper text
 - `NgxSignalFormFieldCharacterCountComponent` - Character counter
@@ -77,11 +77,11 @@ import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
   imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
   template: `
     <form [ngxSignalForm]="contactForm">
-      <ngx-signal-form-field [formField]="contactForm.email" outline>
+      <ngx-signal-form-field-wrapper [formField]="contactForm.email" outline>
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" />
-        <ngx-signal-form-field-hint>We'll never share your email</ngx-signal-form-field-hint>
-      </ngx-signal-form-field>
+        <ngx-signal-form-field-wrapper-hint>We'll never share your email</ngx-signal-form-field-wrapper-hint>
+      </ngx-signal-form-field-wrapper>
     </form>
   `,
 })
@@ -98,23 +98,23 @@ import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 ## Components & Directives
 
-### NgxSignalFormFieldComponent
+### NgxSignalFormFieldWrapperComponent
 
 Reusable form field wrapper with automatic error display and consistent layout.
 
 **Import:**
 
 ```typescript
-import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
 ```
 
 **Basic Usage:**
 
 ```html
-<ngx-signal-form-field [formField]="form.email" fieldName="email">
+<ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 #### Inputs
@@ -131,18 +131,20 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
 The component uses content projection to allow full customization:
 
 ```html
-<ngx-signal-form-field [formField]="form.bio">
+<ngx-signal-form-field-wrapper [formField]="form.bio">
   <!-- Labels and inputs are projected -->
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
 
   <!-- Hints and character counts are projected in a separate slot -->
-  <ngx-signal-form-field-hint>Max 500 characters</ngx-signal-form-field-hint>
-  <ngx-signal-form-field-character-count
+  <ngx-signal-form-field-wrapper-hint
+    >Max 500 characters</ngx-signal-form-field-wrapper-hint
+  >
+  <ngx-signal-form-field-wrapper-character-count
     [formField]="form.bio"
     [maxLength]="500"
   />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 #### Prefix/Suffix Slots
@@ -152,17 +154,17 @@ Add icons, text, or interactive elements before or after the input using `prefix
 **Search icon prefix:**
 
 ```html
-<ngx-signal-form-field [formField]="form.search">
+<ngx-signal-form-field-wrapper [formField]="form.search">
   <span prefix aria-hidden="true">🔍</span>
   <label for="search">Search</label>
   <input id="search" [formField]="form.search" />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 **Show/hide password button suffix:**
 
 ```html
-<ngx-signal-form-field [formField]="form.password">
+<ngx-signal-form-field-wrapper [formField]="form.password">
   <label for="password">Password</label>
   <input
     id="password"
@@ -172,24 +174,24 @@ Add icons, text, or interactive elements before or after the input using `prefix
   <button suffix type="button" (click)="togglePassword()">
     {{ showPassword() ? 'Hide' : 'Show' }}
   </button>
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 **Currency symbols (both prefix and suffix):**
 
 ```html
-<ngx-signal-form-field [formField]="form.amount">
+<ngx-signal-form-field-wrapper [formField]="form.amount">
   <span prefix aria-hidden="true">$</span>
   <label for="amount">Amount</label>
   <input id="amount" type="number" [formField]="form.amount" step="0.01" />
   <span suffix aria-hidden="true">.00</span>
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 **Clear button with outlined layout:**
 
 ```html
-<ngx-signal-form-field [formField]="form.query" outline>
+<ngx-signal-form-field-wrapper [formField]="form.query" outline>
   <span prefix aria-hidden="true">🔍</span>
   <label for="query">Search</label>
   <input id="query" [formField]="form.query" />
@@ -203,7 +205,7 @@ Add icons, text, or interactive elements before or after the input using `prefix
     ✕
   </button>
   }
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 **Accessibility Notes:**
@@ -291,7 +293,7 @@ The form field component supports non-blocking warnings in addition to blocking 
 
 ### NgxFloatingLabelDirective
 
-Transforms `NgxSignalFormFieldComponent` into an outlined layout where the label sits inside the input border, matching Material Design outlined input patterns.
+Transforms `NgxSignalFormFieldWrapperComponent` into an outlined layout where the label sits inside the input border, matching Material Design outlined input patterns.
 
 **Import:**
 
@@ -303,7 +305,7 @@ import { NgxFloatingLabelDirective } from '@ngx-signal-forms/toolkit/form-field'
 **Basic Usage:**
 
 ```html
-<ngx-signal-form-field [formField]="form.email" outline>
+<ngx-signal-form-field-wrapper [formField]="form.email" outline>
   <label for="email">Email Address</label>
   <input
     id="email"
@@ -312,7 +314,7 @@ import { NgxFloatingLabelDirective } from '@ngx-signal-forms/toolkit/form-field'
     required
     placeholder="you@example.com"
   />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 #### Inputs
@@ -329,37 +331,41 @@ By default, the required marker (`*`) is automatically shown when the input has 
 **Hide required marker:**
 
 ```html
-<ngx-signal-form-field
+<ngx-signal-form-field-wrapper
   [formField]="form.email"
   outline
   [showRequiredMarker]="false"
 >
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" required />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 **Custom required marker - "(required)":**
 
 ```html
-<ngx-signal-form-field
+<ngx-signal-form-field-wrapper
   [formField]="form.email"
   outline
   requiredMarker="(required)"
 >
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" required />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 <!-- Result: "Email(required)" -->
 ```
 
 **Custom required marker - dagger (†):**
 
 ```html
-<ngx-signal-form-field [formField]="form.email" outline requiredMarker=" †">
+<ngx-signal-form-field-wrapper
+  [formField]="form.email"
+  outline
+  requiredMarker=" †"
+>
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" required />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 <!-- Result: "Email †" -->
 ```
 
@@ -470,7 +476,7 @@ Requires CSS `:has()` selector:
 - Focus state applied to container meets WCAG 2.2 Level AA
 - Input outline removed safely (container provides visible focus indicator)
 - Required fields automatically detected via CSS `:has()` selector
-- ARIA attributes handled by parent `NgxSignalFormFieldComponent`
+- ARIA attributes handled by parent `NgxSignalFormFieldWrapperComponent`
 
 #### Error/Warning Alignment
 
@@ -526,19 +532,21 @@ import { NgxSignalFormFieldHintComponent } from '@ngx-signal-forms/toolkit/form-
 **Usage:**
 
 ```html
-<ngx-signal-form-field [formField]="form.phone" outline>
+<ngx-signal-form-field-wrapper [formField]="form.phone" outline>
   <label for="phone">Phone Number</label>
   <input id="phone" [formField]="form.phone" />
-  <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
-</ngx-signal-form-field>
+  <ngx-signal-form-field-wrapper-hint
+    >Format: 123-456-7890</ngx-signal-form-field-wrapper-hint
+  >
+</ngx-signal-form-field-wrapper>
 ```
 
 **Position control:**
 
 ```html
-<ngx-signal-form-field-hint position="right">
+<ngx-signal-form-field-wrapper-hint position="right">
   Optional field
-</ngx-signal-form-field-hint>
+</ngx-signal-form-field-wrapper-hint>
 ```
 
 #### CSS Custom Properties
@@ -569,14 +577,14 @@ import { NgxSignalFormFieldCharacterCountComponent } from '@ngx-signal-forms/too
 **Usage:**
 
 ```html
-<ngx-signal-form-field [formField]="form.bio" outline>
+<ngx-signal-form-field-wrapper [formField]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-character-count
+  <ngx-signal-form-field-wrapper-character-count
     [formField]="form.bio"
     [maxLength]="500"
   />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 #### Inputs
@@ -602,7 +610,7 @@ The component automatically changes color based on character count:
 **Disable color progression:**
 
 ```html
-<ngx-signal-form-field-character-count
+<ngx-signal-form-field-wrapper-character-count
   [formField]="form.bio"
   [maxLength]="500"
   [showLimitColors]="false"
@@ -612,7 +620,7 @@ The component automatically changes color based on character count:
 **Custom thresholds:**
 
 ```html
-<ngx-signal-form-field-character-count
+<ngx-signal-form-field-wrapper-character-count
   [formField]="form.tweet"
   [maxLength]="280"
   [colorThresholds]="{ warning: 90, danger: 98 }"
@@ -637,14 +645,14 @@ The component automatically changes color based on character count:
 
 ---
 
-### NgxSignalFormFieldsetComponent
+### NgxSignalFormFieldset
 
 Groups related form fields with aggregated error/warning display. Similar to HTML `<fieldset>`, but with validation message aggregation and deduplication.
 
 **Import:**
 
 ```typescript
-import { NgxSignalFormFieldsetComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxSignalFormFieldset } from '@ngx-signal-forms/toolkit/form-field';
 ```
 
 **Basic Usage:**
@@ -653,15 +661,15 @@ import { NgxSignalFormFieldsetComponent } from '@ngx-signal-forms/toolkit/form-f
 <ngx-signal-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
   <legend class="fieldset-legend">Shipping Address</legend>
 
-  <ngx-signal-form-field [formField]="form.address.street" outline>
+  <ngx-signal-form-field-wrapper [formField]="form.address.street" outline>
     <label for="street">Street</label>
     <input id="street" [formField]="form.address.street" />
-  </ngx-signal-form-field>
+  </ngx-signal-form-field-wrapper>
 
-  <ngx-signal-form-field [formField]="form.address.city" outline>
+  <ngx-signal-form-field-wrapper [formField]="form.address.city" outline>
     <label for="city">City</label>
     <input id="city" [formField]="form.address.city" />
-  </ngx-signal-form-field>
+  </ngx-signal-form-field-wrapper>
 
   <!-- Aggregated errors appear at bottom of fieldset -->
 </ngx-signal-form-fieldset>
@@ -704,21 +712,59 @@ import { NgxSignalFormFieldsetComponent } from '@ngx-signal-forms/toolkit/form-f
 
 #### Features
 
-- ✅ **Aggregated Errors**: Collects errors from all nested fields via `errorSummary()`
+- ✅ **Group-Only Mode** (default): Shows only group-level errors to avoid duplication
+- ✅ **Aggregated Mode**: Optionally collects errors from all nested fields via `errorSummary()`
 - ✅ **Deduplication**: Same error message shown only once even if multiple fields have it
 - ✅ **Warning Support**: Non-blocking warnings (with `warn:` prefix) shown when no errors exist
 - ✅ **WCAG 2.2 Compliant**: Errors use `role="alert"`, warnings use `role="status"`
 - ✅ **Strategy Aware**: Respects `ErrorDisplayStrategy` from form context or input
 
+#### Error Display Modes
+
+The `includeNestedErrors` input controls which errors are shown:
+
+**Group-Only Mode** (`includeNestedErrors="false"`, default):
+Shows ONLY group-level errors via `errors()`. Use when nested fields display their own errors via `NgxSignalFormField` to avoid duplicate error messages.
+
+```html
+<ngx-signal-form-fieldset [fieldsetField]="form.passwords">
+  <ngx-signal-form-field-wrapper [formField]="form.passwords.password" outline>
+    <!-- This field shows its own "required" error -->
+  </ngx-signal-form-field-wrapper>
+  <ngx-signal-form-field-wrapper [formField]="form.passwords.confirm" outline>
+    <!-- This field shows its own errors -->
+  </ngx-signal-form-field-wrapper>
+  <!-- Fieldset shows ONLY cross-field error: "Passwords must match" -->
+</ngx-signal-form-fieldset>
+```
+
+**Aggregated Mode** (`includeNestedErrors`):
+Shows ALL errors including nested field errors via `errorSummary()`. Use when nested fields do NOT display their own errors (e.g., plain inputs without `NgxSignalFormField` wrappers).
+
+```html
+<fieldset
+  ngxSignalFormFieldset
+  [fieldsetField]="form.address"
+  includeNestedErrors
+>
+  <legend>Shipping Address</legend>
+  <!-- Plain inputs without error display -->
+  <input [formField]="form.address.street" />
+  <input [formField]="form.address.city" />
+  <!-- Fieldset shows ALL errors: "Street required", "City required", etc. -->
+</fieldset>
+```
+
 #### Inputs
 
-| Input           | Type                           | Default             | Description                                        |
-| --------------- | ------------------------------ | ------------------- | -------------------------------------------------- |
-| `fieldsetField` | `FieldTree<TFieldset>`         | _required_          | The Signal Forms field tree to aggregate from      |
-| `fields`        | `FieldTree<unknown>[] \| null` | `null`              | Explicit list of fields for custom groupings       |
-| `fieldsetId`    | `string \| undefined`          | Auto-generated      | Unique identifier for generating error/warning IDs |
-| `strategy`      | `ErrorDisplayStrategy \| null` | Inherited from form | Error display strategy                             |
-| `showErrors`    | `boolean`                      | `true`              | Whether to display aggregated error messages       |
+| Input                 | Type                           | Default             | Description                                                               |
+| --------------------- | ------------------------------ | ------------------- | ------------------------------------------------------------------------- |
+| `fieldsetField`       | `FieldTree<TFieldset>`         | _required_          | The Signal Forms field tree to aggregate from                             |
+| `fields`              | `FieldTree<unknown>[] \| null` | `null`              | Explicit list of fields for custom groupings                              |
+| `fieldsetId`          | `string \| undefined`          | Auto-generated      | Unique identifier for generating error/warning IDs                        |
+| `strategy`            | `ErrorDisplayStrategy \| null` | Inherited from form | Error display strategy                                                    |
+| `showErrors`          | `boolean`                      | `true`              | Whether to display aggregated error messages                              |
+| `includeNestedErrors` | `boolean`                      | `false`             | Include nested field errors (`true`) or only group-level errors (`false`) |
 
 #### Host CSS Classes
 
@@ -775,7 +821,7 @@ import {
   submit,
 } from '@angular/forms/signals';
 import {
-  NgxSignalFormFieldComponent,
+  NgxSignalFormFieldWrapperComponent,
   NgxFloatingLabelDirective,
   NgxSignalFormFieldHintComponent,
   NgxSignalFormFieldCharacterCountComponent,
@@ -798,7 +844,7 @@ const contactSchema = schema<ContactForm>((path) => {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormField,
-    NgxSignalFormFieldComponent,
+    NgxSignalFormFieldWrapperComponent,
     NgxFloatingLabelDirective,
     NgxSignalFormFieldHintComponent,
     NgxSignalFormFieldCharacterCountComponent,
@@ -806,7 +852,7 @@ const contactSchema = schema<ContactForm>((path) => {
   template: `
     <form (submit)="save($event)" novalidate>
       <!-- Outlined email field with custom required marker -->
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="contactForm.email"
         outline
         requiredMarker=" (required)"
@@ -819,13 +865,13 @@ const contactSchema = schema<ContactForm>((path) => {
           required
           placeholder="you@example.com"
         />
-        <ngx-signal-form-field-hint>
+        <ngx-signal-form-field-wrapper-hint>
           We'll never share your email
-        </ngx-signal-form-field-hint>
-      </ngx-signal-form-field>
+        </ngx-signal-form-field-wrapper-hint>
+      </ngx-signal-form-field-wrapper>
 
       <!-- Outlined message field with character count -->
-      <ngx-signal-form-field [formField]="contactForm.message" outline>
+      <ngx-signal-form-field-wrapper [formField]="contactForm.message" outline>
         <label for="message">Message</label>
         <textarea
           id="message"
@@ -833,11 +879,11 @@ const contactSchema = schema<ContactForm>((path) => {
           required
           rows="4"
         ></textarea>
-        <ngx-signal-form-field-character-count
+        <ngx-signal-form-field-wrapper-character-count
           [formField]="contactForm.message"
           [maxLength]="500"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
 
       <button type="submit" [disabled]="contactForm().invalid()">
         Send Message
@@ -875,8 +921,8 @@ export class ContactFormComponent {
 
 ```typescript
 // Components
-export { NgxSignalFormFieldComponent } from './form-field.component';
-export { NgxSignalFormFieldsetComponent } from './form-fieldset.component';
+export { NgxSignalFormFieldWrapperComponent } from './form-field-wrapper.component';
+export { NgxSignalFormFieldset } from './form-fieldset.component';
 ## License
 
 MIT © [ngx-signal-forms](https://github.com/ngx-signal-forms/ngx-signal-forms)

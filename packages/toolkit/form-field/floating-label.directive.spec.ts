@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFloatingLabelDirective } from './floating-label.directive';
-import { NgxSignalFormFieldComponent } from './form-field.component';
+import { NgxSignalFormFieldWrapperComponent as NgxSignalFormFieldWrapper } from './form-field-wrapper.component';
 
 /**
  * Test suite for NgxFloatingLabelDirective.
@@ -12,7 +12,7 @@ import { NgxSignalFormFieldComponent } from './form-field.component';
  * - Required marker display (show/hide)
  * - Custom required marker characters
  * - Data attribute bindings for CSS styling
- * - Integration with NgxSignalFormFieldComponent
+ * - Integration with NgxSignalFormFieldWrapperComponent
  * - Accessibility compliance (ARIA attributes preserved)
  */
 
@@ -27,37 +27,41 @@ describe('NgxFloatingLabelDirective', () => {
   describe('Basic directive application', () => {
     it('should add ngx-signal-forms-outline class when outline attribute is present', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [formField]="field" outline>
+        `<ngx-signal-form-field-wrapper [formField]="field" outline>
           <label for="email">Email</label>
           <input id="email" type="email" />
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
           },
         },
       );
 
-      const formField = container.querySelector('ngx-signal-form-field');
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
       expect(formField).toHaveClass('ngx-signal-forms-outline');
     });
 
     it('should not add ngx-signal-forms-outline class without outline attribute', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [formField]="field">
+        `<ngx-signal-form-field-wrapper [formField]="field">
           <label for="email">Email</label>
           <input id="email" type="email" />
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
           },
         },
       );
 
-      const formField = container.querySelector('ngx-signal-form-field');
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
       expect(formField).not.toHaveClass('ngx-signal-forms-outline');
     });
   });
@@ -65,55 +69,61 @@ describe('NgxFloatingLabelDirective', () => {
   describe('Required marker display', () => {
     it('should show required marker by default when showRequiredMarker is true', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [formField]="field" outline [showRequiredMarker]="true">
+        `<ngx-signal-form-field-wrapper [formField]="field" outline [showRequiredMarker]="true">
           <label for="email">Email</label>
           <input id="email" type="email" required />
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
           },
         },
       );
 
-      const formField = container.querySelector('ngx-signal-form-field');
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
       expect(formField).toHaveAttribute('data-show-required', 'true');
     });
 
     it('should hide required marker when showRequiredMarker is false', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [formField]="field" outline [showRequiredMarker]="false">
+        `<ngx-signal-form-field-wrapper [formField]="field" outline [showRequiredMarker]="false">
           <label for="email">Email</label>
           <input id="email" type="email" required />
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
           },
         },
       );
 
-      const formField = container.querySelector('ngx-signal-form-field');
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
       expect(formField).not.toHaveAttribute('data-show-required', 'true');
     });
 
     it('should default showRequiredMarker to true', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [formField]="field" outline>
+        `<ngx-signal-form-field-wrapper [formField]="field" outline>
           <label for="email">Email</label>
           <input id="email" type="email" required />
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
           },
         },
       );
 
-      const formField = container.querySelector('ngx-signal-form-field');
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
       expect(formField).toHaveAttribute('data-show-required', 'true');
     });
   });
@@ -121,73 +131,81 @@ describe('NgxFloatingLabelDirective', () => {
   describe('Custom required marker', () => {
     it('should use default asterisk marker " *"', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [formField]="field" outline>
+        `<ngx-signal-form-field-wrapper [formField]="field" outline>
           <label for="email">Email</label>
           <input id="email" type="email" required />
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
           },
         },
       );
 
-      const formField = container.querySelector('ngx-signal-form-field');
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
       expect(formField).toHaveAttribute('data-required-marker', ' *');
     });
 
     it('should use custom required marker "(required)"', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [formField]="field" outline requiredMarker="(required)">
+        `<ngx-signal-form-field-wrapper [formField]="field" outline requiredMarker="(required)">
           <label for="email">Email</label>
           <input id="email" type="email" required />
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
           },
         },
       );
 
-      const formField = container.querySelector('ngx-signal-form-field');
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
       expect(formField).toHaveAttribute('data-required-marker', '(required)');
     });
 
     it('should use custom required marker " †"', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [formField]="field" outline requiredMarker=" †">
+        `<ngx-signal-form-field-wrapper [formField]="field" outline requiredMarker=" †">
           <label for="email">Email</label>
           <input id="email" type="email" required />
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
           },
         },
       );
 
-      const formField = container.querySelector('ngx-signal-form-field');
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
       expect(formField).toHaveAttribute('data-required-marker', ' †');
     });
 
     it('should allow empty string as required marker', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [formField]="field" outline requiredMarker="">
+        `<ngx-signal-form-field-wrapper [formField]="field" outline requiredMarker="">
           <label for="email">Email</label>
           <input id="email" type="email" required />
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
           },
         },
       );
 
-      const formField = container.querySelector('ngx-signal-form-field');
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
       expect(formField).toHaveAttribute('data-required-marker', '');
     });
   });
@@ -195,39 +213,40 @@ describe('NgxFloatingLabelDirective', () => {
   describe('Data attribute bindings', () => {
     it('should bind both data-show-required and data-required-marker', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field
+        `<ngx-signal-form-field-wrapper
           [formField]="field"
           outline
-          [showRequiredMarker]="true"
           requiredMarker=" (optional)">
           <label for="username">Username</label>
           <input id="username" type="text" required />
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
           },
         },
       );
 
-      const formField = container.querySelector('ngx-signal-form-field');
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
       expect(formField).toHaveAttribute('data-show-required', 'true');
       expect(formField).toHaveAttribute('data-required-marker', ' (optional)');
     });
 
     it('should update data attributes when inputs change', async () => {
       const { container, rerender } = await render(
-        `<ngx-signal-form-field
+        `<ngx-signal-form-field-wrapper
           [formField]="field"
           outline
           [showRequiredMarker]="showRequired"
           [requiredMarker]="marker">
           <label for="email">Email</label>
           <input id="email" type="email" required />
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
             showRequired: true,
@@ -236,7 +255,9 @@ describe('NgxFloatingLabelDirective', () => {
         },
       );
 
-      const formField = container.querySelector('ngx-signal-form-field');
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
       expect(formField).toHaveAttribute('data-show-required', 'true');
       expect(formField).toHaveAttribute('data-required-marker', ' *');
 
@@ -257,12 +278,12 @@ describe('NgxFloatingLabelDirective', () => {
   describe('Accessibility', () => {
     it('should preserve label for attribute', async () => {
       await render(
-        `<ngx-signal-form-field [formField]="field" outline>
+        `<ngx-signal-form-field-wrapper [formField]="field" outline>
           <label for="email">Email Address</label>
           <input id="email" type="email" required />
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
           },
@@ -278,12 +299,12 @@ describe('NgxFloatingLabelDirective', () => {
 
     it('should preserve required attribute on input', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [formField]="field" outline>
+        `<ngx-signal-form-field-wrapper [formField]="field" outline>
           <label for="password">Password</label>
           <input id="password" type="password" required />
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
           },
@@ -296,12 +317,12 @@ describe('NgxFloatingLabelDirective', () => {
 
     it('should preserve aria-required on input', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [formField]="field" outline>
+        `<ngx-signal-form-field-wrapper [formField]="field" outline>
           <label for="username">Username</label>
           <input id="username" type="text" aria-required="true" />
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
           },
@@ -316,19 +337,21 @@ describe('NgxFloatingLabelDirective', () => {
   describe('Integration with form field component', () => {
     it('should work with textarea elements', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [formField]="field" outline>
+        `<ngx-signal-form-field-wrapper [formField]="field" outline>
           <label for="bio">Bio</label>
           <textarea id="bio" required></textarea>
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
           },
         },
       );
 
-      const formField = container.querySelector('ngx-signal-form-field');
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
       expect(formField).toHaveClass('ngx-signal-forms-outline');
 
       const textarea = container.querySelector('textarea#bio');
@@ -337,23 +360,25 @@ describe('NgxFloatingLabelDirective', () => {
 
     it('should work with select elements', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [formField]="field" outline>
+        `<ngx-signal-form-field-wrapper [formField]="field" outline>
           <label for="country">Country</label>
           <select id="country" required>
             <option value="">Select...</option>
             <option value="us">United States</option>
             <option value="ca">Canada</option>
           </select>
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
           },
         },
       );
 
-      const formField = container.querySelector('ngx-signal-form-field');
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
       expect(formField).toHaveClass('ngx-signal-forms-outline');
 
       const select = container.querySelector('select#country');
@@ -362,12 +387,12 @@ describe('NgxFloatingLabelDirective', () => {
 
     it('should work with placeholder text', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field [formField]="field" outline>
+        `<ngx-signal-form-field-wrapper [formField]="field" outline>
           <label for="email">Email</label>
           <input id="email" type="email" placeholder="you@example.com" required />
-        </ngx-signal-form-field>`,
+        </ngx-signal-form-field-wrapper>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field: createMockFieldState(),
           },
@@ -383,23 +408,23 @@ describe('NgxFloatingLabelDirective', () => {
     it('should apply directive to multiple fields independently', async () => {
       const { container } = await render(
         `<div>
-          <ngx-signal-form-field [formField]="field1" outline>
+          <ngx-signal-form-field-wrapper [formField]="field1" outline>
             <label for="email">Email</label>
             <input id="email" type="email" />
-          </ngx-signal-form-field>
+          </ngx-signal-form-field-wrapper>
 
-          <ngx-signal-form-field [formField]="field2" outline [showRequiredMarker]="false">
+          <ngx-signal-form-field-wrapper [formField]="field2" outline [showRequiredMarker]="false">
             <label for="username">Username</label>
             <input id="username" type="text" />
-          </ngx-signal-form-field>
+          </ngx-signal-form-field-wrapper>
 
-          <ngx-signal-form-field [formField]="field3">
+          <ngx-signal-form-field-wrapper [formField]="field3">
             <label for="password">Password</label>
             <input id="password" type="password" />
-          </ngx-signal-form-field>
+          </ngx-signal-form-field-wrapper>
         </div>`,
         {
-          imports: [NgxSignalFormFieldComponent, NgxFloatingLabelDirective],
+          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
           componentProperties: {
             field1: createMockFieldState(),
             field2: createMockFieldState(),
@@ -408,7 +433,9 @@ describe('NgxFloatingLabelDirective', () => {
         },
       );
 
-      const formFields = container.querySelectorAll('ngx-signal-form-field');
+      const formFields = container.querySelectorAll(
+        'ngx-signal-form-field-wrapper',
+      );
       expect(formFields).toHaveLength(3);
 
       // First field: outline with default required marker

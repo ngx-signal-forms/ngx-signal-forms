@@ -116,6 +116,35 @@ export function readErrors(state: unknown): ValidationError[] {
 }
 
 /**
+ * Read only direct errors from FieldState (excludes nested field errors).
+ *
+ * Unlike `readErrors()` which uses `errorSummary()`, this only reads
+ * the direct `errors()` on the field itself. Use this when nested fields
+ * display their own errors and you only want group-level validation.
+ *
+ * @param state - The field state object (from `fieldTree()`)
+ * @returns Array of ValidationError directly on this field, empty if not accessible
+ *
+ * @example
+ * ```typescript
+ * const addressState = addressField();
+ * const groupErrors = readDirectErrors(addressState); // Only cross-field validations
+ * ```
+ */
+export function readDirectErrors(state: unknown): ValidationError[] {
+  if (!state || typeof state !== 'object') {
+    return [];
+  }
+
+  const errors = (state as FieldStateLike).errors;
+  if (typeof errors === 'function') {
+    return errors() ?? [];
+  }
+
+  return [];
+}
+
+/**
  * Deduplicate validation errors by kind + message combination.
  *
  * Useful for fieldsets that aggregate errors from multiple fields -

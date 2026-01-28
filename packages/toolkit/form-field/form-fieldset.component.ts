@@ -21,6 +21,7 @@ import {
 import {
   createUniqueId,
   dedupeValidationErrors,
+  readDirectErrors,
   readErrors,
   readFieldFlag,
 } from '@ngx-signal-forms/toolkit/headless';
@@ -35,48 +36,43 @@ import {
  * ## Features
  *
  * - **Aggregated Errors**: Collects errors from all nested fields via `errorSummary()`
+ * - **Group-Only Mode**: Show only group-level errors when nested fields display their own
  * - **Deduplication**: Same error shown only once even if multiple fields have it
  * - **Warning Support**: Non-blocking warnings (with `warn:` prefix) shown when no errors
  * - **WCAG 2.2 Compliant**: Errors use `role="alert"`, warnings use `role="status"`
  * - **Strategy Aware**: Respects `ErrorDisplayStrategy` from form context or input
  *
- * ## Naming Rationale
+ * ## Error Display Modes
  *
- * Named "fieldset" to align with HTML `<fieldset>` semantics - both group form
- * controls with a shared purpose. Unlike HTML fieldset, this component also
- * handles aggregated validation display.
+ * Use `includeNestedErrors` to control which errors are shown:
+ * - `false` (default): Shows ONLY direct group-level errors (use when fields show their own errors)
+ * - `true`: Shows ALL errors including nested field errors via `errorSummary()`
  *
  * @template TFieldset The type of the fieldset field value
  *
- * @example Basic Usage - Group with Aggregated Errors
+ * @example Group-Only Mode (when nested fields show their own errors)
  * ```html
- * <ngx-signal-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
- *   <ngx-signal-form-field [formField]="form.address.street">
- *     <label for="street">Street</label>
- *     <input id="street" [formField]="form.address.street" />
- *   </ngx-signal-form-field>
- *
- *   <ngx-signal-form-field [formField]="form.address.city">
- *     <label for="city">City</label>
- *     <input id="city" [formField]="form.address.city" />
- *   </ngx-signal-form-field>
+ * <ngx-signal-form-fieldset
+ *   [fieldsetField]="form.passwords"
+ *   [includeNestedErrors]="false"
+ * >
+ *   <ngx-signal-form-field-wrapper [formField]="form.passwords.password">...</ngx-signal-form-field-wrapper>
+ *   <ngx-signal-form-field-wrapper [formField]="form.passwords.confirm">...</ngx-signal-form-field-wrapper>
+ *   <!-- Fieldset shows only "Passwords must match" cross-field error -->
  * </ngx-signal-form-fieldset>
  * ```
  *
- * @example Custom Field Collection
+ * @example Aggregated Mode (when nested fields don't show errors)
  * ```html
- * <ngx-signal-form-fieldset
- *   [fieldsetField]="form"
- *   [fields]="[form.password, form.confirmPassword]"
- *   fieldsetId="passwords"
- * >
- *   <!-- Fields content -->
+ * <ngx-signal-form-fieldset [fieldsetField]="form.address">
+ *   <input [formField]="form.address.street" />
+ *   <input [formField]="form.address.city" />
+ *   <!-- Fieldset shows all nested field errors -->
  * </ngx-signal-form-fieldset>
  * ```
  */
 @Component({
-  selector:
-    'ngx-signal-form-fieldset, [ngxSignalFormFieldset], [ngx-signal-form-fieldset]',
+  selector: 'ngx-signal-form-fieldset, [ngxSignalFormFieldset]',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgxSignalFormErrorComponent],
   styleUrl: './form-fieldset.component.scss',
@@ -104,7 +100,7 @@ import {
     }
   `,
 })
-export class NgxSignalFormFieldsetComponent<TFieldset = unknown> {
+export class NgxSignalFormFieldset<TFieldset = unknown> {
   readonly #formContext = injectFormContext();
   readonly #config = injectFormConfig();
 
@@ -145,6 +141,31 @@ export class NgxSignalFormFieldsetComponent<TFieldset = unknown> {
    * @default true
    */
   readonly showErrors = input(true, { transform: booleanAttribute });
+
+  /**
+   * Whether to include nested field errors in the aggregated display.
+   *
+   * - `false` (default): Shows ONLY group-level errors via `errors()`.
+   *   Use when nested fields DO display their own errors (avoids duplication).
+   * - `true`: Shows ALL errors from nested fields via `errorSummary()`.
+   *   Use when nested fields do NOT display their own errors.
+   *
+   * @default false
+   *
+   * @example Show all nested field errors (when fields don't show their own)
+   * ```html
+   * <ngx-signal-form-fieldset
+   *   [fieldsetField]="form.address"
+   *   [includeNestedErrors]="true"
+   * >
+   *   <!-- Plain inputs without NgxSignalFormField wrapper -->
+   *   <input [formField]="form.address.street" />
+   *   <input [formField]="form.address.city" />
+   *   <!-- Fieldset shows all errors from nested fields -->
+   * </ngx-signal-form-fieldset>
+   * ```
+   */
+  readonly includeNestedErrors = input(false, { transform: booleanAttribute });
 
   readonly #generatedFieldsetId = createUniqueId('fieldset');
 
@@ -188,13 +209,17 @@ export class NgxSignalFormFieldsetComponent<TFieldset = unknown> {
    */
   readonly #allMessages = computed(() => {
     const override = this.fields();
+    const includeNested = this.includeNestedErrors();
+
+    /// Select read function based on includeNestedErrors
+    const readFn = includeNested ? readErrors : readDirectErrors;
 
     if (override && override.length > 0) {
-      const messages = override.flatMap((field) => readErrors(field()));
+      const messages = override.flatMap((field) => readFn(field()));
       return dedupeValidationErrors(messages);
     }
 
-    return dedupeValidationErrors(readErrors(this.#fieldsetState()));
+    return dedupeValidationErrors(readFn(this.#fieldsetState()));
   });
 
   /**

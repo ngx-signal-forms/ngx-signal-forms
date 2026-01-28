@@ -48,7 +48,10 @@ import { errorMessagesSchema } from './error-messages.validations';
       <!-- Form fields -->
       <div class="space-y-6">
         <!-- Email: Uses validator message (Tier 1 - highest priority) -->
-        <ngx-signal-form-field [formField]="errorMessagesForm.email" outline>
+        <ngx-signal-form-field-wrapper
+          [formField]="errorMessagesForm.email"
+          outline
+        >
           <label for="email">Email (Validator Message - Tier 1)</label>
           <input
             id="email"
@@ -57,13 +60,16 @@ import { errorMessagesSchema } from './error-messages.validations';
             placeholder="you@example.com"
             class="form-input"
           />
-          <ngx-signal-form-field-hint>
+          <ngx-signal-form-field-wrapper-hint>
             Tier 1: Validator message takes priority
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field>
+          </ngx-signal-form-field-wrapper-hint>
+        </ngx-signal-form-field-wrapper>
 
         <!-- Password: Uses registry override (Tier 2) -->
-        <ngx-signal-form-field [formField]="errorMessagesForm.password" outline>
+        <ngx-signal-form-field-wrapper
+          [formField]="errorMessagesForm.password"
+          outline
+        >
           <label for="password">Password (Registry Override - Tier 2)</label>
           <input
             id="password"
@@ -72,13 +78,16 @@ import { errorMessagesSchema } from './error-messages.validations';
             placeholder="Enter password"
             class="form-input"
           />
-          <ngx-signal-form-field-hint>
+          <ngx-signal-form-field-wrapper-hint>
             Tier 2: Registry provides fallback message
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field>
+          </ngx-signal-form-field-wrapper-hint>
+        </ngx-signal-form-field-wrapper>
 
         <!-- Bio: Uses default toolkit fallback (Tier 3) -->
-        <ngx-signal-form-field [formField]="errorMessagesForm.bio" outline>
+        <ngx-signal-form-field-wrapper
+          [formField]="errorMessagesForm.bio"
+          outline
+        >
           <label for="bio">Bio (Default Fallback - Tier 3)</label>
           <textarea
             id="bio"
@@ -87,10 +96,10 @@ import { errorMessagesSchema } from './error-messages.validations';
             placeholder="Tell us about yourself"
             class="form-input"
           ></textarea>
-          <ngx-signal-form-field-hint>
+          <ngx-signal-form-field-wrapper-hint>
             Tier 3: Toolkit default fallback
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field>
+          </ngx-signal-form-field-wrapper-hint>
+        </ngx-signal-form-field-wrapper>
       </div>
 
       <!-- Form actions -->

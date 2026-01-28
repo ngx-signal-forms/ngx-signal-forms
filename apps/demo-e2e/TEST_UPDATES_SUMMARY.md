@@ -159,7 +159,7 @@ Fixed and expanded E2E tests based on the comprehensive test plan in `specs/e2e-
 - ✅ On-submit - errors after submit (strategy limitation documented)
 - ✅ Manual - programmatic control
 
-### Form Field Wrapper (`NgxSignalFormFieldComponent`)
+### Form Field Wrapper (`NgxSignalFormFieldWrapperComponent`)
 
 - ✅ Automatic label association
 - ✅ Error message positioning

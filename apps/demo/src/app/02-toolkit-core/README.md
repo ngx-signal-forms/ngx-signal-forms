@@ -350,7 +350,7 @@ validate(path.email, (ctx) => {
 
 **What changes:**
 
-- `NgxSignalFormFieldComponent` for layout
+- `NgxSignalFormFieldWrapperComponent` for layout
 - Content projection (label + input)
 - Automatic error display
 - Consistent spacing

@@ -16,16 +16,16 @@ import {
 } from './basic-usage.validations';
 
 /**
- * Basic Usage - Demonstrates NgxSignalFormFieldComponent
+ * Basic Usage - Demonstrates NgxSignalFormFieldWrapperComponent
  *
- * This example showcases the NgxSignalFormFieldComponent wrapper which combines:
+ * This example showcases the NgxSignalFormFieldWrapperComponent wrapper which combines:
  * - **Automatic Error Display**: No need to manually add `<ngx-signal-form-error>`
  * - **Consistent Layout**: Standardized spacing via CSS custom properties
  * - **Accessibility**: Proper structure with semantic HTML
  * - **Multiple Field Types**: Works with all form controls
  *
  * 🎯 Key Features Demonstrated:
- * - NgxSignalFormFieldComponent wrapper for cleaner markup
+ * - NgxSignalFormFieldWrapperComponent wrapper for cleaner markup
  * - Automatic error display (no manual error components needed)
  * - Various input types (text, email, url, number, textarea, select, checkbox)
  * - Consistent spacing and layout

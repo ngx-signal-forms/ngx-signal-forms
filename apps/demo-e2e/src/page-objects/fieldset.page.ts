@@ -5,7 +5,7 @@ import { BaseFormPage } from './base-form.page';
  * Page Object for "Fieldset - Aggregated Errors" demo
  * Route: /form-field-wrapper/fieldset
  *
- * Demonstrates NgxSignalFormFieldsetComponent for grouping form fields
+ * Demonstrates NgxSignalFormFieldset for grouping form fields
  * with aggregated error display at the fieldset level.
  */
 export class FieldsetPage extends BaseFormPage {
@@ -42,6 +42,13 @@ export class FieldsetPage extends BaseFormPage {
    */
   get credentialsFieldset(): Locator {
     return this.page.locator('[fieldsetid="credentials"]');
+  }
+
+  /**
+   * Get delivery method fieldset
+   */
+  get deliveryFieldset(): Locator {
+    return this.page.locator('[fieldsetid="delivery-method"]');
   }
 
   /**
@@ -93,6 +100,13 @@ export class FieldsetPage extends BaseFormPage {
    */
   getFieldsetErrors(fieldset: Locator): Locator {
     return fieldset.locator('.ngx-signal-form-error');
+  }
+
+  /**
+   * Get delivery method radios
+   */
+  get deliveryMethodRadios(): Locator {
+    return this.deliveryFieldset.getByRole('radio');
   }
 
   /**

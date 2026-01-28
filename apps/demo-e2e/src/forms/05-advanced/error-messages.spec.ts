@@ -56,7 +56,7 @@ test.describe('Error Messages - 3-Tier Priority', () => {
       // A robust way in this specific demo layout is to look for the alert within the same generic container
       // or simply rely on the fact that it matches 'This field is required' AND is the 3rd one? No, that's brittle.
 
-      const fieldGroup = page.locator('ngx-signal-form-field', {
+      const fieldGroup = page.locator('ngx-signal-form-field-wrapper', {
         has: bioInput,
       });
 

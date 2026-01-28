@@ -9,19 +9,16 @@ import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
-import {
-  NgxOutlinedFormField,
-  NgxSignalFormFieldsetComponent,
-} from '@ngx-signal-forms/toolkit/form-field';
+import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 import type { FieldsetDemoModel } from './fieldset.model';
 import { fieldsetDemoSchema } from './fieldset.validations';
 
 /**
- * Fieldset Demo - Demonstrates NgxSignalFormFieldsetComponent
+ * Fieldset Demo - Demonstrates NgxSignalFormFieldset
  *
  * This example showcases how to group related form fields and display
- * aggregated validation errors using the NgxSignalFormFieldsetComponent.
+ * aggregated validation errors using the NgxSignalFormFieldset.
  *
  * 🎯 Key Features Demonstrated:
  * - Grouped address fields with shared validation display
@@ -31,7 +28,7 @@ import { fieldsetDemoSchema } from './fieldset.validations';
  * - Conditional fieldset visibility (billing same as shipping)
  * - WCAG 2.2 compliant accessibility
  *
- * 📚 When to use NgxSignalFormFieldsetComponent:
+ * 📚 When to use NgxSignalFormFieldset:
  * - Grouping logically related fields (addresses, password groups)
  * - Showing aggregated errors at the group level
  * - Reducing visual clutter with many field-level errors
@@ -44,12 +41,7 @@ import { fieldsetDemoSchema } from './fieldset.validations';
 @Component({
   selector: 'ngx-fieldset-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    FormField,
-    NgxSignalFormToolkit,
-    NgxOutlinedFormField,
-    NgxSignalFormFieldsetComponent,
-  ],
+  imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
   templateUrl: './fieldset.form.html',
   styles: `
     /* Spacing between fieldsets */
@@ -83,6 +75,9 @@ export class FieldsetFormComponent {
     credentials: {
       password: '',
       confirmPassword: '',
+    },
+    delivery: {
+      method: '',
     },
     billingSameAsShipping: true,
   });
@@ -128,6 +123,9 @@ export class FieldsetFormComponent {
       credentials: {
         password: '',
         confirmPassword: '',
+      },
+      delivery: {
+        method: '',
       },
       billingSameAsShipping: true,
     });

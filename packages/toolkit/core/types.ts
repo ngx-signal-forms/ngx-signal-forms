@@ -167,7 +167,7 @@ export interface NgxSignalFormsConfig {
 
   /**
    * Default appearance for form fields.
-   * When set, all NgxSignalFormFieldComponent instances will use this appearance
+   * When set, all NgxSignalFormFieldWrapperComponent instances will use this appearance
    * unless explicitly overridden with the `outline` attribute.
    *
    * @default undefined (no global default)

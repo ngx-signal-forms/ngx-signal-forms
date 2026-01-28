@@ -16,8 +16,8 @@ import {
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import {
   NgxFloatingLabelDirective,
-  NgxSignalFormFieldComponent,
   NgxSignalFormFieldHintComponent,
+  NgxSignalFormFieldWrapperComponent,
 } from '@ngx-signal-forms/toolkit/form-field';
 
 interface UserForm {
@@ -32,7 +32,7 @@ interface UserForm {
     CommonModule,
     FormField,
     NgxSignalFormToolkit,
-    NgxSignalFormFieldComponent,
+    NgxSignalFormFieldWrapperComponent,
     NgxFloatingLabelDirective,
     NgxSignalFormFieldHintComponent,
   ],

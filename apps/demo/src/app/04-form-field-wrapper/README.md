@@ -4,7 +4,7 @@
 
 ## 🎯 Purpose
 
-This section demonstrates the **"batteries included"** approach using `NgxSignalFormFieldComponent` - a complete form field wrapper with automatic error display, consistent layout, and content projection.
+This section demonstrates the **"batteries included"** approach using `NgxSignalFormFieldWrapperComponent` - a complete form field wrapper with automatic error display, consistent layout, and content projection.
 
 **Adoption Level:** 100% toolkit
 
@@ -20,7 +20,7 @@ This section demonstrates the **"batteries included"** approach using `NgxSignal
 
 ### basic-usage
 
-**Focus:** Introduction to NgxSignalFormFieldComponent
+**Focus:** Introduction to NgxSignalFormFieldWrapperComponent
 
 **What you'll learn:**
 
@@ -59,18 +59,18 @@ This section demonstrates the **"batteries included"** approach using `NgxSignal
 
 ## 🎨 API Reference
 
-### NgxSignalFormFieldComponent
+### NgxSignalFormFieldWrapperComponent
 
 ```typescript
-import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
-  imports: [FormField, NgxSignalFormFieldComponent],
+  imports: [FormField, NgxSignalFormFieldWrapperComponent],
   template: `
-    <ngx-signal-form-field [formField]="form.email" fieldName="email">
+    <ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
       <label for="email">Email</label>
       <input id="email" [formField]="form.email" />
-    </ngx-signal-form-field>
+    </ngx-signal-form-field-wrapper>
   `,
 })
 ```
@@ -94,12 +94,12 @@ import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-fiel
 The component uses `<ng-content>` to project your custom content:
 
 ```html
-<ngx-signal-form-field [formField]="form.email" fieldName="email">
+<ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
   <!-- Everything here is projected -->
   <label for="email">Email Address</label>
   <input id="email" type="email" [formField]="form.email" />
   <p class="hint">We'll never share your email</p>
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 ## 💡 Code Reduction Analysis
@@ -125,15 +125,15 @@ The component uses `<ng-content>` to project your custom content:
 
 ```html
 <!-- ~5 lines per field -->
-<ngx-signal-form-field [formField]="form.email" fieldName="email">
+<ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 
-<ngx-signal-form-field [formField]="form.password" fieldName="password">
+<ngx-signal-form-field-wrapper [formField]="form.password" fieldName="password">
   <label for="password">Password</label>
   <input id="password" type="password" [formField]="form.password" />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 **Reduction:** ~67% less code per field ✅
@@ -207,13 +207,13 @@ validate(path, (ctx) => {
 
 ```html
 @for (contact of form.contacts; track $index; let i = $index) {
-<ngx-signal-form-field
+<ngx-signal-form-field-wrapper
   [formField]="form.contacts[i].value"
   [fieldName]="'contact-' + i"
 >
   <label [for]="'contact-' + i">Contact {{ i + 1 }}</label>
   <input [id]="'contact-' + i" [formField]="form.contacts[i].value" />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 }
 ```
 
@@ -225,7 +225,7 @@ validate(path, (ctx) => {
 <!-- Form uses 'on-touch' by default -->
 <form [ngxSignalForm]="form" [errorStrategy]="'on-touch'">
   <!-- But password confirmation shows immediately -->
-  <ngx-signal-form-field
+  <ngx-signal-form-field-wrapper
     [formField]="form.confirmPassword"
     fieldName="confirmPassword"
     [strategy]="'immediate'"
@@ -236,7 +236,7 @@ validate(path, (ctx) => {
       type="password"
       [formField]="form.confirmPassword"
     />
-  </ngx-signal-form-field>
+  </ngx-signal-form-field-wrapper>
 </form>
 ```
 
@@ -261,7 +261,7 @@ The component uses CSS custom properties for easy theming:
 
 ```css
 :root {
-  --ngx-signal-form-field-gap: 0.5rem;
+  --ngx-signal-form-field-wrapper-gap: 0.5rem;
   --ngx-signal-form-error-color: #dc2626;
   --ngx-signal-form-warning-color: #f59e0b;
 }
@@ -278,9 +278,9 @@ The component uses CSS custom properties for easy theming:
 ### Layout Customization
 
 ```scss
-ngx-signal-form-field {
+ngx-signal-form-field-wrapper {
   display: block;
-  margin-bottom: var(--ngx-signal-form-field-gap, 1rem);
+  margin-bottom: var(--ngx-signal-form-field-wrapper-gap, 1rem);
 
   label {
     display: block;
@@ -315,7 +315,7 @@ ngx-signal-form-field {
 
 ## 🤔 When to Use Form Field Wrapper
 
-### Use NgxSignalFormFieldComponent When
+### Use NgxSignalFormFieldWrapperComponent When
 
 - ✅ You need consistent form layouts
 - ✅ You want automatic error display
@@ -348,14 +348,14 @@ ngx-signal-form-field {
 
 ```html
 <!-- ❌ Wrong: fieldName doesn't match id -->
-<ngx-signal-form-field [formField]="form.email" fieldName="userEmail">
+<ngx-signal-form-field-wrapper [formField]="form.email" fieldName="userEmail">
   <input id="email" [formField]="form.email" />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 
 <!-- ✅ Correct: fieldName matches id -->
-<ngx-signal-form-field [formField]="form.email" fieldName="email">
+<ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
   <input id="email" [formField]="form.email" />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 ### Errors not showing
@@ -381,13 +381,13 @@ ngx-signal-form-field {
 
 ```css
 /* ❌ Don't override component internals */
-ngx-signal-form-field > div {
+ngx-signal-form-field-wrapper > div {
   margin: 2rem;
 }
 
 /* ✅ Use CSS variables */
 :root {
-  --ngx-signal-form-field-gap: 2rem;
+  --ngx-signal-form-field-wrapper-gap: 2rem;
 }
 ```
 

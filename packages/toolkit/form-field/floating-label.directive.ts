@@ -1,7 +1,7 @@
 import { Directive, input } from '@angular/core';
 
 /**
- * Attribute directive that transforms NgxSignalFormFieldComponent into ann outlined/outlined/floating label layout.
+ * Attribute directive that transforms NgxSignalFormFieldWrapperComponent into ann outlined/outlined/floating label layout.
  *
  * Applies modern outlined input styling where the label appears inside the input container,
  * matching contemporary design patterns like Material Design 3 outlined inputs and similar systems.
@@ -15,26 +15,26 @@ import { Directive, input } from '@angular/core';
  *
  * @example Basic outlined field
  * ```html
- * <ngx-signal-form-field [formField]="form.email" outline>
+ * <ngx-signal-form-field-wrapper [formField]="form.email" outline>
  *   <label for="email">Email Address</label>
  *   <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
- * </ngx-signal-form-field>
+ * </ngx-signal-form-field-wrapper>
  * ```
  *
  * @example Hide required marker
  * ```html
- * <ngx-signal-form-field [formField]="form.email" outline [showRequiredMarker]="false">
+ * <ngx-signal-form-field-wrapper [formField]="form.email" outline [showRequiredMarker]="false">
  *   <label for="email">Email Address</label>
  *   <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
- * </ngx-signal-form-field>
+ * </ngx-signal-form-field-wrapper>
  * ```
  *
  * @example Custom required marker
  * ```html
- * <ngx-signal-form-field [formField]="form.email" outline requiredMarker="(required)">
+ * <ngx-signal-form-field-wrapper [formField]="form.email" outline requiredMarker="(required)">
  *   <label for="email">Email Address</label>
  *   <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
- * </ngx-signal-form-field>
+ * </ngx-signal-form-field-wrapper>
  * ```
  *
  * Note: By default, the required marker (*) is shown when the input has
@@ -43,20 +43,20 @@ import { Directive, input } from '@angular/core';
  *
  * @example With character count
  * ```html
- * <ngx-signal-form-field [formField]="form.bio" outline>
+ * <ngx-signal-form-field-wrapper [formField]="form.bio" outline>
  *   <label for="bio">Bio</label>
  *   <textarea id="bio" [formField]="form.bio"></textarea>
- *   <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
- * </ngx-signal-form-field>
+ *   <ngx-signal-form-field-wrapper-character-count [formField]="form.bio" [maxLength]="500" />
+ * </ngx-signal-form-field-wrapper>
  * ```
  *
  * @example With hint text
  * ```html
- * <ngx-signal-form-field [formField]="form.phone" outline>
+ * <ngx-signal-form-field-wrapper [formField]="form.phone" outline>
  *   <label for="phone">Phone Number</label>
  *   <input id="phone" [formField]="form.phone" required />
- *   <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
- * </ngx-signal-form-field>
+ *   <ngx-signal-form-field-wrapper-hint>Format: 123-456-7890</ngx-signal-form-field-wrapper-hint>
+ * </ngx-signal-form-field-wrapper>
  * ```
  *
  * Browser Support:
@@ -95,7 +95,7 @@ import { Directive, input } from '@angular/core';
  */
 @Directive({
   // eslint-disable-next-line @angular-eslint/directive-selector
-  selector: 'ngx-signal-form-field[outline]',
+  selector: 'ngx-signal-form-field-wrapper[outline]',
   standalone: true,
   host: {
     '[class.ngx-signal-forms-outline]': 'true',

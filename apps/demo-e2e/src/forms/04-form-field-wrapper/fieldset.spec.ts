@@ -26,14 +26,23 @@ test.describe('Form Fieldset - Aggregated Errors', () => {
       await expect(page.credentialsFieldset).toBeVisible();
     });
 
-    test('should initially show 2 fieldsets (shipping + credentials)', async () => {
+    test('should render delivery method fieldset', async () => {
+      await expect(page.deliveryFieldset).toBeVisible();
+    });
+
+    test('should initially show 4 fieldsets (shipping + billing(hidden?) + delivery + delivery-inner + credentials)', async () => {
       // Wait for at least one fieldset to be visible before counting
       await expect(page.shippingFieldset).toBeVisible();
-      await expect(page.allFieldsets).toHaveCount(2);
+      // Shipping, Delivery (Outer), Delivery (Inner), Credentials. Billing is hidden.
+      await expect(page.allFieldsets).toHaveCount(4);
     });
 
     test('should have billing checkbox checked by default', async () => {
       await expect(page.billingSameAsShippingCheckbox).toBeChecked();
+    });
+
+    test('should render delivery method radio group', async () => {
+      await expect(page.deliveryMethodRadios).toHaveCount(3);
     });
   });
 
@@ -78,6 +87,14 @@ test.describe('Form Fieldset - Aggregated Errors', () => {
 
       // Error should appear at fieldset level
       const errors = page.getFieldsetErrors(page.credentialsFieldset);
+      await expect(errors.first()).toBeVisible();
+    });
+
+    test('should show aggregated errors in delivery method fieldset', async () => {
+      await page.deliveryMethodRadios.first().focus();
+      await page.deliveryMethodRadios.first().blur();
+
+      const errors = page.getFieldsetErrors(page.deliveryFieldset);
       await expect(errors.first()).toBeVisible();
     });
 

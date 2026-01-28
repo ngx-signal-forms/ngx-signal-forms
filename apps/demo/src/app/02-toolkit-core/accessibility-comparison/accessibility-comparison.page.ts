@@ -73,7 +73,8 @@ import { AccessibilityToolkitFormComponent } from './accessibility-comparison.to
             </span>
           </div>
           <p class="text-xs text-gray-500 dark:text-gray-400">
-            Auto-ARIA + <code>&lt;ngx-signal-form-field&gt;</code> without
+            Auto-ARIA +
+            <code>&lt;ngx-signal-form-field-wrapper&gt;</code> without
             <code>[ngxSignalForm]</code>.
           </p>
 
@@ -159,7 +160,7 @@ import { AccessibilityToolkitFormComponent } from './accessibility-comparison.to
             </tr>
             <tr>
               <td class="px-4 py-2 text-gray-700 dark:text-gray-300">
-                <code>&lt;ngx-signal-form-field&gt;</code> auto errors
+                <code>&lt;ngx-signal-form-field-wrapper&gt;</code> auto errors
               </td>
               <td class="px-4 py-2 text-center">❌</td>
               <td class="px-4 py-2 text-center">✅</td>

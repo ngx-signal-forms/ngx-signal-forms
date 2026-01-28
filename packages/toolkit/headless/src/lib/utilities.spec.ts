@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createUniqueId,
   dedupeValidationErrors,
+  readDirectErrors,
   readErrors,
   readFieldFlag,
   type BooleanStateKey,
@@ -282,6 +283,78 @@ describe('Headless Utilities', () => {
         expect(result).toHaveLength(2);
         expect(result[0].kind).toBe('required');
         expect(result[1].kind).toBe('warn:suggestion');
+      });
+    });
+  });
+
+  // ============================================================================
+  // readDirectErrors
+  // ============================================================================
+
+  describe('readDirectErrors', () => {
+    describe('basic usage', () => {
+      it('should return only direct errors, ignoring errorSummary', () => {
+        const directErrors: ValidationError[] = [
+          { kind: 'passwordMismatch', message: 'Passwords must match' },
+        ];
+        const summaryErrors: ValidationError[] = [
+          { kind: 'required', message: 'Password is required' },
+          { kind: 'required', message: 'Confirm password is required' },
+          { kind: 'passwordMismatch', message: 'Passwords must match' },
+        ];
+
+        const state: FieldStateLike = {
+          errors: () => directErrors,
+          errorSummary: () => summaryErrors,
+        };
+
+        const result = readDirectErrors(state);
+
+        expect(result).toEqual(directErrors);
+        expect(result).toHaveLength(1);
+        expect(result[0].kind).toBe('passwordMismatch');
+      });
+
+      it('should return empty array when no direct errors exist', () => {
+        const state: FieldStateLike = {
+          errors: () => [],
+          errorSummary: () => [{ kind: 'nested', message: 'Nested error' }],
+        };
+
+        const result = readDirectErrors(state);
+
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('with invalid inputs', () => {
+      it('should return empty array when state is null', () => {
+        expect(readDirectErrors(null)).toEqual([]);
+      });
+
+      it('should return empty array when state is undefined', () => {
+        expect(readDirectErrors(undefined)).toEqual([]);
+      });
+
+      it('should return empty array when state is not an object', () => {
+        expect(readDirectErrors('string')).toEqual([]);
+        expect(readDirectErrors(123)).toEqual([]);
+      });
+
+      it('should return empty array when errors is not a function', () => {
+        const state = {
+          errors: [{ kind: 'required' }], // Not a function
+        };
+
+        expect(readDirectErrors(state)).toEqual([]);
+      });
+
+      it('should return empty array when errors returns null', () => {
+        const state: FieldStateLike = {
+          errors: () => null as unknown as ValidationError[],
+        };
+
+        expect(readDirectErrors(state)).toEqual([]);
       });
     });
   });

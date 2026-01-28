@@ -124,7 +124,10 @@
         [ngxSignalForm]="immediateForm"
         (submit)="handleImmediateSubmit($event)"
       >
-        <ngx-signal-form-field [formField]="immediateForm.email" outline>
+        <ngx-signal-form-field-wrapper
+          [formField]="immediateForm.email"
+          outline
+        >
           <label for="immediate-email">Email Address</label>
           <input
             id="immediate-email"
@@ -135,12 +138,15 @@
             [class.demo-valid]="immediateClasses().valid"
             [class.demo-touched]="immediateClasses().touched"
           />
-          <ngx-signal-form-field-hint
-            >Red border appears instantly</ngx-signal-form-field-hint
+          <ngx-signal-form-field-wrapper-hint
+            >Red border appears instantly</ngx-signal-form-field-wrapper-hint
           >
-        </ngx-signal-form-field>
+        </ngx-signal-form-field-wrapper>
 
-        <ngx-signal-form-field [formField]="immediateForm.password" outline>
+        <ngx-signal-form-field-wrapper
+          [formField]="immediateForm.password"
+          outline
+        >
           <label for="immediate-password">Password</label>
           <input
             id="immediate-password"
@@ -150,10 +156,10 @@
             [class.demo-valid]="immediateForm.password().valid()"
             [class.demo-touched]="immediateForm.password().touched()"
           />
-          <ngx-signal-form-field-hint
-            >Min 8 characters</ngx-signal-form-field-hint
+          <ngx-signal-form-field-wrapper-hint
+            >Min 8 characters</ngx-signal-form-field-wrapper-hint
           >
-        </ngx-signal-form-field>
+        </ngx-signal-form-field-wrapper>
 
         <button type="submit">Submit Immediate Form</button>
       </form>
@@ -191,7 +197,7 @@
         [ngxSignalForm]="onTouchForm"
         (submit)="handleOnTouchSubmit($event)"
       >
-        <ngx-signal-form-field [formField]="onTouchForm.email" outline>
+        <ngx-signal-form-field-wrapper [formField]="onTouchForm.email" outline>
           <label for="on-touch-email">Email Address</label>
           <input
             id="on-touch-email"
@@ -204,12 +210,15 @@
             "
             [class.demo-touched]="onTouchClasses().touched"
           />
-          <ngx-signal-form-field-hint
-            >Red border appears after blur</ngx-signal-form-field-hint
+          <ngx-signal-form-field-wrapper-hint
+            >Red border appears after blur</ngx-signal-form-field-wrapper-hint
           >
-        </ngx-signal-form-field>
+        </ngx-signal-form-field-wrapper>
 
-        <ngx-signal-form-field [formField]="onTouchForm.password" outline>
+        <ngx-signal-form-field-wrapper
+          [formField]="onTouchForm.password"
+          outline
+        >
           <label for="on-touch-password">Password</label>
           <input
             id="on-touch-password"
@@ -224,10 +233,10 @@
             "
             [class.demo-touched]="onTouchForm.password().touched()"
           />
-          <ngx-signal-form-field-hint
-            >Min 8 characters</ngx-signal-form-field-hint
+          <ngx-signal-form-field-wrapper-hint
+            >Min 8 characters</ngx-signal-form-field-wrapper-hint
           >
-        </ngx-signal-form-field>
+        </ngx-signal-form-field-wrapper>
 
         <button type="submit">Submit On-Touch Form</button>
       </form>

@@ -118,7 +118,7 @@ apps/demo-e2e/src/
 
 **Verdict**: **Good**. Warning API tested, but Signal Forms API limitation prevents non-blocking behavior (documented in test.fixme).
 
-#### Form Field Wrapper Component (`NgxSignalFormFieldComponent`)
+#### Form Field Wrapper Component (`NgxSignalFormFieldWrapperComponent`)
 
 | Feature                 | Test Coverage            | Status  | Notes                                                |
 | ----------------------- | ------------------------ | ------- | ---------------------------------------------------- |
@@ -269,7 +269,7 @@ await expect(form).toMatchAriaSnapshot(`
    - Example: `form-field-wrapper.spec.ts`
 
    ```typescript
-   await expect(page.locator('ngx-signal-form-field').first())
+   await expect(page.locator('ngx-signal-form-field-wrapper').first())
      .toMatchAriaSnapshot(`
      - region:
        - heading "Full Name *" [level=3]

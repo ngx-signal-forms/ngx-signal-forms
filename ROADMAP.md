@@ -145,7 +145,7 @@ maxLength(path.bio, 500);
 
 ```html
 <!-- Must repeat maxLength -->
-<ngx-signal-form-field-character-count
+<ngx-signal-form-field-wrapper-character-count
   [formField]="form.bio"
   [maxLength]="500"
 />
@@ -155,10 +155,10 @@ maxLength(path.bio, 500);
 
 ```html
 <!-- Auto-detects maxLength from validation -->
-<ngx-signal-form-field-character-count [formField]="form.bio" />
+<ngx-signal-form-field-wrapper-character-count [formField]="form.bio" />
 
 <!-- Can still override if needed -->
-<ngx-signal-form-field-character-count
+<ngx-signal-form-field-wrapper-character-count
   [formField]="form.bio"
   [maxLength]="300"
 />
@@ -256,19 +256,19 @@ type ErrorDisplayStrategy =
 
 **Status:** ⚪ Not started
 **Effort:** Small
-**Files:** `packages/toolkit/form-field/form-field.component.ts`
+**Files:** `packages/toolkit/form-field/form-field-wrapper.component.ts`
 
 Add size variants for visual hierarchy and mobile optimization.
 
 ```html
-<ngx-signal-form-field [formField]="form.email" size="small">
-  <ngx-signal-form-field [formField]="form.email" size="medium">
+<ngx-signal-form-field-wrapper [formField]="form.email" size="small">
+  <ngx-signal-form-field-wrapper [formField]="form.email" size="medium">
     <!-- default -->
-    <ngx-signal-form-field
+    <ngx-signal-form-field-wrapper
       [formField]="form.email"
       size="large"
-    ></ngx-signal-form-field></ngx-signal-form-field
-></ngx-signal-form-field>
+    ></ngx-signal-form-field-wrapper></ngx-signal-form-field-wrapper
+></ngx-signal-form-field-wrapper>
 ```
 
 **Implementation:**
@@ -283,16 +283,16 @@ Add size variants for visual hierarchy and mobile optimization.
 
 **Status:** ✅ Completed (November 3, 2025)
 **Effort:** Medium
-**Files:** `packages/toolkit/form-field/form-field.component.ts`, `.scss`
+**Files:** `packages/toolkit/form-field/form-field-wrapper.component.ts`, `.scss`
 
 Support icons and text before/after inputs (Material pattern).
 
 ```html
-<ngx-signal-form-field [formField]="form.search">
+<ngx-signal-form-field-wrapper [formField]="form.search">
   <span prefix>🔍</span>
   <input [formField]="form.search" />
   <button suffix type="button">Clear</button>
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 **Implementation:**
@@ -393,12 +393,12 @@ Advanced input components for common patterns.
 Material Design filled and underline-only layouts.
 
 ```html
-<ngx-signal-form-field [formField]="form.email" filled>
-  <ngx-signal-form-field
+<ngx-signal-form-field-wrapper [formField]="form.email" filled>
+  <ngx-signal-form-field-wrapper
     [formField]="form.email"
     underline
-  ></ngx-signal-form-field
-></ngx-signal-form-field>
+  ></ngx-signal-form-field-wrapper
+></ngx-signal-form-field-wrapper>
 ```
 
 **Implementation:**
@@ -417,10 +417,14 @@ Material Design filled and underline-only layouts.
 Group related fields with shared layout/styling.
 
 ```html
-<ngx-signal-form-field-group legend="Shipping Address">
-  <ngx-signal-form-field [formField]="form.street">...</ngx-signal-form-field>
-  <ngx-signal-form-field [formField]="form.city">...</ngx-signal-form-field>
-</ngx-signal-form-field-group>
+<ngx-signal-form-field-wrapper-group legend="Shipping Address">
+  <ngx-signal-form-field-wrapper [formField]="form.street"
+    >...</ngx-signal-form-field-wrapper
+  >
+  <ngx-signal-form-field-wrapper [formField]="form.city"
+    >...</ngx-signal-form-field-wrapper
+  >
+</ngx-signal-form-field-wrapper-group>
 ```
 
 ---

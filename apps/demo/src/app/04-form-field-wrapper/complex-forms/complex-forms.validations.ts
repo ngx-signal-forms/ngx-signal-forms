@@ -7,6 +7,7 @@ import {
   pattern,
   required,
   schema,
+  validate,
 } from '@angular/forms/signals';
 import type { ComplexFormModel } from './complex-forms.model';
 
@@ -64,5 +65,20 @@ export const complexFormSchema = schema<ComplexFormModel>((path) => {
     // Note: In real app, would use conditional validation
     // For now, just ensure value is not empty
     minLength(contact.value, 3, { message: 'At least 3 characters' });
+  });
+
+  // Preferences
+  required(path.preferences.contactMethod, {
+    message: 'Preferred contact method is required',
+  });
+  validate(path.preferences.contactMethod, (ctx) => {
+    const value = ctx.value();
+    if (value === 'sms') {
+      return {
+        kind: 'warn:sms-rate',
+        message: 'SMS messages may incur carrier charges',
+      };
+    }
+    return null;
   });
 });

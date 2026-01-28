@@ -252,7 +252,7 @@ import {
 
 **What changes:**
 
-- `NgxSignalFormFieldComponent` for layout
+- `NgxSignalFormFieldWrapperComponent` for layout
 - Content projection patterns
 - Consistent spacing
 - Even less boilerplate (~80% reduction)

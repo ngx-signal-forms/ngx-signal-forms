@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
-import { NgxSignalFormFieldsetComponent } from './form-fieldset.component';
+import { NgxSignalFormFieldset } from './form-fieldset.component';
 
 type MockState = {
   invalid: () => boolean;
@@ -25,7 +25,7 @@ const createFieldsetState = (overrides: Partial<MockState> = {}) =>
     ...overrides,
   });
 
-describe('NgxSignalFormFieldsetComponent', () => {
+describe('NgxSignalFormFieldset', () => {
   it('renders projected content', async () => {
     const fieldset = createFieldsetState();
 
@@ -34,7 +34,7 @@ describe('NgxSignalFormFieldsetComponent', () => {
         <div class="content">Projected</div>
       </ngx-signal-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldsetComponent],
+        imports: [NgxSignalFormFieldset],
         componentProperties: {
           fieldset,
         },
@@ -58,7 +58,7 @@ describe('NgxSignalFormFieldsetComponent', () => {
         <div>Content without nested form field</div>
       </ngx-signal-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldsetComponent],
+        imports: [NgxSignalFormFieldset],
         componentProperties: { fieldset },
       },
     );
@@ -85,7 +85,7 @@ describe('NgxSignalFormFieldsetComponent', () => {
         <div>Content without nested form field</div>
       </ngx-signal-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldsetComponent],
+        imports: [NgxSignalFormFieldset],
         componentProperties: { fieldset },
       },
     );
@@ -113,7 +113,7 @@ describe('NgxSignalFormFieldsetComponent', () => {
         <div>Content without nested form field</div>
       </ngx-signal-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldsetComponent],
+        imports: [NgxSignalFormFieldset],
         componentProperties: { fieldset },
       },
     );
@@ -139,7 +139,7 @@ describe('NgxSignalFormFieldsetComponent', () => {
         <div>Content without nested form field</div>
       </ngx-signal-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldsetComponent],
+        imports: [NgxSignalFormFieldset],
         componentProperties: { fieldset, fields: [field] },
       },
     );
@@ -160,7 +160,7 @@ describe('NgxSignalFormFieldsetComponent', () => {
         <div>Content</div>
       </ngx-signal-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldsetComponent],
+        imports: [NgxSignalFormFieldset],
         componentProperties: { fieldset },
       },
     );
@@ -182,7 +182,7 @@ describe('NgxSignalFormFieldsetComponent', () => {
         <div>Content</div>
       </ngx-signal-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldsetComponent],
+        imports: [NgxSignalFormFieldset],
         componentProperties: { fieldset },
       },
     );

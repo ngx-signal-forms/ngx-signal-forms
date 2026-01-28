@@ -107,4 +107,17 @@ export const fieldsetDemoSchema = schema<FieldsetDemoModel>((path) => {
     }
     return null;
   });
+
+  // Delivery method validation
+  required(path.delivery.method, { message: 'Delivery method is required' });
+  validate(path.delivery.method, (ctx) => {
+    const value = ctx.value();
+    if (value === 'express') {
+      return {
+        kind: 'warn:expedited-shipping',
+        message: 'Express delivery may incur extra fees',
+      };
+    }
+    return null;
+  });
 });

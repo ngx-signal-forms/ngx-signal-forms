@@ -12,7 +12,10 @@
 >
   <div class="space-y-6">
     <!-- Name Field with Search Icon Prefix -->
-    <ngx-signal-form-field [formField]="showcaseForm.name" fieldName="name">
+    <ngx-signal-form-field-wrapper
+      [formField]="showcaseForm.name"
+      fieldName="name"
+    >
       <svg
         prefix
         aria-hidden="true"
@@ -38,10 +41,13 @@
         placeholder="John Doe"
         aria-required="true"
       />
-    </ngx-signal-form-field>
+    </ngx-signal-form-field-wrapper>
 
     <!-- Email Field with Icon Prefix -->
-    <ngx-signal-form-field [formField]="showcaseForm.email" fieldName="email">
+    <ngx-signal-form-field-wrapper
+      [formField]="showcaseForm.email"
+      fieldName="email"
+    >
       <span prefix>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -70,10 +76,10 @@
         autocomplete="email"
         aria-required="true"
       />
-    </ngx-signal-form-field>
+    </ngx-signal-form-field-wrapper>
 
     <!-- Website Field with Protocol Prefix -->
-    <ngx-signal-form-field
+    <ngx-signal-form-field-wrapper
       [formField]="showcaseForm.website"
       fieldName="website"
     >
@@ -104,10 +110,13 @@
         placeholder="example.com"
         autocomplete="url"
       />
-    </ngx-signal-form-field>
+    </ngx-signal-form-field-wrapper>
 
     <!-- Age Field with Years Suffix -->
-    <ngx-signal-form-field [formField]="showcaseForm.age" fieldName="age">
+    <ngx-signal-form-field-wrapper
+      [formField]="showcaseForm.age"
+      fieldName="age"
+    >
       <label class="form-label" for="age">Age *</label>
       <input
         id="age"
@@ -120,14 +129,14 @@
         aria-valuemax="120"
       />
       <span suffix aria-hidden="true" class="text-sm text-gray-400">years</span>
-    </ngx-signal-form-field>
+    </ngx-signal-form-field-wrapper>
   </div>
 
   <div class="space-y-6">
     <h2 class="text-lg font-semibold">Additional Details</h2>
 
     <!-- Country Field -->
-    <ngx-signal-form-field
+    <ngx-signal-form-field-wrapper
       [formField]="showcaseForm.country"
       fieldName="country"
     >
@@ -142,10 +151,13 @@
         <option [value]="country.value">{{ country.label }}</option>
         }
       </select>
-    </ngx-signal-form-field>
+    </ngx-signal-form-field-wrapper>
 
     <!-- Bio Field -->
-    <ngx-signal-form-field [formField]="showcaseForm.bio" fieldName="bio">
+    <ngx-signal-form-field-wrapper
+      [formField]="showcaseForm.bio"
+      fieldName="bio"
+    >
       <label class="form-label" for="bio">Bio *</label>
       <textarea
         id="bio"
@@ -154,14 +166,14 @@
         placeholder="Tell us about yourself (minimum 20 characters)..."
         aria-required="true"
       ></textarea>
-    </ngx-signal-form-field>
+    </ngx-signal-form-field-wrapper>
   </div>
 
   <div class="space-y-6">
     <h2 class="text-lg font-semibold">Agreements</h2>
 
     <!-- Terms and Conditions Checkbox -->
-    <ngx-signal-form-field
+    <ngx-signal-form-field-wrapper
       [formField]="showcaseForm.agreeToTerms"
       fieldName="agreeToTerms"
     >
@@ -175,7 +187,7 @@
         />
         <span class="ml-2">I agree to the terms and conditions *</span>
       </label>
-    </ngx-signal-form-field>
+    </ngx-signal-form-field-wrapper>
   </div>
 
   <!-- Form Actions -->

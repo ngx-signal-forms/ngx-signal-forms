@@ -1,21 +1,21 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { form, FormField, submit } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
 import type { AccessibilityFormModel } from './accessibility-comparison.model';
 import { accessibilityValidationSchema } from './accessibility-comparison.validations';
 
 /**
  * Minimal Toolkit Implementation - NO [ngxSignalForm] BINDING
  *
- * This example demonstrates that `<ngx-signal-form-field>` works WITHOUT
+ * This example demonstrates that `<ngx-signal-form-field-wrapper>` works WITHOUT
  * the `[ngxSignalForm]` binding for the default `'on-touch'` strategy!
  *
  * 🎯 What you GET (automatically):
  * - `novalidate` attribute on form
  * - `aria-invalid="true"` when field is invalid AND touched
  * - `aria-describedby` linking to error containers
- * - `<ngx-signal-form-field>` automatic error display (for 'on-touch')
+ * - `<ngx-signal-form-field-wrapper>` automatic error display (for 'on-touch')
  * - `<ngx-signal-form-error>` automatic error display (for 'on-touch')
  *
  * ⚠️ What DOES require `[ngxSignalForm]`:
@@ -31,12 +31,19 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
 @Component({
   selector: 'ngx-accessibility-minimal-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxSignalFormFieldWrapperComponent,
+  ],
   template: `
     <!-- ✅ NO [ngxSignalForm] needed! Error components work for 'on-touch' strategy -->
     <form (submit)="handleSubmit($event)" class="space-y-4">
-      <!-- Email Field - uses ngx-signal-form-field WITHOUT [ngxSignalForm] -->
-      <ngx-signal-form-field [formField]="signupForm.email" fieldName="email">
+      <!-- Email Field - uses ngx-signal-form-field-wrapper WITHOUT [ngxSignalForm] -->
+      <ngx-signal-form-field-wrapper
+        [formField]="signupForm.email"
+        fieldName="email"
+      >
         <label for="minimal-email" class="form-label">Email *</label>
         <input
           id="minimal-email"
@@ -45,10 +52,10 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
           [formField]="signupForm.email"
           aria-required="true"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
 
       <!-- Password Field -->
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="signupForm.password"
         fieldName="password"
       >
@@ -60,10 +67,10 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
           [formField]="signupForm.password"
           aria-required="true"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
 
       <!-- Confirm Password Field -->
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="signupForm.confirmPassword"
         fieldName="confirmPassword"
       >
@@ -77,7 +84,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
           [formField]="signupForm.confirmPassword"
           aria-required="true"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
 
       <button type="submit" class="btn-primary">
         @if (signupForm().pending()) {
@@ -93,7 +100,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
       class="mt-4 rounded-md bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
     >
       <strong>💡 Minimal Toolkit:</strong>
-      <code>&lt;ngx-signal-form-field&gt;</code> works WITHOUT
+      <code>&lt;ngx-signal-form-field-wrapper&gt;</code> works WITHOUT
       <code>[ngxSignalForm]</code> for the default
       <code>'on-touch'</code> strategy!
     </div>

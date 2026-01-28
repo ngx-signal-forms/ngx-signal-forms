@@ -122,10 +122,10 @@ form(model, (path) => {
 **Template:** ~8 lines for same functionality
 
 ```html
-<ngx-signal-form-field [formField]="loginForm.email" fieldName="email">
+<ngx-signal-form-field-wrapper [formField]="loginForm.email" fieldName="email">
   <label for="email">Email</label>
   <input id="email" [formField]="loginForm.email" />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 **Reduction:** ~67% less code with toolkit

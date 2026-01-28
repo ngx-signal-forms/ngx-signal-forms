@@ -40,7 +40,7 @@ const tasksSchema = schema<TasksModel>((path) => {
 
       <form (submit)="saveTasks($event)" class="max-w-2xl space-y-6">
         <!-- Team Name -->
-        <ngx-signal-form-field [formField]="tasksForm.teamName" outline>
+        <ngx-signal-form-field-wrapper [formField]="tasksForm.teamName" outline>
           <label for="teamName">Team Name</label>
           <input
             id="teamName"
@@ -49,7 +49,7 @@ const tasksSchema = schema<TasksModel>((path) => {
             placeholder="Enter team name"
             class="form-input"
           />
-        </ngx-signal-form-field>
+        </ngx-signal-form-field-wrapper>
 
         <!-- Tasks List -->
         <div class="space-y-4">
@@ -77,7 +77,7 @@ const tasksSchema = schema<TasksModel>((path) => {
               </span>
 
               <div class="flex-1">
-                <ngx-signal-form-field
+                <ngx-signal-form-field-wrapper
                   [formField]="tasksForm.tasks[i].title"
                   outline
                 >
@@ -89,7 +89,7 @@ const tasksSchema = schema<TasksModel>((path) => {
                     placeholder="What needs to be done?"
                     class="form-input"
                   />
-                </ngx-signal-form-field>
+                </ngx-signal-form-field-wrapper>
               </div>
 
               <button

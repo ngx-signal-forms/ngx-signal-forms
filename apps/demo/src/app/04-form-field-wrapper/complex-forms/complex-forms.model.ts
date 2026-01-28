@@ -44,5 +44,6 @@ export interface ComplexFormModel {
   preferences: {
     newsletter: boolean;
     notifications: boolean;
+    contactMethod: string;
   };
 }

@@ -12,10 +12,11 @@
 >
   <!-- Shipping Address Fieldset -->
   <fieldset
-    ngx-signal-form-fieldset
+    ngxSignalFormFieldset
     [fieldsetField]="fieldsetForm.shippingAddress"
     fieldsetId="shipping-address"
     class="fieldset-demo"
+    includeNestedErrors
   >
     <legend class="fieldset-legend">Shipping Address</legend>
     <p class="fieldset-description">
@@ -23,7 +24,7 @@
     </p>
 
     <div class="grid gap-4 sm:grid-cols-2">
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="fieldsetForm.shippingAddress.street"
         fieldName="shippingStreet"
         class="sm:col-span-2"
@@ -37,9 +38,9 @@
           placeholder="123 Main Street"
           aria-required="true"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
 
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="fieldsetForm.shippingAddress.city"
         fieldName="shippingCity"
       >
@@ -52,9 +53,9 @@
           placeholder="New York"
           aria-required="true"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
 
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="fieldsetForm.shippingAddress.zipCode"
         fieldName="shippingZipCode"
       >
@@ -67,9 +68,9 @@
           placeholder="10001"
           aria-required="true"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
 
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="fieldsetForm.shippingAddress.country"
         fieldName="shippingCountry"
         class="sm:col-span-2"
@@ -85,7 +86,7 @@
           <option [value]="country.value">{{ country.label }}</option>
           }
         </select>
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
     </div>
   </fieldset>
 
@@ -104,10 +105,11 @@
   <!-- Billing Address Fieldset - Shown when different from shipping -->
   @if (!fieldsetForm.billingSameAsShipping().value()) {
   <fieldset
-    ngx-signal-form-fieldset
+    ngxSignalFormFieldset
     [fieldsetField]="fieldsetForm.billingAddress"
     fieldsetId="billing-address"
     class="fieldset-demo"
+    includeNestedErrors
   >
     <legend class="fieldset-legend">Billing Address</legend>
     <p class="fieldset-description">
@@ -115,7 +117,7 @@
     </p>
 
     <div class="grid gap-4 sm:grid-cols-2">
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="fieldsetForm.billingAddress.street"
         fieldName="billingStreet"
         class="sm:col-span-2"
@@ -129,9 +131,9 @@
           placeholder="456 Business Ave"
           aria-required="true"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
 
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="fieldsetForm.billingAddress.city"
         fieldName="billingCity"
       >
@@ -144,9 +146,9 @@
           placeholder="Los Angeles"
           aria-required="true"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
 
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="fieldsetForm.billingAddress.zipCode"
         fieldName="billingZipCode"
       >
@@ -159,9 +161,9 @@
           placeholder="90001"
           aria-required="true"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
 
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="fieldsetForm.billingAddress.country"
         fieldName="billingCountry"
         class="sm:col-span-2"
@@ -177,17 +179,70 @@
           <option [value]="country.value">{{ country.label }}</option>
           }
         </select>
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
     </div>
   </fieldset>
   }
 
+  <!-- Delivery Method Fieldset -->
+  <fieldset
+    ngxSignalFormFieldset
+    [fieldsetField]="fieldsetForm.delivery"
+    fieldsetId="delivery-method"
+    class="fieldset-demo"
+    includeNestedErrors
+  >
+    <legend class="fieldset-legend">Delivery Method</legend>
+    <p class="fieldset-description">Select how you want the order delivered.</p>
+
+    <fieldset
+      ngxSignalFormFieldset
+      [fieldsetField]="fieldsetForm.delivery.method"
+      fieldsetId="delivery-method-options"
+      class="space-y-3"
+      aria-required="true"
+    >
+      <legend class="form-label">Delivery option *</legend>
+
+      <label class="flex cursor-pointer items-center gap-2">
+        <input
+          type="radio"
+          class="form-radio"
+          [formField]="fieldsetForm.delivery.method"
+          value="standard"
+        />
+        <span class="text-sm">Standard (3-5 business days)</span>
+      </label>
+
+      <label class="flex cursor-pointer items-center gap-2">
+        <input
+          type="radio"
+          class="form-radio"
+          [formField]="fieldsetForm.delivery.method"
+          value="express"
+        />
+        <span class="text-sm">Express (1-2 business days)</span>
+      </label>
+
+      <label class="flex cursor-pointer items-center gap-2">
+        <input
+          type="radio"
+          class="form-radio"
+          [formField]="fieldsetForm.delivery.method"
+          value="pickup"
+        />
+        <span class="text-sm">Local pickup</span>
+      </label>
+    </fieldset>
+  </fieldset>
+
   <!-- Credentials Fieldset -->
   <fieldset
-    ngx-signal-form-fieldset
+    ngxSignalFormFieldset
     [fieldsetField]="fieldsetForm.credentials"
     fieldsetId="credentials"
     class="fieldset-demo"
+    includeNestedErrors
   >
     <legend class="fieldset-legend">Account Credentials</legend>
     <p class="fieldset-description">
@@ -195,7 +250,7 @@
     </p>
 
     <div class="grid gap-4 sm:grid-cols-2">
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="fieldsetForm.credentials.password"
         fieldName="password"
       >
@@ -209,9 +264,9 @@
           aria-required="true"
           autocomplete="new-password"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
 
-      <ngx-signal-form-field
+      <ngx-signal-form-field-wrapper
         [formField]="fieldsetForm.credentials.confirmPassword"
         fieldName="confirmPassword"
       >
@@ -227,7 +282,7 @@
           aria-required="true"
           autocomplete="new-password"
         />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
     </div>
   </fieldset>
 

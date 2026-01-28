@@ -56,7 +56,7 @@ export const appConfig: ApplicationConfig = {
 ```typescript
 // 2. Use in components (recommended: bundle import)
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
 import {
   form,
   schema,
@@ -66,14 +66,21 @@ import {
 } from '@angular/forms/signals';
 
 @Component({
-  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxSignalFormFieldWrapperComponent,
+  ],
   template: `
     <!-- ✅ NO [ngxSignalForm] needed for default 'on-touch' strategy! -->
     <form (submit)="handleSubmit($event)">
-      <ngx-signal-form-field [formField]="contactForm.email" fieldName="email">
+      <ngx-signal-form-field-wrapper
+        [formField]="contactForm.email"
+        fieldName="email"
+      >
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
       <button type="submit">Submit</button>
     </form>
   `,
@@ -148,16 +155,16 @@ The `[ngxSignalForm]` binding provides **form context** for child components via
 
 #### Feature Comparison: With vs Without `[ngxSignalForm]`
 
-| Feature                                    | Without `[ngxSignalForm]` | With `[ngxSignalForm]` |
-| ------------------------------------------ | :-----------------------: | :--------------------: |
-| Auto `novalidate` on form                  |            ✅             |           ✅           |
-| Auto `aria-invalid` when touched + invalid |            ✅             |           ✅           |
-| Auto `aria-describedby` linking            |            ✅             |           ✅           |
-| `<ngx-signal-form-error>` (`'on-touch'`)   |         ✅ Works          |        ✅ Works        |
-| `<ngx-signal-form-field>` (`'on-touch'`)   |      ✅ Auto errors       |     ✅ Auto errors     |
-| `<ngx-signal-form-error>` (`'on-submit'`)  |       ❌ No context       |        ✅ Works        |
-| Form-level `[errorStrategy]` override      |            ❌             |           ✅           |
-| `submittedStatus` signal via DI            |            ❌             |           ✅           |
+| Feature                                          | Without `[ngxSignalForm]` | With `[ngxSignalForm]` |
+| ------------------------------------------------ | :-----------------------: | :--------------------: |
+| Auto `novalidate` on form                        |            ✅             |           ✅           |
+| Auto `aria-invalid` when touched + invalid       |            ✅             |           ✅           |
+| Auto `aria-describedby` linking                  |            ✅             |           ✅           |
+| `<ngx-signal-form-error>` (`'on-touch'`)         |         ✅ Works          |        ✅ Works        |
+| `<ngx-signal-form-field-wrapper>` (`'on-touch'`) |      ✅ Auto errors       |     ✅ Auto errors     |
+| `<ngx-signal-form-error>` (`'on-submit'`)        |       ❌ No context       |        ✅ Works        |
+| Form-level `[errorStrategy]` override            |            ❌             |           ✅           |
+| `submittedStatus` signal via DI                  |            ❌             |           ✅           |
 
 **Key insight:** The `'on-touch'` strategy only checks `field.invalid() && field.touched()`. Since Angular's `submit()` helper calls `markAllAsTouched()`, errors appear after both blur AND submit - without needing `submittedStatus`.
 
@@ -181,17 +188,17 @@ The `[ngxSignalForm]` binding provides **form context** for child components via
 
 ```typescript
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
-  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldWrapperComponent],
   template: `
     <!-- ✅ Error components work WITHOUT [ngxSignalForm] for 'on-touch' strategy -->
     <form (submit)="handleSubmit($event)">
-      <ngx-signal-form-field [formField]="form.email" fieldName="email">
+      <ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
         <label for="email">Email</label>
         <input id="email" [formField]="form.email" />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
       <button type="submit">Submit</button>
     </form>
   `,
@@ -265,8 +272,8 @@ import {
 
 // Form field wrapper with enhanced components
 import {
-  NgxSignalFormFieldComponent,
-  NgxSignalFormFieldsetComponent,
+  NgxSignalFormFieldWrapperComponent,
+  NgxSignalFormFieldset,
   NgxFloatingLabelDirective,
   NgxSignalFormFieldHintComponent,
   NgxSignalFormFieldCharacterCountComponent,
@@ -340,7 +347,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-When set, all `NgxSignalFormFieldComponent` instances will use this appearance unless explicitly overridden with the `outline` attribute. This is useful for maintaining consistent form styling across your application without manually adding `outline` to each field.
+When set, all `NgxSignalFormFieldWrapperComponent` instances will use this appearance unless explicitly overridden with the `outline` attribute. This is useful for maintaining consistent form styling across your application without manually adding `outline` to each field.
 
 **Priority:** Explicit `outline` attribute > `defaultFormFieldAppearance` config > implicit default
 
@@ -899,8 +906,8 @@ The toolkit includes a complete form field component system for enhanced layouts
 
 ```typescript
 import {
-  NgxSignalFormFieldComponent,
-  NgxSignalFormFieldsetComponent,
+  NgxSignalFormFieldWrapperComponent,
+  NgxSignalFormFieldset,
   NgxFloatingLabelDirective,
   NgxSignalFormFieldHintComponent,
   NgxSignalFormFieldCharacterCountComponent,
@@ -909,8 +916,8 @@ import {
 
 **Key Features:**
 
-- **NgxSignalFormFieldComponent** - Reusable wrapper with automatic error display
-- **NgxSignalFormFieldsetComponent** - Group related fields with aggregated error/warning display
+- **NgxSignalFormFieldWrapperComponent** - Reusable wrapper with automatic error display
+- **NgxSignalFormFieldset** - Group related fields with aggregated error/warning display
 - **NgxFloatingLabelDirective** (`outline` attribute) - Material Design outlined layout
 - **NgxSignalFormFieldCharacterCountComponent** - Progressive color states (ok → warning → danger → exceeded)
 - **NgxSignalFormFieldHintComponent** - Helper text display
@@ -918,17 +925,17 @@ import {
 ### Example Usage
 
 ```html
-<ngx-signal-form-field [formField]="form.bio" outline>
+<ngx-signal-form-field-wrapper [formField]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-hint
-    >Tell us about yourself</ngx-signal-form-field-hint
+  <ngx-signal-form-field-wrapper-hint
+    >Tell us about yourself</ngx-signal-form-field-wrapper-hint
   >
-  <ngx-signal-form-field-character-count
+  <ngx-signal-form-field-wrapper-character-count
     [formField]="form.bio"
     [maxLength]="500"
   />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 ### Validator Attributes & HTML5 Truncation
@@ -963,16 +970,16 @@ maxLength(path.bio, 500);
 
 ```html
 <!-- Add character count to show user the limit -->
-<ngx-signal-form-field [formField]="form.bio">
+<ngx-signal-form-field-wrapper [formField]="form.bio">
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
 
   <!-- User sees remaining count, preventing paste surprises -->
-  <ngx-signal-form-field-character-count
+  <ngx-signal-form-field-wrapper-character-count
     [formField]="form.bio"
     [maxLength]="500"
   />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 **Benefits:**
@@ -1171,17 +1178,17 @@ import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit';
 
 **Note:** When used inside a form with `ngxSignalFormDirective`, the `submittedStatus` signal is automatically injected. The toolkit derives this from Angular's native `submitting()` signal transitions.
 
-#### NgxSignalFormFieldComponent
+#### NgxSignalFormFieldWrapperComponent
 
 ```html
-<ngx-signal-form-field
+<ngx-signal-form-field-wrapper
   [formField]="form.email"
   fieldName="email"
   [strategy]="'on-touch'"
 >
   <label>Email</label>
   <input [formField]="form.email" />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 #### NgxFloatingLabelDirective
@@ -1189,7 +1196,7 @@ import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit';
 Transforms the form field into an outlined layout where the label appears inside the input container, matching Material Design outlined input patterns.
 
 ```html
-<ngx-signal-form-field [formField]="form.email" outline>
+<ngx-signal-form-field-wrapper [formField]="form.email" outline>
   <label for="email">Email Address</label>
   <input
     id="email"
@@ -1198,7 +1205,7 @@ Transforms the form field into an outlined layout where the label appears inside
     required
     placeholder="you@example.com"
   />
-</ngx-signal-form-field>
+</ngx-signal-form-field-wrapper>
 ```
 
 **Inputs:**
@@ -1215,11 +1222,13 @@ Transforms the form field into an outlined layout where the label appears inside
 Displays helper text for form fields.
 
 ```html
-<ngx-signal-form-field [formField]="form.phone" outline>
+<ngx-signal-form-field-wrapper [formField]="form.phone" outline>
   <label for="phone">Phone Number</label>
   <input id="phone" [formField]="form.phone" />
-  <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
-</ngx-signal-form-field>
+  <ngx-signal-form-field-wrapper-hint
+    >Format: 123-456-7890</ngx-signal-form-field-wrapper-hint
+  >
+</ngx-signal-form-field-wrapper>
 ```
 
 **For complete API and positioning options, see [Form Field Documentation](./form-field/README.md#ngxsignalformfieldhintcomponent)**
@@ -1237,11 +1246,11 @@ maxLength(path.bio, 500);
 
 ```html
 <!-- Character count automatically detects limit from validation -->
-<ngx-signal-form-field [formField]="form.bio" outline>
+<ngx-signal-form-field-wrapper [formField]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-character-count [formField]="form.bio" />
-</ngx-signal-form-field>
+  <ngx-signal-form-field-wrapper-character-count [formField]="form.bio" />
+</ngx-signal-form-field-wrapper>
 ```
 
 **Enhancement over Angular Signal Forms:**
@@ -1256,7 +1265,7 @@ maxLength(path.bio, 500);
 
 ```html
 <!-- Display limit is 300, even if validation allows 500 -->
-<ngx-signal-form-field-character-count
+<ngx-signal-form-field-wrapper-character-count
   [formField]="form.bio"
   [maxLength]="300"
 />
@@ -1278,7 +1287,7 @@ maxLength(path.bio, 500);
 
 **For complete API, CSS custom properties, and examples, see [Form Field Documentation](./form-field/README.md#ngxsignalformfieldcharactercountcomponent)**
 
-#### NgxSignalFormFieldsetComponent
+#### NgxSignalFormFieldset
 
 Groups related form fields with **aggregated error/warning display**. Similar to HTML `<fieldset>`, but with validation message aggregation and deduplication.
 
@@ -1288,15 +1297,15 @@ Groups related form fields with **aggregated error/warning display**. Similar to
 <ngx-signal-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
   <legend class="fieldset-legend">Shipping Address</legend>
 
-  <ngx-signal-form-field [formField]="form.address.street" outline>
+  <ngx-signal-form-field-wrapper [formField]="form.address.street" outline>
     <label for="street">Street</label>
     <input id="street" [formField]="form.address.street" />
-  </ngx-signal-form-field>
+  </ngx-signal-form-field-wrapper>
 
-  <ngx-signal-form-field [formField]="form.address.city" outline>
+  <ngx-signal-form-field-wrapper [formField]="form.address.city" outline>
     <label for="city">City</label>
     <input id="city" [formField]="form.address.city" />
-  </ngx-signal-form-field>
+  </ngx-signal-form-field-wrapper>
 
   <!-- Aggregated errors appear at bottom of fieldset -->
 </ngx-signal-form-fieldset>
@@ -1338,11 +1347,41 @@ Groups related form fields with **aggregated error/warning display**. Similar to
 
 **Features:**
 
-- ✅ **Aggregated Errors**: Collects errors from all nested fields via `errorSummary()`
+- ✅ **Group-Only Mode** (default): Shows only group-level errors to avoid duplication
+- ✅ **Aggregated Mode**: Optionally collects errors from all nested fields via `errorSummary()`
 - ✅ **Deduplication**: Same error message shown only once even if multiple fields have it
 - ✅ **Warning Support**: Non-blocking warnings (with `warn:` prefix) shown when no errors exist
 - ✅ **WCAG 2.2 Compliant**: Errors use `role="alert"`, warnings use `role="status"`
 - ✅ **Strategy Aware**: Respects `ErrorDisplayStrategy` from form context or input
+
+**Error Display Modes:**
+
+- **Group-Only** (`includeNestedErrors="false"`, default): Shows ONLY group-level errors via `errors()`. Use when nested fields display their own errors via `NgxSignalFormField`.
+- **Aggregated** (`includeNestedErrors`): Shows ALL errors via `errorSummary()`. Use when nested fields do NOT display their own errors.
+
+```html
+<!-- Group-Only Mode (default) - nested fields show their own errors -->
+<ngx-signal-form-fieldset [fieldsetField]="form.passwords">
+  <ngx-signal-form-field-wrapper [formField]="form.passwords.password" outline
+    >...</ngx-signal-form-field-wrapper
+  >
+  <ngx-signal-form-field-wrapper [formField]="form.passwords.confirm" outline
+    >...</ngx-signal-form-field-wrapper
+  >
+  <!-- Fieldset shows ONLY cross-field error: "Passwords must match" -->
+</ngx-signal-form-fieldset>
+
+<!-- Aggregated Mode - fieldset shows all errors for plain inputs -->
+<fieldset
+  ngxSignalFormFieldset
+  [fieldsetField]="form.address"
+  includeNestedErrors
+>
+  <input [formField]="form.address.street" />
+  <input [formField]="form.address.city" />
+  <!-- Fieldset shows ALL errors: "Street required", "City required" -->
+</fieldset>
+```
 
 **Inputs:**
 
@@ -1351,6 +1390,7 @@ Groups related form fields with **aggregated error/warning display**. Similar to
 - `fieldsetId` (optional) - Unique identifier for generating error/warning IDs
 - `strategy` (optional) - Error display strategy (`'immediate'` | `'on-touch'` | `'on-submit'` | `'inherit'`)
 - `showErrors` (boolean, default: `true`) - Whether to display aggregated error messages
+- `includeNestedErrors` (boolean, default: `false`) - Include nested field errors (`true`) or only group-level errors (`false`)
 
 **Host CSS Classes:**
 

@@ -33,7 +33,7 @@ import { NgxSignalFormFieldCharacterCountComponent } from './form-field-characte
   imports: [NgxSignalFormFieldCharacterCountComponent],
   template: `
     @if (colorThresholds(); as thresholds) {
-      <ngx-signal-form-field-character-count
+      <ngx-signal-form-field-wrapper-character-count
         [formField]="testForm.text"
         [maxLength]="maxLength()"
         [position]="position()"
@@ -41,7 +41,7 @@ import { NgxSignalFormFieldCharacterCountComponent } from './form-field-characte
         [colorThresholds]="thresholds"
       />
     } @else {
-      <ngx-signal-form-field-character-count
+      <ngx-signal-form-field-wrapper-character-count
         [formField]="testForm.text"
         [maxLength]="maxLength()"
         [position]="position()"
@@ -107,7 +107,7 @@ describe('NgxSignalFormFieldCharacterCountComponent', () => {
       });
 
       const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
+        'ngx-signal-form-field-wrapper-character-count',
       );
       expect(host).toHaveAttribute('position', 'right');
     });
@@ -121,7 +121,7 @@ describe('NgxSignalFormFieldCharacterCountComponent', () => {
       });
 
       const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
+        'ngx-signal-form-field-wrapper-character-count',
       );
       expect(host).toHaveAttribute('position', 'left');
     });
@@ -135,7 +135,7 @@ describe('NgxSignalFormFieldCharacterCountComponent', () => {
       });
 
       const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
+        'ngx-signal-form-field-wrapper-character-count',
       );
       expect(host).toHaveAttribute('position', 'right');
     });
@@ -440,7 +440,7 @@ describe('NgxSignalFormFieldCharacterCountComponent', () => {
       });
 
       const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
+        'ngx-signal-form-field-wrapper-character-count',
       );
       const innerElement = host?.querySelector('.ngx-form-field-char-count');
 

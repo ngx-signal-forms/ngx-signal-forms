@@ -50,7 +50,7 @@ Renderless directives that expose signals without any UI—build custom form com
 
 A set of cohesive UI components to build consistent, accessible form layouts:
 
-- **Unified Wrapper**: `<ngx-signal-form-field>` encapsulates label, input, errors, warnings and hints in a semantic structure.
+- **Unified Wrapper**: `<ngx-signal-form-field-wrapper>` encapsulates label, input, errors, warnings and hints in a semantic structure.
 - **Two Layout Modes**: Default (stacked) or `outline` attribute for Material-like floating labels.
 - **Fieldset Grouping**: `<ngx-signal-form-fieldset>` groups related fields with aggregated validation messages.
 - **Character Count**: Auto-detects `maxLength` validators and displays a progressive character counter.
@@ -99,15 +99,15 @@ A set of cohesive UI components to build consistent, accessible form layouts:
 
 ### Form Field (`@ngx-signal-forms/toolkit/form-field`)
 
-| Feature               | Headless Primitives        | With Form Field                                               |
-| --------------------- | -------------------------- | ------------------------------------------------------------- |
-| **Field Wrapper**     | ❌ Build your own          | ✅ `<ngx-signal-form-field>` with automatic error display     |
-| **Layout Modes**      | ❌ Build your own CSS      | ✅ Default (stacked) or `outline` (floating labels)           |
-| **Fieldset Grouping** | ✅ Signals via directive   | ✅ `<ngx-signal-form-fieldset>` styled component              |
-| **Character Count**   | ✅ Signals via directive   | ✅ `<ngx-signal-form-field-character-count>` styled component |
-| **Hints**             | ❌ Build your own          | ✅ `<ngx-signal-form-field-hint>` with proper styling         |
-| **Theming**           | ❌ Your own CSS            | ✅ 20+ CSS custom properties for deep customization           |
-| **Effort**            | ⚠️ More code, full control | ✅ Ready-to-use, less code                                    |
+| Feature               | Headless Primitives        | With Form Field                                                       |
+| --------------------- | -------------------------- | --------------------------------------------------------------------- |
+| **Field Wrapper**     | ❌ Build your own          | ✅ `<ngx-signal-form-field-wrapper>` with automatic error display     |
+| **Layout Modes**      | ❌ Build your own CSS      | ✅ Default (stacked) or `outline` (floating labels)                   |
+| **Fieldset Grouping** | ✅ Signals via directive   | ✅ `<ngx-signal-form-fieldset>` styled component                      |
+| **Character Count**   | ✅ Signals via directive   | ✅ `<ngx-signal-form-field-wrapper-character-count>` styled component |
+| **Hints**             | ❌ Build your own          | ✅ `<ngx-signal-form-field-wrapper-hint>` with proper styling         |
+| **Theming**           | ❌ Your own CSS            | ✅ 20+ CSS custom properties for deep customization                   |
+| **Effort**            | ⚠️ More code, full control | ✅ Ready-to-use, less code                                            |
 
 ---
 
@@ -139,10 +139,10 @@ A set of cohesive UI components to build consistent, accessible form layouts:
 ```html
 <!-- No [ngxSignalForm] needed for default 'on-touch' strategy! -->
 <form (submit)="save($event)">
-  <ngx-signal-form-field [formField]="userForm.email" fieldName="email">
+  <ngx-signal-form-field-wrapper [formField]="userForm.email" fieldName="email">
     <label for="email">Email</label>
     <input id="email" [formField]="userForm.email" />
-  </ngx-signal-form-field>
+  </ngx-signal-form-field-wrapper>
   <button type="submit">Submit</button>
 </form>
 ```
@@ -166,17 +166,24 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
   selector: 'app-contact',
-  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldComponent],
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxSignalFormFieldWrapperComponent,
+  ],
   template: `
     <form (submit)="save($event)">
-      <ngx-signal-form-field [formField]="contactForm.email" fieldName="email">
+      <ngx-signal-form-field-wrapper
+        [formField]="contactForm.email"
+        fieldName="email"
+      >
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" type="email" />
-      </ngx-signal-form-field>
+      </ngx-signal-form-field-wrapper>
       <button type="submit">Send</button>
     </form>
   `,
@@ -250,20 +257,20 @@ import {
 
 **Key exports**:
 
-- `NgxSignalFormFieldComponent` — Unified wrapper for label, input, errors
-- `NgxSignalFormFieldsetComponent` — Group related fields with aggregated errors
+- `NgxSignalFormFieldWrapperComponent` — Unified wrapper for label, input, errors
+- `NgxSignalFormFieldset` — Group related fields with aggregated errors (use `includeNestedErrors` to control aggregation)
 - `NgxFloatingLabelDirective` — Material Design-like outlined inputs (`outline` attribute)
 - `NgxSignalFormFieldCharacterCountComponent` — Progressive character counter
 
 ```html
-<ngx-signal-form-field [formField]="form.bio" outline>
+<ngx-signal-form-field-wrapper [formField]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-hint
-    >Tell us about yourself</ngx-signal-form-field-hint
+  <ngx-signal-form-field-wrapper-hint
+    >Tell us about yourself</ngx-signal-form-field-wrapper-hint
   >
-  <ngx-signal-form-field-character-count [formField]="form.bio" />
-</ngx-signal-form-field>
+  <ngx-signal-form-field-wrapper-character-count [formField]="form.bio" />
+</ngx-signal-form-field-wrapper>
 ```
 
 **[📖 Full Documentation →](./packages/toolkit/form-field/README.md)** | **[🎨 Theming Guide →](./packages/toolkit/form-field/THEMING.md)**

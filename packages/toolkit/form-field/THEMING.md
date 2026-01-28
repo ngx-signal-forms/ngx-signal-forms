@@ -63,7 +63,7 @@ controls the display of validation errors and warnings.
 
 ### Hints
 
-**Component:** `ngx-signal-form-field-hint`
+**Component:** `ngx-signal-form-field-wrapper-hint`
 
 Provides context or instructions for a field.
 
@@ -76,7 +76,7 @@ Provides context or instructions for a field.
 
 ### Character Count
 
-**Component:** `ngx-signal-form-field-character-count`
+**Component:** `ngx-signal-form-field-wrapper-character-count`
 
 Displays progress towards a character limit.
 
@@ -103,7 +103,7 @@ Groups related fields with consistent spacing.
 
 ## 3. Form Field Component
 
-**Component:** `ngx-signal-form-field`
+**Component:** `ngx-signal-form-field-wrapper`
 
 This component wraps your `label` and `input` to provide layout, borders, and states.
 
@@ -154,7 +154,7 @@ Redefine the semantic colors in your global styles or component.
 
 ```css
 /* Apply to all fields */
-ngx-signal-form-field {
+ngx-signal-form-field-wrapper {
   --ngx-form-field-color-primary: #6da305; /* My Brand Green */
   --ngx-form-field-color-error: #d93025; /* My Error Red */
 }
@@ -167,7 +167,7 @@ Map your framework's variables to the toolkit's semantic layer.
 **Bootstrap Example:**
 
 ```css
-ngx-signal-form-field {
+ngx-signal-form-field-wrapper {
   --ngx-form-field-color-primary: var(--bs-primary, #0d6efd);
   --ngx-form-field-color-border: var(--bs-border-color, #dee2e6);
   --ngx-form-field-color-text: var(--bs-body-color, #212529);
@@ -189,7 +189,7 @@ If your app has a manual toggle (e.g. adding a `.dark` class), use this pattern 
 
 /* 1. Define Dark Mode overrides */
 @media (prefers-color-scheme: dark) {
-  ngx-signal-form-field {
+  ngx-signal-form-field-wrapper {
     --ngx-form-field-color-surface: #1f2937;
     --ngx-form-field-color-text: #f9fafb;
     /* ... other dark tokens */
@@ -197,7 +197,7 @@ If your app has a manual toggle (e.g. adding a `.dark` class), use this pattern 
 }
 
 /* 2. Fix: Force Light Mode if user explicitly chose it (even if system is Dark) */
-:root:not(.dark) ngx-signal-form-field {
+:root:not(.dark) ngx-signal-form-field-wrapper {
   --ngx-form-field-color-surface: #ffffff;
   --ngx-form-field-color-text: #324155;
   /* ... reset to light tokens */

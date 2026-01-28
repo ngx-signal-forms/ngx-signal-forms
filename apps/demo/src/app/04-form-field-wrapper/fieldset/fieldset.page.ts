@@ -13,7 +13,7 @@ import { FieldsetFormComponent } from './fieldset.form';
 /**
  * Fieldset Demo Page
  *
- * Demonstrates the NgxSignalFormFieldsetComponent for:
+ * Demonstrates the NgxSignalFormFieldset for:
  * - Grouping related form fields (addresses, credentials)
  * - Aggregating validation errors at the group level
  * - Cross-field validation (password confirmation)
@@ -37,7 +37,7 @@ import { FieldsetFormComponent } from './fieldset.form';
       <h1 class="page-title">Form Fieldset - Aggregated Errors</h1>
       <p class="page-subtitle">
         Group related fields and display combined validation messages with
-        NgxSignalFormFieldsetComponent
+        NgxSignalFormFieldset
       </p>
     </header>
 

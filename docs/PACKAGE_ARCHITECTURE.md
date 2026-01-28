@@ -32,7 +32,7 @@ packages/toolkit/
 │   ├── types.ts
 │   └── public_api.ts
 ├── form-field/                          # Optional form-field entry
-│   ├── form-field.component.ts
+│   ├── form-field-wrapper.component.ts
 │   ├── form-fieldset.component.ts
 │   ├── floating-label.directive.ts
 │   ├── form-field-hint.component.ts
@@ -87,7 +87,7 @@ import {
 ### Secondary Entry (Form Field - Optional)
 
 ```typescript
-import { NgxSignalFormFieldComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
 ```
 
 ### Secondary Entry (Headless Primitives - Optional)

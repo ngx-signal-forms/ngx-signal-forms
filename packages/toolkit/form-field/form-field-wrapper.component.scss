@@ -232,7 +232,7 @@
 }
 
 // Label sits OUTSIDE the bordered container (traditional layout)
-.ngx-signal-form-field__label {
+.ngx-signal-form-field-wrapper__label {
   font-size: var(--_label-size);
   font-weight: var(--_label-weight);
   color: var(--_label-color);
@@ -243,7 +243,7 @@
   display: block;
 }
 
-.ngx-signal-form-field__content {
+.ngx-signal-form-field-wrapper__content {
   display: flex;
   align-items: center;
   gap: 0; // No gap - prefix/suffix integrated into input
@@ -284,7 +284,8 @@
 }
 
 // Warning state styling (applied via host class when field has warnings but no errors)
-:host(.ngx-signal-form-field--warning) .ngx-signal-form-field__content {
+:host(.ngx-signal-form-field-wrapper--warning)
+  .ngx-signal-form-field-wrapper__content {
   border-color: var(--_warning-color);
 
   &:focus-within {
@@ -293,7 +294,7 @@
   }
 }
 
-.ngx-signal-form-field__main {
+.ngx-signal-form-field-wrapper__main {
   display: flex;
   flex-direction: row; // Row since label is outside
   align-items: center;
@@ -301,8 +302,8 @@
   min-width: 0; // Prevent flex item overflow
 }
 
-.ngx-signal-form-field__prefix,
-.ngx-signal-form-field__suffix {
+.ngx-signal-form-field-wrapper__prefix,
+.ngx-signal-form-field-wrapper__suffix {
   display: flex;
   align-items: center;
   flex-shrink: 0;
@@ -317,11 +318,11 @@
   }
 }
 
-.ngx-signal-form-field__prefix {
+.ngx-signal-form-field-wrapper__prefix {
   padding-right: var(--_field-space-md);
 }
 
-.ngx-signal-form-field__suffix {
+.ngx-signal-form-field-wrapper__suffix {
   color: var(--_suffix-color);
   gap: var(--_suffix-gap);
   padding-left: var(--_field-space-md);
@@ -399,9 +400,9 @@
 
 // Input, textarea, select (inside main content wrapper)
 // No label styling here - label is in its own class above
-:host ::ng-deep .ngx-signal-form-field__main input,
-:host ::ng-deep .ngx-signal-form-field__main textarea,
-:host ::ng-deep .ngx-signal-form-field__main select {
+:host ::ng-deep .ngx-signal-form-field-wrapper__main input,
+:host ::ng-deep .ngx-signal-form-field-wrapper__main textarea,
+:host ::ng-deep .ngx-signal-form-field-wrapper__main select {
   font-size: var(--_input-size);
   color: var(--_input-color);
   padding: 0; // No padding - container handles it
@@ -444,13 +445,13 @@
   // Override gap for outlined layout (uses public API with fallback)
   --_gap: var(--ngx-form-field-gap, var(--_field-space-xs));
 
-  // Hide the external label div (label will be inside .ngx-signal-form-field__main)
-  .ngx-signal-form-field__label {
+  // Hide the external label div (label will be inside .ngx-signal-form-field-wrapper__main)
+  .ngx-signal-form-field-wrapper__label {
     display: none;
   }
 }
 
-:host(.ngx-signal-forms-outline) .ngx-signal-form-field__content {
+:host(.ngx-signal-forms-outline) .ngx-signal-form-field-wrapper__content {
   display: flex;
   flex-direction: row; // Changed from column to support prefix/suffix
   align-items: center;
@@ -469,34 +470,34 @@
 // Prefix/suffix in outlined forms - use :has() for conditional borders
 // Prefix/suffix inherit the base flex centering; only normalize spacing here
 // to avoid redundant declarations.
-:host(.ngx-signal-forms-outline) .ngx-signal-form-field__prefix,
-:host(.ngx-signal-forms-outline) .ngx-signal-form-field__suffix {
+:host(.ngx-signal-forms-outline) .ngx-signal-form-field-wrapper__prefix,
+:host(.ngx-signal-forms-outline) .ngx-signal-form-field-wrapper__suffix {
   padding: 0;
   margin: 0;
 }
 
 // Prefix spacing when present (no border divider)
 :host(.ngx-signal-forms-outline)
-  .ngx-signal-form-field__content:has(
-    .ngx-signal-form-field__prefix:not(:empty)
+  .ngx-signal-form-field-wrapper__content:has(
+    .ngx-signal-form-field-wrapper__prefix:not(:empty)
   ) {
-  .ngx-signal-form-field__prefix {
+  .ngx-signal-form-field-wrapper__prefix {
     padding-right: var(--_field-space-sm);
   }
 }
 
 // Suffix spacing when present (no border divider)
 :host(.ngx-signal-forms-outline)
-  .ngx-signal-form-field__content:has(
-    .ngx-signal-form-field__suffix:not(:empty)
+  .ngx-signal-form-field-wrapper__content:has(
+    .ngx-signal-form-field-wrapper__suffix:not(:empty)
   ) {
-  .ngx-signal-form-field__suffix {
+  .ngx-signal-form-field-wrapper__suffix {
     padding-left: var(--_field-space-sm);
   }
 }
 
 // Main content wrapper for outlined (vertical layout for label + input)
-:host(.ngx-signal-forms-outline) .ngx-signal-form-field__main {
+:host(.ngx-signal-forms-outline) .ngx-signal-form-field-wrapper__main {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -504,7 +505,10 @@
 }
 
 // Label inside container (smaller, subtle, updated for Figma design)
-:host(.ngx-signal-forms-outline) ::ng-deep .ngx-signal-form-field__main label {
+:host(.ngx-signal-forms-outline)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__main
+  label {
   font-size: var(
     --ngx-form-field-outline-label-size,
     var(--_field-text-xs)
@@ -523,10 +527,10 @@
 
 // Required marker (automatic via :has() selector)
 :host(.ngx-signal-forms-outline[data-show-required='true'])
-  .ngx-signal-form-field__content:has([required])
+  .ngx-signal-form-field-wrapper__content:has([required])
   label::after,
 :host(.ngx-signal-forms-outline[data-show-required='true'])
-  .ngx-signal-form-field__content:has([aria-required='true'])
+  .ngx-signal-form-field-wrapper__content:has([aria-required='true'])
   label::after {
   content: attr(data-required-marker);
   color: var(--_invalid-color); // Reuse invalid color for required marker
@@ -534,12 +538,18 @@
 }
 
 // Remove input default styling (container provides all visual feedback)
-:host(.ngx-signal-forms-outline) ::ng-deep .ngx-signal-form-field__main input,
 :host(.ngx-signal-forms-outline)
   ::ng-deep
-  .ngx-signal-form-field__main
+  .ngx-signal-form-field-wrapper__main
+  input,
+:host(.ngx-signal-forms-outline)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__main
   textarea,
-:host(.ngx-signal-forms-outline) ::ng-deep .ngx-signal-form-field__main select {
+:host(.ngx-signal-forms-outline)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__main
+  select {
   border: none;
   background-color: transparent;
   padding: 0;
@@ -576,11 +586,11 @@
 // Placeholder (slightly more subtle in outlined)
 :host(.ngx-signal-forms-outline)
   ::ng-deep
-  .ngx-signal-form-field__main
+  .ngx-signal-form-field-wrapper__main
   input::placeholder,
 :host(.ngx-signal-forms-outline)
   ::ng-deep
-  .ngx-signal-form-field__main
+  .ngx-signal-form-field-wrapper__main
   textarea::placeholder {
   color: var(--_placeholder-color);
 }
