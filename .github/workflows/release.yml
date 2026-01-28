@@ -42,6 +42,11 @@ on:
         required: false
         type: boolean
         default: false
+      first_release:
+        description: 'First release (no previous git tags exist)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -94,18 +99,27 @@ jobs:
             echo "cmd=${{ inputs.version }}" >> $GITHUB_OUTPUT
           fi
 
+      - name: Set release flags
+        id: release_flags
+        run: |
+          FLAGS=""
+          if [ "${{ inputs.first_release }}" = "true" ]; then
+            FLAGS="$FLAGS --first-release"
+          fi
+          echo "flags=$FLAGS" >> $GITHUB_OUTPUT
+
       - name: Version (Dry Run)
         if: ${{ inputs.dry_run }}
         run: |
-          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --dry-run
+          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --dry-run ${{ steps.release_flags.outputs.flags }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Version and Publish (Real)
         if: ${{ !inputs.dry_run }}
         run: |
-          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --yes
-          pnpm exec nx release publish --tag=${{ inputs.npm_tag }} --yes
+          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --yes ${{ steps.release_flags.outputs.flags }}
+          pnpm exec nx release publish --tag=${{ inputs.npm_tag }} ${{ steps.release_flags.outputs.flags }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
