@@ -9,6 +9,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { ERROR_MESSAGES_CONTENT } from './error-messages.content';
@@ -31,6 +32,7 @@ import { ErrorMessagesComponent } from './error-messages.form';
     ErrorDisplayModeSelectorComponent,
     PageHeaderComponent,
     SignalFormDebuggerComponent,
+    SplitLayoutComponent,
   ],
   template: `
     <ngx-page-header
@@ -48,14 +50,15 @@ import { ErrorMessagesComponent } from './error-messages.form';
       [(selectedMode)]="errorDisplayMode"
       class="mb-6"
     />
-
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <ngx-error-messages [errorDisplayMode]="errorDisplayMode()" />
+    <ngx-split-layout>
+      <ngx-error-messages [errorDisplayMode]="errorDisplayMode()" left />
 
       @if (formRef(); as form) {
-        <ngx-signal-form-debugger [formTree]="form.errorMessagesForm()" />
+        <div right>
+          <ngx-signal-form-debugger [formTree]="form.errorMessagesForm()" />
+        </div>
       }
-    </div>
+    </ngx-split-layout>
   `,
 })
 export class ErrorMessagesPage {

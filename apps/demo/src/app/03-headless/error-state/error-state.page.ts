@@ -3,6 +3,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { HEADLESS_ERROR_STATE_CONTENT } from './error-state.content';
 import { HeadlessErrorStateComponent } from './error-state.form';
@@ -15,6 +16,7 @@ import { HeadlessErrorStateComponent } from './error-state.form';
     ExampleCardsComponent,
     PageHeaderComponent,
     SignalFormDebuggerComponent,
+    SplitLayoutComponent,
   ],
   template: `
     <ngx-page-header
@@ -26,14 +28,15 @@ import { HeadlessErrorStateComponent } from './error-state.form';
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
     />
-
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <ngx-headless-error-state />
+    <ngx-split-layout>
+      <ngx-headless-error-state left />
 
       @if (formRef(); as form) {
-        <ngx-signal-form-debugger [formTree]="form.profileForm()" />
+        <div right>
+          <ngx-signal-form-debugger [formTree]="form.profileForm()" />
+        </div>
       }
-    </div>
+    </ngx-split-layout>
   `,
 })
 export class HeadlessErrorStatePageComponent {

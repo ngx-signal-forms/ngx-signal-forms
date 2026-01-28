@@ -3,6 +3,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { NESTED_GROUPS_CONTENT } from './nested-groups.content';
 import { NestedGroupsComponent } from './nested-groups.form';
@@ -15,6 +16,7 @@ import { NestedGroupsComponent } from './nested-groups.form';
     ExampleCardsComponent,
     PageHeaderComponent,
     SignalFormDebuggerComponent,
+    SplitLayoutComponent,
   ],
   template: `
     <ngx-page-header
@@ -27,13 +29,15 @@ import { NestedGroupsComponent } from './nested-groups.form';
       [learning]="content.learning"
     />
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <ngx-nested-groups />
+    <ngx-split-layout>
+      <ngx-nested-groups left />
 
       @if (formRef(); as form) {
-        <ngx-signal-form-debugger [formTree]="form.profileForm()" />
+        <div right>
+          <ngx-signal-form-debugger [formTree]="form.profileForm()" />
+        </div>
       }
-    </div>
+    </ngx-split-layout>
   `,
 })
 export class NestedGroupsPageComponent {

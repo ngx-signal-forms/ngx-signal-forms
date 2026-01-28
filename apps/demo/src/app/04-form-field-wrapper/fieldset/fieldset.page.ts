@@ -9,6 +9,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { FIELDSET_CONTENT } from './fieldset.content';
@@ -34,6 +35,7 @@ import { FieldsetFormComponent } from './fieldset.form';
     ErrorDisplayModeSelectorComponent,
     ExampleCardsComponent,
     PageHeaderComponent,
+    SplitLayoutComponent,
     SignalFormDebuggerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,13 +55,20 @@ import { FieldsetFormComponent } from './fieldset.form';
         class="mb-6"
       />
 
-      <!-- Side-by-side layout for form and debugger -->
-      <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
-        <ngx-fieldset-form #formComponent [errorDisplayMode]="selectedMode()" />
+      <ngx-split-layout>
+        <ngx-fieldset-form
+          #formComponent
+          [errorDisplayMode]="selectedMode()"
+          left
+        />
         @if (formComponent) {
-          <ngx-signal-form-debugger [formTree]="formComponent.fieldsetForm()" />
+          <div right>
+            <ngx-signal-form-debugger
+              [formTree]="formComponent.fieldsetForm()"
+            />
+          </div>
         }
-      </div>
+      </ngx-split-layout>
     </ngx-example-cards>
   `,
 })

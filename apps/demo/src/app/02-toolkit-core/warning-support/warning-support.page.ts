@@ -9,6 +9,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { WARNING_SUPPORT_CONTENT } from './warning-support.content';
@@ -28,6 +29,7 @@ import { WarningsSupportFormComponent } from './warning-support.form';
     ErrorDisplayModeSelectorComponent,
     PageHeaderComponent,
     WarningsSupportFormComponent,
+    SplitLayoutComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
@@ -46,16 +48,20 @@ import { WarningsSupportFormComponent } from './warning-support.form';
         class="mb-6"
       />
 
-      <!-- Side-by-side layout for form and debugger -->
-      <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
+      <ngx-split-layout>
         <ngx-warning-support-form
           #formComponent
           [errorDisplayMode]="selectedMode()"
+          left
         />
         @if (formComponent) {
-          <ngx-signal-form-debugger [formTree]="formComponent.passwordForm()" />
+          <div right>
+            <ngx-signal-form-debugger
+              [formTree]="formComponent.passwordForm()"
+            />
+          </div>
         }
-      </div>
+      </ngx-split-layout>
     </ngx-example-cards>
   `,
 })

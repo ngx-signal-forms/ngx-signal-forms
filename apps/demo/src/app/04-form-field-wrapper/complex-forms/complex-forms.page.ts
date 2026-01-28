@@ -9,6 +9,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { COMPLEX_FORMS_CONTENT } from './complex-forms.content';
@@ -35,6 +36,7 @@ import { ComplexFormsComponent } from './complex-forms.form';
     PageHeaderComponent,
     ComplexFormsComponent,
     SignalFormDebuggerComponent,
+    SplitLayoutComponent,
   ],
   template: `
     <ngx-page-header
@@ -52,14 +54,15 @@ import { ComplexFormsComponent } from './complex-forms.form';
       [(selectedMode)]="errorDisplayMode"
       class="mb-6"
     />
-
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <ngx-complex-forms [errorDisplayMode]="errorDisplayMode()" />
+    <ngx-split-layout>
+      <ngx-complex-forms [errorDisplayMode]="errorDisplayMode()" left />
 
       @if (formRef(); as form) {
-        <ngx-signal-form-debugger [formTree]="form.complexForm()" />
+        <div right>
+          <ngx-signal-form-debugger [formTree]="form.complexForm()" />
+        </div>
       }
-    </div>
+    </ngx-split-layout>
   `,
 })
 export class ComplexFormsPage {

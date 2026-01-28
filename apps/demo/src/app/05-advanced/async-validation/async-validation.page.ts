@@ -3,6 +3,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { ASYNC_VALIDATION_CONTENT } from './async-validation.content';
 import { AsyncValidationComponent } from './async-validation.form';
@@ -15,6 +16,7 @@ import { AsyncValidationComponent } from './async-validation.form';
     ExampleCardsComponent,
     PageHeaderComponent,
     SignalFormDebuggerComponent,
+    SplitLayoutComponent,
   ],
   template: `
     <ngx-page-header
@@ -27,13 +29,15 @@ import { AsyncValidationComponent } from './async-validation.form';
       [learning]="content.learning"
     />
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <ngx-async-validation />
+    <ngx-split-layout>
+      <ngx-async-validation left />
 
       @if (formRef(); as form) {
-        <ngx-signal-form-debugger [formTree]="form.regForm()" />
+        <div right>
+          <ngx-signal-form-debugger [formTree]="form.regForm()" />
+        </div>
       }
-    </div>
+    </ngx-split-layout>
   `,
 })
 export class AsyncValidationPageComponent {

@@ -9,6 +9,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { ERROR_DISPLAY_MODES_CONTENT } from './error-display-modes.content';
@@ -28,6 +29,7 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
     ErrorDisplayModeSelectorComponent,
     PageHeaderComponent,
     SignalFormDebuggerComponent,
+    SplitLayoutComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -49,21 +51,24 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
         />
 
         <!-- Side-by-side layout for form and debugger -->
-        <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
+        <ngx-split-layout>
           <!-- Interactive Demo Form -->
           <ngx-error-display-modes-form
             #formComponent
             [errorDisplayMode]="selectedMode()"
+            left
           />
 
           <!-- Real-time Form State -->
           @if (formComponent?.productForm(); as form) {
-            <ngx-signal-form-debugger
-              [formTree]="form"
-              [errorStrategy]="selectedMode()"
-            />
+            <div right>
+              <ngx-signal-form-debugger
+                [formTree]="form"
+                [errorStrategy]="selectedMode()"
+              />
+            </div>
           }
-        </div>
+        </ngx-split-layout>
       </ngx-example-cards>
     </div>
   `,

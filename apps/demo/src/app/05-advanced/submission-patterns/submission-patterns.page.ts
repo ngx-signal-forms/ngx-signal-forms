@@ -9,6 +9,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { SUBMISSION_PATTERNS_CONTENT } from './submission-patterns.content';
@@ -27,6 +28,7 @@ import { SubmissionPatternsComponent } from './submission-patterns.form';
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,
     PageHeaderComponent,
+    SplitLayoutComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
@@ -46,13 +48,15 @@ import { SubmissionPatternsComponent } from './submission-patterns.form';
       class="mb-6"
     />
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <ngx-submission-patterns [errorDisplayMode]="errorDisplayMode()" />
+    <ngx-split-layout>
+      <ngx-submission-patterns [errorDisplayMode]="errorDisplayMode()" left />
 
       @if (formRef(); as form) {
-        <ngx-signal-form-debugger [formTree]="form.registrationForm()" />
+        <div right>
+          <ngx-signal-form-debugger [formTree]="form.registrationForm()" />
+        </div>
       }
-    </div>
+    </ngx-split-layout>
   `,
 })
 export class SubmissionPatternsPage {

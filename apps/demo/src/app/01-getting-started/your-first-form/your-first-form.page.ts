@@ -9,6 +9,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { YOUR_FIRST_FORM_CONTENT } from './your-first-form.content';
@@ -35,6 +36,7 @@ import { YourFirstFormComponent } from './your-first-form.form';
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,
     PageHeaderComponent,
+    SplitLayoutComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
@@ -53,19 +55,21 @@ import { YourFirstFormComponent } from './your-first-form.form';
         class="mb-6"
       />
 
-      <!-- Side-by-side layout for form and debugger -->
-      <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
+      <ngx-split-layout>
         <ngx-your-first-form
           #formComponent
           [errorDisplayMode]="selectedMode()"
+          left
         />
         @if (formComponent) {
-          <ngx-signal-form-debugger
-            [formTree]="formComponent.contactForm"
-            [errorStrategy]="selectedMode()"
-          />
+          <div right>
+            <ngx-signal-form-debugger
+              [formTree]="formComponent.contactForm"
+              [errorStrategy]="selectedMode()"
+            />
+          </div>
         }
-      </div>
+      </ngx-split-layout>
     </ngx-example-cards>
   `,
 })

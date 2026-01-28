@@ -3,6 +3,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { DYNAMIC_LIST_CONTENT } from './dynamic-list.content';
 import { DynamicListComponent } from './dynamic-list.form';
@@ -15,6 +16,7 @@ import { DynamicListComponent } from './dynamic-list.form';
     ExampleCardsComponent,
     PageHeaderComponent,
     SignalFormDebuggerComponent,
+    SplitLayoutComponent,
   ],
   template: `
     <ngx-page-header
@@ -27,13 +29,15 @@ import { DynamicListComponent } from './dynamic-list.form';
       [learning]="content.learning"
     />
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <ngx-dynamic-list />
+    <ngx-split-layout>
+      <ngx-dynamic-list left />
 
       @if (formRef(); as form) {
-        <ngx-signal-form-debugger [formTree]="form.tasksForm()" />
+        <div right>
+          <ngx-signal-form-debugger [formTree]="form.tasksForm()" />
+        </div>
       }
-    </div>
+    </ngx-split-layout>
   `,
 })
 export class DynamicListPageComponent {

@@ -3,6 +3,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { PURE_SIGNAL_FORM_CONTENT } from './pure-signal-form.content';
 import { PureSignalFormComponent } from './pure-signal-form.form';
@@ -28,6 +29,7 @@ import { PureSignalFormComponent } from './pure-signal-form.form';
     PureSignalFormComponent,
     ExampleCardsComponent,
     PageHeaderComponent,
+    SplitLayoutComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
@@ -40,14 +42,15 @@ import { PureSignalFormComponent } from './pure-signal-form.form';
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
     />
-
-    <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <ngx-pure-signal-form />
+    <ngx-split-layout class="mt-8">
+      <ngx-pure-signal-form left />
 
       @if (formRef(); as form) {
-        <ngx-signal-form-debugger [formTree]="form.signupForm()" />
+        <div right>
+          <ngx-signal-form-debugger [formTree]="form.signupForm()" />
+        </div>
       }
-    </div>
+    </ngx-split-layout>
   `,
 })
 export class PureSignalFormPageComponent {

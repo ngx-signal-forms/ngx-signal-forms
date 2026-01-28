@@ -3,6 +3,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { CROSS_FIELD_VALIDATION_CONTENT } from './cross-field-validation.content';
 import { CrossFieldValidationComponent } from './cross-field-validation.form';
@@ -15,6 +16,7 @@ import { CrossFieldValidationComponent } from './cross-field-validation.form';
     ExampleCardsComponent,
     PageHeaderComponent,
     SignalFormDebuggerComponent,
+    SplitLayoutComponent,
   ],
   template: `
     <ngx-page-header
@@ -27,13 +29,15 @@ import { CrossFieldValidationComponent } from './cross-field-validation.form';
       [learning]="content.learning"
     />
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <ngx-cross-field-validation />
+    <ngx-split-layout>
+      <ngx-cross-field-validation left />
 
       @if (formRef(); as form) {
-        <ngx-signal-form-debugger [formTree]="form.bookingForm()" />
+        <div right>
+          <ngx-signal-form-debugger [formTree]="form.bookingForm()" />
+        </div>
       }
-    </div>
+    </ngx-split-layout>
   `,
 })
 export class CrossFieldValidationPageComponent {

@@ -9,6 +9,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { OUTLINE_FORM_FIELD_CONTENT } from './outline-form-field.content';
@@ -40,6 +41,7 @@ import { OutlineFormFieldComponent } from './outline-form-field.form';
     ErrorDisplayModeSelectorComponent,
     ExampleCardsComponent,
     PageHeaderComponent,
+    SplitLayoutComponent,
     SignalFormDebuggerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -59,17 +61,21 @@ import { OutlineFormFieldComponent } from './outline-form-field.form';
         class="mb-6"
       />
 
-      <!-- Side-by-side layout for form and debugger -->
-      <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
+      <ngx-split-layout>
         <ngx-outline-form-field
           #formComponent
           [errorDisplayMode]="selectedMode()"
+          left
         />
 
         @if (formComponent) {
-          <ngx-signal-form-debugger [formTree]="formComponent.showcaseForm()" />
+          <div right>
+            <ngx-signal-form-debugger
+              [formTree]="formComponent.showcaseForm()"
+            />
+          </div>
         }
-      </div>
+      </ngx-split-layout>
     </ngx-example-cards>
   `,
 })

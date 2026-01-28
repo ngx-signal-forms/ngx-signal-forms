@@ -3,6 +3,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { STEPPER_FORM_CONTENT } from './stepper-form.content';
 import { StepperFormComponent } from './stepper-form.form';
@@ -15,6 +16,7 @@ import { StepperFormComponent } from './stepper-form.form';
     ExampleCardsComponent,
     PageHeaderComponent,
     SignalFormDebuggerComponent,
+    SplitLayoutComponent,
   ],
   template: `
     <ngx-page-header
@@ -27,13 +29,15 @@ import { StepperFormComponent } from './stepper-form.form';
       [learning]="content.learning"
     />
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <ngx-stepper-form />
+    <ngx-split-layout>
+      <ngx-stepper-form left />
 
       @if (formRef(); as form) {
-        <ngx-signal-form-debugger [formTree]="form.wizardForm()" />
+        <div right>
+          <ngx-signal-form-debugger [formTree]="form.wizardForm()" />
+        </div>
       }
-    </div>
+    </ngx-split-layout>
   `,
 })
 export class StepperFormPageComponent {

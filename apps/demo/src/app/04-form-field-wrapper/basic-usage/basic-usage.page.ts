@@ -9,6 +9,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { BASIC_USAGE_CONTENT } from './basic-usage.content';
@@ -34,6 +35,7 @@ import { BasicUsageComponent } from './basic-usage.form';
     ExampleCardsComponent,
     PageHeaderComponent,
     SignalFormDebuggerComponent,
+    SplitLayoutComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -52,13 +54,20 @@ import { BasicUsageComponent } from './basic-usage.form';
         class="mb-6"
       />
 
-      <!-- Side-by-side layout for form and debugger -->
-      <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
-        <ngx-basic-usage #formComponent [errorDisplayMode]="selectedMode()" />
+      <ngx-split-layout>
+        <ngx-basic-usage
+          #formComponent
+          [errorDisplayMode]="selectedMode()"
+          left
+        />
         @if (formComponent) {
-          <ngx-signal-form-debugger [formTree]="formComponent.showcaseForm()" />
+          <div right>
+            <ngx-signal-form-debugger
+              [formTree]="formComponent.showcaseForm()"
+            />
+          </div>
         }
-      </div>
+      </ngx-split-layout>
     </ngx-example-cards>
   `,
 })

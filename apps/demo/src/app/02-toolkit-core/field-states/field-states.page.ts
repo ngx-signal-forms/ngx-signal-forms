@@ -3,6 +3,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { FieldStatesTableComponent } from '../../ui/field-states-table/public-api';
 import { FIELD_STATES_CONTENT } from './field-states.content';
@@ -19,6 +20,7 @@ import { FieldStatesForm } from './field-states.form';
     FieldStatesForm,
     FieldStatesTableComponent,
     PageHeaderComponent,
+    SplitLayoutComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
@@ -32,16 +34,17 @@ import { FieldStatesForm } from './field-states.form';
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
     >
-      <!-- Side-by-side layout for form and debugger -->
-      <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
+      <ngx-split-layout>
         <!-- Interactive Form -->
-        <ngx-field-states-form #formComponent />
+        <ngx-field-states-form #formComponent left />
 
         <!-- Real-time Form State -->
         @if (formComponent.userForm(); as form) {
-          <ngx-signal-form-debugger [formTree]="form" />
+          <div right>
+            <ngx-signal-form-debugger [formTree]="form" />
+          </div>
         }
-      </div>
+      </ngx-split-layout>
 
       <!-- Educational Content Below Form -->
       <div class="mt-8 space-y-6">

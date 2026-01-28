@@ -9,6 +9,7 @@ import {
   ExampleCardsComponent,
   PageHeaderComponent,
   SignalFormDebuggerComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { GLOBAL_CONFIG_CONTENT } from './global-configuration.content';
@@ -28,6 +29,7 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,
     PageHeaderComponent,
+    SplitLayoutComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
@@ -46,14 +48,15 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
       [(selectedMode)]="errorDisplayMode"
       class="mb-6"
     />
-
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <ngx-global-configuration [errorDisplayMode]="errorDisplayMode()" />
+    <ngx-split-layout>
+      <ngx-global-configuration [errorDisplayMode]="errorDisplayMode()" left />
 
       @if (formRef(); as form) {
-        <ngx-signal-form-debugger [formTree]="form.configForm()" />
+        <div right>
+          <ngx-signal-form-debugger [formTree]="form.configForm()" />
+        </div>
       }
-    </div>
+    </ngx-split-layout>
   `,
 })
 export class GlobalConfigurationPage {
