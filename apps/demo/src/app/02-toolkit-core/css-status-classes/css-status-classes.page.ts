@@ -19,6 +19,7 @@ import {
   NgxSignalFormFieldHintComponent,
   NgxSignalFormFieldWrapperComponent,
 } from '@ngx-signal-forms/toolkit/form-field';
+import { PageHeaderComponent } from '../../ui';
 
 interface UserForm {
   email: string;
@@ -35,6 +36,7 @@ interface UserForm {
     NgxSignalFormFieldWrapperComponent,
     NgxFloatingLabelDirective,
     NgxSignalFormFieldHintComponent,
+    PageHeaderComponent,
   ],
   templateUrl: './css-status-classes.page.html',
   styleUrls: ['./css-status-classes.page.scss'],

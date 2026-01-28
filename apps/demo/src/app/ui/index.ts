@@ -7,6 +7,7 @@ export {
 export { CardComponent } from './card';
 export { ErrorDisplayModeSelectorComponent } from './error-display-mode-selector';
 export { ExampleCardsComponent } from './example-cards';
+export { PageHeaderComponent } from './page-header';
 
 // Form components - Angular Signal Forms compatible
 export { SignalFormDebuggerComponent } from './debugger';

@@ -5,7 +5,11 @@ import {
   viewChild,
 } from '@angular/core';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { COMPLEX_FORMS_CONTENT } from './complex-forms.content';
 import { ComplexFormsComponent } from './complex-forms.form';
@@ -28,17 +32,15 @@ import { ComplexFormsComponent } from './complex-forms.form';
   imports: [
     ErrorDisplayModeSelectorComponent,
     ExampleCardsComponent,
+    PageHeaderComponent,
     ComplexFormsComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Complex Forms with Form Field Wrapper</h1>
-      <p class="page-subtitle">
-        Nested objects, dynamic arrays, and maximum code reduction with
-        NgxSignalFormFieldWrapperComponent
-      </p>
-    </header>
+    <ngx-page-header
+      title="Complex Forms with Form Field Wrapper"
+      subtitle="Nested objects, dynamic arrays, and maximum code reduction with NgxSignalFormFieldWrapperComponent"
+    />
 
     <ngx-example-cards
       [demonstrated]="content.demonstrated"

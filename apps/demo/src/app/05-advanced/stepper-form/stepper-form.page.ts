@@ -1,5 +1,9 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { STEPPER_FORM_CONTENT } from './stepper-form.content';
 import { StepperFormComponent } from './stepper-form.form';
 
@@ -9,13 +13,14 @@ import { StepperFormComponent } from './stepper-form.form';
   imports: [
     StepperFormComponent,
     ExampleCardsComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Multi-Step Form Wizard</h1>
-      <p class="page-subtitle">Breaking complex forms into manageable steps</p>
-    </header>
+    <ngx-page-header
+      title="Multi-Step Form Wizard"
+      subtitle="Breaking complex forms into manageable steps"
+    />
 
     <ngx-example-cards
       [demonstrated]="content.demonstrated"

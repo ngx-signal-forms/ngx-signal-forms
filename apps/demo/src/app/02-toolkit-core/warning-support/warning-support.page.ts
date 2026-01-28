@@ -5,7 +5,11 @@ import {
   viewChild,
 } from '@angular/core';
 import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { WARNING_SUPPORT_CONTENT } from './warning-support.content';
 import { WarningsSupportFormComponent } from './warning-support.form';
@@ -22,18 +26,15 @@ import { WarningsSupportFormComponent } from './warning-support.form';
   imports: [
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,
+    PageHeaderComponent,
     WarningsSupportFormComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Warning Support</h1>
-      <p class="page-subtitle">
-        Distinguish between blocking errors (prevent submission) and
-        non-blocking warnings (guidance only). WCAG 2.2 compliant messaging
-        patterns.
-      </p>
-    </header>
+    <ngx-page-header
+      title="Warning Support"
+      subtitle="Distinguish between blocking errors (prevent submission) and non-blocking warnings (guidance only). WCAG 2.2 compliant messaging patterns."
+    />
 
     <ngx-example-cards
       [demonstrated]="content.demonstrated"

@@ -5,7 +5,11 @@ import {
   viewChild,
 } from '@angular/core';
 import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { ERROR_DISPLAY_MODES_CONTENT } from './error-display-modes.content';
 import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
@@ -19,21 +23,20 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
 @Component({
   selector: 'ngx-error-display-modes-page',
   imports: [
+    ErrorDisplayModesFormComponent,
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,
-    ErrorDisplayModesFormComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div>
       <!-- Header Section -->
-      <header class="mb-8">
-        <h1 class="page-title">Error Display Strategies</h1>
-        <p class="page-subtitle">
-          Explore how different error display timing affects user experience
-        </p>
-      </header>
+      <ngx-page-header
+        title="Error Display Strategies"
+        subtitle="Explore how different error display timing affects user experience"
+      />
 
       <ngx-example-cards
         [demonstrated]="demonstratedContent"

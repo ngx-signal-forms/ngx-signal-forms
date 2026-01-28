@@ -1,5 +1,9 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { ACCESSIBILITY_COMPARISON_CONTENT } from './accessibility-comparison.content';
 import { AccessibilityManualFormComponent } from './accessibility-comparison.manual.form';
 import { AccessibilityMinimalFormComponent } from './accessibility-comparison.minimal.form';
@@ -21,15 +25,14 @@ import { AccessibilityToolkitFormComponent } from './accessibility-comparison.to
     AccessibilityManualFormComponent,
     AccessibilityMinimalFormComponent,
     AccessibilityToolkitFormComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Accessibility Comparison</h1>
-      <p class="page-subtitle">
-        Compare manual, minimal toolkit, and full toolkit implementations
-      </p>
-    </header>
+    <ngx-page-header
+      title="Accessibility Comparison"
+      subtitle="Compare manual, minimal toolkit, and full toolkit implementations"
+    />
 
     <ngx-example-cards
       [demonstrated]="content.demonstrated"

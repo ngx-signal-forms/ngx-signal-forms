@@ -1,5 +1,9 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { HEADLESS_ERROR_STATE_CONTENT } from './error-state.content';
 import { HeadlessErrorStateComponent } from './error-state.form';
 
@@ -9,13 +13,14 @@ import { HeadlessErrorStateComponent } from './error-state.form';
   imports: [
     HeadlessErrorStateComponent,
     ExampleCardsComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Headless Error State</h1>
-      <p class="page-subtitle">Build custom UI with headless directives</p>
-    </header>
+    <ngx-page-header
+      title="Headless Error State"
+      subtitle="Build custom UI with headless directives"
+    />
 
     <ngx-example-cards
       [demonstrated]="content.demonstrated"

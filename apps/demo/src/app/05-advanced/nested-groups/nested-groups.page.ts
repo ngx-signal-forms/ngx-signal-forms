@@ -1,5 +1,9 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { NESTED_GROUPS_CONTENT } from './nested-groups.content';
 import { NestedGroupsComponent } from './nested-groups.form';
 
@@ -9,15 +13,14 @@ import { NestedGroupsComponent } from './nested-groups.form';
   imports: [
     NestedGroupsComponent,
     ExampleCardsComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Nested Form Groups</h1>
-      <p class="page-subtitle">
-        Handling complex, hierarchical data structures
-      </p>
-    </header>
+    <ngx-page-header
+      title="Nested Form Groups"
+      subtitle="Handling complex, hierarchical data structures"
+    />
 
     <ngx-example-cards
       [demonstrated]="content.demonstrated"

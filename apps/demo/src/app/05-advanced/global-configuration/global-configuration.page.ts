@@ -5,7 +5,11 @@ import {
   viewChild,
 } from '@angular/core';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { GLOBAL_CONFIG_CONTENT } from './global-configuration.content';
 import { GlobalConfigurationComponent } from './global-configuration.form';
@@ -23,15 +27,14 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
     GlobalConfigurationComponent,
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Global Toolkit Configuration</h1>
-      <p class="page-subtitle">
-        Configure toolkit defaults globally with provideNgxSignalFormsConfig()
-      </p>
-    </header>
+    <ngx-page-header
+      title="Global Toolkit Configuration"
+      subtitle="Configure toolkit defaults globally with provideNgxSignalFormsConfig()"
+    />
 
     <ngx-example-cards
       [demonstrated]="content.demonstrated"

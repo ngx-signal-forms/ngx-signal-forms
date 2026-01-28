@@ -5,7 +5,11 @@ import {
   viewChild,
 } from '@angular/core';
 import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { FIELDSET_CONTENT } from './fieldset.content';
 import { FieldsetFormComponent } from './fieldset.form';
@@ -29,17 +33,15 @@ import { FieldsetFormComponent } from './fieldset.form';
     FieldsetFormComponent,
     ErrorDisplayModeSelectorComponent,
     ExampleCardsComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Form Fieldset - Aggregated Errors</h1>
-      <p class="page-subtitle">
-        Group related fields and display combined validation messages with
-        NgxSignalFormFieldset
-      </p>
-    </header>
+    <ngx-page-header
+      title="Form Fieldset - Aggregated Errors"
+      subtitle="Group related fields and display combined validation messages with NgxSignalFormFieldset"
+    />
 
     <ngx-example-cards
       [demonstrated]="demonstratedContent"

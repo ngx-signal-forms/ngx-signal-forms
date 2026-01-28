@@ -5,7 +5,11 @@ import {
   viewChild,
 } from '@angular/core';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { ERROR_MESSAGES_CONTENT } from './error-messages.content';
 import { ErrorMessagesComponent } from './error-messages.form';
@@ -25,15 +29,14 @@ import { ErrorMessagesComponent } from './error-messages.form';
     ErrorMessagesComponent,
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Error Message Configuration</h1>
-      <p class="page-subtitle">
-        3-tier priority system: validator → registry → default fallback
-      </p>
-    </header>
+    <ngx-page-header
+      title="Error Message Configuration"
+      subtitle="3-tier priority system: validator → registry → default fallback"
+    />
 
     <ngx-example-cards
       [demonstrated]="content.demonstrated"

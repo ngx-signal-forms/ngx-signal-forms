@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { SignalFormDebuggerComponent } from '../../ui';
-import { ExampleCardsComponent } from '../../ui/example-cards/example-cards.component';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { FieldStatesTableComponent } from '../../ui/field-states-table/public-api';
 import { FIELD_STATES_CONTENT } from './field-states.content';
 import { FieldStatesForm } from './field-states.form';
@@ -15,16 +18,15 @@ import { FieldStatesForm } from './field-states.form';
     ExampleCardsComponent,
     FieldStatesForm,
     FieldStatesTableComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
     <!-- Header Section -->
-    <header class="mb-8">
-      <p class="page-subtitle">
-        Understanding dirty, touched, invalid, and valid states with interactive
-        examples and programmatic control
-      </p>
-    </header>
+    <ngx-page-header
+      title="Field States"
+      subtitle="Understanding dirty, touched, invalid, and valid states with interactive examples and programmatic control"
+    />
 
     <ngx-example-cards
       [demonstrated]="content.demonstrated"

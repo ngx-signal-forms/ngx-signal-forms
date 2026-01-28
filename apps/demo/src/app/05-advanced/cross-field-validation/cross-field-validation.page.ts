@@ -1,5 +1,9 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { CROSS_FIELD_VALIDATION_CONTENT } from './cross-field-validation.content';
 import { CrossFieldValidationComponent } from './cross-field-validation.form';
 
@@ -9,13 +13,14 @@ import { CrossFieldValidationComponent } from './cross-field-validation.form';
   imports: [
     CrossFieldValidationComponent,
     ExampleCardsComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Cross-Field Validation</h1>
-      <p class="page-subtitle">Validations depending on multiple fields</p>
-    </header>
+    <ngx-page-header
+      title="Cross-Field Validation"
+      subtitle="Validations depending on multiple fields"
+    />
 
     <ngx-example-cards
       [demonstrated]="content.demonstrated"

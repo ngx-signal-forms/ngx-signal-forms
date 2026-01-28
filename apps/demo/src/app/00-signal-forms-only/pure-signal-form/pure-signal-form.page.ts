@@ -1,5 +1,9 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { PURE_SIGNAL_FORM_CONTENT } from './pure-signal-form.content';
 import { PureSignalFormComponent } from './pure-signal-form.form';
 
@@ -23,15 +27,14 @@ import { PureSignalFormComponent } from './pure-signal-form.form';
   imports: [
     PureSignalFormComponent,
     ExampleCardsComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Pure Signal Forms (No Toolkit)</h1>
-      <p class="page-subtitle">
-        Baseline: What you write manually without the enhancement library
-      </p>
-    </header>
+    <ngx-page-header
+      title="Pure Signal Forms (No Toolkit)"
+      subtitle="Baseline: What you write manually without the enhancement library"
+    />
 
     <ngx-example-cards
       [demonstrated]="content.demonstrated"

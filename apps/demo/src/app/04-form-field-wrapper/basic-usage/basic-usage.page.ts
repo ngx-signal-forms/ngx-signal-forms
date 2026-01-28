@@ -5,7 +5,11 @@ import {
   viewChild,
 } from '@angular/core';
 import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { BASIC_USAGE_CONTENT } from './basic-usage.content';
 import { BasicUsageComponent } from './basic-usage.form';
@@ -28,17 +32,15 @@ import { BasicUsageComponent } from './basic-usage.form';
     BasicUsageComponent,
     ErrorDisplayModeSelectorComponent,
     ExampleCardsComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Form Field Wrapper - Basic Usage</h1>
-      <p class="page-subtitle">
-        Automatic error display and consistent layout with
-        NgxSignalFormFieldWrapperComponent
-      </p>
-    </header>
+    <ngx-page-header
+      title="Form Field Wrapper - Basic Usage"
+      subtitle="Automatic error display and consistent layout with NgxSignalFormFieldWrapperComponent"
+    />
 
     <ngx-example-cards
       [demonstrated]="demonstratedContent"

@@ -1,5 +1,9 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { DYNAMIC_LIST_CONTENT } from './dynamic-list.content';
 import { DynamicListComponent } from './dynamic-list.form';
 
@@ -9,13 +13,14 @@ import { DynamicListComponent } from './dynamic-list.form';
   imports: [
     DynamicListComponent,
     ExampleCardsComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Dynamic Lists (Form Arrays)</h1>
-      <p class="page-subtitle">Managing arrays of data with Signal Forms</p>
-    </header>
+    <ngx-page-header
+      title="Dynamic Lists (Form Arrays)"
+      subtitle="Managing arrays of data with Signal Forms"
+    />
 
     <ngx-example-cards
       [demonstrated]="content.demonstrated"

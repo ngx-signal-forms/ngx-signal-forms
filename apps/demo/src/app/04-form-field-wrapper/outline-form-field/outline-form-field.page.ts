@@ -5,7 +5,11 @@ import {
   viewChild,
 } from '@angular/core';
 import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { OUTLINE_FORM_FIELD_CONTENT } from './outline-form-field.content';
 import { OutlineFormFieldComponent } from './outline-form-field.form';
@@ -35,16 +39,15 @@ import { OutlineFormFieldComponent } from './outline-form-field.form';
     OutlineFormFieldComponent,
     ErrorDisplayModeSelectorComponent,
     ExampleCardsComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Form Field Wrapper - Outlined Form Fields</h1>
-      <p class="page-subtitle">
-        Default outlined form field styling matching Figma design
-      </p>
-    </header>
+    <ngx-page-header
+      title="Form Field Wrapper - Outlined Form Fields"
+      subtitle="Default outlined form field styling matching Figma design"
+    />
 
     <ngx-example-cards
       [demonstrated]="demonstratedContent"

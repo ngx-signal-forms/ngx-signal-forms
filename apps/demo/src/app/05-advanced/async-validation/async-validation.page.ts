@@ -1,5 +1,9 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { ASYNC_VALIDATION_CONTENT } from './async-validation.content';
 import { AsyncValidationComponent } from './async-validation.form';
 
@@ -9,13 +13,14 @@ import { AsyncValidationComponent } from './async-validation.form';
   imports: [
     AsyncValidationComponent,
     ExampleCardsComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Async Validation</h1>
-      <p class="page-subtitle">Server-side checks with improved UX</p>
-    </header>
+    <ngx-page-header
+      title="Async Validation"
+      subtitle="Server-side checks with improved UX"
+    />
 
     <ngx-example-cards
       [demonstrated]="content.demonstrated"

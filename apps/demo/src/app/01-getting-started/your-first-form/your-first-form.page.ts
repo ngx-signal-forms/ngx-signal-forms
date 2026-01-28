@@ -5,7 +5,11 @@ import {
   viewChild,
 } from '@angular/core';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { YOUR_FIRST_FORM_CONTENT } from './your-first-form.content';
 import { YourFirstFormComponent } from './your-first-form.form';
@@ -30,16 +34,14 @@ import { YourFirstFormComponent } from './your-first-form.form';
     YourFirstFormComponent,
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Your First Form with Toolkit</h1>
-      <p class="page-subtitle">
-        Contact form with automatic ARIA, error display strategies, and 43% less
-        code
-      </p>
-    </header>
+    <ngx-page-header
+      title="Your First Form with Toolkit"
+      subtitle="Contact form with automatic ARIA, error display strategies, and 43% less code"
+    />
 
     <ngx-example-cards
       [demonstrated]="demonstratedContent"

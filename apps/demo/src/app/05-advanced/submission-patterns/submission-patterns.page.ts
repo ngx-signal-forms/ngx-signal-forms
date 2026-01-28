@@ -5,7 +5,11 @@ import {
   viewChild,
 } from '@angular/core';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
-import { ExampleCardsComponent, SignalFormDebuggerComponent } from '../../ui';
+import {
+  ExampleCardsComponent,
+  PageHeaderComponent,
+  SignalFormDebuggerComponent,
+} from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { SUBMISSION_PATTERNS_CONTENT } from './submission-patterns.content';
 import { SubmissionPatternsComponent } from './submission-patterns.form';
@@ -22,15 +26,14 @@ import { SubmissionPatternsComponent } from './submission-patterns.form';
     SubmissionPatternsComponent,
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,
+    PageHeaderComponent,
     SignalFormDebuggerComponent,
   ],
   template: `
-    <header class="mb-8">
-      <h1 class="page-title">Form Submission Patterns</h1>
-      <p class="page-subtitle">
-        Async operations, server errors, and WCAG 2.2 compliance
-      </p>
-    </header>
+    <ngx-page-header
+      title="Form Submission Patterns"
+      subtitle="Async operations, server errors, and WCAG 2.2 compliance"
+    />
 
     <ngx-example-cards
       [demonstrated]="content.demonstrated"
