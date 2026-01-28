@@ -2,9 +2,6 @@
 
 > Enhancement toolkit for Angular Signal Forms with automatic accessibility and progressive error disclosure
 
-[![npm version](https://img.shields.io/npm/v/@ngx-signal-forms/toolkit.svg)](https://www.npmjs.com/package/@ngx-signal-forms/toolkit)
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
-
 Zero-intrusive directives, components, and utilities for Angular Signal Forms.
 
 ## Features
