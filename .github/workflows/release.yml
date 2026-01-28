@@ -11,6 +11,9 @@ on:
           - patch
           - minor
           - major
+          - prepatch
+          - preminor
+          - premajor
           - prerelease
           - custom
       custom_version:
@@ -18,7 +21,7 @@ on:
         required: false
         type: string
       prerelease_id:
-        description: 'Prerelease identifier (beta, next, rc, etc.)'
+        description: 'Prerelease identifier (for pre* versions)'
         required: false
         type: choice
         default: 'beta'
@@ -91,12 +94,14 @@ jobs:
       - name: Determine version command
         id: version_cmd
         run: |
-          if [ "${{ inputs.version }}" = "custom" ]; then
+          VERSION="${{ inputs.version }}"
+          if [ "$VERSION" = "custom" ]; then
             echo "cmd=${{ inputs.custom_version }}" >> $GITHUB_OUTPUT
-          elif [ "${{ inputs.version }}" = "prerelease" ]; then
-            echo "cmd=prerelease --preid=${{ inputs.prerelease_id }}" >> $GITHUB_OUTPUT
+          elif [[ "$VERSION" == pre* ]]; then
+            # prepatch, preminor, premajor, prerelease all use --preid
+            echo "cmd=$VERSION --preid=${{ inputs.prerelease_id }}" >> $GITHUB_OUTPUT
           else
-            echo "cmd=${{ inputs.version }}" >> $GITHUB_OUTPUT
+            echo "cmd=$VERSION" >> $GITHUB_OUTPUT
           fi
 
       - name: Set release flags
