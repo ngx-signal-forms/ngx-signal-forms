@@ -51,10 +51,10 @@ jobs:
           echo "Releasing version: $NEXT_VERSION"
 
           # Version without git operations
-          pnpm exec nx release version --specifier $NEXT_VERSION --git-tag=false --stage-changes=false --generator-options='{"skipLockFileUpdate": true}' --yes
+          pnpm exec nx release version $NEXT_VERSION --git-tag=false --stage-changes=false
 
           # Publish to npm with next tag and provenance
-          pnpm exec nx release publish --tag=next --yes
+          pnpm exec nx release publish --tag=next
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true'
