@@ -38,6 +38,14 @@ Every installation includes these essentials to streamline your forms logic:
 - **Status Classes**: Strategy-aware wrapper for Angular's `provideSignalFormsConfig({ classes })`. Syncs CSS classes (like `.is-invalid`) with your error strategy—so users don't see red fields while typing.
 - **Warning Logic**: Support for non-blocking validation messages ("warnings") alongside standard errors.
 
+### 🧩 Headless Primitives (`@ngx-signal-forms/toolkit/headless`)
+
+Renderless directives that expose signals without any UI—build custom form components that match your exact design system:
+
+- **State-Only Logic**: Error states, character counts, and field grouping as pure signals.
+- **Host Directive Composition**: Use with Angular's Directive Composition API for clean component architecture.
+- **Zero UI Coupling**: Works with Tailwind, Bootstrap, Material, or any custom CSS.
+
 ### 📦 Form Field (`@ngx-signal-forms/toolkit/form-field`)
 
 A set of cohesive UI components to build consistent, accessible form layouts:
@@ -48,14 +56,6 @@ A set of cohesive UI components to build consistent, accessible form layouts:
 - **Character Count**: Auto-detects `maxLength` validators and displays a progressive character counter.
 - **Accessibility Components**: Special `<ngx-signal-form-error>` and hints with correct ARIA roles.
 - **Theming**: Comprehensive CSS Custom Properties API for deep customization. [See Theming Guide](./packages/toolkit/form-field/THEMING.md).
-
-### 🧩 Headless Primitives (`@ngx-signal-forms/toolkit/headless`)
-
-Renderless directives that expose signals without any UI—build custom form components that match your exact design system:
-
-- **State-Only Logic**: Error states, character counts, and field grouping as pure signals.
-- **Host Directive Composition**: Use with Angular's Directive Composition API for clean component architecture.
-- **Zero UI Coupling**: Works with Tailwind, Bootstrap, Material, or any custom CSS.
 
 ---
 
