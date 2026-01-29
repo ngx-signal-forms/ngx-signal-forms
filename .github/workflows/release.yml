@@ -30,16 +30,6 @@ on:
           - next
           - rc
           - alpha
-      npm_tag:
-        description: 'NPM dist-tag'
-        required: true
-        type: choice
-        default: 'latest'
-        options:
-          - latest
-          - beta
-          - next
-          - rc
       dry_run:
         description: 'Dry run (no actual publish)'
         required: false
@@ -53,7 +43,6 @@ on:
 
 permissions:
   contents: write
-  id-token: write
 
 jobs:
   release:
@@ -116,24 +105,22 @@ jobs:
       - name: Version (Dry Run)
         if: ${{ inputs.dry_run }}
         run: |
-          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --dry-run ${{ steps.release_flags.outputs.flags }}
+          pnpm exec nx release version ${{ steps.version_cmd.outputs.cmd }} --dry-run ${{ steps.release_flags.outputs.flags }}
+          pnpm exec nx release changelog --dry-run ${{ steps.release_flags.outputs.flags }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Version and Publish (Real)
+      - name: Version (Real)
         if: ${{ !inputs.dry_run }}
         run: |
-          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --yes ${{ steps.release_flags.outputs.flags }}
-          pnpm exec nx release publish --tag=${{ inputs.npm_tag }} ${{ steps.release_flags.outputs.flags }}
+          pnpm exec nx release version ${{ steps.version_cmd.outputs.cmd }} --yes ${{ steps.release_flags.outputs.flags }}
+          pnpm exec nx release changelog --yes ${{ steps.release_flags.outputs.flags }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_PROVENANCE: 'true'
 
       - name: Summary
         if: ${{ !inputs.dry_run }}
         run: |
           echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
           echo "- Version: ${{ steps.version_cmd.outputs.cmd }}" >> $GITHUB_STEP_SUMMARY
-          echo "- NPM Tag: ${{ inputs.npm_tag }}" >> $GITHUB_STEP_SUMMARY
           echo "- Dry Run: ${{ inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
