@@ -52,3 +52,4 @@ vitest.config.*.timestamp*
 **/__screenshots__/*
 **/__snapshots__/*
 test-results/
+build.log
