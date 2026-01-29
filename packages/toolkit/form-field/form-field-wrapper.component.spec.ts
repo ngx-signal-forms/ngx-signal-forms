@@ -1036,10 +1036,10 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(main).toBeTruthy();
       expect(suffix).toBeTruthy();
 
-      // Verify DOM structure (use non-null assertion as we've verified above)
-      expect(content!.contains(prefix!)).toBe(true);
-      expect(content!.contains(main!)).toBe(true);
-      expect(content!.contains(suffix!)).toBe(true);
+      // Verify DOM structure
+      expect(content?.contains(prefix ?? null)).toBe(true);
+      expect(content?.contains(main ?? null)).toBe(true);
+      expect(content?.contains(suffix ?? null)).toBe(true);
     });
 
     it('should hide empty prefix slot', async () => {

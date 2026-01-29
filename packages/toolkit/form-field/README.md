@@ -25,8 +25,8 @@ All components in this entry point (`ngx-signal-form-field-wrapper`, `ngx-signal
 - **`ngx-signal-form-field-wrapper`**: Outlined layout, borders, colors, spacing.
 - **`ngx-signal-form-fieldset`**: Grouping gap and indentation.
 - **`ngx-signal-form-error`**: Shared feedback typography and colors.
-- **`ngx-form-field-hint`**: Helper text colors and spacing.
-- **`ngx-form-field-character-count`**: Progressive color states.
+- **`ngx-signal-form-field-hint`**: Helper text colors and spacing.
+- **`ngx-signal-form-field-character-count`**: Progressive color states.
 
 ### Quick Customization
 
@@ -83,7 +83,7 @@ import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
       <ngx-signal-form-field-wrapper [formField]="contactForm.email" outline>
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" />
-        <ngx-form-field-hint>We'll never share your email</ngx-form-field-hint>
+        <ngx-signal-form-field-hint>We'll never share your email</ngx-signal-form-field-hint>
       </ngx-signal-form-field-wrapper>
     </form>
   `,
@@ -140,8 +140,8 @@ The component uses content projection to allow full customization:
   <textarea id="bio" [formField]="form.bio"></textarea>
 
   <!-- Hints and character counts are projected in a separate slot -->
-  <ngx-form-field-hint>Max 500 characters</ngx-form-field-hint>
-  <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+  <ngx-signal-form-field-hint>Max 500 characters</ngx-signal-form-field-hint>
+  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -485,14 +485,14 @@ import { NgxFormFieldHintComponent } from '@ngx-signal-forms/toolkit/form-field'
 <ngx-signal-form-field-wrapper [formField]="form.phone" outline>
   <label for="phone">Phone Number</label>
   <input id="phone" [formField]="form.phone" />
-  <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
+  <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
 </ngx-signal-form-field-wrapper>
 ```
 
 **Position control:**
 
 ```html
-<ngx-form-field-hint position="right"> Optional field </ngx-form-field-hint>
+<ngx-signal-form-field-hint position="right"> Optional field </ngx-signal-form-field-hint>
 ```
 
 #### CSS Custom Properties
@@ -526,7 +526,7 @@ import { NgxFormFieldCharacterCountComponent } from '@ngx-signal-forms/toolkit/f
 <ngx-signal-form-field-wrapper [formField]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -553,7 +553,7 @@ The component automatically changes color based on character count:
 **Disable color progression:**
 
 ```html
-<ngx-form-field-character-count
+<ngx-signal-form-field-character-count
   [formField]="form.bio"
   [maxLength]="500"
   [showLimitColors]="false"
@@ -563,7 +563,7 @@ The component automatically changes color based on character count:
 **Custom thresholds:**
 
 ```html
-<ngx-form-field-character-count
+<ngx-signal-form-field-character-count
   [formField]="form.tweet"
   [maxLength]="280"
   [colorThresholds]="{ warning: 90, danger: 98 }"
@@ -808,9 +808,9 @@ const contactSchema = schema<ContactForm>((path) => {
           required
           placeholder="you@example.com"
         />
-        <ngx-form-field-hint>
+        <ngx-signal-form-field-hint>
           We'll never share your email
-        </ngx-form-field-hint>
+        </ngx-signal-form-field-hint>
       </ngx-signal-form-field-wrapper>
 
       <!-- Outlined message field with character count -->
@@ -822,7 +822,7 @@ const contactSchema = schema<ContactForm>((path) => {
           required
           rows="4"
         ></textarea>
-        <ngx-form-field-character-count
+        <ngx-signal-form-field-character-count
           [formField]="contactForm.message"
           [maxLength]="500"
         />

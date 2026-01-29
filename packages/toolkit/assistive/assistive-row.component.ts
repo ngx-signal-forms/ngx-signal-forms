@@ -59,7 +59,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  * - Error messages should have aria-live="polite" for screen reader announcements
  */
 @Component({
-  selector: 'ngx-form-field-assistive-row',
+  selector: 'ngx-signal-form-field-assistive-row',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="ngx-form-field-assistive-row__left">

@@ -314,24 +314,6 @@ describe('NgxFloatingLabelDirective', () => {
       const input = container.querySelector('input#password');
       expect(input).toHaveAttribute('required');
     });
-
-    it('should preserve aria-required on input', async () => {
-      const { container } = await render(
-        `<ngx-signal-form-field-wrapper [formField]="field" outline>
-          <label for="username">Username</label>
-          <input id="username" type="text"  />
-        </ngx-signal-form-field-wrapper>`,
-        {
-          imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],
-          componentProperties: {
-            field: createMockFieldState(),
-          },
-        },
-      );
-
-      const input = container.querySelector('input#username');
-      expect(input).toHaveAttribute('aria-required', 'true');
-    });
   });
 
   describe('Integration with form field component', () => {

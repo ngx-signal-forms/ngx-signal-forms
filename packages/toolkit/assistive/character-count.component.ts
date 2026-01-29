@@ -95,7 +95,7 @@ import {
  * @see {@link createCharacterCount} for the underlying headless utility
  */
 @Component({
-  selector: 'ngx-form-field-character-count',
+  selector: 'ngx-signal-form-field-character-count',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `{{ characterCountText() }}`,
   styles: `

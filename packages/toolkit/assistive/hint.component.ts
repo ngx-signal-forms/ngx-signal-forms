@@ -54,7 +54,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  * - Consider using aria-describedby to link hint to input (handled by parent component)
  */
 @Component({
-  selector: 'ngx-form-field-hint',
+  selector: 'ngx-signal-form-field-hint',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<ng-content />`,
   styles: `

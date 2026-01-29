@@ -51,8 +51,8 @@ Renderless directives that expose signals without any UI—build custom form com
 Lightly-styled, accessible components for form feedback—designed to be easily themed or used as building blocks:
 
 - **Error Display**: `<ngx-signal-form-error>` with proper ARIA roles (`role="alert"` for errors, `role="status"` for warnings).
-- **Hint Text**: `<ngx-form-field-hint>` for helper text below inputs.
-- **Character Counter**: `<ngx-form-field-character-count>` with automatic maxLength detection.
+- **Hint Text**: `<ngx-signal-form-field-hint>` for helper text below inputs.
+- **Character Counter**: `<ngx-signal-form-field-character-count>` with automatic maxLength detection.
 - **Warning Support**: `warningError()`, `isWarningError()`, `isBlockingError()` utilities for non-blocking validation.
 - **Theming**: Minimal CSS that integrates with any design system.
 
@@ -112,8 +112,8 @@ A set of cohesive UI components to build consistent, accessible form layouts:
 | Feature             | Headless Primitives                  | With Assistive                                         |
 | ------------------- | ------------------------------------ | ------------------------------------------------------ |
 | **Error Component** | ❌ Build your own                    | ✅ `<ngx-signal-form-error>` with ARIA roles           |
-| **Hint Component**  | ❌ Build your own                    | ✅ `<ngx-form-field-hint>` with proper styling         |
-| **Character Count** | ✅ Signals via directive             | ✅ `<ngx-form-field-character-count>` styled component |
+| **Hint Component**  | ❌ Build your own                    | ✅ `<ngx-signal-form-field-hint>` with proper styling         |
+| **Character Count** | ✅ Signals via directive             | ✅ `<ngx-signal-form-field-character-count>` styled component |
 | **Warning Support** | ❌ Manual implementation             | ✅ `warningError()`, `isWarningError()` utilities      |
 | **ARIA Roles**      | ❌ Manual ARIA attributes            | ✅ Automatic `role="alert"` / `role="status"`          |
 | **Theming**         | ❌ Your own CSS                      | ✅ Minimal, themeable CSS                              |
@@ -298,7 +298,7 @@ import {
 <label for="email">Email</label>
 <input id="email" [formField]="form.email" />
 <ngx-signal-form-error [formField]="form.email" fieldName="email" />
-<ngx-form-field-hint>We'll never share your email</ngx-form-field-hint>
+<ngx-signal-form-field-hint>We'll never share your email</ngx-signal-form-field-hint>
 ```
 
 **[📖 Full Documentation →](./packages/toolkit/assistive/README.md)**
@@ -323,8 +323,8 @@ import {
 <ngx-signal-form-field-wrapper [formField]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-form-field-hint>Tell us about yourself</ngx-form-field-hint>
-  <ngx-form-field-character-count [formField]="form.bio" />
+  <ngx-signal-form-field-hint>Tell us about yourself</ngx-signal-form-field-hint>
+  <ngx-signal-form-field-character-count [formField]="form.bio" />
 </ngx-signal-form-field-wrapper>
 ```
 

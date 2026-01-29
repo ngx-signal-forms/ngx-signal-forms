@@ -30,7 +30,7 @@ Features:
 Displays helper text for form fields.
 
 ```html
-<ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
+<ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
 ```
 
 ### NgxFormFieldCharacterCountComponent
@@ -38,7 +38,7 @@ Displays helper text for form fields.
 Displays character count with progressive color states.
 
 ```html
-<ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+<ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 ```
 
 ### NgxFormFieldAssistiveRowComponent
@@ -46,10 +46,10 @@ Displays character count with progressive color states.
 Layout container for hint, error, and character count.
 
 ```html
-<ngx-form-field-assistive-row>
-  <ngx-form-field-hint>Enter your bio</ngx-form-field-hint>
-  <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
-</ngx-form-field-assistive-row>
+<ngx-signal-form-field-assistive-row>
+  <ngx-signal-form-field-hint>Enter your bio</ngx-signal-form-field-hint>
+  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+</ngx-signal-form-field-assistive-row>
 ```
 
 ## Utilities

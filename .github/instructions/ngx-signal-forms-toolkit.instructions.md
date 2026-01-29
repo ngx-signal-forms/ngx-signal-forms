@@ -773,7 +773,7 @@ Transforms form field into Material Design outlined layout.
 
 ### NgxFormFieldHintComponent
 
-**Selector**: `ngx-form-field-hint`
+**Selector**: `ngx-signal-form-field-hint`
 
 Displays helper text for form fields.
 
@@ -781,13 +781,13 @@ Displays helper text for form fields.
 <ngx-signal-form-field-wrapper [formField]="form.phone">
   <label for="phone">Phone Number</label>
   <input id="phone" [formField]="form.phone" />
-  <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
+  <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
 </ngx-signal-form-field-wrapper>
 ```
 
 ### NgxFormFieldCharacterCountComponent
 
-**Selector**: `ngx-form-field-character-count`
+**Selector**: `ngx-signal-form-field-character-count`
 
 Displays character count with progressive color states.
 
@@ -795,7 +795,7 @@ Displays character count with progressive color states.
 <ngx-signal-form-field-wrapper [formField]="form.bio">
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 </ngx-signal-form-field-wrapper>
 ```
 

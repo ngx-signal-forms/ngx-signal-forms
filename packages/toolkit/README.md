@@ -931,8 +931,8 @@ import {
 <ngx-signal-form-field-wrapper [formField]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-form-field-hint>Tell us about yourself</ngx-form-field-hint>
-  <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+  <ngx-signal-form-field-hint>Tell us about yourself</ngx-signal-form-field-hint>
+  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -973,7 +973,7 @@ maxLength(path.bio, 500);
   <textarea id="bio" [formField]="form.bio"></textarea>
 
   <!-- User sees remaining count, preventing paste surprises -->
-  <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -1220,7 +1220,7 @@ Displays helper text for form fields.
 <ngx-signal-form-field-wrapper [formField]="form.phone" outline>
   <label for="phone">Phone Number</label>
   <input id="phone" [formField]="form.phone" />
-  <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
+  <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -1242,7 +1242,7 @@ maxLength(path.bio, 500);
 <ngx-signal-form-field-wrapper [formField]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-form-field-character-count [formField]="form.bio" />
+  <ngx-signal-form-field-character-count [formField]="form.bio" />
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -1258,7 +1258,7 @@ maxLength(path.bio, 500);
 
 ```html
 <!-- Display limit is 300, even if validation allows 500 -->
-<ngx-form-field-character-count [formField]="form.bio" [maxLength]="300" />
+<ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="300" />
 ```
 
 **Color States:**

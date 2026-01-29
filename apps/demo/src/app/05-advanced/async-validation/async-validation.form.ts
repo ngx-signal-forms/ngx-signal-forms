@@ -65,9 +65,9 @@ const registrationSchema = schema<Registration>((path) => {
             </span>
           }
 
-          <ngx-form-field-hint>
+          <ngx-signal-form-field-hint>
             Availability is checked automatically
-          </ngx-form-field-hint>
+          </ngx-signal-form-field-hint>
         </ngx-signal-form-field-wrapper>
 
         <div class="flex gap-4">

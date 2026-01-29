@@ -458,41 +458,6 @@ function createMockForm(
 }
 
 /**
- * Helper: Create mock FieldTree with submittedStatus signal.
- *
- * @param status - Submitted status (string or signal function)
- */
-function createMockFormWithStatus(
-  status:
-    | 'unsubmitted'
-    | 'submitting'
-    | 'submitted'
-    | (() => 'unsubmitted' | 'submitting' | 'submitted' | undefined),
-): FieldTree<unknown> {
-  const statusFn = typeof status === 'function' ? status : () => status;
-
-  return signal({
-    value: () => ({}),
-    valid: () => true,
-    invalid: () => false,
-    touched: () => false,
-    dirty: () => false,
-    errors: () => [],
-    pending: () => false,
-    disabled: () => false,
-    readonly: () => false,
-    hidden: () => false,
-    submitting: () => false,
-    submittedStatus: statusFn,
-    reset: vi.fn(),
-    markAsTouched: vi.fn(),
-    markAsDirty: vi.fn(),
-    resetSubmittedStatus: vi.fn(),
-    errorSummary: () => [],
-  }) as unknown as FieldTree<unknown>;
-}
-
-/**
  * Helper: Create mock FieldTree with controllable submitting signal.
  * Used for testing hasSubmitted which internally tracks submitting transitions.
  *

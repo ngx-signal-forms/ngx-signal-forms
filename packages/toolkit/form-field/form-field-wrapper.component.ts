@@ -176,7 +176,7 @@ function generateUniqueFieldId(): string {
     </div>
 
     <!-- Assistive row: fixed-height container prevents layout shift -->
-    <ngx-form-field-assistive-row
+    <ngx-signal-form-field-assistive-row
       class="ngx-signal-form-field-wrapper__assistive"
     >
       <!-- Left side: hint (hidden when errors shown) or errors -->
@@ -193,7 +193,7 @@ function generateUniqueFieldId(): string {
 
       <!-- Right side: character count -->
       <ng-content select="ngx-form-field-character-count" />
-    </ngx-form-field-assistive-row>
+    </ngx-signal-form-field-assistive-row>
   `,
 })
 export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {

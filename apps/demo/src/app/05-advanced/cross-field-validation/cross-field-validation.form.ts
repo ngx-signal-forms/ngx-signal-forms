@@ -117,9 +117,9 @@ const bookingSchema = schema<Booking>((path) => {
             placeholder="Try 'SMALLGROUP'"
             class="form-input uppercase"
           />
-          <ngx-form-field-hint>
+          <ngx-signal-form-field-hint>
             Valid only for ≤ 4 guests
-          </ngx-form-field-hint>
+          </ngx-signal-form-field-hint>
         </ngx-signal-form-field-wrapper>
 
         <div class="flex gap-4">

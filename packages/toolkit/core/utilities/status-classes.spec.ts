@@ -33,6 +33,7 @@ describe('ngxStatusClasses', () => {
     return {
       // formField.state() returns the stateObject
       state: signal(stateObject),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
   };
 
@@ -41,42 +42,42 @@ describe('ngxStatusClasses', () => {
 
     it('should apply ng-touched when touched is true', () => {
       const field = createMockField({ touched: true });
-      expect(classes['ng-touched']!(field)).toBe(true);
+      expect(classes?.['ng-touched']?.(field)).toBe(true);
     });
 
     it('should apply ng-untouched when touched is false', () => {
       const field = createMockField({ touched: false });
-      expect(classes['ng-untouched']!(field)).toBe(true);
+      expect(classes?.['ng-untouched']?.(field)).toBe(true);
     });
 
     it('should apply ng-dirty when dirty is true', () => {
       const field = createMockField({ dirty: true });
-      expect(classes['ng-dirty']!(field)).toBe(true);
+      expect(classes?.['ng-dirty']?.(field)).toBe(true);
     });
 
     it('should apply ng-pristine when dirty is false', () => {
       const field = createMockField({ dirty: false });
-      expect(classes['ng-pristine']!(field)).toBe(true);
+      expect(classes?.['ng-pristine']?.(field)).toBe(true);
     });
 
     it('should NOT apply ng-invalid when invalid but untouched', () => {
       const field = createMockField({ invalid: true, touched: false });
-      expect(classes['ng-invalid']!(field)).toBe(false);
+      expect(classes?.['ng-invalid']?.(field)).toBe(false);
     });
 
     it('should apply ng-invalid when invalid AND touched', () => {
       const field = createMockField({ invalid: true, touched: true });
-      expect(classes['ng-invalid']!(field)).toBe(true);
+      expect(classes?.['ng-invalid']?.(field)).toBe(true);
     });
 
     it('should NOT apply ng-valid when valid but untouched', () => {
       const field = createMockField({ valid: true, touched: false });
-      expect(classes['ng-valid']!(field)).toBe(false);
+      expect(classes?.['ng-valid']?.(field)).toBe(false);
     });
 
     it('should apply ng-valid when valid AND touched', () => {
       const field = createMockField({ valid: true, touched: true });
-      expect(classes['ng-valid']!(field)).toBe(true);
+      expect(classes?.['ng-valid']?.(field)).toBe(true);
     });
   });
 
@@ -85,12 +86,12 @@ describe('ngxStatusClasses', () => {
 
     it('should apply ng-invalid immediately even if untouched', () => {
       const field = createMockField({ invalid: true, touched: false });
-      expect(classes['ng-invalid']!(field)).toBe(true);
+      expect(classes?.['ng-invalid']?.(field)).toBe(true);
     });
 
     it('should apply ng-valid immediately even if untouched', () => {
       const field = createMockField({ valid: true, touched: false });
-      expect(classes['ng-valid']!(field)).toBe(true);
+      expect(classes?.['ng-valid']?.(field)).toBe(true);
     });
   });
 
@@ -106,14 +107,14 @@ describe('ngxStatusClasses', () => {
     });
 
     it('should use custom class names', () => {
-      expect(classes['is-touched']).toBeDefined();
-      expect(classes['is-untouched']).toBeDefined();
-      expect(classes['is-dirty']).toBeDefined();
-      expect(classes['is-pristine']).toBeDefined();
-      expect(classes['is-valid']).toBeDefined();
-      expect(classes['is-invalid']).toBeDefined();
+      expect(classes?.['is-touched']).toBeDefined();
+      expect(classes?.['is-untouched']).toBeDefined();
+      expect(classes?.['is-dirty']).toBeDefined();
+      expect(classes?.['is-pristine']).toBeDefined();
+      expect(classes?.['is-valid']).toBeDefined();
+      expect(classes?.['is-invalid']).toBeDefined();
 
-      expect(classes['ng-touched']).toBeUndefined();
+      expect(classes?.['ng-touched']).toBeUndefined();
     });
   });
 });
