@@ -87,11 +87,13 @@
       },
       "projectChangelogs": true
     },
-    "git": {
-      "commit": true,
-      "commitMessage": "chore(release): publish {version}",
-      "tag": true,
-      "tagMessage": "Release {version}"
+    "version": {
+      "git": {
+        "commit": true,
+        "commitMessage": "chore(release): publish {version}",
+        "tag": true,
+        "tagMessage": "Release {version}"
+      }
     },
     "releaseTag": {
       "pattern": "v{version}"
