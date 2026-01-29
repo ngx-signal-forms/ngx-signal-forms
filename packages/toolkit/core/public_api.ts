@@ -12,9 +12,6 @@ export * from './providers/error-messages.provider';
 export * from './directives/auto-aria.directive';
 export * from './directives/ngx-signal-form.directive';
 
-// Components
-export * from './components/form-error.component';
-
 // Utilities
 export { shouldShowErrors } from './utilities/error-strategies';
 export * from './utilities/field-resolution';
@@ -24,26 +21,25 @@ export { injectFormContext } from './utilities/inject-form-context';
 export { combineShowErrors, showErrors } from './utilities/show-errors';
 export * from './utilities/status-classes';
 export * from './utilities/submission-helpers';
-export * from './utilities/warning-error';
 
 // Convenience imports
-import { NgxSignalFormErrorComponent } from './components/form-error.component';
 import { NgxSignalFormAutoAriaDirective } from './directives/auto-aria.directive';
 import { NgxSignalFormDirective } from './directives/ngx-signal-form.directive';
 
 /**
- * Bundled imports for the ngx-signal-forms toolkit core directives and components.
+ * Bundled imports for the ngx-signal-forms toolkit core directives.
  *
  * This constant provides a convenient way to import all essential toolkit directives
- * and components in a single import statement, reducing boilerplate in component imports.
+ * in a single import statement, reducing boilerplate in component imports.
  *
  * @example
  * ```typescript
  * import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+ * import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
  *
  * @Component({
  *   selector: 'ngx-my-form',
- *   imports: [FormField, NgxSignalFormToolkit],
+ *   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
  *   template: `
  *     <form [ngxSignalForm]="myForm">
  *       <input [formField]="myForm.email" />
@@ -60,24 +56,17 @@ import { NgxSignalFormDirective } from './directives/ngx-signal-form.directive';
  * **Contents:**
  * - {@link NgxSignalFormDirective} - Provides form context to child components
  * - {@link NgxSignalFormAutoAriaDirective} - Automatically applies ARIA attributes
- * - {@link NgxSignalFormErrorComponent} - Displays validation errors and warnings
+ *
+ * **For error display:** Import `NgxSignalFormErrorComponent` from `@ngx-signal-forms/toolkit/assistive`
  *
  * **Benefits:**
- * - Single import instead of three individual imports
+ * - Single import instead of multiple individual imports
  * - Type-safe readonly tuple
  * - Cleaner component metadata
- * - Better developer experience
- *
- * **Alternative:**
- * You can still import individual items if you need only specific directives/components:
- * ```typescript
- * import { ngxSignalFormDirective, NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit';
- * ```
  *
  * @public
  */
 export const NgxSignalFormToolkit = [
   NgxSignalFormDirective,
   NgxSignalFormAutoAriaDirective,
-  NgxSignalFormErrorComponent,
 ] as const;

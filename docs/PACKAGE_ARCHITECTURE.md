@@ -3,9 +3,12 @@
 ## Overview
 
 The current `@ngx-signal-forms` ecosystem in this repository consists of a
-single publishable package:
+single publishable package with multiple entry points:
 
-1. **`@ngx-signal-forms/toolkit`** - Main package with core functionality
+1. **`@ngx-signal-forms/toolkit`** - Core directives, utilities, and providers
+2. **`@ngx-signal-forms/toolkit/assistive`** - Styled feedback components
+3. **`@ngx-signal-forms/toolkit/form-field`** - Form field wrapper components
+4. **`@ngx-signal-forms/toolkit/headless`** - Renderless primitives
 
 ## Package Structure
 
@@ -14,8 +17,6 @@ single publishable package:
 ```bash
 packages/toolkit/
 ├── core/                               # Core implementation (public entry)
-│   ├── components/
-│   │   └── form-error.component.ts
 │   ├── directives/
 │   │   ├── auto-aria.directive.ts
 │   │   └── ngx-signal-form.directive.ts
@@ -31,12 +32,17 @@ packages/toolkit/
 │   ├── tokens.ts
 │   ├── types.ts
 │   └── public_api.ts
+├── assistive/                           # Styled assistive components entry
+│   ├── assistive-row.component.ts
+│   ├── character-count.component.ts
+│   ├── form-error.component.ts
+│   ├── hint.component.ts
+│   ├── warning-error.ts
+│   └── index.ts
 ├── form-field/                          # Optional form-field entry
 │   ├── form-field-wrapper.component.ts
 │   ├── form-fieldset.component.ts
 │   ├── floating-label.directive.ts
-│   ├── form-field-hint.component.ts
-│   ├── form-field-character-count.component.ts
 │   └── public_api.ts
 ├── headless/                            # Headless primitives entry
 │   ├── src/
@@ -55,7 +61,8 @@ packages/toolkit/
 
 **Entry Points:**
 
-- `@ngx-signal-forms/toolkit` - Providers, directives, utilities, components
+- `@ngx-signal-forms/toolkit` - Providers, directives, utilities
+- `@ngx-signal-forms/toolkit/assistive` - Styled feedback components
 - `@ngx-signal-forms/toolkit/form-field` - Form field wrapper (optional)
 - `@ngx-signal-forms/toolkit/headless` - Headless primitives (optional)
 
@@ -74,14 +81,25 @@ npm install @ngx-signal-forms/toolkit
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 ```
 
-### Core Entry (Directives/Utilities/Components)
+### Core Entry (Directives/Utilities)
 
 ```typescript
 import {
   NgxSignalFormAutoAriaDirective,
   NgxSignalFormDirective,
-  NgxSignalFormErrorComponent,
 } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+```
+
+### Secondary Entry (Assistive Components - Optional)
+
+```typescript
+import {
+  NgxSignalFormErrorComponent,
+  NgxFormFieldHintComponent,
+  NgxFormFieldCharacterCountComponent,
+  NgxFormFieldAssistiveRowComponent,
+} from '@ngx-signal-forms/toolkit/assistive';
 ```
 
 ### Secondary Entry (Form Field - Optional)
@@ -115,7 +133,8 @@ import {
         ↓
 @ngx-signal-forms/toolkit (main package)
 ├── Primary: Providers/types
-├── /core (directives, utilities, components)
+├── /core (directives, utilities)
+├── /assistive (optional secondary entry - styled feedback)
 ├── /form-field (optional secondary entry)
 └── /headless (optional secondary entry - renderless primitives)
 ```

@@ -224,12 +224,12 @@ If you only need specific directives or components, you can import them individu
 
 ```typescript
 import {
-  ngxSignalFormDirective,
-  NgxSignalFormErrorComponent
+  NgxSignalFormDirective,
 } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 
 @Component({
-  imports: [FormField, ngxSignalFormDirective, NgxSignalFormErrorComponent],
+  imports: [FormField, NgxSignalFormDirective, NgxSignalFormErrorComponent],
   template: `
     <form [ngxSignalForm]="myForm" (submit)="handleSubmit($event)">
       <!-- fields -->
@@ -255,8 +255,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 // Core - Individual imports (alternative)
 import {
-  ngxSignalFormDirective,
-  NgxSignalFormErrorComponent,
+  NgxSignalFormDirective,
   NgxSignalFormAutoAriaDirective,
   // Error display utilities
   showErrors,
@@ -270,13 +269,16 @@ import {
   unwrapValue,
 } from '@ngx-signal-forms/toolkit';
 
+// Assistive components (styled feedback)
+import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+
 // Form field wrapper with enhanced components
 import {
   NgxSignalFormFieldWrapperComponent,
   NgxSignalFormFieldset,
   NgxFloatingLabelDirective,
-  NgxSignalFormFieldHintComponent,
-  NgxSignalFormFieldCharacterCountComponent,
+  NgxFormFieldHintComponent,
+  NgxFormFieldCharacterCountComponent,
 } from '@ngx-signal-forms/toolkit/form-field';
 
 // Headless primitives (renderless directives)
@@ -295,7 +297,7 @@ import {
 
 #### NgxSignalFormToolkit
 
-The `NgxSignalFormToolkit` constant provides a convenient way to import all essential directives and components:
+The `NgxSignalFormToolkit` constant provides a convenient way to import all essential directives:
 
 ```typescript
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
@@ -308,9 +310,10 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 **Contents:**
 
-- `ngxSignalFormDirective` - Provides form context to child components
+- `NgxSignalFormDirective` - Provides form context to child components
 - `NgxSignalFormAutoAriaDirective` - Automatically applies ARIA attributes
-- `NgxSignalFormErrorComponent` - Displays validation errors and warnings
+
+**For error display:** Import `NgxSignalFormErrorComponent` from `@ngx-signal-forms/toolkit/assistive`.
 
 **Benefits:**
 
@@ -909,8 +912,8 @@ import {
   NgxSignalFormFieldWrapperComponent,
   NgxSignalFormFieldset,
   NgxFloatingLabelDirective,
-  NgxSignalFormFieldHintComponent,
-  NgxSignalFormFieldCharacterCountComponent,
+  NgxFormFieldHintComponent,
+  NgxFormFieldCharacterCountComponent,
 } from '@ngx-signal-forms/toolkit/form-field';
 ```
 
@@ -919,8 +922,8 @@ import {
 - **NgxSignalFormFieldWrapperComponent** - Reusable wrapper with automatic error display
 - **NgxSignalFormFieldset** - Group related fields with aggregated error/warning display
 - **NgxFloatingLabelDirective** (`outline` attribute) - Material Design outlined layout
-- **NgxSignalFormFieldCharacterCountComponent** - Progressive color states (ok → warning → danger → exceeded)
-- **NgxSignalFormFieldHintComponent** - Helper text display
+- **NgxFormFieldCharacterCountComponent** - Progressive color states (ok → warning → danger → exceeded)
+- **NgxFormFieldHintComponent** - Helper text display
 
 ### Example Usage
 
@@ -928,13 +931,8 @@ import {
 <ngx-signal-form-field-wrapper [formField]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-wrapper-hint
-    >Tell us about yourself</ngx-signal-form-field-wrapper-hint
-  >
-  <ngx-signal-form-field-wrapper-character-count
-    [formField]="form.bio"
-    [maxLength]="500"
-  />
+  <ngx-form-field-hint>Tell us about yourself</ngx-form-field-hint>
+  <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -975,10 +973,7 @@ maxLength(path.bio, 500);
   <textarea id="bio" [formField]="form.bio"></textarea>
 
   <!-- User sees remaining count, preventing paste surprises -->
-  <ngx-signal-form-field-wrapper-character-count
-    [formField]="form.bio"
-    [maxLength]="500"
-  />
+  <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -1045,7 +1040,7 @@ For detailed API reference, CSS custom properties, browser support, migration gu
 
 ### Directives
 
-#### ngxSignalFormDirective
+#### NgxSignalFormDirective
 
 Provides form context to child components via dependency injection.
 
@@ -1176,7 +1171,7 @@ import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit';
 <ngx-signal-form-error [formField]="form.email" fieldName="email" />
 ```
 
-**Note:** When used inside a form with `ngxSignalFormDirective`, the `submittedStatus` signal is automatically injected. The toolkit derives this from Angular's native `submitting()` signal transitions.
+**Note:** When used inside a form with `NgxSignalFormDirective`, the `submittedStatus` signal is automatically injected. The toolkit derives this from Angular's native `submitting()` signal transitions.
 
 #### NgxSignalFormFieldWrapperComponent
 
@@ -1217,7 +1212,7 @@ Transforms the form field into an outlined layout where the label appears inside
 
 **For complete API, CSS custom properties, and examples, see [Form Field Documentation](./form-field/README.md#ngxfloatinglabeldirective)**
 
-#### NgxSignalFormFieldHintComponent
+#### NgxFormFieldHintComponent
 
 Displays helper text for form fields.
 
@@ -1225,15 +1220,13 @@ Displays helper text for form fields.
 <ngx-signal-form-field-wrapper [formField]="form.phone" outline>
   <label for="phone">Phone Number</label>
   <input id="phone" [formField]="form.phone" />
-  <ngx-signal-form-field-wrapper-hint
-    >Format: 123-456-7890</ngx-signal-form-field-wrapper-hint
-  >
+  <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
 </ngx-signal-form-field-wrapper>
 ```
 
-**For complete API and positioning options, see [Form Field Documentation](./form-field/README.md#ngxsignalformfieldhintcomponent)**
+**For complete API and positioning options, see [Form Field Documentation](./form-field/README.md#ngxformfieldhintcomponent)**
 
-#### NgxSignalFormFieldCharacterCountComponent
+#### NgxFormFieldCharacterCountComponent
 
 Displays character count with progressive color states and **automatic limit detection**.
 
@@ -1249,7 +1242,7 @@ maxLength(path.bio, 500);
 <ngx-signal-form-field-wrapper [formField]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-wrapper-character-count [formField]="form.bio" />
+  <ngx-form-field-character-count [formField]="form.bio" />
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -1265,10 +1258,7 @@ maxLength(path.bio, 500);
 
 ```html
 <!-- Display limit is 300, even if validation allows 500 -->
-<ngx-signal-form-field-wrapper-character-count
-  [formField]="form.bio"
-  [maxLength]="300"
-/>
+<ngx-form-field-character-count [formField]="form.bio" [maxLength]="300" />
 ```
 
 **Color States:**
@@ -1285,7 +1275,7 @@ maxLength(path.bio, 500);
 - `showLimitColors` (boolean, default: `true`) - Enable color progression
 - `colorThresholds` (object, default: `{ warning: 80, danger: 95 }`) - Custom thresholds
 
-**For complete API, CSS custom properties, and examples, see [Form Field Documentation](./form-field/README.md#ngxsignalformfieldcharactercountcomponent)**
+**For complete API, CSS custom properties, and examples, see [Form Field Documentation](./form-field/README.md#ngxformfieldcharactercountcomponent)**
 
 #### NgxSignalFormFieldset
 

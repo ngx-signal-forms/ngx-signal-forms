@@ -29,14 +29,12 @@
         fieldName="shippingStreet"
         class="sm:col-span-2"
       >
-        <label for="shippingStreet" class="form-label">Street Address *</label>
+        <label for="shippingStreet">Street Address *</label>
         <input
           id="shippingStreet"
-          class="form-input"
           type="text"
           [formField]="fieldsetForm.shippingAddress.street"
           placeholder="123 Main Street"
-          aria-required="true"
         />
       </ngx-signal-form-field-wrapper>
 
@@ -44,14 +42,12 @@
         [formField]="fieldsetForm.shippingAddress.city"
         fieldName="shippingCity"
       >
-        <label for="shippingCity" class="form-label">City *</label>
+        <label for="shippingCity">City *</label>
         <input
           id="shippingCity"
-          class="form-input"
           type="text"
           [formField]="fieldsetForm.shippingAddress.city"
           placeholder="New York"
-          aria-required="true"
         />
       </ngx-signal-form-field-wrapper>
 
@@ -59,14 +55,12 @@
         [formField]="fieldsetForm.shippingAddress.zipCode"
         fieldName="shippingZipCode"
       >
-        <label for="shippingZipCode" class="form-label">ZIP Code *</label>
+        <label for="shippingZipCode">ZIP Code *</label>
         <input
           id="shippingZipCode"
-          class="form-input"
           type="text"
           [formField]="fieldsetForm.shippingAddress.zipCode"
           placeholder="10001"
-          aria-required="true"
         />
       </ngx-signal-form-field-wrapper>
 
@@ -75,12 +69,10 @@
         fieldName="shippingCountry"
         class="sm:col-span-2"
       >
-        <label for="shippingCountry" class="form-label">Country *</label>
+        <label for="shippingCountry">Country *</label>
         <select
           id="shippingCountry"
-          class="form-select"
           [formField]="fieldsetForm.shippingAddress.country"
-          aria-required="true"
         >
           @for (country of countries; track country.value) {
           <option [value]="country.value">{{ country.label }}</option>
@@ -122,14 +114,12 @@
         fieldName="billingStreet"
         class="sm:col-span-2"
       >
-        <label for="billingStreet" class="form-label">Street Address *</label>
+        <label for="billingStreet">Street Address *</label>
         <input
           id="billingStreet"
-          class="form-input"
           type="text"
           [formField]="fieldsetForm.billingAddress.street"
           placeholder="456 Business Ave"
-          aria-required="true"
         />
       </ngx-signal-form-field-wrapper>
 
@@ -137,14 +127,12 @@
         [formField]="fieldsetForm.billingAddress.city"
         fieldName="billingCity"
       >
-        <label for="billingCity" class="form-label">City *</label>
+        <label for="billingCity">City *</label>
         <input
           id="billingCity"
-          class="form-input"
           type="text"
           [formField]="fieldsetForm.billingAddress.city"
           placeholder="Los Angeles"
-          aria-required="true"
         />
       </ngx-signal-form-field-wrapper>
 
@@ -152,14 +140,12 @@
         [formField]="fieldsetForm.billingAddress.zipCode"
         fieldName="billingZipCode"
       >
-        <label for="billingZipCode" class="form-label">ZIP Code *</label>
+        <label for="billingZipCode">ZIP Code *</label>
         <input
           id="billingZipCode"
-          class="form-input"
           type="text"
           [formField]="fieldsetForm.billingAddress.zipCode"
           placeholder="90001"
-          aria-required="true"
         />
       </ngx-signal-form-field-wrapper>
 
@@ -168,12 +154,10 @@
         fieldName="billingCountry"
         class="sm:col-span-2"
       >
-        <label for="billingCountry" class="form-label">Country *</label>
+        <label for="billingCountry">Country *</label>
         <select
           id="billingCountry"
-          class="form-select"
           [formField]="fieldsetForm.billingAddress.country"
-          aria-required="true"
         >
           @for (country of countries; track country.value) {
           <option [value]="country.value">{{ country.label }}</option>
@@ -200,7 +184,6 @@
       [fieldsetField]="fieldsetForm.delivery.method"
       fieldsetId="delivery-method-options"
       class="space-y-3"
-      aria-required="true"
     >
       <legend class="form-label">Delivery option *</legend>
 
@@ -254,14 +237,12 @@
         [formField]="fieldsetForm.credentials.password"
         fieldName="password"
       >
-        <label for="password" class="form-label">Password *</label>
+        <label for="password">Password *</label>
         <input
           id="password"
-          class="form-input"
           type="password"
           [formField]="fieldsetForm.credentials.password"
           placeholder="Enter password (min 8 chars)"
-          aria-required="true"
           autocomplete="new-password"
         />
       </ngx-signal-form-field-wrapper>
@@ -270,16 +251,12 @@
         [formField]="fieldsetForm.credentials.confirmPassword"
         fieldName="confirmPassword"
       >
-        <label for="confirmPassword" class="form-label"
-          >Confirm Password *</label
-        >
+        <label for="confirmPassword">Confirm Password *</label>
         <input
           id="confirmPassword"
-          class="form-input"
           type="password"
           [formField]="fieldsetForm.credentials.confirmPassword"
           placeholder="Confirm your password"
-          aria-required="true"
           autocomplete="new-password"
         />
       </ngx-signal-form-field-wrapper>

@@ -531,7 +531,7 @@ export const appConfig: ApplicationConfig = {
 
 <!-- ✅ Correct: Use native submit event with preventDefault -->
 <form (submit)="save($event)">
-  <button type="submit">Submit</button>
+  <button type="submit" class="btn-primary">Submit</button>
 </form>
 ```
 

@@ -50,7 +50,7 @@ const userForm = form(signal({ email: '' }), (path) => {
 
 ```typescript
 import { form, required, minLength, validate } from '@angular/forms/signals';
-import { warningError } from '@ngx-signal-forms/toolkit';
+import { warningError } from '@ngx-signal-forms/toolkit/assistive';
 
 const passwordForm = form(signal({ password: '' }), (path) => {
   // Errors (block submission)
@@ -111,7 +111,7 @@ const passwordForm = form(signal({ password: '' }), (path) => {
 
 ```typescript
 import { form, required, email, validate } from '@angular/forms/signals';
-import { warningError } from '@ngx-signal-forms/toolkit';
+import { warningError } from '@ngx-signal-forms/toolkit/assistive';
 
 const registrationForm = form(
   signal({
@@ -393,7 +393,10 @@ const onSubmit = async () => {
 Since warnings are technically "errors" in Signal Forms, you can filter by the `kind` field or use toolkit helpers:
 
 ```typescript
-import { isBlockingError, isWarningError } from '@ngx-signal-forms/toolkit';
+import {
+  isBlockingError,
+  isWarningError,
+} from '@ngx-signal-forms/toolkit/assistive';
 
 const hasWarnings = computed(() => {
   return form.email().errors().some(isWarningError);

@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 /**
  * Headless Error State - E2E Tests
  * Route: /headless/error-state
@@ -7,7 +6,7 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Headless - Error State', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/headless/error-state');
+    await page.goto(`/headless/error-state`);
     // Wait for Angular to fully load - the form should be present and interactive
     await expect(page.locator('form').first()).toBeVisible();
     await expect(page.getByLabel('Email')).toBeVisible();

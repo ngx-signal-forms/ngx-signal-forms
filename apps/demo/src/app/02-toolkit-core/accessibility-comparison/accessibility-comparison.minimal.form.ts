@@ -50,7 +50,6 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
           type="email"
           class="form-input"
           [formField]="signupForm.email"
-          aria-required="true"
         />
       </ngx-signal-form-field-wrapper>
 
@@ -65,7 +64,6 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
           type="password"
           class="form-input"
           [formField]="signupForm.password"
-          aria-required="true"
         />
       </ngx-signal-form-field-wrapper>
 
@@ -82,7 +80,6 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
           type="password"
           class="form-input"
           [formField]="signupForm.confirmPassword"
-          aria-required="true"
         />
       </ngx-signal-form-field-wrapper>
 

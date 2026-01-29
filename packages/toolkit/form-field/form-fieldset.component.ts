@@ -13,11 +13,13 @@ import type {
 import {
   injectFormConfig,
   injectFormContext,
+  showErrors,
+} from '@ngx-signal-forms/toolkit';
+import {
   isBlockingError,
   isWarningError,
   NgxSignalFormErrorComponent,
-  showErrors,
-} from '@ngx-signal-forms/toolkit';
+} from '@ngx-signal-forms/toolkit/assistive';
 import {
   createUniqueId,
   dedupeValidationErrors,

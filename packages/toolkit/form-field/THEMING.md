@@ -33,12 +33,12 @@ The system works in layers to ensure consistency while allowing deep customizati
 
 **Start here** if you want to change the size or spacing of _all_ helper text (Errors, Warnings, Hints, Character Counts) at once.
 
-| Property                                        | Default   | Description                          |
-| :---------------------------------------------- | :-------- | :----------------------------------- |
-| `--ngx-signal-form-feedback-font-size`          | `0.75rem` | Font size for all feedback text      |
-| `--ngx-signal-form-feedback-line-height`        | `1.25`    | Line height for feedback text        |
-| `--ngx-signal-form-feedback-margin-top`         | `0.25rem` | Spacing between input and feedback   |
-| `--ngx-signal-form-feedback-padding-horizontal` | `0`       | Horizontal padding for feedback text |
+| Property                                        | Default    | Description                          |
+| :---------------------------------------------- | :--------- | :----------------------------------- |
+| `--ngx-signal-form-feedback-font-size`          | `0.75rem`  | Font size for all feedback text      |
+| `--ngx-signal-form-feedback-line-height`        | `1rem`     | Line height for feedback text        |
+| `--ngx-signal-form-feedback-margin-top`         | `0.125rem` | Spacing between input and feedback   |
+| `--ngx-signal-form-feedback-padding-horizontal` | `0.5rem`   | Horizontal padding for feedback text |
 
 ---
 
@@ -52,42 +52,65 @@ These components inherit from the **Shared Feedback** layer but can be overridde
 
 controls the display of validation errors and warnings.
 
-| Property                                     | Default                 | Description             |
-| :------------------------------------------- | :---------------------- | :---------------------- |
-| `--ngx-signal-form-error-color`              | `#dc2626`               | Text color for errors   |
-| `--ngx-signal-form-warning-color`            | `#f59e0b`               | Text color for warnings |
-| `--ngx-signal-form-error-font-size`          | `var(--...feedback...)` | Text size               |
-| `--ngx-signal-form-error-line-height`        | `var(--...feedback...)` | Line height             |
-| `--ngx-signal-form-error-margin-top`         | `var(--...feedback...)` | Spacing from input      |
-| `--ngx-signal-form-error-padding-horizontal` | `var(--...feedback...)` | Left/Right padding      |
+| Property                                       | Default                                                          | Description                              |
+| :--------------------------------------------- | :--------------------------------------------------------------- | :--------------------------------------- |
+| `--ngx-signal-form-error-color`                | `#db1818`                                                        | Text color for errors                    |
+| `--ngx-signal-form-error-bg`                   | `transparent`                                                    | Error background color                   |
+| `--ngx-signal-form-error-border`               | `transparent`                                                    | Error border color                       |
+| `--ngx-signal-form-warning-color`              | `#f59e0b`                                                        | Text color for warnings                  |
+| `--ngx-signal-form-warning-bg`                 | `transparent`                                                    | Warning background color                 |
+| `--ngx-signal-form-warning-border`             | `transparent`                                                    | Warning border color                     |
+| `--ngx-signal-form-error-font-size`            | `var(--...feedback...)`                                          | Text size                                |
+| `--ngx-signal-form-error-line-height`          | `var(--...feedback...)`                                          | Line height                              |
+| `--ngx-signal-form-error-font-size-override`   | `unset`                                                          | Override feedback font size for errors   |
+| `--ngx-signal-form-error-line-height-override` | `unset`                                                          | Override feedback line height for errors |
+| `--ngx-signal-form-error-margin-top`           | `var(--...feedback...)`                                          | Spacing from input                       |
+| `--ngx-signal-form-error-message-spacing`      | `0.25rem`                                                        | Spacing between messages                 |
+| `--ngx-signal-form-error-border-width`         | `0`                                                              | Border width                             |
+| `--ngx-signal-form-error-border-radius`        | `0`                                                              | Border radius                            |
+| `--ngx-signal-form-error-padding`              | `0`                                                              | Container padding                        |
+| `--ngx-signal-form-error-padding-horizontal`   | `0.5rem`                                                         | Left/Right padding                       |
+| `--ngx-signal-form-error-animation`            | `ngxStatusSlideIn 300ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards` | Entry animation                          |
 
 ### Hints
 
-**Component:** `ngx-signal-form-field-wrapper-hint`
+**Component:** `ngx-form-field-hint`
 
 Provides context or instructions for a field.
 
-| Property                            | Default                   | Description        |
-| :---------------------------------- | :------------------------ | :----------------- |
-| `--ngx-form-field-hint-color`       | `rgba(71, 91, 119, 0.75)` | Hint text color    |
-| `--ngx-form-field-hint-font-size`   | `var(--...feedback...)`   | Text size          |
-| `--ngx-form-field-hint-line-height` | `var(--...feedback...)`   | Line height        |
-| `--ngx-form-field-hint-margin-top`  | `var(--...feedback...)`   | Spacing from input |
+| Property                            | Default                  | Description     |
+| :---------------------------------- | :----------------------- | :-------------- |
+| `--ngx-form-field-hint-color`       | `rgba(50, 65, 85, 0.75)` | Hint text color |
+| `--ngx-form-field-hint-font-size`   | `var(--...feedback...)`  | Text size       |
+| `--ngx-form-field-hint-line-height` | `var(--...feedback...)`  | Line height     |
 
 ### Character Count
 
-**Component:** `ngx-signal-form-field-wrapper-character-count`
+**Component:** `ngx-form-field-character-count`
 
 Displays progress towards a character limit.
 
-| Property                                      | Default                   | Description               |
-| :-------------------------------------------- | :------------------------ | :------------------------ |
-| `--ngx-form-field-char-count-font-size`       | `var(--...feedback...)`   | Text size                 |
-| `--ngx-form-field-char-count-color-ok`        | `rgba(71, 91, 119, 0.75)` | Neutral state color       |
-| `--ngx-form-field-char-count-color-warning`   | `#f59e0b`                 | Warning threshold color   |
-| `--ngx-form-field-char-count-color-danger`    | `#dc2626`                 | Critical threshold color  |
-| `--ngx-form-field-char-count-color-exceeded`  | `#991b1b`                 | Limit exceeded color      |
-| `--ngx-form-field-char-count-weight-exceeded` | `600`                     | Font weight when exceeded |
+| Property                                      | Default                  | Description               |
+| :-------------------------------------------- | :----------------------- | :------------------------ |
+| `--ngx-form-field-char-count-font-size`       | `var(--...feedback...)`  | Text size                 |
+| `--ngx-form-field-char-count-line-height`     | `1.25`                   | Line height               |
+| `--ngx-form-field-char-count-color-ok`        | `rgba(50, 65, 85, 0.75)` | Neutral state color       |
+| `--ngx-form-field-char-count-color-warning`   | `#f59e0b`                | Warning threshold color   |
+| `--ngx-form-field-char-count-color-danger`    | `#db1818`                | Critical threshold color  |
+| `--ngx-form-field-char-count-color-exceeded`  | `#991b1b`                | Limit exceeded color      |
+| `--ngx-form-field-char-count-weight-exceeded` | `600`                    | Font weight when exceeded |
+
+### Assistive Row
+
+**Component:** `ngx-form-field-assistive-row`
+
+Layout container for hint/error and character count alignment.
+
+| Property                                | Default   | Description                              |
+| :-------------------------------------- | :-------- | :--------------------------------------- |
+| `--ngx-form-field-assistive-min-height` | `1.25rem` | Prevents layout shift when messages show |
+| `--ngx-form-field-assistive-gap`        | `0.5rem`  | Gap between left and right content       |
+| `--ngx-form-field-assistive-margin-top` | `2px`     | Spacing above assistive row              |
 
 ### Fieldset
 
@@ -111,16 +134,17 @@ This component wraps your `label` and `input` to provide layout, borders, and st
 
 **Start here.** Changing these variables will automatically update focus rings, borders, text, and backgrounds across all states.
 
-| Property                            | Default             | Used For                         |
-| :---------------------------------- | :------------------ | :------------------------------- |
-| `--ngx-form-field-color-primary`    | `#005fcc`           | Focus states, active borders     |
-| `--ngx-form-field-color-error`      | `#dc2626`           | Invalid states, required markers |
-| `--ngx-form-field-color-warning`    | `#f59e0b`           | Warning states                   |
-| `--ngx-form-field-color-text`       | `#324155`           | Input text, Labels               |
-| `--ngx-form-field-color-text-muted` | `#5f7589`           | Placeholders, Hints              |
-| `--ngx-form-field-color-surface`    | `#ffffff`           | Input background                 |
-| `--ngx-form-field-color-border`     | `rgba(172,...0.25)` | Default borders                  |
-| `--ngx-form-field-color-disabled`   | `#f3f4f6`           | Disabled background              |
+| Property                                | Default                  | Used For                         |
+| :-------------------------------------- | :----------------------- | :------------------------------- |
+| `--ngx-form-field-color-primary`        | `#007bc7`                | Focus states, active borders     |
+| `--ngx-form-field-color-error`          | `#db1818`                | Invalid states, required markers |
+| `--ngx-form-field-color-warning`        | `#f59e0b`                | Warning states                   |
+| `--ngx-form-field-color-text`           | `#324155`                | Input text                       |
+| `--ngx-form-field-color-text-secondary` | `rgba(50, 65, 85, 0.75)` | Labels, placeholders, hints      |
+| `--ngx-form-field-color-surface`        | `#ffffff`                | Input background                 |
+| `--ngx-form-field-color-border`         | `rgba(50, 65, 85, 0.25)` | Default borders                  |
+| `--ngx-form-field-color-border-hover`   | `#324155`                | Hover borders                    |
+| `--ngx-form-field-color-disabled`       | `#f3f4f6`                | Disabled background              |
 
 ### Specific Overrides
 
@@ -128,21 +152,85 @@ If the semantic colors aren't enough, you can override specific parts of the com
 
 #### Layout & Spacing
 
-| Property                         | Default          | Description                 |
-| :------------------------------- | :--------------- | :-------------------------- |
-| `--ngx-form-field-input-padding` | `0.5rem 0.75rem` | Padding inside the border   |
-| `--ngx-form-field-radius`        | `0.25rem`        | Border radius               |
-| `--ngx-form-field-min-height`    | `3.5rem`         | Height for outlined variant |
-| `--ngx-form-field-gap`           | `0.125rem`       | Gap between label and input |
+| Property                              | Default                                                                           | Description                          |
+| :------------------------------------ | :-------------------------------------------------------------------------------- | :----------------------------------- |
+| `--ngx-form-field-padding-vertical`   | `0.25rem`                                                                         | Vertical padding inside the border   |
+| `--ngx-form-field-padding-horizontal` | `0.5rem`                                                                          | Horizontal padding inside the border |
+| `--ngx-form-field-input-padding`      | `var(--ngx-form-field-padding-vertical) var(--ngx-form-field-padding-horizontal)` | Combined input padding               |
+| `--ngx-form-field-radius`             | `0.25rem`                                                                         | Border radius                        |
+| `--ngx-form-field-min-height`         | `3.5rem`                                                                          | Height for outlined variant          |
+| `--ngx-form-field-gap`                | `0.125rem`                                                                        | Gap between label and input          |
+| `--ngx-form-field-margin`             | `0`                                                                               | Bottom margin for field wrapper      |
 
-#### Typography
+#### Prefix & Suffix
 
-| Property                                     | Description            |
-| :------------------------------------------- | :--------------------- |
-| `--ngx-form-field-outline-label-font-family` | Font family for labels |
-| `--ngx-form-field-outline-input-font-family` | Font family for inputs |
-| `--ngx-form-field-outline-label-size`        | Font size for labels   |
-| `--ngx-form-field-outline-input-size`        | Font size for inputs   |
+| Property                        | Default                                      | Description               |
+| :------------------------------ | :------------------------------------------- | :------------------------ |
+| `--ngx-form-field-prefix-gap`   | `0.5rem`                                     | Gap after prefix content  |
+| `--ngx-form-field-suffix-gap`   | `0.5rem`                                     | Gap before suffix content |
+| `--ngx-form-field-prefix-color` | `var(--ngx-form-field-color-text-secondary)` | Prefix color              |
+| `--ngx-form-field-suffix-color` | `var(--ngx-form-field-color-text-secondary)` | Suffix color              |
+
+#### Labels (Standard Layout)
+
+| Property                               | Default                                      | Description         |
+| :------------------------------------- | :------------------------------------------- | :------------------ |
+| `--ngx-form-field-label-size`          | `0.75rem`                                    | Label font size     |
+| `--ngx-form-field-label-weight`        | `400`                                        | Label font weight   |
+| `--ngx-form-field-label-color`         | `var(--ngx-form-field-color-text-secondary)` | Label text color    |
+| `--ngx-form-field-label-line-height`   | `1rem`                                       | Label line height   |
+| `--ngx-form-field-label-padding-start` | `0.125rem`                                   | Label start padding |
+
+#### Labels (Outlined Layout)
+
+| Property                                     | Default                                      | Description                |
+| :------------------------------------------- | :------------------------------------------- | :------------------------- |
+| `--ngx-form-field-outline-label-size`        | `0.75rem`                                    | Outlined label font size   |
+| `--ngx-form-field-outline-label-gap`         | `0rem`                                       | Gap under outlined label   |
+| `--ngx-form-field-outline-label-weight`      | `400`                                        | Outlined label font weight |
+| `--ngx-form-field-outline-label-color`       | `var(--ngx-form-field-color-text-secondary)` | Outlined label color       |
+| `--ngx-form-field-outline-label-line-height` | `1rem`                                       | Outlined label line height |
+
+#### Required Marker
+
+| Property                                  | Default                             | Description            |
+| :---------------------------------------- | :---------------------------------- | :--------------------- |
+| `--ngx-form-field-required-marker-color`  | `var(--ngx-form-field-color-error)` | Required marker color  |
+| `--ngx-form-field-required-marker-weight` | `600`                               | Required marker weight |
+
+#### Input (Standard Layout)
+
+| Property                             | Default                                      | Description        |
+| :----------------------------------- | :------------------------------------------- | :----------------- |
+| `--ngx-form-field-input-size`        | `0.875rem`                                   | Input font size    |
+| `--ngx-form-field-input-line-height` | `1.25rem`                                    | Input line height  |
+| `--ngx-form-field-input-weight`      | `400`                                        | Input font weight  |
+| `--ngx-form-field-input-color`       | `var(--ngx-form-field-color-text)`           | Input text color   |
+| `--ngx-form-field-input-bg`          | `var(--ngx-form-field-color-surface)`        | Input background   |
+| `--ngx-form-field-border-color`      | `var(--ngx-form-field-color-border)`         | Input border color |
+| `--ngx-form-field-placeholder-color` | `var(--ngx-form-field-color-text-secondary)` | Placeholder color  |
+
+#### Input (Outlined Layout)
+
+| Property                                     | Default                            | Description                |
+| :------------------------------------------- | :--------------------------------- | :------------------------- |
+| `--ngx-form-field-outline-input-size`        | `0.875rem`                         | Outlined input font size   |
+| `--ngx-form-field-outline-input-line-height` | `1.25rem`                          | Outlined input line height |
+| `--ngx-form-field-outline-input-weight`      | `400`                              | Outlined input font weight |
+| `--ngx-form-field-outline-input-color`       | `var(--ngx-form-field-color-text)` | Outlined input text color  |
+
+#### States & Focus
+
+| Property                              | Default                                                               | Description          |
+| :------------------------------------ | :-------------------------------------------------------------------- | :------------------- |
+| `--ngx-form-field-focus-color`        | `var(--ngx-form-field-color-primary)`                                 | Focus border color   |
+| `--ngx-form-field-focus-box-shadow`   | `0 0 0 4px color-mix(in srgb, var(--focus-color) 25%, transparent)`   | Focus ring           |
+| `--ngx-form-field-hover-border-color` | `var(--ngx-form-field-color-border-hover)`                            | Hover border color   |
+| `--ngx-form-field-invalid-color`      | `var(--ngx-form-field-color-error)`                                   | Invalid border color |
+| `--ngx-form-field-warning-color`      | `var(--ngx-form-field-color-warning)`                                 | Warning border color |
+| `--ngx-form-field-warning-box-shadow` | `0 0 0 4px color-mix(in srgb, var(--warning-color) 25%, transparent)` | Warning ring         |
+| `--ngx-form-field-disabled-bg`        | `var(--ngx-form-field-color-disabled)`                                | Disabled background  |
+| `--ngx-form-field-disabled-opacity`   | `0.6`                                                                 | Disabled opacity     |
 
 ---
 

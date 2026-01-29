@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 /**
  * ARIA Attributes Accessibility Tests
  * WCAG 2.2 Level AA - Programmatic Relationships
@@ -14,16 +13,16 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Accessibility - ARIA Attributes', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/toolkit-core/accessibility-comparison');
+    await page.goto(`/toolkit-core/accessibility-comparison`);
     await page.waitForLoadState('domcontentloaded');
   });
 
-  test('should have aria-invalid attribute on all three forms', async ({
-    page,
-  }) => {
-    await test.step('Verify Manual form (form 0)', async () => {
-      const manualForm = page.locator('form').nth(0);
-      const emailInput = manualForm.locator('input[type="email"]').first();
+  test('should have aria-invalid attribute on both forms', async ({ page }) => {
+    await test.step('Verify Minimal toolkit form (form 0)', async () => {
+      const minimalForm = page.locator('form').nth(0);
+      const emailInput = minimalForm
+        .locator('input[type="email"], input[type="text"]')
+        .first();
 
       await emailInput.focus();
       await emailInput.blur();
@@ -31,19 +30,11 @@ test.describe('Accessibility - ARIA Attributes', () => {
       await expect(emailInput).toHaveAttribute('aria-invalid', /(true|false)/);
     });
 
-    await test.step('Verify Minimal toolkit form (form 1)', async () => {
-      const minimalForm = page.locator('form').nth(1);
-      const emailInput = minimalForm.locator('input[type="email"]').first();
-
-      await emailInput.focus();
-      await emailInput.blur();
-
-      await expect(emailInput).toHaveAttribute('aria-invalid', /(true|false)/);
-    });
-
-    await test.step('Verify Full toolkit form with [ngxSignalForm] (form 2)', async () => {
-      const fullForm = page.locator('form').nth(2);
-      const emailInput = fullForm.locator('input[type="email"]').first();
+    await test.step('Verify Full toolkit form with [ngxSignalForm] (form 1)', async () => {
+      const fullForm = page.locator('form').nth(1);
+      const emailInput = fullForm
+        .locator('input[type="email"], input[type="text"]')
+        .first();
 
       await emailInput.focus();
       await emailInput.blur();
@@ -57,9 +48,11 @@ test.describe('Accessibility - ARIA Attributes', () => {
     page,
   }) => {
     await test.step('Verify aria-describedby linkage on Full form with auto-ARIA', async () => {
-      // Get the Full toolkit form (third form, index 2) which uses [ngxSignalForm]
-      const fullForm = page.locator('form').nth(2);
-      const emailInput = fullForm.locator('input[type="email"]').first();
+      // Get the Full toolkit form (second form, index 1) which uses [ngxSignalForm]
+      const fullForm = page.locator('form').nth(1);
+      const emailInput = fullForm
+        .locator('input[type="email"], input[type="text"]')
+        .first();
 
       // Trigger validation visibility by touching (blur) the field; the
       // Auto-ARIA directive links error container IDs via aria-describedby
@@ -89,7 +82,7 @@ test.describe('Accessibility - ARIA Attributes', () => {
   });
 
   test('warnings should have role="status"', async ({ page }) => {
-    await page.goto('/toolkit-core/warning-support');
+    await page.goto(`/toolkit-core/warning-support`);
     await page.waitForLoadState('domcontentloaded');
 
     await test.step('Verify warning role attribute', async () => {
@@ -129,7 +122,7 @@ test.describe('Accessibility - ARIA Attributes', () => {
   test('should preserve existing aria-describedby when adding error IDs', async ({
     page,
   }) => {
-    await page.goto('/toolkit-core/error-display-modes');
+    await page.goto(`/toolkit-core/error-display-modes`);
     await page.waitForLoadState('domcontentloaded');
 
     await test.step('Verify additive aria-describedby behavior', async () => {
@@ -167,7 +160,7 @@ test.describe('Accessibility - ARIA Attributes', () => {
   test('should preserve multiple existing aria-describedby IDs', async ({
     page,
   }) => {
-    await page.goto('/toolkit-core/error-display-modes');
+    await page.goto(`/toolkit-core/error-display-modes`);
     await page.waitForLoadState('domcontentloaded');
 
     await test.step('Verify multiple IDs are preserved', async () => {

@@ -16,7 +16,7 @@ import {
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import {
   NgxFloatingLabelDirective,
-  NgxSignalFormFieldHintComponent,
+  NgxFormFieldHintComponent,
   NgxSignalFormFieldWrapperComponent,
 } from '@ngx-signal-forms/toolkit/form-field';
 import { PageHeaderComponent } from '../../ui';
@@ -35,7 +35,7 @@ interface UserForm {
     NgxSignalFormToolkit,
     NgxSignalFormFieldWrapperComponent,
     NgxFloatingLabelDirective,
-    NgxSignalFormFieldHintComponent,
+    NgxFormFieldHintComponent,
     PageHeaderComponent,
   ],
   templateUrl: './css-status-classes.page.html',

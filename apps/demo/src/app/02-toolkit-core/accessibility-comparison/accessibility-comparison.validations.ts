@@ -9,7 +9,7 @@ import type { AccessibilityFormModel } from './accessibility-comparison.model';
 
 /**
  * Validation schema for accessibility comparison
- * Used by BOTH manual and toolkit implementations
+ * Used by toolkit comparison implementations
  */
 export const accessibilityValidationSchema = schema<AccessibilityFormModel>(
   (path) => {

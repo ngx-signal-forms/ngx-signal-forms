@@ -25,7 +25,7 @@ test.describe('Advanced - Global Configuration', () => {
     await test.step('Trigger validation according to strategy', async () => {
       // Default is likely 'on-touch', so blur should trigger errors
       const inputs = playwrightPage.locator(
-        'input[required], input[aria-required="true"]',
+        'input[aria-required="true"], textarea[aria-required="true"], select[aria-required="true"]',
       );
       const input = inputs.first();
       await expect(input).toBeVisible();
@@ -57,14 +57,18 @@ test.describe('Advanced - Global Configuration', () => {
   test('should apply custom CSS classes if configured', async ({
     page: playwrightPage,
   }) => {
-    await test.step('Check for custom or default CSS classes on invalid fields', async () => {
-      const inputs = playwrightPage.locator('input');
-      const input = inputs.first();
+    await test.step('Check for aria-invalid on invalid fields', async () => {
+      // Select actual form inputs (text, email, etc), not radio buttons
+      const formInputs = playwrightPage.locator(
+        'input[type="text"], input[type="email"], input[type="url"], input[type="tel"], textarea, select',
+      );
+      const input = formInputs.first();
       await expect(input).toBeVisible();
       await input.focus();
       await input.blur();
 
-      await expect(input).toHaveClass(/invalid|ng-/);
+      // Auto-ARIA directive sets aria-invalid regardless of CSS class config
+      await expect(input).toHaveAttribute('aria-invalid', 'true');
     });
   });
 });

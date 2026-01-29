@@ -1,6 +1,5 @@
 import { Locator, Page } from '@playwright/test';
 import { BaseFormPage } from './base-form.page';
-
 /**
  * Page Object for "Field States" demo
  * Route: /toolkit-core/field-states
@@ -16,7 +15,7 @@ export class FieldStatesPage extends BaseFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/toolkit-core/field-states');
+    await this.page.goto(`/toolkit-core/field-states`);
     await this.waitForReady();
   }
 

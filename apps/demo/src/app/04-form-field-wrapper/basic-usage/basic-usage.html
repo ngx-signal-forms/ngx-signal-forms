@@ -32,14 +32,12 @@
           d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
         />
       </svg>
-      <label for="name" class="form-label">Full Name *</label>
+      <label for="name">Full Name *</label>
       <input
         id="name"
-        class="form-input"
         type="text"
         [formField]="showcaseForm.name"
         placeholder="John Doe"
-        aria-required="true"
       />
     </ngx-signal-form-field-wrapper>
 
@@ -66,15 +64,13 @@
           />
         </svg>
       </span>
-      <label for="email" class="form-label">Email Address *</label>
+      <label for="email">Email Address *</label>
       <input
         id="email"
-        class="form-input"
         type="email"
         [formField]="showcaseForm.email"
         placeholder="john@example.com"
         autocomplete="email"
-        aria-required="true"
       />
     </ngx-signal-form-field-wrapper>
 
@@ -101,10 +97,9 @@
           />
         </svg>
       </span>
-      <label class="form-label" for="website">Website (Optional)</label>
+      <label for="website">Website (Optional)</label>
       <input
         id="website"
-        class="form-input"
         type="url"
         [formField]="showcaseForm.website"
         placeholder="example.com"
@@ -117,14 +112,12 @@
       [formField]="showcaseForm.age"
       fieldName="age"
     >
-      <label class="form-label" for="age">Age *</label>
+      <label for="age">Age *</label>
       <input
         id="age"
-        class="form-input"
         type="number"
         [formField]="showcaseForm.age"
         placeholder="25"
-        aria-required="true"
         aria-valuemin="18"
         aria-valuemax="120"
       />
@@ -140,13 +133,8 @@
       [formField]="showcaseForm.country"
       fieldName="country"
     >
-      <label class="form-label" for="country">Country *</label>
-      <select
-        id="country"
-        class="form-select"
-        [formField]="showcaseForm.country"
-        aria-required="true"
-      >
+      <label for="country">Country *</label>
+      <select id="country" [formField]="showcaseForm.country">
         @for (country of countries; track country.value) {
         <option [value]="country.value">{{ country.label }}</option>
         }
@@ -158,13 +146,11 @@
       [formField]="showcaseForm.bio"
       fieldName="bio"
     >
-      <label class="form-label" for="bio">Bio *</label>
+      <label for="bio">Bio *</label>
       <textarea
         id="bio"
-        class="form-textarea"
         [formField]="showcaseForm.bio"
         placeholder="Tell us about yourself (minimum 20 characters)..."
-        aria-required="true"
       ></textarea>
     </ngx-signal-form-field-wrapper>
   </div>
@@ -180,10 +166,8 @@
       <label class="form-checkbox-label" for="agreeToTerms">
         <input
           id="agreeToTerms"
-          class="form-checkbox"
           type="checkbox"
           [formField]="showcaseForm.agreeToTerms"
-          aria-required="true"
         />
         <span class="ml-2">I agree to the terms and conditions *</span>
       </label>

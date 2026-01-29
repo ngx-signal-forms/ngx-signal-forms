@@ -31,8 +31,8 @@ The toolkit requires Angular 21.1+ for these features:
 
 ```
 packages/toolkit/
+├── assistive/                      # Error, hint, character count components
 ├── core/                           # Secondary entry (re-exported by toolkit)
-│   ├── components/                 # NgxSignalFormErrorComponent
 │   ├── directives/                 # NgxSignalFormDirective, NgxSignalFormAutoAriaDirective
 │   ├── providers/                  # provideNgxSignalFormsConfig, provideErrorMessages
 │   ├── utilities/                  # Helper functions (submission-helpers, show-errors, etc.)
@@ -126,9 +126,10 @@ export const appConfig: ApplicationConfig = {
 
 ```typescript
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 
 @Component({
-  imports: [FormField, NgxSignalFormToolkit],
+  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
   template: `
     <!-- ✅ Works WITHOUT [ngxSignalForm] for default 'on-touch' strategy -->
     <form (submit)="save($event)">
@@ -140,7 +141,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 })
 ```
 
-**Contains**: `NgxSignalFormDirective`, `NgxSignalFormAutoAriaDirective`, `NgxSignalFormErrorComponent`
+**Contains**: `NgxSignalFormDirective`, `NgxSignalFormAutoAriaDirective`
 
 ### Form Field Bundle Import
 
@@ -158,15 +159,16 @@ import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 })
 ```
 
-**Contains**: `NgxSignalFormFieldWrapperComponent`, `NgxFloatingLabelDirective`, `NgxSignalFormFieldHintComponent`, `NgxSignalFormFieldCharacterCountComponent`, `NgxSignalFormFieldset`
+**Contains**: `NgxSignalFormFieldWrapperComponent`, `NgxFloatingLabelDirective`, `NgxFormFieldHintComponent`, `NgxFormFieldCharacterCountComponent`, `NgxSignalFormFieldset`
 
 ### Individual Imports (Alternative)
 
 ```typescript
 import {
-  /* Lines 167-169 omitted */
-  NgxSignalFormErrorComponent,
+  NgxSignalFormDirective,
+  NgxSignalFormAutoAriaDirective,
 } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
 ## Theming & Styling
@@ -769,9 +771,9 @@ Transforms form field into Material Design outlined layout.
 
 **Browser Support**: Chrome 105+, Firefox 121+, Safari 15.4+, Edge 105+ (95%+ coverage)
 
-### NgxSignalFormFieldHintComponent
+### NgxFormFieldHintComponent
 
-**Selector**: `ngx-signal-form-field-wrapper-hint`
+**Selector**: `ngx-form-field-hint`
 
 Displays helper text for form fields.
 
@@ -779,13 +781,13 @@ Displays helper text for form fields.
 <ngx-signal-form-field-wrapper [formField]="form.phone">
   <label for="phone">Phone Number</label>
   <input id="phone" [formField]="form.phone" />
-  <ngx-signal-form-field-wrapper-hint>Format: 123-456-7890</ngx-signal-form-field-wrapper-hint>
+  <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
 </ngx-signal-form-field-wrapper>
 ```
 
-### NgxSignalFormFieldCharacterCountComponent
+### NgxFormFieldCharacterCountComponent
 
-**Selector**: `ngx-signal-form-field-wrapper-character-count`
+**Selector**: `ngx-form-field-character-count`
 
 Displays character count with progressive color states.
 
@@ -793,7 +795,7 @@ Displays character count with progressive color states.
 <ngx-signal-form-field-wrapper [formField]="form.bio">
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-wrapper-character-count [formField]="form.bio" [maxLength]="500" />
+  <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 </ngx-signal-form-field-wrapper>
 ```
 

@@ -103,6 +103,10 @@ export const appConfig: ApplicationConfig = {
 
 For better accessibility, use the toolkit's error component instead of Bootstrap's `.invalid-feedback`:
 
+```typescript
+import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+```
+
 ```html
 <form (submit)="save($event)">
   <div class="mb-3">
@@ -127,7 +131,7 @@ ngx-signal-form-field-wrapper {
   --ngx-form-field-color-primary: var(--bs-primary, #0d6efd);
   --ngx-form-field-color-border: var(--bs-border-color, #dee2e6);
   --ngx-form-field-color-text: var(--bs-body-color, #212529);
-  --ngx-form-field-color-text-muted: var(--bs-secondary-color, #6c757d);
+  --ngx-form-field-color-text-secondary: var(--bs-secondary-color, #6c757d);
   --ngx-form-field-color-surface: var(--bs-body-bg, #ffffff);
   --ngx-form-field-color-disabled: var(--bs-secondary-bg, #e9ecef);
   --ngx-form-field-color-error: var(--bs-form-invalid-color, #dc3545);

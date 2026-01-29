@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 /**
  * Keyboard Navigation Accessibility Tests
  * WCAG 2.2 Level AA - Keyboard Accessible
@@ -14,7 +13,7 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Accessibility - Keyboard Navigation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/getting-started/your-first-form');
+    await page.goto(`/getting-started/your-first-form`);
     await page.waitForLoadState('domcontentloaded');
   });
 

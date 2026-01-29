@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 /**
  * Visual Accessibility Tests
  * WCAG 2.2 Level AA - Perceivable
@@ -13,7 +12,7 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Accessibility - Visual Accessibility', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto(`/`);
     await page.waitForLoadState('domcontentloaded');
   });
 
@@ -37,7 +36,7 @@ test.describe('Accessibility - Visual Accessibility', () => {
   });
 
   test('should have proper label association', async ({ page }) => {
-    await page.goto('/getting-started/your-first-form');
+    await page.goto(`/getting-started/your-first-form`);
     await page.waitForLoadState('domcontentloaded');
 
     await test.step('Verify labels are associated with inputs', async () => {

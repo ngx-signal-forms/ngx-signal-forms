@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 /**
  * Dynamic Form Arrays (Dynamic Lists) - E2E Tests
  * Route: /advanced-scenarios/dynamic-list
@@ -10,7 +9,7 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Advanced Scenarios - Dynamic Form Arrays', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/advanced-scenarios/dynamic-list');
+    await page.goto(`/advanced-scenarios/dynamic-list`);
     await page.waitForLoadState('domcontentloaded');
   });
 

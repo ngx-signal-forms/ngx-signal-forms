@@ -99,6 +99,18 @@ test.describe('Form Field Wrapper', () => {
     });
   });
 
+  test('should have correct default label spacing (wrapper check)', async () => {
+    console.log('Running updated label spacing test');
+
+    await test.step('Verify default label spacing', async () => {
+      // The CSS applies padding-inline-start: 2px to the label wrapper
+      const labelWrapper = formPage.form
+        .locator('.ngx-signal-form-field-wrapper__label')
+        .first();
+      await expect(labelWrapper).toHaveCSS('padding-inline-start', '2px');
+    });
+  });
+
   test('should handle interactive suffix buttons', async () => {
     await formPage.gotoComplexForms();
 

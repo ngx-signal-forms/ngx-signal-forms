@@ -52,6 +52,7 @@ import { isBlockingError, isWarningError } from '../utilities/warning-error';
   host: {
     '[attr.aria-invalid]': 'ariaInvalid()',
     '[attr.aria-describedby]': 'ariaDescribedBy()',
+    '[attr.aria-required]': 'ariaRequired()',
   },
 })
 export class NgxSignalFormAutoAriaDirective {
@@ -143,6 +144,31 @@ export class NgxSignalFormAutoAriaDirective {
     if (!fieldState) return null;
 
     return this.#shouldShowErrors() ? 'true' : 'false';
+  });
+
+  /**
+   * Computed ARIA required state.
+   * Returns 'true' | null based on whether the field has a required() validator.
+   *
+   * Angular Signal Forms exposes a `required` signal on FieldState that
+   * returns true when the field has a required() validator applied.
+   * This automatically sets aria-required="true" for accessibility.
+   */
+  protected readonly ariaRequired = computed(() => {
+    const field = this.formField();
+    if (!field) return null;
+
+    const fieldState = field();
+    if (!fieldState) return null;
+
+    // Access the required signal from FieldState (available when required() validator is used)
+    const requiredGetter = (fieldState as { required?: () => boolean })
+      .required;
+    if (typeof requiredGetter === 'function' && requiredGetter()) {
+      return 'true';
+    }
+
+    return null;
   });
 
   /**

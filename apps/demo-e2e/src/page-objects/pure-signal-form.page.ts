@@ -1,6 +1,5 @@
 import type { Locator } from '@playwright/test';
 import { BaseFormPage } from './base-form.page';
-
 /**
  * Page Object for Pure Signal Form (Baseline)
  * Route: /signal-forms-only/pure-signal-form
@@ -13,7 +12,7 @@ import { BaseFormPage } from './base-form.page';
  */
 export class PureSignalFormPage extends BaseFormPage {
   async goto(): Promise<void> {
-    await this.page.goto('/signal-forms-only/pure-signal-form');
+    await this.page.goto(`/signal-forms-only/pure-signal-form`);
     await this.waitForReady();
   }
 

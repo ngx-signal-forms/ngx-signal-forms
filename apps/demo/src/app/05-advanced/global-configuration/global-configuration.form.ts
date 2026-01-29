@@ -122,7 +122,6 @@ import { globalConfigSchema } from './global-configuration.validations';
         <button
           type="submit"
           class="btn-primary"
-          aria-live="polite"
           [disabled]="configForm().pending()"
         >
           @if (configForm().pending()) {

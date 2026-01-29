@@ -319,7 +319,7 @@ describe('NgxFloatingLabelDirective', () => {
       const { container } = await render(
         `<ngx-signal-form-field-wrapper [formField]="field" outline>
           <label for="username">Username</label>
-          <input id="username" type="text" aria-required="true" />
+          <input id="username" type="text"  />
         </ngx-signal-form-field-wrapper>`,
         {
           imports: [NgxSignalFormFieldWrapper, NgxFloatingLabelDirective],

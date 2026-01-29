@@ -77,11 +77,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
       </ngx-signal-form-field-wrapper>
 
       <!-- Submit Button -->
-      <button
-        type="submit"
-        aria-live="polite"
-        class="btn-primary w-full justify-center bg-green-600 hover:bg-green-700 focus:ring-green-500"
-      >
+      <button type="submit" class="btn-primary">
         @if (signupForm().pending()) {
           Subscribing...
         } @else {

@@ -89,7 +89,7 @@ import { createPasswordForm } from './warning-support.validations';
         <button type="button" (click)="reset()">Reset</button>
         <button
           type="submit"
-          aria-live="polite"
+          class="btn-primary"
           [disabled]="!canSubmitWithWarnings() || passwordForm().pending()"
         >
           @if (passwordForm().pending()) {

@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 /**
  * Async Validation - E2E Tests
  * Route: /advanced-scenarios/async-validation
@@ -10,7 +9,7 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Advanced Scenarios - Async Validation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/advanced-scenarios/async-validation');
+    await page.goto(`/advanced-scenarios/async-validation`);
     await page.waitForLoadState('domcontentloaded');
   });
 

@@ -46,6 +46,16 @@ Renderless directives that expose signals without any UI—build custom form com
 - **Host Directive Composition**: Use with Angular's Directive Composition API for clean component architecture.
 - **Zero UI Coupling**: Works with Tailwind, Bootstrap, Material, or any custom CSS.
 
+### 🎯 Assistive Components (`@ngx-signal-forms/toolkit/assistive`)
+
+Lightly-styled, accessible components for form feedback—designed to be easily themed or used as building blocks:
+
+- **Error Display**: `<ngx-signal-form-error>` with proper ARIA roles (`role="alert"` for errors, `role="status"` for warnings).
+- **Hint Text**: `<ngx-form-field-hint>` for helper text below inputs.
+- **Character Counter**: `<ngx-form-field-character-count>` with automatic maxLength detection.
+- **Warning Support**: `warningError()`, `isWarningError()`, `isBlockingError()` utilities for non-blocking validation.
+- **Theming**: Minimal CSS that integrates with any design system.
+
 ### 📦 Form Field (`@ngx-signal-forms/toolkit/form-field`)
 
 A set of cohesive UI components to build consistent, accessible form layouts:
@@ -78,7 +88,7 @@ A set of cohesive UI components to build consistent, accessible form layouts:
 | **Warning Support**     | ❌ Not supported                                                  | ✅ Non-blocking validation via `warningError()` convention                   |
 | **ARIA Attributes**     | ❌ Manual `[attr.aria-invalid]`, `[attr.aria-describedby]`        | ✅ Automatic via `NgxSignalFormAutoAriaDirective`                            |
 | **Error Display Logic** | ❌ Manual `@if` conditions in every template                      | ✅ Strategy-based (`'on-touch'`, `'on-submit'`, `'immediate'`, `'manual'`)   |
-| **Error Component**     | ❌ Custom error rendering per component                           | ✅ Reusable `<ngx-signal-form-error>` with ARIA roles                        |
+| **Error Component**     | ❌ Custom error rendering per component                           | ➡️ Use Assistive entry point (`<ngx-signal-form-error>`)                     |
 | **HTML5 Validation**    | ❌ Manual `novalidate` on every form                              | ✅ Automatic `novalidate` on any form with `(submit)`                        |
 | **CSS Status Classes**  | ⚠️ Manual via `provideSignalFormsConfig`                          | ✅ `ngxStatusClasses()` syncs classes with error display strategy            |
 | **Submission Helpers**  | ❌ Manual `form().valid() && !form().submitting()`                | ✅ `canSubmit()`, `isSubmitting()`, `hasSubmitted()` computed signals        |
@@ -97,17 +107,30 @@ A set of cohesive UI components to build consistent, accessible form layouts:
 | **Styling Control** | ✅ Full control                             | ✅ Full control over markup and styling                        |
 | **Design System**   | ✅ Your design tokens                       | ✅ Build components matching your exact design tokens          |
 
+### Assistive (`@ngx-signal-forms/toolkit/assistive`)
+
+| Feature             | Headless Primitives                  | With Assistive                                         |
+| ------------------- | ------------------------------------ | ------------------------------------------------------ |
+| **Error Component** | ❌ Build your own                    | ✅ `<ngx-signal-form-error>` with ARIA roles           |
+| **Hint Component**  | ❌ Build your own                    | ✅ `<ngx-form-field-hint>` with proper styling         |
+| **Character Count** | ✅ Signals via directive             | ✅ `<ngx-form-field-character-count>` styled component |
+| **Warning Support** | ❌ Manual implementation             | ✅ `warningError()`, `isWarningError()` utilities      |
+| **ARIA Roles**      | ❌ Manual ARIA attributes            | ✅ Automatic `role="alert"` / `role="status"`          |
+| **Theming**         | ❌ Your own CSS                      | ✅ Minimal, themeable CSS                              |
+| **Use Case**        | Build from scratch with full control | Use styled components as building blocks               |
+
 ### Form Field (`@ngx-signal-forms/toolkit/form-field`)
 
-| Feature               | Headless Primitives        | With Form Field                                                       |
-| --------------------- | -------------------------- | --------------------------------------------------------------------- |
-| **Field Wrapper**     | ❌ Build your own          | ✅ `<ngx-signal-form-field-wrapper>` with automatic error display     |
-| **Layout Modes**      | ❌ Build your own CSS      | ✅ Default (stacked) or `outline` (floating labels)                   |
-| **Fieldset Grouping** | ✅ Signals via directive   | ✅ `<ngx-signal-form-fieldset>` styled component                      |
-| **Character Count**   | ✅ Signals via directive   | ✅ `<ngx-signal-form-field-wrapper-character-count>` styled component |
-| **Hints**             | ❌ Build your own          | ✅ `<ngx-signal-form-field-wrapper-hint>` with proper styling         |
-| **Theming**           | ❌ Your own CSS            | ✅ 20+ CSS custom properties for deep customization                   |
-| **Effort**            | ⚠️ More code, full control | ✅ Ready-to-use, less code                                            |
+| Feature               | Assistive Components       | With Form Field                                                   |
+| --------------------- | -------------------------- | ----------------------------------------------------------------- |
+| **Field Wrapper**     | ❌ Build your own          | ✅ `<ngx-signal-form-field-wrapper>` with automatic error display |
+| **Layout Modes**      | ❌ Build your own CSS      | ✅ Default (stacked) or `outline` (floating labels)               |
+| **Fieldset Grouping** | ❌ Build your own          | ✅ `<ngx-signal-form-fieldset>` styled component                  |
+| **Error Display**     | ✅ Component available     | ✅ Integrated automatically in wrapper                            |
+| **Character Count**   | ✅ Component available     | ✅ Integrated in wrapper layout                                   |
+| **Hints**             | ✅ Component available     | ✅ Integrated in wrapper layout                                   |
+| **Theming**           | ✅ Minimal CSS             | ✅ 20+ CSS custom properties for deep customization               |
+| **Effort**            | ⚠️ More code, full control | ✅ Ready-to-use, less code                                        |
 
 ---
 
@@ -249,6 +272,39 @@ import {
 
 ---
 
+### @ngx-signal-forms/toolkit/assistive
+
+**What**: Lightly-styled, accessible components for form feedback—error display, hints, and character counters.
+
+**When to use**: When you want ready-to-use feedback components without the full form field wrapper, or as building blocks for custom layouts.
+
+**Key exports**:
+
+- `NgxSignalFormErrorComponent` — Error/warning display with ARIA roles
+- `NgxFormFieldHintComponent` — Helper text below inputs
+- `NgxFormFieldCharacterCountComponent` — Character counter with maxLength detection
+- `NgxFormFieldAssistiveRowComponent` — Layout row for hints and counters
+- `warningError()`, `isWarningError()`, `isBlockingError()` — Warning utilities
+
+```typescript
+import {
+  NgxSignalFormErrorComponent,
+  NgxFormFieldHintComponent,
+  warningError,
+} from '@ngx-signal-forms/toolkit/assistive';
+```
+
+```html
+<label for="email">Email</label>
+<input id="email" [formField]="form.email" />
+<ngx-signal-form-error [formField]="form.email" fieldName="email" />
+<ngx-form-field-hint>We'll never share your email</ngx-form-field-hint>
+```
+
+**[📖 Full Documentation →](./packages/toolkit/assistive/README.md)**
+
+---
+
 ### @ngx-signal-forms/toolkit/form-field
 
 **What**: Pre-built UI components for consistent form layouts with automatic error display.
@@ -260,16 +316,15 @@ import {
 - `NgxSignalFormFieldWrapperComponent` — Unified wrapper for label, input, errors
 - `NgxSignalFormFieldset` — Group related fields with aggregated errors (use `includeNestedErrors` to control aggregation)
 - `NgxFloatingLabelDirective` — Material Design-like outlined inputs (`outline` attribute)
-- `NgxSignalFormFieldCharacterCountComponent` — Progressive character counter
+- `NgxFormFieldHintComponent` — Helper text below inputs
+- `NgxFormFieldCharacterCountComponent` — Progressive character counter
 
 ```html
 <ngx-signal-form-field-wrapper [formField]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-wrapper-hint
-    >Tell us about yourself</ngx-signal-form-field-wrapper-hint
-  >
-  <ngx-signal-form-field-wrapper-character-count [formField]="form.bio" />
+  <ngx-form-field-hint>Tell us about yourself</ngx-form-field-hint>
+  <ngx-form-field-character-count [formField]="form.bio" />
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -346,8 +401,9 @@ export const appConfig: ApplicationConfig = {
 | Document                                                             | Description                                                 |
 | -------------------------------------------------------------------- | ----------------------------------------------------------- |
 | **[Toolkit API Reference](./packages/toolkit/README.md)**            | Complete API documentation with all options and examples    |
-| **[Form Field Components](./packages/toolkit/form-field/README.md)** | Form field wrapper, outlined layout, hints, character count |
 | **[Headless Primitives](./packages/toolkit/headless/README.md)**     | Renderless directives for custom design systems             |
+| **[Assistive Components](./packages/toolkit/assistive/README.md)**   | Error, hint, and character count components                 |
+| **[Form Field Components](./packages/toolkit/form-field/README.md)** | Form field wrapper, outlined layout, hints, character count |
 | **[CSS Framework Integration](./docs/CSS_FRAMEWORK_INTEGRATION.md)** | Bootstrap 5.3, Tailwind CSS 4, Angular Material setup       |
 | **[Theming Guide](./packages/toolkit/form-field/THEMING.md)**        | CSS custom properties, dark mode, brand customization       |
 | **[Warnings Support](./docs/WARNINGS_SUPPORT.md)**                   | Non-blocking validation messages                            |

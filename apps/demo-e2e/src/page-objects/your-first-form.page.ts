@@ -1,6 +1,5 @@
 import { Locator, Page } from '@playwright/test';
 import { ErrorStrategyFormPage } from './base-form.page';
-
 /**
  * Page Object for "Your First Form with Toolkit" demo
  * Route: /getting-started/your-first-form
@@ -21,7 +20,7 @@ export class YourFirstFormPage extends ErrorStrategyFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/getting-started/your-first-form');
+    await this.page.goto(`/getting-started/your-first-form`);
     await this.waitForReady();
   }
 

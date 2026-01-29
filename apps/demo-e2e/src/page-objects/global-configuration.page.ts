@@ -1,6 +1,5 @@
 import { Page } from '@playwright/test';
 import { BaseFormPage } from './base-form.page';
-
 /**
  * Page Object for "Advanced - Global Configuration" demo
  * Route: /advanced-scenarios/global-configuration
@@ -13,7 +12,7 @@ export class GlobalConfigurationPage extends BaseFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/advanced-scenarios/global-configuration');
+    await this.page.goto(`/advanced-scenarios/global-configuration`);
     await this.waitForReady();
   }
 }

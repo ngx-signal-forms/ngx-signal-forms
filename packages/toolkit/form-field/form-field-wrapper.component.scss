@@ -1,23 +1,27 @@
 /// ============================================================================
 /// THEMING ARCHITECTURE
 /// ============================================================================
-/// Uses semantic layering with property derivation:
-/// 1. Design tokens (internal, prefixed --_field-*) - Base colors, spacing, typography
-/// 2. Semantic color scale (public API, --ngx-form-field-color-*) - Brand/state colors
-/// 3. Component-specific properties (public API, --ngx-form-field-*) - Specific use cases
-/// 4. Component implementation - Uses layer 2/3 with fallbacks to layer 1
+/// Uses Lea Verou's "pseudo-private variables" pattern for fallback management:
+/// https://lea.verou.me/blog/2021/10/custom-properties-with-defaults/
 ///
-/// Example derivation chain:
-/// --_field-clr-primary (#3b82f6)
-///   ↓ derives to
-/// --ngx-form-field-color-primary (themeable semantic color)
-///   ↓ derives to
-/// --ngx-form-field-focus-color (specific use case)
-///   ↓ used in
-/// input:focus { border-color: var(--_focus-color); }
+/// Layering approach:
+/// 1. Design tokens (internal, --_field-*) - Base values for colors, spacing, typography
+/// 2. Public API (--ngx-form-field-*) - Overridable by consumers
+/// 3. Pseudo-private (--_*) - Resolve public → fallback to tokens
+/// 4. Implementation - Uses only --_* variables (single source of truth)
 ///
-/// Benefits:
-/// - Easy theming: Change semantic colors, update entire appearance
+/// This pattern:
+/// - Avoids repeating fallbacks throughout the codebase
+/// - Creates a clean API without exposing internal token names
+/// - Allows consumers to override specific values while preserving defaults
+///
+/// Design token reference values (light mode):
+/// - Border: rgba(50, 65, 85, 0.25), hover: #324155
+/// - Focus: #007bc7 with 4px spread
+/// - Error: #db1818
+/// - Text primary: #324155, secondary: rgba(50, 65, 85, 0.75)
+/// - Spacing: 2px (gap), 4px (padding-y), 8px (padding-x)
+/// - Radius: 4px
 
 /// ============================================================================
 /// PREFIX/SUFFIX ARCHITECTURE
@@ -31,95 +35,114 @@
 /// - Interactive suffix support - Buttons in suffix inherit container focus state
 ///
 /// Browser Support: Chrome 105+, Firefox 121+, Safari 15.4+, Edge 105+ (95%+ coverage)
-/// - Clear semantics: Purpose-based property names (primary/error vs clr-primary/clr-danger)
-/// - Automatic consistency: All uses of "primary" color stay in sync
-/// - Encapsulation: Private tokens can change without breaking public API
 /// ============================================================================
 
 // ============================================================================
-// DESIGN TOKENS (Internal - used as fallback defaults)
+// LAYER 1: DESIGN TOKENS (Internal foundation)
 // ============================================================================
-// Pseudo-private properties (--_field-*) provide sensible defaults.
-// Override component semantics (--ngx-form-field-*) for theming.
+// Base values that define the visual language. Not exposed publicly.
+// Use semantic names without framework-specific terminology.
 
 :host {
-  // Color tokens (updated to match Expo Figma design library)
-  // All colors verified for WCAG 2.2 Level AA contrast compliance
-  --_field-clr-primary: #005fcc; // Blue - focus states
-  --_field-clr-danger: #dc2626; // Red - invalid states
-  --_field-clr-text: #324155; // Base text color (var(--text/base)) - 5.6:1 contrast
-  --_field-clr-text-muted: #5f7589; // Placeholder color (more readable) - 4.5:1 contrast ✓
-  --_field-clr-text-subtle: #5f7589; // Secondary text/label color - 4.5:1 contrast ✓ (was too light)
-  --_field-clr-surface: #ffffff; // White - backgrounds (var(--surface/component))
-  --_field-clr-border: rgba(
-    172,
-    178,
-    187,
-    1
-  ); // Border color (var(--border/opaque/light))
-  --_field-clr-disabled: #f3f4f6; // Very light gray - disabled bg
+  // Color tokens
+  --_field-clr-primary: #007bc7; // Focus/interactive states
+  --_field-clr-danger: #db1818; // Error/invalid states
+  --_field-clr-warning: #f59e0b; // Warning states (amber)
+  --_field-clr-text: #324155; // Primary text color
+  --_field-clr-text-secondary: rgba(
+    50,
+    65,
+    85,
+    0.75
+  ); // Labels, hints, placeholders
+  --_field-clr-surface: #ffffff; // Input background
+  --_field-clr-border: rgba(50, 65, 85, 0.25); // Default border
+  --_field-clr-border-hover: #324155; // Hover border
+  --_field-clr-disabled: #f3f4f6; // Disabled background
 
-  // Spacing scale (rem-based for accessibility)
-  --_field-space-xs: 0.125rem; // 2px
-  --_field-space-sm: 0.75rem; // 12px - icon spacing
-  --_field-space-md: 0.5rem; // 8px
-  --_field-space-lg: 0.75rem; // 12px
-  --_field-space-xl: 1rem; // 16px
+  // Spacing scale (rem for accessibility)
+  --_field-space-3xs: 0.125rem; // 2px - tight gaps
+  --_field-space-2xs: 0.25rem; // 4px - padding vertical
+  --_field-space-xs: 0.5rem; // 8px - padding horizontal
+  --_field-space-sm: 0.75rem; // 12px - medium gaps
+  --_field-space-md: 0.5rem; // 8px - standard gaps
+  --_field-space-lg: 0.75rem; // 12px - larger gaps
+  --_field-space-xl: 1rem; // 16px - section spacing
 
-  // Typography scale (updated to match Figma design)
-  --_field-text-xs: 0.75rem; // 12px - outlined label (caption)
-  --_field-text-sm: 0.875rem; // 14px - input text (body-2)
-  --_field-text-base: 1rem; // 16px - large input
+  // Typography scale
+  --_field-text-caption: 0.75rem; // 12px - labels, hints (caption style)
+  --_field-text-body: 0.875rem; // 14px - input text (body style)
+  --_field-text-base: 1rem; // 16px - fallback
 
-  // Other tokens (updated to match Figma design)
-  --_field-radius: 0.25rem; // 4px - Border radius (Figma design)
-  --_field-opacity-disabled: 0.6; // Disabled opacity
+  // Line-height scale
+  --_field-line-height-caption: 1rem; // 16px - for caption text
+  --_field-line-height-body: 1.25rem; // 20px - for body text
+
+  // Font-weight scale
+  --_field-weight-normal: 400; // Regular text
+  --_field-weight-medium: 500; // Emphasized labels (standard layout)
+  --_field-weight-semibold: 600; // Required marker, strong emphasis
+
+  // Other tokens
+  --_field-radius: 0.25rem; // 4px - border radius
+  --_field-opacity-disabled: 0.6;
+  --_field-focus-spread: 4px; // Focus ring spread
 
   // Icon/touch targets
-  --_field-icon-size: 1.25rem; // 20px – default heroicon size
-  --_field-touch-target: 2rem; // 32px – comfortable click area
+  --_field-icon-size: 1.25rem; // 20px
+  --_field-touch-target: 2rem; // 32px
+
+  // Legacy aliases (for backward compatibility)
+  --_field-text-xs: var(--_field-text-caption);
+  --_field-text-sm: var(--_field-text-body);
+  --_field-line-height-s: var(--_field-line-height-caption);
+  --_field-line-height-m: var(--_field-line-height-body);
+  --_field-clr-text-muted: var(--_field-clr-text-secondary);
+  --_field-clr-text-subtle: var(--_field-clr-text-secondary);
 }
 
-// Light mode defaults are already set above – no need to redefine the same
-// values here. Keeping a single source prevents accidental drift.
-
-// Dark mode overrides (respects system preference but checks for light-forced mode)
+// Dark mode overrides (respects system preference)
 @media (prefers-color-scheme: dark) {
   :host {
     --_field-clr-primary: #60a5fa; // Lighter blue for dark bg
     --_field-clr-danger: #fca5a5; // Lighter red for dark bg
+    --_field-clr-warning: #fcd34d; // Lighter amber for dark bg
     --_field-clr-text: #f9fafb; // Almost white - main text
-    --_field-clr-text-muted: #c8cfd9; // Light gray - placeholders - 4.5:1 on dark ✓
-    --_field-clr-text-subtle: #c8cfd9; // Subtle gray - 4.5:1 on dark ✓ (was too dark)
+    --_field-clr-text-secondary: rgba(
+      249,
+      250,
+      251,
+      0.75
+    ); // Light text/secondary
     --_field-clr-surface: #1f2937; // Dark gray - backgrounds
-    --_field-clr-border: #374151; // Medium gray - borders
-    --_field-clr-disabled: #111827; // Very dark gray - disabled bg
+    --_field-clr-border: rgba(249, 250, 251, 0.25); // Light border
+    --_field-clr-border-hover: #f9fafb;
+    --_field-clr-disabled: #111827;
   }
 }
 
-// Light mode override (when app explicitly sets light theme despite system dark preference)
-// This rule runs when :root does NOT have .dark class
+// Light mode override (when app explicitly sets light theme)
 :root:not(.dark) :host {
-  --_field-clr-primary: #005fcc; // Blue - focus states
-  --_field-clr-danger: #dc2626; // Red - invalid states
-  --_field-clr-text: #324155; // Base text color
-  --_field-clr-text-muted: #5f7589; // Placeholder color
-  --_field-clr-text-subtle: #5f7589; // Secondary text/label color
-  --_field-clr-surface: #ffffff; // White - backgrounds
-  --_field-clr-border: rgba(172, 178, 187, 1); // Border color
-  --_field-clr-disabled: #f3f4f6; // Very light gray - disabled bg
+  --_field-clr-primary: #007bc7;
+  --_field-clr-danger: #db1818;
+  --_field-clr-warning: #f59e0b;
+  --_field-clr-text: #324155;
+  --_field-clr-text-secondary: rgba(50, 65, 85, 0.75);
+  --_field-clr-surface: #ffffff;
+  --_field-clr-border: rgba(50, 65, 85, 0.25);
+  --_field-clr-border-hover: #324155;
+  --_field-clr-disabled: #f3f4f6;
 }
 
 // ============================================================================
-// SEMANTIC COLOR SCALE (Public API - brand/state colors)
+// LAYER 2: PUBLIC API (Consumer-facing properties)
 // ============================================================================
-// High-level semantic colors that map to design tokens.
-// Override these for brand theming.
+// These properties can be overridden by consumers.
+// Pseudo-private variables (--_*) reference these with fallbacks to tokens.
+// Pattern: --_var: var(--ngx-public-var, var(--_token));
 
 :host {
-  // Warning color token (amber/orange for non-blocking issues)
-  --_field-clr-warning: #f59e0b; // Amber - warning states
-
+  // Semantic color API
   --_color-primary: var(
     --ngx-form-field-color-primary,
     var(--_field-clr-primary)
@@ -130,80 +153,166 @@
     var(--_field-clr-warning)
   );
   --_color-text: var(--ngx-form-field-color-text, var(--_field-clr-text));
-  --_color-text-muted: var(
-    --ngx-form-field-color-text-muted,
-    var(--_field-clr-text-muted)
+  --_color-text-secondary: var(
+    --ngx-form-field-color-text-secondary,
+    var(--_field-clr-text-secondary)
   );
   --_color-surface: var(
     --ngx-form-field-color-surface,
     var(--_field-clr-surface)
   );
   --_color-border: var(--ngx-form-field-color-border, var(--_field-clr-border));
+  --_color-border-hover: var(
+    --ngx-form-field-color-border-hover,
+    var(--_field-clr-border-hover)
+  );
   --_color-disabled: var(
     --ngx-form-field-color-disabled,
     var(--_field-clr-disabled)
   );
-}
 
-// Dark mode warning color override
-@media (prefers-color-scheme: dark) {
-  :host {
-    --_field-clr-warning: #fcd34d; // Lighter amber for dark bg
-  }
-}
+  // Spacing API
+  --_padding-vertical: var(
+    --ngx-form-field-padding-vertical,
+    var(--_field-space-2xs)
+  );
+  --_padding-horizontal: var(
+    --ngx-form-field-padding-horizontal,
+    var(--_field-space-xs)
+  );
 
-// Light mode override for warning
-:root:not(.dark) :host {
-  --_field-clr-warning: #f59e0b; // Amber - warning states
+  // Legacy alias for backward compatibility
+  --_color-text-muted: var(--_color-text-secondary);
 }
 
 // ============================================================================
-// COMPONENT SEMANTICS (Public API - specific use cases)
+// LAYER 3: COMPONENT PROPERTIES (Specific use cases)
 // ============================================================================
-// Purpose-specific properties that derive from semantic colors.
-// Override these for fine-grained control.
+// Purpose-specific properties for fine-grained control.
+// Uses pseudo-private pattern: public API → fallback to tokens.
 
 :host {
   // Layout
-  --_gap: var(--ngx-form-field-gap, var(--_field-space-md));
-  --_margin-bottom: var(--ngx-form-field-margin, var(--_field-space-xl));
+  --_gap: var(--ngx-form-field-gap, var(--_field-space-3xs));
+  --_margin-bottom: var(--ngx-form-field-margin, 0);
 
   // Prefix/Suffix
   --_prefix-gap: var(--ngx-form-field-prefix-gap, var(--_field-space-md));
   --_suffix-gap: var(--ngx-form-field-suffix-gap, var(--_field-space-md));
-  --_prefix-color: var(--ngx-form-field-prefix-color, var(--_color-text-muted));
-  --_suffix-color: var(--ngx-form-field-suffix-color, var(--_color-text-muted));
+  --_prefix-color: var(
+    --ngx-form-field-prefix-color,
+    var(--_color-text-secondary)
+  );
+  --_suffix-color: var(
+    --ngx-form-field-suffix-color,
+    var(--_color-text-secondary)
+  );
 
-  // Label (updated for Figma design)
-  --_label-size: var(--ngx-form-field-label-size, var(--_field-text-sm));
-  --_label-weight: var(--ngx-form-field-label-weight, 500);
-  --_label-color: var(--ngx-form-field-label-color, var(--_color-text));
+  // Label - Standard layout (caption style, above input)
+  --_label-size: var(--ngx-form-field-label-size, var(--_field-text-caption));
+  --_label-weight: var(
+    --ngx-form-field-label-weight,
+    var(--_field-weight-normal)
+  );
+  --_label-color: var(
+    --ngx-form-field-label-color,
+    var(--_color-text-secondary)
+  );
+  --_label-line-height: var(
+    --ngx-form-field-label-line-height,
+    var(--_field-line-height-caption)
+  );
+  --_label-padding-start: var(
+    --ngx-form-field-label-padding-start,
+    var(--_field-space-3xs)
+  );
 
-  // Input (updated padding for Figma design: 4px 8px)
-  --_input-size: var(--ngx-form-field-input-size, var(--_field-text-sm));
+  // Label - Outlined layout (caption style, inside container)
+  --_label-outline-size: var(
+    --ngx-form-field-outline-label-size,
+    var(--_field-text-caption)
+  );
+  --_label-outline-gap: var(--ngx-form-field-outline-label-gap, 0rem);
+  --_label-outline-weight: var(
+    --ngx-form-field-outline-label-weight,
+    var(--_field-weight-normal)
+  );
+  --_label-outline-color: var(
+    --ngx-form-field-outline-label-color,
+    var(--_color-text-secondary)
+  );
+  --_label-outline-line-height: var(
+    --ngx-form-field-outline-label-line-height,
+    var(--_field-line-height-caption)
+  );
+
+  // Required marker
+  --_required-marker-color: var(
+    --ngx-form-field-required-marker-color,
+    var(--_color-error)
+  );
+  --_required-marker-weight: var(
+    --ngx-form-field-required-marker-weight,
+    var(--_field-weight-semibold)
+  );
+
+  // Input - Standard layout
+  --_input-size: var(--ngx-form-field-input-size, var(--_field-text-body));
   --_input-padding: var(
     --ngx-form-field-input-padding,
-    var(--_field-space-sm) var(--_field-space-md)
+    var(--_padding-vertical) var(--_padding-horizontal)
   );
   --_input-color: var(--ngx-form-field-input-color, var(--_color-text));
-  --_input-bg: var(--ngx-form-field-input-bg, transparent);
+  --_input-bg: var(--ngx-form-field-input-bg, var(--_color-surface));
   --_input-border-color: var(
     --ngx-form-field-border-color,
     var(--_color-border)
   );
   --_input-radius: var(--ngx-form-field-radius, var(--_field-radius));
+  --_input-line-height: var(
+    --ngx-form-field-input-line-height,
+    var(--_field-line-height-body)
+  );
+  --_input-weight: var(
+    --ngx-form-field-input-weight,
+    var(--_field-weight-normal)
+  );
 
-  // States (derive from semantic colors)
+  // Input - Outlined layout
+  --_input-outline-size: var(
+    --ngx-form-field-outline-input-size,
+    var(--_field-text-body)
+  );
+  --_input-outline-weight: var(
+    --ngx-form-field-outline-input-weight,
+    var(--_field-weight-normal)
+  );
+  --_input-outline-color: var(
+    --ngx-form-field-outline-input-color,
+    var(--_color-text)
+  );
+  --_input-outline-line-height: var(
+    --ngx-form-field-outline-input-line-height,
+    var(--_field-line-height-body)
+  );
+
+  // States (Figma: focus/spread/m = 4px, interaction/primary/enabled = #007bc7)
   --_focus-color: var(--ngx-form-field-focus-color, var(--_color-primary));
   --_focus-box-shadow: var(
     --ngx-form-field-focus-box-shadow,
-    0 0 0 2px color-mix(in srgb, var(--_focus-color) 25%, transparent)
+    0 0 0 var(--_field-focus-spread)
+      color-mix(in srgb, var(--_focus-color) 25%, transparent)
+  );
+  --_hover-border-color: var(
+    --ngx-form-field-hover-border-color,
+    var(--_color-border-hover)
   );
   --_invalid-color: var(--ngx-form-field-invalid-color, var(--_color-error));
   --_warning-color: var(--ngx-form-field-warning-color, var(--_color-warning));
   --_warning-box-shadow: var(
     --ngx-form-field-warning-box-shadow,
-    0 0 0 2px color-mix(in srgb, var(--_warning-color) 25%, transparent)
+    0 0 0 var(--_field-focus-spread)
+      color-mix(in srgb, var(--_warning-color) 25%, transparent)
   );
   --_disabled-bg: var(--ngx-form-field-disabled-bg, var(--_color-disabled));
   --_disabled-opacity: var(
@@ -229,18 +338,18 @@
   gap: var(--_gap);
   margin-bottom: var(--_margin-bottom);
   width: 100%;
+  height: fit-content; // Prevent stretching in grid/flex rows
 }
 
 // Label sits OUTSIDE the bordered container (traditional layout)
 .ngx-signal-form-field-wrapper__label {
   font-size: var(--_label-size);
   font-weight: var(--_label-weight);
+  line-height: var(--_label-line-height);
   color: var(--_label-color);
-  // Remove intrinsic bottom margin and rely solely on the host gap
-  // This prevents double spacing (gap + margin) between label and input
-  // Default vertical spacing can still be tuned via --ngx-form-field-gap
   margin-bottom: 0;
   display: block;
+  padding-inline-start: var(--_label-padding-start);
 }
 
 .ngx-signal-form-field-wrapper__content {
@@ -258,6 +367,11 @@
   transition:
     border-color 0.15s ease-in-out,
     box-shadow 0.15s ease-in-out;
+
+  // Hover state (Figma: border/opaque/dark = #324155)
+  &:hover:not(:focus-within) {
+    border-color: var(--_hover-border-color);
+  }
 
   // Focus state when any child input has focus
   &:focus-within {
@@ -440,23 +554,52 @@
 // ============================================================================
 // Container-based input where label sits inside the border.
 // Reuses the same semantic tokens, just applies them differently.
+// Uses CSS Grid to visually position label INSIDE the bordered container
+// while maintaining the existing DOM structure for content projection.
 
 :host(.ngx-signal-forms-outline) {
-  // Override gap for outlined layout (uses public API with fallback)
-  --_gap: var(--ngx-form-field-gap, var(--_field-space-xs));
+  // CSS Grid layout to integrate label visually into the bordered container
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    'content'
+    'assistive';
+  gap: var(--_field-space-3xs); // 2px gap between container and assistive
 
-  // Hide the external label div (label will be inside .ngx-signal-form-field-wrapper__main)
+  // Label wrapper positioned inside the content area (caption style)
   .ngx-signal-form-field-wrapper__label {
-    display: none;
+    grid-area: content;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    pointer-events: none;
+    padding: var(--_field-space-2xs) var(--_field-space-xs) 0;
+
+    label {
+      // Caption typography: smaller, lighter for inline labels
+      font-size: var(--_label-outline-size);
+      line-height: var(--_label-outline-line-height);
+      font-weight: var(--_label-outline-weight);
+      color: var(--_label-outline-color);
+      cursor: text;
+      pointer-events: auto;
+    }
   }
 }
 
 :host(.ngx-signal-forms-outline) .ngx-signal-form-field-wrapper__content {
+  grid-area: content;
   display: flex;
-  flex-direction: row; // Changed from column to support prefix/suffix
-  align-items: center;
-  gap: 0; // No gap - integrated design
-  padding: var(--_input-padding);
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 0;
+  // Top padding = label line-height + gap (default 0) + base padding
+  padding: calc(
+      var(--_label-outline-line-height) + var(--_label-outline-gap) +
+        var(--_padding-vertical)
+    )
+    var(--_padding-horizontal) var(--_padding-vertical);
   background-color: var(--_input-bg);
   border: 1px solid var(--_input-border-color);
   border-radius: var(--_input-radius);
@@ -504,37 +647,36 @@
   min-width: 0;
 }
 
-// Label inside container (smaller, subtle, updated for Figma design)
-:host(.ngx-signal-forms-outline)
-  ::ng-deep
-  .ngx-signal-form-field-wrapper__main
-  label {
-  font-size: var(
-    --ngx-form-field-outline-label-size,
-    var(--_field-text-xs)
-  ); // 12px
-  font-weight: var(
-    --ngx-form-field-outline-label-weight,
-    400
-  ); // Regular weight (Figma design)
-  color: var(
-    --ngx-form-field-outline-label-color,
-    var(--_field-clr-text-subtle)
-  ); // rgba(71, 91, 119, 0.75)
-  margin: 0 0 var(--_field-space-xs) 0;
-  cursor: text;
-}
-
 // Required marker (automatic via :has() selector)
+// Detects required inputs in __main and adds marker to label in __label
 :host(.ngx-signal-forms-outline[data-show-required='true'])
   .ngx-signal-form-field-wrapper__content:has([required])
+  ~ .ngx-signal-form-field-wrapper__label
   label::after,
 :host(.ngx-signal-forms-outline[data-show-required='true'])
   .ngx-signal-form-field-wrapper__content:has([aria-required='true'])
+  ~ .ngx-signal-form-field-wrapper__label
   label::after {
   content: attr(data-required-marker);
-  color: var(--_invalid-color); // Reuse invalid color for required marker
-  font-weight: 600;
+  color: var(--_required-marker-color);
+  font-weight: var(--_required-marker-weight);
+}
+
+// For grid layout where __label comes before __content in DOM,
+// also target direct descendant
+:host(.ngx-signal-forms-outline[data-show-required='true']):has(
+    .ngx-signal-form-field-wrapper__content [required]
+  )
+  .ngx-signal-form-field-wrapper__label
+  label::after,
+:host(.ngx-signal-forms-outline[data-show-required='true']):has(
+    .ngx-signal-form-field-wrapper__content [aria-required='true']
+  )
+  .ngx-signal-form-field-wrapper__label
+  label::after {
+  content: attr(data-required-marker);
+  color: var(--_required-marker-color);
+  font-weight: var(--_required-marker-weight);
 }
 
 // Remove input default styling (container provides all visual feedback)
@@ -555,20 +697,12 @@
   padding: 0;
   margin: 0;
   width: 100%;
-  font-size: var(
-    --ngx-form-field-outline-input-size,
-    var(--_field-text-sm)
-  ); // 14px (Figma design)
-  font-weight: var(
-    --ngx-form-field-outline-input-weight,
-    400
-  ); // Regular weight
-  color: var(
-    --ngx-form-field-outline-input-color,
-    var(--_field-clr-text)
-  ); // #324155
-  outline: none; // Safe: container provides focus indicator
-  box-shadow: none; // Remove any browser default focus shadow
+  font-size: var(--_input-outline-size);
+  line-height: var(--_input-outline-line-height);
+  font-weight: var(--_input-outline-weight);
+  color: var(--_input-outline-color);
+  outline: none;
+  box-shadow: none;
 
   // Ensure no focus ring on the input itself
   &:focus {

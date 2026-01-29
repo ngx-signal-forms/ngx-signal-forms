@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 /**
  * Focus Management Tests
  * WCAG 2.2 Level AA - Focus Order and Error Identification
@@ -17,7 +16,7 @@ test.describe('Focus Management', () => {
       console.log(`[BROWSER ${msg.type().toUpperCase()}]: ${msg.text()}`);
     });
 
-    await page.goto('/toolkit-core/accessibility-comparison');
+    await page.goto(`/toolkit-core/accessibility-comparison`);
     await page.waitForLoadState('domcontentloaded');
   });
 

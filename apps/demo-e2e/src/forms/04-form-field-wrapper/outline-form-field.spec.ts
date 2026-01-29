@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Outline Form Field - Complex Nested Form', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/form-field-wrapper/outline-form-field');
+    await page.goto(`/form-field-wrapper/outline-form-field`);
   });
 
   test('should render initial state correctly', async ({ page }) => {
@@ -129,5 +129,29 @@ test.describe('Outline Form Field - Complex Nested Form', () => {
 
     // Submit button should be enabled
     await expect(page.getByRole('button', { name: 'Opslaan' })).toBeEnabled();
+  });
+
+  test('should display labels visibly inside outlined form fields', async ({
+    page,
+  }) => {
+    // Labels should be visible inside the outlined form field containers (Figma design)
+    const pleegdatumLabel = page.getByText('Pleegdatum', { exact: true });
+    await expect(pleegdatumLabel).toBeVisible();
+
+    const pleegperiodeLabel = page.getByText('Pleegperiode', { exact: true });
+    await expect(pleegperiodeLabel).toBeVisible();
+
+    // Verify labels are positioned inside the bordered container (not hidden)
+    const firstFormField = page
+      .locator('ngx-signal-form-field-wrapper.ngx-signal-forms-outline')
+      .first();
+    await expect(firstFormField).toBeVisible();
+
+    // The label wrapper inside the form field should be visible
+    const labelWrapper = firstFormField.locator(
+      '.ngx-signal-form-field-wrapper__label',
+    );
+    await expect(labelWrapper).toBeVisible();
+    await expect(labelWrapper.locator('label')).toBeVisible();
   });
 });

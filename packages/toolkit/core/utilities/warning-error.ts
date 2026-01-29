@@ -82,24 +82,6 @@ export function isBlockingError(error: ValidationError): boolean {
  * });
  * ```
  *
- * @example Multiple warnings
- * ```typescript
- * validate(path.username, (ctx) => {
- *   const value = ctx.value();
- *   const warnings = [];
- *
- *   if (value && value.length < 6) {
- *     warnings.push(warningError('short-username', 'Usernames 6+ characters are easier to remember'));
- *   }
- *
- *   if (value && /^\d+$/.test(value)) {
- *     warnings.push(warningError('numeric-username', 'Consider adding letters for better security'));
- *   }
- *
- *   return warnings.length > 0 ? warnings[0] : null; // Signal Forms only returns one error per validator
- * });
- * ```
- *
  * @see {@link https://angular.dev/api/forms/signals/ValidationError | ValidationError API}
  */
 export function warningError(kind: string, message?: string): ValidationError {

@@ -8,12 +8,11 @@ export const ACCESSIBILITY_COMPARISON_CONTENT = {
     title: 'WCAG 2.2 Accessibility Showcase',
     sections: [
       {
-        title: 'Three Implementation Levels',
+        title: 'Two Implementation Levels',
         items: [
-          '<strong>Manual:</strong> No toolkit, all ARIA attributes manually added (~95 lines)',
           '<strong>Minimal Toolkit:</strong> Auto-ARIA only, no [ngxSignalForm] (~55 lines)',
           '<strong>Full Toolkit:</strong> Complete with [ngxSignalForm] and error components (~31 lines)',
-          'Side-by-side comparison shows progressive enhancement',
+          'Side-by-side comparison focuses on toolkit progression',
         ],
       },
       {
@@ -28,7 +27,6 @@ export const ACCESSIBILITY_COMPARISON_CONTENT = {
       {
         title: 'When to Use Each Level',
         items: [
-          '<strong>Manual:</strong> Learning how accessibility works under the hood',
           '<strong>Minimal:</strong> Custom error UI but want automatic ARIA',
           '<strong>Full:</strong> Most projects - complete accessibility + error display',
         ],

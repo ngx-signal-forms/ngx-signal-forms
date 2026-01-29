@@ -1,8 +1,8 @@
 import { Component, signal } from '@angular/core';
 import { FormField, form, required, schema } from '@angular/forms/signals';
+import { NgxSignalFormDirective } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
-import { NgxSignalFormDirective } from '../directives/ngx-signal-form.directive';
 import { NgxSignalFormErrorComponent } from './form-error.component';
 
 /**

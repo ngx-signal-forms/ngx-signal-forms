@@ -96,10 +96,11 @@ Angular Signal Forms is a new **experimental** reactive form system introduced i
 
 **For Automatic Error Display & Accessibility:**
 
-See the [**Signal Forms Enhancement Library**](./SIGNAL_FORMS_ENHANCEMENT_LIBRARY.md) which provides:
+See the [**Signal Forms Toolkit**](../README.md) which provides:
 
 - ✅ Automatic ARIA attributes (`aria-invalid`, `aria-describedby`)
 - ✅ Error display strategies (`immediate`, `on-touch`, `on-submit`, `manual`)
+- ✅ `<ngx-signal-form-error>` from `@ngx-signal-forms/toolkit/assistive`
 - ✅ Form field wrappers with built-in error display
 - ✅ Derived `submittedStatus` via form provider
 - ✅ WCAG 2.2 compliance by default

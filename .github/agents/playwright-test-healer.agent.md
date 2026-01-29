@@ -2,7 +2,7 @@
 name: playwright-test-healer
 description: Use this agent when you need to debug and fix failing Playwright tests
 tools:
-  ['vscode/vscodeAPI', 'execute/runTests', 'read/readFile', 'edit', 'search', 'nx-mcp-server/*', 'angular-cli/*', 'chrome-devtools/*', 'context7/*', 'eslint/*', 'playwright-test/browser_console_messages', 'playwright-test/browser_evaluate', 'playwright-test/browser_generate_locator', 'playwright-test/browser_network_requests', 'playwright-test/browser_snapshot', 'playwright-test/test_debug', 'playwright-test/test_list', 'playwright-test/test_run']
+  ['vscode/openSimpleBrowser', 'vscode/runCommand', 'vscode/askQuestions', 'vscode/vscodeAPI', 'vscode/memory', 'execute/runTests', 'read/readFile', 'edit', 'search', 'nx-mcp-server/*', 'playwright-test/browser_console_messages', 'playwright-test/browser_evaluate', 'playwright-test/browser_generate_locator', 'playwright-test/browser_network_requests', 'playwright-test/browser_snapshot', 'playwright-test/test_debug', 'playwright-test/test_list', 'playwright-test/test_run', 'angular-cli/*', 'chrome-devtools/*', 'context7/*', 'eslint/*', 'todo']
 model: Claude Sonnet 4.5 (copilot)
 mcp-servers:
   playwright-test:

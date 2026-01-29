@@ -14,12 +14,15 @@ import type {
   ReactiveOrStatic,
 } from '@ngx-signal-forms/toolkit';
 import {
-  isBlockingError,
-  isWarningError,
   NGX_SIGNAL_FORM_CONTEXT,
   NGX_SIGNAL_FORMS_CONFIG,
-  NgxSignalFormErrorComponent,
 } from '@ngx-signal-forms/toolkit';
+import {
+  isBlockingError,
+  isWarningError,
+  NgxFormFieldAssistiveRowComponent,
+  NgxSignalFormErrorComponent,
+} from '@ngx-signal-forms/toolkit/assistive';
 
 /**
  * Counter for generating unique field IDs when fieldName is not provided.
@@ -82,7 +85,7 @@ function generateUniqueFieldId(): string {
  * <ngx-signal-form-field-wrapper [formField]="form.bio" outline>
  *   <label for="bio">Bio</label>
  *   <textarea id="bio" [formField]="form.bio"></textarea>
- *   <ngx-signal-form-field-wrapper-character-count [formField]="form.bio" [maxLength]="500" />
+ *   <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
  * </ngx-signal-form-field-wrapper>
  * ```
  *
@@ -91,7 +94,7 @@ function generateUniqueFieldId(): string {
  * <ngx-signal-form-field-wrapper [formField]="form.phone">
  *   <label for="phone">Phone Number</label>
  *   <input id="phone" [formField]="form.phone" />
- *   <ngx-signal-form-field-wrapper-hint>Format: 123-456-7890</ngx-signal-form-field-wrapper-hint>
+ *   <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
  * </ngx-signal-form-field-wrapper>
  * ```
  *
@@ -142,14 +145,14 @@ function generateUniqueFieldId(): string {
 @Component({
   selector: 'ngx-signal-form-field-wrapper',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgxSignalFormErrorComponent],
+  imports: [NgxSignalFormErrorComponent, NgxFormFieldAssistiveRowComponent],
   styleUrl: './form-field-wrapper.component.scss',
   host: {
     '[attr.outline]': 'isOutline() ? "" : null',
     '[class.ngx-signal-form-field-wrapper--warning]': 'showWarningState()',
   },
   template: `
-    <!-- Label slot (outside bordered container for traditional layout) -->
+    <!-- Label slot (outside bordered container for standard layout, visually inside for outline via CSS) -->
     <div class="ngx-signal-form-field-wrapper__label">
       <ng-content select="label" />
     </div>
@@ -161,7 +164,7 @@ function generateUniqueFieldId(): string {
         <ng-content select="[prefix]" />
       </div>
 
-      <!-- Main content (input only - label is outside) -->
+      <!-- Main content (input) -->
       <div class="ngx-signal-form-field-wrapper__main">
         <ng-content />
       </div>
@@ -172,19 +175,25 @@ function generateUniqueFieldId(): string {
       </div>
     </div>
 
-    <!-- Hint/character count slot (projected before errors) -->
-    <ng-content
-      select="ngx-signal-form-field-wrapper-hint, ngx-signal-form-field-wrapper-character-count"
-    />
+    <!-- Assistive row: fixed-height container prevents layout shift -->
+    <ngx-form-field-assistive-row
+      class="ngx-signal-form-field-wrapper__assistive"
+    >
+      <!-- Left side: hint (hidden when errors shown) or errors -->
+      @if (showErrors() && shouldShowErrors()) {
+        <ngx-signal-form-error
+          [formField]="formField()"
+          [fieldName]="resolvedFieldName()"
+          [strategy]="effectiveStrategy"
+          [submittedStatus]="submittedStatus"
+        />
+      } @else {
+        <ng-content select="ngx-form-field-hint" />
+      }
 
-    @if (showErrors()) {
-      <ngx-signal-form-error
-        [formField]="formField()"
-        [fieldName]="resolvedFieldName()"
-        [strategy]="effectiveStrategy"
-        [submittedStatus]="submittedStatus"
-      />
-    }
+      <!-- Right side: character count -->
+      <ng-content select="ngx-form-field-character-count" />
+    </ngx-form-field-assistive-row>
   `,
 })
 export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
@@ -406,6 +415,41 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   protected readonly hasWarnings = computed(() =>
     this.#allMessages().some(isWarningError),
   );
+
+  /**
+   * Whether to actually display errors based on current strategy and field state.
+   * This controls when the error component replaces the hint.
+   */
+  protected readonly shouldShowErrors = computed(() => {
+    const errors = this.#allMessages();
+    if (errors.length === 0) return false;
+
+    const strategy = this.effectiveStrategy();
+    const fieldState = this.formField()();
+
+    if (!fieldState || typeof fieldState !== 'object') return false;
+
+    const touched =
+      'touched' in fieldState && typeof fieldState.touched === 'function'
+        ? (fieldState.touched as () => boolean)()
+        : false;
+
+    switch (strategy) {
+      case 'on-touch':
+        return touched;
+      case 'on-submit':
+        return this.submittedStatus() === 'submitted';
+      case 'immediate':
+        return true;
+      case 'manual':
+        return false; // Manual strategy means component handles display
+      case 'inherit':
+        // Inherit should have been resolved by effectiveStrategy
+        return touched;
+      default:
+        return touched;
+    }
+  });
 
   /**
    * Whether to apply warning styling to the form field container.

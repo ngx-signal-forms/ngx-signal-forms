@@ -97,19 +97,20 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 - `ngxSignalFormDirective` - Form context and submission tracking
 - `NgxSignalFormAutoAriaDirective` - Automatic ARIA attributes
-- `NgxSignalFormErrorComponent` - Error display component
+
+**Error display component:** Import `NgxSignalFormErrorComponent` from `@ngx-signal-forms/toolkit/assistive`.
 
 #### Alternative: Individual Imports
 
 ```typescript
 import {
   ngxSignalFormDirective,
-  NgxSignalFormErrorComponent,
   NgxSignalFormAutoAriaDirective,
 } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 
 @Component({
-  imports: [FormField, ngxSignalFormDirective, NgxSignalFormErrorComponent],
+  imports: [FormField, ngxSignalFormDirective, NgxSignalFormAutoAriaDirective, NgxSignalFormErrorComponent],
 })
 ```
 

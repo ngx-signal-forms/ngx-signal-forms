@@ -5,24 +5,21 @@ import {
   SignalFormDebuggerComponent,
 } from '../../ui';
 import { ACCESSIBILITY_COMPARISON_CONTENT } from './accessibility-comparison.content';
-import { AccessibilityManualFormComponent } from './accessibility-comparison.manual.form';
 import { AccessibilityMinimalFormComponent } from './accessibility-comparison.minimal.form';
 import { AccessibilityToolkitFormComponent } from './accessibility-comparison.toolkit.form';
 
 /**
  * Accessibility Comparison Page
  *
- * Three-way comparison showing progression from manual to full toolkit:
- * 1. Manual - No toolkit, all ARIA attributes manually added
- * 2. Minimal Toolkit - Auto-ARIA but no [ngxSignalForm] binding
- * 3. Full Toolkit - Complete toolkit with [ngxSignalForm] and error components
+ * Two-way comparison showing progression from minimal to full toolkit:
+ * 1. Minimal Toolkit - Auto-ARIA but no [ngxSignalForm] binding
+ * 2. Full Toolkit - Complete toolkit with [ngxSignalForm] and error components
  */
 @Component({
   selector: 'ngx-accessibility-comparison-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ExampleCardsComponent,
-    AccessibilityManualFormComponent,
     AccessibilityMinimalFormComponent,
     AccessibilityToolkitFormComponent,
     PageHeaderComponent,
@@ -31,38 +28,15 @@ import { AccessibilityToolkitFormComponent } from './accessibility-comparison.to
   template: `
     <ngx-page-header
       title="Accessibility Comparison"
-      subtitle="Compare manual, minimal toolkit, and full toolkit implementations"
+      subtitle="Compare minimal and full toolkit implementations"
     />
 
     <ngx-example-cards
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
     >
-      <!-- Three-Way Comparison -->
-      <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <!-- Manual Implementation -->
-        <div class="space-y-4">
-          <div class="flex items-center justify-between">
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white">
-              ❌ Manual
-            </h2>
-            <span
-              class="rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
-            >
-              95 Lines
-            </span>
-          </div>
-          <p class="text-xs text-gray-500 dark:text-gray-400">
-            No toolkit. All ARIA attributes manually added.
-          </p>
-
-          <div
-            class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
-          >
-            <ngx-accessibility-manual-form />
-          </div>
-        </div>
-
+      <!-- Two-Way Comparison -->
+      <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <!-- Minimal Toolkit Implementation -->
         <div class="space-y-4">
           <div class="flex items-center justify-between">
@@ -125,9 +99,6 @@ import { AccessibilityToolkitFormComponent } from './accessibility-comparison.to
               >
                 Feature
               </th>
-              <th class="px-4 py-3 text-center font-semibold text-yellow-700">
-                Manual
-              </th>
               <th class="px-4 py-3 text-center font-semibold text-blue-700">
                 Minimal
               </th>
@@ -141,7 +112,6 @@ import { AccessibilityToolkitFormComponent } from './accessibility-comparison.to
               <td class="px-4 py-2 text-gray-700 dark:text-gray-300">
                 Auto <code>novalidate</code> on form
               </td>
-              <td class="px-4 py-2 text-center">❌</td>
               <td class="px-4 py-2 text-center">✅</td>
               <td class="px-4 py-2 text-center">✅</td>
             </tr>
@@ -149,7 +119,6 @@ import { AccessibilityToolkitFormComponent } from './accessibility-comparison.to
               <td class="px-4 py-2 text-gray-700 dark:text-gray-300">
                 Auto <code>aria-invalid</code>
               </td>
-              <td class="px-4 py-2 text-center">❌</td>
               <td class="px-4 py-2 text-center">✅</td>
               <td class="px-4 py-2 text-center">✅</td>
             </tr>
@@ -157,7 +126,6 @@ import { AccessibilityToolkitFormComponent } from './accessibility-comparison.to
               <td class="px-4 py-2 text-gray-700 dark:text-gray-300">
                 Auto <code>aria-describedby</code>
               </td>
-              <td class="px-4 py-2 text-center">❌</td>
               <td class="px-4 py-2 text-center">✅</td>
               <td class="px-4 py-2 text-center">✅</td>
             </tr>
@@ -165,7 +133,6 @@ import { AccessibilityToolkitFormComponent } from './accessibility-comparison.to
               <td class="px-4 py-2 text-gray-700 dark:text-gray-300">
                 <code>&lt;ngx-signal-form-field-wrapper&gt;</code> auto errors
               </td>
-              <td class="px-4 py-2 text-center">❌</td>
               <td class="px-4 py-2 text-center">✅</td>
               <td class="px-4 py-2 text-center">✅</td>
             </tr>
@@ -174,14 +141,12 @@ import { AccessibilityToolkitFormComponent } from './accessibility-comparison.to
                 Form-level <code>[errorStrategy]</code>
               </td>
               <td class="px-4 py-2 text-center">❌</td>
-              <td class="px-4 py-2 text-center">❌</td>
               <td class="px-4 py-2 text-center">✅</td>
             </tr>
             <tr>
               <td class="px-4 py-2 text-gray-700 dark:text-gray-300">
                 <code>submittedStatus</code> in child components
               </td>
-              <td class="px-4 py-2 text-center">❌</td>
               <td class="px-4 py-2 text-center">❌</td>
               <td class="px-4 py-2 text-center">✅</td>
             </tr>

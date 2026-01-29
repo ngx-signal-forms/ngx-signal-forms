@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 /**
  * Basic Page Load Tests
  * Ensures all demo pages load successfully

@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { FormField, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import type { ContactFormModel } from './your-first-form.model';
 import { contactFormSchema } from './your-first-form.validations';
@@ -19,7 +20,7 @@ import { contactFormSchema } from './your-first-form.validations';
 @Component({
   selector: 'ngx-your-first-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit],
+  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
   template: `
     <form
       [ngxSignalForm]="contactForm"
@@ -36,7 +37,7 @@ import { contactFormSchema } from './your-first-form.validations';
           [formField]="contactForm.name"
           class="form-input"
           placeholder="Your name"
-          aria-required="true"
+
         />
         <!-- Toolkit handles ARIA automatically! No manual bindings needed -->
         <ngx-signal-form-error
@@ -54,7 +55,7 @@ import { contactFormSchema } from './your-first-form.validations';
           [formField]="contactForm.email"
           class="form-input"
           placeholder="you@example.com"
-          aria-required="true"
+
         />
         <ngx-signal-form-error
           [formField]="contactForm.email"
@@ -71,7 +72,7 @@ import { contactFormSchema } from './your-first-form.validations';
           [formField]="contactForm.message"
           class="form-input"
           placeholder="Your message (min 10 characters)"
-          aria-required="true"
+
         ></textarea>
         <ngx-signal-form-error
           [formField]="contactForm.message"
@@ -81,7 +82,7 @@ import { contactFormSchema } from './your-first-form.validations';
 
       <!-- Form Actions -->
       <div class="form-actions">
-        <button type="submit" class="btn-primary" aria-live="polite">
+        <button type="submit" class="btn-primary">
           @if (contactForm().pending()) {
             Sending...
           } @else {

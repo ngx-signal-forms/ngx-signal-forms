@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 /**
  * Cross-Field Validation - E2E Tests
  * Route: /advanced-scenarios/cross-field-validation
@@ -9,7 +8,7 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Advanced Scenarios - Cross-Field Validation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/advanced-scenarios/cross-field-validation');
+    await page.goto(`/advanced-scenarios/cross-field-validation`);
     await page.waitForLoadState('domcontentloaded');
   });
 

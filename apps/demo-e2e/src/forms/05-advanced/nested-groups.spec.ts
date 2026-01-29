@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 /**
  * Nested Groups - E2E Tests
  * Route: /advanced-scenarios/nested-groups
@@ -9,7 +8,7 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Advanced Scenarios - Nested Groups', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/advanced-scenarios/nested-groups');
+    await page.goto(`/advanced-scenarios/nested-groups`);
     await page.waitForLoadState('domcontentloaded');
   });
 
@@ -34,7 +33,7 @@ test.describe('Advanced Scenarios - Nested Groups', () => {
   test('should validate nested fields correctly', async ({ page }) => {
     await test.step('Trigger validation on nested required field', async () => {
       const requiredInputs = page.locator(
-        'input[required], input[aria-required="true"]',
+        'input[aria-required="true"], textarea[aria-required="true"], select[aria-required="true"]',
       );
       const input = requiredInputs.first();
       await expect(input).toBeVisible();
@@ -48,8 +47,8 @@ test.describe('Advanced Scenarios - Nested Groups', () => {
 
   test('should display errors with correct nested path', async ({ page }) => {
     await test.step('Verify error paths reflect nesting', async () => {
-      // Trigger validation
-      const inputs = page.locator('input[required]').or(page.locator('input'));
+      // Trigger validation on first input
+      const inputs = page.locator('input');
       const input = inputs.first();
       await expect(input).toBeVisible();
       await input.focus();

@@ -1,6 +1,5 @@
 import { Locator, Page } from '@playwright/test';
 import { BaseFormPage } from './base-form.page';
-
 /**
  * Page Object for "Fieldset - Aggregated Errors" demo
  * Route: /form-field-wrapper/fieldset
@@ -19,7 +18,7 @@ export class FieldsetPage extends BaseFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/form-field-wrapper/fieldset');
+    await this.page.goto(`/form-field-wrapper/fieldset`);
     await this.waitForReady();
   }
 

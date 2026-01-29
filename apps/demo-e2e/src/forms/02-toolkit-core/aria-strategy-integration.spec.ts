@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 /**
  * ARIA Strategy Integration Tests
  * WCAG 2.2 Level AA - Error Display Strategy Awareness
@@ -15,7 +14,7 @@ import { expect, test } from '@playwright/test';
 
 test.describe('ARIA Strategy Integration', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/toolkit-core/error-display-modes');
+    await page.goto(`/toolkit-core/error-display-modes`);
     await page.waitForLoadState('domcontentloaded');
   });
 

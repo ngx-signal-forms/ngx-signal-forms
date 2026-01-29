@@ -12,25 +12,25 @@
  *   }
  */
 :host {
-  /* Error Colors */
-  --ngx-signal-form-error-color: #dc2626;
+  /* Error Colors - matches design system danger token */
+  --ngx-signal-form-error-color: #db1818;
   --ngx-signal-form-error-bg: transparent;
   --ngx-signal-form-error-border: transparent;
 
-  /* Warning Colors */
+  /* Warning Colors - matches design system warning token (amber) */
   --ngx-signal-form-warning-color: #f59e0b;
   --ngx-signal-form-warning-bg: transparent;
   --ngx-signal-form-warning-border: transparent;
 
-  /* Spacing */
-  --_feedback-margin-top: var(--ngx-signal-form-feedback-margin-top, 0.25rem);
+  /* Spacing - tighter per Figma design (2px gap between input and assistive text) */
+  --_feedback-margin-top: var(--ngx-signal-form-feedback-margin-top, 0.125rem);
   --ngx-signal-form-error-margin-top: var(--_feedback-margin-top);
   --ngx-signal-form-error-message-spacing: 0.25rem;
 
-  /* Typography */
+  /* Typography - caption style: 12px font, 16px line-height */
   /* Allow upstream override via feedback variables */
   --_feedback-font-size: var(--ngx-signal-form-feedback-font-size, 0.75rem);
-  --_feedback-line-height: var(--ngx-signal-form-feedback-line-height, 1.25);
+  --_feedback-line-height: var(--ngx-signal-form-feedback-line-height, 1rem);
 
   --ngx-signal-form-error-font-size: var(
     --ngx-signal-form-error-font-size-override,
@@ -49,11 +49,15 @@
   --ngx-signal-form-error-padding: 0;
   --ngx-signal-form-error-padding-horizontal: 0.5rem;
 
+  /* Animation */
+  --ngx-signal-form-error-animation: ngxStatusSlideIn 300ms
+    cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+
   display: block;
   margin-top: var(--ngx-signal-form-error-margin-top);
 }
 
-/* Dark mode defaults */
+/* Dark mode defaults - lighter variants for dark backgrounds */
 @media (prefers-color-scheme: dark) {
   :host {
     --ngx-signal-form-error-color: #fca5a5;
@@ -73,6 +77,9 @@
   border-radius: var(--ngx-signal-form-error-border-radius);
   font-size: var(--ngx-signal-form-error-font-size);
   line-height: var(--ngx-signal-form-error-line-height);
+  animation: var(--ngx-signal-form-error-animation);
+  will-change: transform, opacity;
+  transform-origin: top center;
 }
 
 .ngx-signal-form-error--error {
@@ -95,6 +102,19 @@
 @media (prefers-reduced-motion: reduce) {
   .ngx-signal-form-error {
     transition: none;
+    animation: none;
+  }
+}
+
+/* Animations */
+@keyframes ngxStatusSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

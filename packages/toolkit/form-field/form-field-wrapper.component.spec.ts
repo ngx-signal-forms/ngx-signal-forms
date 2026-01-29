@@ -748,7 +748,6 @@ describe('NgxSignalFormWrapperComponent', () => {
             id="phone"
             type="tel"
             aria-describedby="phone-hint"
-            aria-required="true"
           />
           <span id="phone-hint">Include country code</span>
         </ngx-signal-form-field-wrapper>`,
@@ -763,7 +762,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       const input = screen.getByRole('textbox');
 
       expect(input.getAttribute('aria-describedby')).toBe('phone-hint');
-      expect(input.getAttribute('aria-required')).toBe('true');
+      expect(input.getAttribute('aria-required')).toBeNull();
     });
   });
 

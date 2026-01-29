@@ -25,8 +25,8 @@ All components in this entry point (`ngx-signal-form-field-wrapper`, `ngx-signal
 - **`ngx-signal-form-field-wrapper`**: Outlined layout, borders, colors, spacing.
 - **`ngx-signal-form-fieldset`**: Grouping gap and indentation.
 - **`ngx-signal-form-error`**: Shared feedback typography and colors.
-- **`ngx-signal-form-field-wrapper-hint`**: Helper text colors and spacing.
-- **`ngx-signal-form-field-wrapper-character-count`**: Progressive color states.
+- **`ngx-form-field-hint`**: Helper text colors and spacing.
+- **`ngx-form-field-character-count`**: Progressive color states.
 
 ### Quick Customization
 
@@ -38,8 +38,8 @@ Override these root variables to affect all components at once:
   --ngx-signal-form-feedback-font-size: 0.875rem;
 
   /* Brand Colors */
-  --ngx-form-field-color-primary: #3b82f6; /* Focus rings & active borders */
-  --ngx-form-field-color-error: #ef4444; /* Error state */
+  --ngx-form-field-color-primary: #007bc7; /* Focus rings & active borders */
+  --ngx-form-field-color-error: #db1818; /* Error state */
 }
 ```
 
@@ -63,8 +63,11 @@ import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 - `NgxSignalFormFieldWrapperComponent` - Form field wrapper
 - `NgxFloatingLabelDirective` - Outlined layout with floating label
-- `NgxSignalFormFieldHintComponent` - Helper text
-- `NgxSignalFormFieldCharacterCountComponent` - Character counter
+- `NgxFormFieldHintComponent` - Helper text
+- `NgxFormFieldCharacterCountComponent` - Character counter
+- `NgxFormFieldAssistiveRowComponent` - Assistive content row
+- `NgxSignalFormErrorComponent` - Error and warning display
+- `NgxSignalFormFieldset` - Grouped field validation
 
 **Usage:**
 
@@ -80,7 +83,7 @@ import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
       <ngx-signal-form-field-wrapper [formField]="contactForm.email" outline>
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" />
-        <ngx-signal-form-field-wrapper-hint>We'll never share your email</ngx-signal-form-field-wrapper-hint>
+        <ngx-form-field-hint>We'll never share your email</ngx-form-field-hint>
       </ngx-signal-form-field-wrapper>
     </form>
   `,
@@ -89,7 +92,7 @@ import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 **Benefits:**
 
-- ✅ Single import instead of four separate imports
+- ✅ Single import instead of multiple separate imports
 - ✅ Type-safe readonly tuple
 - ✅ Cleaner component metadata
 - ✅ Better developer experience
@@ -137,13 +140,8 @@ The component uses content projection to allow full customization:
   <textarea id="bio" [formField]="form.bio"></textarea>
 
   <!-- Hints and character counts are projected in a separate slot -->
-  <ngx-signal-form-field-wrapper-hint
-    >Max 500 characters</ngx-signal-form-field-wrapper-hint
-  >
-  <ngx-signal-form-field-wrapper-character-count
-    [formField]="form.bio"
-    [maxLength]="500"
-  />
+  <ngx-form-field-hint>Max 500 characters</ngx-form-field-hint>
+  <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -246,46 +244,29 @@ The form field component supports non-blocking warnings in addition to blocking 
 
 ```css
 :root {
-  /* Form field layout */
-  --ngx-form-field-gap: 0.5rem;
-  --ngx-form-field-margin-bottom: 1rem;
-  --ngx-form-field-width: 100%;
+  /* Layout */
+  --ngx-form-field-gap: 0.125rem;
 
-  /* Label styling (optional) */
-  --ngx-form-field-label-font-size: 0.875rem;
-  --ngx-form-field-label-font-weight: 500;
-  --ngx-form-field-label-line-height: 1.25rem;
-  --ngx-form-field-label-color: #374151;
-  --ngx-form-field-label-margin-bottom: 0.25rem;
+  /* Label */
+  --ngx-form-field-label-size: 0.75rem;
+  --ngx-form-field-label-line-height: 1rem;
+  --ngx-form-field-label-weight: 400;
+  --ngx-form-field-label-color: rgba(50, 65, 85, 0.75);
+  --ngx-form-field-label-padding-start: 0.125rem;
 
-  /* Input styling (optional) */
-  --ngx-form-field-input-font-size: 0.875rem;
-  --ngx-form-field-input-font-weight: 400;
-  --ngx-form-field-input-line-height: 1.5;
-  --ngx-form-field-input-color: #1f2937;
-  --ngx-form-field-input-padding: 0.5rem 0.75rem;
-  --ngx-form-field-input-border: 1px solid #d1d5db;
-  --ngx-form-field-input-border-radius: 0.375rem;
-  --ngx-form-field-input-bg: #ffffff;
-  --ngx-form-field-input-transition:
-    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  /* Input */
+  --ngx-form-field-input-size: 0.875rem;
+  --ngx-form-field-input-line-height: 1.25rem;
+  --ngx-form-field-input-weight: 400;
+  --ngx-form-field-input-padding: 0.25rem 0.5rem;
 
-  /* Input states */
-  --ngx-form-field-input-focus-border-color: #3b82f6;
-  --ngx-form-field-input-focus-box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  --ngx-form-field-input-invalid-border-color: #ef4444;
-  --ngx-form-field-input-warning-border-color: #f59e0b;
-  --ngx-form-field-input-warning-box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
-  --ngx-form-field-input-disabled-bg: #f9fafb;
-  --ngx-form-field-input-disabled-opacity: 0.6;
-
-  /* Prefix/Suffix */
-  --ngx-form-field-prefix-gap: 0.5rem;
-  --ngx-form-field-suffix-gap: 0.5rem;
-  --ngx-form-field-prefix-color: #9ca3af;
-  --ngx-form-field-suffix-color: #9ca3af;
-}
-  --ngx-form-field-input-placeholder-color: #9ca3af;
+  /* Colors */
+  --ngx-form-field-color-border: rgba(50, 65, 85, 0.25);
+  --ngx-form-field-color-border-hover: #324155;
+  --ngx-form-field-focus-color: #007bc7;
+  --ngx-form-field-focus-box-shadow: 0 0 0 4px rgba(0, 123, 199, 0.25);
+  --ngx-form-field-invalid-color: #db1818;
+  --ngx-form-field-warning-color: #f59e0b;
 }
 ```
 
@@ -375,51 +356,29 @@ By default, the required marker (`*`) is automatically shown when the input has 
 
 ```css
 :root {
-  /* Layout */
-  --ngx-form-field-outline-gap: 0.125rem;
-  --ngx-form-field-outline-padding: 0.5rem 0.75rem;
-  --ngx-form-field-outline-min-height: 3.5rem;
-
-  /* Container */
-  --ngx-form-field-outline-bg: #ffffff;
-  --ngx-form-field-outline-border: 1px solid rgba(50, 65, 85, 0.25);
-  --ngx-form-field-outline-border-radius: 0.25rem;
-  --ngx-form-field-outline-transition:
-    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-
   /* Label */
-  --ngx-form-field-outline-label-font-family: 'Inter Variable', sans-serif;
-  --ngx-form-field-outline-label-font-size: 0.75rem;
-  --ngx-form-field-outline-label-font-weight: 400;
+  --ngx-form-field-outline-label-size: 0.75rem;
   --ngx-form-field-outline-label-line-height: 1rem;
-  --ngx-form-field-outline-label-color: rgba(71, 91, 119, 0.75);
-
-  /* Required marker */
-  --ngx-form-field-outline-required-color: #dc2626;
-  --ngx-form-field-outline-required-font-weight: 600;
+  --ngx-form-field-outline-label-weight: 400;
+  --ngx-form-field-outline-label-color: rgba(50, 65, 85, 0.75);
+  --ngx-form-field-outline-label-gap: 0rem;
 
   /* Input */
-  --ngx-form-field-outline-input-font-family: 'Inter Variable', sans-serif;
-  --ngx-form-field-outline-input-font-size: 0.875rem;
-  --ngx-form-field-outline-input-font-weight: 400;
+  --ngx-form-field-outline-input-size: 0.875rem;
   --ngx-form-field-outline-input-line-height: 1.25rem;
+  --ngx-form-field-outline-input-weight: 400;
   --ngx-form-field-outline-input-color: #324155;
 
-  /* Placeholder */
-  --ngx-form-field-outline-placeholder-color: rgba(71, 91, 119, 0.5);
+  /* Required marker */
+  --ngx-form-field-required-marker-color: #db1818;
+  --ngx-form-field-required-marker-weight: 600;
 
-  /* Focus state */
-  --ngx-form-field-outline-focus-border-color: #005fcc;
-  --ngx-form-field-outline-focus-box-shadow: 0 0 0 2px rgba(0, 95, 204, 0.25);
-
-  /* Invalid state */
-  --ngx-form-field-outline-invalid-border-color: #dc2626;
-  --ngx-form-field-outline-invalid-focus-box-shadow: 0 0 0 2px
-    rgba(220, 38, 38, 0.25);
-
-  /* Disabled state */
-  --ngx-form-field-outline-disabled-bg: #f3f4f6;
-  --ngx-form-field-outline-disabled-opacity: 0.6;
+  /* Container + states */
+  --ngx-form-field-color-surface: #ffffff;
+  --ngx-form-field-color-border: rgba(50, 65, 85, 0.25);
+  --ngx-form-field-color-border-hover: #324155;
+  --ngx-form-field-focus-color: #007bc7;
+  --ngx-form-field-focus-box-shadow: 0 0 0 4px rgba(0, 123, 199, 0.25);
 }
 ```
 
@@ -428,34 +387,25 @@ By default, the required marker (`*`) is automatically shown when the input has 
 ```css
 /* Brand colors for outlined layout */
 :root {
-  --ngx-form-field-outline-focus-border-color: #10b981; /* Green */
-  --ngx-form-field-outline-focus-box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
-  --ngx-form-field-outline-required-color: #ef4444; /* Red */
+  --ngx-form-field-focus-color: #10b981; /* Green */
+  --ngx-form-field-focus-box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.25);
+  --ngx-form-field-required-marker-color: #ef4444; /* Red */
 }
 
 /* Dark mode for outlined layout */
 @media (prefers-color-scheme: dark) {
   :root {
-    --ngx-form-field-outline-bg: #111827; /* Dark input background */
-    --ngx-form-field-outline-border: 1px solid rgba(156, 163, 175, 0.25); /* Subtle border */
-    --ngx-form-field-outline-label-color: rgba(
-      209,
-      213,
-      219,
-      0.75
-    ); /* Light gray label */
+    --ngx-form-field-color-surface: #111827; /* Dark input background */
+    --ngx-form-field-color-border: rgba(
+      249,
+      250,
+      251,
+      0.25
+    ); /* Subtle border */
+    --ngx-form-field-outline-label-color: rgba(249, 250, 251, 0.75);
     --ngx-form-field-outline-input-color: #f9fafb; /* Almost white text */
-    --ngx-form-field-outline-placeholder-color: rgba(
-      156,
-      163,
-      175,
-      0.35
-    ); /* Lighter placeholder */
-    --ngx-form-field-outline-focus-border-color: #60a5fa; /* Lighter blue for focus */
-    --ngx-form-field-outline-focus-box-shadow: 0 0 0 2px
-      rgba(96, 165, 250, 0.25); /* Lighter blue glow */
-    --ngx-form-field-outline-disabled-bg: #1f2937; /* Slightly lighter for disabled */
-    --ngx-form-field-outline-disabled-opacity: 0.5; /* Reduced opacity */
+    --ngx-form-field-focus-color: #60a5fa; /* Lighter blue for focus */
+    --ngx-form-field-focus-box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.25);
   }
 }
 ```
@@ -519,14 +469,14 @@ The form-field component sets the `--ngx-signal-form-error-padding-horizontal` C
 
 ---
 
-### NgxSignalFormFieldHintComponent
+### NgxFormFieldHintComponent
 
 Displays helper text for form fields.
 
 **Import:**
 
 ```typescript
-import { NgxSignalFormFieldHintComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormFieldHintComponent } from '@ngx-signal-forms/toolkit/form-field';
 ```
 
 **Usage:**
@@ -535,18 +485,14 @@ import { NgxSignalFormFieldHintComponent } from '@ngx-signal-forms/toolkit/form-
 <ngx-signal-form-field-wrapper [formField]="form.phone" outline>
   <label for="phone">Phone Number</label>
   <input id="phone" [formField]="form.phone" />
-  <ngx-signal-form-field-wrapper-hint
-    >Format: 123-456-7890</ngx-signal-form-field-wrapper-hint
-  >
+  <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
 </ngx-signal-form-field-wrapper>
 ```
 
 **Position control:**
 
 ```html
-<ngx-signal-form-field-wrapper-hint position="right">
-  Optional field
-</ngx-signal-form-field-wrapper-hint>
+<ngx-form-field-hint position="right"> Optional field </ngx-form-field-hint>
 ```
 
 #### CSS Custom Properties
@@ -564,14 +510,14 @@ import { NgxSignalFormFieldHintComponent } from '@ngx-signal-forms/toolkit/form-
 
 ---
 
-### NgxSignalFormFieldCharacterCountComponent
+### NgxFormFieldCharacterCountComponent
 
 Displays character count with progressive color states.
 
 **Import:**
 
 ```typescript
-import { NgxSignalFormFieldCharacterCountComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormFieldCharacterCountComponent } from '@ngx-signal-forms/toolkit/form-field';
 ```
 
 **Usage:**
@@ -580,10 +526,7 @@ import { NgxSignalFormFieldCharacterCountComponent } from '@ngx-signal-forms/too
 <ngx-signal-form-field-wrapper [formField]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-wrapper-character-count
-    [formField]="form.bio"
-    [maxLength]="500"
-  />
+  <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -610,7 +553,7 @@ The component automatically changes color based on character count:
 **Disable color progression:**
 
 ```html
-<ngx-signal-form-field-wrapper-character-count
+<ngx-form-field-character-count
   [formField]="form.bio"
   [maxLength]="500"
   [showLimitColors]="false"
@@ -620,7 +563,7 @@ The component automatically changes color based on character count:
 **Custom thresholds:**
 
 ```html
-<ngx-signal-form-field-wrapper-character-count
+<ngx-form-field-character-count
   [formField]="form.tweet"
   [maxLength]="280"
   [colorThresholds]="{ warning: 90, danger: 98 }"
@@ -823,8 +766,8 @@ import {
 import {
   NgxSignalFormFieldWrapperComponent,
   NgxFloatingLabelDirective,
-  NgxSignalFormFieldHintComponent,
-  NgxSignalFormFieldCharacterCountComponent,
+  NgxFormFieldHintComponent,
+  NgxFormFieldCharacterCountComponent,
 } from '@ngx-signal-forms/toolkit/form-field';
 
 interface ContactForm {
@@ -846,8 +789,8 @@ const contactSchema = schema<ContactForm>((path) => {
     FormField,
     NgxSignalFormFieldWrapperComponent,
     NgxFloatingLabelDirective,
-    NgxSignalFormFieldHintComponent,
-    NgxSignalFormFieldCharacterCountComponent,
+    NgxFormFieldHintComponent,
+    NgxFormFieldCharacterCountComponent,
   ],
   template: `
     <form (submit)="save($event)" novalidate>
@@ -865,9 +808,9 @@ const contactSchema = schema<ContactForm>((path) => {
           required
           placeholder="you@example.com"
         />
-        <ngx-signal-form-field-wrapper-hint>
+        <ngx-form-field-hint>
           We'll never share your email
-        </ngx-signal-form-field-wrapper-hint>
+        </ngx-form-field-hint>
       </ngx-signal-form-field-wrapper>
 
       <!-- Outlined message field with character count -->
@@ -879,7 +822,7 @@ const contactSchema = schema<ContactForm>((path) => {
           required
           rows="4"
         ></textarea>
-        <ngx-signal-form-field-wrapper-character-count
+        <ngx-form-field-character-count
           [formField]="contactForm.message"
           [maxLength]="500"
         />
@@ -893,10 +836,9 @@ const contactSchema = schema<ContactForm>((path) => {
   styles: `
     /* Custom theme for outlined fields */
     :host {
-      --ngx-form-field-outline-focus-border-color: #10b981;
-      --ngx-form-field-outline-focus-box-shadow: 0 0 0 2px
-        rgba(16, 185, 129, 0.25);
-      --ngx-form-field-outline-required-color: #ef4444;
+      --ngx-form-field-focus-color: #10b981;
+      --ngx-form-field-focus-box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.25);
+      --ngx-form-field-required-marker-color: #ef4444;
     }
   `,
 })

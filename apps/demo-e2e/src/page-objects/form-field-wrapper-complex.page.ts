@@ -1,6 +1,5 @@
 import { Locator, Page } from '@playwright/test';
 import { BaseFormPage } from './base-form.page';
-
 /**
  * Page Object for "Form Field Wrapper - Complex Forms" demo
  * Route: /form-field-wrapper/complex-forms
@@ -16,7 +15,7 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/form-field-wrapper/complex-forms');
+    await this.page.goto(`/form-field-wrapper/complex-forms`);
     await this.waitForReady();
   }
 

@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 /**
  * Form Accessibility Tests
  * WCAG 2.2 Level AA - Forms
@@ -12,25 +11,28 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Accessibility - Form Accessibility', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/getting-started/your-first-form');
+    await page.goto(`/getting-started/your-first-form`);
     await page.waitForLoadState('domcontentloaded');
   });
 
   test('should have required fields marked with aria-required', async ({
     page,
   }) => {
-    await test.step('Verify required attribute on mandatory fields', async () => {
+    await test.step('Verify aria-required="true" on mandatory fields', async () => {
       const form = page.locator('form').first();
       await expect(form).toBeVisible();
 
-      const inputs = form.locator('input[required], textarea[required]');
+      // Auto-ARIA directive sets aria-required="true" based on validators
+      const inputs = form.locator(
+        'input[aria-required="true"], textarea[aria-required="true"], select[aria-required="true"]',
+      );
 
       const count = await inputs.count();
       expect(count).toBeGreaterThan(0);
 
-      // Verify first required field
+      // Verify first required field has aria-required
       const firstInput = inputs.first();
-      await expect(firstInput).toHaveAttribute('required');
+      await expect(firstInput).toHaveAttribute('aria-required', 'true');
     });
   });
 

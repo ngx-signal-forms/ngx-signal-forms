@@ -199,7 +199,7 @@ const wizardSchema = schema<WizardData>((path) => {
           } @else {
             <button
               type="submit"
-              class="btn-primary bg-green-600 hover:bg-green-700"
+              class="btn-primary"
               [disabled]="wizardForm().pending() || !model().termsAccepted"
             >
               @if (wizardForm().pending()) {

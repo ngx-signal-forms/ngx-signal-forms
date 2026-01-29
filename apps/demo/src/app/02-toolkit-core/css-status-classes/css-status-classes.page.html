@@ -84,7 +84,7 @@
           <p class="native-hint">Min 8 characters</p>
         </div>
 
-        <button type="submit">Submit Native Form</button>
+        <button type="submit" class="btn-primary">Submit Native Form</button>
       </form>
 
       <div class="state-inspector">
@@ -135,8 +135,8 @@
             [class.demo-valid]="immediateClasses().valid"
             [class.demo-touched]="immediateClasses().touched"
           />
-          <ngx-signal-form-field-wrapper-hint
-            >Red border appears instantly</ngx-signal-form-field-wrapper-hint
+          <ngx-form-field-hint
+            >Red border appears instantly</ngx-form-field-hint
           >
         </ngx-signal-form-field-wrapper>
 
@@ -153,12 +153,10 @@
             [class.demo-valid]="immediateForm.password().valid()"
             [class.demo-touched]="immediateForm.password().touched()"
           />
-          <ngx-signal-form-field-wrapper-hint
-            >Min 8 characters</ngx-signal-form-field-wrapper-hint
-          >
+          <ngx-form-field-hint>Min 8 characters</ngx-form-field-hint>
         </ngx-signal-form-field-wrapper>
 
-        <button type="submit">Submit Immediate Form</button>
+        <button type="submit" class="btn-primary">Submit Immediate Form</button>
       </form>
 
       <div class="state-inspector">
@@ -207,8 +205,8 @@
             "
             [class.demo-touched]="onTouchClasses().touched"
           />
-          <ngx-signal-form-field-wrapper-hint
-            >Red border appears after blur</ngx-signal-form-field-wrapper-hint
+          <ngx-form-field-hint
+            >Red border appears after blur</ngx-form-field-hint
           >
         </ngx-signal-form-field-wrapper>
 
@@ -230,12 +228,10 @@
             "
             [class.demo-touched]="onTouchForm.password().touched()"
           />
-          <ngx-signal-form-field-wrapper-hint
-            >Min 8 characters</ngx-signal-form-field-wrapper-hint
-          >
+          <ngx-form-field-hint>Min 8 characters</ngx-form-field-hint>
         </ngx-signal-form-field-wrapper>
 
-        <button type="submit">Submit On-Touch Form</button>
+        <button type="submit" class="btn-primary">Submit On-Touch Form</button>
       </form>
 
       <div class="state-inspector">

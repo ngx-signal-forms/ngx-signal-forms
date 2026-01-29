@@ -1,7 +1,4 @@
 import { expect, test } from '@playwright/test';
-
-const BASE_URL = 'http://localhost:4200';
-
 /**
  * Navigation & Application Shell Tests
  * Tests for Part 1 of DEMO_TEST_PLAN.md
@@ -15,7 +12,7 @@ const BASE_URL = 'http://localhost:4200';
 
 test.describe.fixme('Demo Application - Navigation & Shell', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/`);
+    await page.goto(`/`);
     await page.waitForLoadState('domcontentloaded');
   });
 
@@ -107,7 +104,7 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
       ];
 
       for (const { category, links } of categoryTests) {
-        await page.goto(`${BASE_URL}${category}`);
+        await page.goto(`${category}`);
         await page.waitForLoadState('domcontentloaded');
 
         // Get the sidebar navigation
@@ -153,7 +150,7 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
       ];
 
       for (const examplePath of examples) {
-        await page.goto(`${BASE_URL}${examplePath}`);
+        await page.goto(`${examplePath}`);
         await page.waitForLoadState('domcontentloaded');
 
         // Wait for main content and page heading to be visible
@@ -168,7 +165,7 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
 
   test('should update active state in navigation', async ({ page }) => {
     await test.step('Navigate and verify active state updates', async () => {
-      await page.goto(`${BASE_URL}/getting-started/your-first-form`);
+      await page.goto(`/getting-started/your-first-form`);
       await page.waitForLoadState('domcontentloaded');
 
       // Check for active class on navigation links
@@ -177,7 +174,7 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
         .first();
       await expect(activeLink).toBeVisible({ timeout: 2000 });
 
-      await page.goto(`${BASE_URL}/toolkit-core/accessibility-comparison`);
+      await page.goto(`/toolkit-core/accessibility-comparison`);
       await page.waitForLoadState('domcontentloaded');
 
       // Verify active state updated
@@ -191,7 +188,7 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
   test('should handle browser back button navigation', async ({ page }) => {
     await test.step('Navigate, go back, and verify', async () => {
       // Start from home page
-      await page.goto(`${BASE_URL}/`);
+      await page.goto(`/`);
       await page.waitForLoadState('domcontentloaded');
 
       // Navigate to first page by clicking link (creates proper history entry)
@@ -244,7 +241,7 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
   }) => {
     await test.step('Verify navigation works correctly', async () => {
       // Navigate to first page
-      await page.goto(`${BASE_URL}/getting-started/your-first-form`);
+      await page.goto(`/getting-started/your-first-form`);
       await page.waitForLoadState('domcontentloaded');
 
       const mainContent = page.locator('main').first();
@@ -255,7 +252,7 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
       await expect(heading).toBeVisible();
 
       // Navigate to second page
-      await page.goto(`${BASE_URL}/toolkit-core/error-display-modes`);
+      await page.goto(`/toolkit-core/error-display-modes`);
       await page.waitForLoadState('domcontentloaded');
 
       // Verify new page loaded and main content is visible
@@ -271,7 +268,7 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
 
 test.describe.fixme('Demo Application - Theme Switching', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/`);
+    await page.goto(`/`);
     await page.waitForLoadState('domcontentloaded');
   });
 
@@ -295,7 +292,7 @@ test.describe.fixme('Demo Application - Theme Switching', () => {
 
   test('should maintain theme across navigation', async ({ page }) => {
     await test.step('Set theme and navigate, verify persistence', async () => {
-      await page.goto(`${BASE_URL}/toolkit-core/accessibility-comparison`);
+      await page.goto(`/toolkit-core/accessibility-comparison`);
       await page.waitForLoadState('domcontentloaded');
 
       /// Verify page loaded successfully (theme persists across navigation)
@@ -369,7 +366,7 @@ test.describe.fixme('Demo Application - Route Handling', () => {
     await test.step('Navigate to non-existent route', async () => {
       // Navigate to invalid route - Angular will redirect or show 404
       await page
-        .goto(`${BASE_URL}/invalid-route-that-does-not-exist`, {
+        .goto(`/invalid-route-that-does-not-exist`, {
           waitUntil: 'domcontentloaded',
         })
         .catch(() => {
@@ -390,7 +387,7 @@ test.describe.fixme('Demo Application - Route Handling', () => {
     page,
   }) => {
     await test.step('Add query params and navigate', async () => {
-      await page.goto(`${BASE_URL}/?debug=true&mode=manual`);
+      await page.goto(`/?debug=true&mode=manual`);
       await page.waitForLoadState('domcontentloaded');
 
       const url = page.url();

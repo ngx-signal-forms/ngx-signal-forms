@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Error Messages - 3-Tier Priority', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/advanced-scenarios/error-messages');
+    await page.goto(`/advanced-scenarios/error-messages`);
     await page.waitForLoadState('domcontentloaded');
   });
 

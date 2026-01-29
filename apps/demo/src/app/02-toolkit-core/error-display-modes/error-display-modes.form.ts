@@ -10,6 +10,7 @@ import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 
 import {
   productFeedbackSchema,
@@ -40,7 +41,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
 @Component({
   selector: 'ngx-error-display-modes-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit],
+  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
   template: `
     <!-- Product Feedback Form -->
     <form
@@ -167,8 +168,6 @@ const INITIAL_MODEL: ProductFeedbackModel = {
             [formField]="productForm.overallRating"
             placeholder="Rate 1-5 stars"
             aria-describedby="rating-hint"
-            aria-valuemin="1"
-            aria-valuemax="5"
           />
           <div class="form-hint" id="rating-hint">1 = Poor, 5 = Excellent</div>
           <ngx-signal-form-error
@@ -314,7 +313,6 @@ const INITIAL_MODEL: ProductFeedbackModel = {
         <button
           type="submit"
           class="btn-primary"
-          aria-live="polite"
           [disabled]="productForm().pending()"
           [attr.aria-describedby]="
             showSubmissionError() ? 'submission-error' : null

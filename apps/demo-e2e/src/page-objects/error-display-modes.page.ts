@@ -1,6 +1,5 @@
 import { Locator, Page } from '@playwright/test';
 import { ErrorStrategyFormPage } from './base-form.page';
-
 /**
  * Page Object for "Error Display Modes" demo
  * Route: /toolkit-core/error-display-modes
@@ -22,7 +21,7 @@ export class ErrorDisplayModesPage extends ErrorStrategyFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/toolkit-core/error-display-modes');
+    await this.page.goto(`/toolkit-core/error-display-modes`);
     await this.waitForReady();
   }
 

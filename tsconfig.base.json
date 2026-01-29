@@ -24,6 +24,10 @@
     "useDefineForClassFields": false,
     "paths": {
       "@ngx-signal-forms/toolkit": ["packages/toolkit/index.ts"],
+      "@ngx-signal-forms/toolkit/assistive": [
+        "packages/toolkit/assistive/index.ts"
+      ],
+      "@ngx-signal-forms/toolkit/core": ["packages/toolkit/core/index.ts"],
       "@ngx-signal-forms/toolkit/form-field": [
         "packages/toolkit/form-field/public_api.ts"
       ],

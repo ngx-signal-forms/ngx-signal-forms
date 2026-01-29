@@ -359,7 +359,6 @@
         [fieldsetField]="complexForm.preferences.contactMethod"
         fieldsetId="contact-method"
         class="space-y-3"
-        aria-required="true"
       >
         <legend class="text-sm font-medium text-gray-700 dark:text-gray-300">
           Preferred contact method *
@@ -403,7 +402,6 @@
     <button
       type="submit"
       class="btn-primary"
-      aria-live="polite"
       [disabled]="complexForm().pending()"
     >
       @if (complexForm().pending()) { Submitting... } @else { Submit Application

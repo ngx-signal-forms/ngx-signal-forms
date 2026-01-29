@@ -1,6 +1,5 @@
 import { Locator, Page } from '@playwright/test';
 import { BaseFormPage } from './base-form.page';
-
 /**
  * Page Object for "Advanced - Submission Patterns" demo
  * Route: /advanced-scenarios/submission-patterns
@@ -18,7 +17,7 @@ export class SubmissionPatternsPage extends BaseFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/advanced-scenarios/submission-patterns');
+    await this.page.goto(`/advanced-scenarios/submission-patterns`);
     await this.waitForReady();
   }
 

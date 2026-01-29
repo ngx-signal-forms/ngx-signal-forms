@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { FormField, form, submit } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 
 import {
   createInitialFieldStatesModel,
@@ -20,7 +21,7 @@ import { fieldStatesSchema } from './field-states.validations';
 @Component({
   selector: 'ngx-field-states-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit],
+  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
   template: `
     <form [ngxSignalForm]="userForm" (submit)="saveChanges($event)">
       @if (userForm().dirty()) {
@@ -48,7 +49,6 @@ import { fieldStatesSchema } from './field-states.validations';
           class="form-input"
           [formField]="userForm.email"
           placeholder="you@example.com"
-          aria-required="true"
         />
         <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
       </div>
@@ -61,7 +61,6 @@ import { fieldStatesSchema } from './field-states.validations';
           class="form-input"
           [formField]="userForm.username"
           placeholder="johndoe"
-          aria-required="true"
         />
         <ngx-signal-form-error
           [formField]="userForm.username"
@@ -77,38 +76,15 @@ import { fieldStatesSchema } from './field-states.validations';
           class="form-input"
           [formField]="userForm.password"
           placeholder="••••••••"
-          aria-required="true"
         />
         <ngx-signal-form-error
           [formField]="userForm.password"
           fieldName="password"
         />
-
-        <!-- Reserved space wrapper prevents layout shift when warnings appear/disappear -->
-        <div class="min-h-[0px] transition-all duration-200">
-          @if (showPasswordWarnings()) {
-            <div
-              class="mt-2 space-y-1 rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950"
-            >
-              <p
-                class="text-xs font-semibold text-amber-800 dark:text-amber-200"
-              >
-                💡 Password Strength Suggestions:
-              </p>
-              @for (warning of passwordWarnings(); track warning) {
-                <p
-                  class="text-sm text-amber-700 dark:text-amber-300"
-                  role="status"
-                >
-                  • {{ warning.message }}
-                </p>
-              }
-              <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">
-                These are suggestions, not requirements
-              </p>
-            </div>
-          }
-        </div>
+        <ngx-signal-form-error
+          [errors]="passwordWarnings"
+          fieldName="password"
+        />
       </div>
 
       <div class="form-field">
@@ -176,21 +152,14 @@ export class FieldStatesForm {
   /** Public form instance for state tracking in parent page */
   readonly userForm = form(this.#model, fieldStatesSchema);
 
-  /** Computed signal for password warnings display */
-  protected readonly showPasswordWarnings = computed(() => {
-    const passwordField = this.userForm.password();
-    return (
-      passwordField.dirty() &&
-      passwordField.errors().some((e) => e.kind.startsWith('warn:'))
-    );
-  });
-
   /** Computed signal for password warnings list */
   protected readonly passwordWarnings = computed(() => {
-    return this.userForm
-      .password()
-      .errors()
-      .filter((e) => e.kind.startsWith('warn:'));
+    const passwordField = this.userForm.password();
+    if (!passwordField.dirty()) {
+      return [];
+    }
+
+    return passwordField.errors().filter((e) => e.kind.startsWith('warn:'));
   });
 
   /**

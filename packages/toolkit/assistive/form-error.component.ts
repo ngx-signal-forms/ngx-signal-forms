@@ -11,19 +11,17 @@ import type {
   FieldTree,
   ValidationError,
 } from '@angular/forms/signals';
-import { NGX_ERROR_MESSAGES } from '../providers/error-messages.provider';
-import type {
-  ErrorDisplayStrategy,
-  ReactiveOrStatic,
-  SubmittedStatus,
-  ValidationErrorWithParams,
-} from '../types';
 import {
   generateErrorId,
   generateWarningId,
-} from '../utilities/field-resolution';
-import { injectFormContext } from '../utilities/inject-form-context';
-import { showErrors } from '../utilities/show-errors';
+  injectFormContext,
+  NGX_ERROR_MESSAGES,
+  showErrors,
+  type ErrorDisplayStrategy,
+  type ReactiveOrStatic,
+  type SubmittedStatus,
+  type ValidationErrorWithParams,
+} from '@ngx-signal-forms/toolkit/core';
 
 /**
  * Reusable error and warning display component with WCAG 2.2 compliance.

@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 /**
  * Stepper / Multi-step Form - E2E Tests
  * Route: /advanced-scenarios/stepper-form
@@ -9,7 +8,7 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Advanced Scenarios - Stepper Form', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/advanced-scenarios/stepper-form');
+    await page.goto(`/advanced-scenarios/stepper-form`);
     await page.waitForLoadState('domcontentloaded');
   });
 

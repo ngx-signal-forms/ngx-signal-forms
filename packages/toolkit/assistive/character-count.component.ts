@@ -33,7 +33,7 @@ import {
  * <ngx-signal-form-field-wrapper [formField]="form.bio">
  *   <label for="bio">Bio</label>
  *   <textarea id="bio" [formField]="form.bio"></textarea>
- *   <ngx-signal-form-field-wrapper-character-count
+ *   <ngx-form-field-character-count
  *     [formField]="form.bio"
  *     [maxLength]="500"
  *   />
@@ -42,7 +42,7 @@ import {
  *
  * @example Left-aligned
  * ```html
- * <ngx-signal-form-field-wrapper-character-count
+ * <ngx-form-field-character-count
  *   [formField]="form.tweet"
  *   [maxLength]="280"
  *   position="left"
@@ -51,7 +51,7 @@ import {
  *
  * @example Disable color progression
  * ```html
- * <ngx-signal-form-field-wrapper-character-count
+ * <ngx-form-field-character-count
  *   [formField]="form.message"
  *   [maxLength]="1000"
  *   [showLimitColors]="false"
@@ -60,18 +60,18 @@ import {
  *
  * @example Custom thresholds
  * ```html
- * <ngx-signal-form-field-wrapper-character-count
+ * <ngx-form-field-character-count
  *   [formField]="form.description"
  *   [maxLength]="500"
  *   [colorThresholds]="{ warning: 90, danger: 98 }"
  * />
  * ```
  *
- * Color States:
- * - **ok**: 0-80% of limit (default gray)
- * - **warning**: 80-95% of limit (default amber)
- * - **danger**: 95-100% of limit (default red)
- * - **exceeded**: >100% of limit (default dark red, bold)
+ * Color States (aligned with Figma design tokens):
+ * - **ok**: 0-80% of limit (text/secondary)
+ * - **warning**: 80-95% of limit (amber)
+ * - **danger**: 95-100% of limit (interaction/danger)
+ * - **exceeded**: >100% of limit (darker red, bold)
  *
  * Customization:
  * Use CSS custom properties to theme character count appearance:
@@ -80,97 +80,73 @@ import {
  * :root {
  *   --ngx-form-field-char-count-font-size: 0.75rem;
  *   --ngx-form-field-char-count-line-height: 1rem;
- *
- *   // Color states (0-80%)
- *   --ngx-form-field-char-count-color-ok: #6b7280;
- *
- *   // Warning state (80-95%)
+ *   --ngx-form-field-char-count-color-ok: rgba(50, 65, 85, 0.75);
  *   --ngx-form-field-char-count-color-warning: #f59e0b;
- *
- *   // Danger state (95-100%)
- *   --ngx-form-field-char-count-color-danger: #dc2626;
- *
- *   // Exceeded state (>100%)
+ *   --ngx-form-field-char-count-color-danger: #db1818;
  *   --ngx-form-field-char-count-color-exceeded: #991b1b;
- *   --ngx-form-field-char-count-weight-exceeded: 700;
+ *   --ngx-form-field-char-count-weight-exceeded: 600;
  * }
  * ```
  *
  * Accessibility:
  * - Ensure color is not the only indicator (text content also changes)
  * - Color contrast meets WCAG 2.2 Level AA (4.5:1 minimum)
- * - Consider announcing state changes for screen readers (future enhancement)
  *
  * @see {@link createCharacterCount} for the underlying headless utility
  */
 @Component({
-  selector: 'ngx-signal-form-field-wrapper-character-count',
+  selector: 'ngx-form-field-character-count',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div
-      class="ngx-form-field-char-count"
-      [attr.data-limit-state]="displayLimitState()"
-    >
-      {{ characterCountText() }}
-    </div>
-  `,
+  template: `{{ characterCountText() }}`,
   styles: `
-    .ngx-form-field-char-count {
-      font-size: var(
-        --ngx-form-field-char-count-font-size,
-        var(--ngx-signal-form-feedback-font-size, 0.75rem)
-      );
-      line-height: var(
-        --ngx-form-field-char-count-line-height,
-        var(--ngx-signal-form-feedback-line-height, 1.25)
-      );
-      color: var(--ngx-form-field-char-count-color-ok, rgba(71, 91, 119, 0.75));
-      margin-top: var(
-        --ngx-form-field-char-count-margin-top,
-        var(--ngx-signal-form-feedback-margin-top, 0.25rem)
-      );
+    :host {
+      display: block;
+      font-size: var(--ngx-form-field-char-count-font-size, 0.75rem);
+      line-height: var(--ngx-form-field-char-count-line-height, 1.25);
+      color: var(--ngx-form-field-char-count-color-ok, rgba(50, 65, 85, 0.75));
       transition:
         color 0.2s ease,
         font-weight 0.2s ease;
       white-space: nowrap;
     }
 
-    :host([position='left']) .ngx-form-field-char-count {
+    :host([position='left']) {
       text-align: left;
     }
 
-    :host([position='right']) .ngx-form-field-char-count {
+    :host([position='right']) {
       text-align: right;
     }
 
     /* Color progression states */
-    .ngx-form-field-char-count[data-limit-state='ok'] {
-      color: var(--ngx-form-field-char-count-color-ok, rgba(71, 91, 119, 0.75));
+    :host([data-limit-state='ok']) {
+      color: var(--ngx-form-field-char-count-color-ok, rgba(50, 65, 85, 0.75));
     }
 
-    .ngx-form-field-char-count[data-limit-state='warning'] {
+    :host([data-limit-state='warning']) {
       color: var(--ngx-form-field-char-count-color-warning, #f59e0b);
     }
 
-    .ngx-form-field-char-count[data-limit-state='danger'] {
-      color: var(--ngx-form-field-char-count-color-danger, #dc2626);
+    :host([data-limit-state='danger']) {
+      color: var(--ngx-form-field-char-count-color-danger, #db1818);
     }
 
-    .ngx-form-field-char-count[data-limit-state='exceeded'] {
+    :host([data-limit-state='exceeded']) {
       color: var(--ngx-form-field-char-count-color-exceeded, #991b1b);
       font-weight: var(--ngx-form-field-char-count-weight-exceeded, 600);
     }
 
     /* Disabled color progression */
-    .ngx-form-field-char-count[data-limit-state='disabled'] {
-      color: var(--ngx-form-field-char-count-color-ok, rgba(71, 91, 119, 0.75));
+    :host([data-limit-state='disabled']) {
+      color: var(--ngx-form-field-char-count-color-ok, rgba(50, 65, 85, 0.75));
     }
   `,
   host: {
     '[attr.position]': 'position()',
+    '[attr.data-limit-state]': 'displayLimitState()',
   },
 })
-export class NgxSignalFormFieldCharacterCountComponent<TValue = unknown> {
+export class NgxFormFieldCharacterCountComponent<TValue = unknown> {
   /**
    * Form field to track character count from.
    * Must contain a value compatible with string length calculation.
@@ -199,13 +175,13 @@ export class NgxSignalFormFieldCharacterCountComponent<TValue = unknown> {
    * ```
    * ```html
    * <!-- maxLength auto-detected as 500 -->
-   * <ngx-signal-form-field-wrapper-character-count [formField]="form.bio" />
+   * <ngx-form-field-character-count [formField]="form.bio" />
    * ```
    *
    * @example Manual override
    * ```html
    * <!-- Display limit is 300, even if validation allows 500 -->
-   * <ngx-signal-form-field-wrapper-character-count
+   * <ngx-form-field-character-count
    *   [formField]="form.bio"
    *   [maxLength]="300"
    * />

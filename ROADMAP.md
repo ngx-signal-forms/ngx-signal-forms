@@ -145,23 +145,17 @@ maxLength(path.bio, 500);
 
 ```html
 <!-- Must repeat maxLength -->
-<ngx-signal-form-field-wrapper-character-count
-  [formField]="form.bio"
-  [maxLength]="500"
-/>
+<ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 ```
 
 **After:**
 
 ```html
 <!-- Auto-detects maxLength from validation -->
-<ngx-signal-form-field-wrapper-character-count [formField]="form.bio" />
+<ngx-form-field-character-count [formField]="form.bio" />
 
 <!-- Can still override if needed -->
-<ngx-signal-form-field-wrapper-character-count
-  [formField]="form.bio"
-  [maxLength]="300"
-/>
+<ngx-form-field-character-count [formField]="form.bio" [maxLength]="300" />
 ```
 
 **Implementation:**
