@@ -105,16 +105,14 @@ jobs:
       - name: Version (Dry Run)
         if: ${{ inputs.dry_run }}
         run: |
-          pnpm exec nx release version ${{ steps.version_cmd.outputs.cmd }} --dry-run ${{ steps.release_flags.outputs.flags }}
-          pnpm exec nx release changelog --dry-run ${{ steps.release_flags.outputs.flags }}
+          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --dry-run --skip-publish ${{ steps.release_flags.outputs.flags }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Version (Real)
         if: ${{ !inputs.dry_run }}
         run: |
-          pnpm exec nx release version ${{ steps.version_cmd.outputs.cmd }} --yes ${{ steps.release_flags.outputs.flags }}
-          pnpm exec nx release changelog --yes ${{ steps.release_flags.outputs.flags }}
+          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --yes --skip-publish ${{ steps.release_flags.outputs.flags }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
