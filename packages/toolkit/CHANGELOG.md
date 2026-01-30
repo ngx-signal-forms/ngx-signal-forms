@@ -1,3 +1,31 @@
+## 1.0.0-beta.1 (2026-01-30)
+
+### 🚀 Features
+
+- ⚠️  **toolkit:** create assistive components entry point ([b1d003b](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/b1d003b))
+- ⚠️  **form-field:** rename form field wrapper API ([4588f54](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/4588f54))
+
+### ⚠️  Breaking Changes
+
+- **toolkit:** create assistive components entry point  ([b1d003b](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/b1d003b))
+  NgxSignalFormErrorComponent moved from @ngx-signal-forms/toolkit to @ngx-signal-forms/toolkit/assistive. Update imports:
+  Before:
+  import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit';
+  After:
+  import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+- **form-field:** rename form field wrapper API  ([4588f54](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/4588f54))
+  The form field wrapper component and related
+  selectors were renamed. Update imports to
+  NgxSignalFormFieldWrapperComponent and replace
+  <ngx-signal-form-field> with <ngx-signal-form-field-wrapper>.
+  Hint and character count selectors are now
+  ngx-signal-form-field-wrapper-hint and
+  ngx-signal-form-field-wrapper-character-count.
+
+### ❤️ Thank You
+
+- The Ult
+
 ## 1.0.0-beta.0 (2026-01-28)
 
 ### 🚀 Features
