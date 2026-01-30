@@ -102,27 +102,21 @@ jobs:
           fi
           echo "flags=$FLAGS" >> $GITHUB_OUTPUT
 
-      - name: Version (Dry Run)
+      - name: Release (Dry Run)
         if: ${{ inputs.dry_run }}
-        run: |
-          VERSION_OUTPUT=$(pnpm exec nx release version ${{ steps.version_cmd.outputs.cmd }} --dry-run --git-tag=false ${{ steps.release_flags.outputs.flags }} | tee /dev/stderr)
-          NEXT_VERSION=$(printf '%s\n' "$VERSION_OUTPUT" | sed -n 's/.*New version \([^ ]*\) written.*/\1/p' | head -n1)
-          if [ -z "$NEXT_VERSION" ]; then
-            echo "Failed to resolve next version from nx output." >&2
-            exit 1
-          fi
-          pnpm exec nx release changelog "$NEXT_VERSION" --dry-run ${{ steps.release_flags.outputs.flags }}
+        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.release_flags.outputs.flags }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Version (Real)
+      - name: Release
         if: ${{ !inputs.dry_run }}
-        run: |
-          pnpm exec nx release version ${{ steps.version_cmd.outputs.cmd }} --git-tag=false ${{ steps.release_flags.outputs.flags }}
-          NEXT_VERSION=$(node -p "require('./packages/toolkit/package.json').version")
-          pnpm exec nx release changelog "$NEXT_VERSION" ${{ steps.release_flags.outputs.flags }}
+        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish ${{ steps.release_flags.outputs.flags }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push changes and tags
+        if: ${{ !inputs.dry_run }}
+        run: git push --follow-tags
 
       - name: Summary
         if: ${{ !inputs.dry_run }}
