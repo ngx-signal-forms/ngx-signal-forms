@@ -1,4 +1,4 @@
-import { Directive, input } from '@angular/core';
+import { Directive } from '@angular/core';
 
 /**
  * Attribute directive that transforms NgxSignalFormFieldWrapperComponent into ann outlined/outlined/floating label layout.
@@ -21,25 +21,8 @@ import { Directive, input } from '@angular/core';
  * </ngx-signal-form-field-wrapper>
  * ```
  *
- * @example Hide required marker
- * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.email" outline [showRequiredMarker]="false">
- *   <label for="email">Email Address</label>
- *   <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
- * </ngx-signal-form-field-wrapper>
- * ```
- *
- * @example Custom required marker
- * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.email" outline requiredMarker="(required)">
- *   <label for="email">Email Address</label>
- *   <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
- * </ngx-signal-form-field-wrapper>
- * ```
- *
- * Note: By default, the required marker (*) is shown when the input has
- * the 'required' attribute or 'aria-required="true"'. Use [showRequiredMarker]="false"
- * to hide it, or provide a custom requiredMarker string.
+ * Note: Required marker behavior is configured via the form field wrapper inputs
+ * (`showRequiredMarker`, `requiredMarker`) or toolkit config.
  *
  * @example With character count
  * ```html
@@ -99,20 +82,6 @@ import { Directive, input } from '@angular/core';
   standalone: true,
   host: {
     '[class.ngx-signal-forms-outline]': 'true',
-    '[attr.data-show-required]': 'showRequiredMarker() ? "true" : null',
-    '[attr.data-required-marker]': 'requiredMarker()',
   },
 })
-export class NgxFloatingLabelDirective {
-  /**
-   * Whether to show the required marker (asterisk or custom character) for required fields.
-   * @default true
-   */
-  readonly showRequiredMarker = input<boolean>(true);
-
-  /**
-   * Custom character(s) to display for required fields.
-   * @default ' *'
-   */
-  readonly requiredMarker = input<string>(' *');
-}
+export class NgxFloatingLabelDirective {}

@@ -150,6 +150,11 @@ function generateUniqueFieldId(): string {
   host: {
     '[attr.outline]': 'isOutline() ? "" : null',
     '[class.ngx-signal-form-field-wrapper--warning]': 'showWarningState()',
+    '[class.ngx-signal-forms-outline]': 'isOutline()',
+    '[attr.data-show-required]':
+      'isOutline() && resolvedShowRequiredMarker() ? "true" : null',
+    '[attr.data-required-marker]':
+      'isOutline() && resolvedShowRequiredMarker() ? resolvedRequiredMarker() : null',
   },
   template: `
     <!-- Label slot (outside bordered container for standard layout, visually inside for outline via CSS) -->
@@ -285,6 +290,18 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   readonly outline = input(false, { transform: booleanAttribute });
 
   /**
+   * Whether to show the required marker in outlined fields.
+   * Falls back to NgxSignalFormsConfig.showRequiredMarker when unset.
+   */
+  readonly showRequiredMarker = input<unknown>(undefined);
+
+  /**
+   * Custom character(s) for the required marker in outlined fields.
+   * Falls back to NgxSignalFormsConfig.requiredMarker when unset.
+   */
+  readonly requiredMarker = input<string | undefined>(undefined);
+
+  /**
    * Toolkit configuration for default appearance.
    */
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
@@ -333,6 +350,30 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
 
     // Priority 2: Config default
     return this.#config.defaultFormFieldAppearance === 'outline';
+  });
+
+  /**
+   * Resolved required marker visibility with input override.
+   */
+  protected readonly resolvedShowRequiredMarker = computed(() => {
+    const explicit = this.showRequiredMarker();
+    if (explicit !== undefined) {
+      return booleanAttribute(explicit);
+    }
+
+    return this.#config.showRequiredMarker;
+  });
+
+  /**
+   * Resolved required marker text with input override.
+   */
+  protected readonly resolvedRequiredMarker = computed(() => {
+    const explicit = this.requiredMarker();
+    if (explicit !== undefined) {
+      return explicit;
+    }
+
+    return this.#config.requiredMarker;
   });
 
   /**

@@ -618,6 +618,98 @@ describe('NgxSignalFormWrapperComponent', () => {
     });
   });
 
+  describe('Required marker configuration', () => {
+    it('should show required marker by default when outline is enabled', async () => {
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field" outline>
+          <label for="email">Email</label>
+          <input id="email" type="email" required />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
+      expect(formField).toHaveAttribute('data-show-required', 'true');
+      expect(formField).toHaveAttribute('data-required-marker', ' *');
+    });
+
+    it('should hide required marker when showRequiredMarker is false', async () => {
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper
+          [formField]="field"
+          outline
+          [showRequiredMarker]="false">
+          <label for="email">Email</label>
+          <input id="email" type="email" required />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
+      expect(formField).not.toHaveAttribute('data-show-required', 'true');
+      expect(formField).not.toHaveAttribute('data-required-marker');
+    });
+
+    it('should use custom required marker when provided', async () => {
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper
+          [formField]="field"
+          outline
+          requiredMarker="(required)">
+          <label for="email">Email</label>
+          <input id="email" type="email" required />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
+      expect(formField).toHaveAttribute('data-show-required', 'true');
+      expect(formField).toHaveAttribute('data-required-marker', '(required)');
+    });
+
+    it('should not set marker when outline is disabled', async () => {
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" required />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const formField = container.querySelector(
+        'ngx-signal-form-field-wrapper',
+      );
+      expect(formField).not.toHaveAttribute('data-show-required', 'true');
+      expect(formField).not.toHaveAttribute('data-required-marker');
+    });
+  });
+
   describe('Integration scenarios', () => {
     it('should work with textarea elements', async () => {
       await render(
