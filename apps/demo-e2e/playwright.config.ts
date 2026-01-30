@@ -14,10 +14,13 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
+const preset = nxE2EPreset(__filename, { testDir: './src' });
+
 export default defineConfig({
-  ...nxE2EPreset(__filename, { testDir: './src' }),
+  ...preset,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
+    ...preset.use,
     baseURL,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',

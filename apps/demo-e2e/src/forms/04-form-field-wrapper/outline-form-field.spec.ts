@@ -154,4 +154,15 @@ test.describe('Outline Form Field - Complex Nested Form', () => {
     await expect(labelWrapper).toBeVisible();
     await expect(labelWrapper.locator('label')).toBeVisible();
   });
+
+  test('should expose required marker attributes on outlined fields', async ({
+    page,
+  }) => {
+    const firstFormField = page
+      .locator('ngx-signal-form-field-wrapper.ngx-signal-forms-outline')
+      .first();
+
+    await expect(firstFormField).toHaveAttribute('data-show-required', 'true');
+    await expect(firstFormField).toHaveAttribute('data-required-marker', ' *');
+  });
 });
