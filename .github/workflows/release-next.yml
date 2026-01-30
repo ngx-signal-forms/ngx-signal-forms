@@ -51,7 +51,7 @@ jobs:
           SHA_SHORT=$(git rev-parse --short HEAD)
           NEXT_VERSION="0.0.0-next.$SHA_SHORT"
           echo "🔍 Dry run - would release version: $NEXT_VERSION"
-          pnpm exec nx release version $NEXT_VERSION --git-tag=false --stage-changes=false
+          pnpm exec nx release version $NEXT_VERSION --git-commit=false --git-tag=false --stage-changes=false
           pnpm exec nx release publish --tag=next --dry-run
 
       - name: Release Next
@@ -62,7 +62,7 @@ jobs:
           echo "📦 Releasing version: $NEXT_VERSION"
 
           # Version without git operations
-          pnpm exec nx release version $NEXT_VERSION --git-tag=false --stage-changes=false
+          pnpm exec nx release version $NEXT_VERSION --git-commit=false --git-tag=false --stage-changes=false
 
           # Publish to npm with next tag (uses OIDC)
           pnpm exec nx release publish --tag=next
