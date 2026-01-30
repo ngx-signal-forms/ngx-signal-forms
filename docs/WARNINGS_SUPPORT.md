@@ -222,7 +222,7 @@ The component automatically separates errors and warnings:
 </div>
 ```
 
-### Using NgxSignalFormFieldWrapperComponent
+### Using NgxFormField
 
 The form field wrapper automatically handles both:
 

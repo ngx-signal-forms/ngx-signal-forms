@@ -49,19 +49,19 @@ For a full list of all 20+ variables including layout, typography, and dark mode
 
 ## 📦 Convenience Export Bundle
 
-### NgxOutlinedFormField
+### NgxFormField
 
-A convenience bundle that includes all components needed for outlined form fields. Simplifies imports when using the outlined layout.
+A single bundle that includes all form field components. The floating label directive is included, so outline works without extra imports.
 
 **Import:**
 
 ```typescript
-import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 ```
 
 **Includes:**
 
-- `NgxSignalFormFieldWrapperComponent` - Form field wrapper
+- Form field wrapper component (`ngx-signal-form-field-wrapper`)
 - `NgxFloatingLabelDirective` - Outlined layout with floating label
 - `NgxFormFieldHintComponent` - Helper text
 - `NgxFormFieldCharacterCountComponent` - Character counter
@@ -74,20 +74,15 @@ import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 ```typescript
 import { Field } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
-  imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [ngxSignalForm]="contactForm">
       <ngx-signal-form-field-wrapper [formField]="contactForm.email" outline>
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" />
-        <ngx-signal-form-field-hint>We'll never share your email</ngx-signal-form-field-hint>
-      </ngx-signal-form-field-wrapper>
-    </form>
-  `,
-})
 ```
 
 **Benefits:**
@@ -101,37 +96,30 @@ import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 ## Components & Directives
 
-### NgxSignalFormFieldWrapperComponent
+### Form Field Wrapper Component
 
 Reusable form field wrapper with automatic error display and consistent layout.
 
-**Import:**
+**Usage:**
 
 ```typescript
-import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { Field } from '@angular/forms/signals';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
+
+@Component({
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
+  template: `
+    <form [ngxSignalForm]="contactForm">
+      <ngx-signal-form-field-wrapper [formField]="contactForm.email" outline>
+        <label for="email">Email</label>
+        <input id="email" [formField]="contactForm.email" />
+        <ngx-signal-form-field-hint>We'll never share your email</ngx-signal-form-field-hint>
+      </ngx-signal-form-field-wrapper>
+    </form>
+  `,
+})
 ```
-
-**Basic Usage:**
-
-```html
-<ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
-  <label for="email">Email</label>
-  <input id="email" [formField]="form.email" />
-</ngx-signal-form-field-wrapper>
-```
-
-#### Inputs
-
-| Input        | Type                           | Default                      | Description                                  |
-| ------------ | ------------------------------ | ---------------------------- | -------------------------------------------- |
-| `field`      | `FieldTree<TValue>`            | _required_                   | The Signal Forms field to display            |
-| `fieldName`  | `string`                       | Auto-derived from input `id` | Field name for error IDs and ARIA attributes |
-| `strategy`   | `ErrorDisplayStrategy \| null` | Inherited from form provider | Error display strategy                       |
-| `showErrors` | `boolean`                      | `true`                       | Whether to show automatic error display      |
-
-#### Content Projection
-
-The component uses content projection to allow full customization:
 
 ```html
 <ngx-signal-form-field-wrapper [formField]="form.bio">
@@ -141,7 +129,10 @@ The component uses content projection to allow full customization:
 
   <!-- Hints and character counts are projected in a separate slot -->
   <ngx-signal-form-field-hint>Max 500 characters</ngx-signal-form-field-hint>
-  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+  <ngx-signal-form-field-character-count
+    [formField]="form.bio"
+    [maxLength]="500"
+  />
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -274,14 +265,8 @@ The form field component supports non-blocking warnings in addition to blocking 
 
 ### NgxFloatingLabelDirective
 
-Transforms `NgxSignalFormFieldWrapperComponent` into an outlined layout where the label sits inside the input border, matching Material Design outlined input patterns.
-
-**Import:**
-
-```typescript
-import { NgxFloatingLabelDirective } from '@ngx-signal-forms/toolkit/form-field';
-// Or via public_api.ts
-```
+Enables the outlined layout where the label sits inside the input border, matching Material Design outlined input patterns.
+When you import `NgxFormField`, the directive is already included.
 
 **Basic Usage:**
 
@@ -298,7 +283,7 @@ import { NgxFloatingLabelDirective } from '@ngx-signal-forms/toolkit/form-field'
 </ngx-signal-form-field-wrapper>
 ```
 
-#### Inputs
+#### Wrapper inputs (outlined)
 
 | Input                | Type      | Default | Description                                             |
 | -------------------- | --------- | ------- | ------------------------------------------------------- |
@@ -308,6 +293,39 @@ import { NgxFloatingLabelDirective } from '@ngx-signal-forms/toolkit/form-field'
 #### Required Field Indicator
 
 By default, the required marker (`*`) is automatically shown when the input has the `required` attribute or `aria-required="true"`.
+You can set defaults in `provideNgxSignalFormsConfig`, then override per field with `showRequiredMarker` or `requiredMarker` inputs.
+
+**Global defaults (app-level):**
+
+```typescript
+import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideNgxSignalFormsConfig({
+      defaultFormFieldAppearance: 'outline',
+      showRequiredMarker: true,
+      requiredMarker: ' *',
+    }),
+  ],
+};
+```
+
+**Component-level override:**
+
+```typescript
+import { provideNgxSignalFormsConfigForComponent } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  providers: [
+    provideNgxSignalFormsConfigForComponent({
+      showRequiredMarker: false,
+      requiredMarker: '(required)',
+    }),
+  ],
+})
+export class OutlineSectionComponent {}
+```
 
 **Hide required marker:**
 
@@ -426,7 +444,7 @@ Requires CSS `:has()` selector:
 - Focus state applied to container meets WCAG 2.2 Level AA
 - Input outline removed safely (container provides visible focus indicator)
 - Required fields automatically detected via CSS `:has()` selector
-- ARIA attributes handled by parent `NgxSignalFormFieldWrapperComponent`
+- ARIA attributes handled by the form field wrapper component
 
 #### Error/Warning Alignment
 
@@ -492,7 +510,9 @@ import { NgxFormFieldHintComponent } from '@ngx-signal-forms/toolkit/form-field'
 **Position control:**
 
 ```html
-<ngx-signal-form-field-hint position="right"> Optional field </ngx-signal-form-field-hint>
+<ngx-signal-form-field-hint position="right">
+  Optional field
+</ngx-signal-form-field-hint>
 ```
 
 #### CSS Custom Properties
@@ -526,7 +546,10 @@ import { NgxFormFieldCharacterCountComponent } from '@ngx-signal-forms/toolkit/f
 <ngx-signal-form-field-wrapper [formField]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+  <ngx-signal-form-field-character-count
+    [formField]="form.bio"
+    [maxLength]="500"
+  />
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -763,12 +786,7 @@ import {
   FormField,
   submit,
 } from '@angular/forms/signals';
-import {
-  NgxSignalFormFieldWrapperComponent,
-  NgxFloatingLabelDirective,
-  NgxFormFieldHintComponent,
-  NgxFormFieldCharacterCountComponent,
-} from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 interface ContactForm {
   email: string;
@@ -785,13 +803,7 @@ const contactSchema = schema<ContactForm>((path) => {
 @Component({
   selector: 'app-contact-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    FormField,
-    NgxSignalFormFieldWrapperComponent,
-    NgxFloatingLabelDirective,
-    NgxFormFieldHintComponent,
-    NgxFormFieldCharacterCountComponent,
-  ],
+  imports: [FormField, NgxFormField],
   template: `
     <form (submit)="save($event)" novalidate>
       <!-- Outlined email field with custom required marker -->
@@ -862,8 +874,8 @@ export class ContactFormComponent {
 ### Public Exports
 
 ```typescript
-// Components
-export { NgxSignalFormFieldWrapperComponent } from './form-field-wrapper.component';
+// Bundle
+export { NgxFormField } from './public_api';
 export { NgxSignalFormFieldset } from './form-fieldset.component';
 ## License
 

@@ -26,6 +26,7 @@ This section demonstrates **production-ready patterns** for real-world applicati
 **What you'll learn:**
 
 - `provideNgxSignalFormsConfig` setup
+- `provideNgxSignalFormsConfigForComponent` overrides
 - Custom default error strategies
 - Custom field name resolvers
 - Debug mode for development
@@ -67,7 +68,10 @@ This section demonstrates **production-ready patterns** for real-world applicati
 
 ```typescript
 import { ApplicationConfig } from '@angular/core';
-import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
+import {
+  provideNgxSignalFormsConfig,
+  provideNgxSignalFormsConfigForComponent,
+} from '@ngx-signal-forms/toolkit';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -77,6 +81,13 @@ export const appConfig: ApplicationConfig = {
 
       // Default error strategy (default: 'on-touch')
       defaultErrorStrategy: 'on-touch',
+
+      // Default appearance for form fields
+      defaultFormFieldAppearance: 'outline',
+
+      // Required marker defaults for outlined fields
+      showRequiredMarker: true,
+      requiredMarker: ' *',
 
       // Custom field name resolver
       fieldNameResolver: (element: HTMLElement) => {
@@ -92,17 +103,31 @@ export const appConfig: ApplicationConfig = {
     }),
   ],
 };
+
+// Component-level overrides (scoped to this component subtree)
+@Component({
+  providers: [
+    provideNgxSignalFormsConfigForComponent({
+      showRequiredMarker: false,
+      requiredMarker: '(required)',
+    }),
+  ],
+})
+export class ExampleComponent {}
 ```
 
 ### Configuration Options
 
-| Option                  | Type                                  | Default      | Description                                  |
-| ----------------------- | ------------------------------------- | ------------ | -------------------------------------------- |
-| `autoAria`              | `boolean`                             | `true`       | Enable automatic ARIA attributes             |
-| `defaultErrorStrategy`  | `ErrorDisplayStrategy`                | `'on-touch'` | Default error display strategy               |
-| `fieldNameResolver`     | `(el: HTMLElement) => string \| null` | Built-in     | Custom field name resolution logic           |
-| `strictFieldResolution` | `boolean`                             | `false`      | Throw error if field name cannot be resolved |
-| `debug`                 | `boolean`                             | `false`      | Enable debug logging                         |
+| Option                       | Type                                  | Default      | Description                                  |
+| ---------------------------- | ------------------------------------- | ------------ | -------------------------------------------- |
+| `autoAria`                   | `boolean`                             | `true`       | Enable automatic ARIA attributes             |
+| `defaultErrorStrategy`       | `ErrorDisplayStrategy`                | `'on-touch'` | Default error display strategy               |
+| `defaultFormFieldAppearance` | `'default' \| 'outline'`              | `undefined`  | Default form field appearance                |
+| `showRequiredMarker`         | `boolean`                             | `true`       | Show required marker in outlined fields      |
+| `requiredMarker`             | `string`                              | `' *'`       | Required marker text                         |
+| `fieldNameResolver`          | `(el: HTMLElement) => string \| null` | Built-in     | Custom field name resolution logic           |
+| `strictFieldResolution`      | `boolean`                             | `false`      | Throw error if field name cannot be resolved |
+| `debug`                      | `boolean`                             | `false`      | Enable debug logging                         |
 
 ### Field Name Resolution Priority
 
@@ -503,13 +528,19 @@ protected async save(): Promise<void> {
 
 **Problem:** Global config not working
 
-**Solution:** Verify provider is in app.config.ts
+**Solution:** Verify provider is in app.config.ts for global defaults, or use component-level overrides where needed.
 
 ```typescript
-// ❌ Wrong: In component providers
+// ❌ Wrong: In component providers when you expect global defaults
 @Component({
   providers: [provideNgxSignalFormsConfig(...)], // Won't work globally
 })
+
+// ✅ Correct: Component-level overrides
+@Component({
+  providers: [provideNgxSignalFormsConfigForComponent(...)],
+})
+export class FeatureSection {}
 
 // ✅ Correct: In app.config.ts
 export const appConfig: ApplicationConfig = {

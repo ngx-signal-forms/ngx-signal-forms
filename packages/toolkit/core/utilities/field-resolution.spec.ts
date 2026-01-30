@@ -1,6 +1,9 @@
 import { Injector } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
-import { NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
+import {
+  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+  NGX_SIGNAL_FORMS_CONFIG,
+} from '../tokens';
 import type { NgxSignalFormsConfig } from '../types';
 import { generateErrorId, resolveFieldName } from './field-resolution';
 
@@ -8,6 +11,7 @@ describe('field-resolution', () => {
   describe('resolveFieldName', () => {
     it('should resolve field name from data-signal-field attribute (priority 1)', () => {
       const config: NgxSignalFormsConfig = {
+        ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
         autoAria: true,
       };
       const injector = Injector.create({
@@ -26,6 +30,7 @@ describe('field-resolution', () => {
     it('should resolve field name from custom resolver (priority 2)', () => {
       const customResolver = vi.fn(() => 'custom-field');
       const config: NgxSignalFormsConfig = {
+        ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
         fieldNameResolver: () => customResolver, // Wrap in SignalLike
       };
       const injector = Injector.create({
@@ -43,6 +48,7 @@ describe('field-resolution', () => {
 
     it('should resolve field name from id attribute (priority 3)', () => {
       const config: NgxSignalFormsConfig = {
+        ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
         autoAria: true,
       };
       const injector = Injector.create({
@@ -59,6 +65,7 @@ describe('field-resolution', () => {
 
     it('should resolve field name from name attribute (priority 4)', () => {
       const config: NgxSignalFormsConfig = {
+        ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
         autoAria: true,
       };
       const injector = Injector.create({
@@ -74,6 +81,7 @@ describe('field-resolution', () => {
 
     it('should return null when no field name can be resolved (non-strict mode)', () => {
       const config: NgxSignalFormsConfig = {
+        ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
         strictFieldResolution: false,
       };
       const injector = Injector.create({
@@ -88,6 +96,7 @@ describe('field-resolution', () => {
 
     it('should throw error in strict mode when field name cannot be resolved', () => {
       const config: NgxSignalFormsConfig = {
+        ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
         strictFieldResolution: true,
       };
       const injector = Injector.create({
@@ -108,6 +117,7 @@ describe('field-resolution', () => {
           // Mock implementation to suppress console output during tests
         });
       const config: NgxSignalFormsConfig = {
+        ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
         strictFieldResolution: false,
         debug: true,
       };
@@ -129,6 +139,7 @@ describe('field-resolution', () => {
     it('should prioritize data-signal-field over custom resolver', () => {
       const customResolver = vi.fn(() => 'custom-field');
       const config: NgxSignalFormsConfig = {
+        ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
         fieldNameResolver: () => customResolver, // Wrap in SignalLike
       };
       const injector = Injector.create({
@@ -146,6 +157,7 @@ describe('field-resolution', () => {
     it('should handle custom resolver returning null', () => {
       const customResolver = vi.fn(() => null);
       const config: NgxSignalFormsConfig = {
+        ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
         fieldNameResolver: () => customResolver, // Wrap in SignalLike
       };
       const injector = Injector.create({

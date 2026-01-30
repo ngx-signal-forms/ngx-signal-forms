@@ -1,15 +1,16 @@
 import { Injector } from '@angular/core';
-import { describe, it, expect } from 'vitest';
-import { injectFormConfig } from './inject-form-config';
+import { describe, expect, it } from 'vitest';
 import {
-  NGX_SIGNAL_FORMS_CONFIG,
   DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+  NGX_SIGNAL_FORMS_CONFIG,
 } from '../tokens';
 import type { NgxSignalFormsConfig } from '../types';
+import { injectFormConfig } from './inject-form-config';
 
 describe('injectFormConfig', () => {
   it('should return provided config when available', () => {
     const customConfig: NgxSignalFormsConfig = {
+      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
       strictFieldResolution: true,
       debug: true,
       autoAria: false,
@@ -38,6 +39,7 @@ describe('injectFormConfig', () => {
 
   it('should merge partial config with defaults', () => {
     const partialConfig: NgxSignalFormsConfig = {
+      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
       strictFieldResolution: true,
     };
 

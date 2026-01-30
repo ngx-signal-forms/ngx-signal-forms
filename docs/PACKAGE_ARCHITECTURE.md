@@ -105,7 +105,7 @@ import {
 ### Secondary Entry (Form Field - Optional)
 
 ```typescript
-import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 ```
 
 ### Secondary Entry (Headless Primitives - Optional)

@@ -2,7 +2,11 @@ import { ElementRef, Injector, signal } from '@angular/core';
 import type { SubmittedStatus } from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
 import type { NgxSignalFormContext } from '../directives/ngx-signal-form.directive';
-import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
+import {
+  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+  NGX_SIGNAL_FORM_CONTEXT,
+  NGX_SIGNAL_FORMS_CONFIG,
+} from '../tokens';
 import type { NgxSignalFormsConfig } from '../types';
 import { injectFieldControl } from './inject-field-control';
 
@@ -15,7 +19,10 @@ describe('injectFieldControl', () => {
       submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
-    const config: NgxSignalFormsConfig = { strictFieldResolution: false };
+    const config: NgxSignalFormsConfig = {
+      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+      strictFieldResolution: false,
+    };
 
     const injector = Injector.create({
       providers: [
@@ -39,7 +46,10 @@ describe('injectFieldControl', () => {
       submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
-    const config: NgxSignalFormsConfig = { strictFieldResolution: false };
+    const config: NgxSignalFormsConfig = {
+      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+      strictFieldResolution: false,
+    };
 
     const injector = Injector.create({
       providers: [
@@ -63,7 +73,10 @@ describe('injectFieldControl', () => {
       submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
-    const config: NgxSignalFormsConfig = { strictFieldResolution: false };
+    const config: NgxSignalFormsConfig = {
+      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+      strictFieldResolution: false,
+    };
 
     const injector = Injector.create({
       providers: [
@@ -86,7 +99,10 @@ describe('injectFieldControl', () => {
       submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
-    const config: NgxSignalFormsConfig = { strictFieldResolution: false };
+    const config: NgxSignalFormsConfig = {
+      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+      strictFieldResolution: false,
+    };
 
     const injector = Injector.create({
       providers: [
@@ -110,7 +126,10 @@ describe('injectFieldControl', () => {
       submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
-    const config: NgxSignalFormsConfig = { strictFieldResolution: false };
+    const config: NgxSignalFormsConfig = {
+      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+      strictFieldResolution: false,
+    };
 
     const injector = Injector.create({
       providers: [
@@ -134,7 +153,10 @@ describe('injectFieldControl', () => {
       submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
-    const config: NgxSignalFormsConfig = { strictFieldResolution: false };
+    const config: NgxSignalFormsConfig = {
+      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+      strictFieldResolution: false,
+    };
 
     const injector = Injector.create({
       providers: [
@@ -152,7 +174,10 @@ describe('injectFieldControl', () => {
   });
 
   it('should throw error when form instance is not available (required input)', () => {
-    const config: NgxSignalFormsConfig = { strictFieldResolution: false };
+    const config: NgxSignalFormsConfig = {
+      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+      strictFieldResolution: false,
+    };
 
     const injector = Injector.create({
       providers: [
@@ -190,7 +215,10 @@ describe('injectFieldControl', () => {
   });
 
   it('should throw when form context not available', () => {
-    const config: NgxSignalFormsConfig = { strictFieldResolution: false };
+    const config: NgxSignalFormsConfig = {
+      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+      strictFieldResolution: false,
+    };
     const injector = Injector.create({
       providers: [{ provide: NGX_SIGNAL_FORMS_CONFIG, useValue: config }],
       // No NGX_SIGNAL_FORM_CONTEXT

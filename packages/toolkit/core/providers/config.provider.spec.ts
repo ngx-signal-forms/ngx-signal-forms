@@ -4,7 +4,10 @@ import {
   DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
   NGX_SIGNAL_FORMS_CONFIG,
 } from '../tokens';
-import { provideNgxSignalFormsConfig } from './config.provider';
+import {
+  provideNgxSignalFormsConfig,
+  provideNgxSignalFormsConfigForComponent,
+} from './config.provider';
 
 const createInjectorFromEnvProviders = (envProviders: unknown) => {
   const providersRecord = envProviders as {
@@ -49,5 +52,32 @@ describe('provideNgxSignalFormsConfig', () => {
 
     const resolved = injector.get(NGX_SIGNAL_FORMS_CONFIG);
     expect(resolved).toEqual({ ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG });
+  });
+});
+
+describe('provideNgxSignalFormsConfigForComponent', () => {
+  it('should return providers array', () => {
+    const config = { autoAria: true };
+    const providers = provideNgxSignalFormsConfigForComponent(config);
+
+    expect(Array.isArray(providers)).toBe(true);
+    expect(providers.length).toBeGreaterThan(0);
+  });
+
+  it('should provide configured values', () => {
+    const config = {
+      autoAria: false,
+      debug: true,
+    };
+
+    const providers = provideNgxSignalFormsConfigForComponent(config);
+    const injector = Injector.create({ providers });
+
+    const resolved = injector.get(NGX_SIGNAL_FORMS_CONFIG);
+    expect(resolved.autoAria).toBe(false);
+    expect(resolved.debug).toBe(true);
+    expect(resolved.defaultErrorStrategy).toBe(
+      DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy,
+    );
   });
 });

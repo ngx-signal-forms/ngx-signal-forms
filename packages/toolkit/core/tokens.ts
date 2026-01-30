@@ -11,6 +11,8 @@ export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: NgxSignalFormsConfig = {
   strictFieldResolution: false,
   debug: false,
   defaultFormFieldAppearance: undefined,
+  showRequiredMarker: true,
+  requiredMarker: ' *',
 };
 
 /**

@@ -4,7 +4,7 @@
 
 ## 🎯 Purpose
 
-This section demonstrates the **"batteries included"** approach using `NgxSignalFormFieldWrapperComponent` - a complete form field wrapper with automatic error display, consistent layout, and content projection.
+This section demonstrates the **"batteries included"** approach using `NgxFormField` - a complete form field bundle with automatic error display, consistent layout, and content projection.
 
 **Adoption Level:** 100% toolkit
 
@@ -20,7 +20,7 @@ This section demonstrates the **"batteries included"** approach using `NgxSignal
 
 ### basic-usage
 
-**Focus:** Introduction to NgxSignalFormFieldWrapperComponent
+**Focus:** Introduction to NgxFormField
 
 **What you'll learn:**
 
@@ -59,13 +59,13 @@ This section demonstrates the **"batteries included"** approach using `NgxSignal
 
 ## 🎨 API Reference
 
-### NgxSignalFormFieldWrapperComponent
+### NgxFormField
 
 ```typescript
-import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
-  imports: [FormField, NgxSignalFormFieldWrapperComponent],
+  imports: [FormField, NgxFormField],
   template: `
     <ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
       <label for="email">Email</label>
@@ -315,7 +315,7 @@ ngx-signal-form-field-wrapper {
 
 ## 🤔 When to Use Form Field Wrapper
 
-### Use NgxSignalFormFieldWrapperComponent When
+### Use NgxFormField When
 
 - ✅ You need consistent form layouts
 - ✅ You want automatic error display

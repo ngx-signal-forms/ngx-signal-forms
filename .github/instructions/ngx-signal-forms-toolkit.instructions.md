@@ -42,7 +42,7 @@ packages/toolkit/
     ├── floating-label.directive.ts # Outlined Material Design layout
     ├── form-field-hint.component.ts
     ├── form-field-character-count.component.ts
-    └── public_api.ts               # Public exports + NgxOutlinedFormField bundle
+    └── public_api.ts               # Public exports + NgxFormField bundle
 ```
 
 ## Core Design Principles
@@ -146,10 +146,10 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
 ### Form Field Bundle Import
 
 ```typescript
-import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
-  imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <ngx-signal-form-field-wrapper [formField]="form.email" outline>
       <label for="email">Email</label>
@@ -159,7 +159,7 @@ import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
 })
 ```
 
-**Contains**: `NgxSignalFormFieldWrapperComponent`, `NgxFloatingLabelDirective`, `NgxFormFieldHintComponent`, `NgxFormFieldCharacterCountComponent`, `NgxSignalFormFieldset`
+**Contains**: `NgxFormField` (bundle), `NgxSignalFormFieldset`
 
 ### Individual Imports (Alternative)
 
@@ -349,7 +349,7 @@ Displays validation errors and warnings with WCAG-compliant ARIA roles.
 - `strategy`: Error display strategy (default: `'on-touch'`)
 - `submittedStatus`: Form submission state (auto-injected when inside `[ngxSignalForm]}`, optional for `'on-touch'`. If provided manually, must be a `Signal<SubmittedStatus>`)
 
-### NgxSignalFormFieldWrapperComponent
+### NgxFormField
 
 **Selector**: `ngx-signal-form-field-wrapper`
 

@@ -56,7 +56,7 @@ export const appConfig: ApplicationConfig = {
 ```typescript
 // 2. Use in components (recommended: bundle import)
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import {
   form,
   schema,
@@ -66,11 +66,7 @@ import {
 } from '@angular/forms/signals';
 
 @Component({
-  imports: [
-    FormField,
-    NgxSignalFormToolkit,
-    NgxSignalFormFieldWrapperComponent,
-  ],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <!-- ✅ NO [ngxSignalForm] needed for default 'on-touch' strategy! -->
     <form (submit)="handleSubmit($event)">
@@ -188,10 +184,10 @@ The `[ngxSignalForm]` binding provides **form context** for child components via
 
 ```typescript
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
-  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldWrapperComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <!-- ✅ Error components work WITHOUT [ngxSignalForm] for 'on-touch' strategy -->
     <form (submit)="handleSubmit($event)">
@@ -272,14 +268,8 @@ import {
 // Assistive components (styled feedback)
 import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 
-// Form field wrapper with enhanced components
-import {
-  NgxSignalFormFieldWrapperComponent,
-  NgxSignalFormFieldset,
-  NgxFloatingLabelDirective,
-  NgxFormFieldHintComponent,
-  NgxFormFieldCharacterCountComponent,
-} from '@ngx-signal-forms/toolkit/form-field';
+// Form field bundle (wrapper + outlined layout + hints + character count)
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 // Headless primitives (renderless directives)
 import {
@@ -329,6 +319,8 @@ interface NgxSignalFormsConfig {
   autoAria: boolean; // Default: true
   defaultErrorStrategy: ErrorDisplayStrategy; // Default: 'on-touch'
   defaultFormFieldAppearance?: 'default' | 'outline'; // Default: undefined
+  showRequiredMarker: boolean; // Default: true
+  requiredMarker: string; // Default: ' *'
   fieldNameResolver?: (el: HTMLElement) => string | null;
   strictFieldResolution: boolean; // Default: false
   debug: boolean; // Default: false
@@ -336,6 +328,49 @@ interface NgxSignalFormsConfig {
 
 type ErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit' | 'manual';
 ```
+
+#### Configuration providers
+
+Use `provideNgxSignalFormsConfig` for app-wide defaults. Use `provideNgxSignalFormsConfigForComponent` to override within a component subtree.
+
+**App-level (global defaults):**
+
+```typescript
+import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideNgxSignalFormsConfig({
+      defaultErrorStrategy: 'on-touch',
+      defaultFormFieldAppearance: 'outline',
+      showRequiredMarker: true,
+      requiredMarker: ' *',
+    }),
+  ],
+};
+```
+
+**Component-level (scoped overrides):**
+
+```typescript
+import { provideNgxSignalFormsConfigForComponent } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  providers: [
+    provideNgxSignalFormsConfigForComponent({
+      defaultFormFieldAppearance: 'outline',
+      showRequiredMarker: false,
+      requiredMarker: '(required)',
+    }),
+  ],
+})
+export class ExampleComponent {}
+```
+
+**When to use which:**
+
+- Use `provideNgxSignalFormsConfig` once in `app.config.ts` for consistent defaults.
+- Use `provideNgxSignalFormsConfigForComponent` when a page or feature needs a different appearance or required marker style.
 
 **`defaultFormFieldAppearance`** - Set global default appearance for all form fields:
 
@@ -345,12 +380,14 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideNgxSignalFormsConfig({
       defaultFormFieldAppearance: 'outline',
+      showRequiredMarker: true,
+      requiredMarker: ' *',
     }),
   ],
 };
 ```
 
-When set, all `NgxSignalFormFieldWrapperComponent` instances will use this appearance unless explicitly overridden with the `outline` attribute. This is useful for maintaining consistent form styling across your application without manually adding `outline` to each field.
+When set, all `ngx-signal-form-field-wrapper` instances will use this appearance unless explicitly overridden with the `outline` attribute. This is useful for maintaining consistent form styling across your application without manually adding `outline` to each field.
 
 **Priority:** Explicit `outline` attribute > `defaultFormFieldAppearance` config > implicit default
 
@@ -908,22 +945,13 @@ The toolkit includes a complete form field component system for enhanced layouts
 ### Quick Overview
 
 ```typescript
-import {
-  NgxSignalFormFieldWrapperComponent,
-  NgxSignalFormFieldset,
-  NgxFloatingLabelDirective,
-  NgxFormFieldHintComponent,
-  NgxFormFieldCharacterCountComponent,
-} from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 ```
 
 **Key Features:**
 
-- **NgxSignalFormFieldWrapperComponent** - Reusable wrapper with automatic error display
+- **NgxFormField** - Bundle for wrapper, outlined layout, hints, and character count
 - **NgxSignalFormFieldset** - Group related fields with aggregated error/warning display
-- **NgxFloatingLabelDirective** (`outline` attribute) - Material Design outlined layout
-- **NgxFormFieldCharacterCountComponent** - Progressive color states (ok → warning → danger → exceeded)
-- **NgxFormFieldHintComponent** - Helper text display
 
 ### Example Usage
 
@@ -931,8 +959,13 @@ import {
 <ngx-signal-form-field-wrapper [formField]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-hint>Tell us about yourself</ngx-signal-form-field-hint>
-  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+  <ngx-signal-form-field-hint
+    >Tell us about yourself</ngx-signal-form-field-hint
+  >
+  <ngx-signal-form-field-character-count
+    [formField]="form.bio"
+    [maxLength]="500"
+  />
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -973,7 +1006,10 @@ maxLength(path.bio, 500);
   <textarea id="bio" [formField]="form.bio"></textarea>
 
   <!-- User sees remaining count, preventing paste surprises -->
-  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+  <ngx-signal-form-field-character-count
+    [formField]="form.bio"
+    [maxLength]="500"
+  />
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -1173,7 +1209,7 @@ import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit';
 
 **Note:** When used inside a form with `NgxSignalFormDirective`, the `submittedStatus` signal is automatically injected. The toolkit derives this from Angular's native `submitting()` signal transitions.
 
-#### NgxSignalFormFieldWrapperComponent
+#### Form Field Wrapper
 
 ```html
 <ngx-signal-form-field-wrapper
@@ -1203,10 +1239,10 @@ Transforms the form field into an outlined layout where the label appears inside
 </ngx-signal-form-field-wrapper>
 ```
 
-**Inputs:**
+**Required marker configuration:**
 
-- `showRequiredMarker` (boolean, default: `true`) - Show required field marker
-- `requiredMarker` (string, default: `' *'`) - Custom marker character(s)
+- `showRequiredMarker` and `requiredMarker` are inputs on `ngx-signal-form-field-wrapper`
+- Defaults come from `provideNgxSignalFormsConfig`
 
 **Browser Support:** Chrome 105+, Firefox 121+, Safari 15.4+, Edge 105+ (95%+ coverage)
 
@@ -1258,7 +1294,10 @@ maxLength(path.bio, 500);
 
 ```html
 <!-- Display limit is 300, even if validation allows 500 -->
-<ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="300" />
+<ngx-signal-form-field-character-count
+  [formField]="form.bio"
+  [maxLength]="300"
+/>
 ```
 
 **Color States:**

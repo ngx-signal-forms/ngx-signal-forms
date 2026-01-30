@@ -253,7 +253,7 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
 
 **What changes:**
 
-- `NgxSignalFormFieldWrapperComponent` for layout
+- `NgxFormField` for layout
 - Content projection patterns
 - Consistent spacing
 - Even less boilerplate (~80% reduction)

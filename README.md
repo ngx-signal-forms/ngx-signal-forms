@@ -109,15 +109,15 @@ A set of cohesive UI components to build consistent, accessible form layouts:
 
 ### Assistive (`@ngx-signal-forms/toolkit/assistive`)
 
-| Feature             | Headless Primitives                  | With Assistive                                         |
-| ------------------- | ------------------------------------ | ------------------------------------------------------ |
-| **Error Component** | ❌ Build your own                    | ✅ `<ngx-signal-form-error>` with ARIA roles           |
+| Feature             | Headless Primitives                  | With Assistive                                                |
+| ------------------- | ------------------------------------ | ------------------------------------------------------------- |
+| **Error Component** | ❌ Build your own                    | ✅ `<ngx-signal-form-error>` with ARIA roles                  |
 | **Hint Component**  | ❌ Build your own                    | ✅ `<ngx-signal-form-field-hint>` with proper styling         |
 | **Character Count** | ✅ Signals via directive             | ✅ `<ngx-signal-form-field-character-count>` styled component |
-| **Warning Support** | ❌ Manual implementation             | ✅ `warningError()`, `isWarningError()` utilities      |
-| **ARIA Roles**      | ❌ Manual ARIA attributes            | ✅ Automatic `role="alert"` / `role="status"`          |
-| **Theming**         | ❌ Your own CSS                      | ✅ Minimal, themeable CSS                              |
-| **Use Case**        | Build from scratch with full control | Use styled components as building blocks               |
+| **Warning Support** | ❌ Manual implementation             | ✅ `warningError()`, `isWarningError()` utilities             |
+| **ARIA Roles**      | ❌ Manual ARIA attributes            | ✅ Automatic `role="alert"` / `role="status"`                 |
+| **Theming**         | ❌ Your own CSS                      | ✅ Minimal, themeable CSS                                     |
+| **Use Case**        | Build from scratch with full control | Use styled components as building blocks                      |
 
 ### Form Field (`@ngx-signal-forms/toolkit/form-field`)
 
@@ -189,15 +189,11 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
   selector: 'app-contact',
-  imports: [
-    FormField,
-    NgxSignalFormToolkit,
-    NgxSignalFormFieldWrapperComponent,
-  ],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form (submit)="save($event)">
       <ngx-signal-form-field-wrapper
@@ -298,7 +294,9 @@ import {
 <label for="email">Email</label>
 <input id="email" [formField]="form.email" />
 <ngx-signal-form-error [formField]="form.email" fieldName="email" />
-<ngx-signal-form-field-hint>We'll never share your email</ngx-signal-form-field-hint>
+<ngx-signal-form-field-hint
+  >We'll never share your email</ngx-signal-form-field-hint
+>
 ```
 
 **[📖 Full Documentation →](./packages/toolkit/assistive/README.md)**
@@ -313,17 +311,16 @@ import {
 
 **Key exports**:
 
-- `NgxSignalFormFieldWrapperComponent` — Unified wrapper for label, input, errors
+- `NgxFormField` — Bundle import for form field wrapper, outlined layout, hints, and character count
 - `NgxSignalFormFieldset` — Group related fields with aggregated errors (use `includeNestedErrors` to control aggregation)
-- `NgxFloatingLabelDirective` — Material Design-like outlined inputs (`outline` attribute)
-- `NgxFormFieldHintComponent` — Helper text below inputs
-- `NgxFormFieldCharacterCountComponent` — Progressive character counter
 
 ```html
 <ngx-signal-form-field-wrapper [formField]="form.bio" outline>
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-hint>Tell us about yourself</ngx-signal-form-field-hint>
+  <ngx-signal-form-field-hint
+    >Tell us about yourself</ngx-signal-form-field-hint
+  >
   <ngx-signal-form-field-character-count [formField]="form.bio" />
 </ngx-signal-form-field-wrapper>
 ```

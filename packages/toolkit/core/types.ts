@@ -180,6 +180,21 @@ export interface NgxSignalFormsConfig {
    * ```
    */
   defaultFormFieldAppearance?: 'default' | 'outline';
+
+  /**
+   * Whether to show the required marker for outlined fields.
+   * When false, outlined fields do not append the required marker.
+   *
+   * @default true
+   */
+  showRequiredMarker: boolean;
+
+  /**
+   * Custom character(s) to display as the required marker in outlined fields.
+   *
+   * @default ' *'
+   */
+  requiredMarker: string;
 }
 
 /**
