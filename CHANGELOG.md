@@ -1,31 +1,46 @@
 ## 1.0.0-beta.1 (2026-01-30)
 
+**Compare:** https://github.com/ngx-signal-forms/ngx-signal-forms/compare/v1.0.0-beta.0...v1.0.0-beta.1
+
+### ⚠️ Breaking Changes
+
+- **toolkit:** assistive components entry point added. `NgxSignalFormErrorComponent` moved from `@ngx-signal-forms/toolkit` to `@ngx-signal-forms/toolkit/assistive`. ([b1d003b](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/b1d003b))
+- **form-field:** wrapper API renamed. Use `NgxSignalFormFieldWrapperComponent`, replace `<ngx-signal-form-field>` with `<ngx-signal-form-field-wrapper>`, and apply `NgxFloatingLabelDirective` to the new wrapper selector (`ngx-signal-form-field-wrapper[outline]`). ([4588f54](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/4588f54))
+
+#### Renames overview
+
+| Area                       | Before                                   | After                                    | Notes                                   |
+| -------------------------- | ---------------------------------------- | ---------------------------------------- | --------------------------------------- |
+| Component class            | `NgxSignalFormFieldComponent`            | `NgxSignalFormFieldWrapperComponent`     | Wrapper API rename.                     |
+| Component selector         | `<ngx-signal-form-field>`                | `<ngx-signal-form-field-wrapper>`        | Update templates and tests.             |
+| Outline directive selector | `ngx-signal-form-field[outline]`         | `ngx-signal-form-field-wrapper[outline]` | Applies to `NgxFloatingLabelDirective`. |
+| Error component import     | `@ngx-signal-forms/toolkit`              | `@ngx-signal-forms/toolkit/assistive`    | `NgxSignalFormErrorComponent` moved.    |
+| CSS variable               | `--ngx-form-field-color-text-muted`      | `--ngx-form-field-color-text-secondary`  | Updated naming for secondary text.      |
+| CSS variable               | `--ngx-form-field-hint-margin-top`       | `--ngx-signal-form-feedback-margin-top`  | Shared feedback spacing.                |
+| CSS variable               | `--ngx-form-field-char-count-margin-top` | `--ngx-signal-form-feedback-margin-top`  | Shared feedback spacing.                |
+
 ### 🚀 Features
 
-- ⚠️  **form-field:** rename form field wrapper API ([4588f54](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/4588f54))
-- ⚠️  **toolkit:** create assistive components entry point ([b1d003b](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/b1d003b))
+- **toolkit:** new assistive entry point (`@ngx-signal-forms/toolkit/assistive`). ([b1d003b](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/b1d003b))
+- **form-field:** wrapper API rename to align component and selector naming. ([4588f54](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/4588f54))
 
 ### 🩹 Fixes
 
-- **demo:** improve layout spacing and alignment for form examples ([d6a3bbe](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/d6a3bbe))
-- **release:** move git configuration under version section ([e38bd1a](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/e38bd1a))
+- **demo:** spacing and alignment improvements in form examples. ([d6a3bbe](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/d6a3bbe))
+- **release:** git configuration placement fix. ([e38bd1a](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/e38bd1a))
 
-### ⚠️  Breaking Changes
+### 🎨 Demo UI & Layout
 
-- **toolkit:** create assistive components entry point  ([b1d003b](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/b1d003b))
-  NgxSignalFormErrorComponent moved from @ngx-signal-forms/toolkit to @ngx-signal-forms/toolkit/assistive. Update imports:
-  Before:
-  import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit';
-  After:
-  import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
-- **form-field:** rename form field wrapper API  ([4588f54](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/4588f54))
-  The form field wrapper component and related
-  selectors were renamed. Update imports to
-  NgxSignalFormFieldWrapperComponent and replace
-  <ngx-signal-form-field> with <ngx-signal-form-field-wrapper>.
-  Hint and character count selectors are now
-  ngx-signal-form-field-wrapper-hint and
-  ngx-signal-form-field-wrapper-character-count.
+- **demo:** introduced `SplitLayoutComponent` and unified page layouts. ([3b5bd6a](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/3b5bd6a))
+- **ui:** new `PageHeaderComponent` for consistent headers. ([8db3bf0](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/8db3bf0))
+
+### 📚 Docs
+
+- Badge fixes and doc ordering tweaks. ([795ea22](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/795ea22), [ca4d643](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/ca4d643), [0a0e691](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/0a0e691))
+
+### 🔧 Build & CI
+
+- Release workflow improvements and publish tooling updates. ([3ce443b](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/3ce443b), [b437916](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/b437916), [f37d757](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/f37d757), [ce87c5d](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/ce87c5d), [ec90813](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/ec90813), [2ae64f7](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/2ae64f7), [7ae19e3](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/7ae19e3), [5ba50fa](https://github.com/ngx-signal-forms/ngx-signal-forms/commit/5ba50fa))
 
 ### ❤️ Thank You
 
