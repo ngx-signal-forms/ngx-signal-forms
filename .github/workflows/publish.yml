@@ -5,6 +5,13 @@ on:
   workflow_run:
     workflows: ['Release']
     types: [completed]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Tag or commit SHA to publish (e.g. v1.0.0-beta.1)'
+        required: true
+        type: string
+        default: 'v1.0.0-beta.1'
 
 permissions:
   contents: read
@@ -15,21 +22,31 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
+      - name: Resolve publish ref
+        id: publish_ref
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "ref=${{ inputs.ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           filter: tree:0
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ steps.publish_ref.outputs.ref }}
 
       - name: Resolve release tag
         id: release_tag
         run: |
           git fetch --tags --force
-          TAG=$(git tag --points-at "${{ github.event.workflow_run.head_sha }}" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
+          REF_SHA=$(git rev-parse "${{ steps.publish_ref.outputs.ref }}")
+          TAG=$(git tag --points-at "$REF_SHA" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
           if [ -z "$TAG" ]; then
-            echo "No release tag found for commit ${{ github.event.workflow_run.head_sha }}" >&2
+            echo "No release tag found for ref ${{ steps.publish_ref.outputs.ref }}" >&2
             exit 1
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
