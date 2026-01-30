@@ -9,7 +9,7 @@
       👤 Personal Information
     </legend>
 
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+    <div class="grid grid-cols-1 gap-y-1 gap-x-4 md:grid-cols-2">
       <ngx-signal-form-field-wrapper
         [formField]="complexForm.personalInfo.firstName"
         fieldName="firstName"
@@ -90,7 +90,7 @@
       🏠 Address Information
     </legend>
 
-    <div class="grid grid-cols-1 gap-6">
+    <div class="grid grid-cols-1 gap-y-1">
       <ngx-signal-form-field-wrapper
         [formField]="complexForm.addressInfo.street"
         fieldName="street"
@@ -123,7 +123,7 @@
         />
       </ngx-signal-form-field-wrapper>
 
-      <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div class="grid grid-cols-1 gap-y-1 gap-x-4 md:grid-cols-3">
         <ngx-signal-form-field-wrapper
           [formField]="complexForm.addressInfo.city"
           fieldName="city"
@@ -179,7 +179,7 @@
 
     @for (skill of complexForm.skills; track $index; let i = $index) {
     <div
-      class="mb-4 grid grid-cols-1 items-start gap-4 md:grid-cols-[1fr,150px]"
+      class="mb-2 grid grid-cols-1 items-start gap-y-1 gap-x-4 md:grid-cols-[1fr,150px]"
     >
       <ngx-signal-form-field-wrapper
         [formField]="complexForm.skills[i].name"
@@ -236,7 +236,7 @@
 
     @for (contact of complexForm.contacts; track $index; let i = $index) {
     <div
-      class="mb-4 grid grid-cols-1 items-start gap-4 md:grid-cols-[150px,1fr]"
+      class="mb-2 grid grid-cols-1 items-start gap-y-1 gap-x-4 md:grid-cols-[150px,1fr]"
     >
       <ngx-signal-form-field-wrapper
         [formField]="complexForm.contacts[i].type"
@@ -329,7 +329,7 @@
       ⚙️ Preferences
     </legend>
 
-    <div class="space-y-4">
+    <div class="space-y-2">
       <label class="flex items-center space-x-3">
         <input
           id="newsletter"
