@@ -760,3 +760,43 @@
     --_feedback-padding-horizontal
   );
 }
+
+// ============================================================================
+// CHECKBOX/RADIO ADAPTATIONS
+// ============================================================================
+
+// Case 1: Input nested INSIDE Label (e.g. <label><input type="checkbox"> Text</label>)
+// The label wraps the input, so it gets projected into the label slot via select="label".
+// The content slot is effectively empty but still renders a border/height.
+// SOLUTION: Hide the main content wrapper entirely when the label contains a check/radio.
+:host:has(.ngx-signal-form-field-wrapper__label input[type='checkbox']),
+:host:has(.ngx-signal-form-field-wrapper__label input[type='radio']) {
+  .ngx-signal-form-field-wrapper__content {
+    display: none;
+  }
+}
+
+// Case 2: Input SEPARATE from Label (e.g. <label>Text</label> <input type="checkbox">)
+// The input is projected into the content slot.
+// SOLUTION: Remove text-field-like styling (border, background, padding) from the wrapper.
+.ngx-signal-form-field-wrapper__content:has(input[type='checkbox']),
+.ngx-signal-form-field-wrapper__content:has(input[type='radio']) {
+  border: none;
+  background-color: transparent;
+  padding: 0;
+  box-shadow: none;
+
+  &:hover,
+  &:focus-within {
+    border-color: transparent;
+    box-shadow: none;
+  }
+}
+
+// Case 2 continuation: Reset input styles for checkbox/radio
+// Text fields get width: 100% which distorts checkboxes.
+:host ::ng-deep .ngx-signal-form-field-wrapper__main input[type='checkbox'],
+:host ::ng-deep .ngx-signal-form-field-wrapper__main input[type='radio'] {
+  width: auto; // Do not stretch
+  margin-right: 0.5rem; // Small gap if needed
+}
