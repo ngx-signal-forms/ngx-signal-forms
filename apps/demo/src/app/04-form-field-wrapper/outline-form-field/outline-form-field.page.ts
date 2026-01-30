@@ -4,7 +4,10 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import {
+  provideNgxSignalFormsConfigForComponent,
+  type ErrorDisplayStrategy,
+} from '@ngx-signal-forms/toolkit';
 import {
   ExampleCardsComponent,
   PageHeaderComponent,
@@ -43,6 +46,11 @@ import { OutlineFormFieldComponent } from './outline-form-field.form';
     PageHeaderComponent,
     SplitLayoutComponent,
     SignalFormDebuggerComponent,
+  ],
+  providers: [
+    provideNgxSignalFormsConfigForComponent({
+      defaultFormFieldAppearance: 'outline',
+    }),
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

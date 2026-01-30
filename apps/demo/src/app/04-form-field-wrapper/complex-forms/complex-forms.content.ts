@@ -10,7 +10,7 @@ export const COMPLEX_FORMS_CONTENT = {
     title: 'Complex Forms Made Simple',
     sections: [
       {
-        title: 'NgxSignalFormFieldWrapperComponent Features',
+        title: 'NgxFormField Features',
         items: [
           '• <strong>Nested objects:</strong> Deep path validation',
           '• <strong>Dynamic arrays:</strong> Add/remove items with reactive updates',

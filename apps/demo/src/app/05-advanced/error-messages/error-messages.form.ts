@@ -11,7 +11,7 @@ import {
   NgxSignalFormToolkit,
   provideErrorMessages,
 } from '@ngx-signal-forms/toolkit';
-import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import type { ErrorMessagesModel } from './error-messages.model';
 import { errorMessagesSchema } from './error-messages.validations';
 
@@ -28,7 +28,7 @@ import { errorMessagesSchema } from './error-messages.validations';
 @Component({
   selector: 'ngx-error-messages',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   providers: [
     // Demo: Centralized error messages (pattern shown in README)
     provideErrorMessages({

@@ -8,7 +8,7 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 interface Task {
   id: number;
@@ -30,7 +30,7 @@ const tasksSchema = schema<TasksModel>((path) => {
 @Component({
   selector: 'ngx-dynamic-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <div class="px-6 pt-0 pb-6">
       <h2 class="mb-4 text-2xl font-bold">Dynamic List Demo</h2>

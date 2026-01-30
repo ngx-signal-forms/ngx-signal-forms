@@ -13,7 +13,7 @@ import {
   NGX_SIGNAL_FORM_CONTEXT,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import type { SubmissionModel } from './submission-patterns.model';
 import { submissionSchema } from './submission-patterns.validations';
 
@@ -30,11 +30,7 @@ import { submissionSchema } from './submission-patterns.validations';
 @Component({
   selector: 'ngx-submission-patterns',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    FormField,
-    NgxSignalFormToolkit,
-    NgxSignalFormFieldWrapperComponent,
-  ],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form
       [ngxSignalForm]="registrationForm"

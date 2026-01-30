@@ -4,7 +4,7 @@ import {
   focusFirstInvalid,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import type { AccessibilityFormModel } from './accessibility-comparison.model';
 import { accessibilityValidationSchema } from './accessibility-comparison.validations';
 
@@ -17,11 +17,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
 @Component({
   selector: 'ngx-accessibility-toolkit-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    FormField,
-    NgxSignalFormToolkit,
-    NgxSignalFormFieldWrapperComponent,
-  ],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form
       #formElement

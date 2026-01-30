@@ -47,7 +47,6 @@
     <div class="grid gap-4 md:grid-cols-2">
       <ngx-signal-form-field-wrapper
         [formField]="showcaseForm.facts[factIndex].commitDate"
-        outline
       >
         <svg
           prefix
@@ -75,7 +74,6 @@
 
       <ngx-signal-form-field-wrapper
         [formField]="showcaseForm.facts[factIndex].commitPeriod"
-        outline
       >
         <svg
           prefix
@@ -105,7 +103,6 @@
     <!-- Land -->
     <ngx-signal-form-field-wrapper
       [formField]="showcaseForm.facts[factIndex].country"
-      outline
     >
       <label for="country-{{ factIndex }}">Land</label>
       <select
@@ -122,7 +119,6 @@
     <div class="grid gap-4 md:grid-cols-2">
       <ngx-signal-form-field-wrapper
         [formField]="showcaseForm.facts[factIndex].place"
-        outline
       >
         <svg
           prefix
@@ -155,7 +151,6 @@
 
       <ngx-signal-form-field-wrapper
         [formField]="showcaseForm.facts[factIndex].municipality"
-        outline
       >
         <svg
           prefix
@@ -189,7 +184,6 @@
 
     <ngx-signal-form-field-wrapper
       [formField]="showcaseForm.facts[factIndex].locationDescription"
-      outline
     >
       <label for="locationDescription-{{ factIndex }}">
         Locatieaanduiding
@@ -204,7 +198,6 @@
 
     <ngx-signal-form-field-wrapper
       [formField]="showcaseForm.facts[factIndex].abroadLocation"
-      outline
     >
       <label for="abroadLocation-{{ factIndex }}">
         Pleegplaats buitenland
@@ -241,7 +234,6 @@
           <div class="flex-1 space-y-4">
             <ngx-signal-form-field-wrapper
               [formField]="showcaseForm.facts[factIndex].offenses[offenseIndex].qualification"
-              outline
             >
               <svg
                 prefix
@@ -314,7 +306,6 @@
                   <div class="flex items-center gap-2">
                     <ngx-signal-form-field-wrapper
                       [formField]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles[articleIndex].article"
-                      outline
                       class="flex-1"
                     >
                       <label

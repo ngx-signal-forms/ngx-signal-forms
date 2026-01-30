@@ -11,18 +11,14 @@ import {
   submitWithWarnings,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import type { PasswordFormModel } from './warning-support.model';
 import { createPasswordForm } from './warning-support.validations';
 
 @Component({
   selector: 'ngx-warning-support-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    FormField,
-    NgxSignalFormToolkit,
-    NgxSignalFormFieldWrapperComponent,
-  ],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   host: {
     class: 'block max-w-xl mx-auto',
   },

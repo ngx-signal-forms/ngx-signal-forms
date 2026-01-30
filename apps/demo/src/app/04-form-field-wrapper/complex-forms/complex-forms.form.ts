@@ -7,14 +7,14 @@ import {
 import { FormField, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import type { ComplexFormModel } from './complex-forms.model';
 import { complexFormSchema } from './complex-forms.validations';
 
 /**
  * Complex Forms Component
  *
- * Demonstrates NgxOutlinedFormField with:
+ * Demonstrates NgxFormField with:
  * - Nested object structures
  * - Dynamic arrays (add/remove items)
  * - Maximum code reduction with form field wrapper
@@ -22,7 +22,7 @@ import { complexFormSchema } from './complex-forms.validations';
 @Component({
   selector: 'ngx-complex-forms',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   templateUrl: './complex-forms.form.html',
 })
 export class ComplexFormsComponent {

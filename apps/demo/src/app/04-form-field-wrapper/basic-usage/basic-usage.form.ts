@@ -9,23 +9,23 @@ import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
-import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import {
   basicUsageSchema,
   type BasicUsageModel,
 } from './basic-usage.validations';
 
 /**
- * Basic Usage - Demonstrates NgxSignalFormFieldWrapperComponent
+ * Basic Usage - Demonstrates NgxFormField
  *
- * This example showcases the NgxSignalFormFieldWrapperComponent wrapper which combines:
+ * This example showcases the NgxFormField bundle which combines:
  * - **Automatic Error Display**: No need to manually add `<ngx-signal-form-error>`
  * - **Consistent Layout**: Standardized spacing via CSS custom properties
  * - **Accessibility**: Proper structure with semantic HTML
  * - **Multiple Field Types**: Works with all form controls
  *
  * 🎯 Key Features Demonstrated:
- * - NgxSignalFormFieldWrapperComponent wrapper for cleaner markup
+ * - NgxFormField wrapper for cleaner markup
  * - Automatic error display (no manual error components needed)
  * - Various input types (text, email, url, number, textarea, select, checkbox)
  * - Consistent spacing and layout
@@ -43,7 +43,7 @@ import {
 @Component({
   selector: 'ngx-basic-usage',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   templateUrl: './basic-usage.html',
 })
 export class BasicUsageComponent {

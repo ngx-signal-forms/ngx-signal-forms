@@ -10,7 +10,7 @@ import {
   validate,
 } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 interface Booking {
   checkIn: string;
@@ -58,7 +58,7 @@ const bookingSchema = schema<Booking>((path) => {
 @Component({
   selector: 'ngx-cross-field-validation',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <div class="px-6 pt-0 pb-6">
       <h2 class="mb-4 text-2xl font-bold">Cross-Field Validation</h2>

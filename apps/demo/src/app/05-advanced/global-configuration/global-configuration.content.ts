@@ -13,8 +13,12 @@ export const GLOBAL_CONFIG_CONTENT = {
         title: 'Configuration Options',
         items: [
           '• <strong>provideNgxSignalFormsConfig():</strong> Configure toolkit defaults in app.config.ts',
+          '• <strong>provideNgxSignalFormsConfigForComponent():</strong> Override defaults for a component subtree',
           '• <strong>defaultErrorStrategy:</strong> Set global error display mode (immediate, on-touch, on-submit, manual)',
+          '• <strong>defaultFormFieldAppearance:</strong> Set default form field style (default or outline)',
           '• <strong>autoAria:</strong> Enable/disable automatic ARIA attributes globally',
+          '• <strong>showRequiredMarker:</strong> Toggle required marker for outlined fields',
+          '• <strong>requiredMarker:</strong> Customize required marker text',
           '• <strong>fieldNameResolver:</strong> Custom logic for resolving field names from DOM',
           '• <strong>debug:</strong> Enable console logging for troubleshooting',
         ],
@@ -22,7 +26,7 @@ export const GLOBAL_CONFIG_CONTENT = {
       {
         title: 'Custom Field Resolution',
         items: [
-          '• <strong>Default resolution:</strong> Uses <code class="code-inline">id</code> → <code class="code-inline">name</code> → <code class="code-inline">data-signal-field</code>',
+          '• <strong>Default resolution:</strong> Uses <code class="code-inline">data-signal-field</code> → custom resolver → <code class="code-inline">id</code> → <code class="code-inline">name</code>',
           '• <strong>Custom resolver:</strong> Override with your own field name extraction logic',
           '• <strong>WCAG compliance:</strong> Prefer <code class="code-inline">id</code> attributes for accessibility',
           '• <strong>Nested paths:</strong> Use <code class="code-inline">data-signal-field</code> for complex paths like "user.address.city"',

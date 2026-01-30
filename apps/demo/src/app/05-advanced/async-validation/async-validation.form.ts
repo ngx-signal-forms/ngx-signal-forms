@@ -9,7 +9,7 @@ import {
   validateHttp,
 } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 interface Registration {
   username: string;
@@ -39,7 +39,7 @@ const registrationSchema = schema<Registration>((path) => {
 @Component({
   selector: 'ngx-async-validation',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField, JsonPipe],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField, JsonPipe],
   template: `
     <div class="px-6 pt-0 pb-6">
       <h2 class="mb-4 text-2xl font-bold">Async Validation Demo</h2>

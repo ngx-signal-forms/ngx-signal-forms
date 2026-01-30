@@ -9,7 +9,7 @@ import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
-import { NgxOutlinedFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 import type { FieldsetDemoModel } from './fieldset.model';
 import { fieldsetDemoSchema } from './fieldset.validations';
@@ -41,7 +41,7 @@ import { fieldsetDemoSchema } from './fieldset.validations';
 @Component({
   selector: 'ngx-fieldset-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxOutlinedFormField],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   templateUrl: './fieldset.form.html',
   styles: `
     /* Spacing between fieldsets */

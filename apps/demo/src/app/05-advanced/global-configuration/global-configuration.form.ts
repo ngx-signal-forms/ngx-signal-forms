@@ -7,7 +7,7 @@ import {
 import { FormField, form, submit } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import type { GlobalConfigModel } from './global-configuration.model';
 import { globalConfigSchema } from './global-configuration.validations';
 
@@ -26,11 +26,7 @@ import { globalConfigSchema } from './global-configuration.validations';
 @Component({
   selector: 'ngx-global-configuration',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    FormField,
-    NgxSignalFormToolkit,
-    NgxSignalFormFieldWrapperComponent,
-  ],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form
       [ngxSignalForm]="configForm"
@@ -162,7 +158,7 @@ import { globalConfigSchema } from './global-configuration.validations';
               Field Resolution:
             </dt>
             <dd class="text-gray-600 dark:text-gray-400">
-              id → name → data-signal-field
+              data-signal-field → custom resolver → id → name
             </dd>
           </div>
         </dl>

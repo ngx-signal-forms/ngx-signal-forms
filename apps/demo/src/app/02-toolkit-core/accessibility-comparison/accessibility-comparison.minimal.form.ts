@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { form, FormField, submit } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import type { AccessibilityFormModel } from './accessibility-comparison.model';
 import { accessibilityValidationSchema } from './accessibility-comparison.validations';
 
@@ -31,11 +31,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
 @Component({
   selector: 'ngx-accessibility-minimal-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    FormField,
-    NgxSignalFormToolkit,
-    NgxSignalFormFieldWrapperComponent,
-  ],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <!-- ✅ NO [ngxSignalForm] needed! Error components work for 'on-touch' strategy -->
     <form (submit)="handleSubmit($event)" class="space-y-4">
