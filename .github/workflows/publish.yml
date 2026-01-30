@@ -1,11 +1,10 @@
 name: Publish
 
-# Nx recommended pattern: publish when tags are pushed
-# Flow: nx release --skip-publish (locally) → git push --tags → this workflow publishes
+# Publish after a successful Release run to avoid GITHUB_TOKEN tag-trigger limits
 on:
-  push:
-    tags:
-      - v*.*.*
+  workflow_run:
+    workflows: ['Release']
+    types: [completed]
 
 permissions:
   contents: read
@@ -16,11 +15,24 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           filter: tree:0
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Resolve release tag
+        id: release_tag
+        run: |
+          git fetch --tags --force
+          TAG=$(git tag --points-at "${{ github.event.workflow_run.head_sha }}" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
+          if [ -z "$TAG" ]; then
+            echo "No release tag found for commit ${{ github.event.workflow_run.head_sha }}" >&2
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
