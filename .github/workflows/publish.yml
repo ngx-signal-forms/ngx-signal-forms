@@ -1,6 +1,7 @@
 name: Publish
 
-# Publish after a successful Release run to avoid GITHUB_TOKEN tag-trigger limits
+# Publish after a successful Release run or manually
+# Uses npm Trusted Publishers (OIDC) - no secrets required!
 on:
   workflow_run:
     workflows: ['Release']
@@ -12,10 +13,15 @@ on:
         required: true
         type: string
         default: 'v1.0.0-beta.1'
+      dry_run:
+        description: 'Dry run (no actual publish)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
-  id-token: write
+  id-token: write # Required for npm Trusted Publishers (OIDC)
 
 jobs:
   publish:
@@ -39,8 +45,8 @@ jobs:
           filter: tree:0
           ref: ${{ steps.publish_ref.outputs.ref }}
 
-      - name: Resolve release tag
-        id: release_tag
+      - name: Resolve release tag and dist-tag
+        id: release_info
         run: |
           git fetch --tags --force
           REF_SHA=$(git rev-parse "${{ steps.publish_ref.outputs.ref }}")
@@ -51,6 +57,21 @@ jobs:
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
+          # Determine npm dist-tag based on version
+          VERSION="${TAG#v}"
+          if [[ "$VERSION" == *"-next"* ]]; then
+            echo "dist_tag=next" >> "$GITHUB_OUTPUT"
+          elif [[ "$VERSION" == *"-beta"* ]]; then
+            echo "dist_tag=beta" >> "$GITHUB_OUTPUT"
+          elif [[ "$VERSION" == *"-rc"* ]]; then
+            echo "dist_tag=rc" >> "$GITHUB_OUTPUT"
+          elif [[ "$VERSION" == *"-alpha"* ]]; then
+            echo "dist_tag=alpha" >> "$GITHUB_OUTPUT"
+          else
+            echo "dist_tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Resolved: tag=$TAG, dist_tag will be determined by version"
+
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
@@ -58,7 +79,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org'
 
@@ -71,8 +92,21 @@ jobs:
       - name: Build
         run: pnpm exec nx run-many -t build -p toolkit
 
+      - name: Publish packages (Dry Run)
+        if: ${{ inputs.dry_run == true }}
+        run: |
+          echo "🔍 Dry run - would publish with tag: ${{ steps.release_info.outputs.dist_tag }}"
+          pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --dry-run
+
       - name: Publish packages
-        run: pnpm exec nx release publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: 'true'
+        if: ${{ inputs.dry_run != true }}
+        run: pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }}
+        # No NODE_AUTH_TOKEN needed - uses OIDC via Trusted Publishers!
+
+      - name: Summary
+        run: |
+          echo "## Publish Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Git Tag: ${{ steps.release_info.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- npm Dist Tag: ${{ steps.release_info.outputs.dist_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Dry Run: ${{ inputs.dry_run || false }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Auth: npm Trusted Publishers (OIDC)" >> $GITHUB_STEP_SUMMARY

@@ -1,5 +1,13 @@
 name: Release
 
+# Manually create versioned releases with changelog and git tags
+# This workflow does NOT publish to npm - use "Publish" workflow after this succeeds
+#
+# Release types:
+#   - patch/minor/major: Stable releases → npm tag: latest
+#   - prerelease --preid=beta: Beta releases → npm tag: beta (e.g., 1.0.0-beta.1)
+#   - prerelease --preid=rc: Release candidates → npm tag: rc (e.g., 1.0.0-rc.1)
+#   - For @next dev builds, use "Release Next" workflow instead
 on:
   workflow_dispatch:
     inputs:
@@ -27,7 +35,6 @@ on:
         default: 'beta'
         options:
           - beta
-          - next
           - rc
           - alpha
       dry_run:
@@ -62,7 +69,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org'
 
@@ -119,8 +126,13 @@ jobs:
         run: git push --follow-tags
 
       - name: Summary
-        if: ${{ !inputs.dry_run }}
         run: |
           echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
           echo "- Version: ${{ steps.version_cmd.outputs.cmd }}" >> $GITHUB_STEP_SUMMARY
           echo "- Dry Run: ${{ inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ inputs.dry_run }}" != "true" ]; then
+            echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+            echo "The **Publish** workflow will automatically trigger to publish to npm." >> $GITHUB_STEP_SUMMARY
+            echo "Or manually run it from Actions → Publish → Run workflow" >> $GITHUB_STEP_SUMMARY
+          fi

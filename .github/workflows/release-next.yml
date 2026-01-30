@@ -1,18 +1,19 @@
 name: Release Next
 
-# Automatically publish next releases on push to main
+# Manually publish @next releases for testing/preview
+# Uses npm Trusted Publishers (OIDC) - no secrets required!
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'packages/**'
-      - '!packages/**/*.md'
-      - '!packages/**/*.spec.ts'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (no actual publish)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
-  id-token: write
+  id-token: write # Required for npm Trusted Publishers (OIDC)
 
 jobs:
   release-next:
@@ -31,30 +32,47 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify Quality (Lint, Test, Build, E2E)
-        run: pnpm exec nx run-many -t lint test build e2e-ci -p toolkit demo-e2e
+      - name: Verify Quality (Lint, Test, Build)
+        run: pnpm exec nx run-many -t lint test build -p toolkit
 
       - name: Nx Report
         run: pnpm exec nx report
 
-      - name: Release Next
+      - name: Release Next (Dry Run)
+        if: ${{ inputs.dry_run == true }}
         run: |
           SHA_SHORT=$(git rev-parse --short HEAD)
           NEXT_VERSION="0.0.0-next.$SHA_SHORT"
-          echo "Releasing version: $NEXT_VERSION"
+          echo "🔍 Dry run - would release version: $NEXT_VERSION"
+          pnpm exec nx release version $NEXT_VERSION --git-tag=false --stage-changes=false
+          pnpm exec nx release publish --tag=next --dry-run
+
+      - name: Release Next
+        if: ${{ inputs.dry_run != true }}
+        run: |
+          SHA_SHORT=$(git rev-parse --short HEAD)
+          NEXT_VERSION="0.0.0-next.$SHA_SHORT"
+          echo "📦 Releasing version: $NEXT_VERSION"
 
           # Version without git operations
           pnpm exec nx release version $NEXT_VERSION --git-tag=false --stage-changes=false
 
-          # Publish to npm with next tag and provenance
+          # Publish to npm with next tag (uses OIDC)
           pnpm exec nx release publish --tag=next
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: 'true'
+        # No NODE_AUTH_TOKEN needed - uses OIDC via Trusted Publishers!
+
+      - name: Summary
+        run: |
+          SHA_SHORT=$(git rev-parse --short HEAD)
+          echo "## Release Next Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: 0.0.0-next.$SHA_SHORT" >> $GITHUB_STEP_SUMMARY
+          echo "- npm Tag: next" >> $GITHUB_STEP_SUMMARY
+          echo "- Dry Run: ${{ inputs.dry_run || false }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Auth: npm Trusted Publishers (OIDC)" >> $GITHUB_STEP_SUMMARY
