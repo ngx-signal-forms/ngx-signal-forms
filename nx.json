@@ -82,10 +82,66 @@
   "release": {
     "projects": ["toolkit"],
     "changelog": {
-      "workspaceChangelog": {
-        "createRelease": "github"
-      },
-      "projectChangelogs": true
+      "workspaceChangelog": false,
+      "projectChangelogs": {
+        "createRelease": "github",
+        "file": false,
+        "renderOptions": {
+          "authors": true,
+          "commitReferences": true,
+          "versionTitleDate": true
+        }
+      }
+    },
+    "conventionalCommits": {
+      "types": {
+        "feat": {
+          "semverBump": "minor",
+          "changelog": {
+            "title": "🚀 Features"
+          }
+        },
+        "fix": {
+          "semverBump": "patch",
+          "changelog": {
+            "title": "🩹 Bug Fixes"
+          }
+        },
+        "perf": {
+          "semverBump": "patch",
+          "changelog": {
+            "title": "⚡ Performance"
+          }
+        },
+        "refactor": {
+          "semverBump": "none",
+          "changelog": {
+            "title": "♻️ Refactoring"
+          }
+        },
+        "docs": {
+          "semverBump": "none",
+          "changelog": {
+            "title": "📚 Documentation"
+          }
+        },
+        "test": {
+          "semverBump": "none",
+          "changelog": false
+        },
+        "build": {
+          "semverBump": "none",
+          "changelog": false
+        },
+        "ci": {
+          "semverBump": "none",
+          "changelog": false
+        },
+        "chore": {
+          "semverBump": "none",
+          "changelog": false
+        }
+      }
     },
     "git": {
       "commit": true,
