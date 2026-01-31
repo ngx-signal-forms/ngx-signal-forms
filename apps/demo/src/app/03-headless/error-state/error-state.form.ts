@@ -67,7 +67,7 @@ const headlessSchema = schema<HeadlessProfile>((path) => {
             <div
               [id]="emailState.errorId()"
               role="alert"
-              class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700"
+              class="headless-alert-error text-sm"
             >
               @for (error of emailState.resolvedErrors(); track error.kind) {
                 <div>{{ error.message }}</div>
@@ -102,21 +102,18 @@ const headlessSchema = schema<HeadlessProfile>((path) => {
             #bioCount="characterCount"
             [field]="profileForm.bio"
             [maxLength]="160"
-            class="flex items-center justify-between text-xs"
+            class="headless-counter"
           >
             <span
               [class.text-amber-600]="bioCount.limitState() === 'warning'"
               [class.text-orange-600]="bioCount.limitState() === 'danger'"
               [class.text-red-600]="bioCount.limitState() === 'exceeded'"
-              class="text-gray-500"
             >
               {{ bioCount.currentLength() }} /
               {{ bioCount.resolvedMaxLength() }}
             </span>
             @if (bioCount.remaining() !== null) {
-              <span class="text-gray-500">
-                {{ bioCount.remaining() }} remaining
-              </span>
+              <span> {{ bioCount.remaining() }} remaining </span>
             }
           </div>
 
@@ -124,7 +121,7 @@ const headlessSchema = schema<HeadlessProfile>((path) => {
             <div
               [id]="bioState.errorId()"
               role="alert"
-              class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700"
+              class="headless-alert-error text-sm"
             >
               @for (error of bioState.resolvedErrors(); track error.kind) {
                 <div>{{ error.message }}</div>
