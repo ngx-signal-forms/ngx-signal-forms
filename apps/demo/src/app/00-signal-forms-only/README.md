@@ -172,7 +172,7 @@ form(model, (path) => {
 
 ### Skip to Full Toolkit (100%)
 
-**Path:** `02-toolkit-core/` or `03-form-field-wrapper/`
+**Path:** `02-toolkit-core/` or `04-form-field-wrapper/`
 
 **What changes:**
 

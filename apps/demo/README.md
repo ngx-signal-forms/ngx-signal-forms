@@ -11,9 +11,9 @@ This demo follows a **progressive learning path** from vanilla Angular Signal Fo
 ├─ 00-signal-forms-only/     [0% toolkit]  ← Baseline: What Signal Forms looks like
 ├─ 01-getting-started/       [20% toolkit] ← First steps with toolkit
 ├─ 02-toolkit-core/          [100%]        ← Core toolkit features
-├─ 05-headless/              [100%]        ← Headless primitives
-├─ 03-form-field-wrapper/    [100%]        ← Form field component
-└─ 04-advanced/              [100%]        ← Advanced scenarios & production patterns
+├─ 03-headless/              [100%]        ← Headless primitives
+├─ 04-form-field-wrapper/    [100%]        ← Form field component
+└─ 05-advanced/              [100%]        ← Advanced scenarios & production patterns
 ```
 
 ## 📚 Learning Path
@@ -59,17 +59,19 @@ Deep dive into core toolkit features.
 
 ### Level 4: Headless (100% Toolkit)
 
-**Path:** `05-headless/`
+**Path:** `03-headless/`
 
 Renderless primitives for custom UI.
 
 - ✅ Strategy-aware error visibility with `NgxHeadlessErrorState`
 - ✅ Character count and limits with `NgxHeadlessCharacterCount`
+- ✅ Field grouping with `NgxHeadlessFieldset`
+- ✅ Field name resolution with `NgxHeadlessFieldName`
 - ✅ Full control over markup and styling
 
 ### Level 5: Form Field Wrapper (100% Toolkit)
 
-**Path:** `03-form-field-wrapper/`
+**Path:** `04-form-field-wrapper/`
 
 "Batteries included" approach with the form field component.
 
@@ -80,7 +82,7 @@ Renderless primitives for custom UI.
 
 ### Level 6: Advanced Scenarios (100% Toolkit)
 
-**Path:** `04-advanced/`
+**Path:** `05-advanced/`
 
 Production-ready patterns for real applications.
 
@@ -208,7 +210,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 ## 🔧 Technology Stack
 
-- **Angular**: 21.0.0-next.7 (Signal Forms experimental API)
+- **Angular**: 21.1.2 (Signal Forms experimental API)
 - **TypeScript**: 5.8+ (strict mode)
 - **Toolkit**: @ngx-signal-forms/toolkit
 - **Styling**: Tailwind CSS 4.x
