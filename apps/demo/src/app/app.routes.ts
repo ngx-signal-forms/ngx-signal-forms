@@ -113,6 +113,14 @@ export const appRoutes: Routes = [
           ),
         title: 'Headless Error State - Custom UI with Signals',
       },
+      {
+        path: 'fieldset-utilities',
+        loadComponent: () =>
+          import('./03-headless/fieldset-utilities/fieldset-utilities.page').then(
+            (m) => m.HeadlessFieldsetUtilitiesPageComponent,
+          ),
+        title: 'Headless Fieldset + Utilities - Grouped State',
+      },
     ],
   },
 

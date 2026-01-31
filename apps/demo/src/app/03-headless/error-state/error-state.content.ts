@@ -26,9 +26,9 @@ export const HEADLESS_ERROR_STATE_CONTENT = {
       },
     ],
     nextStep: {
-      text: 'Next: use the prebuilt wrappers →',
-      link: '../form-field-wrapper/basic-usage',
-      linkText: 'Form Field Wrapper',
+      text: 'Next: headless fieldset + field names →',
+      link: '/headless/fieldset-utilities',
+      linkText: 'Headless Fieldset',
     },
   },
 } as const;

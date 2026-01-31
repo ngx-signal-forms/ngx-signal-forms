@@ -116,6 +116,10 @@ export class AppComponent implements AfterViewInit {
           path: '/headless/error-state',
           label: 'Error State + Character Count',
         },
+        {
+          path: '/headless/fieldset-utilities',
+          label: 'Fieldset + Utilities',
+        },
       ],
     },
     {
