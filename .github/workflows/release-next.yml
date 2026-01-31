@@ -40,9 +40,12 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - uses: nrwl/nx-set-shas@v4
+        continue-on-error: true
 
       - name: Verify Quality (Lint, Test, Build)
         run: pnpm exec nx affected -t lint test build
+        env:
+          NX_CLOUD_NO_TIMEOUTS: true
 
       - name: Nx Report
         run: pnpm exec nx report

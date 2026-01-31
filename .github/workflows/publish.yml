@@ -91,6 +91,8 @@ jobs:
 
       - name: Build
         run: pnpm exec nx run-many -t build -p toolkit
+        env:
+          NX_CLOUD_NO_TIMEOUTS: true
 
       - name: Publish packages (Dry Run)
         if: ${{ inputs.dry_run == true }}
