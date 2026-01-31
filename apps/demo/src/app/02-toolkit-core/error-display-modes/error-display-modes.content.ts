@@ -73,7 +73,7 @@ export const ERROR_DISPLAY_MODES_CONTENT = {
     ],
     nextStep: {
       text: 'Learn about field state management →',
-      link: '../toolkit/field-states',
+      link: '/toolkit-core/field-states',
       linkText: 'Field States',
     },
   },

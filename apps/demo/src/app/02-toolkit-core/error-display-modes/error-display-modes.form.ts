@@ -5,10 +5,14 @@ import {
   input,
   signal,
 } from '@angular/core';
+import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { form, FormField, submit } from '@angular/forms/signals';
 import {
+  combineShowErrors,
+  injectFormContext,
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
+  type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 
@@ -29,6 +33,104 @@ const INITIAL_MODEL: ProductFeedbackModel = {
   newsletter: false,
 };
 
+@Component({
+  selector: 'ngx-error-display-helpers',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div
+      class="rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900 dark:border-indigo-800 dark:bg-indigo-950 dark:text-indigo-100"
+    >
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="font-semibold">Toolkit helpers</span>
+          <span
+            class="rounded-full bg-white px-2 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200"
+          >
+            Strategy: {{ resolvedStrategy() }}
+          </span>
+          <span
+            class="rounded-full bg-white px-2 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200"
+          >
+            Submitted: {{ submittedStatus() }}
+          </span>
+        </div>
+        <span class="text-xs text-indigo-700 dark:text-indigo-300">
+          Powered by injectFormContext + showErrors
+        </span>
+      </div>
+
+      <div class="mt-3 grid gap-2 sm:grid-cols-2">
+        <div
+          class="rounded-md bg-white/80 px-3 py-2 text-xs text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-200"
+        >
+          Name errors visible:
+          <strong>{{ showNameErrors() ? 'yes' : 'no' }}</strong>
+        </div>
+        <div
+          class="rounded-md bg-white/80 px-3 py-2 text-xs text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-200"
+        >
+          Email errors visible:
+          <strong>{{ showEmailErrors() ? 'yes' : 'no' }}</strong>
+        </div>
+      </div>
+
+      @if (showPersonalInfoErrors()) {
+        <div
+          class="mt-3 rounded-md border border-indigo-300 bg-white px-3 py-2 text-xs font-medium text-indigo-800 dark:border-indigo-700 dark:bg-indigo-900 dark:text-indigo-100"
+          role="status"
+          aria-live="polite"
+        >
+          Personal info has visible errors (combineShowErrors)
+        </div>
+      }
+    </div>
+  `,
+})
+export class ErrorDisplayHelpersComponent {
+  readonly nameField = input.required<FieldTree<string>>();
+  readonly emailField = input.required<FieldTree<string>>();
+
+  readonly #formContext = injectFormContext();
+
+  protected readonly resolvedStrategy = computed<ErrorDisplayStrategy>(
+    () => this.#formContext?.errorStrategy?.() ?? 'on-touch',
+  );
+
+  protected readonly submittedStatus = computed<SubmittedStatus>(
+    () => this.#formContext?.submittedStatus?.() ?? 'unsubmitted',
+  );
+
+  // showErrors() helper computes visibility based on strategy, field state, and submission
+  // We wrap in computed to properly unwrap InputSignal → FieldTree → FieldState
+  protected readonly showNameErrors = computed(() =>
+    this.#computeShowErrors(this.nameField()()),
+  );
+
+  protected readonly showEmailErrors = computed(() =>
+    this.#computeShowErrors(this.emailField()()),
+  );
+
+  // combineShowErrors() returns true if ANY field should show errors
+  protected readonly showPersonalInfoErrors = combineShowErrors([
+    this.showNameErrors,
+    this.showEmailErrors,
+  ]);
+
+  // Inline showErrors logic to handle InputSignal<FieldTree<T>> properly
+  #computeShowErrors(fieldState: FieldState<string>): boolean {
+    const strategy = this.resolvedStrategy();
+    const status = this.submittedStatus();
+
+    if (strategy === 'manual') return false;
+    if (!fieldState.invalid()) return false;
+    if (strategy === 'immediate') return true;
+    if (strategy === 'on-touch') return fieldState.touched();
+    if (strategy === 'on-submit')
+      return status === 'submitted' || status === 'submitting';
+    return false;
+  }
+}
+
 /**
  * Error Display Modes Demo using Angular Signal Forms + Toolkit
  *
@@ -41,7 +143,12 @@ const INITIAL_MODEL: ProductFeedbackModel = {
 @Component({
   selector: 'ngx-error-display-modes-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
+  imports: [
+    ErrorDisplayHelpersComponent,
+    FormField,
+    NgxSignalFormToolkit,
+    NgxSignalFormErrorComponent,
+  ],
   template: `
     <!-- Product Feedback Form -->
     <form
@@ -51,6 +158,11 @@ const INITIAL_MODEL: ProductFeedbackModel = {
       class="form-container"
       aria-labelledby="productFeedbackHeading"
     >
+      <ngx-error-display-helpers
+        [nameField]="productForm.name"
+        [emailField]="productForm.email"
+        class="mb-6 block"
+      />
       <!-- Personal Information Section -->
       <fieldset class="mb-8">
         <legend
