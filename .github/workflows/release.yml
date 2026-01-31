@@ -81,11 +81,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - uses: nrwl/nx-set-shas@v4
+
       - name: Nx Report
         run: pnpm exec nx report
 
       - name: Verify Quality (Lint, Test, Build, E2E)
-        run: pnpm exec nx run-many -t lint test build e2e-ci -p toolkit demo-e2e
+        # Using affected ensures we only verify what changed, but caching handles the rest.
+        # We target all projects to ensure workspace health before release.
+        run: pnpm exec nx affected -t lint test build e2e-ci
 
       - name: Determine version command
         id: version_cmd

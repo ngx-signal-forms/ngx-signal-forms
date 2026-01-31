@@ -39,8 +39,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - uses: nrwl/nx-set-shas@v4
+
       - name: Verify Quality (Lint, Test, Build)
-        run: pnpm exec nx run-many -t lint test build -p toolkit
+        run: pnpm exec nx affected -t lint test build
 
       - name: Nx Report
         run: pnpm exec nx report

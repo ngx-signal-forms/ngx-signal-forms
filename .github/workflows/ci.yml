@@ -37,6 +37,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps
 
+      - uses: nrwl/nx-set-shas@v4
+
       - name: Nx Report
         run: pnpm exec nx report
 
