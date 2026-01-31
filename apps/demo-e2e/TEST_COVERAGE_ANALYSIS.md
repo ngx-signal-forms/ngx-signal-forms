@@ -506,17 +506,16 @@ The test suite is production-ready with excellent coverage of:
 
 19. `pure-signal-form.spec.ts` - Pure Angular Signal Forms (no toolkit)
 
-### Toolkit Core (5 files)
+### Toolkit Core (4 files)
 
 20. `accessibility-comparison.spec.ts` - Manual vs Toolkit ARIA
-21. `css-status-classes.spec.ts` - Custom CSS class injection
-22. `error-display-modes.spec.ts` - Error strategy modes
-23. `field-states.spec.ts` - Field state signals
-24. `warning-support.spec.ts` - Warning vs error behavior
+21. `error-display-modes.spec.ts` - Error strategy modes
+22. `field-states.spec.ts` - Field state signals
+23. `warning-support.spec.ts` - Warning vs error behavior
 
 ### Other (2 files)
 
 25. `navigation.spec.ts` - Route navigation
 26. `responsive.spec.ts` - Page load validation
 
-**Total: 26 test files, 145 passing tests**
+**Total: 25 test files**

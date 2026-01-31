@@ -28,10 +28,12 @@ import { normalizeSignalFormsConfig } from '../utilities/normalize-config';
 export function provideNgxSignalFormsConfig(
   config: NgxSignalFormsUserConfig,
 ): EnvironmentProviders {
+  const normalizedConfig = normalizeSignalFormsConfig(config);
+
   return makeEnvironmentProviders([
     {
       provide: NGX_SIGNAL_FORMS_CONFIG,
-      useValue: normalizeSignalFormsConfig(config),
+      useValue: normalizedConfig,
     },
   ]);
 }
@@ -61,10 +63,12 @@ export function provideNgxSignalFormsConfig(
 export function provideNgxSignalFormsConfigForComponent(
   config: NgxSignalFormsUserConfig,
 ): Provider[] {
+  const normalizedConfig = normalizeSignalFormsConfig(config);
+
   return [
     {
       provide: NGX_SIGNAL_FORMS_CONFIG,
-      useValue: normalizeSignalFormsConfig(config),
+      useValue: normalizedConfig,
     },
   ];
 }

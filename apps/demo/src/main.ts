@@ -4,7 +4,6 @@ import {
   isDevMode,
   provideZonelessChangeDetection,
 } from '@angular/core';
-import { provideSignalFormsConfig } from '@angular/forms/signals';
 import { bootstrapApplication } from '@angular/platform-browser';
 import {
   provideRouter,
@@ -12,10 +11,7 @@ import {
   withEnabledBlockingInitialNavigation,
   withViewTransitions,
 } from '@angular/router';
-import {
-  ngxStatusClasses,
-  provideNgxSignalFormsConfig,
-} from '@ngx-signal-forms/toolkit';
+import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 import { AppComponent } from './app/app.component';
 import { appRoutes } from './app/app.routes';
 
@@ -47,11 +43,7 @@ import { appRoutes } from './app/app.routes';
         defaultErrorStrategy: 'on-touch',
         autoAria: true,
         strictFieldResolution: false,
-        debug: true, // Enable debug logging
-      }),
-      // CSS status classes synced with error display strategy
-      provideSignalFormsConfig({
-        classes: ngxStatusClasses({ strategy: 'on-touch' }),
+        debug: true,
       }),
       provideRouter(
         appRoutes,

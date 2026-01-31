@@ -10,10 +10,10 @@ export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: NgxSignalFormsConfig = {
   defaultErrorStrategy: () => 'on-touch' as const,
   strictFieldResolution: false,
   debug: false,
-  defaultFormFieldAppearance: undefined,
+  defaultFormFieldAppearance: 'default',
   showRequiredMarker: true,
   requiredMarker: ' *',
-};
+} as const;
 
 /**
  * Injection token for the global ngx-signal-forms configuration.

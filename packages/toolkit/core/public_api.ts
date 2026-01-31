@@ -19,7 +19,6 @@ export * from './utilities/focus-first-invalid';
 export { injectFormConfig } from './utilities/inject-form-config';
 export { injectFormContext } from './utilities/inject-form-context';
 export { combineShowErrors, showErrors } from './utilities/show-errors';
-export * from './utilities/status-classes';
 export * from './utilities/submission-helpers';
 
 // Convenience imports

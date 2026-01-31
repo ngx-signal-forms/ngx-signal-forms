@@ -40,35 +40,29 @@ For comprehensive theming of the Form Field wrapper and Fieldset, see the **[For
 
 ## Quick Start
 
-```typescript
-// 1. Configure (optional)
-import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
+### Zero Configuration
 
+The toolkit works out of the box with sensible defaults. No providers required:
+
+```typescript
+// app.config.ts - NO toolkit providers needed!
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideNgxSignalFormsConfig({
-      defaultErrorStrategy: 'on-touch',
-    }),
+    provideRouter(appRoutes),
+    // ... other providers
   ],
 };
 ```
 
 ```typescript
-// 2. Use in components (recommended: bundle import)
+// my-form.component.ts
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import {
-  form,
-  schema,
-  required,
-  submit,
-  FormField,
-} from '@angular/forms/signals';
+import { form, schema, required, FormField } from '@angular/forms/signals';
 
 @Component({
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <!-- ✅ NO [ngxSignalForm] needed for default 'on-touch' strategy! -->
     <form (submit)="handleSubmit($event)">
       <ngx-signal-form-field-wrapper
         [formField]="contactForm.email"
@@ -81,37 +75,54 @@ import {
     </form>
   `,
 })
-export class MyComponent {
-  protected readonly model = signal({ email: '' });
-  protected readonly contactForm = form(
-    this.model,
-    schema((path) => {
-      required(path.email, { message: 'Email is required' });
-    }),
-  );
-
-  /**
-   * Form submission using Angular Signal Forms submit() helper.
-   *
-   * IMPORTANT: Signal Forms use native DOM submit event, NOT ngSubmit.
-   * - Template binding: (submit)="handleSubmit($event)" with event parameter
-   * - Must call event.preventDefault() to prevent page reload
-   * - Automatically marks all fields as touched
-   * - Only executes callback when form is VALID
-   */
-  protected async handleSubmit(event: Event): Promise<void> {
-    event.preventDefault();
-    await submit(this.contactForm, async () => {
-      // Handle submission (e.g., API call)
-      console.log('Form data:', this.model());
-      // Reset after success
-      this.model.set({ email: '' });
-      this.contactForm().reset();
-      return null; // No server errors
-    });
-  }
+export class MyFormComponent {
+  // ... form logic
 }
 ```
+
+**Default behavior (no configuration):**
+
+| Feature               | Default                                                     |
+| --------------------- | ----------------------------------------------------------- |
+| Error display         | `'on-touch'` - errors show after blur or submit             |
+| Auto ARIA             | `true` - `aria-invalid` and `aria-describedby` auto-applied |
+| Required marker       | `' *'` shown after label                                    |
+| Form field appearance | `'default'` (not outlined)                                  |
+
+### When to Use `provideNgxSignalFormsConfig()`
+
+**Only call this provider when you need to override the defaults:**
+
+```typescript
+import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // Only needed to OVERRIDE defaults
+    provideNgxSignalFormsConfig({
+      // Change when errors appear (default: 'on-touch')
+      defaultErrorStrategy: 'on-submit', // or 'immediate', 'manual'
+
+      // Change required marker text (default: ' *')
+      requiredMarker: ' (required)',
+
+      // Hide required markers entirely (default: true)
+      showRequiredMarker: false,
+
+      // Use outlined fields globally (default: 'default')
+      defaultFormFieldAppearance: 'outline',
+
+      // Disable automatic ARIA (default: true)
+      autoAria: false,
+
+      // Enable debug logging (default: false)
+      debug: true,
+    }),
+  ],
+};
+```
+
+---
 
 > **Important:** Angular Signal Forms use native DOM `submit` event, NOT `ngSubmit` (which is from Reactive/Template-driven forms).
 >
@@ -314,11 +325,13 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 ### Configuration
 
+The toolkit works without any configuration. Only use these providers to **override the defaults**.
+
 ```typescript
 interface NgxSignalFormsConfig {
   autoAria: boolean; // Default: true
   defaultErrorStrategy: ErrorDisplayStrategy; // Default: 'on-touch'
-  defaultFormFieldAppearance?: 'default' | 'outline'; // Default: undefined
+  defaultFormFieldAppearance?: 'default' | 'outline'; // Default: 'default'
   showRequiredMarker: boolean; // Default: true
   requiredMarker: string; // Default: ' *'
   fieldNameResolver?: (el: HTMLElement) => string | null;
@@ -331,20 +344,22 @@ type ErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit' | 'manual';
 
 #### Configuration providers
 
-Use `provideNgxSignalFormsConfig` for app-wide defaults. Use `provideNgxSignalFormsConfigForComponent` to override within a component subtree.
+**When to use:**
 
-**App-level (global defaults):**
+- `provideNgxSignalFormsConfig` - Override app-wide defaults (in `app.config.ts`)
+- `provideNgxSignalFormsConfigForComponent` - Override for a specific component subtree
+
+**App-level (override global defaults):**
 
 ```typescript
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // Only include options you want to CHANGE from defaults
     provideNgxSignalFormsConfig({
-      defaultErrorStrategy: 'on-touch',
-      defaultFormFieldAppearance: 'outline',
-      showRequiredMarker: true,
-      requiredMarker: ' *',
+      defaultFormFieldAppearance: 'outline', // All fields get outlined style
+      requiredMarker: ' (required)', // Change marker text
     }),
   ],
 };
@@ -369,239 +384,21 @@ export class ExampleComponent {}
 
 **When to use which:**
 
-- Use `provideNgxSignalFormsConfig` once in `app.config.ts` for consistent defaults.
-- Use `provideNgxSignalFormsConfigForComponent` when a page or feature needs a different appearance or required marker style.
+- **Neither** - Use defaults (most common case)
+- `provideNgxSignalFormsConfig` - Override app-wide defaults in `app.config.ts`
+- `provideNgxSignalFormsConfigForComponent` - Override for a specific component/page
 
-**`defaultFormFieldAppearance`** - Set global default appearance for all form fields:
+**`defaultFormFieldAppearance` note:**
 
-```typescript
-// Apply outlined style to all form fields by default
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideNgxSignalFormsConfig({
-      defaultFormFieldAppearance: 'outline',
-      showRequiredMarker: true,
-      requiredMarker: ' *',
-    }),
-  ],
-};
-```
-
-When set, all `ngx-signal-form-field-wrapper` instances will use this appearance unless explicitly overridden with the `outline` attribute. This is useful for maintaining consistent form styling across your application without manually adding `outline` to each field.
+When set to `'outline'`, all `ngx-signal-form-field-wrapper` instances use outlined styling unless explicitly overridden with the `outline` attribute on individual fields.
 
 **Priority:** Explicit `outline` attribute > `defaultFormFieldAppearance` config > implicit default
 
-### Automatic Status Classes
+### CSS Status Classes (Optional)
 
-Angular 21.1+ introduces `provideSignalFormsConfig` for managing status classes. The toolkit provides helpers to align these CSS classes (like `ng-invalid` or `is-invalid`) with your error display strategy.
+The toolkit uses **ARIA attributes** (`aria-invalid`, `aria-describedby`) for accessibility and styling—no CSS class configuration needed.
 
-#### The Problem: CSS vs Error Message Mismatch
-
-By default, Angular Signal Forms applies CSS status classes **immediately** when you type:
-
-- Field becomes invalid → `ng-invalid` class applied → Red border appears
-- But with toolkit's default `'on-touch'` strategy → Error message only shows after blur
-
-**Result:** Users see a red border while typing, but no error message explaining what's wrong (poor UX).
-
-**Visual example:**
-
-```
-❌ Default Behavior (Bad UX):
-┌─────────────────────────────┐
-│ Email [red border]          │  ← Red border from ng-invalid
-└─────────────────────────────┘
-                                 ← No error message yet!
-
-User thinks: "Why is this red? What did I do wrong?"
-```
-
-```
-✅ With Toolkit Alignment (Good UX):
-┌─────────────────────────────┐
-│ Email [normal border]       │  ← Normal border while typing
-└─────────────────────────────┘
-
-[User blurs field]
-
-┌─────────────────────────────┐
-│ Email [red border]          │  ← Red border + error appear together
-└─────────────────────────────┘
-⚠️ Please enter a valid email   ← Error message explains the issue
-```
-
-#### When You Need This
-
-**You NEED this if:**
-
-- ✅ You use CSS that targets `ng-invalid`, `ng-valid`, etc. classes
-- ✅ You use a CSS framework that styles forms based on these classes (Bootstrap, Tailwind)
-- ✅ Your form fields have visual states (red borders, colored text) based on validity
-
-**You DON'T need this if:**
-
-- ❌ You don't style forms based on `ng-*` classes
-- ❌ You manually add `[class.invalid]` bindings in your templates
-- ❌ All your validation feedback is text-only (no colored borders/backgrounds)
-
-#### How to Use: Two Approaches
-
-**Approach 1: Utility Function (Recommended - More Flexible)**
-
-Use this when you need to configure other Signal Forms options or want full composability:
-
-```typescript
-import { provideSignalFormsConfig } from '@angular/forms/signals';
-import { ngxStatusClasses } from '@ngx-signal-forms/toolkit';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideSignalFormsConfig({
-      // Toolkit generates the classes config
-      classes: ngxStatusClasses({
-        strategy: 'on-touch', // Syncs with toolkit's error display (default)
-
-        // Optional: Customize class names
-        invalidClass: 'is-invalid', // Use 'is-invalid' instead of 'ng-invalid'
-        validClass: 'is-valid',
-        touchedClass: 'is-touched',
-      }),
-
-      // You can add other Angular Signal Forms config here
-      // (future Angular features can be added without changing this)
-    }),
-  ],
-};
-```
-
-**Approach 2: Convenience Provider (Simpler - Status Classes Only)**
-
-Use this when you ONLY need status classes and nothing else:
-
-```typescript
-import { provideNgxStatusClasses } from '@ngx-signal-forms/toolkit';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    // Simpler: just provide status classes
-    provideNgxStatusClasses({
-      strategy: 'on-touch',
-      invalidClass: 'is-invalid',
-    }),
-  ],
-};
-```
-
-#### Configuration Options
-
-```typescript
-interface NgxStatusClassesOptions {
-  /** When to apply status classes (default: 'on-touch') */
-  strategy?: 'on-touch' | 'immediate';
-
-  /** Class names (all optional, defaults shown) */
-  validClass?: string; // Default: 'ng-valid'
-  invalidClass?: string; // Default: 'ng-invalid'
-  touchedClass?: string; // Default: 'ng-touched'
-  untouchedClass?: string; // Default: 'ng-untouched'
-  dirtyClass?: string; // Default: 'ng-dirty'
-  pristineClass?: string; // Default: 'ng-pristine'
-}
-```
-
-**Strategy behavior:**
-
-- **`'on-touch'` (default):** Classes applied only after field is touched (blurred or form submitted)
-  - Matches toolkit's default error display strategy
-  - Best for progressive disclosure (show errors after user interaction)
-
-- **`'immediate'`:** Classes applied as soon as field becomes invalid
-  - Matches standard Angular behavior
-  - Use when you want instant visual feedback
-
-#### Common Use Cases
-
-**Bootstrap/Tailwind Forms:**
-
-```typescript
-// Bootstrap uses 'is-invalid' and 'is-valid' classes
-provideSignalFormsConfig({
-  classes: ngxStatusClasses({
-    strategy: 'on-touch',
-    invalidClass: 'is-invalid',
-    validClass: 'is-valid',
-  }),
-});
-```
-
-```css
-/* Now your Bootstrap forms work correctly with on-touch strategy */
-.form-control.is-invalid {
-  border-color: #dc3545;
-}
-```
-
-**Material Design Inspired:**
-
-```typescript
-provideNgxStatusClasses({
-  strategy: 'on-touch',
-  invalidClass: 'mdc-text-field--invalid',
-  validClass: 'mdc-text-field--valid',
-});
-```
-
-**Custom Design System:**
-
-```typescript
-provideSignalFormsConfig({
-  classes: ngxStatusClasses({
-    strategy: 'on-touch',
-    invalidClass: 'field-error',
-    validClass: 'field-success',
-    touchedClass: 'field-interacted',
-  }),
-});
-```
-
-**→ [CSS Framework Integration Guide](../../docs/CSS_FRAMEWORK_INTEGRATION.md)** — Complete setup for Bootstrap 5.3, Tailwind CSS 4, and Angular Material.
-
-#### ⚠️ Important: Don't Mix Approaches
-
-**❌ WRONG - Using both approaches causes conflicts:**
-
-```typescript
-export const appConfig: ApplicationConfig = {
-  providers: [
-    // First approach
-    provideNgxStatusClasses({ strategy: 'on-touch' }),
-
-    // Second approach - WILL OVERRIDE THE FIRST!
-    provideSignalFormsConfig({
-      classes: ngxStatusClasses({ strategy: 'immediate' }),
-    }),
-  ],
-};
-```
-
-**✅ CORRECT - Choose one approach:**
-
-```typescript
-// If you only need classes:
-providers: [provideNgxStatusClasses({ strategy: 'on-touch' })];
-
-// If you need classes + other config:
-providers: [
-  provideSignalFormsConfig({
-    classes: ngxStatusClasses({ strategy: 'on-touch' }),
-    // other config here
-  }),
-];
-```
-
-#### Migration from Standard Angular
-
-**Before (standard Angular 21.1+):**
+If your CSS framework requires validation classes like `ng-invalid` or `is-invalid`, use Angular's built-in configuration:
 
 ```typescript
 import {
@@ -609,33 +406,18 @@ import {
   NG_STATUS_CLASSES,
 } from '@angular/forms/signals';
 
-providers: [
-  provideSignalFormsConfig({
-    classes: NG_STATUS_CLASSES, // Applies ng-invalid immediately
-  }),
-];
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideSignalFormsConfig({
+      classes: NG_STATUS_CLASSES, // Adds ng-valid, ng-invalid, ng-touched, etc.
+    }),
+  ],
+};
 ```
 
-```
-Result: Red border appears immediately, error shows on-touch (mismatch!)
-```
+**Note:** Angular's `NG_STATUS_CLASSES` applies classes **immediately** when validation state changes. Both error messages and CSS classes appear based on the same field state signals.
 
-**After (with toolkit alignment):**
-
-```typescript
-import { provideSignalFormsConfig } from '@angular/forms/signals';
-import { ngxStatusClasses } from '@ngx-signal-forms/toolkit';
-
-providers: [
-  provideSignalFormsConfig({
-    classes: ngxStatusClasses({ strategy: 'on-touch' }), // Synced!
-  }),
-];
-```
-
-```
-Result: Red border AND error both appear on-touch (consistent UX!)
-```
+For more details, see the [Angular Signal Forms documentation](https://angular.dev/api/forms/signals/provideSignalFormsConfig).
 
 ### Error Message Configuration
 

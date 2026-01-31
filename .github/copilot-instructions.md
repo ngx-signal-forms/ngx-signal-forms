@@ -96,12 +96,8 @@ Follow [`.github/instructions/security-and-owasp.instructions.md`](./instruction
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { form, Validators } from '@angular/forms';
-import {
-  provideNgxToolkit,
-  ngxAutoAria,
-  ngxStatusClasses,
-} from '@ngx-signal-forms/toolkit';
+import { form, Validators, FormField } from '@angular/forms/signals';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 interface UserData {
   email: string;
@@ -111,11 +107,7 @@ interface UserData {
 @Component({
   selector: 'app-user-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  hostDirectives: [
-    ngxAutoAria(),
-    ngxStatusClasses({ invalidClass: 'is-invalid' }),
-  ],
-  providers: [provideNgxToolkit()],
+  imports: [FormField, NgxSignalFormToolkit],
   template: `
     <form novalidate (submit)="onSubmit($event)">
       <input type="email" [formField]="userForm.email" />

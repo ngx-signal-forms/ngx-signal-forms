@@ -4,14 +4,14 @@
 
 Angular Signal Forms use JavaScript-based validation, which means they **don't** set native HTML5 validation state (`:invalid` pseudo-class). CSS frameworks need explicit classes or attributes to style invalid fields.
 
-The toolkit solves this with **status class synchronization** — aligning CSS classes with your error display strategy.
+**The toolkit's approach:** Uses ARIA attributes (`aria-invalid`, `aria-describedby`) for accessibility and styling via attribute selectors. If your CSS framework requires validation classes, use Angular's native `provideSignalFormsConfig`.
 
 ---
 
 ## The Problem
 
 By default, Angular Signal Forms does **not** apply status classes like `ng-invalid` and `ng-valid` unless you configure them via `provideSignalFormsConfig` (or the `NG_STATUS_CLASSES` preset).
-See [Status Classes Documentation](../packages/toolkit/README.md#automatic-status-classes) & [Angular Forms Signals Migration Guide](https://angular.dev/guide/forms/signals/migration#automatic-status-classes) for details.
+See [Angular Forms Signals Migration Guide](https://angular.dev/guide/forms/signals/migration#automatic-status-classes) for details.
 When enabled, `invalid()` reflects validation errors immediately, so those classes apply as soon as validation fails:
 
 ```console
@@ -24,21 +24,22 @@ When enabled, `invalid()` reflects validation errors immediately, so those class
 User thinks: "Why is this red? What did I do wrong?"
 ```
 
-The toolkit synchronizes CSS classes with error message display:
+**Solution:** Either use ARIA attribute selectors (toolkit's approach) or configure classes to apply on-touch/on-submit.
 
-```console
-✅ With Toolkit (Good UX):
-┌─────────────────────────────┐
-│ Email [normal border]       │  ← No visual change while typing
-└─────────────────────────────┘
+---
 
-[User blurs or submits]
+## Toolkit's ARIA-Based Approach (Recommended)
 
-┌─────────────────────────────┐
-│ Email [red border]          │  ← Red border + error appear together
-└─────────────────────────────┘
-⚠️ Please enter a valid email   ← Error explains the issue
+The toolkit automatically adds `aria-invalid="true"` when a field is touched and invalid. Use CSS attribute selectors:
+
+```css
+/* Style invalid fields using ARIA (works with any CSS framework) */
+input[aria-invalid='true'] {
+  border-color: #dc3545;
+}
 ```
+
+This aligns with the toolkit's `'on-touch'` error display strategy by default.
 
 ---
 
@@ -46,26 +47,42 @@ The toolkit synchronizes CSS classes with error message display:
 
 Bootstrap uses `.is-invalid` and `.is-valid` classes for form validation styling.
 
-### Setup
+### Option A: ARIA Attribute Selectors (Recommended)
+
+Override Bootstrap's default styles to use ARIA attributes:
+
+```css
+/* Override Bootstrap to use ARIA-based validation */
+.form-control[aria-invalid='true'],
+.form-control:user-invalid {
+  border-color: var(--bs-form-invalid-border-color);
+  background-image: url('data:image/svg+xml,...'); /* Bootstrap's error icon */
+}
+
+.form-control[aria-invalid='true'] ~ .invalid-feedback {
+  display: block;
+}
+```
+
+### Option B: Angular's Native Class Configuration
+
+If you prefer Bootstrap's class-based approach, use Angular's `provideSignalFormsConfig`:
 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
 import { provideSignalFormsConfig } from '@angular/forms/signals';
-import {
-  ngxStatusClasses,
-  provideNgxSignalFormsConfig,
-} from '@ngx-signal-forms/toolkit';
+import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    // Sync status classes with error display strategy
+    // Configure CSS status classes via Angular's native API
     provideSignalFormsConfig({
-      classes: ngxStatusClasses({
-        strategy: 'on-touch', // Match toolkit's default
-        invalidClass: 'is-invalid',
-        validClass: 'is-valid',
-      }),
+      classes: {
+        valid: { 'is-valid': () => true },
+        invalid: { 'is-invalid': () => true },
+        touched: { 'is-touched': () => true },
+      },
     }),
 
     // Optional: configure toolkit defaults
@@ -207,20 +224,19 @@ Tailwind 4's `user-invalid:` variant matches the toolkit's `'on-touch'` strategy
 - `user-invalid:` — Styles when invalid AND user has interacted (matches `'on-touch'`)
 - `focus:invalid:` — Styles when focused and invalid
 
-### Option B: Custom Status Classes
+### Option B: Custom Status Classes (via Angular's API)
 
-If you prefer explicit classes for more control:
+If you prefer explicit classes for more control, use Angular's `provideSignalFormsConfig`:
 
 ```typescript
 // app.config.ts
 provideSignalFormsConfig({
-  classes: ngxStatusClasses({
-    strategy: 'on-touch',
-    invalidClass: 'field-invalid',
-    validClass: 'field-valid',
-    touchedClass: 'field-touched',
-    dirtyClass: 'field-dirty',
-  }),
+  classes: {
+    invalid: { 'field-invalid': () => true },
+    valid: { 'field-valid': () => true },
+    touched: { 'field-touched': () => true },
+    dirty: { 'field-dirty': () => true },
+  },
 }),
 ```
 
@@ -270,20 +286,16 @@ Angular Material has its own form infrastructure. When using `mat-form-field`:
 
 ```typescript
 // app.config.ts
-import { provideSignalFormsConfig } from '@angular/forms/signals';
-import { ngxStatusClasses } from '@ngx-signal-forms/toolkit';
+import {
+  provideSignalFormsConfig,
+  NG_STATUS_CLASSES,
+} from '@angular/forms/signals';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // Material uses ng-* classes internally
     provideSignalFormsConfig({
-      classes: ngxStatusClasses({
-        strategy: 'on-touch',
-        // Material uses these internally
-        invalidClass: 'ng-invalid',
-        validClass: 'ng-valid',
-        touchedClass: 'ng-touched',
-        dirtyClass: 'ng-dirty',
-      }),
+      classes: NG_STATUS_CLASSES, // Adds ng-valid, ng-invalid, ng-touched, etc.
     }),
   ],
 };
@@ -414,6 +426,6 @@ provideNgxSignalFormsConfig({
 
 ## Related Documentation
 
-- [Toolkit README → Status Classes](../packages/toolkit/README.md#automatic-status-classes)
+- [Angular Signal Forms Migration Guide - Status Classes](https://angular.dev/guide/forms/signals/migration#automatic-status-classes)
+- [Custom Form Status Classes in Angular Signal Forms](https://netbasal.medium.com/custom-form-status-classes-in-angular-signal-forms-388553becd68)
 - [Form Field Theming](../packages/toolkit/form-field/THEMING.md)
-- [ARIA Integration](./ANGULAR_ARIA_INTEGRATION.md)

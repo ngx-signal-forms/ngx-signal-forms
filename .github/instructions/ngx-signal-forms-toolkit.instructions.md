@@ -517,40 +517,26 @@ protected save(): void {
 
 **Note**: Custom control directives must implement a `focus()` method for `focusBoundControl()` to work.
 
-### ngxStatusClasses()
+### CSS Status Classes (Angular's Native API)
 
-Generates CSS class configuration that syncs with your error display strategy. Angular 21.1+'s `provideSignalFormsConfig` applies classes immediately by default, but toolkit's error messages use `'on-touch'` strategy. This utility aligns both.
-
-**Use case:** Prevent red borders appearing immediately while error messages wait until field is touched.
+The toolkit uses ARIA attributes (`aria-invalid`, `aria-describedby`) for accessibility and styling. If you need CSS validation classes for framework integration (Bootstrap, etc.), use Angular's native `provideSignalFormsConfig`:
 
 ```typescript
-import { provideSignalFormsConfig } from '@angular/forms/signals';
-import { ngxStatusClasses } from '@ngx-signal-forms/toolkit';
+import {
+  provideSignalFormsConfig,
+  NG_STATUS_CLASSES,
+} from '@angular/forms/signals';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideSignalFormsConfig({
-      classes: ngxStatusClasses({
-        strategy: 'on-touch', // Sync with toolkit's error display
-        invalidClass: 'is-invalid', // Optional: custom class names
-      }),
+      classes: NG_STATUS_CLASSES, // Adds ng-valid, ng-invalid, ng-touched, etc.
     }),
   ],
 };
 ```
 
-**Alternative convenience provider:**
-
-```typescript
-import { provideNgxStatusClasses } from '@ngx-signal-forms/toolkit';
-
-providers: [provideNgxStatusClasses({ strategy: 'on-touch' })];
-```
-
-**Options:**
-
-- `strategy`: `'on-touch'` (default) | `'immediate'`
-- `validClass`, `invalidClass`, `touchedClass`, `untouchedClass`, `dirtyClass`, `pristineClass`: Custom class names
+See Angular's [Custom Form Status Classes](https://netbasal.medium.com/custom-form-status-classes-in-angular-signal-forms-388553becd68) guide for customization options.
 
 ### Submission Helpers
 

@@ -33,7 +33,9 @@ test.describe('Advanced - Submission Patterns', () => {
       await usernameInput.focus();
       await usernameInput.blur();
 
-      await expect(usernameInput).toHaveClass(/ng-invalid/);
+      // After blur, error message should be visible (on-touch strategy)
+      const errorMessage = page.page.getByText('Username is required');
+      await expect(errorMessage).toBeVisible();
     });
   });
 

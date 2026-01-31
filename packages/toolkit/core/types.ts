@@ -64,7 +64,7 @@ export type SignalLike<T> = Signal<T> | (() => T);
  * ```typescript
  * @Component({...})
  * export class MyComponent {
- *   // Accepts signal, function, or static strategy
+ *   /// Accepts signal, function, or static strategy
  *   readonly strategy = input<ReactiveOrStatic<ErrorDisplayStrategy>>('on-touch');
  *
  *   protected readonly actualStrategy = computed(() =>
@@ -82,7 +82,7 @@ export type SignalLike<T> = Signal<T> | (() => T);
  *   return computed(() => {
  *     const fieldState = unwrapValue(field);
  *     const strategyValue = unwrapValue(strategy);
- *     // ... use unwrapped values
+ *     /// ... use unwrapped values
  *   });
  * }
  * ```
@@ -179,7 +179,7 @@ export interface NgxSignalFormsConfig {
    * });
    * ```
    */
-  defaultFormFieldAppearance?: 'default' | 'outline';
+  defaultFormFieldAppearance: 'default' | 'outline';
 
   /**
    * Whether to show the required marker for outlined fields.
@@ -192,7 +192,7 @@ export interface NgxSignalFormsConfig {
   /**
    * Custom character(s) to display as the required marker in outlined fields.
    *
-   * @default ' *'
+   * @default '*'
    */
   requiredMarker: string;
 }
@@ -256,7 +256,7 @@ export type ExtractFieldValue<T> = T extends { value: () => infer V }
  * ```typescript
  * const registry: ErrorMessageRegistry = {
  *   minLength: (params) => {
- *     // params is Record<string, unknown>, need type assertion for specific properties
+ *     /// params is Record<string, unknown>, need type assertion for specific properties
  *     const min = (params as { minLength: number }).minLength;
  *     return `Minimum ${min} characters required`;
  *   },
@@ -266,7 +266,7 @@ export type ExtractFieldValue<T> = T extends { value: () => infer V }
  * @example Component usage
  * ```typescript
  * function resolveMessage(error: ValidationError): string {
- *   // Cast to ValidationErrorWithParams for factory function calls
+ *   /// Cast to ValidationErrorWithParams for factory function calls
  *   const errorWithParams = error as ValidationErrorWithParams;
  *   return factoryFn(errorWithParams);
  * }

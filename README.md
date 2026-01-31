@@ -90,7 +90,7 @@ A set of cohesive UI components to build consistent, accessible form layouts:
 | **Error Display Logic** | ❌ Manual `@if` conditions in every template                      | ✅ Strategy-based (`'on-touch'`, `'on-submit'`, `'immediate'`, `'manual'`)   |
 | **Error Component**     | ❌ Custom error rendering per component                           | ➡️ Use Assistive entry point (`<ngx-signal-form-error>`)                     |
 | **HTML5 Validation**    | ❌ Manual `novalidate` on every form                              | ✅ Automatic `novalidate` on any form with `(submit)`                        |
-| **CSS Status Classes**  | ⚠️ Manual via `provideSignalFormsConfig`                          | ✅ `ngxStatusClasses()` syncs classes with error display strategy            |
+| **CSS Status Classes**  | ⚠️ Manual via `provideSignalFormsConfig`                          | ↗️ Use Angular's `provideSignalFormsConfig` (toolkit uses ARIA attributes)   |
 | **Submission Helpers**  | ❌ Manual `form().valid() && !form().submitting()`                | ✅ `canSubmit()`, `isSubmitting()`, `hasSubmitted()` computed signals        |
 | **Focus Management**    | ⚠️ Manual via `errorSummary()[0].fieldTree().focusBoundControl()` | ✅ `focusFirstInvalid(form)` one-liner wrapping native API                   |
 | **Form Context**        | ❌ Manual form setup                                              | ✅ Optional `[ngxSignalForm]` provides DI context for `'on-submit'` strategy |
@@ -251,7 +251,6 @@ export class ContactComponent {
 **Key exports**:
 
 - `NgxSignalFormToolkit` — Bundle import for all core directives
-- `ngxStatusClasses()` — Align CSS classes with your error strategy
 - `focusFirstInvalid()` — Convenience wrapper for Angular's `focusBoundControl()` via `errorSummary()`
 - `canSubmit()`, `isSubmitting()`, `hasSubmitted()` — Computed submission signals
 - `warningError()` — Create non-blocking validation messages
@@ -370,20 +369,20 @@ For CSS framework integration or custom error strategies, add providers to `app.
 
 ```typescript
 import {
-  provideNgxSignalFormsConfig,
-  ngxStatusClasses,
-} from '@ngx-signal-forms/toolkit';
+  provideSignalFormsConfig,
+  NG_STATUS_CLASSES,
+} from '@angular/forms/signals';
+import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideNgxSignalFormsConfig({
-      defaultErrorStrategy: 'on-touch', // When errors appear
-      defaultFormFieldAppearance: 'outline', // Default to floating labels
-      // CSS class sync (e.g., for Bootstrap 'is-invalid')
-      statusClasses: ngxStatusClasses({
-        strategy: 'on-touch',
-        invalidClass: 'is-invalid',
-      }),
+      defaultErrorStrategy: 'on-touch',
+      defaultFormFieldAppearance: 'outline',
+    }),
+    // CSS status classes - use Angular's native API
+    provideSignalFormsConfig({
+      classes: NG_STATUS_CLASSES, // Adds ng-valid, ng-invalid, ng-touched, etc.
     }),
   ],
 };

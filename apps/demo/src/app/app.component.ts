@@ -105,10 +105,6 @@ export class AppComponent implements AfterViewInit {
           path: '/toolkit-core/field-states',
           label: 'Field States',
         },
-        {
-          path: '/toolkit-core/css-status-classes',
-          label: 'CSS Status Classes',
-        },
       ],
     },
     {
