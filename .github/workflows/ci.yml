@@ -5,6 +5,13 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
+    inputs:
+      skip_cloud:
+        description: 'Skip Nx Cloud (use when quota exceeded)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   actions: read
@@ -41,14 +48,14 @@ jobs:
         run: pnpm exec nx report
 
       # Run tasks locally - no DTE distribution to conserve Nx Cloud credits
-      # Graceful fallback: NX_CLOUD_NO_TIMEOUTS and continue-on-error prevent
-      # failures when Nx Cloud quota is exceeded (local cache still works)
+      # Set skip_cloud=true via workflow_dispatch when quota is exceeded
       - name: Run affected tasks
         run: pnpm exec nx affected -t lint test build e2e-ci --parallel=3
         env:
-          NX_CLOUD_NO_TIMEOUTS: true
-        continue-on-error: ${{ github.event_name == 'pull_request' }}
+          NX_NO_CLOUD: ${{ inputs.skip_cloud || false }}
 
       # https://nx.dev/ci/features/self-healing-ci
+      # continue-on-error: fix-ci requires Nx Cloud, may fail if quota exceeded
       - run: pnpm exec nx fix-ci
-        if: always()
+        if: ${{ always() && !inputs.skip_cloud }}
+        continue-on-error: true
