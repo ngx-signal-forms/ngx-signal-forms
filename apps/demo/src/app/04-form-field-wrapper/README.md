@@ -67,7 +67,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 @Component({
   imports: [FormField, NgxFormField],
   template: `
-    <ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
+    <ngx-signal-form-field-wrapper [formField]="form.email">
       <label for="email">Email</label>
       <input id="email" [formField]="form.email" />
     </ngx-signal-form-field-wrapper>
@@ -77,24 +77,24 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 #### Required Inputs
 
-| Input       | Type           | Description                                     |
-| ----------- | -------------- | ----------------------------------------------- |
-| `field`     | `FieldTree<T>` | Form field from your Signal Forms instance      |
-| `fieldName` | `string`       | Field name (must match `id` attribute for ARIA) |
+| Input   | Type           | Description                                |
+| ------- | -------------- | ------------------------------------------ |
+| `field` | `FieldTree<T>` | Form field from your Signal Forms instance |
 
 #### Optional Inputs
 
-| Input        | Type                   | Default                     | Description                    |
-| ------------ | ---------------------- | --------------------------- | ------------------------------ |
-| `strategy`   | `ErrorDisplayStrategy` | Inherits from form provider | When to show errors            |
-| `showErrors` | `boolean`              | `true`                      | Toggle automatic error display |
+| Input        | Type                   | Default                        | Description                                      |
+| ------------ | ---------------------- | ------------------------------ | ------------------------------------------------ |
+| `fieldName`  | `string`               | Auto-derived from input's `id` | Field name for ARIA (optional when input has id) |
+| `strategy`   | `ErrorDisplayStrategy` | Inherits from form provider    | When to show errors                              |
+| `showErrors` | `boolean`              | `true`                         | Toggle automatic error display                   |
 
 #### Content Projection
 
 The component uses `<ng-content>` to project your custom content:
 
 ```html
-<ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
+<ngx-signal-form-field-wrapper [formField]="form.email">
   <!-- Everything here is projected -->
   <label for="email">Email Address</label>
   <input id="email" type="email" [formField]="form.email" />
@@ -125,12 +125,13 @@ The component uses `<ng-content>` to project your custom content:
 
 ```html
 <!-- ~5 lines per field -->
-<ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
+<!-- fieldName is optional - auto-derived from input's id attribute -->
+<ngx-signal-form-field-wrapper [formField]="form.email">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
 </ngx-signal-form-field-wrapper>
 
-<ngx-signal-form-field-wrapper [formField]="form.password" fieldName="password">
+<ngx-signal-form-field-wrapper [formField]="form.password">
   <label for="password">Password</label>
   <input id="password" type="password" [formField]="form.password" />
 </ngx-signal-form-field-wrapper>
@@ -227,7 +228,6 @@ validate(path, (ctx) => {
   <!-- But password confirmation shows immediately -->
   <ngx-signal-form-field-wrapper
     [formField]="form.confirmPassword"
-    fieldName="confirmPassword"
     [strategy]="'immediate'"
   >
     <label for="confirmPassword">Confirm Password</label>
@@ -332,11 +332,11 @@ ngx-signal-form-field-wrapper {
 
 ### Best Practices
 
-1. **Always provide `fieldName`** - Must match `id` attribute for WCAG compliance
+1. **Use input `id` attribute** - fieldName is auto-derived when input has `id`
 2. **Use strategy inheritance** - Set once on form provider, override when needed
 3. **Leverage content projection** - Add hints, icons, or custom elements
 4. **Theme with CSS variables** - Don't override component styles directly
-5. **Keep field names consistent** - Use same value for `id`, `fieldName`, and form path
+5. **Keep IDs consistent** - Use same value for `id` and `for` attributes
 
 ## 🐛 Common Issues
 
@@ -344,17 +344,22 @@ ngx-signal-form-field-wrapper {
 
 **Problem:** `aria-describedby` not linking to errors
 
-**Solution:**
+**Solution:** Ensure input has `id` attribute:
 
 ```html
-<!-- ❌ Wrong: fieldName doesn't match id -->
-<ngx-signal-form-field-wrapper [formField]="form.email" fieldName="userEmail">
+<!-- ✅ Correct: Input has id, fieldName auto-derived -->
+<ngx-signal-form-field-wrapper [formField]="form.email">
+  <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
 </ngx-signal-form-field-wrapper>
 
-<!-- ✅ Correct: fieldName matches id -->
-<ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
-  <input id="email" [formField]="form.email" />
+<!-- ✅ Also correct: Explicit fieldName for dynamic IDs -->
+<ngx-signal-form-field-wrapper
+  [formField]="form.contacts[i].value"
+  [fieldName]="'contact-' + i"
+>
+  <label [for]="'contact-' + i">Contact</label>
+  <input [id]="'contact-' + i" [formField]="form.contacts[i].value" />
 </ngx-signal-form-field-wrapper>
 ```
 

@@ -162,7 +162,7 @@ A set of cohesive UI components to build consistent, accessible form layouts:
 ```html
 <!-- No [ngxSignalForm] needed for default 'on-touch' strategy! -->
 <form (submit)="save($event)">
-  <ngx-signal-form-field-wrapper [formField]="userForm.email" fieldName="email">
+  <ngx-signal-form-field-wrapper [formField]="userForm.email">
     <label for="email">Email</label>
     <input id="email" [formField]="userForm.email" />
   </ngx-signal-form-field-wrapper>
@@ -196,10 +196,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form (submit)="save($event)">
-      <ngx-signal-form-field-wrapper
-        [formField]="contactForm.email"
-        fieldName="email"
-      >
+      <ngx-signal-form-field-wrapper [formField]="contactForm.email">
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" type="email" />
       </ngx-signal-form-field-wrapper>
@@ -292,6 +289,7 @@ import {
 ```html
 <label for="email">Email</label>
 <input id="email" [formField]="form.email" />
+<!-- fieldName auto-derived from input id when used standalone -->
 <ngx-signal-form-error [formField]="form.email" fieldName="email" />
 <ngx-signal-form-field-hint
   >We'll never share your email</ngx-signal-form-field-hint
