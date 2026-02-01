@@ -51,7 +51,7 @@ Renderless directives that expose signals without any UI—build custom form com
 Lightly-styled, accessible components for form feedback—designed to be easily themed or used as building blocks:
 
 - **Error Display**: `<ngx-signal-form-error>` with proper ARIA roles (`role="alert"` for errors, `role="status"` for warnings).
-- **Hint Text**: `<ngx-signal-form-field-hint>` for helper text below inputs.
+- **Hint Text**: `<ngx-signal-form-field-hint>` with smart positioning (auto-flips to avoid collisions).
 - **Character Counter**: `<ngx-signal-form-field-character-count>` with automatic maxLength detection.
 - **Warning Support**: `warningError()`, `isWarningError()`, `isBlockingError()` utilities for non-blocking validation.
 - **Theming**: Minimal CSS that integrates with any design system.
@@ -112,7 +112,7 @@ A set of cohesive UI components to build consistent, accessible form layouts:
 | Feature             | Headless Primitives                  | With Assistive                                                |
 | ------------------- | ------------------------------------ | ------------------------------------------------------------- |
 | **Error Component** | ❌ Build your own                    | ✅ `<ngx-signal-form-error>` with ARIA roles                  |
-| **Hint Component**  | ❌ Build your own                    | ✅ `<ngx-signal-form-field-hint>` with proper styling         |
+| **Hint Component**  | ❌ Build your own                    | ✅ `<ngx-signal-form-field-hint>` with smart positioning      |
 | **Character Count** | ✅ Signals via directive             | ✅ `<ngx-signal-form-field-character-count>` styled component |
 | **Warning Support** | ❌ Manual implementation             | ✅ `warningError()`, `isWarningError()` utilities             |
 | **ARIA Roles**      | ❌ Manual ARIA attributes            | ✅ Automatic `role="alert"` / `role="status"`                 |

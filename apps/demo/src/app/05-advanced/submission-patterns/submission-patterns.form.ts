@@ -140,9 +140,9 @@ import { submissionSchema } from './submission-patterns.validations';
             placeholder="Enter username"
             class="form-input"
           />
-          <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          <ngx-signal-form-field-hint>
             Letters, numbers, and underscores only
-          </p>
+          </ngx-signal-form-field-hint>
         </ngx-signal-form-field-wrapper>
 
         <!-- Password field -->
@@ -158,9 +158,9 @@ import { submissionSchema } from './submission-patterns.validations';
             placeholder="Enter password"
             class="form-input"
           />
-          <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          <ngx-signal-form-field-hint>
             At least 8 characters
-          </p>
+          </ngx-signal-form-field-hint>
         </ngx-signal-form-field-wrapper>
 
         <!-- Confirm Password field -->

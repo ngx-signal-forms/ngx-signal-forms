@@ -78,11 +78,13 @@ controls the display of validation errors and warnings.
 
 Provides context or instructions for a field.
 
-| Property                            | Default                  | Description     |
-| :---------------------------------- | :----------------------- | :-------------- |
-| `--ngx-form-field-hint-color`       | `rgba(50, 65, 85, 0.75)` | Hint text color |
-| `--ngx-form-field-hint-font-size`   | `var(--...feedback...)`  | Text size       |
-| `--ngx-form-field-hint-line-height` | `var(--...feedback...)`  | Line height     |
+| Property                                   | Default                  | Description                                |
+| :----------------------------------------- | :----------------------- | :----------------------------------------- |
+| `--ngx-form-field-hint-color`              | `rgba(50, 65, 85, 0.75)` | Hint text color                            |
+| `--ngx-form-field-hint-font-size`          | `var(--...feedback...)`  | Text size                                  |
+| `--ngx-form-field-hint-line-height`        | `var(--...feedback...)`  | Line height                                |
+| `--ngx-form-field-hint-align`              | `right`                  | Text alignment (left/right)                |
+| `--ngx-form-field-hint-padding-horizontal` | `0.5rem`                 | Horizontal padding (for left/right adjust) |
 
 ### Character Count
 

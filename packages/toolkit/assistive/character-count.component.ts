@@ -108,6 +108,11 @@ import {
         color 0.2s ease,
         font-weight 0.2s ease;
       white-space: nowrap;
+      padding-left: var(--ngx-form-field-char-count-padding-horizontal, 0);
+      padding-right: var(
+        --ngx-form-field-char-count-padding-horizontal,
+        0.5rem
+      );
     }
 
     :host([position='left']) {

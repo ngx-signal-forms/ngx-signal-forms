@@ -507,11 +507,26 @@ import { NgxFormFieldHintComponent } from '@ngx-signal-forms/toolkit/form-field'
 </ngx-signal-form-field-wrapper>
 ```
 
-**Position control:**
+**Smart Positioning:**
+
+- **Default:** Aligns to the **right** side of the footer.
+- **With Character Count:** Automatically flips to the **left** to avoid collision.
+- **Manual Override:** Force specific alignment using `position="left"` or `position="right"`.
 
 ```html
-<ngx-signal-form-field-hint position="right">
-  Optional field
+<!-- Default: Aligns right -->
+<ngx-signal-form-field-hint>Optional</ngx-signal-form-field-hint>
+
+<!-- Auto-flip: Aligns left because char count takes right spot -->
+<ngx-signal-form-field-hint>Max 500 chars</ngx-signal-form-field-hint>
+<ngx-signal-form-field-character-count
+  [formField]="form.bio"
+  [maxLength]="500"
+/>
+
+<!-- Manual override: Force left alignment -->
+<ngx-signal-form-field-hint position="left">
+  Start on the left
 </ngx-signal-form-field-hint>
 ```
 
@@ -525,6 +540,8 @@ import { NgxFormFieldHintComponent } from '@ngx-signal-forms/toolkit/form-field'
     0.75rem
   );
   --ngx-form-field-hint-color: #6b7280;
+  --ngx-form-field-hint-align: right;
+  --ngx-form-field-hint-padding-horizontal: 0.5rem;
 }
 ```
 

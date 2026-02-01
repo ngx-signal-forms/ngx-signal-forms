@@ -205,11 +205,11 @@ function generateUniqueFieldId(): string {
           [submittedStatus]="submittedStatus"
         />
       } @else {
-        <ng-content select="ngx-form-field-hint" />
+        <ng-content select="ngx-signal-form-field-hint" />
       }
 
       <!-- Right side: character count -->
-      <ng-content select="ngx-form-field-character-count" />
+      <ng-content select="ngx-signal-form-field-character-count" />
     </ngx-signal-form-field-assistive-row>
   `,
 })

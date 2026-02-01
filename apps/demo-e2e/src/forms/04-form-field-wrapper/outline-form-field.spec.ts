@@ -165,4 +165,15 @@ test.describe('Outline Form Field - Complex Nested Form', () => {
     await expect(firstFormField).toHaveAttribute('data-show-required', 'true');
     await expect(firstFormField).toHaveAttribute('data-required-marker', ' *');
   });
+
+  test('should display hints for specific fields', async ({ page }) => {
+    // Verify hints are visible
+    await expect(
+      page.getByText('Format: DD-MM-JJJJ', { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText('Selecteer het land van herkomst', { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText('Bijv. SR-310', { exact: true })).toBeVisible();
+  });
 });

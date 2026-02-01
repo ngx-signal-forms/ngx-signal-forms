@@ -62,11 +62,11 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   selector: 'ngx-signal-form-field-assistive-row',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="ngx-form-field-assistive-row__left">
-      <ng-content />
-    </div>
+    <div class="ngx-form-field-assistive-row__left"><ng-content /></div>
     <div class="ngx-form-field-assistive-row__right">
-      <ng-content select="ngx-form-field-character-count, [characterCount]" />
+      <ng-content
+        select="ngx-signal-form-field-character-count, [characterCount]"
+      />
     </div>
   `,
   styles: `
@@ -77,6 +77,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       gap: var(--ngx-form-field-assistive-gap, 0.5rem);
       min-height: var(--ngx-form-field-assistive-min-height, 1.25rem);
       margin-top: var(--ngx-form-field-assistive-margin-top, 2px);
+      margin-bottom: var(--ngx-form-field-assistive-margin-bottom, 0.25rem);
       width: 100%;
     }
 
@@ -97,6 +98,15 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     .ngx-form-field-assistive-row__left:empty,
     .ngx-form-field-assistive-row__right:empty {
       display: none;
+    }
+
+    /*
+     * When the right slot contains content (e.g. character count),
+     * we force the hint in the left slot to align left.
+     * This overrides the default right alignment of the hint component.
+     */
+    :host:has(.ngx-form-field-assistive-row__right:not(:empty)) {
+      --ngx-form-field-hint-align: left;
     }
   `,
   host: {

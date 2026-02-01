@@ -70,6 +70,9 @@
           [formField]="showcaseForm.facts[factIndex].commitDate"
           placeholder="DD-MM-JJJJ"
         />
+        <ngx-signal-form-field-hint
+          >Format: DD-MM-JJJJ</ngx-signal-form-field-hint
+        >
       </ngx-signal-form-field-wrapper>
 
       <ngx-signal-form-field-wrapper
@@ -113,6 +116,9 @@
         <option [value]="country.value">{{ country.label }}</option>
         }
       </select>
+      <ngx-signal-form-field-hint
+        >Selecteer het land van herkomst</ngx-signal-form-field-hint
+      >
     </ngx-signal-form-field-wrapper>
 
     <!-- Location Fields -->
@@ -259,6 +265,9 @@
                 [formField]="showcaseForm.facts[factIndex].offenses[offenseIndex].qualification"
                 placeholder="SR-310"
               />
+              <ngx-signal-form-field-hint
+                >Bijv. SR-310</ngx-signal-form-field-hint
+              >
               <!-- Group-level remove: align with first input by using suffix slot -->
               <button
                 suffix

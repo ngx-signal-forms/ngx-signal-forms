@@ -761,12 +761,19 @@ Transforms form field into Material Design outlined layout.
 
 **Selector**: `ngx-signal-form-field-hint`
 
-Displays helper text for form fields.
+Displays helper text for form fields with smart positioning.
+
+**Behavior**:
+
+- Defaults to **right** alignment
+- Automatically flips to **left** if a character count is present
+- Supports manual override via `position` input (`'left' | 'right'`)
 
 ```typescript
 <ngx-signal-form-field-wrapper [formField]="form.phone">
   <label for="phone">Phone Number</label>
   <input id="phone" [formField]="form.phone" />
+  <!-- Will align right by default -->
   <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
 </ngx-signal-form-field-wrapper>
 ```

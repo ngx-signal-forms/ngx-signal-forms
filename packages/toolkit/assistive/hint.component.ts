@@ -63,7 +63,13 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       font-size: var(--ngx-form-field-hint-font-size, 0.75rem);
       line-height: var(--ngx-form-field-hint-line-height, 1rem);
       color: var(--ngx-form-field-hint-color, rgba(50, 65, 85, 0.75));
-      margin-top: var(--ngx-signal-form-feedback-margin-top, 0.125rem);
+      padding-left: var(--ngx-form-field-hint-padding-horizontal, 0.5rem);
+      padding-right: var(--ngx-form-field-hint-padding-horizontal, 0.5rem);
+      text-align: var(--ngx-form-field-hint-align, right);
+    }
+
+    :host([position='left']) {
+      text-align: left;
     }
 
     :host([position='right']) {
@@ -78,7 +84,7 @@ export class NgxFormFieldHintComponent {
   /**
    * Text alignment position.
    *
-   * @default undefined (inherits from parent, left-aligned)
+   * @default undefined (defaults to right-aligned, or left-aligned if character count is present)
    */
   readonly position = input<'left' | 'right' | null>(null);
 }
