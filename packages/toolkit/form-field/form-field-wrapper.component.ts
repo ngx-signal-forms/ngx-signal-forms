@@ -1,12 +1,15 @@
 import {
+  afterNextRender,
   booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   computed,
-  contentChild,
   effect,
+  ElementRef,
+  forwardRef,
   inject,
   input,
+  signal,
 } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import type {
@@ -15,6 +18,7 @@ import type {
 } from '@ngx-signal-forms/toolkit';
 import {
   NGX_SIGNAL_FORM_CONTEXT,
+  NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORMS_CONFIG,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -146,6 +150,15 @@ function generateUniqueFieldId(): string {
   selector: 'ngx-signal-form-field-wrapper',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgxSignalFormErrorComponent, NgxFormFieldAssistiveRowComponent],
+  providers: [
+    {
+      provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+      useFactory: (component: NgxSignalFormFieldWrapperComponent) => ({
+        fieldName: component.resolvedFieldName,
+      }),
+      deps: [forwardRef(() => NgxSignalFormFieldWrapperComponent)],
+    },
+  ],
   styleUrl: './form-field-wrapper.component.scss',
   host: {
     '[attr.outline]': 'isOutline() ? "" : null',
@@ -188,7 +201,6 @@ function generateUniqueFieldId(): string {
       @if (showErrors() && shouldShowErrors()) {
         <ngx-signal-form-error
           [formField]="formField()"
-          [fieldName]="resolvedFieldName()"
           [strategy]="effectiveStrategy"
           [submittedStatus]="submittedStatus"
         />
@@ -216,19 +228,33 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * When omitted, the field name is automatically derived from the input element's `id` attribute.
    * This ensures ARIA attributes (`aria-describedby`) correctly link to error messages.
    *
+   * **Native HTML elements:** Works automatically with `<input>`, `<textarea>`, `<select>`,
+   * and `<button type="button">` elements.
+   *
+   * **Custom Signal Forms controls:** Also works with custom `FormValueControl` components
+   * that have an `id` attribute. The wrapper queries for any element with `[id]` as a fallback.
+   *
    * **Explicit override:**
    * Provide an explicit field name when you need to override the automatic behavior
    * or when the input element doesn't have an `id` attribute.
    *
    * **Fallback:**
-   * If no explicit fieldName is provided AND no input element with an `id` is found,
+   * If no explicit fieldName is provided AND no element with an `id` is found,
    * a unique ID is auto-generated (e.g., "field-1", "field-2").
    *
-   * @example Automatic (recommended) - derives "email" from input's id attribute
+   * @example Automatic (native input) - derives "email" from input's id attribute
    * ```html
    * <ngx-signal-form-field-wrapper [formField]="form.email">
    *   <label for="email">Email</label>
    *   <input id="email" [formField]="form.email" />
+   * </ngx-signal-form-field-wrapper>
+   * ```
+   *
+   * @example Custom control (FormValueControl) - derives "rating" from component's id
+   * ```html
+   * <ngx-signal-form-field-wrapper [formField]="form.rating">
+   *   <label for="rating">Rating</label>
+   *   <app-rating-control id="rating" [formField]="form.rating" />
    * </ngx-signal-form-field-wrapper>
    * ```
    *
@@ -237,14 +263,6 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * <ngx-signal-form-field-wrapper [formField]="form.email" fieldName="user-email">
    *   <label for="user-email">Email</label>
    *   <input id="user-email" [formField]="form.email" />
-   * </ngx-signal-form-field-wrapper>
-   * ```
-   *
-   * @example Fallback to auto-generated ID (when no id attribute exists)
-   * ```html
-   * <ngx-signal-form-field-wrapper [formField]="form.email">
-   *   <label>Email</label>
-   *   <input [formField]="form.email" />
    * </ngx-signal-form-field-wrapper>
    * ```
    */
@@ -317,26 +335,15 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   readonly #generatedFieldId = generateUniqueFieldId();
 
   /**
-   * Query for form control elements within this form field.
-   * Used to automatically derive the field name from the element's `id` attribute.
-   *
-   * This query searches for interactive form control elements that typically have the [formField] directive:
-   * - input: All input types (text, email, password, number, checkbox, radio, etc.)
-   * - textarea: Multi-line text input
-   * - select: Dropdown selection
-   * - button: Interactive buttons (type="button" with [formField] for custom controls)
-   *
-   * The result is a signal containing the HTMLElement, or undefined if no matching element exists.
-   *
-   * Note: Cannot use ES private (#) because contentChild doesn't support it.
-   * Note: Uses descendants:true to find elements nested within projected content (like labels wrapping inputs).
+   * Reference to the host element for DOM queries.
    */
-  private readonly inputElement = contentChild<HTMLElement>(
-    'input, textarea, select, button[type="button"]',
-    {
-      descendants: true,
-    },
-  );
+  readonly #elementRef = inject(ElementRef<HTMLElement>);
+
+  /**
+   * Signal holding the input element's ID attribute.
+   * Set by afterNextRender after content projection is complete.
+   */
+  readonly #inputElementId = signal<string | null>(null);
 
   /**
    * Computed signal determining if outline appearance should be applied.
@@ -384,17 +391,20 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    *
    * This ensures ARIA attributes (`aria-describedby`) correctly link to error messages
    * even when the developer doesn't provide an explicit `fieldName`.
+   *
+   * @remarks
+   * This signal is public to allow child components to access the resolved field name
+   * via the `NGX_SIGNAL_FORM_FIELD_CONTEXT` injection token.
    */
-  protected readonly resolvedFieldName = computed(() => {
+  readonly resolvedFieldName = computed(() => {
     // Priority 1: Explicit fieldName input
     const explicit = this.fieldName();
     if (explicit !== undefined) {
       return explicit;
     }
 
-    // Priority 2: Derive from input element's id attribute
-    const inputEl = this.inputElement();
-    const idFromInput = inputEl?.getAttribute('id');
+    // Priority 2: Derive from input element's id attribute (signal updated by afterNextRender)
+    const idFromInput = this.#inputElementId();
     if (idFromInput) {
       return idFromInput;
     }
@@ -503,9 +513,48 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   });
 
   constructor() {
+    // Query DOM for input element ID after first render (content projection complete).
+    // Uses afterNextRender (Angular 19+) instead of legacy ngAfterContentInit.
+    // The signal update triggers error component to re-render with correct ID.
+    afterNextRender(() => {
+      const hostEl = this.#elementRef.nativeElement as HTMLElement;
+
+      // Priority 1: Native form elements (most common case)
+      let inputEl = hostEl.querySelector(
+        'input, textarea, select, button[type="button"]',
+      ) as HTMLElement | null;
+
+      // Priority 2: Custom controls with [id] - supports FormValueControl components
+      // Excludes: label, wrapper, and all assistive elements
+      if (!inputEl || !inputEl.getAttribute('id')) {
+        inputEl = hostEl.querySelector(
+          '[id]:not(label):not(ngx-signal-form-field-wrapper):not(ngx-signal-form-error):not(ngx-signal-form-field-hint):not(ngx-signal-form-field-character-count):not([role="alert"]):not([role="status"])',
+        ) as HTMLElement | null;
+      }
+
+      if (inputEl) {
+        const id = inputEl.getAttribute('id');
+        if (id) {
+          this.#inputElementId.set(id);
+        }
+      }
+    });
+
+    // Set data-signal-field attribute for debugging/testing
     effect(() => {
-      const inputEl = this.inputElement();
       const fieldName = this.resolvedFieldName();
+      const hostEl = this.#elementRef.nativeElement as HTMLElement;
+
+      // Use same fallback logic as afterNextRender
+      let inputEl = hostEl.querySelector(
+        'input, textarea, select, button[type="button"]',
+      ) as HTMLElement | null;
+
+      if (!inputEl) {
+        inputEl = hostEl.querySelector(
+          '[id]:not(label):not(ngx-signal-form-field-wrapper):not(ngx-signal-form-error):not(ngx-signal-form-field-hint):not(ngx-signal-form-field-character-count):not([role="alert"]):not([role="status"])',
+        ) as HTMLElement | null;
+      }
 
       if (inputEl) {
         inputEl.setAttribute('data-signal-field', fieldName);

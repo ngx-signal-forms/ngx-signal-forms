@@ -47,7 +47,8 @@ import { isBlockingError, isWarningError } from '../utilities/warning-error';
   selector: `
     input[formField]:not([ngxSignalFormAutoAriaDisabled]):not([type="radio"]):not([type="checkbox"]),
     textarea[formField]:not([ngxSignalFormAutoAriaDisabled]),
-    select[formField]:not([ngxSignalFormAutoAriaDisabled])
+    select[formField]:not([ngxSignalFormAutoAriaDisabled]),
+    [formField]:not(input):not(textarea):not(select):not([ngxSignalFormAutoAriaDisabled])
   `,
   host: {
     '[attr.aria-invalid]': 'ariaInvalid()',

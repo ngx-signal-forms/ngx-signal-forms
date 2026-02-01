@@ -16,6 +16,7 @@ import {
   generateWarningId,
   injectFormContext,
   NGX_ERROR_MESSAGES,
+  NGX_SIGNAL_FORM_FIELD_CONTEXT,
   showErrors,
   type ErrorDisplayStrategy,
   type ReactiveOrStatic,
@@ -138,6 +139,14 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   readonly #injectedContext = injectFormContext();
 
   /**
+   * Try to inject field context (optional - provided by form field wrapper).
+   * Used to automatically resolve field name when not explicitly provided.
+   */
+  readonly #fieldContext = inject(NGX_SIGNAL_FORM_FIELD_CONTEXT, {
+    optional: true,
+  });
+
+  /**
    * Try to inject error messages registry (optional - may not be provided).
    *
    * Used for 3-tier message priority:
@@ -185,8 +194,47 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   /**
    * The field name used for generating error/warning IDs.
    * This should match the field name used in aria-describedby.
+   *
+   * **Automatic resolution (when used inside `ngx-signal-form-field-wrapper`):**
+   * When omitted, the field name is automatically inherited from the parent
+   * wrapper component via dependency injection. This allows simplified usage:
+   *
+   * ```html
+   * <ngx-signal-form-field-wrapper [formField]="form.email">
+   *   <label for="email">Email</label>
+   *   <input id="email" [formField]="form.email" />
+   *   <!-- fieldName is automatically resolved from wrapper -->
+   * </ngx-signal-form-field-wrapper>
+   * ```
+   *
+   * **Explicit override:**
+   * Provide an explicit field name when using the component standalone
+   * or when you need to override the automatic behavior.
    */
-  readonly fieldName = input.required<string>();
+  readonly fieldName = input<string>();
+
+  /**
+   * Resolved field name computed from input or field context.
+   *
+   * Priority:
+   * 1. Explicit `fieldName` input
+   * 2. Field context from parent wrapper (via NGX_SIGNAL_FORM_FIELD_CONTEXT)
+   * 3. Falls back to 'unknown-field' (should not happen in normal usage)
+   */
+  readonly #resolvedFieldName = computed(() => {
+    const explicit = this.fieldName();
+    if (explicit !== undefined) {
+      return explicit;
+    }
+
+    const contextFieldName = this.#fieldContext?.fieldName();
+    if (contextFieldName !== undefined) {
+      return contextFieldName;
+    }
+
+    // Fallback - should not happen in normal usage
+    return 'unknown-field';
+  });
 
   /**
    * Error display strategy for this specific field.
@@ -244,14 +292,14 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * Computed error ID for aria-describedby linking.
    */
   protected readonly errorId = computed(() =>
-    generateErrorId(this.fieldName()),
+    generateErrorId(this.#resolvedFieldName()),
   );
 
   /**
    * Computed warning ID for aria-describedby linking.
    */
   protected readonly warningId = computed(() =>
-    generateWarningId(this.fieldName()),
+    generateWarningId(this.#resolvedFieldName()),
   );
 
   /**
