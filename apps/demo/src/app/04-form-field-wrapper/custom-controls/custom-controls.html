@@ -1,0 +1,102 @@
+<div class="mb-6 text-center">
+  <p class="text-sm text-gray-600 dark:text-gray-400">
+    Custom Angular Signal Forms controls (FormValueControl) with form field
+    wrapper
+  </p>
+</div>
+
+<form
+  [ngxSignalForm]="reviewForm"
+  [errorStrategy]="errorDisplayMode"
+  (submit)="saveData($event)"
+  class="form-container"
+>
+  <div class="space-y-6">
+    <!-- Product Name - Standard input for comparison -->
+    <ngx-signal-form-field-wrapper [formField]="reviewForm.productName">
+      <label for="productName">Product Name *</label>
+      <input
+        id="productName"
+        type="text"
+        [formField]="reviewForm.productName"
+        placeholder="Enter product name"
+      />
+    </ngx-signal-form-field-wrapper>
+
+    <!-- Product Rating - Custom RatingControl with auto-derived fieldName -->
+    <ngx-signal-form-field-wrapper [formField]="reviewForm.rating">
+      <label for="rating">Product Rating *</label>
+      <ngx-rating-control
+        id="rating"
+        [formField]="reviewForm.rating"
+        [maxRating]="5"
+      />
+      <span
+        class="mt-1 block text-xs text-gray-500 dark:text-gray-400"
+        aria-hidden="true"
+      >
+        Use arrow keys or click to rate
+      </span>
+    </ngx-signal-form-field-wrapper>
+
+    <!-- Service Rating - Custom RatingControl -->
+    <ngx-signal-form-field-wrapper [formField]="reviewForm.serviceRating">
+      <label for="serviceRating">Service Quality *</label>
+      <ngx-rating-control
+        id="serviceRating"
+        [formField]="reviewForm.serviceRating"
+        [maxRating]="5"
+      />
+    </ngx-signal-form-field-wrapper>
+
+    <!-- Would Recommend - Custom RatingControl as thumbs up/down (2 stars) -->
+    <ngx-signal-form-field-wrapper [formField]="reviewForm.wouldRecommend">
+      <label for="wouldRecommend">Would Recommend?</label>
+      <ngx-rating-control
+        id="wouldRecommend"
+        [formField]="reviewForm.wouldRecommend"
+        [maxRating]="2"
+      />
+      <span
+        class="mt-1 block text-xs text-gray-500 dark:text-gray-400"
+        aria-hidden="true"
+      >
+        ☆ = No, ★ = Maybe, ★★ = Definitely!
+      </span>
+    </ngx-signal-form-field-wrapper>
+
+    <!-- Feedback - Standard textarea for comparison -->
+    <ngx-signal-form-field-wrapper [formField]="reviewForm.feedback">
+      <label for="feedback">Additional Feedback (optional)</label>
+      <textarea
+        id="feedback"
+        [formField]="reviewForm.feedback"
+        placeholder="Tell us more about your experience..."
+        rows="3"
+      ></textarea>
+    </ngx-signal-form-field-wrapper>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="mt-8 flex items-center gap-4">
+    <button
+      class="btn-primary"
+      type="submit"
+      [disabled]="reviewForm().pending()"
+    >
+      @if (reviewForm().pending()) { Submitting... } @else { Submit Review }
+    </button>
+
+    <button class="btn-secondary" type="reset" (click)="resetForm()">
+      Reset
+    </button>
+
+    <div class="ml-auto text-sm text-gray-600 dark:text-gray-400">
+      @if (reviewForm().valid()) {
+      <span class="text-green-600 dark:text-green-400">✓ All fields valid</span>
+      } @else {
+      <span>* Required fields</span>
+      }
+    </div>
+  </div>
+</form>

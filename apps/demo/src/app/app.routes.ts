@@ -163,6 +163,14 @@ export const appRoutes: Routes = [
           ),
         title: 'Outline Form Field - Default Outlined Styling',
       },
+      {
+        path: 'custom-controls',
+        loadComponent: () =>
+          import('./04-form-field-wrapper/custom-controls/custom-controls.page').then(
+            (m) => m.CustomControlsPage,
+          ),
+        title: 'Custom Controls - FormValueControl Integration',
+      },
     ],
   },
 
