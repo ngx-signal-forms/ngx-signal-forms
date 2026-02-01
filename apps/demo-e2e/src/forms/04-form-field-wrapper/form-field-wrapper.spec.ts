@@ -144,4 +144,58 @@ test.describe('Form Field Wrapper', () => {
       await expect(removeButton).toHaveCount(1);
     });
   });
+
+  test('should auto-derive fieldName from input id for ARIA attributes', async ({
+    page,
+  }) => {
+    await test.step('Trigger error by blurring empty required field', async () => {
+      // Name field has id="name" - fieldName should be auto-derived
+      await formPage.nameInput.focus();
+      await formPage.nameInput.blur();
+    });
+
+    await test.step('Verify error element has correct id derived from input id', async () => {
+      // Error element should have id="name-error" (derived from input id="name")
+      const errorElement = formPage.form.locator('#name-error');
+      await expect(errorElement).toBeVisible();
+    });
+
+    await test.step('Verify input has aria-describedby linking to error', async () => {
+      // Input should have aria-describedby pointing to the error element
+      await expect(formPage.nameInput).toHaveAttribute(
+        'aria-describedby',
+        /name-error/,
+      );
+    });
+
+    await test.step('Verify aria-invalid is set correctly', async () => {
+      // Input should have aria-invalid="true" when invalid and touched
+      await expect(formPage.nameInput).toHaveAttribute('aria-invalid', 'true');
+    });
+  });
+
+  test('should work without explicit fieldName attribute', async () => {
+    await test.step('Verify form works with auto-derived fieldName', async () => {
+      // Fill in valid data
+      await formPage.nameInput.fill('John Doe');
+      await formPage.nameInput.blur();
+
+      // Verify no error shown (field is valid)
+      await expect(formPage.nameInput).not.toHaveAttribute(
+        'aria-invalid',
+        'true',
+      );
+    });
+
+    await test.step('Verify multiple fields all derive fieldName correctly', async () => {
+      // Email field has id="email" - fieldName should be auto-derived
+      const emailInput = formPage.form.locator('#email');
+      await emailInput.focus();
+      await emailInput.blur();
+
+      // Error should appear with correct id
+      const emailError = formPage.form.locator('#email-error');
+      await expect(emailError).toBeVisible();
+    });
+  });
 });
