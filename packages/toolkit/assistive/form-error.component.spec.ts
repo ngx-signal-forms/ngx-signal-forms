@@ -7,6 +7,7 @@ import {
   required,
   schema,
 } from '@angular/forms/signals';
+import { NGX_SIGNAL_FORM_FIELD_CONTEXT } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -698,6 +699,192 @@ describe('NgxSignalFormErrorComponent', () => {
 
       const alert = screen.queryByRole('alert');
       expect(alert).toBeFalsy();
+    });
+  });
+
+  describe('fieldName resolution from DI context', () => {
+    it('should resolve fieldName from NGX_SIGNAL_FORM_FIELD_CONTEXT when not provided', async () => {
+      /**
+       * Test that error component can resolve fieldName from parent context
+       * when used inside ngx-signal-form-field-wrapper.
+       *
+       * The context provides { fieldName: Signal<string> } which error component
+       * uses when its own fieldName input is undefined.
+       */
+      @Component({
+        selector: 'ngx-test-context-resolution',
+        imports: [FormField, NgxSignalFormErrorComponent],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+            useValue: {
+              fieldName: signal('context-provided-name'),
+            },
+          },
+        ],
+        template: `
+          <input id="email" [formField]="contactForm.email" />
+          <ngx-signal-form-error
+            [formField]="contactForm.email"
+            [strategy]="'immediate'"
+          />
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'Email is required' });
+          }),
+        );
+      }
+
+      const { container } = await render(TestComponent);
+
+      // Error ID should use the context-provided fieldName
+      const errorElement = container.querySelector(
+        '[id="context-provided-name-error"]',
+      );
+      expect(errorElement).toBeTruthy();
+    });
+
+    it('should prefer explicit fieldName input over DI context', async () => {
+      /**
+       * Priority order:
+       * 1. Explicit fieldName input (highest)
+       * 2. DI context from parent wrapper
+       * 3. Fallback to 'unknown-field'
+       */
+      @Component({
+        selector: 'ngx-test-explicit-priority',
+        imports: [FormField, NgxSignalFormErrorComponent],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+            useValue: {
+              fieldName: signal('context-name'),
+            },
+          },
+        ],
+        template: `
+          <input id="email" [formField]="contactForm.email" />
+          <ngx-signal-form-error
+            [formField]="contactForm.email"
+            fieldName="explicit-name"
+            [strategy]="'immediate'"
+          />
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'Email is required' });
+          }),
+        );
+      }
+
+      const { container } = await render(TestComponent);
+
+      // Explicit fieldName should take priority over context
+      const errorElement = container.querySelector(
+        '[id="explicit-name-error"]',
+      );
+      expect(errorElement).toBeTruthy();
+
+      // Context name should NOT be used
+      const contextError = container.querySelector('[id="context-name-error"]');
+      expect(contextError).toBeFalsy();
+    });
+
+    it('should fallback to unknown-field when no context and no input', async () => {
+      /**
+       * When error component is used standalone without context or fieldName input,
+       * it falls back to 'unknown-field' to avoid undefined errors.
+       */
+      @Component({
+        selector: 'ngx-test-fallback',
+        imports: [FormField, NgxSignalFormErrorComponent],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <input id="email" [formField]="contactForm.email" />
+          <ngx-signal-form-error
+            [formField]="contactForm.email"
+            [strategy]="'immediate'"
+          />
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'Email is required' });
+          }),
+        );
+      }
+
+      const { container } = await render(TestComponent);
+
+      // Should fallback to 'unknown-field'
+      const errorElement = container.querySelector(
+        '[id="unknown-field-error"]',
+      );
+      expect(errorElement).toBeTruthy();
+    });
+
+    it('should react to context signal changes', async () => {
+      /**
+       * The context provides a signal, not a static value.
+       * This test verifies the error component responds to signal updates.
+       */
+      const fieldNameSignal = signal('initial-name');
+
+      @Component({
+        selector: 'ngx-test-signal-reactivity',
+        imports: [FormField, NgxSignalFormErrorComponent],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+            useValue: {
+              fieldName: fieldNameSignal,
+            },
+          },
+        ],
+        template: `
+          <input id="email" [formField]="contactForm.email" />
+          <ngx-signal-form-error
+            [formField]="contactForm.email"
+            [strategy]="'immediate'"
+          />
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'Email is required' });
+          }),
+        );
+      }
+
+      const { fixture, container } = await render(TestComponent);
+
+      // Initial error ID
+      expect(container.querySelector('[id="initial-name-error"]')).toBeTruthy();
+
+      // Update the signal
+      fieldNameSignal.set('updated-name');
+      fixture.detectChanges();
+
+      // Error ID should update
+      expect(container.querySelector('[id="updated-name-error"]')).toBeTruthy();
     });
   });
 });
