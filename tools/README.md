@@ -15,6 +15,7 @@ Due to Nx Release's inability to load TypeScript modules, the renderer is curren
 When creating a new release that needs the custom renderer:
 
 1. **Before `nx release version`**, temporarily add to `nx.json`:
+
    ```json
    "projectChangelogs": {
      "createRelease": "github",
@@ -25,6 +26,7 @@ When creating a new release that needs the custom renderer:
    ```
 
 2. **Run versioning**:
+
    ```bash
    pnpm exec nx release version patch  # or minor/major
    ```
