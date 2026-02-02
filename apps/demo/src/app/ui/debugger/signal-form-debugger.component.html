@@ -37,22 +37,48 @@
       <div>
         @if (valid() && !pending()) {
           <ngx-badge variant="solid" appearance="success">
-            <svg ngxBadgeIcon fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+            <svg
+              ngxBadgeIcon
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 16 16"
+            >
               <circle cx="8" cy="8" r="5.5" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5.5 8l1.5 1.5 3.5-3.5" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5.5 8l1.5 1.5 3.5-3.5"
+              />
             </svg>
             Valid
           </ngx-badge>
         } @else if (pending()) {
           <ngx-badge variant="solid" appearance="warning">
-            <svg ngxBadgeIcon class="animate-spin" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
-              <path stroke-linecap="round" d="M8 2v2M8 12v2M14 8h-2M4 8H2M12.5 3.5l-1.4 1.4M4.9 10.1l-1.4 1.4M12.5 12.5l-1.4-1.4M4.9 5.9L3.5 4.5" />
+            <svg
+              ngxBadgeIcon
+              class="animate-spin"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 16 16"
+            >
+              <path
+                stroke-linecap="round"
+                d="M8 2v2M8 12v2M14 8h-2M4 8H2M12.5 3.5l-1.4 1.4M4.9 10.1l-1.4 1.4M12.5 12.5l-1.4-1.4M4.9 5.9L3.5 4.5"
+              />
             </svg>
             Validating
           </ngx-badge>
         } @else if (invalid()) {
           <ngx-badge variant="solid" appearance="danger">
-            <svg ngxBadgeIcon fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+            <svg
+              ngxBadgeIcon
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 16 16"
+            >
               <circle cx="8" cy="8" r="5.5" />
               <path stroke-linecap="round" d="M5.5 5.5l5 5M10.5 5.5l-5 5" />
             </svg>
@@ -60,7 +86,13 @@
           </ngx-badge>
         } @else {
           <ngx-badge variant="solid" appearance="neutral">
-            <svg ngxBadgeIcon fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+            <svg
+              ngxBadgeIcon
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 16 16"
+            >
               <circle cx="8" cy="8" r="5.5" />
               <circle cx="8" cy="6" r="0.5" fill="currentColor" />
               <path stroke-linecap="round" d="M8 8.5v3" />
@@ -77,41 +109,92 @@
     class="border-b border-gray-200 bg-white px-6 py-3 dark:border-gray-700 dark:bg-gray-800"
   >
     <div class="flex flex-wrap gap-2">
-      <ngx-badge variant="outline" [appearance]="valid() ? 'success' : 'danger'">
+      <ngx-badge
+        variant="outline"
+        [appearance]="valid() ? 'success' : 'neutral'"
+      >
         @if (valid()) {
-          <svg ngxBadgeIcon fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+          <svg
+            ngxBadgeIcon
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 16 16"
+          >
             <circle cx="8" cy="8" r="5.5" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5.5 8l1.5 1.5 3.5-3.5" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M5.5 8l1.5 1.5 3.5-3.5"
+            />
           </svg>
         } @else {
-          <svg ngxBadgeIcon fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+          <svg
+            ngxBadgeIcon
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 16 16"
+          >
             <circle cx="8" cy="8" r="5.5" />
             <path stroke-linecap="round" d="M5.5 5.5l5 5M10.5 5.5l-5 5" />
           </svg>
         }
         Valid
       </ngx-badge>
-      <ngx-badge variant="outline" [appearance]="invalid() ? 'danger' : 'neutral'">
+      <ngx-badge
+        variant="outline"
+        [appearance]="invalid() ? 'danger' : 'neutral'"
+      >
         @if (invalid()) {
-          <svg ngxBadgeIcon fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+          <svg
+            ngxBadgeIcon
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 16 16"
+          >
             <circle cx="8" cy="8" r="5.5" />
             <path stroke-linecap="round" d="M5.5 5.5l5 5M10.5 5.5l-5 5" />
           </svg>
         }
         Invalid
       </ngx-badge>
-      <ngx-badge variant="outline" [appearance]="dirty() ? 'warning' : 'neutral'">
+      <ngx-badge
+        variant="outline"
+        [appearance]="dirty() ? 'warning' : 'neutral'"
+      >
         @if (dirty()) {
-          <svg ngxBadgeIcon fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 3 3-7 7-3-3zm0 0l-2 2m13-13l-3 3" />
+          <svg
+            ngxBadgeIcon
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 16 16"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3 12l2-2m0 0l7-7 3 3-7 7-3-3zm0 0l-2 2m13-13l-3 3"
+            />
           </svg>
         }
         Dirty
       </ngx-badge>
       <ngx-badge variant="outline" appearance="info">
         @if (pending()) {
-          <svg ngxBadgeIcon class="animate-spin" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
-            <path stroke-linecap="round" d="M8 2v2M8 12v2M14 8h-2M4 8H2M12.5 3.5l-1.4 1.4M4.9 10.1l-1.4 1.4M12.5 12.5l-1.4-1.4M4.9 5.9L3.5 4.5" />
+          <svg
+            ngxBadgeIcon
+            class="animate-spin"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 16 16"
+          >
+            <path
+              stroke-linecap="round"
+              d="M8 2v2M8 12v2M14 8h-2M4 8H2M12.5 3.5l-1.4 1.4M4.9 10.1l-1.4 1.4M12.5 12.5l-1.4-1.4M4.9 5.9L3.5 4.5"
+            />
           </svg>
         }
         Pending
@@ -119,19 +202,41 @@
       <ngx-badge
         variant="outline"
         [appearance]="
-          submittedStatus() === 'submitting' ? 'info' :
-          submittedStatus() === 'submitted' ? 'success' :
-          'neutral'
+          submittedStatus() === 'submitting'
+            ? 'info'
+            : submittedStatus() === 'submitted'
+              ? 'success'
+              : 'neutral'
         "
       >
         @if (submittedStatus() === 'submitting') {
-          <svg ngxBadgeIcon class="animate-spin" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
-            <path stroke-linecap="round" d="M8 2v2M8 12v2M14 8h-2M4 8H2M12.5 3.5l-1.4 1.4M4.9 10.1l-1.4 1.4M12.5 12.5l-1.4-1.4M4.9 5.9L3.5 4.5" />
+          <svg
+            ngxBadgeIcon
+            class="animate-spin"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 16 16"
+          >
+            <path
+              stroke-linecap="round"
+              d="M8 2v2M8 12v2M14 8h-2M4 8H2M12.5 3.5l-1.4 1.4M4.9 10.1l-1.4 1.4M12.5 12.5l-1.4-1.4M4.9 5.9L3.5 4.5"
+            />
           </svg>
         } @else if (submittedStatus() === 'submitted') {
-          <svg ngxBadgeIcon fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16">
+          <svg
+            ngxBadgeIcon
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 16 16"
+          >
             <circle cx="8" cy="8" r="5.5" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5.5 8l1.5 1.5 3.5-3.5" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M5.5 8l1.5 1.5 3.5-3.5"
+            />
           </svg>
         }
         Status: {{ submittedStatusDisplay() }}
@@ -192,7 +297,9 @@
           </span>
           <ngx-badge
             variant="solid"
-            [appearance]="errorVisibilityInfo().errorsVisible ? 'success' : 'warning'"
+            [appearance]="
+              errorVisibilityInfo().errorsVisible ? 'success' : 'warning'
+            "
           >
             {{ errorVisibilityInfo().strategy }}
           </ngx-badge>
@@ -215,7 +322,6 @@
     <!-- Form Model Section -->
     <details
       class="group border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
-      open
     >
       <summary
         class="flex cursor-pointer items-center gap-2 px-6 py-4 text-lg font-medium text-gray-900 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-700/50 [&::-webkit-details-marker]:hidden"
@@ -292,9 +398,9 @@
           ></path>
         </svg>
         <span>Validation Errors</span>
-        @if (blockingErrorCount() > 0) {
+        @if (totalBlockingCount() > 0) {
           <ngx-badge variant="solid" appearance="danger">
-            {{ blockingErrorCount() }}
+            {{ visibleBlockingCount() }}/{{ totalBlockingCount() }}
           </ngx-badge>
         }
       </summary>
@@ -327,27 +433,27 @@
                   >
                 </div>
                 <div class="space-y-3">
-                  @for (error of rootBlockingErrors(); track error.kind) {
+                  @for (error of rootBlockingErrors(); track $index) {
                     <div
                       class="rounded-md border-l-4 p-3"
-                      [class.border-purple-500]="errorVisibilityInfo().errorsVisible"
-                      [class.bg-purple-50]="errorVisibilityInfo().errorsVisible"
-                      [class.dark:bg-purple-900/20]="errorVisibilityInfo().errorsVisible"
-                      [class.border-gray-300]="!errorVisibilityInfo().errorsVisible"
-                      [class.bg-gray-50]="!errorVisibilityInfo().errorsVisible"
-                      [class.dark:bg-gray-900/20]="!errorVisibilityInfo().errorsVisible"
+                      [class.border-purple-500]="error.visible"
+                      [class.bg-purple-50]="error.visible"
+                      [class.dark:bg-purple-900/20]="error.visible"
+                      [class.border-gray-300]="!error.visible"
+                      [class.bg-gray-50]="!error.visible"
+                      [class.dark:bg-gray-900/20]="!error.visible"
                     >
                       <div class="flex items-center justify-between">
                         <h6
                           class="text-sm font-semibold"
-                          [class.text-purple-800]="errorVisibilityInfo().errorsVisible"
-                          [class.dark:text-purple-300]="errorVisibilityInfo().errorsVisible"
-                          [class.text-gray-600]="!errorVisibilityInfo().errorsVisible"
-                          [class.dark:text-gray-400]="!errorVisibilityInfo().errorsVisible"
+                          [class.text-purple-800]="error.visible"
+                          [class.dark:text-purple-300]="error.visible"
+                          [class.text-gray-600]="!error.visible"
+                          [class.dark:text-gray-400]="!error.visible"
                         >
                           🔗 {{ error.kind }}
                         </h6>
-                        @if (!errorVisibilityInfo().errorsVisible) {
+                        @if (!error.visible) {
                           <ngx-badge variant="outline" appearance="warning">
                             Hidden by strategy
                           </ngx-badge>
@@ -355,10 +461,10 @@
                       </div>
                       <p
                         class="mt-1 text-sm"
-                        [class.text-purple-700]="errorVisibilityInfo().errorsVisible"
-                        [class.dark:text-purple-400]="errorVisibilityInfo().errorsVisible"
-                        [class.text-gray-600]="!errorVisibilityInfo().errorsVisible"
-                        [class.dark:text-gray-500]="!errorVisibilityInfo().errorsVisible"
+                        [class.text-purple-700]="error.visible"
+                        [class.dark:text-purple-400]="error.visible"
+                        [class.text-gray-600]="!error.visible"
+                        [class.dark:text-gray-500]="!error.visible"
                       >
                         {{ error.message }}
                       </p>
@@ -394,29 +500,29 @@
                   >
                 </div>
                 <div class="space-y-3">
-                  @for (error of fieldBlockingErrors(); track error.kind) {
+                  @for (error of fieldBlockingErrors(); track $index) {
                     <div
                       class="rounded-md border p-3"
-                      [class.border-red-200]="errorVisibilityInfo().errorsVisible"
-                      [class.bg-red-50]="errorVisibilityInfo().errorsVisible"
-                      [class.dark:border-red-700]="errorVisibilityInfo().errorsVisible"
-                      [class.dark:bg-red-900/20]="errorVisibilityInfo().errorsVisible"
-                      [class.border-gray-300]="!errorVisibilityInfo().errorsVisible"
-                      [class.bg-gray-50]="!errorVisibilityInfo().errorsVisible"
-                      [class.dark:border-gray-700]="!errorVisibilityInfo().errorsVisible"
-                      [class.dark:bg-gray-900/20]="!errorVisibilityInfo().errorsVisible"
+                      [class.border-red-200]="error.visible"
+                      [class.bg-red-50]="error.visible"
+                      [class.dark:border-red-700]="error.visible"
+                      [class.dark:bg-red-900/20]="error.visible"
+                      [class.border-gray-300]="!error.visible"
+                      [class.bg-gray-50]="!error.visible"
+                      [class.dark:border-gray-700]="!error.visible"
+                      [class.dark:bg-gray-900/20]="!error.visible"
                     >
                       <div class="flex items-center justify-between">
                         <h6
                           class="text-sm font-semibold"
-                          [class.text-red-800]="errorVisibilityInfo().errorsVisible"
-                          [class.dark:text-red-300]="errorVisibilityInfo().errorsVisible"
-                          [class.text-gray-600]="!errorVisibilityInfo().errorsVisible"
-                          [class.dark:text-gray-400]="!errorVisibilityInfo().errorsVisible"
+                          [class.text-red-800]="error.visible"
+                          [class.dark:text-red-300]="error.visible"
+                          [class.text-gray-600]="!error.visible"
+                          [class.dark:text-gray-400]="!error.visible"
                         >
                           {{ error.kind }}
                         </h6>
-                        @if (!errorVisibilityInfo().errorsVisible) {
+                        @if (!error.visible) {
                           <ngx-badge variant="outline" appearance="warning">
                             Hidden by strategy
                           </ngx-badge>
@@ -424,10 +530,10 @@
                       </div>
                       <p
                         class="mt-1 text-sm"
-                        [class.text-red-700]="errorVisibilityInfo().errorsVisible"
-                        [class.dark:text-red-400]="errorVisibilityInfo().errorsVisible"
-                        [class.text-gray-600]="!errorVisibilityInfo().errorsVisible"
-                        [class.dark:text-gray-500]="!errorVisibilityInfo().errorsVisible"
+                        [class.text-red-700]="error.visible"
+                        [class.dark:text-red-400]="error.visible"
+                        [class.text-gray-600]="!error.visible"
+                        [class.dark:text-gray-500]="!error.visible"
                       >
                         {{ error.message }}
                       </p>
@@ -465,46 +571,48 @@
     </details>
 
     <!-- Warnings Section (Non-blocking) -->
-    @if (hasWarnings()) {
-      <details
-        class="group bg-white dark:bg-gray-800"
-        [attr.open]="hasWarnings() ? true : null"
+    <details
+      class="group bg-white dark:bg-gray-800"
+      [attr.open]="hasWarnings() ? true : null"
+    >
+      <summary
+        class="flex cursor-pointer items-center gap-2 px-6 py-4 text-lg font-medium text-gray-900 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-700/50 [&::-webkit-details-marker]:hidden"
       >
-        <summary
-          class="flex cursor-pointer items-center gap-2 px-6 py-4 text-lg font-medium text-gray-900 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-700/50 [&::-webkit-details-marker]:hidden"
+        <svg
+          class="h-4 w-4 transition-transform group-open:rotate-90"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
         >
-          <svg
-            class="h-4 w-4 transition-transform group-open:rotate-90"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 5l7 7-7 7"
-            ></path>
-          </svg>
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            ></path>
-          </svg>
-          <span>Warnings (Non-blocking)</span>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5l7 7-7 7"
+          ></path>
+        </svg>
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
+        </svg>
+        <span>Warnings (Non-blocking)</span>
+        @if (totalWarningCount() > 0) {
           <ngx-badge variant="solid" appearance="warning">
-            {{ warningCount() }}
+            {{ visibleWarningCount() }}/{{ totalWarningCount() }}
           </ngx-badge>
-        </summary>
-        <div class="px-6 pb-6">
+        }
+      </summary>
+      <div class="px-6 pb-6">
+        @if (hasWarnings()) {
           <div
             class="mb-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
           >
@@ -522,17 +630,38 @@
                   Root-Level Warnings
                 </div>
                 <div class="space-y-3">
-                  @for (warning of rootWarningErrors(); track warning.kind) {
+                  @for (warning of rootWarningErrors(); track $index) {
                     <div
-                      class="rounded-md border-l-4 border-amber-500 bg-amber-50 p-3 dark:bg-amber-900/20"
+                      class="rounded-md border-l-4 p-3"
+                      [class.border-amber-500]="warning.visible"
+                      [class.bg-amber-50]="warning.visible"
+                      [class.dark:bg-amber-900/20]="warning.visible"
+                      [class.border-gray-300]="!warning.visible"
+                      [class.bg-gray-50]="!warning.visible"
+                      [class.dark:bg-gray-900/20]="!warning.visible"
                     >
-                      <h6
-                        class="text-sm font-semibold text-amber-800 dark:text-amber-300"
-                      >
-                        🔗 {{ warning.kind }}
-                      </h6>
+                      <div class="flex items-center justify-between">
+                        <h6
+                          class="text-sm font-semibold"
+                          [class.text-amber-800]="warning.visible"
+                          [class.dark:text-amber-300]="warning.visible"
+                          [class.text-gray-600]="!warning.visible"
+                          [class.dark:text-gray-400]="!warning.visible"
+                        >
+                          🔗 {{ warning.kind }}
+                        </h6>
+                        @if (!warning.visible) {
+                          <ngx-badge variant="outline" appearance="warning">
+                            Hidden by strategy
+                          </ngx-badge>
+                        }
+                      </div>
                       <p
-                        class="mt-1 text-sm text-amber-700 dark:text-amber-400"
+                        class="mt-1 text-sm"
+                        [class.text-amber-700]="warning.visible"
+                        [class.dark:text-amber-400]="warning.visible"
+                        [class.text-gray-600]="!warning.visible"
+                        [class.dark:text-gray-500]="!warning.visible"
                       >
                         {{ warning.message }}
                       </p>
@@ -551,17 +680,40 @@
                   Field-Level Warnings
                 </div>
                 <div class="space-y-3">
-                  @for (warning of fieldWarningErrors(); track warning.kind) {
+                  @for (warning of fieldWarningErrors(); track $index) {
                     <div
-                      class="rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-900/20"
+                      class="rounded-md border p-3"
+                      [class.border-amber-200]="warning.visible"
+                      [class.bg-amber-50]="warning.visible"
+                      [class.dark:border-amber-700]="warning.visible"
+                      [class.dark:bg-amber-900/20]="warning.visible"
+                      [class.border-gray-300]="!warning.visible"
+                      [class.bg-gray-50]="!warning.visible"
+                      [class.dark:border-gray-700]="!warning.visible"
+                      [class.dark:bg-gray-900/20]="!warning.visible"
                     >
-                      <h6
-                        class="text-sm font-semibold text-amber-800 dark:text-amber-300"
-                      >
-                        {{ warning.kind }}
-                      </h6>
+                      <div class="flex items-center justify-between">
+                        <h6
+                          class="text-sm font-semibold"
+                          [class.text-amber-800]="warning.visible"
+                          [class.dark:text-amber-300]="warning.visible"
+                          [class.text-gray-600]="!warning.visible"
+                          [class.dark:text-gray-400]="!warning.visible"
+                        >
+                          {{ warning.kind }}
+                        </h6>
+                        @if (!warning.visible) {
+                          <ngx-badge variant="outline" appearance="warning">
+                            Hidden by strategy
+                          </ngx-badge>
+                        }
+                      </div>
                       <p
-                        class="mt-1 text-sm text-amber-700 dark:text-amber-400"
+                        class="mt-1 text-sm"
+                        [class.text-amber-700]="warning.visible"
+                        [class.dark:text-amber-400]="warning.visible"
+                        [class.text-gray-600]="!warning.visible"
+                        [class.dark:text-gray-500]="!warning.visible"
                       >
                         {{ warning.message }}
                       </p>
@@ -571,9 +723,32 @@
               </div>
             }
           </div>
-        </div>
-      </details>
-    }
+        } @else {
+          <div class="py-4 text-center">
+            <div
+              class="mx-auto mb-3 h-12 w-12 rounded-full bg-amber-50 p-3 dark:bg-amber-900/20"
+            >
+              <svg
+                class="h-6 w-6 text-amber-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              No active warnings
+            </p>
+          </div>
+        }
+      </div>
+    </details>
   </div>
 
   <!-- Footer -->

@@ -6,6 +6,7 @@ import {
   input,
 } from '@angular/core';
 import type { FieldState } from '@angular/forms/signals';
+import { isBlockingError, isWarningError } from '@ngx-signal-forms/toolkit';
 
 /**
  * Simple Form State Display for Angular Signal Forms
@@ -58,6 +59,11 @@ import type { FieldState } from '@angular/forms/signals';
               class="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-800"
             >
               Invalid ({{ errorCount() }} errors)
+              @if (warningCount() > 0) {
+                <span class="text-amber-700">
+                  + {{ warningCount() }} warnings
+                </span>
+              }
             </span>
           }
         </div>
@@ -86,12 +92,32 @@ import type { FieldState } from '@angular/forms/signals';
               Validation Errors
             </h4>
             <div class="space-y-2">
-              @for (error of formState().errors(); track error.kind) {
+              @for (error of blockingErrors(); track error.kind) {
                 <div
                   class="rounded bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300"
                 >
                   <strong>{{ error.kind }}:</strong>
                   {{ error.message }}
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (hasWarnings()) {
+          <div>
+            <h4
+              class="mb-2 text-sm font-semibold text-amber-700 dark:text-amber-300"
+            >
+              Warnings
+            </h4>
+            <div class="space-y-2">
+              @for (warning of warningErrors(); track warning.kind) {
+                <div
+                  class="rounded bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
+                >
+                  <strong>{{ warning.kind }}:</strong>
+                  {{ warning.message }}
                 </div>
               }
             </div>
@@ -150,7 +176,7 @@ import type { FieldState } from '@angular/forms/signals';
 })
 export class SignalFormStateDisplayComponent {
   /** The Signal Form state to display */
-  readonly form = input.required<FieldState<Record<string, unknown>>>();
+  readonly form = input.required<FieldState<unknown>>();
 
   /** Title for the display component */
   readonly title = input<string>('Form State');
@@ -158,13 +184,45 @@ export class SignalFormStateDisplayComponent {
   /** Access the form state directly */
   protected readonly formState = this.form;
 
+  #errorSummaryOf(
+    state: FieldState<unknown>,
+  ): Array<{ kind: string; message?: string }> {
+    const fn = (state as { errorSummary?: () => unknown }).errorSummary;
+    if (typeof fn === 'function') {
+      const result = fn();
+      return Array.isArray(result)
+        ? (result as Array<{ kind: string; message?: string }>)
+        : [];
+    }
+    return (state.errors?.() ?? []) as Array<{
+      kind: string;
+      message?: string;
+    }>;
+  }
+
   /** Check if there are errors */
+  protected readonly allErrors = computed(() =>
+    this.#errorSummaryOf(this.formState()),
+  );
+
+  protected readonly blockingErrors = computed(() =>
+    this.allErrors().filter(isBlockingError),
+  );
+
+  protected readonly warningErrors = computed(() =>
+    this.allErrors().filter(isWarningError),
+  );
+
   protected readonly hasErrors = computed(
-    () => this.formState().errors().length > 0,
+    () => this.blockingErrors().length > 0,
+  );
+
+  protected readonly hasWarnings = computed(
+    () => this.warningErrors().length > 0,
   );
 
   /** Count total errors */
-  protected readonly errorCount = computed(
-    () => this.formState().errors().length,
-  );
+  protected readonly errorCount = computed(() => this.blockingErrors().length);
+
+  protected readonly warningCount = computed(() => this.warningErrors().length);
 }

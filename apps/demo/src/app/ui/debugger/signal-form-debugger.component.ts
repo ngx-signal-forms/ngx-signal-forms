@@ -8,10 +8,19 @@ import {
 } from '@angular/core';
 import type { FieldState } from '@angular/forms/signals';
 import {
+  isBlockingError,
+  isWarningError,
   NGX_SIGNAL_FORM_CONTEXT,
+  shouldShowErrors,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import { BadgeComponent, BadgeIconDirective } from '../badge';
+
+type DebuggerError = {
+  kind: string;
+  message?: string;
+  visible: boolean;
+};
 
 /**
  * Enhanced Signal Form Debugger Component
@@ -35,14 +44,14 @@ import { BadgeComponent, BadgeIconDirective } from '../badge';
  * ```html
  * <form [ngxSignalForm]="userForm" (submit)="handleSubmit($event)">
  *   <input [formField]="userForm.email" />
- *   <ngx-signal-form-debugger [formTree]="userForm()" />
+ *   <ngx-signal-form-debugger [formTree]="userForm" />
  * </form>
  * ```
  *
  * @example Custom title
  * ```html
  * <ngx-signal-form-debugger
- *   [formTree]="userForm()"
+ *   [formTree]="userForm"
  *   title="User Registration Form"
  * />
  * ```
@@ -56,16 +65,20 @@ import { BadgeComponent, BadgeIconDirective } from '../badge';
 })
 export class SignalFormDebuggerComponent {
   /** Safely read errorSummary() from a state-like object if available */
-  #errorSummaryOf(v: unknown): Array<{ kind: string; message?: string }> {
+  #errorSummaryOf(v: unknown, visible: boolean): Array<DebuggerError> {
     const fn = (v as { errorSummary?: () => unknown }).errorSummary;
     if (typeof fn === 'function') {
       const result = fn();
       return Array.isArray(result)
-        ? (result as Array<{ kind: string; message?: string }>)
+        ? (result as Array<{ kind: string; message?: string }>).map((e) => ({
+            ...e,
+            visible,
+          }))
         : [];
     }
     return [];
   }
+
   /** Inject form context (provides submittedStatus automatically) */
   readonly #formContext = inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true });
 
@@ -158,13 +171,20 @@ export class SignalFormDebuggerComponent {
    * - If a FieldTree function is provided: traverse children and collect errors
    * - Otherwise (FieldState): fallback to errorSummary() on the root state
    */
-  protected readonly allErrors = computed(() => {
+  protected readonly allErrors = computed<DebuggerError[]>(() => {
     const input = this.formTree();
+    const strategy = this.errorStrategy();
+    const submitted = this.submittedStatus();
+
+    // Normalize root visibility for fallback or summary usage
+    const rootState = this.rootState();
+    const rootVisible = shouldShowErrors(rootState, strategy, submitted);
+
     if (this.#isFieldTree(input)) {
       // Traverse the FieldTree using the model shape
       const state = (input as () => FieldState<unknown>)();
       const value = state.value();
-      const collected: Array<{ kind: string; message?: string }> = [];
+      const collected: DebuggerError[] = [];
 
       const visit = (tree: Record<string, unknown>, model: unknown): void => {
         if (model && typeof model === 'object' && !Array.isArray(model)) {
@@ -172,19 +192,24 @@ export class SignalFormDebuggerComponent {
             const child = (tree as Record<string, unknown>)[key];
             if (typeof child === 'function') {
               const childState = (child as () => FieldState<unknown>)();
-              // Collect direct errors on this field
-              collected.push(
-                ...((childState.errors() ?? []) as Array<{
-                  kind: string;
-                  message?: string;
-                }>),
-              );
-              // Also collect any available summary from this child (defensive)
-              collected.push(...this.#errorSummaryOf(childState));
-              // Recurse deeper using the model branch
+              const visible = shouldShowErrors(childState, strategy, submitted);
               const nextModel = (model as Record<string, unknown>)[
                 key
               ] as unknown;
+              const isLeaf = !nextModel || typeof nextModel !== 'object';
+
+              if (isLeaf) {
+                // Collect direct errors only for leaf nodes
+                collected.push(
+                  ...(
+                    (childState.errors() ?? []) as Array<{
+                      kind: string;
+                      message?: string;
+                    }>
+                  ).map((e) => ({ ...e, visible })),
+                );
+              }
+              // Recurse deeper using the model branch
               visit(child as unknown as Record<string, unknown>, nextModel);
             }
           }
@@ -193,45 +218,44 @@ export class SignalFormDebuggerComponent {
             const child = (tree as unknown as Record<number, unknown>)[i];
             if (typeof child === 'function') {
               const childState = (child as () => FieldState<unknown>)();
-              collected.push(
-                ...((childState.errors() ?? []) as Array<{
-                  kind: string;
-                  message?: string;
-                }>),
-              );
-              collected.push(...this.#errorSummaryOf(childState));
-              visit(child as unknown as Record<string, unknown>, model[i]);
+              const visible = shouldShowErrors(childState, strategy, submitted);
+              const nextModel = model[i];
+              const isLeaf = !nextModel || typeof nextModel !== 'object';
+
+              if (isLeaf) {
+                collected.push(
+                  ...(
+                    (childState.errors() ?? []) as Array<{
+                      kind: string;
+                      message?: string;
+                    }>
+                  ).map((e) => ({ ...e, visible })),
+                );
+              }
+              visit(child as unknown as Record<string, unknown>, nextModel);
             }
           }
         }
       };
 
       visit(input as unknown as Record<string, unknown>, value);
-      // Prefer built-in summary when it exists (most reliable)
-      const rootSummary = this.#errorSummaryOf(state);
-      if (rootSummary.length > 0) {
-        return rootSummary;
-      }
-      // Fallback: combine root errors and collected child errors/summaries
-      return [
-        ...((state.errors?.() ?? []) as Array<{
-          kind: string;
-          message?: string;
-        }>),
-        ...collected,
-      ];
+      // For FieldTree, return ONLY collected leaf errors (with per-field visibility)
+      // Do NOT include root state.errors() as it may aggregate all descendant errors
+      // and would override the per-field visibility logic
+      return collected;
     }
 
     // Fallback: rely on built-in summary when only FieldState is available
-    const root = this.rootState();
-    const summary = this.#errorSummaryOf(root);
+    const summary = this.#errorSummaryOf(rootState, rootVisible);
     // If summary is unexpectedly empty but form is invalid, include root errors at least
     return summary.length > 0
       ? summary
-      : ((root.errors?.() ?? []) as Array<{
-          kind: string;
-          message?: string;
-        }>);
+      : (
+          (rootState.errors?.() ?? []) as Array<{
+            kind: string;
+            message?: string;
+          }>
+        ).map((e) => ({ ...e, visible: rootVisible }));
   });
 
   /** Field-level errors (exclude root-level ones from the summary) */
@@ -239,81 +263,79 @@ export class SignalFormDebuggerComponent {
     const root = this.rootErrors();
     const all = this.allErrors();
     return all.filter(
-      (e: unknown): e is { kind: string; message: string } =>
-        typeof e === 'object' &&
-        e !== null &&
-        'kind' in e &&
-        typeof (e as { kind: string }).kind === 'string' &&
+      (e): e is DebuggerError =>
         // Exclude any error that matches a root-level error by kind+message
         !root.some(
           (r) =>
             r &&
-            typeof r === 'object' &&
-            'kind' in r &&
-            (r as { kind: string }).kind === (e as { kind: string }).kind &&
-            'message' in r &&
-            (r as { message?: string }).message ===
-              (e as { message?: string }).message,
+            (r as { kind: string }).kind === e.kind &&
+            (r as { message?: string }).message === e.message,
         ),
     );
   });
 
   /** Root-level blocking errors */
-  protected readonly rootBlockingErrors = computed(() =>
-    this.rootErrors().filter((error) => !error.kind.startsWith('warn:')),
-  );
+  protected readonly rootBlockingErrors = computed(() => {
+    const rootVisible = shouldShowErrors(
+      this.rootState(),
+      this.errorStrategy(),
+      this.submittedStatus(),
+    );
+    return this.rootErrors()
+      .filter(isBlockingError)
+      .map((e) => ({ ...e, visible: rootVisible }));
+  });
 
   /** Root-level warnings */
-  protected readonly rootWarningErrors = computed(() =>
-    this.rootErrors().filter((error) => error.kind.startsWith('warn:')),
-  );
+  protected readonly rootWarningErrors = computed(() => {
+    const rootVisible = shouldShowErrors(
+      this.rootState(),
+      this.errorStrategy(),
+      this.submittedStatus(),
+    );
+    return this.rootErrors()
+      .filter(isWarningError)
+      .map((e) => ({ ...e, visible: rootVisible }));
+  });
 
   /** Field-level blocking errors */
   protected readonly fieldBlockingErrors = computed(() =>
-    this.fieldErrors().filter(
-      (error: unknown): error is { kind: string; message: string } =>
-        typeof error === 'object' &&
-        error !== null &&
-        'kind' in error &&
-        typeof (error as { kind: string }).kind === 'string' &&
-        !(error as { kind: string }).kind.startsWith('warn:'),
-    ),
+    this.fieldErrors().filter(isBlockingError),
   );
 
   /** Field-level warnings */
   protected readonly fieldWarningErrors = computed(() =>
-    this.fieldErrors().filter(
-      (error: unknown): error is { kind: string; message: string } =>
-        typeof error === 'object' &&
-        error !== null &&
-        'kind' in error &&
-        typeof (error as { kind: string }).kind === 'string' &&
-        (error as { kind: string }).kind.startsWith('warn:'),
-    ),
+    this.fieldErrors().filter(isWarningError),
   );
 
   /** All blocking errors (root + field) */
   protected readonly blockingErrors = computed(() =>
-    this.allErrors().filter(
-      (error: unknown): error is { kind: string; message: string } =>
-        typeof error === 'object' &&
-        error !== null &&
-        'kind' in error &&
-        typeof (error as { kind: string }).kind === 'string' &&
-        !(error as { kind: string }).kind.startsWith('warn:'),
-    ),
+    this.allErrors().filter(isBlockingError),
   );
 
   /** All warning errors (root + field) */
   protected readonly warningErrors = computed(() =>
-    this.allErrors().filter(
-      (error: unknown): error is { kind: string; message: string } =>
-        typeof error === 'object' &&
-        error !== null &&
-        'kind' in error &&
-        typeof (error as { kind: string }).kind === 'string' &&
-        (error as { kind: string }).kind.startsWith('warn:'),
-    ),
+    this.allErrors().filter(isWarningError),
+  );
+
+  /** Visible blocking error count */
+  protected readonly visibleBlockingCount = computed(
+    () => this.blockingErrors().filter((error) => error.visible).length,
+  );
+
+  /** Total blocking error count */
+  protected readonly totalBlockingCount = computed(
+    () => this.blockingErrors().length,
+  );
+
+  /** Visible warning count */
+  protected readonly visibleWarningCount = computed(
+    () => this.warningErrors().filter((error) => error.visible).length,
+  );
+
+  /** Total warning count */
+  protected readonly totalWarningCount = computed(
+    () => this.warningErrors().length,
   );
 
   /** Does the form have any blocking errors? */
@@ -343,14 +365,6 @@ export class SignalFormDebuggerComponent {
   protected readonly totalErrorCount = computed(
     () => this.blockingErrors().length + this.warningErrors().length,
   );
-
-  /** Blocking error count */
-  protected readonly blockingErrorCount = computed(
-    () => this.blockingErrors().length,
-  );
-
-  /** Warning count */
-  protected readonly warningCount = computed(() => this.warningErrors().length);
 
   // ============================================================================
   // Error Visibility Strategy Analysis

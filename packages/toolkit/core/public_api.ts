@@ -20,6 +20,7 @@ export { injectFormConfig } from './utilities/inject-form-config';
 export { injectFormContext } from './utilities/inject-form-context';
 export { combineShowErrors, showErrors } from './utilities/show-errors';
 export * from './utilities/submission-helpers';
+export * from './utilities/warning-error';
 
 // Convenience imports
 import { NgxSignalFormAutoAriaDirective } from './directives/auto-aria.directive';
