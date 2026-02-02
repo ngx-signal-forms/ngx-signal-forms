@@ -1,331 +1,96 @@
-# @ngx-signal-forms/toolkit
+# @ngx-signal-forms/toolkit — API Reference
 
-> Enhancement toolkit for Angular Signal Forms with automatic accessibility and progressive error disclosure
+> This is the detailed API reference. For overview, installation, and quick start, see the [main README](https://github.com/ngx-signal-forms/ngx-signal-forms#readme).
 
-Zero-intrusive directives, components, and utilities for Angular Signal Forms.
+## Entry Points
 
-## Features
-
-- ✅ Automatic ARIA attributes (`aria-invalid`, `aria-describedby`)
-- ✅ Error display strategies (immediate, on-touch, on-submit, manual)
-- ✅ Warning support (non-blocking validation messages)
-- ✅ Reusable form field wrapper with automatic error display
-- ✅ WCAG 2.2 Level AA compliant
-- ✅ Type-safe with full TypeScript inference
-- ✅ Tree-shakable with secondary entry points
-
-> **Note**: Angular Signal Forms' `[formField]` directive automatically marks fields as touched on blur. No additional directive needed for touch tracking.
-
-## 🎨 Theming
-
-The toolkit uses a layered theming architecture based on CSS Custom Properties.
-
-- **Shared Feedback Layer**: Controls typography and spacing for errors, warnings, and hints.
-- **Semantic Layer**: Controls colors based on intent (primary, error, warning).
-
-To customize the `ngx-signal-form-error` component (included in this package), use the feedback variables:
-
-```css
-:root {
-  /* Affects all errors and warnings */
-  --ngx-signal-form-feedback-font-size: 0.875rem;
-  --ngx-signal-form-feedback-line-height: 1.25;
-  --ngx-signal-form-feedback-margin-top: 0.5rem;
-  --ngx-signal-form-feedback-padding-horizontal: 0;
-  --ngx-signal-form-error-color: #dc2626;
-}
-```
-
-For comprehensive theming of the Form Field wrapper and Fieldset, see the **[Form Field Theming Guide](./form-field/THEMING.md)**.
-
-## Quick Start
-
-### Zero Configuration
-
-The toolkit works out of the box with sensible defaults. No providers required:
-
-```typescript
-// app.config.ts - NO toolkit providers needed!
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideRouter(appRoutes),
-    // ... other providers
-  ],
-};
-```
-
-```typescript
-// my-form.component.ts
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import { form, schema, required, FormField } from '@angular/forms/signals';
-
-@Component({
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
-  template: `
-    <form (submit)="handleSubmit($event)">
-      <ngx-signal-form-field-wrapper
-        [formField]="contactForm.email"
-        fieldName="email"
-      >
-        <label for="email">Email</label>
-        <input id="email" [formField]="contactForm.email" />
-      </ngx-signal-form-field-wrapper>
-      <button type="submit">Submit</button>
-    </form>
-  `,
-})
-export class MyFormComponent {
-  // ... form logic
-}
-```
-
-**Default behavior (no configuration):**
-
-| Feature               | Default                                                     |
-| --------------------- | ----------------------------------------------------------- |
-| Error display         | `'on-touch'` - errors show after blur or submit             |
-| Auto ARIA             | `true` - `aria-invalid` and `aria-describedby` auto-applied |
-| Required marker       | `' *'` shown after label                                    |
-| Form field appearance | `'default'` (not outlined)                                  |
-
-### When to Use `provideNgxSignalFormsConfig()`
-
-**Only call this provider when you need to override the defaults:**
-
-```typescript
-import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    // Only needed to OVERRIDE defaults
-    provideNgxSignalFormsConfig({
-      // Change when errors appear (default: 'on-touch')
-      defaultErrorStrategy: 'on-submit', // or 'immediate', 'manual'
-
-      // Change required marker text (default: ' *')
-      requiredMarker: ' (required)',
-
-      // Hide required markers entirely (default: true)
-      showRequiredMarker: false,
-
-      // Use outlined fields globally (default: 'default')
-      defaultFormFieldAppearance: 'outline',
-
-      // Disable automatic ARIA (default: true)
-      autoAria: false,
-
-      // Enable debug logging (default: false)
-      debug: true,
-    }),
-  ],
-};
-```
+| Entry Point                            | Purpose                                     |
+| -------------------------------------- | ------------------------------------------- |
+| `@ngx-signal-forms/toolkit`            | Core directives, providers, and utilities   |
+| `@ngx-signal-forms/toolkit/assistive`  | Error, hint, and character count components |
+| `@ngx-signal-forms/toolkit/form-field` | Form field wrapper and fieldset components  |
+| `@ngx-signal-forms/toolkit/headless`   | Renderless primitives for custom UI         |
 
 ---
 
-> **Important:** Angular Signal Forms use native DOM `submit` event, NOT `ngSubmit` (which is from Reactive/Template-driven forms).
->
-> Always use `(submit)="handleSubmit($event)"` with `event.preventDefault()` in your handler to prevent page reload.
+## Core (`@ngx-signal-forms/toolkit`)
 
-### ⚠️ Critical: The `novalidate` Attribute
-
-Signal Forms do **NOT** automatically disable HTML5 form validation like Angular's Reactive Forms do. The toolkit handles this automatically when you import `NgxSignalFormToolkit`.
-
-**What happens without `novalidate`:**
-
-1. User types invalid input (e.g., bad email format)
-2. Browser's HTML5 validation bubble appears
-3. User blurs the field → toolkit's validation error also appears
-4. User sees **BOTH** error messages (confusing!)
-5. Your carefully designed error UX is undermined
-
-**Automatic `novalidate` (when NgxSignalFormToolkit is imported):**
-
-The directive has selector `form[ngxSignalForm], form(submit)` — meaning `novalidate` is **automatically added** to ANY form with a `(submit)` handler:
-
-```html
-<!-- ✅ novalidate auto-applied (has submit handler) -->
-<form (submit)="handleSubmit($event)">
-  <input [formField]="form.email" />
-</form>
-
-<!-- ✅ novalidate auto-applied + full form context -->
-<form [ngxSignalForm]="userForm" (submit)="handleSubmit($event)">
-  <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
-</form>
-```
-
-**When do you need `[ngxSignalForm]` binding?**
-
-The `[ngxSignalForm]` binding provides **form context** for child components via dependency injection. However, for the **default `'on-touch'` strategy**, error components work **without** `[ngxSignalForm]` because they only need `field.invalid() && field.touched()`.
-
-#### Feature Comparison: With vs Without `[ngxSignalForm]`
-
-| Feature                                          | Without `[ngxSignalForm]` | With `[ngxSignalForm]` |
-| ------------------------------------------------ | :-----------------------: | :--------------------: |
-| Auto `novalidate` on form                        |            ✅             |           ✅           |
-| Auto `aria-invalid` when touched + invalid       |            ✅             |           ✅           |
-| Auto `aria-describedby` linking                  |            ✅             |           ✅           |
-| `<ngx-signal-form-error>` (`'on-touch'`)         |         ✅ Works          |        ✅ Works        |
-| `<ngx-signal-form-field-wrapper>` (`'on-touch'`) |      ✅ Auto errors       |     ✅ Auto errors     |
-| `<ngx-signal-form-error>` (`'on-submit'`)        |       ❌ No context       |        ✅ Works        |
-| Form-level `[errorStrategy]` override            |            ❌             |           ✅           |
-| `submittedStatus` signal via DI                  |            ❌             |           ✅           |
-
-**Key insight:** The `'on-touch'` strategy only checks `field.invalid() && field.touched()`. Since Angular's `submit()` helper calls `markAllAsTouched()`, errors appear after both blur AND submit - without needing `submittedStatus`.
-
-#### When to Use Each Approach
-
-**Minimal Toolkit** (without `[ngxSignalForm]`) — Use when:
-
-- You want automatic ARIA attributes and error display with `'on-touch'` strategy
-- You're gradually migrating an existing form
-- Your design system uses the default error display timing
-- **Works for most use cases!**
-
-**Full Toolkit** (with `[ngxSignalForm]`) — Use when:
-
-- You need `'on-submit'` error strategy (requires `submittedStatus`)
-- You need form-level `[errorStrategy]` override
-- You need `submittedStatus` in custom components
-- You're building complex multi-step forms
-
-#### Example: Minimal Toolkit (Error Components Work!)
+### Imports
 
 ```typescript
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-
-@Component({
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
-  template: `
-    <!-- ✅ Error components work WITHOUT [ngxSignalForm] for 'on-touch' strategy -->
-    <form (submit)="handleSubmit($event)">
-      <ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
-        <label for="email">Email</label>
-        <input id="email" [formField]="form.email" />
-      </ngx-signal-form-field-wrapper>
-      <button type="submit">Submit</button>
-    </form>
-  `,
-})
-```
-
-#### Example: Full Toolkit (For `'on-submit'` Strategy)
-
-```html
-<!-- Use [ngxSignalForm] when you need 'on-submit' strategy or submittedStatus -->
-<form
-  [ngxSignalForm]="userForm"
-  [errorStrategy]="'on-submit'"
-  (submit)="handleSubmit($event)"
->
-  <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
-</form>
-```
-
-### Alternative: Individual Imports
-
-If you only need specific directives or components, you can import them individually:
-
-```typescript
-import {
-  NgxSignalFormDirective,
-} from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
-
-@Component({
-  imports: [FormField, NgxSignalFormDirective, NgxSignalFormErrorComponent],
-  template: `
-    <form [ngxSignalForm]="myForm" (submit)="handleSubmit($event)">
-      <!-- fields -->
-    </form>
-  `,
-})
-```
-
-## API
-
-### Entry Points
-
-```typescript
-// Primary entry point - Configuration
-import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
-import type {
-  NgxSignalFormsConfig,
-  ErrorDisplayStrategy,
-} from '@ngx-signal-forms/toolkit';
-
-// Core - Bundle import (recommended)
+// Bundle import (recommended)
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
-// Core - Individual imports (alternative)
+// Individual imports
 import {
   NgxSignalFormDirective,
   NgxSignalFormAutoAriaDirective,
-  // Error display utilities
+  provideNgxSignalFormsConfig,
+  provideNgxSignalFormsConfigForComponent,
+  provideErrorMessages,
   showErrors,
-  combineShowErrors,
   computeShowErrors,
   shouldShowErrors,
-  // Context injection functions (CIFs)
+  combineShowErrors,
+  focusFirstInvalid,
+  canSubmit,
+  isSubmitting,
+  hasSubmitted,
   injectFormContext,
   injectFormConfig,
-  // Reactive utilities
   unwrapValue,
 } from '@ngx-signal-forms/toolkit';
-
-// Assistive components (styled feedback)
-import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
-
-// Form field bundle (wrapper + outlined layout + hints + character count)
-import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-
-// Headless primitives (renderless directives)
-import {
-  NgxHeadlessErrorStateDirective,
-  NgxHeadlessCharacterCountDirective,
-  NgxHeadlessFieldsetDirective,
-  NgxHeadlessFieldNameDirective,
-  NgxHeadlessToolkit,
-  createErrorState,
-  createCharacterCount,
-} from '@ngx-signal-forms/toolkit/headless';
 ```
 
-### Bundle Constant
+### NgxSignalFormToolkit
 
-#### NgxSignalFormToolkit
-
-The `NgxSignalFormToolkit` constant provides a convenient way to import all essential directives:
+Bundle containing `NgxSignalFormDirective` and `NgxSignalFormAutoAriaDirective`.
 
 ```typescript
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-
 @Component({
   imports: [FormField, NgxSignalFormToolkit],
-  // ...
 })
 ```
 
-**Contents:**
+### NgxSignalFormDirective
 
-- `NgxSignalFormDirective` - Provides form context to child components
-- `NgxSignalFormAutoAriaDirective` - Automatically applies ARIA attributes
+Selector: `form[ngxSignalForm], form(submit)`
 
-**For error display:** Import `NgxSignalFormErrorComponent` from `@ngx-signal-forms/toolkit/assistive`.
+**Inputs:**
 
-**Benefits:**
+- `ngxSignalForm` — The form field tree
+- `errorStrategy` — `'immediate' | 'on-touch' | 'on-submit' | 'manual'`
 
-- Single import instead of three individual imports
-- Type-safe readonly tuple
-- Cleaner component metadata
-- Better developer experience
+**Outputs:**
+
+- `submittedStatus` — `Signal<'unsubmitted' | 'submitting' | 'submitted'>`
+
+**Features:**
+
+- Auto-adds `novalidate` attribute
+- Provides form context to child components
+- Tracks submission lifecycle
+
+```html
+<form
+  [ngxSignalForm]="form"
+  [errorStrategy]="'on-submit'"
+  (submit)="save($event)"
+>
+  <!-- children can inject form context -->
+</form>
+```
+
+### NgxSignalFormAutoAriaDirective
+
+Selector: `input[formField], textarea[formField], select[formField]`
+
+Auto-applies:
+
+- `aria-invalid` (respects error strategy)
+- `aria-describedby` (links to error elements)
 
 ### Configuration
-
-The toolkit works without any configuration. Only use these providers to **override the defaults**.
 
 ```typescript
 interface NgxSignalFormsConfig {
@@ -342,917 +107,261 @@ interface NgxSignalFormsConfig {
 type ErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit' | 'manual';
 ```
 
-#### Configuration providers
-
-**When to use:**
-
-- `provideNgxSignalFormsConfig` - Override app-wide defaults (in `app.config.ts`)
-- `provideNgxSignalFormsConfigForComponent` - Override for a specific component subtree
-
-**App-level (override global defaults):**
+**Providers:**
 
 ```typescript
-import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
+// App-level (in app.config.ts)
+provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-submit' });
 
-export const appConfig: ApplicationConfig = {
-  providers: [
-    // Only include options you want to CHANGE from defaults
-    provideNgxSignalFormsConfig({
-      defaultFormFieldAppearance: 'outline', // All fields get outlined style
-      requiredMarker: ' (required)', // Change marker text
-    }),
-  ],
-};
+// Component-level (in @Component.providers)
+provideNgxSignalFormsConfigForComponent({
+  defaultFormFieldAppearance: 'outline',
+});
 ```
 
-**Component-level (scoped overrides):**
+### Error Messages
 
 ```typescript
-import { provideNgxSignalFormsConfigForComponent } from '@ngx-signal-forms/toolkit';
-
-@Component({
-  providers: [
-    provideNgxSignalFormsConfigForComponent({
-      defaultFormFieldAppearance: 'outline',
-      showRequiredMarker: false,
-      requiredMarker: '(required)',
-    }),
-  ],
-})
-export class ExampleComponent {}
+provideErrorMessages({
+  required: 'This field is required',
+  email: 'Invalid email format',
+  minLength: (params) => `Minimum ${params.minLength} characters`,
+});
 ```
 
-**When to use which:**
+**Priority:** Validator `error.message` → Registry → Default toolkit message
 
-- **Neither** - Use defaults (most common case)
-- `provideNgxSignalFormsConfig` - Override app-wide defaults in `app.config.ts`
-- `provideNgxSignalFormsConfigForComponent` - Override for a specific component/page
+### Utilities
 
-**`defaultFormFieldAppearance` note:**
+| Function                                    | Description                                           |
+| ------------------------------------------- | ----------------------------------------------------- |
+| `focusFirstInvalid(form)`                   | Focus first invalid field via `errorSummary()`        |
+| `canSubmit(form)`                           | `Signal<boolean>` — valid and not submitting          |
+| `isSubmitting(form)`                        | `Signal<boolean>` — currently submitting              |
+| `hasSubmitted(form)`                        | `Signal<boolean>` — completed at least one submission |
+| `showErrors(field, strategy, status)`       | `Signal<boolean>` — should show errors                |
+| `shouldShowErrors(state, strategy, status)` | Non-reactive check                                    |
+| `injectFormContext()`                       | Get `NgxSignalFormDirective` context or `undefined`   |
+| `injectFormConfig()`                        | Get normalized config with defaults                   |
+| `unwrapValue(signalOrValue)`                | Extract value from `Signal` or static                 |
 
-When set to `'outline'`, all `ngx-signal-form-field-wrapper` instances use outlined styling unless explicitly overridden with the `outline` attribute on individual fields.
+---
 
-**Priority:** Explicit `outline` attribute > `defaultFormFieldAppearance` config > implicit default
+## Assistive (`@ngx-signal-forms/toolkit/assistive`)
 
-### CSS Status Classes (Optional)
-
-The toolkit uses **ARIA attributes** (`aria-invalid`, `aria-describedby`) for accessibility and styling—no CSS class configuration needed.
-
-If your CSS framework requires validation classes like `ng-invalid` or `is-invalid`, use Angular's built-in configuration:
+### Imports
 
 ```typescript
 import {
-  provideSignalFormsConfig,
-  NG_STATUS_CLASSES,
-} from '@angular/forms/signals';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideSignalFormsConfig({
-      classes: NG_STATUS_CLASSES, // Adds ng-valid, ng-invalid, ng-touched, etc.
-    }),
-  ],
-};
+  NgxSignalFormErrorComponent,
+  NgxFormFieldHintComponent,
+  NgxFormFieldCharacterCountComponent,
+  NgxFormFieldAssistiveRowComponent,
+  warningError,
+  isWarningError,
+  isBlockingError,
+} from '@ngx-signal-forms/toolkit/assistive';
 ```
 
-**Note:** Angular's `NG_STATUS_CLASSES` applies classes **immediately** when validation state changes. Both error messages and CSS classes appear based on the same field state signals.
+### NgxSignalFormErrorComponent
 
-For more details, see the [Angular Signal Forms documentation](https://angular.dev/api/forms/signals/provideSignalFormsConfig).
+Displays validation errors with ARIA roles.
 
-### Error Message Configuration
+**Inputs:**
 
-The toolkit provides a flexible error message registry for customizing validation error messages. **Zero-config by default** - Standard Schema libraries (Zod, Valibot, ArkType) already include excellent error messages in the `error.message` property.
-
-#### Philosophy
-
-```typescript
-// ✅ RECOMMENDED: Zero-config approach
-// Use Standard Schema libraries - they provide great error messages!
-import { z } from 'zod';
-
-const userSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-});
-
-// The toolkit automatically uses error.message from Zod ✨
-// No additional configuration needed!
-```
-
-#### When to Use Custom Error Messages
-
-Only configure error messages when you need to:
-
-- **Override default toolkit messages** for built-in Angular validators (required, email, minLength, etc.)
-- **Centralize messages** across multiple forms for consistency (DRY principle)
-- **Support internationalization (i18n)** with dynamic locale switching
-- **Match specific design system** or brand voice requirements
-
-**When NOT to use custom error messages:**
-
-- ✅ **Using Zod, Valibot, or ArkType** - These libraries provide excellent error messages out of the box
-- ✅ **Simple forms** - Toolkit's default messages are production-ready
-- ✅ **Single-language apps** - Default messages are clear and professional
-
-**Real-world use cases:**
-
-1. **Multi-language application** - Use JSON files or ngx-translate for locale-specific messages
-2. **Design system requirements** - Match brand voice (e.g., "Oops! Email required" vs. "This field is required")
-3. **Centralized validation** - Reuse same messages across 50+ forms without repeating validator messages
-4. **Custom validators** - Provide friendly messages for domain-specific validation (e.g., `username_taken`, `password_weak`)
-
-#### 3-Tier Message Priority
-
-The toolkit resolves error messages in this order:
-
-1. **Validator message** (`error.message` property) - **Always checked first!**
-2. **Registry override** (from `provideErrorMessages()`) - Fallback if no validator message
-3. **Default toolkit message** - Final fallback for built-in Angular validators
-
-#### Basic Usage (Centralized Overrides)
-
-```typescript
-import { provideErrorMessages } from '@ngx-signal-forms/toolkit';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideErrorMessages({
-      // Override built-in Angular validators
-      required: 'This field is required',
-      email: 'Please enter a valid email address',
-
-      // Factory functions for dynamic messages
-      minLength: (params: Record<string, unknown>) =>
-        `Minimum ${(params as { minLength: number }).minLength} characters required`,
-      maxLength: (params: Record<string, unknown>) =>
-        `Maximum ${(params as { maxLength: number }).maxLength} characters allowed`,
-
-      // Custom validators
-      phone_invalid: 'Please enter a valid phone number',
-      password_weak: 'Password must contain uppercase, lowercase, and numbers',
-    }),
-  ],
-};
-```
-
-#### i18n Integration Patterns
-
-**Pattern 1: JSON Files with Locale Injection**
-
-```typescript
-// app.config.ts
-import { LOCALE_ID } from '@angular/core';
-import { provideErrorMessages } from '@ngx-signal-forms/toolkit';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    { provide: LOCALE_ID, useValue: 'en-US' },
-    provideErrorMessages(() => {
-      const locale = inject(LOCALE_ID);
-      // Dynamically import locale-specific messages
-      const messages = {
-        'en-US': {
-          required: 'This field is required',
-          email: 'Please enter a valid email',
-        },
-        'ja-JP': {
-          required: 'このフィールドは必須です',
-          email: '有効なメールアドレスを入力してください',
-        },
-      };
-      return messages[locale as keyof typeof messages] || messages['en-US'];
-    }),
-  ],
-};
-```
-
-**Pattern 2: ngx-translate Integration**
-
-```typescript
-import { TranslateService } from '@ngx-translate/core';
-import { provideErrorMessages } from '@ngx-signal-forms/toolkit';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideErrorMessages(() => {
-      const translate = inject(TranslateService);
-      return {
-        required: translate.instant('ERRORS.REQUIRED'),
-        email: translate.instant('ERRORS.EMAIL'),
-        minLength: (params: Record<string, unknown>) =>
-          translate.instant('ERRORS.MIN_LENGTH', {
-            minLength: (params as { minLength: number }).minLength,
-          }),
-      };
-    }),
-  ],
-};
-```
-
-**Pattern 3: @angular/localize**
-
-```typescript
-import { provideErrorMessages } from '@ngx-signal-forms/toolkit';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideErrorMessages({
-      required: $localize`:@@error.required:This field is required`,
-      email: $localize`:@@error.email:Please enter a valid email`,
-      minLength: (params: Record<string, unknown>) => {
-        const min = (params as { minLength: number }).minLength;
-        return $localize`:@@error.minLength:Minimum ${min} characters required`;
-      },
-    }),
-  ],
-};
-```
-
-**Pattern 4: TypeScript Message Files**
-
-```typescript
-// src/app/i18n/error-messages.ts
-import type { ErrorMessageRegistry } from '@ngx-signal-forms/toolkit';
-
-export const errorMessagesEn: ErrorMessageRegistry = {
-  required: 'This field is required',
-  email: 'Please enter a valid email',
-  minLength: (params: Record<string, unknown>) =>
-    `Minimum ${(params as { minLength: number }).minLength} characters`,
-};
-
-export const errorMessagesJa: ErrorMessageRegistry = {
-  required: 'このフィールドは必須です',
-  email: '有効なメールアドレスを入力してください',
-  minLength: (params: Record<string, unknown>) =>
-    `最小${(params as { minLength: number }).minLength}文字`,
-};
-
-// app.config.ts
-import { LOCALE_ID } from '@angular/core';
-import { provideErrorMessages } from '@ngx-signal-forms/toolkit';
-import { errorMessagesEn, errorMessagesJa } from './i18n/error-messages';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    { provide: LOCALE_ID, useValue: 'en-US' },
-    provideErrorMessages(() => {
-      const locale = inject(LOCALE_ID);
-      const messages = { 'en-US': errorMessagesEn, 'ja-JP': errorMessagesJa };
-      return messages[locale as keyof typeof messages] || errorMessagesEn;
-    }),
-  ],
-};
-```
-
-#### Built-in Validator Fallbacks
-
-The toolkit provides default fallback messages for Angular Signal Forms built-in validators:
-
-| Validator   | Default Message                           |
-| ----------- | ----------------------------------------- |
-| `required`  | "This field is required"                  |
-| `email`     | "Please enter a valid email address"      |
-| `minLength` | "Minimum {minLength} characters required" |
-| `maxLength` | "Maximum {maxLength} characters allowed"  |
-| `min`       | "Minimum value is {min}"                  |
-| `max`       | "Maximum value is {max}"                  |
-| `pattern`   | "Invalid format"                          |
-
-**Custom validators** fall back to error kind with underscores replaced by spaces (e.g., `phone_invalid` → "Phone invalid").
-
-#### Migration from Manual Error Mapping
-
-**Before (Manual mapping in template):**
-
-```typescript
-@Component({
-  template: `
-    @if (form.email().invalid() && form.email().touched()) {
-      @for (error of form.email().errors(); track error.kind) {
-        <div class="error">
-          @switch (error.kind) {
-            @case ('required') { Email is required }
-            @case ('email') { Invalid email format }
-            @case ('minLength') { Min {{ error.minLength }} characters }
-          }
-        </div>
-      }
-    }
-  `
-})
-```
-
-**After (Zero-config with Zod):**
-
-```typescript
-import { z } from 'zod';
-import { zodToSignal } from '@ngx-signal-forms/zod';
-
-@Component({
-  template: `
-    <ngx-signal-form-error [formField]="form.email" fieldName="email" />
-    <!-- Error messages come from Zod automatically! -->
-  `,
-})
-export class MyComponent {
-  protected readonly form = zodToSignal(
-    signal({ email: '' }),
-    z.object({
-      email: z
-        .string()
-        .min(1, 'Email is required')
-        .email('Invalid email format'),
-    }),
-  );
-}
-```
-
-**After (Centralized registry):**
-
-```typescript
-// app.config.ts
-provideErrorMessages({
-  required: 'Email is required',
-  email: 'Invalid email format',
-  minLength: (params) => `Min ${(params as any).minLength} characters`,
-});
-
-// component.ts
-@Component({
-  template: `
-    <ngx-signal-form-error [formField]="form.email" fieldName="email" />
-    <!-- Uses centralized messages -->
-  `
-})
-```
-
-#### API Reference
-
-```typescript
-/**
- * Error message registry interface.
- * Supports string literals and factory functions.
- */
-interface ErrorMessageRegistry {
-  [errorKind: string]:
-    | string
-    | ((params: Record<string, unknown>) => string)
-    | undefined;
-}
-
-/**
- * Injection token for error message registry.
- * Default: Empty object (zero-config)
- */
-const NGX_ERROR_MESSAGES: InjectionToken<ErrorMessageRegistry>;
-
-/**
- * Provide custom error messages.
- *
- * @param configOrFactory - Static config object or factory function
- * @returns Provider for error message registry
- */
-function provideErrorMessages(
-  configOrFactory: ErrorMessageRegistry | (() => ErrorMessageRegistry),
-): Provider;
-```
-
----
-
-## Form Field Components
-
-The toolkit includes a complete form field component system for enhanced layouts and accessibility:
-
-### Quick Overview
-
-```typescript
-import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-```
-
-**Key Features:**
-
-- **NgxFormField** - Bundle for wrapper, outlined layout, hints, and character count
-- **NgxSignalFormFieldset** - Group related fields with aggregated error/warning display
-
-### Example Usage
-
-```html
-<ngx-signal-form-field-wrapper [formField]="form.bio" outline>
-  <label for="bio">Bio</label>
-  <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-hint
-    >Tell us about yourself</ngx-signal-form-field-hint
-  >
-  <ngx-signal-form-field-character-count
-    [formField]="form.bio"
-    [maxLength]="500"
-  />
-</ngx-signal-form-field-wrapper>
-```
-
-### Validator Attributes & HTML5 Truncation
-
-⚠️ **Important:** Some Signal Forms validators add HTML attributes that can affect input behavior, particularly with text truncation.
-
-#### The Silent Truncation Issue with `maxLength()`
-
-When you use `maxLength()` validator, it adds an HTML `maxlength` attribute:
-
-```typescript
-maxLength(path.bio, 500);
-// Generates: <textarea maxlength="500"></textarea>
-```
-
-**Problem:** HTML5 truncates input silently when users paste:
-
-1. User tries to paste 1000 character text
-2. Browser silently truncates at 500 chars
-3. **No error message shown** (form is valid!)
-4. User thinks their full text was accepted
-5. Surprise: Their data is incomplete!
-
-#### Solutions
-
-**Option 1: Use Character Count Component (Recommended)** ✅
-
-```typescript
-// Keep the validator for validation logic
-maxLength(path.bio, 500);
-```
-
-```html
-<!-- Add character count to show user the limit -->
-<ngx-signal-form-field-wrapper [formField]="form.bio">
-  <label for="bio">Bio</label>
-  <textarea id="bio" [formField]="form.bio"></textarea>
-
-  <!-- User sees remaining count, preventing paste surprises -->
-  <ngx-signal-form-field-character-count
-    [formField]="form.bio"
-    [maxLength]="500"
-  />
-</ngx-signal-form-field-wrapper>
-```
-
-**Benefits:**
-
-- User sees remaining character count
-- Progressive color change (ok → warning → danger)
-- Paste behavior is visible and expected
-- Accessible with ARIA attributes
-
-**Option 2: Skip `maxLength()`, Validate in Code Only**
-
-```typescript
-// Don't use maxLength validator - no HTML attribute
-validate(path.bio, (ctx) => {
-  if (ctx.value() && ctx.value().length > 500) {
-    return customError({
-      kind: 'too_long',
-      message: 'Maximum 500 characters allowed',
-    });
-  }
-  return null;
-});
-```
-
-```html
-<!-- No maxlength attribute = no silent truncation -->
-<textarea id="bio" [formField]="form.bio"></textarea>
-```
-
-**Benefits:**
-
-- No silent truncation
-- Clear error message when limit exceeded
-- More control over validation logic
-
-**Option 3: Skip Validator Entirely**
-
-```html
-<!-- No validation at all - user can enter any amount -->
-<textarea id="bio" [formField]="form.bio"></textarea>
-```
-
-⚠️ **Not recommended** - Better to use Option 1 or 2
-
-#### Other Validators with HTML Attributes
-
-| Validator     | HTML Attribute    | Effect                        | Risk                          |
-| ------------- | ----------------- | ----------------------------- | ----------------------------- |
-| `maxLength()` | `maxlength="n"`   | Text truncates at n chars     | ⚠️ Silent truncation on paste |
-| `min()`       | `min="n"`         | Number input won't accept < n | ✅ Clear validation           |
-| `max()`       | `max="n"`         | Number input won't accept > n | ✅ Clear validation           |
-| `pattern()`   | `pattern="regex"` | HTML5 validation only         | ✅ Clear validation           |
-
-**Recommendation:** Use the character count component with `maxLength()` for the best UX.
-
-### Complete Documentation
-
-For detailed API reference, CSS custom properties, browser support, migration guides, and complete examples:
-
-**[📖 Form Field Components Documentation](./form-field/README.md)**
-
----
-
-### Directives
-
-#### NgxSignalFormDirective
-
-Provides form context to child components via dependency injection.
-
-**Automatic Features:**
-
-- Adds `novalidate` attribute to prevent browser validation UI
-- Tracks submission lifecycle (`submittedStatus` signal) using reactive effects
-- Provides form context to child directives/components
-- Manages error display strategy
-
-```html
-<form
-  [ngxSignalForm]="myForm"
-  [errorStrategy]="'on-touch'"
-  (submit)="handleSubmit($event)"
->
-  <!-- form fields -->
-  <button type="submit">Submit</button>
-</form>
-```
-
-**Template Reference:**
-
-```html
-<form [ngxSignalForm]="myForm" #formDir="ngxSignalForm">
-  <!-- Access directive instance (SubmittedStatus derived from submitting() transitions) -->
-  <div>Status: {{ formDir.submittedStatus() }}</div>
-</form>
-```
-
-```typescript
-/**
- * Form submission using native DOM submit event.
- * Signal Forms do NOT use ngSubmit - that's for Reactive/Template forms.
- */
-protected async handleSubmit(event: Event): Promise<void> {
-  event.preventDefault();
-  await submit(this.myForm, async () => {
-    // Handle submission
-    console.log('Form data:', this.model());
-    return null; // No server errors
-  });
-}
-```
-
-> **Note:** Angular Signal Forms use native DOM `submit` event. Always include `event.preventDefault()` to prevent page reload.
-
-### Form Reset Behavior
-
-**⚠️ Important:** Angular Signal Forms' `reset()` method resets **control states only**, not data values. This is a common source of confusion.
-
-**What `reset()` actually does:**
-
-- Sets `touched()` → `false`
-- Sets `dirty()` → `false`
-- Derived `submittedStatus` → `'unsubmitted'` (because touched/submitting become false)
-- **Does NOT change data values** ❌
-
-**To fully reset a form, you must reset BOTH:**
-
-```typescript
-// ❌ Incomplete - Only resets form states
-this.userForm().reset();
-// Form says it's "clean" but still shows old data!
-
-// ✅ Complete - Reset states AND data
-this.userForm().reset();
-this.#model.set({ email: '', password: '' });
-// Now form is truly reset
-```
-
-**Example with submission:**
-
-```typescript
-protected async handleSubmit(): Promise<void> {
-  await submit(this.userForm, async (formData) => {
-    try {
-      await this.apiService.saveUser(formData().value());
-
-      // ✅ Reset BOTH form states and data after successful submission
-      formData().reset();
-      this.#model.set(this.createInitialModel());
-
-      return null; // Success
-    } catch (error) {
-      return [{ kind: 'save_error', message: 'Failed to save' }];
-    }
-  });
-}
-```
-
-**Why Signal Forms work this way:**
-
-Signal Forms separate data (your signal) from form state (control states). This design:
-
-- ✅ Gives you control over when data changes
-- ✅ Prevents accidental data loss
-- ✅ Allows keeping data while resetting form state if needed
-- ⚠️ Requires explicit data reset after form reset
-
-#### NgxSignalFormAutoAriaDirective
-
-Automatically applied to `input[formField]`, `textarea[formField]`, `select[formField]` elements.
-
-**Key Features:**
-
-- **Smart Validation State**: `aria-invalid` respects your `ErrorDisplayStrategy` (e.g., only shows invalid after touch if strategy is `'on-touch'`).
-- **Additive Description**: Preserves any existing `aria-describedby` values (e.g. static help text) and appends error IDs when needed.
-- **Reference Linking**: Links inputs to error messages via `aria-describedby` for screen readers.
-
-> **Important:** This directive must be imported to activate. While it has an automatic selector, Angular standalone components require explicit imports. Use `NgxSignalFormToolkit` bundle or import `NgxSignalFormAutoAriaDirective` individually.
-
-```typescript
-// With bundle (recommended)
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-@Component({ imports: [FormField, NgxSignalFormToolkit] })
-
-// Or individual import
-import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit';
-@Component({ imports: [FormField, NgxSignalFormAutoAriaDirective] })
-```
-
-### Components
-
-#### NgxSignalFormErrorComponent
+- `formField` (required) — The field tree
+- `fieldName` (required) — Unique identifier for ARIA linking
+- `strategy` — Override error display strategy
 
 ```html
 <ngx-signal-form-error [formField]="form.email" fieldName="email" />
 ```
 
-**Note:** When used inside a form with `NgxSignalFormDirective`, the `submittedStatus` signal is automatically injected. The toolkit derives this from Angular's native `submitting()` signal transitions.
+- Errors: `role="alert"` (assertive)
+- Warnings: `role="status"` (polite)
 
-#### Form Field Wrapper
+### NgxFormFieldHintComponent
 
-```html
-<ngx-signal-form-field-wrapper
-  [formField]="form.email"
-  fieldName="email"
-  [strategy]="'on-touch'"
->
-  <label>Email</label>
-  <input [formField]="form.email" />
-</ngx-signal-form-field-wrapper>
-```
-
-#### NgxFloatingLabelDirective
-
-Transforms the form field into an outlined layout where the label appears inside the input container, matching Material Design outlined input patterns.
+Helper text below inputs.
 
 ```html
-<ngx-signal-form-field-wrapper [formField]="form.email" outline>
-  <label for="email">Email Address</label>
-  <input
-    id="email"
-    type="email"
-    [formField]="form.email"
-    required
-    placeholder="you@example.com"
-  />
-</ngx-signal-form-field-wrapper>
+<ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
 ```
 
-**Required marker configuration:**
+### NgxFormFieldCharacterCountComponent
 
-- `showRequiredMarker` and `requiredMarker` are inputs on `ngx-signal-form-field-wrapper`
-- Defaults come from `provideNgxSignalFormsConfig`
-
-**Browser Support:** Chrome 105+, Firefox 121+, Safari 15.4+, Edge 105+ (95%+ coverage)
-
-**For complete API, CSS custom properties, and examples, see [Form Field Documentation](./form-field/README.md#ngxfloatinglabeldirective)**
-
-#### NgxFormFieldHintComponent
-
-Displays helper text for form fields.
-
-```html
-<ngx-signal-form-field-wrapper [formField]="form.phone" outline>
-  <label for="phone">Phone Number</label>
-  <input id="phone" [formField]="form.phone" />
-  <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
-</ngx-signal-form-field-wrapper>
-```
-
-**For complete API and positioning options, see [Form Field Documentation](./form-field/README.md#ngxformfieldhintcomponent)**
-
-#### NgxFormFieldCharacterCountComponent
-
-Displays character count with progressive color states and **automatic limit detection**.
-
-**Auto-Detection (Recommended):**
-
-```typescript
-// In form schema - define validation rule
-maxLength(path.bio, 500);
-```
-
-```html
-<!-- Character count automatically detects limit from validation -->
-<ngx-signal-form-field-wrapper [formField]="form.bio" outline>
-  <label for="bio">Bio</label>
-  <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-character-count [formField]="form.bio" />
-</ngx-signal-form-field-wrapper>
-```
-
-**Enhancement over Angular Signal Forms:**
-
-- ✅ Angular Signal Forms: Validators add `maxlength` HTML attribute that silently truncates text on paste
-- ✅ Toolkit: Auto-detects limit from validation rules (DRY principle)
-- ✅ Visual feedback prevents paste truncation surprises
-- ✅ Progressive color states guide users (ok → warning → danger)
-- ✅ Manual override available when display limit differs from validation
-
-**Manual Override:**
-
-```html
-<!-- Display limit is 300, even if validation allows 500 -->
-<ngx-signal-form-field-character-count
-  [formField]="form.bio"
-  [maxLength]="300"
-/>
-```
-
-**Color States:**
-
-- **ok** (0-80%): Gray
-- **warning** (80-95%): Amber
-- **danger** (95-100%): Red
-- **exceeded** (>100%): Dark red, bold
+Character counter with progressive color states.
 
 **Inputs:**
 
-- `field` (required) - The Signal Forms field
-- `maxLength` (optional) - Maximum character limit (auto-detected if not provided)
-- `showLimitColors` (boolean, default: `true`) - Enable color progression
-- `colorThresholds` (object, default: `{ warning: 80, danger: 95 }`) - Custom thresholds
-
-**For complete API, CSS custom properties, and examples, see [Form Field Documentation](./form-field/README.md#ngxformfieldcharactercountcomponent)**
-
-#### NgxSignalFormFieldset
-
-Groups related form fields with **aggregated error/warning display**. Similar to HTML `<fieldset>`, but with validation message aggregation and deduplication.
-
-**Basic Usage - Group with Aggregated Errors:**
+- `formField` (required)
+- `maxLength` — Auto-detected from validators if omitted
+- `showLimitColors` — Enable color progression (default: `true`)
+- `colorThresholds` — `{ warning: 80, danger: 95 }`
 
 ```html
+<ngx-signal-form-field-character-count [formField]="form.bio" />
+```
+
+### Warning Utilities
+
+```typescript
+// Create a non-blocking warning
+warningError({
+  kind: 'weak_password',
+  message: 'Consider a stronger password',
+});
+
+// Check error type
+isWarningError(error); // true if kind starts with 'warn:'
+isBlockingError(error); // true if not a warning
+```
+
+### Theming
+
+```css
+:root {
+  --ngx-signal-form-feedback-font-size: 0.875rem;
+  --ngx-signal-form-feedback-line-height: 1.25;
+  --ngx-signal-form-feedback-margin-top: 0.5rem;
+  --ngx-signal-form-error-color: #dc2626;
+  --ngx-signal-form-warning-color: #f59e0b;
+}
+```
+
+---
+
+## Form Field (`@ngx-signal-forms/toolkit/form-field`)
+
+### Imports
+
+```typescript
+// Bundle import (recommended)
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
+
+// Individual imports
+import {
+  NgxSignalFormFieldWrapperComponent,
+  NgxSignalFormFieldset,
+  NgxFloatingLabelDirective,
+  NgxFormFieldHintComponent,
+  NgxFormFieldCharacterCountComponent,
+} from '@ngx-signal-forms/toolkit/form-field';
+```
+
+### NgxSignalFormFieldWrapperComponent
+
+Unified wrapper with automatic error/warning/hint display.
+
+**Inputs:**
+
+- `formField` (required)
+- `fieldName` — Auto-derived from child input `id` if omitted
+- `strategy` — Override error strategy
+- `showRequiredMarker` / `requiredMarker` — Required field indicator
+
+```html
+<ngx-signal-form-field-wrapper [formField]="form.email">
+  <label for="email">Email</label>
+  <input id="email" [formField]="form.email" />
+</ngx-signal-form-field-wrapper>
+```
+
+### NgxFloatingLabelDirective (`outline`)
+
+Attribute directive for Material-like outlined inputs.
+
+```html
+<ngx-signal-form-field-wrapper [formField]="form.email" outline>
+  <label for="email">Email</label>
+  <input id="email" [formField]="form.email" placeholder=" " />
+</ngx-signal-form-field-wrapper>
+```
+
+**Note:** Add `placeholder=" "` for floating label animation.
+
+### NgxSignalFormFieldset
+
+Groups related fields with aggregated validation.
+
+**Inputs:**
+
+- `fieldsetField` (required) — Field tree to aggregate
+- `fields` — Explicit field list (overrides tree traversal)
+- `fieldsetId` — For ARIA linking
+- `strategy` — Error display strategy
+- `showErrors` — Enable error display (default: `true`)
+- `includeNestedErrors` — Include child field errors (default: `false`)
+
+```html
+<!-- Group-only errors (default) -->
 <ngx-signal-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
-  <legend class="fieldset-legend">Shipping Address</legend>
-
+  <legend>Address</legend>
   <ngx-signal-form-field-wrapper [formField]="form.address.street" outline>
-    <label for="street">Street</label>
-    <input id="street" [formField]="form.address.street" />
+    ...
   </ngx-signal-form-field-wrapper>
-
-  <ngx-signal-form-field-wrapper [formField]="form.address.city" outline>
-    <label for="city">City</label>
-    <input id="city" [formField]="form.address.city" />
-  </ngx-signal-form-field-wrapper>
-
-  <!-- Aggregated errors appear at bottom of fieldset -->
-</ngx-signal-form-fieldset>
-```
-
-**Attribute Selector Usage (recommended for semantic fieldsets):**
-
-```html
-<fieldset
-  ngxSignalFormFieldset
-  [fieldsetField]="form.address"
-  fieldsetId="address"
->
-  <legend class="fieldset-legend">Shipping Address</legend>
-  <!-- Fields content -->
-</fieldset>
-```
-
-**Non-fieldset Wrapper Usage (when fieldset semantics do not apply):**
-
-```html
-<div ngxSignalFormFieldset [fieldsetField]="form.address" fieldsetId="address">
-  <!-- Fields content -->
-</div>
-```
-
-**Custom Field Collection:**
-
-```html
-<!-- Override which fields to aggregate errors from -->
-<ngx-signal-form-fieldset
-  [fieldsetField]="form"
-  [fields]="[form.password, form.confirmPassword]"
-  fieldsetId="passwords"
->
-  <!-- Fields content -->
-</ngx-signal-form-fieldset>
-```
-
-**Features:**
-
-- ✅ **Group-Only Mode** (default): Shows only group-level errors to avoid duplication
-- ✅ **Aggregated Mode**: Optionally collects errors from all nested fields via `errorSummary()`
-- ✅ **Deduplication**: Same error message shown only once even if multiple fields have it
-- ✅ **Warning Support**: Non-blocking warnings (with `warn:` prefix) shown when no errors exist
-- ✅ **WCAG 2.2 Compliant**: Errors use `role="alert"`, warnings use `role="status"`
-- ✅ **Strategy Aware**: Respects `ErrorDisplayStrategy` from form context or input
-
-**Error Display Modes:**
-
-- **Group-Only** (`includeNestedErrors="false"`, default): Shows ONLY group-level errors via `errors()`. Use when nested fields display their own errors via `NgxSignalFormField`.
-- **Aggregated** (`includeNestedErrors`): Shows ALL errors via `errorSummary()`. Use when nested fields do NOT display their own errors.
-
-```html
-<!-- Group-Only Mode (default) - nested fields show their own errors -->
-<ngx-signal-form-fieldset [fieldsetField]="form.passwords">
-  <ngx-signal-form-field-wrapper [formField]="form.passwords.password" outline
-    >...</ngx-signal-form-field-wrapper
-  >
-  <ngx-signal-form-field-wrapper [formField]="form.passwords.confirm" outline
-    >...</ngx-signal-form-field-wrapper
-  >
-  <!-- Fieldset shows ONLY cross-field error: "Passwords must match" -->
 </ngx-signal-form-fieldset>
 
-<!-- Aggregated Mode - fieldset shows all errors for plain inputs -->
+<!-- Include all nested errors -->
 <fieldset
   ngxSignalFormFieldset
   [fieldsetField]="form.address"
   includeNestedErrors
 >
-  <input [formField]="form.address.street" />
-  <input [formField]="form.address.city" />
-  <!-- Fieldset shows ALL errors: "Street required", "City required" -->
+  ...
 </fieldset>
 ```
 
-**Inputs:**
+### Theming
 
-- `fieldsetField` (required) - The Signal Forms field tree to aggregate errors from
-- `fields` (optional) - Explicit list of fields for custom groupings
-- `fieldsetId` (optional) - Unique identifier for generating error/warning IDs
-- `strategy` (optional) - Error display strategy (`'immediate'` | `'on-touch'` | `'on-submit'` | `'inherit'`)
-- `showErrors` (boolean, default: `true`) - Whether to display aggregated error messages
-- `includeNestedErrors` (boolean, default: `false`) - Include nested field errors (`true`) or only group-level errors (`false`)
-
-**Host CSS Classes:**
-
-- `.ngx-signal-form-fieldset` - Always applied
-- `.ngx-signal-form-fieldset--invalid` - Applied when showing errors
-- `.ngx-signal-form-fieldset--warning` - Applied when showing warnings (no errors)
-
-**CSS Custom Properties:**
-
-```css
-ngx-signal-form-fieldset {
-  /* Layout */
-  --ngx-signal-form-fieldset-gap: 1rem; /* Gap between fields */
-  --ngx-signal-form-fieldset-padding: 1rem; /* Content padding */
-
-  /* Border styling for invalid state */
-  --ngx-signal-form-fieldset-invalid-border: 2px solid #dc2626;
-  --ngx-signal-form-fieldset-warning-border: 2px solid #f59e0b;
-
-  /* Background */
-  --ngx-signal-form-fieldset-bg: transparent;
-  --ngx-signal-form-fieldset-invalid-bg: rgba(220, 38, 38, 0.05);
-  --ngx-signal-form-fieldset-warning-bg: rgba(245, 158, 11, 0.05);
-}
-```
-
-**Why use fieldsets over individual field errors?**
-
-- Group validation (e.g., "password must match confirm password") applies to multiple fields
-- Reduces visual noise when many fields have the same validation rule
-- Better UX for complex forms with related field groups (addresses, passwords, etc.)
-
-**For complete API, CSS custom properties, and examples, see [Form Field Documentation](./form-field/README.md#ngxsignalformfieldsetcomponent)**
+See [Form Field Theming Guide](./form-field/THEMING.md) for 20+ CSS custom properties.
 
 ---
 
-## Headless Primitives
+## Headless (`@ngx-signal-forms/toolkit/headless`)
 
-For complete styling control, the toolkit provides **headless (renderless) directives** that expose signals without any UI. Build custom form components that match your exact design system.
+Renderless primitives for custom UI. All expose signals without markup.
+
+### Imports
 
 ```typescript
+// Bundle import
+import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
+
+// Individual imports
 import {
   NgxHeadlessErrorStateDirective,
   NgxHeadlessCharacterCountDirective,
   NgxHeadlessFieldsetDirective,
   NgxHeadlessFieldNameDirective,
-  NgxHeadlessToolkit, // Bundle import
+  createErrorState,
+  createCharacterCount,
+  readFieldFlag,
+  readErrors,
+  dedupeValidationErrors,
+  createUniqueId,
 } from '@ngx-signal-forms/toolkit/headless';
 ```
 
-### Quick Example
+### NgxHeadlessErrorStateDirective
+
+Selector: `[ngxSignalFormHeadlessErrorState]`
+Export: `#errorState="errorState"`
+
+**Inputs:**
+
+- `field` (required)
+- `fieldName` (required)
+- `strategy`
+
+**Signals:**
+
+- `showErrors()` — Should display errors now
+- `hasErrors()` — Has validation errors
+- `hasWarnings()` — Has warnings (no blocking errors)
+- `resolvedErrors()` — Errors with messages resolved
+- `resolvedWarnings()` — Warnings with messages resolved
+- `errorId` / `warningId` — Generated IDs for ARIA
 
 ```html
 <div
@@ -1262,20 +371,50 @@ import {
   fieldName="email"
 >
   <input [formField]="form.email" />
-
   @if (errorState.showErrors() && errorState.hasErrors()) {
-  <div class="my-error-style">
-    @for (error of errorState.resolvedErrors(); track error.kind) {
-    <span>{{ error.message }}</span>
-    }
-  </div>
+  <div class="my-error">{{ errorState.resolvedErrors()[0].message }}</div>
   }
 </div>
 ```
 
-### Use as Host Directives
+### NgxHeadlessCharacterCountDirective
 
-All headless directives work with Angular's Directive Composition API:
+Selector: `[ngxSignalFormHeadlessCharacterCount]`
+Export: `#charCount="charCount"`
+
+**Inputs:**
+
+- `field` (required)
+- `maxLength` — Auto-detected if omitted
+
+**Signals:**
+
+- `currentLength()` — Current character count
+- `maxLength()` — Limit (from validator or input)
+- `remaining()` — Characters left
+- `percentage()` — Usage percentage (0-100+)
+- `limitState()` — `'ok' | 'warning' | 'danger' | 'exceeded'`
+
+### NgxHeadlessFieldsetDirective
+
+Selector: `[ngxSignalFormHeadlessFieldset]`
+Export: `#fieldset="fieldset"`
+
+**Inputs:**
+
+- `fieldsetField` (required)
+- `fields` — Explicit field list
+- `strategy`
+- `includeNestedErrors`
+
+**Signals:**
+
+- `isValid()` / `isInvalid()`
+- `isTouched()` / `isDirty()`
+- `aggregatedErrors()` / `aggregatedWarnings()`
+- `showErrors()`
+
+### Host Directive Pattern
 
 ```typescript
 @Component({
@@ -1292,312 +431,35 @@ export class MyFormFieldComponent {
 }
 ```
 
-### Available Primitives
-
-| Directive                            | Purpose                  | Signals Exposed                                   |
-| ------------------------------------ | ------------------------ | ------------------------------------------------- |
-| `NgxHeadlessErrorStateDirective`     | Error/warning display    | `showErrors`, `hasErrors`, `resolvedErrors`, etc. |
-| `NgxHeadlessCharacterCountDirective` | Character limit tracking | `currentLength`, `remaining`, `limitState`, etc.  |
-| `NgxHeadlessFieldsetDirective`       | Group validation         | `aggregatedErrors`, `hasErrors`, `isValid`, etc.  |
-| `NgxHeadlessFieldNameDirective`      | ID generation            | `resolvedFieldName`, `errorId`, `warningId`       |
-
 ### Utility Functions
 
 ```typescript
-import {
-  createErrorState,
-  createCharacterCount,
-  // Field state utilities
-  readFieldFlag,
-  readErrors,
-  dedupeValidationErrors,
-  createUniqueId,
-} from '@ngx-signal-forms/toolkit/headless';
+// Programmatic error state
+const state = createErrorState({ field: form.email, fieldName: 'email' });
 
-// Programmatic usage without directives
-const errorState = createErrorState({ field: form.email, fieldName: 'email' });
-const charCount = createCharacterCount({ field: form.bio, maxLength: 500 });
+// Programmatic character count
+const count = createCharacterCount({ field: form.bio, maxLength: 500 });
 
-// Field state reading (safe with null/undefined)
-const isInvalid = readFieldFlag(form.email(), 'invalid');
-const errors = readErrors(form.address()); // uses errorSummary() or errors()
-const uniqueErrors = dedupeValidationErrors(errors);
-const id = createUniqueId('field'); // 'field-1'
+// Safe field state reading
+readFieldFlag(field(), 'invalid'); // boolean
+readErrors(field()); // uses errorSummary() or errors()
+dedupeValidationErrors(errors); // remove duplicates by message
+createUniqueId('field'); // 'field-1', 'field-2', ...
 ```
-
-**[📖 Full Headless Documentation](./headless/README.md)** - Complete API reference, host directive patterns, and comparison with styled components.
 
 ---
 
-### Utilities
-
-#### Focus Management
-
-```typescript
-// Focus first invalid field after failed submission
-import { focusFirstInvalid } from '@ngx-signal-forms/toolkit';
-
-protected save(): void {
-  if (this.userForm().invalid()) {
-    focusFirstInvalid(this.userForm);
-  }
-}
-```
-
-**How it works (Angular 21.1+):**
-
-- Uses `errorSummary()` to get all validation errors (including nested fields)
-- Calls native `focusBoundControl()` on the first error's `fieldTree`
-- Custom controls must implement a `focus()` method for this to work
-
-**Why use this over direct `focusBoundControl()`:**
-
-- ✅ Single function call handles error lookup + focus
-- ✅ Returns `boolean` to indicate success/failure
-- ✅ Graceful handling when `focusBoundControl()` is unavailable
-
-#### Submission State Helpers
-
-```typescript
-// Convenience computed signals for common submission states
-import {
-  canSubmit,
-  isSubmitting,
-  hasSubmitted,
-} from '@ngx-signal-forms/toolkit';
-
-@Component({
-  template: `
-    <button type="submit" [disabled]="!canSubmit()">
-      @if (isSubmitting()) {
-        <span>Saving...</span>
-      } @else {
-        <span>Submit</span>
-      }
-    </button>
-    @if (hasSubmitted() && userForm().valid()) {
-      <div class="success">Form saved!</div>
-    }
-  `,
-})
-export class MyFormComponent {
-  protected readonly canSubmit = canSubmit(this.userForm);
-  protected readonly isSubmitting = isSubmitting(this.userForm);
-  protected readonly hasSubmitted = hasSubmitted(this.userForm);
-}
-```
-
-**Enhancement over Angular Signal Forms:**
-
-- ✅ Angular Signal Forms: Provides `valid()`, `submitting()`, `touched()` signals
-- ✅ Toolkit: Derives `submittedStatus` from native `submitting()` signal transitions
-- ✅ Toolkit: Pre-computed helper signals reduce template boilerplate by ~50%
-- ✅ Consistent naming convention across applications
-- ✅ Type-safe with automatic inference
-
-**API Reference:**
-
-```typescript
-// Check if form is valid and not submitting
-canSubmit(formTree: FieldTree<unknown>): Signal<boolean>
-
-// Check if form is currently submitting
-isSubmitting(formTree: FieldTree<unknown>): Signal<boolean>
-
-// Check if form has completed at least one submission
-// NOTE: Requires injection context (uses effect() internally)
-hasSubmitted(formTree: FieldTree<unknown>): Signal<boolean>
-```
-
-> **Note:** `hasSubmitted()` uses `effect()` internally to track state transitions. It must be called within an **injection context** (property initializer or constructor).
-
-#### Error Display Utilities
-
-```typescript
-// Compute error visibility (reactive - returns Signal<boolean>)
-computeShowErrors<T>(
-  field: ReactiveOrStatic<FieldState<T>>,
-  strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
-  submittedStatus: ReactiveOrStatic<SubmittedStatus>
-): Signal<boolean>
-
-// SubmittedStatus type from Angular Signal Forms
-type SubmittedStatus = 'unsubmitted' | 'submitting' | 'submitted';
-
-// Convenience wrapper (most common usage)
-showErrors<T>(
-  field: FieldTree<T>,
-  strategy: ErrorDisplayStrategy,
-  submittedStatus: Signal<SubmittedStatus>
-): Signal<boolean>
-
-// Combine multiple error visibility signals (OR logic)
-combineShowErrors(signals: Signal<boolean>[]): Signal<boolean>
-
-// Non-reactive check (for imperative code)
-shouldShowErrors(
-  fieldState: FieldState<unknown>,
-  strategy: ErrorDisplayStrategy,
-  submittedStatus: SubmittedStatus
-): boolean
-
-// Field name resolution
-resolveFieldName(element: HTMLElement, injector: Injector): string | null
-generateErrorId(fieldName: string): string
-generateWarningId(fieldName: string): string
-```
-
-**Usage Examples:**
-
-```typescript
-import {
-  showErrors,
-  combineShowErrors,
-  computeShowErrors,
-  shouldShowErrors,
-} from '@ngx-signal-forms/toolkit';
-
-// Simple usage - most common
-protected readonly emailShowErrors = showErrors(
-  this.userForm.email,
-  'on-touch',
-  this.submittedStatus,
-);
-
-// Check if ANY field should show errors
-protected readonly showAnyErrors = combineShowErrors([
-  showErrors(this.userForm.email, 'on-touch', this.submittedStatus),
-  showErrors(this.userForm.password, 'on-touch', this.submittedStatus),
-]);
-
-// Imperative check (non-reactive)
-if (shouldShowErrors(this.userForm.email(), 'on-touch', 'submitted')) {
-  // Field should display errors
-}
-```
-
-#### Context Injection Functions (CIFs)
-
-CIFs provide access to toolkit context in custom directives and components.
-
-```typescript
-import { injectFormContext, injectFormConfig } from '@ngx-signal-forms/toolkit';
-```
-
-**injectFormContext()**
-
-Injects the form context provided by `NgxSignalFormDirective`. Returns `undefined` if not inside a form with the directive.
-
-```typescript
-import { injectFormContext } from '@ngx-signal-forms/toolkit';
-
-@Directive({ selector: '[myCustomDirective]' })
-export class MyCustomDirective {
-  readonly #formContext = injectFormContext();
-
-  constructor() {
-    if (this.#formContext) {
-      // Access form context
-      console.log('Form:', this.#formContext.form);
-      console.log('Strategy:', this.#formContext.errorStrategy());
-      console.log('Status:', this.#formContext.submittedStatus());
-    }
-  }
-}
-```
-
-**injectFormConfig()**
-
-Injects the global toolkit configuration. Returns normalized config with defaults applied.
-
-```typescript
-import { injectFormConfig } from '@ngx-signal-forms/toolkit';
-
-@Component({
-  /* ... */
-})
-export class MyComponent {
-  readonly #config = injectFormConfig();
-
-  constructor() {
-    console.log('Auto ARIA:', this.#config.autoAria);
-    console.log('Default strategy:', this.#config.defaultErrorStrategy);
-    console.log('Debug mode:', this.#config.debug);
-  }
-}
-```
-
-**Optional injector parameter:**
-
-Both CIFs accept an optional `Injector` parameter for use outside injection context:
-
-```typescript
-// Inside injection context (normal usage)
-const context = injectFormContext();
-
-// Outside injection context (e.g., in a callback)
-const context = injectFormContext(this.injector);
-```
-
-#### Reactive Utilities
-
-**unwrapValue()**
-
-Extracts the current value from a `ReactiveOrStatic<T>` type. Useful for normalizing values that may be signals, functions, or static values.
-
-```typescript
-import { unwrapValue } from '@ngx-signal-forms/toolkit';
-import type { ReactiveOrStatic } from '@ngx-signal-forms/toolkit';
-
-function processStrategy(strategy: ReactiveOrStatic<ErrorDisplayStrategy>) {
-  // Works with signal, function, or static value
-  const currentStrategy = unwrapValue(strategy);
-  // currentStrategy is now ErrorDisplayStrategy (not Signal or function)
-}
-
-// Example usage
-const staticStrategy: ReactiveOrStatic<ErrorDisplayStrategy> = 'on-touch';
-const signalStrategy: ReactiveOrStatic<ErrorDisplayStrategy> =
-  signal('on-touch');
-const computedStrategy: ReactiveOrStatic<ErrorDisplayStrategy> = computed(
-  () => 'on-touch',
-);
-
-unwrapValue(staticStrategy); // 'on-touch'
-unwrapValue(signalStrategy); // 'on-touch'
-unwrapValue(computedStrategy); // 'on-touch'
-```
-
-## API Stability Policy
-
-The toolkit follows [Semantic Versioning 2.0.0](https://semver.org/).
-
-- **Public API**: Defined by the package entry points (`@ngx-signal-forms/toolkit`, `@ngx-signal-forms/toolkit/form-field`).
-- **Beta Releases**: Versions marked as `beta` or `rc` may introduce breaking changes without a major version bump.
-- **Internal APIs**: Symbols not exported via public entry points are considered internal and may change at any time.
-
-## Development
-
-```bash
-# Run tests
-pnpm nx test toolkit
-
-# Build library
-pnpm nx build toolkit
-
-# Run tests with coverage
-pnpm nx test toolkit --coverage
-```
-
-## Documentation
-
-For complete documentation and examples, see the [main repository README](../../README.md).
-
-### Guides
-
-- **[CSS Framework Integration](../../docs/CSS_FRAMEWORK_INTEGRATION.md)** — Bootstrap 5.3, Tailwind CSS 4, Angular Material
-- **[Form Field Theming](./form-field/THEMING.md)** — CSS custom properties, dark mode
-- **[Warnings Support](../../docs/WARNINGS_SUPPORT.md)** — Non-blocking validation messages
+## Related Documentation
+
+- [Main README](https://github.com/ngx-signal-forms/ngx-signal-forms#readme) — Overview, installation, quick start
+- [Form Field Theming](./form-field/THEMING.md) — CSS custom properties guide
+- [CSS Framework Integration](../../docs/CSS_FRAMEWORK_INTEGRATION.md) — Bootstrap, Tailwind, Material setup
+- [Warnings Support](../../docs/WARNINGS_SUPPORT.md) — Non-blocking validation
+- [Assistive Components](./assistive/README.md) — Detailed assistive docs
+- [Headless Primitives](./headless/README.md) — Detailed headless docs
+- [Form Field Components](./form-field/README.md) — Detailed form field docs
+
+---
 
 ## License
 

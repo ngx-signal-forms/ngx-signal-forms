@@ -27,8 +27,15 @@
       },
       "defaultConfiguration": "production"
     },
+    "post-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["cp README.md dist/packages/toolkit/README.md"],
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "nx-release-publish": {
-      "dependsOn": ["build"],
+      "dependsOn": ["build", "post-build"],
       "options": {
         "packageRoot": "dist/{projectRoot}",
         "args": ["--json"]
