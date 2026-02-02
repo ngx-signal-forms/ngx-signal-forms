@@ -100,7 +100,7 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
 
       // Find the error entry div that contains "Last name is required" text
       const lastNameErrorEntry = debugger_
-        .locator('div.rounded-md.border')
+        .getByRole('listitem')
         .filter({ hasText: 'Last name is required' });
       await expect(lastNameErrorEntry).toBeVisible();
 
@@ -254,7 +254,7 @@ test.describe('Signal Form Debugger - Outline Form Field Page', () => {
 
     // Find the Pleegdatum error entry in the debugger
     const pleegdatumErrorEntry = debugger_
-      .locator('div.rounded-md.border')
+      .getByRole('listitem')
       .filter({ hasText: 'Pleegdatum is verplicht' });
     await expect(pleegdatumErrorEntry).toBeVisible();
 

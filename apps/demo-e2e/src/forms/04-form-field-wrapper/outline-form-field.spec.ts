@@ -107,7 +107,7 @@ test.describe('Outline Form Field - Complex Nested Form', () => {
 
     // Use specific locator for the alert
     const dateAlert = page
-      .locator('ngx-signal-form-error')
+      .getByRole('alert')
       .filter({ hasText: 'Pleegdatum is verplicht' });
     await expect(dateAlert).toBeVisible();
 
@@ -143,23 +143,20 @@ test.describe('Outline Form Field - Complex Nested Form', () => {
 
     // Verify labels are positioned inside the bordered container (not hidden)
     const firstFormField = page
-      .locator('ngx-signal-form-field-wrapper.ngx-signal-forms-outline')
+      .locator('ngx-signal-form-field-wrapper[outline]')
       .first();
     await expect(firstFormField).toBeVisible();
 
-    // The label wrapper inside the form field should be visible
-    const labelWrapper = firstFormField.locator(
-      '.ngx-signal-form-field-wrapper__label',
-    );
-    await expect(labelWrapper).toBeVisible();
-    await expect(labelWrapper.locator('label')).toBeVisible();
+    // The label inside the form field should be visible
+    const label = firstFormField.locator('label');
+    await expect(label).toBeVisible();
   });
 
   test('should expose required marker attributes on outlined fields', async ({
     page,
   }) => {
     const firstFormField = page
-      .locator('ngx-signal-form-field-wrapper.ngx-signal-forms-outline')
+      .locator('ngx-signal-form-field-wrapper[outline]')
       .first();
 
     await expect(firstFormField).toHaveAttribute('data-show-required', 'true');
