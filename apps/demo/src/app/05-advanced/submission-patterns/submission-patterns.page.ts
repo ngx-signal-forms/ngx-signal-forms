@@ -57,7 +57,7 @@ import { SubmissionPatternsComponent } from './submission-patterns.form';
 
       @if (formRef(); as form) {
         <div right>
-          <ngx-signal-form-debugger [formTree]="form.registrationForm()" />
+          <ngx-signal-form-debugger [formTree]="form.registrationForm" />
         </div>
       }
     </ngx-split-layout>

@@ -40,7 +40,7 @@ import { HeadlessFieldsetUtilitiesComponent } from './fieldset-utilities.form';
 
         @if (formRef(); as form) {
           <div right>
-            <ngx-signal-form-debugger [formTree]="form.deliveryForm()" />
+            <ngx-signal-form-debugger [formTree]="form.deliveryForm" />
           </div>
         }
       </ngx-split-layout>

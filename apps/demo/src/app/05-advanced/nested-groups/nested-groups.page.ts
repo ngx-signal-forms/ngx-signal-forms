@@ -41,7 +41,7 @@ import { NestedGroupsComponent } from './nested-groups.form';
 
       @if (formRef(); as form) {
         <div right>
-          <ngx-signal-form-debugger [formTree]="form.profileForm()" />
+          <ngx-signal-form-debugger [formTree]="form.profileForm" />
         </div>
       }
     </ngx-split-layout>

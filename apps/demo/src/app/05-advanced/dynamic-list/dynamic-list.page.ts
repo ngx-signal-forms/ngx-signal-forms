@@ -41,7 +41,7 @@ import { DynamicListComponent } from './dynamic-list.form';
 
       @if (formRef(); as form) {
         <div right>
-          <ngx-signal-form-debugger [formTree]="form.tasksForm()" />
+          <ngx-signal-form-debugger [formTree]="form.tasksForm" />
         </div>
       }
     </ngx-split-layout>

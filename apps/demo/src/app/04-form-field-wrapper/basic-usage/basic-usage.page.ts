@@ -62,9 +62,7 @@ import { BasicUsageComponent } from './basic-usage.form';
         />
         @if (formComponent) {
           <div right>
-            <ngx-signal-form-debugger
-              [formTree]="formComponent.showcaseForm()"
-            />
+            <ngx-signal-form-debugger [formTree]="formComponent.showcaseForm" />
           </div>
         }
       </ngx-split-layout>

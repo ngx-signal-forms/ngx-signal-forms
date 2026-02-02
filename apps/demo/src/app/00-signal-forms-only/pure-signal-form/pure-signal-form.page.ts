@@ -54,7 +54,7 @@ import { PureSignalFormComponent } from './pure-signal-form.form';
 
       @if (formRef(); as form) {
         <div right>
-          <ngx-signal-form-debugger [formTree]="form.signupForm()" />
+          <ngx-signal-form-debugger [formTree]="form.signupForm" />
         </div>
       }
     </ngx-split-layout>

@@ -41,7 +41,7 @@ import { AsyncValidationComponent } from './async-validation.form';
 
       @if (formRef(); as form) {
         <div right>
-          <ngx-signal-form-debugger [formTree]="form.regForm()" />
+          <ngx-signal-form-debugger [formTree]="form.regForm" />
         </div>
       }
     </ngx-split-layout>

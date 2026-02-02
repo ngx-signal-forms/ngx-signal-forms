@@ -62,7 +62,7 @@ import { CustomControlsComponent } from './custom-controls.form';
         />
         @if (formComponent) {
           <div right>
-            <ngx-signal-form-debugger [formTree]="formComponent.reviewForm()" />
+            <ngx-signal-form-debugger [formTree]="formComponent.reviewForm" />
           </div>
         }
       </ngx-split-layout>

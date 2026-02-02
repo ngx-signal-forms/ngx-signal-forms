@@ -158,7 +158,7 @@ import { AccessibilityToolkitFormComponent } from './accessibility-comparison.to
       @if (toolkitForm) {
         <div class="mt-8">
           <ngx-signal-form-debugger
-            [formTree]="toolkitForm.signupForm()"
+            [formTree]="toolkitForm.signupForm"
             title="Full Toolkit Form State"
           />
         </div>

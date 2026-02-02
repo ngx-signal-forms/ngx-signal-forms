@@ -59,7 +59,7 @@ import { ErrorMessagesComponent } from './error-messages.form';
 
       @if (formRef(); as form) {
         <div right>
-          <ngx-signal-form-debugger [formTree]="form.errorMessagesForm()" />
+          <ngx-signal-form-debugger [formTree]="form.errorMessagesForm" />
         </div>
       }
     </ngx-split-layout>

@@ -41,7 +41,7 @@ import { StepperFormComponent } from './stepper-form.form';
 
       @if (formRef(); as form) {
         <div right>
-          <ngx-signal-form-debugger [formTree]="form.wizardForm()" />
+          <ngx-signal-form-debugger [formTree]="form.wizardForm" />
         </div>
       }
     </ngx-split-layout>

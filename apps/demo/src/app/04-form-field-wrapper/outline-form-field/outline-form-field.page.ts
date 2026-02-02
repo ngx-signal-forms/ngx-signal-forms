@@ -78,9 +78,7 @@ import { OutlineFormFieldComponent } from './outline-form-field.form';
 
         @if (formComponent) {
           <div right>
-            <ngx-signal-form-debugger
-              [formTree]="formComponent.showcaseForm()"
-            />
+            <ngx-signal-form-debugger [formTree]="formComponent.showcaseForm" />
           </div>
         }
       </ngx-split-layout>

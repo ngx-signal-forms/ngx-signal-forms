@@ -63,9 +63,7 @@ import { FieldsetFormComponent } from './fieldset.form';
         />
         @if (formComponent) {
           <div right>
-            <ngx-signal-form-debugger
-              [formTree]="formComponent.fieldsetForm()"
-            />
+            <ngx-signal-form-debugger [formTree]="formComponent.fieldsetForm" />
           </div>
         }
       </ngx-split-layout>

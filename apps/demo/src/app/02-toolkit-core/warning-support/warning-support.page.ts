@@ -56,9 +56,7 @@ import { WarningsSupportFormComponent } from './warning-support.form';
         />
         @if (formComponent) {
           <div right>
-            <ngx-signal-form-debugger
-              [formTree]="formComponent.passwordForm()"
-            />
+            <ngx-signal-form-debugger [formTree]="formComponent.passwordForm" />
           </div>
         }
       </ngx-split-layout>

@@ -41,7 +41,7 @@ import { CrossFieldValidationComponent } from './cross-field-validation.form';
 
       @if (formRef(); as form) {
         <div right>
-          <ngx-signal-form-debugger [formTree]="form.bookingForm()" />
+          <ngx-signal-form-debugger [formTree]="form.bookingForm" />
         </div>
       }
     </ngx-split-layout>

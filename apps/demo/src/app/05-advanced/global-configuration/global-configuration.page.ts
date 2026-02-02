@@ -57,7 +57,7 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
 
       @if (formRef(); as form) {
         <div right>
-          <ngx-signal-form-debugger [formTree]="form.configForm()" />
+          <ngx-signal-form-debugger [formTree]="form.configForm" />
         </div>
       }
     </ngx-split-layout>
