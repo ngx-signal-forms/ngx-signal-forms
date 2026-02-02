@@ -1,9 +1,6 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
-import {
-  ExampleCardsComponent,
-  PageHeaderComponent,
-  SignalFormDebuggerComponent,
-} from '../../ui';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+import { ExampleCardsComponent, PageHeaderComponent } from '../../ui';
 import { ACCESSIBILITY_COMPARISON_CONTENT } from './accessibility-comparison.content';
 import { AccessibilityMinimalFormComponent } from './accessibility-comparison.minimal.form';
 import { AccessibilityToolkitFormComponent } from './accessibility-comparison.toolkit.form';
@@ -23,7 +20,7 @@ import { AccessibilityToolkitFormComponent } from './accessibility-comparison.to
     AccessibilityMinimalFormComponent,
     AccessibilityToolkitFormComponent,
     PageHeaderComponent,
-    SignalFormDebuggerComponent,
+    NgxSignalFormDebugger,
   ],
   template: `
     <ngx-page-header

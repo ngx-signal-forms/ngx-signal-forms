@@ -5,10 +5,10 @@ import {
   viewChild,
 } from '@angular/core';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
   ExampleCardsComponent,
   PageHeaderComponent,
-  SignalFormDebuggerComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
@@ -42,8 +42,8 @@ import { ComplexFormsComponent } from './complex-forms.form';
     ExampleCardsComponent,
     PageHeaderComponent,
     ComplexFormsComponent,
-    SignalFormDebuggerComponent,
     SplitLayoutComponent,
+    NgxSignalFormDebugger,
   ],
   template: `
     <ngx-page-header

@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
   ExampleCardsComponent,
   PageHeaderComponent,
-  SignalFormDebuggerComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import { ASYNC_VALIDATION_CONTENT } from './async-validation.content';
@@ -22,8 +22,8 @@ import { AsyncValidationComponent } from './async-validation.form';
     AsyncValidationComponent,
     ExampleCardsComponent,
     PageHeaderComponent,
-    SignalFormDebuggerComponent,
     SplitLayoutComponent,
+    NgxSignalFormDebugger,
   ],
   template: `
     <ngx-page-header

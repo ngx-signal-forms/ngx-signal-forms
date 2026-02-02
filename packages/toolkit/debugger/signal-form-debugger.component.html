@@ -360,6 +360,24 @@
           <ngx-debugger-badge variant="solid" appearance="danger">
             {{ visibleBlockingCount() }}/{{ totalBlockingCount() }}
           </ngx-debugger-badge>
+        } @else if (showValidAfterTouch()) {
+          <ngx-debugger-badge variant="solid" appearance="success">
+            <svg
+              ngxDebuggerBadgeIcon
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 16 16"
+            >
+              <circle cx="8" cy="8" r="5.5" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5.5 8l1.5 1.5 3.5-3.5"
+              />
+            </svg>
+            0/0
+          </ngx-debugger-badge>
         }
       </summary>
       <div class="ngx-debugger__section-content">

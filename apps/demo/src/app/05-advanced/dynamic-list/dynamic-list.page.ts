@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
   ExampleCardsComponent,
   PageHeaderComponent,
-  SignalFormDebuggerComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import { DYNAMIC_LIST_CONTENT } from './dynamic-list.content';
@@ -22,8 +22,8 @@ import { DynamicListComponent } from './dynamic-list.form';
     DynamicListComponent,
     ExampleCardsComponent,
     PageHeaderComponent,
-    SignalFormDebuggerComponent,
     SplitLayoutComponent,
+    NgxSignalFormDebugger,
   ],
   template: `
     <ngx-page-header

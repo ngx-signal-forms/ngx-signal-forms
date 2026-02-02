@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
   ExampleCardsComponent,
   PageHeaderComponent,
-  SignalFormDebuggerComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import { STEPPER_FORM_CONTENT } from './stepper-form.content';
@@ -22,8 +22,8 @@ import { StepperFormComponent } from './stepper-form.form';
     StepperFormComponent,
     ExampleCardsComponent,
     PageHeaderComponent,
-    SignalFormDebuggerComponent,
     SplitLayoutComponent,
+    NgxSignalFormDebugger,
   ],
   template: `
     <ngx-page-header

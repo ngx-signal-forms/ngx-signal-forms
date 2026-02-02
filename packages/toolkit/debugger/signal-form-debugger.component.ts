@@ -3,8 +3,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   input,
+  isDevMode,
 } from '@angular/core';
 import type { FieldState } from '@angular/forms/signals';
 import {
@@ -123,6 +125,22 @@ export class SignalFormDebuggerComponent {
     v: unknown,
   ): v is { (): FieldState<unknown> } & Record<string, unknown> =>
     typeof v === 'function';
+
+  #warned = false;
+
+  readonly #warnFieldStateUsage = effect(() => {
+    if (!isDevMode()) return;
+
+    const input = this.formTree();
+    if (!input || this.#isFieldTree(input) || this.#warned) return;
+
+    this.#warned = true;
+    console.warn(
+      '[NgxSignalFormDebugger] Pass the FieldTree function (e.g. form) to formTree. ' +
+        'A FieldState (e.g. form()) is supported, but it cannot traverse child fields ' +
+        'and may show errors as visible immediately.',
+    );
+  });
 
   /** Normalize to root FieldState regardless of input shape */
   protected readonly rootState = computed<FieldState<unknown>>(() => {
@@ -434,6 +452,15 @@ export class SignalFormDebuggerComponent {
       hasTouchedFields,
       submittedStatus,
     };
+  });
+
+  /** Show a success badge when the form is valid after any touch interaction. */
+  protected readonly showValidAfterTouch = computed(() => {
+    return (
+      this.errorVisibilityInfo().hasTouchedFields &&
+      this.valid() &&
+      !this.pending()
+    );
   });
 
   /**

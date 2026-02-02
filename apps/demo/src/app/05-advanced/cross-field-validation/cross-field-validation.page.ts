@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
   ExampleCardsComponent,
   PageHeaderComponent,
-  SignalFormDebuggerComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import { CROSS_FIELD_VALIDATION_CONTENT } from './cross-field-validation.content';
@@ -22,8 +22,8 @@ import { CrossFieldValidationComponent } from './cross-field-validation.form';
     CrossFieldValidationComponent,
     ExampleCardsComponent,
     PageHeaderComponent,
-    SignalFormDebuggerComponent,
     SplitLayoutComponent,
+    NgxSignalFormDebugger,
   ],
   template: `
     <ngx-page-header

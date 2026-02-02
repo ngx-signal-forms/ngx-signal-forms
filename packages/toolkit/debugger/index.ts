@@ -7,10 +7,10 @@
  *
  * @example
  * ```typescript
- * import { SignalFormDebuggerComponent } from '@ngx-signal-forms/toolkit/debugger';
+ * import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
  *
  * @Component({
- *   imports: [FormField, SignalFormDebuggerComponent],
+ *   imports: [NgxSignalFormDebugger],
  *   template: `
  *     <form (submit)="save($event)">
  *       <input [formField]="form.email" />
@@ -22,6 +22,12 @@
  * ```
  */
 
+import {
+  DebuggerBadgeComponent,
+  DebuggerBadgeIconDirective,
+} from './debugger-badge.component';
+import { SignalFormDebuggerComponent } from './signal-form-debugger.component';
+
 // Main debugger component
 export { SignalFormDebuggerComponent } from './signal-form-debugger.component';
 
@@ -32,3 +38,22 @@ export {
   type DebuggerBadgeAppearance,
   type DebuggerBadgeVariant,
 } from './debugger-badge.component';
+
+/**
+ * Convenience bundle for the signal form debugger.
+ *
+ * @example
+ * ```typescript
+ * import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+ *
+ * @Component({
+ *   imports: [NgxSignalFormDebugger],
+ *   // ...
+ * })
+ * ```
+ */
+export const NgxSignalFormDebugger = [
+  SignalFormDebuggerComponent,
+  DebuggerBadgeComponent,
+  DebuggerBadgeIconDirective,
+] as const;

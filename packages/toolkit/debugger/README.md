@@ -41,6 +41,10 @@ export class UserFormComponent {
 }
 ```
 
+**Important:** Pass the FieldTree function (e.g. `userForm`), not the root state (`userForm()`).
+The debugger can accept a `FieldState`, but it cannot traverse child fields, so visibility can
+appear incorrect.
+
 ## Features
 
 - **Form State Display**: Valid, Invalid, Dirty, Pending, Submitted status
@@ -55,12 +59,12 @@ export class UserFormComponent {
 
 ### Inputs
 
-| Input           | Type                   | Default                        | Description                    |
-| --------------- | ---------------------- | ------------------------------ | ------------------------------ |
-| `formTree`      | `unknown` (required)   | -                              | The Signal Form to display     |
-| `errorStrategy` | `ErrorDisplayStrategy` | `'on-touch'`                   | Current error display strategy |
-| `title`         | `string`               | `'Form State & Validation'`    | Header title                   |
-| `subtitle`      | `string`               | `'Live debugging information'` | Header subtitle                |
+| Input           | Type                   | Default                        | Description                                                                                 |
+| --------------- | ---------------------- | ------------------------------ | ------------------------------------------------------------------------------------------- |
+| `formTree`      | `unknown` (required)   | -                              | The Signal Form to display. Prefer the FieldTree function for correct per-field visibility. |
+| `errorStrategy` | `ErrorDisplayStrategy` | `'on-touch'`                   | Current error display strategy                                                              |
+| `title`         | `string`               | `'Form State & Validation'`    | Header title                                                                                |
+| `subtitle`      | `string`               | `'Live debugging information'` | Header subtitle                                                                             |
 
 ### Theming
 

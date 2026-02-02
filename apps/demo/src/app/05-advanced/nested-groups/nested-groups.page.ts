@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
   ExampleCardsComponent,
   PageHeaderComponent,
-  SignalFormDebuggerComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import { NESTED_GROUPS_CONTENT } from './nested-groups.content';
@@ -22,8 +22,8 @@ import { NestedGroupsComponent } from './nested-groups.form';
     NestedGroupsComponent,
     ExampleCardsComponent,
     PageHeaderComponent,
-    SignalFormDebuggerComponent,
     SplitLayoutComponent,
+    NgxSignalFormDebugger,
   ],
   template: `
     <ngx-page-header

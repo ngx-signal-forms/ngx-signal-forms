@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
   ExampleCardsComponent,
   PageHeaderComponent,
-  SignalFormDebuggerComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import { FieldStatesTableComponent } from '../../ui/field-states-table/public-api';
@@ -21,7 +21,7 @@ import { FieldStatesForm } from './field-states.form';
     FieldStatesTableComponent,
     PageHeaderComponent,
     SplitLayoutComponent,
-    SignalFormDebuggerComponent,
+    NgxSignalFormDebugger,
   ],
   template: `
     <!-- Header Section -->
@@ -39,9 +39,9 @@ import { FieldStatesForm } from './field-states.form';
         <ngx-field-states-form #formComponent left />
 
         <!-- Real-time Form State -->
-        @if (formComponent.userForm(); as form) {
+        @if (formComponent) {
           <div right>
-            <ngx-signal-form-debugger [formTree]="form" />
+            <ngx-signal-form-debugger [formTree]="formComponent.userForm" />
           </div>
         }
       </ngx-split-layout>

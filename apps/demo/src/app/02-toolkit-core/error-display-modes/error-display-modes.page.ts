@@ -5,10 +5,10 @@ import {
   viewChild,
 } from '@angular/core';
 import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
   ExampleCardsComponent,
   PageHeaderComponent,
-  SignalFormDebuggerComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
@@ -28,8 +28,8 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,
     PageHeaderComponent,
-    SignalFormDebuggerComponent,
     SplitLayoutComponent,
+    NgxSignalFormDebugger,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -60,10 +60,10 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
           />
 
           <!-- Real-time Form State -->
-          @if (formComponent?.productForm(); as form) {
+          @if (formComponent) {
             <div right>
               <ngx-signal-form-debugger
-                [formTree]="form"
+                [formTree]="formComponent.productForm"
                 [errorStrategy]="selectedMode()"
               />
             </div>

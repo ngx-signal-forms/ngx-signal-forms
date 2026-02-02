@@ -388,6 +388,9 @@ import {
 </form>
 ```
 
+**Note:** Pass the FieldTree function (e.g. `form`), not the root state (`form()`).
+The debugger supports `FieldState`, but it cannot traverse child fields, so visibility may look wrong.
+
 **[📖 Full Documentation →](./packages/toolkit/debugger/README.md)**
 
 ---

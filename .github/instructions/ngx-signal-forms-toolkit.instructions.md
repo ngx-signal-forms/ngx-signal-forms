@@ -171,6 +171,23 @@ import {
 import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
+### Debugger
+
+```typescript
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+
+@Component({
+  imports: [NgxSignalFormDebugger],
+  template: `
+    <ngx-signal-form-debugger [formTree]="userForm" />
+  `,
+})
+```
+
+**Important:** Pass the FieldTree function (e.g. `userForm`), not the root state (`userForm()`).
+`FieldState` is supported as a fallback but cannot traverse child fields, which can make error
+visibility look incorrect.
+
 ## Theming & Styling
 
 The toolkit uses a 4-layer CSS Custom Property architecture.

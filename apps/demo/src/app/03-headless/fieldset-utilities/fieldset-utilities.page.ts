@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
   ExampleCardsComponent,
   PageHeaderComponent,
-  SignalFormDebuggerComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import { HEADLESS_FIELDSET_UTILITIES_CONTENT } from './fieldset-utilities.content';
@@ -22,8 +22,8 @@ import { HeadlessFieldsetUtilitiesComponent } from './fieldset-utilities.form';
     ExampleCardsComponent,
     HeadlessFieldsetUtilitiesComponent,
     PageHeaderComponent,
-    SignalFormDebuggerComponent,
     SplitLayoutComponent,
+    NgxSignalFormDebugger,
   ],
   template: `
     <ngx-page-header

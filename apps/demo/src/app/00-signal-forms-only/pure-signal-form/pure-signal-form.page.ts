@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
   ExampleCardsComponent,
   PageHeaderComponent,
-  SignalFormDebuggerComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import { PURE_SIGNAL_FORM_CONTENT } from './pure-signal-form.content';
@@ -37,7 +37,7 @@ import { PureSignalFormComponent } from './pure-signal-form.form';
     ExampleCardsComponent,
     PageHeaderComponent,
     SplitLayoutComponent,
-    SignalFormDebuggerComponent,
+    NgxSignalFormDebugger,
   ],
   template: `
     <ngx-page-header
