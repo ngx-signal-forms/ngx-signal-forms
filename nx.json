@@ -86,6 +86,7 @@
       "projectChangelogs": {
         "createRelease": "github",
         "file": false,
+        "renderer": "./tools/custom-changelog-renderer.ts",
         "renderOptions": {
           "authors": true,
           "commitReferences": true,

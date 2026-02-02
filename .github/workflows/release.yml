@@ -100,6 +100,19 @@ jobs:
             echo "cmd=$VERSION" >> $GITHUB_OUTPUT
           fi
 
+      - name: Preview Release Changelog
+        run: |
+          echo "## 📋 Release Preview" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Running: \`nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run > /tmp/release-preview.txt 2>&1 || true
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          head -100 /tmp/release-preview.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Release (Dry Run)
         if: ${{ inputs.dry_run }}
         run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run
