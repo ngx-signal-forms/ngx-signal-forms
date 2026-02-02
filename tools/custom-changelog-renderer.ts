@@ -7,7 +7,7 @@ import { ChangelogRenderer, type ChangelogRenderOptions } from '@nx/js/release';
  * This ensures demo improvements and other workspace changes are captured
  * in a separate "Demo Application" section.
  */
-export default class CustomChangelogRenderer extends ChangelogRenderer {
+export class CustomChangelogRenderer extends ChangelogRenderer {
   async renderMarkdown(
     changes: any[],
     options: ChangelogRenderOptions,
