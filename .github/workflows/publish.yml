@@ -125,5 +125,4 @@ jobs:
           echo "- Git Tag: ${{ steps.release_info.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           echo "- npm Dist Tag: ${{ steps.release_info.outputs.dist_tag }}" >> $GITHUB_STEP_SUMMARY
           echo "- Dry Run: ${{ inputs.dry_run || false }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Auth: npm Automation Token" >> $GITHUB_STEP_SUMMARY
-Trusted Publishers (OIDC)
+          echo "- Auth: npm Trusted Publishers (OIDC)" >> $GITHUB_STEP_SUMMARY
