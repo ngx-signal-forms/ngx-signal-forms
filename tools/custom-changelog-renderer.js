@@ -1,0 +1,125 @@
+'use strict';
+const __createBinding =
+  (this && this.__createBinding) ||
+  (Object.create
+    ? function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        let desc = Object.getOwnPropertyDescriptor(m, k);
+        if (
+          !desc ||
+          ('get' in desc ? !m.__esModule : desc.writable || desc.configurable)
+        ) {
+          desc = {
+            enumerable: true,
+            get: function () {
+              return m[k];
+            },
+          };
+        }
+        Object.defineProperty(o, k2, desc);
+      }
+    : function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        o[k2] = m[k];
+      });
+const __setModuleDefault =
+  (this && this.__setModuleDefault) ||
+  (Object.create
+    ? function (o, v) {
+        Object.defineProperty(o, 'default', { enumerable: true, value: v });
+      }
+    : function (o, v) {
+        o['default'] = v;
+      });
+const __importStar =
+  (this && this.__importStar) ||
+  (function () {
+    let ownKeys = function (o) {
+      ownKeys =
+        Object.getOwnPropertyNames ||
+        function (o) {
+          const ar = [];
+          for (const k in o)
+            if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+          return ar;
+        };
+      return ownKeys(o);
+    };
+    return function (mod) {
+      if (mod && mod.__esModule) return mod;
+      const result = {};
+      if (mod != null)
+        for (let k = ownKeys(mod), i = 0; i < k.length; i++)
+          if (k[i] !== 'default') __createBinding(result, mod, k[i]);
+      __setModuleDefault(result, mod);
+      return result;
+    };
+  })();
+Object.defineProperty(exports, '__esModule', { value: true });
+const release_1 = require('@nx/js/release');
+/**
+ * Custom changelog renderer that includes ALL conventional commits,
+ * not just those affecting the toolkit package.
+ *
+ * This ensures demo improvements and other workspace changes are captured
+ * in a separate "Demo Application" section.
+ */
+class CustomChangelogRenderer extends release_1.ChangelogRenderer {
+  async renderMarkdown(changes, options) {
+    // Use default renderer for toolkit commits
+    const toolkitChangelog = await super.renderMarkdown(changes, options);
+    // Get ALL commits since last release (not just toolkit-affecting)
+    const { execSync } = await Promise.resolve().then(() =>
+      __importStar(require('child_process')),
+    );
+    const fromRef = options.from || 'HEAD^';
+    const toRef = options.to || 'HEAD';
+    let allCommits;
+    try {
+      const commitsOutput = execSync(
+        `git log ${fromRef}..${toRef} --pretty=format:"%H:::%s:::%b" --no-merges`,
+        { encoding: 'utf-8' },
+      );
+      allCommits = commitsOutput.trim().split('\n').filter(Boolean);
+    } catch {
+      // Fallback if git command fails
+      return toolkitChangelog;
+    }
+    // Parse demo commits
+    const demoCommits = allCommits
+      .map((line) => {
+        const [hash, subject, body] = line.split(':::');
+        return { hash: hash.substring(0, 7), subject, body };
+      })
+      .filter((commit) => {
+        // Include feat/fix/refactor commits with demo scope
+        return /^(feat|fix|refactor|perf)\(demo\):/.test(commit.subject);
+      });
+    if (demoCommits.length === 0) {
+      return toolkitChangelog;
+    }
+    // Build demo section
+    let demoSection = '\n\n### 📦 Demo Application\n\n';
+    for (const commit of demoCommits) {
+      const cleanSubject = commit.subject.replace(/^[^:]+:\s*/, '');
+      const repoUrl = options.repoSlug || 'ngx-signal-forms/ngx-signal-forms';
+      demoSection += `- **demo:** ${cleanSubject} ([${commit.hash}](https://github.com/${repoUrl}/commit/${commit.hash}))\n`;
+    }
+    // Insert demo section before Breaking Changes or Thank You section
+    if (toolkitChangelog.includes('### ⚠️  Breaking Changes')) {
+      return toolkitChangelog.replace(
+        '### ⚠️  Breaking Changes',
+        demoSection + '\n### ⚠️  Breaking Changes',
+      );
+    } else if (toolkitChangelog.includes('### ❤️ Thank You')) {
+      return toolkitChangelog.replace(
+        '### ❤️ Thank You',
+        demoSection + '\n### ❤️ Thank You',
+      );
+    } else {
+      return toolkitChangelog + demoSection;
+    }
+  }
+}
+exports.CustomChangelogRenderer = CustomChangelogRenderer;
+exports.default = CustomChangelogRenderer;
