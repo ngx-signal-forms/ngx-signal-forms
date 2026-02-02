@@ -12,6 +12,22 @@ export abstract class BaseFormPage {
   }
 
   /**
+   * Helper to construct absolute URL if baseURL is missing in context
+   */
+  protected getFullUrl(route: string): string {
+    // If validation fails in CI due to missing baseURL, fallback to manual construction
+    // This provides robustness across different runners
+    if (route.startsWith('/')) {
+      const baseUrl = process.env['BASE_URL'] || 'http://localhost:4200';
+      // Remove trailing slash from base and leading from route to avoid double slash
+      const cleanBase = baseUrl.replace(/\/$/, '');
+      const cleanRoute = route.replace(/^\//, '');
+      return `${cleanBase}/${cleanRoute}`;
+    }
+    return route;
+  }
+
+  /**
    * Navigate to the form page
    * Must be implemented by subclasses
    */

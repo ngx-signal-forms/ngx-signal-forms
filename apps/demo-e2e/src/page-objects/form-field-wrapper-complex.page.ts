@@ -15,7 +15,7 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(`/form-field-wrapper/complex-forms`);
+    await this.page.goto(this.getFullUrl('/form-field-wrapper/complex-forms'));
     await this.waitForReady();
   }
 

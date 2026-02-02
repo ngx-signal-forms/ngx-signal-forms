@@ -47,11 +47,8 @@ export class CustomControlsPage extends BaseFormPage {
    * Navigate to the custom controls demo page.
    */
   override async goto(): Promise<void> {
-    const url = this.route.startsWith('/')
-      ? (process.env['BASE_URL'] ?? 'http://localhost:4200') + this.route
-      : this.route;
-    await this.page.goto(url);
-    await this.page.waitForLoadState('networkidle');
+    await this.page.goto(this.getFullUrl(this.route));
+    await this.waitForReady();
   }
 
   /**
