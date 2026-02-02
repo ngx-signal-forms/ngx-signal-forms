@@ -16,6 +16,10 @@
     "url": "https://github.com/ngx-signal-forms/ngx-signal-forms"
   },
   "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "peerDependencies": {
     "@angular/core": ">=21.1.0",
     "@analogjs/vite-plugin-angular": "2.2.3",
