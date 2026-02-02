@@ -109,18 +109,15 @@ jobs:
       - name: Nx Report
         run: pnpm exec nx report
 
-      - name: Build
-        run: pnpm exec nx run-many -t build -p toolkit --skip-remote-cache
-
       - name: Publish packages (Dry Run)
         if: ${{ inputs.dry_run == true }}
         run: |
           echo "🔍 Dry run - would publish with tag: ${{ steps.release_info.outputs.dist_tag }}"
-          pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --dry-run
+          pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --dry-run --skip-nx-cache
 
       - name: Publish packages
         if: ${{ inputs.dry_run != true }}
-        run: pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }}
+        run: pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --skip-nx-cache
         # No NODE_AUTH_TOKEN needed - uses OIDC via Trusted Publishers!
 
       - name: Summary
