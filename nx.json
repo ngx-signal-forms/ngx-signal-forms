@@ -143,13 +143,11 @@
         }
       }
     },
-    "version": {
-      "git": {
-        "commit": true,
-        "commitMessage": "chore(release): publish {version}",
-        "tag": true,
-        "tagMessage": "Release {version}"
-      }
+    "git": {
+      "commit": true,
+      "commitMessage": "chore(release): publish {version}",
+      "tag": true,
+      "tagMessage": "Release {version}"
     },
     "releaseTagPattern": "v{version}"
   }
