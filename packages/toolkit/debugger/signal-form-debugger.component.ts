@@ -14,7 +14,10 @@ import {
   shouldShowErrors,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
-import { BadgeComponent, BadgeIconDirective } from '../badge';
+import {
+  DebuggerBadgeComponent,
+  DebuggerBadgeIconDirective,
+} from './debugger-badge.component';
 
 type DebuggerError = {
   kind: string;
@@ -23,43 +26,64 @@ type DebuggerError = {
 };
 
 /**
- * Enhanced Signal Form Debugger Component
+ * Signal Form Debugger Component
  *
- * Displays comprehensive state and validation information for Angular Signal Forms.
- * Designed for development and debugging purposes with rich UI and detailed insights.
+ * A development-time debugging panel for Angular Signal Forms that displays
+ * comprehensive state and validation information. Fully styled with CSS custom
+ * properties (no Tailwind dependencies).
  *
  * **Features**:
  * - Form state badges (Valid, Invalid, Dirty, Pending, Submitted Status)
  * - Live model values with JSON formatting
  * - Validation errors separated into blocking errors and warnings
  * - Collapsible sections for better organization
- * - Dark mode support
+ * - Dark mode support via `prefers-color-scheme`
  * - Automatic submission status tracking (via form provider)
  *
- * **Requirements**:
- * - Must be used within a form with `[ngxSignalForm]` directive
- * - Form provider automatically supplies submission status
+ * **Usage**:
+ * - Can be used with or without `[ngxSignalForm]` directive
+ * - For `'on-submit'` strategy, requires form context
+ * - For `'on-touch'` (default), works standalone
+ *
+ * **Theming**:
+ * Override CSS custom properties to customize appearance:
+ * ```css
+ * ngx-signal-form-debugger {
+ *   --ngx-debugger-bg: #ffffff;
+ *   --ngx-debugger-border-color: #e5e7eb;
+ *   --ngx-debugger-text-color: #111827;
+ * }
+ * ```
  *
  * @example Basic usage
  * ```html
- * <form [ngxSignalForm]="userForm" (submit)="handleSubmit($event)">
+ * <form (submit)="save($event)">
  *   <input [formField]="userForm.email" />
  *   <ngx-signal-form-debugger [formTree]="userForm" />
  * </form>
  * ```
  *
- * @example Custom title
+ * @example With form context
+ * ```html
+ * <form [ngxSignalForm]="userForm" (submit)="save($event)">
+ *   <input [formField]="userForm.email" />
+ *   <ngx-signal-form-debugger [formTree]="userForm" />
+ * </form>
+ * ```
+ *
+ * @example Custom title and strategy
  * ```html
  * <ngx-signal-form-debugger
  *   [formTree]="userForm"
- *   title="User Registration Form"
+ *   title="Registration Form"
+ *   [errorStrategy]="'on-submit'"
  * />
  * ```
  */
 @Component({
   selector: 'ngx-signal-form-debugger',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [JsonPipe, BadgeComponent, BadgeIconDirective],
+  imports: [JsonPipe, DebuggerBadgeComponent, DebuggerBadgeIconDirective],
   templateUrl: './signal-form-debugger.component.html',
   styleUrl: './signal-form-debugger.component.scss',
 })
@@ -147,9 +171,9 @@ export class SignalFormDebuggerComponent {
     const status = this.submittedStatus();
     switch (status) {
       case 'submitting':
-        return '🚀 Submitting';
+        return 'Submitting';
       case 'submitted':
-        return '✅ Submitted';
+        return 'Submitted';
       default:
         return 'Idle';
     }
@@ -176,12 +200,10 @@ export class SignalFormDebuggerComponent {
     const strategy = this.errorStrategy();
     const submitted = this.submittedStatus();
 
-    // Normalize root visibility for fallback or summary usage
     const rootState = this.rootState();
     const rootVisible = shouldShowErrors(rootState, strategy, submitted);
 
     if (this.#isFieldTree(input)) {
-      // Traverse the FieldTree using the model shape
       const state = (input as () => FieldState<unknown>)();
       const value = state.value();
       const collected: DebuggerError[] = [];
@@ -199,7 +221,6 @@ export class SignalFormDebuggerComponent {
               const isLeaf = !nextModel || typeof nextModel !== 'object';
 
               if (isLeaf) {
-                // Collect direct errors only for leaf nodes
                 collected.push(
                   ...(
                     (childState.errors() ?? []) as Array<{
@@ -209,7 +230,6 @@ export class SignalFormDebuggerComponent {
                   ).map((e) => ({ ...e, visible })),
                 );
               }
-              // Recurse deeper using the model branch
               visit(child as unknown as Record<string, unknown>, nextModel);
             }
           }
@@ -239,15 +259,10 @@ export class SignalFormDebuggerComponent {
       };
 
       visit(input as unknown as Record<string, unknown>, value);
-      // For FieldTree, return ONLY collected leaf errors (with per-field visibility)
-      // Do NOT include root state.errors() as it may aggregate all descendant errors
-      // and would override the per-field visibility logic
       return collected;
     }
 
-    // Fallback: rely on built-in summary when only FieldState is available
     const summary = this.#errorSummaryOf(rootState, rootVisible);
-    // If summary is unexpectedly empty but form is invalid, include root errors at least
     return summary.length > 0
       ? summary
       : (
@@ -264,7 +279,6 @@ export class SignalFormDebuggerComponent {
     const all = this.allErrors();
     return all.filter(
       (e): e is DebuggerError =>
-        // Exclude any error that matches a root-level error by kind+message
         !root.some(
           (r) =>
             r &&
@@ -342,7 +356,6 @@ export class SignalFormDebuggerComponent {
   protected readonly hasBlockingErrors = computed(() => {
     const count = this.blockingErrors().length;
     if (count > 0) return true;
-    // Defensive: if the form is invalid but we couldn't extract error objects, still open the section
     return this.invalid();
   });
 
@@ -379,7 +392,6 @@ export class SignalFormDebuggerComponent {
     const submittedStatus = this.submittedStatus();
     const rootState = this.rootState();
 
-    // Check if any fields are touched
     const hasTouchedFields = this.#hasAnyTouchedFields(rootState);
 
     let visibilityReason = '';
@@ -397,7 +409,7 @@ export class SignalFormDebuggerComponent {
           ? 'Errors shown because fields were touched (blurred)'
           : submittedStatus !== 'unsubmitted'
             ? 'Errors shown because form was submitted'
-            : '⚠️ Errors hidden until you touch (blur) fields';
+            : 'Errors hidden until you touch (blur) fields';
         break;
 
       case 'on-submit':
@@ -405,7 +417,7 @@ export class SignalFormDebuggerComponent {
         visibilityReason =
           submittedStatus !== 'unsubmitted'
             ? 'Errors shown because form was submitted'
-            : '⚠️ Errors hidden until form submission';
+            : 'Errors hidden until form submission';
         break;
 
       case 'manual':
@@ -428,7 +440,6 @@ export class SignalFormDebuggerComponent {
    * Recursively check if any fields in the form tree have been touched.
    */
   #hasAnyTouchedFields(state: FieldState<unknown>): boolean {
-    // Check if this field is touched
     if (
       typeof state.touched === 'function' &&
       (state.touched as () => boolean)()
@@ -436,7 +447,6 @@ export class SignalFormDebuggerComponent {
       return true;
     }
 
-    // Recursively check children if this is a FieldTree
     const input = this.formTree();
     if (this.#isFieldTree(input)) {
       const value = state.value();
@@ -464,7 +474,6 @@ export class SignalFormDebuggerComponent {
           ) {
             return true;
           }
-          // Recurse deeper
           const nextModel = (model as Record<string, unknown>)[key] as unknown;
           if (
             this.#checkTouchedRecursive(

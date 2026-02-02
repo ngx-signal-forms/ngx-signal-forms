@@ -1,17 +1,11 @@
-<div
-  class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
->
+<div class="ngx-debugger">
   <!-- Header Section -->
-  <div
-    class="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-700"
-  >
-    <div class="flex items-center justify-between px-6 py-4">
-      <div class="flex items-center gap-3">
-        <div
-          class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900"
-        >
+  <div class="ngx-debugger__header">
+    <div class="ngx-debugger__header-content">
+      <div class="ngx-debugger__header-left">
+        <div class="ngx-debugger__icon-wrapper">
           <svg
-            class="h-4 w-4 text-blue-600 dark:text-blue-300"
+            class="ngx-debugger__icon"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -25,20 +19,16 @@
           </svg>
         </div>
         <div>
-          <h3 class="font-semibold text-gray-900 dark:text-gray-100">
-            {{ title() }}
-          </h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400">
-            {{ subtitle() }}
-          </p>
+          <h3 class="ngx-debugger__title">{{ title() }}</h3>
+          <p class="ngx-debugger__subtitle">{{ subtitle() }}</p>
         </div>
       </div>
       <!-- Status Badge -->
       <div>
         @if (valid() && !pending()) {
-          <ngx-badge variant="solid" appearance="success">
+          <ngx-debugger-badge variant="solid" appearance="success">
             <svg
-              ngxBadgeIcon
+              ngxDebuggerBadgeIcon
               fill="none"
               stroke="currentColor"
               stroke-width="2"
@@ -52,12 +42,12 @@
               />
             </svg>
             Valid
-          </ngx-badge>
+          </ngx-debugger-badge>
         } @else if (pending()) {
-          <ngx-badge variant="solid" appearance="warning">
+          <ngx-debugger-badge variant="solid" appearance="warning">
             <svg
-              ngxBadgeIcon
-              class="animate-spin"
+              ngxDebuggerBadgeIcon
+              class="ngx-debugger-badge__icon animate-spin"
               fill="none"
               stroke="currentColor"
               stroke-width="2"
@@ -69,11 +59,11 @@
               />
             </svg>
             Validating
-          </ngx-badge>
+          </ngx-debugger-badge>
         } @else if (invalid()) {
-          <ngx-badge variant="solid" appearance="danger">
+          <ngx-debugger-badge variant="solid" appearance="danger">
             <svg
-              ngxBadgeIcon
+              ngxDebuggerBadgeIcon
               fill="none"
               stroke="currentColor"
               stroke-width="2"
@@ -83,11 +73,11 @@
               <path stroke-linecap="round" d="M5.5 5.5l5 5M10.5 5.5l-5 5" />
             </svg>
             Invalid
-          </ngx-badge>
+          </ngx-debugger-badge>
         } @else {
-          <ngx-badge variant="solid" appearance="neutral">
+          <ngx-debugger-badge variant="solid" appearance="neutral">
             <svg
-              ngxBadgeIcon
+              ngxDebuggerBadgeIcon
               fill="none"
               stroke="currentColor"
               stroke-width="2"
@@ -98,24 +88,22 @@
               <path stroke-linecap="round" d="M8 8.5v3" />
             </svg>
             Idle
-          </ngx-badge>
+          </ngx-debugger-badge>
         }
       </div>
     </div>
   </div>
 
   <!-- Status Indicators Row -->
-  <div
-    class="border-b border-gray-200 bg-white px-6 py-3 dark:border-gray-700 dark:bg-gray-800"
-  >
-    <div class="flex flex-wrap gap-2">
-      <ngx-badge
+  <div class="ngx-debugger__status-row">
+    <div class="ngx-debugger__status-badges">
+      <ngx-debugger-badge
         variant="outline"
         [appearance]="valid() ? 'success' : 'neutral'"
       >
         @if (valid()) {
           <svg
-            ngxBadgeIcon
+            ngxDebuggerBadgeIcon
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -130,7 +118,7 @@
           </svg>
         } @else {
           <svg
-            ngxBadgeIcon
+            ngxDebuggerBadgeIcon
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -141,14 +129,14 @@
           </svg>
         }
         Valid
-      </ngx-badge>
-      <ngx-badge
+      </ngx-debugger-badge>
+      <ngx-debugger-badge
         variant="outline"
         [appearance]="invalid() ? 'danger' : 'neutral'"
       >
         @if (invalid()) {
           <svg
-            ngxBadgeIcon
+            ngxDebuggerBadgeIcon
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -159,14 +147,14 @@
           </svg>
         }
         Invalid
-      </ngx-badge>
-      <ngx-badge
+      </ngx-debugger-badge>
+      <ngx-debugger-badge
         variant="outline"
         [appearance]="dirty() ? 'warning' : 'neutral'"
       >
         @if (dirty()) {
           <svg
-            ngxBadgeIcon
+            ngxDebuggerBadgeIcon
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -180,12 +168,12 @@
           </svg>
         }
         Dirty
-      </ngx-badge>
-      <ngx-badge variant="outline" appearance="info">
+      </ngx-debugger-badge>
+      <ngx-debugger-badge variant="outline" appearance="info">
         @if (pending()) {
           <svg
-            ngxBadgeIcon
-            class="animate-spin"
+            ngxDebuggerBadgeIcon
+            class="ngx-debugger-badge__icon animate-spin"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -198,8 +186,8 @@
           </svg>
         }
         Pending
-      </ngx-badge>
-      <ngx-badge
+      </ngx-debugger-badge>
+      <ngx-debugger-badge
         variant="outline"
         [appearance]="
           submittedStatus() === 'submitting'
@@ -211,8 +199,8 @@
       >
         @if (submittedStatus() === 'submitting') {
           <svg
-            ngxBadgeIcon
-            class="animate-spin"
+            ngxDebuggerBadgeIcon
+            class="ngx-debugger-badge__icon animate-spin"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -225,7 +213,7 @@
           </svg>
         } @else if (submittedStatus() === 'submitted') {
           <svg
-            ngxBadgeIcon
+            ngxDebuggerBadgeIcon
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -240,27 +228,24 @@
           </svg>
         }
         Status: {{ submittedStatusDisplay() }}
-      </ngx-badge>
+      </ngx-debugger-badge>
     </div>
   </div>
 
   <!-- Error Visibility Strategy Indicator -->
   <div
-    class="border-b border-gray-200 px-6 py-3 dark:border-gray-700"
-    [class.bg-green-50]="errorVisibilityInfo().errorsVisible"
-    [class.dark:bg-green-900/10]="errorVisibilityInfo().errorsVisible"
-    [class.bg-amber-50]="!errorVisibilityInfo().errorsVisible"
-    [class.dark:bg-amber-900/10]="!errorVisibilityInfo().errorsVisible"
+    class="ngx-debugger__strategy-row"
+    [class.ngx-debugger__strategy-row--visible]="
+      errorVisibilityInfo().errorsVisible
+    "
+    [class.ngx-debugger__strategy-row--hidden]="
+      !errorVisibilityInfo().errorsVisible
+    "
   >
-    <div class="flex items-start gap-3">
-      <div class="shrink-0">
+    <div class="ngx-debugger__strategy-content">
+      <div class="ngx-debugger__strategy-icon">
         @if (errorVisibilityInfo().errorsVisible) {
-          <svg
-            class="h-5 w-5 text-green-600 dark:text-green-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -269,12 +254,7 @@
             ></path>
           </svg>
         } @else {
-          <svg
-            class="h-5 w-5 text-amber-600 dark:text-amber-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -284,33 +264,19 @@
           </svg>
         }
       </div>
-      <div class="flex-1">
-        <div class="flex items-center gap-2">
-          <span
-            class="text-sm font-semibold"
-            [class.text-green-900]="errorVisibilityInfo().errorsVisible"
-            [class.dark:text-green-100]="errorVisibilityInfo().errorsVisible"
-            [class.text-amber-900]="!errorVisibilityInfo().errorsVisible"
-            [class.dark:text-amber-100]="!errorVisibilityInfo().errorsVisible"
-          >
-            Error Display Strategy:
-          </span>
-          <ngx-badge
+      <div class="ngx-debugger__strategy-text">
+        <div class="ngx-debugger__strategy-label">
+          <span>Error Display Strategy:</span>
+          <ngx-debugger-badge
             variant="solid"
             [appearance]="
               errorVisibilityInfo().errorsVisible ? 'success' : 'warning'
             "
           >
             {{ errorVisibilityInfo().strategy }}
-          </ngx-badge>
+          </ngx-debugger-badge>
         </div>
-        <p
-          class="mt-1 text-sm"
-          [class.text-green-700]="errorVisibilityInfo().errorsVisible"
-          [class.dark:text-green-300]="errorVisibilityInfo().errorsVisible"
-          [class.text-amber-700]="!errorVisibilityInfo().errorsVisible"
-          [class.dark:text-amber-300]="!errorVisibilityInfo().errorsVisible"
-        >
+        <p class="ngx-debugger__strategy-reason">
           {{ errorVisibilityInfo().visibilityReason }}
         </p>
       </div>
@@ -318,16 +284,12 @@
   </div>
 
   <!-- Collapsible Content Sections -->
-  <div class="space-y-0">
+  <div class="ngx-debugger__sections">
     <!-- Form Model Section -->
-    <details
-      class="group border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
-    >
-      <summary
-        class="flex cursor-pointer items-center gap-2 px-6 py-4 text-lg font-medium text-gray-900 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-700/50 [&::-webkit-details-marker]:hidden"
-      >
+    <details class="ngx-debugger__section">
+      <summary class="ngx-debugger__section-header">
         <svg
-          class="h-4 w-4 transition-transform group-open:rotate-90"
+          class="ngx-debugger__chevron"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -340,7 +302,7 @@
           ></path>
         </svg>
         <svg
-          class="h-4 w-4"
+          class="ngx-debugger__section-icon"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -354,10 +316,8 @@
         </svg>
         <span>Form Model</span>
       </summary>
-      <div class="px-6 pb-4">
-        <div
-          class="overflow-x-auto rounded-md border border-blue-200 bg-blue-50 p-4 font-mono text-sm text-blue-900 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
-        >
+      <div class="ngx-debugger__section-content">
+        <div class="ngx-debugger__json-display">
           <pre><code>{{ model() | json }}</code></pre>
         </div>
       </div>
@@ -365,14 +325,12 @@
 
     <!-- Blocking Validation Errors Section -->
     <details
-      class="group border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+      class="ngx-debugger__section"
       [attr.open]="hasBlockingErrors() ? true : null"
     >
-      <summary
-        class="flex cursor-pointer items-center gap-2 px-6 py-4 text-lg font-medium text-gray-900 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-700/50 [&::-webkit-details-marker]:hidden"
-      >
+      <summary class="ngx-debugger__section-header">
         <svg
-          class="h-4 w-4 transition-transform group-open:rotate-90"
+          class="ngx-debugger__chevron"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -385,7 +343,7 @@
           ></path>
         </svg>
         <svg
-          class="h-4 w-4"
+          class="ngx-debugger__section-icon"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -399,26 +357,21 @@
         </svg>
         <span>Validation Errors</span>
         @if (totalBlockingCount() > 0) {
-          <ngx-badge variant="solid" appearance="danger">
+          <ngx-debugger-badge variant="solid" appearance="danger">
             {{ visibleBlockingCount() }}/{{ totalBlockingCount() }}
-          </ngx-badge>
+          </ngx-debugger-badge>
         }
       </summary>
-      <div class="px-6 pb-6">
+      <div class="ngx-debugger__section-content">
         @if (hasBlockingErrors()) {
-          <div class="space-y-4">
+          <div class="ngx-debugger__error-groups">
             <!-- Root-Level Errors (Cross-field validation) -->
             @if (rootBlockingErrors().length > 0) {
               <div>
                 <div
-                  class="mb-3 flex items-center gap-2 rounded-md border border-purple-200 bg-purple-50 p-2 text-xs text-purple-800 dark:border-purple-700 dark:bg-purple-900/20 dark:text-purple-300"
+                  class="ngx-debugger__info-box ngx-debugger__info-box--root"
                 >
-                  <svg
-                    class="h-4 w-4 shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -432,40 +385,28 @@
                     "passwords must match")</span
                   >
                 </div>
-                <div class="space-y-3">
+                <div class="ngx-debugger__error-list" role="list">
                   @for (error of rootBlockingErrors(); track $index) {
                     <div
-                      class="rounded-md border-l-4 p-3"
-                      [class.border-purple-500]="error.visible"
-                      [class.bg-purple-50]="error.visible"
-                      [class.dark:bg-purple-900/20]="error.visible"
-                      [class.border-gray-300]="!error.visible"
-                      [class.bg-gray-50]="!error.visible"
-                      [class.dark:bg-gray-900/20]="!error.visible"
+                      role="listitem"
+                      class="ngx-debugger__error-item ngx-debugger__error-item--root"
+                      [class.ngx-debugger__error-item--visible]="error.visible"
+                      [class.ngx-debugger__error-item--hidden]="!error.visible"
                     >
-                      <div class="flex items-center justify-between">
-                        <h6
-                          class="text-sm font-semibold"
-                          [class.text-purple-800]="error.visible"
-                          [class.dark:text-purple-300]="error.visible"
-                          [class.text-gray-600]="!error.visible"
-                          [class.dark:text-gray-400]="!error.visible"
-                        >
+                      <div class="ngx-debugger__error-header">
+                        <h6 class="ngx-debugger__error-kind">
                           🔗 {{ error.kind }}
                         </h6>
                         @if (!error.visible) {
-                          <ngx-badge variant="outline" appearance="warning">
+                          <ngx-debugger-badge
+                            variant="outline"
+                            appearance="warning"
+                          >
                             Hidden by strategy
-                          </ngx-badge>
+                          </ngx-debugger-badge>
                         }
                       </div>
-                      <p
-                        class="mt-1 text-sm"
-                        [class.text-purple-700]="error.visible"
-                        [class.dark:text-purple-400]="error.visible"
-                        [class.text-gray-600]="!error.visible"
-                        [class.dark:text-gray-500]="!error.visible"
-                      >
+                      <p class="ngx-debugger__error-message">
                         {{ error.message }}
                       </p>
                     </div>
@@ -478,14 +419,9 @@
             @if (fieldBlockingErrors().length > 0) {
               <div>
                 <div
-                  class="mb-3 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-800 dark:border-red-700 dark:bg-red-900/20 dark:text-red-300"
+                  class="ngx-debugger__info-box ngx-debugger__info-box--field"
                 >
-                  <svg
-                    class="h-4 w-4 shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -499,42 +435,28 @@
                     characters")</span
                   >
                 </div>
-                <div class="space-y-3">
+                <div class="ngx-debugger__error-list" role="list">
                   @for (error of fieldBlockingErrors(); track $index) {
                     <div
-                      class="rounded-md border p-3"
-                      [class.border-red-200]="error.visible"
-                      [class.bg-red-50]="error.visible"
-                      [class.dark:border-red-700]="error.visible"
-                      [class.dark:bg-red-900/20]="error.visible"
-                      [class.border-gray-300]="!error.visible"
-                      [class.bg-gray-50]="!error.visible"
-                      [class.dark:border-gray-700]="!error.visible"
-                      [class.dark:bg-gray-900/20]="!error.visible"
+                      role="listitem"
+                      class="ngx-debugger__error-item ngx-debugger__error-item--field"
+                      [class.ngx-debugger__error-item--visible]="error.visible"
+                      [class.ngx-debugger__error-item--hidden]="!error.visible"
                     >
-                      <div class="flex items-center justify-between">
-                        <h6
-                          class="text-sm font-semibold"
-                          [class.text-red-800]="error.visible"
-                          [class.dark:text-red-300]="error.visible"
-                          [class.text-gray-600]="!error.visible"
-                          [class.dark:text-gray-400]="!error.visible"
-                        >
+                      <div class="ngx-debugger__error-header">
+                        <h6 class="ngx-debugger__error-kind">
                           {{ error.kind }}
                         </h6>
                         @if (!error.visible) {
-                          <ngx-badge variant="outline" appearance="warning">
+                          <ngx-debugger-badge
+                            variant="outline"
+                            appearance="warning"
+                          >
                             Hidden by strategy
-                          </ngx-badge>
+                          </ngx-debugger-badge>
                         }
                       </div>
-                      <p
-                        class="mt-1 text-sm"
-                        [class.text-red-700]="error.visible"
-                        [class.dark:text-red-400]="error.visible"
-                        [class.text-gray-600]="!error.visible"
-                        [class.dark:text-gray-500]="!error.visible"
-                      >
+                      <p class="ngx-debugger__error-message">
                         {{ error.message }}
                       </p>
                     </div>
@@ -544,16 +466,9 @@
             }
           </div>
         } @else {
-          <div class="py-4 text-center">
-            <div
-              class="mx-auto mb-3 h-12 w-12 rounded-full bg-gray-100 p-3 dark:bg-gray-700"
-            >
-              <svg
-                class="h-6 w-6 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+          <div class="ngx-debugger__empty-state">
+            <div class="ngx-debugger__empty-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -562,9 +477,7 @@
                 ></path>
               </svg>
             </div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-              No validation errors 🎉
-            </p>
+            <p>No validation errors</p>
           </div>
         }
       </div>
@@ -572,14 +485,12 @@
 
     <!-- Warnings Section (Non-blocking) -->
     <details
-      class="group bg-white dark:bg-gray-800"
+      class="ngx-debugger__section ngx-debugger__section--last"
       [attr.open]="hasWarnings() ? true : null"
     >
-      <summary
-        class="flex cursor-pointer items-center gap-2 px-6 py-4 text-lg font-medium text-gray-900 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-700/50 [&::-webkit-details-marker]:hidden"
-      >
+      <summary class="ngx-debugger__section-header">
         <svg
-          class="h-4 w-4 transition-transform group-open:rotate-90"
+          class="ngx-debugger__chevron"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -592,7 +503,7 @@
           ></path>
         </svg>
         <svg
-          class="h-4 w-4"
+          class="ngx-debugger__section-icon"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -606,63 +517,51 @@
         </svg>
         <span>Warnings (Non-blocking)</span>
         @if (totalWarningCount() > 0) {
-          <ngx-badge variant="solid" appearance="warning">
+          <ngx-debugger-badge variant="solid" appearance="warning">
             {{ visibleWarningCount() }}/{{ totalWarningCount() }}
-          </ngx-badge>
+          </ngx-debugger-badge>
         }
       </summary>
-      <div class="px-6 pb-6">
+      <div class="ngx-debugger__section-content">
         @if (hasWarnings()) {
           <div
-            class="mb-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
+            class="ngx-debugger__info-box ngx-debugger__info-box--warning-info"
           >
-            <strong>💡 Warnings vs Errors:</strong>
+            <strong>Warnings vs Errors:</strong>
             Warnings are non-blocking validation messages that provide guidance
             without preventing form submission.
           </div>
-          <div class="space-y-4">
+          <div class="ngx-debugger__error-groups">
             <!-- Root-Level Warnings -->
             @if (rootWarningErrors().length > 0) {
               <div>
-                <div
-                  class="mb-2 text-xs font-semibold text-amber-700 uppercase dark:text-amber-400"
-                >
-                  Root-Level Warnings
-                </div>
-                <div class="space-y-3">
+                <div class="ngx-debugger__group-label">Root-Level Warnings</div>
+                <div class="ngx-debugger__error-list" role="list">
                   @for (warning of rootWarningErrors(); track $index) {
                     <div
-                      class="rounded-md border-l-4 p-3"
-                      [class.border-amber-500]="warning.visible"
-                      [class.bg-amber-50]="warning.visible"
-                      [class.dark:bg-amber-900/20]="warning.visible"
-                      [class.border-gray-300]="!warning.visible"
-                      [class.bg-gray-50]="!warning.visible"
-                      [class.dark:bg-gray-900/20]="!warning.visible"
+                      role="listitem"
+                      class="ngx-debugger__error-item ngx-debugger__error-item--warning ngx-debugger__error-item--root"
+                      [class.ngx-debugger__error-item--visible]="
+                        warning.visible
+                      "
+                      [class.ngx-debugger__error-item--hidden]="
+                        !warning.visible
+                      "
                     >
-                      <div class="flex items-center justify-between">
-                        <h6
-                          class="text-sm font-semibold"
-                          [class.text-amber-800]="warning.visible"
-                          [class.dark:text-amber-300]="warning.visible"
-                          [class.text-gray-600]="!warning.visible"
-                          [class.dark:text-gray-400]="!warning.visible"
-                        >
+                      <div class="ngx-debugger__error-header">
+                        <h6 class="ngx-debugger__error-kind">
                           🔗 {{ warning.kind }}
                         </h6>
                         @if (!warning.visible) {
-                          <ngx-badge variant="outline" appearance="warning">
+                          <ngx-debugger-badge
+                            variant="outline"
+                            appearance="warning"
+                          >
                             Hidden by strategy
-                          </ngx-badge>
+                          </ngx-debugger-badge>
                         }
                       </div>
-                      <p
-                        class="mt-1 text-sm"
-                        [class.text-amber-700]="warning.visible"
-                        [class.dark:text-amber-400]="warning.visible"
-                        [class.text-gray-600]="!warning.visible"
-                        [class.dark:text-gray-500]="!warning.visible"
-                      >
+                      <p class="ngx-debugger__error-message">
                         {{ warning.message }}
                       </p>
                     </div>
@@ -674,47 +573,35 @@
             <!-- Field-Level Warnings -->
             @if (fieldWarningErrors().length > 0) {
               <div>
-                <div
-                  class="mb-2 text-xs font-semibold text-amber-700 uppercase dark:text-amber-400"
-                >
+                <div class="ngx-debugger__group-label">
                   Field-Level Warnings
                 </div>
-                <div class="space-y-3">
+                <div class="ngx-debugger__error-list" role="list">
                   @for (warning of fieldWarningErrors(); track $index) {
                     <div
-                      class="rounded-md border p-3"
-                      [class.border-amber-200]="warning.visible"
-                      [class.bg-amber-50]="warning.visible"
-                      [class.dark:border-amber-700]="warning.visible"
-                      [class.dark:bg-amber-900/20]="warning.visible"
-                      [class.border-gray-300]="!warning.visible"
-                      [class.bg-gray-50]="!warning.visible"
-                      [class.dark:border-gray-700]="!warning.visible"
-                      [class.dark:bg-gray-900/20]="!warning.visible"
+                      role="listitem"
+                      class="ngx-debugger__error-item ngx-debugger__error-item--warning ngx-debugger__error-item--field"
+                      [class.ngx-debugger__error-item--visible]="
+                        warning.visible
+                      "
+                      [class.ngx-debugger__error-item--hidden]="
+                        !warning.visible
+                      "
                     >
-                      <div class="flex items-center justify-between">
-                        <h6
-                          class="text-sm font-semibold"
-                          [class.text-amber-800]="warning.visible"
-                          [class.dark:text-amber-300]="warning.visible"
-                          [class.text-gray-600]="!warning.visible"
-                          [class.dark:text-gray-400]="!warning.visible"
-                        >
+                      <div class="ngx-debugger__error-header">
+                        <h6 class="ngx-debugger__error-kind">
                           {{ warning.kind }}
                         </h6>
                         @if (!warning.visible) {
-                          <ngx-badge variant="outline" appearance="warning">
+                          <ngx-debugger-badge
+                            variant="outline"
+                            appearance="warning"
+                          >
                             Hidden by strategy
-                          </ngx-badge>
+                          </ngx-debugger-badge>
                         }
                       </div>
-                      <p
-                        class="mt-1 text-sm"
-                        [class.text-amber-700]="warning.visible"
-                        [class.dark:text-amber-400]="warning.visible"
-                        [class.text-gray-600]="!warning.visible"
-                        [class.dark:text-gray-500]="!warning.visible"
-                      >
+                      <p class="ngx-debugger__error-message">
                         {{ warning.message }}
                       </p>
                     </div>
@@ -724,16 +611,11 @@
             }
           </div>
         } @else {
-          <div class="py-4 text-center">
-            <div
-              class="mx-auto mb-3 h-12 w-12 rounded-full bg-amber-50 p-3 dark:bg-amber-900/20"
-            >
-              <svg
-                class="h-6 w-6 text-amber-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+          <div
+            class="ngx-debugger__empty-state ngx-debugger__empty-state--warning"
+          >
+            <div class="ngx-debugger__empty-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -742,9 +624,7 @@
                 ></path>
               </svg>
             </div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-              No active warnings
-            </p>
+            <p>No active warnings</p>
           </div>
         }
       </div>
@@ -752,19 +632,11 @@
   </div>
 
   <!-- Footer -->
-  <div
-    class="border-t border-gray-200 bg-gray-50 px-6 py-3 dark:border-gray-700 dark:bg-gray-700"
-  >
-    <div
-      class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400"
-    >
-      <div class="flex items-center gap-4">
-        <span>Angular Signal Forms Debugger</span>
-      </div>
-      <div class="flex items-center gap-1">
-        <span
-          class="inline-block h-2 w-2 animate-pulse rounded-full bg-green-400"
-        ></span>
+  <div class="ngx-debugger__footer">
+    <div class="ngx-debugger__footer-content">
+      <span>Angular Signal Forms Debugger</span>
+      <div class="ngx-debugger__live-indicator">
+        <span class="ngx-debugger__live-dot"></span>
         <span>Live updating</span>
       </div>
     </div>

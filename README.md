@@ -67,6 +67,15 @@ A set of cohesive UI components to build consistent, accessible form layouts:
 - **Accessibility Components**: Special `<ngx-signal-form-error>` and hints with correct ARIA roles.
 - **Theming**: Comprehensive CSS Custom Properties API for deep customization. [See Theming Guide](./packages/toolkit/form-field/THEMING.md).
 
+### 🐞 Debugger (`@ngx-signal-forms/toolkit/debugger`)
+
+A development tool to inspect form state and validation logic:
+
+- **State Visualization**: Real-time badges for valid, invalid, dirty, pending, and submitted states.
+- **Error Inspection**: See exactly which errors are active, which are hidden by strategy, and why.
+- **Live Model**: Inspect the underlying form model JSON as you type.
+- **Zero Dependencies**: Styled with CSS custom properties (no Tailwind/Bootstrap required).
+
 ---
 
 ## Comparison Matrix
@@ -361,6 +370,28 @@ import {
 
 ---
 
+### @ngx-signal-forms/toolkit/debugger
+
+**What**: Visual debugger for inspecting form state, errors, and warnings.
+
+**When to use**: During development to troubleshoot validation logic or form state issues.
+
+**Key exports**:
+
+- `NgxSignalFormDebugger` — Bundle import
+- `SignalFormDebuggerComponent` — Standalone component
+
+```html
+<form (submit)="save()">
+  <!-- ... fields ... -->
+  <ngx-signal-form-debugger [formTree]="form" />
+</form>
+```
+
+**[📖 Full Documentation →](./packages/toolkit/debugger/README.md)**
+
+---
+
 ## Advanced Configuration
 
 For CSS framework integration or custom error strategies, add providers to `app.config.ts`:
@@ -448,16 +479,17 @@ Each example below links to its source folder in `apps/demo/src/app`, with a sho
 
 ## Documentation
 
-| Document                                                             | Description                                                 |
-| -------------------------------------------------------------------- | ----------------------------------------------------------- |
-| **[Toolkit API Reference](./packages/toolkit/README.md)**            | Complete API documentation with all options and examples    |
-| **[Headless Primitives](./packages/toolkit/headless/README.md)**     | Renderless directives for custom design systems             |
-| **[Assistive Components](./packages/toolkit/assistive/README.md)**   | Error, hint, and character count components                 |
-| **[Form Field Components](./packages/toolkit/form-field/README.md)** | Form field wrapper, outlined layout, hints, character count |
-| **[CSS Framework Integration](./docs/CSS_FRAMEWORK_INTEGRATION.md)** | Bootstrap 5.3, Tailwind CSS 4, Angular Material setup       |
-| **[Theming Guide](./packages/toolkit/form-field/THEMING.md)**        | CSS custom properties, dark mode, brand customization       |
-| **[Warnings Support](./docs/WARNINGS_SUPPORT.md)**                   | Non-blocking validation messages                            |
-| **[Package Architecture](./docs/PACKAGE_ARCHITECTURE.md)**           | Library structure and design decisions                      |
+| Document                                                             | Description                                                  |
+| -------------------------------------------------------------------- | ------------------------------------------------------------ |
+| **[Toolkit API Reference](./packages/toolkit/README.md)**            | Complete API documentation with all options and examples     |
+| **[Headless Primitives](./packages/toolkit/headless/README.md)**     | Renderless directives for custom design systems              |
+| **[Assistive Components](./packages/toolkit/assistive/README.md)**   | Error, hint, and character count components                  |
+| **[Form Field Components](./packages/toolkit/form-field/README.md)** | Form field wrapper, outlined layout, hints, character count  |
+| **[Debugger Tool](./packages/toolkit/debugger/README.md)**           | Visual form inspector for state, errors, and model debugging |
+| **[CSS Framework Integration](./docs/CSS_FRAMEWORK_INTEGRATION.md)** | Bootstrap 5.3, Tailwind CSS 4, Angular Material setup        |
+| **[Theming Guide](./packages/toolkit/form-field/THEMING.md)**        | CSS custom properties, dark mode, brand customization        |
+| **[Warnings Support](./docs/WARNINGS_SUPPORT.md)**                   | Non-blocking validation messages                             |
+| **[Package Architecture](./docs/PACKAGE_ARCHITECTURE.md)**           | Library structure and design decisions                       |
 
 ---
 

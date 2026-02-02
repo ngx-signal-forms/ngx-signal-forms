@@ -1,0 +1,602 @@
+/**
+ * Signal Form Debugger Styles
+ *
+ * All styles use CSS custom properties for theming.
+ * Override these at the component level to customize appearance.
+ *
+ * @example
+ * ```css
+ * ngx-signal-form-debugger {
+ *   --ngx-debugger-bg: #1f2937;
+ *   --ngx-debugger-text-color: #f3f4f6;
+ * }
+ * ```
+ */
+
+:host {
+  /* ============================================ */
+  /* CSS Custom Properties (Theming API)         */
+  /* ============================================ */
+
+  /* Base colors */
+  --ngx-debugger-bg: #ffffff;
+  --ngx-debugger-bg-secondary: #f9fafb;
+  --ngx-debugger-bg-tertiary: #f3f4f6;
+  --ngx-debugger-border-color: #e5e7eb;
+  --ngx-debugger-text-color: #111827;
+  --ngx-debugger-text-secondary: #6b7280;
+  --ngx-debugger-text-muted: #9ca3af;
+
+  /* Semantic colors */
+  --ngx-debugger-color-success: #22c55e;
+  --ngx-debugger-color-success-bg: #dcfce7;
+  --ngx-debugger-color-success-text: #166534;
+  --ngx-debugger-color-warning: #f59e0b;
+  --ngx-debugger-color-warning-bg: #fef3c7;
+  --ngx-debugger-color-warning-text: #92400e;
+  --ngx-debugger-color-danger: #ef4444;
+  --ngx-debugger-color-danger-bg: #fee2e2;
+  --ngx-debugger-color-danger-text: #991b1b;
+  --ngx-debugger-color-info: #3b82f6;
+  --ngx-debugger-color-info-bg: #dbeafe;
+  --ngx-debugger-color-info-text: #1e40af;
+  --ngx-debugger-color-root: #a855f7;
+  --ngx-debugger-color-root-bg: #f3e8ff;
+  --ngx-debugger-color-root-text: #7c3aed;
+
+  /* Typography */
+  --ngx-debugger-font-family:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ngx-debugger-font-size-base: 0.875rem;
+  --ngx-debugger-font-size-sm: 0.75rem;
+  --ngx-debugger-font-size-xs: 0.6875rem;
+
+  /* Spacing */
+  --ngx-debugger-spacing-xs: 0.25rem;
+  --ngx-debugger-spacing-sm: 0.5rem;
+  --ngx-debugger-spacing-md: 0.75rem;
+  --ngx-debugger-spacing-lg: 1rem;
+  --ngx-debugger-spacing-xl: 1.5rem;
+
+  /* Border radius */
+  --ngx-debugger-border-radius: 0.5rem;
+  --ngx-debugger-border-radius-sm: 0.375rem;
+
+  /* Shadows */
+  --ngx-debugger-shadow:
+    0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+
+  display: block;
+  font-family: var(--ngx-debugger-font-family);
+  font-size: var(--ngx-debugger-font-size-base);
+  color: var(--ngx-debugger-text-color);
+}
+
+/* ============================================ */
+/* DARK MODE                                     */
+/* ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    --ngx-debugger-bg: #1f2937;
+    --ngx-debugger-bg-secondary: #374151;
+    --ngx-debugger-bg-tertiary: #4b5563;
+    --ngx-debugger-border-color: #374151;
+    --ngx-debugger-text-color: #f3f4f6;
+    --ngx-debugger-text-secondary: #d1d5db;
+    --ngx-debugger-text-muted: #9ca3af;
+
+    --ngx-debugger-color-success-bg: rgba(34, 197, 94, 0.15);
+    --ngx-debugger-color-success-text: #86efac;
+    --ngx-debugger-color-warning-bg: rgba(245, 158, 11, 0.15);
+    --ngx-debugger-color-warning-text: #fcd34d;
+    --ngx-debugger-color-danger-bg: rgba(239, 68, 68, 0.15);
+    --ngx-debugger-color-danger-text: #fca5a5;
+    --ngx-debugger-color-info-bg: rgba(59, 130, 246, 0.15);
+    --ngx-debugger-color-info-text: #93c5fd;
+    --ngx-debugger-color-root-bg: rgba(168, 85, 247, 0.15);
+    --ngx-debugger-color-root-text: #c4b5fd;
+  }
+}
+
+/* ============================================ */
+/* MAIN CONTAINER                               */
+/* ============================================ */
+
+.ngx-debugger {
+  overflow: hidden;
+  border-radius: var(--ngx-debugger-border-radius);
+  border: 1px solid var(--ngx-debugger-border-color);
+  background-color: var(--ngx-debugger-bg);
+  box-shadow: var(--ngx-debugger-shadow);
+}
+
+/* ============================================ */
+/* HEADER                                       */
+/* ============================================ */
+
+.ngx-debugger__header {
+  border-bottom: 1px solid var(--ngx-debugger-border-color);
+  background-color: var(--ngx-debugger-bg-secondary);
+}
+
+.ngx-debugger__header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ngx-debugger-spacing-lg) var(--ngx-debugger-spacing-xl);
+}
+
+.ngx-debugger__header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--ngx-debugger-spacing-md);
+}
+
+.ngx-debugger__icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background-color: var(--ngx-debugger-color-info-bg);
+}
+
+.ngx-debugger__icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--ngx-debugger-color-info);
+}
+
+.ngx-debugger__title {
+  margin: 0;
+  font-size: var(--ngx-debugger-font-size-base);
+  font-weight: 600;
+  color: var(--ngx-debugger-text-color);
+}
+
+.ngx-debugger__subtitle {
+  margin: 0;
+  font-size: var(--ngx-debugger-font-size-xs);
+  color: var(--ngx-debugger-text-muted);
+}
+
+/* ============================================ */
+/* STATUS ROW                                   */
+/* ============================================ */
+
+.ngx-debugger__status-row {
+  border-bottom: 1px solid var(--ngx-debugger-border-color);
+  background-color: var(--ngx-debugger-bg);
+  padding: var(--ngx-debugger-spacing-md) var(--ngx-debugger-spacing-xl);
+}
+
+.ngx-debugger__status-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ngx-debugger-spacing-sm);
+}
+
+/* ============================================ */
+/* STRATEGY ROW                                 */
+/* ============================================ */
+
+.ngx-debugger__strategy-row {
+  border-bottom: 1px solid var(--ngx-debugger-border-color);
+  padding: var(--ngx-debugger-spacing-md) var(--ngx-debugger-spacing-xl);
+}
+
+.ngx-debugger__strategy-row--visible {
+  background-color: var(--ngx-debugger-color-success-bg);
+}
+
+.ngx-debugger__strategy-row--hidden {
+  background-color: var(--ngx-debugger-color-warning-bg);
+}
+
+.ngx-debugger__strategy-content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ngx-debugger-spacing-md);
+}
+
+.ngx-debugger__strategy-icon {
+  flex-shrink: 0;
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+.ngx-debugger__strategy-row--visible .ngx-debugger__strategy-icon {
+  color: var(--ngx-debugger-color-success);
+}
+
+.ngx-debugger__strategy-row--hidden .ngx-debugger__strategy-icon {
+  color: var(--ngx-debugger-color-warning);
+}
+
+.ngx-debugger__strategy-text {
+  flex: 1;
+}
+
+.ngx-debugger__strategy-label {
+  display: flex;
+  align-items: center;
+  gap: var(--ngx-debugger-spacing-sm);
+  font-size: var(--ngx-debugger-font-size-sm);
+  font-weight: 600;
+}
+
+.ngx-debugger__strategy-row--visible .ngx-debugger__strategy-label {
+  color: var(--ngx-debugger-color-success-text);
+}
+
+.ngx-debugger__strategy-row--hidden .ngx-debugger__strategy-label {
+  color: var(--ngx-debugger-color-warning-text);
+}
+
+.ngx-debugger__strategy-reason {
+  margin: var(--ngx-debugger-spacing-xs) 0 0;
+  font-size: var(--ngx-debugger-font-size-sm);
+}
+
+.ngx-debugger__strategy-row--visible .ngx-debugger__strategy-reason {
+  color: var(--ngx-debugger-color-success-text);
+}
+
+.ngx-debugger__strategy-row--hidden .ngx-debugger__strategy-reason {
+  color: var(--ngx-debugger-color-warning-text);
+}
+
+/* ============================================ */
+/* SECTIONS                                     */
+/* ============================================ */
+
+.ngx-debugger__sections {
+  /* No spacing between sections by design */
+}
+
+.ngx-debugger__section {
+  border-bottom: 1px solid var(--ngx-debugger-border-color);
+  background-color: var(--ngx-debugger-bg);
+}
+
+.ngx-debugger__section--last {
+  border-bottom: none;
+}
+
+.ngx-debugger__section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--ngx-debugger-spacing-sm);
+  padding: var(--ngx-debugger-spacing-lg) var(--ngx-debugger-spacing-xl);
+  cursor: pointer;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--ngx-debugger-text-color);
+  list-style: none;
+  transition: background-color 0.15s ease;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &:hover {
+    background-color: var(--ngx-debugger-bg-secondary);
+  }
+}
+
+.ngx-debugger__chevron {
+  width: 1rem;
+  height: 1rem;
+  transition: transform 0.2s ease;
+}
+
+details[open] > .ngx-debugger__section-header .ngx-debugger__chevron {
+  transform: rotate(90deg);
+}
+
+.ngx-debugger__section-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.ngx-debugger__section-content {
+  padding: 0 var(--ngx-debugger-spacing-xl) var(--ngx-debugger-spacing-lg);
+}
+
+/* ============================================ */
+/* JSON DISPLAY                                 */
+/* ============================================ */
+
+.ngx-debugger__json-display {
+  overflow-x: auto;
+  border-radius: var(--ngx-debugger-border-radius-sm);
+  border: 1px solid var(--ngx-debugger-color-info-bg);
+  background-color: var(--ngx-debugger-color-info-bg);
+  padding: var(--ngx-debugger-spacing-lg);
+  font-family:
+    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono',
+    monospace;
+  font-size: var(--ngx-debugger-font-size-sm);
+  color: var(--ngx-debugger-color-info-text);
+
+  pre {
+    margin: 0;
+  }
+
+  code {
+    font-family: inherit;
+  }
+}
+
+/* ============================================ */
+/* INFO BOXES                                   */
+/* ============================================ */
+
+.ngx-debugger__info-box {
+  display: flex;
+  align-items: center;
+  gap: var(--ngx-debugger-spacing-sm);
+  margin-bottom: var(--ngx-debugger-spacing-md);
+  padding: var(--ngx-debugger-spacing-sm);
+  border-radius: var(--ngx-debugger-border-radius-sm);
+  font-size: var(--ngx-debugger-font-size-xs);
+
+  svg {
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+.ngx-debugger__info-box--root {
+  border: 1px solid var(--ngx-debugger-color-root-bg);
+  background-color: var(--ngx-debugger-color-root-bg);
+  color: var(--ngx-debugger-color-root-text);
+}
+
+.ngx-debugger__info-box--field {
+  border: 1px solid var(--ngx-debugger-color-danger-bg);
+  background-color: var(--ngx-debugger-color-danger-bg);
+  color: var(--ngx-debugger-color-danger-text);
+}
+
+.ngx-debugger__info-box--warning-info {
+  border: 1px solid var(--ngx-debugger-color-warning-bg);
+  background-color: var(--ngx-debugger-color-warning-bg);
+  color: var(--ngx-debugger-color-warning-text);
+}
+
+/* ============================================ */
+/* ERROR ITEMS                                  */
+/* ============================================ */
+
+.ngx-debugger__error-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ngx-debugger-spacing-lg);
+}
+
+.ngx-debugger__error-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ngx-debugger-spacing-md);
+}
+
+.ngx-debugger__error-item {
+  padding: var(--ngx-debugger-spacing-md);
+  border-radius: var(--ngx-debugger-border-radius-sm);
+  animation: ngx-debugger-slide-in 0.2s ease-out;
+}
+
+.ngx-debugger__error-item--root {
+  border-left: 4px solid;
+}
+
+.ngx-debugger__error-item--field {
+  border: 1px solid;
+}
+
+/* Visible errors - colored */
+.ngx-debugger__error-item--visible.ngx-debugger__error-item--root:not(
+    .ngx-debugger__error-item--warning
+  ) {
+  border-left-color: var(--ngx-debugger-color-root);
+  background-color: var(--ngx-debugger-color-root-bg);
+}
+
+.ngx-debugger__error-item--visible.ngx-debugger__error-item--field:not(
+    .ngx-debugger__error-item--warning
+  ) {
+  border-color: var(--ngx-debugger-color-danger-bg);
+  background-color: var(--ngx-debugger-color-danger-bg);
+}
+
+.ngx-debugger__error-item--visible.ngx-debugger__error-item--warning.ngx-debugger__error-item--root {
+  border-left-color: var(--ngx-debugger-color-warning);
+  background-color: var(--ngx-debugger-color-warning-bg);
+}
+
+.ngx-debugger__error-item--visible.ngx-debugger__error-item--warning.ngx-debugger__error-item--field {
+  border-color: var(--ngx-debugger-color-warning-bg);
+  background-color: var(--ngx-debugger-color-warning-bg);
+}
+
+/* Hidden errors - muted */
+.ngx-debugger__error-item--hidden {
+  border-color: var(--ngx-debugger-border-color);
+  background-color: var(--ngx-debugger-bg-secondary);
+}
+
+.ngx-debugger__error-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ngx-debugger__error-kind {
+  margin: 0;
+  font-size: var(--ngx-debugger-font-size-sm);
+  font-weight: 600;
+}
+
+.ngx-debugger__error-item--visible:not(
+    .ngx-debugger__error-item--warning
+  ).ngx-debugger__error-item--root
+  .ngx-debugger__error-kind {
+  color: var(--ngx-debugger-color-root-text);
+}
+
+.ngx-debugger__error-item--visible:not(
+    .ngx-debugger__error-item--warning
+  ).ngx-debugger__error-item--field
+  .ngx-debugger__error-kind {
+  color: var(--ngx-debugger-color-danger-text);
+}
+
+.ngx-debugger__error-item--visible.ngx-debugger__error-item--warning
+  .ngx-debugger__error-kind {
+  color: var(--ngx-debugger-color-warning-text);
+}
+
+.ngx-debugger__error-item--hidden .ngx-debugger__error-kind {
+  color: var(--ngx-debugger-text-secondary);
+}
+
+.ngx-debugger__error-message {
+  margin: var(--ngx-debugger-spacing-xs) 0 0;
+  font-size: var(--ngx-debugger-font-size-sm);
+}
+
+.ngx-debugger__error-item--visible:not(
+    .ngx-debugger__error-item--warning
+  ).ngx-debugger__error-item--root
+  .ngx-debugger__error-message {
+  color: var(--ngx-debugger-color-root-text);
+}
+
+.ngx-debugger__error-item--visible:not(
+    .ngx-debugger__error-item--warning
+  ).ngx-debugger__error-item--field
+  .ngx-debugger__error-message {
+  color: var(--ngx-debugger-color-danger-text);
+}
+
+.ngx-debugger__error-item--visible.ngx-debugger__error-item--warning
+  .ngx-debugger__error-message {
+  color: var(--ngx-debugger-color-warning-text);
+}
+
+.ngx-debugger__error-item--hidden .ngx-debugger__error-message {
+  color: var(--ngx-debugger-text-muted);
+}
+
+.ngx-debugger__group-label {
+  margin-bottom: var(--ngx-debugger-spacing-sm);
+  font-size: var(--ngx-debugger-font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--ngx-debugger-color-warning-text);
+}
+
+/* ============================================ */
+/* EMPTY STATE                                  */
+/* ============================================ */
+
+.ngx-debugger__empty-state {
+  padding: var(--ngx-debugger-spacing-lg) 0;
+  text-align: center;
+
+  p {
+    margin: 0;
+    font-size: var(--ngx-debugger-font-size-sm);
+    color: var(--ngx-debugger-text-muted);
+  }
+}
+
+.ngx-debugger__empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto var(--ngx-debugger-spacing-md);
+  border-radius: 50%;
+  background-color: var(--ngx-debugger-bg-tertiary);
+
+  svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--ngx-debugger-text-muted);
+  }
+}
+
+.ngx-debugger__empty-state--warning .ngx-debugger__empty-icon {
+  background-color: var(--ngx-debugger-color-warning-bg);
+
+  svg {
+    color: var(--ngx-debugger-color-warning);
+  }
+}
+
+/* ============================================ */
+/* FOOTER                                       */
+/* ============================================ */
+
+.ngx-debugger__footer {
+  border-top: 1px solid var(--ngx-debugger-border-color);
+  background-color: var(--ngx-debugger-bg-secondary);
+  padding: var(--ngx-debugger-spacing-md) var(--ngx-debugger-spacing-xl);
+}
+
+.ngx-debugger__footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--ngx-debugger-font-size-xs);
+  color: var(--ngx-debugger-text-muted);
+}
+
+.ngx-debugger__live-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--ngx-debugger-spacing-xs);
+}
+
+.ngx-debugger__live-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--ngx-debugger-color-success);
+  animation: ngx-debugger-pulse 2s infinite;
+}
+
+/* ============================================ */
+/* ANIMATIONS                                   */
+/* ============================================ */
+
+@keyframes ngx-debugger-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ngx-debugger-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
