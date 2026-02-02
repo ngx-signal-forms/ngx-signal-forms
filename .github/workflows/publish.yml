@@ -102,8 +102,6 @@ jobs:
           node-version: 22
           cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -120,8 +118,6 @@ jobs:
       - name: Publish packages
         if: ${{ inputs.dry_run != true }}
         run: pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --skip-nx-cache
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Summary
         run: |
@@ -130,3 +126,4 @@ jobs:
           echo "- npm Dist Tag: ${{ steps.release_info.outputs.dist_tag }}" >> $GITHUB_STEP_SUMMARY
           echo "- Dry Run: ${{ inputs.dry_run || false }}" >> $GITHUB_STEP_SUMMARY
           echo "- Auth: npm Automation Token" >> $GITHUB_STEP_SUMMARY
+Trusted Publishers (OIDC)
