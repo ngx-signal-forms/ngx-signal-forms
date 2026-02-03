@@ -1874,7 +1874,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       });
 
       // First render with id="first"
-      const { rerender, container } = await render(
+      const { container } = await render(
         `<ngx-signal-form-field-wrapper [formField]="field">
           <label for="first">Field</label>
           <input id="first" type="text" />

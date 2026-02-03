@@ -128,19 +128,21 @@ export class SignalFormDebuggerComponent {
 
   #warned = false;
 
-  readonly #warnFieldStateUsage = effect(() => {
-    if (!isDevMode()) return;
+  constructor() {
+    effect(() => {
+      if (!isDevMode()) return;
 
-    const input = this.formTree();
-    if (!input || this.#isFieldTree(input) || this.#warned) return;
+      const input = this.formTree();
+      if (!input || this.#isFieldTree(input) || this.#warned) return;
 
-    this.#warned = true;
-    console.warn(
-      '[NgxSignalFormDebugger] Pass the FieldTree function (e.g. form) to formTree. ' +
-        'A FieldState (e.g. form()) is supported, but it cannot traverse child fields ' +
-        'and may show errors as visible immediately.',
-    );
-  });
+      this.#warned = true;
+      console.warn(
+        '[NgxSignalFormDebugger] Pass the FieldTree function (e.g. form) to formTree. ' +
+          'A FieldState (e.g. form()) is supported, but it cannot traverse child fields ' +
+          'and may show errors as visible immediately.',
+      );
+    });
+  }
 
   /** Normalize to root FieldState regardless of input shape */
   protected readonly rootState = computed<FieldState<unknown>>(() => {

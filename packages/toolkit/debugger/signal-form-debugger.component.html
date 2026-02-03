@@ -26,9 +26,9 @@
       <!-- Status Badge -->
       <div>
         @if (valid() && !pending()) {
-          <ngx-debugger-badge variant="solid" appearance="success">
+          <ngx-signal-form-debugger-badge variant="solid" appearance="success">
             <svg
-              ngxDebuggerBadgeIcon
+              ngxSignalFormDebuggerBadgeIcon
               fill="none"
               stroke="currentColor"
               stroke-width="2"
@@ -42,11 +42,11 @@
               />
             </svg>
             Valid
-          </ngx-debugger-badge>
+          </ngx-signal-form-debugger-badge>
         } @else if (pending()) {
-          <ngx-debugger-badge variant="solid" appearance="warning">
+          <ngx-signal-form-debugger-badge variant="solid" appearance="warning">
             <svg
-              ngxDebuggerBadgeIcon
+              ngxSignalFormDebuggerBadgeIcon
               class="ngx-debugger-badge__icon animate-spin"
               fill="none"
               stroke="currentColor"
@@ -59,11 +59,11 @@
               />
             </svg>
             Validating
-          </ngx-debugger-badge>
+          </ngx-signal-form-debugger-badge>
         } @else if (invalid()) {
-          <ngx-debugger-badge variant="solid" appearance="danger">
+          <ngx-signal-form-debugger-badge variant="solid" appearance="danger">
             <svg
-              ngxDebuggerBadgeIcon
+              ngxSignalFormDebuggerBadgeIcon
               fill="none"
               stroke="currentColor"
               stroke-width="2"
@@ -73,11 +73,11 @@
               <path stroke-linecap="round" d="M5.5 5.5l5 5M10.5 5.5l-5 5" />
             </svg>
             Invalid
-          </ngx-debugger-badge>
+          </ngx-signal-form-debugger-badge>
         } @else {
-          <ngx-debugger-badge variant="solid" appearance="neutral">
+          <ngx-signal-form-debugger-badge variant="solid" appearance="neutral">
             <svg
-              ngxDebuggerBadgeIcon
+              ngxSignalFormDebuggerBadgeIcon
               fill="none"
               stroke="currentColor"
               stroke-width="2"
@@ -88,7 +88,7 @@
               <path stroke-linecap="round" d="M8 8.5v3" />
             </svg>
             Idle
-          </ngx-debugger-badge>
+          </ngx-signal-form-debugger-badge>
         }
       </div>
     </div>
@@ -97,13 +97,13 @@
   <!-- Status Indicators Row -->
   <div class="ngx-debugger__status-row">
     <div class="ngx-debugger__status-badges">
-      <ngx-debugger-badge
+      <ngx-signal-form-debugger-badge
         variant="outline"
         [appearance]="valid() ? 'success' : 'neutral'"
       >
         @if (valid()) {
           <svg
-            ngxDebuggerBadgeIcon
+            ngxSignalFormDebuggerBadgeIcon
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -118,7 +118,7 @@
           </svg>
         } @else {
           <svg
-            ngxDebuggerBadgeIcon
+            ngxSignalFormDebuggerBadgeIcon
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -129,14 +129,14 @@
           </svg>
         }
         Valid
-      </ngx-debugger-badge>
-      <ngx-debugger-badge
+      </ngx-signal-form-debugger-badge>
+      <ngx-signal-form-debugger-badge
         variant="outline"
         [appearance]="invalid() ? 'danger' : 'neutral'"
       >
         @if (invalid()) {
           <svg
-            ngxDebuggerBadgeIcon
+            ngxSignalFormDebuggerBadgeIcon
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -147,14 +147,14 @@
           </svg>
         }
         Invalid
-      </ngx-debugger-badge>
-      <ngx-debugger-badge
+      </ngx-signal-form-debugger-badge>
+      <ngx-signal-form-debugger-badge
         variant="outline"
         [appearance]="dirty() ? 'warning' : 'neutral'"
       >
         @if (dirty()) {
           <svg
-            ngxDebuggerBadgeIcon
+            ngxSignalFormDebuggerBadgeIcon
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -168,11 +168,11 @@
           </svg>
         }
         Dirty
-      </ngx-debugger-badge>
-      <ngx-debugger-badge variant="outline" appearance="info">
+      </ngx-signal-form-debugger-badge>
+      <ngx-signal-form-debugger-badge variant="outline" appearance="info">
         @if (pending()) {
           <svg
-            ngxDebuggerBadgeIcon
+            ngxSignalFormDebuggerBadgeIcon
             class="ngx-debugger-badge__icon animate-spin"
             fill="none"
             stroke="currentColor"
@@ -186,8 +186,8 @@
           </svg>
         }
         Pending
-      </ngx-debugger-badge>
-      <ngx-debugger-badge
+      </ngx-signal-form-debugger-badge>
+      <ngx-signal-form-debugger-badge
         variant="outline"
         [appearance]="
           submittedStatus() === 'submitting'
@@ -199,7 +199,7 @@
       >
         @if (submittedStatus() === 'submitting') {
           <svg
-            ngxDebuggerBadgeIcon
+            ngxSignalFormDebuggerBadgeIcon
             class="ngx-debugger-badge__icon animate-spin"
             fill="none"
             stroke="currentColor"
@@ -213,7 +213,7 @@
           </svg>
         } @else if (submittedStatus() === 'submitted') {
           <svg
-            ngxDebuggerBadgeIcon
+            ngxSignalFormDebuggerBadgeIcon
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -228,7 +228,7 @@
           </svg>
         }
         Status: {{ submittedStatusDisplay() }}
-      </ngx-debugger-badge>
+      </ngx-signal-form-debugger-badge>
     </div>
   </div>
 
@@ -267,14 +267,14 @@
       <div class="ngx-debugger__strategy-text">
         <div class="ngx-debugger__strategy-label">
           <span>Error Display Strategy:</span>
-          <ngx-debugger-badge
+          <ngx-signal-form-debugger-badge
             variant="solid"
             [appearance]="
               errorVisibilityInfo().errorsVisible ? 'success' : 'warning'
             "
           >
             {{ errorVisibilityInfo().strategy }}
-          </ngx-debugger-badge>
+          </ngx-signal-form-debugger-badge>
         </div>
         <p class="ngx-debugger__strategy-reason">
           {{ errorVisibilityInfo().visibilityReason }}
@@ -357,13 +357,13 @@
         </svg>
         <span>Validation Errors</span>
         @if (totalBlockingCount() > 0) {
-          <ngx-debugger-badge variant="solid" appearance="danger">
+          <ngx-signal-form-debugger-badge variant="solid" appearance="danger">
             {{ visibleBlockingCount() }}/{{ totalBlockingCount() }}
-          </ngx-debugger-badge>
+          </ngx-signal-form-debugger-badge>
         } @else if (showValidAfterTouch()) {
-          <ngx-debugger-badge variant="solid" appearance="success">
+          <ngx-signal-form-debugger-badge variant="solid" appearance="success">
             <svg
-              ngxDebuggerBadgeIcon
+              ngxSignalFormDebuggerBadgeIcon
               fill="none"
               stroke="currentColor"
               stroke-width="2"
@@ -377,7 +377,7 @@
               />
             </svg>
             0/0
-          </ngx-debugger-badge>
+          </ngx-signal-form-debugger-badge>
         }
       </summary>
       <div class="ngx-debugger__section-content">
@@ -416,12 +416,12 @@
                           🔗 {{ error.kind }}
                         </h6>
                         @if (!error.visible) {
-                          <ngx-debugger-badge
+                          <ngx-signal-form-debugger-badge
                             variant="outline"
                             appearance="warning"
                           >
                             Hidden by strategy
-                          </ngx-debugger-badge>
+                          </ngx-signal-form-debugger-badge>
                         }
                       </div>
                       <p class="ngx-debugger__error-message">
@@ -466,12 +466,12 @@
                           {{ error.kind }}
                         </h6>
                         @if (!error.visible) {
-                          <ngx-debugger-badge
+                          <ngx-signal-form-debugger-badge
                             variant="outline"
                             appearance="warning"
                           >
                             Hidden by strategy
-                          </ngx-debugger-badge>
+                          </ngx-signal-form-debugger-badge>
                         }
                       </div>
                       <p class="ngx-debugger__error-message">
@@ -535,9 +535,9 @@
         </svg>
         <span>Warnings (Non-blocking)</span>
         @if (totalWarningCount() > 0) {
-          <ngx-debugger-badge variant="solid" appearance="warning">
+          <ngx-signal-form-debugger-badge variant="solid" appearance="warning">
             {{ visibleWarningCount() }}/{{ totalWarningCount() }}
-          </ngx-debugger-badge>
+          </ngx-signal-form-debugger-badge>
         }
       </summary>
       <div class="ngx-debugger__section-content">
@@ -571,12 +571,12 @@
                           🔗 {{ warning.kind }}
                         </h6>
                         @if (!warning.visible) {
-                          <ngx-debugger-badge
+                          <ngx-signal-form-debugger-badge
                             variant="outline"
                             appearance="warning"
                           >
                             Hidden by strategy
-                          </ngx-debugger-badge>
+                          </ngx-signal-form-debugger-badge>
                         }
                       </div>
                       <p class="ngx-debugger__error-message">
@@ -611,12 +611,12 @@
                           {{ warning.kind }}
                         </h6>
                         @if (!warning.visible) {
-                          <ngx-debugger-badge
+                          <ngx-signal-form-debugger-badge
                             variant="outline"
                             appearance="warning"
                           >
                             Hidden by strategy
-                          </ngx-debugger-badge>
+                          </ngx-signal-form-debugger-badge>
                         }
                       </div>
                       <p class="ngx-debugger__error-message">

@@ -29,7 +29,7 @@ export type DebuggerBadgeAppearance =
  * ```
  */
 @Directive({
-  selector: '[ngxDebuggerBadgeIcon]',
+  selector: '[ngxSignalFormDebuggerBadgeIcon]',
   host: {
     class: 'ngx-debugger-badge__icon',
   },
@@ -42,11 +42,11 @@ export class DebuggerBadgeIconDirective {}
  *
  * @example
  * ```html
- * <ngx-debugger-badge variant="solid" appearance="success">Valid</ngx-debugger-badge>
+ * <ngx-signal-form-debugger-badge variant="solid" appearance="success">Valid</ngx-signal-form-debugger-badge>
  * ```
  */
 @Component({
-  selector: 'ngx-debugger-badge',
+  selector: 'ngx-signal-form-debugger-badge',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'ngx-debugger-badge',
