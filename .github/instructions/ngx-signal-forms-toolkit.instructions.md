@@ -987,6 +987,173 @@ test('should validate accessibility tree', async ({ page }) => {
 9. **Convention-Based**: Use `'warn:'` prefix for warnings
 10. **Default Strategy**: Always use `'on-touch'` unless specified
 
+## Multi-Page / Wizard Forms
+
+Reference: [WAI Forms Tutorial: Multi-page Forms](https://www.w3.org/WAI/tutorials/forms/multi-page/)
+
+### Navigation Behavior
+
+#### Next Button: DO NOT Disable
+
+**Critical**: Never disable the Next button when the current step is invalid.
+
+| Approach | WCAG Impact |
+|----------|-------------|
+| Disabled Next when invalid | Users cannot discover which fields need attention |
+| Enabled Next + validation on click | Users receive actionable error feedback |
+
+```typescript
+// ✅ Correct: Always allow Next, validate on click
+protected nextStep(): void {
+  // Trigger validation on all fields
+  this.stepForm.markAllAsTouched();
+
+  if (this.stepForm().invalid()) {
+    // Focus first invalid field for immediate correction
+    focusFirstInvalid(this.stepForm);
+    return;
+  }
+
+  this.saveAndProceed();
+}
+
+// ❌ Wrong: Disabling button blocks error discovery
+<button [disabled]="stepForm().invalid()">Next</button>
+```
+
+#### Previous Button: Always Allow
+
+Users MUST be able to navigate backward to review/edit completed steps:
+
+- Save current step data (even if incomplete) before navigating
+- Restore data when returning to a step
+- Never block backward navigation due to validation
+
+```typescript
+protected previousStep(): void {
+  // Always save before leaving, even if invalid
+  this.saveCurrentStep();
+  this.goToPreviousStep();
+  this.focusStepContent();
+}
+```
+
+### Progress Indication
+
+Show progress in multiple ways for different users:
+
+```typescript
+// 1. Page title (screen readers announce first)
+<title>Step 2 of 4: Trip Details – Booking Wizard – Travel App</title>
+
+// 2. Heading (visual users, screen readers)
+<h1>Trip Details (Step 2 of 4)</h1>
+
+// 3. Step indicators with proper semantics
+<nav aria-label="Booking progress">
+  <ol class="wizard-steps">
+    @for (step of steps; track step.id) {
+      <li [class.completed]="isCompleted(step.id)"
+          [class.current]="isCurrent(step.id)">
+        @if (isCompleted(step.id)) {
+          <span class="sr-only">Completed: </span>
+          <a [routerLink]="step.route">{{ step.number }}. {{ step.label }}</a>
+        } @else if (isCurrent(step.id)) {
+          <span class="sr-only">Current: </span>
+          <span aria-current="step">{{ step.number }}. {{ step.label }}</span>
+        } @else {
+          <span>{{ step.number }}. {{ step.label }}</span>
+        }
+      </li>
+    }
+  </ol>
+</nav>
+
+// 4. Progress bar
+<div role="progressbar"
+     [attr.aria-valuenow]="progressPercent()"
+     aria-valuemin="0"
+     aria-valuemax="100"
+     aria-label="Booking progress">
+  <div class="fill" [style.width.%]="progressPercent()"></div>
+</div>
+```
+
+### Focus Management
+
+On step change, move focus to help users orient:
+
+```typescript
+protected goToStep(stepId: string): void {
+  this.currentStep.set(stepId);
+
+  // Option 1: Focus step heading (needs tabindex="-1")
+  this.stepHeading().nativeElement.focus();
+
+  // Option 2: Focus first form field
+  // Good for short forms, avoids extra tab stop
+}
+```
+
+### Error Strategy for Wizards
+
+**Recommended**: Use `'on-touch'` (default) for wizard steps.
+
+- Errors show immediately after blur (user left field)
+- Errors show for all fields after clicking Next (markAllAsTouched)
+- No additional `submittedStatus` tracking needed
+
+```typescript
+// ✅ Works well for wizard steps
+<form (submit)="nextStep()">
+  <ngx-signal-form-field-wrapper [formField]="stepForm.email">
+    <label for="email">Email</label>
+    <input id="email" [formField]="stepForm.email" />
+  </ngx-signal-form-field-wrapper>
+  <button type="submit">Next</button>
+</form>
+```
+
+### Review Step Pattern
+
+Provide a review step before final submission:
+
+```typescript
+// Review step template
+<section aria-labelledby="review-heading">
+  <h1 id="review-heading">Review Your Booking (Step 3 of 3)</h1>
+
+  @for (step of completedSteps; track step.id) {
+    <div class="review-section">
+      <h2>{{ step.label }}</h2>
+      <dl>
+        @for (field of step.fields; track field.key) {
+          <dt>{{ field.label }}</dt>
+          <dd>{{ field.value }}</dd>
+        }
+      </dl>
+      <a [routerLink]="step.route">Edit {{ step.label }}</a>
+    </div>
+  }
+
+  <button type="button" (click)="submitBooking()">
+    Confirm Booking
+  </button>
+</section>
+```
+
+### Wizard Accessibility Checklist
+
+- [ ] Next button NOT disabled when step is invalid
+- [ ] Users can navigate backward to any completed step
+- [ ] Progress shown in page title and heading
+- [ ] Step indicators use `aria-current="step"`
+- [ ] Progress bar uses `role="progressbar"` with aria attributes
+- [ ] Focus moves to step heading or first field on navigation
+- [ ] Review step allows editing before final submission
+- [ ] No time limits (or extendable if required)
+- [ ] Data saved when navigating between steps
+
 ## WCAG 2.2 Compliance Checklist
 
 - [ ] All inputs have associated labels
