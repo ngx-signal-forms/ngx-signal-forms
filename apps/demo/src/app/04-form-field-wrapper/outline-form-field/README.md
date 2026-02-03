@@ -2,66 +2,53 @@
 
 ## Overview
 
-This example demonstrates the default outlined form field styling that matches the Figma design system without custom CSS overrides. The form showcases a Dutch legal system interface for entering prison sentence data.
+Demonstrates the default outlined form field styling (no custom overrides) with a complex, nested form for Dutch legal case entry.
 
-## Key Features
+## Form model
 
-- **Default Outlined Styling**: Uses toolkit's default design (matches Figma)
-- **Zero Configuration**: No custom CSS properties needed
-- **Outlined Input Layout**: Material Design inspired inputs with floating labels
-- **Nested Card Structure**: Multi-level hierarchy with semi-transparent backgrounds
-- **Dynamic Array Handling**: Add/remove facts, offenses, and legal articles
-- **Custom Icons**: SVG icons integrated with design system colors
-- **Consistent Spacing**: Design tokens for all spacing values
+- Signal model via `signal<OutlineFormFieldModel>()`.
+- Form instance created with `form(model, outlineFormFieldSchema)`.
 
-## Design System
+## Validation overview
 
-Based on the Figma design system with default toolkit styling:
+**Errors**
 
-- **Typography**: 12px labels (caption), 14px inputs (body-2), Inter Variable font
-- **Spacing**: 4px vertical, 8px horizontal padding (Figma design)
-- **Colors**: #324155 text, rgba(50,65,85,0.25) borders, #005fcc focus
-- **Borders**: 4px rounded corners with subtle border colors
-- **Icons**: SVG icons matching the design system
+- Commit date and country required for each fact.
+- Municipality required when country is `NL`.
+- Abroad location required when country is not `NL`.
+- Location description must be at least 10 characters if provided.
+- Each offense requires a qualification with minimum length 3.
+- Each offense must include at least one article.
+- Each article is required.
+- Duplicate articles within an offense are rejected.
+- At least one offense required per fact.
 
-## Files
+**Warnings**
 
-- `outline-form-field.model.ts` - Data model for facts, offenses, and legal articles
-- `outline-form-field.validations.ts` - Validation schema
-- `outline-form-field.form.ts` - Main form component with dynamic array handling
-- `outline-form-field.html` - Template with nested card structure
-- `outline-form-field.scss` - Layout styling only (no form field overrides)
-- `outline-form-field.content.ts` - Documentation content
-- `outline-form-field.page.ts` - Demo page wrapper
+- Missing place description (suggestion).
+- Article format suggestion for `SR-###` values.
 
-## Default Styling
+## Toolkit usage
 
-The form uses the toolkit's default outlined styling which matches the Figma design:
+- `NgxSignalFormToolkit` for auto-ARIA and form context.
+- `NgxFormField` wrapper for outlined appearance.
+- `provideNgxSignalFormsConfigForComponent({ defaultFormFieldAppearance: 'outline' })` to enable outline styling.
 
-```scss
-// No custom properties needed - uses toolkit defaults
-// Default values automatically match Figma design:
-// - Label: 12px, rgba(71,91,119,0.75), weight 400
-// - Input: 14px, #324155, weight 400
-// - Padding: 4px 8px
-// - Border: rgba(50,65,85,0.25), 4px radius
-// - Focus: #005fcc with subtle shadow
-```
+## Other tools
 
-## Usage
+- None.
 
-```typescript
-import { OutlineFormFieldPage } from './outline-form-field';
+## Key files
 
-// In routes
-{
-  path: 'outline-form-field',
-  component: OutlineFormFieldPage
-}
-```
+- `outline-form-field.model.ts` — nested data model.
+- `outline-form-field.validations.ts` — schema with nested array rules.
+- `outline-form-field.form.ts` — dynamic array handlers.
+- `outline-form-field.html` — template layout.
+- `outline-form-field.page.ts` — demo wrapper and debugger.
 
-## Learn More
+## How to test
 
-- See `THEMING.md` in the form-field package for customization options
-- Check the Figma design for visual specifications
-- Default styling matches Figma design without configuration
+1. Run the demo app.
+2. Navigate to `/form-field-wrapper/outline-form-field`.
+3. Add offenses and articles to trigger nested validations.
+4. Set country to `NL` vs non-`NL` to see conditional requirements.

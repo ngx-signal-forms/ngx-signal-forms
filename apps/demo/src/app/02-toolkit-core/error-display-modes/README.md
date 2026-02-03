@@ -1,31 +1,50 @@
 # Error Display Modes
 
-This example demonstrates how the toolkit’s error display strategies affect when validation feedback appears. It uses a realistic product feedback form and lets you switch strategies at runtime.
+## Overview
 
-## What this demo shows
+Demonstrates how different error display strategies change when validation feedback appears. The product feedback form can be switched between `immediate`, `on-touch`, `on-submit`, and `manual` strategies.
 
-- **Error strategies**: `immediate`, `on-touch`, `on-submit`, `manual`
-- **Signal Forms + Toolkit**: `NgxSignalFormToolkit` + `NgxSignalFormErrorComponent`
-- **Realistic form**: personal info, product feedback, and preferences
-- **Helper usage**: `showErrors()` and `injectFormContext()` for custom visibility logic
+## Form model
 
-## Strategies in practice
+- Signal model via `signal<ProductFeedbackModel>()`.
+- Form instance created with `form(model, productFeedbackSchema)`.
 
-- **immediate**: errors show as the user types
-- **on-touch**: errors show after blur or submit (recommended)
-- **on-submit**: errors show only after submit attempt
-- **manual**: no automatic error visibility
+## Validation overview
 
-## Try it
+**Errors**
 
-1. Switch between strategies with the selector.
-2. Type in **Name** or **Email** and blur the field.
-3. Submit with missing required fields.
-4. Watch the helper panel react to `showErrors()` and form submission state.
+- Name: required, minimum length 2, maximum length 50.
+- Email: required + email format.
+- Company: maximum length 100.
+- Product used: required.
+- Overall rating: required, min 1, max 5.
+- Improvement suggestions: required when rating ≤ 3, minimum length 10, maximum length 500.
+- Detailed feedback: maximum length 1000.
+
+**Warnings**
+
+- None.
+
+## Toolkit usage
+
+- `NgxSignalFormToolkit` for auto-ARIA and form context.
+- `NgxSignalFormErrorComponent` for field-level error rendering.
+- `injectFormContext()` and `combineShowErrors()` for custom visibility helpers.
+- Error strategy set on the form via `[errorStrategy]`.
+
+## Other tools
+
+- None.
 
 ## Key files
 
-- `error-display-modes.page.ts` — page shell and mode selector
-- `error-display-modes.form.ts` — form implementation
-- `error-display-modes.validations.ts` — schema and validation rules
-- `error-display-modes.content.ts` — demo card content
+- `error-display-modes.form.ts` — form and helper component.
+- `error-display-modes.validations.ts` — validation schema.
+- `error-display-modes.page.ts` — demo wrapper and debugger.
+
+## How to test
+
+1. Run the demo app.
+2. Navigate to `/toolkit-core/error-display-modes`.
+3. Switch strategies and blur fields to observe timing differences.
+4. Choose a low rating to trigger the conditional improvement field.

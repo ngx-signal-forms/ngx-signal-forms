@@ -1,188 +1,88 @@
-# Error Messages Demo
+# Error Messages & Global Configuration
 
 ## Overview
 
-This demo showcases the **Error Message Fallback Registry** (Item #5) with 3-tier message priority system.
+This demo showcases the **3-tier error message priority system** provided by `@ngx-signal-forms/toolkit`. It demonstrates how to manage error messages efficiently at different levels of your application, from specific form fields to global defaults.
 
-## When to Use This Feature
+The priority system resolves messages in this order:
 
-**Use `provideErrorMessages()` when you need:**
+1.  **Validator Message (Tier 1)**: Defines a specific message for a single field instance.
+2.  **Registry / Provider (Tier 2)**: Overrides messages for a specific validator type (e.g., all `required` errors) within a component tree.
+3.  **Toolkit Default (Tier 3)**: The built-in English fallback if no other message is found.
 
-- ✅ **Multi-language support** - Dynamic messages based on user's locale (LOCALE_ID, ngx-translate, @angular/localize)
-- ✅ **Centralized consistency** - Same error messages across all forms in your application (DRY principle)
-- ✅ **Brand-specific messaging** - Match your company's tone/voice (e.g., friendly vs. formal)
-- ✅ **Design system requirements** - Comply with specific UX guidelines
-- ✅ **Custom validator messages** - Friendly messages for domain-specific validation
+## Feature Spotlight: `provideErrorMessages`
 
-**Don't use `provideErrorMessages()` when:**
+### What is it?
 
-- ❌ **Using Standard Schema libraries** (Zod, Valibot, ArkType) - They provide excellent messages
-- ❌ **Simple apps** - Toolkit's defaults are production-ready
-- ❌ **Single language** - No i18n needed, validator messages work great
+`provideErrorMessages` is a toolkit function that registers a custom error message dictionary in the Angular dependency injection system. It allows you to define centralized messages for validation keys (like `required`, `email`, `minLength`).
 
-**Decision flowchart:**
+### Why use it?
 
-```text
-Do you use Zod/Valibot/ArkType?
-  ├─ Yes → Use schema messages (zero-config) ✅
-  └─ No → Do you need i18n?
-      ├─ Yes → Use provideErrorMessages() with locale injection 🌍
-      └─ No → Do you have 10+ forms?
-          ├─ Yes → Consider provideErrorMessages() for consistency 📋
-          └─ No → Use validator messages or defaults ✅
-```
+- **Consistency**: Ensure "This field is required" looks the same across your entire app.
+- **Maintainability**: Change a message in one place (e.g., `main.ts`) to update it everywhere.
+- **Flexibility**: You can override these defaults at the component level for specific forms.
+- **Dynamic Messages**: Supports function-based messages for parameterized validators (e.g., showing the specific length required).
 
-## 3-Tier Message Priority
+### How to use it?
 
-The toolkit resolves error messages in this order:
-
-1. **Tier 1: Validator Message** (`error.message` property)
-   - Highest priority
-   - Example: `email(path.email, { message: 'Valid email required' })`
-   - ✅ **Recommended** for most use cases
-
-2. **Tier 2: Registry Override** (from `provideErrorMessages()`)
-   - Fallback if no validator message
-   - Example: `provideErrorMessages({ required: 'This field is required' })`
-   - Use for centralized messages or i18n
-
-3. **Tier 3: Default Toolkit Fallback**
-   - Final fallback for built-in Angular validators
-   - Example: `required` → "This field is required"
-   - Automatically provided by toolkit
-
-## Features Demonstrated
-
-### Zero-Config Pattern (Recommended)
+Registers providers in your `appConfig` (global) or `Component` (local):
 
 ```typescript
+// Local override example
+providers: [
+  provideErrorMessages({
+    required: 'This field is required',
+    email: 'Please use a valid corporate email',
+    // Dynamic message using validation params
+    minLength: (params) => `Needs at least ${params.minLength} chars`,
+  }),
+];
+```
+
+## Implementation Details
+
+This demo implements the 3 tiers to show how they interact:
+
+### Tier 1: Validator Message
+
+**Highest Priority.** Used when a specific field needs a unique message (e.g., "You must accept the terms" vs just "Required").
+
+```typescript
+// In validation schema
 email(path.email, { message: 'Valid email required' });
 ```
 
-**Benefits:**
+### Tier 2: Registry Override
 
-- No provider configuration needed
-- Messages close to validation logic
-- Standard Schema libraries (Zod, Valibot, ArkType) work perfectly
-
-### Centralized Registry Pattern
+**Context Priority.** Used to set the tone for a specific form or feature area. In this demo, the `ErrorMessagesComponent` provides its own dictionary.
 
 ```typescript
+// In component providers
 provideErrorMessages({
-  required: 'This field is required',
-  email: 'Please enter a valid email address',
-  minLength: (params: Record<string, unknown>) =>
-    `Minimum ${(params as { minLength: number }).minLength} characters required`,
+  minLength: (p) => `Minimum ${p.minLength} characters required`,
 });
 ```
 
-**Use Cases:**
+### Tier 3: Default Fallback
 
-- Centralizing messages across multiple forms
-- i18n integration (LOCALE_ID, ngx-translate, @angular/localize)
-- Brand-specific messaging
-- Design system requirements
+**Lowest Priority.** If you don't provide a message in the schema OR the registry, the toolkit uses its built-in defaults (e.g., "required" -> "This field is required").
 
-### Default Toolkit Fallbacks
+## Toolkit Usage in this Demo
 
-Built-in validators that don't have validator messages or registry overrides use toolkit defaults:
+| Feature                    | Use Case                                                                                               |
+| :------------------------- | :----------------------------------------------------------------------------------------------------- |
+| **`provideErrorMessages`** | Registers the custom message dictionary for this form.                                                 |
+| **`NgxSignalFormToolkit`** | Provides the injection context to resolve these messages automatically.                                |
+| **`NgxFormField`**         | improved UX element that automatically displays the resolved error message without manual `if` blocks. |
 
-| Validator   | Default Message                           |
-| ----------- | ----------------------------------------- |
-| `required`  | "This field is required"                  |
-| `email`     | "Please enter a valid email address"      |
-| `minLength` | "Minimum {minLength} characters required" |
-| `maxLength` | "Maximum {maxLength} characters allowed"  |
-| `min`       | "Minimum value is {min}"                  |
-| `max`       | "Maximum value is {max}"                  |
-| `pattern`   | "Invalid format"                          |
+## Key Files
 
-## Form Implementation
+- [error-messages.form.ts](error-messages.form.ts): Contains the `providers` setup and form configuration.
+- [error-messages.validations.ts](error-messages.validations.ts): Defines the schema with Tier 1 overrides.
+- [error-messages.content.ts](error-messages.content.ts): Explains the learning concepts.
 
-### Email Field (Tier 1 - Validator Message)
+## How to Test
 
-```typescript
-required(path.email); // No message
-email(path.email, { message: 'Valid email required' }); // Has message - Tier 1!
-```
-
-**Result:** Uses "Valid email required" from validator
-
-### Password Field (Tier 2 - Registry Override)
-
-```typescript
-required(path.password); // No message
-minLength(path.password, 8); // No message
-```
-
-**Provider:**
-
-```typescript
-provideErrorMessages({
-  minLength: (params) => `Minimum ${params.minLength} characters required`,
-});
-```
-
-**Result:** Uses registry message "Minimum 8 characters required"
-
-### Bio Field (Tier 3 - Default Fallback)
-
-```typescript
-required(path.bio); // No message
-```
-
-**No provider entry for `required`**
-
-**Result:** Uses toolkit default "This field is required"
-
-## i18n Integration Patterns
-
-See [packages/toolkit/README.md](../../../packages/toolkit/README.md#error-message-configuration) for complete i18n examples:
-
-- JSON files with LOCALE_ID injection
-- ngx-translate integration
-- @angular/localize integration
-- TypeScript message files
-
-## Testing
-
-All error message features are tested:
-
-```bash
-pnpm nx test toolkit --testFile=error-messages.provider.spec.ts
-```
-
-**Test Coverage:**
-
-- ✅ Static configuration (string messages, factory functions)
-- ✅ Dynamic providers (locale injection, environment-based)
-- ✅ Zero-config (empty registry)
-- ✅ Type safety (TypeScript compilation)
-- ✅ Edge cases (undefined values, special characters)
-
-## Architecture
-
-**Provider:**
-
-- `packages/toolkit/core/providers/error-messages.provider.ts`
-- `NGX_ERROR_MESSAGES` injection token
-- `provideErrorMessages()` function
-
-**Component Integration:**
-
-- `packages/toolkit/core/components/form-error.component.ts`
-- `#resolveErrorMessage()` - 3-tier priority logic
-- `#getDefaultMessage()` - Built-in validator fallbacks
-- `resolvedErrors` / `resolvedWarnings` computed signals
-
-**Tests:**
-
-- `packages/toolkit/core/providers/error-messages.provider.spec.ts`
-- 16 tests across 5 suites
-- All tests passing ✅
-
-## Related Documentation
-
-- [Toolkit README - Error Message Configuration](../../../packages/toolkit/README.md#error-message-configuration)
-- [Signal Forms Instructions](../../../.github/instructions/signal-forms.instructions.md)
-- [Toolkit Instructions](../../../.github/instructions/signal-forms-toolkit.instructions.md)
+1.  **Tier 1 (Email)**: Enter an invalid email. Notice the message "Valid email required" comes directly from the schema definition.
+2.  **Tier 2 (Password)**: Enter a short password. Notice the message "Minimum 8 characters required". This is dynamically generated from the _provider function_ configured in the component.
+3.  **Tier 3 (Bio)**: Leave empty and blur. Notice the generic "This field is required". This comes from the `required` key in the provider (acting as the default for this scope).
