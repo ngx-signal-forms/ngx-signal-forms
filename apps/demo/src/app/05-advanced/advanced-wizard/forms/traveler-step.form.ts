@@ -111,7 +111,9 @@ export function createTravelerStepForm(
 
   return {
     form: travelerForm,
-    isValid: computed(() => !travelerForm().invalid()),
+    isValid: computed(
+      () => !travelerForm().invalid() && passportExpiryError() === null,
+    ),
     passportExpiryError,
   };
 }

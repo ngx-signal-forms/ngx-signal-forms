@@ -1,9 +1,10 @@
 import {
+  afterNextRender,
+  computed,
   Directive,
   ElementRef,
-  Injector,
-  computed,
   inject,
+  Injector,
   input,
   signal,
 } from '@angular/core';
@@ -78,6 +79,8 @@ export class NgxSignalFormAutoAriaDirective {
    * Used to preserve developer-specified associations (hints, descriptions).
    */
   readonly #existingDescribedBy = signal<string | null>(null);
+
+  readonly #domVersion = signal(0);
 
   /**
    * Computed signal that determines if errors should be shown based on error display strategy.
@@ -180,6 +183,7 @@ export class NgxSignalFormAutoAriaDirective {
    * appends error/warning IDs when they should be shown.
    */
   protected readonly ariaDescribedBy = computed(() => {
+    this.#domVersion();
     const field = this.formField();
     if (!field) return this.#existingDescribedBy();
 
@@ -191,6 +195,13 @@ export class NgxSignalFormAutoAriaDirective {
 
     const existing = this.#existingDescribedBy();
     const parts: string[] = existing ? existing.split(' ').filter(Boolean) : [];
+
+    const hintIds = this.#resolveHintIds(fieldName);
+    for (const hintId of hintIds) {
+      if (!parts.includes(hintId)) {
+        parts.push(hintId);
+      }
+    }
 
     // Add error ID if showing errors
     if (this.#shouldShowErrors()) {
@@ -210,6 +221,27 @@ export class NgxSignalFormAutoAriaDirective {
 
     return parts.length > 0 ? parts.join(' ') : null;
   });
+
+  #resolveHintIds(fieldName: string): string[] {
+    const host = this.#element.nativeElement;
+    const wrapper = host.closest('ngx-signal-form-field-wrapper');
+    if (!wrapper) return [];
+
+    const hintElements = Array.from(
+      wrapper.querySelectorAll(
+        'ngx-signal-form-field-hint[data-ngx-signal-form-hint]',
+      ),
+    ) as HTMLElement[];
+
+    const matchingHints = hintElements.filter((hint) => {
+      const hintField = hint.getAttribute('data-signal-field');
+      return !hintField || hintField === fieldName;
+    });
+
+    return matchingHints
+      .map((hint) => hint.getAttribute('id'))
+      .filter((id): id is string => Boolean(id));
+  }
 
   constructor() {
     // Capture existing aria-describedby before we modify it
@@ -231,5 +263,12 @@ export class NgxSignalFormAutoAriaDirective {
         { existingDescribedBy },
       );
     }
+
+    afterNextRender(
+      () => {
+        this.#domVersion.update((value) => value + 1);
+      },
+      { injector: this.#injector },
+    );
   }
 }

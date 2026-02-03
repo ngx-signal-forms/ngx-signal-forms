@@ -1,4 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { ApplicationRef, Component, signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { NgxFormFieldHintComponent } from '@ngx-signal-forms/toolkit/assistive';
 import { render } from '@testing-library/angular';
 import { describe, expect, it, vi } from 'vitest';
 import { NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
@@ -288,6 +290,58 @@ describe('NgxSignalFormAutoAriaDirective', () => {
 
       const input = container.querySelector('input');
       expect(input?.getAttribute('aria-describedby')).toBe('email-error');
+    });
+
+    it('should include hint ID when hint is present', async () => {
+      @Component({
+        template: `
+          <ngx-signal-form-field-wrapper>
+            <input id="email" [formField]="emailControl()" />
+            <ngx-signal-form-field-hint id="email-hint">
+              Help text
+            </ngx-signal-form-field-hint>
+          </ngx-signal-form-field-wrapper>
+        `,
+        imports: [NgxSignalFormAutoAriaDirective, NgxFormFieldHintComponent],
+      })
+      class TestComponent {
+        emailControl = createMockControl(false, true); // valid, touched
+      }
+
+      const { container } = await render(TestComponent);
+
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const input = container.querySelector('input');
+      expect(input?.getAttribute('aria-describedby')).toBe('email-hint');
+    });
+
+    it('should combine hint and error IDs when invalid', async () => {
+      @Component({
+        template: `
+          <ngx-signal-form-field-wrapper>
+            <input id="email" [formField]="emailControl()" />
+            <ngx-signal-form-field-hint id="email-hint">
+              Help text
+            </ngx-signal-form-field-hint>
+          </ngx-signal-form-field-wrapper>
+        `,
+        imports: [NgxSignalFormAutoAriaDirective, NgxFormFieldHintComponent],
+      })
+      class TestComponent {
+        emailControl = createMockControl(true, true, [
+          { kind: 'required', message: 'Required' },
+        ]);
+      }
+
+      const { container } = await render(TestComponent);
+
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const input = container.querySelector('input');
+      expect(input?.getAttribute('aria-describedby')).toBe(
+        'email-hint email-error',
+      );
     });
 
     it('should NOT set aria-describedby when control is invalid but not touched', async () => {

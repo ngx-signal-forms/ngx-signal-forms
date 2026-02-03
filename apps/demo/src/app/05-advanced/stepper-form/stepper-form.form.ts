@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+  Injector,
+  signal,
+  viewChild,
+} from '@angular/core';
 import {
   email,
   form,
@@ -6,10 +15,18 @@ import {
   required,
   schema,
   submit,
+  validate,
 } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import {
+  focusFirstInvalid,
+  NgxSignalFormToolkit,
+} from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
+/**
+ * Data model for the stepper form.
+ */
 interface WizardData {
   // Step 1
   email: string;
@@ -21,6 +38,9 @@ interface WizardData {
   termsAccepted: boolean;
 }
 
+/**
+ * Validation rules for each step of the wizard.
+ */
 const wizardSchema = schema<WizardData>((path) => {
   // Step 1
   required(path.email, { message: 'Email required' });
@@ -33,53 +53,72 @@ const wizardSchema = schema<WizardData>((path) => {
 
   // Step 3
   // Checkbox often needs custom handling or simple true check
-  // For now we assume the UI handles true/false
+  validate(path.termsAccepted, (ctx) => {
+    if (!ctx.value()) {
+      return {
+        kind: 'terms_required',
+        message: 'You must accept the terms and conditions',
+      };
+    }
+    return null;
+  });
 });
 
 @Component({
   selector: 'ngx-stepper-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxFormField,
+    NgxSignalFormErrorComponent,
+  ],
   template: `
     <div class="px-6 pt-0 pb-6">
       <h2 class="mb-6 text-2xl font-bold">Multi-Step Registration</h2>
 
       <!-- Stepper Header -->
-      <div class="mb-8 flex max-w-lg items-center justify-between">
-        @for (step of [1, 2, 3]; track step) {
-          <div class="relative z-10 flex flex-col items-center">
-            <div
-              class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors"
-              [class]="
-                currentStep() >= step
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-500'
-              "
-            >
-              {{ step }}
-            </div>
-            <span class="mt-1 text-xs text-gray-500">
-              @if (step === 1) {
-                Account
-              }
-              @if (step === 2) {
-                Profile
-              }
-              @if (step === 3) {
-                Review
-              }
-            </span>
-          </div>
-          @if (step < 3) {
-            <div class="mx-2 h-0.5 flex-1 translate-y-[-10px] bg-gray-200">
+      <nav class="mb-8" aria-label="Wizard progress">
+        <ol class="flex max-w-lg items-center justify-between">
+          @for (step of [1, 2, 3]; track step) {
+            <li class="relative z-10 flex flex-col items-center">
               <div
-                class="h-full bg-blue-600 transition-all duration-300"
-                [style.width]="currentStep() > step ? '100%' : '0%'"
-              ></div>
-            </div>
+                class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors"
+                [class]="
+                  currentStep() >= step
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-500'
+                "
+                [attr.aria-current]="currentStep() === step ? 'step' : null"
+              >
+                {{ step }}
+              </div>
+              <span class="mt-1 text-xs text-gray-500">
+                @if (step === 1) {
+                  Account
+                }
+                @if (step === 2) {
+                  Profile
+                }
+                @if (step === 3) {
+                  Review
+                }
+              </span>
+            </li>
+            @if (step < 3) {
+              <li
+                class="mx-2 h-0.5 flex-1 translate-y-[-10px] bg-gray-200"
+                aria-hidden="true"
+              >
+                <div
+                  class="h-full bg-blue-600 transition-all duration-300"
+                  [style.width]="currentStep() > step ? '100%' : '0%'"
+                ></div>
+              </li>
+            }
           }
-        }
-      </div>
+        </ol>
+      </nav>
 
       <form
         (submit)="finishWizard($event)"
@@ -90,13 +129,15 @@ const wizardSchema = schema<WizardData>((path) => {
           <div
             class="animate-in fade-in slide-in-from-right-4 space-y-4 duration-300"
           >
-            <h3 class="text-lg font-semibold">Account Details</h3>
+            <h3 #stepHeading class="text-lg font-semibold" tabindex="-1">
+              Account Details
+            </h3>
 
             <ngx-signal-form-field-wrapper
               [formField]="wizardForm.email"
               outline
             >
-              <label for="email">Email Address</label>
+              <label for="email">Email Address *</label>
               <input
                 id="email"
                 type="email"
@@ -109,7 +150,7 @@ const wizardSchema = schema<WizardData>((path) => {
               [formField]="wizardForm.password"
               outline
             >
-              <label for="password">Password</label>
+              <label for="password">Password *</label>
               <input
                 id="password"
                 type="password"
@@ -125,13 +166,15 @@ const wizardSchema = schema<WizardData>((path) => {
           <div
             class="animate-in fade-in slide-in-from-right-4 space-y-4 duration-300"
           >
-            <h3 class="text-lg font-semibold">Personal Profile</h3>
+            <h3 #stepHeading class="text-lg font-semibold" tabindex="-1">
+              Personal Profile
+            </h3>
 
             <ngx-signal-form-field-wrapper
               [formField]="wizardForm.fullName"
               outline
             >
-              <label for="fullName">Full Name</label>
+              <label for="fullName">Full Name *</label>
               <input
                 id="fullName"
                 [formField]="wizardForm.fullName"
@@ -143,7 +186,7 @@ const wizardSchema = schema<WizardData>((path) => {
               [formField]="wizardForm.phone"
               outline
             >
-              <label for="phone">Phone Number</label>
+              <label for="phone">Phone Number *</label>
               <input
                 id="phone"
                 type="tel"
@@ -159,7 +202,9 @@ const wizardSchema = schema<WizardData>((path) => {
           <div
             class="animate-in fade-in slide-in-from-right-4 space-y-4 duration-300"
           >
-            <h3 class="text-lg font-semibold">Review & Terms</h3>
+            <h3 #stepHeading class="text-lg font-semibold" tabindex="-1">
+              Review & Terms
+            </h3>
 
             <div
               class="space-y-2 rounded border bg-gray-50 p-4 text-sm dark:border-gray-700 dark:bg-gray-900"
@@ -170,14 +215,23 @@ const wizardSchema = schema<WizardData>((path) => {
               </p>
             </div>
 
-            <label class="flex cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <input
+                  id="termsAccepted"
+                  type="checkbox"
+                  [formField]="wizardForm.termsAccepted"
+                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label for="termsAccepted" class="text-sm">
+                  I accept the terms and conditions *
+                </label>
+              </div>
+              <ngx-signal-form-error
                 [formField]="wizardForm.termsAccepted"
-                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                fieldName="termsAccepted"
               />
-              <span class="text-sm">I accept the terms and conditions</span>
-            </label>
+            </div>
           </div>
         }
 
@@ -200,7 +254,8 @@ const wizardSchema = schema<WizardData>((path) => {
             <button
               type="submit"
               class="btn-primary"
-              [disabled]="wizardForm().pending() || !model().termsAccepted"
+              [disabled]="wizardForm().pending()"
+              [attr.aria-busy]="wizardForm().pending() ? 'true' : null"
             >
               @if (wizardForm().pending()) {
                 Submitting...
@@ -214,8 +269,14 @@ const wizardSchema = schema<WizardData>((path) => {
     </div>
   `,
 })
+/**
+ * Multi-step registration form with validation gates and focus management.
+ */
 export class StepperFormComponent {
   readonly currentStep = signal(1);
+  protected readonly stepHeading =
+    viewChild<ElementRef<HTMLHeadingElement>>('stepHeading');
+  readonly #injector = inject(Injector);
 
   readonly #model = signal<WizardData>({
     email: '',
@@ -228,6 +289,9 @@ export class StepperFormComponent {
   readonly model = this.#model.asReadonly();
   readonly wizardForm = form(this.#model, wizardSchema);
 
+  /**
+   * Validate the current step and advance when valid.
+   */
   nextStep(): void {
     const step = this.currentStep();
     if (step === 1) {
@@ -236,8 +300,10 @@ export class StepperFormComponent {
       if (
         this.wizardForm.email().invalid() ||
         this.wizardForm.password().invalid()
-      )
+      ) {
+        focusFirstInvalid(this.wizardForm);
         return;
+      }
     }
     if (step === 2) {
       this.wizardForm.fullName().markAsTouched();
@@ -245,28 +311,54 @@ export class StepperFormComponent {
       if (
         this.wizardForm.fullName().invalid() ||
         this.wizardForm.phone().invalid()
-      )
+      ) {
+        focusFirstInvalid(this.wizardForm);
         return;
+      }
     }
 
     if (step < 3) {
       this.currentStep.update((s) => s + 1);
+      this.#focusStepHeading();
     }
   }
 
+  /**
+   * Navigate to the previous step without blocking validation.
+   */
   prevStep(): void {
     if (this.currentStep() > 1) {
       this.currentStep.update((s) => s - 1);
+      this.#focusStepHeading();
     }
   }
 
+  /**
+   * Submit the wizard and focus the first invalid field when needed.
+   */
   protected async finishWizard(event: Event): Promise<void> {
     event.preventDefault();
+    if (this.wizardForm().invalid()) {
+      focusFirstInvalid(this.wizardForm);
+    }
     await submit(this.wizardForm, async (data) => {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       console.log('Wizard Completed:', data());
       alert('Registration Successful!');
       return null;
     });
+  }
+
+  /**
+   * Move focus to the active step heading after the view updates.
+   * Uses afterNextRender to ensure the heading exists in the DOM before focus.
+   */
+  #focusStepHeading(): void {
+    afterNextRender(
+      () => {
+        this.stepHeading()?.nativeElement.focus();
+      },
+      { injector: this.#injector },
+    );
   }
 }

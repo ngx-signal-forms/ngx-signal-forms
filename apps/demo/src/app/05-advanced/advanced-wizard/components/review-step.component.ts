@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+  viewChild,
+} from '@angular/core';
 
 import {
   createReviewStepForm,
@@ -11,12 +17,14 @@ import { WizardStore } from '../stores/wizard.store';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="review-step">
-      <h2 class="mb-4 text-xl font-semibold">Review Your Booking</h2>
+      <h2 #stepHeading class="mb-4 text-xl font-semibold" tabindex="-1">
+        Review Your Booking
+      </h2>
 
       <!-- Traveler Summary -->
       <section class="review-section mb-6">
         <h3 class="mb-3 flex items-center gap-2 text-lg font-medium">
-          <span class="section-icon">👤</span>
+          <span class="section-icon" aria-hidden="true">👤</span>
           Traveler Information
         </h3>
         <div class="review-card">
@@ -64,7 +72,7 @@ import { WizardStore } from '../stores/wizard.store';
       <!-- Trip Summary -->
       <section class="review-section mb-6">
         <h3 class="mb-3 flex items-center gap-2 text-lg font-medium">
-          <span class="section-icon">✈️</span>
+          <span class="section-icon" aria-hidden="true">✈️</span>
           Trip Overview
         </h3>
         <div class="review-card">
@@ -88,7 +96,7 @@ import { WizardStore } from '../stores/wizard.store';
       <!-- Destinations Detail -->
       <section class="review-section">
         <h3 class="mb-3 flex items-center gap-2 text-lg font-medium">
-          <span class="section-icon">📍</span>
+          <span class="section-icon" aria-hidden="true">📍</span>
           Destinations
         </h3>
 
@@ -204,6 +212,8 @@ import { WizardStore } from '../stores/wizard.store';
 })
 export class ReviewStepComponent {
   readonly #store = inject(WizardStore);
+  protected readonly stepHeading =
+    viewChild<ElementRef<HTMLHeadingElement>>('stepHeading');
 
   protected readonly reviewForm: ReviewStepForm = createReviewStepForm(
     this.#store.traveler,
@@ -211,4 +221,8 @@ export class ReviewStepComponent {
   );
 
   // No effects needed - review step validation is computed from store data
+
+  focusHeading(): void {
+    this.stepHeading()?.nativeElement.focus();
+  }
 }

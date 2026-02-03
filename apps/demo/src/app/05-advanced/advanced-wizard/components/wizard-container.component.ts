@@ -1,10 +1,12 @@
 import { DatePipe } from '@angular/common';
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
   effect,
   inject,
+  Injector,
   signal,
   viewChild,
 } from '@angular/core';
@@ -32,27 +34,34 @@ const MIN_DISPLAY_MS = 500;
   ],
   template: `
     <div class="wizard-container">
-      <!-- Progress Bar -->
-      <div class="wizard-progress mb-6">
-        <div class="mb-2 flex justify-between">
+      <nav class="wizard-progress mb-6" aria-label="Wizard progress">
+        <ol class="mb-2 flex justify-between">
           @for (step of steps; track step.id) {
-            <button
-              type="button"
-              class="step-indicator"
-              [class.active]="store.currentStep() === step.id"
-              [class.completed]="isStepCompleted(step.id)"
-              [class.disabled]="!canNavigateTo(step.id)"
-              [attr.aria-current]="
-                store.currentStep() === step.id ? 'step' : null
-              "
-              [disabled]="!canNavigateTo(step.id)"
-              (click)="store.goToStep(step.id, store.canProceed())"
-            >
-              <span class="step-number">{{ step.number }}</span>
-              <span class="step-label">{{ step.label }}</span>
-            </button>
+            <li>
+              <button
+                type="button"
+                class="step-indicator"
+                [class.active]="store.currentStep() === step.id"
+                [class.completed]="isStepCompleted(step.id)"
+                [class.disabled]="!canNavigateTo(step.id)"
+                [attr.aria-current]="
+                  store.currentStep() === step.id ? 'step' : null
+                "
+                [disabled]="!canNavigateTo(step.id)"
+                (click)="store.goToStep(step.id)"
+              >
+                @if (isStepCompleted(step.id)) {
+                  <span class="sr-only">Completed: </span>
+                }
+                @if (store.currentStep() === step.id) {
+                  <span class="sr-only">Current: </span>
+                }
+                <span class="step-number">{{ step.number }}</span>
+                <span class="step-label">{{ step.label }}</span>
+              </button>
+            </li>
           }
-        </div>
+        </ol>
         <div class="progress-bar">
           <div
             class="progress-fill"
@@ -61,9 +70,10 @@ const MIN_DISPLAY_MS = 500;
             [attr.aria-valuenow]="store.progress()"
             aria-valuemin="0"
             aria-valuemax="100"
+            aria-label="Booking progress"
           ></div>
         </div>
-      </div>
+      </nav>
 
       <!-- Status indicator with reserved space (no layout shift) -->
       <div class="status-row" aria-live="polite">
@@ -127,12 +137,14 @@ const MIN_DISPLAY_MS = 500;
         }
       </div>
 
-      <!-- Error Display -->
-      @if (store.error()) {
-        <div class="error-message mt-4" role="alert">
-          {{ store.error() }}
-        </div>
-      }
+      <div
+        class="error-message mt-4"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        {{ store.error() ?? '' }}
+      </div>
     </div>
   `,
   styles: `
@@ -224,6 +236,10 @@ const MIN_DISPLAY_MS = 500;
       color: #dc2626;
     }
 
+    .error-message:empty {
+      display: none;
+    }
+
     .btn {
       padding: 0.5rem 1.5rem;
       border-radius: 0.375rem;
@@ -256,11 +272,13 @@ const MIN_DISPLAY_MS = 500;
   `,
 })
 export class WizardContainerComponent {
+  readonly #injector = inject(Injector);
   protected readonly store = inject(WizardStore);
 
   // Step component references for manual commit before navigation (using viewChild signals)
   protected readonly travelerStep = viewChild(TravelerStepComponent);
   protected readonly tripStep = viewChild(TripStepComponent);
+  protected readonly reviewStep = viewChild(ReviewStepComponent);
 
   /**
    * Determine if the current step is valid by checking the child component directly.
@@ -345,7 +363,8 @@ export class WizardContainerComponent {
 
   protected canNavigateTo(stepId: WizardStep): boolean {
     return (
-      this.store.visitedSteps().includes(stepId) || this.store.canProceed()
+      this.store.visitedSteps().includes(stepId) ||
+      this.store.currentStep() === stepId
     );
   }
 
@@ -358,11 +377,13 @@ export class WizardContainerComponent {
     );
     if (currentIdx > 0) {
       this.store.goToStep(this.steps[currentIdx - 1].id);
+      this.#focusCurrentStepHeading();
     }
   }
 
-  protected nextStep(): void {
-    if (!this.isCurrentStepValid()) {
+  protected async nextStep(): Promise<void> {
+    const isValid = await this.#validateCurrentStep();
+    if (!isValid) {
       return;
     }
 
@@ -374,6 +395,7 @@ export class WizardContainerComponent {
     );
     if (currentIdx < this.steps.length - 1) {
       this.store.goToStep(this.steps[currentIdx + 1].id, true);
+      this.#focusCurrentStepHeading();
     }
   }
 
@@ -394,7 +416,8 @@ export class WizardContainerComponent {
   }
 
   protected async submit(): Promise<void> {
-    if (!this.isCurrentStepValid()) {
+    const isValid = await this.#validateCurrentStep();
+    if (!isValid) {
       return;
     }
 
@@ -404,5 +427,32 @@ export class WizardContainerComponent {
     this.store.submit();
     // The store's submitBooking mutation will handle success/error state
     // UI will update reactively via isSubmitting and error signals
+  }
+
+  async #validateCurrentStep(): Promise<boolean> {
+    const step = this.store.currentStep();
+    if (step === 'traveler') {
+      return (await this.travelerStep()?.validateAndFocus()) ?? false;
+    }
+    if (step === 'trip') {
+      return (await this.tripStep()?.validateAndFocus()) ?? false;
+    }
+    return true;
+  }
+
+  #focusCurrentStepHeading(): void {
+    afterNextRender(
+      () => {
+        const step = this.store.currentStep();
+        if (step === 'traveler') {
+          this.travelerStep()?.focusHeading();
+        } else if (step === 'trip') {
+          this.tripStep()?.focusHeading();
+        } else if (step === 'review') {
+          this.reviewStep()?.focusHeading();
+        }
+      },
+      { injector: this.#injector },
+    );
   }
 }

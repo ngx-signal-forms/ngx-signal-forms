@@ -1,4 +1,11 @@
-import { Component, effect, input, signal } from '@angular/core';
+import {
+  ApplicationRef,
+  Component,
+  effect,
+  input,
+  signal,
+} from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { form } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
@@ -38,6 +45,7 @@ import { NgxFormFieldCharacterCountComponent } from './character-count.component
         [maxLength]="maxLength()"
         [position]="position()"
         [showLimitColors]="showLimitColors()"
+        [liveAnnounce]="liveAnnounce()"
         [colorThresholds]="thresholds"
       />
     } @else {
@@ -46,6 +54,7 @@ import { NgxFormFieldCharacterCountComponent } from './character-count.component
         [maxLength]="maxLength()"
         [position]="position()"
         [showLimitColors]="showLimitColors()"
+        [liveAnnounce]="liveAnnounce()"
       />
     }
   `,
@@ -55,6 +64,7 @@ class TestWrapperComponent {
   readonly maxLength = input<number>(100);
   readonly position = input<'left' | 'right'>('right');
   readonly showLimitColors = input<boolean>(true);
+  readonly liveAnnounce = input<boolean>(false);
   readonly colorThresholds = input<
     { warning: number; danger: number } | undefined
   >(undefined);
@@ -377,28 +387,77 @@ describe('NgxFormFieldCharacterCountComponent', () => {
   });
 
   describe('Accessibility', () => {
-    it.skip('should have aria-live region', async () => {
-      // TODO: Add aria-live="polite" to component template
+    it('should not render a live region when liveAnnounce is false', async () => {
       const { container } = await render(TestWrapperComponent, {
         componentInputs: { textModel: 'test', maxLength: 100 },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
+      const liveRegion = container.querySelector(
+        '.ngx-signal-form-field-char-count__sr',
       );
-      expect(host).toHaveAttribute('aria-live', 'polite');
+      expect(liveRegion).toBeNull();
     });
 
-    it.skip('should have aria-atomic for complete announcements', async () => {
-      // TODO: Add aria-atomic="true" to component template
+    it('should render a polite live region when liveAnnounce is true', async () => {
       const { container } = await render(TestWrapperComponent, {
-        componentInputs: { textModel: 'test', maxLength: 100 },
+        componentInputs: {
+          textModel: 'a'.repeat(80),
+          maxLength: 100,
+          liveAnnounce: true,
+        },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
+      const liveRegion = container.querySelector(
+        '.ngx-signal-form-field-char-count__sr',
       );
-      expect(host).toHaveAttribute('aria-atomic', 'true');
+      expect(liveRegion).toHaveAttribute('aria-live', 'polite');
+      expect(liveRegion).toHaveAttribute('aria-atomic', 'true');
+      expect(liveRegion).toHaveTextContent(
+        'Approaching limit: 20 characters remaining.',
+      );
+    });
+
+    it('should update announcement text when limit state changes', async () => {
+      const { container, rerender } = await render(TestWrapperComponent, {
+        componentInputs: {
+          textModel: 'a'.repeat(79),
+          maxLength: 100,
+          liveAnnounce: true,
+        },
+      });
+
+      const liveRegion = () =>
+        container.querySelector('.ngx-signal-form-field-char-count__sr');
+
+      expect(liveRegion()).toHaveTextContent('');
+
+      await rerender({
+        componentInputs: {
+          textModel: 'a'.repeat(95),
+          maxLength: 100,
+          liveAnnounce: true,
+        },
+      });
+
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(liveRegion()).toHaveTextContent(
+        'Almost at limit: 5 characters remaining.',
+      );
+
+      await rerender({
+        componentInputs: {
+          textModel: 'a'.repeat(105),
+          maxLength: 100,
+          liveAnnounce: true,
+        },
+      });
+
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(liveRegion()).toHaveTextContent(
+        'Character limit exceeded by 5 characters.',
+      );
     });
   });
 

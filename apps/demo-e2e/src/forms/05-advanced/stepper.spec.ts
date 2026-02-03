@@ -36,8 +36,8 @@ test.describe('Advanced Scenarios - Stepper Form', () => {
   test('should allow navigation when step is valid', async ({ page }) => {
     await test.step('Fill Step 1 and proceed to Step 2', async () => {
       // Find and fill inputs in step 1
-      await page.getByLabel('Email Address').fill('test@example.com');
-      await page.getByLabel('Password').fill('Test Value');
+      await page.getByLabel(/Email Address/i).fill('test@example.com');
+      await page.getByLabel(/Password/i).fill('Test Value');
 
       // Click Next
       const nextButton = page.getByRole('button', { name: /next/i });
@@ -46,17 +46,21 @@ test.describe('Advanced Scenarios - Stepper Form', () => {
       await expect(
         page.getByRole('heading', { name: 'Personal Profile' }),
       ).toBeVisible();
+
+      await expect(
+        page.getByRole('heading', { name: 'Personal Profile' }),
+      ).toBeFocused();
     });
   });
 
   test('should preserve state between steps', async ({ page }) => {
     await test.step('Fill step 1, go to step 2, go back, verify data persists', async () => {
       const testValue = 'test@example.com';
-      const emailInput = page.getByLabel('Email Address');
+      const emailInput = page.getByLabel(/Email Address/i);
       await emailInput.fill(testValue);
 
       // Fill password to make step valid
-      await page.getByLabel('Password').fill('ValidPassword123');
+      await page.getByLabel(/Password/i).fill('ValidPassword123');
 
       const nextButton = page.getByRole('button', { name: /next/i });
       await nextButton.click();
@@ -96,5 +100,42 @@ test.describe('Advanced Scenarios - Stepper Form', () => {
       ).toBeVisible();
       await expect(stepperRegion.locator('.bg-blue-600').first()).toBeVisible();
     });
+  });
+
+  test('should focus step heading on back navigation', async ({ page }) => {
+    await page.getByLabel(/Email Address/i).fill('test@example.com');
+    await page.getByLabel(/Password/i).fill('ValidPassword123');
+
+    await page.getByRole('button', { name: /next/i }).click();
+
+    await expect(
+      page.getByRole('heading', { name: 'Personal Profile' }),
+    ).toBeFocused();
+
+    await page.getByRole('button', { name: /back|previous/i }).click();
+
+    await expect(
+      page.getByRole('heading', { name: 'Account Details' }),
+    ).toBeFocused();
+  });
+
+  test('should show terms error when unchecked', async ({ page }) => {
+    await page.getByLabel(/Email Address/i).fill('test@example.com');
+    await page.getByLabel(/Password/i).fill('ValidPassword123');
+    await page.getByRole('button', { name: /next/i }).click();
+
+    await page.getByLabel(/Full Name/i).fill('Test Person');
+    await page.getByLabel(/Phone Number/i).fill('555-0100');
+    await page.getByRole('button', { name: /next/i }).click();
+
+    await expect(
+      page.getByRole('heading', { name: 'Review & Terms' }),
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: /Complete Registration/i }).click();
+
+    await expect(
+      page.getByText('You must accept the terms and conditions'),
+    ).toBeVisible();
   });
 });

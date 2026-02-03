@@ -31,15 +31,17 @@ test.describe('Demo - Page Loading', () => {
       ];
 
       for (const route of routes) {
-        await page.goto(route);
-        await page.waitForLoadState('domcontentloaded');
+        const routePage = await page.context().newPage();
+        await routePage.goto(route, { waitUntil: 'domcontentloaded' });
 
         /// Verify page loaded with content
-        const main = page.locator('main, [role="main"]');
+        const main = routePage.locator('main, [role="main"]');
         const isVisible = await main
           .isVisible({ timeout: 2000 })
           .catch(() => false);
-        expect(isVisible || (await page.content()).length > 0).toBe(true);
+        expect(isVisible || (await routePage.content()).length > 0).toBe(true);
+
+        await routePage.close();
       }
     });
   });
@@ -54,11 +56,13 @@ test.describe('Demo - Page Loading', () => {
       ];
 
       for (const route of routes) {
-        await page.goto(route);
-        await page.waitForLoadState('domcontentloaded');
+        const routePage = await page.context().newPage();
+        await routePage.goto(route, { waitUntil: 'domcontentloaded' });
 
-        const form = page.locator('form').first();
+        const form = routePage.locator('form').first();
         await expect(form).toBeVisible({ timeout: 5000 });
+
+        await routePage.close();
       }
     });
   });

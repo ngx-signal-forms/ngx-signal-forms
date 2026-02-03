@@ -3,11 +3,18 @@ import {
   Component,
   computed,
   DestroyRef,
+  ElementRef,
   inject,
+  viewChild,
 } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import {
+  focusFirstInvalid,
+  NgxSignalFormToolkit,
+  submitWithWarnings,
+} from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 import { createTravelerStepForm } from '../forms/traveler-step.form';
@@ -16,10 +23,17 @@ import { WizardStore } from '../stores/wizard.store';
 @Component({
   selector: 'ngx-traveler-step',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxFormField,
+    NgxSignalFormErrorComponent,
+  ],
   template: `
     <div class="traveler-step">
-      <h2 class="mb-4 text-xl font-semibold">Traveler Information</h2>
+      <h2 #stepHeading class="mb-4 text-xl font-semibold" tabindex="-1">
+        Traveler Information
+      </h2>
 
       <form novalidate class="space-y-4">
         <!-- First Name -->
@@ -112,12 +126,20 @@ import { WizardStore } from '../stores/wizard.store';
                 class="form-input"
                 [attr.aria-invalid]="passportExpiryError() ? true : null"
               />
+              <ngx-signal-form-error
+                [formField]="travelerForm.passportExpiry"
+                fieldName="passportExpiry"
+              />
+              <div
+                class="passport-expiry-message"
+                role="alert"
+                aria-live="assertive"
+                aria-atomic="true"
+              >
+                {{ passportExpiryMessage() ?? '' }}
+              </div>
               <ngx-signal-form-field-hint position="left">
-                @if (passportExpiryError()) {
-                  <span class="text-red-500">{{ passportExpiryError() }}</span>
-                } @else {
-                  Must be valid 6 months after trip ends
-                }
+                Must be valid 6 months after trip ends
               </ngx-signal-form-field-hint>
             </ngx-signal-form-field-wrapper>
           </div>
@@ -147,11 +169,18 @@ import { WizardStore } from '../stores/wizard.store';
     .form-input[aria-invalid='true'] {
       border-color: #ef4444;
     }
+
+    .passport-expiry-message {
+      color: #ef4444;
+      min-height: 1.25rem;
+    }
   `,
 })
 export class TravelerStepComponent {
   readonly #store = inject(WizardStore);
   readonly #destroyRef = inject(DestroyRef);
+  protected readonly stepHeading =
+    viewChild<ElementRef<HTMLHeadingElement>>('stepHeading');
 
   // Compute latest departure date for passport cross-field validation
   readonly #lastDepartureDate = computed(() => {
@@ -177,6 +206,16 @@ export class TravelerStepComponent {
   readonly isValid = this.#travelerStepForm.isValid;
   protected readonly passportExpiryError =
     this.#travelerStepForm.passportExpiryError;
+  protected readonly passportExpiryMessage = computed(() => {
+    const message = this.passportExpiryError();
+    const errors = this.travelerForm.passportExpiry().errors();
+
+    if (!message || errors.length > 0) {
+      return null;
+    }
+
+    return message;
+  });
 
   constructor() {
     this.#destroyRef.onDestroy(() => {
@@ -192,5 +231,20 @@ export class TravelerStepComponent {
   commitToStore(): void {
     const formData = this.travelerForm().value();
     this.#store.setTraveler(formData);
+  }
+
+  async validateAndFocus(): Promise<boolean> {
+    await submitWithWarnings(this.travelerForm, async () => undefined);
+
+    if (this.travelerForm().invalid() || this.passportExpiryError()) {
+      focusFirstInvalid(this.travelerForm);
+      return false;
+    }
+
+    return true;
+  }
+
+  focusHeading(): void {
+    this.stepHeading()?.nativeElement.focus();
   }
 }

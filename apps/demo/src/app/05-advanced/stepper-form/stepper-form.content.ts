@@ -19,7 +19,7 @@ export const STEPPER_FORM_CONTENT = {
       {
         title: 'Step Logic',
         items: [
-          '• Use <code>form.field().valid()</code> checks for "Next" button enablement',
+          '• Trigger validation on Next click and focus the first invalid field',
           '• Persist data across steps automatically (data model is separate from view)',
           '• Allow navigation back to edit previous steps',
         ],

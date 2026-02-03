@@ -2,11 +2,17 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
   inject,
+  viewChild,
 } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import {
+  focusFirstInvalid,
+  NgxSignalFormToolkit,
+  submitWithWarnings,
+} from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 import { createTripStepForm } from '../forms/trip-step.form';
@@ -18,7 +24,9 @@ import { WizardStore } from '../stores/wizard.store';
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <div class="trip-step">
-      <h2 class="mb-4 text-xl font-semibold">Trip Details</h2>
+      <h2 #stepHeading class="mb-4 text-xl font-semibold" tabindex="-1">
+        Trip Details
+      </h2>
 
       @if (!hasDestinations()) {
         <div
@@ -29,6 +37,7 @@ import { WizardStore } from '../stores/wizard.store';
             type="button"
             class="btn btn-primary"
             (click)="store.addDestination()"
+            #addDestinationButton
           >
             Add Your First Destination
           </button>
@@ -50,7 +59,7 @@ import { WizardStore } from '../stores/wizard.store';
               type="button"
               class="text-red-500 hover:text-red-700"
               (click)="store.removeDestination(destIdx)"
-              aria-label="Remove destination"
+              [attr.aria-label]="'Remove destination ' + (destIdx + 1)"
             >
               Remove
             </button>
@@ -167,7 +176,12 @@ import { WizardStore } from '../stores/wizard.store';
                     type="button"
                     class="text-sm text-red-400 hover:text-red-600"
                     (click)="store.removeActivity(destIdx, actIdx)"
-                    aria-label="Remove activity"
+                    [attr.aria-label]="
+                      'Remove activity ' +
+                      (actIdx + 1) +
+                      ' for destination ' +
+                      (destIdx + 1)
+                    "
                   >
                     Remove
                   </button>
@@ -263,17 +277,49 @@ import { WizardStore } from '../stores/wizard.store';
                     let reqIdx = $index
                   ) {
                     <div class="requirement-item mb-1 flex gap-2">
+                      <label
+                        class="sr-only"
+                        [for]="
+                          'req-description-' +
+                          destIdx +
+                          '-' +
+                          actIdx +
+                          '-' +
+                          reqIdx
+                        "
+                      >
+                        Requirement description
+                      </label>
                       <input
                         type="text"
                         class="form-input-xs flex-1"
                         placeholder="Description"
+                        [id]="
+                          'req-description-' +
+                          destIdx +
+                          '-' +
+                          actIdx +
+                          '-' +
+                          reqIdx
+                        "
                         [formField]="
                           tripForm.destinations[destIdx].activities[actIdx]
                             .requirements[reqIdx].description
                         "
                       />
+                      <label
+                        class="sr-only"
+                        [for]="
+                          'req-type-' + destIdx + '-' + actIdx + '-' + reqIdx
+                        "
+                      >
+                        Requirement type
+                      </label>
                       <select
                         class="form-input-xs"
+                        [id]="
+                          'req-type-' + destIdx + '-' + actIdx + '-' + reqIdx
+                        "
                         [formField]="
                           tripForm.destinations[destIdx].activities[actIdx]
                             .requirements[reqIdx].type
@@ -291,7 +337,12 @@ import { WizardStore } from '../stores/wizard.store';
                         (click)="
                           store.removeRequirement(destIdx, actIdx, reqIdx)
                         "
-                        aria-label="Remove requirement"
+                        [attr.aria-label]="
+                          'Remove requirement ' +
+                          (reqIdx + 1) +
+                          ' for activity ' +
+                          (actIdx + 1)
+                        "
                       >
                         ✕
                       </button>
@@ -388,6 +439,11 @@ import { WizardStore } from '../stores/wizard.store';
 export class TripStepComponent {
   protected readonly store = inject(WizardStore);
   readonly #destroyRef = inject(DestroyRef);
+  protected readonly stepHeading =
+    viewChild<ElementRef<HTMLHeadingElement>>('stepHeading');
+  protected readonly addDestinationButton = viewChild<
+    ElementRef<HTMLButtonElement>
+  >('addDestinationButton');
 
   // Create form using factory function
   readonly #tripStepForm = createTripStepForm(this.store);
@@ -411,5 +467,23 @@ export class TripStepComponent {
   commitToStore(): void {
     const destinations = this.tripForm().value().destinations;
     this.store.setDestinations(destinations);
+  }
+
+  async validateAndFocus(): Promise<boolean> {
+    await submitWithWarnings(this.tripForm, async () => undefined);
+
+    if (this.tripForm().invalid() || !this.hasDestinations()) {
+      const focused = focusFirstInvalid(this.tripForm);
+      if (!focused && !this.hasDestinations()) {
+        this.addDestinationButton()?.nativeElement.focus();
+      }
+      return false;
+    }
+
+    return true;
+  }
+
+  focusHeading(): void {
+    this.stepHeading()?.nativeElement.focus();
   }
 }

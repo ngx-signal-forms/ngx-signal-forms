@@ -1,4 +1,19 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
+import { NGX_SIGNAL_FORM_FIELD_CONTEXT } from '@ngx-signal-forms/toolkit/core';
+
+let uniqueHintIdCounter = 0;
+
+function generateUniqueHintId(): string {
+  return `hint-${++uniqueHintIdCounter}`;
+}
 
 /**
  * Form field hint component for displaying helper text.
@@ -78,13 +93,44 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   `,
   host: {
     '[attr.position]': 'position() ?? null',
+    '[attr.id]': 'resolvedId()',
+    '[attr.data-ngx-signal-form-hint]': '"true"',
+    '[attr.data-signal-field]': 'resolvedFieldName()',
   },
 })
 export class NgxFormFieldHintComponent {
+  readonly #elementRef = inject(ElementRef<HTMLElement>);
+  readonly #fieldContext = inject(NGX_SIGNAL_FORM_FIELD_CONTEXT, {
+    optional: true,
+  });
+
+  readonly #explicitId = signal<string | null>(null);
+
   /**
    * Text alignment position.
    *
    * @default undefined (defaults to right-aligned, or left-aligned if character count is present)
    */
   readonly position = input<'left' | 'right' | null>(null);
+
+  protected readonly resolvedFieldName = computed(() => {
+    return this.#fieldContext?.fieldName() ?? null;
+  });
+
+  protected readonly resolvedId = computed(() => {
+    const explicit = this.#explicitId();
+    if (explicit) return explicit;
+
+    const fieldName = this.resolvedFieldName();
+    if (fieldName) return `${fieldName}-hint`;
+
+    return generateUniqueHintId();
+  });
+
+  constructor() {
+    const existingId = this.#elementRef.nativeElement.getAttribute('id');
+    if (existingId) {
+      this.#explicitId.set(existingId);
+    }
+  }
 }

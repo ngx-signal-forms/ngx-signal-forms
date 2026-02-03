@@ -1,8 +1,11 @@
 import {
+  booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   input,
+  signal,
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import {
@@ -97,10 +100,24 @@ import {
 @Component({
   selector: 'ngx-signal-form-field-character-count',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `{{ characterCountText() }}`,
+  template: `
+    <span class="ngx-signal-form-field-char-count__text">
+      {{ characterCountText() }}
+    </span>
+    @if (liveAnnounce()) {
+      <span
+        class="ngx-signal-form-field-char-count__sr"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {{ announcementText() }}
+      </span>
+    }
+  `,
   styles: `
     :host {
       display: block;
+      position: relative;
       font-size: var(--ngx-form-field-char-count-font-size, 0.75rem);
       line-height: var(--ngx-form-field-char-count-line-height, 1.25);
       color: var(--ngx-form-field-char-count-color-ok, rgba(50, 65, 85, 0.75));
@@ -144,6 +161,19 @@ import {
     /* Disabled color progression */
     :host([data-limit-state='disabled']) {
       color: var(--ngx-form-field-char-count-color-ok, rgba(50, 65, 85, 0.75));
+    }
+
+    .ngx-signal-form-field-char-count__sr {
+      border: 0;
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      padding: 0;
+      position: absolute;
+      white-space: nowrap;
+      width: 1px;
     }
   `,
   host: {
@@ -210,6 +240,17 @@ export class NgxFormFieldCharacterCountComponent<TValue = unknown> {
    * @default true
    */
   readonly showLimitColors = input<boolean>(true);
+
+  /**
+   * Enable polite live announcements when approaching or exceeding the limit.
+   *
+   * Announcements are only triggered when the limit state changes.
+   *
+   * @default false
+   */
+  readonly liveAnnounce = input(false, {
+    transform: booleanAttribute,
+  });
 
   /**
    * Percentage thresholds for color state changes.
@@ -301,4 +342,62 @@ export class NgxFormFieldCharacterCountComponent<TValue = unknown> {
 
     return state.limitState();
   });
+
+  readonly #lastAnnouncedState = signal<
+    CharacterCountLimitState | 'disabled' | null
+  >(null);
+
+  readonly #announcementText = signal<string>('');
+
+  protected readonly announcementText = computed(() =>
+    this.#announcementText(),
+  );
+
+  constructor() {
+    effect(() => {
+      if (!this.liveAnnounce()) {
+        this.#lastAnnouncedState.set(null);
+        this.#announcementText.set('');
+        return;
+      }
+
+      const state = this.displayLimitState();
+      const max = this.#resolvedMaxLength();
+      if (max === 0 || state === 'disabled') {
+        this.#lastAnnouncedState.set(null);
+        this.#announcementText.set('');
+        return;
+      }
+
+      const current = this.currentLength();
+      const remaining = Math.max(0, max - current);
+      const over = Math.max(0, current - max);
+      const last = this.#lastAnnouncedState();
+
+      if (state === last) return;
+
+      this.#lastAnnouncedState.set(state);
+
+      switch (state) {
+        case 'warning':
+          this.#announcementText.set(
+            `Approaching limit: ${remaining} characters remaining.`,
+          );
+          break;
+        case 'danger':
+          this.#announcementText.set(
+            `Almost at limit: ${remaining} characters remaining.`,
+          );
+          break;
+        case 'exceeded':
+          this.#announcementText.set(
+            `Character limit exceeded by ${over} characters.`,
+          );
+          break;
+        default:
+          this.#announcementText.set('');
+          break;
+      }
+    });
+  }
 }

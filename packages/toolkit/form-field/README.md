@@ -507,6 +507,9 @@ import { NgxFormFieldHintComponent } from '@ngx-signal-forms/toolkit/form-field'
 </ngx-signal-form-field-wrapper>
 ```
 
+When used inside `ngx-signal-form-field-wrapper`, hints are automatically linked
+to the input via `aria-describedby`.
+
 **Smart Positioning:**
 
 - **Default:** Aligns to the **right** side of the footer.
@@ -578,6 +581,7 @@ import { NgxFormFieldCharacterCountComponent } from '@ngx-signal-forms/toolkit/f
 | `maxLength`       | `number`                              | _required_                    | Maximum character limit                        |
 | `showLimitColors` | `boolean`                             | `true`                        | Whether to use progressive color states        |
 | `colorThresholds` | `{ warning: number; danger: number }` | `{ warning: 80, danger: 95 }` | Percentage thresholds for color changes        |
+| `liveAnnounce`    | `boolean`                             | `false`                       | Enable polite live announcements               |
 
 #### Color States
 
@@ -787,6 +791,7 @@ ngx-signal-form-fieldset {
 - Errors use `role="alert"` with `aria-live="assertive"` for immediate screen reader announcement
 - Warnings use `role="status"` with `aria-live="polite"`
 - `aria-busy="true"` is set when the fieldset has pending validation
+- `<legend>` is recommended but optional; when omitted, provide a programmatic group label via `aria-labelledby` or include the group name in the first label.
 
 ---
 

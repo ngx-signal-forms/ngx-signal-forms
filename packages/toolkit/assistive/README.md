@@ -33,12 +33,28 @@ Displays helper text for form fields.
 <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
 ```
 
+When used inside `ngx-signal-form-field-wrapper`, hints are automatically linked
+to the input via `aria-describedby`.
+
 ### NgxFormFieldCharacterCountComponent
 
 Displays character count with progressive color states.
 
 ```html
-<ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+<ngx-signal-form-field-character-count
+  [formField]="form.bio"
+  [maxLength]="500"
+/>
+```
+
+Optional live announcements:
+
+```html
+<ngx-signal-form-field-character-count
+  [formField]="form.bio"
+  [maxLength]="500"
+  liveAnnounce
+/>
 ```
 
 ### NgxFormFieldAssistiveRowComponent
@@ -48,7 +64,10 @@ Layout container for hint, error, and character count.
 ```html
 <ngx-signal-form-field-assistive-row>
   <ngx-signal-form-field-hint>Enter your bio</ngx-signal-form-field-hint>
-  <ngx-signal-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+  <ngx-signal-form-field-character-count
+    [formField]="form.bio"
+    [maxLength]="500"
+  />
 </ngx-signal-form-field-assistive-row>
 ```
 
@@ -86,7 +105,7 @@ if (isBlockingError(error)) {
 
 This package sits between `headless` and `form-field` in the dependency hierarchy:
 
-```
+```text
 @ngx-signal-forms/toolkit           (core utilities)
 @ngx-signal-forms/toolkit/headless  (unstyled primitives)
 @ngx-signal-forms/toolkit/assistive (styled building blocks) ← You are here

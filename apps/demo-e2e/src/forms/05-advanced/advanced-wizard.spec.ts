@@ -29,6 +29,10 @@ test.describe('Advanced Wizard Demo', () => {
 
       // Navigate to Trip step
       await page.getByRole('button', { name: 'Next' }).click();
+
+      await expect(
+        page.getByRole('heading', { name: 'Trip Details', exact: true }),
+      ).toBeFocused();
     });
 
     // ----------------------------------------------------------------
@@ -80,6 +84,10 @@ test.describe('Advanced Wizard Demo', () => {
         page.getByRole('heading', { name: 'Review Your Booking' }),
       ).toBeVisible();
 
+      await expect(
+        page.getByRole('heading', { name: 'Review Your Booking' }),
+      ).toBeFocused();
+
       // Verify summary data
       await expect(page.getByText('John Doe')).toBeVisible();
       await expect(page.getByText('Japan')).toBeVisible();
@@ -98,6 +106,10 @@ test.describe('Advanced Wizard Demo', () => {
         page.getByRole('heading', { name: 'Traveler Information' }),
       ).toBeVisible();
 
+      await expect(
+        page.getByRole('heading', { name: 'Traveler Information' }),
+      ).toBeFocused();
+
       // Trip ends Aug 10, 2026.
       // Passport must be valid for 6 months after (Feb 10, 2027).
 
@@ -109,6 +121,11 @@ test.describe('Advanced Wizard Demo', () => {
       await expect(
         page.getByText('Passport must be valid 6 months after trip ends'),
       ).toBeVisible();
+
+      const passportAlert = page
+        .getByRole('alert')
+        .filter({ hasText: 'Passport must be valid 6 months after trip ends' });
+      await expect(passportAlert).toBeVisible();
 
       // Fix expiry: March 2027
       await page.getByLabel(/Expiry Date/i).fill('2027-03-01');

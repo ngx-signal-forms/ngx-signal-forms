@@ -1,3 +1,5 @@
+import { signal } from '@angular/core';
+import { NGX_SIGNAL_FORM_FIELD_CONTEXT } from '@ngx-signal-forms/toolkit/core';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldHintComponent } from './hint.component';
@@ -291,6 +293,38 @@ describe('NgxFormFieldHintComponent', () => {
 
       const hint = container.querySelector('ngx-signal-form-field-hint');
       expect(hint).toBeInTheDocument();
+    });
+
+    it('should preserve explicit id attribute', async () => {
+      const { container } = await render(
+        `<ngx-signal-form-field-hint id="email-hint">Hint</ngx-signal-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHintComponent],
+        },
+      );
+
+      const hint = container.querySelector('ngx-signal-form-field-hint');
+      expect(hint).toHaveAttribute('id', 'email-hint');
+      expect(hint).toHaveAttribute('data-ngx-signal-form-hint', 'true');
+    });
+
+    it('should derive id from field context when provided', async () => {
+      const { container } = await render(
+        `<ngx-signal-form-field-hint>Hint</ngx-signal-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHintComponent],
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+              useValue: { fieldName: signal('email') },
+            },
+          ],
+        },
+      );
+
+      const hint = container.querySelector('ngx-signal-form-field-hint');
+      expect(hint).toHaveAttribute('id', 'email-hint');
+      expect(hint).toHaveAttribute('data-signal-field', 'email');
     });
   });
 
