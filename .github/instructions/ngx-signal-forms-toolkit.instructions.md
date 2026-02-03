@@ -316,9 +316,23 @@ The toolkit is designed so that **most forms work without `[ngxSignalForm]`**. T
 
 **Features**:
 
-- Auto-adds `aria-invalid="true"` when field is invalid
-- Auto-adds `aria-describedby` linking to error containers
+- Auto-adds `aria-invalid="true"` when field is invalid (respects error display strategy)
+- Auto-adds `aria-required="true"` when field has `required()` validator
+- Auto-adds `aria-describedby` linking to error/warning containers
 - Uses `id` attribute for field name resolution (WCAG preferred)
+
+**ARIA Attributes Handled by Toolkit** (do NOT add manually):
+
+| Attribute          | When Applied                          | Source                       |
+| ------------------ | ------------------------------------- | ---------------------------- |
+| `aria-invalid`     | Field is invalid + errors should show | Error display strategy       |
+| `aria-required`    | Field has `required()` validator      | FieldState `required` signal |
+| `aria-describedby` | Field has errors/warnings visible     | Links to error/warning IDs   |
+
+**Important**: When using `NgxSignalFormToolkit`, do NOT manually add `aria-required="true"`
+or `aria-invalid` attributes. The toolkit handles these automatically based on form state.
+Angular Signal Forms' `required()` validator exposes a `required` signal on FieldState,
+which the toolkit reads to set `aria-required="true"` automatically.
 
 **Field Name Resolution Priority**:
 
@@ -997,10 +1011,10 @@ Reference: [WAI Forms Tutorial: Multi-page Forms](https://www.w3.org/WAI/tutoria
 
 **Critical**: Never disable the Next button when the current step is invalid.
 
-| Approach | WCAG Impact |
-|----------|-------------|
-| Disabled Next when invalid | Users cannot discover which fields need attention |
-| Enabled Next + validation on click | Users receive actionable error feedback |
+| Approach                           | WCAG Impact                                       |
+| ---------------------------------- | ------------------------------------------------- |
+| Disabled Next when invalid         | Users cannot discover which fields need attention |
+| Enabled Next + validation on click | Users receive actionable error feedback           |
 
 ```typescript
 // ✅ Correct: Always allow Next, validate on click
