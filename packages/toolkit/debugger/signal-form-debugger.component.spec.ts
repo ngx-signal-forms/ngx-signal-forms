@@ -68,13 +68,13 @@ describe('SignalFormDebuggerComponent', () => {
 
     it('should display initial form state', () => {
       const topBadge = debuggerEl.querySelector(
-        '.ngx-debugger__header ngx-debugger-badge',
+        '.ngx-debugger__header ngx-signal-form-debugger-badge',
       );
       expect(topBadge?.textContent).toContain('Invalid');
 
       const statusBadges = Array.from(
         debuggerEl.querySelectorAll(
-          '.ngx-debugger__status-badges ngx-debugger-badge',
+          '.ngx-debugger__status-badges ngx-signal-form-debugger-badge',
         ),
       );
       // Valid, Invalid, Dirty, Pending
@@ -89,13 +89,13 @@ describe('SignalFormDebuggerComponent', () => {
       fixture.detectChanges();
 
       const topBadge = debuggerEl.querySelector(
-        '.ngx-debugger__header ngx-debugger-badge',
+        '.ngx-debugger__header ngx-signal-form-debugger-badge',
       );
       expect(topBadge?.textContent).toContain('Valid');
 
       const statusBadges = Array.from(
         debuggerEl.querySelectorAll(
-          '.ngx-debugger__status-badges ngx-debugger-badge',
+          '.ngx-debugger__status-badges ngx-signal-form-debugger-badge',
         ),
       );
       expect(statusBadges[0].getAttribute('data-appearance')).toBe('success'); // Valid
