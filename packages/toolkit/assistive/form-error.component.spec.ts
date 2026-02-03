@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import type { SubmittedStatus } from '@angular/forms/signals';
 import {
   email,
   form,
@@ -7,7 +6,8 @@ import {
   required,
   schema,
 } from '@angular/forms/signals';
-import { NGX_SIGNAL_FORM_FIELD_CONTEXT } from '@ngx-signal-forms/toolkit';
+import type { SubmittedStatus } from '@ngx-signal-forms/toolkit/core';
+import { NGX_SIGNAL_FORM_FIELD_CONTEXT } from '@ngx-signal-forms/toolkit/core';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
