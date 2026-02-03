@@ -18,6 +18,8 @@
   },
   "private": true,
   "dependencies": {
+    "@angular-architects/ngrx-toolkit": "21.0.1",
+    "@ngrx/signals": "21.0.1",
     "@angular/aria": "~21.1.2",
     "@angular/cdk": "~21.1.2",
     "@angular/common": "~21.1.2",
@@ -27,8 +29,10 @@
     "@angular/platform-browser": "~21.1.2",
     "@angular/router": "~21.1.2",
     "@shikijs/core": "^3.22.0",
+    "msw": "2.12.7",
     "rxjs": "~7.8.2",
-    "shiki": "^3.22.0"
+    "shiki": "^3.22.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@analogjs/vite-plugin-angular": "2.2.3",
@@ -91,10 +95,14 @@
     "typescript-eslint": "^8.54.0",
     "verdaccio": "^6.2.5",
     "vite": "^7.3.1",
-    "vitest": "4.0.18",
-    "zod": "^4.3.6"
+    "vitest": "4.0.18"
   },
   "nx": {
     "includedScripts": []
+  },
+  "msw": {
+    "workerDirectory": [
+      "apps/demo/public"
+    ]
   }
 }

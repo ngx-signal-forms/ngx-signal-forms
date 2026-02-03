@@ -432,27 +432,28 @@ Each example below links to its source folder in `apps/demo/src/app`, with a sho
 
 <!-- markdownlint-disable MD060 -->
 
-| Example                     | Use case / type of form          | Toolkit features shown (why)                                                            | Library entry points used                      | Source           |
-| --------------------------- | -------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------- | ---------------- |
-| Your First Form             | Simple contact form              | Auto-ARIA and error component for progressive disclosure without boilerplate            | [core][core-docs], [assistive][assistive-docs] | [source][src-01] |
-| Accessibility Comparison    | Side-by-side baseline vs toolkit | Auto-ARIA + error component to show code reduction and WCAG-aligned output              | [core][core-docs], [assistive][assistive-docs] | [source][src-02] |
-| Error Display Modes         | Same form, different strategies  | Error strategies (`immediate`, `on-touch`, `on-submit`, `manual`) to choose UX behavior | [core][core-docs], [assistive][assistive-docs] | [source][src-03] |
-| Warning Support             | Validation with warnings         | `warningError()` and warning roles to show non-blocking feedback                        | [core][core-docs], [assistive][assistive-docs] | [source][src-04] |
-| Field States                | State exploration form           | Field state signals (touched, dirty, pending, invalid) to clarify visibility logic      | [core][core-docs]                              | [source][src-05] |
-| Headless Error State        | Custom UI, no toolkit UI         | Headless error state to build your own rendering while keeping strategies               | [headless][headless-docs]                      | [source][src-06] |
-| Headless Fieldset Utilities | Grouped validation               | Headless fieldset aggregation and field name resolution for custom layouts              | [headless][headless-docs]                      | [source][src-07] |
-| Form Field Basic Usage      | Standard input layout            | `NgxFormField` wrapper for consistent markup and automatic error display                | [form-field][form-field-docs]                  | [source][src-08] |
-| Form Field Complex Forms    | Realistic registration form      | `NgxFormField` with nested objects and cross-field validation                           | [form-field][form-field-docs]                  | [source][src-09] |
-| Form Field Fieldset         | Grouped sections                 | `NgxSignalFormFieldset` for aggregated errors and grouped semantics                     | [form-field][form-field-docs]                  | [source][src-10] |
-| Outline Form Field          | Material-like layout             | Outlined appearance and field wrapper theming defaults                                  | [form-field][form-field-docs]                  | [source][src-11] |
-| Global Configuration        | App-wide defaults                | `provideNgxSignalFormsConfig` for default strategy, appearance, and resolution          | [core][core-docs]                              | [source][src-12] |
-| Submission Patterns         | Async submit flows               | `submit()` helper + submission state signals for server errors and loading              | [core][core-docs]                              | [source][src-13] |
-| Error Messages              | Centralized messaging            | Error message registry and priority tiers for i18n-ready messaging                      | [core][core-docs]                              | [source][src-14] |
-| Dynamic List                | Add/remove items                 | Array handling with signals and `NgxFormField` for repeated fields                      | [core][core-docs]                              | [source][src-15] |
-| Nested Groups               | Deep data structures             | Nested group handling with auto-ARIA and consistent error surfaces                      | [core][core-docs]                              | [source][src-16] |
-| Async Validation            | Server checks                    | Async validation + pending state visibility in toolkit UI                               | [core][core-docs]                              | [source][src-17] |
-| Stepper Form                | Multi-step wizard                | Step validation patterns with strategy-aware errors per step                            | [core][core-docs]                              | [source][src-18] |
-| Cross-Field Validation      | Dependent fields                 | Cross-field rules with grouped error display in toolkit components                      | [core][core-docs]                              | [source][src-19] |
+| Example                     | Use case / type of form          | Toolkit features shown (why)                                                            | Library entry points used                        | Source           |
+| --------------------------- | -------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------ | ---------------- |
+| Your First Form             | Simple contact form              | Auto-ARIA and error component for progressive disclosure without boilerplate            | [core][core-docs], [assistive][assistive-docs]   | [source][src-01] |
+| Accessibility Comparison    | Side-by-side baseline vs toolkit | Auto-ARIA + error component to show code reduction and WCAG-aligned output              | [core][core-docs], [assistive][assistive-docs]   | [source][src-02] |
+| Error Display Modes         | Same form, different strategies  | Error strategies (`immediate`, `on-touch`, `on-submit`, `manual`) to choose UX behavior | [core][core-docs], [assistive][assistive-docs]   | [source][src-03] |
+| Warning Support             | Validation with warnings         | `warningError()` and warning roles to show non-blocking feedback                        | [core][core-docs], [assistive][assistive-docs]   | [source][src-04] |
+| Field States                | State exploration form           | Field state signals (touched, dirty, pending, invalid) to clarify visibility logic      | [core][core-docs]                                | [source][src-05] |
+| Headless Error State        | Custom UI, no toolkit UI         | Headless error state to build your own rendering while keeping strategies               | [headless][headless-docs]                        | [source][src-06] |
+| Headless Fieldset Utilities | Grouped validation               | Headless fieldset aggregation and field name resolution for custom layouts              | [headless][headless-docs]                        | [source][src-07] |
+| Form Field Basic Usage      | Standard input layout            | `NgxFormField` wrapper for consistent markup and automatic error display                | [form-field][form-field-docs]                    | [source][src-08] |
+| Form Field Complex Forms    | Realistic registration form      | `NgxFormField` with nested objects and cross-field validation                           | [form-field][form-field-docs]                    | [source][src-09] |
+| Form Field Fieldset         | Grouped sections                 | `NgxSignalFormFieldset` for aggregated errors and grouped semantics                     | [form-field][form-field-docs]                    | [source][src-10] |
+| Outline Form Field          | Material-like layout             | Outlined appearance and field wrapper theming defaults                                  | [form-field][form-field-docs]                    | [source][src-11] |
+| Global Configuration        | App-wide defaults                | `provideNgxSignalFormsConfig` for default strategy, appearance, and resolution          | [core][core-docs]                                | [source][src-12] |
+| Submission Patterns         | Async submit flows               | `submit()` helper + submission state signals for server errors and loading              | [core][core-docs]                                | [source][src-13] |
+| Error Messages              | Centralized messaging            | Error message registry and priority tiers for i18n-ready messaging                      | [core][core-docs]                                | [source][src-14] |
+| Dynamic List                | Add/remove items                 | Array handling with signals and `NgxFormField` for repeated fields                      | [core][core-docs]                                | [source][src-15] |
+| Nested Groups               | Deep data structures             | Nested group handling with auto-ARIA and consistent error surfaces                      | [core][core-docs]                                | [source][src-16] |
+| Async Validation            | Server checks                    | Async validation + pending state visibility in toolkit UI                               | [core][core-docs]                                | [source][src-17] |
+| Stepper Form                | Multi-step wizard                | Step validation patterns with strategy-aware errors per step                            | [core][core-docs]                                | [source][src-18] |
+| Advanced Wizard             | Form-per-step wizard             | Toolkit field wrappers, auto-ARIA, and cross-step validation in a store-backed wizard   | [core][core-docs], [form-field][form-field-docs] | [source][src-20] |
+| Cross-Field Validation      | Dependent fields                 | Cross-field rules with grouped error display in toolkit components                      | [core][core-docs]                                | [source][src-19] |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -479,6 +480,7 @@ Each example below links to its source folder in `apps/demo/src/app`, with a sho
 [src-17]: ./apps/demo/src/app/05-advanced/async-validation
 [src-18]: ./apps/demo/src/app/05-advanced/stepper-form
 [src-19]: ./apps/demo/src/app/05-advanced/cross-field-validation
+[src-20]: ./apps/demo/src/app/05-advanced/advanced-wizard
 
 ## Documentation
 

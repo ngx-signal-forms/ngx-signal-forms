@@ -15,6 +15,25 @@ import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 import { AppComponent } from './app/app.component';
 import { appRoutes } from './app/app.routes';
 
+// Enable MSW mocking in development
+async function enableMocking(): Promise<void> {
+  if (!isDevMode()) {
+    return;
+  }
+
+  const { worker } = await import('./mocks/browser');
+
+  // Start the worker with service worker options
+  await worker.start({
+    onUnhandledRequest: 'bypass', // Don't warn about unhandled requests
+    serviceWorker: {
+      url: '/mockServiceWorker.js',
+    },
+  });
+
+  console.log('🔧 MSW: Mock Service Worker started');
+}
+
 // Wrap in async IIFE to support top-level await in all build targets
 (async () => {
   // Enable debug logging globally
@@ -33,6 +52,9 @@ import { appRoutes } from './app/app.routes';
   } catch {
     // Ignore if not available; production builds don't need it
   }
+
+  // Start MSW before bootstrapping the app
+  await enableMocking();
 
   await bootstrapApplication(AppComponent, {
     providers: [

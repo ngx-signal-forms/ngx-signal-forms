@@ -238,6 +238,12 @@ export const appRoutes: Routes = [
         title: 'Stepper Form - Multi-step Wizard',
       },
       {
+        path: 'advanced-wizard',
+        loadComponent: () =>
+          import('./05-advanced/advanced-wizard/advanced-wizard.page'),
+        title: 'Advanced Wizard - NgRx Signal Store + Zod',
+      },
+      {
         path: 'cross-field-validation',
         loadComponent: () =>
           import('./05-advanced/cross-field-validation/cross-field-validation.page').then(

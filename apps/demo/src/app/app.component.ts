@@ -179,6 +179,10 @@ export class AppComponent implements AfterViewInit {
           label: 'Stepper Form',
         },
         {
+          path: '/advanced-scenarios/advanced-wizard',
+          label: 'Advanced Wizard',
+        },
+        {
           path: '/advanced-scenarios/cross-field-validation',
           label: 'Cross-Field Validation',
         },
