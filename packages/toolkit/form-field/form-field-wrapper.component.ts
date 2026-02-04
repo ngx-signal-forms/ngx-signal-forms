@@ -78,7 +78,7 @@ function generateUniqueFieldId(): string {
  *
  * @example Outlined Layout
  * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.email" outline>
+ * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
  *   <label for="email">Email Address</label>
  *   <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
  * </ngx-signal-form-field-wrapper>
@@ -86,7 +86,7 @@ function generateUniqueFieldId(): string {
  *
  * @example With Character Count
  * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.bio" outline>
+ * <ngx-signal-form-field-wrapper [formField]="form.bio" appearance="outline">
  *   <label for="bio">Bio</label>
  *   <textarea id="bio" [formField]="form.bio"></textarea>
  *   <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
@@ -285,12 +285,55 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   readonly showErrors = input<boolean>(true);
 
   /**
-   * Enable outlined form field appearance.
-   * When true, applies Material Design outlined input styling.
+   * Form field appearance variant.
    *
-   * @default Inherited from NgxSignalFormsConfig.defaultFormFieldAppearance
+   * Controls the visual style of the form field wrapper:
+   * - `'standard'`: Default appearance with label above input
+   * - `'outline'`: Material Design outlined appearance with floating label
+   * - `'inherit'`: Use the global config default (defaultFormFieldAppearance)
    *
-   * @example Explicit outline
+   * @default 'inherit'
+   *
+   * @example Explicit standard appearance (override global config)
+   * ```html
+   * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="standard">
+   *   <label for="email">Email</label>
+   *   <input id="email" [formField]="form.email" />
+   * </ngx-signal-form-field-wrapper>
+   * ```
+   *
+   * @example Explicit outline appearance
+   * ```html
+   * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
+   *   <label for="email">Email</label>
+   *   <input id="email" [formField]="form.email" />
+   * </ngx-signal-form-field-wrapper>
+   * ```
+   *
+   * @example Inherit from global config (default behavior)
+   * ```html
+   * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="inherit">
+   *   <label for="email">Email</label>
+   *   <input id="email" [formField]="form.email" />
+   * </ngx-signal-form-field-wrapper>
+   * ```
+   *
+   * @example Global config
+   * ```typescript
+   * provideNgxSignalFormsConfig({
+   *   defaultFormFieldAppearance: 'outline', // All inherit fields use outline
+   * });
+   * ```
+   */
+  readonly appearance = input<'standard' | 'outline' | 'inherit'>('inherit');
+
+  /**
+   * @deprecated Use `appearance="outline"` instead. Maintained for backward compatibility.
+   *
+   * Legacy boolean attribute for outline appearance.
+   * When true, forces outline appearance regardless of `appearance` input or config.
+   *
+   * @example Legacy usage (still works)
    * ```html
    * <ngx-signal-form-field-wrapper [formField]="form.email" outline>
    *   <label for="email">Email</label>
@@ -298,11 +341,12 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * </ngx-signal-form-field-wrapper>
    * ```
    *
-   * @example Global default via config
-   * ```typescript
-   * provideNgxSignalFormsConfig({
-   *   defaultFormFieldAppearance: 'outline',
-   * });
+   * @example Recommended replacement
+   * ```html
+   * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
+   *   <label for="email">Email</label>
+   *   <input id="email" [formField]="form.email" />
+   * </ngx-signal-form-field-wrapper>
    * ```
    */
   readonly outline = input(false, { transform: booleanAttribute });
@@ -347,16 +391,31 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
 
   /**
    * Computed signal determining if outline appearance should be applied.
-   * Respects explicit outline input, falls back to config default.
+   * Resolves the effective appearance based on component input and config default.
+   *
+   * Resolution priority:
+   * 1. Legacy `outline` boolean input (for backward compatibility)
+   * 2. Component `appearance` input (if not 'inherit')
+   * 3. Global config `defaultFormFieldAppearance`
    */
   protected readonly isOutline = computed(() => {
-    // Priority 1: Explicit outline input
+    // Priority 1: Legacy outline boolean (backward compatibility)
     if (this.outline()) {
       return true;
     }
 
-    // Priority 2: Config default
-    return this.#config.defaultFormFieldAppearance === 'outline';
+    // Priority 2: Explicit component appearance (non-inherit)
+    const componentAppearance = this.appearance();
+    if (componentAppearance === 'outline') {
+      return true;
+    }
+    if (componentAppearance === 'standard') {
+      return false;
+    }
+
+    // Priority 3: Inherit from config default
+    const configDefault = this.#config.defaultFormFieldAppearance;
+    return configDefault === 'outline';
   });
 
   /**
