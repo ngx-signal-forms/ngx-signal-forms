@@ -96,7 +96,7 @@ Auto-applies:
 interface NgxSignalFormsConfig {
   autoAria: boolean; // Default: true
   defaultErrorStrategy: ErrorDisplayStrategy; // Default: 'on-touch'
-  defaultFormFieldAppearance?: 'default' | 'outline'; // Default: 'default'
+  defaultFormFieldAppearance: 'standard' | 'outline'; // Default: 'standard'
   showRequiredMarker: boolean; // Default: true
   requiredMarker: string; // Default: ' *'
   fieldNameResolver?: (el: HTMLElement) => string | null;

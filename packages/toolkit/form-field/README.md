@@ -111,7 +111,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [ngxSignalForm]="contactForm">
-      <ngx-signal-form-field-wrapper [formField]="contactForm.email" outline>
+      <ngx-signal-form-field-wrapper [formField]="contactForm.email" appearance="outline">
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" />
         <ngx-signal-form-field-hint>We'll never share your email</ngx-signal-form-field-hint>
@@ -180,7 +180,7 @@ Add icons, text, or interactive elements before or after the input using `prefix
 **Clear button with outlined layout:**
 
 ```html
-<ngx-signal-form-field-wrapper [formField]="form.query" outline>
+<ngx-signal-form-field-wrapper [formField]="form.query" appearance="outline">
   <span prefix aria-hidden="true">🔍</span>
   <label for="query">Search</label>
   <input id="query" [formField]="form.query" />
@@ -268,7 +268,22 @@ The form field component supports non-blocking warnings in addition to blocking 
 Enables the outlined layout where the label sits inside the input border, matching Material Design outlined input patterns.
 When you import `NgxFormField`, the directive is already included.
 
-**Basic Usage:**
+**Recommended: Use `appearance` input**
+
+```html
+<ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
+  <label for="email">Email Address</label>
+  <input
+    id="email"
+    type="email"
+    [formField]="form.email"
+    required
+    placeholder="you@example.com"
+  />
+</ngx-signal-form-field-wrapper>
+```
+
+**Legacy: `outline` boolean attribute (still works)**
 
 ```html
 <ngx-signal-form-field-wrapper [formField]="form.email" outline>
@@ -283,7 +298,24 @@ When you import `NgxFormField`, the directive is already included.
 </ngx-signal-form-field-wrapper>
 ```
 
-#### Wrapper inputs (outlined)
+**Override global config:**
+
+```html
+<!-- Force standard appearance even if global config sets outline -->
+<ngx-signal-form-field-wrapper [formField]="form.notes" appearance="standard">
+  <label for="notes">Notes</label>
+  <textarea id="notes" [formField]="form.notes"></textarea>
+</ngx-signal-form-field-wrapper>
+```
+
+#### Wrapper inputs (appearance)
+
+| Input        | Type                                        | Default     | Description                                |
+| ------------ | ------------------------------------------- | ----------- | ------------------------------------------ |
+| `appearance` | `'standard' \| 'outline' \| 'inherit'`      | `'inherit'` | Visual style: standard, outline, or config |
+| `outline`    | `boolean`                                   | `false`     | Legacy: Forces outline (use appearance)    |
+
+#### Wrapper inputs (outlined-specific)
 
 | Input                | Type      | Default | Description                                             |
 | -------------------- | --------- | ------- | ------------------------------------------------------- |
