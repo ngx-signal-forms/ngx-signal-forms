@@ -106,6 +106,9 @@ jobs:
       - name: Nx Report
         run: pnpm exec nx report
 
+      - name: Build toolkit package
+        run: pnpm exec nx run toolkit:build --skip-nx-cache
+
       - name: Publish packages (Dry Run)
         if: ${{ inputs.dry_run == true }}
         run: |
