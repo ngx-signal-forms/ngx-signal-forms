@@ -112,7 +112,7 @@ export const appConfig: ApplicationConfig = {
     provideNgxSignalFormsConfig({
       autoAria: true, // Default
       defaultErrorStrategy: 'on-touch', // Default
-      defaultFormFieldAppearance: 'outline', // Optional: 'default' | 'outline'
+      defaultFormFieldAppearance: 'outline', // Optional: 'standard' | 'outline'
       strictFieldResolution: false, // Default
       debug: false, // Default
     }),
@@ -151,7 +151,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 @Component({
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <ngx-signal-form-field-wrapper [formField]="form.email" outline>
+    <ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
       <label for="email">Email</label>
       <input id="email" [formField]="form.email" />
     </ngx-signal-form-field-wrapper>
@@ -409,7 +409,7 @@ Reusable form field wrapper with automatic error display.
 - Automatic error/warning display
 - Inherits error strategy from form directive
 - Type-safe with generics
-- Supports `outline` attribute for Material Design layout
+- Supports `appearance` input for Material Design layout (`'standard' | 'outline' | 'inherit'`)
 
 ### NgxSignalFormFieldset
 
@@ -420,10 +420,10 @@ Groups related form fields with aggregated error/warning display.
 ```html
 <!-- Group-Only Mode (default) - when nested fields show their own errors -->
 <ngx-signal-form-fieldset [fieldsetField]="form.passwords">
-  <ngx-signal-form-field-wrapper [formField]="form.passwords.password" outline
+  <ngx-signal-form-field-wrapper [formField]="form.passwords.password" appearance="outline"
     >...</ngx-signal-form-field-wrapper
   >
-  <ngx-signal-form-field-wrapper [formField]="form.passwords.confirm" outline
+  <ngx-signal-form-field-wrapper [formField]="form.passwords.confirm" appearance="outline"
     >...</ngx-signal-form-field-wrapper
   >
   <!-- Fieldset shows ONLY cross-field error: "Passwords must match" -->
@@ -772,7 +772,20 @@ unwrapValue(computedStrategy); // 'on-touch'
 
 **Selector**: `ngx-signal-form-field-wrapper[outline]`
 
+**Deprecated**: Use `appearance="outline"` instead. Maintained for backward compatibility.
+
 Transforms form field into Material Design outlined layout.
+
+**Recommended:**
+
+```typescript
+<ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
+  <label for="email">Email Address</label>
+  <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
+</ngx-signal-form-field-wrapper>
+```
+
+**Legacy (still works):**
 
 ```typescript
 <ngx-signal-form-field-wrapper [formField]="form.email" outline>
