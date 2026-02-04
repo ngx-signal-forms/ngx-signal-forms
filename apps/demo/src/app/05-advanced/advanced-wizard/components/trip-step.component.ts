@@ -45,7 +45,7 @@ import { WizardStore } from '../stores/wizard.store';
       }
 
       @for (
-        destination of store.destinations();
+        destination of store.destinationsDraft();
         track destination.id;
         let destIdx = $index
       ) {
@@ -450,6 +450,7 @@ export class TripStepComponent {
 
   // Expose form and computed signals to template
   readonly tripForm = this.#tripStepForm.form;
+  readonly #model = this.#tripStepForm.model;
   protected readonly hasDestinations = this.#tripStepForm.hasDestinations;
   readonly isValid = this.#tripStepForm.isValid;
 
@@ -460,13 +461,11 @@ export class TripStepComponent {
   }
 
   /**
-   * Explicitly commit form data to store.
-   * Called before navigation or final submission.
-   * linkedSignal keeps form writable, but changes stay local until committed.
+   * Commit form data to store.
+   * Transfers local linkedSignal data to store's committed state.
    */
   commitToStore(): void {
-    const destinations = this.tripForm().value().destinations;
-    this.store.setDestinations(destinations);
+    this.store.setDestinations(this.#model().destinations);
   }
 
   async validateAndFocus(): Promise<boolean> {

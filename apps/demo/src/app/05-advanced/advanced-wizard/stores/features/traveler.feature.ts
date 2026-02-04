@@ -1,8 +1,9 @@
-import { computed } from '@angular/core';
+import { linkedSignal } from '@angular/core';
 import {
   patchState,
   signalStoreFeature,
   withComputed,
+  withLinkedState,
   withMethods,
   withState,
 } from '@ngrx/signals';
@@ -19,13 +20,23 @@ export function withTravelerManagement() {
       traveler: createEmptyTraveler(),
     }),
 
-    withComputed((store) => ({
-      travelerFullName: computed(() => {
-        const t = store.traveler();
-        return `${t.firstName} ${t.lastName}`.trim() || 'Guest';
+    // Draft state linked to committed - form binds to this
+    // Resets when committed state changes (e.g., after load from server)
+    withLinkedState(({ traveler }) => ({
+      travelerDraft: linkedSignal({
+        source: traveler,
+        computation: (committed) => structuredClone(committed),
       }),
-      isAdult: computed(() => {
-        const dob = store.traveler().dateOfBirth;
+    })),
+
+    // Arrow function shorthand - auto-wrapped in computed()
+    withComputed(({ traveler }) => ({
+      travelerFullName: () => {
+        const t = traveler();
+        return `${t.firstName} ${t.lastName}`.trim() || 'Guest';
+      },
+      isAdult: () => {
+        const dob = traveler().dateOfBirth;
         if (!dob) return false;
         const today = new Date();
         const birthDate = new Date(dob);
@@ -38,21 +49,26 @@ export function withTravelerManagement() {
           return age - 1 >= 18;
         }
         return age >= 18;
-      }),
-      hasValidPassport: computed(() => {
-        const passport = store.traveler().passportExpiry;
+      },
+      hasValidPassport: () => {
+        const passport = traveler().passportExpiry;
         if (!passport) return false;
         return new Date(passport) > new Date();
-      }),
+      },
     })),
 
     withMethods((store) => ({
-      updateTraveler(changes: Partial<Traveler>): void {
-        patchState(store, (s) => ({
-          traveler: { ...s.traveler, ...changes },
-        }));
+      // Commit draft to permanent state
+      commitTraveler(): void {
+        patchState(store, { traveler: store.travelerDraft() });
       },
 
+      // Discard draft changes, revert to committed
+      discardTravelerChanges(): void {
+        patchState(store, { travelerDraft: store.traveler() });
+      },
+
+      // Direct update to committed state (for API loads)
       setTraveler(traveler: Traveler): void {
         patchState(store, { traveler });
       },

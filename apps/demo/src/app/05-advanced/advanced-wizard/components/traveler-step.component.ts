@@ -203,6 +203,7 @@ export class TravelerStepComponent {
 
   // Expose form and computed signals to template
   readonly travelerForm = this.#travelerStepForm.form;
+  readonly #model = this.#travelerStepForm.model;
   readonly isValid = this.#travelerStepForm.isValid;
   protected readonly passportExpiryError =
     this.#travelerStepForm.passportExpiryError;
@@ -224,13 +225,11 @@ export class TravelerStepComponent {
   }
 
   /**
-   * Explicitly commit form data to store.
-   * Called before navigation or final submission.
-   * linkedSignal keeps form writable, but changes stay local until committed.
+   * Commit form data to store.
+   * Transfers local linkedSignal data to store's committed state.
    */
   commitToStore(): void {
-    const formData = this.travelerForm().value();
-    this.#store.setTraveler(formData);
+    this.#store.setTraveler(this.#model());
   }
 
   async validateAndFocus(): Promise<boolean> {

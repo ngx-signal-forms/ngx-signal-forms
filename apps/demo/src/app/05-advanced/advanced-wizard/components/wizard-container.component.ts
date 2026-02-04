@@ -301,8 +301,6 @@ export class WizardContainerComponent {
    */
   protected readonly showSavingIndicator = signal(false);
 
-  #showTimeoutId: ReturnType<typeof setTimeout> | null = null;
-  #hideTimeoutId: ReturnType<typeof setTimeout> | null = null;
   #shownAt: number | null = null;
 
   protected readonly steps: {
@@ -316,43 +314,31 @@ export class WizardContainerComponent {
   ];
 
   constructor() {
-    // Watch isSaving and apply debounce/minimum display logic
-    effect(() => {
+    // Angular 21.1 pattern: use onCleanup for automatic timeout cleanup
+    effect((onCleanup) => {
       const isSaving = this.store.isSaving();
 
       if (isSaving) {
-        // Clear any pending hide
-        if (this.#hideTimeoutId) {
-          clearTimeout(this.#hideTimeoutId);
-          this.#hideTimeoutId = null;
-        }
-
-        // Only show after delay (prevents flicker on fast saves)
-        if (!this.#showTimeoutId && !this.showSavingIndicator()) {
-          this.#showTimeoutId = setTimeout(() => {
+        // Show indicator after delay (prevents flicker on fast saves)
+        if (!this.showSavingIndicator()) {
+          const showTimeoutId = setTimeout(() => {
             this.showSavingIndicator.set(true);
             this.#shownAt = Date.now();
-            this.#showTimeoutId = null;
           }, SHOW_SAVING_AFTER_MS);
-        }
-      } else {
-        // Clear pending show if save finished quickly
-        if (this.#showTimeoutId) {
-          clearTimeout(this.#showTimeoutId);
-          this.#showTimeoutId = null;
-        }
 
+          onCleanup(() => clearTimeout(showTimeoutId));
+        }
+      } else if (this.showSavingIndicator() && this.#shownAt) {
         // Ensure minimum display time before hiding
-        if (this.showSavingIndicator() && this.#shownAt) {
-          const elapsed = Date.now() - this.#shownAt;
-          const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
+        const elapsed = Date.now() - this.#shownAt;
+        const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
 
-          this.#hideTimeoutId = setTimeout(() => {
-            this.showSavingIndicator.set(false);
-            this.#shownAt = null;
-            this.#hideTimeoutId = null;
-          }, remaining);
-        }
+        const hideTimeoutId = setTimeout(() => {
+          this.showSavingIndicator.set(false);
+          this.#shownAt = null;
+        }, remaining);
+
+        onCleanup(() => clearTimeout(hideTimeoutId));
       }
     });
   }

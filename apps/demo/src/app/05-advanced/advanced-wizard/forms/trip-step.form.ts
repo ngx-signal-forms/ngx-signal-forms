@@ -23,10 +23,8 @@ export type TripStepData = {
 /**
  * Trip step form type alias.
  *
- * Uses Angular Signal Forms with linkedSignal for store → form synchronization.
- * Form model is WRITABLE (via linkedSignal), but changes stay local until
- * explicitly committed to store via component's commitToStore() method.
- * This avoids effect-based continuous mirroring (signal→signal propagation).
+ * Form uses local linkedSignal for writable binding to Angular Signal Forms.
+ * Changes stay local until committed via store.setDestinations().
  */
 export type TripStepForm = FieldTree<TripStepData>;
 
@@ -34,49 +32,41 @@ export type TripStepForm = FieldTree<TripStepData>;
  * Creates trip step form with Zod validation via StandardSchema.
  *
  * Architecture:
- * - Store is the source of truth (owns the data)
- * - Form uses linkedSignal for reactive store → form updates
- * - Form model is writable locally but doesn't auto-sync back to store
- * - Explicit commit via component's commitToStore() before navigation/submit
- * - This avoids effect-based mirroring (per Angular best practices)
+ * - Store owns committed state (destinations)
+ * - Form uses local linkedSignal (reads from store, writes locally)
+ * - Commit via store.setDestinations() transfers local changes to store
+ *
+ * Note: Angular Signal Forms requires WritableSignal, not DeepSignal from
+ * withLinkedState. So we create a local linkedSignal for form binding.
  *
  * Validation strategy:
- * - Single-field validation: Handled by Zod schema via validateStandardSchema()
- *   - Required fields, min lengths, array minimums
- * - Same-object cross-field: Handled by Zod schema refine()
- *   - Arrival date must be in future
- *   - Departure date must be after arrival
- * - Nested cross-field: Handled by validate() with valueOf()
- *   - Activity date must be within destination date range
+ * - Single-field: Zod schemas via validateStandardSchema()
+ * - Same-object cross-field: Zod schema refine() for dates
+ * - Nested cross-field: validate() for activity date within destination range
  *
  * @param store Wizard store instance
- * @returns Form FieldTree and computed helper signals
  */
 export function createTripStepForm(store: InstanceType<typeof WizardStore>): {
   form: TripStepForm;
+  model: Signal<TripStepData>;
   hasDestinations: Signal<boolean>;
   isValid: Signal<boolean>;
 } {
-  // Local writable model linked to store (reads from store, writes stay local)
+  // Local linkedSignal: reads from store's draft, writes stay local
+  // Note: We read from destinationsDraft since that's what the user edits
   const model = linkedSignal<TripStepData>(() => ({
-    destinations: store.destinations(),
+    destinations: store.destinationsDraft(),
   }));
 
-  // Form with nested array validation using StandardSchema
+  // Form with nested array validation
   const tripForm = form(model, (path) => {
     applyEach(path.destinations, (destPath) => {
-      // Zod schema via StandardSchema handles:
-      // - Required fields, min lengths
-      // - Arrival date must be in future (via refine)
-      // - Departure > arrival (via refine)
       validateStandardSchema(destPath, DestinationSchema);
 
       applyEach(destPath.activities, (actPath) => {
-        // Zod schema via StandardSchema for activity fields
         validateStandardSchema(actPath, ActivitySchema);
 
         // Cross-field: activity date within destination date range
-        // This cannot be in Zod schema because it needs parent destination dates
         validate(actPath.date, (ctx) => {
           const arrival = ctx.valueOf(destPath.arrivalDate);
           const departure = ctx.valueOf(destPath.departureDate);
@@ -106,6 +96,7 @@ export function createTripStepForm(store: InstanceType<typeof WizardStore>): {
 
   return {
     form: tripForm,
+    model,
     hasDestinations: computed(() => model().destinations.length > 0),
     isValid: computed(
       () => !tripForm().invalid() && model().destinations.length > 0,
