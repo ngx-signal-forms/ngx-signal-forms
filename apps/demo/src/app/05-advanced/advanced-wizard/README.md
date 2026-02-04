@@ -4,6 +4,219 @@
 
 Multi-step travel booking wizard showcasing form-per-step architecture, shared store state, cross-step validation, and auto-save. It is the most complex demo in the app.
 
+## Architectural Pattern: Draft State with Explicit Commit
+
+This wizard implements a **draft state pattern** for managing form data in NgRx Signal Store. This pattern is recommended when:
+
+- Forms live in child components but navigation controls are in a parent
+- You need explicit control over when changes are persisted
+- Auto-save should operate on drafts, not committed state
+
+### Why This Pattern?
+
+1. **Predictable data flow**: Changes are local until explicitly committed
+2. **Auto-reset on server load**: `withLinkedState` automatically resets drafts when committed state changes
+3. **Undo/discard support**: Users can abandon changes before committing
+4. **Testable**: Clear boundaries between draft and committed state
+
+### Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ WizardStore                                                     │
+│                                                                 │
+│  withLinkedState:                                               │
+│    traveler ──linked──▶ travelerDraft                           │
+│    destinations ──────▶ destinationsDraft                       │
+│                                                                 │
+│  CRUD methods operate on draft signals                          │
+│  Auto-save watches draftSummary()                               │
+└─────────────────────────────────────────────────────────────────┘
+              ▲                           ▲
+              │                           │
+┌─────────────┴───────────┐  ┌────────────┴──────────────┐
+│ TravelerStepComponent   │  │ TripStepComponent         │
+│                         │  │                           │
+│ linkedSignal reads from │  │ linkedSignal reads from   │
+│ store.traveler()        │  │ store.destinations()      │
+│                         │  │                           │
+│ commitToStore():        │  │ commitToStore():          │
+│   store.setTraveler()   │  │   store.setDestinations() │
+└─────────────────────────┘  └───────────────────────────┘
+```
+
+### Data Flow: Draft → Commit → Save
+
+```
+  ┌──────────┐      ┌──────────────┐      ┌───────────┐      ┌─────────┐
+  │   User   │      │ Form (local) │      │   Store   │      │   API   │
+  └────┬─────┘      └──────┬───────┘      └─────┬─────┘      └────┬────┘
+       │                   │                    │                 │
+       │   1. API loads data                    │◀────────────────┤
+       │                   │◀───linkedSignal────┤                 │
+       │                   │    auto-syncs      │                 │
+       │                   │                    │                 │
+       ├───2. User types───▶                    │                 │
+       │                   │ (local changes)    │                 │
+       │                   │                    │                 │
+       ├───3. Click NEXT───▶                    │                 │
+       │                   │──validate──┐       │                 │
+       │                   │◀───────────┘       │                 │
+       │                   │                    │                 │
+       │              [if valid]                │                 │
+       │                   ├──commitToStore()──▶│                 │
+       │                   │                    ├──auto-save─────▶│
+       │                   │                    │                 │
+       │              [if invalid]              │                 │
+       │◀──focus errors────┤                    │                 │
+       │                   │                    │                 │
+```
+
+### Navigation Flow
+
+```
+    ┌──────────┐     NEXT      ┌──────────┐     NEXT      ┌──────────┐
+    │ Traveler │──(valid)─────▶│   Trip   │──(valid)─────▶│  Review  │
+    │   Step   │               │   Step   │               │   Step   │
+    └──────────┘◀──PREVIOUS────└──────────┘◀──PREVIOUS────└──────────┘
+         │                          │                          │
+         │ NEXT (invalid)           │ NEXT (invalid)           │ SUBMIT (invalid)
+         ▼                          ▼                          ▼
+    focus first               focus first               show cross-step
+    invalid field             invalid field             validation errors
+```
+
+### Pattern Implementation
+
+```typescript
+// Store feature (stores/features/traveler.feature.ts)
+export function withTravelerManagement() {
+  return signalStoreFeature(
+    // Committed state (source of truth)
+    withState<TravelerState>({ traveler: createEmptyTraveler() }),
+
+    // Draft state linked to committed - auto-resets when source changes
+    withLinkedState(({ traveler }) => ({
+      travelerDraft: linkedSignal({
+        source: traveler,
+        computation: (committed) => structuredClone(committed),
+      }),
+    })),
+
+    withMethods((store) => ({
+      // Transfer draft to committed state
+      commitTraveler(): void {
+        patchState(store, { traveler: store.travelerDraft() });
+      },
+      // Revert draft to committed state
+      discardTravelerChanges(): void {
+        patchState(store, { travelerDraft: store.traveler() });
+      },
+    })),
+  );
+}
+```
+
+### Form Factory Pattern
+
+Angular Signal Forms requires `WritableSignal`, but `withLinkedState` creates `DeepSignal`. Form factories use a local `linkedSignal` that reads from the store:
+
+```typescript
+// Form factory (forms/traveler-step.form.ts)
+export function createTravelerStepForm(store: WizardStore) {
+  // Local writable signal that reads from store
+  const model = linkedSignal<Traveler>(() => store.traveler());
+
+  const travelerForm = form(model, {
+    firstName: [Validators.required],
+    // ...
+  });
+
+  return { travelerForm, model }; // Return model for explicit commit
+}
+
+// Component commits on navigation
+commitToStore(): void {
+  this.#store.setTraveler(this.#model());
+}
+```
+
+### Effect Cleanup Pattern (Angular 21.1)
+
+For timed UI states (saving indicators, debounced actions), use the `onCleanup` callback:
+
+```typescript
+// Angular 21.1 pattern - automatic cleanup on effect re-run
+effect((onCleanup) => {
+  const isSaving = this.store.isSaving();
+
+  if (isSaving) {
+    const timeoutId = setTimeout(() => {
+      this.showIndicator.set(true);
+    }, DELAY_MS);
+
+    onCleanup(() => clearTimeout(timeoutId)); // Cleanup when effect re-runs
+  }
+});
+```
+
+### Immutable Array Update Helpers
+
+For deeply nested arrays, helper functions reduce spread nesting:
+
+```typescript
+// Instead of 4+ levels of spread:
+function updateAt<T>(arr: T[], idx: number, updater: (item: T) => T): T[] {
+  return arr.map((item, i) => (i === idx ? updater(item) : item));
+}
+
+// Compose for nested structures
+function updateActivity(destinations, destIdx, actIdx, updater) {
+  return updateAt(destinations, destIdx, (dest) => ({
+    ...dest,
+    activities: updateAt(dest.activities, actIdx, updater),
+  }));
+}
+```
+
+## Lazy Loading Strategy (@defer)
+
+The wizard uses Angular's `@defer` block to lazy-load step components. This optimizes the initial load by splitting step-specific dependencies (like large validation libraries or data lists) into separate chunks.
+
+### Why @defer?
+
+1. **Performance**: Reduces the initial bundle size of the wizard container. Steps are split into separate chunks.
+2. **Resource Management**: Prevents loading data/resources for steps the user hasn't reached yet.
+3. **Simplicity**: Keeps the wizard coordination in a single container component without the complexity of a Router-based wizard implementation.
+
+### Implementation Details
+
+Steps implement a common interface to allow the container to interact with them without eager coupling (which would break lazy loading):
+
+```typescript
+// wizard-step.interface.ts
+export interface WizardStepInterface {
+  validateAndFocus(): Promise<boolean>;
+  commitToStore(): void;
+  focusHeading(): void;
+}
+```
+
+The container uses a generic `viewChild` query to interact with the currently loaded step:
+
+```typescript
+// wizard-container.component.ts
+protected readonly currentStepComponent = viewChild<WizardStepInterface>('currentStep');
+
+// Template uses @defer for each step
+@switch (store.currentStep()) {
+  @case ('traveler') {
+    @defer { <ngx-traveler-step #currentStep /> }
+  }
+  // ...
+}
+```
+
 ## Form model
 
 - Forms are created per step via `linkedSignal()` and `form()` factories.

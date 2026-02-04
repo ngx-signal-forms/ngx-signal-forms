@@ -1,5 +1,5 @@
 import { httpMutation, withMutations } from '@angular-architects/ngrx-toolkit';
-import { computed, effect } from '@angular/core';
+import { effect } from '@angular/core';
 import {
   patchState,
   signalStore,
@@ -52,6 +52,24 @@ type TripSummary = {
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
+// VALIDATION HELPERS - reusable validation logic
+// ══════════════════════════════════════════════════════════════════════════════
+
+function isTravelerValid(t: Traveler): boolean {
+  return !!t.firstName && !!t.lastName && !!t.email && !!t.passportNumber;
+}
+
+function isDestinationsValid(d: Destination[]): boolean {
+  return (
+    d.length > 0 &&
+    d.every(
+      (dest) =>
+        dest.country && dest.city && dest.arrivalDate && dest.departureDate,
+    )
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // STORE
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -62,148 +80,78 @@ export const WizardStore = signalStore(
     error: null as string | null,
   }),
 
-  // Compose features
+  // Compose features (order matters - navigation first, then data features)
   withWizardNavigation(),
   withTravelerManagement(),
   withTripManagement(),
 
-  // Computed values - derived state (no effects needed!)
+  // Computed values using arrow function shorthand (auto-wrapped in computed())
   withComputed((store) => ({
     // ══════════════════════════════════════════════════════════════════════════
-    // STEP VALIDATION - Pure computed, no side effects
+    // STEP VALIDATION - validates draft data (what user is editing)
     // ══════════════════════════════════════════════════════════════════════════
-    isTravelerStepValid: computed(() => {
-      const t = store.traveler();
-      return !!t.firstName && !!t.lastName && !!t.email && !!t.passportNumber;
-    }),
+    isTravelerStepValid: () => isTravelerValid(store.travelerDraft()),
+    isTripStepValid: () => isDestinationsValid(store.destinationsDraft()),
+    isReviewStepValid: () =>
+      isTravelerValid(store.travelerDraft()) &&
+      isDestinationsValid(store.destinationsDraft()),
 
-    isTripStepValid: computed(() => {
-      const d = store.destinations();
-      return (
-        d.length > 0 &&
-        d.every(
-          (dest) =>
-            dest.country && dest.city && dest.arrivalDate && dest.departureDate,
-        )
-      );
-    }),
-
-    isReviewStepValid: computed(() => {
-      const t = store.traveler();
-      const d = store.destinations();
-      const travelerValid =
-        !!t.firstName && !!t.lastName && !!t.email && !!t.passportNumber;
-      const tripValid =
-        d.length > 0 &&
-        d.every(
-          (dest) =>
-            dest.country && dest.city && dest.arrivalDate && dest.departureDate,
-        );
-      return travelerValid && tripValid;
+    /**
+     * Validation status for all steps as a record.
+     */
+    stepValidation: (): Record<WizardStep, boolean> => ({
+      traveler: isTravelerValid(store.travelerDraft()),
+      trip: isDestinationsValid(store.destinationsDraft()),
+      review:
+        isTravelerValid(store.travelerDraft()) &&
+        isDestinationsValid(store.destinationsDraft()),
     }),
 
     /**
-     * Returns validation status for all steps as a record.
-     * Useful for templates that need to check multiple steps.
+     * Whether the current step's draft is valid and user can proceed.
      */
-    stepValidation: computed(
-      (): Record<WizardStep, boolean> => ({
-        traveler:
-          !!store.traveler().firstName &&
-          !!store.traveler().lastName &&
-          !!store.traveler().email &&
-          !!store.traveler().passportNumber,
-        trip:
-          store.destinations().length > 0 &&
-          store
-            .destinations()
-            .every(
-              (d) => d.country && d.city && d.arrivalDate && d.departureDate,
-            ),
-        review:
-          !!store.traveler().firstName &&
-          !!store.traveler().lastName &&
-          !!store.traveler().email &&
-          !!store.traveler().passportNumber &&
-          store.destinations().length > 0 &&
-          store
-            .destinations()
-            .every(
-              (d) => d.country && d.city && d.arrivalDate && d.departureDate,
-            ),
-      }),
-    ),
-
-    /**
-     * Whether the current step is valid and user can proceed.
-     */
-    canProceed: computed(() => {
+    canProceed: () => {
       const step = store.currentStep();
-      const t = store.traveler();
-      const d = store.destinations();
-
       switch (step) {
         case 'traveler':
-          return (
-            !!t.firstName && !!t.lastName && !!t.email && !!t.passportNumber
-          );
+          return isTravelerValid(store.travelerDraft());
         case 'trip':
-          return (
-            d.length > 0 &&
-            d.every(
-              (dest) =>
-                dest.country &&
-                dest.city &&
-                dest.arrivalDate &&
-                dest.departureDate,
-            )
-          );
+          return isDestinationsValid(store.destinationsDraft());
         case 'review':
-          return true; // Review step is always "valid" for proceeding
+          return true;
         default:
           return false;
       }
+    },
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // TRIP DATA - uses drafts for auto-save, committed for submission
+    // ══════════════════════════════════════════════════════════════════════════
+
+    /** Draft data for auto-save (saves work in progress) */
+    draftSummary: (): TripSummary => ({
+      traveler: store.travelerDraft(),
+      destinations: store.destinationsDraft(),
     }),
 
-    // ══════════════════════════════════════════════════════════════════════════
-    // TRIP DATA
-    // ══════════════════════════════════════════════════════════════════════════
-    tripSummary: computed<TripSummary>(() => ({
-      traveler: store.traveler(),
-      destinations: store.destinations(),
-    })),
-
-    tripData: computed<Trip>(() => ({
+    /** Committed data for final submission */
+    tripData: (): Trip => ({
       traveler: store.traveler(),
       destinations: store.destinations(),
       confirmed: false,
-    })),
-
-    isReadyToSubmit: computed(() => {
-      const t = store.traveler();
-      const d = store.destinations();
-      return (
-        !!t.firstName &&
-        !!t.lastName &&
-        !!t.email &&
-        !!t.passportNumber &&
-        d.length > 0 &&
-        d.every(
-          (dest) =>
-            dest.country && dest.city && dest.arrivalDate && dest.departureDate,
-        )
-      );
     }),
 
-    hasDestinations: computed(() => store.destinations().length > 0),
+    isReadyToSubmit: () =>
+      isTravelerValid(store.traveler()) &&
+      isDestinationsValid(store.destinations()),
+
+    hasDestinations: () => store.destinationsDraft().length > 0,
   })),
 
   // Mutations for API calls (ngrx-toolkit)
-  // These automatically provide isPending, error, and value signals
   withMutations((store) => ({
     /**
      * Save draft to server.
-     * Auto-creates new draft or updates existing based on draftId.
      */
     saveDraft: httpMutation<DraftData, DraftResponse>({
       request: (data) => {
@@ -235,6 +183,7 @@ export const WizardStore = signalStore(
       }),
       parse: (response) => response as DraftData,
       onSuccess: (data) => {
+        // Set committed state; withLinkedState auto-updates drafts
         store.setTraveler(data.traveler);
         store.setDestinations(data.destinations);
         patchState(store, { error: null });
@@ -266,25 +215,21 @@ export const WizardStore = signalStore(
     }),
   })),
 
-  // Expose mutation states for components
+  // Mutation state signals for template binding
   withComputed((store) => ({
-    // Expose mutation pending states for template binding
-    isSaving: computed(() => store.saveDraftIsPending()),
-    isLoading: computed(
-      () => store.loadDraftIsPending() || store.submitBookingIsPending(),
-    ),
-    isSubmitting: computed(() => store.submitBookingIsPending()),
+    isSaving: () => store.saveDraftIsPending(),
+    isLoading: () => store.loadDraftIsPending(),
+    isSubmitting: () => store.submitBookingIsPending(),
   })),
 
   // Additional methods
   withMethods((store) => {
-    // Reactive auto-save with debounce using rxMethod
-    const autoSave = rxMethod<TripSummary>(
+    // Auto-save draft data with debounce
+    const autoSaveDraft = rxMethod<TripSummary>(
       pipe(
         debounceTime(2000),
         distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
         tap((data) => {
-          // Only save if we have meaningful data
           if (data.traveler.firstName || data.destinations.length > 0) {
             store.saveDraft(data);
           }
@@ -293,10 +238,10 @@ export const WizardStore = signalStore(
     );
 
     return {
-      autoSave,
+      autoSaveDraft,
 
       /**
-       * Submit the booking (convenience wrapper that checks validity)
+       * Submit the booking using committed data.
        */
       submit(): void {
         if (!store.isReadyToSubmit()) {
@@ -307,7 +252,7 @@ export const WizardStore = signalStore(
       },
 
       /**
-       * Reset wizard to initial state
+       * Reset wizard to initial state.
        */
       reset(): void {
         store.resetTraveler();
@@ -317,7 +262,7 @@ export const WizardStore = signalStore(
       },
 
       /**
-       * Initialize wizard with a destination if empty
+       * Initialize wizard with a destination if empty.
        */
       initializeIfEmpty(): void {
         if (store.destinations().length === 0) {
@@ -330,13 +275,11 @@ export const WizardStore = signalStore(
   // Store lifecycle hooks
   withHooks({
     onInit(store) {
-      // Connect store state changes to auto-save
-      // This ensures any commit (via navigation) or manual update triggers auto-save
+      // Auto-save draft data when it changes
       effect(() => {
-        store.autoSave(store.tripSummary());
+        store.autoSaveDraft(store.draftSummary());
       });
 
-      // Initialize wizard with a destination if empty
       store.initializeIfEmpty();
     },
   }),

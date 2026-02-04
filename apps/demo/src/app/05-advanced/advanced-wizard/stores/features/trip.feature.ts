@@ -1,11 +1,13 @@
-import { computed } from '@angular/core';
+import { linkedSignal } from '@angular/core';
 import {
   patchState,
   signalStoreFeature,
   withComputed,
+  withLinkedState,
   withMethods,
   withState,
 } from '@ngrx/signals';
+import { updateAt, updateNested } from '@ngx-signal-forms/toolkit';
 
 import {
   Activity,
@@ -20,29 +22,65 @@ type TripState = {
   destinations: Destination[];
 };
 
+// Compose nested updates for 3-level depth (destinations → activities → requirements)
+function updateRequirementNested(
+  destinations: Destination[],
+  destIdx: number,
+  actIdx: number,
+  reqIdx: number,
+  updater: (req: Requirement) => Requirement,
+): Destination[] {
+  return updateNested<Destination, 'activities', Activity>(
+    destinations,
+    destIdx,
+    'activities',
+    actIdx,
+    (act) => ({
+      ...act,
+      requirements: updateAt(act.requirements, reqIdx, updater),
+    }),
+  );
+}
+
 export function withTripManagement() {
   return signalStoreFeature(
     withState<TripState>({
       destinations: [],
     }),
 
-    withComputed((store) => ({
-      totalDestinations: computed(() => store.destinations().length),
-      allActivities: computed(() =>
-        store.destinations().flatMap((d) => d.activities),
-      ),
-      allRequirements: computed(() =>
-        store
-          .destinations()
-          .flatMap((d) => d.activities.flatMap((a) => a.requirements)),
-      ),
+    // Draft state linked to committed - form binds to this
+    withLinkedState(({ destinations }) => ({
+      destinationsDraft: linkedSignal({
+        source: destinations,
+        computation: (committed) => structuredClone(committed),
+      }),
+    })),
+
+    // Arrow function shorthand - auto-wrapped in computed()
+    withComputed(({ destinations }) => ({
+      totalDestinations: () => destinations().length,
+      allActivities: () => destinations().flatMap((d) => d.activities),
+      allRequirements: () =>
+        destinations().flatMap((d) =>
+          d.activities.flatMap((a) => a.requirements),
+        ),
     })),
 
     withMethods((store) => ({
-      // --- Destination CRUD ---
+      // Commit draft to permanent state
+      commitDestinations(): void {
+        patchState(store, { destinations: store.destinationsDraft() });
+      },
+
+      // Discard draft changes
+      discardDestinationChanges(): void {
+        patchState(store, { destinationsDraft: store.destinations() });
+      },
+
+      // --- Destination CRUD (operates on draft) ---
       addDestination(): void {
         patchState(store, (s) => ({
-          destinations: [...s.destinations, createEmptyDestination()],
+          destinationsDraft: [...s.destinationsDraft, createEmptyDestination()],
         }));
       },
 
@@ -51,25 +89,29 @@ export function withTripManagement() {
         changes: Partial<Omit<Destination, 'activities'>>,
       ): void {
         patchState(store, (s) => ({
-          destinations: s.destinations.map((d, i) =>
-            i === index ? { ...d, ...changes } : d,
-          ),
+          destinationsDraft: updateAt(s.destinationsDraft, index, (d) => ({
+            ...d,
+            ...changes,
+          })),
         }));
       },
 
       removeDestination(index: number): void {
         patchState(store, (s) => ({
-          destinations: s.destinations.filter((_, i) => i !== index),
+          destinationsDraft: s.destinationsDraft.filter((_, i) => i !== index),
         }));
       },
 
-      // --- Activity CRUD ---
+      // --- Activity CRUD (operates on draft) ---
       addActivity(destinationIndex: number): void {
         patchState(store, (s) => ({
-          destinations: s.destinations.map((d, i) =>
-            i === destinationIndex
-              ? { ...d, activities: [...d.activities, createEmptyActivity()] }
-              : d,
+          destinationsDraft: updateAt(
+            s.destinationsDraft,
+            destinationIndex,
+            (d) => ({
+              ...d,
+              activities: [...d.activities, createEmptyActivity()],
+            }),
           ),
         }));
       },
@@ -80,54 +122,41 @@ export function withTripManagement() {
         changes: Partial<Omit<Activity, 'requirements'>>,
       ): void {
         patchState(store, (s) => ({
-          destinations: s.destinations.map((d, di) =>
-            di === destinationIndex
-              ? {
-                  ...d,
-                  activities: d.activities.map((a, ai) =>
-                    ai === activityIndex ? { ...a, ...changes } : a,
-                  ),
-                }
-              : d,
+          destinationsDraft: updateNested<Destination, 'activities', Activity>(
+            s.destinationsDraft,
+            destinationIndex,
+            'activities',
+            activityIndex,
+            (a) => ({ ...a, ...changes }),
           ),
         }));
       },
 
       removeActivity(destinationIndex: number, activityIndex: number): void {
         patchState(store, (s) => ({
-          destinations: s.destinations.map((d, di) =>
-            di === destinationIndex
-              ? {
-                  ...d,
-                  activities: d.activities.filter(
-                    (_, ai) => ai !== activityIndex,
-                  ),
-                }
-              : d,
+          destinationsDraft: updateAt(
+            s.destinationsDraft,
+            destinationIndex,
+            (d) => ({
+              ...d,
+              activities: d.activities.filter((_, i) => i !== activityIndex),
+            }),
           ),
         }));
       },
 
-      // --- Requirement CRUD ---
+      // --- Requirement CRUD (operates on draft) ---
       addRequirement(destinationIndex: number, activityIndex: number): void {
         patchState(store, (s) => ({
-          destinations: s.destinations.map((d, di) =>
-            di === destinationIndex
-              ? {
-                  ...d,
-                  activities: d.activities.map((a, ai) =>
-                    ai === activityIndex
-                      ? {
-                          ...a,
-                          requirements: [
-                            ...a.requirements,
-                            createEmptyRequirement(),
-                          ],
-                        }
-                      : a,
-                  ),
-                }
-              : d,
+          destinationsDraft: updateNested<Destination, 'activities', Activity>(
+            s.destinationsDraft,
+            destinationIndex,
+            'activities',
+            activityIndex,
+            (a) => ({
+              ...a,
+              requirements: [...a.requirements, createEmptyRequirement()],
+            }),
           ),
         }));
       },
@@ -139,22 +168,12 @@ export function withTripManagement() {
         changes: Partial<Requirement>,
       ): void {
         patchState(store, (s) => ({
-          destinations: s.destinations.map((d, di) =>
-            di === destinationIndex
-              ? {
-                  ...d,
-                  activities: d.activities.map((a, ai) =>
-                    ai === activityIndex
-                      ? {
-                          ...a,
-                          requirements: a.requirements.map((r, ri) =>
-                            ri === requirementIndex ? { ...r, ...changes } : r,
-                          ),
-                        }
-                      : a,
-                  ),
-                }
-              : d,
+          destinationsDraft: updateRequirementNested(
+            s.destinationsDraft,
+            destinationIndex,
+            activityIndex,
+            requirementIndex,
+            (r) => ({ ...r, ...changes }),
           ),
         }));
       },
@@ -165,27 +184,22 @@ export function withTripManagement() {
         requirementIndex: number,
       ): void {
         patchState(store, (s) => ({
-          destinations: s.destinations.map((d, di) =>
-            di === destinationIndex
-              ? {
-                  ...d,
-                  activities: d.activities.map((a, ai) =>
-                    ai === activityIndex
-                      ? {
-                          ...a,
-                          requirements: a.requirements.filter(
-                            (_, ri) => ri !== requirementIndex,
-                          ),
-                        }
-                      : a,
-                  ),
-                }
-              : d,
+          destinationsDraft: updateNested<Destination, 'activities', Activity>(
+            s.destinationsDraft,
+            destinationIndex,
+            'activities',
+            activityIndex,
+            (a) => ({
+              ...a,
+              requirements: a.requirements.filter(
+                (_: Requirement, i: number) => i !== requirementIndex,
+              ),
+            }),
           ),
         }));
       },
 
-      // --- Bulk operations ---
+      // --- Bulk operations (direct to committed state) ---
       setDestinations(destinations: Destination[]): void {
         patchState(store, { destinations });
       },

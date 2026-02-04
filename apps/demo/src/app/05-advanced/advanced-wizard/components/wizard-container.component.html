@@ -1,0 +1,87 @@
+<div class="wizard-container">
+  <!-- Status indicator with reserved space (no layout shift) -->
+  <div class="status-row" aria-live="polite">
+    @if (showSavingIndicator()) {
+      <span class="saving-indicator">Saving draft...</span>
+    } @else if (store.lastSavedAt()) {
+      <span class="saved-indicator">
+        Last saved: {{ store.lastSavedAt() | date: 'shortTime' }}
+      </span>
+    }
+  </div>
+
+  <ngx-wizard
+    [(currentStep)]="currentStep"
+    [completedSteps]="completedSteps()"
+    [showNavigation]="false"
+    (stepChange)="onStepChange($event)"
+  >
+    <!-- Traveler Step -->
+    <ng-template ngxWizardStep="traveler" label="Traveler Info">
+      @defer {
+        <ngx-traveler-step #currentStepRef />
+      }
+    </ng-template>
+
+    <!-- Trip Step -->
+    <ng-template ngxWizardStep="trip" label="Trip Details">
+      @defer {
+        <ngx-trip-step #currentStepRef />
+      }
+    </ng-template>
+
+    <!-- Review Step -->
+    <ng-template ngxWizardStep="review" label="Review">
+      @defer {
+        <ngx-review-step #currentStepRef />
+      }
+    </ng-template>
+  </ngx-wizard>
+
+  <!-- Custom Navigation Buttons -->
+  <div class="wizard-navigation mt-6 flex justify-between">
+    <button
+      type="button"
+      class="btn btn-secondary"
+      [disabled]="
+        store.isFirstStep() || store.isLoading() || store.isSubmitting()
+      "
+      (click)="previousStep()"
+    >
+      Previous
+    </button>
+
+    @if (!store.isLastStep()) {
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="store.isLoading() || store.isSubmitting()"
+        (click)="nextStep()"
+      >
+        Next
+      </button>
+    } @else {
+      <button
+        type="button"
+        class="btn btn-success"
+        [disabled]="store.isLoading() || store.isSubmitting()"
+        (click)="submit()"
+      >
+        @if (store.isSubmitting()) {
+          Submitting...
+        } @else {
+          Confirm Booking
+        }
+      </button>
+    }
+  </div>
+
+  <div
+    class="error-message mt-4"
+    role="alert"
+    aria-live="assertive"
+    aria-atomic="true"
+  >
+    {{ store.error() ?? '' }}
+  </div>
+</div>
