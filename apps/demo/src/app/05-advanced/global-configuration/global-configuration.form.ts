@@ -64,6 +64,7 @@ import { globalConfigSchema } from './global-configuration.validations';
         <ngx-signal-form-field-wrapper
           [formField]="configForm.userEmail"
           fieldName="userEmail"
+          ngxSignalFormAutoAriaDisabled
         >
           <label for="userEmail">Email Address *</label>
           <input
@@ -79,6 +80,7 @@ import { globalConfigSchema } from './global-configuration.validations';
         <ngx-signal-form-field-wrapper
           [formField]="configForm.userPhone"
           fieldName="userPhone"
+          ngxSignalFormAutoAriaDisabled
         >
           <label for="userPhone">Phone Number *</label>
           <input
@@ -97,6 +99,7 @@ import { globalConfigSchema } from './global-configuration.validations';
         <!-- Website field (optional) -->
         <ngx-signal-form-field-wrapper
           [formField]="configForm.userWebsite"
+          ngxSignalFormAutoAriaDisabled
           fieldName="userWebsite"
         >
           <label for="userWebsite">Website</label>
