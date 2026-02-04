@@ -29,8 +29,12 @@
     },
     "post-build": {
       "executor": "nx:run-commands",
+      "dependsOn": ["build"],
       "options": {
-        "commands": ["cp README.md dist/packages/toolkit/README.md"],
+        "commands": [
+          "mkdir -p dist/packages/toolkit",
+          "cp README.md dist/packages/toolkit/README.md"
+        ],
         "cwd": "{workspaceRoot}"
       }
     },

@@ -3,9 +3,6 @@ name: Publish
 # Publish after a successful Release run or manually
 # Uses npm Trusted Publishers (OIDC) - no secrets required!
 on:
-  workflow_run:
-    workflows: ['Release']
-    types: [completed]
   workflow_dispatch:
     inputs:
       ref:
@@ -28,7 +25,7 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     steps:
       - name: Resolve publish ref
         id: publish_ref

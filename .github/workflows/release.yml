@@ -45,6 +45,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write # Required for npm Trusted Publishers (OIDC)
 
 jobs:
   release:
@@ -125,6 +126,54 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Resolve release tag and dist-tag
+        if: ${{ !inputs.dry_run }}
+        id: release_info
+        run: |
+          git fetch --tags --force
+
+          TAG=$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' 2>/dev/null || true)
+          if [ -z "$TAG" ]; then
+            echo "❌ No release tag found after nx release" >&2
+            git tag --list 'v*' --sort=-version:refname | head -5 >&2
+            exit 1
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+          VERSION="${TAG#v}"
+          if [[ "$VERSION" == *"-next"* ]]; then
+            echo "dist_tag=next" >> "$GITHUB_OUTPUT"
+          elif [[ "$VERSION" == *"-beta"* ]]; then
+            echo "dist_tag=beta" >> "$GITHUB_OUTPUT"
+          elif [[ "$VERSION" == *"-rc"* ]]; then
+            echo "dist_tag=rc" >> "$GITHUB_OUTPUT"
+          elif [[ "$VERSION" == *"-alpha"* ]]; then
+            echo "dist_tag=alpha" >> "$GITHUB_OUTPUT"
+          else
+            echo "dist_tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "Resolved: tag=$TAG, dist_tag will be determined by version"
+
+      - name: Publish packages
+        if: ${{ !inputs.dry_run }}
+        run: pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --skip-nx-cache
+        env:
+          # Uses NPM_TOKEN if OIDC fails - set this secret in repo settings
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Cleanup release on publish failure
+        if: ${{ failure() && steps.release_info.outputs.tag }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.release_info.outputs.tag }}"
+          echo "Cleaning up failed release: $TAG"
+          gh release delete "$TAG" -y || true
+          git push origin ":refs/tags/$TAG" || true
+
       - name: Push changes and tags
         if: ${{ !inputs.dry_run }}
         run: git push --follow-tags
@@ -136,7 +185,7 @@ jobs:
           echo "- Dry Run: ${{ inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ inputs.dry_run }}" != "true" ]; then
-            echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
-            echo "The **Publish** workflow will automatically trigger to publish to npm." >> $GITHUB_STEP_SUMMARY
-            echo "Or manually run it from Actions → Publish → Run workflow" >> $GITHUB_STEP_SUMMARY
+            echo "- npm Dist Tag: ${{ steps.release_info.outputs.dist_tag }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Git Tag: ${{ steps.release_info.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Publish: completed in this workflow" >> $GITHUB_STEP_SUMMARY
           fi
