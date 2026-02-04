@@ -127,14 +127,13 @@ export type ErrorDisplayStrategy =
   | 'inherit'; // Inherit from form provider (field-level only)
 
 /**
- * Form field appearance variants.
+ * Form field appearance for global configuration.
  *
- * Controls the visual style of form field wrappers, matching design patterns
+ * Controls the default visual style of form field wrappers, matching design patterns
  * like Angular Material's form field appearance variants.
  *
  * - `'standard'`: Default appearance with label above input (default)
  * - `'outline'`: Material Design outlined appearance with floating label
- * - `'inherit'`: Inherit from global config (component-level only)
  *
  * @example Global configuration
  * ```typescript
@@ -142,6 +141,19 @@ export type ErrorDisplayStrategy =
  *   defaultFormFieldAppearance: 'outline', // All fields use outline by default
  * });
  * ```
+ *
+ * @see https://material.angular.dev/components/form-field/overview#form-field-appearance-variants
+ */
+export type FormFieldAppearance = 'standard' | 'outline';
+
+/**
+ * Form field appearance input for component-level control.
+ *
+ * Extends FormFieldAppearance with 'inherit' option to use global config default.
+ *
+ * - `'standard'`: Default appearance with label above input
+ * - `'outline'`: Material Design outlined appearance with floating label
+ * - `'inherit'`: Use the global config default (component-level only)
  *
  * @example Component-level override
  * ```html
@@ -154,7 +166,7 @@ export type ErrorDisplayStrategy =
  *
  * @see https://material.angular.dev/components/form-field/overview#form-field-appearance-variants
  */
-export type FormFieldAppearance = 'standard' | 'outline' | 'inherit';
+export type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
 
 /**
  * Configuration options for the ngx-signal-forms toolkit.

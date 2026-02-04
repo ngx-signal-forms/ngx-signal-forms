@@ -14,6 +14,7 @@ import {
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
+  FormFieldAppearanceInput,
   ReactiveOrStatic,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -325,7 +326,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * });
    * ```
    */
-  readonly appearance = input<'standard' | 'outline' | 'inherit'>('inherit');
+  readonly appearance = input<FormFieldAppearanceInput>('inherit');
 
   /**
    * @deprecated Use `appearance="outline"` instead. Maintained for backward compatibility.
