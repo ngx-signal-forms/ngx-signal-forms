@@ -218,8 +218,7 @@ export const WizardStore = signalStore(
   // Mutation state signals for template binding
   withComputed((store) => ({
     isSaving: () => store.saveDraftIsPending(),
-    isLoading: () =>
-      store.loadDraftIsPending() || store.submitBookingIsPending(),
+    isLoading: () => store.loadDraftIsPending(),
     isSubmitting: () => store.submitBookingIsPending(),
   })),
 

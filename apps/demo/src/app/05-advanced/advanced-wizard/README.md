@@ -179,6 +179,44 @@ function updateActivity(destinations, destIdx, actIdx, updater) {
 }
 ```
 
+## Lazy Loading Strategy (@defer)
+
+The wizard uses Angular's `@defer` block to lazy-load step components. This optimizes the initial load by splitting step-specific dependencies (like large validation libraries or data lists) into separate chunks.
+
+### Why @defer?
+
+1. **Performance**: Reduces the initial bundle size of the wizard container. Steps are split into separate chunks.
+2. **Resource Management**: Prevents loading data/resources for steps the user hasn't reached yet.
+3. **Simplicity**: Keeps the wizard coordination in a single container component without the complexity of a Router-based wizard implementation.
+
+### Implementation Details
+
+Steps implement a common interface to allow the container to interact with them without eager coupling (which would break lazy loading):
+
+```typescript
+// wizard-step.interface.ts
+export interface WizardStepInterface {
+  validateAndFocus(): Promise<boolean>;
+  commitToStore(): void;
+  focusHeading(): void;
+}
+```
+
+The container uses a generic `viewChild` query to interact with the currently loaded step:
+
+```typescript
+// wizard-container.component.ts
+protected readonly currentStepComponent = viewChild<WizardStepInterface>('currentStep');
+
+// Template uses @defer for each step
+@switch (store.currentStep()) {
+  @case ('traveler') {
+    @defer { <ngx-traveler-step #currentStep /> }
+  }
+  // ...
+}
+```
+
 ## Form model
 
 - Forms are created per step via `linkedSignal()` and `form()` factories.

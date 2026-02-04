@@ -17,6 +17,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 import { createTripStepForm } from '../forms/trip-step.form';
 import { WizardStore } from '../stores/wizard.store';
+import { WizardStepInterface } from '../wizard-step.interface';
 
 @Component({
   selector: 'ngx-trip-step',
@@ -436,7 +437,7 @@ import { WizardStore } from '../stores/wizard.store';
     }
   `,
 })
-export class TripStepComponent {
+export class TripStepComponent implements WizardStepInterface {
   protected readonly store = inject(WizardStore);
   readonly #destroyRef = inject(DestroyRef);
   protected readonly stepHeading =

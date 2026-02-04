@@ -11,6 +11,7 @@ import {
   ReviewStepForm,
 } from '../forms/review-step.form';
 import { WizardStore } from '../stores/wizard.store';
+import { WizardStepInterface } from '../wizard-step.interface';
 
 @Component({
   selector: 'ngx-review-step',
@@ -210,7 +211,7 @@ import { WizardStore } from '../stores/wizard.store';
     }
   `,
 })
-export class ReviewStepComponent {
+export class ReviewStepComponent implements WizardStepInterface {
   readonly #store = inject(WizardStore);
   protected readonly stepHeading =
     viewChild<ElementRef<HTMLHeadingElement>>('stepHeading');
@@ -221,6 +222,14 @@ export class ReviewStepComponent {
   );
 
   // No effects needed - review step validation is computed from store data
+
+  async validateAndFocus(): Promise<boolean> {
+    return true;
+  }
+
+  commitToStore(): void {
+    // Read-only step, nothing to commit
+  }
 
   focusHeading(): void {
     this.stepHeading()?.nativeElement.focus();

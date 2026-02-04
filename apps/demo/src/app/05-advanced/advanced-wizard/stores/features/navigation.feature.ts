@@ -32,15 +32,29 @@ export function withWizardNavigation() {
       lastSavedAt: null,
     }),
 
+    // First computed block: base signals from state
     withComputed((store) => ({
-      isFirstStep: computed(() => store.currentStep() === 'traveler'),
-      isLastStep: computed(() => store.currentStep() === 'review'),
       currentStepIndex: computed(() =>
         WIZARD_STEPS.indexOf(store.currentStep()),
       ),
-      progress: computed(() => {
-        const idx = WIZARD_STEPS.indexOf(store.currentStep());
-        return ((idx + 1) / WIZARD_STEPS.length) * 100;
+      isFirstStep: computed(() => store.currentStep() === WIZARD_STEPS[0]),
+      isLastStep: computed(
+        () => store.currentStep() === WIZARD_STEPS[WIZARD_STEPS.length - 1],
+      ),
+    })),
+
+    // Second computed block: derived from currentStepIndex
+    withComputed((store) => ({
+      progress: computed(
+        () => ((store.currentStepIndex() + 1) / WIZARD_STEPS.length) * 100,
+      ),
+      previousStepId: computed(() => {
+        const idx = store.currentStepIndex();
+        return idx > 0 ? WIZARD_STEPS[idx - 1] : null;
+      }),
+      nextStepId: computed(() => {
+        const idx = store.currentStepIndex();
+        return idx < WIZARD_STEPS.length - 1 ? WIZARD_STEPS[idx + 1] : null;
       }),
     })),
 
@@ -57,6 +71,33 @@ export function withWizardNavigation() {
             visitedSteps: [...new Set([...store.visitedSteps(), step])],
           });
         }
+      },
+
+      /**
+       * Navigate to previous step. Always allowed if not on first step.
+       */
+      goToPreviousStep(): boolean {
+        const prev = store.previousStepId();
+        if (prev) {
+          patchState(store, { currentStep: prev });
+          return true;
+        }
+        return false;
+      },
+
+      /**
+       * Navigate to next step. Requires canNavigateToNew for unvisited steps.
+       */
+      goToNextStep(canNavigateToNew = false): boolean {
+        const next = store.nextStepId();
+        if (next && (store.visitedSteps().includes(next) || canNavigateToNew)) {
+          patchState(store, {
+            currentStep: next,
+            visitedSteps: [...new Set([...store.visitedSteps(), next])],
+          });
+          return true;
+        }
+        return false;
       },
 
       setDraftSaved(draftId: string): void {

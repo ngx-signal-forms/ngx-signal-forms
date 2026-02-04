@@ -19,6 +19,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 import { createTravelerStepForm } from '../forms/traveler-step.form';
 import { WizardStore } from '../stores/wizard.store';
+import { WizardStepInterface } from '../wizard-step.interface';
 
 @Component({
   selector: 'ngx-traveler-step',
@@ -176,7 +177,7 @@ import { WizardStore } from '../stores/wizard.store';
     }
   `,
 })
-export class TravelerStepComponent {
+export class TravelerStepComponent implements WizardStepInterface {
   readonly #store = inject(WizardStore);
   readonly #destroyRef = inject(DestroyRef);
   protected readonly stepHeading =
