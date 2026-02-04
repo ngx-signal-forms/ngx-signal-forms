@@ -45,7 +45,8 @@
 
     <!-- Fact Fields -->
     <div class="grid gap-4 md:grid-cols-2">
-      <ngx-signal-form-field-wrapper
+      <ngx-signal-form-field-wrapper [appearance]="appearance()"
+        appearance="outline"
         [formField]="showcaseForm.facts[factIndex].commitDate"
       >
         <svg
@@ -75,7 +76,8 @@
         >
       </ngx-signal-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-signal-form-field-wrapper [appearance]="appearance()"
+        appearance="outline"
         [formField]="showcaseForm.facts[factIndex].commitPeriod"
       >
         <svg
@@ -104,7 +106,8 @@
     </div>
 
     <!-- Land -->
-    <ngx-signal-form-field-wrapper
+    <ngx-signal-form-field-wrapper [appearance]="appearance()"
+      appearance="outline"
       [formField]="showcaseForm.facts[factIndex].country"
     >
       <label for="country-{{ factIndex }}">Land</label>
@@ -123,7 +126,8 @@
 
     <!-- Location Fields -->
     <div class="grid gap-4 md:grid-cols-2">
-      <ngx-signal-form-field-wrapper
+      <ngx-signal-form-field-wrapper [appearance]="appearance()"
+        appearance="outline"
         [formField]="showcaseForm.facts[factIndex].place"
       >
         <svg
@@ -155,7 +159,8 @@
         />
       </ngx-signal-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-signal-form-field-wrapper [appearance]="appearance()"
+        appearance="outline"
         [formField]="showcaseForm.facts[factIndex].municipality"
       >
         <svg
@@ -188,7 +193,8 @@
       </ngx-signal-form-field-wrapper>
     </div>
 
-    <ngx-signal-form-field-wrapper
+    <ngx-signal-form-field-wrapper [appearance]="appearance()"
+      appearance="outline"
       [formField]="showcaseForm.facts[factIndex].locationDescription"
     >
       <label for="locationDescription-{{ factIndex }}">
@@ -202,7 +208,8 @@
       />
     </ngx-signal-form-field-wrapper>
 
-    <ngx-signal-form-field-wrapper
+    <ngx-signal-form-field-wrapper [appearance]="appearance()"
+      appearance="outline"
       [formField]="showcaseForm.facts[factIndex].abroadLocation"
     >
       <label for="abroadLocation-{{ factIndex }}">
@@ -238,7 +245,8 @@
         </div>
         <div class="flex items-start gap-4">
           <div class="flex-1 space-y-4">
-            <ngx-signal-form-field-wrapper
+            <ngx-signal-form-field-wrapper [appearance]="appearance()"
+              appearance="outline"
               [formField]="showcaseForm.facts[factIndex].offenses[offenseIndex].qualification"
             >
               <svg
@@ -313,7 +321,8 @@
                   @for (article of offense.articles; track $index; let
                   articleIndex = $index) {
                   <div class="flex items-center gap-2">
-                    <ngx-signal-form-field-wrapper
+                    <ngx-signal-form-field-wrapper [appearance]="appearance()"
+                      appearance="outline"
                       [formField]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles[articleIndex].article"
                       class="flex-1"
                     >

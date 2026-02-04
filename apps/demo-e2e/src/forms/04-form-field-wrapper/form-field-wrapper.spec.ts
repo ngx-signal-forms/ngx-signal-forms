@@ -198,4 +198,32 @@ test.describe('Form Field Wrapper', () => {
       await expect(emailError).toBeVisible();
     });
   });
+
+  test('should toggle appearance between standard and outline', async ({
+    page,
+  }) => {
+    await test.step('Initial state should be standard', async () => {
+      const firstWrapper = formPage.formFieldComponents.first();
+      // Assume standard doesn't have the outline class
+      await expect(firstWrapper).not.toHaveClass(/ngx-signal-forms-outline/);
+
+      // Check toggle button state
+      const standardBtn = page.getByRole('button', { name: 'Standard' });
+      await expect(standardBtn).toHaveClass(/bg-white/);
+    });
+
+    await test.step('Switch to outline', async () => {
+      await page.getByRole('button', { name: 'Outline' }).click();
+
+      const firstWrapper = formPage.formFieldComponents.first();
+      await expect(firstWrapper).toHaveClass(/ngx-signal-forms-outline/);
+    });
+
+    await test.step('Switch back to standard', async () => {
+      await page.getByRole('button', { name: 'Standard' }).click();
+
+      const firstWrapper = formPage.formFieldComponents.first();
+      await expect(firstWrapper).not.toHaveClass(/ngx-signal-forms-outline/);
+    });
+  });
 });

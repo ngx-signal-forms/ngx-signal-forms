@@ -13,7 +13,7 @@
 >
   <div class="space-y-6">
     <!-- Product Name - Standard input for comparison -->
-    <ngx-signal-form-field-wrapper [formField]="reviewForm.productName">
+    <ngx-signal-form-field-wrapper [appearance]="appearance()" [formField]="reviewForm.productName">
       <label for="productName">Product Name *</label>
       <input
         id="productName"
@@ -24,7 +24,7 @@
     </ngx-signal-form-field-wrapper>
 
     <!-- Product Rating - Custom RatingControl with auto-derived fieldName -->
-    <ngx-signal-form-field-wrapper [formField]="reviewForm.rating">
+    <ngx-signal-form-field-wrapper [appearance]="appearance()" [formField]="reviewForm.rating">
       <label for="rating">Product Rating *</label>
       <ngx-rating-control
         id="rating"
@@ -40,7 +40,7 @@
     </ngx-signal-form-field-wrapper>
 
     <!-- Service Rating - Custom RatingControl -->
-    <ngx-signal-form-field-wrapper [formField]="reviewForm.serviceRating">
+    <ngx-signal-form-field-wrapper [appearance]="appearance()" [formField]="reviewForm.serviceRating">
       <label for="serviceRating">Service Quality *</label>
       <ngx-rating-control
         id="serviceRating"
@@ -50,7 +50,7 @@
     </ngx-signal-form-field-wrapper>
 
     <!-- Would Recommend - Custom RatingControl as thumbs up/down (2 stars) -->
-    <ngx-signal-form-field-wrapper [formField]="reviewForm.wouldRecommend">
+    <ngx-signal-form-field-wrapper [appearance]="appearance()" [formField]="reviewForm.wouldRecommend">
       <label for="wouldRecommend">Would Recommend?</label>
       <ngx-rating-control
         id="wouldRecommend"
@@ -66,7 +66,7 @@
     </ngx-signal-form-field-wrapper>
 
     <!-- Feedback - Standard textarea for comparison -->
-    <ngx-signal-form-field-wrapper [formField]="reviewForm.feedback">
+    <ngx-signal-form-field-wrapper [appearance]="appearance()" [formField]="reviewForm.feedback">
       <label for="feedback">Additional Feedback (optional)</label>
       <textarea
         id="feedback"

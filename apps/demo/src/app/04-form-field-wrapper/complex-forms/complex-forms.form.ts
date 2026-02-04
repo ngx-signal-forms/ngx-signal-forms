@@ -5,7 +5,10 @@ import {
   signal,
 } from '@angular/core';
 import { FormField, form, submit } from '@angular/forms/signals';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import type {
+  ErrorDisplayStrategy,
+  FormFieldAppearance,
+} from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import type { ComplexFormModel } from './complex-forms.model';
@@ -28,6 +31,9 @@ import { complexFormSchema } from './complex-forms.validations';
 export class ComplexFormsComponent {
   /** Error display mode input */
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+
+  /** Form field appearance input */
+  readonly appearance = input<FormFieldAppearance>('standard');
 
   /** Form data model */
   readonly #model = signal<ComplexFormModel>({
