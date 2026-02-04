@@ -20,6 +20,15 @@ export * from './utilities/assert-injector';
 export { shouldShowErrors } from './utilities/error-strategies';
 export * from './utilities/field-resolution';
 export * from './utilities/focus-first-invalid';
+export {
+  append,
+  insertAt,
+  moveItem,
+  prepend,
+  removeAt,
+  updateAt,
+  updateNested,
+} from './utilities/immutable-array';
 export * from './utilities/inject-field-control';
 export * from './utilities/inject-form-config';
 export * from './utilities/inject-form-context';

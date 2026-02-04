@@ -145,6 +145,61 @@ provideErrorMessages({
 | `injectFormConfig()`                        | Get normalized config with defaults                   |
 | `unwrapValue(signalOrValue)`                | Extract value from `Signal` or static                 |
 
+### Immutable Array Helpers
+
+Utilities for immutable state updates, useful with NgRx Signal Store or any state management.
+
+```typescript
+import {
+  updateAt,
+  removeAt,
+  insertAt,
+  append,
+  prepend,
+  moveItem,
+  updateNested,
+} from '@ngx-signal-forms/toolkit';
+```
+
+| Function                                                 | Description                           |
+| -------------------------------------------------------- | ------------------------------------- |
+| `updateAt(array, index, updater)`                        | Update item at index immutably        |
+| `removeAt(array, index)`                                 | Remove item at index immutably        |
+| `insertAt(array, index, item)`                           | Insert item at index immutably        |
+| `append(array, item)`                                    | Add item to end immutably             |
+| `prepend(array, item)`                                   | Add item to start immutably           |
+| `moveItem(array, fromIndex, toIndex)`                    | Move item between positions immutably |
+| `updateNested(array, index, nestedKey, nestedIndex, fn)` | Update item in nested array immutably |
+
+**Example: Deeply Nested State Updates**
+
+```typescript
+// Without helpers (verbose)
+patchState(store, (s) => ({
+  destinations: s.destinations.map((d, i) =>
+    i === destIdx
+      ? {
+          ...d,
+          activities: d.activities.map((a, j) =>
+            j === actIdx ? { ...a, name: 'Updated' } : a,
+          ),
+        }
+      : d,
+  ),
+}));
+
+// With helpers (concise)
+patchState(store, (s) => ({
+  destinations: updateNested(
+    s.destinations,
+    destIdx,
+    'activities',
+    actIdx,
+    (activity) => ({ ...activity, name: 'Updated' }),
+  ),
+}));
+```
+
 ---
 
 ## Assistive (`@ngx-signal-forms/toolkit/assistive`)
