@@ -420,10 +420,14 @@ Groups related form fields with aggregated error/warning display.
 ```html
 <!-- Group-Only Mode (default) - when nested fields show their own errors -->
 <ngx-signal-form-fieldset [fieldsetField]="form.passwords">
-  <ngx-signal-form-field-wrapper [formField]="form.passwords.password" appearance="outline"
+  <ngx-signal-form-field-wrapper
+    [formField]="form.passwords.password"
+    appearance="outline"
     >...</ngx-signal-form-field-wrapper
   >
-  <ngx-signal-form-field-wrapper [formField]="form.passwords.confirm" appearance="outline"
+  <ngx-signal-form-field-wrapper
+    [formField]="form.passwords.confirm"
+    appearance="outline"
     >...</ngx-signal-form-field-wrapper
   >
   <!-- Fieldset shows ONLY cross-field error: "Passwords must match" -->

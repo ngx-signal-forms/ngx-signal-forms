@@ -310,10 +310,10 @@ When you import `NgxFormField`, the directive is already included.
 
 #### Wrapper inputs (appearance)
 
-| Input        | Type                                        | Default     | Description                                |
-| ------------ | ------------------------------------------- | ----------- | ------------------------------------------ |
-| `appearance` | `'standard' \| 'outline' \| 'inherit'`      | `'inherit'` | Visual style: standard, outline, or config |
-| `outline`    | `boolean`                                   | `false`     | Legacy: Forces outline (use appearance)    |
+| Input        | Type                                   | Default     | Description                                |
+| ------------ | -------------------------------------- | ----------- | ------------------------------------------ |
+| `appearance` | `'standard' \| 'outline' \| 'inherit'` | `'inherit'` | Visual style: standard, outline, or config |
+| `outline`    | `boolean`                              | `false`     | Legacy: Forces outline (use appearance)    |
 
 #### Wrapper inputs (outlined-specific)
 

@@ -130,16 +130,16 @@ A development tool to inspect form state and validation logic:
 
 ### Form Field (`@ngx-signal-forms/toolkit/form-field`)
 
-| Feature               | Assistive Components       | With Form Field                                                   |
-| --------------------- | -------------------------- | ----------------------------------------------------------------- |
-| **Field Wrapper**     | ❌ Build your own          | ✅ `<ngx-signal-form-field-wrapper>` with automatic error display |
-| **Layout Modes**      | ❌ Build your own CSS      | ✅ Standard (stacked) or outline (floating labels) via `appearance` input               |
-| **Fieldset Grouping** | ❌ Build your own          | ✅ `<ngx-signal-form-fieldset>` styled component                  |
-| **Error Display**     | ✅ Component available     | ✅ Integrated automatically in wrapper                            |
-| **Character Count**   | ✅ Component available     | ✅ Integrated in wrapper layout                                   |
-| **Hints**             | ✅ Component available     | ✅ Integrated in wrapper layout                                   |
-| **Theming**           | ✅ Minimal CSS             | ✅ 20+ CSS custom properties for deep customization               |
-| **Effort**            | ⚠️ More code, full control | ✅ Ready-to-use, less code                                        |
+| Feature               | Assistive Components       | With Form Field                                                           |
+| --------------------- | -------------------------- | ------------------------------------------------------------------------- |
+| **Field Wrapper**     | ❌ Build your own          | ✅ `<ngx-signal-form-field-wrapper>` with automatic error display         |
+| **Layout Modes**      | ❌ Build your own CSS      | ✅ Standard (stacked) or outline (floating labels) via `appearance` input |
+| **Fieldset Grouping** | ❌ Build your own          | ✅ `<ngx-signal-form-fieldset>` styled component                          |
+| **Error Display**     | ✅ Component available     | ✅ Integrated automatically in wrapper                                    |
+| **Character Count**   | ✅ Component available     | ✅ Integrated in wrapper layout                                           |
+| **Hints**             | ✅ Component available     | ✅ Integrated in wrapper layout                                           |
+| **Theming**           | ✅ Minimal CSS             | ✅ 20+ CSS custom properties for deep customization                       |
+| **Effort**            | ⚠️ More code, full control | ✅ Ready-to-use, less code                                                |
 
 ---
 

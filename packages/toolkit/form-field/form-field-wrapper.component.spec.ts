@@ -1,7 +1,10 @@
 import { signal } from '@angular/core';
+import {
+  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+  NGX_SIGNAL_FORMS_CONFIG,
+} from '@ngx-signal-forms/toolkit/core';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_NGX_SIGNAL_FORMS_CONFIG, NGX_SIGNAL_FORMS_CONFIG } from '@ngx-signal-forms/toolkit/core';
 import { NgxSignalFormFieldWrapperComponent as NgxSignalFormWrapperComponent } from './form-field-wrapper.component';
 
 /**

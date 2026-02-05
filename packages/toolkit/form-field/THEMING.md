@@ -137,12 +137,14 @@ This component wraps your `label` and `input` to provide layout, borders, and st
 The form field wrapper supports two appearance modes via the `appearance` input:
 
 **Standard Layout** (`appearance="standard"` or default)
+
 - Label positioned above the input
 - Traditional stacked form field design
 - Uses `--ngx-form-field-label-*` properties
 - Uses `--ngx-form-field-input-*` properties
 
 **Outline Layout** (`appearance="outline"`)
+
 - Material Design inspired floating label inside border
 - Label sits inside the input container
 - Uses `--ngx-form-field-outline-label-*` properties
