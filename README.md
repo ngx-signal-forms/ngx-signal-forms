@@ -61,7 +61,7 @@ Lightly-styled, accessible components for form feedback—designed to be easily 
 A set of cohesive UI components to build consistent, accessible form layouts:
 
 - **Unified Wrapper**: `<ngx-signal-form-field-wrapper>` encapsulates label, input, errors, warnings and hints in a semantic structure.
-- **Two Layout Modes**: Default (stacked) or `outline` attribute for Material-like floating labels.
+- **Two Layout Modes**: Standard (stacked) or outline (floating labels) via `appearance` input—matches Angular Material's design patterns.
 - **Fieldset Grouping**: `<ngx-signal-form-fieldset>` groups related fields with aggregated validation messages.
 - **Character Count**: Auto-detects `maxLength` validators and displays a progressive character counter.
 - **Accessibility Components**: Special `<ngx-signal-form-error>` and hints with correct ARIA roles.
@@ -130,16 +130,16 @@ A development tool to inspect form state and validation logic:
 
 ### Form Field (`@ngx-signal-forms/toolkit/form-field`)
 
-| Feature               | Assistive Components       | With Form Field                                                   |
-| --------------------- | -------------------------- | ----------------------------------------------------------------- |
-| **Field Wrapper**     | ❌ Build your own          | ✅ `<ngx-signal-form-field-wrapper>` with automatic error display |
-| **Layout Modes**      | ❌ Build your own CSS      | ✅ Default (stacked) or `outline` (floating labels)               |
-| **Fieldset Grouping** | ❌ Build your own          | ✅ `<ngx-signal-form-fieldset>` styled component                  |
-| **Error Display**     | ✅ Component available     | ✅ Integrated automatically in wrapper                            |
-| **Character Count**   | ✅ Component available     | ✅ Integrated in wrapper layout                                   |
-| **Hints**             | ✅ Component available     | ✅ Integrated in wrapper layout                                   |
-| **Theming**           | ✅ Minimal CSS             | ✅ 20+ CSS custom properties for deep customization               |
-| **Effort**            | ⚠️ More code, full control | ✅ Ready-to-use, less code                                        |
+| Feature               | Assistive Components       | With Form Field                                                           |
+| --------------------- | -------------------------- | ------------------------------------------------------------------------- |
+| **Field Wrapper**     | ❌ Build your own          | ✅ `<ngx-signal-form-field-wrapper>` with automatic error display         |
+| **Layout Modes**      | ❌ Build your own CSS      | ✅ Standard (stacked) or outline (floating labels) via `appearance` input |
+| **Fieldset Grouping** | ❌ Build your own          | ✅ `<ngx-signal-form-fieldset>` styled component                          |
+| **Error Display**     | ✅ Component available     | ✅ Integrated automatically in wrapper                                    |
+| **Character Count**   | ✅ Component available     | ✅ Integrated in wrapper layout                                           |
+| **Hints**             | ✅ Component available     | ✅ Integrated in wrapper layout                                           |
+| **Theming**           | ✅ Minimal CSS             | ✅ 20+ CSS custom properties for deep customization                       |
+| **Effort**            | ⚠️ More code, full control | ✅ Ready-to-use, less code                                                |
 
 ---
 
@@ -321,7 +321,7 @@ import {
 - `NgxSignalFormFieldset` — Group related fields with aggregated errors (use `includeNestedErrors` to control aggregation)
 
 ```html
-<ngx-signal-form-field-wrapper [formField]="form.bio" outline>
+<ngx-signal-form-field-wrapper [formField]="form.bio" appearance="outline">
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
   <ngx-signal-form-field-hint

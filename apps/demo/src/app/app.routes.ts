@@ -164,6 +164,14 @@ export const appRoutes: Routes = [
         title: 'Outline Form Field - Default Outlined Styling',
       },
       {
+        path: 'dynamic-appearance',
+        loadComponent: () =>
+          import('./04-form-field-wrapper/dynamic-appearance/dynamic-appearance.page').then(
+            (m) => m.DynamicAppearancePageComponent,
+          ),
+        title: 'Dynamic Appearance - Runtime Switching',
+      },
+      {
         path: 'custom-controls',
         loadComponent: () =>
           import('./04-form-field-wrapper/custom-controls/custom-controls.page').then(

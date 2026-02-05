@@ -4,9 +4,13 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import {
+  type ErrorDisplayStrategy,
+  type FormFieldAppearance,
+} from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
+  AppearanceToggleComponent,
   ExampleCardsComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
@@ -37,6 +41,7 @@ import { FieldsetFormComponent } from './fieldset.form';
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
+    AppearanceToggleComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -49,16 +54,18 @@ import { FieldsetFormComponent } from './fieldset.form';
       [demonstrated]="demonstratedContent"
       [learning]="learningContent"
     >
-      <!-- Error Display Mode Selector -->
-      <ngx-error-display-mode-selector
-        [(selectedMode)]="selectedMode"
-        class="mb-6"
-      />
+      <div class="mb-6 flex items-center gap-6">
+        <!-- Error Display Mode Selector -->
+        <ngx-error-display-mode-selector [(selectedMode)]="selectedMode" />
+        <!-- Appearance Toggle -->
+        <ngx-appearance-toggle [(value)]="selectedAppearance" />
+      </div>
 
       <ngx-split-layout>
         <ngx-fieldset-form
           #formComponent
           [errorDisplayMode]="selectedMode()"
+          [appearance]="selectedAppearance()"
           left
         />
         @if (formComponent) {
@@ -75,6 +82,8 @@ export class FieldsetPage {
     viewChild.required<FieldsetFormComponent>('formComponent');
 
   protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
+  protected readonly selectedAppearance =
+    signal<FormFieldAppearance>('standard');
 
   protected readonly demonstratedContent = FIELDSET_CONTENT.demonstrated;
   protected readonly learningContent = FIELDSET_CONTENT.learning;

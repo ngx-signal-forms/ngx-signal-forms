@@ -127,6 +127,48 @@ export type ErrorDisplayStrategy =
   | 'inherit'; // Inherit from form provider (field-level only)
 
 /**
+ * Form field appearance for global configuration.
+ *
+ * Controls the default visual style of form field wrappers, matching design patterns
+ * like Angular Material's form field appearance variants.
+ *
+ * - `'standard'`: Default appearance with label above input (default)
+ * - `'outline'`: Material Design outlined appearance with floating label
+ *
+ * @example Global configuration
+ * ```typescript
+ * provideNgxSignalFormsConfig({
+ *   defaultFormFieldAppearance: 'outline', // All fields use outline by default
+ * });
+ * ```
+ *
+ * @see https://material.angular.dev/components/form-field/overview#form-field-appearance-variants
+ */
+export type FormFieldAppearance = 'standard' | 'outline';
+
+/**
+ * Form field appearance input for component-level control.
+ *
+ * Extends FormFieldAppearance with 'inherit' option to use global config default.
+ *
+ * - `'standard'`: Default appearance with label above input
+ * - `'outline'`: Material Design outlined appearance with floating label
+ * - `'inherit'`: Use the global config default (component-level only)
+ *
+ * @example Component-level override
+ * ```html
+ * <!-- Override global config to use standard for specific field -->
+ * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="standard">
+ *   <label for="email">Email</label>
+ *   <input id="email" [formField]="form.email" />
+ * </ngx-signal-form-field-wrapper>
+ * ```
+ *
+ * @see https://material.angular.dev/components/form-field/overview#form-field-appearance-variants
+ */
+export type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
+
+/**
  * Configuration options for the ngx-signal-forms toolkit.
  *
  * Allows configuration values to be signals, functions, or plain values.
@@ -168,9 +210,9 @@ export interface NgxSignalFormsConfig {
   /**
    * Default appearance for form fields.
    * When set, all NgxSignalFormFieldWrapperComponent instances will use this appearance
-   * unless explicitly overridden with the `outline` attribute.
+   * unless explicitly overridden with the `appearance` input.
    *
-   * @default undefined (no global default)
+   * @default 'standard'
    *
    * @example Global outline mode
    * ```typescript
@@ -178,8 +220,17 @@ export interface NgxSignalFormsConfig {
    *   defaultFormFieldAppearance: 'outline',
    * });
    * ```
+   *
+   * @example Component-level override
+   * ```html
+   * <!-- Force standard appearance even if global config is 'outline' -->
+   * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="standard">
+   *   <label for="email">Email</label>
+   *   <input id="email" [formField]="form.email" />
+   * </ngx-signal-form-field-wrapper>
+   * ```
    */
-  defaultFormFieldAppearance: 'default' | 'outline';
+  defaultFormFieldAppearance: FormFieldAppearance;
 
   /**
    * Whether to show the required marker for outlined fields.

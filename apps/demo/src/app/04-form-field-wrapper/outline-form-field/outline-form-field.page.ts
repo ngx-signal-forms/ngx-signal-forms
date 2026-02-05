@@ -7,9 +7,11 @@ import {
 import {
   provideNgxSignalFormsConfigForComponent,
   type ErrorDisplayStrategy,
+  type FormFieldAppearance,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
+  AppearanceToggleComponent,
   ExampleCardsComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
@@ -46,6 +48,7 @@ import { OutlineFormFieldComponent } from './outline-form-field.form';
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
+    AppearanceToggleComponent,
   ],
   providers: [
     provideNgxSignalFormsConfigForComponent({
@@ -63,16 +66,18 @@ import { OutlineFormFieldComponent } from './outline-form-field.form';
       [demonstrated]="demonstratedContent"
       [learning]="learningContent"
     >
-      <!-- Error Display Mode Selector -->
-      <ngx-error-display-mode-selector
-        [(selectedMode)]="selectedMode"
-        class="mb-6"
-      />
+      <div class="mb-6 flex items-center gap-6">
+        <!-- Error Display Mode Selector -->
+        <ngx-error-display-mode-selector [(selectedMode)]="selectedMode" />
+        <!-- Appearance Toggle -->
+        <ngx-appearance-toggle [(value)]="selectedAppearance" />
+      </div>
 
       <ngx-split-layout>
         <ngx-outline-form-field
           #formComponent
           [errorDisplayMode]="selectedMode()"
+          [appearance]="selectedAppearance()"
           left
         />
 
@@ -90,6 +95,8 @@ export class OutlineFormFieldPage {
     viewChild.required<OutlineFormFieldComponent>('formComponent');
 
   protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
+  protected readonly selectedAppearance =
+    signal<FormFieldAppearance>('outline');
 
   protected readonly demonstratedContent =
     OUTLINE_FORM_FIELD_CONTENT.demonstrated;
