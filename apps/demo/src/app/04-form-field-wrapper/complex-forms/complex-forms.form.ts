@@ -104,7 +104,7 @@ export class ComplexFormsComponent {
   /**
    * Form submission handler using Angular Signal Forms submit() helper.
    *
-   * CRITICAL: SigsubmitApplicatione native DOM submit event, NOT ngSubmit.
+   * CRITICAL: Uses native DOM submit event, NOT ngSubmit.
    * - Template binding: (submit)="handleSubmit($event)" with $event
    * - Handler must call event.preventDefault() to prevent page reload
    * - submit() signature: async function submit<T>(form, action): Promise<void>
