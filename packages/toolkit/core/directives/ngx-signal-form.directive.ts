@@ -14,6 +14,7 @@ import type {
   ReactiveOrStatic,
   SubmittedStatus,
 } from '../types';
+import { resolveErrorDisplayStrategy } from '../utilities/resolve-strategy';
 
 /**
  * Form context provided to child directives and components.
@@ -152,13 +153,11 @@ export class NgxSignalFormDirective {
    * Resolved error display strategy (form-level or global default).
    */
   protected readonly resolvedErrorStrategy = computed(() => {
-    const provided = this.errorStrategy();
-    if (provided !== null && provided !== undefined) {
-      return typeof provided === 'function' ? provided() : provided;
-    }
-
-    const configured = this.#config.defaultErrorStrategy;
-    return typeof configured === 'function' ? configured() : configured;
+    return resolveErrorDisplayStrategy(
+      this.errorStrategy(),
+      undefined,
+      this.#config.defaultErrorStrategy,
+    );
   });
 
   /**
@@ -188,7 +187,6 @@ export class NgxSignalFormDirective {
 
     const fieldState = f();
 
-    // Derive SubmittedStatus from Angular's native signals
     if (fieldState.submitting()) {
       return 'submitting';
     }
@@ -204,6 +202,7 @@ export class NgxSignalFormDirective {
     effect(() => {
       const formTree = this.form();
       if (!formTree) {
+        this.#hasSubmitted.set(false);
         this.#wasSubmitting.set(false);
         this.#wasTouched.set(false);
         return;
@@ -215,13 +214,10 @@ export class NgxSignalFormDirective {
       const wasSubmitting = this.#wasSubmitting();
       const wasTouched = this.#wasTouched();
 
-      // Detect submit completion: submitting went from true to false
       if (wasSubmitting && !isSubmitting) {
         this.#hasSubmitted.set(true);
       }
 
-      // Detect reset: touched went from true to false (form.reset() clears touched)
-      // Only reset if not currently submitting to avoid false positives
       if (wasTouched && !isTouched && !isSubmitting) {
         this.#hasSubmitted.set(false);
       }

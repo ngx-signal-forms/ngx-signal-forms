@@ -17,11 +17,12 @@ import {
   injectFormContext,
   NGX_ERROR_MESSAGES,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
+  resolveErrorDisplayStrategy,
+  resolveValidationErrorMessage,
   showErrors,
   type ErrorDisplayStrategy,
   type ReactiveOrStatic,
   type SubmittedStatus,
-  type ValidationErrorWithParams,
 } from '@ngx-signal-forms/toolkit/core';
 
 /**
@@ -133,6 +134,8 @@ import {
   styleUrl: './form-error.component.scss',
 })
 export class NgxSignalFormErrorComponent<TValue = unknown> {
+  #warnedUnknownField = false;
+
   /**
    * Try to inject form context (optional - may not be available).
    */
@@ -232,6 +235,16 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
       return contextFieldName;
     }
 
+    if (
+      !this.#warnedUnknownField &&
+      (typeof ngDevMode === 'undefined' || ngDevMode)
+    ) {
+      this.#warnedUnknownField = true;
+      console.warn(
+        '[ngx-signal-forms] Falling back to unknown field name. Provide fieldName or wrap with ngx-signal-form-field-wrapper.',
+      );
+    }
+
     // Fallback - should not happen in normal usage
     return 'unknown-field';
   });
@@ -311,27 +324,11 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * 3. Default 'on-touch'
    */
   readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
-    const inputStrategy = this.strategy();
-    const unwrappedStrategy =
-      inputStrategy !== undefined && inputStrategy !== null
-        ? typeof inputStrategy === 'function'
-          ? inputStrategy()
-          : inputStrategy
-        : undefined;
-
-    // If field-level strategy is explicitly set and not 'inherit', use it
-    if (unwrappedStrategy !== undefined && unwrappedStrategy !== 'inherit') {
-      return unwrappedStrategy;
-    }
-
-    // Otherwise, inherit from form provider
-    const contextStrategy = this.#injectedContext?.errorStrategy?.();
-    if (contextStrategy && contextStrategy !== 'inherit') {
-      return contextStrategy;
-    }
-
-    // Final fallback
-    return 'on-touch';
+    return resolveErrorDisplayStrategy(
+      this.strategy(),
+      this.#injectedContext?.errorStrategy?.(),
+      undefined,
+    );
   });
 
   /**
@@ -468,81 +465,15 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   );
 
   /**
-   * Resolve error message using 3-tier priority:
-   * 1. error.message (from validator/Zod schema) ← Use first!
-   * 2. Registry override (from provideErrorMessages())
-   * 3. Default fallback (built-in toolkit messages)
-   *
-   * @param error The validation error
-   * @returns The resolved error message
-   */
-  #resolveErrorMessage(error: ValidationError): string {
-    // Tier 1: Use error.message if provided by validator (Zod/Valibot/custom)
-    if (error.message) {
-      return error.message;
-    }
-
-    // Tier 2: Check registry for override
-    if (this.#errorMessagesRegistry) {
-      const registryMessage = this.#errorMessagesRegistry[error.kind];
-      if (registryMessage !== undefined) {
-        if (typeof registryMessage === 'function') {
-          // Factory function - pass error object as params
-          // ValidationError has strict shape, but validators add properties (minLength, min, max, etc.)
-          return registryMessage(error as ValidationErrorWithParams);
-        }
-        // String literal
-        return registryMessage;
-      }
-    }
-
-    // Tier 3: Default fallback messages
-    return this.#getDefaultMessage(error);
-  }
-
-  /**
-   * Get default fallback message for built-in validators.
-   *
-   * Used when validator doesn't provide message AND registry doesn't override.
-   *
-   * @param error The validation error
-   * @returns Default error message
-   */
-  #getDefaultMessage(error: ValidationError): string {
-    const kind = error.kind;
-    // Cast to ValidationErrorWithParams to access validator-specific properties
-    const errorParams = error as ValidationErrorWithParams;
-
-    // Built-in Angular Signal Forms validators
-    switch (kind) {
-      case 'required':
-        return 'This field is required';
-      case 'email':
-        return 'Please enter a valid email address';
-      case 'minLength':
-        return `Minimum ${errorParams['minLength'] || 0} characters required`;
-      case 'maxLength':
-        return `Maximum ${errorParams['maxLength'] || 0} characters allowed`;
-      case 'min':
-        return `Minimum value is ${errorParams['min'] || 0}`;
-      case 'max':
-        return `Maximum value is ${errorParams['max'] || 0}`;
-      case 'pattern':
-        return 'Invalid format';
-      default:
-        // Custom validators: convert error kind to human-readable message
-        // e.g., 'phone_invalid' → 'Phone invalid'
-        return kind.replace(/_/g, ' ');
-    }
-  }
-
-  /**
    * Computed array of resolved error messages (not warnings).
    */
   protected readonly resolvedErrors = computed(() => {
     return this.#blockingErrors().map((error) => ({
       kind: error.kind,
-      message: this.#resolveErrorMessage(error),
+      message: resolveValidationErrorMessage(
+        error,
+        this.#errorMessagesRegistry,
+      ),
     }));
   });
 
@@ -552,7 +483,10 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   protected readonly resolvedWarnings = computed(() => {
     return this.#warningErrors().map((warning) => ({
       kind: warning.kind,
-      message: this.#resolveErrorMessage(warning),
+      message: resolveValidationErrorMessage(
+        warning,
+        this.#errorMessagesRegistry,
+      ),
     }));
   });
 }

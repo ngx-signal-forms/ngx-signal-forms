@@ -11,12 +11,13 @@ import {
   isBlockingError,
   isWarningError,
   NGX_ERROR_MESSAGES,
+  resolveErrorDisplayStrategy,
+  resolveValidationErrorMessage,
   showErrors,
   unwrapValue,
   type ErrorDisplayStrategy,
   type ReactiveOrStatic,
   type SubmittedStatus,
-  type ValidationErrorWithParams,
 } from '@ngx-signal-forms/toolkit';
 
 /**
@@ -142,22 +143,11 @@ export class NgxHeadlessErrorStateDirective<
    * Resolved error display strategy.
    */
   readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
-    const inputStrategy = this.strategy();
-    const unwrappedStrategy =
-      inputStrategy !== undefined && inputStrategy !== null
-        ? unwrapValue(inputStrategy)
-        : undefined;
-
-    if (unwrappedStrategy !== undefined && unwrappedStrategy !== 'inherit') {
-      return unwrappedStrategy;
-    }
-
-    const contextStrategy = this.#injectedContext?.errorStrategy?.();
-    if (contextStrategy && contextStrategy !== 'inherit') {
-      return contextStrategy;
-    }
-
-    return 'on-touch';
+    return resolveErrorDisplayStrategy(
+      this.strategy(),
+      this.#injectedContext?.errorStrategy?.(),
+      undefined,
+    );
   });
 
   /**
@@ -271,54 +261,9 @@ export class NgxHeadlessErrorStateDirective<
     })),
   );
 
-  /**
-   * Resolves error message using 3-tier priority:
-   * 1. error.message (from validator)
-   * 2. Registry override (from provideErrorMessages)
-   * 3. Default fallback
-   */
   #resolveErrorMessage(error: ValidationError): string {
-    if (error.message) {
-      return error.message;
-    }
-
-    if (this.#errorMessagesRegistry) {
-      const registryMessage = this.#errorMessagesRegistry[error.kind];
-      if (registryMessage !== undefined) {
-        if (typeof registryMessage === 'function') {
-          return registryMessage(error as ValidationErrorWithParams);
-        }
-        return registryMessage;
-      }
-    }
-
-    return this.#getDefaultMessage(error);
-  }
-
-  /**
-   * Get default fallback message for built-in validators.
-   */
-  #getDefaultMessage(error: ValidationError): string {
-    const kind = error.kind;
-    const errorParams = error as ValidationErrorWithParams;
-
-    switch (kind) {
-      case 'required':
-        return 'This field is required';
-      case 'email':
-        return 'Please enter a valid email address';
-      case 'minLength':
-        return `Minimum ${errorParams['minLength'] || 0} characters required`;
-      case 'maxLength':
-        return `Maximum ${errorParams['maxLength'] || 0} characters allowed`;
-      case 'min':
-        return `Minimum value is ${errorParams['min'] || 0}`;
-      case 'max':
-        return `Maximum value is ${errorParams['max'] || 0}`;
-      case 'pattern':
-        return 'Invalid format';
-      default:
-        return kind.replace(/_/g, ' ').replace(/^warn:/, '');
-    }
+    return resolveValidationErrorMessage(error, this.#errorMessagesRegistry, {
+      stripWarningPrefix: true,
+    });
   }
 }

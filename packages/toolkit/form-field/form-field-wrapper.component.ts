@@ -6,7 +6,6 @@ import {
   computed,
   effect,
   ElementRef,
-  forwardRef,
   inject,
   input,
   signal,
@@ -18,9 +17,12 @@ import type {
   ReactiveOrStatic,
 } from '@ngx-signal-forms/toolkit';
 import {
+  createUniqueId,
   NGX_SIGNAL_FORM_CONTEXT,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORMS_CONFIG,
+  resolveErrorDisplayStrategy,
+  shouldShowErrors,
 } from '@ngx-signal-forms/toolkit';
 import {
   isBlockingError,
@@ -28,20 +30,6 @@ import {
   NgxFormFieldAssistiveRowComponent,
   NgxSignalFormErrorComponent,
 } from '@ngx-signal-forms/toolkit/assistive';
-
-/**
- * Counter for generating unique field IDs when fieldName is not provided.
- * The counter is incremented using the pre-increment operator within component initialization.
- */
-let uniqueFieldIdCounter = 0;
-
-/**
- * Generates a unique field ID by incrementing the global counter.
- * Each call returns a new unique ID (e.g., "field-1", "field-2", etc.).
- */
-function generateUniqueFieldId(): string {
-  return `field-${++uniqueFieldIdCounter}`;
-}
 
 /**
  * Form field wrapper component with automatic error/warning display.
@@ -154,10 +142,12 @@ function generateUniqueFieldId(): string {
   providers: [
     {
       provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
-      useFactory: (component: NgxSignalFormFieldWrapperComponent) => ({
-        fieldName: component.resolvedFieldName,
-      }),
-      deps: [forwardRef(() => NgxSignalFormFieldWrapperComponent)],
+      useFactory: () => {
+        const component = inject(NgxSignalFormFieldWrapperComponent);
+        return {
+          fieldName: component.resolvedFieldName,
+        };
+      },
     },
   ],
   styleUrl: './form-field-wrapper.component.scss',
@@ -215,6 +205,26 @@ function generateUniqueFieldId(): string {
   `,
 })
 export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
+  #findBoundControl(hostEl: HTMLElement): HTMLElement | null {
+    const nativeControl = hostEl.querySelector(
+      'input, textarea, select, button[type="button"]',
+    ) as HTMLElement | null;
+
+    if (nativeControl?.getAttribute('id')) {
+      return nativeControl;
+    }
+
+    const customControl = hostEl.querySelector(
+      '[id]:not(label):not(ngx-signal-form-field-wrapper):not(ngx-signal-form-error):not(ngx-signal-form-field-hint):not(ngx-signal-form-field-character-count):not([role="alert"]):not([role="status"])',
+    ) as HTMLElement | null;
+
+    if (customControl) {
+      return customControl;
+    }
+
+    return nativeControl;
+  }
+
   /**
    * The Signal Forms field to display.
    * Accepts a FieldTree from Angular Signal Forms.
@@ -377,7 +387,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   /**
    * Auto-generated unique field ID as fallback when no explicit fieldName or input id is found.
    */
-  readonly #generatedFieldId = generateUniqueFieldId();
+  readonly #generatedFieldId = createUniqueId('field');
 
   /**
    * Reference to the host element for DOM queries.
@@ -477,13 +487,11 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * Effective error display strategy combining component input and form context defaults.
    */
   protected readonly effectiveStrategy = computed(() => {
-    const explicit = this.strategy();
-    if (explicit !== null) {
-      return typeof explicit === 'function' ? explicit() : explicit;
-    }
-
-    const contextStrategy = this.#formContext?.errorStrategy?.();
-    return contextStrategy ?? 'on-touch';
+    return resolveErrorDisplayStrategy(
+      this.strategy(),
+      this.#formContext?.errorStrategy?.(),
+      this.#config.defaultErrorStrategy,
+    );
   });
 
   /**
@@ -535,31 +543,15 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     const errors = this.#allMessages();
     if (errors.length === 0) return false;
 
-    const strategy = this.effectiveStrategy();
     const fieldState = this.formField()();
 
     if (!fieldState || typeof fieldState !== 'object') return false;
 
-    const touched =
-      'touched' in fieldState && typeof fieldState.touched === 'function'
-        ? (fieldState.touched as () => boolean)()
-        : false;
-
-    switch (strategy) {
-      case 'on-touch':
-        return touched;
-      case 'on-submit':
-        return this.submittedStatus() === 'submitted';
-      case 'immediate':
-        return true;
-      case 'manual':
-        return false; // Manual strategy means component handles display
-      case 'inherit':
-        // Inherit should have been resolved by effectiveStrategy
-        return touched;
-      default:
-        return touched;
-    }
+    return shouldShowErrors(
+      fieldState,
+      this.effectiveStrategy(),
+      this.submittedStatus(),
+    );
   });
 
   /**
@@ -579,18 +571,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     afterNextRender(() => {
       const hostEl = this.#elementRef.nativeElement as HTMLElement;
 
-      // Priority 1: Native form elements (most common case)
-      let inputEl = hostEl.querySelector(
-        'input, textarea, select, button[type="button"]',
-      ) as HTMLElement | null;
-
-      // Priority 2: Custom controls with [id] - supports FormValueControl components
-      // Excludes: label, wrapper, and all assistive elements
-      if (!inputEl || !inputEl.getAttribute('id')) {
-        inputEl = hostEl.querySelector(
-          '[id]:not(label):not(ngx-signal-form-field-wrapper):not(ngx-signal-form-error):not(ngx-signal-form-field-hint):not(ngx-signal-form-field-character-count):not([role="alert"]):not([role="status"])',
-        ) as HTMLElement | null;
-      }
+      const inputEl = this.#findBoundControl(hostEl);
 
       if (inputEl) {
         const id = inputEl.getAttribute('id');
@@ -605,16 +586,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
       const fieldName = this.resolvedFieldName();
       const hostEl = this.#elementRef.nativeElement as HTMLElement;
 
-      // Use same fallback logic as afterNextRender
-      let inputEl = hostEl.querySelector(
-        'input, textarea, select, button[type="button"]',
-      ) as HTMLElement | null;
-
-      if (!inputEl) {
-        inputEl = hostEl.querySelector(
-          '[id]:not(label):not(ngx-signal-form-field-wrapper):not(ngx-signal-form-error):not(ngx-signal-form-field-hint):not(ngx-signal-form-field-character-count):not([role="alert"]):not([role="status"])',
-        ) as HTMLElement | null;
-      }
+      const inputEl = this.#findBoundControl(hostEl);
 
       if (inputEl) {
         inputEl.setAttribute('data-signal-field', fieldName);

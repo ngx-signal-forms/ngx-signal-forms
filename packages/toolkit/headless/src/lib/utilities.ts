@@ -5,6 +5,7 @@ import type {
   ValidationError,
 } from '@angular/forms/signals';
 import {
+  createUniqueId as createCoreUniqueId,
   generateErrorId,
   generateWarningId,
   isBlockingError,
@@ -182,12 +183,6 @@ export function dedupeValidationErrors(
   return result;
 }
 
-// ============================================================================
-// Unique ID Generation
-// ============================================================================
-
-let globalUniqueIdCounter = 0;
-
 /**
  * Generate a unique ID with the given prefix.
  *
@@ -205,7 +200,7 @@ let globalUniqueIdCounter = 0;
  * ```
  */
 export function createUniqueId(prefix: string): string {
-  return `${prefix}-${++globalUniqueIdCounter}`;
+  return createCoreUniqueId(prefix);
 }
 
 /**

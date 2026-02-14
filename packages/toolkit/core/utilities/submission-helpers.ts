@@ -139,7 +139,7 @@ export function isSubmitting(formTree: FieldTree<unknown>): Signal<boolean> {
   });
 }
 
-function createSubmittedStatusTracker(
+export function createSubmittedStatusTracker(
   formTree: FieldTree<unknown>,
 ): Signal<SubmittedStatus> {
   assertInInjectionContext(createSubmittedStatusTracker);
@@ -153,6 +153,7 @@ function createSubmittedStatusTracker(
     if (!formState) {
       wasSubmitting.set(false);
       wasTouched.set(false);
+      hasSubmitted.set(false);
       return;
     }
 
@@ -161,13 +162,10 @@ function createSubmittedStatusTracker(
     const prevSubmitting = wasSubmitting();
     const prevTouched = wasTouched();
 
-    // Detect submit completion: submitting went from true to false
     if (prevSubmitting && !isSubmitting) {
       hasSubmitted.set(true);
     }
 
-    // Detect reset: touched went from true to false (form.reset() clears touched)
-    // Only reset if not currently submitting to avoid false positives
     if (prevTouched && !isTouched && !isSubmitting) {
       hasSubmitted.set(false);
     }
@@ -473,7 +471,13 @@ function isFieldTree(value: unknown): boolean {
       'markAsTouched' in result &&
       typeof (result as Record<string, unknown>)['markAsTouched'] === 'function'
     );
-  } catch {
+  } catch (error) {
+    if (typeof ngDevMode === 'undefined' || ngDevMode) {
+      console.warn(
+        '[ngx-signal-forms] FieldTree detection failed unexpectedly.',
+        error,
+      );
+    }
     return false;
   }
 }

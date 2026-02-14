@@ -5,8 +5,8 @@ import {
   injectFormContext,
   isBlockingError,
   isWarningError,
+  resolveErrorDisplayStrategy,
   showErrors,
-  unwrapValue,
   type ErrorDisplayStrategy,
   type ReactiveOrStatic,
   type SubmittedStatus,
@@ -139,21 +139,11 @@ export class NgxHeadlessFieldsetDirective<
    * Resolved error display strategy.
    */
   readonly resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
-    const provided = this.strategy();
-    if (provided !== null && provided !== undefined) {
-      const resolved = unwrapValue(provided);
-      if (resolved !== 'inherit') {
-        return resolved;
-      }
-    }
-
-    const contextStrategy = this.#formContext?.errorStrategy?.();
-    if (contextStrategy) {
-      return contextStrategy;
-    }
-
-    const configured = this.#config.defaultErrorStrategy;
-    return unwrapValue(configured);
+    return resolveErrorDisplayStrategy(
+      this.strategy(),
+      this.#formContext?.errorStrategy?.(),
+      this.#config.defaultErrorStrategy,
+    );
   });
 
   /**
