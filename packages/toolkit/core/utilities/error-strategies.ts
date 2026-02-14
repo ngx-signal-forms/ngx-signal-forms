@@ -123,19 +123,6 @@ export function computeShowErrors<T>(
       fallbackStatus,
     );
 
-    if (
-      typeof window !== 'undefined' &&
-      (window as { __DEBUG_SHOW_ERRORS__?: boolean }).__DEBUG_SHOW_ERRORS__
-    ) {
-      console.log('[computeShowErrors]', {
-        strategy: strategyValue,
-        isInvalid,
-        isTouched,
-        submittedStatusProvided: status !== undefined,
-        result,
-      });
-    }
-
     return result;
   });
 }

@@ -83,7 +83,7 @@ export class DebuggerBadgeIconDirective {}
     }
 
     /* Icon styling */
-    ::ng-deep .ngx-debugger-badge__icon {
+    :host .ngx-debugger-badge__icon {
       width: var(--ngx-debugger-badge-icon-size, 0.875rem);
       height: var(--ngx-debugger-badge-icon-size, 0.875rem);
       flex-shrink: 0;
@@ -269,7 +269,7 @@ export class DebuggerBadgeIconDirective {}
     }
 
     /* Spinning animation for pending states */
-    ::ng-deep .ngx-debugger-badge__icon.animate-spin {
+    :host .ngx-debugger-badge__icon.animate-spin {
       animation: ngx-debugger-spin 1s linear infinite;
     }
 

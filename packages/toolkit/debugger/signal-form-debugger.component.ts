@@ -8,7 +8,7 @@ import {
   input,
   isDevMode,
 } from '@angular/core';
-import type { FieldState } from '@angular/forms/signals';
+import type { FieldState, FieldTree } from '@angular/forms/signals';
 import {
   isBlockingError,
   isWarningError,
@@ -112,7 +112,9 @@ export class SignalFormDebuggerComponent {
    * The Signal Form to display.
    * Accepts either the FieldTree function (preferred) or the FieldState root.
    */
-  readonly formTree = input.required<unknown>();
+  readonly formTree = input.required<
+    FieldTree<unknown> | FieldState<unknown>
+  >();
 
   /**
    * The error display strategy currently in effect.

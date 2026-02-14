@@ -69,11 +69,11 @@ export function resolveFieldName(
     throw new Error(
       `[ngx-signal-forms] Cannot resolve field name for element. ` +
         `Please add one of: data-signal-field, id, or name attribute. ` +
-        `Element: ${element.outerHTML}`,
+        `Element tag: <${element.tagName.toLowerCase()}>`,
     );
   }
 
-  if (config.debug) {
+  if (config.debug || typeof ngDevMode === 'undefined' || ngDevMode) {
     console.warn(
       '[ngx-signal-forms] Could not resolve field name for element:',
       element,
