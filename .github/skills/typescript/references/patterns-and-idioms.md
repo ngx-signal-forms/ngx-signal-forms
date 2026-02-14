@@ -38,13 +38,14 @@ const configSatisfies = {
   api: 'https://api.example.com',
   timeout: 5000,
 } satisfies Record<string, string | number>;
-configSatisfies.api;     // string (preserved)
+configSatisfies.api; // string (preserved)
 configSatisfies.timeout; // number (preserved)
 ```
 
 ### Five Key Use Cases
 
 **1. Validate shape while preserving types**
+
 ```typescript
 type Theme = Record<string, string | number[]>;
 
@@ -53,11 +54,12 @@ const palette = {
   green: '#00ff00',
 } satisfies Theme;
 
-palette.red.map(x => x * 2);   // Works — inferred as number[]
-palette.green.toUpperCase();     // Works — inferred as string
+palette.red.map((x) => x * 2); // Works — inferred as number[]
+palette.green.toUpperCase(); // Works — inferred as string
 ```
 
 **2. Enforce exhaustive keys**
+
 ```typescript
 type Routes = Record<'home' | 'about' | 'contact', string>;
 
@@ -70,6 +72,7 @@ const urls = {
 ```
 
 **3. Tuple inference in objects**
+
 ```typescript
 const handlers = {
   click: [100, 200],
@@ -80,6 +83,7 @@ handlers.click; // [number, number] — not number[]
 ```
 
 **4. With `as const` for validated literals**
+
 ```typescript
 const PERMISSIONS = {
   admin: ['read', 'write', 'delete'],
@@ -90,6 +94,7 @@ type AdminPerms = (typeof PERMISSIONS)['admin']; // readonly ["read", "write", "
 ```
 
 **5. Inline parameter validation**
+
 ```typescript
 function createUser(config: { name: string; role: 'admin' | 'user' }) {}
 
@@ -143,12 +148,12 @@ const [error, data] = await fetchData();
 
 ### as const vs Object.freeze
 
-| Feature | `as const` | `Object.freeze` |
-|---|---|---|
-| Scope | Deep (all nested properties) | Shallow (first level only) |
-| Runtime effect | None (compile-time only) | Yes (prevents mutation at runtime) |
-| Type inference | Literal types | `Readonly<T>` with wide types |
-| Performance | Zero cost | Small runtime overhead |
+| Feature        | `as const`                   | `Object.freeze`                    |
+| -------------- | ---------------------------- | ---------------------------------- |
+| Scope          | Deep (all nested properties) | Shallow (first level only)         |
+| Runtime effect | None (compile-time only)     | Yes (prevents mutation at runtime) |
+| Type inference | Literal types                | `Readonly<T>` with wide types      |
+| Performance    | Zero cost                    | Small runtime overhead             |
 
 **Prefer `as const`** unless you specifically need runtime immutability at the top level.
 
@@ -203,8 +208,12 @@ class DatabaseConnection implements AsyncDisposable {
     await this.close();
   }
 
-  private async init(url: string) { /* ... */ }
-  private async close() { /* ... */ }
+  private async init(url: string) {
+    /* ... */
+  }
+  private async close() {
+    /* ... */
+  }
 }
 
 async function queryDatabase() {
@@ -229,9 +238,7 @@ async function queryDatabase() {
 Prefer discriminated unions over thrown exceptions for expected error cases.
 
 ```typescript
-type Result<T, E = Error> =
-  | { ok: true; value: T }
-  | { ok: false; error: E };
+type Result<T, E = Error> = { ok: true; value: T } | { ok: false; error: E };
 
 // Constructor helpers
 const ok = <T>(value: T): Result<T, never> => ({ ok: true, value });
@@ -255,6 +262,7 @@ if (result.ok) {
 ```
 
 **When to use Result vs throw:**
+
 - **Result**: Expected failure cases (validation, parsing, network), caller must handle
 - **throw**: Unexpected errors (programming bugs, invariant violations), should crash
 
@@ -311,10 +319,14 @@ type AppError =
 
 function formatError(error: AppError): string {
   switch (error.type) {
-    case 'validation': return `Invalid fields: ${error.fields.join(', ')}`;
-    case 'network':    return `Network error: ${error.status}`;
-    case 'auth':       return `Auth failed: ${error.reason}`;
-    default:           return assertNever(error);
+    case 'validation':
+      return `Invalid fields: ${error.fields.join(', ')}`;
+    case 'network':
+      return `Network error: ${error.status}`;
+    case 'auth':
+      return `Auth failed: ${error.reason}`;
+    default:
+      return assertNever(error);
   }
 }
 ```
@@ -459,7 +471,9 @@ interface Product {
 
 type ProductUpdate = Partial<Omit<Product, 'id'>>;
 
-function updateProduct(id: number, updates: ProductUpdate) { /* ... */ }
+function updateProduct(id: number, updates: ProductUpdate) {
+  /* ... */
+}
 updateProduct(1, { name: 'New Name' }); // Only pass what changed
 ```
 
@@ -467,13 +481,28 @@ updateProduct(1, { name: 'New Name' }); // Only pass what changed
 
 ```typescript
 // Bad: duplicated properties
-interface User { id: string; createdAt: Date; name: string }
-interface Product { id: string; createdAt: Date; title: string }
+interface User {
+  id: string;
+  createdAt: Date;
+  name: string;
+}
+interface Product {
+  id: string;
+  createdAt: Date;
+  title: string;
+}
 
 // Good: shared base
-interface BaseEntity { id: string; createdAt: Date }
-interface User extends BaseEntity { name: string }
-interface Product extends BaseEntity { title: string }
+interface BaseEntity {
+  id: string;
+  createdAt: Date;
+}
+interface User extends BaseEntity {
+  name: string;
+}
+interface Product extends BaseEntity {
+  title: string;
+}
 ```
 
 ### Pick/Omit for Derived Contracts

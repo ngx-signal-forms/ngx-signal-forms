@@ -28,7 +28,7 @@ type ElementOf<T extends readonly unknown[]> = T[number];
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 // Usage
-type Item = ElementOf<['a', 'b', 'c']>;  // 'a' | 'b' | 'c'
+type Item = ElementOf<['a', 'b', 'c']>; // 'a' | 'b' | 'c'
 ```
 
 ### Pattern 2: Types to Functions
@@ -40,8 +40,8 @@ function first<T>(arr: readonly T[]): T | undefined {
   return arr[0];
 }
 
-const num = first([1, 2, 3]);     // number | undefined
-const str = first(['a', 'b']);     // string | undefined
+const num = first([1, 2, 3]); // number | undefined
+const str = first(['a', 'b']); // string | undefined
 ```
 
 ### Pattern 3: Inference from Arguments
@@ -49,18 +49,27 @@ const str = first(['a', 'b']);     // string | undefined
 Let TypeScript infer generic types from function arguments.
 
 ```typescript
-function groupBy<T, K extends string>(items: T[], key: (item: T) => K): Record<K, T[]> {
-  return items.reduce((acc, item) => {
-    const k = key(item);
-    (acc[k] ??= []).push(item);
-    return acc;
-  }, {} as Record<K, T[]>);
+function groupBy<T, K extends string>(
+  items: T[],
+  key: (item: T) => K,
+): Record<K, T[]> {
+  return items.reduce(
+    (acc, item) => {
+      const k = key(item);
+      (acc[k] ??= []).push(item);
+      return acc;
+    },
+    {} as Record<K, T[]>,
+  );
 }
 
 // T and K inferred from arguments
 const grouped = groupBy(
-  [{ name: 'Alice', role: 'admin' }, { name: 'Bob', role: 'user' }],
-  (u) => u.role
+  [
+    { name: 'Alice', role: 'admin' },
+    { name: 'Bob', role: 'user' },
+  ],
+  (u) => u.role,
 );
 // Record<'admin' | 'user', { name: string; role: string }[]>
 ```
@@ -91,7 +100,7 @@ function routes<const T extends readonly string[]>(paths: T): T {
 
 // With const: T = readonly ["/home", "/about"]
 const r = routes(['/home', '/about']); // readonly ["/home", "/about"]
-type Route = (typeof r)[number];       // "/home" | "/about"
+type Route = (typeof r)[number]; // "/home" | "/about"
 ```
 
 ### Practical Use Cases
@@ -105,9 +114,9 @@ const cfg = defineConfig({ api: 'https://example.com', retries: 3 });
 // { api: "https://example.com"; retries: 3 } — not Record<string, unknown>
 
 // Event map
-function createEventMap<const T extends Record<string, (...args: any[]) => void>>(
-  events: T
-): T {
+function createEventMap<
+  const T extends Record<string, (...args: any[]) => void>,
+>(events: T): T {
   return events;
 }
 const events = createEventMap({
@@ -151,13 +160,13 @@ createFSM('idl', ['idle', 'running', 'stopped']);
 function on<E extends string>(
   event: E,
   handler: (e: E) => void,
-  fallback: NoInfer<E>
+  fallback: NoInfer<E>,
 ) {}
 
 // Style tokens — theme drives inference, fallback follows
 function style<T extends string>(
   tokens: T[],
-  defaults: Record<NoInfer<T>, string>
+  defaults: Record<NoInfer<T>, string>,
 ) {}
 
 style(['primary', 'secondary'], {
@@ -179,7 +188,7 @@ function longest<T extends { length: number }>(a: T, b: T): T {
   return a.length >= b.length ? a : b;
 }
 
-longest('hello', 'hi');     // string
+longest('hello', 'hi'); // string
 longest([1, 2, 3], [4, 5]); // number[]
 // longest(10, 20);          // Error: number has no length
 ```
@@ -200,8 +209,12 @@ getProperty(user, 'name'); // string
 
 ```typescript
 // T must be both serializable and have an id
-interface Identifiable { id: string }
-interface Serializable { toJSON(): unknown }
+interface Identifiable {
+  id: string;
+}
+interface Serializable {
+  toJSON(): unknown;
+}
 
 function save<T extends Identifiable & Serializable>(entity: T): void {
   const json = entity.toJSON();
@@ -307,7 +320,7 @@ function createElement(tag: string): HTMLElement {
   return document.createElement(tag);
 }
 
-const div = createElement('div');   // HTMLDivElement
+const div = createElement('div'); // HTMLDivElement
 const span = createElement('span'); // HTMLSpanElement
 ```
 
@@ -357,10 +370,14 @@ function logLength(item: { length: number }): void {
 
 ```typescript
 // Problem: using `any` for flexibility
-function parse(input: any) { return input.data; }
+function parse(input: any) {
+  return input.data;
+}
 
 // Bad fix: just replacing with unknown
-function parse(input: unknown) { return input.data; }
+function parse(input: unknown) {
+  return input.data;
+}
 //                                       ~~~~~~~~ Error
 
 // Good fix: use a generic with constraint
@@ -373,13 +390,19 @@ function parse<T extends { data: unknown }>(input: T): T['data'] {
 
 ```typescript
 // Too strict: needlessly requires exact type
-function bad<T extends string>(x: T): T { return x; }
+function bad<T extends string>(x: T): T {
+  return x;
+}
 
 // Better: just use string
-function good(x: string): string { return x; }
+function good(x: string): string {
+  return x;
+}
 
 // Const type parameter when literal inference IS needed
-function literal<const T extends string>(x: T): T { return x; }
+function literal<const T extends string>(x: T): T {
+  return x;
+}
 const lit = literal('hello'); // "hello" (literal type)
 ```
 
@@ -390,8 +413,7 @@ const lit = literal('hello'); // "hello" (literal type)
 type InfiniteNested<T> = { value: T; child: InfiniteNested<T> };
 
 // Good: bounded recursion with depth counter
-type Nested<T, D extends number = 5> =
-  D extends 0
-    ? { value: T }
-    : { value: T; child?: Nested<T, [-1, 0, 1, 2, 3, 4][D]> };
+type Nested<T, D extends number = 5> = D extends 0
+  ? { value: T }
+  : { value: T; child?: Nested<T, [-1, 0, 1, 2, 3, 4][D]> };
 ```

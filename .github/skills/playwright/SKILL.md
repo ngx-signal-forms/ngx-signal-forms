@@ -68,7 +68,9 @@ test.describe('Feature - action', () => {
 
   test('Feature - happy path', async ({ page }) => {
     await test.step('Submit form', async () => {
-      await page.getByRole('textbox', { name: 'Email' }).fill('user@example.com');
+      await page
+        .getByRole('textbox', { name: 'Email' })
+        .fill('user@example.com');
       await page.getByRole('button', { name: 'Submit' }).click();
     });
 

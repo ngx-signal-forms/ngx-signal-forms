@@ -10,13 +10,19 @@ Create standalone components for Angular v20+. Components are standalone by defa
 ## Component Structure
 
 ```typescript
-import { Component, ChangeDetectionStrategy, input, output, computed } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  input,
+  output,
+  computed,
+} from '@angular/core';
 
 @Component({
   selector: 'app-user-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    'class': 'user-card',
+    class: 'user-card',
     '[class.active]': 'isActive()',
     '(click)': 'handleClick()',
   },
@@ -28,27 +34,31 @@ import { Component, ChangeDetectionStrategy, input, output, computed } from '@an
     }
   `,
   styles: `
-    :host { display: block; }
-    :host.active { border: 2px solid blue; }
+    :host {
+      display: block;
+    }
+    :host.active {
+      border: 2px solid blue;
+    }
   `,
 })
 export class UserCard {
   // Required input
   name = input.required<string>();
-  
+
   // Optional input with default
   email = input<string>('');
   showEmail = input(false);
-  
+
   // Input with transform
   isActive = input(false, { transform: booleanAttribute });
-  
+
   // Computed from inputs
   avatarUrl = computed(() => `https://api.example.com/avatar/${this.name()}`);
-  
+
   // Output
   selected = output<string>();
-  
+
   handleClick() {
     this.selected.emit(this.name());
   }
@@ -105,19 +115,19 @@ Use the `host` object in `@Component`—do NOT use `@HostBinding` or `@HostListe
   selector: 'app-button',
   host: {
     // Static attributes
-    'role': 'button',
-    
+    role: 'button',
+
     // Dynamic class bindings
     '[class.primary]': 'variant() === "primary"',
     '[class.disabled]': 'disabled()',
-    
+
     // Dynamic style bindings
     '[style.--btn-color]': 'color()',
-    
+
     // Attribute bindings
     '[attr.aria-disabled]': 'disabled()',
     '[attr.tabindex]': 'disabled() ? -1 : 0',
-    
+
     // Event listeners
     '(click)': 'onClick($event)',
     '(keydown.enter)': 'onClick($event)',
@@ -129,9 +139,9 @@ export class Button {
   variant = input<'primary' | 'secondary'>('primary');
   disabled = input(false, { transform: booleanAttribute });
   color = input('#007bff');
-  
+
   clicked = output<void>();
-  
+
   onClick(event: Event) {
     if (!this.disabled()) {
       this.clicked.emit();
@@ -184,14 +194,19 @@ export class My implements OnInit, OnDestroy {
     });
   }
 
-  ngOnInit() { /* Component initialized */ }
-  ngOnDestroy() { /* Cleanup */ }
+  ngOnInit() {
+    /* Component initialized */
+  }
+  ngOnDestroy() {
+    /* Cleanup */
+  }
 }
 ```
 
 ## Accessibility Requirements
 
 Components MUST:
+
 - Pass AXE accessibility checks
 - Meet WCAG AA standards
 - Include proper ARIA attributes for interactive elements
@@ -202,21 +217,23 @@ Components MUST:
 @Component({
   selector: 'app-toggle',
   host: {
-    'role': 'switch',
+    role: 'switch',
     '[attr.aria-checked]': 'checked()',
     '[attr.aria-label]': 'label()',
-    'tabindex': '0',
+    tabindex: '0',
     '(click)': 'toggle()',
     '(keydown.enter)': 'toggle()',
     '(keydown.space)': 'toggle(); $event.preventDefault()',
   },
-  template: `<span class="toggle-track"><span class="toggle-thumb"></span></span>`,
+  template: `<span class="toggle-track"
+    ><span class="toggle-thumb"></span
+  ></span>`,
 })
 export class Toggle {
   label = input.required<string>();
   checked = input(false, { transform: booleanAttribute });
   checkedChange = output<boolean>();
-  
+
   toggle() {
     this.checkedChange.emit(!this.checked());
   }
@@ -230,26 +247,23 @@ Use native control flow—do NOT use `*ngIf`, `*ngFor`, `*ngSwitch`.
 ```html
 <!-- Conditionals -->
 @if (isLoading()) {
-  <app-spinner />
+<app-spinner />
 } @else if (error()) {
-  <app-error [message]="error()" />
+<app-error [message]="error()" />
 } @else {
-  <app-content [data]="data()" />
+<app-content [data]="data()" />
 }
 
 <!-- Loops -->
 @for (item of items(); track item.id) {
-  <app-item [item]="item" />
+<app-item [item]="item" />
 } @empty {
-  <p>No items found</p>
+<p>No items found</p>
 }
 
 <!-- Switch -->
-@switch (status()) {
-  @case ('pending') { <span>Pending</span> }
-  @case ('active') { <span>Active</span> }
-  @default { <span>Unknown</span> }
-}
+@switch (status()) { @case ('pending') { <span>Pending</span> } @case ('active')
+{ <span>Active</span> } @default { <span>Unknown</span> } }
 ```
 
 ## Class and Style Bindings

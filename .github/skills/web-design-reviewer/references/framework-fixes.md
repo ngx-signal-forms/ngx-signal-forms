@@ -96,7 +96,7 @@ This document explains specific fix techniques for each framework and styling me
 
 <!-- After: Overflow control -->
 <div class="w-full max-w-full overflow-hidden">
-  <img src="..." class="w-full h-auto object-contain" />
+  <img src="..." class="h-auto w-full object-contain" />
 </div>
 ```
 
@@ -118,9 +118,7 @@ This document explains specific fix techniques for each framework and styling me
 ```html
 <!-- Mobile-first responsive -->
 <div class="flex flex-col gap-4 md:flex-row md:gap-6 lg:gap-8">
-  <div class="w-full md:w-1/2 lg:w-1/3">
-    Content
-  </div>
+  <div class="w-full md:w-1/2 lg:w-1/3">Content</div>
 </div>
 ```
 
@@ -149,16 +147,15 @@ This document explains specific fix techniques for each framework and styling me
 
 ```html
 <!-- Add focus state -->
-<button class="
-  bg-blue-500 text-white
-  hover:bg-blue-600
-  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-">
+<button
+  class="bg-blue-500 text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+>
   Button
 </button>
 
 <!-- Improve contrast -->
-<p class="text-gray-700 bg-white"> <!-- Changed from text-gray-500 -->
+<p class="bg-white text-gray-700">
+  <!-- Changed from text-gray-500 -->
   Readable text
 </p>
 ```
@@ -208,7 +205,7 @@ This document explains specific fix techniques for each framework and styling me
 @Component({
   selector: 'app-card',
   host: {
-    'class': 'block p-4',
+    class: 'block p-4',
     '[class.overflow-hidden]': 'true',
     '[style.maxWidth.%]': '100',
   },
@@ -276,11 +273,15 @@ import { CdkOverlayOrigin, CdkConnectedOverlay } from '@angular/cdk/overlay';
 @layer reset, base, components, utilities;
 
 @layer base {
-  body { font-family: system-ui, sans-serif; }
+  body {
+    font-family: system-ui, sans-serif;
+  }
 }
 
 @layer components {
-  .btn { padding: 0.5rem 1rem; }
+  .btn {
+    padding: 0.5rem 1rem;
+  }
 }
 ```
 
@@ -342,7 +343,8 @@ import { CdkOverlayOrigin, CdkConnectedOverlay } from '@angular/cdk/overlay';
 }
 
 /* Prevent layout overflow */
-html, body {
+html,
+body {
   max-width: 100vw;
   overflow-x: hidden;
 }
@@ -364,7 +366,7 @@ img {
     <header class="sticky top-0 z-50">
       <!-- Header -->
     </header>
-    <main class="flex-1 container mx-auto px-4 py-8">
+    <main class="container mx-auto flex-1 px-4 py-8">
       <router-outlet />
     </main>
     <footer>
@@ -473,7 +475,7 @@ textarea:focus-visible {
 
 ```javascript
 // Run in console to detect overflow elements
-document.querySelectorAll('*').forEach(el => {
+document.querySelectorAll('*').forEach((el) => {
   if (el.scrollWidth > el.clientWidth) {
     console.log('Horizontal overflow:', el);
   }
@@ -495,7 +497,7 @@ document.querySelectorAll('*').forEach(el => {
 
 ```javascript
 // Verify container queries are working
-document.querySelectorAll('[style*="container-type"]').forEach(el => {
+document.querySelectorAll('[style*="container-type"]').forEach((el) => {
   console.log('Container:', el, 'Size:', el.clientWidth, 'x', el.clientHeight);
 });
 ```

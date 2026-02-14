@@ -4,7 +4,7 @@ description: 'Comprehensive pull request quality toolkit. Use when reviewing PRs
 license: MIT
 metadata:
   author: ngx-vest-forms
-  version: "1.0"
+  version: '1.0'
 ---
 
 # PR Toolkit
@@ -14,6 +14,7 @@ An orchestrator skill that routes pull request review tasks to the appropriate s
 ## When to Use
 
 Use this skill when:
+
 - Reviewing a pull request for overall quality
 - Preparing code for merge
 - Running a comprehensive pre-merge checklist
@@ -21,14 +22,14 @@ Use this skill when:
 
 ## Available Sub-Skills
 
-| Sub-Skill | Purpose | When to Use |
-|-----------|---------|-------------|
-| [code-reviewer](code-reviewer/SKILL.md) | Guideline compliance and bug detection | After writing code, before committing |
-| [code-simplifier](code-simplifier/SKILL.md) | Clarity and maintainability refinement | After completing a coding task |
-| [comment-analyzer](comment-analyzer/SKILL.md) | Documentation accuracy verification | After adding/modifying comments or docs |
-| [pr-test-analyzer](pr-test-analyzer/SKILL.md) | Test coverage gap analysis | After creating or updating a PR |
-| [silent-failure-hunter](silent-failure-hunter/SKILL.md) | Error handling and silent failure audit | When code has try/catch, fallbacks, or error handling |
-| [type-design-analyzer](type-design-analyzer/SKILL.md) | Type invariant and encapsulation quality | When introducing or modifying types |
+| Sub-Skill                                               | Purpose                                  | When to Use                                           |
+| ------------------------------------------------------- | ---------------------------------------- | ----------------------------------------------------- |
+| [code-reviewer](code-reviewer/SKILL.md)                 | Guideline compliance and bug detection   | After writing code, before committing                 |
+| [code-simplifier](code-simplifier/SKILL.md)             | Clarity and maintainability refinement   | After completing a coding task                        |
+| [comment-analyzer](comment-analyzer/SKILL.md)           | Documentation accuracy verification      | After adding/modifying comments or docs               |
+| [pr-test-analyzer](pr-test-analyzer/SKILL.md)           | Test coverage gap analysis               | After creating or updating a PR                       |
+| [silent-failure-hunter](silent-failure-hunter/SKILL.md) | Error handling and silent failure audit  | When code has try/catch, fallbacks, or error handling |
+| [type-design-analyzer](type-design-analyzer/SKILL.md)   | Type invariant and encapsulation quality | When introducing or modifying types                   |
 
 ## Recommended Workflow
 
@@ -44,6 +45,7 @@ For a thorough PR review, run the sub-skills in this order:
 ## Project Context
 
 This project uses:
+
 - **Angular 21** with standalone components and signals
 - **TypeScript ~5.9** with strict mode
 - **Vest.js** for validation

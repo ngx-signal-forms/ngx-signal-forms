@@ -1,6 +1,7 @@
 # Angular Tooling Patterns
 
 ## Table of Contents
+
 - [Custom Schematics](#custom-schematics)
 - [Build Optimization](#build-optimization)
 - [Multi-Project Workspace](#multi-project-workspace)
@@ -24,7 +25,16 @@ schematics blank --name=my-schematics
 
 ```typescript
 // src/my-component/index.ts
-import { Rule, SchematicContext, Tree, apply, url, template, move, mergeWith } from '@angular-devkit/schematics';
+import {
+  Rule,
+  SchematicContext,
+  Tree,
+  apply,
+  url,
+  template,
+  move,
+  mergeWith,
+} from '@angular-devkit/schematics';
 import { strings } from '@angular-devkit/core';
 
 export function myComponent(options: { name: string; path: string }): Rule {
@@ -36,7 +46,7 @@ export function myComponent(options: { name: string; path: string }): Rule {
       }),
       move(options.path),
     ]);
-    
+
     return mergeWith(templateSource)(tree, context);
   };
 }
@@ -97,11 +107,13 @@ last 2 Edge versions
 export const routes: Routes = [
   {
     path: 'admin',
-    loadChildren: () => import('./admin/admin.routes').then(m => m.adminRoutes),
+    loadChildren: () =>
+      import('./admin/admin.routes').then((m) => m.adminRoutes),
   },
   {
     path: 'reports',
-    loadComponent: () => import('./reports/reports.component').then(m => m.Reports),
+    loadComponent: () =>
+      import('./reports/reports.component').then((m) => m.Reports),
   },
 ];
 ```
@@ -122,12 +134,14 @@ import * as rxjs from 'rxjs';
 
 ```typescript
 // app.config.ts
-import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
+import {
+  provideRouter,
+  withPreloading,
+  PreloadAllModules,
+} from '@angular/router';
 
 export const appConfig: ApplicationConfig = {
-  providers: [
-    provideRouter(routes, withPreloading(PreloadAllModules)),
-  ],
+  providers: [provideRouter(routes, withPreloading(PreloadAllModules))],
 };
 ```
 
@@ -218,28 +232,28 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Lint
         run: npm run lint
-      
+
       - name: Test
         run: npm run test -- --watch=false --browsers=ChromeHeadless --code-coverage
-      
+
       - name: Build
         run: npm run build -- -c production
-      
+
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:

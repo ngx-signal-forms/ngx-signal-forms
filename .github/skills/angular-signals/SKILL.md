@@ -24,7 +24,7 @@ console.log(count()); // 0
 count.set(5);
 
 // Update based on current value
-count.update(c => c + 1);
+count.update((c) => c + 1);
 
 // With explicit type
 const user = signal<User | null>(null);
@@ -52,13 +52,11 @@ const filter = signal('');
 
 const filteredItems = computed(() => {
   const query = filter().toLowerCase();
-  return items().filter(item => 
-    item.name.toLowerCase().includes(query)
-  );
+  return items().filter((item) => item.name.toLowerCase().includes(query));
 });
 
-const totalPrice = computed(() => 
-  filteredItems().reduce((sum, item) => sum + item.price, 0)
+const totalPrice = computed(() =>
+  filteredItems().reduce((sum, item) => sum + item.price, 0),
 );
 ```
 
@@ -73,7 +71,7 @@ const options = signal(['A', 'B', 'C']);
 const selected = linkedSignal(() => options()[0]);
 
 console.log(selected()); // "A"
-selected.set('B');       // User selects B
+selected.set('B'); // User selects B
 console.log(selected()); // "B"
 options.set(['X', 'Y']); // Options change
 console.log(selected()); // "X" - auto-reset to first
@@ -86,7 +84,7 @@ const selectedItem = linkedSignal<Item[], Item | null>({
   computation: (newItems, previous) => {
     // Try to preserve selection if item still exists
     const prevItem = previous?.value;
-    if (prevItem && newItems.some(i => i.id === prevItem.id)) {
+    if (prevItem && newItems.some((i) => i.id === prevItem.id)) {
       return prevItem;
     }
     return newItems[0] ?? null;
@@ -102,19 +100,19 @@ import { signal, effect, inject, DestroyRef } from '@angular/core';
 @Component({...})
 export class Search {
   query = signal('');
-  
+
   constructor() {
     // Effect runs when query changes
     effect(() => {
       console.log('Search query:', this.query());
     });
-    
+
     // Effect with cleanup
     effect((onCleanup) => {
       const timer = setInterval(() => {
         console.log('Current query:', this.query());
       }, 1000);
-      
+
       onCleanup(() => clearInterval(timer));
     });
   }
@@ -122,6 +120,7 @@ export class Search {
 ```
 
 **Effect rules:**
+
 - Run in injection context (constructor or with `runInInjectionContext`)
 - Automatically cleaned up when component destroys
 
@@ -131,9 +130,12 @@ export class Search {
 @Component({
   selector: 'app-todo-list',
   template: `
-    <input [value]="newTodo()" (input)="newTodo.set($any($event.target).value)" />
+    <input
+      [value]="newTodo()"
+      (input)="newTodo.set($any($event.target).value)"
+    />
     <button (click)="addTodo()" [disabled]="!canAdd()">Add</button>
-    
+
     <ul>
       @for (todo of filteredTodos(); track todo.id) {
         <li [class.done]="todo.done">
@@ -142,7 +144,7 @@ export class Search {
         </li>
       }
     </ul>
-    
+
     <p>{{ remaining() }} remaining</p>
   `,
 })
@@ -151,38 +153,39 @@ export class TodoList {
   todos = signal<Todo[]>([]);
   newTodo = signal('');
   filter = signal<'all' | 'active' | 'done'>('all');
-  
+
   // Derived state
   canAdd = computed(() => this.newTodo().trim().length > 0);
-  
+
   filteredTodos = computed(() => {
     const todos = this.todos();
     switch (this.filter()) {
-      case 'active': return todos.filter(t => !t.done);
-      case 'done': return todos.filter(t => t.done);
-      default: return todos;
+      case 'active':
+        return todos.filter((t) => !t.done);
+      case 'done':
+        return todos.filter((t) => t.done);
+      default:
+        return todos;
     }
   });
-  
-  remaining = computed(() => 
-    this.todos().filter(t => !t.done).length
-  );
-  
+
+  remaining = computed(() => this.todos().filter((t) => !t.done).length);
+
   // Actions
   addTodo() {
     const text = this.newTodo().trim();
     if (text) {
-      this.todos.update(todos => [
+      this.todos.update((todos) => [
         ...todos,
-        { id: crypto.randomUUID(), text, done: false }
+        { id: crypto.randomUUID(), text, done: false },
       ]);
       this.newTodo.set('');
     }
   }
-  
+
   toggleTodo(id: string) {
-    this.todos.update(todos =>
-      todos.map(t => t.id === id ? { ...t, done: !t.done } : t)
+    this.todos.update((todos) =>
+      todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
     );
   }
 }
@@ -199,13 +202,13 @@ import { interval } from 'rxjs';
 @Component({...})
 export class Timer {
   private http = inject(HttpClient);
-  
+
   // From observable - requires initial value or allowUndefined
   counter = toSignal(interval(1000), { initialValue: 0 });
-  
+
   // From HTTP - undefined until loaded
   users = toSignal(this.http.get<User[]>('/api/users'));
-  
+
   // With requireSync for synchronous observables (BehaviorSubject)
   private user$ = new BehaviorSubject<User | null>(null);
   currentUser = toSignal(this.user$, { requireSync: true });
@@ -221,9 +224,9 @@ import { switchMap, debounceTime } from 'rxjs';
 @Component({...})
 export class Search {
   query = signal('');
-  
+
   private http = inject(HttpClient);
-  
+
   // Convert signal to observable for RxJS operators
   results = toSignal(
     toObservable(this.query).pipe(
@@ -241,7 +244,7 @@ export class Search {
 // Custom equality function
 const user = signal<User>(
   { id: 1, name: 'Alice' },
-  { equal: (a, b) => a.id === b.id }
+  { equal: (a, b) => a.id === b.id },
 );
 
 // Only triggers updates when ID changes
@@ -273,26 +276,26 @@ export class Auth {
   // Private writable state
   private _user = signal<User | null>(null);
   private _loading = signal(false);
-  
+
   // Public read-only signals
   readonly user = this._user.asReadonly();
   readonly loading = this._loading.asReadonly();
   readonly isAuthenticated = computed(() => this._user() !== null);
-  
+
   private http = inject(HttpClient);
-  
+
   async login(credentials: Credentials): Promise<void> {
     this._loading.set(true);
     try {
       const user = await firstValueFrom(
-        this.http.post<User>('/api/login', credentials)
+        this.http.post<User>('/api/login', credentials),
       );
       this._user.set(user);
     } finally {
       this._loading.set(false);
     }
   }
-  
+
   logout(): void {
     this._user.set(null);
   }

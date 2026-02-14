@@ -26,20 +26,20 @@ Recommended configurations for TypeScript 5.9+ projects. No tooling opinions —
     "isolatedModules": true,
 
     // Include modern JS APIs (Map, Set, Promise, etc.)
-    "lib": ["es2022"]
-  }
+    "lib": ["es2022"],
+  },
 }
 ```
 
 ### Why These Defaults
 
-| Option | Reason |
-|---|---|
-| `target: es2022` | Top-level await, `cause` on Error, `.at()`, `structuredClone` |
-| `esModuleInterop` | Correct default/namespace import behavior |
-| `skipLibCheck` | Faster builds, avoids third-party declaration conflicts |
-| `verbatimModuleSyntax` | Forces `import type` syntax, ensures tree-shaking |
-| `isolatedModules` | Required for modern bundlers that transpile per-file |
+| Option                 | Reason                                                        |
+| ---------------------- | ------------------------------------------------------------- |
+| `target: es2022`       | Top-level await, `cause` on Error, `.at()`, `structuredClone` |
+| `esModuleInterop`      | Correct default/namespace import behavior                     |
+| `skipLibCheck`         | Faster builds, avoids third-party declaration conflicts       |
+| `verbatimModuleSyntax` | Forces `import type` syntax, ensures tree-shaking             |
+| `isolatedModules`      | Required for modern bundlers that transpile per-file          |
 
 ---
 
@@ -65,8 +65,8 @@ Recommended configurations for TypeScript 5.9+ projects. No tooling opinions —
     "noImplicitReturns": true,
 
     // Ensure switch cases have break/return
-    "noFallthroughCasesInSwitch": true
-  }
+    "noFallthroughCasesInSwitch": true,
+  },
 }
 ```
 
@@ -99,8 +99,8 @@ For projects that compile TS → JS (apps, CLIs, servers):
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "outDir": "dist"
-  }
+    "outDir": "dist",
+  },
 }
 ```
 
@@ -113,8 +113,8 @@ For projects where a bundler (Vite, esbuild, webpack) handles emit:
   "compilerOptions": {
     "module": "preserve",
     "moduleResolution": "bundler",
-    "noEmit": true
-  }
+    "noEmit": true,
+  },
 }
 ```
 
@@ -133,8 +133,8 @@ For publishable libraries:
     "outDir": "dist",
 
     // Speeds up downstream consumers
-    "isolatedDeclarations": true
-  }
+    "isolatedDeclarations": true,
+  },
 }
 ```
 
@@ -143,13 +143,13 @@ For publishable libraries:
 
 ### When to Choose
 
-| Scenario | Module | ModuleResolution | Emit |
-|---|---|---|---|
-| Node.js app / CLI | `NodeNext` | `NodeNext` | `outDir` |
-| Frontend (Vite/webpack) | `preserve` | `bundler` | `noEmit` |
-| Angular library | `preserve` | `bundler` | via `ng-packagr` |
-| NPM package | `NodeNext` | `NodeNext` | `outDir` + `declaration` |
-| Monorepo package | per package | per package | varies |
+| Scenario                | Module      | ModuleResolution | Emit                     |
+| ----------------------- | ----------- | ---------------- | ------------------------ |
+| Node.js app / CLI       | `NodeNext`  | `NodeNext`       | `outDir`                 |
+| Frontend (Vite/webpack) | `preserve`  | `bundler`        | `noEmit`                 |
+| Angular library         | `preserve`  | `bundler`        | via `ng-packagr`         |
+| NPM package             | `NodeNext`  | `NodeNext`       | `outDir` + `declaration` |
+| Monorepo package        | per package | per package      | varies                   |
 
 ---
 
@@ -160,8 +160,8 @@ For publishable libraries:
 ```jsonc
 {
   "compilerOptions": {
-    "lib": ["es2022", "dom", "dom.iterable"]
-  }
+    "lib": ["es2022", "dom", "dom.iterable"],
+  },
 }
 ```
 
@@ -170,9 +170,9 @@ For publishable libraries:
 ```jsonc
 {
   "compilerOptions": {
-    "lib": ["es2022"]
+    "lib": ["es2022"],
     // Use @types/node for Node APIs
-  }
+  },
 }
 ```
 
@@ -187,9 +187,9 @@ For publishable libraries:
     "paths": {
       "@app/*": ["src/app/*"],
       "@lib/*": ["src/lib/*"],
-      "@shared/*": ["src/shared/*"]
-    }
-  }
+      "@shared/*": ["src/shared/*"],
+    },
+  },
 }
 ```
 
@@ -207,8 +207,8 @@ For publishable libraries:
   "references": [
     { "path": "packages/core" },
     { "path": "packages/utils" },
-    { "path": "apps/web" }
-  ]
+    { "path": "apps/web" },
+  ],
 }
 ```
 
@@ -219,8 +219,8 @@ Each referenced project needs:
   "compilerOptions": {
     "composite": true,
     "declaration": true,
-    "declarationMap": true
-  }
+    "declarationMap": true,
+  },
 }
 ```
 
@@ -230,11 +230,11 @@ Build with `tsc --build` for incremental, dependency-aware compilation.
 
 ## Quick Decisions
 
-| Question | Answer |
-|---|---|
-| Start a new project? | `strict: true` + `noUncheckedIndexedAccess` from day one |
-| Migrate legacy JS? | Start with `allowJs`, `checkJs`, enable strict flags incrementally |
-| Monorepo? | Project references + `composite` per package |
-| Target older runtimes? | Lower `target` (e.g., `es2020`) and add polyfills |
-| Emitting declarations? | Add `isolatedDeclarations` for faster, parallelizable emit |
-| Using `import type`? | `verbatimModuleSyntax` enforces it automatically |
+| Question               | Answer                                                             |
+| ---------------------- | ------------------------------------------------------------------ |
+| Start a new project?   | `strict: true` + `noUncheckedIndexedAccess` from day one           |
+| Migrate legacy JS?     | Start with `allowJs`, `checkJs`, enable strict flags incrementally |
+| Monorepo?              | Project references + `composite` per package                       |
+| Target older runtimes? | Lower `target` (e.g., `es2020`) and add polyfills                  |
+| Emitting declarations? | Add `isolatedDeclarations` for faster, parallelizable emit         |
+| Using `import type`?   | `verbatimModuleSyntax` enforces it automatically                   |

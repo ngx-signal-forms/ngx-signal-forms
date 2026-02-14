@@ -36,8 +36,12 @@ function serialize(err: Error | TypeError): string {
 }
 
 // in — property existence
-interface Bird { fly(): void }
-interface Fish { swim(): void }
+interface Bird {
+  fly(): void;
+}
+interface Fish {
+  swim(): void;
+}
 
 function move(animal: Bird | Fish) {
   if ('fly' in animal) animal.fly();
@@ -87,7 +91,10 @@ function handle(err: unknown) {
 
 ```typescript
 // Assertion — throws if condition fails, narrows after call
-function assertDefined<T>(val: T | undefined | null, msg?: string): asserts val is T {
+function assertDefined<T>(
+  val: T | undefined | null,
+  msg?: string,
+): asserts val is T {
   if (val == null) throw new Error(msg ?? 'Value is not defined');
 }
 
@@ -131,10 +138,14 @@ type State<T> =
 
 function render<T>(state: State<T>): string {
   switch (state.status) {
-    case 'idle':    return 'Ready';
-    case 'loading': return 'Loading...';
-    case 'success': return `Data: ${state.data}`;
-    case 'error':   return `Error: ${state.error.message}`;
+    case 'idle':
+      return 'Ready';
+    case 'loading':
+      return 'Loading...';
+    case 'success':
+      return `Data: ${state.data}`;
+    case 'error':
+      return `Error: ${state.error.message}`;
   }
 }
 ```
@@ -153,9 +164,12 @@ type Shape =
 
 function area(shape: Shape): number {
   switch (shape.kind) {
-    case 'circle': return Math.PI * shape.radius ** 2;
-    case 'rect':   return shape.width * shape.height;
-    default:       return assertNever(shape);
+    case 'circle':
+      return Math.PI * shape.radius ** 2;
+    case 'rect':
+      return shape.width * shape.height;
+    default:
+      return assertNever(shape);
     // Adding a new Shape variant without a case → compile error
   }
 }
@@ -164,9 +178,7 @@ function area(shape: Shape): number {
 ### Result Type Pattern
 
 ```typescript
-type Result<T, E = Error> =
-  | { ok: true; value: T }
-  | { ok: false; error: E };
+type Result<T, E = Error> = { ok: true; value: T } | { ok: false; error: E };
 
 function divide(a: number, b: number): Result<number, string> {
   if (b === 0) return { ok: false, error: 'Division by zero' };
@@ -212,9 +224,13 @@ const custom: Color = '#ff00ff'; // Also valid
 // Known keys get autocomplete, but any nested path is accepted
 type FieldKey<T> = Extract<keyof T, string> | (string & {});
 
-interface User { name: string; email: string; age: number }
+interface User {
+  name: string;
+  email: string;
+  age: number;
+}
 
-const field: FieldKey<User> = 'name';  // ✅ autocomplete: name, email, age
+const field: FieldKey<User> = 'name'; // ✅ autocomplete: name, email, age
 const nested: FieldKey<User> = 'address.street'; // ✅ also valid
 ```
 
@@ -261,8 +277,8 @@ When indexing into an object to get a function based on a union key, the resulti
 
 ```typescript
 const formatters = {
-  string:  (input: string)  => input.toUpperCase(),
-  number:  (input: number)  => input.toFixed(2),
+  string: (input: string) => input.toUpperCase(),
+  number: (input: number) => input.toFixed(2),
   boolean: (input: boolean) => (input ? 'true' : 'false'),
 };
 
@@ -279,6 +295,7 @@ const format = (input: string | number | boolean) => {
 **Why `as any` doesn't work:** `any` is not assignable to `never` — this is one of `never`'s defining properties. `as never` is the only type that satisfies a `never` parameter.
 
 **When you need `as never`:**
+
 - Calling a union of functions obtained by dynamic key lookup
 - The logic is sound but TypeScript can't prove type correspondence
 - You've verified the runtime behavior is safe
@@ -297,7 +314,7 @@ function format(input: string | number | boolean): string {
 // Generic approach
 function format<T extends string | number | boolean>(
   input: T,
-  formatter: (val: T) => string
+  formatter: (val: T) => string,
 ): string {
   return formatter(input);
 }
@@ -312,9 +329,9 @@ Prevent primitive obsession by creating nominal types from structural ones.
 ```typescript
 type Brand<K, T> = K & { readonly __brand: T };
 
-type UserId  = Brand<string, 'UserId'>;
+type UserId = Brand<string, 'UserId'>;
 type OrderId = Brand<string, 'OrderId'>;
-type Email   = Brand<string, 'Email'>;
+type Email = Brand<string, 'Email'>;
 
 // Constructor with validation
 function createEmail(input: string): Email {
@@ -327,15 +344,18 @@ function createUserId(id: string): UserId {
 }
 
 // Type system prevents mixing
-function sendEmail(to: Email, userId: UserId) { /* ... */ }
+function sendEmail(to: Email, userId: UserId) {
+  /* ... */
+}
 
 const email = createEmail('user@example.com');
 const userId = createUserId('u-123');
-sendEmail(email, userId);  // OK
+sendEmail(email, userId); // OK
 // sendEmail(userId, email); // Compile error
 ```
 
 **When to use:**
+
 - Domain identifiers (UserId, OrderId, ProductId)
 - Validated strings (Email, URL, PhoneNumber)
 - Unit-bearing numbers (Meters, Seconds, USD)
@@ -352,7 +372,7 @@ sendEmail(email, userId);  // OK
 type IsString<T> = T extends string ? true : false;
 
 type A = IsString<'hello'>; // true
-type B = IsString<42>;      // false
+type B = IsString<42>; // false
 ```
 
 ### `infer` Keyword
@@ -406,15 +426,15 @@ type NonDist = ToArrayND<string | number>; // (string | number)[]
 
 ```typescript
 // Distributive Omit for unions (built-in Omit doesn't distribute)
-type DistributiveOmit<T, K extends PropertyKey> =
-  T extends any ? Omit<T, K> : never;
+type DistributiveOmit<T, K extends PropertyKey> = T extends any
+  ? Omit<T, K>
+  : never;
 
 // Extract string keys only
 type StringKeys<T> = Extract<keyof T, string>;
 
 // Make certain keys required while keeping others optional
-type RequireKeys<T, K extends keyof T> =
-  Omit<T, K> & Required<Pick<T, K>>;
+type RequireKeys<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
 ```
 
 ---
@@ -446,7 +466,10 @@ type Setters<T> = {
   [K in keyof T as `set${Capitalize<string & K>}`]: (val: T[K]) => void;
 };
 
-interface User { name: string; age: number }
+interface User {
+  name: string;
+  age: number;
+}
 type UserGetters = Getters<User>;
 // { getName: () => string; getAge: () => number }
 ```
@@ -493,10 +516,9 @@ type Prefixed = AddPrefix<{ name: string; age: number }, 'user_'>;
 // { user_name: string; user_age: number }
 
 // Transform keys: snake_case key → camelCase value access
-type SnakeToCamel<S extends string> =
-  S extends `${infer H}_${infer T}`
-    ? `${H}${Capitalize<SnakeToCamel<T>>}`
-    : S;
+type SnakeToCamel<S extends string> = S extends `${infer H}_${infer T}`
+  ? `${H}${Capitalize<SnakeToCamel<T>>}`
+  : S;
 
 type CamelKeys<T> = {
   [K in keyof T as K extends string ? SnakeToCamel<K> : K]: T[K];
@@ -539,10 +561,10 @@ type ConfigPath = PathOf<Config>; // 'db' | 'db.host' | 'db.port' | 'app' | 'app
 ### Built-in String Manipulation Types
 
 ```typescript
-type Upper = Uppercase<'hello'>;       // 'HELLO'
-type Lower = Lowercase<'HELLO'>;       // 'hello'
-type Cap   = Capitalize<'hello'>;      // 'Hello'
-type Uncap = Uncapitalize<'Hello'>;    // 'hello'
+type Upper = Uppercase<'hello'>; // 'HELLO'
+type Lower = Lowercase<'HELLO'>; // 'hello'
+type Cap = Capitalize<'hello'>; // 'Hello'
+type Uncap = Uncapitalize<'Hello'>; // 'hello'
 ```
 
 ---
@@ -576,11 +598,11 @@ type EveryColor = ColorVariants[keyof ColorVariants]; // '#ff0000' | '#00ff00' |
 type Letters = ['a', 'b', 'c'];
 
 // Specific indices
-type First = Letters[0];       // 'a'
-type AOrB = Letters[0 | 1];    // 'a' | 'b'
+type First = Letters[0]; // 'a'
+type AOrB = Letters[0 | 1]; // 'a' | 'b'
 
 // All elements via [number]
-type Letter = Letters[number];  // 'a' | 'b' | 'c'
+type Letter = Letters[number]; // 'a' | 'b' | 'c'
 ```
 
 ### Deep Access Chaining
@@ -627,7 +649,11 @@ A core pattern: derive union types from objects, arrays, and runtime values.
 ### From Object Values
 
 ```typescript
-const STATUS = { ACTIVE: 'active', INACTIVE: 'inactive', PENDING: 'pending' } as const;
+const STATUS = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+  PENDING: 'pending',
+} as const;
 type Status = (typeof STATUS)[keyof typeof STATUS]; // 'active' | 'inactive' | 'pending'
 ```
 
@@ -749,20 +775,26 @@ declare module '*.css' {
 
 ```typescript
 // Declaration merging — interfaces merge, types error
-interface A { x: number }
-interface A { y: string } // OK, merged to { x: number; y: string }
+interface A {
+  x: number;
+}
+interface A {
+  y: string;
+} // OK, merged to { x: number; y: string }
 
-type B = { x: number }
+type B = { x: number };
 // type B = { y: string } // Error: Duplicate identifier
 
 // Performance — interface extends is cached, intersections recompute
-interface Fast extends Base { extra: string }     // Cached
-type Slow = Base & { extra: string };             // Recomputed each use
+interface Fast extends Base {
+  extra: string;
+} // Cached
+type Slow = Base & { extra: string }; // Recomputed each use
 
 // Flexibility — types can represent anything
-type StringOrNumber = string | number;            // Union (impossible with interface)
-type Callback = (x: number) => void;              // Function type
-type Pair = [string, number];                     // Tuple
+type StringOrNumber = string | number; // Union (impossible with interface)
+type Callback = (x: number) => void; // Function type
+type Pair = [string, number]; // Tuple
 ```
 
 ### Recommendation

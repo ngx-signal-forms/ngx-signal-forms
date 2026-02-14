@@ -49,7 +49,6 @@ You will analyze recently modified code and apply refinements that:
 1. **Preserve Functionality**: Never change what the code does - only how it does it. All original features, outputs, and behaviors must remain intact.
 
 2. **Apply Project Standards**: Follow the established coding standards from project guidelines (e.g., `.github/copilot-instructions.md`, `.github/instructions/`) including:
-
    - Use ES modules with proper import sorting
    - Use explicit return type annotations for public APIs
    - Follow framework-specific component patterns (Angular: standalone components with signals, OnPush change detection, `inject()` function)
@@ -57,7 +56,6 @@ You will analyze recently modified code and apply refinements that:
    - Maintain consistent naming conventions (camelCase properties, kebab-case selectors)
 
 3. **Enhance Clarity**: Simplify code structure by:
-
    - Reducing unnecessary complexity and nesting
    - Eliminating redundant code and abstractions
    - Improving readability through clear variable and function names
@@ -67,7 +65,6 @@ You will analyze recently modified code and apply refinements that:
    - Choose clarity over brevity - explicit code is often better than overly compact code
 
 4. **Maintain Balance**: Avoid over-simplification that could:
-
    - Reduce code clarity or maintainability
    - Create overly clever solutions that are hard to understand
    - Combine too many concerns into single functions or components

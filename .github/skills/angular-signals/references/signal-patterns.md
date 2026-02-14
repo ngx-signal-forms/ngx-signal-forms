@@ -1,6 +1,7 @@
 # Angular Signal Patterns
 
 ## Table of Contents
+
 - [Resource API](#resource-api)
 - [Signal Store Pattern](#signal-store-pattern)
 - [Form State with Signals](#form-state-with-signals)
@@ -17,7 +18,7 @@ import { resource, signal, computed } from '@angular/core';
 @Component({...})
 export class UserProfile {
   userId = signal<string>('');
-  
+
   // Resource fetches data when params change
   userResource = resource({
     params: () => ({ id: this.userId() }),
@@ -28,7 +29,7 @@ export class UserProfile {
       return response.json() as Promise<User>;
     },
   });
-  
+
   // Access resource state
   user = computed(() => this.userResource.value());
   isLoading = computed(() => this.userResource.isLoading());
@@ -83,7 +84,7 @@ const userResource = resource({
     return id ? { id } : undefined;
   },
   loader: async ({ params }) => {
-    return fetch(`/api/users/${params.id}`).then(r => r.json());
+    return fetch(`/api/users/${params.id}`).then((r) => r.json());
   },
 });
 // Status is 'idle' when params returns undefined
@@ -112,60 +113,60 @@ export class ProductSt {
     loading: false,
     error: null,
   });
-  
+
   // Selectors (computed signals)
   readonly products = computed(() => this.state().products);
   readonly selectedId = computed(() => this.state().selectedId);
   readonly filter = computed(() => this.state().filter);
   readonly loading = computed(() => this.state().loading);
   readonly error = computed(() => this.state().error);
-  
+
   readonly filteredProducts = computed(() => {
     const { products, filter } = this.state();
     if (!filter) return products;
-    return products.filter(p => 
-      p.name.toLowerCase().includes(filter.toLowerCase())
+    return products.filter((p) =>
+      p.name.toLowerCase().includes(filter.toLowerCase()),
     );
   });
-  
+
   readonly selectedProduct = computed(() => {
     const { products, selectedId } = this.state();
-    return products.find(p => p.id === selectedId) ?? null;
+    return products.find((p) => p.id === selectedId) ?? null;
   });
-  
+
   private http = inject(HttpClient);
-  
+
   // Actions
   setFilter(filter: string): void {
-    this.state.update(s => ({ ...s, filter }));
+    this.state.update((s) => ({ ...s, filter }));
   }
-  
+
   selectProduct(id: string | null): void {
-    this.state.update(s => ({ ...s, selectedId: id }));
+    this.state.update((s) => ({ ...s, selectedId: id }));
   }
-  
+
   async loadProducts(): Promise<void> {
-    this.state.update(s => ({ ...s, loading: true, error: null }));
-    
+    this.state.update((s) => ({ ...s, loading: true, error: null }));
+
     try {
       const products = await firstValueFrom(
-        this.http.get<Product[]>('/api/products')
+        this.http.get<Product[]>('/api/products'),
       );
-      this.state.update(s => ({ ...s, products, loading: false }));
+      this.state.update((s) => ({ ...s, products, loading: false }));
     } catch (err) {
-      this.state.update(s => ({ 
-        ...s, 
-        loading: false, 
-        error: 'Failed to load products' 
+      this.state.update((s) => ({
+        ...s,
+        loading: false,
+        error: 'Failed to load products',
       }));
     }
   }
-  
+
   async addProduct(product: Omit<Product, 'id'>): Promise<void> {
     const newProduct = await firstValueFrom(
-      this.http.post<Product>('/api/products', product)
+      this.http.post<Product>('/api/products', product),
     );
-    this.state.update(s => ({
+    this.state.update((s) => ({
       ...s,
       products: [...s.products, newProduct],
     }));
@@ -191,31 +192,31 @@ function createFormField<T>(
   const value = signal(initialValue);
   const touched = signal(false);
   const dirty = signal(false);
-  
+
   const errors = computed(() => {
     return validators
       .map(v => v(value()))
       .filter((e): e is string => e !== null);
   });
-  
+
   const valid = computed(() => errors().length === 0);
-  
+
   return {
     value,
     touched: touched.asReadonly(),
     dirty: dirty.asReadonly(),
     errors,
     valid,
-    
+
     setValue(newValue: T) {
       value.set(newValue);
       dirty.set(true);
     },
-    
+
     markTouched() {
       touched.set(true);
     },
-    
+
     reset() {
       value.set(initialValue);
       touched.set(false);
@@ -231,13 +232,13 @@ export class Signup {
     v => !v ? 'Email is required' : null,
     v => !v.includes('@') ? 'Invalid email' : null,
   ]);
-  
+
   password = createFormField('', [
     v => !v ? 'Password is required' : null,
     v => v.length < 8 ? 'Password must be at least 8 characters' : null,
   ]);
-  
-  formValid = computed(() => 
+
+  formValid = computed(() =>
     this.email.valid() && this.password.valid()
   );
 }
@@ -251,9 +252,9 @@ export class Signup {
 @Component({...})
 export class Search {
   query = signal('');
-  
+
   private http = inject(HttpClient);
-  
+
   // Debounced search using toObservable
   results = toSignal(
     toObservable(this.query).pipe(
@@ -265,7 +266,7 @@ export class Search {
     ),
     { initialValue: [] }
   );
-  
+
   // Loading state
   private searching = signal(false);
   readonly isSearching = this.searching.asReadonly();
@@ -294,20 +295,18 @@ export class Search {
 export class Todo {
   private todos = signal<Todo[]>([]);
   readonly items = this.todos.asReadonly();
-  
+
   private http = inject(HttpClient);
-  
+
   async toggleTodo(id: string): Promise<void> {
     // Optimistic update
     const previousTodos = this.todos();
-    this.todos.update(todos =>
-      todos.map(t => t.id === id ? { ...t, done: !t.done } : t)
+    this.todos.update((todos) =>
+      todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
     );
-    
+
     try {
-      await firstValueFrom(
-        this.http.patch(`/api/todos/${id}/toggle`, {})
-      );
+      await firstValueFrom(this.http.patch(`/api/todos/${id}/toggle`, {}));
     } catch {
       // Rollback on error
       this.todos.set(previousTodos);
@@ -322,21 +321,21 @@ export class Todo {
 describe('Counter', () => {
   it('should increment count', () => {
     const component = new Counter();
-    
+
     expect(component.count()).toBe(0);
-    
+
     component.increment();
     expect(component.count()).toBe(1);
-    
+
     component.increment();
     expect(component.count()).toBe(2);
   });
-  
+
   it('should compute doubled value', () => {
     const component = new Counter();
-    
+
     expect(component.doubled()).toBe(0);
-    
+
     component.count.set(5);
     expect(component.doubled()).toBe(10);
   });
@@ -348,17 +347,13 @@ describe('ProductSt', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [
-        ProductSt,
-        provideHttpClient(),
-        provideHttpClientTesting(),
-      ],
+      providers: [ProductSt, provideHttpClient(), provideHttpClientTesting()],
     });
 
     store = TestBed.inject(ProductSt);
     httpMock = TestBed.inject(HttpTestingController);
   });
-  
+
   it('should filter products', () => {
     // Set initial state
     store['state'].set({
@@ -371,9 +366,9 @@ describe('ProductSt', () => {
       loading: false,
       error: null,
     });
-    
+
     expect(store.filteredProducts().length).toBe(2);
-    
+
     store.setFilter('app');
     expect(store.filteredProducts().length).toBe(1);
     expect(store.filteredProducts()[0].name).toBe('Apple');

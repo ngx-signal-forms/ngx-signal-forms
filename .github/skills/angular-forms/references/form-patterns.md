@@ -1,6 +1,7 @@
 # Angular Form Patterns
 
 ## Table of Contents
+
 - [Reactive Forms (Production-Stable)](#reactive-forms-production-stable)
 - [Typed Reactive Forms](#typed-reactive-forms)
 - [FormBuilder Patterns](#formbuilder-patterns)
@@ -22,24 +23,26 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
   template: `
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <input formControlName="email" />
-      @if (form.controls.email.errors?.['required'] && form.controls.email.touched) {
+      @if (
+        form.controls.email.errors?.['required'] && form.controls.email.touched
+      ) {
         <span class="error">Email is required</span>
       }
-      
+
       <input type="password" formControlName="password" />
-      
+
       <button type="submit" [disabled]="form.invalid">Login</button>
     </form>
   `,
 })
 export class Login {
   private fb = inject(FormBuilder);
-  
+
   form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
   });
-  
+
   onSubmit() {
     if (this.form.valid) {
       console.log(this.form.value);
@@ -99,7 +102,7 @@ import { NonNullableFormBuilder } from '@angular/forms';
 @Component({...})
 export class Profile {
   private fb = inject(NonNullableFormBuilder);
-  
+
   form = this.fb.group({
     name: ['', Validators.required],           // FormControl<string>
     email: ['', [Validators.required, Validators.email]],
@@ -121,20 +124,20 @@ export class Profile {
   template: `
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <input formControlName="name" placeholder="Name" />
-      
+
       <div formGroupName="address">
         <input formControlName="street" placeholder="Street" />
         <input formControlName="city" placeholder="City" />
         <input formControlName="zip" placeholder="ZIP" />
       </div>
-      
+
       <button type="submit">Submit</button>
     </form>
   `,
 })
 export class Profile {
   private fb = inject(NonNullableFormBuilder);
-  
+
   form = this.fb.group({
     name: ['', Validators.required],
     address: this.fb.group({
@@ -170,26 +173,26 @@ import { FormArray } from '@angular/forms';
 })
 export class Order {
   private fb = inject(NonNullableFormBuilder);
-  
+
   form = this.fb.group({
     items: this.fb.array([this.createItem()]),
   });
-  
+
   get items() {
     return this.form.controls.items;
   }
-  
+
   createItem() {
     return this.fb.group({
       product: ['', Validators.required],
       quantity: [1, [Validators.required, Validators.min(1)]],
     });
   }
-  
+
   addItem() {
     this.items.push(this.createItem());
   }
-  
+
   removeItem(index: number) {
     this.items.removeAt(index);
   }
@@ -205,8 +208,8 @@ import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
 export function forbiddenValue(forbidden: string): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
-    return control.value === forbidden 
-      ? { forbiddenValue: { value: control.value } } 
+    return control.value === forbidden
+      ? { forbiddenValue: { value: control.value } }
       : null;
   };
 }
@@ -227,10 +230,13 @@ export function passwordMatch(): ValidatorFn {
 }
 
 // Usage
-form = this.fb.group({
-  password: ['', [Validators.required, Validators.minLength(8)]],
-  confirmPassword: ['', Validators.required],
-}, { validators: passwordMatch() });
+form = this.fb.group(
+  {
+    password: ['', [Validators.required, Validators.minLength(8)]],
+    confirmPassword: ['', Validators.required],
+  },
+  { validators: passwordMatch() },
+);
 ```
 
 ### Async Validator
@@ -249,7 +255,7 @@ export function uniqueEmail(userService: User): AsyncValidatorFn {
 }
 
 // Usage
-email: ['', 
+email: ['',
   [Validators.required, Validators.email],  // sync validators
   [uniqueEmail(this.userService)]            // async validators
 ],
@@ -261,13 +267,13 @@ email: ['',
 
 ```typescript
 // Check states
-form.valid      // All validations pass
-form.invalid    // Has validation errors
-form.pending    // Async validation in progress
-form.dirty      // Value changed by user
-form.pristine   // Value not changed
-form.touched    // Control has been focused
-form.untouched  // Control never focused
+form.valid; // All validations pass
+form.invalid; // Has validation errors
+form.pending; // Async validation in progress
+form.dirty; // Value changed by user
+form.pristine; // Value not changed
+form.touched; // Control has been focused
+form.untouched; // Control never focused
 
 // Update values
 form.setValue({ name: 'John', email: 'john@example.com' }); // Must include all
@@ -292,20 +298,19 @@ form.markAsDirty();
 
 ```typescript
 // Subscribe to value changes
-form.valueChanges.subscribe(value => {
+form.valueChanges.subscribe((value) => {
   console.log('Form value:', value);
 });
 
 // Single control with debounce
-form.controls.email.valueChanges.pipe(
-  debounceTime(300),
-  distinctUntilChanged()
-).subscribe(email => {
-  this.validateEmail(email);
-});
+form.controls.email.valueChanges
+  .pipe(debounceTime(300), distinctUntilChanged())
+  .subscribe((email) => {
+    this.validateEmail(email);
+  });
 
 // Status changes
-form.statusChanges.subscribe(status => {
+form.statusChanges.subscribe((status) => {
   console.log('Form status:', status); // VALID, INVALID, PENDING
 });
 ```
@@ -313,12 +318,14 @@ form.statusChanges.subscribe(status => {
 ### Unified Events (Angular v21+)
 
 ```typescript
-import { 
-  ValueChangeEvent, StatusChangeEvent, 
-  FormSubmittedEvent, FormResetEvent 
+import {
+  ValueChangeEvent,
+  StatusChangeEvent,
+  FormSubmittedEvent,
+  FormResetEvent,
 } from '@angular/forms';
 
-form.events.subscribe(event => {
+form.events.subscribe((event) => {
   if (event instanceof ValueChangeEvent) {
     console.log('Value changed:', event.value);
   }
@@ -340,7 +347,7 @@ form.events.subscribe(event => {
 @Component({
   template: `
     <input formControlName="email" />
-    
+
     @if (form.controls.email.invalid && form.controls.email.touched) {
       <div class="errors">
         @if (form.controls.email.errors?.['required']) {
@@ -357,7 +364,7 @@ export class Form {
   // Helper for cleaner templates
   hasError(controlName: string, errorKey: string): boolean {
     const control = this.form.get(controlName);
-    return control?.hasError(errorKey) && control?.touched || false;
+    return (control?.hasError(errorKey) && control?.touched) || false;
   }
 }
 ```
@@ -377,13 +384,13 @@ export class Form {
 })
 export class Form {
   isSubmitting = false;
-  
+
   async onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
-    
+
     this.isSubmitting = true;
     try {
       await this.api.submit(this.form.getRawValue());

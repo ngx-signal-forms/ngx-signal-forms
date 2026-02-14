@@ -86,21 +86,25 @@ export type OmitByType<T, V> = Omit<T, KeysOfType<T, V>>;
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 /** Make specific keys required. */
-export type RequiredBy<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
+export type RequiredBy<T, K extends keyof T> = Omit<T, K> &
+  Required<Pick<T, K>>;
 
 /** Make specific keys readonly. */
-export type ReadonlyBy<T, K extends keyof T> = Omit<T, K> & Readonly<Pick<T, K>>;
+export type ReadonlyBy<T, K extends keyof T> = Omit<T, K> &
+  Readonly<Pick<T, K>>;
 
 /** Merge two types (U overrides T). */
 export type Merge<T, U> = Omit<T, keyof U> & U;
 
 /** Distributive Omit — works correctly with union types. */
-export type DistributiveOmit<T, K extends PropertyKey> =
-  T extends any ? Omit<T, K> : never;
+export type DistributiveOmit<T, K extends PropertyKey> = T extends any
+  ? Omit<T, K>
+  : never;
 
 /** Distributive Pick — works correctly with union types. */
-export type DistributivePick<T, K extends PropertyKey> =
-  T extends any ? Pick<T, Extract<K, keyof T>> : never;
+export type DistributivePick<T, K extends PropertyKey> = T extends any
+  ? Pick<T, Extract<K, keyof T>>
+  : never;
 
 // =============================================================================
 // ARRAY UTILITIES
@@ -119,8 +123,9 @@ export type Tuple<T, N extends number> = N extends N
     : _TupleOf<T, N, []>
   : never;
 
-type _TupleOf<T, N extends number, R extends unknown[]> =
-  R['length'] extends N ? R : _TupleOf<T, N, [T, ...R]>;
+type _TupleOf<T, N extends number, R extends unknown[]> = R['length'] extends N
+  ? R
+  : _TupleOf<T, N, [T, ...R]>;
 
 // =============================================================================
 // FUNCTION UTILITIES
@@ -144,18 +149,22 @@ export type Promisify<T> = T extends (...args: infer A) => infer R
 // =============================================================================
 
 /** Split string S by delimiter D into tuple. */
-export type Split<S extends string, D extends string> =
-  S extends `${infer T}${D}${infer U}` ? [T, ...Split<U, D>] : [S];
+export type Split<
+  S extends string,
+  D extends string,
+> = S extends `${infer T}${D}${infer U}` ? [T, ...Split<U, D>] : [S];
 
 /** Join string tuple with delimiter. */
-export type Join<T extends readonly string[], D extends string> =
-  T extends readonly []
-    ? ''
-    : T extends readonly [infer F extends string]
-      ? F
-      : T extends readonly [infer F extends string, ...infer R extends string[]]
-        ? `${F}${D}${Join<R, D>}`
-        : never;
+export type Join<
+  T extends readonly string[],
+  D extends string,
+> = T extends readonly []
+  ? ''
+  : T extends readonly [infer F extends string]
+    ? F
+    : T extends readonly [infer F extends string, ...infer R extends string[]]
+      ? `${F}${D}${Join<R, D>}`
+      : never;
 
 /** Dot-notation paths of an object type. */
 export type PathOf<T, K extends keyof T = keyof T> = K extends string
@@ -179,11 +188,10 @@ export type UnionToIntersection<U> = (
 export type ValueOf<T> = T[keyof T];
 
 /** Last element of a union. */
-export type UnionLast<T> = UnionToIntersection<
-  T extends any ? () => T : never
-> extends () => infer R
-  ? R
-  : never;
+export type UnionLast<T> =
+  UnionToIntersection<T extends any ? () => T : never> extends () => infer R
+    ? R
+    : never;
 
 /** Convert union to tuple (order not guaranteed). */
 export type UnionToTuple<T, L = UnionLast<T>> = [T] extends [never]
@@ -196,7 +204,7 @@ export type UnionToTuple<T, L = UnionLast<T>> = [T] extends [never]
 
 /** Assert two types are equal. */
 export type AssertEqual<T, U> =
-  (<V>() => V extends T ? 1 : 2) extends (<V>() => V extends U ? 1 : 2)
+  (<V>() => V extends T ? 1 : 2) extends <V>() => V extends U ? 1 : 2
     ? true
     : false;
 
@@ -207,11 +215,8 @@ export type IsNever<T> = [T] extends [never] ? true : false;
 export type IsAny<T> = 0 extends 1 & T ? true : false;
 
 /** Check if T is unknown. */
-export type IsUnknown<T> = IsAny<T> extends true
-  ? false
-  : unknown extends T
-    ? true
-    : false;
+export type IsUnknown<T> =
+  IsAny<T> extends true ? false : unknown extends T ? true : false;
 
 // =============================================================================
 // JSON UTILITIES — Serialization-safe types

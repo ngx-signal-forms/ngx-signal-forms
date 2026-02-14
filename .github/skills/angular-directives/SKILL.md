@@ -19,10 +19,10 @@ import { Directive, input, effect, inject, ElementRef } from '@angular/core';
 })
 export class Highlight {
   private el = inject(ElementRef<HTMLElement>);
-  
+
   // Input with alias matching selector
   color = input('yellow', { alias: 'appHighlight' });
-  
+
   constructor() {
     effect(() => {
       this.el.nativeElement.style.backgroundColor = this.color();
@@ -50,11 +50,11 @@ Prefer `host` over `@HostBinding`/`@HostListener`:
 export class Tooltip {
   text = input.required<string>({ alias: 'appTooltip' });
   position = input<'top' | 'bottom' | 'left' | 'right'>('top');
-  
+
   tooltipId = `tooltip-${crypto.randomUUID()}`;
   private tooltipEl: HTMLElement | null = null;
   private el = inject(ElementRef<HTMLElement>);
-  
+
   show() {
     this.tooltipEl = document.createElement('div');
     this.tooltipEl.id = this.tooltipId;
@@ -64,12 +64,12 @@ export class Tooltip {
     document.body.appendChild(this.tooltipEl);
     this.positionTooltip();
   }
-  
+
   hide() {
     this.tooltipEl?.remove();
     this.tooltipEl = null;
   }
-  
+
   private positionTooltip() {
     // Position logic based on this.position() and this.el
   }
@@ -84,7 +84,7 @@ export class Tooltip {
 @Directive({
   selector: '[appButton]',
   host: {
-    'class': 'btn',
+    class: 'btn',
     '[class.btn-primary]': 'variant() === "primary"',
     '[class.btn-secondary]': 'variant() === "secondary"',
     '[class.btn-sm]': 'size() === "small"',
@@ -113,9 +113,9 @@ export class Button {
 })
 export class ClickOutside {
   private el = inject(ElementRef<HTMLElement>);
-  
+
   clickOutside = output<void>();
-  
+
   onDocumentClick(event: MouseEvent) {
     if (!this.el.nativeElement.contains(event.target as Node)) {
       this.clickOutside.emit();
@@ -140,15 +140,17 @@ export class Shortcut {
   ctrl = input(false, { transform: booleanAttribute });
   shift = input(false, { transform: booleanAttribute });
   alt = input(false, { transform: booleanAttribute });
-  
+
   triggered = output<KeyboardEvent>();
-  
+
   onKeydown(event: KeyboardEvent) {
     const keyMatch = event.key.toLowerCase() === this.key().toLowerCase();
-    const ctrlMatch = this.ctrl() ? event.ctrlKey || event.metaKey : !event.ctrlKey && !event.metaKey;
+    const ctrlMatch = this.ctrl()
+      ? event.ctrlKey || event.metaKey
+      : !event.ctrlKey && !event.metaKey;
     const shiftMatch = this.shift() ? event.shiftKey : !event.shiftKey;
     const altMatch = this.alt() ? event.altKey : !event.altKey;
-    
+
     if (keyMatch && ctrlMatch && shiftMatch && altMatch) {
       event.preventDefault();
       this.triggered.emit(event);
@@ -168,7 +170,15 @@ Use structural directives for DOM manipulation beyond control flow (portals, ove
 Render content in a different DOM location:
 
 ```typescript
-import { Directive, inject, TemplateRef, ViewContainerRef, OnInit, OnDestroy, input } from '@angular/core';
+import {
+  Directive,
+  inject,
+  TemplateRef,
+  ViewContainerRef,
+  OnInit,
+  OnDestroy,
+  input,
+} from '@angular/core';
 
 @Directive({
   selector: '[appPortal]',
@@ -177,22 +187,22 @@ export class Portal implements OnInit, OnDestroy {
   private templateRef = inject(TemplateRef<any>);
   private viewContainerRef = inject(ViewContainerRef);
   private viewRef: EmbeddedViewRef<any> | null = null;
-  
+
   // Target container selector or element
   target = input<string | HTMLElement>('body', { alias: 'appPortal' });
-  
+
   ngOnInit() {
     const container = this.getContainer();
     if (container) {
       this.viewRef = this.viewContainerRef.createEmbeddedView(this.templateRef);
-      this.viewRef.rootNodes.forEach(node => container.appendChild(node));
+      this.viewRef.rootNodes.forEach((node) => container.appendChild(node));
     }
   }
-  
+
   ngOnDestroy() {
     this.viewRef?.destroy();
   }
-  
+
   private getContainer(): HTMLElement | null {
     const target = this.target();
     if (typeof target === 'string') {
@@ -220,9 +230,9 @@ export class LazyRender {
   private templateRef = inject(TemplateRef<any>);
   private viewContainer = inject(ViewContainerRef);
   private rendered = false;
-  
+
   condition = input.required<boolean>({ alias: 'appLazyRender' });
-  
+
   constructor() {
     effect(() => {
       // Only render once when condition becomes true
@@ -255,17 +265,19 @@ interface TemplateContext<T> {
 export class TemplateOutlet<T> {
   private viewContainer = inject(ViewContainerRef);
   private currentView: EmbeddedViewRef<TemplateContext<T>> | null = null;
-  
-  template = input.required<TemplateRef<TemplateContext<T>>>({ alias: 'appTemplateOutlet' });
+
+  template = input.required<TemplateRef<TemplateContext<T>>>({
+    alias: 'appTemplateOutlet',
+  });
   context = input.required<T>({ alias: 'appTemplateOutletContext' });
   index = input(0, { alias: 'appTemplateOutletIndex' });
-  
+
   constructor() {
     effect(() => {
       const template = this.template();
       const context = this.context();
       const index = this.index();
-      
+
       if (this.currentView) {
         this.currentView.context.$implicit = context;
         this.currentView.context.item = context;
@@ -286,7 +298,7 @@ export class TemplateOutlet<T> {
 // <ng-template #itemTemplate let-item let-i="index">
 //   <div>{{ i }}: {{ item.name }}</div>
 // </ng-template>
-// <ng-container 
+// <ng-container
 //   *appTemplateOutlet="itemTemplate; context: item; index: i"
 // />
 ```
@@ -300,7 +312,7 @@ Compose directives on components or other directives:
 @Directive({
   selector: '[focusable]',
   host: {
-    'tabindex': '0',
+    tabindex: '0',
     '(focus)': 'onFocus()',
     '(blur)': 'onBlur()',
     '[class.focused]': 'isFocused()',
@@ -308,9 +320,13 @@ Compose directives on components or other directives:
 })
 export class Focusable {
   isFocused = signal(false);
-  
-  onFocus() { this.isFocused.set(true); }
-  onBlur() { this.isFocused.set(false); }
+
+  onFocus() {
+    this.isFocused.set(true);
+  }
+  onBlur() {
+    this.isFocused.set(false);
+  }
 }
 
 @Directive({
@@ -335,7 +351,7 @@ export class Disableable {
     },
   ],
   host: {
-    'role': 'button',
+    role: 'button',
     '(click)': 'onClick($event)',
     '(keydown.enter)': 'onClick($event)',
     '(keydown.space)': 'onClick($event)',
@@ -344,9 +360,9 @@ export class Disableable {
 })
 export class CustomButton {
   private disableable = inject(Disableable);
-  
+
   clicked = output<void>();
-  
+
   onClick(event: Event) {
     if (!this.disableable.disabled()) {
       this.clicked.emit();
@@ -370,14 +386,14 @@ export class CustomButton {
 })
 export class Hoverable {
   isHovered = signal(false);
-  
+
   hoverChange = output<boolean>();
-  
+
   onEnter() {
     this.isHovered.set(true);
     this.hoverChange.emit(true);
   }
-  
+
   onLeave() {
     this.isHovered.set(false);
     this.hoverChange.emit(false);

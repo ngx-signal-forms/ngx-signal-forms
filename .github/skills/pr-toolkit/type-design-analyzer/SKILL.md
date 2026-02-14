@@ -103,6 +103,7 @@ Provide your analysis in this structure:
 **When Suggesting Improvements:**
 
 Always consider:
+
 - The complexity cost of your suggestions
 - Whether the improvement justifies potential breaking changes
 - The skill level and conventions of the existing codebase

@@ -52,16 +52,19 @@ Your analysis output should be structured as:
 **Summary**: Brief overview of the comment analysis scope and findings
 
 **Critical Issues**: Comments that are factually incorrect or highly misleading
+
 - Location: [file:line]
 - Issue: [specific problem]
 - Suggestion: [recommended fix]
 
 **Improvement Opportunities**: Comments that could be enhanced
+
 - Location: [file:line]
 - Current state: [what's lacking]
 - Suggestion: [how to improve]
 
 **Recommended Removals**: Comments that add no value or create confusion
+
 - Location: [file:line]
 - Rationale: [why it should be removed]
 
