@@ -206,6 +206,14 @@ import {
 })
 export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   #findBoundControl(hostEl: HTMLElement): HTMLElement | null {
+    const explicitBoundControl = hostEl.querySelector(
+      '[formField], [ng-reflect-form-field], [data-ngx-signal-form-control]',
+    ) as HTMLElement | null;
+
+    if (explicitBoundControl?.getAttribute('id')) {
+      return explicitBoundControl;
+    }
+
     const nativeControl = hostEl.querySelector(
       'input, textarea, select, button[type="button"]',
     ) as HTMLElement | null;
@@ -215,11 +223,19 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     }
 
     const customControl = hostEl.querySelector(
-      '[id]:not(label):not(ngx-signal-form-field-wrapper):not(ngx-signal-form-error):not(ngx-signal-form-field-hint):not(ngx-signal-form-field-character-count):not([role="alert"]):not([role="status"])',
+      '[id][formField], [id][ng-reflect-form-field], [id][data-ngx-signal-form-control]',
     ) as HTMLElement | null;
 
     if (customControl) {
       return customControl;
+    }
+
+    const idBasedFallback = hostEl.querySelector(
+      '[id]:not(label):not(ngx-signal-form-field-wrapper):not(ngx-signal-form-error):not(ngx-signal-form-field-hint):not(ngx-signal-form-field-character-count):not([role="alert"]):not([role="status"])',
+    ) as HTMLElement | null;
+
+    if (idBasedFallback) {
+      return idBasedFallback;
     }
 
     return nativeControl;
@@ -477,6 +493,13 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     const idFromInput = this.#inputElementId();
     if (idFromInput) {
       return idFromInput;
+    }
+
+    const controlId = this.#findBoundControl(
+      this.#elementRef.nativeElement as HTMLElement,
+    )?.getAttribute('id');
+    if (controlId) {
+      return controlId;
     }
 
     // Priority 3: Fallback to auto-generated unique ID

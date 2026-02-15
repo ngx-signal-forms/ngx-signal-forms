@@ -6,11 +6,7 @@ import {
   input,
   type Signal,
 } from '@angular/core';
-import type {
-  FieldState,
-  FieldTree,
-  ValidationError,
-} from '@angular/forms/signals';
+import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   generateErrorId,
   generateWarningId,
@@ -21,6 +17,7 @@ import {
   resolveValidationErrorMessage,
   showErrors,
   type ErrorDisplayStrategy,
+  type ErrorReadableState,
   type ReactiveOrStatic,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit/core';
@@ -134,6 +131,19 @@ import {
   styleUrl: './form-error.component.scss',
 })
 export class NgxSignalFormErrorComponent<TValue = unknown> {
+  readonly #readErrors = (state: unknown): ValidationError[] => {
+    if (!state || typeof state !== 'object') {
+      return [];
+    }
+
+    const errors = (state as Partial<ErrorReadableState>).errors;
+    if (typeof errors === 'function') {
+      return errors() ?? [];
+    }
+
+    return [];
+  };
+
   #warnedUnknownField = false;
 
   /**
@@ -381,7 +391,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
 
     // Use strategy-based visibility for single fields
     return showErrors(
-      () => fieldState as FieldState<TValue>,
+      () => fieldState,
       this.#resolvedStrategy,
       this.#resolvedSubmittedStatus,
     )();
@@ -414,22 +424,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
     }
 
     const fieldState = fieldTree();
-
-    if (!fieldState || typeof fieldState !== 'object') {
-      return [];
-    }
-
-    const errorsGetter = (
-      fieldState as unknown as {
-        errors?: () => ValidationError[];
-      }
-    ).errors;
-
-    if (typeof errorsGetter === 'function') {
-      return errorsGetter() || [];
-    }
-
-    return [];
+    return this.#readErrors(fieldState);
   });
 
   /**

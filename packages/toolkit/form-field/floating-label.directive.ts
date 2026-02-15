@@ -74,7 +74,6 @@ import { Directive } from '@angular/core';
 @Directive({
   // eslint-disable-next-line @angular-eslint/directive-selector
   selector: 'ngx-signal-form-field-wrapper[outline]',
-  standalone: true,
   host: {
     '[class.ngx-signal-forms-outline]': 'true',
   },

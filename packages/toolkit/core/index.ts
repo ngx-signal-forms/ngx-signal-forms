@@ -16,10 +16,10 @@ export {
 } from './directives/ngx-signal-form.directive';
 
 // Utilities
-export * from './utilities/assert-injector';
 export * from './utilities/create-unique-id';
 export { shouldShowErrors } from './utilities/error-strategies';
 export * from './utilities/field-resolution';
+export * from './utilities/field-state-types';
 export * from './utilities/focus-first-invalid';
 export { updateAt, updateNested } from './utilities/immutable-array';
 export * from './utilities/inject-form-config';

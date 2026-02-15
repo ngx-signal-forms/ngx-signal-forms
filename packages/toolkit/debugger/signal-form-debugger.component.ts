@@ -20,6 +20,7 @@ import {
   DebuggerBadgeComponent,
   DebuggerBadgeIconDirective,
 } from './debugger-badge.component';
+import { walkFormTree } from './form-tree-walker';
 
 type DebuggerError = {
   kind: string;
@@ -230,57 +231,28 @@ export class SignalFormDebuggerComponent {
       const value = state.value();
       const collected: DebuggerError[] = [];
 
-      const visit = (tree: Record<string, unknown>, model: unknown): void => {
-        if (model && typeof model === 'object' && !Array.isArray(model)) {
-          for (const key of Object.keys(model as Record<string, unknown>)) {
-            const child = (tree as Record<string, unknown>)[key];
-            if (typeof child === 'function') {
-              const childState = (child as () => FieldState<unknown>)();
-              const visible = shouldShowErrors(childState, strategy, submitted);
-              const nextModel = (model as Record<string, unknown>)[
-                key
-              ] as unknown;
-              const isLeaf = !nextModel || typeof nextModel !== 'object';
+      walkFormTree(
+        input as unknown as Record<string | number, unknown>,
+        value,
+        (childField, nextModel) => {
+          const childState = (childField as () => FieldState<unknown>)();
+          const visible = shouldShowErrors(childState, strategy, submitted);
+          const isLeaf = !nextModel || typeof nextModel !== 'object';
 
-              if (isLeaf) {
-                collected.push(
-                  ...(
-                    (childState.errors() ?? []) as Array<{
-                      kind: string;
-                      message?: string;
-                    }>
-                  ).map((e) => ({ ...e, visible })),
-                );
-              }
-              visit(child as unknown as Record<string, unknown>, nextModel);
-            }
+          if (!isLeaf) {
+            return;
           }
-        } else if (Array.isArray(model)) {
-          for (let i = 0; i < model.length; i++) {
-            const child = (tree as unknown as Record<number, unknown>)[i];
-            if (typeof child === 'function') {
-              const childState = (child as () => FieldState<unknown>)();
-              const visible = shouldShowErrors(childState, strategy, submitted);
-              const nextModel = model[i];
-              const isLeaf = !nextModel || typeof nextModel !== 'object';
 
-              if (isLeaf) {
-                collected.push(
-                  ...(
-                    (childState.errors() ?? []) as Array<{
-                      kind: string;
-                      message?: string;
-                    }>
-                  ).map((e) => ({ ...e, visible })),
-                );
-              }
-              visit(child as unknown as Record<string, unknown>, nextModel);
-            }
-          }
-        }
-      };
-
-      visit(input as unknown as Record<string, unknown>, value);
+          collected.push(
+            ...(
+              (childState.errors() ?? []) as Array<{
+                kind: string;
+                message?: string;
+              }>
+            ).map((e) => ({ ...e, visible })),
+          );
+        },
+      );
       return collected;
     }
 
@@ -481,66 +453,31 @@ export class SignalFormDebuggerComponent {
     const input = this.formTree();
     if (this.#isFieldTree(input)) {
       const value = state.value();
-      return this.#checkTouchedRecursive(
-        input as unknown as Record<string, unknown>,
+      let touched = false;
+
+      walkFormTree(
+        input as unknown as Record<string | number, unknown>,
         value,
+        (childField) => {
+          if (touched) {
+            return;
+          }
+
+          const childState = (childField as () => FieldState<unknown>)();
+          if (
+            typeof childState.touched === 'function' &&
+            childState.touched()
+          ) {
+            touched = true;
+          }
+        },
       );
+
+      return touched;
     }
 
     return false;
   }
-
-  #checkTouchedRecursive(
-    tree: Record<string, unknown>,
-    model: unknown,
-  ): boolean {
-    if (model && typeof model === 'object' && !Array.isArray(model)) {
-      for (const key of Object.keys(model as Record<string, unknown>)) {
-        const child = (tree as Record<string, unknown>)[key];
-        if (typeof child === 'function') {
-          const childState = (child as () => FieldState<unknown>)();
-          if (
-            typeof childState.touched === 'function' &&
-            childState.touched()
-          ) {
-            return true;
-          }
-          const nextModel = (model as Record<string, unknown>)[key] as unknown;
-          if (
-            this.#checkTouchedRecursive(
-              child as unknown as Record<string, unknown>,
-              nextModel,
-            )
-          ) {
-            return true;
-          }
-        }
-      }
-    } else if (Array.isArray(model)) {
-      for (let i = 0; i < model.length; i++) {
-        const child = (tree as unknown as Record<number, unknown>)[i];
-        if (typeof child === 'function') {
-          const childState = (child as () => FieldState<unknown>)();
-          if (
-            typeof childState.touched === 'function' &&
-            childState.touched()
-          ) {
-            return true;
-          }
-          if (
-            this.#checkTouchedRecursive(
-              child as unknown as Record<string, unknown>,
-              model[i],
-            )
-          ) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  }
-
   /** Expose Object for template use */
   protected readonly Object = Object;
 }

@@ -1,11 +1,14 @@
 import type { Signal } from '@angular/core';
 import { computed } from '@angular/core';
-import type { FieldState } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
   ReactiveOrStatic,
   SubmittedStatus,
 } from '../types';
+import type {
+  ErrorVisibilityState,
+  PartialErrorVisibilityState,
+} from './field-state-types';
 import { unwrapValue } from './unwrap-signal-or-value';
 
 /**
@@ -44,7 +47,6 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * - `on-submit`: Show errors only after form submission attempt
  * - `manual`: Never show automatically (developer controls display)
  *
- * @template T The type of the field value
  * @param field - The form field state (FieldTree from Angular Signal Forms)
  * @param strategy - The error display strategy
  * @param submittedStatus - Optional: Only needed for 'on-submit' strategy. For 'on-touch', Angular's `submit()` already marks fields as touched.
@@ -84,9 +86,10 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * @see {@link ReactiveOrStatic} For understanding the flexible input types
  * @see {@link unwrapValue} For how inputs are unwrapped internally
  * @see {@link showErrors} For a convenience wrapper of this function
+ * @deprecated Use {@link showErrors} from `./show-errors` for new code.
  */
-export function computeShowErrors<T>(
-  field: ReactiveOrStatic<FieldState<T>>,
+export function computeShowErrors(
+  field: ReactiveOrStatic<ErrorVisibilityState | PartialErrorVisibilityState>,
   strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
   submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
 ): Signal<boolean> {

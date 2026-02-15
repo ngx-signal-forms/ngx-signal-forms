@@ -1,9 +1,5 @@
-import { computed, type Signal } from '@angular/core';
-import type {
-  FieldState,
-  FieldTree,
-  ValidationError,
-} from '@angular/forms/signals';
+import { computed } from '@angular/core';
+import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createUniqueId as createCoreUniqueId,
   generateErrorId,
@@ -13,6 +9,7 @@ import {
   showErrors,
   unwrapValue,
   type ErrorDisplayStrategy,
+  type ErrorReadableState,
   type ReactiveOrStatic,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
@@ -22,6 +19,8 @@ import {
   DEFAULT_DANGER_THRESHOLD,
   DEFAULT_WARNING_THRESHOLD,
 } from './character-count.directive';
+
+type ReadSignal<T> = () => T;
 
 // ============================================================================
 // FieldState Duck-Typing Utilities
@@ -45,13 +44,13 @@ export type BooleanStateKey =
  * Used for duck-typing access to error properties.
  */
 export type FieldStateLike = {
-  invalid?: () => boolean;
+  invalid?: ErrorReadableState['invalid'];
   valid?: () => boolean;
-  touched?: () => boolean;
+  touched?: ErrorReadableState['touched'];
   dirty?: () => boolean;
   pending?: () => boolean;
   errorSummary?: () => ValidationError[];
-  errors?: () => ValidationError[];
+  errors?: ErrorReadableState['errors'];
 };
 
 /**
@@ -222,23 +221,23 @@ export interface CreateErrorStateOptions<TValue = unknown> {
  */
 export interface ErrorStateResult {
   /** Whether to show errors */
-  readonly showErrors: Signal<boolean>;
+  readonly showErrors: ReadSignal<boolean>;
   /** Whether to show warnings */
-  readonly showWarnings: Signal<boolean>;
+  readonly showWarnings: ReadSignal<boolean>;
   /** Raw blocking errors */
-  readonly errors: Signal<ValidationError[]>;
+  readonly errors: ReadSignal<ValidationError[]>;
   /** Raw warning errors */
-  readonly warnings: Signal<ValidationError[]>;
+  readonly warnings: ReadSignal<ValidationError[]>;
   /** Whether there are blocking errors */
-  readonly hasErrors: Signal<boolean>;
+  readonly hasErrors: ReadSignal<boolean>;
   /** Whether there are warnings */
-  readonly hasWarnings: Signal<boolean>;
+  readonly hasWarnings: ReadSignal<boolean>;
   /** Generated error region ID */
-  readonly errorId: Signal<string>;
+  readonly errorId: ReadSignal<string>;
   /** Generated warning region ID */
-  readonly warningId: Signal<string>;
+  readonly warningId: ReadSignal<string>;
   /** Resolved field name */
-  readonly fieldName: Signal<string>;
+  readonly fieldName: ReadSignal<string>;
 }
 
 /**
@@ -272,7 +271,7 @@ export function createErrorState<TValue = unknown>(
 ): ErrorStateResult {
   const { field, fieldName, strategy, submittedStatus } = options;
 
-  const fieldState = computed(() => field() as FieldState<TValue>);
+  const fieldState = computed(() => field());
 
   const resolvedFieldName = computed(() => unwrapValue(fieldName));
 
@@ -295,7 +294,7 @@ export function createErrorState<TValue = unknown>(
   });
 
   const showErrorsSignal = showErrors(
-    fieldState as Signal<FieldState<TValue>>,
+    fieldState,
     resolvedStrategy,
     resolvedSubmittedStatus,
   );
@@ -344,17 +343,17 @@ export interface CreateCharacterCountOptions {
  */
 export interface CharacterCountResult {
   /** Current value length */
-  readonly currentLength: Signal<number>;
+  readonly currentLength: ReadSignal<number>;
   /** Resolved maximum length */
-  readonly resolvedMaxLength: Signal<number>;
+  readonly resolvedMaxLength: ReadSignal<number>;
   /** Remaining characters until limit */
-  readonly remaining: Signal<number>;
+  readonly remaining: ReadSignal<number>;
   /** Current limit state */
-  readonly limitState: Signal<CharacterCountLimitState>;
+  readonly limitState: ReadSignal<CharacterCountLimitState>;
   /** Whether the limit has been exceeded */
-  readonly isExceeded: Signal<boolean>;
+  readonly isExceeded: ReadSignal<boolean>;
   /** Percentage of limit used (0-100+) */
-  readonly percentUsed: Signal<number>;
+  readonly percentUsed: ReadSignal<number>;
 }
 
 /**
@@ -393,9 +392,7 @@ export function createCharacterCount(
     dangerThreshold = DEFAULT_DANGER_THRESHOLD,
   } = options;
 
-  const fieldState = computed(
-    () => field() as FieldState<string | null | undefined>,
-  );
+  const fieldState = computed(() => field());
 
   const currentLength = computed(() => {
     const state = fieldState();

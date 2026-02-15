@@ -13,6 +13,7 @@ export interface NgxSignalFormFieldContext {
 
 /**
  * Default configuration applied when no explicit providers override values.
+ * @internal
  */
 export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: NgxSignalFormsConfig = {
   autoAria: true,
