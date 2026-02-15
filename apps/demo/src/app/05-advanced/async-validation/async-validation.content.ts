@@ -27,8 +27,8 @@ export const ASYNC_VALIDATION_CONTENT = {
     ],
     nextStep: {
       text: 'Next: build a multi-step wizard →',
-      link: '../stepper-form',
-      linkText: 'Stepper Form',
+      link: '../advanced-wizard',
+      linkText: 'Advanced Wizard',
     },
   },
 } as const;

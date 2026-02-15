@@ -132,6 +132,41 @@ Groups related fields with consistent spacing.
 
 This component wraps your `label` and `input` to provide layout, borders, and states.
 
+### Layout Modes: Standard vs Outline
+
+The form field wrapper supports two appearance modes via the `appearance` input:
+
+**Standard Layout** (`appearance="standard"` or default)
+
+- Label positioned above the input
+- Traditional stacked form field design
+- Uses `--ngx-form-field-label-*` properties
+- Uses `--ngx-form-field-input-*` properties
+
+**Outline Layout** (`appearance="outline"`)
+
+- Material Design inspired floating label inside border
+- Label sits inside the input container
+- Uses `--ngx-form-field-outline-label-*` properties
+- Uses `--ngx-form-field-outline-input-*` properties
+- Requires CSS `:has()` selector (Chrome 105+, Firefox 121+, Safari 15.4+)
+
+```html
+<!-- Standard (default) -->
+<ngx-signal-form-field-wrapper [formField]="form.email" appearance="standard">
+  <label for="email">Email</label>
+  <input id="email" [formField]="form.email" />
+</ngx-signal-form-field-wrapper>
+
+<!-- Outline -->
+<ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
+  <label for="email">Email</label>
+  <input id="email" [formField]="form.email" />
+</ngx-signal-form-field-wrapper>
+```
+
+> **Note:** The semantic colors below apply to both layouts. Layout-specific properties (labels, input styling) are documented in separate sections.
+
 ### Semantic Color Scale (The "Knobs")
 
 **Start here.** Changing these variables will automatically update focus rings, borders, text, and backgrounds across all states.
@@ -152,7 +187,11 @@ This component wraps your `label` and `input` to provide layout, borders, and st
 
 If the semantic colors aren't enough, you can override specific parts of the component.
 
+> **Layout-Specific Properties:** Properties prefixed with `--ngx-form-field-outline-*` only apply when `appearance="outline"`. Standard layout uses the non-prefixed variants (e.g., `--ngx-form-field-label-*` vs `--ngx-form-field-outline-label-*`).
+
 #### Layout & Spacing
+
+**Applies to both standard and outline layouts.**
 
 | Property                              | Default                                                                           | Description                          |
 | :------------------------------------ | :-------------------------------------------------------------------------------- | :----------------------------------- |
@@ -166,6 +205,8 @@ If the semantic colors aren't enough, you can override specific parts of the com
 
 #### Prefix & Suffix
 
+**Applies to both standard and outline layouts.**
+
 | Property                        | Default                                      | Description               |
 | :------------------------------ | :------------------------------------------- | :------------------------ |
 | `--ngx-form-field-prefix-gap`   | `0.5rem`                                     | Gap after prefix content  |
@@ -174,6 +215,8 @@ If the semantic colors aren't enough, you can override specific parts of the com
 | `--ngx-form-field-suffix-color` | `var(--ngx-form-field-color-text-secondary)` | Suffix color              |
 
 #### Labels (Standard Layout)
+
+**Only applies when `appearance="standard"` (default).**
 
 | Property                               | Default                                      | Description         |
 | :------------------------------------- | :------------------------------------------- | :------------------ |
@@ -185,6 +228,8 @@ If the semantic colors aren't enough, you can override specific parts of the com
 
 #### Labels (Outlined Layout)
 
+**Only applies when `appearance="outline"`.**
+
 | Property                                     | Default                                      | Description                |
 | :------------------------------------------- | :------------------------------------------- | :------------------------- |
 | `--ngx-form-field-outline-label-size`        | `0.75rem`                                    | Outlined label font size   |
@@ -195,12 +240,16 @@ If the semantic colors aren't enough, you can override specific parts of the com
 
 #### Required Marker
 
+**Applies to both layouts, but typically shown only in outline layout.**
+
 | Property                                  | Default                             | Description            |
 | :---------------------------------------- | :---------------------------------- | :--------------------- |
 | `--ngx-form-field-required-marker-color`  | `var(--ngx-form-field-color-error)` | Required marker color  |
 | `--ngx-form-field-required-marker-weight` | `600`                               | Required marker weight |
 
 #### Input (Standard Layout)
+
+**Only applies when `appearance="standard"` (default).**
 
 | Property                             | Default                                      | Description        |
 | :----------------------------------- | :------------------------------------------- | :----------------- |
@@ -214,6 +263,8 @@ If the semantic colors aren't enough, you can override specific parts of the com
 
 #### Input (Outlined Layout)
 
+**Only applies when `appearance="outline"`.**
+
 | Property                                     | Default                            | Description                |
 | :------------------------------------------- | :--------------------------------- | :------------------------- |
 | `--ngx-form-field-outline-input-size`        | `0.875rem`                         | Outlined input font size   |
@@ -222,6 +273,8 @@ If the semantic colors aren't enough, you can override specific parts of the com
 | `--ngx-form-field-outline-input-color`       | `var(--ngx-form-field-color-text)` | Outlined input text color  |
 
 #### States & Focus
+
+**Applies to both standard and outline layouts.**
 
 | Property                              | Default                                                               | Description          |
 | :------------------------------------ | :-------------------------------------------------------------------- | :------------------- |

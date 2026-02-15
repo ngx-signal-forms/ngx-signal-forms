@@ -13,14 +13,28 @@ export * from './directives/auto-aria.directive';
 export * from './directives/ngx-signal-form.directive';
 
 // Utilities
+export * from './utilities/create-unique-id';
 export { shouldShowErrors } from './utilities/error-strategies';
 export * from './utilities/field-resolution';
+export * from './utilities/field-state-types';
 export * from './utilities/focus-first-invalid';
+export { updateAt, updateNested } from './utilities/immutable-array';
 export { injectFormConfig } from './utilities/inject-form-config';
 export { injectFormContext } from './utilities/inject-form-context';
-export { combineShowErrors, showErrors } from './utilities/show-errors';
+export * from './utilities/resolve-error-message';
+export * from './utilities/resolve-strategy';
+export {
+  combineShowErrors,
+  createShowErrorsSignal,
+  showErrors,
+} from './utilities/show-errors';
 export * from './utilities/submission-helpers';
-export * from './utilities/warning-error';
+export { unwrapValue } from './utilities/unwrap-signal-or-value';
+export {
+  isBlockingError,
+  isWarningError,
+  warningError,
+} from './utilities/warning-error';
 
 // Convenience imports
 import { NgxSignalFormAutoAriaDirective } from './directives/auto-aria.directive';

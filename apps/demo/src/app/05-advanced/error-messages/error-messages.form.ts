@@ -50,7 +50,7 @@ import { errorMessagesSchema } from './error-messages.validations';
         <!-- Email: Uses validator message (Tier 1 - highest priority) -->
         <ngx-signal-form-field-wrapper
           [formField]="errorMessagesForm.email"
-          outline
+          appearance="outline"
         >
           <label for="email">Email (Validator Message - Tier 1)</label>
           <input
@@ -68,7 +68,7 @@ import { errorMessagesSchema } from './error-messages.validations';
         <!-- Password: Uses registry override (Tier 2) -->
         <ngx-signal-form-field-wrapper
           [formField]="errorMessagesForm.password"
-          outline
+          appearance="outline"
         >
           <label for="password">Password (Registry Override - Tier 2)</label>
           <input
@@ -86,7 +86,7 @@ import { errorMessagesSchema } from './error-messages.validations';
         <!-- Bio: Uses default toolkit fallback (Tier 3) -->
         <ngx-signal-form-field-wrapper
           [formField]="errorMessagesForm.bio"
-          outline
+          appearance="outline"
         >
           <label for="bio">Bio (Default Fallback - Tier 3)</label>
           <textarea

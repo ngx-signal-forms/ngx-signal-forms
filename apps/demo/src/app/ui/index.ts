@@ -1,3 +1,4 @@
+export { AppearanceToggleComponent } from './appearance-toggle';
 export {
   BadgeComponent,
   BadgeIconDirective,

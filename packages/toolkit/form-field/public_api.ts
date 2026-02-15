@@ -1,12 +1,9 @@
 // Re-export assistive components from the assistive directory
 export {
-  isBlockingError,
-  isWarningError,
   NgxFormFieldAssistiveRowComponent,
   NgxFormFieldCharacterCountComponent,
   NgxFormFieldHintComponent,
   NgxSignalFormErrorComponent,
-  warningError,
 } from '@ngx-signal-forms/toolkit/assistive';
 
 // Core form field components

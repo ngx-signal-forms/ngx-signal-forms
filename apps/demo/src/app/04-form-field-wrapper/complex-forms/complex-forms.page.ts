@@ -4,9 +4,13 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import type {
+  ErrorDisplayStrategy,
+  FormFieldAppearance,
+} from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
+  AppearanceToggleComponent,
   ExampleCardsComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
@@ -44,6 +48,7 @@ import { ComplexFormsComponent } from './complex-forms.form';
     ComplexFormsComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
+    AppearanceToggleComponent,
   ],
   template: `
     <ngx-page-header
@@ -56,15 +61,33 @@ import { ComplexFormsComponent } from './complex-forms.form';
       [learning]="content.learning"
     />
 
-    <!-- Error Display Mode Selector -->
-    <ngx-error-display-mode-selector [(selectedMode)]="errorDisplayMode" />
+    <div class="flex flex-wrap items-start gap-6">
+      <!-- Error Display Mode Selector -->
+      <ngx-error-display-mode-selector
+        [(selectedMode)]="errorDisplayMode"
+        class="min-w-[300px] flex-1"
+      />
+
+      <!-- Appearance Selector -->
+      <div class="flex flex-col gap-2">
+        <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          🎨 Appearance
+        </span>
+        <ngx-appearance-toggle [(value)]="selectedAppearance" />
+      </div>
+    </div>
+
     <ngx-split-layout>
-      <ngx-complex-forms [errorDisplayMode]="errorDisplayMode()" left />
+      <ngx-complex-forms
+        [errorDisplayMode]="errorDisplayMode()"
+        [appearance]="selectedAppearance()"
+        left
+      />
 
       @if (formRef(); as form) {
-        <div right>
+        <ng-container right>
           <ngx-signal-form-debugger [formTree]="form.complexForm" />
-        </div>
+        </ng-container>
       }
     </ngx-split-layout>
   `,
@@ -72,6 +95,9 @@ import { ComplexFormsComponent } from './complex-forms.form';
 export class ComplexFormsPage {
   protected readonly errorDisplayMode =
     signal<ErrorDisplayStrategy>('on-touch');
+  protected readonly selectedAppearance =
+    signal<FormFieldAppearance>('standard');
+
   protected readonly content = COMPLEX_FORMS_CONTENT;
   protected readonly formRef = viewChild(ComplexFormsComponent);
 }

@@ -70,7 +70,7 @@ const bookingSchema = schema<Booking>((path) => {
         <div class="grid grid-cols-2 gap-4">
           <ngx-signal-form-field-wrapper
             [formField]="bookingForm.checkIn"
-            outline
+            appearance="outline"
           >
             <label for="checkIn">Check-In</label>
             <input
@@ -83,7 +83,7 @@ const bookingSchema = schema<Booking>((path) => {
 
           <ngx-signal-form-field-wrapper
             [formField]="bookingForm.checkOut"
-            outline
+            appearance="outline"
           >
             <label for="checkOut">Check-Out</label>
             <input
@@ -95,7 +95,10 @@ const bookingSchema = schema<Booking>((path) => {
           </ngx-signal-form-field-wrapper>
         </div>
 
-        <ngx-signal-form-field-wrapper [formField]="bookingForm.guests" outline>
+        <ngx-signal-form-field-wrapper
+          [formField]="bookingForm.guests"
+          appearance="outline"
+        >
           <label for="guests">Guests</label>
           <input
             id="guests"
@@ -107,7 +110,7 @@ const bookingSchema = schema<Booking>((path) => {
 
         <ngx-signal-form-field-wrapper
           [formField]="bookingForm.promoCode"
-          outline
+          appearance="outline"
         >
           <label for="promo">Promo Code</label>
           <input

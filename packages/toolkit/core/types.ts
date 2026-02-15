@@ -1,5 +1,4 @@
 import type { Signal } from '@angular/core';
-import type { ValidationError } from '@angular/forms/signals';
 import type { DeepPartial } from 'ts-essentials';
 
 /**
@@ -127,6 +126,48 @@ export type ErrorDisplayStrategy =
   | 'inherit'; // Inherit from form provider (field-level only)
 
 /**
+ * Form field appearance for global configuration.
+ *
+ * Controls the default visual style of form field wrappers, matching design patterns
+ * like Angular Material's form field appearance variants.
+ *
+ * - `'standard'`: Default appearance with label above input (default)
+ * - `'outline'`: Material Design outlined appearance with floating label
+ *
+ * @example Global configuration
+ * ```typescript
+ * provideNgxSignalFormsConfig({
+ *   defaultFormFieldAppearance: 'outline', // All fields use outline by default
+ * });
+ * ```
+ *
+ * @see https://material.angular.dev/components/form-field/overview#form-field-appearance-variants
+ */
+export type FormFieldAppearance = 'standard' | 'outline';
+
+/**
+ * Form field appearance input for component-level control.
+ *
+ * Extends FormFieldAppearance with 'inherit' option to use global config default.
+ *
+ * - `'standard'`: Default appearance with label above input
+ * - `'outline'`: Material Design outlined appearance with floating label
+ * - `'inherit'`: Use the global config default (component-level only)
+ *
+ * @example Component-level override
+ * ```html
+ * <!-- Override global config to use standard for specific field -->
+ * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="standard">
+ *   <label for="email">Email</label>
+ *   <input id="email" [formField]="form.email" />
+ * </ngx-signal-form-field-wrapper>
+ * ```
+ *
+ * @see https://material.angular.dev/components/form-field/overview#form-field-appearance-variants
+ */
+export type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
+
+/**
  * Configuration options for the ngx-signal-forms toolkit.
  *
  * Allows configuration values to be signals, functions, or plain values.
@@ -168,9 +209,9 @@ export interface NgxSignalFormsConfig {
   /**
    * Default appearance for form fields.
    * When set, all NgxSignalFormFieldWrapperComponent instances will use this appearance
-   * unless explicitly overridden with the `outline` attribute.
+   * unless explicitly overridden with the `appearance` input.
    *
-   * @default undefined (no global default)
+   * @default 'standard'
    *
    * @example Global outline mode
    * ```typescript
@@ -178,8 +219,17 @@ export interface NgxSignalFormsConfig {
    *   defaultFormFieldAppearance: 'outline',
    * });
    * ```
+   *
+   * @example Component-level override
+   * ```html
+   * <!-- Force standard appearance even if global config is 'outline' -->
+   * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="standard">
+   *   <label for="email">Email</label>
+   *   <input id="email" [formField]="form.email" />
+   * </ngx-signal-form-field-wrapper>
+   * ```
    */
-  defaultFormFieldAppearance: 'default' | 'outline';
+  defaultFormFieldAppearance: FormFieldAppearance;
 
   /**
    * Whether to show the required marker for outlined fields.
@@ -202,75 +252,3 @@ export interface NgxSignalFormsConfig {
  * Uses DeepPartial to allow partial configuration with type safety.
  */
 export type NgxSignalFormsUserConfig = DeepPartial<NgxSignalFormsConfig>;
-
-/**
- * Type utility: Extract FieldState type from a FieldTree.
- *
- * @template T The FieldTree type
- *
- * @example
- * ```typescript
- * const emailField = form.email; // FieldTree<string>
- * type EmailState = ExtractFieldState<typeof emailField>; // FieldState<string>
- * ```
- */
-export type ExtractFieldState<T> = T extends () => infer State ? State : never;
-
-/**
- * Type utility: Extract value type from a FieldState.
- *
- * @template T The FieldState type
- *
- * @example
- * ```typescript
- * import type { FieldState } from '@angular/forms/signals';
- *
- * type EmailValue = ExtractFieldValue<FieldState<string>>; // string
- * ```
- */
-export type ExtractFieldValue<T> = T extends { value: () => infer V }
-  ? V
-  : never;
-
-/**
- * ValidationError with additional validator-specific properties.
- *
- * Angular's ValidationError has a strict shape (kind, message), but validators
- * can add additional properties (minLength, min, max, pattern, etc.).
- *
- * This type safely represents those additional properties as Record<string, unknown>,
- * avoiding unsafe `as any` casts while maintaining type safety.
- *
- * ## Why this exists
- *
- * When validators create errors, they often include additional data:
- * - `minLength` validator adds `{ kind: 'minLength', minLength: 8 }`
- * - `min` validator adds `{ kind: 'min', min: 0 }`
- * - Custom validators can add any properties
- *
- * TypeScript's strict type checking prevents direct access to these properties
- * because ValidationError's interface doesn't include them. This intersection type
- * provides a type-safe way to access validator parameters.
- *
- * @example Factory function with type-safe parameter access
- * ```typescript
- * const registry: ErrorMessageRegistry = {
- *   minLength: (params) => {
- *     /// params is Record<string, unknown>, need type assertion for specific properties
- *     const min = (params as { minLength: number }).minLength;
- *     return `Minimum ${min} characters required`;
- *   },
- * };
- * ```
- *
- * @example Component usage
- * ```typescript
- * function resolveMessage(error: ValidationError): string {
- *   /// Cast to ValidationErrorWithParams for factory function calls
- *   const errorWithParams = error as ValidationErrorWithParams;
- *   return factoryFn(errorWithParams);
- * }
- * ```
- */
-export type ValidationErrorWithParams = ValidationError &
-  Record<string, unknown>;

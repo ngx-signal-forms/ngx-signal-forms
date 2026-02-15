@@ -16,23 +16,21 @@ export {
 } from './directives/ngx-signal-form.directive';
 
 // Utilities
-export * from './utilities/assert-injector';
+export * from './utilities/create-unique-id';
 export { shouldShowErrors } from './utilities/error-strategies';
 export * from './utilities/field-resolution';
+export * from './utilities/field-state-types';
 export * from './utilities/focus-first-invalid';
-export {
-  append,
-  insertAt,
-  moveItem,
-  prepend,
-  removeAt,
-  updateAt,
-  updateNested,
-} from './utilities/immutable-array';
-export * from './utilities/inject-field-control';
+export { updateAt, updateNested } from './utilities/immutable-array';
 export * from './utilities/inject-form-config';
 export * from './utilities/inject-form-context';
-export { combineShowErrors, showErrors } from './utilities/show-errors';
+export * from './utilities/resolve-error-message';
+export * from './utilities/resolve-strategy';
+export {
+  combineShowErrors,
+  createShowErrorsSignal,
+  showErrors,
+} from './utilities/show-errors';
 export * from './utilities/submission-helpers';
 export { unwrapValue } from './utilities/unwrap-signal-or-value';
 export {

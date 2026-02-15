@@ -13,6 +13,7 @@ import type {
 import {
   injectFormConfig,
   injectFormContext,
+  resolveErrorDisplayStrategy,
   showErrors,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -178,21 +179,11 @@ export class NgxSignalFormFieldset<TFieldset = unknown> {
   readonly #fieldsetState = computed(() => this.fieldsetField()());
 
   readonly resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
-    const provided = this.strategy();
-    if (provided !== null && provided !== undefined) {
-      const resolved = typeof provided === 'function' ? provided() : provided;
-      if (resolved !== 'inherit') {
-        return resolved;
-      }
-    }
-
-    const contextStrategy = this.#formContext?.errorStrategy?.();
-    if (contextStrategy) {
-      return contextStrategy;
-    }
-
-    const configured = this.#config.defaultErrorStrategy;
-    return typeof configured === 'function' ? configured() : configured;
+    return resolveErrorDisplayStrategy(
+      this.strategy(),
+      this.#formContext?.errorStrategy?.(),
+      this.#config.defaultErrorStrategy,
+    );
   });
 
   readonly submittedStatus = computed(() => {

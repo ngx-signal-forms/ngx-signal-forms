@@ -18,7 +18,6 @@ import {
   resolveFieldName,
 } from '../utilities/field-resolution';
 import { injectFormConfig } from '../utilities/inject-form-config';
-import { isBlockingError, isWarningError } from '../utilities/warning-error';
 
 /**
  * Automatically manages ARIA attributes for Signal Forms controls.
@@ -58,6 +57,24 @@ import { isBlockingError, isWarningError } from '../utilities/warning-error';
   },
 })
 export class NgxSignalFormAutoAriaDirective {
+  #shouldShowBy(predicate: (kind: string) => boolean): boolean {
+    const field = this.formField();
+    if (!field) return false;
+
+    const fieldState = field();
+    if (!fieldState) return false;
+
+    const errors = fieldState.errors();
+    const hasMatchingErrors = errors.some((error) => predicate(error.kind));
+    if (!hasMatchingErrors) return false;
+
+    const strategy: ErrorDisplayStrategy =
+      this.#context?.errorStrategy() ?? 'on-touch';
+    const submittedStatus = this.#context?.submittedStatus() ?? 'unsubmitted';
+
+    return shouldShowErrors(fieldState, strategy, submittedStatus);
+  }
+
   readonly #element = inject(ElementRef<HTMLElement>);
   readonly #injector = inject(Injector);
   readonly #config = injectFormConfig();
@@ -87,21 +104,7 @@ export class NgxSignalFormAutoAriaDirective {
    * Respects form-level ErrorDisplayStrategy from ngxSignalForm directive.
    */
   readonly #shouldShowErrors = computed(() => {
-    const field = this.formField();
-    if (!field) return false;
-
-    const fieldState = field();
-    if (!fieldState) return false;
-
-    const errors = fieldState.errors();
-    const hasBlockingErrors = errors.some(isBlockingError);
-    if (!hasBlockingErrors) return false;
-
-    const strategy: ErrorDisplayStrategy =
-      this.#context?.errorStrategy() ?? 'on-touch';
-    const submittedStatus = this.#context?.submittedStatus() ?? 'unsubmitted';
-
-    return shouldShowErrors(fieldState, strategy, submittedStatus);
+    return this.#shouldShowBy((kind) => !kind.startsWith('warn:'));
   });
 
   /**
@@ -109,28 +112,7 @@ export class NgxSignalFormAutoAriaDirective {
    * Warnings use same visibility logic as errors.
    */
   readonly #shouldShowWarnings = computed(() => {
-    const field = this.formField();
-    if (!field) return false;
-
-    const fieldState = field();
-    if (!fieldState) return false;
-
-    const errors = fieldState.errors();
-    const hasWarnings = errors.some(isWarningError);
-    if (!hasWarnings) return false;
-
-    const strategy: ErrorDisplayStrategy =
-      this.#context?.errorStrategy() ?? 'on-touch';
-    const submittedStatus = this.#context?.submittedStatus() ?? 'unsubmitted';
-
-    return shouldShowErrors(
-      {
-        invalid: () => true,
-        touched: () => fieldState.touched(),
-      },
-      strategy,
-      submittedStatus,
-    );
+    return this.#shouldShowBy((kind) => kind.startsWith('warn:'));
   });
 
   /**
@@ -166,8 +148,10 @@ export class NgxSignalFormAutoAriaDirective {
     if (!fieldState) return null;
 
     // Access the required signal from FieldState (available when required() validator is used)
-    const requiredGetter = (fieldState as { required?: () => boolean })
-      .required;
+    const requiredGetter =
+      'required' in fieldState
+        ? (fieldState as { required?: () => boolean }).required
+        : undefined;
     if (typeof requiredGetter === 'function' && requiredGetter()) {
       return 'true';
     }

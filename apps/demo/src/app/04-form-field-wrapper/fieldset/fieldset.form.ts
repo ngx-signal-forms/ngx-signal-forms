@@ -8,6 +8,7 @@ import { FormField, form, submit } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
+  type FormFieldAppearance,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
@@ -54,7 +55,8 @@ export class FieldsetFormComponent {
   /**
    * Error display mode input - controls when errors are shown
    */
-  errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly appearance = input<FormFieldAppearance>('standard');
 
   /**
    * Initial empty address template

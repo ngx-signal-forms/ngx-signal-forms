@@ -177,7 +177,6 @@ export interface ErrorMessageRegistry {
 export const NGX_ERROR_MESSAGES = new InjectionToken<ErrorMessageRegistry>(
   'NGX_ERROR_MESSAGES',
   {
-    providedIn: 'root',
     factory: () => ({}), // Empty registry by default (zero-config)
   },
 );

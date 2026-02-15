@@ -21,6 +21,9 @@ jobs:
   main:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+      NX_NO_CLOUD: ${{ inputs.skip_cloud || secrets.NX_CLOUD_ACCESS_TOKEN == '' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,13 +52,12 @@ jobs:
 
       # Run tasks locally - no DTE distribution to conserve Nx Cloud credits
       # Set skip_cloud=true via workflow_dispatch when quota is exceeded
+      # NX_NO_CLOUD is also enabled automatically if no token is available
       - name: Run affected tasks
         run: pnpm exec nx affected -t lint test build e2e-ci --parallel=3
-        env:
-          NX_NO_CLOUD: ${{ inputs.skip_cloud || false }}
 
       # https://nx.dev/ci/features/self-healing-ci
       # continue-on-error: fix-ci requires Nx Cloud, may fail if quota exceeded
       - run: pnpm exec nx fix-ci
-        if: ${{ always() && !inputs.skip_cloud }}
+        if: ${{ always() && !inputs.skip_cloud && env.NX_NO_CLOUD != 'true' }}
         continue-on-error: true

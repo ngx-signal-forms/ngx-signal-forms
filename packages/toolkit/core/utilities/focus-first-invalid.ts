@@ -90,5 +90,12 @@ export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
     return true;
   }
 
+  if (typeof ngDevMode === 'undefined' || ngDevMode) {
+    console.warn(
+      '[ngx-signal-forms] focusFirstInvalid could not focus the first invalid field. ' +
+        'Ensure custom controls implement focus() for focusBoundControl().',
+    );
+  }
+
   return false;
 }

@@ -143,9 +143,10 @@ test.describe('Outline Form Field - Complex Nested Form', () => {
 
     // Verify labels are positioned inside the bordered container (not hidden)
     const firstFormField = page
-      .locator('ngx-signal-form-field-wrapper[outline]')
+      .locator('ngx-signal-form-field-wrapper')
       .first();
     await expect(firstFormField).toBeVisible();
+    await expect(firstFormField).toHaveClass(/ngx-signal-forms-outline/);
 
     // The label inside the form field should be visible
     const label = firstFormField.locator('label');
@@ -156,7 +157,7 @@ test.describe('Outline Form Field - Complex Nested Form', () => {
     page,
   }) => {
     const firstFormField = page
-      .locator('ngx-signal-form-field-wrapper[outline]')
+      .locator('ngx-signal-form-field-wrapper')
       .first();
 
     await expect(firstFormField).toHaveAttribute('data-show-required', 'true');
@@ -172,5 +173,21 @@ test.describe('Outline Form Field - Complex Nested Form', () => {
       page.getByText('Selecteer het land van herkomst', { exact: true }),
     ).toBeVisible();
     await expect(page.getByText('Bijv. SR-310', { exact: true })).toBeVisible();
+  });
+
+  test('should allow toggling styling to standard', async ({ page }) => {
+    // Default is outline (configured in page component)
+    const firstFormField = page
+      .locator('ngx-signal-form-field-wrapper')
+      .first();
+    await expect(firstFormField).toHaveClass(/ngx-signal-forms-outline/);
+
+    // Toggle to standard
+    await page.getByRole('button', { name: 'Standard' }).click();
+    await expect(firstFormField).not.toHaveClass(/ngx-signal-forms-outline/);
+
+    // Toggle back to outline
+    await page.getByRole('button', { name: 'Outline' }).click();
+    await expect(firstFormField).toHaveClass(/ngx-signal-forms-outline/);
   });
 });

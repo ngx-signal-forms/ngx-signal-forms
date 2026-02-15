@@ -26,9 +26,9 @@ export const CROSS_FIELD_VALIDATION_CONTENT = {
       },
     ],
     nextStep: {
-      text: 'Back to dynamic arrays →',
-      link: '../dynamic-list',
-      linkText: 'Dynamic Lists',
+      text: 'Back to consolidated nested/array example →',
+      link: '/form-field-wrapper/complex-forms',
+      linkText: 'Complex Forms',
     },
   },
 } as const;
