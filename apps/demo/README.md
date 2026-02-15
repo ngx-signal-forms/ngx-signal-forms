@@ -13,7 +13,7 @@ This demo follows a **progressive learning path** from vanilla Angular Signal Fo
 ├─ 02-toolkit-core/          [100%]        ← Core toolkit features
 ├─ 03-headless/              [100%]        ← Headless primitives
 ├─ 04-form-field-wrapper/    [100%]        ← Form field component
-└─ 05-advanced/              [100%]        ← Advanced scenarios & production patterns
+└─ 05-advanced/              [100%]        ← Production patterns + canonical advanced wizard
 ```
 
 ## 📚 Learning Path
@@ -91,11 +91,30 @@ Production-ready patterns for real applications.
 | **global-configuration**   | provideNgxSignalFormsConfig | Custom defaults, field resolution, debug mode |
 | **submission-patterns**    | Async submission            | Loading states, server errors, WCAG patterns  |
 | **error-messages**         | Error message registry      | 3-tier priority, i18n                         |
-| **dynamic-list**           | Arrays                      | Adding/removing items with signals            |
-| **nested-groups**          | Deep structures             | Multi-level form models                       |
+| **advanced-wizard**        | Wizard + NgRx Signal Store  | Form-per-step architecture, autosave, Zod     |
 | **async-validation**       | Server checks               | Pending states and async errors               |
-| **stepper-form**           | Wizard flows                | Step validation and progression               |
 | **cross-field-validation** | Dependent logic             | Validations using sibling field values        |
+
+### Feature-to-Example Matrix (Primary Ownership)
+
+Each core capability has exactly one primary demo to avoid overlap.
+
+| Capability                        | Primary Example                             | Secondary Notes                                        |
+| --------------------------------- | ------------------------------------------- | ------------------------------------------------------ |
+| Auto-ARIA + baseline comparison   | `toolkit-core/accessibility-comparison`     | Shows manual vs toolkit side-by-side                   |
+| Error strategy modes              | `toolkit-core/error-display-modes`          | immediate / on-touch / on-submit / manual              |
+| Warning support                   | `toolkit-core/warning-support`              | Non-blocking validation patterns                       |
+| Field state introspection         | `toolkit-core/field-states`                 | touched/dirty/pending/invalid                          |
+| Wrapper fundamentals              | `form-field-wrapper/basic-usage`            | Smallest happy path                                    |
+| Nested groups + arrays            | `form-field-wrapper/complex-forms`          | Consolidates former dynamic-list + nested-groups focus |
+| Group-level error aggregation     | `form-field-wrapper/fieldset`               | Canonical grouped-error example                        |
+| Runtime appearance switching      | `form-field-wrapper/dynamic-appearance`     | Kept as dedicated runtime theming example              |
+| Global toolkit defaults           | `advanced-scenarios/global-configuration`   | App-level provider composition                         |
+| Async submit + server error UX    | `advanced-scenarios/submission-patterns`    | Submission lifecycle + resilience                      |
+| Error message registry/i18n       | `advanced-scenarios/error-messages`         | 3-tier message priority                                |
+| Async remote validation           | `advanced-scenarios/async-validation`       | Pending + debounced remote checks                      |
+| Cross-field constraints           | `advanced-scenarios/cross-field-validation` | Sibling/dependent validation                           |
+| Advanced multi-step orchestration | `advanced-scenarios/advanced-wizard`        | Canonical wizard (NgRx Signal Store + Zod)             |
 
 ## Quick Start
 

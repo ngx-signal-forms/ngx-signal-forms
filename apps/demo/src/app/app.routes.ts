@@ -214,20 +214,25 @@ export const appRoutes: Routes = [
         title: 'Error Messages - 3-Tier Priority & i18n',
       },
       {
-        path: 'dynamic-list',
+        path: 'advanced-wizard',
         loadComponent: () =>
-          import('./05-advanced/dynamic-list/dynamic-list.page').then(
-            (m) => m.DynamicListPageComponent,
-          ),
-        title: 'Dynamic Lists - Form Arrays',
+          import('./05-advanced/advanced-wizard/advanced-wizard.page'),
+        title: 'Advanced Wizard - NgRx Signal Store + Zod (Canonical)',
+      },
+      {
+        path: 'dynamic-list',
+        redirectTo: '/form-field-wrapper/complex-forms',
+        pathMatch: 'full',
       },
       {
         path: 'nested-groups',
-        loadComponent: () =>
-          import('./05-advanced/nested-groups/nested-groups.page').then(
-            (m) => m.NestedGroupsPageComponent,
-          ),
-        title: 'Nested Groups - Complex Data Structures',
+        redirectTo: '/form-field-wrapper/complex-forms',
+        pathMatch: 'full',
+      },
+      {
+        path: 'stepper-form',
+        redirectTo: 'advanced-wizard',
+        pathMatch: 'full',
       },
       {
         path: 'async-validation',
@@ -236,20 +241,6 @@ export const appRoutes: Routes = [
             (m) => m.AsyncValidationPageComponent,
           ),
         title: 'Async Validation - Server Side Checks',
-      },
-      {
-        path: 'stepper-form',
-        loadComponent: () =>
-          import('./05-advanced/stepper-form/stepper-form.page').then(
-            (m) => m.StepperFormPageComponent,
-          ),
-        title: 'Stepper Form - Multi-step Wizard',
-      },
-      {
-        path: 'advanced-wizard',
-        loadComponent: () =>
-          import('./05-advanced/advanced-wizard/advanced-wizard.page'),
-        title: 'Advanced Wizard - NgRx Signal Store + Zod',
       },
       {
         path: 'cross-field-validation',

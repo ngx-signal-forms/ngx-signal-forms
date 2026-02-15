@@ -50,9 +50,9 @@ export const ADVANCED_WIZARD_CONTENT = {
       },
     ],
     nextStep: {
-      text: 'Explore simpler stepper patterns in',
-      link: '../stepper-form',
-      linkText: 'Basic Stepper Form',
+      text: 'Continue with dependent validation patterns in',
+      link: '../cross-field-validation',
+      linkText: 'Cross-Field Validation',
     },
   },
 } as const;
