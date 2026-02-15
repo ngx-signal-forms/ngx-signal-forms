@@ -85,9 +85,9 @@ import { ComplexFormsComponent } from './complex-forms.form';
       />
 
       @if (formRef(); as form) {
-        <div right>
+        <ng-container right>
           <ngx-signal-form-debugger [formTree]="form.complexForm" />
-        </div>
+        </ng-container>
       }
     </ngx-split-layout>
   `,

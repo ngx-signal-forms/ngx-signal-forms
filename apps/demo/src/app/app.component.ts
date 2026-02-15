@@ -132,6 +132,14 @@ export class AppComponent implements AfterViewInit {
           label: 'Basic Usage',
         },
         {
+          path: '/form-field-wrapper/dynamic-appearance',
+          label: 'Dynamic Appearance',
+        },
+        {
+          path: '/form-field-wrapper/custom-controls',
+          label: 'Custom Controls',
+        },
+        {
           path: '/form-field-wrapper/complex-forms',
           label: 'Complex Forms',
         },

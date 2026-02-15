@@ -63,7 +63,7 @@ import {
 
               <ngx-signal-form-field-wrapper
                 [formField]="wizardForm.email"
-                outline
+                appearance="outline"
               >
                 <label for="email">Email Address *</label>
                 <input
@@ -76,7 +76,7 @@ import {
 
               <ngx-signal-form-field-wrapper
                 [formField]="wizardForm.password"
-                outline
+                appearance="outline"
               >
                 <label for="password">Password *</label>
                 <input
@@ -100,7 +100,7 @@ import {
 
               <ngx-signal-form-field-wrapper
                 [formField]="wizardForm.fullName"
-                outline
+                appearance="outline"
               >
                 <label for="fullName">Full Name *</label>
                 <input
@@ -112,7 +112,7 @@ import {
 
               <ngx-signal-form-field-wrapper
                 [formField]="wizardForm.phone"
-                outline
+                appearance="outline"
               >
                 <label for="phone">Phone Number *</label>
                 <input

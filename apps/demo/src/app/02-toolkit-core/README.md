@@ -346,7 +346,7 @@ validate(path.email, (ctx) => {
 
 ### Level 4: Form Field Wrapper
 
-**Path:** `03-form-field-wrapper/`
+**Path:** `04-form-field-wrapper/`
 
 **What changes:**
 
@@ -358,7 +358,7 @@ validate(path.email, (ctx) => {
 
 ### Level 5: Advanced Patterns
 
-**Path:** `04-advanced/`
+**Path:** `05-advanced/`
 
 **What changes:**
 
@@ -403,4 +403,4 @@ validate(path.email, (ctx) => {
 
 ---
 
-**Next:** Try `03-form-field-wrapper/` for production-ready layouts! 🚀
+**Next:** Try `04-form-field-wrapper/` for production-ready layouts! 🚀

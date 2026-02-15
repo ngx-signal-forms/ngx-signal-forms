@@ -40,7 +40,10 @@ const tasksSchema = schema<TasksModel>((path) => {
 
       <form (submit)="saveTasks($event)" class="max-w-2xl space-y-6">
         <!-- Team Name -->
-        <ngx-signal-form-field-wrapper [formField]="tasksForm.teamName" outline>
+        <ngx-signal-form-field-wrapper
+          [formField]="tasksForm.teamName"
+          appearance="outline"
+        >
           <label for="teamName">Team Name</label>
           <input
             id="teamName"
@@ -79,7 +82,7 @@ const tasksSchema = schema<TasksModel>((path) => {
               <div class="flex-1">
                 <ngx-signal-form-field-wrapper
                   [formField]="tasksForm.tasks[i].title"
-                  outline
+                  appearance="outline"
                 >
                   <label [for]="'task-' + i">Task Title</label>
                   <input
