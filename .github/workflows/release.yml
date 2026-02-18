@@ -56,8 +56,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      NX_CLOUD_RW_TOKEN: ${{ secrets['NX_CLOUD_RW_TOKEN'] }}
-      NX_CLOUD_ACCESS_TOKEN: ${{ secrets['NX_CLOUD_ACCESS_TOKEN'] }}
+      NX_CLOUD_ACCESS_TOKEN_RO_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO_RW'] }}
+      NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -86,13 +86,13 @@ jobs:
 
       - name: Configure Nx Cloud access
         run: |
-          TOKEN="$NX_CLOUD_RW_TOKEN"
+          TOKEN="$NX_CLOUD_ACCESS_TOKEN_RO_RW"
           if [ -z "$TOKEN" ]; then
-            TOKEN="$NX_CLOUD_ACCESS_TOKEN"
+            TOKEN="$NX_CLOUD_ACCESS_TOKEN_RO"
           fi
 
           if [ -n "$TOKEN" ]; then
-            echo "NX_CLOUD_ACCESS_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+            echo "NX_CLOUD_ACCESS_TOKEN_RO=$TOKEN" >> "$GITHUB_ENV"
             echo "NX_NO_CLOUD=false" >> "$GITHUB_ENV"
             echo "Nx Cloud enabled for release workflow."
           else

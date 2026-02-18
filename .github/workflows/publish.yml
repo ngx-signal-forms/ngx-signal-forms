@@ -31,8 +31,8 @@ jobs:
     timeout-minutes: 10
     if: ${{ github.event_name == 'workflow_dispatch' }}
     env:
-      NX_CLOUD_RW_TOKEN: ${{ secrets['NX_CLOUD_RW_TOKEN'] }}
-      NX_CLOUD_ACCESS_TOKEN: ${{ secrets['NX_CLOUD_ACCESS_TOKEN'] }}
+      NX_CLOUD_ACCESS_TOKEN_RO_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO_RW'] }}
+      NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
     steps:
       - name: Resolve publish ref
         id: publish_ref
@@ -101,13 +101,13 @@ jobs:
 
       - name: Configure Nx Cloud access
         run: |
-          TOKEN="$NX_CLOUD_RW_TOKEN"
+          TOKEN="$NX_CLOUD_ACCESS_TOKEN_RO_RW"
           if [ -z "$TOKEN" ]; then
-            TOKEN="$NX_CLOUD_ACCESS_TOKEN"
+            TOKEN="$NX_CLOUD_ACCESS_TOKEN_RO"
           fi
 
           if [ -n "$TOKEN" ]; then
-            echo "NX_CLOUD_ACCESS_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+            echo "NX_CLOUD_ACCESS_TOKEN_RO=$TOKEN" >> "$GITHUB_ENV"
             echo "NX_NO_CLOUD=false" >> "$GITHUB_ENV"
             echo "Nx Cloud enabled for publish workflow."
           else
