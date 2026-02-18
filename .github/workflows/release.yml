@@ -139,13 +139,13 @@ jobs:
 
       - name: Release (Dry Run)
         if: ${{ inputs.dry_run }}
-        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run --outputStyle=static
+        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release
         if: ${{ !inputs.dry_run }}
-        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --outputStyle=static
+        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -181,7 +181,7 @@ jobs:
 
       - name: Publish packages
         if: ${{ !inputs.dry_run }}
-        run: pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --skip-nx-cache --outputStyle=static
+        run: pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --skip-nx-cache
         env:
           # Uses NPM_TOKEN if OIDC fails - set this secret in repo settings
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
