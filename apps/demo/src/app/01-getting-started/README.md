@@ -249,7 +249,7 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
 
 ### Level 4: Form Field Wrapper
 
-**Path:** `03-form-field-wrapper/`
+**Path:** `04-form-field-wrapper/`
 
 **What changes:**
 
@@ -260,7 +260,7 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
 
 ### Level 5: Advanced Patterns
 
-**Path:** `04-advanced/`
+**Path:** `05-advanced/`
 
 **What changes:**
 

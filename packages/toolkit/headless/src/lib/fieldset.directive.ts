@@ -1,16 +1,16 @@
-import { computed, Directive, input, type Signal } from '@angular/core';
-import type { FieldState, FieldTree } from '@angular/forms/signals';
+import { computed, Directive, input } from '@angular/core';
+import type { FieldTree } from '@angular/forms/signals';
 import {
   injectFormConfig,
   injectFormContext,
   isBlockingError,
   isWarningError,
+  resolveErrorDisplayStrategy,
   showErrors,
-  unwrapValue,
   type ErrorDisplayStrategy,
   type ReactiveOrStatic,
   type SubmittedStatus,
-} from '@ngx-signal-forms/toolkit';
+} from '@ngx-signal-forms/toolkit/core';
 
 import type { ValidationError } from '@angular/forms/signals';
 import {
@@ -25,29 +25,29 @@ import {
  */
 export interface FieldsetStateSignals {
   /** Aggregated and deduplicated errors from all fields */
-  readonly aggregatedErrors: Signal<ValidationError[]>;
+  readonly aggregatedErrors: () => ValidationError[];
   /** Aggregated and deduplicated warnings from all fields */
-  readonly aggregatedWarnings: Signal<ValidationError[]>;
+  readonly aggregatedWarnings: () => ValidationError[];
   /** Whether the fieldset has blocking errors */
-  readonly hasErrors: Signal<boolean>;
+  readonly hasErrors: () => boolean;
   /** Whether the fieldset has warnings */
-  readonly hasWarnings: Signal<boolean>;
+  readonly hasWarnings: () => boolean;
   /** Whether to show errors based on strategy */
-  readonly shouldShowErrors: Signal<boolean>;
+  readonly shouldShowErrors: () => boolean;
   /** Whether to show warnings based on strategy */
-  readonly shouldShowWarnings: Signal<boolean>;
+  readonly shouldShowWarnings: () => boolean;
   /** Resolved error display strategy */
-  readonly resolvedStrategy: Signal<ErrorDisplayStrategy>;
+  readonly resolvedStrategy: () => ErrorDisplayStrategy;
   /** Resolved submitted status */
-  readonly submittedStatus: Signal<SubmittedStatus>;
+  readonly submittedStatus: () => SubmittedStatus;
   /** Fieldset validation state flags */
-  readonly isInvalid: Signal<boolean>;
-  readonly isValid: Signal<boolean>;
-  readonly isTouched: Signal<boolean>;
-  readonly isDirty: Signal<boolean>;
-  readonly isPending: Signal<boolean>;
+  readonly isInvalid: () => boolean;
+  readonly isValid: () => boolean;
+  readonly isTouched: () => boolean;
+  readonly isDirty: () => boolean;
+  readonly isPending: () => boolean;
   /** Resolved fieldset ID */
-  readonly resolvedFieldsetId: Signal<string>;
+  readonly resolvedFieldsetId: () => string;
 }
 
 /**
@@ -139,21 +139,11 @@ export class NgxHeadlessFieldsetDirective<
    * Resolved error display strategy.
    */
   readonly resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
-    const provided = this.strategy();
-    if (provided !== null && provided !== undefined) {
-      const resolved = unwrapValue(provided);
-      if (resolved !== 'inherit') {
-        return resolved;
-      }
-    }
-
-    const contextStrategy = this.#formContext?.errorStrategy?.();
-    if (contextStrategy) {
-      return contextStrategy;
-    }
-
-    const configured = this.#config.defaultErrorStrategy;
-    return unwrapValue(configured);
+    return resolveErrorDisplayStrategy(
+      this.strategy(),
+      this.#formContext?.errorStrategy?.(),
+      this.#config.defaultErrorStrategy,
+    );
   });
 
   /**
@@ -167,7 +157,7 @@ export class NgxHeadlessFieldsetDirective<
    * Show errors signal based on strategy.
    */
   readonly #showErrorsSignal = showErrors(
-    this.#fieldsetState as () => FieldState<TFieldset>,
+    this.#fieldsetState,
     this.resolvedStrategy,
     this.submittedStatus,
   );

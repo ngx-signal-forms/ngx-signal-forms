@@ -13,13 +13,14 @@ export interface NgxSignalFormFieldContext {
 
 /**
  * Default configuration applied when no explicit providers override values.
+ * @internal
  */
 export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: NgxSignalFormsConfig = {
   autoAria: true,
   defaultErrorStrategy: () => 'on-touch' as const,
   strictFieldResolution: false,
   debug: false,
-  defaultFormFieldAppearance: 'default',
+  defaultFormFieldAppearance: 'standard',
   showRequiredMarker: true,
   requiredMarker: ' *',
 } as const;

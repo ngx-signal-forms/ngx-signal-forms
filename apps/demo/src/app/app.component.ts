@@ -133,15 +133,23 @@ export class AppComponent implements AfterViewInit {
         },
         {
           path: '/form-field-wrapper/complex-forms',
-          label: 'Complex Forms',
+          label: 'Complex Forms (Nested + Arrays)',
         },
         {
           path: '/form-field-wrapper/fieldset',
-          label: 'Fieldset',
+          label: 'Fieldset (Grouped Errors)',
         },
         {
           path: '/form-field-wrapper/outline-form-field',
           label: 'Outlined Form Fields',
+        },
+        {
+          path: '/form-field-wrapper/dynamic-appearance',
+          label: 'Dynamic Appearance',
+        },
+        {
+          path: '/form-field-wrapper/custom-controls',
+          label: 'Custom Controls',
         },
       ],
     },
@@ -163,24 +171,12 @@ export class AppComponent implements AfterViewInit {
           label: 'Error Messages',
         },
         {
-          path: '/advanced-scenarios/dynamic-list',
-          label: 'Dynamic Lists',
-        },
-        {
-          path: '/advanced-scenarios/nested-groups',
-          label: 'Nested Groups',
+          path: '/advanced-scenarios/advanced-wizard',
+          label: 'Advanced Wizard (NgRx Signal Store)',
         },
         {
           path: '/advanced-scenarios/async-validation',
           label: 'Async Validation',
-        },
-        {
-          path: '/advanced-scenarios/stepper-form',
-          label: 'Stepper Form',
-        },
-        {
-          path: '/advanced-scenarios/advanced-wizard',
-          label: 'Advanced Wizard',
         },
         {
           path: '/advanced-scenarios/cross-field-validation',

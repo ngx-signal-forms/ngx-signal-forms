@@ -139,35 +139,59 @@ export function isSubmitting(formTree: FieldTree<unknown>): Signal<boolean> {
   });
 }
 
-function createSubmittedStatusTracker(
-  formTree: FieldTree<unknown>,
+export function createSubmittedStatusTracker(
+  formTree: FieldTree<unknown> | Signal<FieldTree<unknown> | undefined>,
 ): Signal<SubmittedStatus> {
   assertInInjectionContext(createSubmittedStatusTracker);
+
+  const resolveFormTree = (): FieldTree<unknown> | undefined => {
+    if (typeof formTree !== 'function') {
+      return undefined;
+    }
+
+    const candidate = formTree as () => unknown;
+    const resolved = candidate();
+
+    if (typeof resolved === 'function') {
+      return resolved as FieldTree<unknown>;
+    }
+
+    if (
+      resolved &&
+      typeof resolved === 'object' &&
+      typeof (resolved as { submitting?: unknown }).submitting === 'function' &&
+      typeof (resolved as { touched?: unknown }).touched === 'function'
+    ) {
+      return formTree as FieldTree<unknown>;
+    }
+
+    return undefined;
+  };
 
   const hasSubmitted = signal(false);
   const wasSubmitting = signal(false);
   const wasTouched = signal(false);
 
   effect(() => {
-    const formState = formTree();
-    if (!formState) {
+    const resolvedFormTree = resolveFormTree();
+    if (!resolvedFormTree) {
       wasSubmitting.set(false);
       wasTouched.set(false);
+      hasSubmitted.set(false);
       return;
     }
+
+    const formState = resolvedFormTree();
 
     const isSubmitting = formState.submitting();
     const isTouched = formState.touched();
     const prevSubmitting = wasSubmitting();
     const prevTouched = wasTouched();
 
-    // Detect submit completion: submitting went from true to false
     if (prevSubmitting && !isSubmitting) {
       hasSubmitted.set(true);
     }
 
-    // Detect reset: touched went from true to false (form.reset() clears touched)
-    // Only reset if not currently submitting to avoid false positives
     if (prevTouched && !isTouched && !isSubmitting) {
       hasSubmitted.set(false);
     }
@@ -177,10 +201,12 @@ function createSubmittedStatusTracker(
   });
 
   return computed(() => {
-    const formState = formTree();
-    if (!formState) {
+    const resolvedFormTree = resolveFormTree();
+    if (!resolvedFormTree) {
       return 'unsubmitted';
     }
+
+    const formState = resolvedFormTree();
 
     if (formState.submitting()) {
       return 'submitting';
@@ -473,7 +499,13 @@ function isFieldTree(value: unknown): boolean {
       'markAsTouched' in result &&
       typeof (result as Record<string, unknown>)['markAsTouched'] === 'function'
     );
-  } catch {
+  } catch (error) {
+    if (typeof ngDevMode === 'undefined' || ngDevMode) {
+      console.warn(
+        '[ngx-signal-forms] FieldTree detection failed unexpectedly.',
+        error,
+      );
+    }
     return false;
   }
 }

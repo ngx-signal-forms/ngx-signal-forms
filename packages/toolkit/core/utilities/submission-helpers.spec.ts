@@ -231,6 +231,7 @@ describe('Submission Helpers', () => {
         const submittingState = signal(false);
         const mockForm = createMockFormWithSubmitting(() => submittingState());
 
+        // Act
         // Act: Call in injection context (hasSubmitted uses effect internally)
         const result = TestBed.runInInjectionContext(() =>
           hasSubmitted(mockForm),

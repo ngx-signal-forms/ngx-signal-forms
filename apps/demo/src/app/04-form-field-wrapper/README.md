@@ -303,7 +303,7 @@ ngx-signal-form-field-wrapper {
 
 ### Level 5: Advanced Patterns
 
-**Path:** `04-advanced/`
+**Path:** `05-advanced/`
 
 **What you'll learn:**
 
@@ -398,4 +398,4 @@ ngx-signal-form-field-wrapper > div {
 
 ---
 
-**Next:** Explore `04-advanced/` for production patterns and global configuration! 🚀
+**Next:** Explore `05-advanced/` for production patterns and global configuration! 🚀

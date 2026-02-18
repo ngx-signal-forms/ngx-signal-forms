@@ -454,7 +454,6 @@
   align-items: center;
   user-select: none;
   font-size: 0.875rem; // 14px - clean, readable size
-  // Remove baseline gaps so SVGs center precisely within flex container
   line-height: 0;
   opacity: 0.6; // More subtle, integrated look
   color: var(--_color-text-muted);

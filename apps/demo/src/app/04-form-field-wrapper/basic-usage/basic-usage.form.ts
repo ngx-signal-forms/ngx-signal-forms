@@ -8,6 +8,7 @@ import { FormField, form, submit } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
+  type FormFieldAppearance,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import {
@@ -50,7 +51,12 @@ export class BasicUsageComponent {
   /**
    * Error display mode input - controls when errors are shown
    */
-  errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+
+  /**
+   * Form field appearance input
+   */
+  readonly appearance = input<FormFieldAppearance>('standard');
 
   /**
    * Form model signal with default values

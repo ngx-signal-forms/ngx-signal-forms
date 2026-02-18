@@ -1,9 +1,5 @@
-import { computed, Directive, inject, input, type Signal } from '@angular/core';
-import type {
-  FieldState,
-  FieldTree,
-  ValidationError,
-} from '@angular/forms/signals';
+import { computed, Directive, inject, input } from '@angular/core';
+import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   generateErrorId,
   generateWarningId,
@@ -11,13 +7,17 @@ import {
   isBlockingError,
   isWarningError,
   NGX_ERROR_MESSAGES,
+  resolveErrorDisplayStrategy,
+  resolveValidationErrorMessage,
   showErrors,
   unwrapValue,
   type ErrorDisplayStrategy,
   type ReactiveOrStatic,
   type SubmittedStatus,
-  type ValidationErrorWithParams,
-} from '@ngx-signal-forms/toolkit';
+} from '@ngx-signal-forms/toolkit/core';
+
+import type { ErrorMessageRegistry } from '@ngx-signal-forms/toolkit/core';
+import { readDirectErrors } from './utilities';
 
 /**
  * Resolved error with kind and message.
@@ -34,25 +34,25 @@ export interface ResolvedError {
  */
 export interface ErrorStateSignals {
   /** Whether to show errors based on the current strategy */
-  readonly showErrors: Signal<boolean>;
+  readonly showErrors: () => boolean;
   /** Whether to show warnings based on the current strategy */
-  readonly showWarnings: Signal<boolean>;
+  readonly showWarnings: () => boolean;
   /** Raw blocking errors from the field */
-  readonly errors: Signal<ValidationError[]>;
+  readonly errors: () => ValidationError[];
   /** Raw warning errors from the field */
-  readonly warnings: Signal<ValidationError[]>;
+  readonly warnings: () => ValidationError[];
   /** Resolved errors with messages */
-  readonly resolvedErrors: Signal<ResolvedError[]>;
+  readonly resolvedErrors: () => ResolvedError[];
   /** Resolved warnings with messages */
-  readonly resolvedWarnings: Signal<ResolvedError[]>;
+  readonly resolvedWarnings: () => ResolvedError[];
   /** Whether the field has blocking errors */
-  readonly hasErrors: Signal<boolean>;
+  readonly hasErrors: () => boolean;
   /** Whether the field has warnings */
-  readonly hasWarnings: Signal<boolean>;
+  readonly hasWarnings: () => boolean;
   /** Generated error ID for aria-describedby */
-  readonly errorId: Signal<string>;
+  readonly errorId: () => string;
   /** Generated warning ID for aria-describedby */
-  readonly warningId: Signal<string>;
+  readonly warningId: () => string;
 }
 
 /**
@@ -142,22 +142,11 @@ export class NgxHeadlessErrorStateDirective<
    * Resolved error display strategy.
    */
   readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
-    const inputStrategy = this.strategy();
-    const unwrappedStrategy =
-      inputStrategy !== undefined && inputStrategy !== null
-        ? unwrapValue(inputStrategy)
-        : undefined;
-
-    if (unwrappedStrategy !== undefined && unwrappedStrategy !== 'inherit') {
-      return unwrappedStrategy;
-    }
-
-    const contextStrategy = this.#injectedContext?.errorStrategy?.();
-    if (contextStrategy && contextStrategy !== 'inherit') {
-      return contextStrategy;
-    }
-
-    return 'on-touch';
+    return resolveErrorDisplayStrategy(
+      this.strategy(),
+      this.#injectedContext?.errorStrategy?.(),
+      undefined,
+    );
   });
 
   /**
@@ -198,7 +187,7 @@ export class NgxHeadlessErrorStateDirective<
    * Whether errors should be shown based on strategy.
    */
   readonly showErrors = showErrors(
-    this.#fieldState as Signal<FieldState<TValue>>,
+    this.#fieldState,
     this.#resolvedStrategy,
     this.#resolvedSubmittedStatus,
   );
@@ -212,21 +201,7 @@ export class NgxHeadlessErrorStateDirective<
    * All validation messages from the field.
    */
   readonly #allMessages = computed(() => {
-    const fieldState = this.#fieldState();
-
-    if (!fieldState || typeof fieldState !== 'object') {
-      return [];
-    }
-
-    const errorsGetter = (
-      fieldState as unknown as { errors?: () => ValidationError[] }
-    ).errors;
-
-    if (typeof errorsGetter === 'function') {
-      return errorsGetter() || [];
-    }
-
-    return [];
+    return readDirectErrors(this.#fieldState());
   });
 
   /**
@@ -271,54 +246,9 @@ export class NgxHeadlessErrorStateDirective<
     })),
   );
 
-  /**
-   * Resolves error message using 3-tier priority:
-   * 1. error.message (from validator)
-   * 2. Registry override (from provideErrorMessages)
-   * 3. Default fallback
-   */
   #resolveErrorMessage(error: ValidationError): string {
-    if (error.message) {
-      return error.message;
-    }
-
-    if (this.#errorMessagesRegistry) {
-      const registryMessage = this.#errorMessagesRegistry[error.kind];
-      if (registryMessage !== undefined) {
-        if (typeof registryMessage === 'function') {
-          return registryMessage(error as ValidationErrorWithParams);
-        }
-        return registryMessage;
-      }
-    }
-
-    return this.#getDefaultMessage(error);
-  }
-
-  /**
-   * Get default fallback message for built-in validators.
-   */
-  #getDefaultMessage(error: ValidationError): string {
-    const kind = error.kind;
-    const errorParams = error as ValidationErrorWithParams;
-
-    switch (kind) {
-      case 'required':
-        return 'This field is required';
-      case 'email':
-        return 'Please enter a valid email address';
-      case 'minLength':
-        return `Minimum ${errorParams['minLength'] || 0} characters required`;
-      case 'maxLength':
-        return `Maximum ${errorParams['maxLength'] || 0} characters allowed`;
-      case 'min':
-        return `Minimum value is ${errorParams['min'] || 0}`;
-      case 'max':
-        return `Maximum value is ${errorParams['max'] || 0}`;
-      case 'pattern':
-        return 'Invalid format';
-      default:
-        return kind.replace(/_/g, ' ').replace(/^warn:/, '');
-    }
+    return resolveValidationErrorMessage(error, this.#errorMessagesRegistry, {
+      stripWarningPrefix: true,
+    });
   }
 }

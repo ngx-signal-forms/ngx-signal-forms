@@ -7,13 +7,10 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { NGX_SIGNAL_FORM_FIELD_CONTEXT } from '@ngx-signal-forms/toolkit/core';
-
-let uniqueHintIdCounter = 0;
-
-function generateUniqueHintId(): string {
-  return `hint-${++uniqueHintIdCounter}`;
-}
+import {
+  createUniqueId,
+  NGX_SIGNAL_FORM_FIELD_CONTEXT,
+} from '@ngx-signal-forms/toolkit/core';
 
 /**
  * Form field hint component for displaying helper text.
@@ -124,7 +121,7 @@ export class NgxFormFieldHintComponent {
     const fieldName = this.resolvedFieldName();
     if (fieldName) return `${fieldName}-hint`;
 
-    return generateUniqueHintId();
+    return createUniqueId('hint');
   });
 
   constructor() {

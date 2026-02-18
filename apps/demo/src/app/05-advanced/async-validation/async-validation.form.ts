@@ -48,7 +48,10 @@ const registrationSchema = schema<Registration>((path) => {
       </p>
 
       <form (submit)="register($event)" class="max-w-md space-y-6">
-        <ngx-signal-form-field-wrapper [formField]="regForm.username" outline>
+        <ngx-signal-form-field-wrapper
+          [formField]="regForm.username"
+          appearance="outline"
+        >
           <label for="username">Username</label>
           <input
             id="username"

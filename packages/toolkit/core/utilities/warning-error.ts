@@ -85,8 +85,10 @@ export function isBlockingError(error: ValidationError): boolean {
  * @see {@link https://angular.dev/api/forms/signals/ValidationError | ValidationError API}
  */
 export function warningError(kind: string, message?: string): ValidationError {
+  const normalizedKind = kind.startsWith('warn:') ? kind.slice(5) : kind;
+
   return {
-    kind: `warn:${kind}`,
+    kind: `warn:${normalizedKind}`,
     message,
   };
 }

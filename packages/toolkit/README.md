@@ -93,15 +93,16 @@ Auto-applies:
 ### Configuration
 
 ```typescript
-interface NgxSignalFormsConfig {
-  autoAria: boolean; // Default: true
-  defaultErrorStrategy: ErrorDisplayStrategy; // Default: 'on-touch'
-  defaultFormFieldAppearance?: 'default' | 'outline'; // Default: 'default'
-  showRequiredMarker: boolean; // Default: true
-  requiredMarker: string; // Default: ' *'
+// User config (all properties optional with defaults shown)
+interface NgxSignalFormsUserConfig {
+  autoAria?: boolean; // Default: true
+  defaultErrorStrategy?: ErrorDisplayStrategy; // Default: 'on-touch'
+  defaultFormFieldAppearance?: 'standard' | 'outline'; // Default: 'standard'
+  showRequiredMarker?: boolean; // Default: true
+  requiredMarker?: string; // Default: ' *'
   fieldNameResolver?: (el: HTMLElement) => string | null;
-  strictFieldResolution: boolean; // Default: false
-  debug: boolean; // Default: false
+  strictFieldResolution?: boolean; // Default: false
+  debug?: boolean; // Default: false
 }
 
 type ErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit' | 'manual';

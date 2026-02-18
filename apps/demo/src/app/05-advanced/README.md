@@ -60,6 +60,39 @@ This section demonstrates **production-ready patterns** for real-world applicati
 - Async/await patterns
 - Server error integration
 
+---
+
+### advanced-wizard
+
+**Focus:** Canonical multi-step production wizard
+
+**What you'll learn:**
+
+- NgRx Signal Store feature composition for wizard state
+- Form-per-step architecture with explicit commit boundaries
+- Cross-step validation (traveler + trip constraints)
+- Debounced autosave and step orchestration
+- Zod-backed schema validation in a realistic workflow
+
+**Technologies:**
+
+- `@ngrx/signals` Signal Store
+- Angular Signal Forms step factories
+- Zod schema validation
+- Deferred step rendering and focus management
+
+---
+
+### Consolidated examples (route cleanup)
+
+The following overlapping demos were consolidated to reduce duplication:
+
+- `advanced-scenarios/dynamic-list` → `form-field-wrapper/complex-forms`
+- `advanced-scenarios/nested-groups` → `form-field-wrapper/complex-forms`
+- `advanced-scenarios/stepper-form` → `advanced-scenarios/advanced-wizard`
+
+Legacy paths are redirected so existing links keep working.
+
 ## 🎨 Global Configuration
 
 ### provideNgxSignalFormsConfig

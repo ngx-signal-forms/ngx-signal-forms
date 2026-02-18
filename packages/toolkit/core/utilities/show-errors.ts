@@ -1,11 +1,14 @@
 import { computed, type Signal } from '@angular/core';
-import type { FieldState } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
   ReactiveOrStatic,
   SubmittedStatus,
 } from '../types';
 import { computeShowErrors as baseComputeShowErrors } from './error-strategies';
+import type {
+  ErrorVisibilityState,
+  PartialErrorVisibilityState,
+} from './field-state-types';
 
 /**
  * Convenience wrapper for {@link computeShowErrors} with cleaner import path.
@@ -34,7 +37,6 @@ import { computeShowErrors as baseComputeShowErrors } from './error-strategies';
  *    - `'manual'`: Developer controls visibility (always returns `false`)
  * 3. Returns a computed signal that updates when field state changes
  *
- * @template T The type of the field value
  * @param field - The form field state (FieldTree from Angular Signal Forms)
  * @param strategy - The error display strategy (defaults to 'on-touch')
  * @param submittedStatus - Optional: Only needed for 'on-submit' strategy
@@ -80,8 +82,8 @@ import { computeShowErrors as baseComputeShowErrors } from './error-strategies';
  * @see {@link createShowErrorsSignal} For options-based API
  * @see {@link combineShowErrors} For combining multiple error signals
  */
-export function showErrors<T>(
-  field: ReactiveOrStatic<FieldState<T>>,
+export function showErrors(
+  field: ReactiveOrStatic<ErrorVisibilityState | PartialErrorVisibilityState>,
   strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
   submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
 ): Signal<boolean> {
@@ -110,7 +112,6 @@ export function showErrors<T>(
  * 2. Defaults to 'on-touch' strategy if not specified
  * 3. Delegates to {@link computeShowErrors} with unwrapped options
  *
- * @template T The type of the field value
  * @param field - The form field state
  * @param options - Configuration options
  * @param options.strategy - Error display strategy (defaults to 'on-touch')
@@ -150,8 +151,8 @@ export function showErrors<T>(
  * @see {@link computeShowErrors} For full implementation details
  * @see {@link combineShowErrors} For combining multiple error signals
  */
-export function createShowErrorsSignal<T extends FieldState<unknown>>(
-  field: ReactiveOrStatic<T>,
+export function createShowErrorsSignal<T extends PartialErrorVisibilityState>(
+  field: ReactiveOrStatic<T | ErrorVisibilityState>,
   options: {
     strategy?: ReactiveOrStatic<ErrorDisplayStrategy>;
     submittedStatus: ReactiveOrStatic<SubmittedStatus>;

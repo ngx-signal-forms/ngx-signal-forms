@@ -6,7 +6,6 @@ import {
   computed,
   effect,
   ElementRef,
-  forwardRef,
   inject,
   input,
   signal,
@@ -14,12 +13,16 @@ import {
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
+  FormFieldAppearanceInput,
   ReactiveOrStatic,
 } from '@ngx-signal-forms/toolkit';
 import {
+  createUniqueId,
   NGX_SIGNAL_FORM_CONTEXT,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORMS_CONFIG,
+  resolveErrorDisplayStrategy,
+  shouldShowErrors,
 } from '@ngx-signal-forms/toolkit';
 import {
   isBlockingError,
@@ -27,20 +30,6 @@ import {
   NgxFormFieldAssistiveRowComponent,
   NgxSignalFormErrorComponent,
 } from '@ngx-signal-forms/toolkit/assistive';
-
-/**
- * Counter for generating unique field IDs when fieldName is not provided.
- * The counter is incremented using the pre-increment operator within component initialization.
- */
-let uniqueFieldIdCounter = 0;
-
-/**
- * Generates a unique field ID by incrementing the global counter.
- * Each call returns a new unique ID (e.g., "field-1", "field-2", etc.).
- */
-function generateUniqueFieldId(): string {
-  return `field-${++uniqueFieldIdCounter}`;
-}
 
 /**
  * Form field wrapper component with automatic error/warning display.
@@ -78,7 +67,7 @@ function generateUniqueFieldId(): string {
  *
  * @example Outlined Layout
  * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.email" outline>
+ * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
  *   <label for="email">Email Address</label>
  *   <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
  * </ngx-signal-form-field-wrapper>
@@ -86,7 +75,7 @@ function generateUniqueFieldId(): string {
  *
  * @example With Character Count
  * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.bio" outline>
+ * <ngx-signal-form-field-wrapper [formField]="form.bio" appearance="outline">
  *   <label for="bio">Bio</label>
  *   <textarea id="bio" [formField]="form.bio"></textarea>
  *   <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
@@ -153,10 +142,12 @@ function generateUniqueFieldId(): string {
   providers: [
     {
       provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
-      useFactory: (component: NgxSignalFormFieldWrapperComponent) => ({
-        fieldName: component.resolvedFieldName,
-      }),
-      deps: [forwardRef(() => NgxSignalFormFieldWrapperComponent)],
+      useFactory: () => {
+        const component = inject(NgxSignalFormFieldWrapperComponent);
+        return {
+          fieldName: component.resolvedFieldName,
+        };
+      },
     },
   ],
   styleUrl: './form-field-wrapper.component.scss',
@@ -214,6 +205,42 @@ function generateUniqueFieldId(): string {
   `,
 })
 export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
+  #findBoundControl(hostEl: HTMLElement): HTMLElement | null {
+    const explicitBoundControl = hostEl.querySelector(
+      '[formField], [ng-reflect-form-field], [data-ngx-signal-form-control]',
+    ) as HTMLElement | null;
+
+    if (explicitBoundControl?.getAttribute('id')) {
+      return explicitBoundControl;
+    }
+
+    const nativeControl = hostEl.querySelector(
+      'input, textarea, select, button[type="button"]',
+    ) as HTMLElement | null;
+
+    if (nativeControl?.getAttribute('id')) {
+      return nativeControl;
+    }
+
+    const customControl = hostEl.querySelector(
+      '[id][formField], [id][ng-reflect-form-field], [id][data-ngx-signal-form-control]',
+    ) as HTMLElement | null;
+
+    if (customControl) {
+      return customControl;
+    }
+
+    const idBasedFallback = hostEl.querySelector(
+      '[id]:not(label):not(ngx-signal-form-field-wrapper):not(ngx-signal-form-error):not(ngx-signal-form-field-hint):not(ngx-signal-form-field-character-count):not([role="alert"]):not([role="status"])',
+    ) as HTMLElement | null;
+
+    if (idBasedFallback) {
+      return idBasedFallback;
+    }
+
+    return nativeControl;
+  }
+
   /**
    * The Signal Forms field to display.
    * Accepts a FieldTree from Angular Signal Forms.
@@ -285,12 +312,55 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   readonly showErrors = input<boolean>(true);
 
   /**
-   * Enable outlined form field appearance.
-   * When true, applies Material Design outlined input styling.
+   * Form field appearance variant.
    *
-   * @default Inherited from NgxSignalFormsConfig.defaultFormFieldAppearance
+   * Controls the visual style of the form field wrapper:
+   * - `'standard'`: Default appearance with label above input
+   * - `'outline'`: Material Design outlined appearance with floating label
+   * - `'inherit'`: Use the global config default (defaultFormFieldAppearance)
    *
-   * @example Explicit outline
+   * @default 'inherit'
+   *
+   * @example Explicit standard appearance (override global config)
+   * ```html
+   * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="standard">
+   *   <label for="email">Email</label>
+   *   <input id="email" [formField]="form.email" />
+   * </ngx-signal-form-field-wrapper>
+   * ```
+   *
+   * @example Explicit outline appearance
+   * ```html
+   * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
+   *   <label for="email">Email</label>
+   *   <input id="email" [formField]="form.email" />
+   * </ngx-signal-form-field-wrapper>
+   * ```
+   *
+   * @example Inherit from global config (default behavior)
+   * ```html
+   * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="inherit">
+   *   <label for="email">Email</label>
+   *   <input id="email" [formField]="form.email" />
+   * </ngx-signal-form-field-wrapper>
+   * ```
+   *
+   * @example Global config
+   * ```typescript
+   * provideNgxSignalFormsConfig({
+   *   defaultFormFieldAppearance: 'outline', // All inherit fields use outline
+   * });
+   * ```
+   */
+  readonly appearance = input<FormFieldAppearanceInput>('inherit');
+
+  /**
+   * @deprecated Use `appearance="outline"` instead. Maintained for backward compatibility.
+   *
+   * Legacy boolean attribute for outline appearance.
+   * When true, forces outline appearance regardless of `appearance` input or config.
+   *
+   * @example Legacy usage (still works)
    * ```html
    * <ngx-signal-form-field-wrapper [formField]="form.email" outline>
    *   <label for="email">Email</label>
@@ -298,11 +368,12 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * </ngx-signal-form-field-wrapper>
    * ```
    *
-   * @example Global default via config
-   * ```typescript
-   * provideNgxSignalFormsConfig({
-   *   defaultFormFieldAppearance: 'outline',
-   * });
+   * @example Recommended replacement
+   * ```html
+   * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
+   *   <label for="email">Email</label>
+   *   <input id="email" [formField]="form.email" />
+   * </ngx-signal-form-field-wrapper>
    * ```
    */
   readonly outline = input(false, { transform: booleanAttribute });
@@ -332,7 +403,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   /**
    * Auto-generated unique field ID as fallback when no explicit fieldName or input id is found.
    */
-  readonly #generatedFieldId = generateUniqueFieldId();
+  readonly #generatedFieldId = createUniqueId('field');
 
   /**
    * Reference to the host element for DOM queries.
@@ -347,16 +418,31 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
 
   /**
    * Computed signal determining if outline appearance should be applied.
-   * Respects explicit outline input, falls back to config default.
+   * Resolves the effective appearance based on component input and config default.
+   *
+   * Resolution priority:
+   * 1. Legacy `outline` boolean input (for backward compatibility)
+   * 2. Component `appearance` input (if not 'inherit')
+   * 3. Global config `defaultFormFieldAppearance`
    */
   protected readonly isOutline = computed(() => {
-    // Priority 1: Explicit outline input
+    // Priority 1: Legacy outline boolean (backward compatibility)
     if (this.outline()) {
       return true;
     }
 
-    // Priority 2: Config default
-    return this.#config.defaultFormFieldAppearance === 'outline';
+    // Priority 2: Explicit component appearance (non-inherit)
+    const componentAppearance = this.appearance();
+    if (componentAppearance === 'outline') {
+      return true;
+    }
+    if (componentAppearance === 'standard') {
+      return false;
+    }
+
+    // Priority 3: Inherit from config default
+    const configDefault = this.#config.defaultFormFieldAppearance;
+    return configDefault === 'outline';
   });
 
   /**
@@ -409,6 +495,13 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
       return idFromInput;
     }
 
+    const controlId = this.#findBoundControl(
+      this.#elementRef.nativeElement as HTMLElement,
+    )?.getAttribute('id');
+    if (controlId) {
+      return controlId;
+    }
+
     // Priority 3: Fallback to auto-generated unique ID
     return this.#generatedFieldId;
   });
@@ -417,13 +510,11 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * Effective error display strategy combining component input and form context defaults.
    */
   protected readonly effectiveStrategy = computed(() => {
-    const explicit = this.strategy();
-    if (explicit !== null) {
-      return typeof explicit === 'function' ? explicit() : explicit;
-    }
-
-    const contextStrategy = this.#formContext?.errorStrategy?.();
-    return contextStrategy ?? 'on-touch';
+    return resolveErrorDisplayStrategy(
+      this.strategy(),
+      this.#formContext?.errorStrategy?.(),
+      this.#config.defaultErrorStrategy,
+    );
   });
 
   /**
@@ -475,31 +566,15 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     const errors = this.#allMessages();
     if (errors.length === 0) return false;
 
-    const strategy = this.effectiveStrategy();
     const fieldState = this.formField()();
 
     if (!fieldState || typeof fieldState !== 'object') return false;
 
-    const touched =
-      'touched' in fieldState && typeof fieldState.touched === 'function'
-        ? (fieldState.touched as () => boolean)()
-        : false;
-
-    switch (strategy) {
-      case 'on-touch':
-        return touched;
-      case 'on-submit':
-        return this.submittedStatus() === 'submitted';
-      case 'immediate':
-        return true;
-      case 'manual':
-        return false; // Manual strategy means component handles display
-      case 'inherit':
-        // Inherit should have been resolved by effectiveStrategy
-        return touched;
-      default:
-        return touched;
-    }
+    return shouldShowErrors(
+      fieldState,
+      this.effectiveStrategy(),
+      this.submittedStatus(),
+    );
   });
 
   /**
@@ -519,18 +594,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     afterNextRender(() => {
       const hostEl = this.#elementRef.nativeElement as HTMLElement;
 
-      // Priority 1: Native form elements (most common case)
-      let inputEl = hostEl.querySelector(
-        'input, textarea, select, button[type="button"]',
-      ) as HTMLElement | null;
-
-      // Priority 2: Custom controls with [id] - supports FormValueControl components
-      // Excludes: label, wrapper, and all assistive elements
-      if (!inputEl || !inputEl.getAttribute('id')) {
-        inputEl = hostEl.querySelector(
-          '[id]:not(label):not(ngx-signal-form-field-wrapper):not(ngx-signal-form-error):not(ngx-signal-form-field-hint):not(ngx-signal-form-field-character-count):not([role="alert"]):not([role="status"])',
-        ) as HTMLElement | null;
-      }
+      const inputEl = this.#findBoundControl(hostEl);
 
       if (inputEl) {
         const id = inputEl.getAttribute('id');
@@ -545,16 +609,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
       const fieldName = this.resolvedFieldName();
       const hostEl = this.#elementRef.nativeElement as HTMLElement;
 
-      // Use same fallback logic as afterNextRender
-      let inputEl = hostEl.querySelector(
-        'input, textarea, select, button[type="button"]',
-      ) as HTMLElement | null;
-
-      if (!inputEl) {
-        inputEl = hostEl.querySelector(
-          '[id]:not(label):not(ngx-signal-form-field-wrapper):not(ngx-signal-form-error):not(ngx-signal-form-field-hint):not(ngx-signal-form-field-character-count):not([role="alert"]):not([role="status"])',
-        ) as HTMLElement | null;
-      }
+      const inputEl = this.#findBoundControl(hostEl);
 
       if (inputEl) {
         inputEl.setAttribute('data-signal-field', fieldName);
