@@ -454,8 +454,7 @@
   align-items: center;
   user-select: none;
   font-size: 0.875rem; // 14px - clean, readable size
-  // Ensure text renders correctly - flex container handles vertical alignment
-  line-height: normal;
+  line-height: 0;
   opacity: 0.6; // More subtle, integrated look
   color: var(--_color-text-muted);
   transition:

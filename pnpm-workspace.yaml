@@ -4,9 +4,6 @@ packages:
 
 autoInstallPeers: true
 
-ignoredBuiltDependencies:
-  - msw
-
 onlyBuiltDependencies:
   - '@swc/core'
   - nx
