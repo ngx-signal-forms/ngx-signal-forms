@@ -20,23 +20,24 @@ permissions:
   contents: read
   id-token: write # Required for npm Trusted Publishers (OIDC)
 
+concurrency:
+  group: publish-${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   publish:
     name: Publish to npm
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.event_name == 'workflow_dispatch' }}
+    env:
+      NX_CLOUD_RW_TOKEN: ${{ secrets['NX_CLOUD_RW_TOKEN'] }}
+      NX_CLOUD_ACCESS_TOKEN: ${{ secrets['NX_CLOUD_ACCESS_TOKEN'] }}
     steps:
       - name: Resolve publish ref
         id: publish_ref
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "ref=${{ inputs.ref }}" >> "$GITHUB_OUTPUT"
-          else
-            # For workflow_run: Find the tag at the release commit
-            # The Release workflow creates a tag and commit, we need to find it
-            echo "ref=${{ github.event.workflow_run.head_branch }}" >> "$GITHUB_OUTPUT"
-          fi
+          echo "ref=${{ inputs.ref }}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v4
         with:
@@ -103,21 +104,37 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Configure Nx Cloud access
+        run: |
+          TOKEN="$NX_CLOUD_RW_TOKEN"
+          if [ -z "$TOKEN" ]; then
+            TOKEN="$NX_CLOUD_ACCESS_TOKEN"
+          fi
+
+          if [ -n "$TOKEN" ]; then
+            echo "NX_CLOUD_ACCESS_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+            echo "NX_NO_CLOUD=false" >> "$GITHUB_ENV"
+            echo "Nx Cloud enabled for publish workflow."
+          else
+            echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
+            echo "No Nx Cloud token configured. Running publish workflow without Nx Cloud."
+          fi
+
       - name: Nx Report
-        run: pnpm exec nx report
+        run: pnpm exec nx report --outputStyle=static
 
       - name: Build toolkit package
-        run: pnpm exec nx run toolkit:build --skip-nx-cache
+        run: pnpm exec nx run toolkit:build --skip-nx-cache --outputStyle=static
 
       - name: Publish packages (Dry Run)
         if: ${{ inputs.dry_run == true }}
         run: |
           echo "🔍 Dry run - would publish with tag: ${{ steps.release_info.outputs.dist_tag }}"
-          pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --dry-run --skip-nx-cache
+          pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --dry-run --skip-nx-cache --outputStyle=static
 
       - name: Publish packages
         if: ${{ inputs.dry_run != true }}
-        run: pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --skip-nx-cache
+        run: pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --skip-nx-cache --outputStyle=static
         env:
           # Uses NPM_TOKEN if OIDC fails - set this secret in repo settings
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

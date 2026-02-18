@@ -22,8 +22,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
-      NX_NO_CLOUD: ${{ inputs.skip_cloud || secrets.NX_CLOUD_ACCESS_TOKEN == '' }}
+      NX_CLOUD_RW_TOKEN: ${{ secrets['NX_CLOUD_RW_TOKEN'] }}
+      NX_CLOUD_RO_TOKEN: ${{ secrets['NX_CLOUD_RO_TOKEN'] }}
+      NX_CLOUD_ACCESS_TOKEN: ${{ secrets['NX_CLOUD_ACCESS_TOKEN'] }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,6 +44,37 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps
 
+      - name: Configure Nx Cloud access
+        id: nx_cloud
+        run: |
+          if [ "${{ inputs.skip_cloud }}" = "true" ]; then
+            echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Nx Cloud disabled via workflow input."
+            exit 0
+          fi
+
+          TOKEN=""
+
+          if [ "${{ github.ref }}" = "refs/heads/main" ] && [ -n "$NX_CLOUD_RW_TOKEN" ]; then
+            TOKEN="$NX_CLOUD_RW_TOKEN"
+          elif [ -n "$NX_CLOUD_RO_TOKEN" ]; then
+            TOKEN="$NX_CLOUD_RO_TOKEN"
+          elif [ -n "$NX_CLOUD_ACCESS_TOKEN" ]; then
+            TOKEN="$NX_CLOUD_ACCESS_TOKEN"
+          fi
+
+          if [ -n "$TOKEN" ]; then
+            echo "NX_CLOUD_ACCESS_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+            echo "NX_NO_CLOUD=false" >> "$GITHUB_ENV"
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "Nx Cloud enabled."
+          else
+            echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "No Nx Cloud token configured. Running without Nx Cloud."
+          fi
+
       # Set BASE/HEAD for affected commands; continue if Nx Cloud quota exceeded
       - uses: nrwl/nx-set-shas@v4
         continue-on-error: true
@@ -54,10 +86,10 @@ jobs:
       # Set skip_cloud=true via workflow_dispatch when quota is exceeded
       # NX_NO_CLOUD is also enabled automatically if no token is available
       - name: Run affected tasks
-        run: pnpm exec nx affected -t lint test build e2e-ci --parallel=3
+        run: pnpm exec nx affected -t lint test build e2e-ci --parallel=3 --outputStyle=static
 
       # https://nx.dev/ci/features/self-healing-ci
       # continue-on-error: fix-ci requires Nx Cloud, may fail if quota exceeded
-      - run: pnpm exec nx fix-ci
-        if: ${{ always() && !inputs.skip_cloud && env.NX_NO_CLOUD != 'true' }}
+      - run: pnpm exec nx fix-ci --outputStyle=static
+        if: ${{ always() && !inputs.skip_cloud && steps.nx_cloud.outputs.enabled == 'true' }}
         continue-on-error: true

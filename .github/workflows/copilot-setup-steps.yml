@@ -12,6 +12,8 @@ on:
 jobs:
   copilot-setup-steps:
     runs-on: ubuntu-latest
+    env:
+      NX_NO_CLOUD: true
 
     permissions:
       contents: read
@@ -41,4 +43,4 @@ jobs:
 
       # Customize this step as needed
       - name: Build application
-        run: pnpm exec nx affected -t build
+        run: pnpm exec nx affected -t build --outputStyle=static

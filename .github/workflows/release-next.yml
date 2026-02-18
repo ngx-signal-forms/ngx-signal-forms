@@ -15,12 +15,17 @@ permissions:
   contents: read
   id-token: write # Required for npm Trusted Publishers (OIDC)
 
+concurrency:
+  group: release-next-${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   release-next:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      NX_NO_CLOUD: true
+      NX_CLOUD_RW_TOKEN: ${{ secrets['NX_CLOUD_RW_TOKEN'] }}
+      NX_CLOUD_ACCESS_TOKEN: ${{ secrets['NX_CLOUD_ACCESS_TOKEN'] }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -41,14 +46,30 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Configure Nx Cloud access
+        run: |
+          TOKEN="$NX_CLOUD_RW_TOKEN"
+          if [ -z "$TOKEN" ]; then
+            TOKEN="$NX_CLOUD_ACCESS_TOKEN"
+          fi
+
+          if [ -n "$TOKEN" ]; then
+            echo "NX_CLOUD_ACCESS_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+            echo "NX_NO_CLOUD=false" >> "$GITHUB_ENV"
+            echo "Nx Cloud enabled for release-next workflow."
+          else
+            echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
+            echo "No Nx Cloud token configured. Running release-next without Nx Cloud."
+          fi
+
       - uses: nrwl/nx-set-shas@v4
         continue-on-error: true
 
       - name: Verify Quality (Lint, Test, Build)
-        run: pnpm exec nx affected -t lint test build
+        run: pnpm exec nx affected -t lint test build --outputStyle=static
 
       - name: Nx Report
-        run: pnpm exec nx report
+        run: pnpm exec nx report --outputStyle=static
 
       - name: Release Next (Dry Run)
         if: ${{ inputs.dry_run == true }}
@@ -56,8 +77,8 @@ jobs:
           SHA_SHORT=$(git rev-parse --short HEAD)
           NEXT_VERSION="0.0.0-next.$SHA_SHORT"
           echo "🔍 Dry run - would release version: $NEXT_VERSION"
-          pnpm exec nx release version $NEXT_VERSION --git-commit=false --git-tag=false --stage-changes=false
-          pnpm exec nx release publish --tag=next --dry-run
+          pnpm exec nx release version $NEXT_VERSION --git-commit=false --git-tag=false --stage-changes=false --outputStyle=static
+          pnpm exec nx release publish --tag=next --dry-run --outputStyle=static
 
       - name: Release Next
         if: ${{ inputs.dry_run != true }}
@@ -67,10 +88,10 @@ jobs:
           echo "📦 Releasing version: $NEXT_VERSION"
 
           # Version without git operations
-          pnpm exec nx release version $NEXT_VERSION --git-commit=false --git-tag=false --stage-changes=false
+          pnpm exec nx release version $NEXT_VERSION --git-commit=false --git-tag=false --stage-changes=false --outputStyle=static
 
           # Publish to npm with next tag (uses OIDC)
-          pnpm exec nx release publish --tag=next
+          pnpm exec nx release publish --tag=next --outputStyle=static
         # No NODE_AUTH_TOKEN needed - uses OIDC via Trusted Publishers!
 
       - name: Summary

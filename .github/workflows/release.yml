@@ -1,7 +1,7 @@
 name: Release
 
 # Manually create versioned releases with changelog and git tags
-# This workflow does NOT publish to npm - use "Publish" workflow after this succeeds
+# This workflow can also publish to npm unless dry_run=true
 #
 # Release types:
 #   - patch/minor/major: Stable releases → npm tag: latest
@@ -47,12 +47,17 @@ permissions:
   contents: write
   id-token: write # Required for npm Trusted Publishers (OIDC)
 
+concurrency:
+  group: release-${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      NX_NO_CLOUD: true
+      NX_CLOUD_RW_TOKEN: ${{ secrets['NX_CLOUD_RW_TOKEN'] }}
+      NX_CLOUD_ACCESS_TOKEN: ${{ secrets['NX_CLOUD_ACCESS_TOKEN'] }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -79,16 +84,32 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Configure Nx Cloud access
+        run: |
+          TOKEN="$NX_CLOUD_RW_TOKEN"
+          if [ -z "$TOKEN" ]; then
+            TOKEN="$NX_CLOUD_ACCESS_TOKEN"
+          fi
+
+          if [ -n "$TOKEN" ]; then
+            echo "NX_CLOUD_ACCESS_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+            echo "NX_NO_CLOUD=false" >> "$GITHUB_ENV"
+            echo "Nx Cloud enabled for release workflow."
+          else
+            echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
+            echo "No Nx Cloud token configured. Running release workflow without Nx Cloud."
+          fi
+
       - uses: nrwl/nx-set-shas@v4
         continue-on-error: true
 
       - name: Nx Report
-        run: pnpm exec nx report
+        run: pnpm exec nx report --outputStyle=static
 
       - name: Verify Quality (Lint, Test, Build, E2E)
         # Using affected ensures we only verify what changed, but caching handles the rest.
         # We target all projects to ensure workspace health before release.
-        run: pnpm exec nx affected -t lint test build e2e-ci
+        run: pnpm exec nx affected -t lint test build e2e-ci --outputStyle=static
 
       - name: Determine version command
         id: version_cmd
@@ -118,13 +139,13 @@ jobs:
 
       - name: Release (Dry Run)
         if: ${{ inputs.dry_run }}
-        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run
+        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run --outputStyle=static
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release
         if: ${{ !inputs.dry_run }}
-        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish
+        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --outputStyle=static
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -160,7 +181,7 @@ jobs:
 
       - name: Publish packages
         if: ${{ !inputs.dry_run }}
-        run: pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --skip-nx-cache
+        run: pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --skip-nx-cache --outputStyle=static
         env:
           # Uses NPM_TOKEN if OIDC fails - set this secret in repo settings
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -175,10 +196,6 @@ jobs:
           echo "Cleaning up failed release: $TAG"
           gh release delete "$TAG" -y || true
           git push origin ":refs/tags/$TAG" || true
-
-      - name: Push changes and tags
-        if: ${{ !inputs.dry_run }}
-        run: git push --follow-tags
 
       - name: Summary
         run: |

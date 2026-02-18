@@ -81,6 +81,13 @@
   },
   "release": {
     "projects": ["toolkit"],
+    "git": {
+      "commit": true,
+      "commitMessage": "chore(release): publish {version}",
+      "tag": true,
+      "tagMessage": "Release {version}",
+      "push": true
+    },
     "changelog": {
       "workspaceChangelog": false,
       "projectChangelogs": {
@@ -92,11 +99,6 @@
           "commitReferences": true,
           "versionTitleDate": true
         }
-      },
-      "git": {
-        "commit": false,
-        "tag": false,
-        "push": true
       }
     },
     "conventionalCommits": {
@@ -147,14 +149,6 @@
           "semverBump": "none",
           "changelog": false
         }
-      }
-    },
-    "version": {
-      "git": {
-        "commit": true,
-        "commitMessage": "chore(release): publish {version}",
-        "tag": true,
-        "tagMessage": "Release {version}"
       }
     },
     "releaseTagPattern": "v{version}"
