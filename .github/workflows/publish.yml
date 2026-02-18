@@ -126,13 +126,12 @@ jobs:
         run: |
           echo "🔍 Dry run - would publish with tag: ${{ steps.release_info.outputs.dist_tag }}"
           pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --dry-run --skip-nx-cache
+        # OIDC Trusted Publisher handles authentication in dry-run too
 
       - name: Publish packages
         if: ${{ inputs.dry_run != true }}
         run: pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --skip-nx-cache
-        env:
-          # Uses NPM_TOKEN if OIDC fails - set this secret in repo settings
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # OIDC Trusted Publisher handles authentication automatically
 
       - name: Summary
         run: |
