@@ -22,8 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      NX_CLOUD_ACCESS_TOKEN_RO_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO_RW'] }}
-      NX_CLOUD_RO_TOKEN: ${{ secrets['NX_CLOUD_RO_TOKEN'] }}
+      NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RW'] }}
       NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
     steps:
       - uses: actions/checkout@v4
@@ -56,10 +55,8 @@ jobs:
 
           TOKEN=""
 
-          if [ "${{ github.ref }}" = "refs/heads/main" ] && [ -n "$NX_CLOUD_ACCESS_TOKEN_RO_RW" ]; then
-            TOKEN="$NX_CLOUD_ACCESS_TOKEN_RO_RW"
-          elif [ -n "$NX_CLOUD_RO_TOKEN" ]; then
-            TOKEN="$NX_CLOUD_RO_TOKEN"
+          if [ "${{ github.ref }}" = "refs/heads/main" ] && [ -n "$NX_CLOUD_ACCESS_TOKEN_RW" ]; then
+            TOKEN="$NX_CLOUD_ACCESS_TOKEN_RW"
           elif [ -n "$NX_CLOUD_ACCESS_TOKEN_RO" ]; then
             TOKEN="$NX_CLOUD_ACCESS_TOKEN_RO"
           fi

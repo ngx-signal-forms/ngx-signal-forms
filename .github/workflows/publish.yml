@@ -31,7 +31,7 @@ jobs:
     timeout-minutes: 10
     if: ${{ github.event_name == 'workflow_dispatch' }}
     env:
-      NX_CLOUD_ACCESS_TOKEN_RO_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO_RW'] }}
+      NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RW'] }}
       NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
     steps:
       - name: Resolve publish ref
@@ -101,7 +101,7 @@ jobs:
 
       - name: Configure Nx Cloud access
         run: |
-          TOKEN="$NX_CLOUD_ACCESS_TOKEN_RO_RW"
+          TOKEN="$NX_CLOUD_ACCESS_TOKEN_RW"
           if [ -z "$TOKEN" ]; then
             TOKEN="$NX_CLOUD_ACCESS_TOKEN_RO"
           fi
@@ -131,6 +131,8 @@ jobs:
       - name: Publish packages
         if: ${{ inputs.dry_run != true }}
         run: pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --skip-nx-cache
+        env:
+          NPM_CONFIG_PROVENANCE: true
         # OIDC Trusted Publisher handles authentication automatically
 
       - name: Summary

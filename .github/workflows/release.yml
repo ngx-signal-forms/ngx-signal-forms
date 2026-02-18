@@ -1,13 +1,12 @@
 name: Release
 
 # Manually create versioned releases with changelog and git tags
-# This workflow can also publish to npm unless dry_run=true
+# Publishing is intentionally handled by the separate Publish workflow.
 #
 # Release types:
 #   - patch/minor/major: Stable releases → npm tag: latest
 #   - prerelease --preid=beta: Beta releases → npm tag: beta (e.g., 1.0.0-beta.1)
 #   - prerelease --preid=rc: Release candidates → npm tag: rc (e.g., 1.0.0-rc.1)
-#   - For @next dev builds, use "Release Next" workflow instead
 on:
   workflow_dispatch:
     inputs:
@@ -45,7 +44,6 @@ on:
 
 permissions:
   contents: write
-  id-token: write # Required for npm Trusted Publishers (OIDC)
 
 concurrency:
   group: release-${{ github.workflow }}
@@ -56,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      NX_CLOUD_ACCESS_TOKEN_RO_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO_RW'] }}
+      NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RW'] }}
       NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
     steps:
       - uses: actions/checkout@v4
@@ -86,7 +84,7 @@ jobs:
 
       - name: Configure Nx Cloud access
         run: |
-          TOKEN="$NX_CLOUD_ACCESS_TOKEN_RO_RW"
+          TOKEN="$NX_CLOUD_ACCESS_TOKEN_RW"
           if [ -z "$TOKEN" ]; then
             TOKEN="$NX_CLOUD_ACCESS_TOKEN_RO"
           fi
@@ -149,7 +147,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Resolve release tag and dist-tag
+      - name: Resolve created release tag
         if: ${{ !inputs.dry_run }}
         id: release_info
         run: |
@@ -163,39 +161,7 @@ jobs:
           fi
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
-          VERSION="${TAG#v}"
-          if [[ "$VERSION" == *"-next"* ]]; then
-            echo "dist_tag=next" >> "$GITHUB_OUTPUT"
-          elif [[ "$VERSION" == *"-beta"* ]]; then
-            echo "dist_tag=beta" >> "$GITHUB_OUTPUT"
-          elif [[ "$VERSION" == *"-rc"* ]]; then
-            echo "dist_tag=rc" >> "$GITHUB_OUTPUT"
-          elif [[ "$VERSION" == *"-alpha"* ]]; then
-            echo "dist_tag=alpha" >> "$GITHUB_OUTPUT"
-          else
-            echo "dist_tag=latest" >> "$GITHUB_OUTPUT"
-          fi
-
-          echo "Resolved: tag=$TAG, dist_tag will be determined by version"
-
-      - name: Publish packages
-        if: ${{ !inputs.dry_run }}
-        run: pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --skip-nx-cache
-        env:
-          # Uses NPM_TOKEN if OIDC fails - set this secret in repo settings
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Cleanup release on publish failure
-        if: ${{ failure() && steps.release_info.outputs.tag }}
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="${{ steps.release_info.outputs.tag }}"
-          echo "Cleaning up failed release: $TAG"
-          gh release delete "$TAG" -y || true
-          git push origin ":refs/tags/$TAG" || true
+          echo "Resolved: tag=$TAG"
 
       - name: Summary
         run: |
@@ -204,7 +170,6 @@ jobs:
           echo "- Dry Run: ${{ inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ inputs.dry_run }}" != "true" ]; then
-            echo "- npm Dist Tag: ${{ steps.release_info.outputs.dist_tag }}" >> $GITHUB_STEP_SUMMARY
             echo "- Git Tag: ${{ steps.release_info.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-            echo "- Publish: completed in this workflow" >> $GITHUB_STEP_SUMMARY
+            echo "- Publish: run the separate Publish workflow with ref=${{ steps.release_info.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           fi
