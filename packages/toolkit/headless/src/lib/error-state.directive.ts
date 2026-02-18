@@ -108,12 +108,9 @@ export class NgxHeadlessErrorStateDirective<
   TValue = unknown,
 > implements ErrorStateSignals {
   readonly #injectedContext = injectFormContext();
-  readonly #errorMessagesRegistry = inject<ErrorMessageRegistry | null>(
-    NGX_ERROR_MESSAGES,
-    {
-      optional: true,
-    },
-  );
+  readonly #errorMessagesRegistry = inject(NGX_ERROR_MESSAGES, {
+    optional: true,
+  });
 
   /**
    * The Signal Forms field to track error state for.

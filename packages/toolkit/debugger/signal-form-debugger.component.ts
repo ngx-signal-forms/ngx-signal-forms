@@ -4,18 +4,17 @@ import {
   Component,
   computed,
   effect,
-  inject,
   input,
   isDevMode,
 } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import {
+  injectFormContext,
   isBlockingError,
   isWarningError,
-  NGX_SIGNAL_FORM_CONTEXT,
   shouldShowErrors,
   type ErrorDisplayStrategy,
-} from '@ngx-signal-forms/toolkit';
+} from '@ngx-signal-forms/toolkit/core';
 import {
   DebuggerBadgeComponent,
   DebuggerBadgeIconDirective,
@@ -107,7 +106,7 @@ export class SignalFormDebuggerComponent {
   }
 
   /** Inject form context (provides submittedStatus automatically) */
-  readonly #formContext = inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true });
+  readonly #formContext = injectFormContext();
 
   /**
    * The Signal Form to display.

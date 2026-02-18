@@ -12,7 +12,7 @@ import {
   type ErrorReadableState,
   type ReactiveOrStatic,
   type SubmittedStatus,
-} from '@ngx-signal-forms/toolkit';
+} from '@ngx-signal-forms/toolkit/core';
 
 import type { CharacterCountLimitState } from './character-count.directive';
 import {

@@ -14,6 +14,7 @@
   },
   "scripts": {
     "start": "nx serve demo",
+    "build:all": "nx run-many --target=build --all",
     "lint:all:fix": "nx run-many --target=lint --all --fix"
   },
   "private": true,
@@ -99,6 +100,16 @@
   },
   "nx": {
     "includedScripts": []
+  },
+  "pnpm": {
+    "overrides": {
+      "@angular/common": "21.1.4",
+      "@angular/compiler": "21.1.4",
+      "@angular/core": "21.1.4",
+      "@angular/forms": "21.1.4",
+      "@angular/platform-browser": "21.1.4",
+      "@angular/router": "21.1.4"
+    }
   },
   "msw": {
     "workerDirectory": [
