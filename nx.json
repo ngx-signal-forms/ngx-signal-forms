@@ -1,9 +1,6 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "workspaceLayout": {
-    "appsDir": "apps",
-    "libsDir": "packages"
-  },
+  "workspaceLayout": { "appsDir": "apps", "libsDir": "packages" },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
@@ -22,7 +19,7 @@
       "{workspaceRoot}/.github/workflows/publish.yml"
     ]
   },
-  "nxCloudId": "68ebfa2fab08d69a339a9973",
+  "nxCloudId": "6996105d7ca3ad8352dfd299",
   "targetDefaults": {
     "@angular/build:application": {
       "cache": true,
@@ -38,31 +35,17 @@
         "{workspaceRoot}/eslint.config.mjs"
       ]
     },
-    "@nx/vitest:test": {
-      "cache": true,
-      "inputs": ["default", "^production"]
-    },
+    "@nx/vitest:test": { "cache": true, "inputs": ["default", "^production"] },
     "@nx/angular:package": {
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
-    "e2e": {
-      "cache": true,
-      "inputs": ["default", "^production"]
-    },
-    "e2e-ci": {
-      "cache": true,
-      "inputs": ["default", "^production"]
-    }
+    "e2e": { "cache": true, "inputs": ["default", "^production"] },
+    "e2e-ci": { "cache": true, "inputs": ["default", "^production"] }
   },
   "plugins": [
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
-      }
-    }
+    { "plugin": "@nx/eslint/plugin", "options": { "targetName": "lint" } }
   ],
   "generators": {
     "@nx/angular:application": {
@@ -75,9 +58,7 @@
       "linter": "eslint",
       "unitTestRunner": "vitest-analog"
     },
-    "@nx/angular:component": {
-      "style": "css"
-    }
+    "@nx/angular:component": { "style": "css" }
   },
   "release": {
     "projects": ["toolkit"],
@@ -105,50 +86,28 @@
       "types": {
         "feat": {
           "semverBump": "minor",
-          "changelog": {
-            "title": "🚀 Features"
-          }
+          "changelog": { "title": "🚀 Features" }
         },
         "fix": {
           "semverBump": "patch",
-          "changelog": {
-            "title": "🩹 Bug Fixes"
-          }
+          "changelog": { "title": "🩹 Bug Fixes" }
         },
         "perf": {
           "semverBump": "patch",
-          "changelog": {
-            "title": "⚡ Performance"
-          }
+          "changelog": { "title": "⚡ Performance" }
         },
         "refactor": {
           "semverBump": "none",
-          "changelog": {
-            "title": "♻️ Refactoring"
-          }
+          "changelog": { "title": "♻️ Refactoring" }
         },
         "docs": {
           "semverBump": "none",
-          "changelog": {
-            "title": "📚 Documentation"
-          }
+          "changelog": { "title": "📚 Documentation" }
         },
-        "test": {
-          "semverBump": "none",
-          "changelog": false
-        },
-        "build": {
-          "semverBump": "none",
-          "changelog": false
-        },
-        "ci": {
-          "semverBump": "none",
-          "changelog": false
-        },
-        "chore": {
-          "semverBump": "none",
-          "changelog": false
-        }
+        "test": { "semverBump": "none", "changelog": false },
+        "build": { "semverBump": "none", "changelog": false },
+        "ci": { "semverBump": "none", "changelog": false },
+        "chore": { "semverBump": "none", "changelog": false }
       }
     },
     "releaseTagPattern": "v{version}"
