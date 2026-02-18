@@ -54,7 +54,7 @@ jobs:
           fi
 
           if [ -n "$TOKEN" ]; then
-            echo "NX_CLOUD_ACCESS_TOKEN_RO=$TOKEN" >> "$GITHUB_ENV"
+            echo "NX_CLOUD_ACCESS_TOKEN=$TOKEN" >> "$GITHUB_ENV"
             echo "NX_NO_CLOUD=false" >> "$GITHUB_ENV"
             echo "Nx Cloud enabled for release-next workflow."
           else
