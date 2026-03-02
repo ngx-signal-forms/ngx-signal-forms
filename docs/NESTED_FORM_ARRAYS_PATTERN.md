@@ -898,7 +898,7 @@ export function createFactsStepForm(store: InstanceType<typeof WizardStore>): {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form novalidate (submit)="onSubmit($event)">
+    <form [ngxSignalForm]="factsForm">
       @for (fact of store.facts(); track fact.id; let i = $index) {
         <app-fact-card [factIndex]="i" [factField]="factsForm.facts[i]" />
       }
@@ -913,13 +913,6 @@ export class FactsStepComponent {
 
   protected readonly factsForm = this.#factsStepForm.form;
   protected readonly hasFacts = this.#factsStepForm.hasFacts;
-
-  protected onSubmit(event: Event): void {
-    event.preventDefault();
-    if (this.factsForm().valid()) {
-      this.store.setFacts(this.factsForm().value().facts);
-    }
-  }
 
   constructor() {
     // Side effects only (HTTP, persistence, analytics)
@@ -1702,7 +1695,7 @@ export class WizardShellComponent {
     NgxSignalFormFieldWrapperComponent,
   ],
   template: `
-    <form novalidate [ngxSignalForm]="personForm" (submit)="onContinue($event)">
+    <form [ngxSignalForm]="personForm">
       <ngx-signal-form-field-wrapper [formField]="personForm.firstName" outline>
         <label for="firstName">First Name</label>
         <input
@@ -1746,12 +1739,23 @@ export class PersonInfoStepComponent {
   // Create form from store slice
   readonly #model = computed(() => this.#store.personInfo());
 
-  protected readonly personForm = form(this.#model, {
-    firstName: [Validators.required],
-    lastName: [Validators.required],
-    email: [Validators.required, Validators.email],
-    phone: [],
-  });
+  protected readonly personForm = form(
+    this.#model,
+    {
+      firstName: [Validators.required],
+      lastName: [Validators.required],
+      email: [Validators.required, Validators.email],
+      phone: [],
+    },
+    {
+      submission: {
+        action: async () => {
+          this.#store.nextStep();
+          return null;
+        },
+      },
+    },
+  );
 
   // Sync form changes back to store
   constructor() {
@@ -1768,13 +1772,6 @@ export class PersonInfoStepComponent {
       });
     });
   }
-
-  protected onContinue(event: Event): void {
-    event.preventDefault();
-    if (this.personForm.valid()) {
-      this.#store.nextStep();
-    }
-  }
 }
 ```
 
@@ -1786,7 +1783,7 @@ export class PersonInfoStepComponent {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, FactCardComponent],
   template: `
-    <form novalidate [ngxSignalForm]="factsForm" (submit)="onContinue($event)">
+    <form [ngxSignalForm]="factsForm">
       @for (fact of store.facts(); track fact.id; let i = $index) {
         <app-fact-card [factId]="fact.id" [factField]="factsForm.facts()[i]" />
       }
@@ -1807,13 +1804,6 @@ export class FactsStepComponent {
         this.store.markStepValid('facts', this.store.factsValid());
       });
     });
-  }
-
-  protected onContinue(event: Event): void {
-    event.preventDefault();
-    if (this.store.factsValid()) {
-      this.store.nextStep();
-    }
   }
 }
 ```

@@ -9,7 +9,7 @@ Enhancement library for Angular Signal Forms. Provides automatic accessibility (
 - [Error Display](#error-display)
 - [Form Field Wrapper](#form-field-wrapper)
 - [Fieldset (Grouped Fields)](#fieldset-grouped-fields)
-- [When to Add `[ngxSignalForm]`](#when-to-add-ngxsignalform)
+- [Using `[ngxSignalForm]`](#using-ngxsignalform)
 - [ARIA Rules](#aria-rules)
 
 ## Setup
@@ -32,14 +32,14 @@ providers: [
 
 ## Basic Pattern (Recommended)
 
-Use `NgxSignalFormToolkit` — **no `[ngxSignalForm]` needed** for most forms:
+Use `NgxSignalFormToolkit` with `[ngxSignalForm]` for automatic form submission handling:
 
 ```typescript
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
   template: `
-    <form novalidate (submit)="onSubmit($event)">
+    <form [ngxSignalForm]="userForm">
       <label for="email">Email</label>
       <input id="email" type="email" [formField]="userForm.email" />
       <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
@@ -51,21 +51,24 @@ Use `NgxSignalFormToolkit` — **no `[ngxSignalForm]` needed** for most forms:
 export class UserFormComponent {
   readonly #model = signal<UserData>({ email: '' });
 
-  protected readonly userForm = form(this.#model, (schemaPath) => {
-    required(schemaPath.email, { message: 'Email is required' });
-    email(schemaPath.email, { message: 'Enter a valid email' });
-  });
-
-  protected onSubmit(event: Event): void {
-    event.preventDefault();
-    submit(this.userForm, async () => {
-      await this.api.save(this.#model());
-    });
-  }
+  protected readonly userForm = form(
+    this.#model,
+    (schemaPath) => {
+      required(schemaPath.email, { message: 'Email is required' });
+      email(schemaPath.email, { message: 'Enter a valid email' });
+    },
+    {
+      submission: {
+        action: async () => {
+          await this.api.save(this.#model());
+        },
+      },
+    },
+  );
 }
 ```
 
-`submit()` from `@angular/forms/signals` marks all fields touched before running your callback, so `'on-touch'` strategy naturally works on submit too—no extra wiring needed.
+The `[ngxSignalForm]` directive handles `novalidate`, `preventDefault()`, and calls `submit()` on the form automatically. The `submission.action` callback runs when the form is valid; use `submission.onInvalid` (e.g., `createOnInvalidHandler()`) to handle invalid submissions.
 
 ## Error Display
 
@@ -134,25 +137,21 @@ Use `appearance="outline"` for Material Design outlined style.
 
 Use `includeNestedErrors` when fields are plain `<input>` elements without their own error components.
 
-## When to Add `[ngxSignalForm]`
+## Using `[ngxSignalForm]`
 
-Only add `[ngxSignalForm]` when you need one of these:
+`[ngxSignalForm]` handles `novalidate`, `preventDefault()`, and calls `submit()` automatically on form submit. **Recommended for all toolkit forms.**
 
-| Need                                  | Required? |
-| ------------------------------------- | --------- |
-| `'on-submit'` error strategy          | ✅ Yes    |
-| Form-level `[errorStrategy]` override | ✅ Yes    |
-| `submittedStatus` signal in DI        | ✅ Yes    |
-| Default `'on-touch'` strategy         | ❌ No     |
-| Automatic ARIA / error display        | ❌ No     |
+Additional features:
+
+| Feature                               | Description                       |
+| ------------------------------------- | --------------------------------- |
+| `'on-submit'` error strategy          | Requires `[ngxSignalForm]`        |
+| Form-level `[errorStrategy]` override | Set strategy for all child fields |
+| `submittedStatus` signal in DI        | Track submission state            |
 
 ```html
-<!-- Only when using 'on-submit' strategy -->
-<form
-  [ngxSignalForm]="userForm"
-  [errorStrategy]="'on-submit'"
-  (submit)="save($event)"
->
+<!-- With on-submit strategy -->
+<form [ngxSignalForm]="userForm" [errorStrategy]="'on-submit'">
   <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
 </form>
 ```

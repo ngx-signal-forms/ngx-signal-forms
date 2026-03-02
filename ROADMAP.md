@@ -93,18 +93,17 @@ protected save(): void {
 **Effort:** Small
 **Files:** `packages/toolkit/core/utilities/submission-helpers.ts`
 
-Computed signals for common submission states.
+Computed signals for common submission states. Uses Angular 21.2's declarative `submission` config.
 
 ```typescript
-import { canSubmit, isSubmitting } from '@ngx-signal-forms/toolkit';
+import { hasSubmitted } from '@ngx-signal-forms/toolkit';
 
-protected readonly canSubmit = canSubmit(this.form);
-protected readonly isSubmitting = isSubmitting(this.form);
+protected readonly hasSubmitted = hasSubmitted(this.form);
 ```
 
 ```html
-<button type="submit" [disabled]="!canSubmit()">
-  @if (isSubmitting()) {
+<button type="submit" [disabled]="form().invalid() || form().submitting()">
+  @if (form().submitting()) {
   <span>Saving...</span>
   } @else {
   <span>Submit</span>
@@ -114,10 +113,9 @@ protected readonly isSubmitting = isSubmitting(this.form);
 
 **Implementation:**
 
-- ✅ Created `canSubmit()` - combines valid() && !submitting()
-- ✅ Created `isSubmitting()` - checks submitting state
-- ✅ Created `hasSubmitted()` - checks submitted status
-- ✅ Type-safe with runtime submittedStatus existence check
+- ✅ Created `hasSubmitted()` - tracks submission completion via `submitting()` transitions
+- ✅ Removed `canSubmit()` and `isSubmitting()` — use `form().valid()` and `form().submitting()` directly
+- ✅ Type-safe with `FieldTree` from Angular Signal Forms
 - ✅ Exported in public API
 
 **Benefits:**
@@ -473,7 +471,7 @@ Per-field strategy override with 'inherit' option for flexible error UX.
 
 ### ✅ Form Submission Helper Utilities (November 1, 2025)
 
-Computed signals (`canSubmit()`, `isSubmitting()`, `hasSubmitted()`) for reducing template boilerplate.
+`hasSubmitted()` signal for tracking submission completion. Uses Angular 21.2's native `submitting()` and declarative submission config for validity/submitting checks.
 
 ### ✅ Character Count Auto-Detection (November 1, 2025)
 

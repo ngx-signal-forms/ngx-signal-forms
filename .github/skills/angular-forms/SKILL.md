@@ -17,13 +17,7 @@ Always use `NgxSignalFormToolkit` — it handles ARIA, error display, and access
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import {
-  form,
-  FormField,
-  required,
-  email,
-  submit,
-} from '@angular/forms/signals';
+import { form, FormField, required, email } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 
@@ -37,7 +31,7 @@ interface LoginData {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
   template: `
-    <form novalidate (submit)="onSubmit($event)">
+    <form [ngxSignalForm]="loginForm">
       <label for="email">Email</label>
       <input id="email" type="email" [formField]="loginForm.email" />
       <ngx-signal-form-error [formField]="loginForm.email" fieldName="email" />
@@ -56,18 +50,21 @@ interface LoginData {
 export class Login {
   readonly #loginModel = signal<LoginData>({ email: '', password: '' });
 
-  protected readonly loginForm = form(this.#loginModel, (schemaPath) => {
-    required(schemaPath.email, { message: 'Email is required' });
-    email(schemaPath.email, { message: 'Enter a valid email address' });
-    required(schemaPath.password, { message: 'Password is required' });
-  });
-
-  protected onSubmit(event: Event): void {
-    event.preventDefault();
-    submit(this.loginForm, async () => {
-      console.log('Submitting:', this.#loginModel());
-    });
-  }
+  protected readonly loginForm = form(
+    this.#loginModel,
+    (schemaPath) => {
+      required(schemaPath.email, { message: 'Email is required' });
+      email(schemaPath.email, { message: 'Enter a valid email address' });
+      required(schemaPath.password, { message: 'Password is required' });
+    },
+    {
+      submission: {
+        action: async () => {
+          console.log('Submitting:', this.#loginModel());
+        },
+      },
+    },
+  );
 }
 ```
 

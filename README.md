@@ -18,6 +18,19 @@ Directives, components, and utilities that enhance Angular's Signal Forms with a
 npm install @ngx-signal-forms/toolkit
 ```
 
+## Upgrade Notes (beta.4)
+
+If you are upgrading from earlier beta releases, review the migration guide:
+
+- [Migration Guide: `1.0.0-beta.4`](./docs/MIGRATION_BETA4.md)
+
+Key updates in `beta.4`:
+
+- Angular baseline aligned to `21.2.0`
+- Declarative submission preferred (`[ngxSignalForm]` + `submission` config)
+- `canSubmit()` and `isSubmitting()` removed (use native `valid()` / `submitting()`)
+- `computeShowErrors()` usage replaced by `showErrors()`
+
 ---
 
 ## Why This Library?
@@ -34,7 +47,7 @@ Every installation includes these essentials to streamline your forms logic:
 
 - **Auto-ARIA Automation**: Automatically manages `aria-invalid` and `aria-describedby` for WCAG compliance.
 - **Smart Error Strategies**: Control when errors appear (`'on-touch'`, `'on-submit'`, `'immediate'`) without complex template logic.
-- **Submission Utilities**: Helpers like `focusFirstInvalid()`, `canSubmit()`, and `isSubmitting()` signals.
+- **Submission Utilities**: Helpers like `focusFirstInvalid()`, `hasSubmitted()`, and `createOnInvalidHandler()` for managing submission flow.
 - **Status Classes**: Strategy-aware wrapper for Angular's `provideSignalFormsConfig({ classes })`. Syncs CSS classes (like `.is-invalid`) with your error strategy—so users don't see red fields while typing.
 - **Warning Logic**: Support for non-blocking validation messages ("warnings") alongside standard errors.
 
@@ -98,9 +111,9 @@ A development tool to inspect form state and validation logic:
 | **ARIA Attributes**     | ❌ Manual `[attr.aria-invalid]`, `[attr.aria-describedby]`        | ✅ Automatic via `NgxSignalFormAutoAriaDirective`                            |
 | **Error Display Logic** | ❌ Manual `@if` conditions in every template                      | ✅ Strategy-based (`'on-touch'`, `'on-submit'`, `'immediate'`, `'manual'`)   |
 | **Error Component**     | ❌ Custom error rendering per component                           | ➡️ Use Assistive entry point (`<ngx-signal-form-error>`)                     |
-| **HTML5 Validation**    | ❌ Manual `novalidate` on every form                              | ✅ Automatic `novalidate` on any form with `(submit)`                        |
+| **HTML5 Validation**    | ❌ Manual `novalidate` on every form                              | ✅ Automatic `novalidate` via `[ngxSignalForm]` directive                    |
 | **CSS Status Classes**  | ⚠️ Manual via `provideSignalFormsConfig`                          | ↗️ Use Angular's `provideSignalFormsConfig` (toolkit uses ARIA attributes)   |
-| **Submission Helpers**  | ❌ Manual `form().valid() && !form().submitting()`                | ✅ `canSubmit()`, `isSubmitting()`, `hasSubmitted()` computed signals        |
+| **Submission Helpers**  | ❌ Manual submission lifecycle tracking                           | ✅ `hasSubmitted()`, `focusFirstInvalid()`, `createOnInvalidHandler()`       |
 | **Focus Management**    | ⚠️ Manual via `errorSummary()[0].fieldTree().focusBoundControl()` | ✅ `focusFirstInvalid(form)` one-liner wrapping native API                   |
 | **Form Context**        | ❌ Manual form setup                                              | ✅ Optional `[ngxSignalForm]` provides DI context for `'on-submit'` strategy |
 
@@ -166,11 +179,11 @@ A development tool to inspect form state and validation logic:
 </form>
 ```
 
-### With Toolkit (Automatic ARIA + Error Display)
+### With Toolkit (Automatic ARIA + Error Display + Declarative Submission)
 
 ```html
-<!-- No [ngxSignalForm] needed for default 'on-touch' strategy! -->
-<form (submit)="save($event)">
+<!-- [ngxSignalForm] composes Angular FormRoot: novalidate + submit() -->
+<form [ngxSignalForm]="userForm">
   <ngx-signal-form-field-wrapper [formField]="userForm.email">
     <label for="email">Email</label>
     <input id="email" [formField]="userForm.email" />
@@ -195,16 +208,18 @@ import {
   required,
   email,
   FormField,
-  submit,
 } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import {
+  NgxSignalFormToolkit,
+  createOnInvalidHandler,
+} from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
   selector: 'app-contact',
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form (submit)="save($event)">
+    <form [ngxSignalForm]="contactForm">
       <ngx-signal-form-field-wrapper [formField]="contactForm.email">
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" type="email" />
@@ -222,27 +237,30 @@ export class ContactComponent {
       required(path.email, { message: 'Email is required' });
       email(path.email, { message: 'Invalid email format' });
     }),
+    {
+      submission: {
+        action: async () => {
+          console.log('Submit:', this.model());
+        },
+        onInvalid: createOnInvalidHandler(),
+      },
+    },
   );
-
-  protected save(event: Event): void {
-    event.preventDefault();
-    submit(this.contactForm, async () => {
-      console.log('Submit:', this.model());
-    });
-  }
 }
 ```
 
 ### What You Get Automatically
 
-- ✅ `novalidate` attribute (prevents browser validation bubbles)
+- ✅ `novalidate` attribute via `[ngxSignalForm]` directive (prevents browser validation bubbles)
+- ✅ FormRoot submit handling via directive composition (`novalidate` + `submit()`)
+- ✅ Declarative submission via `form()` options — no manual `submit()` calls needed
 - ✅ `aria-invalid` and `aria-describedby` for accessibility
 - ✅ **Errors** display after blur OR submit (default `'on-touch'` strategy) with `role="alert"`
 - ✅ **Warnings** (non-blocking) display with `role="status"` when no errors present
 - ✅ **Hints** render below the input with proper ARIA association
 - ✅ Consistent layout with label, input, feedback messages in semantic structure
 
-> **How it works:** Angular's `submit()` calls `markAllAsTouched()`, so errors appear after both blur AND submit—without any form wrapper!
+> **How it works:** The `[ngxSignalForm]` directive composes Angular's `FormRoot`, which calls `submit()` on form submit and triggers `markAllAsTouched()`. Define your submission action declaratively in `form()` options.
 
 ---
 
@@ -258,14 +276,16 @@ export class ContactComponent {
 
 - `NgxSignalFormToolkit` — Bundle import for all core directives
 - `focusFirstInvalid()` — Convenience wrapper for Angular's `focusBoundControl()` via `errorSummary()`
-- `canSubmit()`, `isSubmitting()`, `hasSubmitted()` — Computed submission signals
+- `createOnInvalidHandler()` — Factory for `onInvalid` callbacks (auto-focuses first invalid control)
+- `hasSubmitted()` — Computed signal tracking submission completion
 - `warningError()` — Create non-blocking validation messages
 
 ```typescript
 import {
   NgxSignalFormToolkit,
   focusFirstInvalid,
-  canSubmit,
+  createOnInvalidHandler,
+  hasSubmitted,
 } from '@ngx-signal-forms/toolkit';
 ```
 
@@ -495,6 +515,7 @@ Each example below links to its source folder in `apps/demo/src/app`, with a sho
 | **[Assistive Components](./packages/toolkit/assistive/README.md)**   | Error, hint, and character count components                  |
 | **[Form Field Components](./packages/toolkit/form-field/README.md)** | Form field wrapper, outlined layout, hints, character count  |
 | **[Debugger Tool](./packages/toolkit/debugger/README.md)**           | Visual form inspector for state, errors, and model debugging |
+| **[Migration Guide (beta.4)](./docs/MIGRATION_BETA4.md)**            | Upgrade steps for Angular 21.2 and toolkit beta.4 changes    |
 | **[CSS Framework Integration](./docs/CSS_FRAMEWORK_INTEGRATION.md)** | Bootstrap 5.3, Tailwind CSS 4, Angular Material setup        |
 | **[Theming Guide](./packages/toolkit/form-field/THEMING.md)**        | CSS custom properties, dark mode, brand customization        |
 | **[Warnings Support](./docs/WARNINGS_SUPPORT.md)**                   | Non-blocking validation messages                             |

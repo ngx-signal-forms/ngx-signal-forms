@@ -131,8 +131,8 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
 @Component({
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
   template: `
-    <!-- ✅ Works WITHOUT [ngxSignalForm] for default 'on-touch' strategy -->
-    <form (submit)="save($event)">
+    <!-- [ngxSignalForm] handles novalidate, preventDefault, and submit() -->
+    <form [ngxSignalForm]="userForm">
       <input [formField]="userForm.email" />
       <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
       <button type="submit">Submit</button>
@@ -237,17 +237,24 @@ ngx-signal-form-field-wrapper {
 
 ## Architecture
 
-### Key Insight: `[ngxSignalForm]` is Optional for Most Use Cases
+### Key Insight: Prefer `[ngxSignalForm]` for Toolkit Forms
 
-The toolkit is designed so that **most forms work without `[ngxSignalForm]`**. The default `'on-touch'` strategy only checks `field.invalid() && field.touched()` - no form context needed.
+Use `<form [ngxSignalForm]="form">` as the default with toolkit components.
 
-**Why this works:** Angular's `submit()` helper calls `markAllAsTouched()` before your async handler, so `touched()` becomes true for all fields after both blur AND submit.
+The directive composes Angular's `FormRoot` and provides:
+
+- automatic `novalidate`
+- automatic `preventDefault()` on submit
+- automatic `submit()` invocation for declarative `submission` config
+- DI context for strategy and submission state
 
 ### Feature Comparison: With vs Without `[ngxSignalForm]`
 
 | Feature                                          | Without `[ngxSignalForm]` | With `[ngxSignalForm]` |
 | ------------------------------------------------ | :-----------------------: | :--------------------: |
-| Auto `novalidate` on form                        |            ✅             |           ✅           |
+| Auto `novalidate` on form                        |            ❌             |           ✅           |
+| Auto `preventDefault()` on submit                |            ❌             |           ✅           |
+| Declarative `submission` support                 |            ❌             |           ✅           |
 | Auto `aria-invalid` when touched + invalid       |            ✅             |           ✅           |
 | Auto `aria-describedby` linking                  |            ✅             |           ✅           |
 | `<ngx-signal-form-error>` (`'on-touch'`)         |         ✅ Works          |        ✅ Works        |
@@ -258,15 +265,13 @@ The toolkit is designed so that **most forms work without `[ngxSignalForm]`**. T
 
 ### When to Use Each Approach
 
-**Without `[ngxSignalForm]` (Recommended for most forms):**
+**Without `[ngxSignalForm]` (advanced/manual setup):**
 
-- Using default `'on-touch'` error strategy
-- Want automatic ARIA attributes and error display
-- Simpler template with less boilerplate
+- You intentionally handle native submit yourself
+- You explicitly set `novalidate`
+- You do not need form-level context
 
-**Avoid `[ngxSignalForm]` when you don’t need form-level strategy overrides** — it adds context you’re not using and increases boilerplate.
-
-**With `[ngxSignalForm]` (Only when needed):**
+**With `[ngxSignalForm]` (recommended):**
 
 - Need `'on-submit'` error strategy (requires `submittedStatus`)
 - Need form-level `[errorStrategy]` override
@@ -277,21 +282,21 @@ The toolkit is designed so that **most forms work without `[ngxSignalForm]`**. T
 
 ### NgxSignalFormDirective
 
-**Selector**: `form[ngxSignalForm], form(submit)` (auto-applied to forms with submit handler)
+**Selector**: `form[ngxSignalForm]`
 
-**Automatic Features (both selectors)**:
+**Features**:
 
 - Adds `novalidate` attribute to prevent HTML5 validation conflicts
-
-**Context Features (requires `[ngxSignalForm]` binding)**:
+- Handles `preventDefault()` on submit
+- Calls `submit()` for declarative form submissions
 
 - Provides form context to child components via DI
 - Derives `submittedStatus` from Angular's native `submitting()` transitions via `effect()`
 - Manages error display strategy
 
 ```typescript
-// ✅ Recommended: Works for most forms (no [ngxSignalForm] needed)
-<form (submit)="save($event)">
+// ✅ Recommended: Declarative submission with ngxSignalForm
+<form [ngxSignalForm]="form">
   <ngx-signal-form-field-wrapper [formField]="form.email">
     <label for="email">Email</label>
     <input id="email" [formField]="form.email" />
@@ -299,15 +304,15 @@ The toolkit is designed so that **most forms work without `[ngxSignalForm]`**. T
   <button type="submit">Submit</button>
 </form>
 
-// Only needed for 'on-submit' strategy or form-level overrides
-<form [ngxSignalForm]="userForm" [errorStrategy]="'on-submit'" (submit)="save($event)">
+// With on-submit strategy
+<form [ngxSignalForm]="userForm" [errorStrategy]="'on-submit'">
   <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
 </form>
 ```
 
 **Input Properties**:
 
-- `ngxSignalForm` (optional): The form instance (FieldTree) - only needed for `'on-submit'` strategy
+- `ngxSignalForm` (required): The form instance (FieldTree)
 - `errorStrategy` (optional): Error display strategy override
 
 ### NgxSignalFormAutoAriaDirective
@@ -354,8 +359,8 @@ Displays validation errors and warnings with WCAG-compliant ARIA roles.
 **Simplified Usage (Default `'on-touch'` Strategy):**
 
 ```typescript
-<!-- ✅ Works WITHOUT [ngxSignalForm] - errors show after blur OR submit -->
-<form (submit)="save($event)">
+<!-- ✅ Recommended: use ngxSignalForm for submit lifecycle + context -->
+<form [ngxSignalForm]="form">
   <input id="email" [formField]="form.email" />
   <ngx-signal-form-error [formField]="form.email" fieldName="email" />
 </form>
@@ -365,7 +370,7 @@ Displays validation errors and warnings with WCAG-compliant ARIA roles.
 
 ```typescript
 <!-- Requires [ngxSignalForm] for submittedStatus signal -->
-<form [ngxSignalForm]="form" [errorStrategy]="'on-submit'" (submit)="save($event)">
+<form [ngxSignalForm]="form" [errorStrategy]="'on-submit'">
   <ngx-signal-form-error [formField]="form.email" fieldName="email" />
 </form>
 ```

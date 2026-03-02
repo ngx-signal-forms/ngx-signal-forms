@@ -179,7 +179,7 @@ const registrationForm = form(
 The component automatically separates errors and warnings:
 
 ```html
-<form [ngxSignalForm]="form" (submit)="save($event)">
+<form [ngxSignalForm]="form">
   <label for="email">Email *</label>
   <input id="email" [formField]="form.email" />
 
