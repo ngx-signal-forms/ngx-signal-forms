@@ -48,6 +48,8 @@ export function getDefaultValidationMessage(
       return `Maximum value is ${errorParams['max'] || 0}`;
     case 'pattern':
       return 'Invalid format';
+    case 'parse':
+      return 'Invalid value';
     default: {
       const normalizedKind = options?.stripWarningPrefix
         ? kind.replace(/^warn:/, '')

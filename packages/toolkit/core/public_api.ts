@@ -21,6 +21,7 @@ export * from './utilities/focus-first-invalid';
 export { updateAt, updateNested } from './utilities/immutable-array';
 export { injectFormConfig } from './utilities/inject-form-config';
 export { injectFormContext } from './utilities/inject-form-context';
+export * from './utilities/on-invalid-handler';
 export * from './utilities/resolve-error-message';
 export * from './utilities/resolve-strategy';
 export {

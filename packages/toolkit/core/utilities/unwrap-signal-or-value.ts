@@ -42,7 +42,7 @@ import type { ReactiveOrStatic } from '../types';
  *
  * @example Inside a computed signal
  * ```typescript
- * function computeShowErrors<T>(
+ * function resolveShowErrors<T>(
  *   field: ReactiveOrStatic<FieldState<T>>,
  *   strategy: ReactiveOrStatic<ErrorDisplayStrategy>
  * ): Signal<boolean> {

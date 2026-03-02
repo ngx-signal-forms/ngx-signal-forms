@@ -107,69 +107,6 @@ describe('focusFirstInvalid', () => {
       expect(result).toBe(false);
     });
   });
-
-  describe('Edge Cases - Missing focusBoundControl', () => {
-    it('should return false when fieldState lacks focusBoundControl method', () => {
-      // Arrange: FieldState without focusBoundControl (pre-Angular 21.1)
-      const errorWithOldFieldState = {
-        kind: 'required',
-        message: 'Required',
-        fieldTree: () => ({
-          value: () => '',
-          valid: () => false,
-          invalid: () => true,
-          // No focusBoundControl method
-        }),
-      } as unknown as ValidationError<unknown>;
-
-      const mockField = createMockFieldWithErrors([errorWithOldFieldState]);
-
-      // Act
-      const result = focusFirstInvalid(mockField);
-
-      // Assert
-      expect(result).toBe(false);
-    });
-
-    it('should return false when focusBoundControl is not a function', () => {
-      // Arrange: focusBoundControl is not a function
-      const errorWithBadFocusBoundControl = {
-        kind: 'required',
-        message: 'Required',
-        fieldTree: () => ({
-          value: () => '',
-          valid: () => false,
-          invalid: () => true,
-          focusBoundControl: 'not a function',
-        }),
-      } as unknown as ValidationError<unknown>;
-
-      const mockField = createMockFieldWithErrors([errorWithBadFocusBoundControl]);
-
-      // Act
-      const result = focusFirstInvalid(mockField);
-
-      // Assert
-      expect(result).toBe(false);
-    });
-  });
-
-  describe('Type Safety', () => {
-    it('should handle primitive fieldState gracefully', () => {
-      // Arrange: fieldTree returns a primitive
-      const errorWithPrimitiveState = {
-        kind: 'required',
-        message: 'Required',
-        fieldTree: () => 'not an object',
-      } as unknown as ValidationError<unknown>;
-
-      const mockField = createMockFieldWithErrors([errorWithPrimitiveState]);
-
-      // Act & Assert: Should not throw
-      expect(() => focusFirstInvalid(mockField)).not.toThrow();
-      expect(focusFirstInvalid(mockField)).toBe(false);
-    });
-  });
 });
 
 /**

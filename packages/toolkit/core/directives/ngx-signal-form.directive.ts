@@ -1,5 +1,6 @@
 import { computed, Directive, inject, input, type Signal } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
+import { FormRoot } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type {
   ErrorDisplayStrategy,
@@ -42,60 +43,76 @@ export interface NgxSignalFormContext {
 }
 
 /**
- * Directive to provide Signal Forms context to child components.
+ * Directive that composes Angular's `FormRoot` and provides toolkit context.
  *
- * **Selectors**:
- * - `form[ngxSignalForm]` - Explicit binding with full form context
- * - `form(submit)` - Auto-applies only (adds `novalidate` attribute)
+ * Uses `FormRoot` as a host directive and enriches it with toolkit-specific features
+ * (DI context, submitted status tracking, error strategy).
  *
- * **Automatically adds `novalidate`** to prevent HTML5 validation UI from conflicting
- * with Angular Signal Forms validation display.
+ * **Use `[ngxSignalForm]` instead of `[formRoot]`** — do not use both on the same form.
  *
- * **What this directive adds**:
- * 1. Automatic `novalidate` attribute (both selectors)
- * 2. DI context for child components (when using `[ngxSignalForm]`)
- * 3. Error display strategy management (when using `[ngxSignalForm]`)
+ * **What this directive provides**:
+ * 1. Automatic `novalidate` attribute (same as `FormRoot`)
+ * 2. Submit event handling with `preventDefault()` (same as `FormRoot`)
+ * 3. Automatic `submit()` call when form has a `submission` config
+ * 4. DI context for child toolkit components
+ * 5. Submitted status tracking (`unsubmitted` → `submitting` → `submitted`)
+ * 6. Error display strategy management
  *
- * **Philosophy**: Stay close to Angular Signal Forms API.
- * The directive derives `submittedStatus` from Angular's native `submitting()`
- * signal by tracking submit transitions.
+ * **Submission patterns**:
+ * - **Declarative** (recommended): Configure `submission: { action, onInvalid }` in `form()`.
+ *   The directive calls `submit()` automatically on form submit.
+ * - **Manual**: Add `(submit)="handler($event)"` for custom logic.
+ *   The directive still handles `preventDefault()` and status tracking.
  *
- * @example Explicit form binding (recommended for toolkit components)
+ * @example Declarative submission (recommended)
  * ```typescript
  * @Component({
  *   template: `
- *     <form [ngxSignalForm]="userForm" (submit)="handleSubmit($event)">
+ *     <form [ngxSignalForm]="userForm">
  *       <input [formField]="userForm.email" type="email" />
  *       <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
  *       <button type="submit">Submit</button>
  *     </form>
  *   `
  * })
+ * export class UserFormComponent {
+ *   readonly #userData = signal({ email: '' });
+ *   protected readonly userForm = form(this.#userData, {
+ *     submission: {
+ *       action: async (field) => {
+ *         await this.save(field().value());
+ *         return undefined;
+ *       },
+ *       onInvalid: createOnInvalidHandler(),
+ *     },
+ *   });
+ * }
  * ```
  *
- * @example Auto-apply novalidate only (minimal usage)
+ * @example Manual submission
  * ```html
- * <!-- Just adds novalidate, no form context provided -->
- * <form (submit)="handleSubmit($event)">
- *   <input [formField]="form.email" />
+ * <form [ngxSignalForm]="userForm" (submit)="save($event)">
  *   <button type="submit">Submit</button>
  * </form>
  * ```
  *
  * @example With error strategy
  * ```html
- * <form [ngxSignalForm]="userForm" [errorStrategy]="'on-submit'" (submit)="handleSubmit($event)">
+ * <form [ngxSignalForm]="userForm" [errorStrategy]="'on-submit'">
  *   <!-- Errors appear only after form submission -->
  * </form>
  * ```
  */
 @Directive({
   // eslint-disable-next-line @angular-eslint/directive-selector -- Directive for forms using Angular Signal Forms
-  selector: 'form[ngxSignalForm], form(submit)',
+  selector: 'form[ngxSignalForm]',
   exportAs: 'ngxSignalForm',
-  host: {
-    '[attr.novalidate]': '""',
-  },
+  hostDirectives: [
+    {
+      directive: FormRoot,
+      inputs: ['formRoot: ngxSignalForm'],
+    },
+  ],
   providers: [
     {
       provide: NGX_SIGNAL_FORM_CONTEXT,
@@ -103,14 +120,7 @@ export interface NgxSignalFormContext {
         const directive = inject(NgxSignalFormDirective);
         return {
           get form() {
-            const f = directive.form();
-            if (!f) {
-              throw new Error(
-                'NgxSignalFormContext requires [ngxSignalForm] binding. ' +
-                  'Use <form [ngxSignalForm]="yourForm"> to access form context.',
-              );
-            }
-            return f;
+            return directive.form();
           },
           submittedStatus: directive.submittedStatus,
           errorStrategy: directive.resolvedErrorStrategy,
@@ -124,10 +134,8 @@ export class NgxSignalFormDirective {
 
   /**
    * The Signal Forms instance (FieldTree) to provide.
-   * Optional when using `form(submit)` selector (only adds `novalidate`).
-   * Required when using `[ngxSignalForm]` for full form context.
    */
-  readonly form = input<FieldTree<unknown> | undefined>(undefined, {
+  readonly form = input.required<FieldTree<unknown>>({
     alias: 'ngxSignalForm',
   });
 
@@ -153,23 +161,16 @@ export class NgxSignalFormDirective {
   /**
    * Submission status derived from Angular Signal Forms' native signals.
    *
-   * Angular 21 provides a `submitting()` signal on `FieldState`,
+   * Angular 21.2 provides a `submitting()` signal on `FieldState`,
    * but NOT a `submittedStatus()` signal. The toolkit derives `SubmittedStatus`
    * from these native signals:
    *
-   * - `'unsubmitted'` - Form hasn't been submitted yet (no form bound OR no submit attempts)
+   * - `'unsubmitted'` - Form hasn't been submitted yet
    * - `'submitting'` - Form is currently being submitted (`submitting()` is true)
    * - `'submitted'` - Form has completed a submission (tracked via `submitting()` transition)
    *
-   * **How derivation works**:
-   * 1. If `submitting()` is true → `'submitting'`
-   * 2. If a submission completed (submitting went from true to false) → `'submitted'`
-   * 3. Otherwise → `'unsubmitted'`
-   *
    * **Reset behavior**: When `form.reset()` is called, the status returns to `'unsubmitted'`.
    * This is detected by watching for `touched()` becoming `false` after being `true`.
-   *
-   * Returns `'unsubmitted'` when no form is bound (using `form(submit)` selector only).
    */
   readonly submittedStatus = createSubmittedStatusTracker(this.form);
 }

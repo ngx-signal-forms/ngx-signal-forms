@@ -2,10 +2,11 @@ import { signal } from '@angular/core';
 import type { SubmittedStatus } from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
 import type { ErrorDisplayStrategy } from '../types';
-import { computeShowErrors, shouldShowErrors } from './error-strategies';
+import { shouldShowErrors } from './error-strategies';
+import { showErrors } from './show-errors';
 
 describe('error-strategies', () => {
-  describe('computeShowErrors', () => {
+  describe('showErrors (reactive computed)', () => {
     describe('immediate strategy', () => {
       it('should show errors immediately when field is invalid', () => {
         const fieldState = signal({
@@ -14,11 +15,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'immediate',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'immediate', submittedStatus);
 
         expect(result()).toBe(true);
       });
@@ -30,11 +27,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'immediate',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'immediate', submittedStatus);
 
         expect(result()).toBe(false);
       });
@@ -47,11 +40,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'immediate',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'immediate', submittedStatus);
 
         expect(result()).toBe(false);
 
@@ -69,11 +58,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'immediate',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'immediate', submittedStatus);
 
         expect(result()).toBe(true);
 
@@ -98,11 +83,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'on-touch',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'on-touch', submittedStatus);
 
         // EXPECT: NO errors should be visible on initial page load
         expect(result()).toBe(false);
@@ -115,11 +96,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'on-touch',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'on-touch', submittedStatus);
 
         expect(result()).toBe(false);
       });
@@ -131,11 +108,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'on-touch',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'on-touch', submittedStatus);
 
         expect(result()).toBe(true);
       });
@@ -149,11 +122,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('submitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'on-touch',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'on-touch', submittedStatus);
 
         // submittedStatus is ignored for on-touch - only touched() matters
         expect(result()).toBe(false);
@@ -166,11 +135,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'on-touch',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'on-touch', submittedStatus);
 
         expect(result()).toBe(false);
       });
@@ -183,11 +148,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'on-touch',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'on-touch', submittedStatus);
 
         expect(result()).toBe(false);
 
@@ -204,11 +165,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('submitting');
 
-        const result = computeShowErrors(
-          fieldState,
-          'on-touch',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'on-touch', submittedStatus);
 
         // submittedStatus is ignored for on-touch - only touched() matters
         expect(result()).toBe(false);
@@ -224,11 +181,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'on-touch',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'on-touch', submittedStatus);
 
         // Initially no errors (not touched)
         expect(result()).toBe(false);
@@ -254,11 +207,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'on-submit',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'on-submit', submittedStatus);
 
         // EXPECT: NO errors until form is submitted
         expect(result()).toBe(false);
@@ -271,11 +220,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'on-submit',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'on-submit', submittedStatus);
 
         expect(result()).toBe(false);
       });
@@ -287,11 +232,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('submitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'on-submit',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'on-submit', submittedStatus);
 
         expect(result()).toBe(true);
       });
@@ -303,11 +244,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('submitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'on-submit',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'on-submit', submittedStatus);
 
         expect(result()).toBe(false);
       });
@@ -319,7 +256,7 @@ describe('error-strategies', () => {
           touched: () => false,
         });
 
-        const result = computeShowErrors(fieldState, 'on-submit', submitted);
+        const result = showErrors(fieldState, 'on-submit', submitted);
 
         expect(result()).toBe(false);
 
@@ -334,11 +271,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('submitting');
 
-        const result = computeShowErrors(
-          fieldState,
-          'on-submit',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'on-submit', submittedStatus);
 
         expect(result()).toBe(true);
       });
@@ -350,11 +283,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'on-submit',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'on-submit', submittedStatus);
 
         // No errors before submission
         expect(result()).toBe(false);
@@ -377,7 +306,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('submitted');
 
-        const result = computeShowErrors(fieldState, 'manual', submittedStatus);
+        const result = showErrors(fieldState, 'manual', submittedStatus);
 
         expect(result()).toBe(false);
       });
@@ -389,7 +318,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('submitted');
 
-        const result = computeShowErrors(fieldState, 'manual', submittedStatus);
+        const result = showErrors(fieldState, 'manual', submittedStatus);
 
         expect(result()).toBe(false);
       });
@@ -401,7 +330,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(fieldState, 'manual', submittedStatus);
+        const result = showErrors(fieldState, 'manual', submittedStatus);
 
         expect(result()).toBe(false);
 
@@ -424,7 +353,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(fieldState, strategy, submittedStatus);
+        const result = showErrors(fieldState, strategy, submittedStatus);
 
         expect(result()).toBe(false);
 
@@ -445,7 +374,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(fieldState, strategy, submittedStatus);
+        const result = showErrors(fieldState, strategy, submittedStatus);
 
         expect(result()).toBe(false);
 
@@ -459,11 +388,7 @@ describe('error-strategies', () => {
         const fieldState = signal(null);
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'immediate',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'immediate', submittedStatus);
 
         expect(result()).toBe(false);
       });
@@ -472,24 +397,7 @@ describe('error-strategies', () => {
         const fieldState = signal(undefined);
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(
-          fieldState,
-          'immediate',
-          submittedStatus,
-        );
-
-        expect(result()).toBe(false);
-      });
-
-      it('should handle field state without methods', () => {
-        const fieldState = signal({});
-        const submittedStatus = signal<SubmittedStatus>('unsubmitted');
-
-        const result = computeShowErrors(
-          fieldState,
-          'immediate',
-          submittedStatus,
-        );
+        const result = showErrors(fieldState, 'immediate', submittedStatus);
 
         expect(result()).toBe(false);
       });
@@ -501,7 +409,7 @@ describe('error-strategies', () => {
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = computeShowErrors(
+        const result = showErrors(
           fieldState,
           'unknown' as ErrorDisplayStrategy,
           submittedStatus,
@@ -514,7 +422,7 @@ describe('error-strategies', () => {
           invalid: () => true,
           touched: () => true,
         });
-        const result2 = computeShowErrors(
+        const result2 = showErrors(
           touchedState,
           'unknown' as ErrorDisplayStrategy,
           submittedStatus,

@@ -29,12 +29,10 @@ import {
   provideNgxSignalFormsConfigForComponent,
   provideErrorMessages,
   showErrors,
-  computeShowErrors,
   shouldShowErrors,
   combineShowErrors,
   focusFirstInvalid,
-  canSubmit,
-  isSubmitting,
+  createOnInvalidHandler,
   hasSubmitted,
   injectFormContext,
   injectFormConfig,
@@ -54,11 +52,11 @@ Bundle containing `NgxSignalFormDirective` and `NgxSignalFormAutoAriaDirective`.
 
 ### NgxSignalFormDirective
 
-Selector: `form[ngxSignalForm], form(submit)`
+Selector: `form[ngxSignalForm]`
 
 **Inputs:**
 
-- `ngxSignalForm` — The form field tree
+- `ngxSignalForm` (required) — The form field tree
 - `errorStrategy` — `'immediate' | 'on-touch' | 'on-submit' | 'manual'`
 
 **Outputs:**
@@ -67,18 +65,20 @@ Selector: `form[ngxSignalForm], form(submit)`
 
 **Features:**
 
-- Auto-adds `novalidate` attribute
+- Composes Angular `FormRoot` (`novalidate` + submit lifecycle)
+- Auto-calls `submit()` through `FormRoot` on form submit
 - Provides form context to child components
 - Tracks submission lifecycle
 
+**Submission patterns:**
+
 ```html
-<form
-  [ngxSignalForm]="form"
-  [errorStrategy]="'on-submit'"
-  (submit)="save($event)"
->
-  <!-- children can inject form context -->
+<!-- Declarative (recommended): configure submission in form(), no (submit) binding needed -->
+<form [ngxSignalForm]="myForm" [errorStrategy]="'on-submit'">
+  <button type="submit">Submit</button>
 </form>
+
+<!-- Important: [ngxSignalForm] composes FormRoot, so provide submission.action in form() -->
 ```
 
 ### NgxSignalFormAutoAriaDirective
@@ -137,8 +137,7 @@ provideErrorMessages({
 | Function                                    | Description                                           |
 | ------------------------------------------- | ----------------------------------------------------- |
 | `focusFirstInvalid(form)`                   | Focus first invalid field via `errorSummary()`        |
-| `canSubmit(form)`                           | `Signal<boolean>` — valid and not submitting          |
-| `isSubmitting(form)`                        | `Signal<boolean>` — currently submitting              |
+| `createOnInvalidHandler(options?)`          | Creates `onInvalid` handler for `FormSubmitOptions`   |
 | `hasSubmitted(form)`                        | `Signal<boolean>` — completed at least one submission |
 | `showErrors(field, strategy, status)`       | `Signal<boolean>` — should show errors                |
 | `shouldShowErrors(state, strategy, status)` | Non-reactive check                                    |
@@ -508,6 +507,7 @@ createUniqueId('field'); // 'field-1', 'field-2', ...
 ## Related Documentation
 
 - [Main README](https://github.com/ngx-signal-forms/ngx-signal-forms#readme) — Overview, installation, quick start
+- [Migration Guide (beta.4)](../../docs/MIGRATION_BETA4.md) — Upgrade steps from earlier beta releases
 - [Form Field Theming](./form-field/THEMING.md) — CSS custom properties guide
 - [CSS Framework Integration](../../docs/CSS_FRAMEWORK_INTEGRATION.md) — Bootstrap, Tailwind, Material setup
 - [Warnings Support](../../docs/WARNINGS_SUPPORT.md) — Non-blocking validation

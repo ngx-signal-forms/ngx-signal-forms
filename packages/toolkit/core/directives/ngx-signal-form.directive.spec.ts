@@ -219,7 +219,11 @@ describe('ngxSignalFormDirective', () => {
       })
       class TestComponent {
         readonly #model = signal({ email: 'test@example.com' });
-        readonly contactForm = form(this.#model);
+        readonly contactForm = form(this.#model, {
+          submission: {
+            action: async () => null,
+          },
+        });
 
         async handleSubmit(event: Event) {
           event.preventDefault();
@@ -268,7 +272,11 @@ describe('ngxSignalFormDirective', () => {
       })
       class TestComponent {
         readonly #model = signal({ email: 'test@example.com' });
-        readonly contactForm = form(this.#model);
+        readonly contactForm = form(this.#model, {
+          submission: {
+            action: async () => null,
+          },
+        });
 
         async handleSubmit(event: Event) {
           event.preventDefault();
@@ -323,7 +331,11 @@ describe('ngxSignalFormDirective', () => {
         })
         class TestComponent {
           readonly #model = signal({ email: 'test@example.com' });
-          readonly contactForm = form(this.#model);
+          readonly contactForm = form(this.#model, {
+            submission: {
+              action: async () => null,
+            },
+          });
 
           async onSubmit(event: Event) {
             event.preventDefault();
@@ -371,6 +383,11 @@ describe('ngxSignalFormDirective', () => {
             schema((path) => {
               required(path.email, { message: 'Email is required' });
             }),
+            {
+              submission: {
+                action: async () => null,
+              },
+            },
           );
 
           async onSubmit(event: Event) {
@@ -422,6 +439,11 @@ describe('ngxSignalFormDirective', () => {
             schema((path) => {
               required(path.email, { message: 'Email is required' });
             }),
+            {
+              submission: {
+                action: async () => null,
+              },
+            },
           );
 
           async onSubmit(event: Event) {
@@ -477,6 +499,11 @@ describe('ngxSignalFormDirective', () => {
             schema((path) => {
               required(path.email, { message: 'Email is required' });
             }),
+            {
+              submission: {
+                action: async () => null,
+              },
+            },
           );
 
           async onSubmit(event: Event) {

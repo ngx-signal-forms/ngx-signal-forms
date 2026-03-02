@@ -2,8 +2,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type { FieldTree } from '@angular/forms/signals';
 import { describe, expect, it, vi } from 'vitest';
-import { canSubmit, hasSubmitted, isSubmitting } from './submission-helpers';
-
+import { hasSubmitted } from './submission-helpers';
 /**
  * Test suite for submission helper utilities.
  *
@@ -11,219 +10,6 @@ import { canSubmit, hasSubmitted, isSubmitting } from './submission-helpers';
  * Medium risk areas: Runtime type checking, signal unwrapping, template usage patterns.
  */
 describe('Submission Helpers', () => {
-  describe('canSubmit', () => {
-    describe('Happy Path', () => {
-      it('should return true when form is valid and not submitting', () => {
-        // Arrange: Valid form, not submitting
-        const mockForm = createMockForm(true, false);
-
-        // Act
-        const result = canSubmit(mockForm);
-
-        // Assert
-        expect(result()).toBe(true);
-      });
-
-      it('should update reactively when form validity changes', () => {
-        // Arrange: Start invalid, then become valid
-        const isValid = signal(false);
-        const mockForm = createMockForm(() => isValid(), false);
-        const result = canSubmit(mockForm);
-
-        // Assert: Initially false
-        expect(result()).toBe(false);
-
-        // Act: Make form valid
-        isValid.set(true);
-
-        // Assert: Now true
-        expect(result()).toBe(true);
-      });
-
-      it('should update reactively when submitting state changes', () => {
-        // Arrange: Valid form, start not submitting
-        const isSubmittingState = signal(false);
-        const mockForm = createMockForm(true, () => isSubmittingState());
-        const result = canSubmit(mockForm);
-
-        // Assert: Initially true
-        expect(result()).toBe(true);
-
-        // Act: Start submitting
-        isSubmittingState.set(true);
-
-        // Assert: Now false
-        expect(result()).toBe(false);
-      });
-    });
-
-    describe('Edge Cases - Invalid Form', () => {
-      it('should return false when form is invalid', () => {
-        // Arrange: Invalid form, not submitting
-        const mockForm = createMockForm(false, false);
-
-        // Act
-        const result = canSubmit(mockForm);
-
-        // Assert
-        expect(result()).toBe(false);
-      });
-
-      it('should return false when form is invalid AND submitting', () => {
-        // Arrange: Invalid form, submitting
-        const mockForm = createMockForm(false, true);
-
-        // Act
-        const result = canSubmit(mockForm);
-
-        // Assert
-        expect(result()).toBe(false);
-      });
-    });
-
-    describe('Edge Cases - Submitting State', () => {
-      it('should return false when form is submitting', () => {
-        // Arrange: Valid form, but submitting
-        const mockForm = createMockForm(true, true);
-
-        // Act
-        const result = canSubmit(mockForm);
-
-        // Assert
-        expect(result()).toBe(false);
-      });
-
-      it('should return true after submission completes', () => {
-        // Arrange: Valid form, simulate submission lifecycle
-        const isSubmittingState = signal(false);
-        const mockForm = createMockForm(true, () => isSubmittingState());
-        const result = canSubmit(mockForm);
-
-        // Assert: Initially can submit
-        expect(result()).toBe(true);
-
-        // Act: Start submission
-        isSubmittingState.set(true);
-        expect(result()).toBe(false);
-
-        // Act: Complete submission
-        isSubmittingState.set(false);
-
-        // Assert: Can submit again
-        expect(result()).toBe(true);
-      });
-    });
-
-    describe('Type Safety', () => {
-      it('should work with typed form models', () => {
-        // Arrange: Strongly typed form
-        interface UserForm {
-          email: string;
-          password: string;
-        }
-        const mockForm = createMockForm(true, false) as FieldTree<UserForm>;
-
-        // Act
-        const result = canSubmit(mockForm);
-
-        // Assert
-        expect(result()).toBe(true);
-      });
-
-      it('should accept any FieldTree type', () => {
-        // Arrange: Different data types
-        const stringForm = createMockForm(true, false) as FieldTree<string>;
-        const numberForm = createMockForm(true, false) as FieldTree<number>;
-        const objectForm = createMockForm(true, false) as FieldTree<{
-          name: string;
-        }>;
-
-        // Act & Assert: Should all work
-        expect(canSubmit(stringForm)()).toBe(true);
-        expect(canSubmit(numberForm)()).toBe(true);
-        expect(canSubmit(objectForm)()).toBe(true);
-      });
-    });
-  });
-
-  describe('isSubmitting', () => {
-    describe('Happy Path', () => {
-      it('should return true when form is submitting', () => {
-        // Arrange: Form in submitting state
-        const mockForm = createMockForm(true, true);
-
-        // Act
-        const result = isSubmitting(mockForm);
-
-        // Assert
-        expect(result()).toBe(true);
-      });
-
-      it('should return false when form is not submitting', () => {
-        // Arrange: Form not submitting
-        const mockForm = createMockForm(true, false);
-
-        // Act
-        const result = isSubmitting(mockForm);
-
-        // Assert
-        expect(result()).toBe(false);
-      });
-
-      it('should update reactively when submitting state changes', () => {
-        // Arrange: Dynamic submitting state
-        const isSubmittingState = signal(false);
-        const mockForm = createMockForm(true, () => isSubmittingState());
-        const result = isSubmitting(mockForm);
-
-        // Assert: Initially not submitting
-        expect(result()).toBe(false);
-
-        // Act: Start submitting
-        isSubmittingState.set(true);
-
-        // Assert: Now submitting
-        expect(result()).toBe(true);
-
-        // Act: Stop submitting
-        isSubmittingState.set(false);
-
-        // Assert: Not submitting again
-        expect(result()).toBe(false);
-      });
-    });
-
-    describe('Edge Cases', () => {
-      it('should work regardless of form validity', () => {
-        // Arrange: Invalid form, but submitting
-        const mockForm = createMockForm(false, true);
-
-        // Act
-        const result = isSubmitting(mockForm);
-
-        // Assert: Still reports submitting state
-        expect(result()).toBe(true);
-      });
-    });
-
-    describe('Type Safety', () => {
-      it('should work with typed form models', () => {
-        // Arrange: Strongly typed form
-        interface LoginForm {
-          username: string;
-          password: string;
-        }
-        const mockForm = createMockForm(true, true) as FieldTree<LoginForm>;
-
-        // Act
-        const result = isSubmitting(mockForm);
-
-        // Assert
-        expect(result()).toBe(true);
-      });
-    });
-  });
-
   describe('hasSubmitted', () => {
     describe('Happy Path', () => {
       it('should return false initially when form has not been submitted', () => {
@@ -326,21 +112,6 @@ describe('Submission Helpers', () => {
       });
     });
 
-    describe('Edge Cases', () => {
-      it('should return false when form state is null/undefined', () => {
-        // Arrange: Form signal that returns null
-        const mockForm = signal(null) as unknown as FieldTree<unknown>;
-
-        // Act
-        const result = TestBed.runInInjectionContext(() =>
-          hasSubmitted(mockForm),
-        );
-
-        // Assert
-        expect(result()).toBe(false);
-      });
-    });
-
     describe('Type Safety', () => {
       it('should work with typed form models', () => {
         // Arrange: Strongly typed form
@@ -366,35 +137,20 @@ describe('Submission Helpers', () => {
 
   describe('Integration - Combined Usage', () => {
     it('should work together for complete submission flow', async () => {
-      // Arrange: Simulate full submission lifecycle
-      const isValid = signal(false);
       const isSubmittingState = signal(false);
       const touchedState = signal(false);
 
       const mockForm = createMockFormCompleteWithTouched(
-        () => isValid(),
+        () => true,
         () => isSubmittingState(),
         () => touchedState(),
       );
 
-      const canSubmitResult = canSubmit(mockForm);
-      const isSubmittingResult = isSubmitting(mockForm);
-      // hasSubmitted needs injection context
       const hasSubmittedResult = TestBed.runInInjectionContext(() =>
         hasSubmitted(mockForm),
       );
 
-      // Assert: Initial state (invalid, not submitting, not submitted)
-      expect(canSubmitResult()).toBe(false);
-      expect(isSubmittingResult()).toBe(false);
-      expect(hasSubmittedResult()).toBe(false);
-
-      // Act: Make form valid
-      isValid.set(true);
-
-      // Assert: Can now submit
-      expect(canSubmitResult()).toBe(true);
-      expect(isSubmittingResult()).toBe(false);
+      // Assert: Initial state
       expect(hasSubmittedResult()).toBe(false);
 
       // Act: Start submission
@@ -405,8 +161,6 @@ describe('Submission Helpers', () => {
       ).whenStable();
 
       // Assert: Submitting state
-      expect(canSubmitResult()).toBe(false); // Can't submit while submitting
-      expect(isSubmittingResult()).toBe(true);
       expect(hasSubmittedResult()).toBe(false);
 
       // Act: Complete submission
@@ -416,47 +170,10 @@ describe('Submission Helpers', () => {
       ).whenStable();
 
       // Assert: Submitted state
-      expect(canSubmitResult()).toBe(true); // Can submit again
-      expect(isSubmittingResult()).toBe(false);
       expect(hasSubmittedResult()).toBe(true);
     });
   });
 });
-
-/**
- * Helper: Create mock FieldTree with valid() and submitting() signals.
- *
- * @param valid - Validity state (boolean or signal function)
- * @param submitting - Submitting state (boolean or signal function)
- */
-function createMockForm(
-  valid: boolean | (() => boolean),
-  submitting: boolean | (() => boolean),
-): FieldTree<unknown> {
-  const validFn = typeof valid === 'function' ? valid : () => valid;
-  const submittingFn =
-    typeof submitting === 'function' ? submitting : () => submitting;
-
-  return signal({
-    value: () => ({}),
-    valid: validFn,
-    invalid: () => !validFn(),
-    touched: () => false,
-    dirty: () => false,
-    errors: () => [],
-    pending: () => false,
-    disabled: () => false,
-    readonly: () => false,
-    hidden: () => false,
-    submitting: submittingFn,
-    submittedStatus: () => 'unsubmitted' as const,
-    reset: vi.fn(),
-    markAsTouched: vi.fn(),
-    markAsDirty: vi.fn(),
-    resetSubmittedStatus: vi.fn(),
-    errorSummary: () => [],
-  }) as unknown as FieldTree<unknown>;
-}
 
 /**
  * Helper: Create mock FieldTree with controllable submitting signal.

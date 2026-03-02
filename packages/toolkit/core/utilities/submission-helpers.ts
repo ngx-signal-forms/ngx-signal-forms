@@ -10,209 +10,71 @@ import type { SubmittedStatus } from '../types';
 import { isBlockingError } from './warning-error';
 
 /**
- * Computed signal indicating whether a form can be submitted.
+ * Tracks submission lifecycle by watching `submitting()` transitions.
  *
- * Returns `true` when:
- * - Form is valid (all validation rules pass)
- * - Form is not currently submitting
+ * Angular Signal Forms exposes `submitting()` and `touched()` but does NOT
+ * provide a `submittedStatus()` signal. This function derives it:
+ * - `'unsubmitted'` — no submission attempt yet
+ * - `'submitting'` — `submitting()` is currently `true`
+ * - `'submitted'` — `submitting()` transitioned from `true` to `false`
  *
- * Use this to control submit button state and prevent duplicate submissions.
+ * Resets to `'unsubmitted'` when `touched()` transitions from `true` to `false`
+ * (i.e. after `form.reset()`).
  *
- * @param formTree The form tree to check submission readiness for
- * @returns Signal that emits `true` when form can be submitted
- *
- * @example Disable submit button
- * ```typescript
- * import { canSubmit } from '@ngx-signal-forms/toolkit';
- *
- * @Component({
- *   template: `
- *     <button
- *       type="submit"
- *       [disabled]="!canSubmit()">
- *       Submit
- *     </button>
- *   `
- * })
- * export class MyFormComponent {
- *   protected readonly canSubmit = canSubmit(this.userForm);
- * }
- * ```
- *
- * @example Show loading state
- * ```typescript
- * @Component({
- *   template: `
- *     <button type="submit" [disabled]="!canSubmit()">
- *       @if (isSubmitting()) {
- *         <span>Saving...</span>
- *       } @else {
- *         <span>Submit</span>
- *       }
- *     </button>
- *   `
- * })
- * export class MyFormComponent {
- *   protected readonly canSubmit = canSubmit(this.userForm);
- *   protected readonly isSubmitting = isSubmitting(this.userForm);
- * }
- * ```
+ * @param formTree A `FieldTree` or `Signal<FieldTree>` (supports deferred resolution via `input.required()`)
+ * @returns Signal with the current `SubmittedStatus`
  *
  * @remarks
- * This is a convenience wrapper around:
- * ```typescript
- * computed(() => form().valid() && !form().submitting())
- * ```
- *
- * **Benefits:**
- * - Consistent naming across applications
- * - Less template boilerplate
- * - Self-documenting code
- * - Type-safe computed signal
+ * Must be called in an injection context (uses `effect()` internally).
  *
  * @public
  */
-export function canSubmit(formTree: FieldTree<unknown>): Signal<boolean> {
-  return computed(() => {
-    const formState = formTree();
-    return formState.valid() && !formState.submitting();
-  });
-}
-
-/**
- * Computed signal indicating whether a form is currently submitting.
- *
- * Returns `true` when:
- * - Form submission is in progress (via `submit()` helper)
- * - `submitting()` signal from Angular Signal Forms is `true`
- *
- * Use this to show loading indicators and prevent user actions during submission.
- *
- * @param formTree The form tree to check submission status for
- * @returns Signal that emits `true` when form is submitting
- *
- * @example Show loading spinner
- * ```typescript
- * import { isSubmitting } from '@ngx-signal-forms/toolkit';
- *
- * @Component({
- *   template: `
- *     @if (isSubmitting()) {
- *       <div class="spinner">Loading...</div>
- *     }
- *   `
- * })
- * export class MyFormComponent {
- *   protected readonly isSubmitting = isSubmitting(this.userForm);
- * }
- * ```
- *
- * @example Disable form during submission
- * ```typescript
- * @Component({
- *   template: `
- *     <fieldset [disabled]="isSubmitting()">
- *       <!-- All inputs disabled during submission -->
- *     </fieldset>
- *   `
- * })
- * ```
- *
- * @remarks
- * This is a convenience wrapper around:
- * ```typescript
- * computed(() => form().submitting())
- * ```
- *
- * **When to use:**
- * - Showing loading indicators
- * - Disabling form controls during submission
- * - Preventing duplicate submissions
- * - Conditional rendering based on submission state
- *
- * @public
- */
-export function isSubmitting(formTree: FieldTree<unknown>): Signal<boolean> {
-  return computed(() => {
-    const formState = formTree();
-    return formState.submitting();
-  });
-}
-
 export function createSubmittedStatusTracker(
-  formTree: FieldTree<unknown> | Signal<FieldTree<unknown> | undefined>,
+  formTree: FieldTree<unknown> | Signal<FieldTree<unknown>>,
 ): Signal<SubmittedStatus> {
   assertInInjectionContext(createSubmittedStatusTracker);
 
-  const resolveFormTree = (): FieldTree<unknown> | undefined => {
-    if (typeof formTree !== 'function') {
-      return undefined;
+  const resolve = (): FieldTree<unknown> => {
+    if (typeof formTree === 'function') {
+      const result = (formTree as () => unknown)();
+      // Signal<FieldTree>: calling the signal returns the FieldTree (a function)
+      if (typeof result === 'function') {
+        return result as FieldTree<unknown>;
+      }
+      // Plain FieldTree: calling it returned a FieldState (an object)
+      if (result && typeof result === 'object') {
+        return formTree as FieldTree<unknown>;
+      }
     }
-
-    const candidate = formTree as () => unknown;
-    const resolved = candidate();
-
-    if (typeof resolved === 'function') {
-      return resolved as FieldTree<unknown>;
-    }
-
-    if (
-      resolved &&
-      typeof resolved === 'object' &&
-      typeof (resolved as { submitting?: unknown }).submitting === 'function' &&
-      typeof (resolved as { touched?: unknown }).touched === 'function'
-    ) {
-      return formTree as FieldTree<unknown>;
-    }
-
-    return undefined;
+    throw new Error(
+      'createSubmittedStatusTracker requires a FieldTree or Signal<FieldTree>.',
+    );
   };
 
-  const hasSubmitted = signal(false);
-  const wasSubmitting = signal(false);
-  const wasTouched = signal(false);
+  const submitted = signal(false);
+  const prevSubmitting = signal(false);
+  const prevTouched = signal(false);
 
   effect(() => {
-    const resolvedFormTree = resolveFormTree();
-    if (!resolvedFormTree) {
-      wasSubmitting.set(false);
-      wasTouched.set(false);
-      hasSubmitted.set(false);
-      return;
+    const state = resolve()();
+    const nowSubmitting = state.submitting();
+    const nowTouched = state.touched();
+
+    if (prevSubmitting() && !nowSubmitting) {
+      submitted.set(true);
+    }
+    if (prevTouched() && !nowTouched && !nowSubmitting) {
+      submitted.set(false);
     }
 
-    const formState = resolvedFormTree();
-
-    const isSubmitting = formState.submitting();
-    const isTouched = formState.touched();
-    const prevSubmitting = wasSubmitting();
-    const prevTouched = wasTouched();
-
-    if (prevSubmitting && !isSubmitting) {
-      hasSubmitted.set(true);
-    }
-
-    if (prevTouched && !isTouched && !isSubmitting) {
-      hasSubmitted.set(false);
-    }
-
-    wasSubmitting.set(isSubmitting);
-    wasTouched.set(isTouched);
+    prevSubmitting.set(nowSubmitting);
+    prevTouched.set(nowTouched);
   });
 
   return computed(() => {
-    const resolvedFormTree = resolveFormTree();
-    if (!resolvedFormTree) {
-      return 'unsubmitted';
-    }
-
-    const formState = resolvedFormTree();
-
-    if (formState.submitting()) {
-      return 'submitting';
-    }
-
-    return hasSubmitted() ? 'submitted' : 'unsubmitted';
+    const state = resolve()();
+    if (state.submitting()) return 'submitting';
+    return submitted() ? 'submitted' : 'unsubmitted';
   });
 }
 
@@ -340,7 +202,7 @@ export function getBlockingErrors(
 /**
  * Computed signal indicating whether a form can be submitted with warnings.
  *
- * Unlike `canSubmit()` which requires `form().valid()` (no errors at all),
+ * Unlike checking `form().valid()` which requires no errors at all,
  * this allows submission when only warning errors exist.
  *
  * **WCAG Compliance:**

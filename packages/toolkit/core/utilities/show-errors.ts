@@ -4,16 +4,14 @@ import type {
   ReactiveOrStatic,
   SubmittedStatus,
 } from '../types';
-import { computeShowErrors as baseComputeShowErrors } from './error-strategies';
+import { shouldShowErrors } from './error-strategies';
 import type {
   ErrorVisibilityState,
   PartialErrorVisibilityState,
 } from './field-state-types';
+import { unwrapValue } from './unwrap-signal-or-value';
 
 /**
- * Convenience wrapper for {@link computeShowErrors} with cleaner import path.
- *
- * ## What does it do?
  * Creates a reactive computed signal that determines if a form field's errors should
  * be shown to the user based on the error display strategy.
  *
@@ -78,7 +76,6 @@ import type {
  * );
  * ```
  *
- * @see {@link computeShowErrors} For full documentation and additional examples
  * @see {@link createShowErrorsSignal} For options-based API
  * @see {@link combineShowErrors} For combining multiple error signals
  */
@@ -87,7 +84,7 @@ export function showErrors(
   strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
   submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
 ): Signal<boolean> {
-  return baseComputeShowErrors(field, strategy, submittedStatus);
+  return computeShowErrorsInternal(field, strategy, submittedStatus);
 }
 
 /**
@@ -110,7 +107,7 @@ export function showErrors(
  * ## How does it work?
  * 1. Accepts field and an options object with optional strategy
  * 2. Defaults to 'on-touch' strategy if not specified
- * 3. Delegates to {@link computeShowErrors} with unwrapped options
+ * 3. Delegates to the internal computed implementation with unwrapped options
  *
  * @param field - The form field state
  * @param options - Configuration options
@@ -148,7 +145,6 @@ export function showErrors(
  * ```
  *
  * @see {@link showErrors} For positional parameter API
- * @see {@link computeShowErrors} For full implementation details
  * @see {@link combineShowErrors} For combining multiple error signals
  */
 export function createShowErrorsSignal<T extends PartialErrorVisibilityState>(
@@ -159,7 +155,7 @@ export function createShowErrorsSignal<T extends PartialErrorVisibilityState>(
   },
 ): Signal<boolean> {
   const strategy = options.strategy ?? 'on-touch';
-  return baseComputeShowErrors(field, strategy, options.submittedStatus);
+  return computeShowErrorsInternal(field, strategy, options.submittedStatus);
 }
 
 /**
@@ -242,10 +238,36 @@ export function createShowErrorsSignal<T extends PartialErrorVisibilityState>(
  * ```
  *
  * @see {@link showErrors} For creating individual error visibility signals
- * @see {@link computeShowErrors} For the underlying implementation
  */
 export function combineShowErrors(
   showErrorsSignals: Signal<boolean>[],
 ): Signal<boolean> {
   return computed(() => showErrorsSignals.some((signal) => signal()));
+}
+
+function computeShowErrorsInternal(
+  field: ReactiveOrStatic<ErrorVisibilityState | PartialErrorVisibilityState>,
+  strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
+  submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
+): Signal<boolean> {
+  return computed(() => {
+    const fieldState = unwrapValue(field);
+    const strategyValue = unwrapValue(strategy);
+
+    if (!fieldState || typeof fieldState !== 'object') {
+      return false;
+    }
+
+    const isInvalid = fieldState.invalid?.() ?? false;
+    const isTouched = fieldState.touched?.() ?? false;
+
+    const status = submittedStatus ? unwrapValue(submittedStatus) : undefined;
+    const fallbackStatus = status ?? (isTouched ? 'submitted' : 'unsubmitted');
+
+    return shouldShowErrors(
+      { invalid: () => isInvalid, touched: () => isTouched },
+      strategyValue,
+      fallbackStatus,
+    );
+  });
 }

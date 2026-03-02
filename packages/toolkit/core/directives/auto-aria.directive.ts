@@ -5,10 +5,9 @@ import {
   ElementRef,
   inject,
   Injector,
-  input,
   signal,
 } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
+import { FORM_FIELD } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORM_CONTEXT } from '../tokens';
 import type { ErrorDisplayStrategy } from '../types';
 import { shouldShowErrors } from '../utilities/error-strategies';
@@ -58,7 +57,7 @@ import { injectFormConfig } from '../utilities/inject-form-config';
 })
 export class NgxSignalFormAutoAriaDirective {
   #shouldShowBy(predicate: (kind: string) => boolean): boolean {
-    const field = this.formField();
+    const field = this.#formField.field();
     if (!field) return false;
 
     const fieldState = field();
@@ -80,11 +79,9 @@ export class NgxSignalFormAutoAriaDirective {
   readonly #config = injectFormConfig();
   readonly #context = inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true });
 
-  /**
-   * The Signal Forms field for this field.
-   * Accepts a FieldTree (callable function returning FieldState).
-   */
-  readonly formField = input.required<FieldTree<unknown>>();
+  /// Inject Angular's FormField to avoid creating a duplicate `formField` input,
+  /// which triggers the pass-through flag and disables FormField's blur/value binding.
+  readonly #formField = inject(FORM_FIELD);
 
   /**
    * Resolved field name for this field.
@@ -123,10 +120,7 @@ export class NgxSignalFormAutoAriaDirective {
    * appears when errors should be visible according to the strategy.
    */
   protected readonly ariaInvalid = computed(() => {
-    const field = this.formField();
-    if (!field) return null;
-
-    const fieldState = field();
+    const fieldState = this.#formField.state();
     if (!fieldState) return null;
 
     return this.#shouldShowErrors() ? 'true' : 'false';
@@ -134,29 +128,13 @@ export class NgxSignalFormAutoAriaDirective {
 
   /**
    * Computed ARIA required state.
-   * Returns 'true' | null based on whether the field has a required() validator.
-   *
-   * Angular Signal Forms exposes a `required` signal on FieldState that
-   * returns true when the field has a required() validator applied.
-   * This automatically sets aria-required="true" for accessibility.
+   * Returns 'true' | null based on the field's `required()` signal.
    */
   protected readonly ariaRequired = computed(() => {
-    const field = this.formField();
-    if (!field) return null;
-
-    const fieldState = field();
+    const fieldState = this.#formField.state();
     if (!fieldState) return null;
 
-    // Access the required signal from FieldState (available when required() validator is used)
-    const requiredGetter =
-      'required' in fieldState
-        ? (fieldState as { required?: () => boolean }).required
-        : undefined;
-    if (typeof requiredGetter === 'function' && requiredGetter()) {
-      return 'true';
-    }
-
-    return null;
+    return fieldState.required() ? 'true' : null;
   });
 
   /**
@@ -168,10 +146,7 @@ export class NgxSignalFormAutoAriaDirective {
    */
   protected readonly ariaDescribedBy = computed(() => {
     this.#domVersion();
-    const field = this.formField();
-    if (!field) return this.#existingDescribedBy();
-
-    const fieldState = field();
+    const fieldState = this.#formField.state();
     if (!fieldState) return this.#existingDescribedBy();
 
     const fieldName = this.#fieldName();
