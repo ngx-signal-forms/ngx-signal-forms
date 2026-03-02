@@ -1,81 +1,19 @@
 ---
 name: angular-forms
-description: Build signal-based forms in Angular v21+ using the new Signal Forms API. Use for form creation with automatic two-way binding, schema-based validation, field state management, and dynamic forms. Triggers on form implementation, adding validation, creating multi-step forms, or building forms with conditional fields. Signal Forms are experimental but recommended for new Angular projects.
+description: Build signal-based forms in Angular v21+ using Signal Forms API with @ngx-signal-forms/toolkit for accessibility-first error display. Use for form creation, adding validation, error display, ARIA management, form-field wrappers, and fieldset grouping. Always use @ngx-signal-forms/toolkit (NgxSignalFormToolkit, ngx-signal-form-error, NgxFormField) - never write manual aria-invalid/aria-required/aria-describedby or ng-invalid CSS. Triggers on: implementing forms, adding validation, error display, toolkit integration, creating multi-step or dynamic forms. Signal Forms are experimental in Angular v21. Don't use for template-driven forms without signals or third-party form libraries.
 ---
 
 # Angular Signal Forms
 
-Build type-safe, reactive forms using Angular's Signal Forms API. Signal Forms provide automatic two-way binding, schema-based validation, and reactive field state.
+Build type-safe, reactive forms using Angular's Signal Forms API + `@ngx-signal-forms/toolkit` for accessibility-first error display.
 
 **Note:** Signal Forms are experimental in Angular v21. For production apps requiring stability, see [references/form-patterns.md](references/form-patterns.md) for Reactive Forms patterns.
 
+**Toolkit Reference:** For all toolkit patterns (error display, form-field wrapper, fieldset, ARIA rules), see [references/toolkit-patterns.md](references/toolkit-patterns.md).
+
 ## Basic Setup
 
-```typescript
-import { Component, signal } from '@angular/core';
-import { form, FormField, required, email } from '@angular/forms/signals';
-
-interface LoginData {
-  email: string;
-  password: string;
-}
-
-@Component({
-  selector: 'app-login',
-  imports: [FormField],
-  template: `
-    <form (submit)="onSubmit($event)">
-      <label>
-        Email
-        <input type="email" [formField]="loginForm.email" />
-      </label>
-      @if (loginForm.email().touched() && loginForm.email().invalid()) {
-        <p class="error">{{ loginForm.email().errors()[0].message }}</p>
-      }
-
-      <label>
-        Password
-        <input type="password" [formField]="loginForm.password" />
-      </label>
-      @if (loginForm.password().touched() && loginForm.password().invalid()) {
-        <p class="error">{{ loginForm.password().errors()[0].message }}</p>
-      }
-
-      <button type="submit" [disabled]="loginForm().invalid()">Login</button>
-    </form>
-  `,
-})
-export class Login {
-  // Form model - a writable signal
-  loginModel = signal<LoginData>({
-    email: '',
-    password: '',
-  });
-
-  // Create form with validation schema
-  loginForm = form(this.loginModel, (schemaPath) => {
-    required(schemaPath.email, { message: 'Email is required' });
-    email(schemaPath.email, { message: 'Enter a valid email address' });
-    required(schemaPath.password, { message: 'Password is required' });
-  });
-
-  onSubmit(event: Event) {
-    event.preventDefault();
-    if (this.loginForm().valid()) {
-      const credentials = this.loginModel();
-      console.log('Submitting:', credentials);
-    }
-  }
-}
-```
-
-## Use @ngx-signal-forms/toolkit (recommended)
-
-Prefer the toolkit when building Signal Forms in this repo. It provides automatic ARIA wiring, error strategies, and accessible form field wrappers.
-
-### Core directive + auto-ARIA
-
-Use `NgxSignalFormToolkit` with `ngxSignalForm` on `<form>` to enable automatic ARIA attributes and submission lifecycle tracking.
+Always use `NgxSignalFormToolkit` — it handles ARIA, error display, and accessibility automatically:
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
@@ -87,127 +25,51 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 
-interface ContactData {
+interface LoginData {
   email: string;
+  password: string;
 }
 
 @Component({
-  selector: 'app-contact',
+  selector: 'app-login',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit],
+  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
   template: `
-    <form [ngxSignalForm]="contactForm" (submit)="onSubmit($event)">
+    <form novalidate (submit)="onSubmit($event)">
       <label for="email">Email</label>
-      <input id="email" type="email" [formField]="contactForm.email" />
-      <button type="submit">Send</button>
+      <input id="email" type="email" [formField]="loginForm.email" />
+      <ngx-signal-form-error [formField]="loginForm.email" fieldName="email" />
+
+      <label for="password">Password</label>
+      <input id="password" type="password" [formField]="loginForm.password" />
+      <ngx-signal-form-error
+        [formField]="loginForm.password"
+        fieldName="password"
+      />
+
+      <button type="submit" [disabled]="loginForm().invalid()">Login</button>
     </form>
   `,
 })
-export class ContactComponent {
-  readonly #model = signal<ContactData>({ email: '' });
-  protected readonly contactForm = form(this.#model, (path) => {
-    required(path.email, { message: 'Email is required' });
-    email(path.email, { message: 'Enter a valid email' });
-  });
+export class Login {
+  readonly #loginModel = signal<LoginData>({ email: '', password: '' });
 
-  protected async onSubmit(event: Event): Promise<void> {
-    event.preventDefault();
-    await submit(this.contactForm, async () => {
-      console.log(this.#model());
-    });
-  }
-}
-```
-
-### Form-field wrapper (outline + hints + character count)
-
-Use `NgxFormField` for consistent layout, errors, and assistive text. Prefer `appearance="outline"` and include `placeholder=" "` for floating labels.
-
-```typescript
-import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { form, FormField, required, maxLength } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-
-interface ProfileData {
-  bio: string;
-}
-
-@Component({
-  selector: 'app-profile',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
-  template: `
-    <form [ngxSignalForm]="profileForm" (submit)="onSubmit($event)">
-      <ngx-signal-form-field-wrapper
-        [formField]="profileForm.bio"
-        appearance="outline"
-      >
-        <label for="bio">Bio</label>
-        <textarea
-          id="bio"
-          [formField]="profileForm.bio"
-          placeholder=" "
-          rows="4"
-        ></textarea>
-        <ngx-signal-form-field-hint
-          >Max 200 characters</ngx-signal-form-field-hint
-        >
-        <ngx-signal-form-field-character-count
-          [formField]="profileForm.bio"
-          [maxLength]="200"
-        />
-      </ngx-signal-form-field-wrapper>
-      <button type="submit">Save</button>
-    </form>
-  `,
-})
-export class ProfileComponent {
-  readonly #model = signal<ProfileData>({ bio: '' });
-  protected readonly profileForm = form(this.#model, (path) => {
-    required(path.bio, { message: 'Bio is required' });
-    maxLength(path.bio, 200, { message: 'Max 200 characters' });
+  protected readonly loginForm = form(this.#loginModel, (schemaPath) => {
+    required(schemaPath.email, { message: 'Email is required' });
+    email(schemaPath.email, { message: 'Enter a valid email address' });
+    required(schemaPath.password, { message: 'Password is required' });
   });
 
   protected onSubmit(event: Event): void {
     event.preventDefault();
+    submit(this.loginForm, async () => {
+      console.log('Submitting:', this.#loginModel());
+    });
   }
 }
 ```
-
-### Configuration + error strategies
-
-Set defaults once and override per component when needed.
-
-```typescript
-import { ApplicationConfig } from '@angular/core';
-import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideNgxSignalFormsConfig({
-      defaultErrorStrategy: 'on-submit',
-      defaultFormFieldAppearance: 'outline',
-      showRequiredMarker: true,
-      requiredMarker: ' *',
-    }),
-  ],
-};
-```
-
-Use `provideNgxSignalFormsConfigForComponent(...)` for per-component overrides.
-
-### Assistive error display (optional)
-
-When not using the wrapper, render errors with assistive components and rely on toolkit ARIA wiring.
-
-```html
-<input id="email" [formField]="form.email" />
-<ngx-signal-form-error [formField]="form.email" fieldName="email" />
-```
-
-**Important:** Do not add `aria-invalid`, `aria-required`, or `aria-describedby` manually when using the toolkit; it manages them based on field state and error strategy.
 
 ## Form Models
 
@@ -538,28 +400,34 @@ export class Order {
 
 ## Displaying Errors
 
-```html
-<input [formField]="form.email" />
+Use `<ngx-signal-form-error>` — **do not** write manual `@if (touched() && invalid())` checks or manage ARIA manually. See [references/toolkit-patterns.md](references/toolkit-patterns.md) for full options.
 
-@if (form.email().touched() && form.email().invalid()) {
-<ul class="errors">
-  @for (error of form.email().errors(); track error) {
-  <li>{{ error.message }}</li>
-  }
-</ul>
-} @if (form.email().pending()) {
+```html
+<input id="email" [formField]="form.email" />
+<ngx-signal-form-error [formField]="form.email" fieldName="email" />
+
+@if (form.email().pending()) {
 <span>Validating...</span>
 }
 ```
 
-## Styling Based on State
+Or use the wrapper component for automatic label + error bundling:
 
 ```html
-<input
-  [formField]="form.email"
-  [class.is-invalid]="form.email().touched() && form.email().invalid()"
-  [class.is-valid]="form.email().touched() && form.email().valid()"
-/>
+<ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
+  <label for="email">Email</label>
+  <input id="email" [formField]="form.email" />
+</ngx-signal-form-field-wrapper>
+```
+
+## Styling Based on State
+
+Never use `.ng-invalid` CSS. Use `[aria-invalid="true"]` — the toolkit sets this automatically:
+
+```css
+[aria-invalid='true'] {
+  border-color: red;
+}
 ```
 
 ## Reset Form
