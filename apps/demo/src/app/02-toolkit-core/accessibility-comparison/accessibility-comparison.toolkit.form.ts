@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { form, FormField, submit } from '@angular/forms/signals';
+import { form, FormField } from '@angular/forms/signals';
 import {
-  focusFirstInvalid,
+  createOnInvalidHandler,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
@@ -19,12 +19,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form
-      #formElement
-      [ngxSignalForm]="signupForm"
-      (submit)="handleSubmit($event)"
-      class="form-container"
-    >
+    <form [ngxSignalForm]="signupForm" class="form-container">
       <!-- Email Field - Toolkit Handles Everything -->
       <ngx-signal-form-field-wrapper
         [formField]="signupForm.email"
@@ -94,25 +89,16 @@ export class AccessibilityToolkitFormComponent {
     confirmPassword: '',
   });
 
-  /// Form instance with validation
-  readonly signupForm = form(this.#model, accessibilityValidationSchema);
-
-  /// Submission handler using Angular Signal Forms submit() helper
-  /// Uses focusBoundControl() via focusFirstInvalid() for accessibility
-  protected async handleSubmit(event: Event): Promise<void> {
-    event.preventDefault();
-
-    /// Focus first invalid field if form is invalid (WCAG 2.2 best practice)
-    if (this.signupForm().invalid()) {
-      focusFirstInvalid(this.signupForm);
-      return;
-    }
-
-    await submit(this.signupForm, async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      this.#model.set({ email: '', password: '', confirmPassword: '' });
-      this.signupForm().reset();
-      return null;
-    });
-  }
+  /// Form instance with declarative submission and onInvalid handler
+  readonly signupForm = form(this.#model, accessibilityValidationSchema, {
+    submission: {
+      action: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        this.#model.set({ email: '', password: '', confirmPassword: '' });
+        this.signupForm().reset();
+        return null;
+      },
+      onInvalid: createOnInvalidHandler(),
+    },
+  });
 }

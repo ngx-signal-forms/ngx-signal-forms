@@ -4,7 +4,7 @@ import {
   computed,
   signal,
 } from '@angular/core';
-import { FormField, form, submit } from '@angular/forms/signals';
+import { FormField, form } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 
@@ -23,7 +23,7 @@ import { fieldStatesSchema } from './field-states.validations';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
   template: `
-    <form [ngxSignalForm]="userForm" (submit)="saveChanges($event)">
+    <form [ngxSignalForm]="userForm">
       @if (userForm().dirty()) {
         <div
           class="mb-4 rounded-lg border-l-4 border-amber-500 bg-amber-50 px-4 py-3 dark:border-amber-400 dark:bg-amber-900/20"
@@ -150,7 +150,16 @@ export class FieldStatesForm {
   readonly #model = signal<FieldStatesModel>(createInitialFieldStatesModel());
 
   /** Public form instance for state tracking in parent page */
-  readonly userForm = form(this.#model, fieldStatesSchema);
+  readonly userForm = form(this.#model, fieldStatesSchema, {
+    submission: {
+      action: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        this.#model.set({ username: '', email: '', password: '' });
+        this.userForm().reset();
+        return null;
+      },
+    },
+  });
 
   /** Computed signal for password warnings list */
   protected readonly passwordWarnings = computed(() => {
@@ -203,19 +212,5 @@ export class FieldStatesForm {
    */
   protected resetForm(): void {
     this.#model.set(createInitialFieldStatesModel());
-  }
-
-  /**
-   * Form submission handler using Angular Signal Forms submit() helper.
-   * **Key behavior:** Callback only executes if form is VALID.
-   */
-  protected async saveChanges(event: Event): Promise<void> {
-    event.preventDefault();
-    await submit(this.userForm, async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      this.#model.set({ username: '', email: '', password: '' });
-      this.userForm().reset();
-      return null;
-    });
   }
 }

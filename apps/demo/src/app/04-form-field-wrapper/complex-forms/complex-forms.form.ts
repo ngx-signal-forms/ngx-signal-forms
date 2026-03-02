@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { FormField, form, submit } from '@angular/forms/signals';
+import { FormField, form } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
   FormFieldAppearance,
@@ -59,7 +59,16 @@ export class ComplexFormsComponent {
   });
 
   /** Create form with validation schema */
-  readonly complexForm = form(this.#model, complexFormSchema);
+  readonly complexForm = form(this.#model, complexFormSchema, {
+    submission: {
+      action: async () => {
+        // Simulate async operation
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        console.log('Complex form submitted:', this.#model());
+        return null; // No server errors
+      },
+    },
+  });
 
   /**
    * Add new skill to the array
@@ -99,28 +108,6 @@ export class ComplexFormsComponent {
       ...data,
       contacts: data.contacts.filter((_, i) => i !== index),
     }));
-  }
-
-  /**
-   * Form submission handler using Angular Signal Forms submit() helper.
-   *
-   * CRITICAL: Uses native DOM submit event, NOT ngSubmit.
-   * - Template binding: (submit)="handleSubmit($event)" with $event
-   * - Handler must call event.preventDefault() to prevent page reload
-   * - submit() signature: async function submit<T>(form, action): Promise<void>
-   * - Automatically marks all fields as touched
-   * - Only executes callback when form is VALID
-   *
-   * ACCESSIBILITY: Button never disabled (best practice).
-   */
-  protected async handleSubmit(event: Event): Promise<void> {
-    event.preventDefault();
-    await submit(this.complexForm, async () => {
-      // Simulate async operation
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      return null; // No server errors
-    });
   }
 
   /**

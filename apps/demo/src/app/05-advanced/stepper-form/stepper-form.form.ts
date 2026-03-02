@@ -44,7 +44,11 @@ import {
     <div class="px-6 pt-0 pb-6">
       <h2 class="mb-6 text-2xl font-bold">Multi-Step Registration</h2>
 
-      <form (submit)="finishWizard($event)" class="max-w-lg">
+      <form
+        [ngxSignalForm]="wizardForm"
+        (submit)="finishWizard()"
+        class="max-w-lg"
+      >
         <ngx-wizard
           [(currentStep)]="currentStep"
           [completedSteps]="completedSteps()"
@@ -289,8 +293,7 @@ export class StepperFormComponent {
   /**
    * Submit the wizard and focus the first invalid field when needed.
    */
-  protected async finishWizard(event: Event): Promise<void> {
-    event.preventDefault();
+  protected async finishWizard(): Promise<void> {
     if (this.wizardForm().invalid()) {
       focusFirstInvalid(this.wizardForm);
     }

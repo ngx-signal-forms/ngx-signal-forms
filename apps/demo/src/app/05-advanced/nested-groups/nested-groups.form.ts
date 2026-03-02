@@ -6,7 +6,6 @@ import {
   minLength,
   required,
   schema,
-  submit,
 } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
@@ -56,7 +55,7 @@ const profileSchema = schema<UserProfile>((path) => {
         Complex form with deeply nested data structures.
       </p>
 
-      <form (submit)="saveProfile($event)" class="max-w-4xl space-y-8">
+      <form [ngxSignalForm]="profileForm" class="max-w-4xl space-y-8">
         <!-- Section 1: Personal Info -->
         <section
           class="rounded-lg border bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
@@ -249,22 +248,21 @@ export class NestedGroupsComponent {
 
   readonly #model = signal<UserProfile>(this.#initialData);
 
-  readonly profileForm = form(this.#model, profileSchema);
+  readonly profileForm = form(this.#model, profileSchema, {
+    submission: {
+      action: async (data) => {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        console.log('Profile saved:', data());
+        return null;
+      },
+    },
+  });
 
   copyShippingToBilling(): void {
     const current = this.#model();
     this.#model.set({
       ...current,
       billingAddress: { ...current.shippingAddress },
-    });
-  }
-
-  protected async saveProfile(event: Event): Promise<void> {
-    event.preventDefault();
-    await submit(this.profileForm, async (data) => {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log('Profile saved:', data());
-      return null;
     });
   }
 

@@ -5,7 +5,6 @@ import {
   form,
   required,
   schema,
-  submit,
 } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
@@ -38,7 +37,7 @@ const tasksSchema = schema<TasksModel>((path) => {
         Manage a dynamic list of tasks.
       </p>
 
-      <form (submit)="saveTasks($event)" class="max-w-2xl space-y-6">
+      <form [ngxSignalForm]="tasksForm" class="max-w-2xl space-y-6">
         <!-- Team Name -->
         <ngx-signal-form-field-wrapper
           [formField]="tasksForm.teamName"
@@ -153,7 +152,15 @@ export class DynamicListComponent {
 
   readonly #model = signal<TasksModel>(this.#initialData);
 
-  readonly tasksForm = form(this.#model, tasksSchema);
+  readonly tasksForm = form(this.#model, tasksSchema, {
+    submission: {
+      action: async (data) => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        console.log('Saved tasks:', data());
+        return null;
+      },
+    },
+  });
 
   addTask(): void {
     this.#model.update((data) => ({
@@ -167,15 +174,6 @@ export class DynamicListComponent {
       ...data,
       tasks: data.tasks.filter((_, i) => i !== index),
     }));
-  }
-
-  protected async saveTasks(event: Event): Promise<void> {
-    event.preventDefault();
-    await submit(this.tasksForm, async (data) => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Saved tasks:', data());
-      return null;
-    });
   }
 
   protected resetForm(): void {

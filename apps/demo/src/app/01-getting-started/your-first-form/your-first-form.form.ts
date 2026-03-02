@@ -4,10 +4,13 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { FormField, form, submit } from '@angular/forms/signals';
+import { FormField, form } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import {
+  createOnInvalidHandler,
+  NgxSignalFormToolkit,
+} from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import type { ContactFormModel } from './your-first-form.model';
 import { contactFormSchema } from './your-first-form.validations';
 
@@ -25,7 +28,6 @@ import { contactFormSchema } from './your-first-form.validations';
     <form
       [ngxSignalForm]="contactForm"
       [errorStrategy]="errorDisplayMode"
-      (submit)="sendMessage($event)"
       class="form-container"
     >
       <!-- Name Field - Manual Layout with Toolkit Error Component -->
@@ -112,33 +114,18 @@ export class YourFirstFormComponent {
     message: '',
   });
 
-  /** Create form with validation schema */
-  readonly contactForm = form(this.#model, contactFormSchema);
-
-  /**
-   * Form submission handler using Angular Signal Forms submit() helper.
-   *
-   * The submit() helper automatically:
-   * - Marks all fields as touched (shows validation errors)
-   * - Tracks submission state (submitting → submitted)
-   * - Only executes callback when form is VALID
-   * - Provides server error handling
-   *
-   * Button is NEVER disabled (accessibility best practice).
-   */
-  protected async sendMessage(event: Event): Promise<void> {
-    event.preventDefault();
-    await submit(this.contactForm, async () => {
-      // Simulate async operation (e.g., API call)
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Reset form after successful submission
-      this.#model.set({ name: '', email: '', message: '' });
-      this.contactForm().reset();
-
-      return null;
-    });
-  }
+  /** Create form with validation schema and declarative submission */
+  readonly contactForm = form(this.#model, contactFormSchema, {
+    submission: {
+      action: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        this.#model.set({ name: '', email: '', message: '' });
+        this.contactForm().reset();
+        return null;
+      },
+      onInvalid: createOnInvalidHandler(),
+    },
+  });
 
   protected resetForm(): void {
     this.#model.set({ name: '', email: '', message: '' });

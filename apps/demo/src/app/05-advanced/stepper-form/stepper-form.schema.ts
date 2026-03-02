@@ -50,5 +50,11 @@ export type WizardForm = FieldTree<WizardData>;
 export function createWizardForm(
   model: WritableSignal<WizardData>,
 ): WizardForm {
-  return form(model, wizardSchema);
+  return form(model, wizardSchema, {
+    submission: {
+      // Stepper component handles final submission manually.
+      // Keep a no-op action so FormRoot (composed by ngxSignalForm) has a valid submission config.
+      action: async () => null,
+    },
+  });
 }

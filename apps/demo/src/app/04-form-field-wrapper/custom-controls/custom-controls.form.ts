@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { FormField, form, submit } from '@angular/forms/signals';
+import { FormField, form } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
@@ -66,18 +66,14 @@ export class CustomControlsComponent {
    * Create form instance with validation schema.
    * Exposed as public for debugger access.
    */
-  readonly reviewForm = form(this.#model, customControlsSchema);
-
-  /**
-   * Form submission handler using submit() helper.
-   */
-  protected saveData(event: Event): void {
-    event.preventDefault();
-    submit(this.reviewForm, async () => {
-      console.log('Review submitted:', this.#model());
-      return null;
-    });
-  }
+  readonly reviewForm = form(this.#model, customControlsSchema, {
+    submission: {
+      action: async () => {
+        console.log('Review submitted:', this.#model());
+        return null;
+      },
+    },
+  });
 
   /**
    * Reset form to initial values.

@@ -5,7 +5,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { FormField, form, submit } from '@angular/forms/signals';
+import { FormField, form } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import {
   NgxSignalFormToolkit,
@@ -42,7 +42,6 @@ import { errorMessagesSchema } from './error-messages.validations';
     <form
       [ngxSignalForm]="errorMessagesForm"
       [errorStrategy]="errorDisplayMode"
-      (submit)="handleSubmit($event)"
       class="form-container"
     >
       <!-- Form fields -->
@@ -159,7 +158,16 @@ export class ErrorMessagesComponent {
     bio: '',
   });
 
-  readonly errorMessagesForm = form(this.#model, errorMessagesSchema);
+  readonly errorMessagesForm = form(this.#model, errorMessagesSchema, {
+    submission: {
+      action: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        this.#model.set({ email: '', password: '', bio: '' });
+        this.errorMessagesForm().reset();
+        return null;
+      },
+    },
+  });
 
   constructor() {
     // Reset form state on initialization to ensure fields start as untouched
@@ -190,20 +198,6 @@ export class ErrorMessagesComponent {
   // Bio: Uses default fallback (Tier 3)
   required(path.bio);
 })`;
-
-  /**
-   * Form submission handler using Angular Signal Forms submit() helper.
-   * ACCESSIBILITY: Button never disabled (best practice).
-   */
-  protected async handleSubmit(event: Event): Promise<void> {
-    event.preventDefault();
-    await submit(this.errorMessagesForm, async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      this.#model.set({ email: '', password: '', bio: '' });
-      this.errorMessagesForm().reset();
-      return null;
-    });
-  }
 
   protected resetForm(): void {
     this.errorMessagesForm().reset();

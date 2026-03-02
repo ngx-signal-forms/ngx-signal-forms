@@ -216,14 +216,16 @@ import { submit } from '@angular/forms/signals';
 
 @Component({
   template: `
-    <form [ngxSignalForm]="registrationForm" (submit)="handleSubmit($event)">
+    <form [ngxSignalForm]="registrationForm">
       <!-- Form fields -->
 
       <button
         type="submit"
-        [disabled]="registrationForm().invalid() || isSubmitting()"
+        [disabled]="
+          registrationForm().invalid() || registrationForm().submitting()
+        "
       >
-        @if (isSubmitting()) {
+        @if (registrationForm().submitting()) {
           Saving...
         } @else {
           Submit
@@ -240,49 +242,36 @@ export class RegistrationComponent {
   readonly #model = signal<RegistrationModel>({
     /* ... */
   });
-  protected readonly registrationForm = form(this.#model, validators);
+  protected readonly registrationForm = form(this.#model, validators, {
+    submission: {
+      action: async (formData) => {
+        this.serverError.set(null);
 
-  // Track loading state
-  protected readonly isSubmitting = signal(false);
-  protected readonly serverError = signal<string | null>(null);
-
-  // submit() helper automatically:
-  // 1. Marks all fields as touched (shows all errors on submit)
-  // 2. Derives submission status ('unsubmitted' → 'submitting' → 'submitted')
-  //    using submitting() + touched()
-  // 3. Handles async operations
-  // 4. Returns server errors for display
-  readonly #submitHandler = submit(this.registrationForm, async (formData) => {
-    this.isSubmitting.set(true);
-    this.serverError.set(null);
-
-    try {
-      await this.apiService.register(formData().value());
-
-      // Success: navigate away or show success message
-      this.router.navigate(['/success']);
-
-      return null; // No errors
-    } catch (error: any) {
-      // Return server errors for display on form
-      this.serverError.set(error.message || 'Registration failed');
-
-      return [
-        {
-          kind: 'server_error',
-          message: error.message || 'Registration failed',
-          field: formData, // Attach to form root
-        },
-      ];
-    } finally {
-      this.isSubmitting.set(false);
-    }
+        try {
+          await this.apiService.register(formData().value());
+          this.router.navigate(['/success']);
+          return null;
+        } catch (error: any) {
+          this.serverError.set(error.message || 'Registration failed');
+          return [
+            {
+              kind: 'server_error',
+              message: error.message || 'Registration failed',
+              field: formData,
+            },
+          ];
+        }
+      },
+    },
   });
 
-  protected handleSubmit(event: Event): void {
-    event.preventDefault();
-    void this.#submitHandler();
-  }
+  protected readonly serverError = signal<string | null>(null);
+
+  // Angular 21.2's declarative submission automatically:
+  // 1. Marks all fields as touched (shows all errors on submit)
+  // 2. Sets submitting() to true during the async action
+  // 3. Handles async operations
+  // 4. Returns server errors for display
 }
 ```
 
@@ -305,7 +294,7 @@ const submittedStatus = computed<SubmittedStatus>(() => {
 When you use the toolkit's `ngxSignalFormDirective`, the derived status is provided via DI for convenience:
 
 ```html
-<form [ngxSignalForm]="registrationForm" (submit)="save($event)">
+<form [ngxSignalForm]="registrationForm">
   <!-- NgxSignalFormErrorComponent automatically receives submittedStatus -->
   <ngx-signal-form-error
     [formField]="registrationForm.email"
@@ -369,9 +358,9 @@ return [
 ```html
 <button
   type="submit"
-  [disabled]="registrationForm().invalid() || isSubmitting()"
+  [disabled]="registrationForm().invalid() || registrationForm().submitting()"
 >
-  @if (isSubmitting()) {
+  @if (registrationForm().submitting()) {
   <span class="spinner"></span>
   Saving... } @else { Submit Registration }
 </button>
@@ -380,7 +369,7 @@ return [
 **Form-wide loading indicator:**
 
 ```html
-@if (isSubmitting()) {
+@if (registrationForm().submitting()) {
 <div class="loading-overlay" role="status" aria-live="polite">
   <p>Processing your registration...</p>
 </div>
@@ -585,25 +574,29 @@ export const appConfig: ApplicationConfig = {
 
 **Problem:** `submittedStatus` always 'unsubmitted'
 
-**Solution:** Use native `(submit)` event with `event.preventDefault()`
+**Solution:** Use `[ngxSignalForm]` and configure declarative `submission` in `form()`
 
 ```html
-<!-- ❌ Wrong: Manual submit handling -->
+<!-- ❌ Wrong: No form directive/context -->
 <form>
-  <button (click)="save()">Submit</button>
+  <button type="submit" class="btn-primary">Submit</button>
 </form>
 
-<!-- ✅ Correct: Use native submit event with preventDefault -->
-<form (submit)="save($event)">
+<!-- ✅ Correct: Use ngxSignalForm + declarative submission -->
+<form [ngxSignalForm]="registrationForm">
   <button type="submit" class="btn-primary">Submit</button>
 </form>
 ```
 
 ```typescript
-protected save(event: Event): void {
-  event.preventDefault();
-  // Handle form submission
-}
+readonly registrationForm = form(this.#model, schema, {
+  submission: {
+    action: async () => {
+      // Handle form submission
+      return null;
+    },
+  },
+});
 ```
 
 ### Server errors not displaying

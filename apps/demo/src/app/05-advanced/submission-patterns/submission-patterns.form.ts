@@ -1,15 +1,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   input,
   signal,
 } from '@angular/core';
-import { form, FormField, submit } from '@angular/forms/signals';
+import { form, FormField } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import {
-  canSubmit,
-  isSubmitting,
   NGX_SIGNAL_FORM_CONTEXT,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
@@ -35,7 +34,6 @@ import { submissionSchema } from './submission-patterns.validations';
     <form
       [ngxSignalForm]="registrationForm"
       [errorStrategy]="'on-submit'"
-      (submit)="registerUser($event)"
       class="form-container"
     >
       <!-- Submission state indicator -->
@@ -278,67 +276,54 @@ export class SubmissionPatternsComponent {
 
   protected readonly model = this.#model.asReadonly();
 
-  readonly registrationForm = form(this.#model, submissionSchema);
+  readonly registrationForm = form(this.#model, submissionSchema, {
+    submission: {
+      action: async (formData) => {
+        /// Clear previous states
+        this.serverError.set(null);
+        this.submissionSuccess.set(false);
 
-  /// Toolkit submission helpers - reduces template boilerplate
-  protected readonly canSubmitForm = canSubmit(this.registrationForm);
-  protected readonly isFormSubmitting = isSubmitting(this.registrationForm);
+        /// Simulate API delay (toolkit automatically shows 'submitting' state)
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        /// Simulate server error if checkbox is checked
+        if (formData().value().simulateServerError) {
+          const username = formData().value().username;
+          this.serverError.set(
+            `Username "${username}" is already taken. Please choose another.`,
+          );
+          /// Return null since we're handling error display manually
+          /// (Alternatively, could return error array for automatic display)
+          return null;
+        }
+
+        /// Success - show success message and reset form
+        this.submissionSuccess.set(true);
+        this.#model.set({
+          username: '',
+          password: '',
+          confirmPassword: '',
+          simulateServerError: false,
+        });
+        this.registrationForm().reset();
+
+        return null;
+      },
+    },
+  });
+
+  /// Inline submission helpers — Angular 21.2 makes these trivial computed signals
+  protected readonly canSubmitForm = computed(
+    () =>
+      this.registrationForm().valid() && !this.registrationForm().submitting(),
+  );
+  protected readonly isFormSubmitting = computed(() =>
+    this.registrationForm().submitting(),
+  );
 
   /// Server error state for demonstration
   protected readonly serverError = signal<string | null>(null);
   protected readonly submissionSuccess = signal(false);
-
-  /**
-   * Form submission handler using Angular Signal Forms submit() helper.
-   *
-   * CRITICAL: Signal Forms use native DOM submit event, NOT ngSubmit.
-   * - Template binding: (submit)="handleSubmit($event)" with $event
-   * - Handler must call event.preventDefault() to prevent page reload
-   * - submit() helper signature: async function submit<T>(form, action): Promise<void>
-   *
-   * The submit() helper provides:
-   * - Automatic markAllAsTouched() to show validation errors
-   * - Automatic submission state tracking (submitting → submitted)
-   * - Server error handling via return value
-   * - Type-safe access to form data
-   *
-   * Note: The callback is only invoked when the form is VALID.
-   * If invalid, the callback is skipped and submitting remains false.
-   */
-  protected async registerUser(event: Event): Promise<void> {
-    event.preventDefault();
-    await submit(this.registrationForm, async (formData) => {
-      /// Clear previous states
-      this.serverError.set(null);
-      this.submissionSuccess.set(false);
-
-      /// Simulate API delay (toolkit automatically shows 'submitting' state)
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      /// Simulate server error if checkbox is checked
-      if (formData().value().simulateServerError) {
-        const username = formData().value().username;
-        this.serverError.set(
-          `Username "${username}" is already taken. Please choose another.`,
-        );
-        /// Return null since we're handling error display manually
-        /// (Alternatively, could return error array for automatic display)
-        return null;
-      }
-
-      /// Success - show success message and reset form
-      this.submissionSuccess.set(true);
-      this.#model.set({
-        username: '',
-        password: '',
-        confirmPassword: '',
-        simulateServerError: false,
-      });
-      this.registrationForm().reset();
-
-      return null;
-    });
-  }
 
   protected resetForm(): void {
     /// Reset form state and data

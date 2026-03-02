@@ -37,7 +37,7 @@ import { createPasswordForm } from './warning-support.validations';
       class="form-container"
       [ngxSignalForm]="passwordForm"
       [errorStrategy]="errorDisplayMode"
-      (submit)="handleSubmit($event)"
+      (submit)="handleSubmit()"
     >
       <ngx-signal-form-field-wrapper
         [formField]="passwordForm.username"
@@ -130,8 +130,7 @@ export class WarningsSupportFormComponent {
    * - All fields are marked as touched to show feedback
    * - Blocking errors prevent submission
    */
-  protected async handleSubmit(event: Event): Promise<void> {
-    event.preventDefault();
+  protected async handleSubmit(): Promise<void> {
     await submitWithWarnings(this.passwordForm, async () => {
       /// Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));

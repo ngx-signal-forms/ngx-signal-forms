@@ -135,13 +135,13 @@ This section demonstrates **complete toolkit adoption** with focus on core featu
 **When to use:** Custom flows (wizards, conditional logic)
 
 ```typescript
-const showErrors = computeShowErrors(
+const errors = showErrors(
   form.field,
   'manual',
   signal<SubmittedStatus>('unsubmitted')
 );
 
-@if (showErrors() && customCondition()) {
+@if (errors() && customCondition()) {
   <ngx-signal-form-error ... />
 }
 ```

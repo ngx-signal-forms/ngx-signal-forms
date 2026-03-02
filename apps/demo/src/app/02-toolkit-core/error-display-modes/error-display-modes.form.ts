@@ -6,7 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
-import { form, FormField, submit } from '@angular/forms/signals';
+import { form, FormField } from '@angular/forms/signals';
 import {
   combineShowErrors,
   injectFormContext,
@@ -154,7 +154,6 @@ export class ErrorDisplayHelpersComponent {
     <form
       [ngxSignalForm]="productForm"
       [errorStrategy]="errorDisplayMode"
-      (submit)="submitFeedback($event)"
       class="form-container"
       aria-labelledby="productFeedbackHeading"
     >
@@ -447,7 +446,18 @@ export class ErrorDisplayModesFormComponent {
   readonly #model = signal<ProductFeedbackModel>({ ...INITIAL_MODEL });
 
   /** Form instance using Signal Forms */
-  readonly productForm = form(this.#model, productFeedbackSchema);
+  readonly productForm = form(this.#model, productFeedbackSchema, {
+    submission: {
+      onInvalid: () => {
+        this.#submissionAttempted.set(true);
+      },
+      action: async () => {
+        this.#submissionAttempted.set(true);
+        alert('Thank you for your feedback!');
+        return null; // No server errors
+      },
+    },
+  });
 
   /** Computed signal for showing improvement suggestions field */
   protected readonly showImprovementSuggestions = computed(() => {
@@ -477,17 +487,4 @@ export class ErrorDisplayModesFormComponent {
   protected readonly showPendingMessage = computed(() =>
     this.productForm().pending(),
   );
-
-  protected async submitFeedback(event: Event): Promise<void> {
-    event.preventDefault();
-
-    this.#submissionAttempted.set(true);
-
-    await submit(this.productForm, async () => {
-      // Simulate API call
-      alert('Thank you for your feedback!');
-
-      return null; // No server errors
-    });
-  }
 }

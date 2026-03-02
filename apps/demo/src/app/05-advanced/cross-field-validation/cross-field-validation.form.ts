@@ -6,7 +6,6 @@ import {
   min,
   required,
   schema,
-  submit,
   validate,
 } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
@@ -66,7 +65,7 @@ const bookingSchema = schema<Booking>((path) => {
         Demonstrates validation rules that depend on multiple fields.
       </p>
 
-      <form (submit)="bookStay($event)" class="max-w-md space-y-6">
+      <form [ngxSignalForm]="bookingForm" class="max-w-md space-y-6">
         <div class="grid grid-cols-2 gap-4">
           <ngx-signal-form-field-wrapper
             [formField]="bookingForm.checkIn"
@@ -154,16 +153,15 @@ export class CrossFieldValidationComponent {
     promoCode: '',
   });
 
-  readonly bookingForm = form(this.#model, bookingSchema);
-
-  protected async bookStay(event: Event): Promise<void> {
-    event.preventDefault();
-    await submit(this.bookingForm, async (data) => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Booking Confirmed:', data());
-      return null;
-    });
-  }
+  readonly bookingForm = form(this.#model, bookingSchema, {
+    submission: {
+      action: async (data) => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        console.log('Booking Confirmed:', data());
+        return null;
+      },
+    },
+  });
 
   protected resetForm(): void {
     this.bookingForm().reset();

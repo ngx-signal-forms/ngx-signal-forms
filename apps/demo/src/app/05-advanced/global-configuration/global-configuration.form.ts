@@ -4,9 +4,12 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { FormField, form, submit } from '@angular/forms/signals';
+import { form, FormField } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import {
+  createOnInvalidHandler,
+  NgxSignalFormToolkit,
+} from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import type { GlobalConfigModel } from './global-configuration.model';
 import { globalConfigSchema } from './global-configuration.validations';
@@ -31,7 +34,6 @@ import { globalConfigSchema } from './global-configuration.validations';
     <form
       [ngxSignalForm]="configForm"
       [errorStrategy]="errorDisplayMode"
-      (submit)="handleSubmit($event)"
       class="form-container"
     >
       <!-- Info callout about global config -->
@@ -175,21 +177,17 @@ export class GlobalConfigurationComponent {
     userWebsite: '',
   });
 
-  readonly configForm = form(this.#model, globalConfigSchema);
-
-  /**
-   * Form submission handler using Angular Signal Forms submit() helper.
-   * ACCESSIBILITY: Button never disabled (best practice).
-   */
-  protected async handleSubmit(event: Event): Promise<void> {
-    event.preventDefault();
-    await submit(this.configForm, async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      this.#model.set({ userEmail: '', userPhone: '', userWebsite: '' });
-      this.configForm().reset();
-      return null;
-    });
-  }
+  readonly configForm = form(this.#model, globalConfigSchema, {
+    submission: {
+      action: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        this.#model.set({ userEmail: '', userPhone: '', userWebsite: '' });
+        this.configForm().reset();
+        return null;
+      },
+      onInvalid: createOnInvalidHandler(),
+    },
+  });
 
   protected resetForm(): void {
     this.configForm().reset();

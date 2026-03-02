@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { FormField, form, submit } from '@angular/forms/signals';
+import { FormField, form } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
@@ -75,7 +75,14 @@ export class BasicUsageComponent {
    * Create form instance with validation schema and error strategy
    * Exposed as public for debugger access
    */
-  readonly showcaseForm = form(this.#model, basicUsageSchema);
+  readonly showcaseForm = form(this.#model, basicUsageSchema, {
+    submission: {
+      action: async () => {
+        console.log('Form submitted:', this.#model());
+        return null;
+      },
+    },
+  });
 
   /**
    * Available countries for dropdown
@@ -91,17 +98,6 @@ export class BasicUsageComponent {
     { value: 'JP', label: 'Japan' },
     { value: 'NL', label: 'Netherlands' },
   ];
-
-  /**
-   * Form submission handler using submit() helper
-   */
-  protected saveData(event: Event): void {
-    event.preventDefault();
-    submit(this.showcaseForm, async () => {
-      console.log('Form submitted:', this.#model());
-      return null;
-    });
-  }
 
   /**
    * Reset form to initial values

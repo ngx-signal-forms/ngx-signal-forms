@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { FormField, form, submit } from '@angular/forms/signals';
+import { FormField, form } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
@@ -75,7 +75,14 @@ export class OutlineFormFieldComponent {
    * Create form instance with validation schema
    * Exposed as public for debugger access
    */
-  readonly showcaseForm = form(this.#model, outlineFormFieldSchema);
+  readonly showcaseForm = form(this.#model, outlineFormFieldSchema, {
+    submission: {
+      action: async () => {
+        console.log('Form submitted:', this.#model());
+        return null;
+      },
+    },
+  });
 
   /**
    * Available countries for dropdown
@@ -196,17 +203,6 @@ export class OutlineFormFieldComponent {
       };
       facts[factIndex] = { ...facts[factIndex], offenses };
       return { facts };
-    });
-  }
-
-  /**
-   * Form submission handler using submit() helper
-   */
-  protected saveCase(event: Event): void {
-    event.preventDefault();
-    submit(this.showcaseForm, async () => {
-      console.log('Form submitted:', this.#model());
-      return null;
     });
   }
 }

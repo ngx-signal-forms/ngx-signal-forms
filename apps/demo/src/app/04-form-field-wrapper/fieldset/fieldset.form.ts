@@ -4,7 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { FormField, form, submit } from '@angular/forms/signals';
+import { FormField, form } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
@@ -88,7 +88,14 @@ export class FieldsetFormComponent {
    * Create form instance with validation schema
    * Exposed as public for debugger access
    */
-  readonly fieldsetForm = form(this.#model, fieldsetDemoSchema);
+  readonly fieldsetForm = form(this.#model, fieldsetDemoSchema, {
+    submission: {
+      action: async () => {
+        console.log('Fieldset form submitted:', this.#model());
+        return null;
+      },
+    },
+  });
 
   /**
    * Available countries for dropdown
@@ -102,17 +109,6 @@ export class FieldsetFormComponent {
     { value: 'DE', label: 'Germany' },
     { value: 'NL', label: 'Netherlands' },
   ];
-
-  /**
-   * Form submission handler
-   */
-  protected saveData(event: Event): void {
-    event.preventDefault();
-    submit(this.fieldsetForm, async () => {
-      console.log('Fieldset form submitted:', this.#model());
-      return null;
-    });
-  }
 
   /**
    * Reset form to initial values

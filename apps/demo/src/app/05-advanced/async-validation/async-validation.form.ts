@@ -5,7 +5,6 @@ import {
   FormField,
   required,
   schema,
-  submit,
   validateHttp,
 } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
@@ -47,7 +46,7 @@ const registrationSchema = schema<Registration>((path) => {
         Type "admin" to see async validation error (simulated).
       </p>
 
-      <form (submit)="register($event)" class="max-w-md space-y-6">
+      <form [ngxSignalForm]="regForm" class="max-w-md space-y-6">
         <ngx-signal-form-field-wrapper
           [formField]="regForm.username"
           appearance="outline"
@@ -105,17 +104,16 @@ const registrationSchema = schema<Registration>((path) => {
 })
 export class AsyncValidationComponent {
   readonly #model = signal<Registration>({ username: '' });
-  readonly regForm = form(this.#model, registrationSchema);
-
-  protected async register(event: Event): Promise<void> {
-    event.preventDefault();
-    await submit(this.regForm, async (data) => {
-      // Simulate actual registration delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Registered:', data());
-      return null;
-    });
-  }
+  readonly regForm = form(this.#model, registrationSchema, {
+    submission: {
+      action: async (data) => {
+        // Simulate actual registration delay
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        console.log('Registered:', data());
+        return null;
+      },
+    },
+  });
 
   protected resetForm(): void {
     this.regForm().reset();
