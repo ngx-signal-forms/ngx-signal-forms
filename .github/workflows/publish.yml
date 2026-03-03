@@ -33,6 +33,7 @@ jobs:
     env:
       NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RW'] }}
       NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
+      NPM_TOKEN: ${{ secrets['NPM_TOKEN'] }}
     steps:
       - name: Resolve publish ref
         id: publish_ref
@@ -95,6 +96,8 @@ jobs:
           node-version: 22
           cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org'
+          scope: '@ngx-signal-forms'
+          always-auth: true
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -121,6 +124,38 @@ jobs:
       - name: Build toolkit package
         run: pnpm exec nx run toolkit:build --skip-nx-cache --outputStyle=static
 
+      - name: Configure npm auth mode
+        run: |
+          # Clear inherited token auth by default so Trusted Publisher (OIDC) is used.
+          echo "NODE_AUTH_TOKEN=" >> "$GITHUB_ENV"
+
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "NODE_AUTH_TOKEN=$NPM_TOKEN" >> "$GITHUB_ENV"
+            echo "Using NPM_TOKEN authentication fallback for publish."
+          else
+            echo "Using npm Trusted Publisher (OIDC) authentication for publish."
+          fi
+
+      - name: Validate npm publish auth preflight
+        run: |
+          npm --version
+          pnpm --version
+
+          if [ -n "$NPM_TOKEN" ]; then
+            npm whoami
+            echo "Token-based npm authentication is valid."
+          else
+            if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+              echo "❌ OIDC token endpoint is not available in this job." >&2
+              echo "Ensure workflow permissions include: id-token: write" >&2
+              exit 1
+            fi
+            echo "OIDC is available. Ensure npm Trusted Publisher is configured for:"
+            echo "- package: @ngx-signal-forms/toolkit"
+            echo "- repository: ngx-signal-forms/ngx-signal-forms"
+            echo "- workflow file: .github/workflows/publish.yml"
+          fi
+
       - name: Publish packages (Dry Run)
         if: ${{ inputs.dry_run == true }}
         run: |
@@ -133,6 +168,7 @@ jobs:
         run: pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --skip-nx-cache
         env:
           NPM_CONFIG_PROVENANCE: true
+          NODE_AUTH_TOKEN: ${{ env.NODE_AUTH_TOKEN }}
         # OIDC Trusted Publisher handles authentication automatically
 
       - name: Summary
