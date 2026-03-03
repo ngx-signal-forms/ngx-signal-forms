@@ -30,7 +30,7 @@ test.describe('Accessibility - ARIA Attributes', () => {
       await expect(emailInput).toHaveAttribute('aria-invalid', /(true|false)/);
     });
 
-    await test.step('Verify Full toolkit form with [ngxSignalForm] (form 1)', async () => {
+    await test.step('Verify Full toolkit form with [formRoot] (form 1)', async () => {
       const fullForm = page.locator('form').nth(1);
       const emailInput = fullForm
         .locator('input[type="email"], input[type="text"]')
@@ -48,7 +48,7 @@ test.describe('Accessibility - ARIA Attributes', () => {
     page,
   }) => {
     await test.step('Verify aria-describedby linkage on Full form with auto-ARIA', async () => {
-      // Get the Full toolkit form (second form, index 1) which uses [ngxSignalForm]
+      // Get the Full toolkit form (second form, index 1) which uses [formRoot]
       const fullForm = page.locator('form').nth(1);
       const emailInput = fullForm
         .locator('input[type="email"], input[type="text"]')

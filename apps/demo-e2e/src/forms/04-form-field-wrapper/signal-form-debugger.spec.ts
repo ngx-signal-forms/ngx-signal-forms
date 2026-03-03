@@ -267,8 +267,8 @@ test.describe('Signal Form Debugger - Outline Form Field Page', () => {
     // We scope to validation errors section to avoid counting warning badges
     const hiddenBadges =
       validationErrorsSection.getByText('Hidden by strategy');
-    const count = await hiddenBadges.count();
-    expect(count).toBe(3);
+    const count = hiddenBadges;
+    await expect(count).toHaveCount(3);
   });
 });
 

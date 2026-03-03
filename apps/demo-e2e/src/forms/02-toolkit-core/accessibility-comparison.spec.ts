@@ -4,8 +4,8 @@ import { expect, test } from '@playwright/test';
  * Route: /toolkit-core/accessibility-comparison
  *
  * Tests TWO forms side-by-side:
- * - Minimal: Auto-ARIA only, no [ngxSignalForm] (~55 lines)
- * - Full: Complete with [ngxSignalForm] and error components (~31 lines)
+ * - Minimal: Auto-ARIA only, no [formRoot] (~55 lines)
+ * - Full: Complete with [formRoot] and error components (~31 lines)
  *
  * Validates that toolkit provides equivalent accessibility with less code.
  */
@@ -53,7 +53,7 @@ test.describe('Toolkit Core - Accessibility Comparison (Two Forms)', () => {
       await expect(emailInput).toHaveAttribute('aria-describedby');
     });
 
-    await test.step('Test Full toolkit form (form 1) with [ngxSignalForm]', async () => {
+    await test.step('Test Full toolkit form (form 1) with [formRoot]', async () => {
       const fullForm = page.locator('form').nth(1);
       const emailInput = fullForm
         .locator('input[type="email"], input[type="text"]')
@@ -144,7 +144,7 @@ test.describe('Toolkit Core - Accessibility Comparison (Two Forms)', () => {
   });
 
   test('Full toolkit form should use auto-ARIA directive', async ({ page }) => {
-    await test.step('Verify [ngxSignalForm] directive is active on form 1', async () => {
+    await test.step('Verify [formRoot] directive is active on form 1', async () => {
       const fullForm = page.locator('form').nth(1);
 
       // Verify directive is attached (may have data attribute or specific class)

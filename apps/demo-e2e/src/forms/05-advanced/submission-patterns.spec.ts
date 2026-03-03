@@ -25,15 +25,10 @@ test.describe('Advanced - Submission Patterns', () => {
 
   test.describe('Submission Failures', () => {
     test('should show validation errors on submit of empty form', async () => {
-      // Submit button is disabled until the form is valid
-      await expect(page.submitButton).toBeDisabled();
+      // Trigger validation by trying to submit the empty form
+      await page.submitButton.click();
 
-      // Trigger validation by touching a field
-      const usernameInput = page.page.getByLabel(/username/i);
-      await usernameInput.focus();
-      await usernameInput.blur();
-
-      // After blur, error message should be visible (on-touch strategy)
+      // After submit, error message should be visible
       const errorMessage = page.page.getByText('Username is required');
       await expect(errorMessage).toBeVisible();
     });
