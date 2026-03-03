@@ -1,6 +1,6 @@
-# Migration Guide: `1.0.0-beta.4`
+# Migration Guide: `1.0.0-beta.5`
 
-This guide covers migration from earlier beta releases to `@ngx-signal-forms/toolkit@1.0.0-beta.4`.
+This guide covers migration from earlier beta releases to `@ngx-signal-forms/toolkit@1.0.0-beta.5`.
 
 ## Who should migrate
 
@@ -9,17 +9,17 @@ You should follow this guide if your project currently:
 - uses manual `(submit)` handlers with `event.preventDefault()` for toolkit forms
 - uses `canSubmit()` or `isSubmitting()` from `@ngx-signal-forms/toolkit`
 - imports or references `computeShowErrors()`
-- relies on implicit form directive behavior instead of explicit `[ngxSignalForm]`
+- relies on implicit form directive behavior instead of explicit `[formRoot]`
 
 ## Summary of breaking/behavioral changes
 
-| Area                    | Before                                            | Now (`beta.4`)                                                               |
+| Area                    | Before                                            | Now (`beta.5`)                                                               |
 | ----------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------- |
 | Angular baseline        | `21.1.x`                                          | `21.2.0`                                                                     |
-| Form wiring             | Often manual `(submit)` + `submit()`              | Prefer `<form [ngxSignalForm]="form">` with declarative `submission` config  |
+| Form wiring             | Often manual `(submit)` + `submit()`              | Prefer `<form [formRoot]="form">` with declarative `submission` config       |
 | Submission helpers      | `canSubmit()`, `isSubmitting()`, `hasSubmitted()` | `hasSubmitted()` only; use native `form().valid()` and `form().submitting()` |
 | Error API               | `computeShowErrors()` used in examples/docs       | Use `showErrors()`                                                           |
-| Form directive selector | Included broad/implicit patterns in older docs    | Explicit `form[ngxSignalForm]`                                               |
+| Form directive selector | Included broad/implicit patterns in older docs    | Explicit `form[formRoot]`                                                    |
 
 ## 1) Upgrade Angular to `21.2.0`
 
@@ -34,7 +34,7 @@ Ensure your workspace resolves Angular packages to `21.2.0` and reinstall depend
 
 ### After
 
-- Use `<form [ngxSignalForm]="myForm">`.
+- Use `<form [formRoot]="myForm">`.
 - Configure `submission: { action, onInvalid }` in `form(...)` options.
 
 ```ts
@@ -91,15 +91,15 @@ const visible = computeShowErrors(field, strategy, submittedStatus);
 const visible = showErrors(field, strategy, submittedStatus);
 ```
 
-## 5) Ensure forms using toolkit bind `[ngxSignalForm]`
+## 5) Ensure forms using toolkit bind `[formRoot]`
 
 For toolkit-managed forms, use:
 
 ```html
-<form [ngxSignalForm]="myForm">...</form>
+<form [formRoot]="myForm">...</form>
 ```
 
-This ensures form-root composition, submit lifecycle integration, and context availability.
+This ensures FormRoot-equivalent behavior, submit lifecycle integration, and context availability.
 
 ## 6) Optional: standard invalid-submit behavior
 
@@ -115,7 +115,7 @@ submission: {
 ## Migration checklist
 
 - [ ] Angular packages resolve to `21.2.0`
-- [ ] Toolkit forms use `[ngxSignalForm]`
+- [ ] Toolkit forms use `[formRoot]`
 - [ ] `submission.action` defined for declarative submit flow
 - [ ] `canSubmit()` and `isSubmitting()` removed from imports/usages
 - [ ] `computeShowErrors()` replaced by `showErrors()`
@@ -130,7 +130,7 @@ Use native form signals (`valid()`, `submitting()`) and inline `computed` values
 
 ### Errors not showing with `'on-submit'` strategy
 
-Ensure the form is bound with `[ngxSignalForm]` and uses the declarative submission pipeline.
+Ensure the form is bound with `[formRoot]` and uses the declarative submission pipeline.
 
 ### `submittedStatus` appears incorrect
 
