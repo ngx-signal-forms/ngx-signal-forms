@@ -5,7 +5,7 @@
 </div>
 
 <form
-  [ngxSignalForm]="showcaseForm"
+  [formRoot]="showcaseForm"
   [errorStrategy]="errorDisplayMode"
   class="form-container"
 >
@@ -179,9 +179,9 @@
     <button
       class="btn-primary"
       type="submit"
-      [disabled]="showcaseForm().pending()"
+      [disabled]="showcaseForm().submitting()"
     >
-      @if (showcaseForm().pending()) { Saving... } @else { Submit Form }
+      @if (showcaseForm().submitting()) { Saving... } @else { Submit Form }
     </button>
 
     <button class="btn-secondary" type="reset" (click)="resetForm()">

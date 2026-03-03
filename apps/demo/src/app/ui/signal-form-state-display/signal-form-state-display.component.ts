@@ -168,6 +168,15 @@ import { isBlockingError, isWarningError } from '@ngx-signal-forms/toolkit';
                 {{ formState().pending() }}
               </span>
             </div>
+            <div class="rounded bg-gray-50 p-2 dark:bg-gray-900">
+              <span class="font-medium">submitting:</span>
+              <span
+                [class.text-purple-600]="formState().submitting()"
+                [class.text-gray-500]="!formState().submitting()"
+              >
+                {{ formState().submitting() }}
+              </span>
+            </div>
           </div>
         </div>
       </div>

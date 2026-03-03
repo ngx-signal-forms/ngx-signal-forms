@@ -169,7 +169,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 @Component({
   imports: [FormField, NgxSignalFormToolkit],
   template: `
-    <form [ngxSignalForm]="myForm">
+    <form [formRoot]="myForm">
       <input [formField]="myForm.email" />
       <ngx-signal-form-error [formField]="myForm.email" fieldName="email" />
     </form>

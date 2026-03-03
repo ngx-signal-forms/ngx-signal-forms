@@ -26,8 +26,8 @@ Side-by-side comparison of a minimal toolkit setup versus full toolkit usage to 
 
 - `NgxSignalFormToolkit` for auto-ARIA and `novalidate`.
 - `NgxFormField` wrapper for automatic error display.
-- Minimal form runs without `[ngxSignalForm]` to show default `on-touch` behavior.
-- Full form uses `[ngxSignalForm]` and `focusFirstInvalid()` for submission UX.
+- Minimal form runs without `[formRoot]` to show default `on-touch` behavior.
+- Full form uses `[formRoot]` and `focusFirstInvalid()` for submission UX.
 
 ## Other tools
 

@@ -5,7 +5,7 @@
 </div>
 
 <form
-  [ngxSignalForm]="showcaseForm"
+  [formRoot]="showcaseForm"
   [errorStrategy]="errorDisplayMode"
   class="flex flex-col gap-6"
 >
@@ -466,8 +466,8 @@
   <button
     type="submit"
     class="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
-    [disabled]="showcaseForm().pending()"
+    [disabled]="showcaseForm().submitting()"
   >
-    @if (showcaseForm().pending()) { Opslaan... } @else { Opslaan }
+    @if (showcaseForm().submitting()) { Opslaan... } @else { Opslaan }
   </button>
 </form>

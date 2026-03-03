@@ -43,7 +43,7 @@ import {
           <ngx-appearance-toggle [(value)]="appearance" />
         </div>
 
-        <form [ngxSignalForm]="demoForm" class="grid gap-6 md:grid-cols-2">
+        <form [formRoot]="demoForm" class="grid gap-6 md:grid-cols-2">
           <!-- Text Input -->
           <ngx-signal-form-field-wrapper
             [formField]="demoForm.firstName"

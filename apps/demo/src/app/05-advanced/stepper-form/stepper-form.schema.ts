@@ -53,7 +53,7 @@ export function createWizardForm(
   return form(model, wizardSchema, {
     submission: {
       // Stepper component handles final submission manually.
-      // Keep a no-op action so FormRoot (composed by ngxSignalForm) has a valid submission config.
+      // Keep a no-op action so NgxSignalFormDirective ([formRoot]) has a valid submission config.
       action: async () => null,
     },
   });

@@ -7,7 +7,7 @@ import {
   inject,
   viewChild,
 } from '@angular/core';
-import { FormField } from '@angular/forms/signals';
+import { FormField, FormRoot } from '@angular/forms/signals';
 
 import {
   focusFirstInvalid,
@@ -26,6 +26,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormField,
+    FormRoot,
     NgxSignalFormToolkit,
     NgxFormField,
     NgxSignalFormErrorComponent,
@@ -36,7 +37,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
         Traveler Information
       </h2>
 
-      <form novalidate class="space-y-4">
+      <form [formRoot]="travelerForm" class="space-y-4">
         <!-- First Name -->
         <ngx-signal-form-field-wrapper [formField]="travelerForm.firstName">
           <label for="firstName">

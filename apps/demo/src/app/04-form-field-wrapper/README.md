@@ -157,7 +157,7 @@ The component uses `<ng-content>` to project your custom content:
    - Live region announcements
 
 4. **Strategy Inheritance**
-   - Inherits from `ngxSignalFormDirective` if present
+   - Inherits from `NgxSignalFormDirective` (`[formRoot]`) if present
    - Can override per-field with `[strategy]` input
    - Falls back to global config
 
@@ -224,7 +224,7 @@ validate(path, (ctx) => {
 
 ```html
 <!-- Form uses 'on-touch' by default -->
-<form [ngxSignalForm]="form" [errorStrategy]="'on-touch'">
+<form [formRoot]="form" [errorStrategy]="'on-touch'">
   <!-- But password confirmation shows immediately -->
   <ngx-signal-form-field-wrapper
     [formField]="form.confirmPassword"
@@ -371,7 +371,7 @@ ngx-signal-form-field-wrapper {
 
 ```typescript
 // Verify strategy is set
-<form [ngxSignalForm]="form" [errorStrategy]="'on-touch'">
+<form [formRoot]="form" [errorStrategy]="'on-touch'">
 
 // Or check field state
 {{ form.email().touched() }}  // Should be true after blur

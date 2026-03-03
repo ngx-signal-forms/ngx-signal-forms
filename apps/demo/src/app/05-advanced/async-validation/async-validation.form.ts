@@ -46,7 +46,7 @@ const registrationSchema = schema<Registration>((path) => {
         Type "admin" to see async validation error (simulated).
       </p>
 
-      <form [ngxSignalForm]="regForm" class="max-w-md space-y-6">
+      <form [formRoot]="regForm" class="max-w-md space-y-6">
         <ngx-signal-form-field-wrapper
           [formField]="regForm.username"
           appearance="outline"
@@ -76,9 +76,11 @@ const registrationSchema = schema<Registration>((path) => {
           <button
             type="submit"
             class="btn-primary"
-            [disabled]="regForm().pending()"
+            [disabled]="regForm().submitting() || regForm().pending()"
           >
-            @if (regForm().pending()) {
+            @if (regForm().submitting()) {
+              Registering...
+            } @else if (regForm().pending()) {
               Validating...
             } @else {
               Register

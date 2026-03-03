@@ -37,7 +37,7 @@ const tasksSchema = schema<TasksModel>((path) => {
         Manage a dynamic list of tasks.
       </p>
 
-      <form [ngxSignalForm]="tasksForm" class="max-w-2xl space-y-6">
+      <form [formRoot]="tasksForm" class="max-w-2xl space-y-6">
         <!-- Team Name -->
         <ngx-signal-form-field-wrapper
           [formField]="tasksForm.teamName"
@@ -119,9 +119,9 @@ const tasksSchema = schema<TasksModel>((path) => {
           <button
             type="submit"
             class="btn-primary"
-            [disabled]="tasksForm().pending()"
+            [disabled]="tasksForm().submitting()"
           >
-            @if (tasksForm().pending()) {
+            @if (tasksForm().submitting()) {
               Saving...
             } @else {
               Save Tasks

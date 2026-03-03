@@ -55,7 +55,7 @@ const profileSchema = schema<UserProfile>((path) => {
         Complex form with deeply nested data structures.
       </p>
 
-      <form [ngxSignalForm]="profileForm" class="max-w-4xl space-y-8">
+      <form [formRoot]="profileForm" class="max-w-4xl space-y-8">
         <!-- Section 1: Personal Info -->
         <section
           class="rounded-lg border bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
@@ -222,9 +222,9 @@ const profileSchema = schema<UserProfile>((path) => {
           <button
             type="submit"
             class="btn-primary"
-            [disabled]="profileForm().pending()"
+            [disabled]="profileForm().submitting()"
           >
-            @if (profileForm().pending()) {
+            @if (profileForm().submitting()) {
               Saving...
             } @else {
               Save Profile

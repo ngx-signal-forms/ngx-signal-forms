@@ -5,7 +5,7 @@
 </div>
 
 <form
-  [ngxSignalForm]="fieldsetForm"
+  [formRoot]="fieldsetForm"
   [errorStrategy]="errorDisplayMode"
   class="form-container"
 >
@@ -266,9 +266,9 @@
     <button
       class="btn-primary"
       type="submit"
-      [disabled]="fieldsetForm().pending()"
+      [disabled]="fieldsetForm().submitting()"
     >
-      @if (fieldsetForm().pending()) { Saving... } @else { Submit Order }
+      @if (fieldsetForm().submitting()) { Saving... } @else { Submit Order }
     </button>
 
     <button class="btn-secondary" type="reset" (click)="resetForm()">

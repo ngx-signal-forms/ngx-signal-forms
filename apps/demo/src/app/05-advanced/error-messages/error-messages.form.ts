@@ -40,7 +40,7 @@ import { errorMessagesSchema } from './error-messages.validations';
   ],
   template: `
     <form
-      [ngxSignalForm]="errorMessagesForm"
+      [formRoot]="errorMessagesForm"
       [errorStrategy]="errorDisplayMode"
       class="form-container"
     >
@@ -106,9 +106,9 @@ import { errorMessagesSchema } from './error-messages.validations';
         <button
           type="submit"
           class="btn-primary"
-          [disabled]="errorMessagesForm().pending()"
+          [disabled]="errorMessagesForm().submitting()"
         >
-          @if (errorMessagesForm().pending()) {
+          @if (errorMessagesForm().submitting()) {
             Submitting...
           } @else {
             Submit Form

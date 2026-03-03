@@ -10,10 +10,10 @@ This demo visualizes the **State Signals** available on every field.
 
 Every field exposes these reactive signals:
 
--   **`pristine` / `dirty`**: Has the user changed the value? (Useful for "Unsaved Changes" checks).
--   **`untouched` / `touched`**: Has the user focused and blurred? (Useful for delaying error messages).
--   **`valid` / `invalid`**: Does the value satisfy the schema?
--   **`pending`**: Is an async validator running?
+- **`pristine` / `dirty`**: Has the user changed the value? (Useful for "Unsaved Changes" checks).
+- **`untouched` / `touched`**: Has the user focused and blurred? (Useful for delaying error messages).
+- **`valid` / `invalid`**: Does the value satisfy the schema?
+- **`pending`**: Is an async validator running?
 
 ## Feature Spotlight: `NgxSignalFormDebugger`
 
@@ -21,12 +21,12 @@ This demo heavily relies on the debugger to visualize these invisible states. It
 
 ## UX Patterns
 
--   **Disable Save**: `[disabled]="!form.dirty() || form.invalid()"` -> Only save if changed AND valid.
--   **Show Error**: `!form.pristine() && form.invalid()` -> Show immediate errors once they start typing.
+- **Prevent Double Submission**: `[disabled]="form.submitting()"` -> Only prevent saving during submission (do not disable when invalid, to allow users to trigger error messages according to WCAG). Wait for the form to submit then let the user see the errors.
+- **Show Error**: `!form.pristine() && form.invalid()` -> Show immediate errors once they start typing.
 
 ## Key Files
 
--   [field-states.form.ts](field-states.form.ts): Buttons to manually toggle states.
+- [field-states.form.ts](field-states.form.ts): Buttons to manually toggle states.
 
 ## How to Test
 

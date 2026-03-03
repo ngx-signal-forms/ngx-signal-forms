@@ -65,7 +65,7 @@ const bookingSchema = schema<Booking>((path) => {
         Demonstrates validation rules that depend on multiple fields.
       </p>
 
-      <form [ngxSignalForm]="bookingForm" class="max-w-md space-y-6">
+      <form [formRoot]="bookingForm" class="max-w-md space-y-6">
         <div class="grid grid-cols-2 gap-4">
           <ngx-signal-form-field-wrapper
             [formField]="bookingForm.checkIn"
@@ -128,9 +128,9 @@ const bookingSchema = schema<Booking>((path) => {
           <button
             type="submit"
             class="btn-primary"
-            [disabled]="bookingForm().pending()"
+            [disabled]="bookingForm().submitting()"
           >
-            @if (bookingForm().pending()) {
+            @if (bookingForm().submitting()) {
               Booking...
             } @else {
               Book Stay

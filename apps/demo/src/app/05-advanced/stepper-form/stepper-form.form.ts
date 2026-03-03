@@ -44,11 +44,7 @@ import {
     <div class="px-6 pt-0 pb-6">
       <h2 class="mb-6 text-2xl font-bold">Multi-Step Registration</h2>
 
-      <form
-        [ngxSignalForm]="wizardForm"
-        (submit)="finishWizard()"
-        class="max-w-lg"
-      >
+      <form [formRoot]="wizardForm" (submit)="finishWizard()" class="max-w-lg">
         <ngx-wizard
           [(currentStep)]="currentStep"
           [completedSteps]="completedSteps()"
@@ -189,10 +185,10 @@ import {
             <button
               type="submit"
               class="btn-primary"
-              [disabled]="wizardForm().pending()"
-              [attr.aria-busy]="wizardForm().pending() ? 'true' : null"
+              [disabled]="wizardForm().submitting()"
+              [attr.aria-busy]="wizardForm().submitting() ? 'true' : null"
             >
-              @if (wizardForm().pending()) {
+              @if (wizardForm().submitting()) {
                 Submitting...
               } @else {
                 Complete Registration

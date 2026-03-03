@@ -152,7 +152,7 @@ export class ErrorDisplayHelpersComponent {
   template: `
     <!-- Product Feedback Form -->
     <form
-      [ngxSignalForm]="productForm"
+      [formRoot]="productForm"
       [errorStrategy]="errorDisplayMode"
       class="form-container"
       aria-labelledby="productFeedbackHeading"
@@ -424,12 +424,12 @@ export class ErrorDisplayHelpersComponent {
         <button
           type="submit"
           class="btn-primary"
-          [disabled]="productForm().pending()"
+          [disabled]="productForm().submitting()"
           [attr.aria-describedby]="
             showSubmissionError() ? 'submission-error' : null
           "
         >
-          @if (productForm().pending()) {
+          @if (productForm().submitting()) {
             Submitting...
           } @else {
             Submit Feedback
@@ -485,6 +485,6 @@ export class ErrorDisplayModesFormComponent {
 
   /** Computed: show pending message during async validation */
   protected readonly showPendingMessage = computed(() =>
-    this.productForm().pending(),
+    this.productForm().submitting(),
   );
 }

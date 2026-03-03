@@ -20,7 +20,7 @@ The `NgxSignalFormToolkit` is a directive applied to the `<form>` element. It ac
 
 ```html
 <!-- Just add the directive and bind the form signal -->
-<form [ngxSignalForm]="contactForm">
+<form [formRoot]="contactForm">
   <!-- Clean inputs, no manual aria bindings needed! -->
   <input [formField]="contactForm.name" />
 

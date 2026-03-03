@@ -6,7 +6,7 @@
 </div>
 
 <form
-  [ngxSignalForm]="reviewForm"
+  [formRoot]="reviewForm"
   [errorStrategy]="errorDisplayMode"
   class="form-container"
 >
@@ -96,9 +96,9 @@
     <button
       class="btn-primary"
       type="submit"
-      [disabled]="reviewForm().pending()"
+      [disabled]="reviewForm().submitting()"
     >
-      @if (reviewForm().pending()) { Submitting... } @else { Submit Review }
+      @if (reviewForm().submitting()) { Submitting... } @else { Submit Review }
     </button>
 
     <button class="btn-secondary" type="reset" (click)="resetForm()">

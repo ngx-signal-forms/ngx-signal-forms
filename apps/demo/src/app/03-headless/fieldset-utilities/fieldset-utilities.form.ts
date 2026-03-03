@@ -8,11 +8,11 @@ import {
   email,
   form,
   FormField,
+  FormRoot,
   maxLength,
   minLength,
   required,
   schema,
-  submit,
   validate,
 } from '@angular/forms/signals';
 import {
@@ -80,7 +80,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
 @Component({
   selector: 'ngx-headless-fieldset-utilities',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxHeadlessToolkit],
+  imports: [FormField, FormRoot, NgxHeadlessToolkit],
   template: `
     <div class="px-6 pt-0 pb-6">
       <h2 class="mb-4 text-2xl font-bold">Headless Fieldset + Utilities</h2>
@@ -89,7 +89,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
         plus headless utilities for fully custom UI.
       </p>
 
-      <form novalidate (submit)="save($event)" class="max-w-2xl space-y-6">
+      <form [formRoot]="deliveryForm" class="max-w-2xl space-y-6">
         <div class="headless-card">
           <div
             ngxSignalFormHeadlessFieldName
@@ -458,7 +458,17 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
         </div>
 
         <div class="flex gap-4">
-          <button type="submit" class="btn-primary">Submit request</button>
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="deliveryForm().submitting()"
+          >
+            @if (deliveryForm().submitting()) {
+              Submitting...
+            } @else {
+              Submit request
+            }
+          </button>
           <button type="button" (click)="reset()" class="btn-secondary">
             Reset
           </button>
@@ -479,7 +489,15 @@ export class HeadlessFieldsetUtilitiesComponent {
   };
 
   readonly #model = signal<HeadlessDeliveryModel>(this.#initialData);
-  readonly deliveryForm = form(this.#model, deliverySchema);
+  readonly deliveryForm = form(this.#model, deliverySchema, {
+    submission: {
+      action: async (data) => {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        console.log('Delivery request submitted:', data());
+        return null;
+      },
+    },
+  });
 
   protected readonly notesCounterId = 'deliveryNotes-counter';
 
@@ -505,15 +523,6 @@ export class HeadlessFieldsetUtilitiesComponent {
     }
     return ids.join(' ');
   });
-
-  protected async save(event: Event): Promise<void> {
-    event.preventDefault();
-    await submit(this.deliveryForm, async (data) => {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      console.log('Delivery request submitted:', data());
-      return null;
-    });
-  }
 
   protected reset(): void {
     this.deliveryForm().reset();

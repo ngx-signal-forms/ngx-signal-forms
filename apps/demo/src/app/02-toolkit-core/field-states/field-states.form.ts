@@ -23,7 +23,7 @@ import { fieldStatesSchema } from './field-states.validations';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
   template: `
-    <form [ngxSignalForm]="userForm">
+    <form [formRoot]="userForm">
       @if (userForm().dirty()) {
         <div
           class="mb-4 rounded-lg border-l-4 border-amber-500 bg-amber-50 px-4 py-3 dark:border-amber-400 dark:bg-amber-900/20"
@@ -128,16 +128,16 @@ import { fieldStatesSchema } from './field-states.validations';
         <button
           type="submit"
           class="btn-primary"
-          [disabled]="!userForm().valid() || userForm().pending()"
+          [disabled]="userForm().submitting()"
         >
-          @if (userForm().pending()) {
+          @if (userForm().submitting()) {
             <span class="status-message">Submitting...</span>
           } @else {
             Submit
           }
         </button>
 
-        @if (userForm().pending()) {
+        @if (userForm().submitting()) {
           <span class="text-sm text-gray-600 dark:text-gray-400">
             Validating...
           </span>
@@ -176,12 +176,12 @@ export class FieldStatesForm {
    * Use case: "Validate All" button, show all errors on submit
    *
    * Note: Signal Forms automatically marks fields as touched on blur,
-   * and the submit() helper automatically marks all fields as touched
+   * and declarative submission automatically marks all fields as touched
    * when the form is submitted.
    */
   protected markAllTouched(): void {
     // Signal Forms handles touched state automatically
-    // submit() helper marks all fields as touched on form submission
+    // declarative submission marks all fields as touched on form submission
   }
 
   /**

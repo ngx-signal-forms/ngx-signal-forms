@@ -1,4 +1,4 @@
-<form [ngxSignalForm]="complexForm">
+<form [formRoot]="complexForm">
   <!-- Personal Information Section -->
   <ngx-signal-form-fieldset
     [fieldsetField]="complexForm.personalInfo"
@@ -405,10 +405,10 @@
     <button
       type="submit"
       class="btn-primary"
-      [disabled]="complexForm().pending()"
+      [disabled]="complexForm().submitting()"
     >
-      @if (complexForm().pending()) { Submitting... } @else { Submit Application
-      }
+      @if (complexForm().submitting()) { Submitting... } @else { Submit
+      Application }
     </button>
     <button type="button" (click)="resetForm()" class="btn-secondary">
       Reset

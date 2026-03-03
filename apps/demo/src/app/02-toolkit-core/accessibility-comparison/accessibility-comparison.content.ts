@@ -10,13 +10,13 @@ export const ACCESSIBILITY_COMPARISON_CONTENT = {
       {
         title: 'Two Implementation Levels',
         items: [
-          '<strong>Minimal Toolkit:</strong> Auto-ARIA only, no [ngxSignalForm] (~55 lines)',
-          '<strong>Full Toolkit:</strong> Complete with [ngxSignalForm] and error components (~31 lines)',
+          '<strong>Minimal Toolkit:</strong> Auto-ARIA only, no [formRoot] (~55 lines)',
+          '<strong>Full Toolkit:</strong> Complete with [formRoot] and error components (~31 lines)',
           'Side-by-side comparison focuses on toolkit progression',
         ],
       },
       {
-        title: 'What [ngxSignalForm] Adds',
+        title: 'What [formRoot] Adds',
         items: [
           "✅ <code>'on-submit'</code> error strategy support",
           '✅ Form-level <code>[errorStrategy]</code> override',
@@ -37,7 +37,7 @@ export const ACCESSIBILITY_COMPARISON_CONTENT = {
     title: 'Choosing Your Approach',
     sections: [
       {
-        title: '🔧 Minimal Toolkit (No [ngxSignalForm])',
+        title: '🔧 Minimal Toolkit (No [formRoot])',
         items: [
           'Import <code>NgxSignalFormToolkit</code> + <code>NgxFormField</code>',
           'Use <code>(submit)="handler($event)"</code> on form',
@@ -47,9 +47,9 @@ export const ACCESSIBILITY_COMPARISON_CONTENT = {
         ],
       },
       {
-        title: '✅ Full Toolkit (With [ngxSignalForm])',
+        title: '✅ Full Toolkit (With [formRoot])',
         items: [
-          'Add <code>[ngxSignalForm]="form"</code> binding',
+          'Add <code>[formRoot]="form"</code> binding',
           'Unlocks: <code>&lt;ngx-signal-form-error&gt;</code> component',
           'Unlocks: Form-level <code>[errorStrategy]</code> override',
           'Unlocks: <code>submittedStatus</code> via DI in children',

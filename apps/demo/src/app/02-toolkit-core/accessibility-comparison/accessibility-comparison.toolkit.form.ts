@@ -19,7 +19,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form [ngxSignalForm]="signupForm" class="form-container">
+    <form [formRoot]="signupForm" class="form-container">
       <!-- Email Field - Toolkit Handles Everything -->
       <ngx-signal-form-field-wrapper
         [formField]="signupForm.email"
@@ -69,7 +69,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
 
       <!-- Submit Button -->
       <button type="submit" class="btn-primary">
-        @if (signupForm().pending()) {
+        @if (signupForm().submitting()) {
           Subscribing...
         } @else {
           Sign Up

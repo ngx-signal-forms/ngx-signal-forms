@@ -26,7 +26,7 @@ import { contactFormSchema } from './your-first-form.validations';
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
   template: `
     <form
-      [ngxSignalForm]="contactForm"
+      [formRoot]="contactForm"
       [errorStrategy]="errorDisplayMode"
       class="form-container"
     >
@@ -85,7 +85,7 @@ import { contactFormSchema } from './your-first-form.validations';
       <!-- Form Actions -->
       <div class="form-actions">
         <button type="submit" class="btn-primary">
-          @if (contactForm().pending()) {
+          @if (contactForm().submitting()) {
             Sending...
           } @else {
             Send Message

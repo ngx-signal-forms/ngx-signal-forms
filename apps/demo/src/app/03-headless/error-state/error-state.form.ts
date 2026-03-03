@@ -3,10 +3,10 @@ import {
   email,
   form,
   FormField,
+  FormRoot,
   maxLength,
   required,
   schema,
-  submit,
 } from '@angular/forms/signals';
 import {
   NgxHeadlessCharacterCountDirective,
@@ -32,6 +32,7 @@ const headlessSchema = schema<HeadlessProfile>((path) => {
     FormField,
     NgxHeadlessErrorStateDirective,
     NgxHeadlessCharacterCountDirective,
+    FormRoot, // Replaces manual novalidate/submit
   ],
   template: `
     <div class="px-6 pt-0 pb-6">
@@ -41,7 +42,7 @@ const headlessSchema = schema<HeadlessProfile>((path) => {
         character count.
       </p>
 
-      <form novalidate (submit)="save($event)" class="max-w-xl space-y-6">
+      <form [formRoot]="profileForm" class="max-w-xl space-y-6">
         <div
           ngxSignalFormHeadlessErrorState
           #emailState="errorState"
@@ -131,7 +132,17 @@ const headlessSchema = schema<HeadlessProfile>((path) => {
         </div>
 
         <div class="flex gap-4">
-          <button type="submit" class="btn-primary">Save Profile</button>
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="profileForm().submitting()"
+          >
+            @if (profileForm().submitting()) {
+              Saving...
+            } @else {
+              Save Profile
+            }
+          </button>
           <button type="button" (click)="reset()" class="btn-secondary">
             Reset
           </button>
@@ -147,16 +158,15 @@ export class HeadlessErrorStateComponent {
   };
 
   readonly #model = signal<HeadlessProfile>(this.#initialData);
-  readonly profileForm = form(this.#model, headlessSchema);
-
-  protected async save(event: Event): Promise<void> {
-    event.preventDefault();
-    await submit(this.profileForm, async (data) => {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      console.log('Saved profile:', data());
-      return null;
-    });
-  }
+  readonly profileForm = form(this.#model, headlessSchema, {
+    submission: {
+      action: async (data) => {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        console.log('Saved profile:', data());
+        return null;
+      },
+    },
+  });
 
   protected reset(): void {
     this.profileForm().reset();

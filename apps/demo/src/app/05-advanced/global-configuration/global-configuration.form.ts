@@ -32,7 +32,7 @@ import { globalConfigSchema } from './global-configuration.validations';
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form
-      [ngxSignalForm]="configForm"
+      [formRoot]="configForm"
       [errorStrategy]="errorDisplayMode"
       class="form-container"
     >
@@ -120,9 +120,9 @@ import { globalConfigSchema } from './global-configuration.validations';
         <button
           type="submit"
           class="btn-primary"
-          [disabled]="configForm().pending()"
+          [disabled]="configForm().submitting()"
         >
-          @if (configForm().pending()) {
+          @if (configForm().submitting()) {
             Saving...
           } @else {
             Submit Form

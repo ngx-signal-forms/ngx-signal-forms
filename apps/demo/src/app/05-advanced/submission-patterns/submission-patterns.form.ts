@@ -20,7 +20,7 @@ import { submissionSchema } from './submission-patterns.validations';
  * Submission Patterns Component
  *
  * Demonstrates advanced submission patterns:
- * - Automatic submission tracking via submit() helper
+ * - Automatic submission tracking via declarative submission
  * - Toolkit submission helpers (canSubmit, isSubmitting)
  * - Server error handling and display
  * - WCAG 2.2 compliance for error announcements
@@ -32,7 +32,7 @@ import { submissionSchema } from './submission-patterns.validations';
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form
-      [ngxSignalForm]="registrationForm"
+      [formRoot]="registrationForm"
       [errorStrategy]="'on-submit'"
       class="form-container"
     >
@@ -224,7 +224,7 @@ import { submissionSchema } from './submission-patterns.validations';
       <div class="mt-8 flex gap-4">
         <button
           type="submit"
-          [disabled]="!canSubmitForm() || isFormSubmitting()"
+          [disabled]="isFormSubmitting()"
           class="btn-primary"
         >
           @if (isFormSubmitting()) {

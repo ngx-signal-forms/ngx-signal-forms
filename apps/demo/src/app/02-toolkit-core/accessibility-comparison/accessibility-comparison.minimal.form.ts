@@ -6,10 +6,10 @@ import type { AccessibilityFormModel } from './accessibility-comparison.model';
 import { accessibilityValidationSchema } from './accessibility-comparison.validations';
 
 /**
- * Minimal Toolkit Implementation - NO [ngxSignalForm] BINDING
+ * Minimal Toolkit Implementation - NO [formRoot] BINDING
  *
  * This example demonstrates that `<ngx-signal-form-field-wrapper>` works WITHOUT
- * the `[ngxSignalForm]` binding for the default `'on-touch'` strategy!
+ * the `[formRoot]` binding for the default `'on-touch'` strategy!
  *
  * 🎯 What you GET (automatically):
  * - `novalidate` attribute on form
@@ -18,7 +18,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
  * - `<ngx-signal-form-field-wrapper>` automatic error display (for 'on-touch')
  * - `<ngx-signal-form-error>` automatic error display (for 'on-touch')
  *
- * ⚠️ What DOES require `[ngxSignalForm]`:
+ * ⚠️ What DOES require `[formRoot]`:
  * - `'on-submit'` error strategy (needs `submittedStatus`)
  * - Form-level `[errorStrategy]` override
  * - Access to `submittedStatus` signal in child components
@@ -33,9 +33,9 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <!-- ✅ NO [ngxSignalForm] needed! Error components work for 'on-touch' strategy -->
+    <!-- ✅ NO [formRoot] needed! Error components work for 'on-touch' strategy -->
     <form (submit)="handleSubmit($event)" class="space-y-4">
-      <!-- Email Field - uses ngx-signal-form-field-wrapper WITHOUT [ngxSignalForm] -->
+      <!-- Email Field - uses ngx-signal-form-field-wrapper WITHOUT [formRoot] -->
       <ngx-signal-form-field-wrapper
         [formField]="signupForm.email"
         fieldName="email"
@@ -80,7 +80,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
       </ngx-signal-form-field-wrapper>
 
       <button type="submit" class="btn-primary">
-        @if (signupForm().pending()) {
+        @if (signupForm().submitting()) {
           Subscribing...
         } @else {
           Submit
@@ -94,8 +94,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
     >
       <strong>💡 Minimal Toolkit:</strong>
       <code>&lt;ngx-signal-form-field-wrapper&gt;</code> works WITHOUT
-      <code>[ngxSignalForm]</code> for the default
-      <code>'on-touch'</code> strategy!
+      <code>[formRoot]</code> for the default <code>'on-touch'</code> strategy!
     </div>
   `,
   styles: `

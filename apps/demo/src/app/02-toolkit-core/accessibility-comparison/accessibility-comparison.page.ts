@@ -9,8 +9,8 @@ import { AccessibilityToolkitFormComponent } from './accessibility-comparison.to
  * Accessibility Comparison Page
  *
  * Two-way comparison showing progression from minimal to full toolkit:
- * 1. Minimal Toolkit - Auto-ARIA but no [ngxSignalForm] binding
- * 2. Full Toolkit - Complete toolkit with [ngxSignalForm] and error components
+ * 1. Minimal Toolkit - Auto-ARIA but no [formRoot] binding
+ * 2. Full Toolkit - Complete toolkit with [formRoot] and error components
  */
 @Component({
   selector: 'ngx-accessibility-comparison-page',
@@ -49,7 +49,7 @@ import { AccessibilityToolkitFormComponent } from './accessibility-comparison.to
           <p class="text-xs text-gray-500 dark:text-gray-400">
             Auto-ARIA +
             <code>&lt;ngx-signal-form-field-wrapper&gt;</code> without
-            <code>[ngxSignalForm]</code>.
+            <code>[formRoot]</code>.
           </p>
 
           <div
@@ -72,8 +72,7 @@ import { AccessibilityToolkitFormComponent } from './accessibility-comparison.to
             </span>
           </div>
           <p class="text-xs text-gray-500 dark:text-gray-400">
-            Complete toolkit with <code>[ngxSignalForm]</code> and error
-            components.
+            Complete toolkit with <code>[formRoot]</code> and error components.
           </p>
 
           <div

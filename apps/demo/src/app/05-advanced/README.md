@@ -207,7 +207,7 @@ provideNgxSignalFormsConfig({
 
 ## 💡 Async Submission Patterns
 
-### Using submit() Helper (Recommended)
+### Using declarative submission (Recommended)
 
 Angular Signal Forms provides a built-in `submit()` helper that automatically manages submission state:
 
@@ -216,7 +216,7 @@ import { submit } from '@angular/forms/signals';
 
 @Component({
   template: `
-    <form [ngxSignalForm]="registrationForm">
+    <form [formRoot]="registrationForm">
       <!-- Form fields -->
 
       <button
@@ -291,10 +291,10 @@ const submittedStatus = computed<SubmittedStatus>(() => {
 });
 ```
 
-When you use the toolkit's `ngxSignalFormDirective`, the derived status is provided via DI for convenience:
+When you use the toolkit's `NgxSignalFormDirective` (`[formRoot]`), the derived status is provided via DI for convenience:
 
 ```html
-<form [ngxSignalForm]="registrationForm">
+<form [formRoot]="registrationForm">
   <!-- NgxSignalFormErrorComponent automatically receives submittedStatus -->
   <ngx-signal-form-error
     [formField]="registrationForm.email"
@@ -356,10 +356,7 @@ return [
 **Button state management:**
 
 ```html
-<button
-  type="submit"
-  [disabled]="registrationForm().invalid() || registrationForm().submitting()"
->
+<button type="submit" [disabled]="registrationForm().submitting()">
   @if (registrationForm().submitting()) {
   <span class="spinner"></span>
   Saving... } @else { Submit Registration }
@@ -529,7 +526,7 @@ protected async save(): Promise<void> {
 - ✅ You want centralized debug control
 - ✅ You're building an enterprise application
 
-### Use submit() Helper When
+### Use declarative submission When
 
 - ✅ You have async form submissions
 - ✅ You need server error handling
@@ -574,7 +571,7 @@ export const appConfig: ApplicationConfig = {
 
 **Problem:** `submittedStatus` always 'unsubmitted'
 
-**Solution:** Use `[ngxSignalForm]` and configure declarative `submission` in `form()`
+**Solution:** Use `[formRoot]` and configure declarative `submission` in `form()`
 
 ```html
 <!-- ❌ Wrong: No form directive/context -->
@@ -582,8 +579,8 @@ export const appConfig: ApplicationConfig = {
   <button type="submit" class="btn-primary">Submit</button>
 </form>
 
-<!-- ✅ Correct: Use ngxSignalForm + declarative submission -->
-<form [ngxSignalForm]="registrationForm">
+<!-- ✅ Correct: Use [formRoot] + declarative submission -->
+<form [formRoot]="registrationForm">
   <button type="submit" class="btn-primary">Submit</button>
 </form>
 ```

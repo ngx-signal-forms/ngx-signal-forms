@@ -35,7 +35,7 @@ import { createPasswordForm } from './warning-support.validations';
 
     <form
       class="form-container"
-      [ngxSignalForm]="passwordForm"
+      [formRoot]="passwordForm"
       [errorStrategy]="errorDisplayMode"
       (submit)="handleSubmit()"
     >
@@ -86,9 +86,9 @@ import { createPasswordForm } from './warning-support.validations';
         <button
           type="submit"
           class="btn-primary"
-          [disabled]="!canSubmitWithWarnings() || passwordForm().pending()"
+          [disabled]="passwordForm().submitting()"
         >
-          @if (passwordForm().pending()) {
+          @if (passwordForm().submitting()) {
             Creating Account...
           } @else {
             Create Account

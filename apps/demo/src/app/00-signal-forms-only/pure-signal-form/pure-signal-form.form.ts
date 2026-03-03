@@ -4,7 +4,7 @@ import {
   computed,
   signal,
 } from '@angular/core';
-import { FormField, form, submit } from '@angular/forms/signals';
+import { FormField, FormRoot, form } from '@angular/forms/signals';
 import type { PureSignalFormModel } from './pure-signal-form.model';
 import { pureSignalFormSchema } from './pure-signal-form.validations';
 
@@ -17,9 +17,9 @@ import { pureSignalFormSchema } from './pure-signal-form.validations';
 @Component({
   selector: 'ngx-pure-signal-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField],
+  imports: [FormField, FormRoot],
   template: `
-    <form (submit)="saveContact($event)" novalidate class="form-container">
+    <form [formRoot]="signupForm" class="form-container">
       <!-- Email Field - Manual ARIA Implementation -->
       <div class="form-field">
         <label for="pure-email" class="form-label">Email Address *</label>
@@ -121,8 +121,8 @@ import { pureSignalFormSchema } from './pure-signal-form.validations';
 
       <!-- Form Actions -->
       <div class="form-actions">
-        <button type="submit" class="btn-primary" aria-live="polite">
-          @if (signupForm().pending()) {
+        <button type="submit" class="btn-primary" aria-live="polite" [disabled]="signupForm().submitting()">
+          @if (signupForm().submitting()) {
             Saving...
           } @else {
             Sign Up
@@ -141,30 +141,22 @@ export class PureSignalFormComponent {
   });
 
   /** Create form with Angular Signal Forms */
-  readonly signupForm = form(this.#model, pureSignalFormSchema);
+  readonly signupForm = form(this.#model, pureSignalFormSchema, {
+    submission: {
+      action: async (f) => {
+        // Simulate async operation
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // Reset form after successful submission
+        f().reset({ email: '', password: '', confirmPassword: '' });
+
+        return null; // No server errors
+      },
+    },
+  });
 
   /** Manual touch state tracking (required for error display logic) */
   readonly #touchedFields = signal<Set<string>>(new Set());
-
-  /**
-   * Form submission handler using Angular Signal Forms submit() helper.
-   *
-   * **Key behavior:** Signal Forms use native DOM submit event, not ngSubmit.
-   * Must call preventDefault() to avoid page reload.
-   * Callback only executes if form is VALID.
-   */
-  protected saveContact(event: Event): void {
-    event.preventDefault();
-    submit(this.signupForm, async () => {
-      // Simulate async operation
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Reset form after successful submission
-      this.#model.set({ email: '', password: '', confirmPassword: '' });
-
-      return null; // No server errors
-    });
-  }
 
   /**
    * Manual touch tracking - must be called on blur for each field

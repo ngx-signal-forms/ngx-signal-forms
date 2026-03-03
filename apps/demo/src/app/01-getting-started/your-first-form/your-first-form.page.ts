@@ -22,7 +22,7 @@ import { YourFirstFormComponent } from './your-first-form.form';
  * This is the middle ground between pure Signal Forms and full toolkit adoption.
  *
  * Shows:
- * - ngxSignalForm for context and submission tracking
+ * - [formRoot] directive for context and submission tracking
  * - Automatic ARIA attributes
  * - NgxSignalFormErrorComponent for reusable error display
  * - Error display strategies

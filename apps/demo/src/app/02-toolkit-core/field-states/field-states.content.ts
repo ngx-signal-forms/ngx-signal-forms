@@ -23,7 +23,7 @@ export const FIELD_STATES_CONTENT = {
           '<strong>touched():</strong> User interacted with field (blur)',
           '<strong>invalid():</strong> Has blocking validation errors',
           '<strong>valid():</strong> No errors AND no pending validators',
-          '<strong>pending():</strong> Async validation in progress',
+          '<strong>submitting():</strong> Async validation in progress',
         ],
       },
       {
@@ -57,7 +57,7 @@ export const FIELD_STATES_CONTENT = {
           '<strong>touched():</strong> Progressive error disclosure (on-touch strategy)',
           '<strong>invalid():</strong> Error message display logic',
           '<strong>!valid():</strong> Disable submit button (waits for async)',
-          '<strong>pending():</strong> Show loading spinner during validation',
+          '<strong>submitting():</strong> Show loading spinner during validation',
         ],
       },
       {
