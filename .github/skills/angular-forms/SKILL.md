@@ -31,7 +31,7 @@ interface LoginData {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
   template: `
-    <form [ngxSignalForm]="loginForm">
+    <form [formRoot]="loginForm">
       <label for="email">Email</label>
       <input id="email" type="email" [formField]="loginForm.email" />
       <ngx-signal-form-error [formField]="loginForm.email" fieldName="email" />

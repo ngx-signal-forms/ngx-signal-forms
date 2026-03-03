@@ -96,7 +96,7 @@ export const appConfig: ApplicationConfig = {
 ### Template
 
 ```html
-<form [ngxSignalForm]="userForm">
+<form [formRoot]="userForm">
   <div class="mb-3">
     <label for="email" class="form-label">Email</label>
     <input
@@ -125,7 +125,7 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
 ```
 
 ```html
-<form [ngxSignalForm]="userForm">
+<form [formRoot]="userForm">
   <div class="mb-3">
     <label for="email" class="form-label">Email</label>
     <input
@@ -191,7 +191,7 @@ Tailwind uses utility classes and supports the `invalid:` and `user-invalid:` va
 Tailwind 4's `user-invalid:` variant matches the toolkit's `'on-touch'` strategy — it only applies after user interaction:
 
 ```html
-<form [ngxSignalForm]="userForm" class="space-y-4">
+<form [formRoot]="userForm" class="space-y-4">
   <div>
     <label for="email" class="block text-sm font-medium text-gray-700">
       Email
@@ -348,7 +348,7 @@ export const appConfig: ApplicationConfig = {
 ### Template
 
 ```html
-<form [ngxSignalForm]="userForm">
+<form [formRoot]="userForm">
   <mat-form-field appearance="outline">
     <mat-label>Email</mat-label>
     <input matInput type="email" [formField]="userForm.email" />

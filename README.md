@@ -18,16 +18,16 @@ Directives, components, and utilities that enhance Angular's Signal Forms with a
 npm install @ngx-signal-forms/toolkit
 ```
 
-## Upgrade Notes (beta.4)
+## Upgrade Notes (beta.5)
 
 If you are upgrading from earlier beta releases, review the migration guide:
 
-- [Migration Guide: `1.0.0-beta.4`](./docs/MIGRATION_BETA4.md)
+- [Migration Guide: `1.0.0-beta.5`](./docs/MIGRATION_BETA5.md)
 
-Key updates in `beta.4`:
+Key updates in `beta.5`:
 
 - Angular baseline aligned to `21.2.0`
-- Declarative submission preferred (`[ngxSignalForm]` + `submission` config)
+- Declarative submission preferred (`[formRoot]` + `submission` config)
 - `canSubmit()` and `isSubmitting()` removed (use native `valid()` / `submitting()`)
 - `computeShowErrors()` usage replaced by `showErrors()`
 
@@ -35,7 +35,14 @@ Key updates in `beta.4`:
 
 ## Why This Library?
 
-Angular Signal Forms (introduced in v21) provides an excellent foundation for reactive forms. **@ngx-signal-forms/toolkit** builds on this foundation by adding accessibility, UX patterns, and developer conveniences that would otherwise require significant boilerplate.
+Angular Signal Forms (introduced in v21) provides an excellent reactive foundation, but intentionally leaves UX and accessibility concerns up to the developer. **@ngx-signal-forms/toolkit** bridges the gap between raw state and a polished, production-ready user experience.
+
+Here is what it solves out of the box:
+
+- **Progressive Error Disclosure (UX)**: Instead of turning fields red the moment a user types their first character, errors are intelligently held back based on configurable strategies (`'on-touch'`, `'on-submit'`, `'immediate'`).
+- **Zero-Boilerplate Accessibility**: Fully automates `aria-invalid`, `aria-required`, and dynamically links `aria-describedby` to matching error IDs for WCAG 2.2 Level AA compliance without manual template bindings.
+- **Full Submission Lifecycle**: Tracks the complete `'unsubmitted' → 'submitting' → 'submitted'` flow, allowing error components to reveal themselves globally the moment a user clicks submit.
+- **Component Composition (No Context Drilling)**: The `[formRoot]` directive provides a DI context. You can drop an error component anywhere inside the form, and it automatically knows the form's global error strategy and submission status.
 
 ---
 
@@ -105,17 +112,17 @@ A development tool to inspect form state and validation logic:
 
 ### Core Toolkit (`@ngx-signal-forms/toolkit`)
 
-| Feature                 | Signal Forms Alone                                                | With Core Toolkit                                                            |
-| ----------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| **Warning Support**     | ❌ Not supported                                                  | ✅ Non-blocking validation via `warningError()` convention                   |
-| **ARIA Attributes**     | ❌ Manual `[attr.aria-invalid]`, `[attr.aria-describedby]`        | ✅ Automatic via `NgxSignalFormAutoAriaDirective`                            |
-| **Error Display Logic** | ❌ Manual `@if` conditions in every template                      | ✅ Strategy-based (`'on-touch'`, `'on-submit'`, `'immediate'`, `'manual'`)   |
-| **Error Component**     | ❌ Custom error rendering per component                           | ➡️ Use Assistive entry point (`<ngx-signal-form-error>`)                     |
-| **HTML5 Validation**    | ❌ Manual `novalidate` on every form                              | ✅ Automatic `novalidate` via `[ngxSignalForm]` directive                    |
-| **CSS Status Classes**  | ⚠️ Manual via `provideSignalFormsConfig`                          | ↗️ Use Angular's `provideSignalFormsConfig` (toolkit uses ARIA attributes)   |
-| **Submission Helpers**  | ❌ Manual submission lifecycle tracking                           | ✅ `hasSubmitted()`, `focusFirstInvalid()`, `createOnInvalidHandler()`       |
-| **Focus Management**    | ⚠️ Manual via `errorSummary()[0].fieldTree().focusBoundControl()` | ✅ `focusFirstInvalid(form)` one-liner wrapping native API                   |
-| **Form Context**        | ❌ Manual form setup                                              | ✅ Optional `[ngxSignalForm]` provides DI context for `'on-submit'` strategy |
+| Feature                 | Signal Forms Alone                                                | With Core Toolkit                                                          |
+| ----------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Warning Support**     | ❌ Not supported                                                  | ✅ Non-blocking validation via `warningError()` convention                 |
+| **ARIA Attributes**     | ❌ Manual `[attr.aria-invalid]`, `[attr.aria-describedby]`        | ✅ Automatic via `NgxSignalFormAutoAriaDirective`                          |
+| **Error Display Logic** | ❌ Manual `@if` conditions in every template                      | ✅ Strategy-based (`'on-touch'`, `'on-submit'`, `'immediate'`, `'manual'`) |
+| **Error Component**     | ❌ Custom error rendering per component                           | ➡️ Use Assistive entry point (`<ngx-signal-form-error>`)                   |
+| **HTML5 Validation**    | ⚠️ Automatic with `[formRoot]`; manual `novalidate` otherwise     | ✅ Automatic `novalidate` via `[formRoot]` directive                       |
+| **CSS Status Classes**  | ⚠️ Manual via `provideSignalFormsConfig`                          | ↗️ Use Angular's `provideSignalFormsConfig` (toolkit uses ARIA attributes) |
+| **Submission Helpers**  | ❌ Manual submission lifecycle tracking                           | ✅ `hasSubmitted()`, `focusFirstInvalid()`, `createOnInvalidHandler()`     |
+| **Focus Management**    | ⚠️ Manual via `errorSummary()[0].fieldTree().focusBoundControl()` | ✅ `focusFirstInvalid(form)` one-liner wrapping native API                 |
+| **Form Context**        | ❌ Manual form setup                                              | ✅ Optional `[formRoot]` provides DI context for `'on-submit'` strategy    |
 
 ### Headless (`@ngx-signal-forms/toolkit/headless`)
 
@@ -158,16 +165,16 @@ A development tool to inspect form state and validation logic:
 
 ## Code Comparison
 
-### Without Toolkit (Manual ARIA and Error Logic)
+### Without Toolkit (Manual ARIA + Native `formRoot`)
 
 ```html
-<form (submit)="save($event)" novalidate>
+<form [formRoot]="userForm">
   <label for="email">Email</label>
   <input
     id="email"
     [formField]="userForm.email"
     [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null"
-    [attr.aria-describedby]="userForm.email().invalid() && userForm.email().touched() ? 'email-error' : null"
+    [attr.aria-describedby]="userForm.email().invalid() && (userForm.email().touched() || userForm().touched()) ? 'email-error' : null"
   />
   @if (userForm.email().invalid() && (userForm.email().touched() ||
   userForm().touched())) {
@@ -182,8 +189,8 @@ A development tool to inspect form state and validation logic:
 ### With Toolkit (Automatic ARIA + Error Display + Declarative Submission)
 
 ```html
-<!-- [ngxSignalForm] composes Angular FormRoot: novalidate + submit() -->
-<form [ngxSignalForm]="userForm">
+<!-- [formRoot] replicates Angular FormRoot behavior: novalidate + submit() -->
+<form [formRoot]="userForm">
   <ngx-signal-form-field-wrapper [formField]="userForm.email">
     <label for="email">Email</label>
     <input id="email" [formField]="userForm.email" />
@@ -219,7 +226,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   selector: 'app-contact',
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form [ngxSignalForm]="contactForm">
+    <form [formRoot]="contactForm">
       <ngx-signal-form-field-wrapper [formField]="contactForm.email">
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" type="email" />
@@ -251,8 +258,8 @@ export class ContactComponent {
 
 ### What You Get Automatically
 
-- ✅ `novalidate` attribute via `[ngxSignalForm]` directive (prevents browser validation bubbles)
-- ✅ FormRoot submit handling via directive composition (`novalidate` + `submit()`)
+- ✅ `novalidate` attribute via `[formRoot]` directive (prevents browser validation bubbles)
+- ✅ FormRoot-equivalent submit handling via directive replication (`novalidate` + `submit()`)
 - ✅ Declarative submission via `form()` options — no manual `submit()` calls needed
 - ✅ `aria-invalid` and `aria-describedby` for accessibility
 - ✅ **Errors** display after blur OR submit (default `'on-touch'` strategy) with `role="alert"`
@@ -260,7 +267,7 @@ export class ContactComponent {
 - ✅ **Hints** render below the input with proper ARIA association
 - ✅ Consistent layout with label, input, feedback messages in semantic structure
 
-> **How it works:** The `[ngxSignalForm]` directive composes Angular's `FormRoot`, which calls `submit()` on form submit and triggers `markAllAsTouched()`. Define your submission action declaratively in `form()` options.
+> **How it works:** The `[formRoot]` directive replicates Angular's `FormRoot` behavior (`novalidate`, `preventDefault()`, `submit()`), and adds DI context, submitted status tracking, and error display strategy management. Define your submission action declaratively in `form()` options.
 
 ---
 
@@ -402,7 +409,7 @@ import {
 - `SignalFormDebuggerComponent` — Standalone component
 
 ```html
-<form (submit)="save()">
+<form [formRoot]="form">
   <!-- ... fields ... -->
   <ngx-signal-form-debugger [formTree]="form" />
 </form>
@@ -515,7 +522,7 @@ Each example below links to its source folder in `apps/demo/src/app`, with a sho
 | **[Assistive Components](./packages/toolkit/assistive/README.md)**   | Error, hint, and character count components                  |
 | **[Form Field Components](./packages/toolkit/form-field/README.md)** | Form field wrapper, outlined layout, hints, character count  |
 | **[Debugger Tool](./packages/toolkit/debugger/README.md)**           | Visual form inspector for state, errors, and model debugging |
-| **[Migration Guide (beta.4)](./docs/MIGRATION_BETA4.md)**            | Upgrade steps for Angular 21.2 and toolkit beta.4 changes    |
+| **[Migration Guide (beta.5)](./docs/MIGRATION_BETA5.md)**            | Upgrade steps for Angular 21.2 and toolkit beta.5 changes    |
 | **[CSS Framework Integration](./docs/CSS_FRAMEWORK_INTEGRATION.md)** | Bootstrap 5.3, Tailwind CSS 4, Angular Material setup        |
 | **[Theming Guide](./packages/toolkit/form-field/THEMING.md)**        | CSS custom properties, dark mode, brand customization        |
 | **[Warnings Support](./docs/WARNINGS_SUPPORT.md)**                   | Non-blocking validation messages                             |

@@ -300,11 +300,11 @@ expect(valueSignal()).toBe('updated');
 ```typescript
 // Template-based rendering for directive testing
 await render(
-  `<form [ngxSignalForm]="form" [errorStrategy]="strategy">
+  `<form [formRoot]="form" [errorStrategy]="strategy">
     <input type="text" />
   </form>`,
   {
-    imports: [ngxSignalFormDirective],
+    imports: [NgxSignalFormDirective],
     componentProperties: {
       form: createMockForm(),
       strategy: 'immediate' as ErrorDisplayStrategy,

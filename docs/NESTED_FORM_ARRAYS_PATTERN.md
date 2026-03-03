@@ -898,7 +898,7 @@ export function createFactsStepForm(store: InstanceType<typeof WizardStore>): {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form [ngxSignalForm]="factsForm">
+    <form [formRoot]="factsForm">
       @for (fact of store.facts(); track fact.id; let i = $index) {
         <app-fact-card [factIndex]="i" [factField]="factsForm.facts[i]" />
       }
@@ -1695,7 +1695,7 @@ export class WizardShellComponent {
     NgxSignalFormFieldWrapperComponent,
   ],
   template: `
-    <form [ngxSignalForm]="personForm">
+    <form [formRoot]="personForm">
       <ngx-signal-form-field-wrapper [formField]="personForm.firstName" outline>
         <label for="firstName">First Name</label>
         <input
@@ -1783,7 +1783,7 @@ export class PersonInfoStepComponent {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, FactCardComponent],
   template: `
-    <form [ngxSignalForm]="factsForm">
+    <form [formRoot]="factsForm">
       @for (fact of store.facts(); track fact.id; let i = $index) {
         <app-fact-card [factId]="fact.id" [factField]="factsForm.facts()[i]" />
       }

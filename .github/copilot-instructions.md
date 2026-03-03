@@ -74,7 +74,7 @@ Follow [`.github/instructions/security-and-owasp.instructions.md`](./instruction
 - [ ] Use `signal()` for form data model (source of truth)
 - [ ] Use `form()` with validators, NOT `FormBuilder`
 - [ ] Use `[formField]` directive, NOT `formControlName`
-- [ ] Use `<form [ngxSignalForm]="form">` directive (handles novalidate, preventDefault, submit)
+- [ ] Use `<form [formRoot]="form">` directive (handles novalidate, preventDefault, submit)
 - [ ] Without toolkit: use `(submit)="handler($event)"` with `event.preventDefault()` and `novalidate`
 - [ ] Use `OnPush` change detection
 - [ ] Call signals as functions: `form.field().invalid()` NOT `form.field.invalid()`
@@ -84,13 +84,13 @@ Follow [`.github/instructions/security-and-owasp.instructions.md`](./instruction
 
 **Common Pitfalls:**
 
-| Issue          | Wrong                      | Correct                                                                   |
-| -------------- | -------------------------- | ------------------------------------------------------------------------- |
-| Signal calls   | `form.email.invalid()`     | `form.email().invalid()`                                                  |
-| Submit event   | `(ngSubmit)="save()"`      | `[ngxSignalForm]="form"` (toolkit) or `(submit)="save($event)"` (vanilla) |
-| CSS classes    | `.ng-invalid { }`          | `[aria-invalid="true"] { }`                                               |
-| State negation | `form.email().untouched()` | `!form.email().touched()`                                                 |
-| Array mutation | `data.items.push(x)`       | `signal.update(d => ({...d, items: [...d.items, x]}))`                    |
+| Issue          | Wrong                      | Correct                                                              |
+| -------------- | -------------------------- | -------------------------------------------------------------------- |
+| Signal calls   | `form.email.invalid()`     | `form.email().invalid()`                                             |
+| Submit event   | `(ngSubmit)="save()"`      | `[formRoot]="form"` (toolkit) or `(submit)="save($event)"` (vanilla) |
+| CSS classes    | `.ng-invalid { }`          | `[aria-invalid="true"] { }`                                          |
+| State negation | `form.email().untouched()` | `!form.email().touched()`                                            |
+| Array mutation | `data.items.push(x)`       | `signal.update(d => ({...d, items: [...d.items, x]}))`               |
 
 ### Example Pattern
 
@@ -109,7 +109,7 @@ interface UserData {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit],
   template: `
-    <form [ngxSignalForm]="userForm">
+    <form [formRoot]="userForm">
       <input type="email" [formField]="userForm.email" />
       @if (userForm.email().touched() && userForm.email().invalid()) {
         <span class="error">Valid email required</span>

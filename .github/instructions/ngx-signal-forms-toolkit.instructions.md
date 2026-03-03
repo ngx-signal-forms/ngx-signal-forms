@@ -131,8 +131,8 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
 @Component({
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
   template: `
-    <!-- [ngxSignalForm] handles novalidate, preventDefault, and submit() -->
-    <form [ngxSignalForm]="userForm">
+    <!-- [formRoot] handles novalidate, preventDefault, and submit() -->
+    <form [formRoot]="userForm">
       <input [formField]="userForm.email" />
       <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
       <button type="submit">Submit</button>
@@ -237,41 +237,40 @@ ngx-signal-form-field-wrapper {
 
 ## Architecture
 
-### Key Insight: Prefer `[ngxSignalForm]` for Toolkit Forms
+### Key Insight: Prefer `[formRoot]` for Toolkit Forms
 
-Use `<form [ngxSignalForm]="form">` as the default with toolkit components.
+Use `<form [formRoot]="form">` as the default with toolkit components.
 
-The directive composes Angular's `FormRoot` and provides:
+The directive replicates Angular's `FormRoot` baseline behavior (`novalidate`, `preventDefault()`, `submit()`) and adds three enhancements that Angular's `FormRoot` does not provide:
 
-- automatic `novalidate`
-- automatic `preventDefault()` on submit
-- automatic `submit()` invocation for declarative `submission` config
-- DI context for strategy and submission state
+- **DI context** (`NGX_SIGNAL_FORM_CONTEXT`) — enables child components to access form-level state (submission status, error strategy) without prop drilling
+- **Submitted status tracking** — derives `'unsubmitted' → 'submitting' → 'submitted'` lifecycle from Angular's `submitting()` signal, required for `'on-submit'` error strategy
+- **Error display strategy** — configurable timing (`'on-touch'`, `'on-submit'`, `'immediate'`, `'manual'`) so errors appear at the right moment per UX/WCAG best practices
 
-### Feature Comparison: With vs Without `[ngxSignalForm]`
+### Feature Comparison: With vs Without `[formRoot]`
 
-| Feature                                          | Without `[ngxSignalForm]` | With `[ngxSignalForm]` |
-| ------------------------------------------------ | :-----------------------: | :--------------------: |
-| Auto `novalidate` on form                        |            ❌             |           ✅           |
-| Auto `preventDefault()` on submit                |            ❌             |           ✅           |
-| Declarative `submission` support                 |            ❌             |           ✅           |
-| Auto `aria-invalid` when touched + invalid       |            ✅             |           ✅           |
-| Auto `aria-describedby` linking                  |            ✅             |           ✅           |
-| `<ngx-signal-form-error>` (`'on-touch'`)         |         ✅ Works          |        ✅ Works        |
-| `<ngx-signal-form-field-wrapper>` (`'on-touch'`) |      ✅ Auto errors       |     ✅ Auto errors     |
-| `<ngx-signal-form-error>` (`'on-submit'`)        |       ❌ No context       |        ✅ Works        |
-| Form-level `[errorStrategy]` override            |            ❌             |           ✅           |
-| `submittedStatus` signal via DI                  |            ❌             |           ✅           |
+| Feature                                          | Without `[formRoot]` | With `[formRoot]` |
+| ------------------------------------------------ | :------------------: | :---------------: |
+| Auto `novalidate` on form                        |          ❌          |        ✅         |
+| Auto `preventDefault()` on submit                |          ❌          |        ✅         |
+| Declarative `submission` support                 |          ❌          |        ✅         |
+| Auto `aria-invalid` when touched + invalid       |          ✅          |        ✅         |
+| Auto `aria-describedby` linking                  |          ✅          |        ✅         |
+| `<ngx-signal-form-error>` (`'on-touch'`)         |       ✅ Works       |     ✅ Works      |
+| `<ngx-signal-form-field-wrapper>` (`'on-touch'`) |    ✅ Auto errors    |  ✅ Auto errors   |
+| `<ngx-signal-form-error>` (`'on-submit'`)        |    ❌ No context     |     ✅ Works      |
+| Form-level `[errorStrategy]` override            |          ❌          |        ✅         |
+| `submittedStatus` signal via DI                  |          ❌          |        ✅         |
 
 ### When to Use Each Approach
 
-**Without `[ngxSignalForm]` (advanced/manual setup):**
+**Without `[formRoot]` (advanced/manual setup):**
 
 - You intentionally handle native submit yourself
 - You explicitly set `novalidate`
 - You do not need form-level context
 
-**With `[ngxSignalForm]` (recommended):**
+**With `[formRoot]` (recommended):**
 
 - Need `'on-submit'` error strategy (requires `submittedStatus`)
 - Need form-level `[errorStrategy]` override
@@ -282,21 +281,17 @@ The directive composes Angular's `FormRoot` and provides:
 
 ### NgxSignalFormDirective
 
-**Selector**: `form[ngxSignalForm]`
+**Selector**: `form[formRoot]`
 
-**Features**:
+Replicates Angular's `FormRoot` baseline (`novalidate`, `preventDefault()`, `submit()`) and adds:
 
-- Adds `novalidate` attribute to prevent HTML5 validation conflicts
-- Handles `preventDefault()` on submit
-- Calls `submit()` for declarative form submissions
-
-- Provides form context to child components via DI
-- Derives `submittedStatus` from Angular's native `submitting()` transitions via `effect()`
-- Manages error display strategy
+- **DI context** (`NGX_SIGNAL_FORM_CONTEXT`) — child components access form-level state without prop drilling
+- **Submitted status** — derives `'unsubmitted' → 'submitting' → 'submitted'` (Angular only has `submitting()`)
+- **Error display strategy** — configurable timing (`'on-touch'`, `'on-submit'`, `'immediate'`, `'manual'`)
 
 ```typescript
-// ✅ Recommended: Declarative submission with ngxSignalForm
-<form [ngxSignalForm]="form">
+// ✅ Recommended: Declarative submission with [formRoot]
+<form [formRoot]="form">
   <ngx-signal-form-field-wrapper [formField]="form.email">
     <label for="email">Email</label>
     <input id="email" [formField]="form.email" />
@@ -305,14 +300,14 @@ The directive composes Angular's `FormRoot` and provides:
 </form>
 
 // With on-submit strategy
-<form [ngxSignalForm]="userForm" [errorStrategy]="'on-submit'">
+<form [formRoot]="userForm" [errorStrategy]="'on-submit'">
   <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
 </form>
 ```
 
 **Input Properties**:
 
-- `ngxSignalForm` (required): The form instance (FieldTree)
+- `formRoot` (required): The form instance (FieldTree)
 - `errorStrategy` (optional): Error display strategy override
 
 ### NgxSignalFormAutoAriaDirective
@@ -359,8 +354,8 @@ Displays validation errors and warnings with WCAG-compliant ARIA roles.
 **Simplified Usage (Default `'on-touch'` Strategy):**
 
 ```typescript
-<!-- ✅ Recommended: use ngxSignalForm for submit lifecycle + context -->
-<form [ngxSignalForm]="form">
+<!-- ✅ Recommended: use [formRoot] for submit lifecycle + context -->
+<form [formRoot]="form">
   <input id="email" [formField]="form.email" />
   <ngx-signal-form-error [formField]="form.email" fieldName="email" />
 </form>
@@ -369,8 +364,8 @@ Displays validation errors and warnings with WCAG-compliant ARIA roles.
 **With Form Context (For `'on-submit'` Strategy):**
 
 ```typescript
-<!-- Requires [ngxSignalForm] for submittedStatus signal -->
-<form [ngxSignalForm]="form" [errorStrategy]="'on-submit'">
+<!-- Requires [formRoot] for submittedStatus signal -->
+<form [formRoot]="form" [errorStrategy]="'on-submit'">
   <ngx-signal-form-error [formField]="form.email" fieldName="email" />
 </form>
 ```
@@ -383,7 +378,7 @@ Displays validation errors and warnings with WCAG-compliant ARIA roles.
 **Optional Inputs**:
 
 - `strategy`: Error display strategy (default: `'on-touch'`)
-- `submittedStatus`: Form submission state (auto-injected when inside `[ngxSignalForm]}`, optional for `'on-touch'`. If provided manually, must be a `Signal<SubmittedStatus>`)
+- `submittedStatus`: Form submission state (auto-injected when inside `[formRoot]}`, optional for `'on-touch'`. If provided manually, must be a `Signal<SubmittedStatus>`)
 
 ### NgxFormField
 

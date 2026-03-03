@@ -9,7 +9,7 @@ Enhancement library for Angular Signal Forms. Provides automatic accessibility (
 - [Error Display](#error-display)
 - [Form Field Wrapper](#form-field-wrapper)
 - [Fieldset (Grouped Fields)](#fieldset-grouped-fields)
-- [Using `[ngxSignalForm]`](#using-ngxsignalform)
+- [Using `[formRoot]`](#using-ngxsignalform)
 - [ARIA Rules](#aria-rules)
 
 ## Setup
@@ -32,14 +32,14 @@ providers: [
 
 ## Basic Pattern (Recommended)
 
-Use `NgxSignalFormToolkit` with `[ngxSignalForm]` for automatic form submission handling:
+Use `NgxSignalFormToolkit` with `[formRoot]` for automatic form submission handling:
 
 ```typescript
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
   template: `
-    <form [ngxSignalForm]="userForm">
+    <form [formRoot]="userForm">
       <label for="email">Email</label>
       <input id="email" type="email" [formField]="userForm.email" />
       <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
@@ -68,7 +68,7 @@ export class UserFormComponent {
 }
 ```
 
-The `[ngxSignalForm]` directive handles `novalidate`, `preventDefault()`, and calls `submit()` on the form automatically. The `submission.action` callback runs when the form is valid; use `submission.onInvalid` (e.g., `createOnInvalidHandler()`) to handle invalid submissions.
+The `[formRoot]` directive handles `novalidate`, `preventDefault()`, and calls `submit()` on the form automatically. The `submission.action` callback runs when the form is valid; use `submission.onInvalid` (e.g., `createOnInvalidHandler()`) to handle invalid submissions.
 
 ## Error Display
 
@@ -83,7 +83,7 @@ Preferred way to show field errors. Handles `role="alert"` / `aria-live` automat
 
 - `fieldName` must match the `id` on the input for ARIA linking.
 - Default strategy: `'on-touch'` (shows after blur or submit).
-- For `'on-submit'` strategy, add `[ngxSignalForm]` to the form (see below).
+- For `'on-submit'` strategy, add `[formRoot]` to the form (see below).
 
 ### Error Display Strategies
 
@@ -93,7 +93,7 @@ Preferred way to show field errors. Handles `role="alert"` / `aria-live` automat
 | `immediate` | As user types (real-time)           |
 | `on-submit` | Only after first submission attempt |
 | `manual`    | Programmatic control                |
-| `inherit`   | From nearest `[ngxSignalForm]`      |
+| `inherit`   | From nearest `[formRoot]`           |
 
 ## Form Field Wrapper
 
@@ -137,21 +137,21 @@ Use `appearance="outline"` for Material Design outlined style.
 
 Use `includeNestedErrors` when fields are plain `<input>` elements without their own error components.
 
-## Using `[ngxSignalForm]`
+## Using `[formRoot]`
 
-`[ngxSignalForm]` handles `novalidate`, `preventDefault()`, and calls `submit()` automatically on form submit. **Recommended for all toolkit forms.**
+`[formRoot]` handles `novalidate`, `preventDefault()`, and calls `submit()` automatically on form submit. **Recommended for all toolkit forms.**
 
 Additional features:
 
 | Feature                               | Description                       |
 | ------------------------------------- | --------------------------------- |
-| `'on-submit'` error strategy          | Requires `[ngxSignalForm]`        |
+| `'on-submit'` error strategy          | Requires `[formRoot]`             |
 | Form-level `[errorStrategy]` override | Set strategy for all child fields |
 | `submittedStatus` signal in DI        | Track submission state            |
 
 ```html
 <!-- With on-submit strategy -->
-<form [ngxSignalForm]="userForm" [errorStrategy]="'on-submit'">
+<form [formRoot]="userForm" [errorStrategy]="'on-submit'">
   <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
 </form>
 ```
