@@ -570,6 +570,7 @@
   .ngx-signal-form-field-wrapper__label {
     grid-area: content;
     z-index: 1;
+    position: relative; // Required so z-index creates a stacking context above __content (which has position: relative)
     display: flex;
     align-items: flex-start;
     pointer-events: none;
