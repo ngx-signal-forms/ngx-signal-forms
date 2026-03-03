@@ -54,8 +54,8 @@ export function injectFieldControl<TControl = unknown>(
 
       if (!formContext) {
         throw new Error(
-          '[ngx-signal-forms] injectFieldControl() requires ngxSignalFormDirective ' +
-            'to be present in the component tree. Add [ngxSignalForm] to your form element.',
+          '[ngx-signal-forms] injectFieldControl() requires NgxSignalFormDirective ' +
+            'to be present in the component tree. Add [formRoot] to your form element.',
         );
       }
 

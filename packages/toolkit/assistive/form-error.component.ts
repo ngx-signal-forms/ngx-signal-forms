@@ -29,11 +29,11 @@ import {
  *
  * ## Simplified Architecture (aligned with Angular Signal Forms)
  *
- * This component **does not require** `[ngxSignalForm]` directive for the default
+ * This component **does not require** `[formRoot]` directive for the default
  * `'on-touch'` strategy. Angular's `submit()` helper calls `markAllAsTouched()`,
  * so `field.touched()` becomes true after submission - we just check that.
  *
- * **When to use `[ngxSignalForm]`:**
+ * **When to use `[formRoot]`:**
  * - Form-level `errorStrategy` override
  * - Auto-linked `aria-describedby` (via auto-aria directive)
  * - Access to form context in custom components
@@ -48,7 +48,7 @@ import {
  *
  * @template TValue The type of the field value (defaults to unknown)
  *
- * @example Simplest Usage (no ngxSignalForm needed!)
+ * @example Simplest Usage (no NgxSignalFormToolkit needed!)
  * ```html
  * <form (submit)="save($event)" novalidate>
  *   <input [formField]="form.email" />
@@ -59,7 +59,7 @@ import {
  *
  * @example With Form-Level Strategy Override
  * ```html
- * <form [ngxSignalForm]="form" [errorStrategy]="'immediate'">
+ * <form [formRoot]="form" [errorStrategy]="'immediate'">
  *   <ngx-signal-form-error [formField]="form.email" fieldName="email" />
  * </form>
  * ```
@@ -275,7 +275,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    *
    * @example Field-level override
    * ```html
-   * <form [ngxSignalForm]="form" [errorStrategy]="'on-touch'">
+   * <form [formRoot]="form" [errorStrategy]="'on-touch'">
    *   <!-- Override: immediate feedback for password -->
    *   <ngx-signal-form-error
    *     [formField]="form.password"
@@ -304,7 +304,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * **For `'on-submit'` strategy:** Pass a SubmittedStatus signal to distinguish
    * between "never submitted" and "submitted but field not yet touched".
    *
-   * When used inside a form with `ngxSignalFormDirective`, this is automatically
+   * When used inside a form with `NgxSignalFormDirective` (`[formRoot]`), this is automatically
    * injected from the form provider context.
    */
   readonly submittedStatus = input<

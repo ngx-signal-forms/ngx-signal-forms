@@ -38,7 +38,7 @@ export const NGX_SIGNAL_FORMS_CONFIG = new InjectionToken<NgxSignalFormsConfig>(
 );
 
 /**
- * Injection token for the form context (provided by ngxSignalForm directive).
+ * Injection token for the form context (provided by NgxSignalFormDirective via `[formRoot]`).
  *
  * @template TForm - The Signal Forms instance type
  */

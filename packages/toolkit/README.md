@@ -52,33 +52,36 @@ Bundle containing `NgxSignalFormDirective` and `NgxSignalFormAutoAriaDirective`.
 
 ### NgxSignalFormDirective
 
-Selector: `form[ngxSignalForm]`
+Selector: `form[formRoot]`
 
 **Inputs:**
 
-- `ngxSignalForm` (required) — The form field tree
+- `formRoot` (required) — The form field tree
 - `errorStrategy` — `'immediate' | 'on-touch' | 'on-submit' | 'manual'`
 
 **Outputs:**
 
 - `submittedStatus` — `Signal<'unsubmitted' | 'submitting' | 'submitted'>`
 
-**Features:**
+**What it adds beyond Angular's `FormRoot`:**
 
-- Composes Angular `FormRoot` (`novalidate` + submit lifecycle)
-- Auto-calls `submit()` through `FormRoot` on form submit
-- Provides form context to child components
-- Tracks submission lifecycle
+Angular's native `FormRoot` handles three things: `novalidate`, `event.preventDefault()`, and calling `submit()`. The toolkit directive replicates that baseline and adds:
+
+| Enhancement                                              | Problem it solves                                                                                                                                                                                                                                       |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **DI context** (`NGX_SIGNAL_FORM_CONTEXT`)               | Child components like `<ngx-signal-form-error>` need access to form-level state (submission status, error strategy) without manual prop drilling. Angular's `FormRoot` does not provide DI context.                                                     |
+| **Submitted status tracking** (`submittedStatus` signal) | Angular provides `submitting()` (in-flight) but no `submitted` (completed) state. The toolkit derives a `'unsubmitted' → 'submitting' → 'submitted'` lifecycle, which is required for the `'on-submit'` error display strategy.                         |
+| **Error display strategy** (`errorStrategy` input)       | Angular Signal Forms surface errors immediately. The toolkit adds configurable timing—`'on-touch'`, `'on-submit'`, `'immediate'`, `'manual'`—so errors appear at the right moment per UX best practices (WCAG recommends after blur, not while typing). |
 
 **Submission patterns:**
 
 ```html
 <!-- Declarative (recommended): configure submission in form(), no (submit) binding needed -->
-<form [ngxSignalForm]="myForm" [errorStrategy]="'on-submit'">
+<form [formRoot]="myForm" [errorStrategy]="'on-submit'">
   <button type="submit">Submit</button>
 </form>
 
-<!-- Important: [ngxSignalForm] composes FormRoot, so provide submission.action in form() -->
+<!-- [formRoot] replicates FormRoot behavior, so provide submission.action in form() -->
 ```
 
 ### NgxSignalFormAutoAriaDirective
@@ -507,7 +510,7 @@ createUniqueId('field'); // 'field-1', 'field-2', ...
 ## Related Documentation
 
 - [Main README](https://github.com/ngx-signal-forms/ngx-signal-forms#readme) — Overview, installation, quick start
-- [Migration Guide (beta.4)](../../docs/MIGRATION_BETA4.md) — Upgrade steps from earlier beta releases
+- [Migration Guide (beta.5)](../../docs/MIGRATION_BETA5.md) — Upgrade steps from earlier beta releases
 - [Form Field Theming](./form-field/THEMING.md) — CSS custom properties guide
 - [CSS Framework Integration](../../docs/CSS_FRAMEWORK_INTEGRATION.md) — Bootstrap, Tailwind, Material setup
 - [Warnings Support](../../docs/WARNINGS_SUPPORT.md) — Non-blocking validation

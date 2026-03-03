@@ -96,14 +96,14 @@ export type ReactiveOrStatic<T> = SignalLike<T> | T;
  *
  * @example Form-level strategy (all fields inherit)
  * ```html
- * <form [ngxSignalForm]="form" [errorStrategy]="'on-touch'">
+ * <form [formRoot]="form" [errorStrategy]="'on-touch'">
  *   <!-- All errors use 'on-touch' strategy -->
  * </form>
  * ```
  *
  * @example Field-level override
  * ```html
- * <form [ngxSignalForm]="form" [errorStrategy]="'on-touch'">
+ * <form [formRoot]="form" [errorStrategy]="'on-touch'">
  *   <!-- Password shows errors immediately -->
  *   <ngx-signal-form-error
  *     [formField]="form.password"

@@ -16,7 +16,6 @@ import {
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit/core';
 
-import type { ErrorMessageRegistry } from '@ngx-signal-forms/toolkit/core';
 import { readDirectErrors } from './utilities';
 
 /**
@@ -87,7 +86,7 @@ export interface ErrorStateSignals {
  * ## With Form Context (for on-submit strategy)
  *
  * ```html
- * <form [ngxSignalForm]="form" [errorStrategy]="'on-submit'">
+ * <form [formRoot]="form" [errorStrategy]="'on-submit'">
  *   <div ngxSignalFormHeadlessErrorState #errorState="errorState" [field]="form.email" fieldName="email">
  *     @if (errorState.showErrors()) {
  *       @for (error of errorState.resolvedErrors(); track error.kind) {

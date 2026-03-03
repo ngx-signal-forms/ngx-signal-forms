@@ -43,7 +43,7 @@ type DebuggerError = {
  * - Automatic submission status tracking (via form provider)
  *
  * **Usage**:
- * - Can be used with or without `[ngxSignalForm]` directive
+ * - Can be used with or without `[formRoot]` directive
  * - For `'on-submit'` strategy, requires form context
  * - For `'on-touch'` (default), works standalone
  *
@@ -67,7 +67,7 @@ type DebuggerError = {
  *
  * @example With form context
  * ```html
- * <form [ngxSignalForm]="userForm" (submit)="save($event)">
+ * <form [formRoot]="userForm" (submit)="save($event)">
  *   <input [formField]="userForm.email" />
  *   <ngx-signal-form-debugger [formTree]="userForm" />
  * </form>

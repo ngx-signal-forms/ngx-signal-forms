@@ -880,16 +880,16 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(errorComponent).toBeFalsy();
     });
 
-    it('should display errors WITHOUT [ngxSignalForm] context for on-touch strategy', async () => {
+    it('should display errors WITHOUT [formRoot] context for on-touch strategy', async () => {
       /**
-       * KEY CAPABILITY: NgxSignalFormWrapperComponent works WITHOUT [ngxSignalForm] directive
+       * KEY CAPABILITY: NgxSignalFormWrapperComponent works WITHOUT [formRoot] directive
        * for the default 'on-touch' strategy.
        *
        * The 'on-touch' strategy only checks `field.invalid() && field.touched()`.
        * It does NOT require `submittedStatus` signal from form context.
        *
        * This means users can use <ngx-signal-form-field-wrapper> for simple forms without
-       * needing to add [ngxSignalForm] to their <form> element.
+       * needing to add [formRoot] to their <form> element.
        */
       const invalidField = signal({
         invalid: () => true,
@@ -897,7 +897,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         errors: () => [{ kind: 'required', message: 'Email is required' }],
       });
 
-      // No [ngxSignalForm] context - just the component in isolation
+      // No [formRoot] context - just the component in isolation
       await render(
         `<ngx-signal-form-field-wrapper [formField]="field" fieldName="email">
           <label for="email">Email</label>

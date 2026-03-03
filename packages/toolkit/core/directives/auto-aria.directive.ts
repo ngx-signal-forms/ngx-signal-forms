@@ -98,7 +98,7 @@ export class NgxSignalFormAutoAriaDirective {
 
   /**
    * Computed signal that determines if errors should be shown based on error display strategy.
-   * Respects form-level ErrorDisplayStrategy from ngxSignalForm directive.
+   * Respects form-level ErrorDisplayStrategy from NgxSignalFormDirective (`[formRoot]`).
    */
   readonly #shouldShowErrors = computed(() => {
     return this.#shouldShowBy((kind) => !kind.startsWith('warn:'));

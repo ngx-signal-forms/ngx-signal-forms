@@ -56,7 +56,7 @@ import { NgxSignalFormDirective } from './directives/ngx-signal-form.directive';
  *   selector: 'ngx-my-form',
  *   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
  *   template: `
- *     <form [ngxSignalForm]="myForm">
+ *     <form [formRoot]="myForm">
  *       <input [formField]="myForm.email" />
  *       <ngx-signal-form-error [formField]="myForm.email" fieldName="email" />
  *     </form>

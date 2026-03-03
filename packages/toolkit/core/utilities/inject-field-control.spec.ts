@@ -229,6 +229,6 @@ describe('injectFieldControl', () => {
 
     expect(() => {
       injectFieldControl(element, injector);
-    }).toThrow(/requires ngxSignalFormDirective/i);
+    }).toThrow(/requires NgxSignalFormDirective/i);
   });
 });

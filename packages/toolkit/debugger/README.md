@@ -113,7 +113,7 @@ ngx-signal-form-debugger {
 
 ## With Form Context
 
-For `'on-submit'` error strategy, wrap your form with `[ngxSignalForm]`:
+For `'on-submit'` error strategy, wrap your form with `[formRoot]`:
 
 ```typescript
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
@@ -122,7 +122,7 @@ import { SignalFormDebuggerComponent } from '@ngx-signal-forms/toolkit/debugger'
 @Component({
   imports: [FormField, NgxSignalFormToolkit, SignalFormDebuggerComponent],
   template: `
-    <form [ngxSignalForm]="userForm" [errorStrategy]="'on-submit'">
+    <form [formRoot]="userForm" [errorStrategy]="'on-submit'">
       <input [formField]="userForm.email" />
       <button type="submit">Submit</button>
     </form>
