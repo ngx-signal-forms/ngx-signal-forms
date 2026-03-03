@@ -33,7 +33,6 @@ jobs:
     env:
       NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RW'] }}
       NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
-      NPM_TOKEN: ${{ secrets['NPM_TOKEN'] }}
     steps:
       - name: Resolve publish ref
         id: publish_ref
@@ -122,54 +121,43 @@ jobs:
         run: pnpm exec nx report --outputStyle=static
 
       - name: Build toolkit package
-        run: pnpm exec nx run toolkit:build --skip-nx-cache --outputStyle=static
+        run: pnpm exec nx run toolkit:post-build --skip-nx-cache --outputStyle=static
 
-      - name: Configure npm auth mode
-        run: |
-          # Clear inherited token auth by default so Trusted Publisher (OIDC) is used.
-          echo "NODE_AUTH_TOKEN=" >> "$GITHUB_ENV"
-
-          if [ -n "$NPM_TOKEN" ]; then
-            echo "NODE_AUTH_TOKEN=$NPM_TOKEN" >> "$GITHUB_ENV"
-            echo "Using NPM_TOKEN authentication fallback for publish."
-          else
-            echo "Using npm Trusted Publisher (OIDC) authentication for publish."
-          fi
-
-      - name: Validate npm publish auth preflight
+      - name: Validate npm trusted publishing preflight
         run: |
           npm --version
           pnpm --version
-
-          if [ -n "$NPM_TOKEN" ]; then
-            npm whoami
-            echo "Token-based npm authentication is valid."
-          else
-            if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
-              echo "❌ OIDC token endpoint is not available in this job." >&2
-              echo "Ensure workflow permissions include: id-token: write" >&2
-              exit 1
-            fi
-            echo "OIDC is available. Ensure npm Trusted Publisher is configured for:"
-            echo "- package: @ngx-signal-forms/toolkit"
-            echo "- repository: ngx-signal-forms/ngx-signal-forms"
-            echo "- workflow file: .github/workflows/publish.yml"
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            echo "❌ OIDC token endpoint is not available in this job." >&2
+            echo "Ensure workflow permissions include: id-token: write" >&2
+            exit 1
           fi
+          echo "OIDC is available for npm Trusted Publisher authentication."
 
-      - name: Publish packages (Dry Run)
+      - name: Publish toolkit (Dry Run)
         if: ${{ inputs.dry_run == true }}
         run: |
           echo "🔍 Dry run - would publish with tag: ${{ steps.release_info.outputs.dist_tag }}"
-          pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --dry-run --skip-nx-cache
-        # OIDC Trusted Publisher handles authentication in dry-run too
-
-      - name: Publish packages
-        if: ${{ inputs.dry_run != true }}
-        run: pnpm exec nx release publish --tag=${{ steps.release_info.outputs.dist_tag }} --skip-nx-cache
+          npm publish dist/packages/toolkit --tag=${{ steps.release_info.outputs.dist_tag }} --access public --provenance --dry-run
         env:
           NPM_CONFIG_PROVENANCE: true
-          NODE_AUTH_TOKEN: ${{ env.NODE_AUTH_TOKEN }}
-        # OIDC Trusted Publisher handles authentication automatically
+
+      - name: Publish toolkit
+        if: ${{ inputs.dry_run != true }}
+        run: |
+          PACKAGE_NAME=$(node -p "require('./dist/packages/toolkit/package.json').name")
+          PACKAGE_VERSION=$(node -p "require('./dist/packages/toolkit/package.json').version")
+          DIST_TAG='${{ steps.release_info.outputs.dist_tag }}'
+
+          if npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version --json >/dev/null 2>&1; then
+            echo "Version already exists. Updating dist-tag to '$DIST_TAG'."
+            npm dist-tag add "$PACKAGE_NAME@$PACKAGE_VERSION" "$DIST_TAG"
+          else
+            npm publish dist/packages/toolkit --tag="$DIST_TAG" --access public --provenance
+          fi
+        env:
+          NPM_CONFIG_PROVENANCE: true
+        # npm Trusted Publisher handles authentication automatically
 
       - name: Summary
         run: |
@@ -177,4 +165,5 @@ jobs:
           echo "- Git Tag: ${{ steps.release_info.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
           echo "- npm Dist Tag: ${{ steps.release_info.outputs.dist_tag }}" >> $GITHUB_STEP_SUMMARY
           echo "- Dry Run: ${{ inputs.dry_run || false }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Publish client: npm CLI" >> $GITHUB_STEP_SUMMARY
           echo "- Auth: npm Trusted Publishers (OIDC)" >> $GITHUB_STEP_SUMMARY
