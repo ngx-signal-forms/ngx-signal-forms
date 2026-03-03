@@ -8,6 +8,7 @@ import {
   required,
   schema,
 } from '@angular/forms/signals';
+import { createOnInvalidHandler } from '@ngx-signal-forms/toolkit';
 import {
   NgxHeadlessCharacterCountDirective,
   NgxHeadlessErrorStateDirective,
@@ -165,6 +166,7 @@ export class HeadlessErrorStateComponent {
         console.log('Saved profile:', data());
         return null;
       },
+      onInvalid: createOnInvalidHandler(),
     },
   });
 

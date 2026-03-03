@@ -8,7 +8,8 @@ import {
   schema,
   validate,
 } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import { createOnInvalidHandler,
+  NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 interface Booking {
@@ -160,6 +161,7 @@ export class CrossFieldValidationComponent {
         console.log('Booking Confirmed:', data());
         return null;
       },
+      onInvalid: createOnInvalidHandler(),
     },
   });
 

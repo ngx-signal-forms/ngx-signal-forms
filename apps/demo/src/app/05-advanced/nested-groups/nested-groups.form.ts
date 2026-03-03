@@ -7,7 +7,8 @@ import {
   required,
   schema,
 } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import { createOnInvalidHandler,
+  NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 interface Address {
@@ -255,6 +256,7 @@ export class NestedGroupsComponent {
         console.log('Profile saved:', data());
         return null;
       },
+      onInvalid: createOnInvalidHandler(),
     },
   });
 

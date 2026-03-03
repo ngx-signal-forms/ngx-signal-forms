@@ -1,13 +1,13 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  effect,
   input,
   signal,
 } from '@angular/core';
-import { FormField, form } from '@angular/forms/signals';
+import { form, FormField } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import {
+  createOnInvalidHandler,
   NgxSignalFormToolkit,
   provideErrorMessages,
 } from '@ngx-signal-forms/toolkit';
@@ -166,18 +166,9 @@ export class ErrorMessagesComponent {
         this.errorMessagesForm().reset();
         return null;
       },
+      onInvalid: createOnInvalidHandler(),
     },
   });
-
-  constructor() {
-    // Reset form state on initialization to ensure fields start as untouched
-    effect(
-      () => {
-        this.errorMessagesForm().reset();
-      },
-      { allowSignalWrites: true },
-    );
-  }
 
   protected readonly providerCode = `provideErrorMessages({
   required: 'This field is required',

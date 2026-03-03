@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import {
+  createOnInvalidHandler,
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
@@ -94,6 +95,7 @@ export class FieldsetFormComponent {
         console.log('Fieldset form submitted:', this.#model());
         return null;
       },
+      onInvalid: createOnInvalidHandler(),
     },
   });
 

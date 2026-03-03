@@ -9,6 +9,7 @@ import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { form, FormField } from '@angular/forms/signals';
 import {
   combineShowErrors,
+  createOnInvalidHandler,
   injectFormContext,
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
@@ -448,14 +449,16 @@ export class ErrorDisplayModesFormComponent {
   /** Form instance using Signal Forms */
   readonly productForm = form(this.#model, productFeedbackSchema, {
     submission: {
-      onInvalid: () => {
-        this.#submissionAttempted.set(true);
-      },
       action: async () => {
         this.#submissionAttempted.set(true);
         alert('Thank you for your feedback!');
         return null; // No server errors
       },
+      onInvalid: createOnInvalidHandler({
+        afterInvalid: () => {
+          this.#submissionAttempted.set(true);
+        },
+      }),
     },
   });
 

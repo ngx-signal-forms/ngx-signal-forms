@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import {
+  createOnInvalidHandler,
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
@@ -72,6 +73,7 @@ export class CustomControlsComponent {
         console.log('Review submitted:', this.#model());
         return null;
       },
+      onInvalid: createOnInvalidHandler(),
     },
   });
 

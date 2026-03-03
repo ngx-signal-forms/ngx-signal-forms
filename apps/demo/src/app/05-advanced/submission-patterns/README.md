@@ -2,49 +2,54 @@
 
 ## Overview
 
-Handling form submission manually requires juggling state: disabling buttons, showing loading spinners, catching errors, resetting flags. 
+Handling form submission manually requires juggling state: disabling buttons, showing loading spinners, catching errors, resetting flags.
 
-This demo showcases the **`submit` helper utility** and best practices for server integration.
+This demo showcases **declarative submission via `form(..., { submission })` + `[formRoot]`** and best practices for server integration.
 
-## Feature Spotlight: The `submit()` Helper
+## Feature Spotlight: Declarative Submission with `[formRoot]`
 
-This utility function wraps your submission logic to automate the boring parts.
+The form is configured with a `submission` action in `form(...)`, and the `<form [formRoot]="...">` directive orchestrates submit behavior.
 
-### What it handles for you:
-1.  **e.preventDefault()**: No need to manually call it.
-2.  **Loading State**: Automatically sets a `pending` signal on the form while your async action runs.
-3.  **Error Handling**: Can catch rejected Promises and set form-level errors.
-4.  **Touched State**: Automatically marks all fields as touched if submission fails due to validation.
+### What it handles for you
+
+1. **`event.preventDefault()`**: No manual submit plumbing needed.
+2. **Loading State**: Automatically sets a `submitting` signal while async action runs.
+3. **Invalid Submit Handling**: `onInvalid` can focus the first invalid field and mark visibility state.
+4. **Consistent UX**: Submission lifecycle is centralized in one place.
 
 ### Usage Example
+
 ```typescript
-protected async save(event: Event) {
-  // One-liner to handle the lifecycle
-  await submit(this.form, async () => {
-    await this.apiService.save(this.form.value());
-    // Success!
-  });
-}
+readonly myForm = form(this.#model, schema, {
+  submission: {
+    action: async (data) => {
+      await this.apiService.save(data().value());
+      return null;
+    },
+    onInvalid: createOnInvalidHandler(),
+  },
+});
 ```
 
 ## Feature Spotlight: "On Submit" Error Strategy
 
 Some forms shouldn't show inline errors immediately (while typing) or even on blur. They should stay quiet until the user hits "Save".
 
-This demo configures the form with `[errorStrategy]="'on-submit'"`:
--   **Before Submit**: Invalid fields look clean.
--   **After Failed Submit**: All invalid fields light up red at once.
+This demo binds the strategy as `[errorStrategy]="errorDisplayMode"` (defaults to `on-touch`, can be switched from the page control):
+
+- **Before Submit**: Behavior follows the currently selected strategy.
+- **After Failed Submit**: Invalid fields appear according to that strategy.
 
 ## Key Files
 
--   [submission-patterns.form.ts](submission-patterns.form.ts): Heavily commented submission logic.
--   [submission-patterns.page.ts](submission-patterns.page.ts): Demo wrapper.
+- [submission-patterns.form.ts](submission-patterns.form.ts): Declarative submission and invalid handling.
+- [submission-patterns.page.ts](submission-patterns.page.ts): Demo wrapper.
 
 ## How to Test
 
-1.  **Toggle Server Error**: Check the "Simulate Server Error" box.
-2.  **Click Submit**: 
-    -   Observe the button goes disabled (pending state).
-    -   Observe the loading spinner.
-    -   See the error banner appear when the "fake" request fails.
-3.  **Validation Check**: Clear a required field. Click Submit. Notice it creates a "Validation Failed" state and marks fields dirty.
+1. **Toggle Server Error**: Check the "Simulate Server Error" box.
+2. **Click Submit**:
+   - Observe the button become disabled while `submitting()` is true.
+   - Observe the loading state text.
+   - See the server error banner when the simulated request fails.
+3. **Validation Check**: Clear a required field and submit. Errors are shown according to the selected error display strategy.

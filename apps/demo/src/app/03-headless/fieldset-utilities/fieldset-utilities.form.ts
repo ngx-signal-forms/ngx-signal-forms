@@ -15,6 +15,7 @@ import {
   schema,
   validate,
 } from '@angular/forms/signals';
+import { createOnInvalidHandler } from '@ngx-signal-forms/toolkit';
 import {
   createCharacterCount,
   createErrorState,
@@ -496,6 +497,7 @@ export class HeadlessFieldsetUtilitiesComponent {
         console.log('Delivery request submitted:', data());
         return null;
       },
+      onInvalid: createOnInvalidHandler(),
     },
   });
 

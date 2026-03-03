@@ -9,8 +9,9 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { FormField, submit } from '@angular/forms/signals';
+import { form, FormField } from '@angular/forms/signals';
 import {
+  createOnInvalidHandler,
   focusFirstInvalid,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
@@ -22,7 +23,7 @@ import {
   WizardNavigationEvent,
   WizardStepDirective,
 } from '../../shared/wizard';
-import { createWizardForm } from './stepper-form.schema';
+import { wizardSchema } from './stepper-form.schema';
 import {
   INITIAL_WIZARD_DATA,
   STEP_ORDER,
@@ -44,7 +45,7 @@ import {
     <div class="px-6 pt-0 pb-6">
       <h2 class="mb-6 text-2xl font-bold">Multi-Step Registration</h2>
 
-      <form [formRoot]="wizardForm" (submit)="finishWizard()" class="max-w-lg">
+      <form [formRoot]="wizardForm" class="max-w-lg">
         <ngx-wizard
           [(currentStep)]="currentStep"
           [completedSteps]="completedSteps()"
@@ -212,7 +213,17 @@ export class StepperFormComponent {
   readonly #model = signal(INITIAL_WIZARD_DATA);
 
   readonly model = this.#model.asReadonly();
-  readonly wizardForm = createWizardForm(this.#model);
+  readonly wizardForm = form(this.#model, wizardSchema, {
+    submission: {
+      action: async (data) => {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        console.log('Wizard Completed:', data());
+        alert('Registration Successful!');
+        return null;
+      },
+      onInvalid: createOnInvalidHandler(),
+    },
+  });
 
   /** Computed list of completed steps for the wizard progress indicator. */
   protected readonly completedSteps = computed(() => {
@@ -284,21 +295,6 @@ export class StepperFormComponent {
       this.currentStep.set(STEP_ORDER[currentIdx - 1]);
       this.#focusStepHeading();
     }
-  }
-
-  /**
-   * Submit the wizard and focus the first invalid field when needed.
-   */
-  protected async finishWizard(): Promise<void> {
-    if (this.wizardForm().invalid()) {
-      focusFirstInvalid(this.wizardForm);
-    }
-    await submit(this.wizardForm, async (data) => {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      console.log('Wizard Completed:', data());
-      alert('Registration Successful!');
-      return null;
-    });
   }
 
   /**

@@ -6,7 +6,8 @@ import {
   required,
   schema,
 } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import { createOnInvalidHandler,
+  NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 interface Task {
@@ -159,6 +160,7 @@ export class DynamicListComponent {
         console.log('Saved tasks:', data());
         return null;
       },
+      onInvalid: createOnInvalidHandler(),
     },
   });
 

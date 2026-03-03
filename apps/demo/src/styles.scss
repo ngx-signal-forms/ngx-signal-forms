@@ -3,6 +3,9 @@
 
 @use 'tailwindcss';
 
+/* Prevent scanning repository instruction/skill markdown for class candidates. */
+@source not '../../../.github';
+
 /* Configure Tailwind to use class-based dark mode */
 @variant dark (.dark &);
 

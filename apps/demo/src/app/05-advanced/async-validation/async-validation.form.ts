@@ -7,7 +7,8 @@ import {
   schema,
   validateHttp,
 } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import { createOnInvalidHandler,
+  NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 interface Registration {
@@ -114,6 +115,7 @@ export class AsyncValidationComponent {
         console.log('Registered:', data());
         return null;
       },
+      onInvalid: createOnInvalidHandler(),
     },
   });
 

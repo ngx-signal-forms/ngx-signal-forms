@@ -5,7 +5,8 @@ import {
   signal,
 } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import { createOnInvalidHandler,
+  NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 
 import {
@@ -158,6 +159,7 @@ export class FieldStatesForm {
         this.userForm().reset();
         return null;
       },
+      onInvalid: createOnInvalidHandler(),
     },
   });
 

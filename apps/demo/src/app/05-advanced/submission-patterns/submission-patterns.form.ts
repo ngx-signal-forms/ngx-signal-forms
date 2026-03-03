@@ -9,6 +9,7 @@ import {
 import { form, FormField } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import {
+  createOnInvalidHandler,
   NGX_SIGNAL_FORM_CONTEXT,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
@@ -33,7 +34,7 @@ import { submissionSchema } from './submission-patterns.validations';
   template: `
     <form
       [formRoot]="registrationForm"
-      [errorStrategy]="'on-submit'"
+      [errorStrategy]="errorDisplayMode"
       class="form-container"
     >
       <!-- Submission state indicator -->
@@ -309,6 +310,7 @@ export class SubmissionPatternsComponent {
 
         return null;
       },
+      onInvalid: createOnInvalidHandler(),
     },
   });
 
