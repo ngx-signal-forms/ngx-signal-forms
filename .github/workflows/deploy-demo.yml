@@ -44,6 +44,25 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Configure Nx Cloud access
+        env:
+          NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets.NX_CLOUD_ACCESS_TOKEN_RW }}
+          NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets.NX_CLOUD_ACCESS_TOKEN_RO }}
+        run: |
+          TOKEN=""
+          if [ -n "$NX_CLOUD_ACCESS_TOKEN_RW" ]; then
+            TOKEN="$NX_CLOUD_ACCESS_TOKEN_RW"
+          elif [ -n "$NX_CLOUD_ACCESS_TOKEN_RO" ]; then
+            TOKEN="$NX_CLOUD_ACCESS_TOKEN_RO"
+          fi
+
+          if [ -n "$TOKEN" ]; then
+            echo "NX_CLOUD_ACCESS_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+          else
+            echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
+            echo "No Nx Cloud token configured. Running without Nx Cloud."
+          fi
+
       - name: Build Demo
         run: pnpm exec nx run demo:build --configuration=production --baseHref=/ngx-signal-forms/
 
