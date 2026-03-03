@@ -3,6 +3,9 @@ name: Publish
 # Publish after a successful Release run or manually
 # Uses npm Trusted Publishers (OIDC) - no secrets required!
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       ref:
@@ -29,7 +32,6 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: ${{ github.event_name == 'workflow_dispatch' }}
     env:
       NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RW'] }}
       NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
@@ -37,7 +39,11 @@ jobs:
       - name: Resolve publish ref
         id: publish_ref
         run: |
-          echo "ref=${{ inputs.ref }}" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "ref=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=${{ inputs.ref }}" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: actions/checkout@v4
         with:
@@ -92,10 +98,13 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org'
           scope: '@ngx-signal-forms'
+
+      - name: Upgrade npm for trusted publishing
+        run: npm install --global npm@latest
 
       - name: Enforce OIDC auth mode for npm publish
         run: |
@@ -138,12 +147,20 @@ jobs:
         run: |
           npm --version
           pnpm --version
+          node --version
+
+          NPM_VERSION=$(npm --version)
+          node -e "const [major,minor,patch]=process.argv[1].split('.').map(Number); if (major < 11 || (major === 11 && (minor < 5 || (minor === 5 && patch < 1)))) { process.exit(1); }" "$NPM_VERSION" || {
+            echo "❌ npm $NPM_VERSION is too old for npm Trusted Publisher OIDC (requires >= 11.5.1)." >&2
+            exit 1
+          }
+
           if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
             echo "❌ OIDC token endpoint is not available in this job." >&2
             echo "Ensure workflow permissions include: id-token: write" >&2
             exit 1
           fi
-          echo "OIDC is available for npm Trusted Publisher authentication."
+          echo "OIDC and npm version requirements are satisfied for trusted publishing."
 
       - name: Publish toolkit (Dry Run)
         if: ${{ inputs.dry_run == true }}
