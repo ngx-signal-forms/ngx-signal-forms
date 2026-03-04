@@ -1,3 +1,4 @@
+import { DEMO_PATHS } from '../../demo/src/app/routes.metadata';
 import { Locator, Page } from '@playwright/test';
 import { BaseFormPage } from './base-form.page';
 /**
@@ -17,7 +18,7 @@ export class FormFieldWrapperPage extends BaseFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(`/form-field-wrapper/basic-usage`);
+    await this.page.goto(DEMO_PATHS.basicUsage);
     await this.waitForReady();
   }
 
@@ -25,7 +26,7 @@ export class FormFieldWrapperPage extends BaseFormPage {
    * Navigate to complex forms variant
    */
   async gotoComplexForms(): Promise<void> {
-    await this.page.goto(`/form-field-wrapper/complex-forms`);
+    await this.page.goto(DEMO_PATHS.complexForms);
     await this.waitForReady();
   }
 

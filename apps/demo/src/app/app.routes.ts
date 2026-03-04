@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { getRouteTitle } from './routes.metadata';
 
 /**
  * Demo Application Routes
@@ -33,7 +34,7 @@ export const appRoutes: Routes = [
           import('./00-signal-forms-only/pure-signal-form/pure-signal-form.page').then(
             (m) => m.PureSignalFormPageComponent,
           ),
-        title: 'Pure Signal Forms - No Toolkit (Baseline)',
+        title: getRouteTitle('/signal-forms-only/pure-signal-form'),
       },
     ],
   },
@@ -51,7 +52,7 @@ export const appRoutes: Routes = [
           import('./01-getting-started/your-first-form/your-first-form.page').then(
             (m) => m.YourFirstFormPageComponent,
           ),
-        title: 'Your First Form - Getting Started with Toolkit',
+        title: getRouteTitle('/getting-started/your-first-form'),
       },
     ],
   },
@@ -69,7 +70,7 @@ export const appRoutes: Routes = [
           import('./02-toolkit-core/accessibility-comparison/accessibility-comparison.page').then(
             (m) => m.AccessibilityComparisonPageComponent,
           ),
-        title: 'Accessibility Comparison - Manual vs Toolkit',
+        title: getRouteTitle('/toolkit-core/accessibility-comparison'),
       },
       {
         path: 'error-display-modes',
@@ -77,7 +78,7 @@ export const appRoutes: Routes = [
           import('./02-toolkit-core/error-display-modes/error-display-modes.page').then(
             (m) => m.ErrorDisplayModesPageComponent,
           ),
-        title: 'Error Display Strategies - Progressive Disclosure',
+        title: getRouteTitle('/toolkit-core/error-display-modes'),
       },
       {
         path: 'warning-support',
@@ -85,7 +86,7 @@ export const appRoutes: Routes = [
           import('./02-toolkit-core/warning-support/warning-support.page').then(
             (m) => m.WarningsSupportPageComponent,
           ),
-        title: 'Warning Support - Non-Blocking Validation',
+        title: getRouteTitle('/toolkit-core/warning-support'),
       },
       {
         path: 'field-states',
@@ -93,7 +94,7 @@ export const appRoutes: Routes = [
           import('./02-toolkit-core/field-states/field-states.page').then(
             (m) => m.FieldStatesPage,
           ),
-        title: 'Field States - dirty, touched, invalid',
+        title: getRouteTitle('/toolkit-core/field-states'),
       },
     ],
   },
@@ -111,7 +112,7 @@ export const appRoutes: Routes = [
           import('./03-headless/error-state/error-state.page').then(
             (m) => m.HeadlessErrorStatePageComponent,
           ),
-        title: 'Headless Error State - Custom UI with Signals',
+        title: getRouteTitle('/headless/error-state'),
       },
       {
         path: 'fieldset-utilities',
@@ -119,7 +120,7 @@ export const appRoutes: Routes = [
           import('./03-headless/fieldset-utilities/fieldset-utilities.page').then(
             (m) => m.HeadlessFieldsetUtilitiesPageComponent,
           ),
-        title: 'Headless Fieldset + Utilities - Grouped State',
+        title: getRouteTitle('/headless/fieldset-utilities'),
       },
     ],
   },
@@ -137,7 +138,7 @@ export const appRoutes: Routes = [
           import('./04-form-field-wrapper/basic-usage/basic-usage.page').then(
             (m) => m.BasicUsagePage,
           ),
-        title: 'Basic Usage - Form Field Wrapper',
+        title: getRouteTitle('/form-field-wrapper/basic-usage'),
       },
       {
         path: 'complex-forms',
@@ -145,39 +146,18 @@ export const appRoutes: Routes = [
           import('./04-form-field-wrapper/complex-forms/complex-forms.page').then(
             (m) => m.ComplexFormsPage,
           ),
-        title: 'Complex Forms - Nested Objects & Arrays',
+        title: getRouteTitle('/form-field-wrapper/complex-forms'),
       },
-      {
-        path: 'fieldset',
-        loadComponent: () =>
-          import('./04-form-field-wrapper/fieldset/fieldset.page').then(
-            (m) => m.FieldsetPage,
-          ),
-        title: 'Fieldset - Aggregated Errors for Grouped Fields',
-      },
-      {
-        path: 'outline-form-field',
-        loadComponent: () =>
-          import('./04-form-field-wrapper/outline-form-field/outline-form-field.page').then(
-            (m) => m.OutlineFormFieldPage,
-          ),
-        title: 'Outline Form Field - Default Outlined Styling',
-      },
-      {
-        path: 'dynamic-appearance',
-        loadComponent: () =>
-          import('./04-form-field-wrapper/dynamic-appearance/dynamic-appearance.page').then(
-            (m) => m.DynamicAppearancePageComponent,
-          ),
-        title: 'Dynamic Appearance - Runtime Switching',
-      },
+
+
+
       {
         path: 'custom-controls',
         loadComponent: () =>
           import('./04-form-field-wrapper/custom-controls/custom-controls.page').then(
             (m) => m.CustomControlsPage,
           ),
-        title: 'Custom Controls - FormValueControl Integration',
+        title: getRouteTitle('/form-field-wrapper/custom-controls'),
       },
     ],
   },
@@ -195,7 +175,7 @@ export const appRoutes: Routes = [
           import('./05-advanced/global-configuration/global-configuration.page').then(
             (m) => m.GlobalConfigurationPage,
           ),
-        title: 'Global Configuration - Toolkit Defaults',
+        title: getRouteTitle('/advanced-scenarios/global-configuration'),
       },
       {
         path: 'submission-patterns',
@@ -203,7 +183,7 @@ export const appRoutes: Routes = [
           import('./05-advanced/submission-patterns/submission-patterns.page').then(
             (m) => m.SubmissionPatternsPage,
           ),
-        title: 'Submission Patterns - Async & Server Errors',
+        title: getRouteTitle('/advanced-scenarios/submission-patterns'),
       },
       {
         path: 'error-messages',
@@ -211,13 +191,13 @@ export const appRoutes: Routes = [
           import('./05-advanced/error-messages/error-messages.page').then(
             (m) => m.ErrorMessagesPage,
           ),
-        title: 'Error Messages - 3-Tier Priority & i18n',
+        title: getRouteTitle('/advanced-scenarios/error-messages'),
       },
       {
         path: 'advanced-wizard',
         loadComponent: () =>
           import('./05-advanced/advanced-wizard/advanced-wizard.page'),
-        title: 'Advanced Wizard - NgRx Signal Store + Zod (Canonical)',
+        title: getRouteTitle('/advanced-scenarios/advanced-wizard'),
       },
       {
         path: 'dynamic-list',
@@ -240,7 +220,7 @@ export const appRoutes: Routes = [
           import('./05-advanced/async-validation/async-validation.page').then(
             (m) => m.AsyncValidationPageComponent,
           ),
-        title: 'Async Validation - Server Side Checks',
+        title: getRouteTitle('/advanced-scenarios/async-validation'),
       },
       {
         path: 'cross-field-validation',
@@ -248,7 +228,7 @@ export const appRoutes: Routes = [
           import('./05-advanced/cross-field-validation/cross-field-validation.page').then(
             (m) => m.CrossFieldValidationPageComponent,
           ),
-        title: 'Cross-Field Validation - Dependent Fields',
+        title: getRouteTitle('/advanced-scenarios/cross-field-validation'),
       },
     ],
   },

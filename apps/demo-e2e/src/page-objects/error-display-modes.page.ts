@@ -1,3 +1,4 @@
+import { DEMO_PATHS } from '../../demo/src/app/routes.metadata';
 import { Locator, Page } from '@playwright/test';
 import { ErrorStrategyFormPage } from './base-form.page';
 /**
@@ -21,7 +22,7 @@ export class ErrorDisplayModesPage extends ErrorStrategyFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(`/toolkit-core/error-display-modes`);
+    await this.page.goto(DEMO_PATHS.errorDisplayModes);
     await this.waitForReady();
   }
 

@@ -19,6 +19,7 @@ import {
   RouterOutlet,
 } from '@angular/router';
 import { filter, map } from 'rxjs';
+import { DEMO_CATEGORIES, getRouteTitle } from './routes.metadata';
 import { NgxThemeSwitcherComponent } from './ui/theme-switcher/theme-switcher.component';
 
 @Component({
@@ -45,11 +46,8 @@ export class AppComponent implements AfterViewInit {
   );
 
   #currentRouteTitle(): string {
-    let route = this.router.routerState.root;
-    while (route.firstChild) {
-      route = route.firstChild;
-    }
-    return route.snapshot.title || 'Pure Signal Forms - No Toolkit (Baseline)';
+    const url = this.router.routerState.snapshot.url.split('?')[0];
+    return getRouteTitle(url);
   }
 
   // Keep the browser tab title in sync with the current route title
@@ -61,130 +59,7 @@ export class AppComponent implements AfterViewInit {
 
   // Category + link metadata (single source of truth for sidebar + top nav labels)
   // Organized to show progression: baseline → getting started → toolkit features → advanced
-  private readonly categories = [
-    {
-      id: 'signal-forms-only',
-      label: 'Signal Forms Only',
-      pattern: /^\/signal-forms-only\//,
-      links: [
-        {
-          path: '/signal-forms-only/pure-signal-form',
-          label: 'Pure Signal Forms (Baseline)',
-        },
-      ],
-    },
-    {
-      id: 'getting-started',
-      label: 'Getting Started',
-      pattern: /^\/getting-started\//,
-      links: [
-        {
-          path: '/getting-started/your-first-form',
-          label: 'Your First Form',
-        },
-      ],
-    },
-    {
-      id: 'toolkit-core',
-      label: 'Toolkit Core',
-      pattern: /^\/toolkit-core\//,
-      links: [
-        {
-          path: '/toolkit-core/accessibility-comparison',
-          label: 'Accessibility Comparison',
-        },
-        {
-          path: '/toolkit-core/error-display-modes',
-          label: 'Error Display Modes',
-        },
-        {
-          path: '/toolkit-core/warning-support',
-          label: 'Warning Support',
-        },
-        {
-          path: '/toolkit-core/field-states',
-          label: 'Field States',
-        },
-      ],
-    },
-    {
-      id: 'headless',
-      label: 'Headless',
-      pattern: /^\/headless\//,
-      links: [
-        {
-          path: '/headless/error-state',
-          label: 'Error State + Character Count',
-        },
-        {
-          path: '/headless/fieldset-utilities',
-          label: 'Fieldset + Utilities',
-        },
-      ],
-    },
-    {
-      id: 'form-field-wrapper',
-      label: 'Form Field Wrapper',
-      pattern: /^\/form-field-wrapper\//,
-      links: [
-        {
-          path: '/form-field-wrapper/basic-usage',
-          label: 'Basic Usage',
-        },
-        {
-          path: '/form-field-wrapper/complex-forms',
-          label: 'Complex Forms (Nested + Arrays)',
-        },
-        {
-          path: '/form-field-wrapper/fieldset',
-          label: 'Fieldset (Grouped Errors)',
-        },
-        {
-          path: '/form-field-wrapper/outline-form-field',
-          label: 'Outlined Form Fields',
-        },
-        {
-          path: '/form-field-wrapper/dynamic-appearance',
-          label: 'Dynamic Appearance',
-        },
-        {
-          path: '/form-field-wrapper/custom-controls',
-          label: 'Custom Controls',
-        },
-      ],
-    },
-    {
-      id: 'advanced-scenarios',
-      label: 'Advanced Scenarios',
-      pattern: /^\/advanced-scenarios\//,
-      links: [
-        {
-          path: '/advanced-scenarios/global-configuration',
-          label: 'Global Configuration',
-        },
-        {
-          path: '/advanced-scenarios/submission-patterns',
-          label: 'Submission Patterns',
-        },
-        {
-          path: '/advanced-scenarios/error-messages',
-          label: 'Error Messages',
-        },
-        {
-          path: '/advanced-scenarios/advanced-wizard',
-          label: 'Advanced Wizard (NgRx Signal Store)',
-        },
-        {
-          path: '/advanced-scenarios/async-validation',
-          label: 'Async Validation',
-        },
-        {
-          path: '/advanced-scenarios/cross-field-validation',
-          label: 'Cross-Field Validation',
-        },
-      ],
-    },
-  ] as const;
+  private readonly categories = DEMO_CATEGORIES;
 
   protected readonly categoriesList = this.categories;
 

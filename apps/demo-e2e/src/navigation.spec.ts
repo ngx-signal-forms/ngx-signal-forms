@@ -1,4 +1,6 @@
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { expect, test } from '@playwright/test';
+import { DEMO_CATEGORIES } from '../../demo/src/app/routes.metadata';
 /**
  * Navigation & Application Shell Tests
  * Tests for Part 1 of DEMO_TEST_PLAN.md
@@ -33,14 +35,7 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
 
   test('should display all 6 navigation categories', async ({ page }) => {
     await test.step('Verify all category headers are visible', async () => {
-      const categories = [
-        'Signal Forms Only',
-        'Getting Started',
-        'Toolkit Core',
-        'Headless',
-        'Form Field Wrapper',
-        'Advanced Scenarios',
-      ];
+      const categories = DEMO_CATEGORIES.map((c) => c.label);
 
       for (const category of categories) {
         const categoryElement = page.getByRole('link', {
@@ -56,51 +51,10 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
   }) => {
     await test.step('Verify links are accessible by navigating to each category', async () => {
       // Navigate to each category and verify its example links in sidebar
-      const categoryTests = [
-        {
-          category: '/signal-forms-only',
-          links: ['Pure Signal Forms'],
-        },
-        {
-          category: '/getting-started',
-          links: ['Your First Form'],
-        },
-        {
-          category: '/toolkit-core',
-          links: [
-            'Accessibility Comparison',
-            'Error Display Modes',
-            'Warning Support',
-            'Field States',
-          ],
-        },
-        {
-          category: '/headless',
-          links: ['Error State + Character Count', 'Fieldset + Utilities'],
-        },
-        {
-          category: '/form-field-wrapper',
-          links: [
-            'Basic Usage',
-            'Complex Forms',
-            'Fieldset',
-            'Outlined Form Fields',
-            'Dynamic Appearance',
-            'Custom Controls',
-          ],
-        },
-        {
-          category: '/advanced-scenarios',
-          links: [
-            'Global Configuration',
-            'Submission Patterns',
-            'Error Messages',
-            'Advanced Wizard',
-            'Async Validation',
-            'Cross-Field Validation',
-          ],
-        },
-      ];
+      const categoryTests = DEMO_CATEGORIES.map((c) => ({
+        categoryPath: c.links[0].path.split('/').slice(0, 2).join('/'),
+        links: c.links.map((l) => l.label),
+      }));
 
       for (const { category, links } of categoryTests) {
         await page.goto(`${category}`);
@@ -136,10 +90,7 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
         '/headless/fieldset-utilities',
         '/form-field-wrapper/basic-usage',
         '/form-field-wrapper/complex-forms',
-        '/form-field-wrapper/fieldset',
-        '/form-field-wrapper/dynamic-appearance',
         '/form-field-wrapper/custom-controls',
-        '/form-field-wrapper/outline-form-field',
         '/advanced-scenarios/global-configuration',
         '/advanced-scenarios/submission-patterns',
         '/advanced-scenarios/error-messages',

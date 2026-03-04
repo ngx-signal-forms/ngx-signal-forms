@@ -1,3 +1,4 @@
+import { DEMO_PATHS } from '../../demo/src/app/routes.metadata';
 import { Locator, Page } from '@playwright/test';
 import { BaseFormPage } from './base-form.page';
 /**
@@ -17,7 +18,7 @@ export class SubmissionPatternsPage extends BaseFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(`/advanced-scenarios/submission-patterns`);
+    await this.page.goto(DEMO_PATHS.submissionPatterns);
     await this.waitForReady();
   }
 

@@ -45,6 +45,13 @@ export const BASIC_USAGE_CONTENT = {
     title: 'Interactive Field Testing',
     sections: [
       {
+        title: '🎨 Appearance & Outline Options',
+        items: [
+          'Use the <strong>Appearance selector</strong> to toggle between standard and outline mode natively supported by the wrapper.',
+          'The Outline mode provides a more distinct visual boundary, often preferred in enterprise applications like Material Design.',
+        ],
+      },
+      {
         title: '🧪 Try Different Field Types',
         items: [
           '1. Name: Type "A" → Error: "min 2 characters"',

@@ -1,3 +1,4 @@
+import { DEMO_PATHS } from '../../demo/src/app/routes.metadata';
 import { Page } from '@playwright/test';
 import { BaseFormPage } from './base-form.page';
 /**
@@ -12,7 +13,7 @@ export class GlobalConfigurationPage extends BaseFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(`/advanced-scenarios/global-configuration`);
+    await this.page.goto(DEMO_PATHS.globalConfiguration);
     await this.waitForReady();
   }
 }

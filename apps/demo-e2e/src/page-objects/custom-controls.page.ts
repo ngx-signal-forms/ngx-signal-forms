@@ -1,3 +1,4 @@
+import { DEMO_PATHS } from '../../demo/src/app/routes.metadata';
 import type { Locator, Page } from '@playwright/test';
 import { BaseFormPage } from './base-form.page';
 
@@ -6,7 +7,7 @@ import { BaseFormPage } from './base-form.page';
  * Route: /form-field-wrapper/custom-controls
  */
 export class CustomControlsPage extends BaseFormPage {
-  readonly route = '/form-field-wrapper/custom-controls';
+  readonly route = DEMO_PATHS.customControls;
 
   // Form wrapper locators
   readonly formFieldWrappers: Locator;

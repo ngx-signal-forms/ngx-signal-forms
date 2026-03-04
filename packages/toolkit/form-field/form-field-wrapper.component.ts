@@ -155,6 +155,7 @@ import {
     '[attr.outline]': 'isOutline() ? "" : null',
     '[class.ngx-signal-form-field-wrapper--warning]': 'showWarningState()',
     '[class.ngx-signal-forms-outline]': 'isOutline()',
+    '[class.ngx-signal-forms-bare]': 'isBare()',
     '[attr.data-show-required]':
       'isOutline() && resolvedShowRequiredMarker() ? "true" : null',
     '[attr.data-required-marker]':
@@ -195,9 +196,10 @@ import {
           [strategy]="effectiveStrategy"
           [submittedStatus]="submittedStatus"
         />
-      } @else {
-        <ng-content select="ngx-signal-form-field-hint" />
       }
+      <div [style.display]="(showErrors() && shouldShowErrors()) ? 'none' : 'contents'">
+        <ng-content select="ngx-signal-form-field-hint" />
+      </div>
 
       <!-- Right side: character count -->
       <ng-content select="ngx-signal-form-field-character-count" />
@@ -436,13 +438,30 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     if (componentAppearance === 'outline') {
       return true;
     }
-    if (componentAppearance === 'standard') {
+    if (componentAppearance === 'standard' || componentAppearance === 'bare') {
       return false;
     }
 
     // Priority 3: Inherit from config default
     const configDefault = this.#config.defaultFormFieldAppearance;
     return configDefault === 'outline';
+  });
+
+  /**
+   * Computed signal determining if bare appearance should be applied.
+   */
+  protected readonly isBare = computed(() => {
+    const componentAppearance = this.appearance();
+    if (componentAppearance === 'bare') {
+      return true;
+    }
+    if (
+      componentAppearance === 'inherit' &&
+      (this.#config.defaultFormFieldAppearance as string) === 'bare'
+    ) {
+      return true;
+    }
+    return false;
   });
 
   /**

@@ -1,3 +1,4 @@
+import { DEMO_PATHS } from '../../demo/src/app/routes.metadata';
 import type { Locator } from '@playwright/test';
 import { BaseFormPage } from './base-form.page';
 /**
@@ -12,7 +13,7 @@ import { BaseFormPage } from './base-form.page';
  */
 export class PureSignalFormPage extends BaseFormPage {
   async goto(): Promise<void> {
-    await this.page.goto(`/signal-forms-only/pure-signal-form`);
+    await this.page.goto(DEMO_PATHS.pureSignalForm);
     await this.waitForReady();
   }
 

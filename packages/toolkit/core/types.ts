@@ -143,7 +143,7 @@ export type ErrorDisplayStrategy =
  *
  * @see https://material.angular.dev/components/form-field/overview#form-field-appearance-variants
  */
-export type FormFieldAppearance = 'standard' | 'outline';
+export type FormFieldAppearance = 'standard' | 'outline' | 'bare';
 
 /**
  * Form field appearance input for component-level control.

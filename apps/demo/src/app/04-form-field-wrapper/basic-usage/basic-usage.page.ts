@@ -18,6 +18,7 @@ import {
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { BASIC_USAGE_CONTENT } from './basic-usage.content';
 import { BasicUsageComponent } from './basic-usage.form';
+import { OutlineFormFieldComponent } from './outline-form-field.form';
 
 /**
  * Basic Usage of Form Field Wrapper
@@ -35,6 +36,7 @@ import { BasicUsageComponent } from './basic-usage.form';
   selector: 'ngx-basic-usage-page',
   imports: [
     BasicUsageComponent,
+    OutlineFormFieldComponent,
     ErrorDisplayModeSelectorComponent,
     ExampleCardsComponent,
     PageHeaderComponent,
@@ -70,24 +72,53 @@ import { BasicUsageComponent } from './basic-usage.form';
       </div>
 
       <ngx-split-layout>
-        <ngx-basic-usage
-          #formComponent
-          [errorDisplayMode]="selectedMode()"
-          [appearance]="selectedAppearance()"
-          left
-        />
-        @if (formComponent) {
-          <div right>
-            <ngx-signal-form-debugger [formTree]="formComponent.showcaseForm" />
-          </div>
-        }
+        <div left class="flex flex-col gap-12">
+          <section>
+            <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">Basic Structure</h2>
+            <ngx-basic-usage
+              #formComponent
+              [errorDisplayMode]="selectedMode()"
+              [appearance]="selectedAppearance()"
+            />
+          </section>
+          
+          <hr class="border-gray-200 dark:border-gray-800" />
+          
+          <section>
+            <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">Outline Design (Figma Match)</h2>
+            <ngx-outline-form-field
+              #outlineFormComponent
+              [errorDisplayMode]="selectedMode()"
+              [appearance]="selectedAppearance()"
+            />
+          </section>
+        </div>
+        
+        <div right class="flex flex-col gap-8">
+          @if (formComponent) {
+            <div>
+              <h3 class="mb-2 text-sm font-semibold text-gray-500 uppercase tracking-wider">Basic Form State</h3>
+              <ngx-signal-form-debugger [formTree]="formComponent.showcaseForm" />
+            </div>
+          }
+          @if (outlineFormComponent) {
+            <div>
+              <h3 class="mb-2 text-sm font-semibold text-gray-500 uppercase tracking-wider">Outline Form State</h3>
+              <ngx-signal-form-debugger [formTree]="outlineFormComponent.showcaseForm" />
+            </div>
+          }
+        </div>
       </ngx-split-layout>
     </ngx-example-cards>
   `,
 })
 export class BasicUsagePage {
   protected readonly formComponent =
-    viewChild.required<BasicUsageComponent>('formComponent');
+    viewChild<BasicUsageComponent>('formComponent');
+
+  protected readonly outlineFormComponent =
+    viewChild<OutlineFormFieldComponent>('outlineFormComponent');
+
 
   protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =

@@ -1,3 +1,4 @@
+import { DEMO_PATHS } from '../../demo/src/app/routes.metadata';
 import { Locator, Page } from '@playwright/test';
 import { ErrorStrategyFormPage } from './base-form.page';
 /**
@@ -21,7 +22,7 @@ export class WarningSupportPage extends ErrorStrategyFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(`/toolkit-core/warning-support`);
+    await this.page.goto(DEMO_PATHS.warningSupport);
     await this.waitForReady();
   }
 

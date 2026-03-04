@@ -27,7 +27,7 @@
 
     <!-- Product Rating - Custom RatingControl with auto-derived fieldName -->
     <ngx-signal-form-field-wrapper
-      [appearance]="appearance()"
+      appearance="bare"
       [formField]="reviewForm.rating"
     >
       <label for="rating">Product Rating *</label>
@@ -36,17 +36,14 @@
         [formField]="reviewForm.rating"
         [maxRating]="5"
       />
-      <span
-        class="mt-1 block text-xs text-gray-500 dark:text-gray-400"
-        aria-hidden="true"
-      >
+      <ngx-signal-form-field-hint position="left">
         Use arrow keys or click to rate
-      </span>
+      </ngx-signal-form-field-hint>
     </ngx-signal-form-field-wrapper>
 
     <!-- Service Rating - Custom RatingControl -->
     <ngx-signal-form-field-wrapper
-      [appearance]="appearance()"
+      appearance="bare"
       [formField]="reviewForm.serviceRating"
     >
       <label for="serviceRating">Service Quality *</label>
@@ -59,7 +56,7 @@
 
     <!-- Would Recommend - Custom RatingControl as thumbs up/down (2 stars) -->
     <ngx-signal-form-field-wrapper
-      [appearance]="appearance()"
+      appearance="bare"
       [formField]="reviewForm.wouldRecommend"
     >
       <label for="wouldRecommend">Would Recommend?</label>
@@ -68,12 +65,9 @@
         [formField]="reviewForm.wouldRecommend"
         [maxRating]="2"
       />
-      <span
-        class="mt-1 block text-xs text-gray-500 dark:text-gray-400"
-        aria-hidden="true"
-      >
+      <ngx-signal-form-field-hint position="left">
         ☆ = No, ★ = Maybe, ★★ = Definitely!
-      </span>
+      </ngx-signal-form-field-hint>
     </ngx-signal-form-field-wrapper>
 
     <!-- Feedback - Standard textarea for comparison -->

@@ -35,12 +35,11 @@ export const COMPLEX_FORMS_CONTENT = {
     title: 'Advanced Patterns & Best Practices',
     sections: [
       {
-        title: 'Form Architecture',
+        title: 'Form Architecture & Grouping',
         items: [
           '• <strong>Nested models:</strong> Organize complex data logically',
           '• <strong>Array management:</strong> Signal updates for add/remove',
-          '• <strong>Field naming:</strong> Unique IDs for array items',
-          '• <strong>Accessibility:</strong> ARIA labels for dynamic fields',
+          '• <strong>Fieldset Grouping:</strong> Use <code>NgxSignalFormFieldset</code> for grouped validation and aggregated errors.',
         ],
       },
       {

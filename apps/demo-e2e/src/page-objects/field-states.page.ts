@@ -1,3 +1,4 @@
+import { DEMO_PATHS } from '../../demo/src/app/routes.metadata';
 import { Locator, Page } from '@playwright/test';
 import { BaseFormPage } from './base-form.page';
 /**
@@ -15,7 +16,7 @@ export class FieldStatesPage extends BaseFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(`/toolkit-core/field-states`);
+    await this.page.goto(DEMO_PATHS.fieldStates);
     await this.waitForReady();
   }
 

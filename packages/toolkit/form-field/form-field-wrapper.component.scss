@@ -799,3 +799,32 @@
   width: auto; // Do not stretch
   margin-right: 0.5rem; // Small gap if needed
 }
+
+:host(.ngx-signal-forms-outline) .ngx-signal-form-field-wrapper__assistive {
+  grid-area: assistive;
+}
+
+// Case 3: Bare appearance
+// Removes text-field-like styling (border, background, padding) from the wrapper.
+:host(.ngx-signal-forms-bare) {
+  // Remove horizontal padding in bare appearances
+  // so they align perfectly with the flush-left content.
+  --ngx-form-field-hint-padding-horizontal: 0;
+  --ngx-signal-form-error-padding-horizontal: 0;
+  // Make hint text a bit larger and more readable in bare mode
+  --ngx-form-field-hint-font-size: 0.8125rem;
+  --ngx-form-field-hint-color: var(--_color-text-secondary);
+
+  .ngx-signal-form-field-wrapper__content {
+    border: none;
+    background-color: transparent;
+    padding: 0;
+    box-shadow: none;
+
+    &:hover,
+    &:focus-within {
+      border-color: transparent;
+      box-shadow: none;
+    }
+  }
+}

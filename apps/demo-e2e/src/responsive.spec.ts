@@ -1,3 +1,7 @@
+import { DEMO_PATHS } from '../demo/src/app/routes.metadata';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { ALL_DEMO_ROUTES, DEMO_PATHS } from '../../demo/src/app/routes.metadata';
 import { expect, test } from '@playwright/test';
 /**
  * Basic Page Load Tests
@@ -9,26 +13,7 @@ test.describe('Demo - Page Loading', () => {
     await test.step('Load all example routes', async () => {
       const routes = [
         '/',
-        '/signal-forms-only/pure-signal-form',
-        '/getting-started/your-first-form',
-        '/toolkit-core/accessibility-comparison',
-        '/toolkit-core/error-display-modes',
-        '/toolkit-core/warning-support',
-        '/toolkit-core/field-states',
-        '/headless/error-state',
-        '/headless/fieldset-utilities',
-        '/form-field-wrapper/basic-usage',
-        '/form-field-wrapper/complex-forms',
-        '/form-field-wrapper/fieldset',
-        '/form-field-wrapper/dynamic-appearance',
-        '/form-field-wrapper/custom-controls',
-        '/form-field-wrapper/outline-form-field',
-        '/advanced-scenarios/global-configuration',
-        '/advanced-scenarios/submission-patterns',
-        '/advanced-scenarios/error-messages',
-        '/advanced-scenarios/advanced-wizard',
-        '/advanced-scenarios/async-validation',
-        '/advanced-scenarios/cross-field-validation',
+        ...ALL_DEMO_ROUTES.map(r => r.path)
       ];
 
       for (const route of routes) {
@@ -50,10 +35,10 @@ test.describe('Demo - Page Loading', () => {
   test('should render forms on all pages', async ({ page }) => {
     await test.step('Verify forms are present', async () => {
       const routes = [
-        '/getting-started/your-first-form',
-        '/toolkit-core/accessibility-comparison',
-        '/toolkit-core/error-display-modes',
-        '/form-field-wrapper/basic-usage',
+        DEMO_PATHS.yourFirstForm,
+        DEMO_PATHS.accessibilityComparison,
+        DEMO_PATHS.errorDisplayModes,
+        DEMO_PATHS.basicUsage,
       ];
 
       for (const route of routes) {

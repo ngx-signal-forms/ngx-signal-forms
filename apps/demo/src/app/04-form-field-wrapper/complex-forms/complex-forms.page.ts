@@ -18,6 +18,7 @@ import {
 import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { COMPLEX_FORMS_CONTENT } from './complex-forms.content';
 import { ComplexFormsComponent } from './complex-forms.form';
+import { FieldsetFormComponent } from './fieldset.form';
 
 /**
  * Complex Forms Page
@@ -46,6 +47,7 @@ import { ComplexFormsComponent } from './complex-forms.form';
     ExampleCardsComponent,
     PageHeaderComponent,
     ComplexFormsComponent,
+    FieldsetFormComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
     AppearanceToggleComponent,
@@ -78,17 +80,42 @@ import { ComplexFormsComponent } from './complex-forms.form';
     </div>
 
     <ngx-split-layout>
-      <ngx-complex-forms
-        [errorDisplayMode]="errorDisplayMode()"
-        [appearance]="selectedAppearance()"
-        left
-      />
+      <div left class="flex flex-col gap-12">
+        <section>
+          <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">Nested & Arrays</h2>
+          <ngx-complex-forms
+            #complexFormRef
+            [errorDisplayMode]="errorDisplayMode()"
+            [appearance]="selectedAppearance()"
+          />
+        </section>
 
-      @if (formRef(); as form) {
-        <ng-container right>
-          <ngx-signal-form-debugger [formTree]="form.complexForm" />
-        </ng-container>
-      }
+        <hr class="border-gray-200 dark:border-gray-800" />
+
+        <section>
+          <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">Fieldset Grouping</h2>
+          <ngx-fieldset-form
+            #fieldsetFormRef
+            [errorDisplayMode]="errorDisplayMode()"
+            [appearance]="selectedAppearance()"
+          />
+        </section>
+      </div>
+
+      <div right class="flex flex-col gap-8">
+        @if (complexFormRef) {
+          <div>
+            <h3 class="mb-2 text-sm font-semibold text-gray-500 uppercase tracking-wider">Complex Form State</h3>
+            <ngx-signal-form-debugger [formTree]="complexFormRef.complexForm" />
+          </div>
+        }
+        @if (fieldsetFormRef) {
+          <div>
+            <h3 class="mb-2 text-sm font-semibold text-gray-500 uppercase tracking-wider">Fieldset Form State</h3>
+            <ngx-signal-form-debugger [formTree]="fieldsetFormRef.fieldsetForm" />
+          </div>
+        }
+      </div>
     </ngx-split-layout>
   `,
 })
@@ -99,5 +126,6 @@ export class ComplexFormsPage {
     signal<FormFieldAppearance>('standard');
 
   protected readonly content = COMPLEX_FORMS_CONTENT;
-  protected readonly formRef = viewChild(ComplexFormsComponent);
+  protected readonly complexFormRef = viewChild<ComplexFormsComponent>('complexFormRef');
+  protected readonly fieldsetFormRef = viewChild<FieldsetFormComponent>('fieldsetFormRef');
 }

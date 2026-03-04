@@ -1,3 +1,4 @@
+import { DEMO_PATHS } from '../../demo/src/app/routes.metadata';
 import { Locator, Page } from '@playwright/test';
 import { ErrorStrategyFormPage } from './base-form.page';
 /**
@@ -20,7 +21,7 @@ export class YourFirstFormPage extends ErrorStrategyFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(`/getting-started/your-first-form`);
+    await this.page.goto(DEMO_PATHS.yourFirstForm);
     await this.waitForReady();
   }
 

@@ -471,16 +471,11 @@ Each example below links to its source folder in `apps/demo/src/app`, with a sho
 | Headless Fieldset Utilities | Grouped validation               | Headless fieldset aggregation and field name resolution for custom layouts              | [headless][headless-docs]                        | [source][src-07]             |
 | Form Field Basic Usage      | Standard input layout            | `NgxFormField` wrapper for consistent markup and automatic error display                | [form-field][form-field-docs]                    | [source][src-08]             |
 | Form Field Complex Forms    | Realistic registration form      | `NgxFormField` with nested objects and cross-field validation                           | [form-field][form-field-docs]                    | [source][src-09]             |
-| Form Field Fieldset         | Grouped sections                 | `NgxSignalFormFieldset` for aggregated errors and grouped semantics                     | [form-field][form-field-docs]                    | [source][src-10]             |
 | Custom Controls             | Custom Input Component           | `FormValueControl` integration for custom form components                               | [form-field][form-field-docs]                    | [source][src-custom-control] |
-| Outline Form Field          | Material-like layout             | Outlined appearance and field wrapper theming defaults                                  | [form-field][form-field-docs]                    | [source][src-11]             |
 | Global Configuration        | App-wide defaults                | `provideNgxSignalFormsConfig` for default strategy, appearance, and resolution          | [core][core-docs]                                | [source][src-12]             |
 | Submission Patterns         | Async submit flows               | `submit()` helper + submission state signals for server errors and loading              | [core][core-docs]                                | [source][src-13]             |
 | Error Messages              | Centralized messaging            | Error message registry and priority tiers for i18n-ready messaging                      | [core][core-docs]                                | [source][src-14]             |
-| Dynamic List                | Add/remove items                 | Array handling with signals and `NgxFormField` for repeated fields                      | [core][core-docs]                                | [source][src-15]             |
-| Nested Groups               | Deep data structures             | Nested group handling with auto-ARIA and consistent error surfaces                      | [core][core-docs]                                | [source][src-16]             |
 | Async Validation            | Server checks                    | Async validation + pending state visibility in toolkit UI                               | [core][core-docs]                                | [source][src-17]             |
-| Stepper Form                | Multi-step wizard                | Step validation patterns with strategy-aware errors per step                            | [core][core-docs]                                | [source][src-18]             |
 | Advanced Wizard             | Form-per-step wizard             | Toolkit field wrappers, auto-ARIA, and cross-step validation in a store-backed wizard   | [core][core-docs], [form-field][form-field-docs] | [source][src-20]             |
 | Cross-Field Validation      | Dependent fields                 | Cross-field rules with grouped error display in toolkit components                      | [core][core-docs]                                | [source][src-19]             |
 
@@ -499,15 +494,10 @@ Each example below links to its source folder in `apps/demo/src/app`, with a sho
 [src-07]: ./apps/demo/src/app/03-headless/fieldset-utilities
 [src-08]: ./apps/demo/src/app/04-form-field-wrapper/basic-usage
 [src-09]: ./apps/demo/src/app/04-form-field-wrapper/complex-forms
-[src-10]: ./apps/demo/src/app/04-form-field-wrapper/fieldset
-[src-11]: ./apps/demo/src/app/04-form-field-wrapper/outline-form-field
 [src-12]: ./apps/demo/src/app/05-advanced/global-configuration
 [src-13]: ./apps/demo/src/app/05-advanced/submission-patterns
 [src-14]: ./apps/demo/src/app/05-advanced/error-messages
-[src-15]: ./apps/demo/src/app/05-advanced/dynamic-list
-[src-16]: ./apps/demo/src/app/05-advanced/nested-groups
 [src-17]: ./apps/demo/src/app/05-advanced/async-validation
-[src-18]: ./apps/demo/src/app/05-advanced/stepper-form
 [src-19]: ./apps/demo/src/app/05-advanced/cross-field-validation
 [src-20]: ./apps/demo/src/app/05-advanced/advanced-wizard
 [src-00]: ./apps/demo/src/app/00-signal-forms-only/pure-signal-form
