@@ -1,6 +1,6 @@
-// eslint-disable-next-line @nx/enforce-module-boundaries
 import { expect, test } from '@playwright/test';
-import { DEMO_CATEGORIES } from '../../demo/src/app/routes.metadata';
+
+import { DEMO_CATEGORIES } from '@ngx-signal-forms/demo-shared';
 /**
  * Navigation & Application Shell Tests
  * Tests for Part 1 of DEMO_TEST_PLAN.md
@@ -56,8 +56,8 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
         links: c.links.map((l) => l.label),
       }));
 
-      for (const { category, links } of categoryTests) {
-        await page.goto(`${category}`);
+      for (const { categoryPath, links } of categoryTests) {
+        await page.goto(`${categoryPath}`);
         await page.waitForLoadState('domcontentloaded');
 
         // Get the sidebar navigation

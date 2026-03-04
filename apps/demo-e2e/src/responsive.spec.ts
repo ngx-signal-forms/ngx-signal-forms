@@ -1,7 +1,4 @@
-import { DEMO_PATHS } from '../demo/src/app/routes.metadata';
-// eslint-disable-next-line @nx/enforce-module-boundaries
-// eslint-disable-next-line @nx/enforce-module-boundaries
-import { ALL_DEMO_ROUTES, DEMO_PATHS } from '../../demo/src/app/routes.metadata';
+import { DEMO_CATEGORIES, DEMO_PATHS } from '@ngx-signal-forms/demo-shared';
 import { expect, test } from '@playwright/test';
 /**
  * Basic Page Load Tests
@@ -13,7 +10,7 @@ test.describe('Demo - Page Loading', () => {
     await test.step('Load all example routes', async () => {
       const routes = [
         '/',
-        ...ALL_DEMO_ROUTES.map(r => r.path)
+        ...DEMO_CATEGORIES.flatMap((c) => c.links.map((l) => l.path)),
       ];
 
       for (const route of routes) {

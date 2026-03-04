@@ -1,0 +1,19 @@
+{
+  "name": "demo-shared",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/demo-shared/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/demo-shared",
+        "main": "packages/demo-shared/src/index.ts",
+        "tsConfig": "packages/demo-shared/tsconfig.lib.json",
+        "assets": ["packages/demo-shared/*.md"]
+      }
+    }
+  }
+}

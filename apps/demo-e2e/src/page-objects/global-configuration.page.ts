@@ -1,4 +1,4 @@
-import { DEMO_PATHS } from '../../demo/src/app/routes.metadata';
+import { DEMO_PATHS } from '@ngx-signal-forms/demo-shared';
 import { Page } from '@playwright/test';
 import { BaseFormPage } from './base-form.page';
 /**

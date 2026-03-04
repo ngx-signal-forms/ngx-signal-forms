@@ -1,7 +1,6 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "./",
     "declaration": false,
     "emitDecoratorMetadata": true,
     "esModuleInterop": true,
@@ -23,20 +22,21 @@
     "target": "ES2022",
     "useDefineForClassFields": false,
     "paths": {
-      "@ngx-signal-forms/toolkit": ["packages/toolkit/index.ts"],
+      "@ngx-signal-forms/toolkit": ["./packages/toolkit/index.ts"],
       "@ngx-signal-forms/toolkit/assistive": [
-        "packages/toolkit/assistive/index.ts"
+        "./packages/toolkit/assistive/index.ts"
       ],
-      "@ngx-signal-forms/toolkit/core": ["packages/toolkit/core/index.ts"],
+      "@ngx-signal-forms/toolkit/core": ["./packages/toolkit/core/index.ts"],
       "@ngx-signal-forms/toolkit/debugger": [
-        "packages/toolkit/debugger/index.ts"
+        "./packages/toolkit/debugger/index.ts"
       ],
       "@ngx-signal-forms/toolkit/form-field": [
-        "packages/toolkit/form-field/public_api.ts"
+        "./packages/toolkit/form-field/public_api.ts"
       ],
       "@ngx-signal-forms/toolkit/headless": [
-        "packages/toolkit/headless/src/index.ts"
-      ]
+        "./packages/toolkit/headless/src/index.ts"
+      ],
+      "@ngx-signal-forms/demo-shared": ["./packages/demo-shared/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"],

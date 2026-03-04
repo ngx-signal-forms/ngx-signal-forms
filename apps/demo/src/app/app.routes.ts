@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { getRouteTitle } from './routes.metadata';
+import { getRouteTitle } from '@ngx-signal-forms/demo-shared';
 
 /**
  * Demo Application Routes
@@ -148,8 +148,6 @@ export const appRoutes: Routes = [
           ),
         title: getRouteTitle('/form-field-wrapper/complex-forms'),
       },
-
-
 
       {
         path: 'custom-controls',

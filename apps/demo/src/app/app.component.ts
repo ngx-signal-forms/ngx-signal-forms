@@ -18,8 +18,8 @@ import {
   RouterModule,
   RouterOutlet,
 } from '@angular/router';
+import { DEMO_CATEGORIES, getRouteTitle } from '@ngx-signal-forms/demo-shared';
 import { filter, map } from 'rxjs';
-import { DEMO_CATEGORIES, getRouteTitle } from './routes.metadata';
 import { NgxThemeSwitcherComponent } from './ui/theme-switcher/theme-switcher.component';
 
 @Component({

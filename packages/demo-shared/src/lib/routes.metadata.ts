@@ -1,22 +1,21 @@
-
 export const DEMO_PATHS = {
-  pureSignalForm: "/signal-forms-only/pure-signal-form",
-  yourFirstForm: "/getting-started/your-first-form",
-  accessibilityComparison: "/toolkit-core/accessibility-comparison",
-  errorDisplayModes: "/toolkit-core/error-display-modes",
-  warningSupport: "/toolkit-core/warning-support",
-  fieldStates: "/toolkit-core/field-states",
-  errorState: "/headless/error-state",
-  fieldsetUtilities: "/headless/fieldset-utilities",
-  basicUsage: "/form-field-wrapper/basic-usage",
-  complexForms: "/form-field-wrapper/complex-forms",
-  customControls: "/form-field-wrapper/custom-controls",
-  globalConfiguration: "/advanced-scenarios/global-configuration",
-  submissionPatterns: "/advanced-scenarios/submission-patterns",
-  errorMessages: "/advanced-scenarios/error-messages",
-  advancedWizard: "/advanced-scenarios/advanced-wizard",
-  asyncValidation: "/advanced-scenarios/async-validation",
-  crossFieldValidation: "/advanced-scenarios/cross-field-validation"
+  pureSignalForm: '/signal-forms-only/pure-signal-form',
+  yourFirstForm: '/getting-started/your-first-form',
+  accessibilityComparison: '/toolkit-core/accessibility-comparison',
+  errorDisplayModes: '/toolkit-core/error-display-modes',
+  warningSupport: '/toolkit-core/warning-support',
+  fieldStates: '/toolkit-core/field-states',
+  errorState: '/headless/error-state',
+  fieldsetUtilities: '/headless/fieldset-utilities',
+  basicUsage: '/form-field-wrapper/basic-usage',
+  complexForms: '/form-field-wrapper/complex-forms',
+  customControls: '/form-field-wrapper/custom-controls',
+  globalConfiguration: '/advanced-scenarios/global-configuration',
+  submissionPatterns: '/advanced-scenarios/submission-patterns',
+  errorMessages: '/advanced-scenarios/error-messages',
+  advancedWizard: '/advanced-scenarios/advanced-wizard',
+  asyncValidation: '/advanced-scenarios/async-validation',
+  crossFieldValidation: '/advanced-scenarios/cross-field-validation',
 } as const;
 
 export const DEMO_CATEGORIES = [
@@ -134,7 +133,7 @@ export const DEMO_CATEGORIES = [
 
 export function getRouteTitle(path: string): string {
   for (const category of DEMO_CATEGORIES) {
-    const link = category.links.find(l => l.path === path);
+    const link = category.links.find((l) => l.path === path);
     if (link) return link.label;
   }
   return 'NgxSignalForms Toolkit';
