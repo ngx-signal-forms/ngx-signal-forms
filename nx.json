@@ -101,7 +101,6 @@
       "projectChangelogs": {
         "createRelease": "github",
         "file": false,
-        "renderer": "{workspaceRoot}/tools/custom-changelog-renderer.js",
         "renderOptions": {
           "authors": true,
           "commitReferences": true,
