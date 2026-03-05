@@ -1,8 +1,10 @@
 # Angular Signal Forms Overview
 
-> **Status**: Experimental (since Angular v21.0)
+⚠️ **Maintenance notice (March 2026):** This guide is a deep-dive companion, not a canonical API reference. For exact current signatures and behavior, verify against Angular `@angular/forms/signals` docs and this repository's toolkit READMEs.
+
+> **Status**: Experimental (introduced in Angular v21.0, verified against Angular v21.2)
 > **Package**: `@angular/forms/signals`
-> **Last Updated**: October 2025
+> **Last Updated**: March 2026
 > **Based on**: Angular Team Reddit AMA + Official API Documentation
 >
 > **Additional Resources:**
@@ -51,9 +53,22 @@ Angular Signal Forms is a new **experimental** reactive form system introduced i
 ### ⚠️ Important Notes
 
 - **Experimental API**: Subject to change in future releases
-- **Not recommended for production** at this time
+- **Production readiness depends on your risk profile**: verify Angular release notes and your org policy before adopting broadly
 - **Limited ecosystem support**: Third-party libraries may not yet integrate
 - Use for **experimentation and new projects** being built for the future
+
+### Angular 21.2.0 Best-Practice Alignment
+
+When building Signal Forms in Angular 21.2, keep these defaults:
+
+- Prefer **standalone components** (default behavior; do not add `standalone: true` explicitly).
+- Use **signals as the state source**: `signal()`, `computed()`, `linkedSignal()` where reset-on-dependency semantics are needed.
+- Keep **effects** for side effects only (logging, persistence triggers, analytics), not derived UI state.
+- Use **`inject()`** for dependency injection in components/directives/services.
+- Prefer **native control flow** (`@if`, `@for`, `@switch`) in templates.
+- Use **`ChangeDetectionStrategy.OnPush`** for form-heavy components.
+- Prefer host bindings in the decorator `host` object over `@HostBinding`/`@HostListener`.
+- For large forms/pages, combine route-level lazy loading with `@defer` for non-critical sections.
 
 ### 🚨 Critical: Error Display Logic Is Your Responsibility
 
@@ -763,7 +778,9 @@ validateAsync(path.username, async ({ value }) => {
 validateHttp(path.email, {
   request: ({ value }) => {
     const email = value();
-    return email ? { url: `/api/check-email?email=${email}` } : undefined;
+    return email
+      ? { url: `/api/check-email?email=${encodeURIComponent(email)}` }
+      : undefined;
   },
   errors: (response: { available: boolean }) => {
     return response.available
@@ -800,20 +817,18 @@ const userForm = form(userModel, (path) => {
 
 ### 4. Control Binding
 
-#### `Control` Directive
+#### `formField` directive (`FormField` import)
 
-Binds form fields to UI components.
+Bind form fields to native inputs and compatible custom controls.
 
 ```typescript
-import { Control } from '@angular/forms/signals';
+import { FormField } from '@angular/forms/signals';
 
 @Component({
   template: `
-    <form (submit)="save($event)" novalidate>
-      <!-- Basic input -->
+    <form [formRoot]="userForm">
       <input [formField]="userForm.name" />
 
-      <!-- With error display -->
       <input [formField]="userForm.email" />
       @if (userForm.email().invalid()) {
         <div class="error">
@@ -823,20 +838,17 @@ import { Control } from '@angular/forms/signals';
         </div>
       }
 
-      <!-- Checkbox -->
       <input type="checkbox" [formField]="userForm.newsletter" />
 
-      <!-- Select -->
       <select [formField]="userForm.country">
         <option value="US">United States</option>
         <option value="UK">United Kingdom</option>
       </select>
 
-      <!-- Custom component -->
       <ngx-date-picker [formField]="userForm.birthDate" />
     </form>
   `,
-  imports: [Field]
+  imports: [FormField],
 })
 ```
 
@@ -869,33 +881,28 @@ interface FormValueControl<TValue> {
 
 ### 5. Form Submission
 
-#### `save()` Function
+#### Declarative submission (recommended)
 
-Handles form submission with built-in states.
+Prefer configuring submission in `form(...)` options and binding `<form [formRoot]="userForm">`.
 
 ```typescript
-import { submit } from '@angular/forms/signals';
+import { createOnInvalidHandler } from '@ngx-signal-forms/toolkit';
 
-save() {
-  submit(this.userForm, async (form) => {
-    try {
-      await this.userService.save(form().value());
-      return null; // Success
-    } catch (error) {
-      return {
-        kind: 'server_error',
-        message: 'Failed to save user'
-      };
-    }
-  });
-}
+protected readonly userForm = form(this.userModel, userSchema, {
+  submission: {
+    action: async (field) => {
+      await this.userService.save(field().value());
+      return null;
+    },
+    onInvalid: createOnInvalidHandler(),
+  },
+});
 ```
 
 **Submission States:**
 
 - `submitting()`: Signal indicating submission in progress
-- `submitError()`: Contains error if submission failed
-- `submitSuccess()`: Indicates successful submission
+- For submitted lifecycle tracking (`unsubmitted`/`submitting`/`submitted`), use toolkit form context where needed
 
 ### 6. Field Logic & Properties
 
@@ -992,7 +999,7 @@ import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import {
   form,
   validateStandardSchema,
-  Control,
+  FormField,
   submit,
 } from '@angular/forms/signals';
 import { z } from 'zod';
@@ -1018,7 +1025,7 @@ type User = z.infer<typeof UserSchema>;
 @Component({
   selector: 'ngx-user-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Field],
+  imports: [FormField],
   template: `
     <form (submit)="save($event)" novalidate>
       <div>
@@ -1321,7 +1328,7 @@ export class WeatherFormComponent {
                 return of(this.cityValidationCache.get(cacheKey));
               }
 
-              const url = `/api/weather/search?city=${city}&country=${country}`;
+              const url = `/api/weather/search?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`;
 
               return of(null).pipe(
                 delay(1000), // Debounce
@@ -1439,7 +1446,11 @@ Ensure you have Valibot v0.31+ for StandardSchemaV1 support.
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { form, validateStandardSchema, Control } from '@angular/forms/signals';
+import {
+  form,
+  validateStandardSchema,
+  FormField,
+} from '@angular/forms/signals';
 import * as v from 'valibot';
 
 // Define Valibot schema
@@ -1462,7 +1473,7 @@ type User = v.InferOutput<typeof UserSchema>;
 
 @Component({
   selector: 'ngx-user-form',
-  imports: [Field],
+  imports: [FormField],
   template: `
     <form>
       <input [formField]="userForm.username" />
@@ -1781,7 +1792,7 @@ const weatherForm = form(weatherData, (path) => {
 
 #### Schema Composition Best Practices
 
-**✅ DO: Build from Small to Large**
+#### ✅ DO: Build from Small to Large
 
 ```typescript
 // Atomic → Composite → Array → Form
@@ -1791,7 +1802,7 @@ const arraySchema = schema<Object[]>((path) => applyEach(path, objectSchema));
 const formSchema = schema<Form>((path) => apply(path.items, arraySchema));
 ```
 
-**✅ DO: Make Schemas Reusable**
+#### ✅ DO: Make Schemas Reusable
 
 ```typescript
 // Share schemas across forms
@@ -1807,7 +1818,7 @@ const registrationForm = form(regData, (path) =>
 const profileForm = form(profileData, (path) => apply(path.email, emailSchema));
 ```
 
-**❌ DON'T: Inline Complex Validation**
+#### ❌ DON'T: Inline Complex Validation
 
 ```typescript
 // ❌ Hard to test and reuse
@@ -2068,11 +2079,11 @@ export function metadataToSchema(metadata: FieldMetadata[]): Schema<unknown> {
 
 ```typescript
 import { Component, input } from '@angular/core';
-import { FieldState, Control } from '@angular/forms/signals';
+import { FieldState, FormField } from '@angular/forms/signals';
 
 @Component({
   selector: 'ngx-dynamic-form',
-  imports: [Field],
+  imports: [FormField],
   template: `
     @for (field of metadata(); track field.name) {
       @let fieldState = getField(field.name);
@@ -2449,11 +2460,11 @@ Create a reusable component that wraps labels, inputs, and error messages for co
 
 ```typescript
 import { Component, input, contentChild } from '@angular/core';
-import { FieldState, Control } from '@angular/forms/signals';
+import { FieldState, FormField } from '@angular/forms/signals';
 
 @Component({
   selector: 'ngx-form-field',
-  imports: [Field],
+  imports: [FormField],
   template: `
     <div class="form-field" [class.has-error]="showError()">
       <!-- Label (projected) -->
@@ -2549,7 +2560,7 @@ export class FormFieldComponent {
 ```typescript
 @Component({
   selector: 'ngx-user-form',
-  imports: [FormFieldComponent, Control],
+  imports: [FormFieldComponent, FormField],
   template: `
     <form>
       <!-- Simple text input -->
@@ -3140,7 +3151,7 @@ validate(path.field2, ({ valueOf }) => {
 @Component({
   selector: 'ngx-user-form',
   template: '...',
-  imports: [Field],
+  imports: [FormField],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserFormComponent {
@@ -3840,7 +3851,7 @@ When migrating a Reactive Form:
 - [ ] Convert `valueChanges` subscriptions to `computed()`
 - [ ] Replace `enable()`/`disable()` with `disabled()` schema logic
 - [ ] Convert `addControl`/`removeControl` to optional fields
-- [ ] Replace `patchValue`/`setValue` with signal updates
+- [ ] Replace `patchValue`/`setValue` mental model with `model.set()` / `model.update()`
 - [ ] Remove manual subscription cleanup (signals auto-cleanup)
 - [ ] Update templates to use `[formField]` directive
 - [ ] Test thoroughly (unit + E2E)
@@ -3851,15 +3862,17 @@ When migrating a Reactive Form:
 #### ❌ Pitfall 1: Forgetting Model is Mutable
 
 ```typescript
-// ❌ WRONG: Treating model as immutable
+// ❌ WRONG: Directly mutating the current object value
 const model = signal({ name: '' });
 const form = form(model, schema);
 
-// This mutates the signal's value!
-form.name().value.set('John'); // ✅ This is correct
+const current = model();
+current.name = 'John'; // ❌ No reactive write boundary
 
-// This doesn't work
-model.set({ name: 'John' }); // ❌ Breaks form connection
+// ✅ CORRECT: write through signal APIs
+model.set({ name: 'John' });
+model.update((m) => ({ ...m, name: 'Jane' }));
+form.name().value.set('Alex'); // Also valid for field-level writes
 ```
 
 #### ❌ Pitfall 2: Using getRawValue() Mindset
@@ -3906,7 +3919,7 @@ const myForm = form(model, (path) => {
 
 ### Official Documentation
 
-- [Angular Signal Forms API](https://next.angular.dev/api/forms/signals)
+- [Angular Signal Forms API](https://angular.dev/api/forms/signals)
 - [Angular Signals Guide](https://angular.dev/guide/signals)
 - [Angular Forms Guide](https://angular.dev/guide/forms)
 
@@ -3982,12 +3995,12 @@ Signal Forms are part of Angular's broader evolution toward:
 
 ### When Will It Be Ready?
 
-**Current Status (v21):** Experimental
+**Current Status (v21.2):** Experimental
 
 - ✅ Core APIs are stable enough for experimentation
 - ✅ StandardSchema integration works well
 - ⚠️ API may change before stabilization
-- ❌ Not recommended for production yet
+- ⚠️ Production usage should follow your org's risk policy and Angular release guidance
 
 **Expected Timeline:**
 
@@ -4015,29 +4028,15 @@ This is the future of Angular forms. The question isn't if you'll adopt it, but 
 
 ---
 
-**Document Version**: 2.0.0
-**Last Updated**: October 9, 2025
-**Angular Version**: 21.0+ (experimental)
+**Document Version**: 2.1.0
+**Last Updated**: March 5, 2026
+**Angular Version**: 21.2+ (experimental)
 **Based on**: Angular Team Reddit AMA + Official API Documentation
 
 **Contributors**: Angular Team, Community Feedback, Reddit AMA Participants
 
 **Changelog**:
 
+- v2.1.0: Metadata refresh for Angular 21.2+, control-binding terminology cleanup, submission-state note updates
 - v2.0.0: Major update with AMA insights, Standard Schema integration, reusable components, advanced patterns
 - v1.0.0: Initial comprehensive overview
-
-- **Signal-first reactivity** across the framework
-- **Zone-less applications** for better performance
-- **Simplified APIs** with less boilerplate
-- **Better developer experience** with stronger typing
-
-As the API stabilizes, Signal Forms will likely become the **recommended approach** for new Angular applications, replacing traditional Reactive Forms as the primary form solution.
-
-**Stay Updated**: Monitor the [Angular Blog](https://blog.angular.dev/) and [Angular Roadmap](https://angular.dev/roadmap) for announcements on Signal Forms stability and production readiness.
-
----
-
-**Document Version**: 1.0.0
-**Last Updated**: October 9, 2025
-**Angular Version**: 21.0+ (experimental)

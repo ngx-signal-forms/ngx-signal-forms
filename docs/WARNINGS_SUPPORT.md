@@ -407,7 +407,9 @@ const hasBlockingErrors = computed(() => {
 });
 ```
 
-## Comparison with Vest.js
+## Historical Comparison (Vest-based libraries)
+
+> This section is migration context only. `@ngx-signal-forms/toolkit` does not depend on `ngx-vest-forms` at runtime.
 
 | Feature             | Vest.js (ngx-vest-forms)       | Signal Forms Toolkit                       |
 | ------------------- | ------------------------------ | ------------------------------------------ |
