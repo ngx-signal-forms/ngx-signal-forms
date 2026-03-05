@@ -510,7 +510,7 @@ createUniqueId('field'); // 'field-1', 'field-2', ...
 ## Related Documentation
 
 - [Main README](https://github.com/ngx-signal-forms/ngx-signal-forms#readme) — Overview, installation, quick start
-- [Migration Guide (beta.5)](../../docs/MIGRATION_BETA5.md) — Upgrade steps from earlier beta releases
+- [Migration Guide (beta.5)](../../docs/archive/MIGRATION_BETA5.md) — Upgrade steps from earlier beta releases
 - [Form Field Theming](./form-field/THEMING.md) — CSS custom properties guide
 - [CSS Framework Integration](../../docs/CSS_FRAMEWORK_INTEGRATION.md) — Bootstrap, Tailwind, Material setup
 - [Warnings Support](../../docs/WARNINGS_SUPPORT.md) — Non-blocking validation

@@ -22,7 +22,7 @@ npm install @ngx-signal-forms/toolkit
 
 If you are upgrading from earlier beta releases, review the migration guide:
 
-- [Migration Guide: `1.0.0-beta.5`](./docs/MIGRATION_BETA5.md)
+- [Migration Guide: `1.0.0-beta.5`](./docs/archive/MIGRATION_BETA5.md)
 
 Key updates in `beta.5`:
 
@@ -505,18 +505,19 @@ Each example below links to its source folder in `apps/demo/src/app`, with a sho
 
 ## Documentation
 
-| Document                                                             | Description                                                  |
-| -------------------------------------------------------------------- | ------------------------------------------------------------ |
-| **[Toolkit API Reference](./packages/toolkit/README.md)**            | Complete API documentation with all options and examples     |
-| **[Headless Primitives](./packages/toolkit/headless/README.md)**     | Renderless directives for custom design systems              |
-| **[Assistive Components](./packages/toolkit/assistive/README.md)**   | Error, hint, and character count components                  |
-| **[Form Field Components](./packages/toolkit/form-field/README.md)** | Form field wrapper, outlined layout, hints, character count  |
-| **[Debugger Tool](./packages/toolkit/debugger/README.md)**           | Visual form inspector for state, errors, and model debugging |
-| **[Migration Guide (beta.5)](./docs/MIGRATION_BETA5.md)**            | Upgrade steps for Angular 21.2 and toolkit beta.5 changes    |
-| **[CSS Framework Integration](./docs/CSS_FRAMEWORK_INTEGRATION.md)** | Bootstrap 5.3, Tailwind CSS 4, Angular Material setup        |
-| **[Theming Guide](./packages/toolkit/form-field/THEMING.md)**        | CSS custom properties, dark mode, brand customization        |
-| **[Warnings Support](./docs/WARNINGS_SUPPORT.md)**                   | Non-blocking validation messages                             |
-| **[Package Architecture](./docs/PACKAGE_ARCHITECTURE.md)**           | Library structure and design decisions                       |
+| Document                                                               | Description                                                   |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------- |
+| **[Toolkit API Reference](./packages/toolkit/README.md)**              | Complete API documentation with all options and examples      |
+| **[Headless Primitives](./packages/toolkit/headless/README.md)**       | Renderless directives for custom design systems               |
+| **[Assistive Components](./packages/toolkit/assistive/README.md)**     | Error, hint, and character count components                   |
+| **[Form Field Components](./packages/toolkit/form-field/README.md)**   | Form field wrapper, outlined layout, hints, character count   |
+| **[Debugger Tool](./packages/toolkit/debugger/README.md)**             | Visual form inspector for state, errors, and model debugging  |
+| **[Migration Guide (beta.5)](./docs/archive/MIGRATION_BETA5.md)**      | Upgrade steps for Angular 21.2 and toolkit beta.5 changes     |
+| **[CSS Framework Integration](./docs/CSS_FRAMEWORK_INTEGRATION.md)**   | Bootstrap 5.3, Tailwind CSS 4, Angular Material setup         |
+| **[Nested Form Arrays Pattern](./docs/NESTED_FORM_ARRAYS_PATTERN.md)** | Advanced patterns for deeply nested Signal Forms + store sync |
+| **[Theming Guide](./packages/toolkit/form-field/THEMING.md)**          | CSS custom properties, dark mode, brand customization         |
+| **[Warnings Support](./docs/WARNINGS_SUPPORT.md)**                     | Non-blocking validation messages                              |
+| **[Package Architecture](./docs/PACKAGE_ARCHITECTURE.md)**             | Library structure and design decisions                        |
 
 ---
 
