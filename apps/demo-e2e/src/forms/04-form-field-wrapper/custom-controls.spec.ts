@@ -25,6 +25,7 @@ test.describe('Custom Signal Forms Controls', () => {
     page: playwrightPage,
   }) => {
     await verifyNoErrorsOnInitialLoad(playwrightPage);
+    await expect(page.form).toBeVisible();
   });
 
   test.describe('Rating Control Rendering', () => {

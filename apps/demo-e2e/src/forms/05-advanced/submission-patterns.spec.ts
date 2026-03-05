@@ -29,7 +29,10 @@ test.describe('Advanced - Submission Patterns', () => {
       await page.submitButton.click();
 
       // After submit, error message should be visible
-      const errorMessage = page.page.getByText('Username is required');
+      const errorMessage = page.page
+        .locator('[role="alert"]')
+        .filter({ hasText: 'Username is required' })
+        .first();
       await expect(errorMessage).toBeVisible();
     });
   });

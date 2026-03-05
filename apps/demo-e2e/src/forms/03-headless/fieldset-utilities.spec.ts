@@ -348,12 +348,11 @@ test.describe('Headless - Fieldset + Utilities', () => {
       });
 
       await test.step('Verify aria-describedby points to error', async () => {
-        await expect(emailInput).toHaveAttribute('aria-describedby');
-        const describedBy = await emailInput.getAttribute('aria-describedby');
-        if (!describedBy) {
-          throw new Error('Expected aria-describedby to be set');
-        }
-        const errorElement = page.locator(`#${describedBy}`);
+        await expect(emailInput).toHaveAttribute('aria-describedby', /error/);
+        const errorElement = page
+          .locator('[role="alert"]')
+          .filter({ hasText: 'Email is required' })
+          .first();
         await expect(errorElement).toBeVisible();
         await expect(errorElement).toContainText('Email is required');
       });

@@ -16,6 +16,7 @@ test.describe('Form Field Wrapper', () => {
 
   test('should NOT show errors on initial page load', async ({ page }) => {
     await verifyNoErrorsOnInitialLoad(page);
+    await expect(formPage.form).toBeVisible();
   });
 
   test('should render form field wrapper component', async () => {
@@ -145,9 +146,7 @@ test.describe('Form Field Wrapper', () => {
     });
   });
 
-  test('should auto-derive fieldName from input id for ARIA attributes', async ({
-    page,
-  }) => {
+  test('should auto-derive fieldName from input id for ARIA attributes', async () => {
     await test.step('Trigger error by blurring empty required field', async () => {
       // Name field has id="name" - fieldName should be auto-derived
       await formPage.nameInput.focus();
