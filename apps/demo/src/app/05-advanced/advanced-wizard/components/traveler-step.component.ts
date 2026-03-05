@@ -2,7 +2,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
   ElementRef,
   inject,
   viewChild,
@@ -180,7 +179,6 @@ import { WizardStepInterface } from '../wizard-step.interface';
 })
 export class TravelerStepComponent implements WizardStepInterface {
   readonly #store = inject(WizardStore);
-  readonly #destroyRef = inject(DestroyRef);
   protected readonly stepHeading =
     viewChild<ElementRef<HTMLHeadingElement>>('stepHeading');
 
@@ -219,12 +217,6 @@ export class TravelerStepComponent implements WizardStepInterface {
 
     return message;
   });
-
-  constructor() {
-    this.#destroyRef.onDestroy(() => {
-      console.log('TravelerStepComponent destroyed');
-    });
-  }
 
   /**
    * Commit form data to store.

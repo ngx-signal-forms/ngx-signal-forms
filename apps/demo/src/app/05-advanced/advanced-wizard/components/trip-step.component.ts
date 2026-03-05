@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   ElementRef,
   inject,
   viewChild,
@@ -439,7 +438,6 @@ import { WizardStepInterface } from '../wizard-step.interface';
 })
 export class TripStepComponent implements WizardStepInterface {
   protected readonly store = inject(WizardStore);
-  readonly #destroyRef = inject(DestroyRef);
   protected readonly stepHeading =
     viewChild<ElementRef<HTMLHeadingElement>>('stepHeading');
   protected readonly addDestinationButton = viewChild<
@@ -454,12 +452,6 @@ export class TripStepComponent implements WizardStepInterface {
   readonly #model = this.#tripStepForm.model;
   protected readonly hasDestinations = this.#tripStepForm.hasDestinations;
   readonly isValid = this.#tripStepForm.isValid;
-
-  constructor() {
-    this.#destroyRef.onDestroy(() => {
-      console.log('TripStepComponent destroyed');
-    });
-  }
 
   /**
    * Commit form data to store.
