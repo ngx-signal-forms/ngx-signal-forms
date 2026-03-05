@@ -2,18 +2,6 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "refactor-po",
-      "type": "shell",
-      "command": "node refactor-po.js",
-      "isBackground": false
-    },
-    {
-      "label": "refactor-tests",
-      "type": "shell",
-      "command": "node refactor-tests.js",
-      "isBackground": false
-    },
-    {
       "label": "run-e2e",
       "type": "shell",
       "command": "npx nx e2e demo-e2e --skip-nx-cache",
@@ -23,12 +11,6 @@
       "label": "lint",
       "type": "shell",
       "command": "npx nx run-many -t lint",
-      "isBackground": false
-    },
-    {
-      "label": "lint-fix",
-      "type": "shell",
-      "command": "node lint-fix.js",
       "isBackground": false
     },
     {
