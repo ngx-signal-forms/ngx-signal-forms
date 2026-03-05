@@ -1,6 +1,32 @@
 import { expect, test } from '@playwright/test';
 import { FormFieldWrapperComplexPage } from '../../page-objects/form-field-wrapper-complex.page';
-import { OutlineFormFieldPage } from '../../page-objects/outline-form-field.page';
+import { FormFieldWrapperPage } from '../../page-objects/form-field-wrapper.page';
+
+function parseValidationCounts(headerText: string | null): {
+  visible: number;
+  total: number;
+} {
+  const match = headerText?.match(/Validation Errors (\d+)\/(\d+)/);
+  expect(match).toBeTruthy();
+  if (!match) {
+    throw new Error('Expected validation counts in debugger header');
+  }
+
+  return {
+    visible: Number(match[1]),
+    total: Number(match[2]),
+  };
+}
+
+function getDebuggerByHeading(
+  page: import('@playwright/test').Page,
+  headingName: string,
+) {
+  const heading = page.getByRole('heading', { name: headingName });
+  return heading
+    .locator('xpath=ancestor::*[.//ngx-signal-form-debugger][1]')
+    .locator('ngx-signal-form-debugger');
+}
 
 /**
  * Signal Form Debugger Component Tests
@@ -21,7 +47,7 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
    * Helper to get the debugger component
    */
   const getDebugger = (page: import('@playwright/test').Page) =>
-    page.locator('ngx-signal-form-debugger');
+    getDebuggerByHeading(page, 'Complex Form State');
 
   test.describe('Initial State', () => {
     test('should show Form Model section collapsed by default', async ({
@@ -46,12 +72,9 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
       await expect(validationErrorsHeader).toBeVisible();
 
       const headerText = await validationErrorsHeader.textContent();
-      const match = headerText?.match(/Validation Errors (\d+)\/(\d+)/);
-      expect(match).toBeTruthy();
-
-      const [, visible, total] = match!;
-      expect(Number(visible)).toBe(0);
-      expect(Number(total)).toBeGreaterThan(0);
+      const { visible, total } = parseValidationCounts(headerText);
+      expect(visible).toBe(0);
+      expect(total).toBeGreaterThan(0);
     });
 
     test('should show all errors as "Hidden by strategy" initially', async ({
@@ -81,12 +104,9 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
       await expect(validationErrorsHeader).toBeVisible();
 
       const headerText = await validationErrorsHeader.textContent();
-      const match = headerText?.match(/Validation Errors (\d+)\/(\d+)/);
-      expect(match).toBeTruthy();
-
-      const [, visible, total] = match!;
-      expect(Number(visible)).toBe(1);
-      expect(Number(total)).toBeGreaterThan(1);
+      const { visible, total } = parseValidationCounts(headerText);
+      expect(visible).toBe(1);
+      expect(total).toBeGreaterThan(1);
     });
 
     test('should show touched field error without "Hidden by strategy" badge in debugger', async ({
@@ -139,8 +159,8 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
       let headerText = await debugger_
         .getByText(/Validation Errors \d+\/\d+/)
         .textContent();
-      let match = headerText?.match(/Validation Errors (\d+)\/(\d+)/);
-      expect(Number(match![1])).toBe(1);
+      let counts = parseValidationCounts(headerText);
+      expect(counts.visible).toBe(1);
 
       // Touch Email (using role to be specific)
       const emailInput = page.getByRole('textbox', { name: 'Email *' });
@@ -150,21 +170,19 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
       headerText = await debugger_
         .getByText(/Validation Errors \d+\/\d+/)
         .textContent();
-      match = headerText?.match(/Validation Errors (\d+)\/(\d+)/);
-      expect(Number(match![1])).toBe(2);
+      counts = parseValidationCounts(headerText);
+      expect(counts.visible).toBe(2);
 
       // Touch Street Address
-      const streetInput = page.getByRole('textbox', {
-        name: 'Street Address *',
-      });
+      const streetInput = page.locator('#street');
       await streetInput.focus();
       await streetInput.blur();
 
       headerText = await debugger_
         .getByText(/Validation Errors \d+\/\d+/)
         .textContent();
-      match = headerText?.match(/Validation Errors (\d+)\/(\d+)/);
-      expect(Number(match![1])).toBe(3);
+      counts = parseValidationCounts(headerText);
+      expect(counts.visible).toBe(3);
     });
   });
 
@@ -201,7 +219,7 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
 
 test.describe('Signal Form Debugger - Outline Form Field Page', () => {
   test.beforeEach(async ({ page }) => {
-    const formPage = new OutlineFormFieldPage(page);
+    const formPage = new FormFieldWrapperPage(page);
     await formPage.goto();
   });
 
@@ -209,7 +227,7 @@ test.describe('Signal Form Debugger - Outline Form Field Page', () => {
    * Helper to get the debugger component
    */
   const getDebugger = (page: import('@playwright/test').Page) =>
-    page.locator('ngx-signal-form-debugger');
+    getDebuggerByHeading(page, 'Outline Form State');
 
   test('should show 0/4 visible errors on initial load', async ({ page }) => {
     const debugger_ = getDebugger(page);
@@ -219,12 +237,9 @@ test.describe('Signal Form Debugger - Outline Form Field Page', () => {
     await expect(validationErrorsHeader).toBeVisible();
 
     const headerText = await validationErrorsHeader.textContent();
-    const match = headerText?.match(/Validation Errors (\d+)\/(\d+)/);
-    expect(match).toBeTruthy();
-
-    const [, visible, total] = match!;
-    expect(Number(visible)).toBe(0);
-    expect(Number(total)).toBe(4);
+    const { visible, total } = parseValidationCounts(headerText);
+    expect(visible).toBe(0);
+    expect(total).toBe(4);
   });
 
   test('should show 1/4 after touching Pleegdatum field', async ({ page }) => {
@@ -237,10 +252,10 @@ test.describe('Signal Form Debugger - Outline Form Field Page', () => {
       /Validation Errors \d+\/\d+/,
     );
     const headerText = await validationErrorsHeader.textContent();
-    const match = headerText?.match(/Validation Errors (\d+)\/(\d+)/);
+    const { visible, total } = parseValidationCounts(headerText);
 
-    expect(Number(match![1])).toBe(1);
-    expect(Number(match![2])).toBe(4);
+    expect(visible).toBe(1);
+    expect(total).toBe(4);
   });
 
   test('should show Pleegdatum error as visible after touch', async ({
@@ -274,7 +289,7 @@ test.describe('Signal Form Debugger - Outline Form Field Page', () => {
 
 test.describe('Signal Form Debugger - Warnings Section', () => {
   test.beforeEach(async ({ page }) => {
-    const formPage = new OutlineFormFieldPage(page);
+    const formPage = new FormFieldWrapperPage(page);
     await formPage.goto();
   });
 
@@ -282,7 +297,7 @@ test.describe('Signal Form Debugger - Warnings Section', () => {
    * Helper to get the debugger component
    */
   const getDebugger = (page: import('@playwright/test').Page) =>
-    page.locator('ngx-signal-form-debugger');
+    getDebuggerByHeading(page, 'Outline Form State');
 
   test('should show warnings section with visible/total count', async ({
     page,
