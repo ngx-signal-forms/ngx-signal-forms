@@ -12,7 +12,9 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
 
   constructor(page: Page) {
     super(page);
-    this.submitButton = this.getSubmitButton(/Submit/i);
+    this.submitButton = this.form.getByRole('button', {
+      name: /Submit Application|Submitting/i,
+    });
   }
 
   async goto(): Promise<void> {
@@ -24,14 +26,14 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
    * Get all form field wrapper components
    */
   get formFields(): Locator {
-    return this.page.locator('ngx-signal-form-field-wrapper');
+    return this.form.locator('ngx-signal-form-field-wrapper');
   }
 
   /**
    * Get all fieldset grouping components (both element and attribute usage)
    */
   get fieldsets(): Locator {
-    return this.page.locator(
+    return this.form.locator(
       'ngx-signal-form-fieldset, fieldset[ngxSignalFormFieldset]',
     );
   }

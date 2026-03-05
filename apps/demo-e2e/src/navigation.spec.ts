@@ -346,3 +346,29 @@ test.describe.fixme('Demo Application - Route Handling', () => {
     });
   });
 });
+
+test.describe('Demo Application - Legacy Route Redirects', () => {
+  test('should redirect dynamic-list to complex-forms', async ({ page }) => {
+    await page.goto('/advanced-scenarios/dynamic-list');
+    await page.waitForLoadState('domcontentloaded');
+
+    await expect(page).toHaveURL(/\/form-field-wrapper\/complex-forms$/);
+    await expect(page.locator('main h1').first()).toBeVisible();
+  });
+
+  test('should redirect nested-groups to complex-forms', async ({ page }) => {
+    await page.goto('/advanced-scenarios/nested-groups');
+    await page.waitForLoadState('domcontentloaded');
+
+    await expect(page).toHaveURL(/\/form-field-wrapper\/complex-forms$/);
+    await expect(page.locator('main h1').first()).toBeVisible();
+  });
+
+  test('should redirect stepper-form to advanced-wizard', async ({ page }) => {
+    await page.goto('/advanced-scenarios/stepper-form');
+    await page.waitForLoadState('domcontentloaded');
+
+    await expect(page).toHaveURL(/\/advanced-scenarios\/advanced-wizard$/);
+    await expect(page.locator('main h1').first()).toBeVisible();
+  });
+});
