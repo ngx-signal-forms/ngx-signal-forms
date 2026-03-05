@@ -83,8 +83,6 @@ test.describe('Toolkit Core - Accessibility Comparison (Two Forms)', () => {
         await emailInput.focus();
         await emailInput.blur();
       }
-
-      await page.waitForTimeout(500);
     });
 
     await test.step('Verify both forms show errors', async () => {
@@ -117,8 +115,6 @@ test.describe('Toolkit Core - Accessibility Comparison (Two Forms)', () => {
         await emailInput.blur();
       }
 
-      await page.waitForTimeout(500);
-
       // Both should have:
       // - Input with aria-invalid
       // - Error with role="alert"
@@ -146,16 +142,7 @@ test.describe('Toolkit Core - Accessibility Comparison (Two Forms)', () => {
   test('Full toolkit form should use auto-ARIA directive', async ({ page }) => {
     await test.step('Verify [formRoot] directive is active on form 1', async () => {
       const fullForm = page.locator('form').nth(1);
-
-      // Verify directive is attached (may have data attribute or specific class)
-      const hasDirective = await fullForm.evaluate((el) => {
-        // Check if directive added any attributes
-        return (
-          el.hasAttribute('ngxsignalform') ||
-          el.hasAttribute('data-ngx-signal-form') ||
-          el.className.includes('ngx-signal-form')
-        );
-      });
+      await expect(fullForm).toBeVisible();
 
       // Or just verify auto-ARIA works correctly
       const emailInput = fullForm
@@ -163,8 +150,6 @@ test.describe('Toolkit Core - Accessibility Comparison (Two Forms)', () => {
         .first();
       await emailInput.focus();
       await emailInput.blur();
-
-      await page.waitForTimeout(300);
 
       // Auto-ARIA should set aria-invalid and aria-describedby automatically
       await expect(emailInput).toHaveAttribute('aria-invalid', 'true');
@@ -195,8 +180,6 @@ test.describe('Toolkit Core - Accessibility Comparison (Two Forms)', () => {
         // Fix error
         await emailInput.fill('test@example.com');
         await emailInput.blur();
-
-        await page.waitForTimeout(300);
 
         // Error should clear
         await expect(emailInput).not.toHaveAttribute('aria-invalid', 'true');

@@ -16,6 +16,7 @@ test.describe('Error Display Modes', () => {
 
   test('should NOT show errors on initial page load', async ({ page }) => {
     await verifyNoErrorsOnInitialLoad(page);
+    await expect(formPage.form).toBeVisible();
   });
 
   test('should allow switching between all 4 modes', async () => {
@@ -49,9 +50,7 @@ test.describe('Error Display Modes', () => {
       await formPage.page.reload();
       await formPage.waitForReady();
       await formPage.selectErrorMode('onSubmit');
-
-      // Wait for strategy change to propagate through Angular change detection
-      await formPage.page.waitForTimeout(100);
+      await expect(formPage.errorModeRadios.onSubmit).toBeChecked();
 
       // FIXME: This assertion fails because strategy switching at runtime is not supported.
       // The form was initialized with 'on-touch' strategy and shows errors immediately.

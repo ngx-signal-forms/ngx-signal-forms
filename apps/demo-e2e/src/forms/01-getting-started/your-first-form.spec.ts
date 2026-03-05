@@ -37,9 +37,6 @@ test.describe('Your First Form with Toolkit (POM Example)', () => {
   test('should NOT show errors on initial page load with on-touch strategy', async ({
     page,
   }) => {
-    // Wait a bit for debug logs to accumulate
-    await page.waitForTimeout(500);
-
     await verifyNoErrorsOnInitialLoad(page, {
       visibleFieldSelectors: ['input#contact-name', 'input#contact-email'],
     });
@@ -61,9 +58,7 @@ test.describe('Your First Form with Toolkit (POM Example)', () => {
     await expect(formPage.errorModeRadios.onTouch).toBeChecked();
   });
 
-  test('should apply "immediate" error strategy and show errors', async ({
-    page,
-  }) => {
+  test('should apply "immediate" error strategy and show errors', async () => {
     await test.step('Switch to immediate mode', async () => {
       await formPage.selectErrorMode('immediate');
 
@@ -95,7 +90,7 @@ test.describe('Your First Form with Toolkit (POM Example)', () => {
     });
   });
 
-  test('should prevent submission with invalid data', async ({ page }) => {
+  test('should prevent submission with invalid data', async () => {
     /// With on-touch strategy: errors show after fields are touched (blurred)
     /// Touch all fields by focusing and blurring each one
     await formPage.nameInput.focus();

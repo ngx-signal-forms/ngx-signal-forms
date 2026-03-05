@@ -16,6 +16,7 @@ test.describe('Field States', () => {
 
   test('should NOT show errors on initial page load', async ({ page }) => {
     await verifyNoErrorsOnInitialLoad(page);
+    await expect(formPage.form).toBeVisible();
   });
 
   test('should display form state debugger', async () => {
