@@ -104,7 +104,12 @@ Before writing a comment, ask:
  * @param {number} compoundFrequency - How many times per year interest compounds (default: 1)
  * @returns {number} Final amount after compound interest
  */
-function calculateCompoundInterest(principal, rate, time, compoundFrequency = 1) {
+function calculateCompoundInterest(
+  principal,
+  rate,
+  time,
+  compoundFrequency = 1,
+) {
   /// ... implementation
 }
 ```

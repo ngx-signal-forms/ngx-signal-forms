@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "singleQuote": true,
+  "printWidth": 80,
+  "tabWidth": 2,
+  "semi": true,
+  "sortTailwindcss": {},
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    "dist/**",
+    "coverage/**",
+    ".nx/cache/**",
+    ".nx/workspace-data/**",
+    ".angular/**",
+    "apps/demo/src/app/01-getting-started/your-first-form/your-first-form.form.ts",
+    "apps/demo/src/app/00-signal-forms-only/pure-signal-form/pure-signal-form.form.ts"
+  ]
+}

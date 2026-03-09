@@ -73,9 +73,7 @@ import { isBlockingError, isWarningError } from '@ngx-signal-forms/toolkit';
       <div class="space-y-4 p-6">
         <!-- Model Values -->
         <div>
-          <h4
-            class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300"
-          >
+          <h4 class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
             Model Values
           </h4>
           <pre
@@ -86,9 +84,7 @@ import { isBlockingError, isWarningError } from '@ngx-signal-forms/toolkit';
         <!-- Errors -->
         @if (hasErrors()) {
           <div>
-            <h4
-              class="mb-2 text-sm font-semibold text-red-700 dark:text-red-300"
-            >
+            <h4 class="mb-2 text-sm font-semibold text-red-700 dark:text-red-300">
               Validation Errors
             </h4>
             <div class="space-y-2">
@@ -126,9 +122,7 @@ import { isBlockingError, isWarningError } from '@ngx-signal-forms/toolkit';
 
         <!-- States -->
         <div>
-          <h4
-            class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300"
-          >
+          <h4 class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
             Form States
           </h4>
           <div class="grid grid-cols-2 gap-2 text-xs">

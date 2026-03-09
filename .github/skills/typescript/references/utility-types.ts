@@ -46,7 +46,7 @@ export const none: None = { type: 'none' };
 // =============================================================================
 
 /** Deeply readonly — preserves functions as-is. */
-export type DeepReadonly<T> = T extends (...args: any[]) => any
+export type DeepReadonly<T> = T extends (...args: unknown[]) => unknown
   ? T
   : T extends object
     ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
@@ -97,12 +97,12 @@ export type ReadonlyBy<T, K extends keyof T> = Omit<T, K> &
 export type Merge<T, U> = Omit<T, keyof U> & U;
 
 /** Distributive Omit — works correctly with union types. */
-export type DistributiveOmit<T, K extends PropertyKey> = T extends any
+export type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
   ? Omit<T, K>
   : never;
 
 /** Distributive Pick — works correctly with union types. */
-export type DistributivePick<T, K extends PropertyKey> = T extends any
+export type DistributivePick<T, K extends PropertyKey> = T extends unknown
   ? Pick<T, Extract<K, keyof T>>
   : never;
 
@@ -132,10 +132,13 @@ type _TupleOf<T, N extends number, R extends unknown[]> = R['length'] extends N
 // =============================================================================
 
 /** Get function argument types as tuple. */
-export type Arguments<T> = T extends (...args: infer A) => any ? A : never;
+export type Arguments<T> = T extends (...args: infer A) => unknown ? A : never;
 
 /** Get the first argument type. */
-export type FirstArgument<T> = T extends (first: infer F, ...args: any[]) => any
+export type FirstArgument<T> = T extends (
+  first: infer F,
+  ...args: unknown[]
+) => unknown
   ? F
   : never;
 
@@ -179,7 +182,7 @@ export type PathOf<T, K extends keyof T = keyof T> = K extends string
 
 /** Convert union to intersection: A | B → A & B. */
 export type UnionToIntersection<U> = (
-  U extends any ? (k: U) => void : never
+  U extends unknown ? (k: U) => void : never
 ) extends (k: infer I) => void
   ? I
   : never;
@@ -189,7 +192,7 @@ export type ValueOf<T> = T[keyof T];
 
 /** Last element of a union. */
 export type UnionLast<T> =
-  UnionToIntersection<T extends any ? () => T : never> extends () => infer R
+  UnionToIntersection<T extends unknown ? () => T : never> extends () => infer R
     ? R
     : never;
 
@@ -203,10 +206,11 @@ export type UnionToTuple<T, L = UnionLast<T>> = [T] extends [never]
 // =============================================================================
 
 /** Assert two types are equal. */
-export type AssertEqual<T, U> =
-  (<V>() => V extends T ? 1 : 2) extends <V>() => V extends U ? 1 : 2
+export type AssertEqual<T, U> = [T] extends [U]
+  ? [U] extends [T]
     ? true
-    : false;
+    : false
+  : false;
 
 /** Check if T is never. */
 export type IsNever<T> = [T] extends [never] ? true : false;
@@ -230,7 +234,7 @@ export type JsonValue = JsonPrimitive | JsonArray | JsonObject;
 /** Transform a type to its JSON-serializable equivalent. */
 export type Jsonify<T> = T extends JsonPrimitive
   ? T
-  : T extends undefined | ((...args: any[]) => any) | symbol
+  : T extends undefined | ((...args: unknown[]) => unknown) | symbol
     ? never
     : T extends { toJSON(): infer R }
       ? R

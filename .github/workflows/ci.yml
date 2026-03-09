@@ -79,6 +79,9 @@ jobs:
       - name: Nx Report
         run: pnpm exec nx report
 
+      - name: Check formatting
+        run: pnpm run format:check
+
       # Run tasks locally - no DTE distribution to conserve Nx Cloud credits
       # Set skip_cloud=true via workflow_dispatch when quota is exceeded
       # NX_NO_CLOUD is also enabled automatically if no token is available

@@ -68,9 +68,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
         [formField]="signupForm.confirmPassword"
         fieldName="confirmPassword"
       >
-        <label for="minimal-confirm" class="form-label"
-          >Confirm Password *</label
-        >
+        <label for="minimal-confirm" class="form-label">Confirm Password *</label>
         <input
           id="minimal-confirm"
           type="password"
@@ -159,7 +157,7 @@ export class AccessibilityMinimalFormComponent {
 
   protected handleSubmit(event: Event): void {
     event.preventDefault();
-    submit(this.signupForm, async () => {
+    void submit(this.signupForm, async () => {
       console.log('[Minimal Toolkit] Form submitted:', this.#model());
       return null;
     });

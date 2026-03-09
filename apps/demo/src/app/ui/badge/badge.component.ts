@@ -16,7 +16,9 @@ export type BadgeAppearance =
     '[attr.data-variant]': 'variant()',
     '[attr.data-appearance]': 'appearance()',
   },
-  template: `<ng-content></ng-content>`,
+  template: `
+    <ng-content></ng-content>
+  `,
   styles: `
     :host {
       display: inline-flex;

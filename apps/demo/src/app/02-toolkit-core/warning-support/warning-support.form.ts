@@ -130,8 +130,8 @@ export class WarningsSupportFormComponent {
    * - All fields are marked as touched to show feedback
    * - Blocking errors prevent submission
    */
-  protected async handleSubmit(): Promise<void> {
-    await submitWithWarnings(this.passwordForm, async () => {
+  protected handleSubmit(): void {
+    void submitWithWarnings(this.passwordForm, async () => {
       /// Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 

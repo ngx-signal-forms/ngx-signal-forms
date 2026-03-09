@@ -2,7 +2,7 @@
 
 ## Overview
 
-This demo serves as a **baseline comparison**. It implements a registration form using *standard* Angular Signal Forms APIs, without any help from `@ngx-signal-forms/toolkit`.
+This demo serves as a **baseline comparison**. It implements a registration form using _standard_ Angular Signal Forms APIs, without any help from `@ngx-signal-forms/toolkit`.
 
 The purpose is to highlight **"The Pain of Manual Wiring"**—specifically regarding accessibility and code verbosity—so you can appreciate what the toolkit automates in other demos.
 
@@ -11,6 +11,7 @@ The purpose is to highlight **"The Pain of Manual Wiring"**—specifically regar
 In a pure implementation, you are responsible for the entire accessibility lifecycle. Look at the template code in this demo and notice the heavy attribute binding:
 
 ### 1. Manual ARIA Binding
+
 You must explicitly bind `aria-invalid` and `aria-describedby` to the signal state:
 
 ```html
@@ -22,30 +23,32 @@ You must explicitly bind `aria-invalid` and `aria-describedby` to the signal sta
 ```
 
 ### 2. Manual ID generation
+
 You have to manually generate IDs to link inputs to their error messages (e.g., `id="email-error"`).
 
 ### 3. Manual Error Visibility
-You must write the condition for *when* to show an error (usually "touched AND invalid") for every single field:
+
+You must write the condition for _when_ to show an error (usually "touched AND invalid") for every single field:
 
 ```html
 @if (form.email().touched() && form.email().invalid()) {
-  <div id="email-error" role="alert">...</div>
+<div id="email-error" role="alert">...</div>
 }
 ```
 
 ## Toolkit Comparison
 
-| Feature | Pure Signal Forms (This Demo) | With Toolkit |
-| :--- | :--- | :--- |
-| **ARIA Attributes** | Manual binding required | **Automated** by `NgxSignalFormToolkit` |
-| **Error Visibility** | Manual `if` blocks | **Managed** by `NgxSignalFormError` / Wrapper |
-| **ID Linking** | Manual string concatenation | **Auto-generated** & linked |
-| **Boilerplate** | High (verbose templates) | Low (clean HTML) |
+| Feature              | Pure Signal Forms (This Demo) | With Toolkit                                  |
+| :------------------- | :---------------------------- | :-------------------------------------------- |
+| **ARIA Attributes**  | Manual binding required       | **Automated** by `NgxSignalFormToolkit`       |
+| **Error Visibility** | Manual `if` blocks            | **Managed** by `NgxSignalFormError` / Wrapper |
+| **ID Linking**       | Manual string concatenation   | **Auto-generated** & linked                   |
+| **Boilerplate**      | High (verbose templates)      | Low (clean HTML)                              |
 
 ## Key Files
 
--   [pure-signal-form.form.ts](pure-signal-form.form.ts): The component logic.
--   [pure-signal-form.validations.ts](pure-signal-form.validations.ts): Standard validation schema.
+- [pure-signal-form.form.ts](pure-signal-form.form.ts): The component logic.
+- [pure-signal-form.validations.ts](pure-signal-form.validations.ts): Standard validation schema.
 
 ## How to Test
 

@@ -147,9 +147,7 @@ describe('NgxHeadlessErrorStateDirective', () => {
               [strategy]="'immediate'"
             >
               @for (error of errorState.errors(); track error.kind) {
-                <span [attr.data-testid]="'error-' + error.kind">{{
-                  error.kind
-                }}</span>
+                <span [attr.data-testid]="'error-' + error.kind">{{ error.kind }}</span>
               }
             </div>
           </div>
@@ -401,10 +399,7 @@ describe('NgxHeadlessErrorStateDirective', () => {
                   role="alert"
                   [id]="errorState.errorId()"
                 >
-                  @for (
-                    error of errorState.resolvedErrors();
-                    track error.kind
-                  ) {
+                  @for (error of errorState.resolvedErrors(); track error.kind) {
                     <div class="custom-error-item">
                       <span class="error-icon">⚠️</span>
                       <span class="error-text">{{ error.message }}</span>

@@ -29,9 +29,9 @@ import { NgxThemeSwitcherComponent } from './ui/theme-switcher/theme-switcher.co
   templateUrl: './app.component.html',
 })
 export class AppComponent implements AfterViewInit {
-  private router = inject(Router);
-  private title = inject(Title);
-  private destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
+  private readonly title = inject(Title);
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly mainScroll =
     viewChild<ElementRef<HTMLDivElement>>('mainScroll');
@@ -51,8 +51,8 @@ export class AppComponent implements AfterViewInit {
   }
 
   // Keep the browser tab title in sync with the current route title
-  // eslint-disable-next-line no-unused-private-class-members -- allowed for effect()
-  #syncTitle = effect(() => {
+  // oxlint-disable-next-line no-unused-private-class-members -- allowed for effect()
+  readonly #syncTitle = effect(() => {
     const t = this.pageTitle();
     if (t) this.title.setTitle(t);
   });
@@ -112,8 +112,8 @@ export class AppComponent implements AfterViewInit {
   }
 
   // Reset scroll position on navigation (after view init ensures element exists)
-  // eslint-disable-next-line no-unused-private-class-members -- kept as reactive effect
-  #resetScrollEffect = effect(() => {
+  // oxlint-disable-next-line no-unused-private-class-members -- kept as reactive effect
+  readonly #resetScrollEffect = effect(() => {
     this.currentPath();
     queueMicrotask(() => {
       const element = this.mainScroll()?.nativeElement;

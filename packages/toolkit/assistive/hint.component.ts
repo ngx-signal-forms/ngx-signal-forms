@@ -68,7 +68,9 @@ import {
 @Component({
   selector: 'ngx-signal-form-field-hint',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<ng-content />`,
+  template: `
+    <ng-content />
+  `,
   styles: `
     :host {
       display: block;

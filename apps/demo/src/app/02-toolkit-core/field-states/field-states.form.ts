@@ -5,8 +5,10 @@ import {
   signal,
 } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
-import { createOnInvalidHandler,
-  NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import {
+  createOnInvalidHandler,
+  NgxSignalFormToolkit,
+} from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 
 import {
@@ -33,9 +35,7 @@ import { fieldStatesSchema } from './field-states.validations';
         >
           <div class="flex items-center gap-2">
             <span class="text-amber-600 dark:text-amber-400">⚠️</span>
-            <span
-              class="text-sm font-medium text-amber-800 dark:text-amber-300"
-            >
+            <span class="text-sm font-medium text-amber-800 dark:text-amber-300">
               Unsaved changes
             </span>
           </div>
@@ -82,10 +82,7 @@ import { fieldStatesSchema } from './field-states.validations';
           [formField]="userForm.password"
           fieldName="password"
         />
-        <ngx-signal-form-error
-          [errors]="passwordWarnings"
-          fieldName="password"
-        />
+        <ngx-signal-form-error [errors]="passwordWarnings" fieldName="password" />
       </div>
 
       <div class="form-field">
@@ -112,11 +109,7 @@ import { fieldStatesSchema } from './field-states.validations';
           >
             Prefill Form
           </button>
-          <button
-            type="button"
-            (click)="resetForm()"
-            class="btn-secondary text-sm"
-          >
+          <button type="button" (click)="resetForm()" class="btn-secondary text-sm">
             Reset
           </button>
         </div>
@@ -157,7 +150,6 @@ export class FieldStatesForm {
         await new Promise((resolve) => setTimeout(resolve, 1500));
         this.#model.set({ username: '', email: '', password: '' });
         this.userForm().reset();
-        return null;
       },
       onInvalid: createOnInvalidHandler(),
     },

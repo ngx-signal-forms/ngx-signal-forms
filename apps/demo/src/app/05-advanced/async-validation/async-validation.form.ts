@@ -7,8 +7,10 @@ import {
   schema,
   validateHttp,
 } from '@angular/forms/signals';
-import { createOnInvalidHandler,
-  NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import {
+  createOnInvalidHandler,
+  NgxSignalFormToolkit,
+} from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 interface Registration {
@@ -113,7 +115,6 @@ export class AsyncValidationComponent {
         // Simulate actual registration delay
         await new Promise((resolve) => setTimeout(resolve, 1000));
         console.log('Registered:', data());
-        return null;
       },
       onInvalid: createOnInvalidHandler(),
     },

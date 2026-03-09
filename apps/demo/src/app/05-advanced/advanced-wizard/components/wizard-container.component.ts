@@ -74,7 +74,7 @@ export class WizardContainerComponent {
    * Tracks pending focus request for step heading.
    * Set to true on navigation, cleared when focus is applied.
    */
-  #pendingFocus = signal(false);
+  readonly #pendingFocus = signal(false);
 
   constructor() {
     // Focus step heading after render when component becomes available

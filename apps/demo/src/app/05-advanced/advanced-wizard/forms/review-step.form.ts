@@ -3,6 +3,19 @@ import { z } from 'zod';
 
 import { Destination, Traveler } from '../schemas/wizard.schemas';
 
+type ReadonlyRequirement = Readonly<
+  Destination['activities'][number]['requirements'][number]
+>;
+type ReadonlyActivity = Readonly<
+  Omit<Destination['activities'][number], 'requirements'>
+> & {
+  readonly requirements: readonly ReadonlyRequirement[];
+};
+type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
+  readonly activities: readonly ReadonlyActivity[];
+};
+type ReadonlyTraveler = Readonly<Traveler>;
+
 // ══════════════════════════════════════════════════════════════════════════════
 // DISPLAY DATA SCHEMAS (Zod-first approach for type inference)
 // ══════════════════════════════════════════════════════════════════════════════
@@ -15,7 +28,7 @@ const ActivityDisplaySchema = z.object({
   requirementCount: z.number(),
 });
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* oxlint-disable @typescript-eslint/no-unused-vars */
 const DestinationDisplaySchema = z.object({
   name: z.string(),
   dates: z.string(),
@@ -40,7 +53,7 @@ const ReviewStepFormSchema = z.object({
   totalRequirements: z.custom<Signal<number>>(),
   dateRange: z.custom<Signal<string>>(),
 });
-/* eslint-enable @typescript-eslint/no-unused-vars */
+/* oxlint-enable @typescript-eslint/no-unused-vars */
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPE INFERENCE FROM SCHEMAS
@@ -72,9 +85,10 @@ function formatDateRange(start: string, end: string): string {
 /**
  * Creates a read-only review form that computes display data from trip summary.
  */
+/* oxlint-disable @typescript-eslint/prefer-readonly-parameter-types -- Angular Signal inputs are callable reactive handles rather than readonly data containers. */
 export function createReviewStepForm(
-  traveler: Signal<Traveler>,
-  destinations: Signal<Destination[]>,
+  traveler: Signal<ReadonlyTraveler>,
+  destinations: Signal<readonly ReadonlyDestination[]>,
 ): ReviewStepForm {
   const travelerDisplay = computed<TravelerDisplayData>(() => {
     const t = traveler();
@@ -106,13 +120,13 @@ export function createReviewStepForm(
   });
 
   const destinationsDisplay = computed<DestinationDisplayData[]>(() =>
-    destinations().map((d) => ({
+    destinations().map((d: ReadonlyDestination) => ({
       name:
         d.city && d.country ? `${d.city}, ${d.country}` : 'Unnamed destination',
       dates: formatDateRange(d.arrivalDate, d.departureDate),
       accommodation: d.accommodation || 'Not specified',
       activityCount: d.activities.length,
-      activities: d.activities.map((a) => ({
+      activities: d.activities.map((a: ReadonlyActivity) => ({
         name: a.name || 'Unnamed activity',
         date: a.date
           ? new Date(a.date).toLocaleDateString('en-US', {
@@ -128,13 +142,20 @@ export function createReviewStepForm(
   );
 
   const totalActivities = computed(() =>
-    destinations().reduce((sum, d) => sum + d.activities.length, 0),
+    destinations().reduce(
+      (sum, d: ReadonlyDestination) => sum + d.activities.length,
+      0,
+    ),
   );
 
   const totalRequirements = computed(() =>
     destinations().reduce(
-      (sum, d) =>
-        sum + d.activities.reduce((aSum, a) => aSum + a.requirements.length, 0),
+      (sum, d: ReadonlyDestination) =>
+        sum +
+        d.activities.reduce(
+          (aSum, a: ReadonlyActivity) => aSum + a.requirements.length,
+          0,
+        ),
       0,
     ),
   );
@@ -144,13 +165,18 @@ export function createReviewStepForm(
     if (dests.length === 0) return 'No destinations';
 
     const arrivals = dests
-      .map((d) => d.arrivalDate)
+      .map((d: ReadonlyDestination) => d.arrivalDate)
       .filter(Boolean)
-      .sort();
+      .slice();
     const departures = dests
-      .map((d) => d.departureDate)
+      .map((d: ReadonlyDestination) => d.departureDate)
       .filter(Boolean)
-      .sort();
+      .slice();
+
+    // oxlint-disable-next-line unicorn/no-array-sort -- The workspace targets ES2022, so toSorted() is not available in the demo build.
+    arrivals.sort();
+    // oxlint-disable-next-line unicorn/no-array-sort -- The workspace targets ES2022, so toSorted() is not available in the demo build.
+    departures.sort();
 
     if (arrivals.length === 0 || departures.length === 0) {
       return 'Dates incomplete';
@@ -167,3 +193,4 @@ export function createReviewStepForm(
     dateRange,
   };
 }
+/* oxlint-enable @typescript-eslint/prefer-readonly-parameter-types */

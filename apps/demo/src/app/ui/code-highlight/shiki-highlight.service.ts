@@ -40,6 +40,7 @@ export class ShikiHighlightService {
   }
 
   /// Start initialization immediately (side effect in initializer)
+  // oxlint-disable-next-line no-unused-private-class-members -- Oxlint currently false-positives on this private initializer field.
   readonly #loadingPromise: Promise<void> = this.#initializeShiki();
 
   /**

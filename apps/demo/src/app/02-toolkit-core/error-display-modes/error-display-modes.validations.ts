@@ -55,8 +55,8 @@ export const productFeedbackSchema = schema<ProductFeedbackModel>((path) => {
 
   // Conditional validation: improvement suggestions required for low ratings
   required(path.improvementSuggestions, {
-    when: ({ valueOf }) => {
-      const rating = valueOf(path.overallRating);
+    when: (validationContext) => {
+      const rating = validationContext.valueOf(path.overallRating);
       return rating > 0 && rating <= 3;
     },
     message: 'Please help us understand what could be improved',

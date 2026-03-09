@@ -48,6 +48,7 @@ const demoDescriptionMatchers: Array<{ match: RegExp; scopeIndex: number }> = [
 export class CustomChangelogRenderer extends DefaultChangelogRenderer {
   async render(): Promise<string> {
     const sections: string[][] = [];
+    const relevantChanges = this.relevantChanges as readonly ChangelogChange[];
 
     this.preprocessChanges();
 
@@ -55,7 +56,7 @@ export class CustomChangelogRenderer extends DefaultChangelogRenderer {
       return this.renderEmptyEntry();
     }
 
-    const includedChanges = this.relevantChanges.filter((change) =>
+    const includedChanges = relevantChanges.filter((change) =>
       releaseTypeSet.has(change.type),
     );
     const toolkitChanges = includedChanges.filter(
@@ -111,11 +112,11 @@ export class CustomChangelogRenderer extends DefaultChangelogRenderer {
 
   protected renderSection(
     title: string,
-    changes: ChangelogChange[],
-    options?: {
+    changes: readonly ChangelogChange[],
+    options?: Readonly<{
       stripScope?: string;
-      scopeResolver?: (change: ChangelogChange) => string | undefined;
-    },
+      scopeResolver?: (change: Readonly<ChangelogChange>) => string | undefined;
+    }>,
   ): string[] {
     if (changes.length === 0) {
       return [];
@@ -123,7 +124,7 @@ export class CustomChangelogRenderer extends DefaultChangelogRenderer {
 
     const normalizedChanges = options?.scopeResolver
       ? changes.map((change) => {
-          const resolvedScope = options.scopeResolver?.(change);
+          const resolvedScope = options.scopeResolver(change);
           if (!resolvedScope || resolvedScope === change.scope) {
             return change;
           }
@@ -147,10 +148,10 @@ export class CustomChangelogRenderer extends DefaultChangelogRenderer {
       const changesGroupedByScope = this.groupChangesByScope(group);
       const scopesSortedAlphabetically = Object.keys(
         changesGroupedByScope,
-      ).sort();
+      ).toSorted();
       for (const scope of scopesSortedAlphabetically) {
         const scopedChanges = changesGroupedByScope[scope];
-        for (const change of scopedChanges.reverse()) {
+        for (const change of scopedChanges.toReversed()) {
           markdownLines.push(
             this.formatChangeForSection(change, options?.stripScope),
           );
@@ -162,7 +163,7 @@ export class CustomChangelogRenderer extends DefaultChangelogRenderer {
   }
 
   protected formatChangeForSection(
-    change: ChangelogChange,
+    change: Readonly<ChangelogChange>,
     stripScope?: string,
   ): string {
     if (stripScope && change.scope === stripScope) {
@@ -172,7 +173,9 @@ export class CustomChangelogRenderer extends DefaultChangelogRenderer {
     return this.formatChange(change);
   }
 
-  protected resolveToolkitScope(change: ChangelogChange): string | undefined {
+  protected resolveToolkitScope(
+    change: Readonly<ChangelogChange>,
+  ): string | undefined {
     if (
       change.scope &&
       change.scope !== 'toolkit' &&
@@ -185,7 +188,8 @@ export class CustomChangelogRenderer extends DefaultChangelogRenderer {
       return this.resolveScopeFromDescription(change);
     }
 
-    const affectedProjects = change.affectedProjects ?? [];
+    const affectedProjects =
+      change.affectedProjects === '*' ? [] : change.affectedProjects;
     const resolvedScopes = affectedProjects
       .map((project) => toolkitProjectScopeMap.get(project))
       .filter((scope): scope is string => !!scope);
@@ -204,9 +208,9 @@ export class CustomChangelogRenderer extends DefaultChangelogRenderer {
   }
 
   protected resolveScopeFromDescription(
-    change: ChangelogChange,
+    change: Readonly<ChangelogChange>,
   ): string | undefined {
-    const description = change.description ?? '';
+    const description = change.description;
     const match = descriptionScopeMatchers.find((matcher) =>
       matcher.match.test(description),
     );
@@ -214,14 +218,16 @@ export class CustomChangelogRenderer extends DefaultChangelogRenderer {
     return match?.scope;
   }
 
-  protected resolveDemoScope(change: ChangelogChange): string | undefined {
-    const scope = change.scope ?? '';
+  protected resolveDemoScope(
+    change: Readonly<ChangelogChange>,
+  ): string | undefined {
+    const scope = change.scope;
     const strippedScope = this.stripDemoScope(scope);
     if (strippedScope) {
       return strippedScope;
     }
 
-    const description = change.description ?? '';
+    const description = change.description;
     for (const matcher of demoDescriptionMatchers) {
       const match = description.match(matcher.match);
       if (match?.[matcher.scopeIndex]) {
@@ -232,7 +238,9 @@ export class CustomChangelogRenderer extends DefaultChangelogRenderer {
     return scope === 'demo' ? 'demo' : undefined;
   }
 
-  protected renderBreakingChangesFor(changes: ChangelogChange[]): string[] {
+  protected renderBreakingChangesFor(
+    changes: readonly ChangelogChange[],
+  ): string[] {
     const breakingChanges = changes
       .filter((change) => change.isBreaking)
       .map((change) => this.formatBreakingChange(change));
@@ -246,7 +254,7 @@ export class CustomChangelogRenderer extends DefaultChangelogRenderer {
   }
 
   protected normalizeBreakingChangeScope(
-    change: ChangelogChange,
+    change: Readonly<ChangelogChange>,
   ): ChangelogChange {
     if (this.isDemoScope(change.scope)) {
       const resolvedScope = this.resolveDemoScope(change);
@@ -287,7 +295,7 @@ export class CustomChangelogRenderer extends DefaultChangelogRenderer {
     return undefined;
   }
   async renderMarkdown(
-    changes: any[],
+    changes: unknown[],
     options: ChangelogRenderOptions,
   ): Promise<string> {
     // Use default renderer for toolkit commits
@@ -295,8 +303,8 @@ export class CustomChangelogRenderer extends DefaultChangelogRenderer {
 
     // Get ALL commits since last release (not just toolkit-affecting)
     const { execSync } = await import('child_process');
-    const fromRef = options.from || 'HEAD^';
-    const toRef = options.to || 'HEAD';
+    const fromRef = typeof options.from === 'string' ? options.from : 'HEAD^';
+    const toRef = typeof options.to === 'string' ? options.to : 'HEAD';
 
     let allCommits: string[];
     try {
@@ -329,7 +337,10 @@ export class CustomChangelogRenderer extends DefaultChangelogRenderer {
     let demoSection = '\n\n### 📦 Demo Application\n\n';
     for (const commit of demoCommits) {
       const cleanSubject = commit.subject.replace(/^[^:]+:\s*/, '');
-      const repoUrl = options.repoSlug || 'ngx-signal-forms/ngx-signal-forms';
+      const repoUrl =
+        typeof options.repoSlug === 'string'
+          ? options.repoSlug
+          : 'ngx-signal-forms/ngx-signal-forms';
       demoSection += `- **demo:** ${cleanSubject} ([${commit.hash}](https://github.com/${repoUrl}/commit/${commit.hash}))\n`;
     }
 

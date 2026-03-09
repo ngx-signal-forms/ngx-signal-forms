@@ -96,7 +96,6 @@ export class AccessibilityToolkitFormComponent {
         await new Promise((resolve) => setTimeout(resolve, 1000));
         this.#model.set({ email: '', password: '', confirmPassword: '' });
         this.signupForm().reset();
-        return null;
       },
       onInvalid: createOnInvalidHandler(),
     },

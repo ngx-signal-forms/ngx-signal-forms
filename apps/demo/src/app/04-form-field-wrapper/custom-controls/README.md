@@ -11,7 +11,9 @@ This demo shows how to build a custom "Star Rating" component that integrates se
 To make a custom component play nicely with the toolkit's auto-ARIA and wrapper features, it typically implements a lightweight contract (often just exposing the right signals).
 
 ### No More `writeValue` / `registerOnChange`
+
 The legacy forms API required complex boilerplate. With Signal Forms, your custom control simply needs:
+
 1.  An Input for the value (or Model).
 2.  A way to notify changes (updating the model).
 3.  Optional: handling of "blur" for touched state.
@@ -22,7 +24,7 @@ The legacy forms API required complex boilerplate. With Signal Forms, your custo
 export class RatingControl {
   // The form field signal passed from parent
   readonly formField = input.required<FormField<number>>();
-  
+
   // Update value directly through the signal API
   setRating(val: number) {
     this.formField().controls.setValue(val);
@@ -36,8 +38,8 @@ When wrapped in `ngx-signal-form-field-wrapper`, the toolkit attempts to automat
 
 ## Key Files
 
--   [custom-controls.form.ts](custom-controls.form.ts): The consuming form.
--   `apps/demo/src/app/shared/controls/rating-control`: The implementation of the reusable component.
+- [custom-controls.form.ts](custom-controls.form.ts): The consuming form.
+- `apps/demo/src/app/shared/controls/rating-control`: The implementation of the reusable component.
 
 ## How to Test
 

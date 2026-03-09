@@ -431,18 +431,14 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * Computed array of blocking errors (kind does NOT start with 'warn:').
    */
   readonly #blockingErrors = computed(() => {
-    return this.#allMessages().filter(
-      (msg) => msg.kind && !msg.kind.startsWith('warn:'),
-    );
+    return this.#allMessages().filter((msg) => !msg.kind?.startsWith('warn:'));
   });
 
   /**
    * Computed array of warnings (kind starts with 'warn:').
    */
   readonly #warningErrors = computed(() => {
-    return this.#allMessages().filter(
-      (msg) => msg.kind && msg.kind.startsWith('warn:'),
-    );
+    return this.#allMessages().filter((msg) => msg.kind?.startsWith('warn:'));
   });
 
   /**

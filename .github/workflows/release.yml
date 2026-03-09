@@ -104,6 +104,9 @@ jobs:
       - name: Nx Report
         run: pnpm exec nx report --outputStyle=static
 
+      - name: Check formatting
+        run: pnpm run format:check
+
       - name: Verify Quality (Lint, Test, Build, E2E)
         # Using affected ensures we only verify what changed, but caching handles the rest.
         # We target all projects to ensure workspace health before release.

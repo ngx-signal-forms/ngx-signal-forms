@@ -41,7 +41,7 @@ export const fieldsetDemoSchema = schema<FieldsetDemoModel>((path) => {
     if (billingSame) return null;
 
     const value = ctx.value();
-    if (!value || !value.trim()) {
+    if (!value?.trim()) {
       return { kind: 'required', message: 'Billing street is required' };
     }
     return null;
@@ -52,7 +52,7 @@ export const fieldsetDemoSchema = schema<FieldsetDemoModel>((path) => {
     if (billingSame) return null;
 
     const value = ctx.value();
-    if (!value || !value.trim()) {
+    if (!value?.trim()) {
       return { kind: 'required', message: 'Billing city is required' };
     }
     return null;
@@ -63,7 +63,7 @@ export const fieldsetDemoSchema = schema<FieldsetDemoModel>((path) => {
     if (billingSame) return null;
 
     const value = ctx.value();
-    if (!value || !value.trim()) {
+    if (!value?.trim()) {
       return { kind: 'required', message: 'Billing ZIP code is required' };
     }
     if (!ZIP_CODE_PATTERN.test(value)) {
@@ -80,7 +80,7 @@ export const fieldsetDemoSchema = schema<FieldsetDemoModel>((path) => {
     if (billingSame) return null;
 
     const value = ctx.value();
-    if (!value || !value.trim()) {
+    if (!value?.trim()) {
       return { kind: 'required', message: 'Billing country is required' };
     }
     return null;

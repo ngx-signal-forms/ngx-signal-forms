@@ -64,6 +64,8 @@ export class YourFirstFormPage extends ErrorStrategyFormPage {
         return this.emailInput;
       case 'message':
         return this.messageInput;
+      default:
+        throw new Error('Unsupported field');
     }
   }
 }

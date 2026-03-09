@@ -18,10 +18,7 @@ describe('NgxSignalFormErrorComponent (integration)', () => {
       template: `
         <form [formRoot]="contactForm" [errorStrategy]="errorStrategy">
           <input id="email" [formField]="contactForm.email" />
-          <ngx-signal-form-error
-            [formField]="contactForm.email"
-            fieldName="email"
-          />
+          <ngx-signal-form-error [formField]="contactForm.email" fieldName="email" />
         </form>
       `,
     })

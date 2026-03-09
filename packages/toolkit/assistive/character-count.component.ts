@@ -126,10 +126,7 @@ import {
         font-weight 0.2s ease;
       white-space: nowrap;
       padding-left: var(--ngx-form-field-char-count-padding-horizontal, 0);
-      padding-right: var(
-        --ngx-form-field-char-count-padding-horizontal,
-        0.5rem
-      );
+      padding-right: var(--ngx-form-field-char-count-padding-horizontal, 0.5rem);
     }
 
     :host([position='left']) {
@@ -315,7 +312,7 @@ export class NgxFormFieldCharacterCountComponent<TValue = unknown> {
     if (state) return state.currentLength();
 
     const value = this.formField()().value() as unknown;
-    return typeof value === 'string' ? (value as string).length : 0;
+    return typeof value === 'string' ? (value).length : 0;
   });
 
   /**

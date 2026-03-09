@@ -9,8 +9,10 @@ import type {
   ErrorDisplayStrategy,
   FormFieldAppearance,
 } from '@ngx-signal-forms/toolkit';
-import { createOnInvalidHandler,
-  NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import {
+  createOnInvalidHandler,
+  NgxSignalFormToolkit,
+} from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import type { ComplexFormModel } from './complex-forms.model';
 import { complexFormSchema } from './complex-forms.validations';
@@ -66,7 +68,6 @@ export class ComplexFormsComponent {
         // Simulate async operation
         await new Promise((resolve) => setTimeout(resolve, 500));
         console.log('Complex form submitted:', this.#model());
-        return null; // No server errors
       },
       onInvalid: createOnInvalidHandler(),
     },

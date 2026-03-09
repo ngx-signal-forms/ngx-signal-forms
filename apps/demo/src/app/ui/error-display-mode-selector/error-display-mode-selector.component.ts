@@ -119,21 +119,20 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
         <div class="mt-1 text-xs text-amber-700 dark:text-amber-300">
           @switch (selectedMode()) {
             @case ('immediate') {
-              1. Start typing invalid data → 2. See feedback update instantly →
-              3. Notice how errors clear as you type
+              1. Start typing invalid data → 2. See feedback update instantly → 3.
+              Notice how errors clear as you type
             }
             @case ('on-touch') {
-              1. Click a field → 2. Enter invalid data → 3. Tab away → 4.
-              Observe errors appearing after you leave the field
+              1. Click a field → 2. Enter invalid data → 3. Tab away → 4. Observe
+              errors appearing after you leave the field
             }
             @case ('on-submit') {
-              1. Fill the form quickly → 2. Submit without fixing issues → 3.
-              Watch all errors appear together
+              1. Fill the form quickly → 2. Submit without fixing issues → 3. Watch
+              all errors appear together
             }
             @case ('manual') {
-              1. Interact with fields → 2. Notice no automatic errors → 3.
-              Imagine controlling error display yourself (e.g., via guided
-              flows)
+              1. Interact with fields → 2. Notice no automatic errors → 3. Imagine
+              controlling error display yourself (e.g., via guided flows)
             }
           }
         </div>

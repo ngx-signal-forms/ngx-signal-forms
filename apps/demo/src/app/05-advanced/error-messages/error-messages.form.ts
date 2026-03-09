@@ -164,7 +164,6 @@ export class ErrorMessagesComponent {
         await new Promise((resolve) => setTimeout(resolve, 1000));
         this.#model.set({ email: '', password: '', bio: '' });
         this.errorMessagesForm().reset();
-        return null;
       },
       onInvalid: createOnInvalidHandler(),
     },

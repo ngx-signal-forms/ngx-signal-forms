@@ -150,9 +150,7 @@ import { globalConfigSchema } from './global-configuration.validations';
             </dd>
           </div>
           <div class="flex gap-2">
-            <dt class="font-medium text-gray-700 dark:text-gray-300">
-              Auto ARIA:
-            </dt>
+            <dt class="font-medium text-gray-700 dark:text-gray-300">Auto ARIA:</dt>
             <dd class="text-gray-600 dark:text-gray-400">Enabled (global)</dd>
           </div>
           <div class="flex gap-2">
@@ -183,7 +181,6 @@ export class GlobalConfigurationComponent {
         await new Promise((resolve) => setTimeout(resolve, 1000));
         this.#model.set({ userEmail: '', userPhone: '', userWebsite: '' });
         this.configForm().reset();
-        return null;
       },
       onInvalid: createOnInvalidHandler(),
     },

@@ -794,7 +794,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         },
       );
 
-      const label = screen.getByText('Email Address') as HTMLLabelElement;
+      const label = screen.getByText('Email Address');
       const input = screen.getByRole('textbox');
 
       expect(label.htmlFor).toBe('email');

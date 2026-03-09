@@ -1,5 +1,5 @@
 // Types
-export * from './types';
+export type * from './types';
 
 // Tokens
 export * from './tokens';
@@ -19,7 +19,7 @@ export {
 export * from './utilities/create-unique-id';
 export { shouldShowErrors } from './utilities/error-strategies';
 export * from './utilities/field-resolution';
-export * from './utilities/field-state-types';
+export type * from './utilities/field-state-types';
 export * from './utilities/focus-first-invalid';
 export { updateAt, updateNested } from './utilities/immutable-array';
 export * from './utilities/inject-form-config';

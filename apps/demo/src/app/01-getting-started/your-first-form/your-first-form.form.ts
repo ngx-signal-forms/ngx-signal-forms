@@ -121,7 +121,6 @@ export class YourFirstFormComponent {
         await new Promise((resolve) => setTimeout(resolve, 1500));
         this.#model.set({ name: '', email: '', message: '' });
         this.contactForm().reset();
-        return null;
       },
       onInvalid: createOnInvalidHandler(),
     },

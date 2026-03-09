@@ -183,14 +183,16 @@ export class NgxSignalFormAutoAriaDirective {
 
   #resolveHintIds(fieldName: string): string[] {
     const host = this.#element.nativeElement;
-    const wrapper = host.closest('ngx-signal-form-field-wrapper');
+    const wrapper = host.closest(
+      'ngx-signal-form-field-wrapper',
+    ) as HTMLElement | null;
     if (!wrapper) return [];
 
     const hintElements = Array.from(
       wrapper.querySelectorAll(
         'ngx-signal-form-field-hint[data-ngx-signal-form-hint]',
       ),
-    ) as HTMLElement[];
+    );
 
     const matchingHints = hintElements.filter((hint) => {
       const hintField = hint.getAttribute('data-signal-field');

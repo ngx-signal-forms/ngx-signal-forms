@@ -99,8 +99,8 @@ export class NgxThemeSwitcherComponent implements OnInit, OnDestroy {
   private storageListener?: (event: StorageEvent) => void;
 
   // Apply classes reactively
-  // eslint-disable-next-line no-unused-private-class-members -- side-effect effect
-  #apply = effect(() => {
+  // oxlint-disable-next-line no-unused-private-class-members -- side-effect effect
+  readonly #apply = effect(() => {
     const theme = this.effectiveTheme();
     const root = document.documentElement;
 

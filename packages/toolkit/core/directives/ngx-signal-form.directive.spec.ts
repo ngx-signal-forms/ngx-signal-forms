@@ -221,16 +221,15 @@ describe('NgxSignalFormDirective', () => {
         readonly #model = signal({ email: 'test@example.com' });
         readonly contactForm = form(this.#model, {
           submission: {
-            action: async () => null,
+            action: () => undefined,
           },
         });
 
-        async handleSubmit(event: Event) {
+        handleSubmit(event: Event): void {
           event.preventDefault();
-          await submit(this.contactForm, async () => {
+          void submit(this.contactForm, async () => {
             // Simulate async operation
             await new Promise((resolve) => setTimeout(resolve, 50));
-            return null;
           });
         }
       }
@@ -274,15 +273,14 @@ describe('NgxSignalFormDirective', () => {
         readonly #model = signal({ email: 'test@example.com' });
         readonly contactForm = form(this.#model, {
           submission: {
-            action: async () => null,
+            action: () => undefined,
           },
         });
 
-        async handleSubmit(event: Event) {
+        handleSubmit(event: Event): void {
           event.preventDefault();
-          await submit(this.contactForm, async () => {
+          void submit(this.contactForm, async () => {
             await new Promise((resolve) => setTimeout(resolve, 50));
-            return null;
           });
         }
 
@@ -333,15 +331,14 @@ describe('NgxSignalFormDirective', () => {
           readonly #model = signal({ email: 'test@example.com' });
           readonly contactForm = form(this.#model, {
             submission: {
-              action: async () => null,
+              action: () => undefined,
             },
           });
 
-          async onSubmit(event: Event) {
+          onSubmit(event: Event): void {
             event.preventDefault();
-            await submit(this.contactForm, async () => {
+            void submit(this.contactForm, async () => {
               await new Promise((resolve) => setTimeout(resolve, 50));
-              return null;
             });
           }
         }
@@ -390,11 +387,10 @@ describe('NgxSignalFormDirective', () => {
             },
           );
 
-          async onSubmit(event: Event) {
+          onSubmit(event: Event): void {
             event.preventDefault();
-            await submit(this.contactForm, async () => {
+            void submit(this.contactForm, async () => {
               // This won't execute because form is invalid
-              return null;
             });
           }
         }
@@ -446,9 +442,9 @@ describe('NgxSignalFormDirective', () => {
             },
           );
 
-          async onSubmit(event: Event) {
+          onSubmit(event: Event): void {
             event.preventDefault();
-            await submit(this.contactForm, async () => null);
+            void submit(this.contactForm, async () => {});
           }
         }
 
@@ -506,9 +502,9 @@ describe('NgxSignalFormDirective', () => {
             },
           );
 
-          async onSubmit(event: Event) {
+          onSubmit(event: Event): void {
             event.preventDefault();
-            await submit(this.contactForm, async () => null);
+            void submit(this.contactForm, async () => {});
           }
 
           resetForm() {

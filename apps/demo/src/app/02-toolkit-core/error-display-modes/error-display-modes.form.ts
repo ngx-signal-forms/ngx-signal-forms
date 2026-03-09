@@ -165,9 +165,7 @@ export class ErrorDisplayHelpersComponent {
       />
       <!-- Personal Information Section -->
       <fieldset class="mb-8">
-        <legend
-          class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100"
-        >
+        <legend class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
           Personal Information
         </legend>
 
@@ -186,10 +184,7 @@ export class ErrorDisplayHelpersComponent {
           <div class="form-hint" id="name-hint">
             We use this to personalize our response
           </div>
-          <ngx-signal-form-error
-            [formField]="productForm.name"
-            fieldName="name"
-          />
+          <ngx-signal-form-error [formField]="productForm.name" fieldName="name" />
         </div>
 
         <!-- Email Field -->
@@ -237,9 +232,7 @@ export class ErrorDisplayHelpersComponent {
 
       <!-- Feedback Section -->
       <fieldset class="mb-8">
-        <legend
-          class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100"
-        >
+        <legend class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
           Your Feedback
         </legend>
 
@@ -357,9 +350,7 @@ export class ErrorDisplayHelpersComponent {
 
       <!-- Preferences Section -->
       <fieldset class="mb-8">
-        <legend
-          class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100"
-        >
+        <legend class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
           ⚙️ Preferences
         </legend>
 

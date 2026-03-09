@@ -197,7 +197,9 @@ import {
           [submittedStatus]="submittedStatus"
         />
       }
-      <div [style.display]="(showErrors() && shouldShowErrors()) ? 'none' : 'contents'">
+      <div
+        [style.display]="showErrors() && shouldShowErrors() ? 'none' : 'contents'"
+      >
         <ng-content select="ngx-signal-form-field-hint" />
       </div>
 
@@ -207,34 +209,59 @@ import {
   `,
 })
 export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
+  #getHostElement(): HTMLElement {
+    const hostEl = this.#elementRef.nativeElement;
+
+    if (!(hostEl instanceof HTMLElement)) {
+      throw new TypeError(
+        'NgxSignalFormFieldWrapperComponent requires an HTMLElement host.',
+      );
+    }
+
+    return hostEl;
+  }
+
+  /* oxlint-disable @typescript-eslint/prefer-readonly-parameter-types -- ParentNode is a DOM API surface, not an immutable data structure. */
+  #queryHostElement(hostEl: ParentNode, selector: string): HTMLElement | null {
+    const element = hostEl.querySelector(selector);
+
+    return element instanceof HTMLElement ? element : null;
+  }
+  /* oxlint-enable @typescript-eslint/prefer-readonly-parameter-types */
+
+  // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- DOM query APIs operate on mutable HTMLElement instances.
   #findBoundControl(hostEl: HTMLElement): HTMLElement | null {
-    const explicitBoundControl = hostEl.querySelector(
+    const explicitBoundControl = this.#queryHostElement(
+      hostEl,
       '[formField], [ng-reflect-form-field], [data-ngx-signal-form-control]',
-    ) as HTMLElement | null;
+    );
 
     if (explicitBoundControl?.getAttribute('id')) {
       return explicitBoundControl;
     }
 
-    const nativeControl = hostEl.querySelector(
+    const nativeControl = this.#queryHostElement(
+      hostEl,
       'input, textarea, select, button[type="button"]',
-    ) as HTMLElement | null;
+    );
 
     if (nativeControl?.getAttribute('id')) {
       return nativeControl;
     }
 
-    const customControl = hostEl.querySelector(
+    const customControl = this.#queryHostElement(
+      hostEl,
       '[id][formField], [id][ng-reflect-form-field], [id][data-ngx-signal-form-control]',
-    ) as HTMLElement | null;
+    );
 
     if (customControl) {
       return customControl;
     }
 
-    const idBasedFallback = hostEl.querySelector(
+    const idBasedFallback = this.#queryHostElement(
+      hostEl,
       '[id]:not(label):not(ngx-signal-form-field-wrapper):not(ngx-signal-form-error):not(ngx-signal-form-field-hint):not(ngx-signal-form-field-character-count):not([role="alert"]):not([role="status"])',
-    ) as HTMLElement | null;
+    );
 
     if (idBasedFallback) {
       return idBasedFallback;
@@ -515,7 +542,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     }
 
     const controlId = this.#findBoundControl(
-      this.#elementRef.nativeElement as HTMLElement,
+      this.#getHostElement(),
     )?.getAttribute('id');
     if (controlId) {
       return controlId;
@@ -529,9 +556,11 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * Effective error display strategy combining component input and form context defaults.
    */
   protected readonly effectiveStrategy = computed(() => {
+    const formContext = this.#formContext;
+
     return resolveErrorDisplayStrategy(
       this.strategy(),
-      this.#formContext?.errorStrategy?.(),
+      formContext ? formContext.errorStrategy() : undefined,
       this.#config.defaultErrorStrategy,
     );
   });
@@ -542,7 +571,9 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * otherwise defaults to 'unsubmitted'.
    */
   protected readonly submittedStatus = computed(() => {
-    return this.#formContext?.submittedStatus?.() ?? 'unsubmitted';
+    const formContext = this.#formContext;
+
+    return formContext ? formContext.submittedStatus() : 'unsubmitted';
   });
 
   /**
@@ -558,7 +589,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
 
     const errorsGetter = (fieldState as { errors?: () => ValidationError[] })
       .errors;
-    return typeof errorsGetter === 'function' ? (errorsGetter() ?? []) : [];
+    return typeof errorsGetter === 'function' ? errorsGetter() : [];
   });
 
   /**
@@ -611,7 +642,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     // Uses afterNextRender (Angular 19+) instead of legacy ngAfterContentInit.
     // The signal update triggers error component to re-render with correct ID.
     afterNextRender(() => {
-      const hostEl = this.#elementRef.nativeElement as HTMLElement;
+      const hostEl = this.#getHostElement();
 
       const inputEl = this.#findBoundControl(hostEl);
 
@@ -626,7 +657,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     // Set data-signal-field attribute for debugging/testing
     effect(() => {
       const fieldName = this.resolvedFieldName();
-      const hostEl = this.#elementRef.nativeElement as HTMLElement;
+      const hostEl = this.#getHostElement();
 
       const inputEl = this.#findBoundControl(hostEl);
 

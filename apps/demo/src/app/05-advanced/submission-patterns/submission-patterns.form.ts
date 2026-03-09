@@ -43,9 +43,7 @@ import { submissionSchema } from './submission-patterns.validations';
       >
         <span class="text-2xl">📊</span>
         <div class="flex-1">
-          <div
-            class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
+          <div class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
             Submission State
           </div>
           <div class="flex items-center gap-2">
@@ -223,11 +221,7 @@ import { submissionSchema } from './submission-patterns.validations';
 
       <!-- Form actions using toolkit submission helpers -->
       <div class="mt-8 flex gap-4">
-        <button
-          type="submit"
-          [disabled]="isFormSubmitting()"
-          class="btn-primary"
-        >
+        <button type="submit" [disabled]="isFormSubmitting()" class="btn-primary">
           @if (isFormSubmitting()) {
             <span>Submitting...</span>
           } @else {
@@ -293,9 +287,7 @@ export class SubmissionPatternsComponent {
           this.serverError.set(
             `Username "${username}" is already taken. Please choose another.`,
           );
-          /// Return null since we're handling error display manually
-          /// (Alternatively, could return error array for automatic display)
-          return null;
+          return;
         }
 
         /// Success - show success message and reset form
@@ -307,8 +299,6 @@ export class SubmissionPatternsComponent {
           simulateServerError: false,
         });
         this.registrationForm().reset();
-
-        return null;
       },
       onInvalid: createOnInvalidHandler(),
     },

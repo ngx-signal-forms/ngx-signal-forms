@@ -14,6 +14,12 @@
         "tsConfig": "packages/demo-shared/tsconfig.lib.json",
         "assets": ["packages/demo-shared/*.md"]
       }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "oxlint {projectRoot} --type-aware"
+      }
     }
   }
 }

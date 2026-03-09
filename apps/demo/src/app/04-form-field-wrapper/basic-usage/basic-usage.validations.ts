@@ -70,7 +70,7 @@ export const basicUsageSchema = schema<BasicUsageModel>((path) => {
   // URL input (optional but must be valid if provided)
   validate(path.website, (ctx) => {
     const value = ctx.value();
-    if (value && value.trim()) {
+    if (value?.trim()) {
       if (!/^https?:\/\/.+\..+/i.test(value)) {
         return {
           kind: 'invalid-url',

@@ -148,7 +148,10 @@ export class LegacyFormComponent {
 **Built-in preset:**
 
 ```typescript
-import { NG_STATUS_CLASSES, provideSignalFormsConfig } from '@angular/forms/signals';
+import {
+  NG_STATUS_CLASSES,
+  provideSignalFormsConfig,
+} from '@angular/forms/signals';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -160,6 +163,7 @@ export const appConfig: ApplicationConfig = {
 ```
 
 **Available in `NG_STATUS_CLASSES`:**
+
 - `ng-touched` / `ng-untouched`
 - `ng-dirty` / `ng-pristine`
 - `ng-valid` / `ng-invalid`
@@ -183,6 +187,7 @@ export const appConfig: ApplicationConfig = {
 ```
 
 **How it works:**
+
 1. The `Field` directive automatically applies/removes classes based on field state
 2. No manual `[class.xyz]` bindings needed in templates
 3. Works with any CSS framework (Tailwind, Bootstrap, etc.)

@@ -231,7 +231,7 @@ export const WizardStore = signalStore(
         distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
         tap((data) => {
           if (data.traveler.firstName || data.destinations.length > 0) {
-            store.saveDraft(data);
+            void store.saveDraft(data);
           }
         }),
       ),
@@ -248,7 +248,7 @@ export const WizardStore = signalStore(
           patchState(store, { error: 'Please complete all required fields' });
           return;
         }
-        store.submitBooking(store.tripData());
+        void store.submitBooking(store.tripData());
       },
 
       /**

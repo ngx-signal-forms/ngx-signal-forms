@@ -53,7 +53,10 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint"
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "oxlint {projectRoot} --type-aware"
+      }
     }
   }
 }

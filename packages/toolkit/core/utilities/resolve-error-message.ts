@@ -3,6 +3,25 @@ import type { ErrorMessageRegistry } from '../providers/error-messages.provider'
 
 type ValidationErrorParams = ValidationError & Record<string, unknown>;
 
+function getNumericValidationParam(
+  params: ValidationErrorParams,
+  key: string,
+): number {
+  const value = params[key];
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string' && value.trim().length > 0) {
+    const parsedValue = Number(value);
+    if (Number.isFinite(parsedValue)) {
+      return parsedValue;
+    }
+  }
+
+  return 0;
+}
+
 export function resolveValidationErrorMessage(
   error: ValidationError,
   registry?: ErrorMessageRegistry | null,
@@ -39,13 +58,13 @@ export function getDefaultValidationMessage(
     case 'email':
       return 'Please enter a valid email address';
     case 'minLength':
-      return `Minimum ${errorParams['minLength'] || 0} characters required`;
+      return `Minimum ${getNumericValidationParam(errorParams, 'minLength')} characters required`;
     case 'maxLength':
-      return `Maximum ${errorParams['maxLength'] || 0} characters allowed`;
+      return `Maximum ${getNumericValidationParam(errorParams, 'maxLength')} characters allowed`;
     case 'min':
-      return `Minimum value is ${errorParams['min'] || 0}`;
+      return `Minimum value is ${getNumericValidationParam(errorParams, 'min')}`;
     case 'max':
-      return `Maximum value is ${errorParams['max'] || 0}`;
+      return `Maximum value is ${getNumericValidationParam(errorParams, 'max')}`;
     case 'pattern':
       return 'Invalid format';
     case 'parse':

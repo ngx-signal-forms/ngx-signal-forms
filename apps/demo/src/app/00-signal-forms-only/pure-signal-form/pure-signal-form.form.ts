@@ -149,8 +149,6 @@ export class PureSignalFormComponent {
 
         // Reset form after successful submission
         f().reset({ email: '', password: '', confirmPassword: '' });
-
-        return null; // No server errors
       },
     },
   });

@@ -10,6 +10,8 @@
       "default",
       "!{projectRoot}/.eslintrc.json",
       "!{projectRoot}/eslint.config.mjs",
+      "!{workspaceRoot}/.oxlintrc.json",
+      "!{workspaceRoot}/.oxfmtrc.json",
       "!{projectRoot}/vite.config.{js,cjs,mjs,ts,cts,mts}",
       "!{projectRoot}/vitest.config.{js,cjs,mjs,ts,cts,mts}",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
@@ -21,7 +23,6 @@
     "sharedGlobals": [
       "{workspaceRoot}/.github/workflows/ci.yml",
       "{workspaceRoot}/.github/workflows/release.yml",
-      "{workspaceRoot}/.github/workflows/release-next.yml",
       "{workspaceRoot}/.github/workflows/publish.yml"
     ]
   },
@@ -32,14 +33,9 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
-    "@nx/eslint:lint": {
+    "lint": {
       "cache": true,
-      "inputs": [
-        "default",
-        "{workspaceRoot}/.eslintrc.json",
-        "{workspaceRoot}/.eslintignore",
-        "{workspaceRoot}/eslint.config.mjs"
-      ]
+      "inputs": ["default", "{workspaceRoot}/.oxlintrc.json"]
     },
     "@nx/vitest:test": {
       "cache": true,
@@ -64,23 +60,16 @@
       "inputs": ["production", "^production"]
     }
   },
-  "plugins": [
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
-      }
-    }
-  ],
+  "plugins": [],
   "generators": {
     "@nx/angular:application": {
       "e2eTestRunner": "playwright",
-      "linter": "eslint",
+      "linter": "none",
       "style": "css",
       "unitTestRunner": "vitest-analog"
     },
     "@nx/angular:library": {
-      "linter": "eslint",
+      "linter": "none",
       "unitTestRunner": "vitest-analog"
     },
     "@nx/angular:component": {

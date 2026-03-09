@@ -39,8 +39,8 @@ const headlessSchema = schema<HeadlessProfile>((path) => {
     <div class="px-6 pt-0 pb-6">
       <h2 class="mb-4 text-2xl font-bold">Headless Error State</h2>
       <p class="mb-6 text-gray-600 dark:text-gray-400">
-        Custom markup with headless directives for error visibility and
-        character count.
+        Custom markup with headless directives for error visibility and character
+        count.
       </p>
 
       <form [formRoot]="profileForm" class="max-w-xl space-y-6">
@@ -164,7 +164,6 @@ export class HeadlessErrorStateComponent {
       action: async (data) => {
         await new Promise((resolve) => setTimeout(resolve, 600));
         console.log('Saved profile:', data());
-        return null;
       },
       onInvalid: createOnInvalidHandler(),
     },

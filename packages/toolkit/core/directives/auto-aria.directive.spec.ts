@@ -3,7 +3,7 @@ import {
   Component,
   computed,
   Directive,
-  input,
+  input as signalInput,
   signal,
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
@@ -25,7 +25,7 @@ import { NgxSignalFormAutoAriaDirective } from './auto-aria.directive';
   providers: [{ provide: FORM_FIELD, useExisting: MockFormFieldDirective }],
 })
 class MockFormFieldDirective {
-  readonly field = input<unknown>(undefined, { alias: 'formField' });
+  readonly field = signalInput<unknown>(undefined, { alias: 'formField' });
   readonly state = computed(() => {
     const f = this.field();
     return typeof f === 'function' ? f() : undefined;

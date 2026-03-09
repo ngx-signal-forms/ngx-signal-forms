@@ -82,7 +82,9 @@ import { FieldsetFormComponent } from './fieldset.form';
     <ngx-split-layout>
       <div left class="flex flex-col gap-12">
         <section>
-          <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">Nested & Arrays</h2>
+          <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">
+            Nested & Arrays
+          </h2>
           <ngx-complex-forms
             #complexFormRef
             [errorDisplayMode]="errorDisplayMode()"
@@ -93,7 +95,9 @@ import { FieldsetFormComponent } from './fieldset.form';
         <hr class="border-gray-200 dark:border-gray-800" />
 
         <section>
-          <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">Fieldset Grouping</h2>
+          <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">
+            Fieldset Grouping
+          </h2>
           <ngx-fieldset-form
             #fieldsetFormRef
             [errorDisplayMode]="errorDisplayMode()"
@@ -105,13 +109,21 @@ import { FieldsetFormComponent } from './fieldset.form';
       <div right class="flex flex-col gap-8">
         @if (complexFormRef) {
           <div>
-            <h3 class="mb-2 text-sm font-semibold text-gray-500 uppercase tracking-wider">Complex Form State</h3>
+            <h3
+              class="mb-2 text-sm font-semibold tracking-wider text-gray-500 uppercase"
+            >
+              Complex Form State
+            </h3>
             <ngx-signal-form-debugger [formTree]="complexFormRef.complexForm" />
           </div>
         }
         @if (fieldsetFormRef) {
           <div>
-            <h3 class="mb-2 text-sm font-semibold text-gray-500 uppercase tracking-wider">Fieldset Form State</h3>
+            <h3
+              class="mb-2 text-sm font-semibold tracking-wider text-gray-500 uppercase"
+            >
+              Fieldset Form State
+            </h3>
             <ngx-signal-form-debugger [formTree]="fieldsetFormRef.fieldsetForm" />
           </div>
         }
@@ -126,6 +138,8 @@ export class ComplexFormsPage {
     signal<FormFieldAppearance>('standard');
 
   protected readonly content = COMPLEX_FORMS_CONTENT;
-  protected readonly complexFormRef = viewChild<ComplexFormsComponent>('complexFormRef');
-  protected readonly fieldsetFormRef = viewChild<FieldsetFormComponent>('fieldsetFormRef');
+  protected readonly complexFormRef =
+    viewChild<ComplexFormsComponent>('complexFormRef');
+  protected readonly fieldsetFormRef =
+    viewChild<FieldsetFormComponent>('fieldsetFormRef');
 }

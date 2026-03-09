@@ -72,8 +72,8 @@ test.describe('Focus Management', () => {
       await submitButton.click();
       console.log('Submit button clicked');
 
-      /// Check focus after click (with a small delay via evaluate)
-      await page.evaluate(() => new Promise((r) => setTimeout(r, 300)));
+      /// Check focus after click with a short delay for focus management
+      await page.waitForTimeout(300);
 
       const focusAfterClick = await page.evaluate(() => ({
         id: document.activeElement?.id ?? '',
@@ -163,20 +163,24 @@ test.describe('Focus Management', () => {
 
       /// Form should be processing (no focus change to invalid field)
       /// Verify none of the input fields receive focus due to validation error
-      await expect(async () => {
-        const emailFocused = await emailInput.evaluate(
-          (el) => document.activeElement === el,
-        );
-        const passwordFocused = await passwordInput.evaluate(
-          (el) => document.activeElement === el,
-        );
-        const confirmFocused = await confirmPasswordInput.evaluate(
-          (el) => document.activeElement === el,
-        );
+      await expect
+        .poll(
+          async () => {
+            const emailFocused = await emailInput.evaluate(
+              (el) => document.activeElement === el,
+            );
+            const passwordFocused = await passwordInput.evaluate(
+              (el) => document.activeElement === el,
+            );
+            const confirmFocused = await confirmPasswordInput.evaluate(
+              (el) => document.activeElement === el,
+            );
 
-        /// Form valid means no forced refocus to inputs via focusFirstInvalid
-        expect(emailFocused || passwordFocused || confirmFocused).toBe(false);
-      }).toPass({ timeout: 3000 });
+            return emailFocused || passwordFocused || confirmFocused;
+          },
+          { timeout: 3000 },
+        )
+        .toBe(false);
     });
   });
 });

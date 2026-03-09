@@ -15,10 +15,23 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
+import type { Destination } from '../schemas/wizard.schemas';
 
 import { createTravelerStepForm } from '../forms/traveler-step.form';
 import { WizardStore } from '../stores/wizard.store';
 import { WizardStepInterface } from '../wizard-step.interface';
+
+type ReadonlyRequirement = Readonly<
+  Destination['activities'][number]['requirements'][number]
+>;
+type ReadonlyActivity = Readonly<
+  Omit<Destination['activities'][number], 'requirements'>
+> & {
+  readonly requirements: readonly ReadonlyRequirement[];
+};
+type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
+  readonly activities: readonly ReadonlyActivity[];
+};
 
 @Component({
   selector: 'ngx-traveler-step',
@@ -188,9 +201,12 @@ export class TravelerStepComponent implements WizardStepInterface {
     if (destinations.length === 0) return null;
 
     const departures = destinations
-      .map((d) => d.departureDate)
+      .map((d: ReadonlyDestination) => d.departureDate)
       .filter(Boolean)
-      .sort();
+      .slice();
+
+    // oxlint-disable-next-line unicorn/no-array-sort -- The workspace targets ES2022, so toSorted() is not available in the demo build.
+    departures.sort();
 
     return departures.length > 0 ? departures[departures.length - 1] : null;
   });

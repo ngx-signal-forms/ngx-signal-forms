@@ -35,7 +35,7 @@ async function enableMocking(): Promise<void> {
 }
 
 // Wrap in async IIFE to support top-level await in all build targets
-(async () => {
+void (async () => {
   // Enable debug logging globally
   (
     window as unknown as { __DEBUG_SHOW_ERRORS__?: boolean }

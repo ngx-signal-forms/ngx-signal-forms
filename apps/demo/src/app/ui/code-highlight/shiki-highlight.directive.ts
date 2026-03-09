@@ -46,9 +46,9 @@ export class ShikiHighlightDirective {
   readonly #isHighlighted = signal(false);
 
   /// Initialize highlighting after render (side effect in initializer)
-  // eslint-disable-next-line no-unused-private-class-members -- Angular effect pattern, does not need to be referenced
-  readonly #initHighlight = afterNextRender(async () => {
-    await this.#highlightCode();
+  // oxlint-disable-next-line no-unused-private-class-members -- Angular effect pattern, does not need to be referenced
+  readonly #initHighlight = afterNextRender(() => {
+    void this.#highlightCode();
   });
 
   async #highlightCode(): Promise<void> {

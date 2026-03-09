@@ -197,6 +197,6 @@ export class NgxSignalFormDirective {
   /// @see https://github.com/angular/angular/blob/main/packages/forms/signals/src/directive/ng_signal_form.ts
   protected onSubmit(event: Event): void {
     event.preventDefault();
-    submit(this.formRoot());
+    void submit(this.formRoot());
   }
 }

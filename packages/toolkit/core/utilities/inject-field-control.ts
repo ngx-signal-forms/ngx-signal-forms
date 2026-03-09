@@ -40,10 +40,10 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
  * }
  * ```
  */
-export function injectFieldControl<TControl = unknown>(
+export function injectFieldControl(
   element: HTMLElement | ElementRef<HTMLElement>,
   injector?: Injector,
-): TControl {
+): unknown {
   return assertInjector(
     injectFieldControl as (...args: unknown[]) => unknown,
     injector,
@@ -84,7 +84,7 @@ export function injectFieldControl<TControl = unknown>(
         control = control[part];
       }
 
-      return control as TControl;
+      return control;
     },
   );
 }

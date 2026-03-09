@@ -50,9 +50,7 @@ import { FieldStatesForm } from './field-states.form';
       <div class="mt-8 space-y-6">
         <!-- Critical Distinctions -->
         <div>
-          <h3
-            class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100"
-          >
+          <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
             🔑 Critical Distinctions
           </h3>
 
@@ -74,11 +72,8 @@ import { FieldStatesForm } from './field-states.form';
                   >
                 </div>
                 <div class="rounded bg-amber-100 p-2 dark:bg-amber-900">
-                  <strong>touched():</strong> Tracks <em>user interaction</em
-                  ><br />
-                  <span class="text-xs"
-                    >Triggers: Focus then blur (tab out)</span
-                  >
+                  <strong>touched():</strong> Tracks <em>user interaction</em><br />
+                  <span class="text-xs">Triggers: Focus then blur (tab out)</span>
                 </div>
                 <div class="mt-2 rounded bg-amber-200 p-2 dark:bg-amber-800">
                   <strong>💡 When to use:</strong><br />
@@ -94,9 +89,7 @@ import { FieldStatesForm } from './field-states.form';
             <div
               class="rounded-lg border-2 border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950"
             >
-              <h4
-                class="mb-3 text-base font-bold text-red-900 dark:text-red-100"
-              >
+              <h4 class="mb-3 text-base font-bold text-red-900 dark:text-red-100">
                 invalid() vs !valid()
               </h4>
               <div class="space-y-2 text-sm text-red-800 dark:text-red-200">
@@ -124,9 +117,7 @@ import { FieldStatesForm } from './field-states.form';
           <div
             class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
           >
-            <h3
-              class="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100"
-            >
+            <h3 class="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
               📊 Live State Tracking
             </h3>
             <ngx-field-states-table

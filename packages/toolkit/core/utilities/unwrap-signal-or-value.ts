@@ -85,5 +85,5 @@ export function unwrapValue<T>(value: ReactiveOrStatic<T>): T {
   }
 
   // Otherwise it's a static value of type T
-  return value as T;
+  return value;
 }

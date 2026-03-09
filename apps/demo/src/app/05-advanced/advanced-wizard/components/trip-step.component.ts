@@ -29,9 +29,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
       </h2>
 
       @if (!hasDestinations()) {
-        <div
-          class="empty-state rounded-lg border-2 border-dashed p-8 text-center"
-        >
+        <div class="empty-state rounded-lg border-2 border-dashed p-8 text-center">
           <p class="mb-4 text-gray-500">No destinations added yet.</p>
           <button
             type="button"
@@ -249,8 +247,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
                       type="number"
                       class="form-input-sm"
                       [formField]="
-                        tripForm.destinations[destIdx].activities[actIdx]
-                          .duration
+                        tripForm.destinations[destIdx].activities[actIdx].duration
                       "
                     />
                   </ngx-signal-form-field-wrapper>
@@ -280,12 +277,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
                       <label
                         class="sr-only"
                         [for]="
-                          'req-description-' +
-                          destIdx +
-                          '-' +
-                          actIdx +
-                          '-' +
-                          reqIdx
+                          'req-description-' + destIdx + '-' + actIdx + '-' + reqIdx
                         "
                       >
                         Requirement description
@@ -295,12 +287,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
                         class="form-input-xs flex-1"
                         placeholder="Description"
                         [id]="
-                          'req-description-' +
-                          destIdx +
-                          '-' +
-                          actIdx +
-                          '-' +
-                          reqIdx
+                          'req-description-' + destIdx + '-' + actIdx + '-' + reqIdx
                         "
                         [formField]="
                           tripForm.destinations[destIdx].activities[actIdx]
@@ -309,17 +296,13 @@ import { WizardStepInterface } from '../wizard-step.interface';
                       />
                       <label
                         class="sr-only"
-                        [for]="
-                          'req-type-' + destIdx + '-' + actIdx + '-' + reqIdx
-                        "
+                        [for]="'req-type-' + destIdx + '-' + actIdx + '-' + reqIdx"
                       >
                         Requirement type
                       </label>
                       <select
                         class="form-input-xs"
-                        [id]="
-                          'req-type-' + destIdx + '-' + actIdx + '-' + reqIdx
-                        "
+                        [id]="'req-type-' + destIdx + '-' + actIdx + '-' + reqIdx"
                         [formField]="
                           tripForm.destinations[destIdx].activities[actIdx]
                             .requirements[reqIdx].type
@@ -334,9 +317,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
                       <button
                         type="button"
                         class="text-xs text-red-400 hover:text-red-600"
-                        (click)="
-                          store.removeRequirement(destIdx, actIdx, reqIdx)
-                        "
+                        (click)="store.removeRequirement(destIdx, actIdx, reqIdx)"
                         [attr.aria-label]="
                           'Remove requirement ' +
                           (reqIdx + 1) +

@@ -57,7 +57,7 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
       }));
 
       for (const { categoryPath, links } of categoryTests) {
-        await page.goto(`${categoryPath}`);
+        await page.goto(categoryPath);
         await page.waitForLoadState('domcontentloaded');
 
         // Get the sidebar navigation
@@ -100,7 +100,7 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
       ];
 
       for (const examplePath of examples) {
-        await page.goto(`${examplePath}`);
+        await page.goto(examplePath);
         await page.waitForLoadState('domcontentloaded');
 
         // Wait for main content and page heading to be visible

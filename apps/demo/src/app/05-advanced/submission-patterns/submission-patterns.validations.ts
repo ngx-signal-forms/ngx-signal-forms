@@ -1,9 +1,4 @@
-import {
-  minLength,
-  required,
-  schema,
-  validate,
-} from '@angular/forms/signals';
+import { minLength, required, schema, validate } from '@angular/forms/signals';
 import type { SubmissionModel } from './submission-patterns.model';
 
 /**

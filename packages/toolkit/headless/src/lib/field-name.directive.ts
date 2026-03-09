@@ -140,7 +140,7 @@ export class NgxHeadlessFieldNameDirective implements FieldNameStateSignals {
       }
     }
 
-    const propertyId = (nativeElement as HTMLElement).id?.trim();
+    const propertyId = (nativeElement).id?.trim();
     return propertyId ? propertyId : null;
   }
 }

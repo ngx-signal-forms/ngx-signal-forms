@@ -4,7 +4,7 @@ import {
   Component,
   computed,
   effect,
-  input,
+  input as signalInput,
   isDevMode,
 } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
@@ -112,7 +112,7 @@ export class SignalFormDebuggerComponent {
    * The Signal Form to display.
    * Accepts either the FieldTree function (preferred) or the FieldState root.
    */
-  readonly formTree = input.required<
+  readonly formTree = signalInput.required<
     FieldTree<unknown> | FieldState<unknown>
   >();
 
@@ -120,7 +120,7 @@ export class SignalFormDebuggerComponent {
    * The error display strategy currently in effect.
    * Used to show which errors are hidden vs visible.
    */
-  readonly errorStrategy = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorStrategy = signalInput<ErrorDisplayStrategy>('on-touch');
 
   /** Type guard: FieldTree function (callable + indexable) */
   readonly #isFieldTree = (
@@ -156,10 +156,10 @@ export class SignalFormDebuggerComponent {
   });
 
   /** Title for the debugger display */
-  readonly title = input<string>('Form State & Validation');
+  readonly title = signalInput<string>('Form State & Validation');
 
   /** Subtitle for context */
-  readonly subtitle = input<string>('Live debugging information');
+  readonly subtitle = signalInput<string>('Live debugging information');
 
   // ============================================================================
   // Form State Computed Values
