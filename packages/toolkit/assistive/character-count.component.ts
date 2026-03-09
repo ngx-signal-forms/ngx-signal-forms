@@ -29,8 +29,6 @@ import {
  * - Themeable via CSS custom properties
  * - Position control (left/right alignment)
  *
- * @template TValue The type of the field value (must be compatible with string length check)
- *
  * @example Basic character count
  * ```html
  * <ngx-signal-form-field-wrapper [formField]="form.bio">
@@ -178,12 +176,12 @@ import {
     '[attr.data-limit-state]': 'displayLimitState()',
   },
 })
-export class NgxFormFieldCharacterCountComponent<TValue = unknown> {
+export class NgxFormFieldCharacterCountComponent {
   /**
    * Form field to track character count from.
    * Must contain a value compatible with string length calculation.
    */
-  readonly formField = input.required<FieldTree<TValue>>();
+  readonly formField = input.required<FieldTree<string | null | undefined>>();
 
   /**
    * Maximum character length for the field.
@@ -268,16 +266,13 @@ export class NgxFormFieldCharacterCountComponent<TValue = unknown> {
   readonly #resolvedMaxLength = computed(() => {
     const manualMax = this.maxLength();
 
-    if (manualMax !== undefined && manualMax !== null) {
+    if (manualMax !== undefined) {
       return Math.max(0, manualMax);
     }
 
     /// Try to auto-detect from field validation
-    const fieldState = this.formField()() as { maxLength?: () => number };
-    if (
-      'maxLength' in fieldState &&
-      typeof fieldState.maxLength === 'function'
-    ) {
+    const fieldState = this.formField()();
+    if (this.#hasMaxLengthSignal(fieldState)) {
       const validatorMax = fieldState.maxLength();
       if (typeof validatorMax === 'number' && validatorMax > 0) {
         return validatorMax;
@@ -297,7 +292,7 @@ export class NgxFormFieldCharacterCountComponent<TValue = unknown> {
 
     const thresholds = this.colorThresholds();
     return createCharacterCount({
-      field: this.formField() as FieldTree<string | null | undefined>,
+      field: this.formField(),
       maxLength: max,
       warningThreshold: thresholds.warning / 100,
       dangerThreshold: thresholds.danger / 100,
@@ -312,7 +307,7 @@ export class NgxFormFieldCharacterCountComponent<TValue = unknown> {
     if (state) return state.currentLength();
 
     const value = this.formField()().value() as unknown;
-    return typeof value === 'string' ? (value).length : 0;
+    return typeof value === 'string' ? value.length : 0;
   });
 
   /**
@@ -349,6 +344,17 @@ export class NgxFormFieldCharacterCountComponent<TValue = unknown> {
   protected readonly announcementText = computed(() =>
     this.#announcementText(),
   );
+
+  #hasMaxLengthSignal(
+    fieldState: unknown,
+  ): fieldState is { maxLength: () => unknown } {
+    return (
+      typeof fieldState === 'object' &&
+      fieldState !== null &&
+      'maxLength' in fieldState &&
+      typeof fieldState.maxLength === 'function'
+    );
+  }
 
   constructor() {
     effect(() => {

@@ -6,7 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { form } from '@angular/forms/signals';
+import { form, maxLength as signalMaxLength } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldCharacterCountComponent } from './character-count.component';
@@ -80,6 +80,29 @@ class TestWrapperComponent {
   }
 }
 
+@Component({
+  selector: 'ngx-test-wrapper-auto-max-length',
+  standalone: true,
+  imports: [NgxFormFieldCharacterCountComponent],
+  template: `
+    <ngx-signal-form-field-character-count [formField]="testForm.text" />
+  `,
+})
+class AutoDetectMaxLengthWrapperComponent {
+  readonly textModel = input<string>('');
+
+  readonly #model = signal<{ text: string }>({ text: '' });
+  protected readonly testForm = form(this.#model, (path) => {
+    signalMaxLength(path.text, 50);
+  });
+
+  constructor() {
+    effect(() => {
+      this.#model.set({ text: this.textModel() });
+    });
+  }
+}
+
 describe('NgxFormFieldCharacterCountComponent', () => {
   describe('Basic rendering', () => {
     it('should render the component with character count text', async () => {
@@ -104,6 +127,18 @@ describe('NgxFormFieldCharacterCountComponent', () => {
       });
 
       expect(screen.getByText('0/100')).toBeInTheDocument();
+    });
+
+    it('should auto-detect maxLength from the field validation when input is omitted', async () => {
+      const { container } = await render(AutoDetectMaxLengthWrapperComponent, {
+        componentInputs: { textModel: 'a'.repeat(45) },
+      });
+
+      const host = container.querySelector(
+        'ngx-signal-form-field-character-count',
+      );
+      expect(screen.getByText('45/50')).toBeInTheDocument();
+      expect(host).toHaveAttribute('data-limit-state', 'warning');
     });
   });
 

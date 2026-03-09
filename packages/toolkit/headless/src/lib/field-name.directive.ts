@@ -93,7 +93,7 @@ export class NgxHeadlessFieldNameDirective implements FieldNameStateSignals {
    */
   readonly resolvedFieldName = computed(() => {
     const inputValue = this.fieldName();
-    if (inputValue !== undefined && inputValue !== null) {
+    if (inputValue !== undefined) {
       const resolved = unwrapValue(inputValue).trim();
       if (resolved.length > 0) {
         return resolved;
@@ -128,10 +128,7 @@ export class NgxHeadlessFieldNameDirective implements FieldNameStateSignals {
   );
 
   #readHostId(): string | null {
-    const nativeElement = this.#elementRef?.nativeElement;
-    if (!nativeElement) {
-      return null;
-    }
+    const nativeElement = this.#elementRef.nativeElement;
 
     if (typeof nativeElement.getAttribute === 'function') {
       const attrId = nativeElement.getAttribute('id')?.trim();
@@ -140,7 +137,7 @@ export class NgxHeadlessFieldNameDirective implements FieldNameStateSignals {
       }
     }
 
-    const propertyId = (nativeElement).id?.trim();
+    const propertyId = nativeElement.id.trim();
     return propertyId ? propertyId : null;
   }
 }
