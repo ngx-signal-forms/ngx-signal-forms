@@ -438,7 +438,7 @@ interface Config {
 }
 
 // Deep readonly
-type DeepReadonly<T> = T extends (...args: any[]) => any
+type DeepReadonly<T> = T extends (...args: readonly unknown[]) => unknown
   ? T
   : T extends object
     ? { readonly [K in keyof T]: DeepReadonly<T[K]> }

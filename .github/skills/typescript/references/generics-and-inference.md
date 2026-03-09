@@ -115,7 +115,7 @@ const cfg = defineConfig({ api: 'https://example.com', retries: 3 });
 
 // Event map
 function createEventMap<
-  const T extends Record<string, (...args: any[]) => void>,
+  const T extends Record<string, (...args: readonly any[]) => void>,
 >(events: T): T {
   return events;
 }
@@ -248,10 +248,10 @@ const typed: ApiResponse<string[]> = { data: ['a'], error: null, status: 200 };
 type Awaited<T> = T extends Promise<infer U> ? Awaited<U> : T;
 
 // Extract function parameters
-type Params<T> = T extends (...args: infer P) => any ? P : never;
+type Params<T> = T extends (...args: infer P) => unknown ? P : never;
 
 // Extract return type
-type Return<T> = T extends (...args: any[]) => infer R ? R : never;
+type Return<T> = T extends (...args: readonly unknown[]) => infer R ? R : never;
 
 // Extract array element
 type Elem<T> = T extends readonly (infer E)[] ? E : never;

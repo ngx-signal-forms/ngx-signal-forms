@@ -46,7 +46,7 @@ export const none: None = { type: 'none' };
 // =============================================================================
 
 /** Deeply readonly — preserves functions as-is. */
-export type DeepReadonly<T> = T extends (...args: unknown[]) => unknown
+export type DeepReadonly<T> = T extends (...args: readonly unknown[]) => unknown
   ? T
   : T extends object
     ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
@@ -137,7 +137,7 @@ export type Arguments<T> = T extends (...args: infer A) => unknown ? A : never;
 /** Get the first argument type. */
 export type FirstArgument<T> = T extends (
   first: infer F,
-  ...args: unknown[]
+  ...args: readonly unknown[]
 ) => unknown
   ? F
   : never;
@@ -234,7 +234,7 @@ export type JsonValue = JsonPrimitive | JsonArray | JsonObject;
 /** Transform a type to its JSON-serializable equivalent. */
 export type Jsonify<T> = T extends JsonPrimitive
   ? T
-  : T extends undefined | ((...args: unknown[]) => unknown) | symbol
+  : T extends undefined | ((...args: readonly unknown[]) => unknown) | symbol
     ? never
     : T extends { toJSON(): infer R }
       ? R

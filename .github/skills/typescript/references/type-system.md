@@ -387,7 +387,9 @@ type ElementOf<T> = T extends readonly (infer E)[] ? E : never;
 type Elem = ElementOf<string[]>; // string
 
 // Extract function return
-type ReturnOf<T> = T extends (...args: any[]) => infer R ? R : never;
+type ReturnOf<T> = T extends (...args: readonly unknown[]) => infer R
+  ? R
+  : never;
 ```
 
 ### Distributive Conditional Types (Mapping Over Unions)
