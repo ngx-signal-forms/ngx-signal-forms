@@ -56,9 +56,9 @@ Selector: `form[formRoot]`
 **Inputs:**
 
 - `formRoot` (required) — The form field tree
-- `errorStrategy` — `'immediate' | 'on-touch' | 'on-submit'`
+- `errorStrategy` — typically `'immediate' | 'on-touch' | 'on-submit'`
 
-**Outputs:**
+**Exposed signals:**
 
 - `submittedStatus` — `Signal<'unsubmitted' | 'submitting' | 'submitted'>`
 
@@ -66,11 +66,9 @@ Selector: `form[formRoot]`
 
 Angular's native `FormRoot` handles three things: `novalidate`, `event.preventDefault()`, and calling `submit()`. The toolkit directive replicates that baseline and adds:
 
-| Enhancement                                              | Problem it solves                                                                                                                                                                                                                                       |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **DI context** (`NGX_SIGNAL_FORM_CONTEXT`)               | Child components like `<ngx-signal-form-error>` need access to form-level state (submission status, error strategy) without manual prop drilling. Angular's `FormRoot` does not provide DI context.                                                     |
-| **Submitted status tracking** (`submittedStatus` signal) | Angular provides `submitting()` (in-flight) but no `submitted` (completed) state. The toolkit derives a `'unsubmitted' → 'submitting' → 'submitted'` lifecycle, which is required for the `'on-submit'` error display strategy.                         |
-| **Error display strategy** (`errorStrategy` input)       | Angular Signal Forms surface errors immediately. The toolkit adds configurable timing—`'on-touch'`, `'on-submit'`, `'immediate'`, `'manual'`—so errors appear at the right moment per UX best practices (WCAG recommends after blur, not while typing). |
+- **DI context** (`NGX_SIGNAL_FORM_CONTEXT`) so child components like `<ngx-signal-form-error>` can access form-level state without prop drilling.
+- **Submitted status tracking** (`submittedStatus`) to derive `'unsubmitted' → 'submitting' → 'submitted'`, which Angular does not expose directly.
+- **Error display strategy** (`errorStrategy`) so validation feedback can appear on touch, on submit, or immediately.
 
 **Submission patterns:**
 
@@ -85,11 +83,18 @@ Angular's native `FormRoot` handles three things: `novalidate`, `event.preventDe
 
 ### NgxSignalFormAutoAriaDirective
 
-Selector: `input[formField], textarea[formField], select[formField]`
+Automatically applies to supported `[formField]` controls, including custom controls that expose a bound host element.
+
+Current behavior:
+
+- covers text-like inputs, textareas, selects, and custom `[formField]` hosts
+- excludes `radio` and `checkbox` inputs
+- can be disabled per control with `ngxSignalFormAutoAriaDisabled`
 
 Auto-applies:
 
 - `aria-invalid` (respects error strategy)
+- `aria-required`
 - `aria-describedby` (links to error elements)
 
 ### Configuration
@@ -98,14 +103,14 @@ Auto-applies:
 // User config (all properties optional with defaults shown)
 interface NgxSignalFormsUserConfig {
   autoAria?: boolean; // Default: true
-  defaultErrorStrategy?: ErrorDisplayStrategy; // Default: 'on-touch'
+  defaultErrorStrategy?: 'immediate' | 'on-touch' | 'on-submit'; // Default: 'on-touch'
   defaultFormFieldAppearance?: 'standard' | 'outline'; // Default: 'standard'
   showRequiredMarker?: boolean; // Default: true
   requiredMarker?: string; // Default: ' *'
 }
-
-type ErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit';
 ```
+
+> For CSS status classes such as `ng-invalid` or `ng-touched`, use Angular’s native `provideSignalFormsConfig({ classes })`. The toolkit focuses on ARIA wiring and visibility strategy rather than class generation.
 
 **Providers:**
 
@@ -143,6 +148,8 @@ provideErrorMessages({
 | `injectFormContext()`                       | Get `NgxSignalFormDirective` context or `undefined`   |
 | `unwrapValue(signalOrValue)`                | Extract value from `Signal` or static                 |
 
+`showErrors()` is the main API for component and template work. `shouldShowErrors()` and `unwrapValue()` are mainly useful when building lower-level utilities.
+
 ### Immutable Array Helpers
 
 Utilities for immutable state updates, useful with NgRx Signal Store or any state management.
@@ -169,7 +176,7 @@ import {
 | `moveItem(array, fromIndex, toIndex)`                    | Move item between positions immutably |
 | `updateNested(array, index, nestedKey, nestedIndex, fn)` | Update item in nested array immutably |
 
-**Example: Deeply Nested State Updates**
+### Example: Deeply Nested State Updates
 
 ```typescript
 // Without helpers (verbose)
@@ -202,7 +209,7 @@ patchState(store, (s) => ({
 
 ## Assistive (`@ngx-signal-forms/toolkit/assistive`)
 
-### Imports
+### Assistive imports
 
 ```typescript
 import {
@@ -223,7 +230,7 @@ Displays validation errors with ARIA roles.
 **Inputs:**
 
 - `formField` (required) — The field tree
-- `fieldName` (required) — Unique identifier for ARIA linking
+- `fieldName` — Required when used standalone; inherited automatically inside `ngx-signal-form-field-wrapper`
 - `strategy` — Override error display strategy
 
 ```html
@@ -270,7 +277,7 @@ isWarningError(error); // true if kind starts with 'warn:'
 isBlockingError(error); // true if not a warning
 ```
 
-### Theming
+### Assistive theming
 
 ```css
 :root {
@@ -286,7 +293,7 @@ isBlockingError(error); // true if not a warning
 
 ## Form Field (`@ngx-signal-forms/toolkit/form-field`)
 
-### Imports
+### Form field imports
 
 ```typescript
 // Bundle import (recommended)
@@ -309,9 +316,10 @@ Unified wrapper with automatic error/warning/hint display.
 **Inputs:**
 
 - `formField` (required)
-- `fieldName` — Auto-derived from child input `id` if omitted
+- `fieldName` — Optional explicit override; otherwise derived from the bound control `id`
 - `strategy` — Override error strategy
-- `showRequiredMarker` / `requiredMarker` — Required field indicator
+- `appearance` — `'standard' | 'outline' | 'inherit'`
+- `showRequiredMarker` / `requiredMarker` — Required field indicator for outlined fields
 
 ```html
 <ngx-signal-form-field-wrapper [formField]="form.email">
@@ -320,18 +328,20 @@ Unified wrapper with automatic error/warning/hint display.
 </ngx-signal-form-field-wrapper>
 ```
 
-### NgxFloatingLabelDirective (`outline`)
+The wrapper uses a strict identity model: if you do not pass `fieldName`, the projected bound control must have an `id`.
+
+### NgxFloatingLabelDirective (`appearance="outline"`)
 
 Attribute directive for Material-like outlined inputs.
 
 ```html
-<ngx-signal-form-field-wrapper [formField]="form.email" outline>
+<ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" placeholder=" " />
 </ngx-signal-form-field-wrapper>
 ```
 
-**Note:** Add `placeholder=" "` for floating label animation.
+**Note:** Add `placeholder=" "` for floating label animation. Prefer `appearance="outline"` in new examples.
 
 ### NgxSignalFormFieldset
 
@@ -350,7 +360,10 @@ Groups related fields with aggregated validation.
 <!-- Group-only errors (default) -->
 <ngx-signal-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
   <legend>Address</legend>
-  <ngx-signal-form-field-wrapper [formField]="form.address.street" outline>
+  <ngx-signal-form-field-wrapper
+    [formField]="form.address.street"
+    appearance="outline"
+  >
     ...
   </ngx-signal-form-field-wrapper>
 </ngx-signal-form-fieldset>
@@ -365,7 +378,7 @@ Groups related fields with aggregated validation.
 </fieldset>
 ```
 
-### Theming
+### Form field theming
 
 See [Form Field Theming Guide](./form-field/THEMING.md) for 20+ CSS custom properties.
 
@@ -375,7 +388,7 @@ See [Form Field Theming Guide](./form-field/THEMING.md) for 20+ CSS custom prope
 
 Renderless primitives for custom UI. All expose signals without markup.
 
-### Imports
+### Headless imports
 
 ```typescript
 // Bundle import
@@ -465,7 +478,7 @@ Export: `#fieldset="fieldset"`
 - `isValid()` / `isInvalid()`
 - `isTouched()` / `isDirty()`
 - `aggregatedErrors()` / `aggregatedWarnings()`
-- `showErrors()`
+- `shouldShowErrors()` / `shouldShowWarnings()`
 
 ### Host Directive Pattern
 
@@ -500,11 +513,16 @@ dedupeValidationErrors(errors); // remove duplicates by message
 createUniqueId('field'); // 'field-1', 'field-2', ...
 ```
 
+Use the headless entry point when you want toolkit state logic but fully custom markup. Use the `assistive` or `form-field` entry points when you want ready-to-render UI.
+
 ---
 
 ## Related Documentation
 
 - [Main README](https://github.com/ngx-signal-forms/ngx-signal-forms#readme) — Overview, installation, quick start
+- [Current main changelog](../../docs/CHANGELOG_CURRENT.md) — Unreleased changes since `v1.0.0-beta.6`
+- [Migration guide: beta.6 → current main](../../docs/MIGRATION_CURRENT.md) — Upgrade notes for the current unreleased branch
+- [Changelog (beta.6)](../../docs/archive/CHANGELOG_BETA6.md) — Released changes in `v1.0.0-beta.6`
 - [Migration Guide (beta.5)](../../docs/archive/MIGRATION_BETA5.md) — Upgrade steps from earlier beta releases
 - [Form Field Theming](./form-field/THEMING.md) — CSS custom properties guide
 - [CSS Framework Integration](../../docs/CSS_FRAMEWORK_INTEGRATION.md) — Bootstrap, Tailwind, Material setup

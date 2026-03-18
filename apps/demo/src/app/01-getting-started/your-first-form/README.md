@@ -10,11 +10,11 @@ This demo is your introduction to **@ngx-signal-forms/toolkit**. It takes a stan
 
 The `NgxSignalFormToolkit` is a directive applied to the `<form>` element. It acts as the "brain" for your form's template logic.
 
-### Key Powers:
+### Key Powers
 
-1.  **Auto-ARIA**: automatically syncs `aria-invalid` and `aria-describedby` on your inputs by matching them to their computed signal state.
-2.  **Validation Context**: Provides a registry for error messages so child components (like `NgxSignalFormError`) know what to display without you passing strings down.
-3.  **NoValidate**: Automatically adds `novalidate` to the form element to disable native browser bubbles, giving you full control over the UI.
+1. **Auto-ARIA**: automatically syncs `aria-invalid` and `aria-describedby` on your inputs by matching them to their computed signal state.
+2. **Validation Context**: Provides a registry for error messages so child components (like `NgxSignalFormError`) know what to display without you passing strings down.
+3. **Form Context**: Shares form-level state such as error strategy and submitted status with child toolkit components, so error rendering stays consistent without prop drilling.
 
 ### Usage
 
@@ -44,5 +44,5 @@ Instead of writing `at @if (touched && invalid)` blocks, use this component. It:
 
 ## How to Test
 
-1.  **Auto-ARIA**: Inspect the inputs. Notice `aria-required="true"` and `aria-invalid` appear automatically.
-2.  **Error Strategies**: Use the dropdown at the top to switch between "On Touch", "On Submit", and "Immediate". Notice how `NgxSignalFormError` respects this global setting instantly without code changes.
+1. **Auto-ARIA**: Inspect the inputs. Notice `aria-required="true"` and `aria-invalid` appear automatically.
+2. **Error Strategies**: Use the dropdown at the top to switch between "On Touch", "On Submit", and "Immediate". Notice how `NgxSignalFormError` respects this global setting instantly without code changes.

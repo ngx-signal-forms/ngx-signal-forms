@@ -11,20 +11,20 @@ Side-by-side comparison of a minimal toolkit setup versus full toolkit usage to 
 
 ## Validation overview
 
-**Errors**
+### Errors
 
 - Email: required + email format.
 - Password: required + minimum length 8.
 - Confirm password: required.
 - Cross-field: confirm password must match password.
 
-**Warnings**
+### Warnings
 
 - None.
 
 ## Toolkit usage
 
-- `NgxSignalFormToolkit` for auto-ARIA and `novalidate`.
+- `NgxSignalFormToolkit` for auto-ARIA and shared form context.
 - `NgxFormField` wrapper for automatic error display.
 - Minimal form runs without `[formRoot]` to show default `on-touch` behavior.
 - Full form uses `[formRoot]` and `focusFirstInvalid()` for submission UX.

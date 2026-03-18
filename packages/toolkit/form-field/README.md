@@ -838,8 +838,8 @@ import {
   email,
   maxLength,
   FormField,
-  submit,
 } from '@angular/forms/signals';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 interface ContactForm {
@@ -857,13 +857,13 @@ const contactSchema = schema<ContactForm>((path) => {
 @Component({
   selector: 'app-contact-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxFormField],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form (submit)="save($event)" novalidate>
+    <form [formRoot]="contactForm">
       <!-- Outlined email field with custom required marker -->
       <ngx-signal-form-field-wrapper
         [formField]="contactForm.email"
-        outline
+        appearance="outline"
         requiredMarker=" (required)"
       >
         <label for="email">Email Address</label>
@@ -880,7 +880,10 @@ const contactSchema = schema<ContactForm>((path) => {
       </ngx-signal-form-field-wrapper>
 
       <!-- Outlined message field with character count -->
-      <ngx-signal-form-field-wrapper [formField]="contactForm.message" outline>
+      <ngx-signal-form-field-wrapper
+        [formField]="contactForm.message"
+        appearance="outline"
+      >
         <label for="message">Message</label>
         <textarea
           id="message"
@@ -911,13 +914,6 @@ const contactSchema = schema<ContactForm>((path) => {
 export class ContactFormComponent {
   readonly #model = signal<ContactForm>({ email: '', message: '' });
   protected readonly contactForm = form(this.#model, contactSchema);
-
-  protected save(event: Event): void {
-    event.preventDefault();
-    submit(this.contactForm, async () => {
-      console.log('Form data:', this.#model());
-    });
-  }
 }
 ```
 

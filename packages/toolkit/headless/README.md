@@ -78,6 +78,8 @@ Apply a headless directive and use `exportAs` to access signals in your template
 
 **More complete example (with validation and ARIA):**
 
+This example uses manual submit handling, so `novalidate` is set explicitly instead of relying on toolkit core `[formRoot]`.
+
 ```typescript
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { form, required, email, schema } from '@angular/forms/signals';
@@ -174,6 +176,8 @@ export class MyFormFieldComponent {
 ```
 
 **Usage with `my-form-field`:**
+
+This composition example also uses manual submit handling, so `novalidate` is declared explicitly on the form.
 
 ```typescript
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';

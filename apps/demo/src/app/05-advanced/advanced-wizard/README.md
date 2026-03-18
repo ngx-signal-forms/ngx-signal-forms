@@ -21,7 +21,7 @@ This wizard implements a **draft state pattern** for managing form data in NgRx 
 
 ### Architecture Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │ WizardStore                                                     │
 │                                                                 │
@@ -47,7 +47,7 @@ This wizard implements a **draft state pattern** for managing form data in NgRx 
 
 ### Data Flow: Draft → Commit → Save
 
-```
+```text
   ┌──────────┐      ┌──────────────┐      ┌───────────┐      ┌─────────┐
   │   User   │      │ Form (local) │      │   Store   │      │   API   │
   └────┬─────┘      └──────┬───────┘      └─────┬─────┘      └────┬────┘
@@ -74,7 +74,7 @@ This wizard implements a **draft state pattern** for managing form data in NgRx 
 
 ### Navigation Flow
 
-```
+```text
     ┌──────────┐     NEXT      ┌──────────┐     NEXT      ┌──────────┐
     │ Traveler │──(valid)─────▶│   Trip   │──(valid)─────▶│  Review  │
     │   Step   │               │   Step   │               │   Step   │
@@ -224,7 +224,7 @@ protected readonly currentStepComponent = viewChild<WizardStepInterface>('curren
 
 ## Validation overview
 
-**Errors**
+### Errors
 
 - Traveler: first/last name required, email format, passport number required, passport expiry required and must be in the future, nationality required.
 - Trip: at least one destination; country/city required; arrival date required and not in the past; departure date after arrival; at least one activity.
@@ -233,13 +233,13 @@ protected readonly currentStepComponent = viewChild<WizardStepInterface>('curren
 - Cross-field: activity date must be within destination date range.
 - Cross-step: passport must be valid 6 months after last trip departure.
 
-**Warnings**
+### Warnings
 
 - None.
 
 ## Toolkit usage
 
-- `NgxSignalFormToolkit` for auto-ARIA and `novalidate`.
+- `NgxSignalFormToolkit` for auto-ARIA and shared form context.
 - `NgxFormField` wrapper for consistent layout and errors.
 
 ## Other tools
