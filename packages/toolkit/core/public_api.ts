@@ -1,5 +1,14 @@
-// Types
-export type * from './types';
+// Types — explicit exports (ReactiveOrStatic is internal-only)
+export type {
+  ErrorDisplayStrategy,
+  FormFieldAppearance,
+  FormFieldAppearanceInput,
+  NgxSignalFormsConfig,
+  NgxSignalFormsUserConfig,
+  ResolvedErrorDisplayStrategy,
+  SignalLike,
+  SubmittedStatus,
+} from './types';
 
 // Tokens
 export * from './tokens';
@@ -19,16 +28,11 @@ export * from './utilities/field-resolution';
 export type * from './utilities/field-state-types';
 export * from './utilities/focus-first-invalid';
 export { updateAt, updateNested } from './utilities/immutable-array';
-export { injectFormConfig } from './utilities/inject-form-config';
 export { injectFormContext } from './utilities/inject-form-context';
 export * from './utilities/on-invalid-handler';
 export * from './utilities/resolve-error-message';
 export * from './utilities/resolve-strategy';
-export {
-  combineShowErrors,
-  createShowErrorsSignal,
-  showErrors,
-} from './utilities/show-errors';
+export { combineShowErrors, showErrors } from './utilities/show-errors';
 export * from './utilities/submission-helpers';
 export { unwrapValue } from './utilities/unwrap-signal-or-value';
 export {

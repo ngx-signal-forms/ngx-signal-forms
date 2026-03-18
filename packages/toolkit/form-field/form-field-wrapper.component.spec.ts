@@ -64,34 +64,27 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(errorContainer).toBeTruthy();
     });
 
-    it('should auto-generate unique fieldName when not provided', async () => {
+    it('should throw when neither fieldName nor bound control id is provided', async () => {
       const invalidField = signal({
         invalid: () => true,
         touched: () => true,
         errors: () => [{ kind: 'required', message: 'Required' }],
       });
 
-      const { container } = await render(
-        `<ngx-signal-form-field-wrapper [formField]="field">
-          <label>Email</label>
-          <input type="email" />
-        </ngx-signal-form-field-wrapper>`,
-        {
-          imports: [NgxSignalFormWrapperComponent],
-          componentProperties: {
-            field: invalidField,
+      await expect(
+        render(
+          `<ngx-signal-form-field-wrapper [formField]="field">
+            <label>Email</label>
+            <input type="email" />
+          </ngx-signal-form-field-wrapper>`,
+          {
+            imports: [NgxSignalFormWrapperComponent],
+            componentProperties: {
+              field: invalidField,
+            },
           },
-        },
-      );
-
-      const errorComponent = container.querySelector('ngx-signal-form-error');
-      expect(errorComponent).toBeTruthy();
-
-      // Should generate an error ID like "field-N-error"
-      const errorContainer = container.querySelector(
-        '[id^="field-"][id$="-error"]',
-      );
-      expect(errorContainer).toBeTruthy();
+        ),
+      ).rejects.toThrow(/Could not resolve a deterministic field name/u);
     });
 
     it('should generate different unique IDs for multiple components without explicit fieldName', async () => {
@@ -172,7 +165,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(container.querySelector('[id="email-error"]')).toBeTruthy();
       expect(container.querySelector('[id="confirm-error"]')).toBeTruthy();
 
-      // Check auto-derived ID from input's id attribute (not auto-generated fallback)
+      // Check auto-derived ID from the bound control id attribute.
       expect(container.querySelector('[id="password-error"]')).toBeTruthy();
     });
 
@@ -183,27 +176,22 @@ describe('NgxSignalFormWrapperComponent', () => {
         errors: () => [{ kind: 'required', message: 'Required' }],
       });
 
-      const { container } = await render(
-        `<ngx-signal-form-field-wrapper [formField]="field" fieldName="">
-          <input type="text" />
-        </ngx-signal-form-field-wrapper>`,
-        {
-          imports: [NgxSignalFormWrapperComponent],
-          componentProperties: {
-            field: invalidField,
+      await expect(
+        render(
+          `<ngx-signal-form-field-wrapper [formField]="field" fieldName="">
+            <input type="text" />
+          </ngx-signal-form-field-wrapper>`,
+          {
+            imports: [NgxSignalFormWrapperComponent],
+            componentProperties: {
+              field: invalidField,
+            },
           },
-        },
-      );
-
-      const errorComponent = container.querySelector('ngx-signal-form-error');
-      expect(errorComponent).toBeTruthy();
-
-      // Empty fieldName should result in error ID "-error"
-      const errorContainer = container.querySelector('[id="-error"]');
-      expect(errorContainer).toBeTruthy();
+        ),
+      ).rejects.toThrow(/Could not resolve a deterministic field name/u);
     });
 
-    it('should pass auto-generated fieldName to error component for ARIA attribute generation', async () => {
+    it('should pass derived control id to error component for ARIA attribute generation', async () => {
       const invalidField = signal({
         invalid: () => true,
         touched: () => true,
@@ -212,7 +200,7 @@ describe('NgxSignalFormWrapperComponent', () => {
 
       const { container } = await render(
         `<ngx-signal-form-field-wrapper [formField]="field">
-          <input type="text" />
+          <input id="derived-id" type="text" />
         </ngx-signal-form-field-wrapper>`,
         {
           imports: [NgxSignalFormWrapperComponent],
@@ -225,14 +213,11 @@ describe('NgxSignalFormWrapperComponent', () => {
       const errorComponent = container.querySelector('ngx-signal-form-error');
       expect(errorComponent).toBeTruthy();
 
-      // Should generate ID like "field-N-error" where N is a number
-      const errorContainer = container.querySelector(
-        '[id^="field-"][id$="-error"]',
-      );
+      const errorContainer = container.querySelector('[id="derived-id-error"]');
       expect(errorContainer).toBeTruthy();
 
       const errorId = errorContainer?.getAttribute('id');
-      expect(errorId).toMatch(/^field-\d+-error$/);
+      expect(errorId).toBe('derived-id-error');
     });
   });
 
@@ -590,7 +575,7 @@ describe('NgxSignalFormWrapperComponent', () => {
   describe('Required marker configuration', () => {
     it('should show required marker by default when outline is enabled', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-wrapper [formField]="field" outline>
+        `<ngx-signal-form-field-wrapper [formField]="field" appearance="outline">
           <label for="email">Email</label>
           <input id="email" type="email" required />
         </ngx-signal-form-field-wrapper>`,
@@ -613,7 +598,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       const { container } = await render(
         `<ngx-signal-form-field-wrapper
           [formField]="field"
-          outline
+          appearance="outline"
           [showRequiredMarker]="false">
           <label for="email">Email</label>
           <input id="email" type="email" required />
@@ -637,7 +622,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       const { container } = await render(
         `<ngx-signal-form-field-wrapper
           [formField]="field"
-          outline
+          appearance="outline"
           requiredMarker="(required)">
           <label for="email">Email</label>
           <input id="email" type="email" required />
@@ -850,34 +835,6 @@ describe('NgxSignalFormWrapperComponent', () => {
 
       const errorComponent = container.querySelector('ngx-signal-form-error');
       expect(errorComponent).toBeTruthy();
-    });
-
-    it('should not show error component when showErrors is false', async () => {
-      const invalidField = signal({
-        invalid: () => true,
-        touched: () => true,
-        errors: () => [{ key: 'required', message: 'This field is required' }],
-      });
-
-      const { container } = await render(
-        `<ngx-signal-form-field-wrapper
-          [formField]="field"
-          fieldName="test-field"
-          [showErrors]="false"
-        >
-          <label for="test">Test</label>
-          <input id="test" type="text" />
-        </ngx-signal-form-field-wrapper>`,
-        {
-          imports: [NgxSignalFormWrapperComponent],
-          componentProperties: {
-            field: invalidField,
-          },
-        },
-      );
-
-      const errorComponent = container.querySelector('ngx-signal-form-error');
-      expect(errorComponent).toBeFalsy();
     });
 
     it('should display errors WITHOUT [formRoot] context for on-touch strategy', async () => {
@@ -1566,8 +1523,8 @@ describe('NgxSignalFormWrapperComponent', () => {
      * controls implementing FormValueControl<T>.
      *
      * Since FormValueControl is a TypeScript interface (erased at runtime),
-     * the wrapper uses a fallback DOM query: [id]:not(label):not(ngx-signal-form-field-wrapper)
-     * to detect custom controls with an id attribute.
+     * the wrapper detects custom controls by looking for a projected bound-control
+     * host with an `id` attribute.
      */
 
     it('should auto-resolve fieldName from custom control element with id attribute', async () => {
@@ -1581,7 +1538,12 @@ describe('NgxSignalFormWrapperComponent', () => {
       const { container } = await render(
         `<ngx-signal-form-field-wrapper [formField]="field">
           <label for="rating">Rating</label>
-          <div id="rating" role="slider" aria-label="Rating"></div>
+          <div
+            id="rating"
+            data-ngx-signal-form-control
+            role="slider"
+            aria-label="Rating"
+          ></div>
         </ngx-signal-form-field-wrapper>`,
         {
           imports: [NgxSignalFormWrapperComponent],
@@ -1639,7 +1601,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         `<ngx-signal-form-field-wrapper [formField]="field">
           <label>Selection</label>
           <input type="hidden" />
-          <div id="custom-picker" role="listbox"></div>
+          <div id="custom-picker" data-ngx-signal-form-control role="listbox"></div>
         </ngx-signal-form-field-wrapper>`,
         {
           imports: [NgxSignalFormWrapperComponent],
@@ -1667,7 +1629,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       const { container } = await render(
         `<ngx-signal-form-field-wrapper [formField]="field">
           <label id="my-label" for="control">Control</label>
-          <div id="control" role="slider"></div>
+          <div id="control" data-ngx-signal-form-control role="slider"></div>
         </ngx-signal-form-field-wrapper>`,
         {
           imports: [NgxSignalFormWrapperComponent],
@@ -1697,7 +1659,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       const { container } = await render(
         `<ngx-signal-form-field-wrapper [formField]="field">
           <label for="outer">Outer</label>
-          <div id="outer" role="slider"></div>
+          <div id="outer" data-ngx-signal-form-control role="slider"></div>
         </ngx-signal-form-field-wrapper>`,
         {
           imports: [NgxSignalFormWrapperComponent],
@@ -1724,6 +1686,7 @@ describe('NgxSignalFormWrapperComponent', () => {
           <label for="stars">Rating</label>
           <div
             id="stars"
+            data-ngx-signal-form-control
             role="slider"
             aria-valuemin="0"
             aria-valuemax="5"
@@ -1756,7 +1719,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       const { container } = await render(
         `<ngx-signal-form-field-wrapper [formField]="field" fieldName="explicit-name">
           <label for="custom">Custom</label>
-          <div id="custom" role="slider"></div>
+          <div id="custom" data-ngx-signal-form-control role="slider"></div>
         </ngx-signal-form-field-wrapper>`,
         {
           imports: [NgxSignalFormWrapperComponent],
@@ -1777,32 +1740,27 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(customError).toBeFalsy();
     });
 
-    it('should generate fallback ID when custom control has no id', async () => {
+    it('should throw when custom control has no id', async () => {
       const invalidField = signal({
         invalid: () => true,
         touched: () => true,
         errors: () => [{ kind: 'required', message: 'Required' }],
       });
 
-      // No native elements, no id on custom control
-      const { container } = await render(
-        `<ngx-signal-form-field-wrapper [formField]="field">
-          <label>Custom Control</label>
-          <div role="slider"></div>
-        </ngx-signal-form-field-wrapper>`,
-        {
-          imports: [NgxSignalFormWrapperComponent],
-          componentProperties: {
-            field: invalidField,
+      await expect(
+        render(
+          `<ngx-signal-form-field-wrapper [formField]="field">
+            <label>Custom Control</label>
+            <div data-ngx-signal-form-control role="slider"></div>
+          </ngx-signal-form-field-wrapper>`,
+          {
+            imports: [NgxSignalFormWrapperComponent],
+            componentProperties: {
+              field: invalidField,
+            },
           },
-        },
-      );
-
-      // Should fall back to auto-generated ID pattern
-      const errorElement = container.querySelector(
-        '[id^="field-"][id$="-error"]',
-      );
-      expect(errorElement).toBeTruthy();
+        ),
+      ).rejects.toThrow(/Could not resolve a deterministic field name/u);
     });
   });
 
@@ -1895,31 +1853,27 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(container.querySelector('[id="first-error"]')).toBeTruthy();
     });
 
-    it('should fallback to auto-generated ID when no input has id attribute', async () => {
+    it('should throw when no input has id attribute and no fieldName is provided', async () => {
       const invalidField = signal({
         invalid: () => true,
         touched: () => true,
         errors: () => [{ kind: 'required', message: 'Required' }],
       });
 
-      const { container } = await render(
-        `<ngx-signal-form-field-wrapper [formField]="field">
-          <label>No ID Field</label>
-          <input type="text" />
-        </ngx-signal-form-field-wrapper>`,
-        {
-          imports: [NgxSignalFormWrapperComponent],
-          componentProperties: {
-            field: invalidField,
+      await expect(
+        render(
+          `<ngx-signal-form-field-wrapper [formField]="field">
+            <label>No ID Field</label>
+            <input type="text" />
+          </ngx-signal-form-field-wrapper>`,
+          {
+            imports: [NgxSignalFormWrapperComponent],
+            componentProperties: {
+              field: invalidField,
+            },
           },
-        },
-      );
-
-      // Should fallback to auto-generated ID pattern
-      const errorElement = container.querySelector(
-        '[id^="field-"][id$="-error"]',
-      );
-      expect(errorElement).toBeTruthy();
+        ),
+      ).rejects.toThrow(/Could not resolve a deterministic field name/u);
     });
 
     it('should provide context signal that updates with resolvedFieldName', async () => {
@@ -2167,79 +2121,6 @@ describe('NgxSignalFormWrapperComponent', () => {
           'ngx-signal-form-field-wrapper',
         );
         // Should inherit outline from config
-        expect(formField).toHaveClass('ngx-signal-forms-outline');
-      });
-    });
-
-    describe('Backward compatibility with outline boolean', () => {
-      it('should still work with outline boolean attribute', async () => {
-        const { container } = await render(
-          `<ngx-signal-form-field-wrapper [formField]="field" outline>
-            <label for="email">Email</label>
-            <input id="email" type="email" />
-          </ngx-signal-form-field-wrapper>`,
-          {
-            imports: [NgxSignalFormWrapperComponent],
-            componentProperties: {
-              field: createMockFieldState(),
-            },
-          },
-        );
-
-        const formField = container.querySelector(
-          'ngx-signal-form-field-wrapper',
-        );
-        expect(formField).toHaveClass('ngx-signal-forms-outline');
-      });
-
-      it('should prioritize outline boolean over appearance input', async () => {
-        const { container } = await render(
-          `<ngx-signal-form-field-wrapper [formField]="field" appearance="standard" outline>
-            <label for="email">Email</label>
-            <input id="email" type="email" />
-          </ngx-signal-form-field-wrapper>`,
-          {
-            imports: [NgxSignalFormWrapperComponent],
-            componentProperties: {
-              field: createMockFieldState(),
-            },
-          },
-        );
-
-        const formField = container.querySelector(
-          'ngx-signal-form-field-wrapper',
-        );
-        // outline boolean has priority for backward compatibility
-        expect(formField).toHaveClass('ngx-signal-forms-outline');
-      });
-
-      it('should prioritize outline boolean over global config', async () => {
-        const { container } = await render(
-          `<ngx-signal-form-field-wrapper [formField]="field" outline>
-            <label for="email">Email</label>
-            <input id="email" type="email" />
-          </ngx-signal-form-field-wrapper>`,
-          {
-            imports: [NgxSignalFormWrapperComponent],
-            providers: [
-              {
-                provide: NGX_SIGNAL_FORMS_CONFIG,
-                useValue: {
-                  ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-                  defaultFormFieldAppearance: 'standard',
-                },
-              },
-            ],
-            componentProperties: {
-              field: createMockFieldState(),
-            },
-          },
-        );
-
-        const formField = container.querySelector(
-          'ngx-signal-form-field-wrapper',
-        );
-        // outline boolean overrides everything
         expect(formField).toHaveClass('ngx-signal-forms-outline');
       });
     });

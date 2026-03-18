@@ -35,7 +35,6 @@ import {
   createOnInvalidHandler,
   hasSubmitted,
   injectFormContext,
-  injectFormConfig,
   unwrapValue,
 } from '@ngx-signal-forms/toolkit';
 ```
@@ -57,7 +56,7 @@ Selector: `form[formRoot]`
 **Inputs:**
 
 - `formRoot` (required) — The form field tree
-- `errorStrategy` — `'immediate' | 'on-touch' | 'on-submit' | 'manual'`
+- `errorStrategy` — `'immediate' | 'on-touch' | 'on-submit'`
 
 **Outputs:**
 
@@ -103,12 +102,9 @@ interface NgxSignalFormsUserConfig {
   defaultFormFieldAppearance?: 'standard' | 'outline'; // Default: 'standard'
   showRequiredMarker?: boolean; // Default: true
   requiredMarker?: string; // Default: ' *'
-  fieldNameResolver?: (el: HTMLElement) => string | null;
-  strictFieldResolution?: boolean; // Default: false
-  debug?: boolean; // Default: false
 }
 
-type ErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit' | 'manual';
+type ErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit';
 ```
 
 **Providers:**
@@ -145,7 +141,6 @@ provideErrorMessages({
 | `showErrors(field, strategy, status)`       | `Signal<boolean>` — should show errors                |
 | `shouldShowErrors(state, strategy, status)` | Non-reactive check                                    |
 | `injectFormContext()`                       | Get `NgxSignalFormDirective` context or `undefined`   |
-| `injectFormConfig()`                        | Get normalized config with defaults                   |
 | `unwrapValue(signalOrValue)`                | Extract value from `Signal` or static                 |
 
 ### Immutable Array Helpers

@@ -27,7 +27,7 @@ import { contactFormSchema } from './your-first-form.validations';
   template: `
     <form
       [formRoot]="contactForm"
-      [errorStrategy]="errorDisplayMode"
+      [errorStrategy]="errorDisplayMode()"
       class="form-container"
     >
       <!-- Name Field - Manual Layout with Toolkit Error Component -->

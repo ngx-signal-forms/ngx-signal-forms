@@ -9,8 +9,6 @@ This section demonstrates **production-ready patterns** for real-world applicati
 **Adoption Level:** 100% toolkit
 
 - ✅ Global configuration
-- ✅ Custom field name resolution
-- ✅ Debug mode
 - ✅ Async submission with loading states
 - ✅ Server error handling
 - ✅ WCAG 2.2 error announcements
@@ -28,14 +26,11 @@ This section demonstrates **production-ready patterns** for real-world applicati
 - `provideNgxSignalFormsConfig` setup
 - `provideNgxSignalFormsConfigForComponent` overrides
 - Custom default error strategies
-- Custom field name resolvers
-- Debug mode for development
 - Configuration inheritance
 
 **Technologies:**
 
 - App-level configuration providers
-- Custom field resolution logic
 - TypeScript configuration types
 
 ---
@@ -121,18 +116,6 @@ export const appConfig: ApplicationConfig = {
       // Required marker defaults for outlined fields
       showRequiredMarker: true,
       requiredMarker: ' *',
-
-      // Custom field name resolver
-      fieldNameResolver: (element: HTMLElement) => {
-        // Custom logic: use data-field-name if present
-        return element.getAttribute('data-field-name') || null;
-      },
-
-      // Strict field resolution (default: false)
-      strictFieldResolution: false,
-
-      // Debug mode (default: false)
-      debug: true,
     }),
   ],
 };
@@ -151,58 +134,23 @@ export class ExampleComponent {}
 
 ### Configuration Options
 
-| Option                       | Type                                  | Default      | Description                                  |
-| ---------------------------- | ------------------------------------- | ------------ | -------------------------------------------- |
-| `autoAria`                   | `boolean`                             | `true`       | Enable automatic ARIA attributes             |
-| `defaultErrorStrategy`       | `ErrorDisplayStrategy`                | `'on-touch'` | Default error display strategy               |
-| `defaultFormFieldAppearance` | `'default' \| 'outline'`              | `undefined`  | Default form field appearance                |
-| `showRequiredMarker`         | `boolean`                             | `true`       | Show required marker in outlined fields      |
-| `requiredMarker`             | `string`                              | `' *'`       | Required marker text                         |
-| `fieldNameResolver`          | `(el: HTMLElement) => string \| null` | Built-in     | Custom field name resolution logic           |
-| `strictFieldResolution`      | `boolean`                             | `false`      | Throw error if field name cannot be resolved |
-| `debug`                      | `boolean`                             | `false`      | Enable debug logging                         |
+| Option                       | Type                     | Default      | Description                             |
+| ---------------------------- | ------------------------ | ------------ | --------------------------------------- |
+| `autoAria`                   | `boolean`                | `true`       | Enable automatic ARIA attributes        |
+| `defaultErrorStrategy`       | `ErrorDisplayStrategy`   | `'on-touch'` | Default error display strategy          |
+| `defaultFormFieldAppearance` | `'default' \| 'outline'` | `undefined`  | Default form field appearance           |
+| `showRequiredMarker`         | `boolean`                | `true`       | Show required marker in outlined fields |
+| `requiredMarker`             | `string`                 | `' *'`       | Required marker text                    |
 
-### Field Name Resolution Priority
+### Field Name Resolution
 
-When resolving field names for ARIA linking, the toolkit follows this priority:
-
-1. **`data-signal-field` attribute** (explicit override)
-2. **Custom resolver** (if configured)
-3. **`id` attribute** (WCAG recommended) ✅
-4. **`name` attribute** (fallback)
+The toolkit resolves field names from the element's `id` attribute. This is the WCAG-recommended approach.
 
 **Example:**
 
 ```html
-<!-- Priority 1: Explicit override -->
-<input
-  id="firstName"
-  data-signal-field="personalInfo.firstName"
-  [formField]="form.personalInfo.firstName"
-/>
-
-<!-- Priority 3: Use id (most common) -->
+<!-- Field name resolved from id attribute -->
 <input id="email" [formField]="form.email" />
-
-<!-- Priority 4: Fallback to name -->
-<input name="phone" [formField]="form.phone" />
-```
-
-### Custom Field Resolver Example
-
-**Use case:** You have a naming convention where form field IDs use kebab-case but form paths use camelCase.
-
-```typescript
-provideNgxSignalFormsConfig({
-  fieldNameResolver: (element) => {
-    const id = element.id;
-    if (!id) return null;
-
-    // Convert kebab-case to camelCase
-    // e.g., "first-name" → "firstName"
-    return id.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
-  },
-});
 ```
 
 ## 💡 Async Submission Patterns
@@ -415,28 +363,6 @@ return [
 
 ## 🔍 Advanced Use Cases
 
-### Debug Mode
-
-**Enable in development:**
-
-```typescript
-// app.config.ts (development only)
-import { isDevMode } from '@angular/core';
-
-provideNgxSignalFormsConfig({
-  debug: isDevMode(), // Auto-enable in dev mode
-});
-```
-
-**Debug output:**
-
-```text
-[NgxSignalForms] Field name resolved: email (via id attribute)
-[NgxSignalForms] Auto-ARIA applied: aria-invalid="true"
-[NgxSignalForms] Error display strategy: on-touch
-[NgxSignalForms] Form submission state: submitting
-```
-
 ### Custom Error Recovery
 
 #### Pattern: Retry failed submissions
@@ -488,7 +414,6 @@ protected async save(): Promise<void> {
 
 - [ ] Global config set in `app.config.ts`
 - [ ] Default error strategy chosen (`on-touch` recommended)
-- [ ] Debug mode disabled in production
 - [ ] Server error handling implemented
 - [ ] Loading states for all async operations
 - [ ] ARIA live regions for status updates
@@ -522,8 +447,6 @@ protected async save(): Promise<void> {
 
 - ✅ You have multiple forms in your app
 - ✅ You need consistent error UX
-- ✅ You have custom field naming conventions
-- ✅ You want centralized debug control
 - ✅ You're building an enterprise application
 
 ### Use declarative submission When
@@ -533,13 +456,6 @@ protected async save(): Promise<void> {
 - ✅ You want automatic submission state tracking
 - ✅ You need loading indicators
 - ✅ You're calling APIs on submit
-
-### Use Custom Resolvers When
-
-- ✅ Your field naming doesn't match form paths
-- ✅ You have nested form structures
-- ✅ You need dynamic field resolution
-- ✅ You're migrating from legacy forms
 
 ## 🐛 Common Issues
 

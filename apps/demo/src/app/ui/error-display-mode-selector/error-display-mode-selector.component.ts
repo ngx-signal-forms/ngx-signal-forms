@@ -52,14 +52,6 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
       'Higher abandonment risk',
     ],
   },
-  {
-    mode: 'manual',
-    label: 'Manual',
-    description: 'Full control over when errors are displayed',
-    whenToUse: 'Guided flows, wizards, or custom validation UX',
-    pros: ['Complete flexibility', 'Custom workflows', 'Unique UX patterns'],
-    cons: ['Requires manual implementation', 'Easy to miss edge cases'],
-  },
 ];
 
 /**
@@ -129,10 +121,6 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
             @case ('on-submit') {
               1. Fill the form quickly → 2. Submit without fixing issues → 3. Watch
               all errors appear together
-            }
-            @case ('manual') {
-              1. Interact with fields → 2. Notice no automatic errors → 3. Imagine
-              controlling error display yourself (e.g., via guided flows)
             }
           }
         </div>

@@ -83,11 +83,10 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 #### Optional Inputs
 
-| Input        | Type                   | Default                        | Description                                      |
-| ------------ | ---------------------- | ------------------------------ | ------------------------------------------------ |
-| `fieldName`  | `string`               | Auto-derived from input's `id` | Field name for ARIA (optional when input has id) |
-| `strategy`   | `ErrorDisplayStrategy` | Inherits from form provider    | When to show errors                              |
-| `showErrors` | `boolean`              | `true`                         | Toggle automatic error display                   |
+| Input       | Type                   | Default                        | Description                                      |
+| ----------- | ---------------------- | ------------------------------ | ------------------------------------------------ |
+| `fieldName` | `string`               | Auto-derived from input's `id` | Field name for ARIA (optional when input has id) |
+| `strategy`  | `ErrorDisplayStrategy` | Inherits from form provider    | When to show errors                              |
 
 #### Content Projection
 

@@ -17,7 +17,7 @@ import type { ValidationError } from '@angular/forms/signals';
  * ```
  */
 export function isWarningError(error: ValidationError): boolean {
-  return Boolean(error?.kind?.startsWith('warn:'));
+  return error.kind?.startsWith('warn:') ?? false;
 }
 
 /**
@@ -37,7 +37,7 @@ export function isWarningError(error: ValidationError): boolean {
  * ```
  */
 export function isBlockingError(error: ValidationError): boolean {
-  return Boolean(error?.kind && !error.kind.startsWith('warn:'));
+  return !!error.kind && !error.kind.startsWith('warn:');
 }
 
 /**

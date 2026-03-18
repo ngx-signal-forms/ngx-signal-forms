@@ -6,13 +6,7 @@ import {
   input,
   type Signal,
 } from '@angular/core';
-import {
-  generateErrorId,
-  generateWarningId,
-  unwrapValue,
-  type ReactiveOrStatic,
-} from '@ngx-signal-forms/toolkit';
-import { createUniqueId } from './utilities';
+import { generateErrorId, generateWarningId } from '@ngx-signal-forms/toolkit';
 
 /**
  * Field name state signals exposed by the headless directive.
@@ -36,7 +30,7 @@ export interface FieldNameStateSignals {
  *
  * ## Features
  *
- * - **Name Resolution**: Resolves name from input, host element `id`, or fallback
+ * - **Name Resolution**: Resolves name from input or host element `id`
  * - **ID Generation**: Creates unique error/warning region IDs
  * - **ARIA Integration**: IDs suitable for `aria-describedby` usage
  *
@@ -80,13 +74,12 @@ export interface FieldNameStateSignals {
 })
 export class NgxHeadlessFieldNameDirective implements FieldNameStateSignals {
   readonly #elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
-  readonly #generatedFieldName = createUniqueId('field');
 
   /**
    * The field name to use for ID generation.
-   * If not provided, uses host element `id` or a generated fallback.
+   * If not provided, uses the host element `id`.
    */
-  readonly fieldName = input<ReactiveOrStatic<string> | undefined>(undefined);
+  readonly fieldName = input<string | undefined>(undefined);
 
   /**
    * Resolved field name.
@@ -94,7 +87,7 @@ export class NgxHeadlessFieldNameDirective implements FieldNameStateSignals {
   readonly resolvedFieldName = computed(() => {
     const inputValue = this.fieldName();
     if (inputValue !== undefined) {
-      const resolved = unwrapValue(inputValue).trim();
+      const resolved = inputValue.trim();
       if (resolved.length > 0) {
         return resolved;
       }
@@ -105,7 +98,9 @@ export class NgxHeadlessFieldNameDirective implements FieldNameStateSignals {
       return hostId;
     }
 
-    return this.#generatedFieldName;
+    throw new Error(
+      '[ngx-signal-forms] ngxSignalFormHeadlessFieldName requires either a non-empty `fieldName` input or a host element `id`.',
+    );
   });
 
   /**

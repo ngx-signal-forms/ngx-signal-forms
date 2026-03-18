@@ -11,6 +11,8 @@ import {
   generateErrorId,
   generateWarningId,
   injectFormContext,
+  isBlockingError,
+  isWarningError,
   NGX_ERROR_MESSAGES,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   resolveErrorDisplayStrategy,
@@ -18,7 +20,6 @@ import {
   showErrors,
   type ErrorDisplayStrategy,
   type ErrorReadableState,
-  type ReactiveOrStatic,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit/core';
 
@@ -232,12 +233,15 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * Priority:
    * 1. Explicit `fieldName` input
    * 2. Field context from parent wrapper (via NGX_SIGNAL_FORM_FIELD_CONTEXT)
-   * 3. Falls back to 'unknown-field' (should not happen in normal usage)
+   * 3. Throws when neither is available
    */
   readonly #resolvedFieldName = computed(() => {
     const explicit = this.fieldName();
     if (explicit !== undefined) {
-      return explicit;
+      const trimmed = explicit.trim();
+      if (trimmed.length > 0) {
+        return trimmed;
+      }
     }
 
     const contextFieldName = this.#fieldContext?.fieldName();
@@ -245,71 +249,33 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
       return contextFieldName;
     }
 
-    if (
-      !this.#warnedUnknownField &&
-      (typeof ngDevMode === 'undefined' || ngDevMode)
-    ) {
+    if (!this.#warnedUnknownField) {
       this.#warnedUnknownField = true;
-      console.warn(
-        '[ngx-signal-forms] Falling back to unknown field name. Provide fieldName or wrap with ngx-signal-form-field-wrapper.',
-      );
     }
 
-    // Fallback - should not happen in normal usage
-    return 'unknown-field';
+    throw new Error(
+      '[ngx-signal-forms] ngx-signal-form-error requires an explicit `fieldName` input or a parent ngx-signal-form-field-wrapper context.',
+    );
   });
 
   /**
    * Error display strategy for this specific field.
    *
-   * Can be a SignalLike for dynamic strategy or a static value.
    * Use 'inherit' to explicitly inherit from form provider.
    * If undefined, automatically inherits from form provider or defaults to 'on-touch'.
    *
-   * **Field-Level Override Use Cases:**
-   * - Password fields: Use 'immediate' for real-time feedback
-   * - Optional fields: Use 'on-submit' to avoid premature errors
-   * - Critical fields: Use 'on-touch' for quick feedback
-   *
    * @default undefined (inherits from form or 'on-touch')
-   *
-   * @example Field-level override
-   * ```html
-   * <form [formRoot]="form" [errorStrategy]="'on-touch'">
-   *   <!-- Override: immediate feedback for password -->
-   *   <ngx-signal-form-error
-   *     [formField]="form.password"
-   *     fieldName="password"
-   *     strategy="immediate" />
-   *
-   *   <!-- Explicit inherit (same as omitting strategy) -->
-   *   <ngx-signal-form-error
-   *     [formField]="form.email"
-   *     fieldName="email"
-   *     strategy="inherit" />
-   * </form>
-   * ```
    */
-  readonly strategy = input<ReactiveOrStatic<ErrorDisplayStrategy> | undefined>(
-    undefined,
-  );
+  readonly strategy = input<ErrorDisplayStrategy | undefined>(undefined);
 
   /**
    * Form submission status (optional).
    *
-   * **For `'on-touch'` strategy (default): This input is NOT needed.**
-   * Angular's `submit()` calls `markAllAsTouched()`, so `field.touched()` is true
-   * after submission. The component uses `field.touched()` directly.
-   *
-   * **For `'on-submit'` strategy:** Pass a SubmittedStatus signal to distinguish
-   * between "never submitted" and "submitted but field not yet touched".
-   *
-   * When used inside a form with `NgxSignalFormDirective` (`[formRoot]`), this is automatically
-   * injected from the form provider context.
+   * For `'on-touch'` strategy (default), this input is NOT needed.
+   * Only needed for `'on-submit'` strategy.
+   * When inside `[formRoot]`, this is automatically injected from context.
    */
-  readonly submittedStatus = input<
-    ReactiveOrStatic<SubmittedStatus> | undefined
-  >(undefined);
+  readonly submittedStatus = input<SubmittedStatus | undefined>(undefined);
 
   /**
    * Computed error ID for aria-describedby linking.
@@ -349,7 +315,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
     () => {
       const inputStatus = this.submittedStatus();
       if (inputStatus !== undefined && inputStatus !== null) {
-        return typeof inputStatus === 'function' ? inputStatus() : inputStatus;
+        return inputStatus;
       }
 
       const contextStatus = this.#injectedContext?.submittedStatus?.();
@@ -357,7 +323,6 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
         return contextStatus;
       }
 
-      // Return undefined - showErrors() handles this for 'on-touch' strategy
       return undefined;
     },
   );
@@ -431,14 +396,14 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * Computed array of blocking errors (kind does NOT start with 'warn:').
    */
   readonly #blockingErrors = computed(() => {
-    return this.#allMessages().filter((msg) => !msg.kind?.startsWith('warn:'));
+    return this.#allMessages().filter(isBlockingError);
   });
 
   /**
    * Computed array of warnings (kind starts with 'warn:').
    */
   readonly #warningErrors = computed(() => {
-    return this.#allMessages().filter((msg) => msg.kind?.startsWith('warn:'));
+    return this.#allMessages().filter(isWarningError);
   });
 
   /**

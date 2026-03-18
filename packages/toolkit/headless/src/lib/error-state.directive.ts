@@ -10,9 +10,7 @@ import {
   resolveErrorDisplayStrategy,
   resolveValidationErrorMessage,
   showErrors,
-  unwrapValue,
   type ErrorDisplayStrategy,
-  type ReactiveOrStatic,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit/core';
 
@@ -125,17 +123,13 @@ export class NgxHeadlessErrorStateDirective<
    * Error display strategy override.
    * If undefined, inherits from form context or defaults to 'on-touch'.
    */
-  readonly strategy = input<ReactiveOrStatic<ErrorDisplayStrategy> | undefined>(
-    undefined,
-  );
+  readonly strategy = input<ErrorDisplayStrategy | undefined>(undefined);
 
   /**
    * Form submission status (optional).
    * Only needed for 'on-submit' strategy.
    */
-  readonly submittedStatus = input<
-    ReactiveOrStatic<SubmittedStatus> | undefined
-  >(undefined);
+  readonly submittedStatus = input<SubmittedStatus | undefined>(undefined);
 
   /**
    * Resolved error display strategy.
@@ -155,7 +149,7 @@ export class NgxHeadlessErrorStateDirective<
     () => {
       const inputStatus = this.submittedStatus();
       if (inputStatus !== undefined && inputStatus !== null) {
-        return unwrapValue(inputStatus);
+        return inputStatus;
       }
 
       const contextStatus = this.#injectedContext?.submittedStatus?.();

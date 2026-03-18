@@ -76,7 +76,6 @@ export const BASIC_USAGE_CONTENT = {
         title: '🎨 Customization Options',
         items: [
           'Override CSS custom properties for brand alignment',
-          'Control error display with <code>[showErrors]</code> input',
           'Pass custom error strategy per field if needed',
           'Full TypeScript support with generics',
         ],

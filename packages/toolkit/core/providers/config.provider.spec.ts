@@ -33,7 +33,6 @@ describe('provideNgxSignalFormsConfig', () => {
   it('should work with partial config', () => {
     const config = {
       autoAria: false,
-      debug: true,
     };
 
     const providers = provideNgxSignalFormsConfig(config);
@@ -67,7 +66,6 @@ describe('provideNgxSignalFormsConfigForComponent', () => {
   it('should provide configured values', () => {
     const config = {
       autoAria: false,
-      debug: true,
     };
 
     const providers = provideNgxSignalFormsConfigForComponent(config);
@@ -75,7 +73,6 @@ describe('provideNgxSignalFormsConfigForComponent', () => {
 
     const resolved = injector.get(NGX_SIGNAL_FORMS_CONFIG);
     expect(resolved.autoAria).toBe(false);
-    expect(resolved.debug).toBe(true);
     expect(resolved.defaultErrorStrategy).toBe(
       DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy,
     );

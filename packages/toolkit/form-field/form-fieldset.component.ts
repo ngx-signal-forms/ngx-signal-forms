@@ -3,16 +3,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  inject,
   input,
 } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
-import type {
-  ErrorDisplayStrategy,
-  ReactiveOrStatic,
-} from '@ngx-signal-forms/toolkit';
+import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import {
-  injectFormConfig,
   injectFormContext,
+  NGX_SIGNAL_FORMS_CONFIG,
   resolveErrorDisplayStrategy,
   showErrors,
 } from '@ngx-signal-forms/toolkit';
@@ -105,7 +103,7 @@ import {
 })
 export class NgxSignalFormFieldset<TFieldset = unknown> {
   readonly #formContext = injectFormContext();
-  readonly #config = injectFormConfig();
+  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
 
   /**
    * The primary fieldset field from Signal Forms.
@@ -135,9 +133,7 @@ export class NgxSignalFormFieldset<TFieldset = unknown> {
    * Error display strategy for this fieldset.
    * Inherits from form context if not specified.
    */
-  readonly strategy = input<ReactiveOrStatic<ErrorDisplayStrategy> | null>(
-    null,
-  );
+  readonly strategy = input<ErrorDisplayStrategy | null>(null);
 
   /**
    * Whether to show the automatic error/warning display.
@@ -182,7 +178,7 @@ export class NgxSignalFormFieldset<TFieldset = unknown> {
     return resolveErrorDisplayStrategy(
       this.strategy(),
       this.#formContext?.errorStrategy?.(),
-      this.#config.defaultErrorStrategy,
+      this.#config?.defaultErrorStrategy ?? 'on-touch',
     );
   });
 

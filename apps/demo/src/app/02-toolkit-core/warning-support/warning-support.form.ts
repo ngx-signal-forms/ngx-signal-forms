@@ -36,7 +36,7 @@ import { createPasswordForm } from './warning-support.validations';
     <form
       class="form-container"
       [formRoot]="passwordForm"
-      [errorStrategy]="errorDisplayMode"
+      [errorStrategy]="errorDisplayMode()"
       (submit)="handleSubmit()"
     >
       <ngx-signal-form-field-wrapper
@@ -101,7 +101,7 @@ import { createPasswordForm } from './warning-support.validations';
 export class WarningsSupportFormComponent {
   /**
    * Error display strategy input from parent page.
-   * Allows users to switch between immediate, on-touch, on-submit, and manual modes.
+   * Allows users to switch between immediate, on-touch, and on-submit modes.
    */
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
 

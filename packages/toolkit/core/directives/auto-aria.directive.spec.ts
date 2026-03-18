@@ -11,8 +11,6 @@ import { FORM_FIELD } from '@angular/forms/signals';
 import { NgxFormFieldHintComponent } from '@ngx-signal-forms/toolkit/assistive';
 import { render } from '@testing-library/angular';
 import { describe, expect, it, vi } from 'vitest';
-import { NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
-import type { NgxSignalFormsConfig } from '../types';
 import { NgxSignalFormAutoAriaDirective } from './auto-aria.directive';
 
 /**
@@ -39,7 +37,6 @@ class MockFormFieldDirective {
  * - Initialization with different element types (input, textarea, select)
  * - Field name resolution from element attributes (id, name, formControlName, ariaLabel)
  * - ARIA attribute computation based on field state (valid/invalid, touched/untouched)
- * - Integration with form config (strictFieldResolution, debug)
  * - Opt-out behavior with ngxSignalFormAutoAriaDisabled attribute
  * - Radio and checkbox exclusion from automatic ARIA
  */
@@ -70,10 +67,6 @@ describe('NgxSignalFormAutoAriaDirective', () => {
 
   describe('Initialization and Field Name Resolution', () => {
     it('should initialize with id attribute as field name', async () => {
-      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {
-        // Mock implementation
-      });
-
       @Component({
         template: '<input id="email" [formField]="emailControl()" />',
         imports: [MockFormFieldDirective, NgxSignalFormAutoAriaDirective],
@@ -82,29 +75,10 @@ describe('NgxSignalFormAutoAriaDirective', () => {
         emailControl = createMockControl();
       }
 
-      const { container } = await render(TestComponent, {
-        providers: [
-          {
-            provide: NGX_SIGNAL_FORMS_CONFIG,
-            useValue: {
-              debug: true,
-              strictFieldResolution: false,
-            } as NgxSignalFormsConfig,
-          },
-        ],
-      });
+      const { container } = await render(TestComponent);
 
       const input = container.querySelector('input');
       expect(input?.getAttribute('aria-invalid')).toBe('false');
-
-      // Verify debug logging
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[NgxSignalFormAutoAriaDirective] Initialized for field:',
-        'email',
-        { existingDescribedBy: null },
-      );
-
-      consoleLogSpy.mockRestore();
     });
 
     it('should initialize with name attribute as field name', async () => {
@@ -460,96 +434,6 @@ describe('NgxSignalFormAutoAriaDirective', () => {
       fixture.detectChanges();
 
       expect(input?.hasAttribute('aria-describedby')).toBe(false);
-    });
-  });
-
-  describe('Integration with Form Config', () => {
-    it('should log debug messages when debug is enabled', async () => {
-      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {
-        // Mock implementation
-      });
-
-      @Component({
-        template: '<input id="test-field" [formField]="testControl()" />',
-        imports: [MockFormFieldDirective, NgxSignalFormAutoAriaDirective],
-      })
-      class TestComponent {
-        testControl = createMockControl();
-      }
-
-      await render(TestComponent, {
-        providers: [
-          {
-            provide: NGX_SIGNAL_FORMS_CONFIG,
-            useValue: {
-              debug: true,
-              strictFieldResolution: false,
-            } as NgxSignalFormsConfig,
-          },
-        ],
-      });
-
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[NgxSignalFormAutoAriaDirective] Initialized for field:',
-        'test-field',
-        { existingDescribedBy: null },
-      );
-
-      consoleLogSpy.mockRestore();
-    });
-
-    it('should NOT log debug messages when debug is disabled', async () => {
-      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {
-        // Mock implementation
-      });
-
-      @Component({
-        template: '<input id="no-debug-field" [formField]="testControl()" />',
-        imports: [MockFormFieldDirective, NgxSignalFormAutoAriaDirective],
-      })
-      class TestComponent {
-        testControl = createMockControl();
-      }
-
-      // Clear any previous calls
-      consoleLogSpy.mockClear();
-
-      await render(TestComponent, {
-        providers: [
-          {
-            provide: NGX_SIGNAL_FORMS_CONFIG,
-            useValue: {
-              debug: false,
-              strictFieldResolution: false,
-            } as NgxSignalFormsConfig,
-          },
-        ],
-      });
-
-      // Should not have any calls for NgxSignalFormAutoAriaDirective
-      const autoAriaCalls = consoleLogSpy.mock.calls.filter(
-        (call) =>
-          typeof call[0] === 'string' &&
-          call[0].includes('NgxSignalFormAutoAriaDirective'),
-      );
-      expect(autoAriaCalls).toHaveLength(0);
-
-      consoleLogSpy.mockRestore();
-    });
-
-    it('should use default config when no provider is given', async () => {
-      @Component({
-        template: '<input id="email" [formField]="emailControl()" />',
-        imports: [MockFormFieldDirective, NgxSignalFormAutoAriaDirective],
-      })
-      class TestComponent {
-        emailControl = createMockControl();
-      }
-
-      const { container } = await render(TestComponent);
-
-      const input = container.querySelector('input');
-      expect(input?.getAttribute('aria-invalid')).toBe('false');
     });
   });
 

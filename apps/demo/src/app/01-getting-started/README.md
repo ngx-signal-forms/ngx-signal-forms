@@ -242,7 +242,7 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
 
 **What you'll learn:**
 
-- Error display strategies (immediate, on-touch, on-submit, manual)
+- Error display strategies (immediate, on-touch, on-submit)
 - Warning support (non-blocking validation)
 - Field state visualization
 - Accessibility comparison side-by-side

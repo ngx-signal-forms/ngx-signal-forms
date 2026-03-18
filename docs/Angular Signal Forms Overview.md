@@ -114,7 +114,7 @@ When building Signal Forms in Angular 21.2, keep these defaults:
 See the [**Signal Forms Toolkit**](../README.md) which provides:
 
 - ✅ Automatic ARIA attributes (`aria-invalid`, `aria-describedby`)
-- ✅ Error display strategies (`immediate`, `on-touch`, `on-submit`, `manual`)
+- ✅ Error display strategies (`immediate`, `on-touch`, `on-submit`)
 - ✅ `<ngx-signal-form-error>` from `@ngx-signal-forms/toolkit/assistive`
 - ✅ Form field wrappers with built-in error display
 - ✅ Derived `submittedStatus` via form provider

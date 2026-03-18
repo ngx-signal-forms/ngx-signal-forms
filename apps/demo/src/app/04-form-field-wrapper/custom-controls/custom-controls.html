@@ -7,7 +7,7 @@
 
 <form
   [formRoot]="reviewForm"
-  [errorStrategy]="errorDisplayMode"
+  [errorStrategy]="errorDisplayMode()"
   class="form-container"
 >
   <div class="space-y-6">
@@ -27,12 +27,14 @@
 
     <!-- Product Rating - Custom RatingControl with auto-derived fieldName -->
     <ngx-signal-form-field-wrapper
-      appearance="bare"
+      appearance="standard"
+      fieldName="rating"
       [formField]="reviewForm.rating"
     >
       <label for="rating">Product Rating *</label>
       <ngx-rating-control
         id="rating"
+        data-ngx-signal-form-control="true"
         [formField]="reviewForm.rating"
         [maxRating]="5"
       />
@@ -43,12 +45,14 @@
 
     <!-- Service Rating - Custom RatingControl -->
     <ngx-signal-form-field-wrapper
-      appearance="bare"
+      appearance="standard"
+      fieldName="serviceRating"
       [formField]="reviewForm.serviceRating"
     >
       <label for="serviceRating">Service Quality *</label>
       <ngx-rating-control
         id="serviceRating"
+        data-ngx-signal-form-control="true"
         [formField]="reviewForm.serviceRating"
         [maxRating]="5"
       />
@@ -56,12 +60,14 @@
 
     <!-- Would Recommend - Custom RatingControl as thumbs up/down (2 stars) -->
     <ngx-signal-form-field-wrapper
-      appearance="bare"
+      appearance="standard"
+      fieldName="wouldRecommend"
       [formField]="reviewForm.wouldRecommend"
     >
       <label for="wouldRecommend">Would Recommend?</label>
       <ngx-rating-control
         id="wouldRecommend"
+        data-ngx-signal-form-control="true"
         [formField]="reviewForm.wouldRecommend"
         [maxRating]="2"
       />

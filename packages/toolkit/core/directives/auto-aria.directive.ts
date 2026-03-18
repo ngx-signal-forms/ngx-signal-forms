@@ -16,7 +16,7 @@ import {
   generateWarningId,
   resolveFieldName,
 } from '../utilities/field-resolution';
-import { injectFormConfig } from '../utilities/inject-form-config';
+import { isBlockingError, isWarningError } from '../utilities/warning-error';
 
 /**
  * Automatically manages ARIA attributes for Signal Forms controls.
@@ -56,7 +56,7 @@ import { injectFormConfig } from '../utilities/inject-form-config';
   },
 })
 export class NgxSignalFormAutoAriaDirective {
-  #shouldShowBy(predicate: (kind: string) => boolean): boolean {
+  #shouldShowBy(predicate: (error: { kind: string }) => boolean): boolean {
     const field = this.#formField.field();
     if (!field) return false;
 
@@ -64,7 +64,7 @@ export class NgxSignalFormAutoAriaDirective {
     if (!fieldState) return false;
 
     const errors = fieldState.errors();
-    const hasMatchingErrors = errors.some((error) => predicate(error.kind));
+    const hasMatchingErrors = errors.some(predicate);
     if (!hasMatchingErrors) return false;
 
     const strategy: ErrorDisplayStrategy =
@@ -76,7 +76,6 @@ export class NgxSignalFormAutoAriaDirective {
 
   readonly #element = inject(ElementRef<HTMLElement>);
   readonly #injector = inject(Injector);
-  readonly #config = injectFormConfig();
   readonly #context = inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true });
 
   /// Inject Angular's FormField to avoid creating a duplicate `formField` input,
@@ -101,7 +100,7 @@ export class NgxSignalFormAutoAriaDirective {
    * Respects form-level ErrorDisplayStrategy from NgxSignalFormDirective (`[formRoot]`).
    */
   readonly #shouldShowErrors = computed(() => {
-    return this.#shouldShowBy((kind) => !kind.startsWith('warn:'));
+    return this.#shouldShowBy((error) => isBlockingError(error));
   });
 
   /**
@@ -109,7 +108,7 @@ export class NgxSignalFormAutoAriaDirective {
    * Warnings use same visibility logic as errors.
    */
   readonly #shouldShowWarnings = computed(() => {
-    return this.#shouldShowBy((kind) => kind.startsWith('warn:'));
+    return this.#shouldShowBy((error) => isWarningError(error));
   });
 
   /**
@@ -205,25 +204,12 @@ export class NgxSignalFormAutoAriaDirective {
   }
 
   constructor() {
-    // Capture existing aria-describedby before we modify it
     const existingDescribedBy =
       this.#element.nativeElement.getAttribute('aria-describedby');
     this.#existingDescribedBy.set(existingDescribedBy);
 
-    // Resolve field name on initialization
-    const fieldName = resolveFieldName(
-      this.#element.nativeElement,
-      this.#injector,
-    );
+    const fieldName = resolveFieldName(this.#element.nativeElement);
     this.#fieldName.set(fieldName);
-
-    if (this.#config.debug) {
-      console.log(
-        '[NgxSignalFormAutoAriaDirective] Initialized for field:',
-        fieldName,
-        { existingDescribedBy },
-      );
-    }
 
     afterNextRender(
       () => {

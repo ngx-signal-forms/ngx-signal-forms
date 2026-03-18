@@ -13,18 +13,16 @@ describe('normalizeSignalFormsConfig', () => {
   it('should merge supplied config with defaults', () => {
     const result = normalizeSignalFormsConfig({
       autoAria: false,
-      debug: true,
     });
 
     expect(result.autoAria).toBe(false);
-    expect(result.debug).toBe(true);
     expect(result.defaultErrorStrategy).toBe(
       DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy,
     );
   });
 
   it('should preserve provided defaultErrorStrategy signals', () => {
-    const strategySpy = vi.fn().mockReturnValue('manual');
+    const strategySpy = vi.fn().mockReturnValue('on-touch');
 
     const result = normalizeSignalFormsConfig({
       defaultErrorStrategy: strategySpy,

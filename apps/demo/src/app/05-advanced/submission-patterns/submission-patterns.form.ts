@@ -34,7 +34,7 @@ import { submissionSchema } from './submission-patterns.validations';
   template: `
     <form
       [formRoot]="registrationForm"
-      [errorStrategy]="errorDisplayMode"
+      [errorStrategy]="errorDisplayMode()"
       class="form-container"
     >
       <!-- Submission state indicator -->

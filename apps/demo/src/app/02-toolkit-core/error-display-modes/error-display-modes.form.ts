@@ -122,7 +122,6 @@ export class ErrorDisplayHelpersComponent {
     const strategy = this.resolvedStrategy();
     const status = this.submittedStatus();
 
-    if (strategy === 'manual') return false;
     if (!fieldState.invalid()) return false;
     if (strategy === 'immediate') return true;
     if (strategy === 'on-touch') return fieldState.touched();
@@ -154,7 +153,7 @@ export class ErrorDisplayHelpersComponent {
     <!-- Product Feedback Form -->
     <form
       [formRoot]="productForm"
-      [errorStrategy]="errorDisplayMode"
+      [errorStrategy]="errorDisplayMode()"
       class="form-container"
       aria-labelledby="productFeedbackHeading"
     >

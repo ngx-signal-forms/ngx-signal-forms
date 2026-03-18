@@ -19,9 +19,9 @@ test.describe('Error Display Modes', () => {
     await expect(formPage.form).toBeVisible();
   });
 
-  test('should allow switching between all 4 modes', async () => {
+  test('should allow switching between all 3 modes', async () => {
     await test.step('Switch through all error display modes', async () => {
-      const modes = ['immediate', 'onTouch', 'onSubmit', 'manual'] as const;
+      const modes = ['immediate', 'onTouch', 'onSubmit'] as const;
 
       for (const mode of modes) {
         await formPage.selectErrorMode(mode);

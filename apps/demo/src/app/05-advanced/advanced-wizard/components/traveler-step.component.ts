@@ -13,7 +13,6 @@ import {
   NgxSignalFormToolkit,
   submitWithWarnings,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import type { Destination } from '../schemas/wizard.schemas';
 
@@ -36,13 +35,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
 @Component({
   selector: 'ngx-traveler-step',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    FormField,
-    FormRoot,
-    NgxSignalFormToolkit,
-    NgxFormField,
-    NgxSignalFormErrorComponent,
-  ],
+  imports: [FormField, FormRoot, NgxSignalFormToolkit, NgxFormField],
   template: `
     <div class="traveler-step">
       <h2 #stepHeading class="mb-4 text-xl font-semibold" tabindex="-1">
@@ -128,7 +121,6 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
             <!-- Passport Expiry with cross-field validation -->
             <ngx-signal-form-field-wrapper
               [formField]="travelerForm.passportExpiry"
-              [showErrors]="false"
             >
               <label for="passportExpiry">
                 Expiry Date <span class="text-red-500">*</span>
@@ -139,10 +131,6 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
                 [formField]="travelerForm.passportExpiry"
                 class="form-input"
                 [attr.aria-invalid]="passportExpiryError() ? true : null"
-              />
-              <ngx-signal-form-error
-                [formField]="travelerForm.passportExpiry"
-                fieldName="passportExpiry"
               />
               <div
                 class="passport-expiry-message"

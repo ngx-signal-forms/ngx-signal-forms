@@ -35,7 +35,7 @@ readonly myForm = form(this.#model, schema, {
 
 Some forms shouldn't show inline errors immediately (while typing) or even on blur. They should stay quiet until the user hits "Save".
 
-This demo binds the strategy as `[errorStrategy]="errorDisplayMode"` (defaults to `on-touch`, can be switched from the page control):
+This demo binds the strategy as `[errorStrategy]="errorDisplayMode()"` (defaults to `on-touch`, can be switched from the page control):
 
 - **Before Submit**: Behavior follows the currently selected strategy.
 - **After Failed Submit**: Invalid fields appear according to that strategy.

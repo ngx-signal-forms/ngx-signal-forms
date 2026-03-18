@@ -1,14 +1,13 @@
-import { computed, Directive, input } from '@angular/core';
+import { computed, Directive, inject, input } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import {
-  injectFormConfig,
   injectFormContext,
   isBlockingError,
   isWarningError,
+  NGX_SIGNAL_FORMS_CONFIG,
   resolveErrorDisplayStrategy,
   showErrors,
   type ErrorDisplayStrategy,
-  type ReactiveOrStatic,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit/core';
 
@@ -98,7 +97,7 @@ export class NgxHeadlessFieldsetDirective<
   TFieldset = unknown,
 > implements FieldsetStateSignals {
   readonly #formContext = injectFormContext();
-  readonly #config = injectFormConfig();
+  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
   readonly #generatedFieldsetId = createUniqueId('fieldset');
 
   /**
@@ -119,9 +118,7 @@ export class NgxHeadlessFieldsetDirective<
   /**
    * Error display strategy override.
    */
-  readonly strategy = input<ReactiveOrStatic<ErrorDisplayStrategy> | null>(
-    null,
-  );
+  readonly strategy = input<ErrorDisplayStrategy | null>(null);
 
   /**
    * Resolved fieldset ID.
@@ -142,7 +139,7 @@ export class NgxHeadlessFieldsetDirective<
     return resolveErrorDisplayStrategy(
       this.strategy(),
       this.#formContext?.errorStrategy?.(),
-      this.#config.defaultErrorStrategy,
+      this.#config?.defaultErrorStrategy ?? 'on-touch',
     );
   });
 

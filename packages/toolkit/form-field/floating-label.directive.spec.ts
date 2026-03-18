@@ -25,9 +25,9 @@ const createMockFieldState = () =>
 
 describe('NgxFloatingLabelDirective', () => {
   describe('Basic directive application', () => {
-    it('should add ngx-signal-forms-outline class when outline attribute is present', async () => {
+    it('should add ngx-signal-forms-outline class when outline appearance is set', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-wrapper [formField]="field" outline>
+        `<ngx-signal-form-field-wrapper [formField]="field" appearance="outline">
           <label for="email">Email</label>
           <input id="email" type="email" />
         </ngx-signal-form-field-wrapper>`,
@@ -45,7 +45,7 @@ describe('NgxFloatingLabelDirective', () => {
       expect(formField).toHaveClass('ngx-signal-forms-outline');
     });
 
-    it('should not add ngx-signal-forms-outline class without outline attribute', async () => {
+    it('should not add ngx-signal-forms-outline class without outline appearance', async () => {
       const { container } = await render(
         `<ngx-signal-form-field-wrapper [formField]="field">
           <label for="email">Email</label>
@@ -69,7 +69,7 @@ describe('NgxFloatingLabelDirective', () => {
   describe('Accessibility', () => {
     it('should preserve label for attribute', async () => {
       await render(
-        `<ngx-signal-form-field-wrapper [formField]="field" outline>
+        `<ngx-signal-form-field-wrapper [formField]="field" appearance="outline">
           <label for="email">Email Address</label>
           <input id="email" type="email" required />
         </ngx-signal-form-field-wrapper>`,
@@ -90,7 +90,7 @@ describe('NgxFloatingLabelDirective', () => {
 
     it('should preserve required attribute on input', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-wrapper [formField]="field" outline>
+        `<ngx-signal-form-field-wrapper [formField]="field" appearance="outline">
           <label for="password">Password</label>
           <input id="password" type="password" required />
         </ngx-signal-form-field-wrapper>`,
@@ -110,7 +110,7 @@ describe('NgxFloatingLabelDirective', () => {
   describe('Integration with form field component', () => {
     it('should work with textarea elements', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-wrapper [formField]="field" outline>
+        `<ngx-signal-form-field-wrapper [formField]="field" appearance="outline">
           <label for="bio">Bio</label>
           <textarea id="bio" required></textarea>
         </ngx-signal-form-field-wrapper>`,
@@ -133,7 +133,7 @@ describe('NgxFloatingLabelDirective', () => {
 
     it('should work with select elements', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-wrapper [formField]="field" outline>
+        `<ngx-signal-form-field-wrapper [formField]="field" appearance="outline">
           <label for="country">Country</label>
           <select id="country" required>
             <option value="">Select...</option>
@@ -160,7 +160,7 @@ describe('NgxFloatingLabelDirective', () => {
 
     it('should work with placeholder text', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-wrapper [formField]="field" outline>
+        `<ngx-signal-form-field-wrapper [formField]="field" appearance="outline">
           <label for="email">Email</label>
           <input id="email" type="email" placeholder="you@example.com" required />
         </ngx-signal-form-field-wrapper>`,
@@ -181,12 +181,12 @@ describe('NgxFloatingLabelDirective', () => {
     it('should apply directive to multiple fields independently', async () => {
       const { container } = await render(
         `<div>
-          <ngx-signal-form-field-wrapper [formField]="field1" outline>
+          <ngx-signal-form-field-wrapper [formField]="field1" appearance="outline">
             <label for="email">Email</label>
             <input id="email" type="email" />
           </ngx-signal-form-field-wrapper>
 
-          <ngx-signal-form-field-wrapper [formField]="field2" outline [showRequiredMarker]="false">
+          <ngx-signal-form-field-wrapper [formField]="field2" appearance="outline" [showRequiredMarker]="false">
             <label for="username">Username</label>
             <input id="username" type="text" />
           </ngx-signal-form-field-wrapper>

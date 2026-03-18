@@ -1,13 +1,8 @@
 import { ElementRef, Injector, signal } from '@angular/core';
-import type { SubmittedStatus } from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
+import type { SubmittedStatus } from '../types';
 import type { NgxSignalFormContext } from '../directives/ngx-signal-form.directive';
-import {
-  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-  NGX_SIGNAL_FORM_CONTEXT,
-  NGX_SIGNAL_FORMS_CONFIG,
-} from '../tokens';
-import type { NgxSignalFormsConfig } from '../types';
+import { NGX_SIGNAL_FORM_CONTEXT } from '../tokens';
 import { injectFieldControl } from './inject-field-control';
 
 describe('injectFieldControl', () => {
@@ -19,16 +14,8 @@ describe('injectFieldControl', () => {
       submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
-    const config: NgxSignalFormsConfig = {
-      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-      strictFieldResolution: false,
-    };
-
     const injector = Injector.create({
-      providers: [
-        { provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext },
-        { provide: NGX_SIGNAL_FORMS_CONFIG, useValue: config },
-      ],
+      providers: [{ provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext }],
     });
 
     const element = document.createElement('input');
@@ -46,20 +33,13 @@ describe('injectFieldControl', () => {
       submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
-    const config: NgxSignalFormsConfig = {
-      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-      strictFieldResolution: false,
-    };
 
     const injector = Injector.create({
-      providers: [
-        { provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext },
-        { provide: NGX_SIGNAL_FORMS_CONFIG, useValue: config },
-      ],
+      providers: [{ provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext }],
     });
 
     const element = document.createElement('input');
-    element.setAttribute('data-signal-field', 'address.city');
+    element.setAttribute('id', 'address.city');
 
     const result = injectFieldControl(element, injector);
     expect(result).toBe(cityControl);
@@ -73,16 +53,8 @@ describe('injectFieldControl', () => {
       submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
-    const config: NgxSignalFormsConfig = {
-      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-      strictFieldResolution: false,
-    };
-
     const injector = Injector.create({
-      providers: [
-        { provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext },
-        { provide: NGX_SIGNAL_FORMS_CONFIG, useValue: config },
-      ],
+      providers: [{ provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext }],
     });
 
     const element = document.createElement('input');
@@ -99,20 +71,13 @@ describe('injectFieldControl', () => {
       submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
-    const config: NgxSignalFormsConfig = {
-      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-      strictFieldResolution: false,
-    };
 
     const injector = Injector.create({
-      providers: [
-        { provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext },
-        { provide: NGX_SIGNAL_FORMS_CONFIG, useValue: config },
-      ],
+      providers: [{ provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext }],
     });
 
     const element = document.createElement('input');
-    // No id, name, or data-signal-field
+    // No id attribute
 
     expect(() => {
       injectFieldControl(element, injector);
@@ -126,16 +91,9 @@ describe('injectFieldControl', () => {
       submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
-    const config: NgxSignalFormsConfig = {
-      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-      strictFieldResolution: false,
-    };
 
     const injector = Injector.create({
-      providers: [
-        { provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext },
-        { provide: NGX_SIGNAL_FORMS_CONFIG, useValue: config },
-      ],
+      providers: [{ provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext }],
     });
 
     const element = document.createElement('input');
@@ -153,20 +111,13 @@ describe('injectFieldControl', () => {
       submittedStatus: () => 'unsubmitted' as SubmittedStatus,
       errorStrategy: () => 'on-touch',
     };
-    const config: NgxSignalFormsConfig = {
-      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-      strictFieldResolution: false,
-    };
 
     const injector = Injector.create({
-      providers: [
-        { provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext },
-        { provide: NGX_SIGNAL_FORMS_CONFIG, useValue: config },
-      ],
+      providers: [{ provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext }],
     });
 
     const element = document.createElement('input');
-    element.setAttribute('data-signal-field', 'address.city');
+    element.setAttribute('id', 'address.city');
 
     expect(() => {
       injectFieldControl(element, injector);
@@ -174,11 +125,6 @@ describe('injectFieldControl', () => {
   });
 
   it('should throw error when form instance is not available (required input)', () => {
-    const config: NgxSignalFormsConfig = {
-      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-      strictFieldResolution: false,
-    };
-
     const injector = Injector.create({
       providers: [
         {
@@ -193,7 +139,6 @@ describe('injectFieldControl', () => {
             errorStrategy: () => 'on-touch',
           } satisfies NgxSignalFormContext,
         },
-        { provide: NGX_SIGNAL_FORMS_CONFIG, useValue: config },
       ],
     });
 
@@ -215,13 +160,8 @@ describe('injectFieldControl', () => {
   });
 
   it('should throw when form context not available', () => {
-    const config: NgxSignalFormsConfig = {
-      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-      strictFieldResolution: false,
-    };
     const injector = Injector.create({
-      providers: [{ provide: NGX_SIGNAL_FORMS_CONFIG, useValue: config }],
-      // No NGX_SIGNAL_FORM_CONTEXT
+      providers: [],
     });
 
     const element = document.createElement('input');

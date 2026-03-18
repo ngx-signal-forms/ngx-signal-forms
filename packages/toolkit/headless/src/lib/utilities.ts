@@ -10,7 +10,6 @@ import {
   unwrapValue,
   type ErrorDisplayStrategy,
   type ErrorReadableState,
-  type ReactiveOrStatic,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit/core';
 
@@ -21,6 +20,7 @@ import {
 } from './character-count.directive';
 
 type ReadSignal<T> = () => T;
+type ReactiveOrStatic<T> = T | ReadSignal<T>;
 
 // ============================================================================
 // FieldState Duck-Typing Utilities

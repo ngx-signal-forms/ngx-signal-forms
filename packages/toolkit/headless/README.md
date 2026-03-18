@@ -419,7 +419,7 @@ Aggregates error state across multiple fields for group validation display.
 
 Resolves field names and generates accessible IDs.
 
-If `fieldName` is omitted, the directive uses the host element `id`. If no `id` is present, it generates a unique fallback.
+If `fieldName` is omitted, the directive uses the host element `id`. If no `id` is present, provide an explicit `fieldName`.
 
 | Selector  | `[ngxSignalFormHeadlessFieldName]` |
 | --------- | ---------------------------------- |

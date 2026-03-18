@@ -11,8 +11,6 @@ describe('injectFormConfig', () => {
   it('should return provided config when available', () => {
     const customConfig: NgxSignalFormsConfig = {
       ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-      strictFieldResolution: true,
-      debug: true,
       autoAria: false,
     };
 
@@ -22,8 +20,6 @@ describe('injectFormConfig', () => {
 
     const result = injectFormConfig(injector);
     expect(result).toMatchObject({
-      strictFieldResolution: true,
-      debug: true,
       autoAria: false,
     });
   });
@@ -40,7 +36,7 @@ describe('injectFormConfig', () => {
   it('should merge partial config with defaults', () => {
     const partialConfig: NgxSignalFormsConfig = {
       ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-      strictFieldResolution: true,
+      autoAria: false,
     };
 
     const injector = Injector.create({
@@ -50,8 +46,10 @@ describe('injectFormConfig', () => {
     });
 
     const result = injectFormConfig(injector);
-    expect(result.strictFieldResolution).toBe(true);
-    expect(result.autoAria).toBe(DEFAULT_NGX_SIGNAL_FORMS_CONFIG.autoAria);
+    expect(result.autoAria).toBe(false);
+    expect(result.showRequiredMarker).toBe(
+      DEFAULT_NGX_SIGNAL_FORMS_CONFIG.showRequiredMarker,
+    );
   });
 
   it('should throw when called outside injection context without injector', () => {

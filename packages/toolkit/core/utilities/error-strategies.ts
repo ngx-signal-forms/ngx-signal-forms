@@ -81,9 +81,6 @@ export function shouldShowErrors(
     case 'on-submit':
       return isInvalid && hasSubmitted;
 
-    case 'manual':
-      return false;
-
     default:
       return isInvalid && isTouched;
   }

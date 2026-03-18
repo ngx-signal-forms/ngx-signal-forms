@@ -2,7 +2,7 @@
 
 ## Overview
 
-Demonstrates how different error display strategies change when validation feedback appears. The product feedback form can be switched between `immediate`, `on-touch`, `on-submit`, and `manual` strategies.
+Demonstrates how different error display strategies change when validation feedback appears. The product feedback form can be switched between `immediate`, `on-touch`, and `on-submit` strategies.
 
 ## Form model
 

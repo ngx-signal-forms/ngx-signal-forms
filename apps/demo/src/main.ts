@@ -36,12 +36,6 @@ async function enableMocking(): Promise<void> {
 
 // Wrap in async IIFE to support top-level await in all build targets
 void (async () => {
-  // Enable debug logging globally
-  (
-    window as unknown as { __DEBUG_SHOW_ERRORS__?: boolean }
-  ).__DEBUG_SHOW_ERRORS__ = true;
-  console.log('🐛 Debug logging enabled for error strategies');
-
   // Ensure JIT compiler is available in dev server (Angular Vite builder) for components
   // that rely on templateUrl/styleUrls during E2E and local dev.
   // Use isDevMode() to avoid importing the compiler in production builds.
@@ -64,8 +58,6 @@ void (async () => {
       provideNgxSignalFormsConfig({
         defaultErrorStrategy: 'on-touch',
         autoAria: true,
-        strictFieldResolution: false,
-        debug: true,
       }),
       provideRouter(
         appRoutes,

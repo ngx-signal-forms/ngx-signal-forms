@@ -1,7 +1,6 @@
 import { signal } from '@angular/core';
-import type { SubmittedStatus } from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
-import type { ErrorDisplayStrategy } from '../types';
+import type { ErrorDisplayStrategy, SubmittedStatus } from '../types';
 import { shouldShowErrors } from './error-strategies';
 import { showErrors } from './show-errors';
 
@@ -298,52 +297,6 @@ describe('error-strategies', () => {
       });
     });
 
-    describe('manual strategy', () => {
-      it('should never show errors automatically', () => {
-        const fieldState = signal({
-          invalid: () => true,
-          touched: () => true,
-        });
-        const submittedStatus = signal<SubmittedStatus>('submitted');
-
-        const result = showErrors(fieldState, 'manual', submittedStatus);
-
-        expect(result()).toBe(false);
-      });
-
-      it('should remain false even when all conditions are met', () => {
-        const fieldState = signal({
-          invalid: () => true,
-          touched: () => true,
-        });
-        const submittedStatus = signal<SubmittedStatus>('submitted');
-
-        const result = showErrors(fieldState, 'manual', submittedStatus);
-
-        expect(result()).toBe(false);
-      });
-
-      it('should never show errors regardless of submission status', () => {
-        const fieldState = signal({
-          invalid: () => true,
-          touched: () => true,
-        });
-        const submittedStatus = signal<SubmittedStatus>('unsubmitted');
-
-        const result = showErrors(fieldState, 'manual', submittedStatus);
-
-        expect(result()).toBe(false);
-
-        // Should not show during submission
-        submittedStatus.set('submitting');
-        expect(result()).toBe(false);
-
-        // Should not show after submission
-        submittedStatus.set('submitted');
-        expect(result()).toBe(false);
-      });
-    });
-
     describe('strategy as signal', () => {
       it('should support strategy as a signal', () => {
         const strategy = signal<ErrorDisplayStrategy>('on-touch');
@@ -360,10 +313,6 @@ describe('error-strategies', () => {
         // Switch to immediate strategy
         strategy.set('immediate');
         expect(result()).toBe(true);
-
-        // Switch to manual strategy
-        strategy.set('manual');
-        expect(result()).toBe(false);
       });
 
       it('should react to strategy changes', () => {
@@ -473,15 +422,6 @@ describe('error-strategies', () => {
       expect(shouldShowErrors(fieldState, 'on-submit', 'unsubmitted')).toBe(
         false,
       );
-    });
-
-    it('should work with manual strategy', () => {
-      const fieldState = {
-        invalid: () => true,
-        touched: () => true,
-      };
-
-      expect(shouldShowErrors(fieldState, 'manual', 'submitted')).toBe(false);
     });
   });
 });

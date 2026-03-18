@@ -1696,7 +1696,10 @@ export class WizardShellComponent {
   ],
   template: `
     <form [formRoot]="personForm">
-      <ngx-signal-form-field-wrapper [formField]="personForm.firstName" outline>
+      <ngx-signal-form-field-wrapper
+        [formField]="personForm.firstName"
+        appearance="outline"
+      >
         <label for="firstName">First Name</label>
         <input
           id="firstName"
@@ -1706,7 +1709,10 @@ export class WizardShellComponent {
         />
       </ngx-signal-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper [formField]="personForm.lastName" outline>
+      <ngx-signal-form-field-wrapper
+        [formField]="personForm.lastName"
+        appearance="outline"
+      >
         <label for="lastName">Last Name</label>
         <input
           id="lastName"
@@ -1716,7 +1722,10 @@ export class WizardShellComponent {
         />
       </ngx-signal-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper [formField]="personForm.email" outline>
+      <ngx-signal-form-field-wrapper
+        [formField]="personForm.email"
+        appearance="outline"
+      >
         <label for="email">Email</label>
         <input
           id="email"
@@ -1726,7 +1735,10 @@ export class WizardShellComponent {
         />
       </ngx-signal-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper [formField]="personForm.phone" outline>
+      <ngx-signal-form-field-wrapper
+        [formField]="personForm.phone"
+        appearance="outline"
+      >
         <label for="phone">Phone (optional)</label>
         <input id="phone" type="tel" [formField]="personForm.phone" />
       </ngx-signal-form-field-wrapper>
@@ -2179,7 +2191,7 @@ Your toolkit provides excellent field wrapper functionality. Use it consistently
 import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
 
 // In template
-<ngx-signal-form-field-wrapper [formField]="form.email" outline>
+<ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
   <label for="email">Email</label>
   <input id="email" type="email" [formField]="form.email" required />
   <ngx-form-field-hint>Enter your work email</ngx-form-field-hint>

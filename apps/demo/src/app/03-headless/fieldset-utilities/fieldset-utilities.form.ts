@@ -94,6 +94,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
         <div class="headless-card">
           <div
             ngxSignalFormHeadlessFieldName
+            fieldName="contactEmail"
             #emailName="fieldName"
             class="space-y-2"
           >
@@ -203,6 +204,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
             <div class="grid gap-4 sm:grid-cols-2">
               <div
                 ngxSignalFormHeadlessFieldName
+                fieldName="street"
                 #streetName="fieldName"
                 class="space-y-2"
               >
@@ -270,6 +272,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
 
               <div
                 ngxSignalFormHeadlessFieldName
+                fieldName="city"
                 #cityName="fieldName"
                 class="space-y-2"
               >
@@ -318,6 +321,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
 
               <div
                 ngxSignalFormHeadlessFieldName
+                fieldName="postalCode"
                 #postalName="fieldName"
                 class="space-y-2"
               >

@@ -4,10 +4,9 @@ import { submit } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type {
   ErrorDisplayStrategy,
-  ReactiveOrStatic,
+  ResolvedErrorDisplayStrategy,
   SubmittedStatus,
 } from '../types';
-import { resolveErrorDisplayStrategy } from '../utilities/resolve-strategy';
 import { createSubmittedStatusTracker } from '../utilities/submission-helpers';
 
 /**
@@ -39,7 +38,7 @@ export interface NgxSignalFormContext {
   /**
    * The error display strategy for this form.
    */
-  errorStrategy: Signal<ErrorDisplayStrategy>;
+  errorStrategy: Signal<ResolvedErrorDisplayStrategy>;
 }
 
 /**
@@ -162,20 +161,26 @@ export class NgxSignalFormDirective {
    * Error display strategy for this form.
    * Overrides the global default for all fields in this form.
    */
-  readonly errorStrategy = input<
-    ReactiveOrStatic<ErrorDisplayStrategy> | null | undefined
-  >(undefined);
+  readonly errorStrategy = input<ErrorDisplayStrategy | null | undefined>(
+    undefined,
+  );
 
   /**
    * Resolved error display strategy (form-level or global default).
    */
-  protected readonly resolvedErrorStrategy = computed(() => {
-    return resolveErrorDisplayStrategy(
-      this.errorStrategy(),
-      undefined,
-      this.#config.defaultErrorStrategy,
-    );
-  });
+  protected readonly resolvedErrorStrategy =
+    computed<ResolvedErrorDisplayStrategy>(() => {
+      const formStrategy = this.errorStrategy();
+      if (
+        formStrategy !== undefined &&
+        formStrategy !== null &&
+        formStrategy !== 'inherit'
+      ) {
+        return formStrategy;
+      }
+
+      return this.#config.defaultErrorStrategy;
+    });
 
   /**
    * Submission status derived from Angular Signal Forms' native signals.
@@ -195,7 +200,8 @@ export class NgxSignalFormDirective {
 
   /// Replicates Angular's FormRoot.onSubmit behavior.
   /// @see https://github.com/angular/angular/blob/main/packages/forms/signals/src/directive/ng_signal_form.ts
-  protected onSubmit(event: Event): void {
+  // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- DOM Event is a browser API type and is passed through Angular's submit host listener.
+  protected onSubmit(event: Readonly<Event>): void {
     event.preventDefault();
     void submit(this.formRoot());
   }

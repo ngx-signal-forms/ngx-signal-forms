@@ -1,19 +1,13 @@
 import { signal, WritableSignal } from '@angular/core';
-import type { SubmittedStatus } from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
-import type { ErrorDisplayStrategy } from '../types';
-import {
-  combineShowErrors,
-  createShowErrorsSignal,
-  showErrors,
-} from './show-errors';
+import type { ErrorDisplayStrategy, SubmittedStatus } from '../types';
+import { combineShowErrors, showErrors } from './show-errors';
 
 /**
  * Test suite for show-errors utility functions.
  *
  * Tests cover:
  * - showErrors (re-exported from error-strategies)
- * - createShowErrorsSignal (convenience wrapper)
  * - combineShowErrors (combining multiple signals)
  */
 describe('show-errors utilities', () => {
@@ -22,8 +16,8 @@ describe('show-errors utilities', () => {
    */
   const createMockFieldState = (invalid = false, touched = false) => {
     return signal({
-      invalid: () => invalid,
-      touched: () => touched,
+      invalid: signal(invalid),
+      touched: signal(touched),
     });
   };
 
@@ -60,114 +54,6 @@ describe('show-errors utilities', () => {
       expect(result()).toBe(true);
 
       strategy.set('on-touch');
-      expect(result()).toBe(false);
-    });
-  });
-
-  describe('createShowErrorsSignal', () => {
-    it('should create a signal with default on-touch strategy', () => {
-      const fieldState = createMockFieldState(true, true);
-      const submittedStatus = signal<SubmittedStatus>('unsubmitted');
-
-      const result = createShowErrorsSignal(fieldState, { submittedStatus });
-
-      expect(result()).toBe(true);
-    });
-
-    it('should respect provided strategy', () => {
-      const fieldState = createMockFieldState(true, false);
-      const submittedStatus = signal<SubmittedStatus>('unsubmitted');
-
-      const result = createShowErrorsSignal(fieldState, {
-        strategy: 'immediate',
-        submittedStatus,
-      });
-
-      expect(result()).toBe(true);
-    });
-
-    it('should work with signal strategy', () => {
-      const fieldState = createMockFieldState(true, false);
-      const strategy = signal<ErrorDisplayStrategy>('on-touch');
-      const submittedStatus = signal<SubmittedStatus>('unsubmitted');
-
-      const result = createShowErrorsSignal(fieldState, {
-        strategy,
-        submittedStatus,
-      });
-
-      expect(result()).toBe(false);
-
-      strategy.set('immediate');
-      expect(result()).toBe(true);
-    });
-
-    it('should react to field state changes', () => {
-      const invalid = signal(false);
-      const touched = signal(false);
-      const fieldState = signal({
-        invalid: () => invalid(),
-        touched: () => touched(),
-      });
-      const submittedStatus = signal<SubmittedStatus>('unsubmitted');
-
-      const result = createShowErrorsSignal(fieldState, {
-        strategy: 'on-touch',
-        submittedStatus,
-      });
-
-      expect(result()).toBe(false);
-
-      invalid.set(true);
-      touched.set(true);
-      expect(result()).toBe(true);
-
-      invalid.set(false);
-      expect(result()).toBe(false);
-    });
-
-    it('should NOT react to submittedStatus changes with on-touch strategy', () => {
-      // Simplified architecture: on-touch only checks touched()
-      // Angular's submit() calls markAllAsTouched(), so touched() handles submission
-      const fieldState = createMockFieldState(true, false);
-      const submittedStatus = signal<SubmittedStatus>('unsubmitted');
-
-      const result = createShowErrorsSignal(fieldState, {
-        strategy: 'on-touch',
-        submittedStatus,
-      });
-
-      expect(result()).toBe(false);
-
-      // submittedStatus is ignored for on-touch - only touched() matters
-      submittedStatus.set('submitted');
-      expect(result()).toBe(false);
-    });
-
-    it('should work with on-submit strategy', () => {
-      const fieldState = createMockFieldState(true, true);
-      const submittedStatus = signal<SubmittedStatus>('unsubmitted');
-
-      const result = createShowErrorsSignal(fieldState, {
-        strategy: 'on-submit',
-        submittedStatus,
-      });
-
-      expect(result()).toBe(false);
-
-      submittedStatus.set('submitted');
-      expect(result()).toBe(true);
-    });
-
-    it('should work with manual strategy', () => {
-      const fieldState = createMockFieldState(true, true);
-      const submittedStatus = signal<SubmittedStatus>('submitted');
-
-      const result = createShowErrorsSignal(fieldState, {
-        strategy: 'manual',
-        submittedStatus,
-      });
-
       expect(result()).toBe(false);
     });
   });
@@ -240,24 +126,15 @@ describe('show-errors utilities', () => {
       expect(result()).toBe(false);
     });
 
-    it('should work with createShowErrorsSignal results', () => {
+    it('should work with showErrors results', () => {
       const field1 = createMockFieldState(true, true);
       const field2 = createMockFieldState(false, true);
       const field3 = createMockFieldState(true, false);
       const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-      const showErrors1 = createShowErrorsSignal(field1, {
-        strategy: 'on-touch',
-        submittedStatus,
-      });
-      const showErrors2 = createShowErrorsSignal(field2, {
-        strategy: 'on-touch',
-        submittedStatus,
-      });
-      const showErrors3 = createShowErrorsSignal(field3, {
-        strategy: 'on-touch',
-        submittedStatus,
-      });
+      const showErrors1 = showErrors(field1, 'on-touch', submittedStatus);
+      const showErrors2 = showErrors(field2, 'on-touch', submittedStatus);
+      const showErrors3 = showErrors(field3, 'on-touch', submittedStatus);
 
       const anyErrors = combineShowErrors([
         showErrors1,
@@ -266,10 +143,6 @@ describe('show-errors utilities', () => {
       ]);
 
       // field1 is invalid and touched, so should show errors
-      expect(anyErrors()).toBe(true);
-
-      // After submission, field3 should also show errors
-      submittedStatus.set('submitted');
       expect(anyErrors()).toBe(true);
     });
 
@@ -297,15 +170,12 @@ describe('show-errors utilities', () => {
       const passwordField = createMockFieldState(true, false);
       const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-      const emailErrors = createShowErrorsSignal(emailField, {
-        strategy: 'on-touch',
+      const emailErrors = showErrors(emailField, 'on-touch', submittedStatus);
+      const passwordErrors = showErrors(
+        passwordField,
+        'immediate',
         submittedStatus,
-      });
-
-      const passwordErrors = createShowErrorsSignal(passwordField, {
-        strategy: 'immediate',
-        submittedStatus,
-      });
+      );
 
       const anyErrors = combineShowErrors([emailErrors, passwordErrors]);
 
@@ -319,23 +189,14 @@ describe('show-errors utilities', () => {
       const strategy = signal<ErrorDisplayStrategy>('on-touch');
       const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-      const errors1 = createShowErrorsSignal(field1, {
-        strategy,
-        submittedStatus,
-      });
-      const errors2 = createShowErrorsSignal(field2, {
-        strategy,
-        submittedStatus,
-      });
+      const errors1 = showErrors(field1, strategy, submittedStatus);
+      const errors2 = showErrors(field2, strategy, submittedStatus);
       const anyErrors = combineShowErrors([errors1, errors2]);
 
       expect(anyErrors()).toBe(false);
 
       strategy.set('immediate');
       expect(anyErrors()).toBe(true);
-
-      strategy.set('manual');
-      expect(anyErrors()).toBe(false);
     });
   });
 });

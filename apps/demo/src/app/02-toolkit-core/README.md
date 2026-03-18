@@ -130,28 +130,6 @@ This section demonstrates **complete toolkit adoption** with focus on core featu
 - ⚠️ Delayed feedback
 - ⚠️ May require form-level summary
 
-#### manual
-
-**When to use:** Custom flows (wizards, conditional logic)
-
-```typescript
-const errors = showErrors(
-  form.field,
-  'manual',
-  signal<SubmittedStatus>('unsubmitted')
-);
-
-@if (errors() && customCondition()) {
-  <ngx-signal-form-error ... />
-}
-```
-
-**UX Impact:**
-
-- ✅ Full control
-- ⚠️ Requires manual state management
-- ⚠️ Easy to miss edge cases
-
 ### 2. Warning Support
 
 #### Warning vs Error

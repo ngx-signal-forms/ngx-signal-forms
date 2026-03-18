@@ -311,44 +311,6 @@ describe('NgxSignalFormErrorComponent', () => {
       expect(alert).toBeTruthy();
     });
 
-    it('should never show errors with manual strategy', async () => {
-      @Component({
-        selector: 'ngx-test-manual-strategy',
-        imports: [FormField, NgxSignalFormErrorComponent],
-        changeDetection: ChangeDetectionStrategy.OnPush,
-        template: `
-          <input id="email" [formField]="contactForm.email" />
-          <ngx-signal-form-error
-            [formField]="contactForm.email"
-            fieldName="email"
-            [strategy]="'manual'"
-            [submittedStatus]="submittedStatus()"
-          />
-        `,
-      })
-      class TestComponent {
-        readonly #model = signal({ email: '' });
-        readonly contactForm = form(
-          this.#model,
-          schema((path) => {
-            required(path.email, { message: 'This field is required' });
-          }),
-        );
-        readonly submittedStatus = signal<SubmittedStatus>('submitted');
-      }
-
-      await render(TestComponent);
-
-      const user = userEvent.setup();
-      // Touch the field
-      const input = screen.getByRole('textbox');
-      await user.click(input);
-      await user.tab();
-
-      const alert = screen.queryByRole('alert');
-      expect(alert).toBeFalsy();
-    });
-
     it('should NOT show errors after submit if not touched (on-touch strategy)', async () => {
       // Simplified architecture: on-touch only checks touched()
       // Angular's submit() calls markAllAsTouched(), so in real usage touched() would be true
@@ -752,7 +714,7 @@ describe('NgxSignalFormErrorComponent', () => {
        * Priority order:
        * 1. Explicit fieldName input (highest)
        * 2. DI context from parent wrapper
-       * 3. Fallback to 'unknown-field'
+       * 3. Throw when neither is available
        */
       @Component({
         selector: 'ngx-test-explicit-priority',
@@ -798,10 +760,10 @@ describe('NgxSignalFormErrorComponent', () => {
       expect(contextError).toBeFalsy();
     });
 
-    it('should fallback to unknown-field when no context and no input', async () => {
+    it('should throw when no context and no input are available', async () => {
       /**
-       * When error component is used standalone without context or fieldName input,
-       * it falls back to 'unknown-field' to avoid undefined errors.
+       * Standalone usage must provide fieldName explicitly unless the component
+       * can inherit field context from the wrapper.
        */
       @Component({
         selector: 'ngx-test-fallback',
@@ -825,13 +787,9 @@ describe('NgxSignalFormErrorComponent', () => {
         );
       }
 
-      const { container } = await render(TestComponent);
-
-      // Should fallback to 'unknown-field'
-      const errorElement = container.querySelector(
-        '[id="unknown-field-error"]',
+      await expect(render(TestComponent)).rejects.toThrow(
+        /requires an explicit `fieldName` input or a parent ngx-signal-form-field-wrapper context/u,
       );
-      expect(errorElement).toBeTruthy();
     });
 
     it('should react to context signal changes', async () => {

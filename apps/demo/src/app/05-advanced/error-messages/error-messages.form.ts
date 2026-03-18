@@ -41,7 +41,7 @@ import { errorMessagesSchema } from './error-messages.validations';
   template: `
     <form
       [formRoot]="errorMessagesForm"
-      [errorStrategy]="errorDisplayMode"
+      [errorStrategy]="errorDisplayMode()"
       class="form-container"
     >
       <!-- Form fields -->

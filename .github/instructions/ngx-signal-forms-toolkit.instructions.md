@@ -57,18 +57,6 @@ packages/toolkit/
 
 ## Type System
 
-### ReactiveOrStatic<T>
-
-Accepts signals, functions, or static values:
-
-```typescript
-import type { ReactiveOrStatic } from '@ngx-signal-forms/toolkit';
-
-const static: ReactiveOrStatic<ErrorDisplayStrategy> = 'on-touch';
-const sig: ReactiveOrStatic<ErrorDisplayStrategy> = signal('on-touch');
-const comp: ReactiveOrStatic<ErrorDisplayStrategy> = computed(() => 'on-touch');
-```
-
 ### ErrorDisplayStrategy
 
 ```typescript
@@ -76,7 +64,6 @@ type ErrorDisplayStrategy =
   | 'immediate' // Real-time (as user types)
   | 'on-touch' // After blur or submit (WCAG recommended - DEFAULT)
   | 'on-submit' // Only after form submission
-  | 'manual' // Programmatic control
   | 'inherit'; // Inherit from form provider (field-level only)
 ```
 
@@ -113,8 +100,6 @@ export const appConfig: ApplicationConfig = {
       autoAria: true, // Default
       defaultErrorStrategy: 'on-touch', // Default
       defaultFormFieldAppearance: 'outline', // Optional: 'standard' | 'outline'
-      strictFieldResolution: false, // Default
-      debug: false, // Default
     }),
   ],
 };
@@ -245,7 +230,7 @@ The directive replicates Angular's `FormRoot` baseline behavior (`novalidate`, `
 
 - **DI context** (`NGX_SIGNAL_FORM_CONTEXT`) — enables child components to access form-level state (submission status, error strategy) without prop drilling
 - **Submitted status tracking** — derives `'unsubmitted' → 'submitting' → 'submitted'` lifecycle from Angular's `submitting()` signal, required for `'on-submit'` error strategy
-- **Error display strategy** — configurable timing (`'on-touch'`, `'on-submit'`, `'immediate'`, `'manual'`) so errors appear at the right moment per UX/WCAG best practices
+- **Error display strategy** — configurable timing (`'on-touch'`, `'on-submit'`, `'immediate'`) so errors appear at the right moment per UX/WCAG best practices
 
 ### Feature Comparison: With vs Without `[formRoot]`
 
@@ -287,7 +272,7 @@ Replicates Angular's `FormRoot` baseline (`novalidate`, `preventDefault()`, `sub
 
 - **DI context** (`NGX_SIGNAL_FORM_CONTEXT`) — child components access form-level state without prop drilling
 - **Submitted status** — derives `'unsubmitted' → 'submitting' → 'submitted'` (Angular only has `submitting()`)
-- **Error display strategy** — configurable timing (`'on-touch'`, `'on-submit'`, `'immediate'`, `'manual'`)
+- **Error display strategy** — configurable timing (`'on-touch'`, `'on-submit'`, `'immediate'`)
 
 ```typescript
 // ✅ Recommended: Declarative submission with [formRoot]
@@ -334,12 +319,11 @@ or `aria-invalid` attributes. The toolkit handles these automatically based on f
 Angular Signal Forms' `required()` validator exposes a `required` signal on FieldState,
 which the toolkit reads to set `aria-required="true"` automatically.
 
-**Field Name Resolution Priority**:
+**Field Name Resolution**:
 
-1. `data-signal-field` attribute (explicit override)
-2. Custom resolver from global config
-3. `id` attribute (recommended)
-4. `name` attribute (fallback)
+- Toolkit field identity is deterministic and based on the bound control `id`
+- For standalone/headless APIs, provide `fieldName` explicitly when there is no bound control `id`
+- The toolkit does not silently invent field names for public APIs
 
 **Opt-out**: Use `ngxSignalFormAutoAriaDisabled` attribute
 
@@ -396,12 +380,11 @@ Reusable form field wrapper with automatic error display.
 **Required Inputs**:
 
 - `field`: The field from your form
-- `fieldName`: Field name string (auto-derived from `id` if omitted)
+- `fieldName`: Field name string (optional when the bound control has an `id`)
 
 **Optional Inputs**:
 
 - `strategy`: Error display strategy
-- `showErrors`: Toggle automatic error display (default: `true`)
 
 **Features**:
 
@@ -670,11 +653,11 @@ Lower-level utilities for computing error visibility. Most users should use `sho
 import { computeShowErrors, shouldShowErrors } from '@ngx-signal-forms/toolkit';
 
 // Reactive version - returns Signal<boolean>
-// Accepts ReactiveOrStatic<T> for all parameters (signals, functions, or static values)
+// Accepts signals/functions/static values for utility parameters
 protected readonly showEmailErrors = computeShowErrors(
-  this.form.email,      // ReactiveOrStatic<FieldState<T>>
-  'on-touch',           // ReactiveOrStatic<ErrorDisplayStrategy>
-  this.submittedStatus, // ReactiveOrStatic<SubmittedStatus> - OPTIONAL for 'on-touch'
+  this.form.email,
+  'on-touch',
+  this.submittedStatus,
 );
 
 // Non-reactive version - returns boolean
@@ -710,30 +693,9 @@ export class MyCustomDirective {
 }
 ```
 
-**injectFormConfig()**
-
-Injects the global toolkit configuration. Returns normalized config with defaults applied.
-
-```typescript
-import { injectFormConfig } from '@ngx-signal-forms/toolkit';
-
-@Component({
-  /* ... */
-})
-export class MyComponent {
-  readonly #config = injectFormConfig();
-
-  constructor() {
-    console.log('Auto ARIA:', this.#config.autoAria);
-    console.log('Default strategy:', this.#config.defaultErrorStrategy);
-    console.log('Debug mode:', this.#config.debug);
-  }
-}
-```
-
 **Optional injector parameter:**
 
-Both CIFs accept an optional `Injector` parameter for use outside injection context:
+`injectFormContext()` accepts an optional `Injector` parameter for use outside injection context:
 
 ```typescript
 // Inside injection context (normal usage)
@@ -745,25 +707,26 @@ const context = injectFormContext(this.injector);
 
 ### unwrapValue()
 
-Extracts the current value from a `ReactiveOrStatic<T>` type. Useful for normalizing values that may be signals, functions, or static values.
+Extracts the current value from a utility input that may be a signal, function, or static value.
 
 ```typescript
 import { unwrapValue } from '@ngx-signal-forms/toolkit';
-import type { ReactiveOrStatic } from '@ngx-signal-forms/toolkit';
 
-function processStrategy(strategy: ReactiveOrStatic<ErrorDisplayStrategy>) {
+function processStrategy(
+  strategy:
+    | ErrorDisplayStrategy
+    | Signal<ErrorDisplayStrategy>
+    | (() => ErrorDisplayStrategy),
+) {
   // Works with signal, function, or static value
   const currentStrategy = unwrapValue(strategy);
-  // currentStrategy is now ErrorDisplayStrategy (not Signal or function)
+  // currentStrategy is now ErrorDisplayStrategy
 }
 
 // Example usage
-const staticStrategy: ReactiveOrStatic<ErrorDisplayStrategy> = 'on-touch';
-const signalStrategy: ReactiveOrStatic<ErrorDisplayStrategy> =
-  signal('on-touch');
-const computedStrategy: ReactiveOrStatic<ErrorDisplayStrategy> = computed(
-  () => 'on-touch',
-);
+const staticStrategy = 'on-touch' as const;
+const signalStrategy = signal<ErrorDisplayStrategy>('on-touch');
+const computedStrategy = computed<ErrorDisplayStrategy>(() => 'on-touch');
 
 unwrapValue(staticStrategy); // 'on-touch'
 unwrapValue(signalStrategy); // 'on-touch'
@@ -774,9 +737,7 @@ unwrapValue(computedStrategy); // 'on-touch'
 
 ### NgxFloatingLabelDirective
 
-**Selector**: `ngx-signal-form-field-wrapper[outline]`
-
-**Deprecated**: Use `appearance="outline"` instead. Maintained for backward compatibility.
+Use `appearance="outline"` to enable floating-label styling.
 
 Transforms form field into Material Design outlined layout.
 
@@ -784,15 +745,6 @@ Transforms form field into Material Design outlined layout.
 
 ```typescript
 <ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
-  <label for="email">Email Address</label>
-  <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
-</ngx-signal-form-field-wrapper>
-```
-
-**Legacy (still works):**
-
-```typescript
-<ngx-signal-form-field-wrapper [formField]="form.email" outline>
   <label for="email">Email Address</label>
   <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
 </ngx-signal-form-field-wrapper>
@@ -957,9 +909,9 @@ export class ExampleDirective {
 
 ```typescript
 import { computed, type Signal } from '@angular/core';
-import type { ReactiveOrStatic } from '../types';
+import type { SignalLike } from '../types';
 
-export function utilityFunction<T>(value: ReactiveOrStatic<T>): Signal<T> {
+export function utilityFunction<T>(value: SignalLike<T> | T): Signal<T> {
   return computed(() => {
     return typeof value === 'function' ? value() : value;
   });

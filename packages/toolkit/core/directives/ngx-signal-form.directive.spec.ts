@@ -21,8 +21,6 @@ const createTestConfig = (
 ): NgxSignalFormsConfig => ({
   autoAria: true,
   defaultErrorStrategy: 'on-touch',
-  strictFieldResolution: false,
-  debug: false,
   ...overrides,
 });
 

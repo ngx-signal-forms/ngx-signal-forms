@@ -50,24 +50,21 @@ describe('NgxHeadlessFieldNameDirective', () => {
     expect(screen.getByTestId('resolved')).toHaveTextContent('fallback-id');
   });
 
-  it('generates a unique field name when no input or host id exist', async () => {
-    await render(
-      `
-      <div ngxSignalFormHeadlessFieldName #fieldName="fieldName">
-        <span data-testid="resolved">{{ fieldName.resolvedFieldName() }}</span>
-        <span data-testid="error-id">{{ fieldName.errorId() }}</span>
-        <span data-testid="warning-id">{{ fieldName.warningId() }}</span>
-      </div>
-      `,
-      {
-        imports: [NgxHeadlessFieldNameDirective],
-      },
+  it('throws when no input and no host id exist', async () => {
+    await expect(
+      render(
+        `
+        <div ngxSignalFormHeadlessFieldName #fieldName="fieldName">
+          <span data-testid="resolved">{{ fieldName.resolvedFieldName() }}</span>
+        </div>
+        `,
+        {
+          imports: [NgxHeadlessFieldNameDirective],
+        },
+      ),
+    ).rejects.toThrow(
+      /requires either a non-empty `fieldName` input or a host element `id`/u,
     );
-
-    const resolved = screen.getByTestId('resolved').textContent ?? '';
-    expect(resolved.startsWith('field-')).toBe(true);
-    expect(screen.getByTestId('error-id').textContent).toMatch(/-error$/u);
-    expect(screen.getByTestId('warning-id').textContent).toMatch(/-warning$/u);
   });
 
   it('updates resolved ids when bound field name changes', async () => {
@@ -77,7 +74,7 @@ describe('NgxHeadlessFieldNameDirective', () => {
       <div
         ngxSignalFormHeadlessFieldName
         #fieldName="fieldName"
-        [fieldName]="fieldNameInput"
+        [fieldName]="fieldNameInput()"
       >
         <span data-testid="resolved">{{ fieldName.resolvedFieldName() }}</span>
         <span data-testid="error-id">{{ fieldName.errorId() }}</span>

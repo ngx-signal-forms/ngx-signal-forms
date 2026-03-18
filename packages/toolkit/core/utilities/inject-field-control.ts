@@ -59,7 +59,7 @@ export function injectFieldControl(
         );
       }
 
-      const fieldName = resolveFieldName(htmlElement, injector);
+      const fieldName = resolveFieldName(htmlElement);
 
       if (!fieldName) {
         throw new Error(

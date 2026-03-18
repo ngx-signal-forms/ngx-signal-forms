@@ -25,7 +25,6 @@ export const ERROR_DISPLAY_MODES_CONTENT = {
           '<strong>immediate:</strong> Show errors as user types (real-time)',
           '<strong>on-touch:</strong> Show after field blur (recommended)',
           '<strong>on-submit:</strong> Show only after submit attempt',
-          '<strong>manual:</strong> Full developer control over timing',
           'Interactive switcher to compare strategies',
         ],
       },
@@ -49,7 +48,6 @@ export const ERROR_DISPLAY_MODES_CONTENT = {
           '<strong>Immediate:</strong> Type in Name field → Errors appear instantly',
           '<strong>On Touch:</strong> Click field → Tab away → Errors appear',
           '<strong>On Submit:</strong> Click Submit → All errors show at once',
-          '<strong>Manual:</strong> Full FormField, no automatic error display',
         ],
       },
       {

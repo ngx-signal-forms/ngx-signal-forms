@@ -412,12 +412,6 @@ export class SignalFormDebuggerComponent {
             ? 'Errors shown because form was submitted'
             : 'Errors hidden until form submission';
         break;
-
-      case 'manual':
-        errorsVisible = false;
-        visibilityReason =
-          'Manual mode - error visibility controlled programmatically';
-        break;
     }
 
     return {

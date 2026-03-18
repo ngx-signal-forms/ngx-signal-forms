@@ -33,7 +33,7 @@ import { globalConfigSchema } from './global-configuration.validations';
   template: `
     <form
       [formRoot]="configForm"
-      [errorStrategy]="errorDisplayMode"
+      [errorStrategy]="errorDisplayMode()"
       class="form-container"
     >
       <!-- Info callout about global config -->

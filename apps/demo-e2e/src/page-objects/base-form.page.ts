@@ -112,7 +112,6 @@ export abstract class ErrorStrategyFormPage extends BaseFormPage {
         name: 'On Touch (Recommended)',
       }),
       onSubmit: this.page.getByRole('radio', { name: 'On Submit' }),
-      manual: this.page.getByRole('radio', { name: 'Manual' }),
     };
   }
 
@@ -120,7 +119,7 @@ export abstract class ErrorStrategyFormPage extends BaseFormPage {
    * Select an error display mode
    */
   async selectErrorMode(
-    mode: 'immediate' | 'onTouch' | 'onSubmit' | 'manual',
+    mode: 'immediate' | 'onTouch' | 'onSubmit',
   ): Promise<void> {
     await this.errorModeRadios[mode].check();
   }

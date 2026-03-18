@@ -32,7 +32,6 @@ import { unwrapValue } from './unwrap-signal-or-value';
  *    - `'immediate'`: Errors shown as soon as field is invalid
  *    - `'on-touch'`: Errors shown after blur or submit (WCAG recommended) - **default**
  *    - `'on-submit'`: Errors shown only after form submission
- *    - `'manual'`: Developer controls visibility (always returns `false`)
  * 3. Returns a computed signal that updates when field state changes
  *
  * @param field - The form field state (FieldTree from Angular Signal Forms)
@@ -76,7 +75,6 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * );
  * ```
  *
- * @see {@link createShowErrorsSignal} For options-based API
  * @see {@link combineShowErrors} For combining multiple error signals
  */
 export function showErrors(
@@ -85,77 +83,6 @@ export function showErrors(
   submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
 ): Signal<boolean> {
   return computeShowErrorsInternal(field, strategy, submittedStatus);
-}
-
-/**
- * Creates a computed signal for error visibility using an options-based API.
- *
- * ## What does it do?
- * Provides an alternative, options-based API for creating error visibility signals.
- * Uses sensible defaults (on-touch strategy) while allowing customization through
- * a configuration object.
- *
- * ## When to use it?
- * Use `createShowErrorsSignal()` when you:
- * - Prefer options-object API over positional parameters
- * - Want default 'on-touch' strategy without explicitly passing it
- * - Need to pass many configuration options clearly
- * - Are building reusable utilities that accept configuration
- *
- * **Use {@link showErrors} if you prefer positional parameters.**
- *
- * ## How does it work?
- * 1. Accepts field and an options object with optional strategy
- * 2. Defaults to 'on-touch' strategy if not specified
- * 3. Delegates to the internal computed implementation with unwrapped options
- *
- * @param field - The form field state
- * @param options - Configuration options
- * @param options.strategy - Error display strategy (defaults to 'on-touch')
- * @param options.submittedStatus - Angular's built-in submission status
- * @returns A computed signal returning `true` when errors should be displayed
- *
- * @example With default strategy (on-touch)
- * ```typescript
- * const showEmailErrors = createShowErrorsSignal(form.email, {
- *   submittedStatus: computed<SubmittedStatus>(() =>
- *     form().submitting() ? 'submitting' : form().touched() ? 'submitted' : 'unsubmitted'
- *   )
- * });
- * ```
- *
- * @example With custom strategy
- * ```typescript
- * const showPasswordErrors = createShowErrorsSignal(form.password, {
- *   strategy: 'immediate',
- *   submittedStatus: computed<SubmittedStatus>(() =>
- *     form().submitting() ? 'submitting' : form().touched() ? 'submitted' : 'unsubmitted'
- *   )
- * });
- * ```
- *
- * @example With form provider context
- * ```typescript
- * const context = inject(NGX_SIGNAL_FORM_CONTEXT);
- *
- * const showErrors = createShowErrorsSignal(form.username, {
- *   strategy: 'on-touch',
- *   submittedStatus: context.submittedStatus
- * });
- * ```
- *
- * @see {@link showErrors} For positional parameter API
- * @see {@link combineShowErrors} For combining multiple error signals
- */
-export function createShowErrorsSignal<T extends PartialErrorVisibilityState>(
-  field: ReactiveOrStatic<T | ErrorVisibilityState>,
-  options: {
-    strategy?: ReactiveOrStatic<ErrorDisplayStrategy>;
-    submittedStatus: ReactiveOrStatic<SubmittedStatus>;
-  },
-): Signal<boolean> {
-  const strategy = options.strategy ?? 'on-touch';
-  return computeShowErrorsInternal(field, strategy, options.submittedStatus);
 }
 
 /**

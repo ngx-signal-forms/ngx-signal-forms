@@ -53,7 +53,7 @@ Deep dive into core toolkit features.
 | Example                      | Focus                          | What You Learn                          |
 | ---------------------------- | ------------------------------ | --------------------------------------- |
 | **accessibility-comparison** | Side-by-side manual vs toolkit | 67% code reduction, auto-ARIA benefits  |
-| **error-display-modes**      | Error strategies               | immediate, on-touch, on-submit, manual  |
+| **error-display-modes**      | Error strategies               | immediate, on-touch, on-submit          |
 | **warning-support**          | Non-blocking validation        | Warnings vs errors, WCAG compliance     |
 | **field-states**             | State visualization            | touched, dirty, pending, invalid states |
 
@@ -102,7 +102,7 @@ Each core capability has exactly one primary demo to avoid overlap.
 | Capability                        | Primary Example                             | Secondary Notes                                          |
 | --------------------------------- | ------------------------------------------- | -------------------------------------------------------- |
 | Auto-ARIA + baseline comparison   | `toolkit-core/accessibility-comparison`     | Shows manual vs toolkit side-by-side                     |
-| Error strategy modes              | `toolkit-core/error-display-modes`          | immediate / on-touch / on-submit / manual                |
+| Error strategy modes              | `toolkit-core/error-display-modes`          | immediate / on-touch / on-submit                         |
 | Warning support                   | `toolkit-core/warning-support`              | Non-blocking validation patterns                         |
 | Field state introspection         | `toolkit-core/field-states`                 | touched/dirty/pending/invalid                            |
 | Wrapper fundamentals              | `form-field-wrapper/basic-usage`            | Smallest happy path, including appearance and outline    |
@@ -198,7 +198,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 | ----------------------- | ----------------------------------------- | ---------------------------- |
 | **ARIA Attributes**     | Manual `aria-invalid`, `aria-describedby` | Automatic ✅                 |
 | **Error Display**       | Manual templates + conditions             | Component ✅                 |
-| **Error Strategies**    | Manual state tracking                     | 4 built-in strategies ✅     |
+| **Error Strategies**    | Manual state tracking                     | 3 built-in strategies ✅     |
 | **Warning Support**     | Not supported                             | Built-in ✅                  |
 | **Field States**        | Manual tracking                           | Automatic visualization ✅   |
 | **Form Field Wrapper**  | Manual layout                             | Component with projection ✅ |

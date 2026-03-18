@@ -337,12 +337,11 @@ test.describe.fixme('Demo Application - Route Handling', () => {
     page,
   }) => {
     await test.step('Add query params and navigate', async () => {
-      await page.goto(`/?debug=true&mode=manual`);
+      await page.goto(`/?mode=immediate`);
       await page.waitForLoadState('domcontentloaded');
 
       const url = page.url();
-      expect(url).toContain('debug=true');
-      expect(url).toContain('mode=manual');
+      expect(url).toContain('mode=immediate');
     });
   });
 });

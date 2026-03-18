@@ -32,11 +32,12 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
+    'data-ngx-signal-form-control': '',
     role: 'slider',
     tabindex: '0',
     '[attr.aria-valuemin]': '0',
     '[attr.aria-valuemax]': 'maxRating()',
-    '[attr.aria-valuenow]': 'value()',
+    '[attr.aria-valuenow]': 'currentValue()',
     '[attr.aria-valuetext]': 'valueText()',
     '[attr.aria-invalid]': 'invalid()',
     '[attr.aria-disabled]': 'disabled()',
@@ -108,8 +109,8 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
       <span
         class="star"
         aria-hidden="true"
-        [class.star--filled]="star <= value()"
-        [class.star--empty]="star > value()"
+        [class.star--filled]="star <= currentValue()"
+        [class.star--empty]="star > currentValue()"
         [class.star--disabled]="disabled()"
         (click)="selectRating(star)"
         (mouseenter)="hoverRating(star)"
@@ -179,12 +180,17 @@ export class RatingControlComponent implements FormValueControl<number> {
   );
 
   /**
+   * Normalized current value for ARIA attributes and keyboard handling.
+   */
+  protected readonly currentValue = computed(() => this.value() ?? 0);
+
+  /**
    * Accessible value text for screen readers.
    */
   protected readonly valueText = computed(() =>
-    this.value() === 0
+    this.currentValue() === 0
       ? 'No rating'
-      : `${this.value()} out of ${this.maxRating()} stars`,
+      : `${this.currentValue()} out of ${this.maxRating()} stars`,
   );
 
   /**
@@ -193,12 +199,11 @@ export class RatingControlComponent implements FormValueControl<number> {
   protected onKeydown(event: KeyboardEvent): void {
     if (this.disabled()) return;
 
-    const current = this.value();
+    const current = this.currentValue();
     const max = this.maxRating();
 
     switch (event.key) {
       case 'ArrowRight':
-      case 'ArrowUp':
         event.preventDefault();
         if (current < max) {
           this.value.set(current + 1);
@@ -206,7 +211,6 @@ export class RatingControlComponent implements FormValueControl<number> {
         }
         break;
       case 'ArrowLeft':
-      case 'ArrowDown':
         event.preventDefault();
         if (current > 0) {
           this.value.set(current - 1);

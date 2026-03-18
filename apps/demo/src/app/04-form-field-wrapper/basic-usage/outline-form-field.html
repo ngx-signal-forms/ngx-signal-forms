@@ -6,7 +6,7 @@
 
 <form
   [formRoot]="showcaseForm"
-  [errorStrategy]="errorDisplayMode"
+  [errorStrategy]="errorDisplayMode()"
   class="flex flex-col gap-6"
 >
   @for (fact of model().facts; track fact.factNumber; let factIndex = $index) {

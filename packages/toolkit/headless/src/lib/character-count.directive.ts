@@ -1,6 +1,5 @@
 import { computed, Directive, input, type Signal } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
-import { unwrapValue, type ReactiveOrStatic } from '@ngx-signal-forms/toolkit';
 
 /**
  * Character count limit state.
@@ -102,21 +101,17 @@ export class NgxHeadlessCharacterCountDirective implements CharacterCountStateSi
   /**
    * Maximum length for the character count.
    */
-  readonly maxLength = input.required<ReactiveOrStatic<number>>();
+  readonly maxLength = input.required<number>();
 
   /**
    * Warning threshold as percentage (0-1). Default: 0.8 (80%).
    */
-  readonly warningThreshold = input<ReactiveOrStatic<number>>(
-    DEFAULT_WARNING_THRESHOLD,
-  );
+  readonly warningThreshold = input<number>(DEFAULT_WARNING_THRESHOLD);
 
   /**
    * Danger threshold as percentage (0-1). Default: 0.95 (95%).
    */
-  readonly dangerThreshold = input<ReactiveOrStatic<number>>(
-    DEFAULT_DANGER_THRESHOLD,
-  );
+  readonly dangerThreshold = input<number>(DEFAULT_DANGER_THRESHOLD);
 
   /**
    * The current field state.
@@ -136,8 +131,7 @@ export class NgxHeadlessCharacterCountDirective implements CharacterCountStateSi
    * Resolved maximum length.
    */
   readonly resolvedMaxLength = computed<number | null>(() => {
-    const maxLengthInput = this.maxLength();
-    return unwrapValue(maxLengthInput);
+    return this.maxLength();
   });
 
   /**
@@ -190,10 +184,10 @@ export class NgxHeadlessCharacterCountDirective implements CharacterCountStateSi
     /// Exceeded only when OVER the limit, not at exactly 100%
     if (ratio > 1) return 'exceeded';
 
-    const danger = unwrapValue(this.dangerThreshold());
+    const danger = this.dangerThreshold();
     if (ratio >= danger) return 'danger';
 
-    const warning = unwrapValue(this.warningThreshold());
+    const warning = this.warningThreshold();
     if (ratio >= warning) return 'warning';
 
     return 'ok';

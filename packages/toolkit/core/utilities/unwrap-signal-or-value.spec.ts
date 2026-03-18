@@ -238,11 +238,7 @@ describe('unwrapValue', () => {
 
   describe('Real-World Use Cases', () => {
     it('should work with ErrorDisplayStrategy values', () => {
-      type ErrorDisplayStrategy =
-        | 'immediate'
-        | 'on-touch'
-        | 'on-submit'
-        | 'manual';
+      type ErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit';
 
       const staticStrategy: ErrorDisplayStrategy = 'on-touch';
       const signalStrategy = signal<ErrorDisplayStrategy>('immediate');

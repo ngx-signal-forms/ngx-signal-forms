@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import type { SubmittedStatus } from '@angular/forms/signals';
 import { form, FormField, required, schema } from '@angular/forms/signals';
+import type { SubmittedStatus } from '@ngx-signal-forms/toolkit/core';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -327,53 +327,6 @@ describe('NgxHeadlessErrorStateDirective', () => {
       fixture.detectChanges();
 
       expect(screen.getByTestId('show-errors')).toBeTruthy();
-    });
-
-    it('should never show errors with manual strategy', async () => {
-      @Component({
-        selector: 'ngx-test-manual',
-        imports: [FormField, NgxHeadlessErrorStateDirective],
-        changeDetection: ChangeDetectionStrategy.OnPush,
-        template: `
-          <div>
-            <input id="email" [formField]="contactForm.email" />
-            <div
-              ngxSignalFormHeadlessErrorState
-              #errorState="errorState"
-              [field]="contactForm.email"
-              fieldName="email"
-              [strategy]="'manual'"
-            >
-              @if (errorState.showErrors()) {
-                <span data-testid="show-errors">Show Errors</span>
-              } @else {
-                <span data-testid="hide-errors">Hide Errors</span>
-              }
-            </div>
-          </div>
-        `,
-      })
-      class TestComponent {
-        readonly #model = signal({ email: '' });
-        readonly contactForm = form(
-          this.#model,
-          schema((path) => {
-            required(path.email, { message: 'Email is required' });
-          }),
-        );
-      }
-
-      const { fixture } = await render(TestComponent);
-
-      // Initially hidden
-      expect(screen.getByTestId('hide-errors')).toBeTruthy();
-
-      // Touch the field
-      fixture.componentInstance.contactForm.email().markAsTouched();
-      fixture.detectChanges();
-
-      // Still hidden with manual strategy
-      expect(screen.getByTestId('hide-errors')).toBeTruthy();
     });
   });
 

@@ -1,31 +1,29 @@
-import { type ErrorDisplayStrategy, type ReactiveOrStatic } from '../types';
-import { unwrapValue } from './unwrap-signal-or-value';
+import type {
+  ErrorDisplayStrategy,
+  ResolvedErrorDisplayStrategy,
+} from '../types';
 
-type StrategyInput = ReactiveOrStatic<ErrorDisplayStrategy> | null | undefined;
+type StrategyInput = ErrorDisplayStrategy | null | undefined;
 
 export function resolveErrorDisplayStrategy(
   inputStrategy: StrategyInput,
-  contextStrategy?: ErrorDisplayStrategy | null,
-  configDefault?: ReactiveOrStatic<ErrorDisplayStrategy> | null,
-): ErrorDisplayStrategy {
-  if (inputStrategy !== undefined && inputStrategy !== null) {
-    const resolved = unwrapValue(inputStrategy);
-    if (resolved !== 'inherit') {
-      return resolved;
-    }
+  contextStrategy?: ResolvedErrorDisplayStrategy | null,
+  configDefault?: ResolvedErrorDisplayStrategy | null,
+): ResolvedErrorDisplayStrategy {
+  if (
+    inputStrategy !== undefined &&
+    inputStrategy !== null &&
+    inputStrategy !== 'inherit'
+  ) {
+    return inputStrategy;
   }
 
   if (contextStrategy !== undefined && contextStrategy !== null) {
-    if (contextStrategy !== 'inherit') {
-      return contextStrategy;
-    }
+    return contextStrategy;
   }
 
   if (configDefault !== undefined && configDefault !== null) {
-    const resolvedDefault = unwrapValue(configDefault);
-    if (resolvedDefault !== 'inherit') {
-      return resolvedDefault;
-    }
+    return configDefault;
   }
 
   return 'on-touch';
