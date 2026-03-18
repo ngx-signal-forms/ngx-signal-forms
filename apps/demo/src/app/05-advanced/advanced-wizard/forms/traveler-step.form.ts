@@ -42,7 +42,6 @@ export function createTravelerStepForm(
   form: TravelerStepForm;
   model: Signal<Traveler>;
   isValid: Signal<boolean>;
-  passportExpiryError: Signal<string | null>;
 } {
   // Local linkedSignal: reads from store's committed state, writes stay local
   const model = linkedSignal<Traveler>(() => store.traveler());
@@ -71,34 +70,9 @@ export function createTravelerStepForm(
     });
   });
 
-  // Computed passport validation error for display
-  const passportExpiryError = computed<string | null>(() => {
-    const errors = travelerForm.passportExpiry().errors();
-    const zodError = errors.find((e) => e.message?.includes('expired'));
-    if (zodError) return zodError.message ?? null;
-
-    // Compute 6-month rule directly
-    const departure = lastDepartureDate();
-    const passportValue = model().passportExpiry;
-    if (!departure || !passportValue) return null;
-
-    const expiry = new Date(passportValue);
-    const lastDep = new Date(departure);
-    const sixMonthsAfter = new Date(lastDep);
-    sixMonthsAfter.setMonth(sixMonthsAfter.getMonth() + 6);
-
-    if (expiry <= sixMonthsAfter) {
-      return 'Passport must be valid 6 months after trip ends';
-    }
-    return null;
-  });
-
   return {
     form: travelerForm,
     model,
-    isValid: computed(
-      () => !travelerForm().invalid() && passportExpiryError() === null,
-    ),
-    passportExpiryError,
+    isValid: computed(() => !travelerForm().invalid()),
   };
 }

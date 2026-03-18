@@ -6,7 +6,7 @@ import {
   inject,
   viewChild,
 } from '@angular/core';
-import { FormField, FormRoot } from '@angular/forms/signals';
+import { FormField } from '@angular/forms/signals';
 
 import {
   focusFirstInvalid,
@@ -35,7 +35,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
 @Component({
   selector: 'ngx-traveler-step',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, FormRoot, NgxSignalFormToolkit, NgxFormField],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <div class="traveler-step">
       <h2 #stepHeading class="mb-4 text-xl font-semibold" tabindex="-1">
@@ -130,16 +130,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
                 type="date"
                 [formField]="travelerForm.passportExpiry"
                 class="form-input"
-                [attr.aria-invalid]="passportExpiryError() ? true : null"
               />
-              <div
-                class="passport-expiry-message"
-                role="alert"
-                aria-live="assertive"
-                aria-atomic="true"
-              >
-                {{ passportExpiryMessage() ?? '' }}
-              </div>
               <ngx-signal-form-field-hint position="left">
                 Must be valid 6 months after trip ends
               </ngx-signal-form-field-hint>
@@ -170,11 +161,6 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
 
     .form-input[aria-invalid='true'] {
       border-color: #ef4444;
-    }
-
-    .passport-expiry-message {
-      color: #ef4444;
-      min-height: 1.25rem;
     }
   `,
 })
@@ -209,18 +195,6 @@ export class TravelerStepComponent implements WizardStepInterface {
   readonly travelerForm = this.#travelerStepForm.form;
   readonly #model = this.#travelerStepForm.model;
   readonly isValid = this.#travelerStepForm.isValid;
-  protected readonly passportExpiryError =
-    this.#travelerStepForm.passportExpiryError;
-  protected readonly passportExpiryMessage = computed(() => {
-    const message = this.passportExpiryError();
-    const errors = this.travelerForm.passportExpiry().errors();
-
-    if (!message || errors.length > 0) {
-      return null;
-    }
-
-    return message;
-  });
 
   /**
    * Commit form data to store.
@@ -233,7 +207,7 @@ export class TravelerStepComponent implements WizardStepInterface {
   async validateAndFocus(): Promise<boolean> {
     await submitWithWarnings(this.travelerForm, async () => undefined);
 
-    if (this.travelerForm().invalid() || this.passportExpiryError()) {
+    if (this.travelerForm().invalid()) {
       focusFirstInvalid(this.travelerForm);
       return false;
     }

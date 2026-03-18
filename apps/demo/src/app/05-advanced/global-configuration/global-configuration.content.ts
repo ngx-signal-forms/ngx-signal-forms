@@ -13,12 +13,10 @@ export const GLOBAL_CONFIG_CONTENT = {
         title: 'Configuration Options',
         items: [
           '• <strong>provideNgxSignalFormsConfig():</strong> Configure toolkit defaults in app.config.ts',
-          '• <strong>provideNgxSignalFormsConfigForComponent():</strong> Override defaults for a component subtree',
           '• <strong>defaultErrorStrategy:</strong> Set global error display mode (immediate, on-touch, on-submit)',
           '• <strong>defaultFormFieldAppearance:</strong> Set default form field style (standard or outline)',
           '• <strong>autoAria:</strong> Enable/disable automatic ARIA attributes globally',
-          '• <strong>showRequiredMarker:</strong> Toggle required marker for outlined fields',
-          '• <strong>requiredMarker:</strong> Customize required marker text',
+          '• <strong>Form-level override:</strong> Use <code class="code-inline">[errorStrategy]</code> on <code class="code-inline">[formRoot]</code> when a single form needs different timing',
         ],
       },
       {
@@ -39,7 +37,7 @@ export const GLOBAL_CONFIG_CONTENT = {
           '• <strong>Consistency:</strong> Ensure all forms follow the same error display strategy',
           '• <strong>Brand alignment:</strong> Match error UX to your design system',
           '• <strong>A11y requirements:</strong> Configure for WCAG 2.2 compliance globally',
-          '• <strong>Custom resolvers:</strong> When using non-standard field naming conventions',
+          '• <strong>Stable ids:</strong> Keep control <code class="code-inline">id</code> values deterministic so wrappers and auto-ARIA can link feedback reliably',
         ],
       },
       {

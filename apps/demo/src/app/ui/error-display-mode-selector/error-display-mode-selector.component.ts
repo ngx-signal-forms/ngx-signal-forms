@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, model } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  model,
+} from '@angular/core';
 import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 
 export type ErrorDisplayModeConfig = {
@@ -74,7 +80,7 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
             🎛️ Error Display Mode
           </legend>
           <div class="flex flex-wrap gap-4">
-            @for (modeConfig of errorDisplayModes; track modeConfig.mode) {
+            @for (modeConfig of errorDisplayModes(); track modeConfig.mode) {
               <label class="flex cursor-pointer items-center gap-2">
                 <input
                   type="radio"
@@ -134,10 +140,23 @@ export class ErrorDisplayModeSelectorComponent {
    * Use with [(selectedMode)]="myMode" for automatic two-way binding
    */
   readonly selectedMode = model.required<ErrorDisplayStrategy>();
+  readonly modes = input<readonly ErrorDisplayStrategy[] | null>(null);
 
-  protected readonly errorDisplayModes = ERROR_DISPLAY_MODES;
+  protected readonly errorDisplayModes = computed(() => {
+    const allowedModes = this.modes();
 
-  protected readonly currentModeConfig = () =>
-    this.errorDisplayModes.find((mode) => mode.mode === this.selectedMode()) ||
-    this.errorDisplayModes[1];
+    return allowedModes
+      ? ERROR_DISPLAY_MODES.filter(({ mode }) => allowedModes.includes(mode))
+      : ERROR_DISPLAY_MODES;
+  });
+
+  protected readonly currentModeConfig = computed(() => {
+    const availableModes = this.errorDisplayModes();
+
+    return (
+      availableModes.find((mode) => mode.mode === this.selectedMode()) ??
+      availableModes[0] ??
+      ERROR_DISPLAY_MODES[1]
+    );
+  });
 }

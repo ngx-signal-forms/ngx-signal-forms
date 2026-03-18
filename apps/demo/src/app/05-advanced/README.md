@@ -4,7 +4,7 @@
 
 ## 🎯 Purpose
 
-This section demonstrates **production-ready patterns** for real-world applications including global configuration, custom field resolvers, and async submission handling.
+This section demonstrates **production-ready patterns** for real-world applications including global configuration, deterministic field identity, and async submission handling.
 
 **Adoption Level:** 100% toolkit
 
@@ -24,9 +24,8 @@ This section demonstrates **production-ready patterns** for real-world applicati
 **What you'll learn:**
 
 - `provideNgxSignalFormsConfig` setup
-- `provideNgxSignalFormsConfigForComponent` overrides
 - Custom default error strategies
-- Configuration inheritance
+- Form-level strategy overrides when one form needs different timing
 
 **Technologies:**
 
@@ -96,10 +95,7 @@ Legacy paths are redirected so existing links keep working.
 
 ```typescript
 import { ApplicationConfig } from '@angular/core';
-import {
-  provideNgxSignalFormsConfig,
-  provideNgxSignalFormsConfigForComponent,
-} from '@ngx-signal-forms/toolkit';
+import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -112,45 +108,38 @@ export const appConfig: ApplicationConfig = {
 
       // Default appearance for form fields
       defaultFormFieldAppearance: 'outline',
-
-      // Required marker defaults for outlined fields
-      showRequiredMarker: true,
-      requiredMarker: ' *',
     }),
   ],
 };
+```
 
-// Component-level overrides (scoped to this component subtree)
-@Component({
-  providers: [
-    provideNgxSignalFormsConfigForComponent({
-      showRequiredMarker: false,
-      requiredMarker: '(required)',
-    }),
-  ],
-})
-export class ExampleComponent {}
+When one form needs a different display strategy, prefer a local template override:
+
+```html
+<form [formRoot]="registrationForm" errorStrategy="immediate">
+  <!-- This form shows errors immediately without changing global defaults -->
+</form>
 ```
 
 ### Configuration Options
 
-| Option                       | Type                     | Default      | Description                             |
-| ---------------------------- | ------------------------ | ------------ | --------------------------------------- |
-| `autoAria`                   | `boolean`                | `true`       | Enable automatic ARIA attributes        |
-| `defaultErrorStrategy`       | `ErrorDisplayStrategy`   | `'on-touch'` | Default error display strategy          |
-| `defaultFormFieldAppearance` | `'default' \| 'outline'` | `undefined`  | Default form field appearance           |
-| `showRequiredMarker`         | `boolean`                | `true`       | Show required marker in outlined fields |
-| `requiredMarker`             | `string`                 | `' *'`       | Required marker text                    |
+| Option                       | Type                     | Default      | Description                      |
+| ---------------------------- | ------------------------ | ------------ | -------------------------------- |
+| `autoAria`                   | `boolean`                | `true`       | Enable automatic ARIA attributes |
+| `defaultErrorStrategy`       | `ErrorDisplayStrategy`   | `'on-touch'` | Default error display strategy   |
+| `defaultFormFieldAppearance` | `'default' \| 'outline'` | `undefined`  | Default form field appearance    |
 
-### Field Name Resolution
+### Field Identity
 
-The toolkit resolves field names from the element's `id` attribute. This is the WCAG-recommended approach.
+The toolkit resolves wrapper field identity from the projected control's `id` attribute. This is the WCAG-recommended approach and keeps error/hint linkage deterministic.
 
 **Example:**
 
 ```html
-<!-- Field name resolved from id attribute -->
-<input id="email" [formField]="form.email" />
+<ngx-signal-form-field-wrapper [formField]="form.email">
+  <label for="email">Email</label>
+  <input id="email" [formField]="form.email" />
+</ngx-signal-form-field-wrapper>
 ```
 
 ## 💡 Async Submission Patterns
@@ -463,7 +452,7 @@ protected async save(): Promise<void> {
 
 **Problem:** Global config not working
 
-**Solution:** Verify provider is in app.config.ts for global defaults, or use component-level overrides where needed.
+**Solution:** Verify the provider is in `app.config.ts` for global defaults. For one-off differences, prefer per-form or per-field strategy inputs instead of subtree-level provider overrides.
 
 ```typescript
 // ❌ Wrong: In component providers when you expect global defaults
@@ -471,16 +460,15 @@ protected async save(): Promise<void> {
   providers: [provideNgxSignalFormsConfig(...)], // Won't work globally
 })
 
-// ✅ Correct: Component-level overrides
-@Component({
-  providers: [provideNgxSignalFormsConfigForComponent(...)],
-})
-export class FeatureSection {}
-
 // ✅ Correct: In app.config.ts
 export const appConfig: ApplicationConfig = {
   providers: [provideNgxSignalFormsConfig(...)],
 };
+```
+
+```html
+<!-- ✅ Correct: Override timing locally when only one form differs -->
+<form [formRoot]="registrationForm" errorStrategy="immediate">...</form>
 ```
 
 ### Submission state not updating

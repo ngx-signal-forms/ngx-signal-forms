@@ -200,6 +200,7 @@ export class ContactComponent {
 **Key exports**:
 
 - `NgxSignalFormToolkit` — Bundle import for all core directives
+- `showErrors()` — Reactive helper for strategy-aware error visibility
 - `focusFirstInvalid()` — Convenience wrapper for Angular's `focusBoundControl()` via `errorSummary()`
 - `createOnInvalidHandler()` — Factory for `onInvalid` callbacks (auto-focuses first invalid control)
 - `hasSubmitted()` — Convenience signal for completed submissions
@@ -271,6 +272,10 @@ Use this when you want a batteries-included field wrapper and consistent layout 
 </ngx-signal-form-field-wrapper>
 ```
 
+When you omit `fieldName`, the wrapper derives field identity from the projected
+control's `id`. Standalone assistive or headless APIs still use explicit
+`fieldName` inputs.
+
 **[📖 Full Documentation →](./packages/toolkit/form-field/README.md)** | **[🎨 Theming Guide →](./packages/toolkit/form-field/THEMING.md)**
 
 ---
@@ -285,6 +290,9 @@ Use this when you need full control over markup and styling but do not want to r
 - `NgxHeadlessCharacterCountDirective` — Character count and limit states
 - `NgxHeadlessFieldsetDirective` — Aggregated validation for field groups
 - `createErrorState()`, `createCharacterCount()` — Programmatic utilities
+
+Headless APIs keep `fieldName` explicit because they do not own the rendered
+input structure for you.
 
 ```html
 <div

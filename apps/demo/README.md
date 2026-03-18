@@ -182,7 +182,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 @Component({
   imports: [FormField, NgxFormField],
   template: `
-    <ngx-signal-form-field-wrapper [formField]="myForm.email" fieldName="email">
+    <ngx-signal-form-field-wrapper [formField]="myForm.email">
       <label for="email">Email</label>
       <input id="email" [formField]="myForm.email" />
     </ngx-signal-form-field-wrapper>

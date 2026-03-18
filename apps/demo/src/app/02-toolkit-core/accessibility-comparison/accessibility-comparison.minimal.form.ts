@@ -36,10 +36,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
     <!-- ✅ NO [formRoot] needed! Error components work for 'on-touch' strategy -->
     <form (submit)="handleSubmit($event)" class="space-y-4">
       <!-- Email Field - uses ngx-signal-form-field-wrapper WITHOUT [formRoot] -->
-      <ngx-signal-form-field-wrapper
-        [formField]="signupForm.email"
-        fieldName="email"
-      >
+      <ngx-signal-form-field-wrapper [formField]="signupForm.email">
         <label for="minimal-email" class="form-label">Email *</label>
         <input
           id="minimal-email"
@@ -50,10 +47,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
       </ngx-signal-form-field-wrapper>
 
       <!-- Password Field -->
-      <ngx-signal-form-field-wrapper
-        [formField]="signupForm.password"
-        fieldName="password"
-      >
+      <ngx-signal-form-field-wrapper [formField]="signupForm.password">
         <label for="minimal-password" class="form-label">Password *</label>
         <input
           id="minimal-password"
@@ -64,10 +58,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
       </ngx-signal-form-field-wrapper>
 
       <!-- Confirm Password Field -->
-      <ngx-signal-form-field-wrapper
-        [formField]="signupForm.confirmPassword"
-        fieldName="confirmPassword"
-      >
+      <ngx-signal-form-field-wrapper [formField]="signupForm.confirmPassword">
         <label for="minimal-confirm" class="form-label">Confirm Password *</label>
         <input
           id="minimal-confirm"

@@ -137,9 +137,8 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
 
 **Field Name Resolution:**
 
-1. `data-signal-field` attribute (explicit override)
-2. `id` attribute (WCAG preferred) ✅
-3. `name` attribute (fallback)
+1. Explicit `fieldName` input for standalone/headless APIs
+2. Bound control `id` attribute for wrappers and auto-ARIA ✅
 
 ### 3. Error Display Component
 

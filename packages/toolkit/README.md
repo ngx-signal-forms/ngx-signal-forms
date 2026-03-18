@@ -26,11 +26,8 @@ import {
   NgxSignalFormDirective,
   NgxSignalFormAutoAriaDirective,
   provideNgxSignalFormsConfig,
-  provideNgxSignalFormsConfigForComponent,
   provideErrorMessages,
   showErrors,
-  shouldShowErrors,
-  combineShowErrors,
   focusFirstInvalid,
   createOnInvalidHandler,
   hasSubmitted,
@@ -105,8 +102,6 @@ interface NgxSignalFormsUserConfig {
   autoAria?: boolean; // Default: true
   defaultErrorStrategy?: 'immediate' | 'on-touch' | 'on-submit'; // Default: 'on-touch'
   defaultFormFieldAppearance?: 'standard' | 'outline'; // Default: 'standard'
-  showRequiredMarker?: boolean; // Default: true
-  requiredMarker?: string; // Default: ' *'
 }
 ```
 
@@ -117,12 +112,10 @@ interface NgxSignalFormsUserConfig {
 ```typescript
 // App-level (in app.config.ts)
 provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-submit' });
-
-// Component-level (in @Component.providers)
-provideNgxSignalFormsConfigForComponent({
-  defaultFormFieldAppearance: 'outline',
-});
 ```
+
+For one-off differences, prefer form-level or field-level inputs such as
+`[errorStrategy]` or wrapper `appearance` instead of subtree-scoped config overrides.
 
 ### Error Messages
 
@@ -138,17 +131,16 @@ provideErrorMessages({
 
 ### Utilities
 
-| Function                                    | Description                                           |
-| ------------------------------------------- | ----------------------------------------------------- |
-| `focusFirstInvalid(form)`                   | Focus first invalid field via `errorSummary()`        |
-| `createOnInvalidHandler(options?)`          | Creates `onInvalid` handler for `FormSubmitOptions`   |
-| `hasSubmitted(form)`                        | `Signal<boolean>` — completed at least one submission |
-| `showErrors(field, strategy, status)`       | `Signal<boolean>` — should show errors                |
-| `shouldShowErrors(state, strategy, status)` | Non-reactive check                                    |
-| `injectFormContext()`                       | Get `NgxSignalFormDirective` context or `undefined`   |
-| `unwrapValue(signalOrValue)`                | Extract value from `Signal` or static                 |
+| Function                              | Description                                           |
+| ------------------------------------- | ----------------------------------------------------- |
+| `focusFirstInvalid(form)`             | Focus first invalid field via `errorSummary()`        |
+| `createOnInvalidHandler(options?)`    | Creates `onInvalid` handler for `FormSubmitOptions`   |
+| `hasSubmitted(form)`                  | `Signal<boolean>` — completed at least one submission |
+| `showErrors(field, strategy, status)` | `Signal<boolean>` — should show errors                |
+| `injectFormContext()`                 | Get `NgxSignalFormDirective` context or `undefined`   |
+| `unwrapValue(signalOrValue)`          | Extract value from `Signal` or static                 |
 
-`showErrors()` is the main API for component and template work. `shouldShowErrors()` and `unwrapValue()` are mainly useful when building lower-level utilities.
+`showErrors()` is the main public API for component and template work. `unwrapValue()` is mainly useful when building lower-level utilities.
 
 ### Immutable Array Helpers
 

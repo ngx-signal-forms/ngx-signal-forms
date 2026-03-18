@@ -125,10 +125,7 @@ import { submissionSchema } from './submission-patterns.validations';
       <!-- Form fields -->
       <div class="space-y-6">
         <!-- Username field -->
-        <ngx-signal-form-field-wrapper
-          [formField]="registrationForm.username"
-          fieldName="username"
-        >
+        <ngx-signal-form-field-wrapper [formField]="registrationForm.username">
           <label for="username">Username *</label>
           <input
             id="username"
@@ -143,10 +140,7 @@ import { submissionSchema } from './submission-patterns.validations';
         </ngx-signal-form-field-wrapper>
 
         <!-- Password field -->
-        <ngx-signal-form-field-wrapper
-          [formField]="registrationForm.password"
-          fieldName="password"
-        >
+        <ngx-signal-form-field-wrapper [formField]="registrationForm.password">
           <label for="password">Password *</label>
           <input
             id="password"
@@ -163,7 +157,6 @@ import { submissionSchema } from './submission-patterns.validations';
         <!-- Confirm Password field -->
         <ngx-signal-form-field-wrapper
           [formField]="registrationForm.confirmPassword"
-          fieldName="confirmPassword"
         >
           <label for="confirmPassword">Confirm Password *</label>
           <input

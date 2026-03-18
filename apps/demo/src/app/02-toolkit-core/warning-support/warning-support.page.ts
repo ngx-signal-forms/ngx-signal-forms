@@ -44,6 +44,7 @@ import { WarningsSupportFormComponent } from './warning-support.form';
     >
       <!-- Error Display Mode Selector -->
       <ngx-error-display-mode-selector
+        [modes]="supportedModes"
         [(selectedMode)]="selectedMode"
         class="mb-6"
       />
@@ -65,6 +66,7 @@ import { WarningsSupportFormComponent } from './warning-support.form';
 })
 export class WarningsSupportPageComponent {
   protected readonly content = WARNING_SUPPORT_CONTENT;
+  protected readonly supportedModes = ['immediate', 'on-touch'] as const;
   protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
   protected readonly formComponent =
     viewChild<WarningsSupportFormComponent>('formComponent');

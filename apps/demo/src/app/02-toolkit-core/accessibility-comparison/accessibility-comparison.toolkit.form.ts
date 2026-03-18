@@ -21,10 +21,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
   template: `
     <form [formRoot]="signupForm" class="form-container">
       <!-- Email Field - Toolkit Handles Everything -->
-      <ngx-signal-form-field-wrapper
-        [formField]="signupForm.email"
-        fieldName="toolkit-email"
-      >
+      <ngx-signal-form-field-wrapper [formField]="signupForm.email">
         <label for="toolkit-email" class="form-label"> Email Address * </label>
         <input
           id="toolkit-email"
@@ -36,10 +33,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
       </ngx-signal-form-field-wrapper>
 
       <!-- Password Field - Toolkit Handles Everything -->
-      <ngx-signal-form-field-wrapper
-        [formField]="signupForm.password"
-        fieldName="toolkit-password"
-      >
+      <ngx-signal-form-field-wrapper [formField]="signupForm.password">
         <label for="toolkit-password" class="form-label"> Password * </label>
         <input
           id="toolkit-password"
@@ -51,10 +45,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
       </ngx-signal-form-field-wrapper>
 
       <!-- Confirm Password Field - Toolkit Handles Everything -->
-      <ngx-signal-form-field-wrapper
-        [formField]="signupForm.confirmPassword"
-        fieldName="toolkit-confirm-password"
-      >
+      <ngx-signal-form-field-wrapper [formField]="signupForm.confirmPassword">
         <label for="toolkit-confirm-password" class="form-label">
           Confirm Password *
         </label>

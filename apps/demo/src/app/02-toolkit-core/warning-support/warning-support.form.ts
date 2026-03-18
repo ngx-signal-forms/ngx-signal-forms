@@ -6,7 +6,6 @@ import {
 } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 import {
-  canSubmitWithWarnings,
   NgxSignalFormToolkit,
   submitWithWarnings,
   type ErrorDisplayStrategy,
@@ -33,15 +32,10 @@ import { createPasswordForm } from './warning-support.validations';
       </div>
     }
 
-    <form
-      class="form-container"
-      [formRoot]="passwordForm"
-      [errorStrategy]="errorDisplayMode()"
-      (submit)="handleSubmit()"
-    >
+    <form class="form-container" novalidate (submit)="handleSubmit($event)">
       <ngx-signal-form-field-wrapper
         [formField]="passwordForm.username"
-        fieldName="username"
+        [strategy]="errorDisplayMode()"
       >
         <label for="username">Username</label>
         <input
@@ -55,7 +49,7 @@ import { createPasswordForm } from './warning-support.validations';
 
       <ngx-signal-form-field-wrapper
         [formField]="passwordForm.email"
-        fieldName="email"
+        [strategy]="errorDisplayMode()"
       >
         <label for="email">Email</label>
         <input
@@ -69,7 +63,7 @@ import { createPasswordForm } from './warning-support.validations';
 
       <ngx-signal-form-field-wrapper
         [formField]="passwordForm.password"
-        fieldName="password"
+        [strategy]="errorDisplayMode()"
       >
         <label for="password">Password</label>
         <input
@@ -83,12 +77,8 @@ import { createPasswordForm } from './warning-support.validations';
 
       <div class="form-actions">
         <button type="button" (click)="reset()">Reset</button>
-        <button
-          type="submit"
-          class="btn-primary"
-          [disabled]="passwordForm().submitting()"
-        >
-          @if (passwordForm().submitting()) {
+        <button type="submit" class="btn-primary" [disabled]="isSubmitting()">
+          @if (isSubmitting()) {
             Creating Account...
           } @else {
             Create Account
@@ -112,16 +102,8 @@ export class WarningsSupportFormComponent {
   });
 
   readonly passwordForm = createPasswordForm(this.#formModel);
+  protected readonly isSubmitting = signal(false);
   protected readonly successMessage = signal<string>('');
-
-  /**
-   * Computed signal for button disabled state.
-   * Uses canSubmitWithWarnings() to allow submission when only warnings exist.
-   */
-  protected readonly canSubmitWithWarnings = canSubmitWithWarnings(
-    this.passwordForm,
-  );
-
   /**
    * Form submission using submitWithWarnings() from the toolkit.
    *
@@ -130,22 +112,31 @@ export class WarningsSupportFormComponent {
    * - All fields are marked as touched to show feedback
    * - Blocking errors prevent submission
    */
-  protected handleSubmit(): void {
+  protected handleSubmit(event: SubmitEvent): void {
+    event.preventDefault();
+
+    if (this.isSubmitting()) {
+      return;
+    }
+
+    this.isSubmitting.set(true);
+
     void submitWithWarnings(this.passwordForm, async () => {
-      /// Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       this.successMessage.set(
         '✓ Account created successfully! Notice how warnings did not block submission.',
       );
 
-      /// Clear success message after 5 seconds
       setTimeout(() => this.successMessage.set(''), 5000);
+    }).finally(() => {
+      this.isSubmitting.set(false);
     });
   }
 
   protected reset(): void {
     this.passwordForm().reset();
+    this.isSubmitting.set(false);
     this.#formModel.set({
       username: '',
       email: '',

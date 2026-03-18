@@ -227,7 +227,7 @@ The component automatically separates errors and warnings:
 The form field wrapper automatically handles both:
 
 ```html
-<ngx-signal-form-field-wrapper [formField]="form.password" fieldName="password">
+<ngx-signal-form-field-wrapper [formField]="form.password">
   <label for="password">Password *</label>
   <input id="password" type="password" [formField]="form.password" />
   <!-- Errors and warnings displayed automatically -->

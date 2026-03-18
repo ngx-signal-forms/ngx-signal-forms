@@ -12,27 +12,28 @@ This demo highlights the toolkit's native support for "Soft Validation".
 
 You define warnings in your schema just like errors, but you wrap them or use specific warning utilities. (Note: In strict schema definitions, this often involves specific return types or metadata).
 
-### The "Valid but with Warnings" State
+### The "Warnings present" State
 
-When a field has a warning:
+Angular Signal Forms still treats validation results as errors at the form-state level.
+This demo shows the toolkit's warning convention on top of that baseline:
 
-- `form.field.valid()` remains **true**.
-- `form.field.status()` might report `'warning'` (implementation dependent).
-- Submission is **allowed**.
+- Warnings are identified by `kind` values prefixed with `warn:`.
+- The UI renders warnings separately from blocking errors.
+- Submission is allowed when you opt into the toolkit's warning-aware submission helper.
 
 ## Feature Spotlight: Warning-Aware Submission
 
 The toolkit provides helpers to handle submission UX when warnings are present:
 
 ```typescript
-// Check if we should block or proceed
-if (this.form.valid()) {
-  if (hasWarnings(this.form)) {
-    // Maybe show a confirmation dialog?
-  }
-  submit(this.form);
-}
+await submitWithWarnings(this.form, async () => {
+  // Continue with submission even when only warn:* messages are present.
+});
 ```
+
+This demo keeps submission manual on purpose. Angular's native `submit()` still
+treats all validation results as blocking, so the warning-aware path is shown
+with a plain `<form novalidate>` plus `submitWithWarnings(...)`.
 
 ## Toolkit Visualization
 
@@ -48,6 +49,6 @@ The `NgxSignalFormError` component (and the Wrapper) automatically handles styli
 
 ## How to Test
 
-1.  **Trigger Warning**: Enter a password like "password123". It's valid length, but might trigger a "Weak password" warning.
-2.  **Submit**: Notice the button is **not disabled**.
-3.  **UI Feedback**: Observe the visual distinction between the "Required" error (Red) and the "Weak Password" warning (Orange).
+1. **Trigger Warning**: Enter a password like "password123". It's valid length, but might trigger a "Weak password" warning.
+2. **Submit**: Notice the button is **not disabled** by warnings alone.
+3. **UI Feedback**: Observe the visual distinction between the "Required" error (Red) and the "Weak Password" warning (Orange).

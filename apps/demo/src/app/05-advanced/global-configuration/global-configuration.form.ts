@@ -21,7 +21,7 @@ import { globalConfigSchema } from './global-configuration.validations';
  * Shows how to:
  * - Set default error display strategies globally
  * - Configure automatic ARIA attributes
- * - Use custom field name resolvers
+ * - Rely on deterministic control ids for ARIA linkage
  * - Override global settings per form/field
  *
  * Note: Global configuration is set in app.config.ts via provideNgxSignalFormsConfig()
@@ -63,10 +63,7 @@ import { globalConfigSchema } from './global-configuration.validations';
       <!-- Form fields -->
       <div class="space-y-6">
         <!-- Email field with standard id -->
-        <ngx-signal-form-field-wrapper
-          [formField]="configForm.userEmail"
-          fieldName="userEmail"
-        >
+        <ngx-signal-form-field-wrapper [formField]="configForm.userEmail">
           <label for="userEmail">Email Address *</label>
           <input
             id="userEmail"
@@ -78,16 +75,12 @@ import { globalConfigSchema } from './global-configuration.validations';
         </ngx-signal-form-field-wrapper>
 
         <!-- Phone field with custom data attribute -->
-        <ngx-signal-form-field-wrapper
-          [formField]="configForm.userPhone"
-          fieldName="userPhone"
-        >
+        <ngx-signal-form-field-wrapper [formField]="configForm.userPhone">
           <label for="userPhone">Phone Number *</label>
           <input
             id="userPhone"
             type="tel"
             [formField]="configForm.userPhone"
-            data-signal-field="userPhone"
             placeholder="123-456-7890"
             class="form-input"
           />
@@ -97,10 +90,7 @@ import { globalConfigSchema } from './global-configuration.validations';
         </ngx-signal-form-field-wrapper>
 
         <!-- Website field (optional) -->
-        <ngx-signal-form-field-wrapper
-          [formField]="configForm.userWebsite"
-          fieldName="userWebsite"
-        >
+        <ngx-signal-form-field-wrapper [formField]="configForm.userWebsite">
           <label for="userWebsite">Website</label>
           <input
             id="userWebsite"
@@ -158,7 +148,7 @@ import { globalConfigSchema } from './global-configuration.validations';
               Field Resolution:
             </dt>
             <dd class="text-gray-600 dark:text-gray-400">
-              data-signal-field → custom resolver → id → name
+              Bound control id → deterministic field name
             </dd>
           </div>
         </dl>

@@ -11,7 +11,7 @@ Demonstrates how different error display strategies change when validation feedb
 
 ## Validation overview
 
-**Errors**
+### Errors
 
 - Name: required, minimum length 2, maximum length 50.
 - Email: required + email format.
@@ -21,7 +21,7 @@ Demonstrates how different error display strategies change when validation feedb
 - Improvement suggestions: required when rating ≤ 3, minimum length 10, maximum length 500.
 - Detailed feedback: maximum length 1000.
 
-**Warnings**
+### Warnings
 
 - None.
 
@@ -29,7 +29,7 @@ Demonstrates how different error display strategies change when validation feedb
 
 - `NgxSignalFormToolkit` for auto-ARIA and form context.
 - `NgxSignalFormErrorComponent` for field-level error rendering.
-- `injectFormContext()` and `combineShowErrors()` for custom visibility helpers.
+- `injectFormContext()` plus local computed signals for custom visibility helpers.
 - Error strategy set on the form via `[errorStrategy]`.
 
 ## Other tools

@@ -11,13 +11,13 @@ Shows how global toolkit defaults (set in `apps/demo/src/main.ts`) affect form b
 
 ## Validation overview
 
-**Errors**
+### Errors
 
 - Email: required + email format.
 - Phone: required + `123-456-7890` format.
 - Website: optional but must be a valid URL when provided.
 
-**Warnings**
+### Warnings
 
 - None.
 
@@ -26,7 +26,7 @@ Shows how global toolkit defaults (set in `apps/demo/src/main.ts`) affect form b
 - `provideNgxSignalFormsConfig()` in `apps/demo/src/main.ts` sets defaults.
 - `NgxSignalFormToolkit` for auto-ARIA and form context.
 - `NgxFormField` wrapper for layout and errors.
-- `data-signal-field` used to demonstrate field-name resolution order.
+- Bound control `id` values provide deterministic field identity for ARIA linkage.
 
 ## Other tools
 

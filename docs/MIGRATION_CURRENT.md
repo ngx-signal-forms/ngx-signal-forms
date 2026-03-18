@@ -85,7 +85,7 @@ The current toolkit expects field identity to be explicit.
 ### Field identity after
 
 ```html
-<ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
+<ngx-signal-form-field-wrapper [formField]="form.email">
   <label for="email">Email</label>
   <app-custom-control id="email" [formField]="form.email" />
 </ngx-signal-form-field-wrapper>

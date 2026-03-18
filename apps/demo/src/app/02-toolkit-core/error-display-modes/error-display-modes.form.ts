@@ -8,7 +8,6 @@ import {
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { form, FormField } from '@angular/forms/signals';
 import {
-  combineShowErrors,
   createOnInvalidHandler,
   injectFormContext,
   NgxSignalFormToolkit,
@@ -81,7 +80,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
           role="status"
           aria-live="polite"
         >
-          Personal info has visible errors (combineShowErrors)
+          Personal info has visible errors (aggregated with a computed signal)
         </div>
       }
     </div>
@@ -111,11 +110,9 @@ export class ErrorDisplayHelpersComponent {
     this.#computeShowErrors(this.emailField()()),
   );
 
-  // combineShowErrors() returns true if ANY field should show errors
-  protected readonly showPersonalInfoErrors = combineShowErrors([
-    this.showNameErrors,
-    this.showEmailErrors,
-  ]);
+  protected readonly showPersonalInfoErrors = computed(
+    () => this.showNameErrors() || this.showEmailErrors(),
+  );
 
   // Inline showErrors logic to handle InputSignal<FieldTree<T>> properly
   #computeShowErrors(fieldState: FieldState<string>): boolean {

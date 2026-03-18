@@ -123,11 +123,5 @@ export const passwordFormSchema = schema<PasswordFormModel>((path) => {
  * Helper function to create a password form with validation schema.
  */
 export function createPasswordForm(model: WritableSignal<PasswordFormModel>) {
-  return form(model, passwordFormSchema, {
-    submission: {
-      // Warning-support demo handles submit flow manually via submitWithWarnings().
-      // Keep a no-op action so NgxSignalFormDirective ([formRoot]) has valid submission config.
-      action: async () => null,
-    },
-  });
+  return form(model, passwordFormSchema);
 }
