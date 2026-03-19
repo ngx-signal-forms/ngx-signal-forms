@@ -29,6 +29,95 @@ import { complexFormSchema } from './complex-forms.validations';
   selector: 'ngx-complex-forms',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
+  styles: `
+    :host {
+      display: block;
+    }
+
+    .complex-form-fieldset {
+      --ngx-signal-form-fieldset-gap: 0;
+      --ngx-signal-form-fieldset-padding: 0;
+      --ngx-signal-form-fieldset-border-width: 0;
+      --ngx-signal-form-fieldset-content-offset: 0.5rem;
+    }
+
+    .complex-array-fieldset {
+      --ngx-signal-form-fieldset-gap: 0;
+    }
+
+    .array-entry-grid + .array-entry-grid {
+      margin-top: 1rem;
+    }
+
+    .add-array-button {
+      display: flex;
+      inline-size: 100%;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      min-block-size: 2.75rem;
+      margin-top: 0.5rem;
+      margin-bottom: 0.75rem;
+      padding: 0.625rem 0.875rem;
+      border: 1.5px dotted color-mix(in srgb, #6366f1 55%, #cbd5e1);
+      border-radius: 0.75rem;
+      background: color-mix(in srgb, #eef2ff 75%, white);
+      color: #4338ca;
+      font-size: 0.875rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      transition:
+        border-color 150ms ease,
+        background-color 150ms ease,
+        color 150ms ease,
+        transform 150ms ease,
+        box-shadow 150ms ease;
+    }
+
+    .add-array-button:hover {
+      border-color: #4f46e5;
+      background: color-mix(in srgb, #e0e7ff 78%, white);
+      color: #3730a3;
+      box-shadow: 0 10px 24px -18px rgb(79 70 229 / 0.65);
+      transform: translateY(-1px);
+    }
+
+    .add-array-button:focus-visible {
+      outline: 2px solid #6366f1;
+      outline-offset: 2px;
+    }
+
+    .add-array-button__icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      inline-size: 1.25rem;
+      block-size: 1.25rem;
+      border-radius: 9999px;
+      background: rgb(99 102 241 / 0.12);
+      font-size: 0.9rem;
+      line-height: 1;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .add-array-button {
+        border-color: color-mix(in srgb, #818cf8 60%, #475569);
+        background: color-mix(in srgb, #312e81 24%, #0f172a);
+        color: #c7d2fe;
+      }
+
+      .add-array-button:hover {
+        border-color: #a5b4fc;
+        background: color-mix(in srgb, #3730a3 30%, #0f172a);
+        color: #e0e7ff;
+        box-shadow: 0 12px 28px -20px rgb(165 180 252 / 0.45);
+      }
+
+      .add-array-button__icon {
+        background: rgb(165 180 252 / 0.18);
+      }
+    }
+  `,
   templateUrl: './complex-forms.form.html',
 })
 export class ComplexFormsComponent {
