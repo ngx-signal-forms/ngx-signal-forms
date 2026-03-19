@@ -53,3 +53,6 @@ vitest.config.*.timestamp*
 **/__snapshots__/*
 test-results/
 build.log
+
+.claude/worktrees
+.claude/settings.local.json
