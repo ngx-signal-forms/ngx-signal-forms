@@ -48,12 +48,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
           <label for="firstName">
             First Name <span class="text-red-500">*</span>
           </label>
-          <input
-            id="firstName"
-            type="text"
-            [formField]="travelerForm.firstName"
-            class="form-input"
-          />
+          <input id="firstName" type="text" [formField]="travelerForm.firstName" />
           <ngx-signal-form-field-hint position="left">
             Enter your legal first name as shown on passport
           </ngx-signal-form-field-hint>
@@ -64,23 +59,13 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
           <label for="lastName">
             Last Name <span class="text-red-500">*</span>
           </label>
-          <input
-            id="lastName"
-            type="text"
-            [formField]="travelerForm.lastName"
-            class="form-input"
-          />
+          <input id="lastName" type="text" [formField]="travelerForm.lastName" />
         </ngx-signal-form-field-wrapper>
 
         <!-- Email -->
         <ngx-signal-form-field-wrapper [formField]="travelerForm.email">
           <label for="email"> Email <span class="text-red-500">*</span> </label>
-          <input
-            id="email"
-            type="email"
-            [formField]="travelerForm.email"
-            class="form-input"
-          />
+          <input id="email" type="email" [formField]="travelerForm.email" />
           <ngx-signal-form-field-hint position="left">
             We'll send booking confirmation to this address
           </ngx-signal-form-field-hint>
@@ -95,7 +80,6 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
             id="nationality"
             type="text"
             [formField]="travelerForm.nationality"
-            class="form-input"
           />
         </ngx-signal-form-field-wrapper>
 
@@ -114,7 +98,6 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
                 id="passportNumber"
                 type="text"
                 [formField]="travelerForm.passportNumber"
-                class="form-input"
               />
             </ngx-signal-form-field-wrapper>
 
@@ -129,7 +112,6 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
                 id="passportExpiry"
                 type="date"
                 [formField]="travelerForm.passportExpiry"
-                class="form-input"
               />
               <ngx-signal-form-field-hint position="left">
                 Must be valid 6 months after trip ends
@@ -143,24 +125,6 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
   styles: `
     .traveler-step {
       padding: 1rem;
-    }
-
-    .form-input {
-      width: 100%;
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #d1d5db;
-      border-radius: 0.375rem;
-      font-size: 1rem;
-    }
-
-    .form-input:focus {
-      outline: none;
-      border-color: var(--color-primary, #3b82f6);
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-    }
-
-    .form-input[aria-invalid='true'] {
-      border-color: #ef4444;
     }
   `,
 })

@@ -37,33 +37,26 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
     <form (submit)="handleSubmit($event)" class="space-y-4">
       <!-- Email Field - uses ngx-signal-form-field-wrapper WITHOUT [formRoot] -->
       <ngx-signal-form-field-wrapper [formField]="signupForm.email">
-        <label for="minimal-email" class="form-label">Email *</label>
-        <input
-          id="minimal-email"
-          type="email"
-          class="form-input"
-          [formField]="signupForm.email"
-        />
+        <label for="minimal-email">Email *</label>
+        <input id="minimal-email" type="email" [formField]="signupForm.email" />
       </ngx-signal-form-field-wrapper>
 
       <!-- Password Field -->
       <ngx-signal-form-field-wrapper [formField]="signupForm.password">
-        <label for="minimal-password" class="form-label">Password *</label>
+        <label for="minimal-password">Password *</label>
         <input
           id="minimal-password"
           type="password"
-          class="form-input"
           [formField]="signupForm.password"
         />
       </ngx-signal-form-field-wrapper>
 
       <!-- Confirm Password Field -->
       <ngx-signal-form-field-wrapper [formField]="signupForm.confirmPassword">
-        <label for="minimal-confirm" class="form-label">Confirm Password *</label>
+        <label for="minimal-confirm">Confirm Password *</label>
         <input
           id="minimal-confirm"
           type="password"
-          class="form-input"
           [formField]="signupForm.confirmPassword"
         />
       </ngx-signal-form-field-wrapper>
@@ -87,37 +80,6 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
     </div>
   `,
   styles: `
-    .form-label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--color-gray-700);
-    }
-
-    :host-context(.dark) .form-label {
-      color: var(--color-gray-300);
-    }
-
-    .form-input {
-      padding: 0.5rem 0.75rem;
-      border: 1px solid var(--color-gray-300);
-      border-radius: 0.375rem;
-      font-size: 0.875rem;
-      transition: border-color 0.15s;
-      width: 100%;
-    }
-
-    .form-input:focus {
-      outline: none;
-      border-color: var(--color-blue-500);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    :host-context(.dark) .form-input {
-      background-color: var(--color-gray-800);
-      border-color: var(--color-gray-600);
-      color: var(--color-gray-100);
-    }
-
     .btn-primary {
       padding: 0.5rem 1rem;
       background-color: var(--color-blue-600);

@@ -22,38 +22,33 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
     <form [formRoot]="signupForm" class="form-container">
       <!-- Email Field - Toolkit Handles Everything -->
       <ngx-signal-form-field-wrapper [formField]="signupForm.email">
-        <label for="toolkit-email" class="form-label"> Email Address * </label>
+        <label for="toolkit-email">Email Address *</label>
         <input
           id="toolkit-email"
           type="email"
           [formField]="signupForm.email"
-          class="form-input"
           placeholder="you@example.com"
         />
       </ngx-signal-form-field-wrapper>
 
       <!-- Password Field - Toolkit Handles Everything -->
       <ngx-signal-form-field-wrapper [formField]="signupForm.password">
-        <label for="toolkit-password" class="form-label"> Password * </label>
+        <label for="toolkit-password">Password *</label>
         <input
           id="toolkit-password"
           type="password"
           [formField]="signupForm.password"
-          class="form-input"
           placeholder="At least 8 characters"
         />
       </ngx-signal-form-field-wrapper>
 
       <!-- Confirm Password Field - Toolkit Handles Everything -->
       <ngx-signal-form-field-wrapper [formField]="signupForm.confirmPassword">
-        <label for="toolkit-confirm-password" class="form-label">
-          Confirm Password *
-        </label>
+        <label for="toolkit-confirm-password"> Confirm Password * </label>
         <input
           id="toolkit-confirm-password"
           type="password"
           [formField]="signupForm.confirmPassword"
-          class="form-input"
           placeholder="Re-enter password"
         />
       </ngx-signal-form-field-wrapper>

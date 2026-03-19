@@ -74,7 +74,6 @@ import { WizardStepInterface } from '../wizard-step.interface';
               <input
                 [id]="'dest-country-' + destIdx"
                 type="text"
-                class="form-input"
                 [formField]="tripForm.destinations[destIdx].country"
               />
             </ngx-signal-form-field-wrapper>
@@ -89,7 +88,6 @@ import { WizardStepInterface } from '../wizard-step.interface';
               <input
                 [id]="'dest-city-' + destIdx"
                 type="text"
-                class="form-input"
                 [formField]="tripForm.destinations[destIdx].city"
               />
             </ngx-signal-form-field-wrapper>
@@ -106,7 +104,6 @@ import { WizardStepInterface } from '../wizard-step.interface';
               <input
                 [id]="'dest-arrival-' + destIdx"
                 type="date"
-                class="form-input"
                 [formField]="tripForm.destinations[destIdx].arrivalDate"
               />
             </ngx-signal-form-field-wrapper>
@@ -121,7 +118,6 @@ import { WizardStepInterface } from '../wizard-step.interface';
               <input
                 [id]="'dest-departure-' + destIdx"
                 type="date"
-                class="form-input"
                 [formField]="tripForm.destinations[destIdx].departureDate"
               />
               <ngx-signal-form-field-hint position="left">
@@ -139,7 +135,6 @@ import { WizardStepInterface } from '../wizard-step.interface';
             <input
               [id]="'dest-accommodation-' + destIdx"
               type="text"
-              class="form-input"
               [formField]="tripForm.destinations[destIdx].accommodation"
             />
             <ngx-signal-form-field-hint position="left">
@@ -201,7 +196,6 @@ import { WizardStepInterface } from '../wizard-step.interface';
                     <input
                       [id]="'act-name-' + destIdx + '-' + actIdx"
                       type="text"
-                      class="form-input-sm"
                       [formField]="
                         tripForm.destinations[destIdx].activities[actIdx].name
                       "
@@ -223,7 +217,6 @@ import { WizardStepInterface } from '../wizard-step.interface';
                     <input
                       [id]="'act-date-' + destIdx + '-' + actIdx"
                       type="date"
-                      class="form-input-sm"
                       [formField]="
                         tripForm.destinations[destIdx].activities[actIdx].date
                       "
@@ -245,7 +238,6 @@ import { WizardStepInterface } from '../wizard-step.interface';
                     <input
                       [id]="'act-duration-' + destIdx + '-' + actIdx"
                       type="number"
-                      class="form-input-sm"
                       [formField]="
                         tripForm.destinations[destIdx].activities[actIdx].duration
                       "
@@ -356,22 +348,6 @@ import { WizardStepInterface } from '../wizard-step.interface';
       padding: 1rem;
     }
 
-    .form-input {
-      width: 100%;
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #d1d5db;
-      border-radius: 0.375rem;
-      font-size: 1rem;
-    }
-
-    .form-input-sm {
-      width: 100%;
-      padding: 0.375rem 0.5rem;
-      border: 1px solid #d1d5db;
-      border-radius: 0.25rem;
-      font-size: 0.875rem;
-    }
-
     .form-input-xs {
       padding: 0.25rem 0.375rem;
       border: 1px solid #d1d5db;
@@ -379,16 +355,12 @@ import { WizardStepInterface } from '../wizard-step.interface';
       font-size: 0.75rem;
     }
 
-    .form-input:focus,
-    .form-input-sm:focus,
     .form-input-xs:focus {
       outline: none;
       border-color: var(--color-primary, #3b82f6);
       box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
     }
 
-    .form-input[aria-invalid='true'],
-    .form-input-sm[aria-invalid='true'],
     .form-input-xs[aria-invalid='true'] {
       border-color: #ef4444;
     }

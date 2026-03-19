@@ -75,12 +75,7 @@ const bookingSchema = schema<Booking>((path) => {
             appearance="outline"
           >
             <label for="checkIn">Check-In</label>
-            <input
-              id="checkIn"
-              type="date"
-              [formField]="bookingForm.checkIn"
-              class="form-input"
-            />
+            <input id="checkIn" type="date" [formField]="bookingForm.checkIn" />
           </ngx-signal-form-field-wrapper>
 
           <ngx-signal-form-field-wrapper
@@ -88,12 +83,7 @@ const bookingSchema = schema<Booking>((path) => {
             appearance="outline"
           >
             <label for="checkOut">Check-Out</label>
-            <input
-              id="checkOut"
-              type="date"
-              [formField]="bookingForm.checkOut"
-              class="form-input"
-            />
+            <input id="checkOut" type="date" [formField]="bookingForm.checkOut" />
           </ngx-signal-form-field-wrapper>
         </div>
 
@@ -102,12 +92,7 @@ const bookingSchema = schema<Booking>((path) => {
           appearance="outline"
         >
           <label for="guests">Guests</label>
-          <input
-            id="guests"
-            type="number"
-            [formField]="bookingForm.guests"
-            class="form-input"
-          />
+          <input id="guests" type="number" [formField]="bookingForm.guests" />
         </ngx-signal-form-field-wrapper>
 
         <ngx-signal-form-field-wrapper
@@ -120,7 +105,7 @@ const bookingSchema = schema<Booking>((path) => {
             type="text"
             [formField]="bookingForm.promoCode"
             placeholder="Try 'SMALLGROUP'"
-            class="form-input uppercase"
+            class="uppercase"
           />
           <ngx-signal-form-field-hint>
             Valid only for ≤ 4 guests

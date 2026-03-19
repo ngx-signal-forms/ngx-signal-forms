@@ -1,8 +1,8 @@
 <div class="mb-6 text-center">
   <p class="text-sm text-gray-600 dark:text-gray-400">
-    Group related form fields and display aggregated validation errors. Top
-    placement is the default to match the Figma reference, with bottom placement
-    available per fieldset.
+    Group related form fields and display aggregated validation errors.
+    `errorPlacement` is primarily meant for grouped fieldsets, with the wrapper
+    example below included as a smaller field-level companion.
   </p>
 </div>
 
@@ -187,34 +187,13 @@
       <p class="max-w-3xl text-sm text-gray-600 dark:text-gray-400">
         This sandbox stays invalid on purpose. Keep it on this page for fast
         comparison, but treat it as a dedicated mini-form rather than part of
-        the production-style fieldset example below.
+        the production-style fieldset example below. The grouped fieldset and
+        radio sections are the main placement comparisons; the wrapper example
+        is there to show that the same idea can still work for single fields.
       </p>
     </div>
 
     <div class="playground-selector-grid">
-      <fieldset class="playground-selector-card">
-        <legend class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-          Form-field wrapper
-        </legend>
-        <div
-          class="playground-segmented mt-3"
-          role="group"
-          aria-label="Form-field wrapper"
-        >
-          @for (placement of placementOptions; track placement) {
-          <button
-            type="button"
-            class="playground-option"
-            [attr.data-active]="wrapperPlacement() === placement"
-            [attr.aria-pressed]="wrapperPlacement() === placement"
-            (click)="wrapperPlacement.set(placement)"
-          >
-            {{ placementLabels[placement] }}
-          </button>
-          }
-        </div>
-      </fieldset>
-
       <fieldset class="playground-selector-card">
         <legend class="text-sm font-semibold text-gray-900 dark:text-gray-100">
           Grouped fieldset
@@ -260,6 +239,29 @@
           }
         </div>
       </fieldset>
+
+      <fieldset class="playground-selector-card">
+        <legend class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          Single-field wrapper
+        </legend>
+        <div
+          class="playground-segmented mt-3"
+          role="group"
+          aria-label="Single-field wrapper"
+        >
+          @for (placement of placementOptions; track placement) {
+          <button
+            type="button"
+            class="playground-option"
+            [attr.data-active]="wrapperPlacement() === placement"
+            [attr.aria-pressed]="wrapperPlacement() === placement"
+            (click)="wrapperPlacement.set(placement)"
+          >
+            {{ placementLabels[placement] }}
+          </button>
+          }
+        </div>
+      </fieldset>
     </div>
 
     <p class="playground-note text-sm">
@@ -269,32 +271,6 @@
     </p>
 
     <div class="playground-preview-grid">
-      <section class="playground-preview-card">
-        <h4 class="text-sm font-semibold text-[#324155] dark:text-gray-100">
-          Wrapper error placement
-        </h4>
-        <p class="text-sm text-gray-600 dark:text-gray-400">
-          Single-field errors should sit either directly under the inline label
-          or in the assistive row below the outline.
-        </p>
-
-        <ngx-signal-form-field-wrapper
-          appearance="outline"
-          [formField]="placementPreviewForm.email"
-          [errorPlacement]="wrapperPlacement()"
-          [strategy]="'immediate'"
-        >
-          <label for="placementPreviewEmail">Email address *</label>
-          <input
-            id="placementPreviewEmail"
-            type="email"
-            [formField]="placementPreviewForm.email"
-            placeholder="name@example.com"
-            autocomplete="email"
-          />
-        </ngx-signal-form-field-wrapper>
-      </section>
-
       <section class="playground-preview-card">
         <h4 class="text-sm font-semibold text-[#324155] dark:text-gray-100">
           Grouped fieldset summary
@@ -392,6 +368,33 @@
             <span>Local pickup</span>
           </label>
         </fieldset>
+      </section>
+
+      <section class="playground-preview-card">
+        <h4 class="text-sm font-semibold text-[#324155] dark:text-gray-100">
+          Wrapper error placement
+        </h4>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          Single-field errors can also move, but this is the secondary use case.
+          The grouped fieldset examples are the main design target for
+          placement.
+        </p>
+
+        <ngx-signal-form-field-wrapper
+          appearance="outline"
+          [formField]="placementPreviewForm.email"
+          [errorPlacement]="wrapperPlacement()"
+          [strategy]="'immediate'"
+        >
+          <label for="placementPreviewEmail">Email address *</label>
+          <input
+            id="placementPreviewEmail"
+            type="email"
+            [formField]="placementPreviewForm.email"
+            placeholder="name@example.com"
+            autocomplete="email"
+          />
+        </ngx-signal-form-field-wrapper>
       </section>
     </div>
   </div>

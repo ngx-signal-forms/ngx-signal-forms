@@ -228,6 +228,104 @@ test.describe('Custom Signal Forms Controls', () => {
     });
   });
 
+  test.describe('Outline appearance integration', () => {
+    test('should apply outline appearance to native and custom wrappers', async () => {
+      await test.step('Switch the demo to outline mode', async () => {
+        await page.showOutlineAppearance();
+        await expect(page.outlineAppearanceButton).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        );
+      });
+
+      await test.step('Verify native and custom wrappers receive outline styling hooks', async () => {
+        for (const controlId of [
+          'productName',
+          'rating',
+          'serviceRating',
+          'wouldRecommend',
+          'feedback',
+        ]) {
+          const wrapper = page.getWrapperByControlId(controlId);
+          await expect(wrapper).toHaveAttribute('outline', '');
+          await expect(wrapper).toHaveClass(/ngx-signal-forms-outline/);
+        }
+      });
+    });
+
+    test('should keep invalid outline borders for native and custom required fields', async () => {
+      await test.step('Switch to outline mode and submit the empty form', async () => {
+        await page.showOutlineAppearance();
+        await page.submitButton.click();
+      });
+
+      await test.step('Verify native and custom invalid wrappers render the shared error border', async () => {
+        for (const controlId of ['productName', 'rating', 'serviceRating']) {
+          const wrapper = page.getWrapperByControlId(controlId);
+          const content = page.getWrapperContentByControlId(controlId);
+
+          await expect(wrapper).toHaveClass(
+            /ngx-signal-form-field-wrapper--invalid/,
+          );
+
+          const borderColor = await content.evaluate(
+            (element) => window.getComputedStyle(element).borderColor,
+          );
+
+          expect(borderColor).not.toBe('rgba(50, 65, 85, 0.25)');
+        }
+      });
+    });
+
+    test('should left-align outlined rating controls and reuse the shared outline padding', async () => {
+      await test.step('Switch to outline mode', async () => {
+        await page.showOutlineAppearance();
+      });
+
+      await test.step('Verify outlined rating wrappers use the same padding as the text field wrapper', async () => {
+        const productNamePadding = await page
+          .getWrapperContentByControlId('productName')
+          .evaluate((element) => window.getComputedStyle(element).padding);
+
+        for (const controlId of ['rating', 'serviceRating', 'wouldRecommend']) {
+          const padding = await page
+            .getWrapperContentByControlId(controlId)
+            .evaluate((element) => window.getComputedStyle(element).padding);
+
+          expect(padding).toBe(productNamePadding);
+        }
+      });
+
+      await test.step('Verify outlined rating controls are left aligned inside the shared wrapper layout', async () => {
+        for (const controlId of ['rating', 'serviceRating', 'wouldRecommend']) {
+          const main = page.getWrapperMainByControlId(controlId);
+          const control = page.form.locator(`#${controlId}`);
+
+          const mainAlignItems = await main.evaluate(
+            (element) => window.getComputedStyle(element).alignItems,
+          );
+          const controlAlignSelf = await control.evaluate(
+            (element) => window.getComputedStyle(element).alignSelf,
+          );
+          const geometry = await control.evaluate((element) => {
+            const controlRect = element.getBoundingClientRect();
+            const parentRect = element.parentElement?.getBoundingClientRect();
+
+            return {
+              offsetFromParentLeft: parentRect
+                ? Math.round(controlRect.left - parentRect.left)
+                : null,
+            };
+          });
+
+          expect(mainAlignItems).toBe('flex-start');
+          expect(controlAlignSelf).toBe('flex-start');
+          expect(geometry.offsetFromParentLeft).toBe(0);
+        }
+      });
+    });
+  });
+
   test.describe('Mixed Native and Custom Controls', () => {
     test('should handle mix of native inputs and custom controls', async () => {
       await test.step('Fill native input', async () => {

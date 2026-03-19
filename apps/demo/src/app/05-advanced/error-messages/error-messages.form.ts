@@ -57,7 +57,6 @@ import { errorMessagesSchema } from './error-messages.validations';
             type="email"
             [formField]="errorMessagesForm.email"
             placeholder="you@example.com"
-            class="form-input"
           />
           <ngx-signal-form-field-hint>
             Tier 1: Validator message takes priority
@@ -75,7 +74,6 @@ import { errorMessagesSchema } from './error-messages.validations';
             type="password"
             [formField]="errorMessagesForm.password"
             placeholder="Enter password"
-            class="form-input"
           />
           <ngx-signal-form-field-hint>
             Tier 2: Registry provides fallback message
@@ -93,7 +91,6 @@ import { errorMessagesSchema } from './error-messages.validations';
             [formField]="errorMessagesForm.bio"
             rows="3"
             placeholder="Tell us about yourself"
-            class="form-input"
           ></textarea>
           <ngx-signal-form-field-hint>
             Tier 3: Toolkit default fallback

@@ -60,7 +60,6 @@ const registrationSchema = schema<Registration>((path) => {
             type="text"
             [formField]="regForm.username"
             placeholder="Try typing 'admin'"
-            class="form-input"
           />
 
           <!-- Custom suffix for loading state -->

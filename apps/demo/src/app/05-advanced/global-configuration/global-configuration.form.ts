@@ -70,7 +70,6 @@ import { globalConfigSchema } from './global-configuration.validations';
             type="email"
             [formField]="configForm.userEmail"
             placeholder="user@example.com"
-            class="form-input"
           />
         </ngx-signal-form-field-wrapper>
 
@@ -82,11 +81,10 @@ import { globalConfigSchema } from './global-configuration.validations';
             type="tel"
             [formField]="configForm.userPhone"
             placeholder="123-456-7890"
-            class="form-input"
           />
-          <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          <ngx-signal-form-field-hint>
             Format: 123-456-7890
-          </p>
+          </ngx-signal-form-field-hint>
         </ngx-signal-form-field-wrapper>
 
         <!-- Website field (optional) -->
@@ -97,11 +95,10 @@ import { globalConfigSchema } from './global-configuration.validations';
             type="url"
             [formField]="configForm.userWebsite"
             placeholder="https://example.com"
-            class="form-input"
           />
-          <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          <ngx-signal-form-field-hint>
             Optional - Must be a valid URL if provided
-          </p>
+          </ngx-signal-form-field-hint>
         </ngx-signal-form-field-wrapper>
       </div>
 

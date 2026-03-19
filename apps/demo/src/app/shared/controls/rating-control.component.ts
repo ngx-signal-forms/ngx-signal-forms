@@ -68,10 +68,6 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
       cursor: not-allowed;
     }
 
-    :host(.rating-control--invalid) {
-      box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.5);
-    }
-
     .star {
       font-size: 1.5rem;
       line-height: 1;

@@ -9,6 +9,9 @@ import { BaseFormPage } from './base-form.page';
 export class CustomControlsPage extends BaseFormPage {
   readonly route = DEMO_PATHS.customControls;
 
+  readonly standardAppearanceButton: Locator;
+  readonly outlineAppearanceButton: Locator;
+
   // Form wrapper locators
   readonly formFieldWrappers: Locator;
 
@@ -23,6 +26,13 @@ export class CustomControlsPage extends BaseFormPage {
 
   constructor(page: Page) {
     super(page);
+
+    this.standardAppearanceButton = this.page.getByRole('button', {
+      name: 'Standard',
+    });
+    this.outlineAppearanceButton = this.page.getByRole('button', {
+      name: 'Outline',
+    });
 
     // Form field wrappers
     this.formFieldWrappers = this.form.locator('ngx-signal-form-field-wrapper');
@@ -82,6 +92,40 @@ export class CustomControlsPage extends BaseFormPage {
   async getRatingValue(ratingControl: Locator): Promise<number> {
     const valuenow = await ratingControl.getAttribute('aria-valuenow');
     return parseInt(valuenow ?? '0', 10);
+  }
+
+  /**
+   * Switch the demo to outline appearance.
+   */
+  async showOutlineAppearance(): Promise<void> {
+    await this.outlineAppearanceButton.click();
+  }
+
+  /**
+   * Get the wrapper containing a specific control.
+   */
+  getWrapperByControlId(controlId: string): Locator {
+    return this.form.locator(
+      `ngx-signal-form-field-wrapper:has(#${controlId})`,
+    );
+  }
+
+  /**
+   * Get the bordered content element inside a specific wrapper.
+   */
+  getWrapperContentByControlId(controlId: string): Locator {
+    return this.getWrapperByControlId(controlId).locator(
+      '.ngx-signal-form-field-wrapper__content',
+    );
+  }
+
+  /**
+   * Get the main content container inside a specific wrapper.
+   */
+  getWrapperMainByControlId(controlId: string): Locator {
+    return this.getWrapperByControlId(controlId).locator(
+      '.ngx-signal-form-field-wrapper__main',
+    );
   }
 
   /**

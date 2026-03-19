@@ -1,36 +1,5 @@
 :host {
   display: block;
-  --ngx-form-field-color-surface: #ffffff;
-  --ngx-form-field-input-bg: var(--ngx-form-field-color-surface);
-  --ngx-form-field-color-border: #acb2bb;
-  --ngx-form-field-color-border-hover: #324155;
-  --ngx-form-field-color-text: #324155;
-  --ngx-form-field-color-text-secondary: rgba(50, 65, 85, 0.75);
-  --ngx-form-field-outline-label-color: var(
-    --ngx-form-field-color-text-secondary
-  );
-  --ngx-form-field-outline-input-color: var(--ngx-form-field-color-text);
-  --ngx-form-field-placeholder-color: rgba(50, 65, 85, 0.5);
-  --ngx-form-field-color-primary: #005fcc;
-  --ngx-form-field-focus-color: var(--ngx-form-field-color-primary);
-  --ngx-form-field-focus-box-shadow: 0 0 0 2px rgba(0, 95, 204, 0.18);
-}
-
-:host-context(.dark) {
-  --ngx-form-field-color-surface: #111827;
-  --ngx-form-field-input-bg: var(--ngx-form-field-color-surface);
-  --ngx-form-field-color-border: rgba(156, 163, 175, 0.75);
-  --ngx-form-field-color-border-hover: #f9fafb;
-  --ngx-form-field-color-text: #f9fafb;
-  --ngx-form-field-color-text-secondary: rgba(209, 213, 219, 0.82);
-  --ngx-form-field-outline-label-color: var(
-    --ngx-form-field-color-text-secondary
-  );
-  --ngx-form-field-outline-input-color: var(--ngx-form-field-color-text);
-  --ngx-form-field-placeholder-color: rgba(209, 213, 219, 0.45);
-  --ngx-form-field-color-primary: #60a5fa;
-  --ngx-form-field-focus-color: var(--ngx-form-field-color-primary);
-  --ngx-form-field-focus-box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
 }
 
 fieldset + fieldset {

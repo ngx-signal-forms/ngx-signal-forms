@@ -132,7 +132,6 @@ import { submissionSchema } from './submission-patterns.validations';
             type="text"
             [formField]="registrationForm.username"
             placeholder="Enter username"
-            class="form-input"
           />
           <ngx-signal-form-field-hint>
             Letters, numbers, and underscores only
@@ -147,7 +146,6 @@ import { submissionSchema } from './submission-patterns.validations';
             type="password"
             [formField]="registrationForm.password"
             placeholder="Enter password"
-            class="form-input"
           />
           <ngx-signal-form-field-hint>
             At least 8 characters
@@ -164,7 +162,6 @@ import { submissionSchema } from './submission-patterns.validations';
             type="password"
             [formField]="registrationForm.confirmPassword"
             placeholder="Re-enter password"
-            class="form-input"
           />
         </ngx-signal-form-field-wrapper>
       </div>
