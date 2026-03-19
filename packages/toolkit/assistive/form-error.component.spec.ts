@@ -228,6 +228,67 @@ describe('NgxSignalFormErrorComponent', () => {
       // Should have at least the required error
       expect(messages.length).toBeGreaterThan(0);
     });
+
+    it('should keep the default inline layout as paragraphs', async () => {
+      @Component({
+        selector: 'ngx-test-default-paragraph-layout',
+        imports: [FormField, NgxSignalFormErrorComponent],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <input id="email" [formField]="contactForm.email" />
+          <ngx-signal-form-error
+            [formField]="contactForm.email"
+            fieldName="email"
+            [strategy]="'immediate'"
+          />
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'This field is required' });
+          }),
+        );
+      }
+
+      const { container } = await render(TestComponent);
+
+      expect(
+        container.querySelector('.ngx-signal-form-error__message')?.tagName,
+      ).toBe('P');
+      expect(
+        container.querySelector('.ngx-signal-form-error__list'),
+      ).toBeFalsy();
+    });
+
+    it('should render bullet lists when requested', async () => {
+      @Component({
+        selector: 'ngx-test-bullet-layout',
+        imports: [NgxSignalFormErrorComponent],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <ngx-signal-form-error
+            fieldName="address"
+            [listStyle]="'bullets'"
+            [errors]="errors"
+          />
+        `,
+      })
+      class TestComponent {
+        readonly errors = signal([
+          { kind: 'required', message: 'Street is required' },
+          { kind: 'required-city', message: 'City is required' },
+        ]);
+      }
+
+      const { container } = await render(TestComponent);
+
+      const list = container.querySelector('.ngx-signal-form-error__list');
+      expect(list?.tagName).toBe('UL');
+      expect(list?.querySelectorAll('li')).toHaveLength(2);
+    });
   });
 
   describe('strategy switching', () => {

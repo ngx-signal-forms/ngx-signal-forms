@@ -101,6 +101,7 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
           [fieldName]="resolvedFieldsetId()"
           [strategy]="resolvedStrategy()"
           [submittedStatus]="submittedStatus()"
+          [listStyle]="'bullets'"
         />
       </div>
     }
@@ -116,6 +117,7 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
           [fieldName]="resolvedFieldsetId()"
           [strategy]="resolvedStrategy()"
           [submittedStatus]="submittedStatus()"
+          [listStyle]="'bullets'"
         />
       </div>
     }

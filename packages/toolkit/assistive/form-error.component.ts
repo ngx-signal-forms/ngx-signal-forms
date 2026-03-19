@@ -23,6 +23,8 @@ import {
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit/core';
 
+export type NgxSignalFormErrorListStyle = 'plain' | 'bullets';
+
 /**
  * Reusable error and warning display component with WCAG 2.2 compliance.
  *
@@ -100,12 +102,24 @@ import {
         aria-live="assertive"
         aria-atomic="true"
       >
-        @for (error of resolvedErrors(); track error.kind) {
-          <p
-            class="ngx-signal-form-error__message ngx-signal-form-error__message--error"
-          >
-            {{ error.message }}
-          </p>
+        @if (usesBulletList()) {
+          <ul class="ngx-signal-form-error__list" role="list">
+            @for (error of resolvedErrors(); track error.kind) {
+              <li
+                class="ngx-signal-form-error__message ngx-signal-form-error__message--error"
+              >
+                {{ error.message }}
+              </li>
+            }
+          </ul>
+        } @else {
+          @for (error of resolvedErrors(); track error.kind) {
+            <p
+              class="ngx-signal-form-error__message ngx-signal-form-error__message--error"
+            >
+              {{ error.message }}
+            </p>
+          }
         }
       </div>
     }
@@ -119,12 +133,24 @@ import {
         aria-live="polite"
         aria-atomic="true"
       >
-        @for (warning of resolvedWarnings(); track warning.kind) {
-          <p
-            class="ngx-signal-form-error__message ngx-signal-form-error__message--warning"
-          >
-            {{ warning.message }}
-          </p>
+        @if (usesBulletList()) {
+          <ul class="ngx-signal-form-error__list" role="list">
+            @for (warning of resolvedWarnings(); track warning.kind) {
+              <li
+                class="ngx-signal-form-error__message ngx-signal-form-error__message--warning"
+              >
+                {{ warning.message }}
+              </li>
+            }
+          </ul>
+        } @else {
+          @for (warning of resolvedWarnings(); track warning.kind) {
+            <p
+              class="ngx-signal-form-error__message ngx-signal-form-error__message--warning"
+            >
+              {{ warning.message }}
+            </p>
+          }
         }
       </div>
     }
@@ -269,6 +295,14 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   readonly strategy = input<ErrorDisplayStrategy | undefined>(undefined);
 
   /**
+   * Visual layout for rendered validation messages.
+   *
+   * - `plain` (default): stacked paragraph messages for inline field feedback
+   * - `bullets`: unordered list for grouped summaries such as fieldsets
+   */
+  readonly listStyle = input<NgxSignalFormErrorListStyle>('plain');
+
+  /**
    * Form submission status (optional).
    *
    * For `'on-touch'` strategy (default), this input is NOT needed.
@@ -367,6 +401,10 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * Warnings are shown using the same strategy as errors.
    */
   protected readonly showWarnings = this.showErrors;
+
+  protected readonly usesBulletList = computed(() => {
+    return this.listStyle() === 'bullets';
+  });
 
   /**
    * All validation messages from the field or direct errors input.

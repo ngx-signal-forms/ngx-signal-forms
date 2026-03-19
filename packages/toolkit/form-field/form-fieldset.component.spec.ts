@@ -85,6 +85,8 @@ describe('NgxSignalFormFieldset', () => {
     const errors = screen.getAllByRole('alert');
     expect(errors).toHaveLength(1);
     expect(errors[0]?.textContent).toContain('Street required');
+    expect(errors[0]?.querySelector('ul')).toBeTruthy();
+    expect(errors[0]?.querySelectorAll('li')).toHaveLength(1);
   });
 
   it('suppresses warnings when errors are shown', async () => {
@@ -239,6 +241,33 @@ describe('NgxSignalFormFieldset', () => {
     expect(message?.compareDocumentPosition(content as Node)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
+  });
+
+  it('renders fieldset summaries as a bulleted list', async () => {
+    const fieldset = createFieldsetState({
+      errors: () => [
+        { kind: 'required', message: 'Street required' },
+        { kind: 'minlength', message: 'Street must be longer' },
+      ],
+      errorSummary: () => [
+        { kind: 'required', message: 'Street required' },
+        { kind: 'minlength', message: 'Street must be longer' },
+      ],
+    });
+
+    const { container } = await render(
+      `<ngx-signal-form-fieldset [fieldsetField]="fieldset">
+        <div>Content</div>
+      </ngx-signal-form-fieldset>`,
+      {
+        imports: [NgxSignalFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const errorList = container.querySelector('.ngx-signal-form-error__list');
+    expect(errorList?.tagName).toBe('UL');
+    expect(errorList?.querySelectorAll('li')).toHaveLength(2);
   });
 
   it('renders aggregated messages below content when errorPlacement is bottom', async () => {

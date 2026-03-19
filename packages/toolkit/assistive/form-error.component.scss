@@ -98,6 +98,18 @@
   margin: 0;
 }
 
+.ngx-signal-form-error__list {
+  margin: 0;
+  padding-inline-start: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ngx-signal-form-error-message-spacing);
+}
+
+.ngx-signal-form-error--bullets .ngx-signal-form-error__message {
+  display: list-item;
+}
+
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   .ngx-signal-form-error {
