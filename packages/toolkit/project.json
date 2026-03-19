@@ -10,16 +10,11 @@
       "fallbackCurrentVersionResolver": "disk"
     }
   },
-  "tags": [
-    "scope:toolkit",
-    "type:package"
-  ],
+  "tags": ["scope:toolkit", "type:package"],
   "targets": {
     "build": {
       "executor": "@nx/angular:package",
-      "outputs": [
-        "{workspaceRoot}/dist/{projectRoot}"
-      ],
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "options": {
         "project": "packages/toolkit/ng-package.json",
         "tsConfig": "packages/toolkit/tsconfig.lib.json"
@@ -34,9 +29,7 @@
     },
     "post-build": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "options": {
         "commands": [
           "mkdir -p dist/packages/toolkit",
@@ -46,22 +39,15 @@
       }
     },
     "nx-release-publish": {
-      "dependsOn": [
-        "build",
-        "post-build"
-      ],
+      "dependsOn": ["build", "post-build"],
       "options": {
         "packageRoot": "dist/{projectRoot}",
-        "args": [
-          "--json"
-        ]
+        "args": ["--json"]
       }
     },
     "test": {
       "executor": "@nx/vitest:test",
-      "outputs": [
-        "{options.reportsDirectory}"
-      ],
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
         "reportsDirectory": "{projectRoot}/../../coverage/packages/toolkit"
       }
