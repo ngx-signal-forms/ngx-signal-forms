@@ -6,6 +6,11 @@
       "sourceType": "github",
       "computedHash": "2789fdf11e2a70832ce2e6e79954018325a010ebdd45c5d4b1e7bfdf44679b7c"
     },
+    "angular-developer": {
+      "source": "angular/angular",
+      "sourceType": "github",
+      "computedHash": "9007c9c8e16362cfcccc7c78e0f35750d6ce09e3296cab171ca0af005d2e3de3"
+    },
     "angular-di": {
       "source": "analogjs/angular-skills",
       "sourceType": "github",
