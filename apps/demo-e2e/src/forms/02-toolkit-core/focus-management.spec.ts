@@ -72,17 +72,7 @@ test.describe('Focus Management', () => {
       await submitButton.click();
       console.log('Submit button clicked');
 
-      /// Check focus after click with a short delay for focus management
-      await page.waitForTimeout(300);
-
-      const focusAfterClick = await page.evaluate(() => ({
-        id: document.activeElement?.id ?? '',
-        tagName: document.activeElement?.tagName ?? '',
-        name: (document.activeElement as HTMLInputElement)?.name ?? '',
-      }));
-      console.log('Focus after click:', JSON.stringify(focusAfterClick));
-
-      /// Use expect.poll to wait for focus to change (with longer intervals)
+      /// Use web-first polling to wait for focus management instead of a fixed sleep
       await expect
         .poll(
           async () => {
@@ -96,7 +86,6 @@ test.describe('Focus Management', () => {
         )
         .toBe('toolkit-email');
 
-      /// Verify using toBeFocused
       await expect(emailInput).toBeFocused();
     });
   });

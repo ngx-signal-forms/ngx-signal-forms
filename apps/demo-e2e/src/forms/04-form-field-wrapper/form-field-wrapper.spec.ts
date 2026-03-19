@@ -206,9 +206,11 @@ test.describe('Form Field Wrapper', () => {
       // Assume standard doesn't have the outline class
       await expect(firstWrapper).not.toHaveClass(/ngx-signal-forms-outline/);
 
-      // Check toggle button state
+      // Check toggle button state via semantics instead of Tailwind class names
       const standardBtn = page.getByRole('button', { name: 'Standard' });
-      await expect(standardBtn).toHaveClass(/bg-white/);
+      const outlineBtn = page.getByRole('button', { name: 'Outline' });
+      await expect(standardBtn).toHaveAttribute('aria-pressed', 'true');
+      await expect(outlineBtn).toHaveAttribute('aria-pressed', 'false');
     });
 
     await test.step('Switch to outline', async () => {

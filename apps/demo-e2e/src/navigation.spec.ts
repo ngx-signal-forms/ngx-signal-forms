@@ -12,7 +12,7 @@ import { DEMO_CATEGORIES } from '@ngx-signal-forms/demo-shared';
  * - Route handling is correct
  */
 
-test.describe.fixme('Demo Application - Navigation & Shell', () => {
+test.describe('Demo Application - Navigation & Shell', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(`/`);
     await page.waitForLoadState('domcontentloaded');
@@ -60,17 +60,11 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
         await page.goto(categoryPath);
         await page.waitForLoadState('domcontentloaded');
 
-        // Get the sidebar navigation
-        const sidebar = page
-          .getByRole('navigation', { name: /section/i })
-          .first();
-        await expect(sidebar).toBeVisible();
+        const sectionNavigation = page.getByLabel('Section navigation');
+        await expect(sectionNavigation).toBeVisible();
 
         for (const linkText of links) {
-          // Look for links specifically within the sidebar navigation
-          const link = sidebar.getByRole('link', {
-            name: new RegExp(linkText, 'i'),
-          });
+          const link = sectionNavigation.getByRole('link', { name: linkText });
           await expect(link).toBeVisible({ timeout: 5000 });
         }
       }
@@ -148,11 +142,11 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
       await gettingStartedNav.click();
       await page.waitForLoadState('domcontentloaded');
 
-      // Click the "Your First Form" link in the sidebar
-      const sidebar = page
-        .getByRole('navigation', { name: /section/i })
-        .first();
-      const yourFirstFormLink = sidebar.getByRole('link', {
+      // Click the "Your First Form" link to create a new history entry
+      const sectionNavigation = page.getByLabel('Section navigation');
+      await expect(sectionNavigation).toBeVisible();
+
+      const yourFirstFormLink = sectionNavigation.getByRole('link', {
         name: /Your First Form/i,
       });
       await yourFirstFormLink.click();
@@ -168,7 +162,9 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
       await toolkitCoreNav.click();
       await page.waitForLoadState('domcontentloaded');
 
-      const accessibilityLink = sidebar.getByRole('link', {
+      await expect(sectionNavigation).toBeVisible();
+
+      const accessibilityLink = sectionNavigation.getByRole('link', {
         name: /Accessibility Comparison/i,
       });
       await accessibilityLink.click();
@@ -216,7 +212,7 @@ test.describe.fixme('Demo Application - Navigation & Shell', () => {
 // Theme Switching Tests
 // ============================================
 
-test.describe.fixme('Demo Application - Theme Switching', () => {
+test.describe('Demo Application - Theme Switching', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(`/`);
     await page.waitForLoadState('domcontentloaded');
@@ -311,7 +307,7 @@ test.describe.fixme('Demo Application - Theme Switching', () => {
 // Route Handling Tests
 // ============================================
 
-test.describe.fixme('Demo Application - Route Handling', () => {
+test.describe('Demo Application - Route Handling', () => {
   test('should handle invalid routes gracefully', async ({ page }) => {
     await test.step('Navigate to non-existent route', async () => {
       // Navigate to invalid route - Angular will redirect or show 404
