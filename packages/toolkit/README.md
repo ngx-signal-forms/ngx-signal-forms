@@ -536,8 +536,9 @@ Use the headless entry point when you want toolkit state logic but fully custom 
 ## Related Documentation
 
 - [Main README](https://github.com/ngx-signal-forms/ngx-signal-forms#readme) — Overview, installation, quick start
-- [Current main changelog](../../docs/CHANGELOG_CURRENT.md) — Unreleased changes since `v1.0.0-beta.6`
-- [Migration guide: beta.6 → current main](../../docs/MIGRATION_CURRENT.md) — Upgrade notes for the current unreleased branch
+- [Current main changelog](../../docs/CHANGELOG_CURRENT.md) — Unreleased changes since `v1.0.0-beta.7`
+- [Changelog (beta.7)](../../docs/archive/CHANGELOG_BETA7.md) — Released changes in `v1.0.0-beta.7`
+- [Migration guide: beta.6 → beta.7](../../docs/archive/MIGRATION_BETA7.md) — Upgrade notes for the released `beta.7` scope
 - [Changelog (beta.6)](../../docs/archive/CHANGELOG_BETA6.md) — Released changes in `v1.0.0-beta.6`
 - [Migration Guide (beta.5)](../../docs/archive/MIGRATION_BETA5.md) — Upgrade steps from earlier beta releases
 - [Form Field Theming](./form-field/THEMING.md) — CSS custom properties guide

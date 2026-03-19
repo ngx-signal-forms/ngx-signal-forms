@@ -376,7 +376,8 @@ Start here:
 
 - [Toolkit API reference](./packages/toolkit/README.md)
 - [Current main changelog](./docs/CHANGELOG_CURRENT.md)
-- [Migration from beta.6 to current main](./docs/MIGRATION_CURRENT.md)
+- [Changelog for beta.7](./docs/archive/CHANGELOG_BETA7.md)
+- [Migration from beta.6 to beta.7](./docs/archive/MIGRATION_BETA7.md)
 - [Assistive components](./packages/toolkit/assistive/README.md)
 - [Form field components](./packages/toolkit/form-field/README.md)
 - [Headless primitives](./packages/toolkit/headless/README.md)
