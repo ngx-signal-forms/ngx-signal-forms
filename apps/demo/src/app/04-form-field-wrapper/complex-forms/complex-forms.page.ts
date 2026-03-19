@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   signal,
   viewChild,
 } from '@angular/core';
@@ -11,14 +12,19 @@ import type {
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
   AppearanceToggleComponent,
+  DisplayControlsCardComponent,
+  DisplayControlsSectionComponent,
   ExampleCardsComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
-import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
+import {
+  ERROR_DISPLAY_MODE_LABELS,
+  ErrorDisplayModeSelectorComponent,
+} from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
+import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import { COMPLEX_FORMS_CONTENT } from './complex-forms.content';
 import { ComplexFormsComponent } from './complex-forms.form';
-import { FieldsetFormComponent } from './fieldset.form';
 
 /**
  * Complex Forms Page
@@ -47,10 +53,11 @@ import { FieldsetFormComponent } from './fieldset.form';
     ExampleCardsComponent,
     PageHeaderComponent,
     ComplexFormsComponent,
-    FieldsetFormComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
     AppearanceToggleComponent,
+    DisplayControlsCardComponent,
+    DisplayControlsSectionComponent,
   ],
   template: `
     <ngx-page-header
@@ -61,23 +68,28 @@ import { FieldsetFormComponent } from './fieldset.form';
     <ngx-example-cards
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
-    />
+    >
+      <ngx-display-controls-card
+        title="Nested form behavior controls"
+        description="Use the same long-form data model to study where wrapper timing and visual weight help most once nested groups and repeatable rows start stacking up."
+        [chips]="currentControlChips()"
+        layout="split"
+      >
+        <ngx-error-display-mode-selector
+          [(selectedMode)]="errorDisplayMode"
+          [embedded]="true"
+          display-controls-primary
+          class="block min-w-0"
+        />
 
-    <div class="flex flex-wrap items-start gap-6">
-      <!-- Error Display Mode Selector -->
-      <ngx-error-display-mode-selector
-        [(selectedMode)]="errorDisplayMode"
-        class="min-w-[300px] flex-1"
-      />
-
-      <!-- Appearance Selector -->
-      <div class="flex flex-col gap-2">
-        <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-          🎨 Appearance
-        </span>
-        <ngx-appearance-toggle [(value)]="selectedAppearance" />
-      </div>
-    </div>
+        <ngx-display-controls-section
+          title="🎨 Long-form styling"
+          description="Compare whether the standard or outline wrapper does a better job of keeping long sections and array rows scannable."
+        >
+          <ngx-appearance-toggle [(value)]="selectedAppearance" />
+        </ngx-display-controls-section>
+      </ngx-display-controls-card>
+    </ngx-example-cards>
 
     <ngx-split-layout>
       <div left class="flex flex-col gap-12">
@@ -87,19 +99,6 @@ import { FieldsetFormComponent } from './fieldset.form';
           </h2>
           <ngx-complex-forms
             #complexFormRef
-            [errorDisplayMode]="errorDisplayMode()"
-            [appearance]="selectedAppearance()"
-          />
-        </section>
-
-        <hr class="border-gray-200 dark:border-gray-800" />
-
-        <section>
-          <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-            Fieldset Grouping
-          </h2>
-          <ngx-fieldset-form
-            #fieldsetFormRef
             [errorDisplayMode]="errorDisplayMode()"
             [appearance]="selectedAppearance()"
           />
@@ -117,16 +116,6 @@ import { FieldsetFormComponent } from './fieldset.form';
             <ngx-signal-form-debugger [formTree]="complexFormRef.complexForm" />
           </div>
         }
-        @if (fieldsetFormRef) {
-          <div>
-            <h3
-              class="mb-2 text-sm font-semibold tracking-wider text-gray-500 uppercase"
-            >
-              Fieldset Form State
-            </h3>
-            <ngx-signal-form-debugger [formTree]="fieldsetFormRef.fieldsetForm" />
-          </div>
-        }
       </div>
     </ngx-split-layout>
   `,
@@ -136,10 +125,18 @@ export class ComplexFormsPage {
     signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
+  protected readonly currentControlChips = computed(() => [
+    {
+      label: 'Mode',
+      value: ERROR_DISPLAY_MODE_LABELS[this.errorDisplayMode()],
+    },
+    {
+      label: 'Appearance',
+      value: APPEARANCE_LABELS[this.selectedAppearance()],
+    },
+  ]);
 
   protected readonly content = COMPLEX_FORMS_CONTENT;
   protected readonly complexFormRef =
     viewChild<ComplexFormsComponent>('complexFormRef');
-  protected readonly fieldsetFormRef =
-    viewChild<FieldsetFormComponent>('fieldsetFormRef');
 }

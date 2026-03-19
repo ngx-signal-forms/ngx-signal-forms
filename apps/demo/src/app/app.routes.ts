@@ -148,6 +148,14 @@ export const appRoutes: Routes = [
           ),
         title: getRouteTitle('/form-field-wrapper/complex-forms'),
       },
+      {
+        path: 'fieldset-grouping',
+        loadComponent: () =>
+          import('./04-form-field-wrapper/fieldset-grouping/fieldset-grouping.page').then(
+            (m) => m.FieldsetGroupingPage,
+          ),
+        title: getRouteTitle('/form-field-wrapper/fieldset-grouping'),
+      },
 
       {
         path: 'custom-controls',

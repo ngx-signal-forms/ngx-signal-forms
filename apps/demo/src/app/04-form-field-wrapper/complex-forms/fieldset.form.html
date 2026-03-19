@@ -1,35 +1,18 @@
-<div class="mb-6 text-center">
-  <p class="text-sm text-gray-600 dark:text-gray-400">
-    Group related form fields and display aggregated validation errors.
-    `errorPlacement` is primarily meant for grouped fieldsets, with the wrapper
-    example below included as a smaller field-level companion.
-  </p>
-</div>
-
-<section class="mb-8 space-y-6" aria-labelledby="placement-playground">
-  <div class="flex flex-wrap items-start justify-between gap-4">
+<section class="mb-8 space-y-6" aria-labelledby="placement-examples">
+  <div class="space-y-2">
     <div class="space-y-2">
       <h2
-        id="placement-playground"
+        id="placement-examples"
         class="text-sm font-semibold text-[#324155] dark:text-gray-200"
       >
-        Placement playground
+        Placement examples
       </h2>
       <p class="max-w-3xl text-sm text-gray-600 dark:text-gray-400">
-        The Expo design node is a filled-state outline component, while this
-        page also demonstrates validation-heavy grouped forms. To make the
-        comparison fair, the playground now separates a filled design preview
-        from the invalid error-placement sandbox.
+        Compare a filled design reference with an intentionally invalid sandbox
+        to see how grouped summaries, radio groups, and the smaller wrapper case
+        read when they share the same placement rules.
       </p>
     </div>
-
-    <button
-      class="btn-secondary"
-      type="button"
-      (click)="resetPlacementPreview()"
-    >
-      Reset placement sandbox
-    </button>
   </div>
 
   <div class="playground-shell space-y-5">
@@ -180,88 +163,28 @@
 
   <div class="playground-shell playground-shell--accent space-y-5">
     <div class="playground-section-header">
-      <span class="playground-eyebrow">Validation sandbox</span>
-      <h3 class="text-base font-semibold text-[#324155] dark:text-gray-100">
-        Error placement controls
-      </h3>
-      <p class="max-w-3xl text-sm text-gray-600 dark:text-gray-400">
-        This sandbox stays invalid on purpose. Keep it on this page for fast
-        comparison, but treat it as a dedicated mini-form rather than part of
-        the production-style fieldset example below. The grouped fieldset and
-        radio sections are the main placement comparisons; the wrapper example
-        is there to show that the same idea can still work for single fields.
-      </p>
-    </div>
-
-    <div class="playground-selector-grid">
-      <fieldset class="playground-selector-card">
-        <legend class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-          Grouped fieldset
-        </legend>
-        <div
-          class="playground-segmented mt-3"
-          role="group"
-          aria-label="Grouped fieldset"
-        >
-          @for (placement of placementOptions; track placement) {
-          <button
-            type="button"
-            class="playground-option"
-            [attr.data-active]="fieldsetPlacement() === placement"
-            [attr.aria-pressed]="fieldsetPlacement() === placement"
-            (click)="fieldsetPlacement.set(placement)"
-          >
-            {{ placementLabels[placement] }}
-          </button>
-          }
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div class="space-y-2">
+          <span class="playground-eyebrow">Validation sandbox</span>
+          <h3 class="text-base font-semibold text-[#324155] dark:text-gray-100">
+            Shared placement preview
+          </h3>
+          <p class="max-w-3xl text-sm text-gray-600 dark:text-gray-400">
+            This sandbox stays invalid on purpose. Use the page-level placement
+            control above to move every summary together, then compare the
+            grouped fieldset, radio-group, and single-field wrapper behavior
+            side by side.
+          </p>
         </div>
-      </fieldset>
 
-      <fieldset class="playground-selector-card">
-        <legend class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-          Radio-button group
-        </legend>
-        <div
-          class="playground-segmented mt-3"
-          role="group"
-          aria-label="Radio-button group"
+        <button
+          class="btn-secondary"
+          type="button"
+          (click)="resetPlacementPreview()"
         >
-          @for (placement of placementOptions; track placement) {
-          <button
-            type="button"
-            class="playground-option"
-            [attr.data-active]="radioGroupPlacement() === placement"
-            [attr.aria-pressed]="radioGroupPlacement() === placement"
-            (click)="radioGroupPlacement.set(placement)"
-          >
-            {{ placementLabels[placement] }}
-          </button>
-          }
-        </div>
-      </fieldset>
-
-      <fieldset class="playground-selector-card">
-        <legend class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-          Single-field wrapper
-        </legend>
-        <div
-          class="playground-segmented mt-3"
-          role="group"
-          aria-label="Single-field wrapper"
-        >
-          @for (placement of placementOptions; track placement) {
-          <button
-            type="button"
-            class="playground-option"
-            [attr.data-active]="wrapperPlacement() === placement"
-            [attr.aria-pressed]="wrapperPlacement() === placement"
-            (click)="wrapperPlacement.set(placement)"
-          >
-            {{ placementLabels[placement] }}
-          </button>
-          }
-        </div>
-      </fieldset>
+          Reset sandbox values
+        </button>
+      </div>
     </div>
 
     <p class="playground-note text-sm">
@@ -283,7 +206,7 @@
         <fieldset
           ngxSignalFormFieldset
           [fieldsetField]="placementPreviewForm.address"
-          [errorPlacement]="fieldsetPlacement()"
+          [errorPlacement]="errorPlacement()"
           [strategy]="'immediate'"
           class="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700"
           fieldsetId="placement-preview-address"
@@ -331,7 +254,7 @@
         <fieldset
           ngxSignalFormFieldset
           [fieldsetField]="placementPreviewForm.deliveryMethod"
-          [errorPlacement]="radioGroupPlacement()"
+          [errorPlacement]="errorPlacement()"
           [strategy]="'immediate'"
           class="space-y-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700"
           fieldsetId="placement-preview-delivery"
@@ -383,7 +306,7 @@
         <ngx-signal-form-field-wrapper
           appearance="outline"
           [formField]="placementPreviewForm.email"
-          [errorPlacement]="wrapperPlacement()"
+          [errorPlacement]="errorPlacement()"
           [strategy]="'immediate'"
         >
           <label for="placementPreviewEmail">Email address *</label>
@@ -409,6 +332,7 @@
   <fieldset
     ngxSignalFormFieldset
     [fieldsetField]="fieldsetForm.shippingAddress"
+    [errorPlacement]="errorPlacement()"
     fieldsetId="shipping-address"
     class="fieldset-demo"
     includeNestedErrors
@@ -416,8 +340,8 @@
     <legend class="fieldset-legend">Shipping Address</legend>
     <p class="fieldset-description">
       Errors from all address fields are aggregated above the inputs by default.
-      Use the placement playground above to compare the same summary at the
-      bottom.
+      Use the shared placement control above to compare the same summary at the
+      top or bottom.
     </p>
 
     <div class="grid gap-4 sm:grid-cols-2">
@@ -496,6 +420,7 @@
   <fieldset
     ngxSignalFormFieldset
     [fieldsetField]="fieldsetForm.billingAddress"
+    [errorPlacement]="errorPlacement()"
     fieldsetId="billing-address"
     class="fieldset-demo"
     includeNestedErrors
@@ -569,14 +494,14 @@
   <fieldset
     ngxSignalFormFieldset
     [fieldsetField]="fieldsetForm.delivery"
+    [errorPlacement]="errorPlacement()"
     fieldsetId="delivery-method"
     class="fieldset-demo"
-    errorPlacement="bottom"
   >
     <legend class="fieldset-legend">Delivery Method</legend>
     <p class="fieldset-description">
-      Select how you want the order delivered. The placement playground above
-      lets you move the grouped radio summary between the top and bottom.
+      Select how you want the order delivered. The shared placement control
+      above lets you move the grouped radio summary between the top and bottom.
     </p>
 
     <fieldset
@@ -584,7 +509,7 @@
       [fieldsetField]="fieldsetForm.delivery.method"
       fieldsetId="delivery-method-options"
       class="space-y-3"
-      [errorPlacement]="radioGroupPlacement()"
+      [errorPlacement]="errorPlacement()"
     >
       <legend class="form-label">Delivery option *</legend>
 
@@ -624,6 +549,7 @@
   <fieldset
     ngxSignalFormFieldset
     [fieldsetField]="fieldsetForm.credentials"
+    [errorPlacement]="errorPlacement()"
     fieldsetId="credentials"
     class="fieldset-demo"
     includeNestedErrors

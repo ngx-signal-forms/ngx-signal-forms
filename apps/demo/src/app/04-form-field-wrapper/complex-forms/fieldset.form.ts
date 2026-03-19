@@ -20,7 +20,6 @@ import {
 import {
   type FieldsetErrorPlacement,
   NgxFormField,
-  type FormFieldErrorPlacement,
 } from '@ngx-signal-forms/toolkit/form-field';
 
 import type { FieldsetDemoModel } from './fieldset.model';
@@ -111,16 +110,7 @@ export class FieldsetFormComponent {
    */
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('standard');
-  protected readonly wrapperPlacement =
-    signal<FormFieldErrorPlacement>('bottom');
-  protected readonly fieldsetPlacement = signal<FieldsetErrorPlacement>('top');
-  protected readonly radioGroupPlacement =
-    signal<FieldsetErrorPlacement>('top');
-  protected readonly placementOptions = ['top', 'bottom'] as const;
-  protected readonly placementLabels = {
-    top: 'Top',
-    bottom: 'Bottom',
-  } as const;
+  readonly errorPlacement = input<FieldsetErrorPlacement>('top');
 
   readonly #placementPreviewModel = signal<PlacementPreviewModel>(
     createPlacementPreviewValue(),
@@ -195,9 +185,6 @@ export class FieldsetFormComponent {
   protected resetPlacementPreview(): void {
     this.placementPreviewForm().reset();
     this.#placementPreviewModel.set(createPlacementPreviewValue());
-    this.wrapperPlacement.set('bottom');
-    this.fieldsetPlacement.set('top');
-    this.radioGroupPlacement.set('top');
   }
 
   /**

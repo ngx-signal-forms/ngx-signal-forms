@@ -27,8 +27,7 @@ Complex form with nested objects and dynamic arrays using the form field wrapper
 
 - `NgxSignalFormToolkit` for auto-ARIA and form context.
 - `NgxFormField` wrapper for automatic error rendering and layout.
-- `NgxSignalFormFieldset` for grouping sections.
-- Placement playground for wrapper, grouped fieldset, and radio-group summaries.
+- `NgxSignalFormFieldset` for realistic section structure inside a longer form.
 
 ## Other tools
 
@@ -45,6 +44,6 @@ Complex form with nested objects and dynamic arrays using the form field wrapper
 
 1. Run the demo app.
 2. Navigate to `/form-field-wrapper/complex-forms`.
-3. Use the placement playground to move wrapper, grouped fieldset, and radio-group messages between top and bottom while the sandbox starts invalid.
-4. Add/remove skills and contacts to see array validation.
-5. Choose SMS as contact method to trigger the warning.
+3. Add/remove skills and contacts to see array validation.
+4. Choose SMS as contact method to trigger the warning.
+5. Visit `/form-field-wrapper/fieldset-grouping` for the dedicated grouped fieldset and aggregated error demo.

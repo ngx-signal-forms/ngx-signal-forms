@@ -57,6 +57,25 @@ This section demonstrates the **"batteries included"** approach using `NgxFormFi
 - Nested objects and arrays
 - Complete user journey
 
+---
+
+### fieldset-grouping
+
+**Focus:** Grouped fieldsets and aggregated errors
+
+**What you'll learn:**
+
+- Fieldset grouping patterns
+- Aggregated validation summaries
+- Error placement for fieldsets and radio groups
+- Grouped feedback without overloading individual fields
+
+**Technologies:**
+
+- `NgxSignalFormFieldset`
+- Fieldset-level error summaries
+- Placement playground for grouped feedback
+
 ## 🎨 API Reference
 
 ### NgxFormField

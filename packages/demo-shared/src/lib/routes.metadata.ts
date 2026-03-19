@@ -9,6 +9,7 @@ export const DEMO_PATHS = {
   fieldsetUtilities: '/headless/fieldset-utilities',
   basicUsage: '/form-field-wrapper/basic-usage',
   complexForms: '/form-field-wrapper/complex-forms',
+  fieldsetGrouping: '/form-field-wrapper/fieldset-grouping',
   customControls: '/form-field-wrapper/custom-controls',
   globalConfiguration: '/advanced-scenarios/global-configuration',
   submissionPatterns: '/advanced-scenarios/submission-patterns',
@@ -91,6 +92,10 @@ export const DEMO_CATEGORIES = [
       {
         path: '/form-field-wrapper/complex-forms',
         label: 'Complex Forms (Nested + Arrays)',
+      },
+      {
+        path: '/form-field-wrapper/fieldset-grouping',
+        label: 'Fieldset Grouping + Errors',
       },
       {
         path: '/form-field-wrapper/custom-controls',

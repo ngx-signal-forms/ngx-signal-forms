@@ -39,7 +39,7 @@ export const COMPLEX_FORMS_CONTENT = {
         items: [
           '• <strong>Nested models:</strong> Organize complex data logically',
           '• <strong>Array management:</strong> Signal updates for add/remove',
-          '• <strong>Fieldset Grouping:</strong> Use <code>NgxSignalFormFieldset</code> for grouped validation and aggregated errors.',
+          '• <strong>Sectioned layouts:</strong> Use fieldsets to keep long forms readable without overloading one screen',
         ],
       },
       {
@@ -53,9 +53,9 @@ export const COMPLEX_FORMS_CONTENT = {
       },
     ],
     nextStep: {
-      text: 'Ready to configure globally?',
-      link: '/advanced-scenarios/global-configuration',
-      linkText: 'Explore Advanced Configuration →',
+      text: 'Need grouped summaries too?',
+      link: '/form-field-wrapper/fieldset-grouping',
+      linkText: 'Explore Fieldset Grouping + Errors →',
     },
   },
 } as const;
