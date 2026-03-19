@@ -29,6 +29,8 @@ import {
   NgxSignalFormErrorComponent,
 } from '@ngx-signal-forms/toolkit/assistive';
 
+export type FormFieldErrorPlacement = 'top' | 'bottom';
+
 /**
  * Form field wrapper component with automatic error/warning display.
  *
@@ -143,7 +145,11 @@ import {
   host: {
     '[attr.outline]': 'isOutline() ? "" : null',
     '[class.ngx-signal-form-field-wrapper--warning]': 'showWarningState()',
+    '[class.ngx-signal-form-field-wrapper--messages-top]': 'isTopPlacement()',
+    '[class.ngx-signal-form-field-wrapper--messages-bottom]':
+      '!isTopPlacement()',
     '[class.ngx-signal-forms-outline]': 'isOutline()',
+    '[attr.data-error-placement]': 'errorPlacement()',
     '[attr.data-show-required]':
       'isOutline() && resolvedShowRequiredMarker() ? "true" : null',
     '[attr.data-required-marker]':
@@ -154,6 +160,16 @@ import {
     <div class="ngx-signal-form-field-wrapper__label">
       <ng-content select="label" />
     </div>
+
+    @if (isTopPlacement() && shouldShowErrors()) {
+      <div class="ngx-signal-form-field-wrapper__messages">
+        <ngx-signal-form-error
+          [formField]="formField()"
+          [strategy]="effectiveStrategy()"
+          [submittedStatus]="submittedStatus()"
+        />
+      </div>
+    }
 
     <!-- Bordered input container with prefix/suffix integrated -->
     <div class="ngx-signal-form-field-wrapper__content">
@@ -178,7 +194,7 @@ import {
       class="ngx-signal-form-field-wrapper__assistive"
     >
       <!-- Left side: hint (hidden when errors shown) or errors -->
-      @if (shouldShowErrors()) {
+      @if (!isTopPlacement() && shouldShowErrors()) {
         <ngx-signal-form-error
           [formField]="formField()"
           [strategy]="effectiveStrategy()"
@@ -291,6 +307,14 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * @default Inherited from form context or 'on-touch'
    */
   readonly strategy = input<ErrorDisplayStrategy | null>(null);
+
+  /**
+   * Placement of the automatic error or warning messages.
+   *
+   * - `bottom` (default): render messages in the assistive row beneath the field
+   * - `top`: render messages between the label and the field control
+   */
+  readonly errorPlacement = input<FormFieldErrorPlacement>('bottom');
 
   /**
    * Form field appearance variant.
@@ -500,6 +524,10 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    */
   protected readonly showWarningState = computed(() => {
     return this.hasWarnings() && !this.hasErrors();
+  });
+
+  protected readonly isTopPlacement = computed(() => {
+    return this.errorPlacement() === 'top';
   });
 
   constructor() {

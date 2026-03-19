@@ -1,8 +1,401 @@
 <div class="mb-6 text-center">
   <p class="text-sm text-gray-600 dark:text-gray-400">
-    Group related form fields and display aggregated validation errors
+    Group related form fields and display aggregated validation errors. Top
+    placement is the default to match the Figma reference, with bottom placement
+    available per fieldset.
   </p>
 </div>
+
+<section class="mb-8 space-y-6" aria-labelledby="placement-playground">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="space-y-2">
+      <h2
+        id="placement-playground"
+        class="text-sm font-semibold text-[#324155] dark:text-gray-200"
+      >
+        Placement playground
+      </h2>
+      <p class="max-w-3xl text-sm text-gray-600 dark:text-gray-400">
+        The Expo design node is a filled-state outline component, while this
+        page also demonstrates validation-heavy grouped forms. To make the
+        comparison fair, the playground now separates a filled design preview
+        from the invalid error-placement sandbox.
+      </p>
+    </div>
+
+    <button
+      class="btn-secondary"
+      type="button"
+      (click)="resetPlacementPreview()"
+    >
+      Reset placement sandbox
+    </button>
+  </div>
+
+  <div class="playground-shell space-y-5">
+    <div class="playground-section-header">
+      <span class="playground-eyebrow">Design reference</span>
+      <h3 class="text-base font-semibold text-[#324155] dark:text-gray-100">
+        Filled-state preview
+      </h3>
+      <p class="max-w-3xl text-sm text-gray-600 dark:text-gray-400">
+        These examples stay in outline mode and start with representative values
+        so spacing, label rhythm, and suffix alignment can be compared against
+        the Expo library without validation noise.
+      </p>
+    </div>
+
+    <div class="playground-reference-grid">
+      <section class="playground-preview-card">
+        <h4 class="text-sm font-semibold text-[#324155] dark:text-gray-100">
+          Filled field + suffix
+        </h4>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          The suffix sits inside the same outlined rhythm as the design-library
+          date and select variants.
+        </p>
+
+        <ngx-signal-form-field-wrapper
+          appearance="outline"
+          [formField]="placementDesignPreviewForm.appointmentDate"
+        >
+          <label for="placementDesignPreviewDate">Appointment date</label>
+          <input
+            id="placementDesignPreviewDate"
+            type="text"
+            [formField]="placementDesignPreviewForm.appointmentDate"
+            placeholder="DD-MM-YYYY"
+          />
+          <span suffix aria-hidden="true">
+            <svg
+              class="playground-icon"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6.75 3v2.25M17.25 3v2.25M3.75 8.25h16.5M5.25 5.25h13.5A1.5 1.5 0 0 1 20.25 6.75v12A1.5 1.5 0 0 1 18.75 20.25H5.25a1.5 1.5 0 0 1-1.5-1.5v-12a1.5 1.5 0 0 1 1.5-1.5Z"
+              />
+            </svg>
+          </span>
+        </ngx-signal-form-field-wrapper>
+      </section>
+
+      <section class="playground-preview-card">
+        <h4 class="text-sm font-semibold text-[#324155] dark:text-gray-100">
+          Grouped fieldset spacing
+        </h4>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          Filled grouped content should breathe evenly before the fieldset ever
+          has to show an aggregated summary.
+        </p>
+
+        <fieldset
+          ngxSignalFormFieldset
+          [fieldsetField]="placementDesignPreviewForm.address"
+          class="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700"
+          fieldsetId="placement-design-preview-address"
+        >
+          <legend class="fieldset-legend">Shipping Address</legend>
+
+          <ngx-signal-form-field-wrapper
+            appearance="outline"
+            [formField]="placementDesignPreviewForm.address.street"
+          >
+            <label for="placementDesignPreviewStreet">Street</label>
+            <input
+              id="placementDesignPreviewStreet"
+              type="text"
+              [formField]="placementDesignPreviewForm.address.street"
+            />
+          </ngx-signal-form-field-wrapper>
+
+          <ngx-signal-form-field-wrapper
+            appearance="outline"
+            [formField]="placementDesignPreviewForm.address.city"
+          >
+            <label for="placementDesignPreviewCity">City</label>
+            <input
+              id="placementDesignPreviewCity"
+              type="text"
+              [formField]="placementDesignPreviewForm.address.city"
+            />
+          </ngx-signal-form-field-wrapper>
+        </fieldset>
+      </section>
+
+      <section class="playground-preview-card">
+        <h4 class="text-sm font-semibold text-[#324155] dark:text-gray-100">
+          Selected radio group
+        </h4>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          A selected default value keeps the radio group compact, so placement
+          decisions only matter once validation is active.
+        </p>
+
+        <fieldset
+          ngxSignalFormFieldset
+          [fieldsetField]="placementDesignPreviewForm.deliveryMethod"
+          class="space-y-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700"
+          fieldsetId="placement-design-preview-delivery"
+        >
+          <legend class="form-label">Delivery option</legend>
+
+          <label class="playground-radio-option">
+            <input
+              type="radio"
+              class="form-radio"
+              [formField]="placementDesignPreviewForm.deliveryMethod"
+              value="standard"
+            />
+            <span>Standard (3-5 business days)</span>
+          </label>
+
+          <label class="playground-radio-option">
+            <input
+              type="radio"
+              class="form-radio"
+              [formField]="placementDesignPreviewForm.deliveryMethod"
+              value="express"
+            />
+            <span>Express (1-2 business days)</span>
+          </label>
+
+          <label class="playground-radio-option">
+            <input
+              type="radio"
+              class="form-radio"
+              [formField]="placementDesignPreviewForm.deliveryMethod"
+              value="pickup"
+            />
+            <span>Local pickup</span>
+          </label>
+        </fieldset>
+      </section>
+    </div>
+  </div>
+
+  <div class="playground-shell playground-shell--accent space-y-5">
+    <div class="playground-section-header">
+      <span class="playground-eyebrow">Validation sandbox</span>
+      <h3 class="text-base font-semibold text-[#324155] dark:text-gray-100">
+        Error placement controls
+      </h3>
+      <p class="max-w-3xl text-sm text-gray-600 dark:text-gray-400">
+        This sandbox stays invalid on purpose. Keep it on this page for fast
+        comparison, but treat it as a dedicated mini-form rather than part of
+        the production-style fieldset example below.
+      </p>
+    </div>
+
+    <div class="playground-selector-grid">
+      <fieldset class="playground-selector-card">
+        <legend class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          Form-field wrapper
+        </legend>
+        <div
+          class="playground-segmented mt-3"
+          role="group"
+          aria-label="Form-field wrapper"
+        >
+          @for (placement of placementOptions; track placement) {
+          <button
+            type="button"
+            class="playground-option"
+            [attr.data-active]="wrapperPlacement() === placement"
+            [attr.aria-pressed]="wrapperPlacement() === placement"
+            (click)="wrapperPlacement.set(placement)"
+          >
+            {{ placementLabels[placement] }}
+          </button>
+          }
+        </div>
+      </fieldset>
+
+      <fieldset class="playground-selector-card">
+        <legend class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          Grouped fieldset
+        </legend>
+        <div
+          class="playground-segmented mt-3"
+          role="group"
+          aria-label="Grouped fieldset"
+        >
+          @for (placement of placementOptions; track placement) {
+          <button
+            type="button"
+            class="playground-option"
+            [attr.data-active]="fieldsetPlacement() === placement"
+            [attr.aria-pressed]="fieldsetPlacement() === placement"
+            (click)="fieldsetPlacement.set(placement)"
+          >
+            {{ placementLabels[placement] }}
+          </button>
+          }
+        </div>
+      </fieldset>
+
+      <fieldset class="playground-selector-card">
+        <legend class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          Radio-button group
+        </legend>
+        <div
+          class="playground-segmented mt-3"
+          role="group"
+          aria-label="Radio-button group"
+        >
+          @for (placement of placementOptions; track placement) {
+          <button
+            type="button"
+            class="playground-option"
+            [attr.data-active]="radioGroupPlacement() === placement"
+            [attr.aria-pressed]="radioGroupPlacement() === placement"
+            (click)="radioGroupPlacement.set(placement)"
+          >
+            {{ placementLabels[placement] }}
+          </button>
+          }
+        </div>
+      </fieldset>
+    </div>
+
+    <p class="playground-note text-sm">
+      The sandbox uses outline fields even if you toggle the larger page back to
+      standard mode. That keeps the Figma comparison stable while still letting
+      the rest of the page demonstrate both appearances.
+    </p>
+
+    <div class="playground-preview-grid">
+      <section class="playground-preview-card">
+        <h4 class="text-sm font-semibold text-[#324155] dark:text-gray-100">
+          Wrapper error placement
+        </h4>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          Single-field errors should sit either directly under the inline label
+          or in the assistive row below the outline.
+        </p>
+
+        <ngx-signal-form-field-wrapper
+          appearance="outline"
+          [formField]="placementPreviewForm.email"
+          [errorPlacement]="wrapperPlacement()"
+          [strategy]="'immediate'"
+        >
+          <label for="placementPreviewEmail">Email address *</label>
+          <input
+            id="placementPreviewEmail"
+            type="email"
+            [formField]="placementPreviewForm.email"
+            placeholder="name@example.com"
+            autocomplete="email"
+          />
+        </ngx-signal-form-field-wrapper>
+      </section>
+
+      <section class="playground-preview-card">
+        <h4 class="text-sm font-semibold text-[#324155] dark:text-gray-100">
+          Grouped fieldset summary
+        </h4>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          Top matches the grouped validation layout from the design reference.
+          Bottom keeps the shared summary after the controls.
+        </p>
+
+        <fieldset
+          ngxSignalFormFieldset
+          [fieldsetField]="placementPreviewForm.address"
+          [errorPlacement]="fieldsetPlacement()"
+          [strategy]="'immediate'"
+          class="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700"
+          fieldsetId="placement-preview-address"
+          includeNestedErrors
+        >
+          <legend class="fieldset-legend">Shipping Address</legend>
+
+          <ngx-signal-form-field-wrapper
+            appearance="outline"
+            [formField]="placementPreviewForm.address.street"
+          >
+            <label for="placementPreviewStreet">Street *</label>
+            <input
+              id="placementPreviewStreet"
+              type="text"
+              [formField]="placementPreviewForm.address.street"
+              placeholder="123 Main Street"
+            />
+          </ngx-signal-form-field-wrapper>
+
+          <ngx-signal-form-field-wrapper
+            appearance="outline"
+            [formField]="placementPreviewForm.address.city"
+          >
+            <label for="placementPreviewCity">City *</label>
+            <input
+              id="placementPreviewCity"
+              type="text"
+              [formField]="placementPreviewForm.address.city"
+              placeholder="Amsterdam"
+            />
+          </ngx-signal-form-field-wrapper>
+        </fieldset>
+      </section>
+
+      <section class="playground-preview-card">
+        <h4 class="text-sm font-semibold text-[#324155] dark:text-gray-100">
+          Radio-button group summary
+        </h4>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          The radio group uses the same summary placement API, so grouped option
+          errors can sit above or below the choices.
+        </p>
+
+        <fieldset
+          ngxSignalFormFieldset
+          [fieldsetField]="placementPreviewForm.deliveryMethod"
+          [errorPlacement]="radioGroupPlacement()"
+          [strategy]="'immediate'"
+          class="space-y-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700"
+          fieldsetId="placement-preview-delivery"
+        >
+          <legend class="form-label">Delivery option *</legend>
+
+          <label class="playground-radio-option">
+            <input
+              type="radio"
+              class="form-radio"
+              [formField]="placementPreviewForm.deliveryMethod"
+              value="standard"
+            />
+            <span>Standard (3-5 business days)</span>
+          </label>
+
+          <label class="playground-radio-option">
+            <input
+              type="radio"
+              class="form-radio"
+              [formField]="placementPreviewForm.deliveryMethod"
+              value="express"
+            />
+            <span>Express (1-2 business days)</span>
+          </label>
+
+          <label class="playground-radio-option">
+            <input
+              type="radio"
+              class="form-radio"
+              [formField]="placementPreviewForm.deliveryMethod"
+              value="pickup"
+            />
+            <span>Local pickup</span>
+          </label>
+        </fieldset>
+      </section>
+    </div>
+  </div>
+</section>
 
 <form
   [formRoot]="fieldsetForm"
@@ -19,7 +412,9 @@
   >
     <legend class="fieldset-legend">Shipping Address</legend>
     <p class="fieldset-description">
-      Errors from all address fields are aggregated below the fieldset.
+      Errors from all address fields are aggregated above the inputs by default.
+      Use the placement playground above to compare the same summary at the
+      bottom.
     </p>
 
     <div class="grid gap-4 sm:grid-cols-2">
@@ -173,15 +568,20 @@
     [fieldsetField]="fieldsetForm.delivery"
     fieldsetId="delivery-method"
     class="fieldset-demo"
+    errorPlacement="bottom"
   >
     <legend class="fieldset-legend">Delivery Method</legend>
-    <p class="fieldset-description">Select how you want the order delivered.</p>
+    <p class="fieldset-description">
+      Select how you want the order delivered. The placement playground above
+      lets you move the grouped radio summary between the top and bottom.
+    </p>
 
     <fieldset
       ngxSignalFormFieldset
       [fieldsetField]="fieldsetForm.delivery.method"
       fieldsetId="delivery-method-options"
       class="space-y-3"
+      [errorPlacement]="radioGroupPlacement()"
     >
       <legend class="form-label">Delivery option *</legend>
 

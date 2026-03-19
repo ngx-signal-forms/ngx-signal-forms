@@ -44,6 +44,25 @@ describe('NgxSignalFormFieldset', () => {
     expect(container.querySelector('.content')?.textContent).toBe('Projected');
   });
 
+  it('projects legend as a direct child for semantic fieldsets', async () => {
+    const fieldset = createFieldsetState();
+
+    const { container } = await render(
+      `<fieldset ngxSignalFormFieldset [fieldsetField]="fieldset">
+        <legend>Shipping Address</legend>
+        <div class="content">Projected</div>
+      </fieldset>`,
+      {
+        imports: [NgxSignalFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    expect(container.querySelector('fieldset > legend')?.textContent).toBe(
+      'Shipping Address',
+    );
+  });
+
   it('aggregates errors from fieldsetField errorSummary', async () => {
     const fieldset = createFieldsetState({
       errors: () => [{ kind: 'required', message: 'Street required' }],
@@ -189,5 +208,65 @@ describe('NgxSignalFormFieldset', () => {
 
     const errorElement = container.querySelector('#address-error');
     expect(errorElement).not.toBeNull();
+
+    const host = container.querySelector('ngx-signal-form-fieldset');
+    expect(host).toHaveAttribute('aria-describedby', 'address-error');
+  });
+
+  it('renders aggregated messages above content by default', async () => {
+    const fieldset = createFieldsetState({
+      errors: () => [{ kind: 'required', message: 'Required' }],
+      errorSummary: () => [{ kind: 'required', message: 'Required' }],
+    });
+
+    const { container } = await render(
+      `<ngx-signal-form-fieldset [fieldsetField]="fieldset">
+        <div class="content">Content</div>
+      </ngx-signal-form-fieldset>`,
+      {
+        imports: [NgxSignalFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-signal-form-fieldset');
+    const message = host?.querySelector('.ngx-signal-form-fieldset__messages');
+    const content = host?.querySelector('.ngx-signal-form-fieldset__content');
+
+    expect(
+      host?.classList.contains('ngx-signal-form-fieldset--messages-top'),
+    ).toBe(true);
+    expect(message?.compareDocumentPosition(content as Node)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
+  it('renders aggregated messages below content when errorPlacement is bottom', async () => {
+    const fieldset = createFieldsetState({
+      errors: () => [{ kind: 'required', message: 'Required' }],
+      errorSummary: () => [{ kind: 'required', message: 'Required' }],
+    });
+
+    const { container } = await render(
+      `<ngx-signal-form-fieldset [fieldsetField]="fieldset" errorPlacement="bottom">
+        <div class="content">Content</div>
+      </ngx-signal-form-fieldset>`,
+      {
+        imports: [NgxSignalFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-signal-form-fieldset');
+    const message = host?.querySelector('.ngx-signal-form-fieldset__messages');
+    const content = host?.querySelector('.ngx-signal-form-fieldset__content');
+
+    expect(host).toHaveAttribute('data-error-placement', 'bottom');
+    expect(
+      host?.classList.contains('ngx-signal-form-fieldset--messages-bottom'),
+    ).toBe(true);
+    expect(content?.compareDocumentPosition(message as Node)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
   });
 });

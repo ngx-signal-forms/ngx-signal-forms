@@ -1,6 +1,15 @@
 import { expect, test } from '@playwright/test';
-import { verifyNoErrorsOnInitialLoad } from '../../fixtures/form-validation.fixture';
 import { FormFieldWrapperComplexPage } from '../../page-objects/form-field-wrapper-complex.page';
+
+async function getY(locator: Parameters<typeof expect>[0]) {
+  const box = await locator.boundingBox();
+
+  if (!box) {
+    throw new Error('Expected locator to have a bounding box.');
+  }
+
+  return box.y;
+}
 
 test.describe('Form Field Wrapper - Complex Forms', () => {
   let page: FormFieldWrapperComplexPage;
@@ -10,11 +19,12 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
     await page.goto();
   });
 
-  test('should NOT show errors on initial load (CRITICAL BUG CHECK)', async ({
+  test('should keep the main complex form free of errors on initial load', async ({
     page: playwrightPage,
   }) => {
-    const result = await verifyNoErrorsOnInitialLoad(playwrightPage);
-    expect(result).toBeUndefined();
+    await playwrightPage.waitForLoadState('domcontentloaded');
+    await page.form.locator('#shippingStreet').waitFor({ state: 'visible' });
+    await expect(page.form.locator('[role="alert"]')).toHaveCount(0);
   });
 
   test.describe('Component Structure', () => {
@@ -73,6 +83,223 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       const legend = page.personalInfoFieldset.locator('legend');
       await expect(legend).toBeVisible();
       await expect(legend).toContainText('Personal Information');
+    });
+  });
+
+  test.describe('Placement playground', () => {
+    test('should render the filled-state design preview with outline styling', async ({
+      page: playwrightPage,
+    }) => {
+      const dateInput = playwrightPage.locator('#placementDesignPreviewDate');
+      const dateWrapper = dateInput.locator(
+        'xpath=ancestor::ngx-signal-form-field-wrapper[1]',
+      );
+      const deliveryFieldset = playwrightPage.locator(
+        '[fieldsetid="placement-design-preview-delivery"]',
+      );
+
+      await expect(dateInput).toHaveValue('12-03-2026');
+      await expect(dateWrapper).toHaveClass(/ngx-signal-forms-outline/);
+      await expect(dateWrapper.locator('[suffix]')).toBeVisible();
+      await expect(
+        playwrightPage.locator('#placementDesignPreviewStreet'),
+      ).toHaveValue('Keizersgracht 120');
+      await expect(
+        playwrightPage.locator('#placementDesignPreviewCity'),
+      ).toHaveValue('Amsterdam');
+      await expect(
+        deliveryFieldset.getByRole('radio', {
+          name: /Express \(1-2 business days\)/i,
+        }),
+      ).toBeChecked();
+    });
+
+    test('should intentionally show sandbox alerts on initial load', async ({
+      page: playwrightPage,
+    }) => {
+      const playground = playwrightPage.getByRole('region', {
+        name: /Placement playground/i,
+      });
+
+      await expect(playground.getByRole('alert')).toHaveCount(3);
+      await expect(playground.getByRole('alert').nth(0)).toContainText(
+        'Email is required',
+      );
+      await expect(playground.getByRole('alert').nth(1)).toContainText(
+        'Street is required',
+      );
+      await expect(playground.getByRole('alert').nth(2)).toContainText(
+        'Delivery method is required',
+      );
+    });
+
+    test('should render the documented default placements', async ({
+      page: playwrightPage,
+    }) => {
+      const playground = playwrightPage.getByRole('region', {
+        name: /Placement playground/i,
+      });
+      const wrapperPreview = playwrightPage.locator('#placementPreviewEmail');
+      const wrapperHost = wrapperPreview.locator(
+        'xpath=ancestor::ngx-signal-form-field-wrapper[1]',
+      );
+      const wrapperAlert = playground.getByRole('alert').filter({
+        hasText: 'Email is required',
+      });
+
+      const addressFieldset = playwrightPage.locator(
+        '[fieldsetid="placement-preview-address"]',
+      );
+      const addressAlert = addressFieldset.getByRole('alert');
+      const addressInput = playwrightPage.locator('#placementPreviewStreet');
+
+      const deliveryFieldset = playwrightPage.locator(
+        '[fieldsetid="placement-preview-delivery"]',
+      );
+      const deliveryAlert = deliveryFieldset.getByRole('alert');
+      const deliveryRadio = deliveryFieldset.getByRole('radio', {
+        name: /Standard \(3-5 business days\)/i,
+      });
+
+      await expect(playground).toBeVisible();
+      await expect(wrapperHost).toHaveAttribute(
+        'data-error-placement',
+        'bottom',
+      );
+      await expect(addressFieldset).toHaveAttribute(
+        'data-error-placement',
+        'top',
+      );
+      await expect(deliveryFieldset).toHaveAttribute(
+        'data-error-placement',
+        'top',
+      );
+
+      expect(await getY(wrapperAlert)).toBeGreaterThan(
+        await getY(wrapperPreview),
+      );
+      expect(await getY(addressAlert)).toBeLessThan(await getY(addressInput));
+      expect(await getY(deliveryAlert)).toBeLessThan(await getY(deliveryRadio));
+    });
+
+    test('should move wrapper, fieldset, and radio-group messages when toggled', async ({
+      page: playwrightPage,
+    }) => {
+      const wrapperToggle = playwrightPage.getByRole('group', {
+        name: /Form-field wrapper/i,
+      });
+      const fieldsetToggle = playwrightPage.getByRole('group', {
+        name: /Grouped fieldset/i,
+      });
+      const radioToggle = playwrightPage.getByRole('group', {
+        name: /Radio-button group/i,
+      });
+
+      const wrapperPreview = playwrightPage.locator('#placementPreviewEmail');
+      const wrapperHost = wrapperPreview.locator(
+        'xpath=ancestor::ngx-signal-form-field-wrapper[1]',
+      );
+      const wrapperAlert = playwrightPage.getByRole('alert').filter({
+        hasText: 'Email is required',
+      });
+
+      const addressFieldset = playwrightPage.locator(
+        '[fieldsetid="placement-preview-address"]',
+      );
+      const addressAlert = addressFieldset.getByRole('alert');
+      const addressInput = playwrightPage.locator('#placementPreviewStreet');
+
+      const deliveryFieldset = playwrightPage.locator(
+        '[fieldsetid="placement-preview-delivery"]',
+      );
+      const deliveryAlert = deliveryFieldset.getByRole('alert');
+      const deliveryRadio = deliveryFieldset.getByRole('radio', {
+        name: /Standard \(3-5 business days\)/i,
+      });
+
+      await test.step('Switch placements', async () => {
+        await wrapperToggle.getByRole('button', { name: 'Top' }).click();
+        await fieldsetToggle.getByRole('button', { name: 'Bottom' }).click();
+        await radioToggle.getByRole('button', { name: 'Bottom' }).click();
+      });
+
+      await expect(wrapperHost).toHaveAttribute('data-error-placement', 'top');
+      await expect(addressFieldset).toHaveAttribute(
+        'data-error-placement',
+        'bottom',
+      );
+      await expect(deliveryFieldset).toHaveAttribute(
+        'data-error-placement',
+        'bottom',
+      );
+
+      expect(await getY(wrapperAlert)).toBeLessThan(await getY(wrapperPreview));
+      expect(await getY(addressAlert)).toBeGreaterThan(
+        await getY(addressInput),
+      );
+      expect(await getY(deliveryAlert)).toBeGreaterThan(
+        await getY(deliveryRadio),
+      );
+    });
+
+    test('should restore documented defaults when the sandbox is reset', async ({
+      page: playwrightPage,
+    }) => {
+      const wrapperToggle = playwrightPage.getByRole('group', {
+        name: /Form-field wrapper/i,
+      });
+      const fieldsetToggle = playwrightPage.getByRole('group', {
+        name: /Grouped fieldset/i,
+      });
+      const radioToggle = playwrightPage.getByRole('group', {
+        name: /Radio-button group/i,
+      });
+
+      const wrapperPreview = playwrightPage.locator('#placementPreviewEmail');
+      const wrapperHost = wrapperPreview.locator(
+        'xpath=ancestor::ngx-signal-form-field-wrapper[1]',
+      );
+      const addressFieldset = playwrightPage.locator(
+        '[fieldsetid="placement-preview-address"]',
+      );
+      const deliveryFieldset = playwrightPage.locator(
+        '[fieldsetid="placement-preview-delivery"]',
+      );
+
+      await wrapperToggle.getByRole('button', { name: 'Top' }).click();
+      await fieldsetToggle.getByRole('button', { name: 'Bottom' }).click();
+      await radioToggle.getByRole('button', { name: 'Bottom' }).click();
+
+      await playwrightPage
+        .getByRole('button', { name: /Reset placement sandbox/i })
+        .click();
+
+      await expect(wrapperHost).toHaveAttribute(
+        'data-error-placement',
+        'bottom',
+      );
+      await expect(addressFieldset).toHaveAttribute(
+        'data-error-placement',
+        'top',
+      );
+      await expect(deliveryFieldset).toHaveAttribute(
+        'data-error-placement',
+        'top',
+      );
+
+      await expect(
+        wrapperToggle.getByRole('button', { name: 'Bottom' }),
+      ).toHaveAttribute('aria-pressed', 'true');
+      await expect(
+        fieldsetToggle.getByRole('button', { name: 'Top' }),
+      ).toHaveAttribute('aria-pressed', 'true');
+      await expect(
+        radioToggle.getByRole('button', { name: 'Top' }),
+      ).toHaveAttribute('aria-pressed', 'true');
+
+      await expect(
+        playwrightPage.locator('#placementPreviewEmail-error'),
+      ).toContainText('Email is required');
     });
   });
 

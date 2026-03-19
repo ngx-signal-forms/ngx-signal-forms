@@ -1,0 +1,211 @@
+:host {
+  display: block;
+  --ngx-form-field-color-surface: #ffffff;
+  --ngx-form-field-input-bg: var(--ngx-form-field-color-surface);
+  --ngx-form-field-color-border: #acb2bb;
+  --ngx-form-field-color-border-hover: #324155;
+  --ngx-form-field-color-text: #324155;
+  --ngx-form-field-color-text-secondary: rgba(50, 65, 85, 0.75);
+  --ngx-form-field-outline-label-color: var(
+    --ngx-form-field-color-text-secondary
+  );
+  --ngx-form-field-outline-input-color: var(--ngx-form-field-color-text);
+  --ngx-form-field-placeholder-color: rgba(50, 65, 85, 0.5);
+  --ngx-form-field-color-primary: #005fcc;
+  --ngx-form-field-focus-color: var(--ngx-form-field-color-primary);
+  --ngx-form-field-focus-box-shadow: 0 0 0 2px rgba(0, 95, 204, 0.18);
+}
+
+:host-context(.dark) {
+  --ngx-form-field-color-surface: #111827;
+  --ngx-form-field-input-bg: var(--ngx-form-field-color-surface);
+  --ngx-form-field-color-border: rgba(156, 163, 175, 0.75);
+  --ngx-form-field-color-border-hover: #f9fafb;
+  --ngx-form-field-color-text: #f9fafb;
+  --ngx-form-field-color-text-secondary: rgba(209, 213, 219, 0.82);
+  --ngx-form-field-outline-label-color: var(
+    --ngx-form-field-color-text-secondary
+  );
+  --ngx-form-field-outline-input-color: var(--ngx-form-field-color-text);
+  --ngx-form-field-placeholder-color: rgba(209, 213, 219, 0.45);
+  --ngx-form-field-color-primary: #60a5fa;
+  --ngx-form-field-focus-color: var(--ngx-form-field-color-primary);
+  --ngx-form-field-focus-box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+fieldset + fieldset {
+  margin-top: 2rem;
+}
+
+.playground-shell {
+  border: 1px solid rgba(172, 178, 187, 0.38);
+  border-radius: 1.5rem;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(248, 250, 252, 0.98) 100%
+  );
+  padding: 1.25rem;
+  box-shadow: 0 20px 45px -32px rgba(50, 65, 85, 0.45);
+}
+
+.playground-shell--accent {
+  background: linear-gradient(
+    180deg,
+    rgba(248, 251, 255, 0.98) 0%,
+    rgba(255, 255, 255, 0.98) 100%
+  );
+}
+
+.playground-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.playground-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5f7897;
+}
+
+.playground-reference-grid,
+.playground-preview-grid,
+.playground-selector-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.playground-reference-grid,
+.playground-preview-grid {
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+.playground-selector-grid {
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+.playground-preview-card,
+.playground-selector-card {
+  border: 1px solid rgba(172, 178, 187, 0.38);
+  border-radius: 1.125rem;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.playground-preview-card {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.playground-selector-card {
+  padding: 0.875rem 1rem 1rem;
+}
+
+.playground-segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 9999px;
+  background: rgba(232, 236, 241, 0.88);
+}
+
+.playground-option {
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: #5d6978;
+  padding: 0.45rem 0.95rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.playground-option:hover {
+  color: #324155;
+}
+
+.playground-option[data-active='true'] {
+  background: #e8f4fb;
+  color: #005d96;
+  box-shadow: 0 1px 2px rgba(50, 65, 85, 0.18);
+}
+
+.playground-option:focus-visible {
+  outline: 2px solid #005fcc;
+  outline-offset: 2px;
+}
+
+.playground-note {
+  border-radius: 1rem;
+  background: rgba(232, 244, 251, 0.8);
+  padding: 0.875rem 1rem;
+  color: #47627e;
+}
+
+.playground-icon {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+}
+
+.playground-radio-option {
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  padding: 0.25rem 0;
+}
+
+.playground-radio-option span {
+  font-size: 0.875rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .playground-shell,
+  .playground-shell--accent,
+  .playground-preview-card,
+  .playground-selector-card {
+    border-color: rgba(148, 163, 184, 0.28);
+    background: rgba(17, 24, 39, 0.94);
+  }
+
+  .playground-shell,
+  .playground-shell--accent {
+    box-shadow: 0 24px 48px -36px rgba(15, 23, 42, 0.75);
+  }
+
+  .playground-eyebrow {
+    color: #9dc2ea;
+  }
+
+  .playground-segmented {
+    background: rgba(31, 41, 55, 0.96);
+  }
+
+  .playground-option {
+    color: #cbd5e1;
+  }
+
+  .playground-option:hover {
+    color: #f8fafc;
+  }
+
+  .playground-option[data-active='true'] {
+    background: rgba(59, 130, 246, 0.2);
+    color: #bfdbfe;
+  }
+
+  .playground-note {
+    background: rgba(30, 58, 138, 0.2);
+    color: #cbd5f5;
+  }
+}

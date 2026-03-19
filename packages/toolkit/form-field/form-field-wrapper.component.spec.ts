@@ -398,6 +398,85 @@ describe('NgxSignalFormWrapperComponent', () => {
       const errorElement = container.querySelector('[id="picker-error"]');
       expect(errorElement).toBeTruthy();
     });
+
+    it('renders messages in the assistive row by default', async () => {
+      const invalidField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'required', message: 'Email is required' }],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field">
+          <label for="email-default">Email</label>
+          <input id="email-default" type="email" />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: invalidField,
+          },
+        },
+      );
+
+      const host = container.querySelector('ngx-signal-form-field-wrapper');
+      const assistiveRow = host?.querySelector(
+        'ngx-signal-form-field-assistive-row',
+      );
+
+      expect(host).toHaveAttribute('data-error-placement', 'bottom');
+      expect(
+        host?.classList.contains(
+          'ngx-signal-form-field-wrapper--messages-bottom',
+        ),
+      ).toBe(true);
+      expect(
+        host?.querySelector('.ngx-signal-form-field-wrapper__messages'),
+      ).toBeNull();
+      expect(assistiveRow?.querySelector('ngx-signal-form-error')).toBeTruthy();
+    });
+
+    it('renders messages above the control when errorPlacement is top', async () => {
+      const invalidField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'required', message: 'Email is required' }],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field" errorPlacement="top">
+          <label for="email-top">Email</label>
+          <input id="email-top" type="email" />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: invalidField,
+          },
+        },
+      );
+
+      const host = container.querySelector('ngx-signal-form-field-wrapper');
+      const messages = host?.querySelector(
+        '.ngx-signal-form-field-wrapper__messages',
+      );
+      const content = host?.querySelector(
+        '.ngx-signal-form-field-wrapper__content',
+      );
+      const assistiveRow = host?.querySelector(
+        'ngx-signal-form-field-assistive-row',
+      );
+
+      expect(host).toHaveAttribute('data-error-placement', 'top');
+      expect(
+        host?.classList.contains('ngx-signal-form-field-wrapper--messages-top'),
+      ).toBe(true);
+      expect(messages?.compareDocumentPosition(content as Node)).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      );
+      expect(assistiveRow?.querySelector('ngx-signal-form-error')).toBeFalsy();
+      expect(messages?.querySelector('ngx-signal-form-error')).toBeTruthy();
+    });
   });
 
   describe('Basic rendering', () => {

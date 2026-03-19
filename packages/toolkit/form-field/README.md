@@ -136,6 +136,27 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 </ngx-signal-form-field-wrapper>
 ```
 
+#### Message Placement
+
+The `errorPlacement` input controls where automatic wrapper errors and warnings render:
+
+- `bottom` (default) — render in the assistive row beneath the field
+- `top` — render between the label and the control
+
+```html
+<!-- Default bottom placement -->
+<ngx-signal-form-field-wrapper [formField]="form.email">
+  <label for="email">Email</label>
+  <input id="email" [formField]="form.email" />
+</ngx-signal-form-field-wrapper>
+
+<!-- Move messages above the control -->
+<ngx-signal-form-field-wrapper [formField]="form.email" errorPlacement="top">
+  <label for="email-top">Email</label>
+  <input id="email-top" [formField]="form.email" />
+</ngx-signal-form-field-wrapper>
+```
+
 #### Prefix/Suffix Slots
 
 Add icons, text, or interactive elements before or after the input using `prefix` and `suffix` attributes.
@@ -203,6 +224,18 @@ Add icons, text, or interactive elements before or after the input using `prefix
 - Interactive suffix buttons need descriptive `aria-label` or visible text
 - Suffix buttons should use `type="button"` to prevent form submission
 - Prefix/suffix elements should not be focusable unless interactive
+
+#### Wrapper Inputs
+
+| Input                | Type                                   | Default      | Description                                                            |
+| -------------------- | -------------------------------------- | ------------ | ---------------------------------------------------------------------- |
+| `formField`          | `FieldTree<TValue>`                    | _required_   | Signal Forms field tree bound to the wrapper                           |
+| `fieldName`          | `string \| undefined`                  | Derived      | Explicit error ID prefix, otherwise resolved from the bound control ID |
+| `strategy`           | `ErrorDisplayStrategy \| null`         | Inherited    | Error display strategy override                                        |
+| `appearance`         | `'standard' \| 'outline' \| 'inherit'` | `'inherit'`  | Wrapper appearance variant                                             |
+| `errorPlacement`     | `'top' \| 'bottom'`                    | `'bottom'`   | Render automatic messages above or below the control                   |
+| `showRequiredMarker` | `unknown`                              | Config value | Toggle the outlined required marker                                    |
+| `requiredMarker`     | `string \| undefined`                  | Config value | Custom outlined required marker text                                   |
 
 #### Warning Support
 
@@ -690,7 +723,20 @@ import { NgxSignalFormFieldset } from '@ngx-signal-forms/toolkit/form-field';
     <input id="city" [formField]="form.address.city" />
   </ngx-signal-form-field-wrapper>
 
-  <!-- Aggregated errors appear at bottom of fieldset -->
+  <!-- Aggregated errors appear above the fields by default -->
+</ngx-signal-form-fieldset>
+```
+
+**Bottom Placement:**
+
+```html
+<ngx-signal-form-fieldset
+  [fieldsetField]="form.delivery"
+  fieldsetId="delivery"
+  errorPlacement="bottom"
+>
+  <legend class="fieldset-legend">Delivery method</legend>
+  <!-- Aggregated errors appear below the fields -->
 </ngx-signal-form-fieldset>
 ```
 
@@ -737,6 +783,31 @@ import { NgxSignalFormFieldset } from '@ngx-signal-forms/toolkit/form-field';
 - ✅ **Warning Support**: Non-blocking warnings (with `warn:` prefix) shown when no errors exist
 - ✅ **WCAG 2.2 Compliant**: Errors use `role="alert"`, warnings use `role="status"`
 - ✅ **Strategy Aware**: Respects `ErrorDisplayStrategy` from form context or input
+- ✅ **Configurable Placement**: Render grouped messages above or below field content via `errorPlacement`
+
+#### Fieldset Message Placement
+
+The `errorPlacement` input controls where the grouped message block is rendered:
+
+- `top` (default) — matches the design library layout and shows grouped messages before the field content
+- `bottom` — keeps grouped messages after the field content
+
+```html
+<!-- Default: grouped messages before field content -->
+<ngx-signal-form-fieldset [fieldsetField]="form.address">
+  <legend class="fieldset-legend">Shipping Address</legend>
+  <!-- fields -->
+</ngx-signal-form-fieldset>
+
+<!-- Optional: grouped messages after field content -->
+<ngx-signal-form-fieldset
+  [fieldsetField]="form.delivery"
+  errorPlacement="bottom"
+>
+  <legend class="fieldset-legend">Delivery method</legend>
+  <!-- fields -->
+</ngx-signal-form-fieldset>
+```
 
 #### Error Display Modes
 
@@ -774,7 +845,7 @@ Shows ALL errors including nested field errors via `errorSummary()`. Use when ne
 </fieldset>
 ```
 
-#### Inputs
+#### Fieldset Inputs
 
 | Input                 | Type                           | Default             | Description                                                               |
 | --------------------- | ------------------------------ | ------------------- | ------------------------------------------------------------------------- |
@@ -784,6 +855,7 @@ Shows ALL errors including nested field errors via `errorSummary()`. Use when ne
 | `strategy`            | `ErrorDisplayStrategy \| null` | Inherited from form | Error display strategy                                                    |
 | `showErrors`          | `boolean`                      | `true`              | Whether to display aggregated error messages                              |
 | `includeNestedErrors` | `boolean`                      | `false`             | Include nested field errors (`true`) or only group-level errors (`false`) |
+| `errorPlacement`      | `'top' \| 'bottom'`            | `'top'`             | Render grouped messages before or after the field content                 |
 
 #### Host CSS Classes
 

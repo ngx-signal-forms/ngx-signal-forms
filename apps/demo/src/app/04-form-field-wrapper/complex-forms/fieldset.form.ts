@@ -4,17 +4,75 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { FormField, form } from '@angular/forms/signals';
+import {
+  email,
+  FormField,
+  form,
+  required,
+  schema,
+} from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
 } from '@ngx-signal-forms/toolkit';
-import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
+import {
+  type FieldsetErrorPlacement,
+  NgxFormField,
+  type FormFieldErrorPlacement,
+} from '@ngx-signal-forms/toolkit/form-field';
 
 import type { FieldsetDemoModel } from './fieldset.model';
 import { fieldsetDemoSchema } from './fieldset.validations';
+
+interface PlacementPreviewModel {
+  email: string;
+  address: {
+    street: string;
+    city: string;
+  };
+  deliveryMethod: string;
+}
+
+interface PlacementDesignPreviewModel {
+  appointmentDate: string;
+  address: {
+    street: string;
+    city: string;
+  };
+  deliveryMethod: string;
+}
+
+const createPlacementPreviewValue = (): PlacementPreviewModel => ({
+  email: '',
+  address: {
+    street: '',
+    city: '',
+  },
+  deliveryMethod: '',
+});
+
+const createPlacementDesignPreviewValue = (): PlacementDesignPreviewModel => ({
+  appointmentDate: '12-03-2026',
+  address: {
+    street: 'Keizersgracht 120',
+    city: 'Amsterdam',
+  },
+  deliveryMethod: 'express',
+});
+
+const placementPreviewSchema = schema<PlacementPreviewModel>((path) => {
+  required(path.email, { message: 'Email is required' });
+  email(path.email, { message: 'Email format is invalid' });
+  required(path.address.street, { message: 'Street is required' });
+  required(path.address.city, { message: 'City is required' });
+  required(path.deliveryMethod, { message: 'Delivery method is required' });
+});
+
+const placementDesignPreviewSchema = schema<PlacementDesignPreviewModel>(
+  () => {},
+);
 
 /**
  * Fieldset Demo - Demonstrates NgxSignalFormFieldset
@@ -45,12 +103,7 @@ import { fieldsetDemoSchema } from './fieldset.validations';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   templateUrl: './fieldset.form.html',
-  styles: `
-    /* Spacing between fieldsets */
-    fieldset + fieldset {
-      margin-top: 2rem;
-    }
-  `,
+  styleUrls: ['./fieldset.form.scss'],
 })
 export class FieldsetFormComponent {
   /**
@@ -58,6 +111,33 @@ export class FieldsetFormComponent {
    */
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('standard');
+  protected readonly wrapperPlacement =
+    signal<FormFieldErrorPlacement>('bottom');
+  protected readonly fieldsetPlacement = signal<FieldsetErrorPlacement>('top');
+  protected readonly radioGroupPlacement =
+    signal<FieldsetErrorPlacement>('top');
+  protected readonly placementOptions = ['top', 'bottom'] as const;
+  protected readonly placementLabels = {
+    top: 'Top',
+    bottom: 'Bottom',
+  } as const;
+
+  readonly #placementPreviewModel = signal<PlacementPreviewModel>(
+    createPlacementPreviewValue(),
+  );
+  readonly #placementDesignPreviewModel = signal<PlacementDesignPreviewModel>(
+    createPlacementDesignPreviewValue(),
+  );
+
+  readonly placementPreviewForm = form(
+    this.#placementPreviewModel,
+    placementPreviewSchema,
+  );
+
+  readonly placementDesignPreviewForm = form(
+    this.#placementDesignPreviewModel,
+    placementDesignPreviewSchema,
+  );
 
   /**
    * Initial empty address template
@@ -111,6 +191,14 @@ export class FieldsetFormComponent {
     { value: 'DE', label: 'Germany' },
     { value: 'NL', label: 'Netherlands' },
   ];
+
+  protected resetPlacementPreview(): void {
+    this.placementPreviewForm().reset();
+    this.#placementPreviewModel.set(createPlacementPreviewValue());
+    this.wrapperPlacement.set('bottom');
+    this.fieldsetPlacement.set('top');
+    this.radioGroupPlacement.set('top');
+  }
 
   /**
    * Reset form to initial values

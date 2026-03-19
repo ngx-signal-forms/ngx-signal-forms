@@ -27,6 +27,8 @@ import {
   readFieldFlag,
 } from '@ngx-signal-forms/toolkit/headless';
 
+export type FieldsetErrorPlacement = 'top' | 'bottom';
+
 /**
  * Form fieldset component for grouping related form fields with aggregated error/warning display.
  *
@@ -42,6 +44,7 @@ import {
  * - **Warning Support**: Non-blocking warnings (with `warn:` prefix) shown when no errors
  * - **WCAG 2.2 Compliant**: Errors use `role="alert"`, warnings use `role="status"`
  * - **Strategy Aware**: Respects `ErrorDisplayStrategy` from form context or input
+ * - **Configurable Placement**: Aggregated messages can appear above or below the field content
  *
  * ## Error Display Modes
  *
@@ -82,14 +85,31 @@ import {
     class: 'ngx-signal-form-fieldset',
     '[class.ngx-signal-form-fieldset--invalid]': 'shouldShowErrors()',
     '[class.ngx-signal-form-fieldset--warning]': 'shouldShowWarnings()',
+    '[class.ngx-signal-form-fieldset--messages-top]': 'isTopPlacement()',
+    '[class.ngx-signal-form-fieldset--messages-bottom]': '!isTopPlacement()',
+    '[attr.aria-describedby]': 'describedByIds()',
+    '[attr.data-error-placement]': 'errorPlacement()',
     '[attr.aria-busy]': 'isPending() ? "true" : null',
   },
   template: `
+    <ng-content select="legend" />
+
+    @if (showMessages() && isTopPlacement()) {
+      <div class="ngx-signal-form-fieldset__messages">
+        <ngx-signal-form-error
+          [errors]="filteredErrorsSignal"
+          [fieldName]="resolvedFieldsetId()"
+          [strategy]="resolvedStrategy()"
+          [submittedStatus]="submittedStatus()"
+        />
+      </div>
+    }
+
     <div class="ngx-signal-form-fieldset__content">
       <ng-content />
     </div>
 
-    @if (showErrors() && (shouldShowErrors() || shouldShowWarnings())) {
+    @if (showMessages() && !isTopPlacement()) {
       <div class="ngx-signal-form-fieldset__messages">
         <ngx-signal-form-error
           [errors]="filteredErrorsSignal"
@@ -142,6 +162,14 @@ export class NgxSignalFormFieldset<TFieldset = unknown> {
   readonly showErrors = input(true, { transform: booleanAttribute });
 
   /**
+   * Placement of the aggregated error or warning summary.
+   *
+   * - `top` (default): display the summary directly below the legend/description
+   * - `bottom`: display the summary after the projected field content
+   */
+  readonly errorPlacement = input<FieldsetErrorPlacement>('top');
+
+  /**
    * Whether to include nested field errors in the aggregated display.
    *
    * - `false` (default): Shows ONLY group-level errors via `errors()`.
@@ -175,15 +203,19 @@ export class NgxSignalFormFieldset<TFieldset = unknown> {
   readonly #fieldsetState = computed(() => this.fieldsetField()());
 
   readonly resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
+    const formContext = this.#formContext;
+
     return resolveErrorDisplayStrategy(
       this.strategy(),
-      this.#formContext?.errorStrategy?.(),
+      formContext ? formContext.errorStrategy() : undefined,
       this.#config?.defaultErrorStrategy ?? 'on-touch',
     );
   });
 
   readonly submittedStatus = computed(() => {
-    return this.#formContext?.submittedStatus?.() ?? 'unsubmitted';
+    const formContext = this.#formContext;
+
+    return formContext ? formContext.submittedStatus() : 'unsubmitted';
   });
 
   readonly #showErrorsSignal = showErrors(
@@ -252,6 +284,17 @@ export class NgxSignalFormFieldset<TFieldset = unknown> {
       return false;
     }
     return this.#showErrorsSignal() && this.warningErrors().length > 0;
+  });
+
+  protected readonly isTopPlacement = computed(() => {
+    return this.errorPlacement() !== 'bottom';
+  });
+
+  protected readonly showMessages = computed(() => {
+    return (
+      this.showErrors() &&
+      (this.shouldShowErrors() || this.shouldShowWarnings())
+    );
   });
 
   /**

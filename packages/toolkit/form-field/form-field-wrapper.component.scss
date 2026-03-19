@@ -230,7 +230,7 @@
   // Label - Outlined layout (caption style, inside container)
   --_label-outline-size: var(
     --ngx-form-field-outline-label-size,
-    var(--_field-text-caption)
+    var(--ngx-form-field-outline-label-font-size, var(--_field-text-caption))
   );
   --_label-outline-gap: var(--ngx-form-field-outline-label-gap, 0rem);
   --_label-outline-weight: var(
@@ -281,7 +281,7 @@
   // Input - Outlined layout
   --_input-outline-size: var(
     --ngx-form-field-outline-input-size,
-    var(--_field-text-body)
+    var(--ngx-form-field-outline-input-font-size, var(--_field-text-body))
   );
   --_input-outline-weight: var(
     --ngx-form-field-outline-input-weight,
@@ -325,6 +325,29 @@
     --ngx-form-field-placeholder-color,
     var(--_color-text-muted)
   );
+
+  // Legacy outline aliases (kept for backward compatibility with older demos/docs)
+  --_outline-bg: var(--ngx-form-field-outline-bg, var(--_input-bg));
+  --_outline-border: var(
+    --ngx-form-field-outline-border,
+    1px solid var(--_input-border-color)
+  );
+  --_outline-radius: var(
+    --ngx-form-field-outline-border-radius,
+    var(--_input-radius)
+  );
+  --_outline-min-height: var(
+    --ngx-form-field-outline-min-height,
+    var(--ngx-form-field-min-height, 3.5rem)
+  );
+  --_outline-focus-color: var(
+    --ngx-form-field-outline-focus-border-color,
+    var(--_focus-color)
+  );
+  --_outline-focus-box-shadow: var(
+    --ngx-form-field-outline-focus-box-shadow,
+    var(--_focus-box-shadow)
+  );
 }
 
 // ============================================================================
@@ -339,6 +362,10 @@
   margin-bottom: var(--_margin-bottom);
   width: 100%;
   height: fit-content; // Prevent stretching in grid/flex rows
+}
+
+.ngx-signal-form-field-wrapper__messages {
+  width: 100%;
 }
 
 // Label sits OUTSIDE the bordered container (traditional layout)
@@ -455,11 +482,8 @@
   user-select: none;
   font-size: 0.875rem; // 14px - clean, readable size
   line-height: 0;
-  opacity: 0.6; // More subtle, integrated look
   color: var(--_color-text-muted);
-  transition:
-    opacity 0.15s ease-in-out,
-    color 0.15s ease-in-out;
+  transition: color 0.15s ease-in-out;
 
   // Normalize nested SVGs to avoid inline baseline alignment issues
   svg {
@@ -474,39 +498,34 @@
     cursor: pointer;
     background: transparent;
     border: none;
-    padding: var(--_field-space-xs);
-    margin: calc(var(--_field-space-xs) * -1);
+    padding: var(--_field-space-2xs);
+    margin: 0;
     color: var(--_color-text-muted);
-    font-size: 1.125rem;
+    font-size: 1rem;
     line-height: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: var(--_field-radius);
     transition:
-      opacity 0.15s ease-in-out,
       background-color 0.15s ease-in-out,
-      transform 0.15s ease-in-out;
-    opacity: 0.5;
-    min-inline-size: var(--_field-touch-target);
-    min-block-size: var(--_field-touch-target);
+      color 0.15s ease-in-out;
+    min-inline-size: 1.75rem;
+    min-block-size: 1.75rem;
 
     &:hover {
-      opacity: 0.8;
       background-color: color-mix(in srgb, var(--_color-text) 6%, transparent);
-      transform: scale(1.05);
+      color: var(--_color-text);
     }
 
     &:active {
-      opacity: 1;
       background-color: color-mix(in srgb, var(--_color-text) 10%, transparent);
-      transform: scale(0.98);
     }
 
     &:focus-visible {
       outline: 2px solid var(--_focus-color);
       outline-offset: 2px;
-      opacity: 1;
+      color: var(--_color-text);
     }
   }
 }
@@ -588,6 +607,19 @@
   }
 }
 
+:host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--messages-top) {
+  grid-template-rows: auto auto auto;
+  grid-template-areas:
+    'message'
+    'content'
+    'assistive';
+}
+
+:host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--messages-top)
+  .ngx-signal-form-field-wrapper__messages {
+  grid-area: message;
+}
+
 :host(.ngx-signal-forms-outline) .ngx-signal-form-field-wrapper__content {
   grid-area: content;
   display: flex;
@@ -600,14 +632,20 @@
         var(--_padding-vertical)
     )
     var(--_padding-horizontal) var(--_padding-vertical);
-  background-color: var(--_input-bg);
-  border: 1px solid var(--_input-border-color);
-  border-radius: var(--_input-radius);
+  background-color: var(--_outline-bg);
+  border: var(--_outline-border);
+  border-radius: var(--_outline-radius);
   cursor: text;
   transition:
     border-color 0.15s ease-in-out,
     box-shadow 0.15s ease-in-out;
-  min-height: var(--ngx-form-field-min-height, 3.5rem);
+  min-height: var(--_outline-min-height);
+}
+
+:host(.ngx-signal-forms-outline)
+  .ngx-signal-form-field-wrapper__content:focus-within {
+  border-color: var(--_outline-focus-color);
+  box-shadow: var(--_outline-focus-box-shadow);
 }
 
 // Prefix/suffix in outlined forms - use :has() for conditional borders

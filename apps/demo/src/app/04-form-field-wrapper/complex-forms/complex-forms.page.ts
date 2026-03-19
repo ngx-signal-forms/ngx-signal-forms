@@ -135,7 +135,7 @@ export class ComplexFormsPage {
   protected readonly errorDisplayMode =
     signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
-    signal<FormFieldAppearance>('standard');
+    signal<FormFieldAppearance>('outline');
 
   protected readonly content = COMPLEX_FORMS_CONTENT;
   protected readonly complexFormRef =

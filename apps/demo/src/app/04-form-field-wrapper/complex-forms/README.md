@@ -11,7 +11,7 @@ Complex form with nested objects and dynamic arrays using the form field wrapper
 
 ## Validation overview
 
-**Errors**
+### Errors
 
 - Personal info: first/last name required + minimum length 2; email required + email format; age required with min 18 and max 120.
 - Address: street, city, zip, country required; ZIP pattern `12345` or `12345-6789`.
@@ -19,7 +19,7 @@ Complex form with nested objects and dynamic arrays using the form field wrapper
 - Contacts: type and value required; value minimum length 3.
 - Preferences: contact method required.
 
-**Warnings**
+### Warnings
 
 - Contact method `sms`: warns about potential charges.
 
@@ -28,6 +28,7 @@ Complex form with nested objects and dynamic arrays using the form field wrapper
 - `NgxSignalFormToolkit` for auto-ARIA and form context.
 - `NgxFormField` wrapper for automatic error rendering and layout.
 - `NgxSignalFormFieldset` for grouping sections.
+- Placement playground for wrapper, grouped fieldset, and radio-group summaries.
 
 ## Other tools
 
@@ -44,5 +45,6 @@ Complex form with nested objects and dynamic arrays using the form field wrapper
 
 1. Run the demo app.
 2. Navigate to `/form-field-wrapper/complex-forms`.
-3. Add/remove skills and contacts to see array validation.
-4. Choose SMS as contact method to trigger the warning.
+3. Use the placement playground to move wrapper, grouped fieldset, and radio-group messages between top and bottom while the sandbox starts invalid.
+4. Add/remove skills and contacts to see array validation.
+5. Choose SMS as contact method to trigger the warning.

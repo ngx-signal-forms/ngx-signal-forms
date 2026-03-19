@@ -311,12 +311,18 @@ Unified wrapper with automatic error/warning/hint display.
 - `fieldName` — Optional explicit override; otherwise derived from the bound control `id`
 - `strategy` — Override error strategy
 - `appearance` — `'standard' | 'outline' | 'inherit'`
+- `errorPlacement` — Render automatic messages at the `top` or `bottom` (default: `bottom`)
 - `showRequiredMarker` / `requiredMarker` — Required field indicator for outlined fields
 
 ```html
 <ngx-signal-form-field-wrapper [formField]="form.email">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
+</ngx-signal-form-field-wrapper>
+
+<ngx-signal-form-field-wrapper [formField]="form.email" errorPlacement="top">
+  <label for="email-top">Email</label>
+  <input id="email-top" [formField]="form.email" />
 </ngx-signal-form-field-wrapper>
 ```
 
@@ -347,9 +353,10 @@ Groups related fields with aggregated validation.
 - `strategy` — Error display strategy
 - `showErrors` — Enable error display (default: `true`)
 - `includeNestedErrors` — Include child field errors (default: `false`)
+- `errorPlacement` — Render grouped messages at the `top` or `bottom` (default: `top`)
 
 ```html
-<!-- Group-only errors (default) -->
+<!-- Group-only errors with top summary placement (default) -->
 <ngx-signal-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
   <legend>Address</legend>
   <ngx-signal-form-field-wrapper
@@ -368,6 +375,15 @@ Groups related fields with aggregated validation.
 >
   ...
 </fieldset>
+
+<!-- Move grouped messages below the controls -->
+<ngx-signal-form-fieldset
+  [fieldsetField]="form.delivery"
+  errorPlacement="bottom"
+>
+  <legend>Delivery method</legend>
+  ...
+</ngx-signal-form-fieldset>
 ```
 
 ### Form field theming
