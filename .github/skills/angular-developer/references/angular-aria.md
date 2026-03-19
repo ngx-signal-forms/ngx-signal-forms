@@ -98,7 +98,12 @@ export class App {
 
 ```html
 <!-- horizontal or vertical orientation -->
-<ul ngListbox [(values)]="selectedItems" orientation="horizontal" [multi]="true">
+<ul
+  ngListbox
+  [(values)]="selectedItems"
+  orientation="horizontal"
+  [multi]="true"
+>
   <li ngOption value="apple" class="option">Apple</li>
   <li ngOption value="banana" class="option">Banana</li>
 </ul>

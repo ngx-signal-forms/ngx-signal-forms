@@ -54,7 +54,9 @@ describe('Profiler', () => {
     cy.get('button[aria-label="stop-recording-button"]').click();
 
     // Assert that the flame graph is now visible
-    cy.get('ng-devtools-recording-timeline').find('canvas').should('be.visible');
+    cy.get('ng-devtools-recording-timeline')
+      .find('canvas')
+      .should('be.visible');
   });
 });
 ```
