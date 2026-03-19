@@ -1,5 +1,5 @@
 {
-  "name": "@ngx-signal-forms/toolkit/assistive",
+  "name": "assistive",
   "description": "Styled assistive components for Angular Signal Forms",
   "ngPackage": {}
 }

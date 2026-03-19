@@ -1,4 +1,12 @@
-import type { FieldTree, ValidationError } from '@angular/forms/signals';
+import { signal } from '@angular/core';
+import type {
+  DisabledReason,
+  FieldState,
+  FieldTree,
+  FormField,
+  MetadataKey,
+  ValidationError,
+} from '@angular/forms/signals';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { focusFirstInvalid } from './focus-first-invalid';
 
@@ -6,7 +14,7 @@ import { focusFirstInvalid } from './focus-first-invalid';
  * Test suite for focus-first-invalid utility.
  *
  * Critical functionality: Focus management for accessibility (WCAG 2.2).
- * Uses Angular 21.1's native focusBoundControl() method.
+ * Uses Angular 21.2's native focusBoundControl() method.
  */
 describe('focusFirstInvalid', () => {
   beforeEach(() => {
@@ -18,7 +26,9 @@ describe('focusFirstInvalid', () => {
       // Arrange
       const focusBoundControlSpy = vi.fn();
       const mockField = createMockFieldWithErrors([
-        createMockError(focusBoundControlSpy),
+        createMockError(() => {
+          focusBoundControlSpy();
+        }),
       ]);
 
       // Act
@@ -34,8 +44,12 @@ describe('focusFirstInvalid', () => {
       const firstFocusSpy = vi.fn();
       const secondFocusSpy = vi.fn();
       const mockField = createMockFieldWithErrors([
-        createMockError(firstFocusSpy),
-        createMockError(secondFocusSpy),
+        createMockError(() => {
+          firstFocusSpy();
+        }),
+        createMockError(() => {
+          secondFocusSpy();
+        }),
       ]);
 
       // Act
@@ -74,12 +88,10 @@ describe('focusFirstInvalid', () => {
 
   describe('Edge Cases - Missing fieldTree', () => {
     it('should return false when first error has no fieldTree', () => {
-      // Arrange: Error without fieldTree property
       const errorWithoutFieldTree = {
         kind: 'required',
         message: 'Required',
-        // No fieldTree property
-      } as unknown as ValidationError<unknown>;
+      } satisfies ValidationError.WithOptionalFieldTree;
 
       const mockField = createMockFieldWithErrors([errorWithoutFieldTree]);
 
@@ -91,12 +103,12 @@ describe('focusFirstInvalid', () => {
     });
 
     it('should return false when fieldTree returns invalid state', () => {
-      // Arrange: Error with fieldTree that returns null
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- This test intentionally simulates a malformed runtime error payload.
       const errorWithNullFieldTree = {
         kind: 'required',
         message: 'Required',
         fieldTree: () => null,
-      } as unknown as ValidationError<unknown>;
+      } as unknown as ValidationError.WithOptionalFieldTree;
 
       const mockField = createMockFieldWithErrors([errorWithNullFieldTree]);
 
@@ -113,82 +125,110 @@ describe('focusFirstInvalid', () => {
  * Helper: Create mock FieldTree with specified errors in errorSummary.
  */
 function createMockFieldWithErrors(
-  errors: ValidationError<unknown>[],
+  errors: readonly ValidationError.WithOptionalFieldTree[],
 ): FieldTree<unknown> {
-  const fieldState = {
-    value: () => ({}),
-    valid: () => errors.length === 0,
-    invalid: () => errors.length > 0,
-    touched: () => false,
-    dirty: () => false,
-    errors: () => errors,
-    errorSummary: () => errors,
-    pending: () => false,
-    disabled: () => false,
-    readonly: () => false,
-    hidden: () => false,
-    submitting: () => false,
-    reset: vi.fn(),
-    markAsTouched: vi.fn(),
-    markAsDirty: vi.fn(),
-    focusBoundControl: vi.fn(),
-  };
-
-  return (() => fieldState) as unknown as FieldTree<unknown>;
+  return createMockFieldTree({
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- These edge-case tests intentionally feed malformed runtime errors into errorSummary().
+    errors: [...errors] as ValidationError.WithFieldTree[],
+    valid: errors.length === 0,
+    invalid: errors.length > 0,
+    value: {},
+  });
 }
 
 /**
  * Helper: Create mock FieldTree for valid form.
  */
 function createMockField(valid: boolean): FieldTree<unknown> {
-  const fieldState = {
-    value: () => ({}),
-    valid: () => valid,
-    invalid: () => !valid,
-    touched: () => false,
-    dirty: () => false,
-    errors: () => [],
-    errorSummary: () => [],
-    pending: () => false,
-    disabled: () => false,
-    readonly: () => false,
-    hidden: () => false,
-    submitting: () => false,
-    reset: vi.fn(),
-    markAsTouched: vi.fn(),
-    markAsDirty: vi.fn(),
-    focusBoundControl: vi.fn(),
-  };
-
-  return (() => fieldState) as unknown as FieldTree<unknown>;
+  return createMockFieldTree({
+    errors: [],
+    valid,
+    invalid: !valid,
+    value: {},
+  });
 }
 
 /**
  * Helper: Create mock ValidationError with focusBoundControl spy.
  */
 function createMockError(
-  focusBoundControlSpy: ReturnType<typeof vi.fn>,
-): ValidationError<unknown> {
+  focusBoundControlSpy: () => void,
+): ValidationError.WithFieldTree {
   return {
     kind: 'required',
     message: 'Required',
-    fieldTree: () => ({
-      value: () => '',
-      valid: () => false,
-      invalid: () => true,
-      touched: () => false,
-      dirty: () => false,
-      errors: () => [],
-      errorSummary: () => [],
-      pending: () => false,
-      disabled: () => false,
-      readonly: () => false,
-      hidden: () => false,
-      submitting: () => false,
-      reset: vi.fn(),
-      markAsTouched: vi.fn(),
-      markAsDirty: vi.fn(),
-      focusBoundControl: focusBoundControlSpy,
+    fieldTree: createMockFieldTree({
+      errors: [],
+      focusBoundControl: (_options?: FocusOptions): void => {
+        focusBoundControlSpy();
+      },
+      invalid: true,
+      valid: false,
+      value: '',
     }),
-  } as unknown as ValidationError<unknown>;
+  } satisfies ValidationError.WithFieldTree;
+}
+
+function createMockFieldTree<TValue>({
+  errors,
+  focusBoundControl,
+  invalid,
+  valid,
+  value,
+}: {
+  errors: ValidationError.WithFieldTree[];
+  focusBoundControl?: (options?: FocusOptions) => void;
+  invalid: boolean;
+  valid: boolean;
+  value: TValue;
+}): FieldTree<TValue> {
+  let fieldTree!: FieldTree<TValue>;
+
+  const valueSignal = signal(value);
+  const errorSignal = signal(errors);
+  const focusBoundControlFn =
+    focusBoundControl ?? ((_options?: FocusOptions): void => undefined);
+
+  const fieldState: FieldState<TValue> = {
+    get fieldTree() {
+      return fieldTree;
+    },
+    value: valueSignal,
+    controlValue: valueSignal,
+    disabled: signal(false),
+    disabledReasons: signal<DisabledReason[]>([]),
+    dirty: signal(false),
+    errorSummary: errorSignal,
+    errors: errorSignal,
+    formFieldBindings: signal<FormField<unknown>[]>([]),
+    hidden: signal(false),
+    invalid: signal(invalid),
+    keyInParent: signal<string | number>('root'),
+    max: signal<number | undefined>(undefined),
+    maxLength: signal<number | undefined>(undefined),
+    min: signal<number | undefined>(undefined),
+    minLength: signal<number | undefined>(undefined),
+    name: signal('root'),
+    pattern: signal<readonly RegExp[]>([]),
+    pending: signal(false),
+    readonly: signal(false),
+    required: signal(false),
+    submitting: signal(false),
+    touched: signal(false),
+    valid: signal(valid),
+    focusBoundControl: focusBoundControlFn,
+    markAsDirty: (): void => undefined,
+    markAsTouched: (): void => undefined,
+    metadata: <M>(_key: MetadataKey<M, unknown, unknown>): M | undefined =>
+      undefined,
+    reset: (_value?: TValue): void => undefined,
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- This test helper only needs the callable FieldTree shape used by focusFirstInvalid().
+  fieldTree = Object.assign(
+    (): FieldState<TValue> => fieldState,
+    {},
+  ) as FieldTree<TValue>;
+
+  return fieldTree;
 }

@@ -1,7 +1,7 @@
 {
-  "name": "@ngx-signal-forms/toolkit/debugger",
+  "name": "debugger",
   "peerDependencies": {
-    "@angular/core": ">=21.1.0",
-    "@angular/forms": ">=21.1.0"
+    "@angular/core": ">=21.2.0",
+    "@angular/forms": ">=21.2.0"
   }
 }
