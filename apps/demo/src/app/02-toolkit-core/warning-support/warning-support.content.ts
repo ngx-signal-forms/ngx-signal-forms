@@ -71,7 +71,7 @@ export const WARNING_SUPPORT_CONTENT = {
     ],
     nextStep: {
       text: 'See form field wrapper in action →',
-      link: '../form-field-wrapper/basic-usage',
+      link: '/form-field-wrapper/basic-usage',
       linkText: 'Form Field Wrapper',
     },
   },

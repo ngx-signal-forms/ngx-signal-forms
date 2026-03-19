@@ -75,7 +75,7 @@ export const PURE_SIGNAL_FORM_CONTENT = {
     ],
     nextStep: {
       text: 'See how the toolkit automates all of this →',
-      link: '../getting-started/your-first-form',
+      link: '/getting-started/your-first-form',
       linkText: 'Your First Form with Toolkit',
     },
   },

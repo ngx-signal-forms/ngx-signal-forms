@@ -51,7 +51,7 @@ export const ADVANCED_WIZARD_CONTENT = {
     ],
     nextStep: {
       text: 'Continue with dependent validation patterns in',
-      link: '../cross-field-validation',
+      link: '/advanced-scenarios/cross-field-validation',
       linkText: 'Cross-Field Validation',
     },
   },

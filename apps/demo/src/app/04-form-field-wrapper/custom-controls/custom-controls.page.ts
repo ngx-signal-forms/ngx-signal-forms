@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   signal,
   viewChild,
 } from '@angular/core';
@@ -11,11 +12,17 @@ import type {
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
   AppearanceToggleComponent,
+  DisplayControlsCardComponent,
+  DisplayControlsSectionComponent,
   ExampleCardsComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
-import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
+import {
+  ERROR_DISPLAY_MODE_LABELS,
+  ErrorDisplayModeSelectorComponent,
+} from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
+import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import { CUSTOM_CONTROLS_CONTENT } from './custom-controls.content';
 import { CustomControlsComponent } from './custom-controls.form';
 
@@ -41,6 +48,8 @@ import { CustomControlsComponent } from './custom-controls.form';
     SplitLayoutComponent,
     NgxSignalFormDebugger,
     AppearanceToggleComponent,
+    DisplayControlsCardComponent,
+    DisplayControlsSectionComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -53,12 +62,26 @@ import { CustomControlsComponent } from './custom-controls.form';
       [demonstrated]="demonstratedContent"
       [learning]="learningContent"
     >
-      <div class="mb-6 flex items-center gap-6">
-        <!-- Error Display Mode Selector -->
-        <ngx-error-display-mode-selector [(selectedMode)]="selectedMode" />
-        <!-- Appearance Toggle -->
-        <ngx-appearance-toggle [(value)]="selectedAppearance" />
-      </div>
+      <ngx-display-controls-card
+        title="Custom control integration checks"
+        description="Verify that a non-native control still inherits the same validation timing, wrapper affordances, and debugging story as the regular toolkit fields around it."
+        [chips]="currentControlChips()"
+        layout="split"
+      >
+        <ngx-error-display-mode-selector
+          [(selectedMode)]="selectedMode"
+          [embedded]="true"
+          display-controls-primary
+          class="block min-w-0"
+        />
+
+        <ngx-display-controls-section
+          title="🎨 Wrapper styling"
+          description="Change the wrapper treatment without changing the custom control contract, so labels, hints, and errors can be evaluated independently from the rating UI itself."
+        >
+          <ngx-appearance-toggle [(value)]="selectedAppearance" />
+        </ngx-display-controls-section>
+      </ngx-display-controls-card>
 
       <ngx-split-layout>
         <ngx-custom-controls
@@ -83,6 +106,16 @@ export class CustomControlsPage {
   protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('standard');
+  protected readonly currentControlChips = computed(() => [
+    {
+      label: 'Mode',
+      value: ERROR_DISPLAY_MODE_LABELS[this.selectedMode()],
+    },
+    {
+      label: 'Appearance',
+      value: APPEARANCE_LABELS[this.selectedAppearance()],
+    },
+  ]);
 
   protected readonly demonstratedContent = CUSTOM_CONTROLS_CONTENT.demonstrated;
   protected readonly learningContent = CUSTOM_CONTROLS_CONTENT.learning;

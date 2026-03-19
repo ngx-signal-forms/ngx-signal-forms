@@ -83,7 +83,7 @@ export const BASIC_USAGE_CONTENT = {
     ],
     nextStep: {
       text: 'See complex forms with nested objects and arrays →',
-      link: '../form-field-wrapper/complex-forms',
+      link: '/form-field-wrapper/complex-forms',
       linkText: 'Complex Forms',
     },
   },

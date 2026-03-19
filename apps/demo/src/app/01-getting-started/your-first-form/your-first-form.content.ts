@@ -70,7 +70,7 @@ export const YOUR_FIRST_FORM_CONTENT = {
     ],
     nextStep: {
       text: 'Ready for even less boilerplate?',
-      link: '../toolkit/form-field-showcase',
+      link: '/form-field-wrapper/basic-usage',
       linkText: 'Form Field Wrapper Component →',
     },
   },

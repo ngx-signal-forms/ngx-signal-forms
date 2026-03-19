@@ -46,21 +46,21 @@ export const CUSTOM_CONTROLS_CONTENT: ExampleCardConfig = {
         title: 'Optional Integration',
         items: [
           'Add disabled, invalid, errors inputs for full state support',
-          'Implement focus handling and host attributes',
+          'Implement focus handling and host attributes so the wrapper can forward labels, hints, and error state cleanly',
         ],
       },
       {
         title: 'Accessibility',
         items: [
           'Use proper ARIA roles (e.g., slider)',
-          'Implement keyboard navigation',
+          'Implement keyboard navigation and a visible focus state for parity with native controls',
         ],
       },
     ],
     nextStep: {
-      text: 'Explore more validation examples',
-      link: '/validations',
-      linkText: 'Validations',
+      text: 'Explore async and server-backed validation next →',
+      link: '/advanced-scenarios/async-validation',
+      linkText: 'Async Validation',
     },
   },
 };

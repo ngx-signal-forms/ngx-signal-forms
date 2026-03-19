@@ -19,14 +19,14 @@
     <!-- Traveler Step -->
     <ng-template ngxWizardStep="traveler" label="Traveler Info">
       @defer {
-        <ngx-traveler-step #currentStepRef />
+        <ngx-traveler-step [appearance]="appearance()" #currentStepRef />
       }
     </ng-template>
 
     <!-- Trip Step -->
     <ng-template ngxWizardStep="trip" label="Trip Details">
       @defer {
-        <ngx-trip-step #currentStepRef />
+        <ngx-trip-step [appearance]="appearance()" #currentStepRef />
       }
     </ng-template>
 

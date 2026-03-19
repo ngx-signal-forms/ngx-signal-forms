@@ -68,7 +68,7 @@ export const ACCESSIBILITY_COMPARISON_CONTENT = {
     ],
     nextStep: {
       text: 'Learn about error display strategies →',
-      link: '../toolkit/error-display-modes',
+      link: '/toolkit-core/error-display-modes',
       linkText: 'Error Display Modes',
     },
   },

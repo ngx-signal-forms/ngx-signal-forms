@@ -5,11 +5,13 @@ import {
   Component,
   computed,
   effect,
+  input,
   inject,
   linkedSignal,
   signal,
   viewChild,
 } from '@angular/core';
+import { type FormFieldAppearance } from '@ngx-signal-forms/toolkit';
 
 import {
   WizardComponent,
@@ -45,6 +47,8 @@ const MIN_DISPLAY_MS = 500;
   styleUrl: './wizard-container.component.scss',
 })
 export class WizardContainerComponent {
+  readonly appearance = input<FormFieldAppearance>('outline');
+
   protected readonly store = inject(WizardStore);
 
   // Generic reference to the current step component

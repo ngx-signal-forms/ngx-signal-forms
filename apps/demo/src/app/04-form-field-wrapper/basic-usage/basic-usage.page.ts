@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   signal,
   viewChild,
 } from '@angular/core';
@@ -11,11 +12,17 @@ import {
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
   AppearanceToggleComponent,
+  DisplayControlsCardComponent,
+  DisplayControlsSectionComponent,
   ExampleCardsComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
-import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
+import {
+  ERROR_DISPLAY_MODE_LABELS,
+  ErrorDisplayModeSelectorComponent,
+} from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
+import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import { BASIC_USAGE_CONTENT } from './basic-usage.content';
 import { BasicUsageComponent } from './basic-usage.form';
 import { OutlineFormFieldComponent } from './outline-form-field.form';
@@ -43,6 +50,8 @@ import { OutlineFormFieldComponent } from './outline-form-field.form';
     SplitLayoutComponent,
     NgxSignalFormDebugger,
     AppearanceToggleComponent,
+    DisplayControlsCardComponent,
+    DisplayControlsSectionComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -55,27 +64,32 @@ import { OutlineFormFieldComponent } from './outline-form-field.form';
       [demonstrated]="demonstratedContent"
       [learning]="learningContent"
     >
-      <div class="mb-6 flex flex-wrap items-start gap-6">
-        <!-- Error Display Mode Selector -->
+      <ngx-display-controls-card
+        title="Wrapper comparison controls"
+        description="Keep the field mix constant while comparing how the wrapper reduces boilerplate and how its two visual treatments change the reading rhythm of the form."
+        [chips]="currentControlChips()"
+        layout="split"
+      >
         <ngx-error-display-mode-selector
           [(selectedMode)]="selectedMode"
-          class="min-w-[300px] flex-1"
+          [embedded]="true"
+          display-controls-primary
+          class="block min-w-0"
         />
 
-        <!-- Appearance Selector -->
-        <div class="flex flex-col gap-2">
-          <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            🎨 Appearance
-          </span>
+        <ngx-display-controls-section
+          title="🎨 Wrapper styling"
+          description="Use standard for the everyday baseline and outline for the denser design-system treatment shown in the second example."
+        >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
-        </div>
-      </div>
+        </ngx-display-controls-section>
+      </ngx-display-controls-card>
 
       <ngx-split-layout>
         <div left class="flex flex-col gap-12">
           <section>
             <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-              Basic Structure
+              Standard wrapper baseline
             </h2>
             <ngx-basic-usage
               #formComponent
@@ -88,7 +102,7 @@ import { OutlineFormFieldComponent } from './outline-form-field.form';
 
           <section>
             <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-              Outline Design (Figma Match)
+              Outline wrapper variant
             </h2>
             <ngx-outline-form-field
               #outlineFormComponent
@@ -136,6 +150,16 @@ export class BasicUsagePage {
   protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('standard');
+  protected readonly currentControlChips = computed(() => [
+    {
+      label: 'Mode',
+      value: ERROR_DISPLAY_MODE_LABELS[this.selectedMode()],
+    },
+    {
+      label: 'Appearance',
+      value: APPEARANCE_LABELS[this.selectedAppearance()],
+    },
+  ]);
 
   protected readonly demonstratedContent = BASIC_USAGE_CONTENT.demonstrated;
   protected readonly learningContent = BASIC_USAGE_CONTENT.learning;

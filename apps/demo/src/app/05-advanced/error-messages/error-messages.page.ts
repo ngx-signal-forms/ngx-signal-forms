@@ -1,17 +1,28 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   signal,
   viewChild,
 } from '@angular/core';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import {
+  type ErrorDisplayStrategy,
+  type FormFieldAppearance,
+} from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
+  AppearanceToggleComponent,
+  DisplayControlsCardComponent,
+  DisplayControlsSectionComponent,
   ExampleCardsComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
-import { ErrorDisplayModeSelectorComponent } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
+import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
+import {
+  ERROR_DISPLAY_MODE_LABELS,
+  ErrorDisplayModeSelectorComponent,
+} from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { ERROR_MESSAGES_CONTENT } from './error-messages.content';
 import { ErrorMessagesComponent } from './error-messages.form';
 
@@ -37,6 +48,9 @@ import { ErrorMessagesComponent } from './error-messages.form';
     ErrorMessagesComponent,
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,
+    AppearanceToggleComponent,
+    DisplayControlsCardComponent,
+    DisplayControlsSectionComponent,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
@@ -52,10 +66,32 @@ import { ErrorMessagesComponent } from './error-messages.form';
       [learning]="content.learning"
     />
 
-    <!-- Error Display Mode Selector -->
-    <ngx-error-display-mode-selector [(selectedMode)]="errorDisplayMode" />
+    <ngx-display-controls-card
+      title="Message source comparison"
+      description="Hold the form constant while comparing three message sources—validator copy, registry overrides, and toolkit fallbacks—under the same validation timing rules."
+      [chips]="currentControlChips()"
+      layout="split"
+    >
+      <ngx-error-display-mode-selector
+        [(selectedMode)]="errorDisplayMode"
+        [embedded]="true"
+        display-controls-primary
+        class="block min-w-0"
+      />
+
+      <ngx-display-controls-section
+        title="🎨 Message framing"
+        description="Switch the wrapper treatment to see whether the origin of each message still feels obvious when the visual chrome becomes quieter or stronger."
+      >
+        <ngx-appearance-toggle [(value)]="selectedAppearance" />
+      </ngx-display-controls-section>
+    </ngx-display-controls-card>
     <ngx-split-layout>
-      <ngx-error-messages [errorDisplayMode]="errorDisplayMode()" left />
+      <ngx-error-messages
+        [errorDisplayMode]="errorDisplayMode()"
+        [appearance]="selectedAppearance()"
+        left
+      />
 
       @if (formRef(); as form) {
         <div right>
@@ -68,6 +104,18 @@ import { ErrorMessagesComponent } from './error-messages.form';
 export class ErrorMessagesPage {
   protected readonly errorDisplayMode =
     signal<ErrorDisplayStrategy>('on-touch');
+  protected readonly selectedAppearance =
+    signal<FormFieldAppearance>('outline');
+  protected readonly currentControlChips = computed(() => [
+    {
+      label: 'Mode',
+      value: ERROR_DISPLAY_MODE_LABELS[this.errorDisplayMode()],
+    },
+    {
+      label: 'Appearance',
+      value: APPEARANCE_LABELS[this.selectedAppearance()],
+    },
+  ]);
   protected readonly content = ERROR_MESSAGES_CONTENT;
   protected readonly formRef = viewChild(ErrorMessagesComponent);
 }

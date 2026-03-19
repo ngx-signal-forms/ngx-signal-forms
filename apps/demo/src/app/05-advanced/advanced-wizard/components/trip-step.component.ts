@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  input,
   inject,
   viewChild,
 } from '@angular/core';
@@ -9,6 +10,7 @@ import { FormField } from '@angular/forms/signals';
 
 import {
   focusFirstInvalid,
+  type FormFieldAppearance,
   NgxSignalFormToolkit,
   submitWithWarnings,
 } from '@ngx-signal-forms/toolkit';
@@ -67,6 +69,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
             <!-- Country -->
             <ngx-signal-form-field-wrapper
               [formField]="tripForm.destinations[destIdx].country"
+              [appearance]="appearance()"
             >
               <label [for]="'dest-country-' + destIdx">
                 Country <span class="text-red-500">*</span>
@@ -81,6 +84,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
             <!-- City -->
             <ngx-signal-form-field-wrapper
               [formField]="tripForm.destinations[destIdx].city"
+              [appearance]="appearance()"
             >
               <label [for]="'dest-city-' + destIdx">
                 City <span class="text-red-500">*</span>
@@ -97,6 +101,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
             <!-- Arrival Date -->
             <ngx-signal-form-field-wrapper
               [formField]="tripForm.destinations[destIdx].arrivalDate"
+              [appearance]="appearance()"
             >
               <label [for]="'dest-arrival-' + destIdx">
                 Arrival Date <span class="text-red-500">*</span>
@@ -111,6 +116,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
             <!-- Departure Date -->
             <ngx-signal-form-field-wrapper
               [formField]="tripForm.destinations[destIdx].departureDate"
+              [appearance]="appearance()"
             >
               <label [for]="'dest-departure-' + destIdx">
                 Departure Date <span class="text-red-500">*</span>
@@ -129,6 +135,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
           <!-- Accommodation -->
           <ngx-signal-form-field-wrapper
             [formField]="tripForm.destinations[destIdx].accommodation"
+            [appearance]="appearance()"
             class="mb-4"
           >
             <label [for]="'dest-accommodation-' + destIdx">Accommodation</label>
@@ -186,6 +193,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
                     [formField]="
                       tripForm.destinations[destIdx].activities[actIdx].name
                     "
+                    [appearance]="appearance()"
                   >
                     <label
                       [for]="'act-name-' + destIdx + '-' + actIdx"
@@ -207,6 +215,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
                     [formField]="
                       tripForm.destinations[destIdx].activities[actIdx].date
                     "
+                    [appearance]="appearance()"
                   >
                     <label
                       [for]="'act-date-' + destIdx + '-' + actIdx"
@@ -228,6 +237,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
                     [formField]="
                       tripForm.destinations[destIdx].activities[actIdx].duration
                     "
+                    [appearance]="appearance()"
                   >
                     <label
                       [for]="'act-duration-' + destIdx + '-' + actIdx"
@@ -390,6 +400,8 @@ import { WizardStepInterface } from '../wizard-step.interface';
   `,
 })
 export class TripStepComponent implements WizardStepInterface {
+  readonly appearance = input<FormFieldAppearance>('outline');
+
   protected readonly store = inject(WizardStore);
   protected readonly stepHeading =
     viewChild<ElementRef<HTMLHeadingElement>>('stepHeading');

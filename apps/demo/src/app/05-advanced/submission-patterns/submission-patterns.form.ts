@@ -7,7 +7,10 @@ import {
   signal,
 } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import {
+  type ErrorDisplayStrategy,
+  type FormFieldAppearance,
+} from '@ngx-signal-forms/toolkit';
 import {
   createOnInvalidHandler,
   NGX_SIGNAL_FORM_CONTEXT,
@@ -125,7 +128,10 @@ import { submissionSchema } from './submission-patterns.validations';
       <!-- Form fields -->
       <div class="space-y-6">
         <!-- Username field -->
-        <ngx-signal-form-field-wrapper [formField]="registrationForm.username">
+        <ngx-signal-form-field-wrapper
+          [formField]="registrationForm.username"
+          [appearance]="appearance()"
+        >
           <label for="username">Username *</label>
           <input
             id="username"
@@ -139,7 +145,10 @@ import { submissionSchema } from './submission-patterns.validations';
         </ngx-signal-form-field-wrapper>
 
         <!-- Password field -->
-        <ngx-signal-form-field-wrapper [formField]="registrationForm.password">
+        <ngx-signal-form-field-wrapper
+          [formField]="registrationForm.password"
+          [appearance]="appearance()"
+        >
           <label for="password">Password *</label>
           <input
             id="password"
@@ -155,6 +164,7 @@ import { submissionSchema } from './submission-patterns.validations';
         <!-- Confirm Password field -->
         <ngx-signal-form-field-wrapper
           [formField]="registrationForm.confirmPassword"
+          [appearance]="appearance()"
         >
           <label for="confirmPassword">Confirm Password *</label>
           <input
@@ -245,7 +255,8 @@ import { submissionSchema } from './submission-patterns.validations';
   `,
 })
 export class SubmissionPatternsComponent {
-  errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly appearance = input<FormFieldAppearance>('outline');
 
   /// Form context - provides automatic submission tracking
   protected readonly formContext = inject(NGX_SIGNAL_FORM_CONTEXT, {

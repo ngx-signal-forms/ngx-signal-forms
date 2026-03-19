@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
 import {
   form,
   FormField,
@@ -9,6 +14,8 @@ import {
   validate,
 } from '@angular/forms/signals';
 import {
+  type ErrorDisplayStrategy,
+  type FormFieldAppearance,
   createOnInvalidHandler,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
@@ -68,11 +75,15 @@ const bookingSchema = schema<Booking>((path) => {
         Demonstrates validation rules that depend on multiple fields.
       </p>
 
-      <form [formRoot]="bookingForm" class="max-w-md space-y-6">
+      <form
+        [formRoot]="bookingForm"
+        [errorStrategy]="errorDisplayMode()"
+        class="max-w-md space-y-6"
+      >
         <div class="grid grid-cols-2 gap-4">
           <ngx-signal-form-field-wrapper
             [formField]="bookingForm.checkIn"
-            appearance="outline"
+            [appearance]="appearance()"
           >
             <label for="checkIn">Check-In</label>
             <input id="checkIn" type="date" [formField]="bookingForm.checkIn" />
@@ -80,7 +91,7 @@ const bookingSchema = schema<Booking>((path) => {
 
           <ngx-signal-form-field-wrapper
             [formField]="bookingForm.checkOut"
-            appearance="outline"
+            [appearance]="appearance()"
           >
             <label for="checkOut">Check-Out</label>
             <input id="checkOut" type="date" [formField]="bookingForm.checkOut" />
@@ -89,7 +100,7 @@ const bookingSchema = schema<Booking>((path) => {
 
         <ngx-signal-form-field-wrapper
           [formField]="bookingForm.guests"
-          appearance="outline"
+          [appearance]="appearance()"
         >
           <label for="guests">Guests</label>
           <input id="guests" type="number" [formField]="bookingForm.guests" />
@@ -97,7 +108,7 @@ const bookingSchema = schema<Booking>((path) => {
 
         <ngx-signal-form-field-wrapper
           [formField]="bookingForm.promoCode"
-          appearance="outline"
+          [appearance]="appearance()"
         >
           <label for="promo">Promo Code</label>
           <input
@@ -134,6 +145,9 @@ const bookingSchema = schema<Booking>((path) => {
   `,
 })
 export class CrossFieldValidationComponent {
+  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly appearance = input<FormFieldAppearance>('outline');
+
   readonly #model = signal<Booking>({
     checkIn: '',
     checkOut: '',

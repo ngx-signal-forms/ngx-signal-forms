@@ -6,6 +6,12 @@ export {
   type BadgeVariant,
 } from './badge';
 export { CardComponent } from './card';
+export {
+  DisplayControlsCardComponent,
+  DisplayControlsSectionComponent,
+  type DisplayControlChip,
+  type DisplayControlsLayout,
+} from './display-controls-card';
 export { ErrorDisplayModeSelectorComponent } from './error-display-mode-selector';
 export { ExampleCardsComponent } from './example-cards';
 export { PageHeaderComponent } from './page-header';

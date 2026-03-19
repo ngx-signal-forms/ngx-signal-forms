@@ -16,6 +16,13 @@ export type ErrorDisplayModeConfig = {
   cons: string[];
 };
 
+export const ERROR_DISPLAY_MODE_LABELS = {
+  immediate: 'Immediate',
+  'on-touch': 'On Touch',
+  'on-submit': 'On Submit',
+  inherit: 'Inherited',
+} as const satisfies Record<ErrorDisplayStrategy, string>;
+
 export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
   {
     mode: 'immediate',
@@ -69,9 +76,45 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
 @Component({
   selector: 'ngx-error-display-mode-selector',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    .error-mode-wrapper--embedded {
+      margin-bottom: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
+    }
+
+    .error-mode-summary--embedded {
+      border-top: 1px solid rgba(99, 102, 241, 0.14);
+      background: transparent;
+      border-radius: 0;
+      padding: 0.9rem 0 0;
+    }
+
+    .error-mode-instructions--embedded {
+      margin-top: 0.65rem;
+      border-top: 1px dashed rgba(245, 158, 11, 0.38);
+      background: transparent;
+      border-radius: 0;
+      padding: 0.9rem 0 0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .error-mode-summary--embedded {
+        border-top-color: rgba(129, 140, 248, 0.28);
+      }
+
+      .error-mode-instructions--embedded {
+        border-top-color: rgba(251, 191, 36, 0.34);
+      }
+    }
+  `,
   template: `
     <!-- Mode Selector Section -->
-    <div class="error-mode-wrapper">
+    <div
+      class="error-mode-wrapper"
+      [class.error-mode-wrapper--embedded]="embedded()"
+    >
       <div class="mb-4">
         <fieldset>
           <legend
@@ -100,7 +143,10 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
         </fieldset>
       </div>
 
-      <div class="error-mode-summary">
+      <div
+        class="error-mode-summary"
+        [class.error-mode-summary--embedded]="embedded()"
+      >
         <div class="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">
           {{ currentModeConfig().description }}
         </div>
@@ -110,7 +156,10 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
       </div>
 
       <!-- Testing Instructions -->
-      <div class="error-mode-instructions">
+      <div
+        class="error-mode-instructions"
+        [class.error-mode-instructions--embedded]="embedded()"
+      >
         <div class="text-sm font-medium text-amber-800 dark:text-amber-200">
           🧪 Try this with "{{ currentModeConfig().label }}":
         </div>
@@ -141,6 +190,7 @@ export class ErrorDisplayModeSelectorComponent {
    */
   readonly selectedMode = model.required<ErrorDisplayStrategy>();
   readonly modes = input<readonly ErrorDisplayStrategy[] | null>(null);
+  readonly embedded = input(false);
 
   protected readonly errorDisplayModes = computed(() => {
     const allowedModes = this.modes();

@@ -5,7 +5,10 @@ import {
   signal,
 } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import {
+  type ErrorDisplayStrategy,
+  type FormFieldAppearance,
+} from '@ngx-signal-forms/toolkit';
 import {
   createOnInvalidHandler,
   NgxSignalFormToolkit,
@@ -49,7 +52,7 @@ import { errorMessagesSchema } from './error-messages.validations';
         <!-- Email: Uses validator message (Tier 1 - highest priority) -->
         <ngx-signal-form-field-wrapper
           [formField]="errorMessagesForm.email"
-          appearance="outline"
+          [appearance]="appearance()"
         >
           <label for="email">Email (Validator Message - Tier 1)</label>
           <input
@@ -66,7 +69,7 @@ import { errorMessagesSchema } from './error-messages.validations';
         <!-- Password: Uses registry override (Tier 2) -->
         <ngx-signal-form-field-wrapper
           [formField]="errorMessagesForm.password"
-          appearance="outline"
+          [appearance]="appearance()"
         >
           <label for="password">Password (Registry Override - Tier 2)</label>
           <input
@@ -83,7 +86,7 @@ import { errorMessagesSchema } from './error-messages.validations';
         <!-- Bio: Uses default toolkit fallback (Tier 3) -->
         <ngx-signal-form-field-wrapper
           [formField]="errorMessagesForm.bio"
-          appearance="outline"
+          [appearance]="appearance()"
         >
           <label for="bio">Bio (Default Fallback - Tier 3)</label>
           <textarea
@@ -147,7 +150,8 @@ import { errorMessagesSchema } from './error-messages.validations';
   `,
 })
 export class ErrorMessagesComponent {
-  errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly appearance = input<FormFieldAppearance>('outline');
 
   readonly #model = signal<ErrorMessagesModel>({
     email: '',

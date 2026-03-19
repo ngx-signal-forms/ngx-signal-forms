@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   ElementRef,
+  input,
   inject,
   viewChild,
 } from '@angular/core';
@@ -10,6 +11,7 @@ import { FormField } from '@angular/forms/signals';
 
 import {
   focusFirstInvalid,
+  type FormFieldAppearance,
   NgxSignalFormToolkit,
   submitWithWarnings,
 } from '@ngx-signal-forms/toolkit';
@@ -44,7 +46,10 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
 
       <form [formRoot]="travelerForm" class="space-y-4">
         <!-- First Name -->
-        <ngx-signal-form-field-wrapper [formField]="travelerForm.firstName">
+        <ngx-signal-form-field-wrapper
+          [formField]="travelerForm.firstName"
+          [appearance]="appearance()"
+        >
           <label for="firstName">
             First Name <span class="text-red-500">*</span>
           </label>
@@ -55,7 +60,10 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
         </ngx-signal-form-field-wrapper>
 
         <!-- Last Name -->
-        <ngx-signal-form-field-wrapper [formField]="travelerForm.lastName">
+        <ngx-signal-form-field-wrapper
+          [formField]="travelerForm.lastName"
+          [appearance]="appearance()"
+        >
           <label for="lastName">
             Last Name <span class="text-red-500">*</span>
           </label>
@@ -63,7 +71,10 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
         </ngx-signal-form-field-wrapper>
 
         <!-- Email -->
-        <ngx-signal-form-field-wrapper [formField]="travelerForm.email">
+        <ngx-signal-form-field-wrapper
+          [formField]="travelerForm.email"
+          [appearance]="appearance()"
+        >
           <label for="email"> Email <span class="text-red-500">*</span> </label>
           <input id="email" type="email" [formField]="travelerForm.email" />
           <ngx-signal-form-field-hint position="left">
@@ -72,7 +83,10 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
         </ngx-signal-form-field-wrapper>
 
         <!-- Nationality -->
-        <ngx-signal-form-field-wrapper [formField]="travelerForm.nationality">
+        <ngx-signal-form-field-wrapper
+          [formField]="travelerForm.nationality"
+          [appearance]="appearance()"
+        >
           <label for="nationality">
             Nationality <span class="text-red-500">*</span>
           </label>
@@ -90,6 +104,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
             <!-- Passport Number -->
             <ngx-signal-form-field-wrapper
               [formField]="travelerForm.passportNumber"
+              [appearance]="appearance()"
             >
               <label for="passportNumber">
                 Passport Number <span class="text-red-500">*</span>
@@ -104,6 +119,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
             <!-- Passport Expiry with cross-field validation -->
             <ngx-signal-form-field-wrapper
               [formField]="travelerForm.passportExpiry"
+              [appearance]="appearance()"
             >
               <label for="passportExpiry">
                 Expiry Date <span class="text-red-500">*</span>
@@ -129,6 +145,8 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
   `,
 })
 export class TravelerStepComponent implements WizardStepInterface {
+  readonly appearance = input<FormFieldAppearance>('outline');
+
   readonly #store = inject(WizardStore);
   protected readonly stepHeading =
     viewChild<ElementRef<HTMLHeadingElement>>('stepHeading');

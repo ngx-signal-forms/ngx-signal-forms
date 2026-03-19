@@ -11,6 +11,14 @@ export const CROSS_FIELD_VALIDATION_CONTENT = {
           '• <strong>Conditional Rules:</strong> Applying rules based on other field values (e.g. promo code limit based on guests)',
         ],
       },
+      {
+        title: 'What to compare on this page',
+        items: [
+          '• Switch error timing to see how group rules feel when they appear immediately versus on touch',
+          '• Toggle wrapper appearance to confirm the validation story stays clear in both visual treatments',
+          '• Notice how field-level and dependent errors complement each other instead of duplicating the same message',
+        ],
+      },
     ],
   },
   learning: {
@@ -22,6 +30,14 @@ export const CROSS_FIELD_VALIDATION_CONTENT = {
           '• Validations run automatically when dependencies update',
           '• Keep error messages specific to the failure condition',
           '• Use <code>validate(path, ...)</code> for flexible custom logic',
+        ],
+      },
+      {
+        title: 'Good use cases',
+        items: [
+          '• Travel or booking flows with start/end dates',
+          '• Confirm fields such as password or email confirmation',
+          '• Pricing, capacity, or eligibility rules that depend on multiple inputs',
         ],
       },
     ],

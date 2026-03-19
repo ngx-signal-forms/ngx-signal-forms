@@ -71,7 +71,7 @@ export const FIELD_STATES_CONTENT = {
     ],
     nextStep: {
       text: 'Learn about non-blocking warnings →',
-      link: '../toolkit/warning-support',
+      link: '/toolkit-core/warning-support',
       linkText: 'Warning Support',
     },
   },

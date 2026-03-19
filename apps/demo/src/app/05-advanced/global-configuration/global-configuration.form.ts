@@ -5,7 +5,10 @@ import {
   signal,
 } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import {
+  type ErrorDisplayStrategy,
+  type FormFieldAppearance,
+} from '@ngx-signal-forms/toolkit';
 import {
   createOnInvalidHandler,
   NgxSignalFormToolkit,
@@ -63,7 +66,10 @@ import { globalConfigSchema } from './global-configuration.validations';
       <!-- Form fields -->
       <div class="space-y-6">
         <!-- Email field with standard id -->
-        <ngx-signal-form-field-wrapper [formField]="configForm.userEmail">
+        <ngx-signal-form-field-wrapper
+          [formField]="configForm.userEmail"
+          [appearance]="appearance()"
+        >
           <label for="userEmail">Email Address *</label>
           <input
             id="userEmail"
@@ -74,7 +80,10 @@ import { globalConfigSchema } from './global-configuration.validations';
         </ngx-signal-form-field-wrapper>
 
         <!-- Phone field with custom data attribute -->
-        <ngx-signal-form-field-wrapper [formField]="configForm.userPhone">
+        <ngx-signal-form-field-wrapper
+          [formField]="configForm.userPhone"
+          [appearance]="appearance()"
+        >
           <label for="userPhone">Phone Number *</label>
           <input
             id="userPhone"
@@ -88,7 +97,10 @@ import { globalConfigSchema } from './global-configuration.validations';
         </ngx-signal-form-field-wrapper>
 
         <!-- Website field (optional) -->
-        <ngx-signal-form-field-wrapper [formField]="configForm.userWebsite">
+        <ngx-signal-form-field-wrapper
+          [formField]="configForm.userWebsite"
+          [appearance]="appearance()"
+        >
           <label for="userWebsite">Website</label>
           <input
             id="userWebsite"
@@ -154,7 +166,8 @@ import { globalConfigSchema } from './global-configuration.validations';
   `,
 })
 export class GlobalConfigurationComponent {
-  errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly appearance = input<FormFieldAppearance>('outline');
 
   readonly #model = signal<GlobalConfigModel>({
     userEmail: '',
