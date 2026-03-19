@@ -1,5 +1,10 @@
 import { JsonPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
 import {
   form,
   FormField,
@@ -8,6 +13,8 @@ import {
   validateHttp,
 } from '@angular/forms/signals';
 import {
+  type ErrorDisplayStrategy,
+  type FormFieldAppearance,
   createOnInvalidHandler,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
@@ -17,6 +24,11 @@ interface Registration {
   username: string;
 }
 
+interface UsernameAvailabilityResponse {
+  username: string;
+  available: boolean;
+}
+
 const registrationSchema = schema<Registration>((path) => {
   required(path.username, { message: 'Username is required' });
 
@@ -24,12 +36,11 @@ const registrationSchema = schema<Registration>((path) => {
   validateHttp(path.username, {
     request: ({ value }) =>
       value() ? `fake-api/check-user/${value()}` : undefined,
-    onSuccess: (_response, ctx) => {
-      // Simulate "admin" being taken (all other usernames available)
-      if (ctx.value().toLowerCase() === 'admin') {
+    onSuccess: (response: UsernameAvailabilityResponse, ctx) => {
+      if (!response.available) {
         return {
           kind: 'usernameTaken',
-          message: 'This username is already taken',
+          message: `The username "${ctx.value()}" is already taken`,
         };
       }
       return null;
@@ -49,10 +60,14 @@ const registrationSchema = schema<Registration>((path) => {
         Type "admin" to see async validation error (simulated).
       </p>
 
-      <form [formRoot]="regForm" class="max-w-md space-y-6">
+      <form
+        [formRoot]="regForm"
+        [errorStrategy]="errorDisplayMode()"
+        class="max-w-md space-y-6"
+      >
         <ngx-signal-form-field-wrapper
           [formField]="regForm.username"
-          appearance="outline"
+          [appearance]="appearance()"
         >
           <label for="username">Username</label>
           <input
@@ -107,6 +122,9 @@ const registrationSchema = schema<Registration>((path) => {
   `,
 })
 export class AsyncValidationComponent {
+  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly appearance = input<FormFieldAppearance>('outline');
+
   readonly #model = signal<Registration>({ username: '' });
   readonly regForm = form(this.#model, registrationSchema, {
     submission: {

@@ -48,6 +48,23 @@ function generateConfirmationNumber(): string {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// ASYNC VALIDATION DEMO HANDLERS
+// ══════════════════════════════════════════════════════════════════════════════
+
+export const asyncValidationHandlers = [
+  http.get('/fake-api/check-user/:username', async ({ params }) => {
+    await delay(450);
+
+    const { username } = params as { username: string };
+
+    return HttpResponse.json({
+      username,
+      available: username.toLowerCase() !== 'admin',
+    });
+  }),
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
 // WIZARD API HANDLERS
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -211,4 +228,4 @@ export const wizardHandlers = [
 // EXPORT ALL HANDLERS
 // ══════════════════════════════════════════════════════════════════════════════
 
-export const handlers = [...wizardHandlers];
+export const handlers = [...asyncValidationHandlers, ...wizardHandlers];

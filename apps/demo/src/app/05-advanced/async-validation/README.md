@@ -33,6 +33,7 @@ While validation is in flight:
 - `form.username.status()` becomes `'pending'`.
 - `form.username.pending()` signal becomes `true`.
 - You can show a spinner easily:
+
   ```html
   @if (form.username.pending()) { <spinner /> }
   ```
@@ -47,6 +48,6 @@ The `NgxFormField` wrapper notices this pending state. If you inspect the `async
 
 ## How to Test
 
-1.  **Type Fast**: Type "admin" quickly. Notice only one request fires at the end.
-2.  **Observe**: See the "Checking..." indicator (or visual state change) while the request simulates network latency.
-3.  **Taken Username**: Enter "admin". Wait for the simulated API to return 409/Error. See the error message appear.
+1. **Type Fast**: Type "admin" quickly. Notice only one request fires at the end.
+2. **Observe**: See the "Checking..." indicator (or visual state change) while the request simulates network latency.
+3. **Taken Username**: Enter "admin". Wait for the simulated API to report the username as unavailable. See the error message appear.
