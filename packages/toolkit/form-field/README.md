@@ -138,7 +138,12 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 #### Message Placement
 
-The `errorPlacement` input controls where automatic wrapper errors and warnings render:
+The wrapper also supports `errorPlacement`, but treat it as the secondary,
+single-field version of the API. The main design target is grouped summary
+placement on `ngx-signal-form-fieldset`.
+
+For the wrapper, `errorPlacement` controls where automatic field-level errors
+and warnings render:
 
 - `bottom` (default) — render in the assistive row beneath the field
 - `top` — render between the label and the control
@@ -787,7 +792,8 @@ import { NgxSignalFormFieldset } from '@ngx-signal-forms/toolkit/form-field';
 
 #### Fieldset Message Placement
 
-The `errorPlacement` input controls where the grouped message block is rendered:
+`ngx-signal-form-fieldset#errorPlacement` is the primary placement API. It
+controls where the grouped message block is rendered:
 
 - `top` (default) — matches the design library layout and shows grouped messages before the field content
 - `bottom` — keeps grouped messages after the field content
@@ -888,6 +894,7 @@ ngx-signal-form-fieldset {
 - **Group validation**: Errors like "password must match confirm password" apply to multiple fields
 - **Reduced visual noise**: Same validation rule message shown only once
 - **Better UX for complex forms**: Related field groups (addresses, passwords, etc.) are clearly organized
+- **Better placement semantics**: `errorPlacement` usually makes the most sense at the group level, where one summary can move as a unit
 
 #### Accessibility
 

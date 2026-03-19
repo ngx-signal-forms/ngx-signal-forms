@@ -916,6 +916,60 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(errorComponent).toBeTruthy();
     });
 
+    it('should mark the wrapper invalid when a native control has visible blocking errors', async () => {
+      const invalidField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'required', message: 'This field is required' }],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field" fieldName="test-field">
+          <label for="test">Test</label>
+          <input id="test" type="text" />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: invalidField,
+          },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-signal-form-field-wrapper');
+      expect(wrapper).toHaveAttribute('aria-invalid', 'true');
+      expect(
+        wrapper?.classList.contains('ngx-signal-form-field-wrapper--invalid'),
+      ).toBe(true);
+    });
+
+    it('should not mark the wrapper invalid before errors should be shown', async () => {
+      const untouchedInvalidField = signal({
+        invalid: () => true,
+        touched: () => false,
+        errors: () => [{ kind: 'required', message: 'This field is required' }],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field" fieldName="test-field">
+          <label for="test">Test</label>
+          <input id="test" type="text" />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: untouchedInvalidField,
+          },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-signal-form-field-wrapper');
+      expect(wrapper).toHaveAttribute('aria-invalid', 'false');
+      expect(
+        wrapper?.classList.contains('ngx-signal-form-field-wrapper--invalid'),
+      ).toBe(false);
+    });
+
     it('should display errors WITHOUT [formRoot] context for on-touch strategy', async () => {
       /**
        * KEY CAPABILITY: NgxSignalFormWrapperComponent works WITHOUT [formRoot] directive
@@ -1786,6 +1840,83 @@ describe('NgxSignalFormWrapperComponent', () => {
       const errorElement = container.querySelector('[id="stars-error"]');
       expect(errorElement).toBeTruthy();
       expect(errorElement?.textContent).toContain('Minimum 1 star required');
+    });
+
+    it('should mark the wrapper invalid for custom controls when blocking errors are visible', async () => {
+      const invalidField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'min', message: 'Minimum 1 star required' }],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field">
+          <label for="stars">Rating</label>
+          <div
+            id="stars"
+            data-ngx-signal-form-control
+            role="slider"
+            aria-valuemin="0"
+            aria-valuemax="5"
+            aria-valuenow="0"
+            aria-label="Star rating"
+            tabindex="0"
+          ></div>
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: invalidField,
+          },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-signal-form-field-wrapper');
+      expect(wrapper).toHaveAttribute('aria-invalid', 'true');
+      expect(
+        wrapper?.classList.contains('ngx-signal-form-field-wrapper--invalid'),
+      ).toBe(true);
+    });
+
+    it('should support outline appearance for custom controls', async () => {
+      const invalidField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'min', message: 'Minimum 1 star required' }],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field" appearance="outline">
+          <label for="stars">Rating</label>
+          <div
+            id="stars"
+            data-ngx-signal-form-control
+            role="slider"
+            aria-valuemin="0"
+            aria-valuemax="5"
+            aria-valuenow="0"
+            aria-label="Star rating"
+            tabindex="0"
+          ></div>
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: invalidField,
+          },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-signal-form-field-wrapper');
+      const content = container.querySelector(
+        '.ngx-signal-form-field-wrapper__content',
+      );
+
+      expect(wrapper?.classList.contains('ngx-signal-forms-outline')).toBe(
+        true,
+      );
+      expect(wrapper).toHaveAttribute('outline', '');
+      expect(content).toBeTruthy();
     });
 
     it('should allow explicit fieldName to override custom control id', async () => {

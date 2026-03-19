@@ -305,13 +305,17 @@ import {
 
 Unified wrapper with automatic error/warning/hint display.
 
+Use wrapper `errorPlacement` as a local field-level override. For grouped
+validation summaries and design-library style error positioning, prefer
+`NgxSignalFormFieldset#errorPlacement`.
+
 **Inputs:**
 
 - `formField` (required)
 - `fieldName` — Optional explicit override; otherwise derived from the bound control `id`
 - `strategy` — Override error strategy
 - `appearance` — `'standard' | 'outline' | 'inherit'`
-- `errorPlacement` — Render automatic messages at the `top` or `bottom` (default: `bottom`)
+- `errorPlacement` — Optional per-field override for automatic messages at the `top` or `bottom` (default: `bottom`)
 - `showRequiredMarker` / `requiredMarker` — Required field indicator for outlined fields
 
 ```html
@@ -345,6 +349,10 @@ Attribute directive for Material-like outlined inputs.
 
 Groups related fields with aggregated validation.
 
+This is the primary `errorPlacement` surface for the toolkit. Use it when a
+single validation summary belongs to a field group, radio group, or compound
+control cluster.
+
 **Inputs:**
 
 - `fieldsetField` (required) — Field tree to aggregate
@@ -353,7 +361,7 @@ Groups related fields with aggregated validation.
 - `strategy` — Error display strategy
 - `showErrors` — Enable error display (default: `true`)
 - `includeNestedErrors` — Include child field errors (default: `false`)
-- `errorPlacement` — Render grouped messages at the `top` or `bottom` (default: `top`)
+- `errorPlacement` — Primary grouped-summary placement control at the `top` or `bottom` (default: `top`)
 
 ```html
 <!-- Group-only errors with top summary placement (default) -->

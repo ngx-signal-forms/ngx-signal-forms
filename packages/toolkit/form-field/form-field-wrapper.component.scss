@@ -338,7 +338,14 @@
   );
   --_outline-min-height: var(
     --ngx-form-field-outline-min-height,
-    var(--ngx-form-field-min-height, 3.5rem)
+    var(
+      --ngx-form-field-min-height,
+      calc(
+        var(--_label-outline-line-height) + var(--_label-outline-gap) +
+          var(--_input-outline-line-height) + var(--_padding-vertical) +
+          var(--_padding-vertical)
+      )
+    )
   );
   --_outline-focus-color: var(
     --ngx-form-field-outline-focus-border-color,
@@ -407,13 +414,6 @@
     outline: none;
   }
 
-  // Invalid state when input has aria-invalid
-  &:has(input[aria-invalid='true']),
-  &:has(textarea[aria-invalid='true']),
-  &:has(select[aria-invalid='true']) {
-    border-color: var(--_invalid-color);
-  }
-
   // Disabled state
   &:has(input:disabled),
   &:has(textarea:disabled),
@@ -421,17 +421,6 @@
     background-color: var(--_disabled-bg);
     opacity: var(--_disabled-opacity);
     cursor: not-allowed;
-  }
-}
-
-// Warning state styling (applied via host class when field has warnings but no errors)
-:host(.ngx-signal-form-field-wrapper--warning)
-  .ngx-signal-form-field-wrapper__content {
-  border-color: var(--_warning-color);
-
-  &:focus-within {
-    border-color: var(--_warning-color);
-    box-shadow: var(--_warning-box-shadow);
   }
 }
 
@@ -480,9 +469,10 @@
   display: flex;
   align-items: center;
   user-select: none;
-  font-size: 0.875rem; // 14px - clean, readable size
-  line-height: 0;
+  font-size: var(--_field-text-body);
+  line-height: var(--_field-line-height-body);
   color: var(--_color-text-muted);
+  white-space: nowrap;
   transition: color 0.15s ease-in-out;
 
   // Normalize nested SVGs to avoid inline baseline alignment issues
@@ -624,7 +614,7 @@
   grid-area: content;
   display: flex;
   flex-direction: row;
-  align-items: flex-end;
+  align-items: center;
   gap: 0;
   // Top padding = label line-height + gap (default 0) + base padding
   padding: calc(
@@ -653,6 +643,8 @@
 // to avoid redundant declarations.
 :host(.ngx-signal-forms-outline) .ngx-signal-form-field-wrapper__prefix,
 :host(.ngx-signal-forms-outline) .ngx-signal-form-field-wrapper__suffix {
+  align-self: center;
+  min-block-size: var(--_input-outline-line-height);
   padding: 0;
   margin: 0;
 }
@@ -681,8 +673,18 @@
 :host(.ngx-signal-forms-outline) .ngx-signal-form-field-wrapper__main {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
   flex: 1;
   min-width: 0;
+}
+
+:host(.ngx-signal-forms-outline)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__main
+  [data-ngx-signal-form-control] {
+  align-self: flex-start;
+  max-inline-size: 100%;
 }
 
 // Required marker (automatic via :has() selector)
@@ -770,6 +772,28 @@
 // States using :has()/focus-within are already defined in the base container
 // above (to avoid duplicate CSS). They apply to outlined layout as well
 // because the container element is the same.
+
+:host(.ngx-signal-form-field-wrapper--invalid)
+  .ngx-signal-form-field-wrapper__content {
+  border-color: var(--_invalid-color);
+
+  &:focus-within {
+    border-color: var(--_invalid-color);
+    box-shadow: 0 0 0 var(--_field-focus-spread)
+      color-mix(in srgb, var(--_invalid-color) 25%, transparent);
+  }
+}
+
+// Warning state styling (applied via host class when field has warnings but no errors)
+:host(.ngx-signal-form-field-wrapper--warning)
+  .ngx-signal-form-field-wrapper__content {
+  border-color: var(--_warning-color);
+
+  &:focus-within {
+    border-color: var(--_warning-color);
+    box-shadow: var(--_warning-box-shadow);
+  }
+}
 
 // ============================================================================
 // ERROR/WARNING ALIGNMENT

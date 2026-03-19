@@ -144,6 +144,8 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
   styleUrl: './form-field-wrapper.component.scss',
   host: {
     '[attr.outline]': 'isOutline() ? "" : null',
+    '[attr.aria-invalid]': 'showInvalidState() ? "true" : "false"',
+    '[class.ngx-signal-form-field-wrapper--invalid]': 'showInvalidState()',
     '[class.ngx-signal-form-field-wrapper--warning]': 'showWarningState()',
     '[class.ngx-signal-form-field-wrapper--messages-top]': 'isTopPlacement()',
     '[class.ngx-signal-form-field-wrapper--messages-bottom]':
@@ -498,6 +500,15 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   );
 
   /**
+   * Whether the wrapper should render its invalid visual state.
+   * Mirrors the same timing rules as automatic error display so native inputs
+   * and custom FormValueControl hosts share one consistent border treatment.
+   */
+  protected readonly showInvalidState = computed(() => {
+    return this.hasErrors() && this.shouldShowErrors();
+  });
+
+  /**
    * Whether to actually display errors based on current strategy and field state.
    * This controls when the error component replaces the hint.
    */
@@ -523,7 +534,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * 2. Field has NO errors (errors take visual priority)
    */
   protected readonly showWarningState = computed(() => {
-    return this.hasWarnings() && !this.hasErrors();
+    return this.hasWarnings() && !this.showInvalidState();
   });
 
   protected readonly isTopPlacement = computed(() => {

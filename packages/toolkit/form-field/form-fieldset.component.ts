@@ -44,7 +44,7 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
  * - **Warning Support**: Non-blocking warnings (with `warn:` prefix) shown when no errors
  * - **WCAG 2.2 Compliant**: Errors use `role="alert"`, warnings use `role="status"`
  * - **Strategy Aware**: Respects `ErrorDisplayStrategy` from form context or input
- * - **Configurable Placement**: Aggregated messages can appear above or below the field content
+ * - **Configurable Placement**: Grouped messages can appear above or below the fieldset content
  *
  * ## Error Display Modes
  *
@@ -163,6 +163,10 @@ export class NgxSignalFormFieldset<TFieldset = unknown> {
 
   /**
    * Placement of the aggregated error or warning summary.
+   *
+   * This API is primarily intended for grouped fieldset summaries. The wrapper
+   * component also supports message placement, but this fieldset placement is
+   * the main design-alignment control for complex grouped forms.
    *
    * - `top` (default): display the summary directly below the legend/description
    * - `bottom`: display the summary after the projected field content
