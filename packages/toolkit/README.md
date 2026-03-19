@@ -10,6 +10,7 @@
 | `@ngx-signal-forms/toolkit/assistive`  | Error, hint, and character count components |
 | `@ngx-signal-forms/toolkit/form-field` | Form field wrapper and fieldset components  |
 | `@ngx-signal-forms/toolkit/headless`   | Renderless primitives for custom UI         |
+| `@ngx-signal-forms/toolkit/debugger`   | Development-time form inspection tools      |
 
 ---
 
@@ -26,11 +27,18 @@ import {
   NgxSignalFormDirective,
   NgxSignalFormAutoAriaDirective,
   provideNgxSignalFormsConfig,
+  provideNgxSignalFormsConfigForComponent,
   provideErrorMessages,
+  combineShowErrors,
   showErrors,
   focusFirstInvalid,
   createOnInvalidHandler,
+  createSubmittedStatusTracker,
   hasSubmitted,
+  hasOnlyWarnings,
+  getBlockingErrors,
+  canSubmitWithWarnings,
+  submitWithWarnings,
   injectFormContext,
   unwrapValue,
 } from '@ngx-signal-forms/toolkit';
@@ -135,7 +143,13 @@ provideErrorMessages({
 | ------------------------------------- | ----------------------------------------------------- |
 | `focusFirstInvalid(form)`             | Focus first invalid field via `errorSummary()`        |
 | `createOnInvalidHandler(options?)`    | Creates `onInvalid` handler for `FormSubmitOptions`   |
+| `createSubmittedStatusTracker(form)`  | Derives `unsubmitted/submitting/submitted` status     |
 | `hasSubmitted(form)`                  | `Signal<boolean>` — completed at least one submission |
+| `hasOnlyWarnings(errors)`             | Returns `true` when no blocking errors are present    |
+| `getBlockingErrors(errors)`           | Filters out warning-only validation messages          |
+| `canSubmitWithWarnings(form)`         | Allows submission when only warnings remain           |
+| `submitWithWarnings(form, callback)`  | Submit helper that blocks only on blocking errors     |
+| `combineShowErrors(...signals)`       | Combines multiple visibility signals                  |
 | `showErrors(field, strategy, status)` | `Signal<boolean>` — should show errors                |
 | `injectFormContext()`                 | Get `NgxSignalFormDirective` context or `undefined`   |
 | `unwrapValue(signalOrValue)`          | Extract value from `Signal` or static                 |
@@ -147,25 +161,12 @@ provideErrorMessages({
 Utilities for immutable state updates, useful with NgRx Signal Store or any state management.
 
 ```typescript
-import {
-  updateAt,
-  removeAt,
-  insertAt,
-  append,
-  prepend,
-  moveItem,
-  updateNested,
-} from '@ngx-signal-forms/toolkit';
+import { updateAt, updateNested } from '@ngx-signal-forms/toolkit';
 ```
 
 | Function                                                 | Description                           |
 | -------------------------------------------------------- | ------------------------------------- |
 | `updateAt(array, index, updater)`                        | Update item at index immutably        |
-| `removeAt(array, index)`                                 | Remove item at index immutably        |
-| `insertAt(array, index, item)`                           | Insert item at index immutably        |
-| `append(array, item)`                                    | Add item to end immutably             |
-| `prepend(array, item)`                                   | Add item to start immutably           |
-| `moveItem(array, fromIndex, toIndex)`                    | Move item between positions immutably |
 | `updateNested(array, index, nestedKey, nestedIndex, fn)` | Update item in nested array immutably |
 
 ### Example: Deeply Nested State Updates
@@ -259,10 +260,7 @@ Character counter with progressive color states.
 
 ```typescript
 // Create a non-blocking warning
-warningError({
-  kind: 'weak_password',
-  message: 'Consider a stronger password',
-});
+warningError('weak-password', 'Consider a stronger password');
 
 // Check error type
 isWarningError(error); // true if kind starts with 'warn:'
@@ -536,16 +534,14 @@ Use the headless entry point when you want toolkit state logic but fully custom 
 ## Related Documentation
 
 - [Main README](https://github.com/ngx-signal-forms/ngx-signal-forms#readme) — Overview, installation, quick start
-- [Current main changelog](../../docs/CHANGELOG_CURRENT.md) — Unreleased changes since `v1.0.0-beta.7`
-- [Changelog (beta.7)](../../docs/archive/CHANGELOG_BETA7.md) — Released changes in `v1.0.0-beta.7`
-- [Migration guide: beta.6 → beta.7](../../docs/archive/MIGRATION_BETA7.md) — Upgrade notes for the released `beta.7` scope
-- [Changelog (beta.6)](../../docs/archive/CHANGELOG_BETA6.md) — Released changes in `v1.0.0-beta.6`
-- [Migration Guide (beta.5)](../../docs/archive/MIGRATION_BETA5.md) — Upgrade steps from earlier beta releases
+- [GitHub Releases](https://github.com/ngx-signal-forms/ngx-signal-forms/releases) — Published release notes
+- [Beta release notes archive](../../docs/archive/) — Historical beta changelogs and migration guides
 - [Form Field Theming](./form-field/THEMING.md) — CSS custom properties guide
 - [CSS Framework Integration](../../docs/CSS_FRAMEWORK_INTEGRATION.md) — Bootstrap, Tailwind, Material setup
 - [Warnings Support](../../docs/WARNINGS_SUPPORT.md) — Non-blocking validation
 - [Assistive Components](./assistive/README.md) — Detailed assistive docs
 - [Headless Primitives](./headless/README.md) — Detailed headless docs
+- [Debugger](./debugger/README.md) — Development-only form inspection tools
 - [Form Field Components](./form-field/README.md) — Detailed form field docs
 
 ---

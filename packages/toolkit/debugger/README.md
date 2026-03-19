@@ -13,13 +13,14 @@ npm install @ngx-signal-forms/toolkit
 ## Usage
 
 ```typescript
-import { SignalFormDebuggerComponent } from '@ngx-signal-forms/toolkit/debugger';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import { form, FormField, required } from '@angular/forms/signals';
 
 @Component({
-  imports: [FormField, SignalFormDebuggerComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormDebugger],
   template: `
-    <form (submit)="save($event)">
+    <form [formRoot]="userForm">
       <input [formField]="userForm.email" />
       <button type="submit">Submit</button>
     </form>
@@ -33,11 +34,6 @@ export class UserFormComponent {
   protected readonly userForm = form(this.#data, (path) => {
     required(path.email, { message: 'Email required' });
   });
-
-  protected save(event: Event): void {
-    event.preventDefault();
-    // ...
-  }
 }
 ```
 

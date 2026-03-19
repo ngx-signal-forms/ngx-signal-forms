@@ -367,10 +367,8 @@ The debugger supports `FieldState`, but it cannot traverse child fields, so visi
 For global defaults, add providers to `app.config.ts`:
 
 ```typescript
-import {
-  provideSignalFormsConfig,
-  NG_STATUS_CLASSES,
-} from '@angular/forms/signals';
+import { provideSignalFormsConfig } from '@angular/forms/signals';
+import { NG_STATUS_CLASSES } from '@angular/forms/signals/compat';
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 
 export const appConfig: ApplicationConfig = {
@@ -398,9 +396,8 @@ Live demo: [https://ngx-signal-forms.github.io/ngx-signal-forms/](https://ngx-si
 Start here:
 
 - [Toolkit API reference](./packages/toolkit/README.md)
-- [Current main changelog](./docs/CHANGELOG_CURRENT.md)
-- [Changelog for beta.7](./docs/archive/CHANGELOG_BETA7.md)
-- [Migration from beta.6 to beta.7](./docs/archive/MIGRATION_BETA7.md)
+- [GitHub Releases](https://github.com/ngx-signal-forms/ngx-signal-forms/releases)
+- [Beta release archive](./docs/archive/)
 - [Assistive components](./packages/toolkit/assistive/README.md)
 - [Form field components](./packages/toolkit/form-field/README.md)
 - [Headless primitives](./packages/toolkit/headless/README.md)
@@ -411,7 +408,7 @@ Start here:
 
 ## Browser Support
 
-- Angular 21+ (Signal Forms API)
+- Angular 21.2+ (Signal Forms API)
 - All modern browsers with ES2022+ support
 - TypeScript 5.8+
 

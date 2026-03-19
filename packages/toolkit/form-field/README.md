@@ -72,7 +72,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 **Usage:**
 
 ```typescript
-import { Field } from '@angular/forms/signals';
+import { FormField } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
@@ -103,7 +103,7 @@ Reusable form field wrapper with automatic error display and consistent layout.
 **Usage:**
 
 ```typescript
-import { Field } from '@angular/forms/signals';
+import { FormField } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
@@ -267,7 +267,7 @@ The form field component supports non-blocking warnings in addition to blocking 
 
 **Note:** If you don't want warnings, simply don't define validators that produce them. The validator controls what feedback is displayed.
 
-#### CSS Custom Properties
+#### Outlined CSS Custom Properties
 
 **Standard layout** (without `outline` directive):
 
@@ -402,7 +402,7 @@ export class OutlineSectionComponent {}
 ```html
 <ngx-signal-form-field-wrapper
   [formField]="form.email"
-  outline
+  appearance="outline"
   [showRequiredMarker]="false"
 >
   <label for="email">Email</label>
@@ -415,7 +415,7 @@ export class OutlineSectionComponent {}
 ```html
 <ngx-signal-form-field-wrapper
   [formField]="form.email"
-  outline
+  appearance="outline"
   requiredMarker="(required)"
 >
   <label for="email">Email</label>
@@ -429,7 +429,7 @@ export class OutlineSectionComponent {}
 ```html
 <ngx-signal-form-field-wrapper
   [formField]="form.email"
-  outline
+  appearance="outline"
   requiredMarker=" †"
 >
   <label for="email">Email</label>
@@ -509,7 +509,7 @@ Requires CSS `:has()` selector:
 
 **Coverage:** 95%+ global browser support as of 2025.
 
-#### Accessibility
+#### Wrapper Accessibility
 
 - Focus state applied to container meets WCAG 2.2 Level AA
 - Input outline removed safely (container provides visible focus indicator)
@@ -603,7 +603,7 @@ to the input via `aria-describedby`.
 </ngx-signal-form-field-hint>
 ```
 
-#### CSS Custom Properties
+#### Hint CSS Custom Properties
 
 ```css
 :root {
@@ -648,10 +648,12 @@ import { NgxFormFieldCharacterCountComponent } from '@ngx-signal-forms/toolkit/f
 | Input             | Type                                  | Default                       | Description                                    |
 | ----------------- | ------------------------------------- | ----------------------------- | ---------------------------------------------- |
 | `field`           | `FieldTree<TValue>`                   | _required_                    | The Signal Forms field to count characters for |
-| `maxLength`       | `number`                              | _required_                    | Maximum character limit                        |
+| `maxLength`       | `number`                              | Derived when possible         | Maximum character limit                        |
 | `showLimitColors` | `boolean`                             | `true`                        | Whether to use progressive color states        |
 | `colorThresholds` | `{ warning: number; danger: number }` | `{ warning: 80, danger: 95 }` | Percentage thresholds for color changes        |
 | `liveAnnounce`    | `boolean`                             | `false`                       | Enable polite live announcements               |
+
+When a matching validator is present on the bound field, the component can derive `maxLength` automatically. Pass `maxLength` explicitly when the limit comes from external rules or non-validator business logic.
 
 #### Color States
 
@@ -684,7 +686,7 @@ The component automatically changes color based on character count:
 />
 ```
 
-#### CSS Custom Properties
+#### Character Count CSS Custom Properties
 
 ```css
 :root {
@@ -820,7 +822,7 @@ controls where the grouped message block is rendered:
 The `includeNestedErrors` input controls which errors are shown:
 
 **Group-Only Mode** (`includeNestedErrors="false"`, default):
-Shows ONLY group-level errors via `errors()`. Use when nested fields display their own errors via `NgxSignalFormField` to avoid duplicate error messages.
+Shows ONLY group-level errors via `errors()`. Use when nested fields display their own errors via `ngx-signal-form-field-wrapper` to avoid duplicate error messages.
 
 ```html
 <ngx-signal-form-fieldset [fieldsetField]="form.passwords">
@@ -835,7 +837,7 @@ Shows ONLY group-level errors via `errors()`. Use when nested fields display the
 ```
 
 **Aggregated Mode** (`includeNestedErrors`):
-Shows ALL errors including nested field errors via `errorSummary()`. Use when nested fields do NOT display their own errors (e.g., plain inputs without `NgxSignalFormField` wrappers).
+Shows ALL errors including nested field errors via `errorSummary()`. Use when nested fields do NOT display their own errors (e.g., plain inputs without `ngx-signal-form-field-wrapper`).
 
 ```html
 <fieldset
@@ -869,7 +871,7 @@ Shows ALL errors including nested field errors via `errorSummary()`. Use when ne
 - `.ngx-signal-form-fieldset--invalid` - Applied when showing errors
 - `.ngx-signal-form-fieldset--warning` - Applied when showing warnings (no errors)
 
-#### CSS Custom Properties
+#### Fieldset CSS Custom Properties
 
 ```css
 ngx-signal-form-fieldset {
@@ -896,7 +898,7 @@ ngx-signal-form-fieldset {
 - **Better UX for complex forms**: Related field groups (addresses, passwords, etc.) are clearly organized
 - **Better placement semantics**: `errorPlacement` usually makes the most sense at the group level, where one summary can move as a unit
 
-#### Accessibility
+#### Fieldset Accessibility
 
 - Uses `NgxSignalFormErrorComponent` internally for consistent ARIA attributes
 - Errors use `role="alert"` with `aria-live="assertive"` for immediate screen reader announcement
@@ -1002,11 +1004,12 @@ export class ContactFormComponent {
 
 ### Public Exports
 
-```typescript
-// Bundle
-export { NgxFormField } from './public_api';
-export { NgxSignalFormFieldset } from './form-fieldset.component';
+- `NgxFormField`
+- `NgxFloatingLabelDirective`
+- `NgxSignalFormFieldWrapperComponent`
+- `NgxSignalFormFieldset`
+- Re-exported assistive components from `@ngx-signal-forms/toolkit/assistive`
+
 ## License
 
 MIT © [ngx-signal-forms](https://github.com/ngx-signal-forms/ngx-signal-forms)
-```

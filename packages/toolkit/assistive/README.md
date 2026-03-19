@@ -22,8 +22,10 @@ Features:
 
 - **Errors**: `role="alert"` with `aria-live="assertive"` for immediate announcement
 - **Warnings**: `role="status"` with `aria-live="polite"` for non-intrusive guidance
-- Strategy-based display: `'on-touch'`, `'on-submit'`, `'immediate'`, `'manual'`
+- Strategy-based display: `'on-touch'`, `'on-submit'`, `'immediate'`
 - 3-tier message resolution: validator → registry → defaults
+
+Use `[formRoot]` on the surrounding form when you rely on the `'on-submit'` strategy so assistive components can inherit submission state automatically.
 
 ### NgxFormFieldHintComponent
 
@@ -46,6 +48,8 @@ Displays character count with progressive color states.
   [maxLength]="500"
 />
 ```
+
+When a matching max-length validator is present, `maxLength` can usually be omitted and detected automatically.
 
 Optional live announcements:
 

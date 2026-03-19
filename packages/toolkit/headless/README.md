@@ -120,7 +120,7 @@ interface LoginModel {
         }
       </div>
 
-      <button type="submit" [disabled]="loginForm.invalid()">Submit</button>
+      <button type="submit" [disabled]="loginForm().invalid()">Submit</button>
     </form>
   `,
 })
@@ -199,7 +199,7 @@ interface ProfileModel {
         <input id="name" [formField]="profileForm.name" />
       </my-form-field>
 
-      <button type="submit" [disabled]="profileForm.invalid()">Save</button>
+      <button type="submit" [disabled]="profileForm().invalid()">Save</button>
     </form>
   `,
 })
