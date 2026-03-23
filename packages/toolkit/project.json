@@ -49,6 +49,7 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
+        "configFile": "packages/toolkit/vite.config.mts",
         "reportsDirectory": "{projectRoot}/../../coverage/packages/toolkit"
       }
     },

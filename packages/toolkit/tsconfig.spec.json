@@ -8,7 +8,7 @@
       "vite/client",
       "node",
       "vitest",
-      "@vitest/browser/providers/playwright"
+      "@vitest/browser-playwright"
     ]
   },
   "include": [
@@ -26,5 +26,5 @@
     "./**/*.spec.jsx",
     "./**/*.d.ts"
   ],
-  "files": ["test-setup.ts"]
+  "files": ["test-setup.ts", "test-setup.browser.ts"]
 }

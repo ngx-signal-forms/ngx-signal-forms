@@ -17,8 +17,11 @@ export default defineConfig({
   test: {
     /**
      * Projects array replaces the deprecated vitest.workspace.ts
-     * Only includes projects with actual Vitest unit/component tests
+     * Only includes projects with actual Vitest unit/component tests.
      */
-    projects: ['apps/demo/vite.config.mts', 'packages/toolkit/vite.config.mts'],
+    projects: [
+      'packages/toolkit/vitest.jsdom.config.mts',
+      'packages/toolkit/vitest.browser.config.mts',
+    ],
   },
 });
