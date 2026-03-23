@@ -280,7 +280,9 @@ export class SubmissionPatternsComponent {
         this.submissionSuccess.set(false);
 
         /// Simulate API delay (toolkit automatically shows 'submitting' state)
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 1500);
+        });
 
         /// Simulate server error if checkbox is checked
         if (formData().value().simulateServerError) {

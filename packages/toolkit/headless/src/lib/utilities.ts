@@ -104,12 +104,12 @@ export function readErrors(state: unknown): ValidationError[] {
 
   const summary = (state as FieldStateLike).errorSummary;
   if (typeof summary === 'function') {
-    return summary() ?? [];
+    return summary();
   }
 
   const errors = (state as FieldStateLike).errors;
   if (typeof errors === 'function') {
-    return errors() ?? [];
+    return errors();
   }
 
   return [];
@@ -138,7 +138,7 @@ export function readDirectErrors(state: unknown): ValidationError[] {
 
   const errors = (state as FieldStateLike).errors;
   if (typeof errors === 'function') {
-    return errors() ?? [];
+    return errors();
   }
 
   return [];
@@ -165,7 +165,7 @@ export function readDirectErrors(state: unknown): ValidationError[] {
  * ```
  */
 export function dedupeValidationErrors(
-  errors: ValidationError[],
+  errors: readonly ValidationError[],
 ): ValidationError[] {
   const seen = new Set<string>();
   const result: ValidationError[] = [];
@@ -207,13 +207,13 @@ export function createUniqueId(prefix: string): string {
  */
 export interface CreateErrorStateOptions<TValue = unknown> {
   /** Form field FieldTree */
-  field: FieldTree<TValue>;
+  readonly field: FieldTree<TValue>;
   /** Field name for ID generation */
-  fieldName: ReactiveOrStatic<string>;
+  readonly fieldName: ReactiveOrStatic<string>;
   /** Error display strategy (defaults to 'on-touch') */
-  strategy?: ReactiveOrStatic<ErrorDisplayStrategy>;
+  readonly strategy?: ReactiveOrStatic<ErrorDisplayStrategy>;
   /** Submitted status signal (optional) */
-  submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>;
+  readonly submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>;
 }
 
 /**
@@ -267,7 +267,7 @@ export interface ErrorStateResult {
  * ```
  */
 export function createErrorState<TValue = unknown>(
-  options: CreateErrorStateOptions<TValue>,
+  options: Readonly<CreateErrorStateOptions<TValue>>,
 ): ErrorStateResult {
   const { field, fieldName, strategy, submittedStatus } = options;
 
@@ -276,9 +276,9 @@ export function createErrorState<TValue = unknown>(
   const resolvedFieldName = computed(() => unwrapValue(fieldName));
 
   const resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
-    if (strategy !== undefined && strategy !== null) {
+    if (strategy !== undefined) {
       const resolved = unwrapValue(strategy);
-      if (resolved && resolved !== 'inherit') {
+      if (resolved !== 'inherit') {
         return resolved;
       }
     }
@@ -287,7 +287,7 @@ export function createErrorState<TValue = unknown>(
   });
 
   const resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(() => {
-    if (submittedStatus !== undefined && submittedStatus !== null) {
+    if (submittedStatus !== undefined) {
       return unwrapValue(submittedStatus);
     }
     return undefined;
@@ -299,7 +299,7 @@ export function createErrorState<TValue = unknown>(
     resolvedSubmittedStatus,
   );
 
-  const allErrors = computed(() => fieldState().errors?.() ?? []);
+  const allErrors = computed(() => fieldState().errors());
 
   const errors = computed(() => allErrors().filter(isBlockingError));
 
@@ -329,13 +329,13 @@ export function createErrorState<TValue = unknown>(
  */
 export interface CreateCharacterCountOptions {
   /** Form field for string value */
-  field: FieldTree<string | null | undefined>;
+  readonly field: FieldTree<string | null | undefined>;
   /** Maximum length for the character count */
-  maxLength: ReactiveOrStatic<number>;
+  readonly maxLength: ReactiveOrStatic<number>;
   /** Warning threshold (0-1), default 0.8 */
-  warningThreshold?: ReactiveOrStatic<number>;
+  readonly warningThreshold?: ReactiveOrStatic<number>;
   /** Danger threshold (0-1), default 0.95 */
-  dangerThreshold?: ReactiveOrStatic<number>;
+  readonly dangerThreshold?: ReactiveOrStatic<number>;
 }
 
 /**
@@ -383,7 +383,7 @@ export interface CharacterCountResult {
  * ```
  */
 export function createCharacterCount(
-  options: CreateCharacterCountOptions,
+  options: Readonly<CreateCharacterCountOptions>,
 ): CharacterCountResult {
   const {
     field,
@@ -396,7 +396,7 @@ export function createCharacterCount(
 
   const currentLength = computed(() => {
     const state = fieldState();
-    const value = state?.value?.() ?? '';
+    const value = state.value();
     return typeof value === 'string' ? value.length : 0;
   });
 

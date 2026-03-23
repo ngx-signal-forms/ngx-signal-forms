@@ -167,7 +167,7 @@ export function showErrors(
  * @see {@link showErrors} For creating individual error visibility signals
  */
 export function combineShowErrors(
-  showErrorsSignals: Signal<boolean>[],
+  showErrorsSignals: readonly Signal<boolean>[],
 ): Signal<boolean> {
   return computed(() => showErrorsSignals.some((signal) => signal()));
 }
@@ -180,10 +180,6 @@ function computeShowErrorsInternal(
   return computed(() => {
     const fieldState = unwrapValue(field);
     const strategyValue = unwrapValue(strategy);
-
-    if (!fieldState || typeof fieldState !== 'object') {
-      return false;
-    }
 
     const isInvalid = fieldState.invalid?.() ?? false;
     const isTouched = fieldState.touched?.() ?? false;

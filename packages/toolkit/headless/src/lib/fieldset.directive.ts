@@ -136,9 +136,11 @@ export class NgxHeadlessFieldsetDirective<
    * Resolved error display strategy.
    */
   readonly resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
+    const contextStrategy = this.#formContext?.errorStrategy();
+
     return resolveErrorDisplayStrategy(
       this.strategy(),
-      this.#formContext?.errorStrategy?.(),
+      contextStrategy,
       this.#config?.defaultErrorStrategy ?? 'on-touch',
     );
   });
@@ -147,7 +149,7 @@ export class NgxHeadlessFieldsetDirective<
    * Resolved submitted status.
    */
   readonly submittedStatus = computed<SubmittedStatus>(
-    () => this.#formContext?.submittedStatus?.() ?? 'unsubmitted',
+    () => this.#formContext?.submittedStatus() ?? 'unsubmitted',
   );
 
   /**

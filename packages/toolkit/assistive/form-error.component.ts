@@ -165,7 +165,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
 
     const errors = (state as Partial<ErrorReadableState>).errors;
     if (typeof errors === 'function') {
-      return errors() ?? [];
+      return errors();
     }
 
     return [];
@@ -334,9 +334,11 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * 3. Default 'on-touch'
    */
   readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
+    const contextStrategy = this.#injectedContext?.errorStrategy();
+
     return resolveErrorDisplayStrategy(
       this.strategy(),
-      this.#injectedContext?.errorStrategy?.(),
+      contextStrategy,
       undefined,
     );
   });
@@ -348,12 +350,12 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
   readonly #resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(
     () => {
       const inputStatus = this.submittedStatus();
-      if (inputStatus !== undefined && inputStatus !== null) {
+      if (inputStatus !== undefined) {
         return inputStatus;
       }
 
-      const contextStatus = this.#injectedContext?.submittedStatus?.();
-      if (contextStatus !== undefined && contextStatus !== null) {
+      const contextStatus = this.#injectedContext?.submittedStatus();
+      if (contextStatus !== undefined) {
         return contextStatus;
       }
 

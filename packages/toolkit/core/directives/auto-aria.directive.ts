@@ -56,12 +56,11 @@ import { isBlockingError, isWarningError } from '../utilities/warning-error';
   },
 })
 export class NgxSignalFormAutoAriaDirective {
-  #shouldShowBy(predicate: (error: { kind: string }) => boolean): boolean {
+  #shouldShowBy(
+    predicate: (error: Readonly<{ kind: string }>) => boolean,
+  ): boolean {
     const field = this.#formField.field();
-    if (!field) return false;
-
     const fieldState = field();
-    if (!fieldState) return false;
 
     const errors = fieldState.errors();
     const hasMatchingErrors = errors.some(predicate);
@@ -119,9 +118,6 @@ export class NgxSignalFormAutoAriaDirective {
    * appears when errors should be visible according to the strategy.
    */
   protected readonly ariaInvalid = computed(() => {
-    const fieldState = this.#formField.state();
-    if (!fieldState) return null;
-
     return this.#shouldShowErrors() ? 'true' : 'false';
   });
 
@@ -131,8 +127,6 @@ export class NgxSignalFormAutoAriaDirective {
    */
   protected readonly ariaRequired = computed(() => {
     const fieldState = this.#formField.state();
-    if (!fieldState) return null;
-
     return fieldState.required() ? 'true' : null;
   });
 
@@ -145,9 +139,6 @@ export class NgxSignalFormAutoAriaDirective {
    */
   protected readonly ariaDescribedBy = computed(() => {
     this.#domVersion();
-    const fieldState = this.#formField.state();
-    if (!fieldState) return this.#existingDescribedBy();
-
     const fieldName = this.#fieldName();
     if (!fieldName) return this.#existingDescribedBy();
 
@@ -182,10 +173,10 @@ export class NgxSignalFormAutoAriaDirective {
 
   #resolveHintIds(fieldName: string): string[] {
     const host = this.#element.nativeElement;
-    const wrapper = host.closest(
-      'ngx-signal-form-field-wrapper',
-    ) as HTMLElement | null;
-    if (!wrapper) return [];
+    const maybeWrapper = host.closest('ngx-signal-form-field-wrapper');
+    if (!(maybeWrapper instanceof HTMLElement)) return [];
+
+    const wrapper = maybeWrapper;
 
     const hintElements = Array.from(
       wrapper.querySelectorAll(
@@ -193,14 +184,21 @@ export class NgxSignalFormAutoAriaDirective {
       ),
     );
 
-    const matchingHints = hintElements.filter((hint) => {
-      const hintField = hint.getAttribute('data-signal-field');
-      return !hintField || hintField === fieldName;
-    });
+    const hintIds: string[] = [];
 
-    return matchingHints
-      .map((hint) => hint.getAttribute('id'))
-      .filter((id): id is string => Boolean(id));
+    for (const matchingHint of hintElements) {
+      const hintField = matchingHint.getAttribute('data-signal-field');
+      if (hintField && hintField !== fieldName) {
+        continue;
+      }
+
+      const id = matchingHint.getAttribute('id');
+      if (id) {
+        hintIds.push(id);
+      }
+    }
+
+    return hintIds;
   }
 
   constructor() {

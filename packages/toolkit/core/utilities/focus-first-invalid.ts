@@ -28,10 +28,7 @@ export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
   if (errors.length === 0) return false;
 
   const firstError = errors[0];
-  if (!firstError.fieldTree) return false;
-
   const fieldState = firstError.fieldTree();
-  if (!fieldState) return false;
 
   fieldState.focusBoundControl();
   return true;

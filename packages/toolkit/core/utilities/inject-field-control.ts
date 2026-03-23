@@ -44,47 +44,43 @@ export function injectFieldControl(
   element: HTMLElement | ElementRef<HTMLElement>,
   injector?: Injector,
 ): unknown {
-  return assertInjector(
-    injectFieldControl as (...args: unknown[]) => unknown,
-    injector,
-    () => {
-      const htmlElement =
-        element instanceof ElementRef ? element.nativeElement : element;
-      const formContext = injectFormContext(injector);
+  return assertInjector(injectFieldControl, injector, () => {
+    const htmlElement =
+      element instanceof ElementRef ? element.nativeElement : element;
+    const formContext = injectFormContext(injector);
 
-      if (!formContext) {
+    if (!formContext) {
+      throw new Error(
+        '[ngx-signal-forms] injectFieldControl() requires NgxSignalFormDirective ' +
+          'to be present in the component tree. Add [formRoot] to your form element.',
+      );
+    }
+
+    const fieldName = resolveFieldName(htmlElement);
+
+    if (!fieldName) {
+      throw new Error(
+        '[ngx-signal-forms] injectFieldControl() could not resolve field name from element. ' +
+          `Element: ${htmlElement.outerHTML}`,
+      );
+    }
+
+    const formInstance = formContext.form;
+
+    // Navigate the field path (supports nested paths like "address.city")
+    const pathParts = fieldName.split('.');
+    let control: unknown = formInstance;
+
+    for (const part of pathParts) {
+      if (!isRecord(control) || !(part in control)) {
         throw new Error(
-          '[ngx-signal-forms] injectFieldControl() requires NgxSignalFormDirective ' +
-            'to be present in the component tree. Add [formRoot] to your form element.',
+          `[ngx-signal-forms] Field "${fieldName}" not found in form. ` +
+            `Could not access property "${part}".`,
         );
       }
+      control = control[part];
+    }
 
-      const fieldName = resolveFieldName(htmlElement);
-
-      if (!fieldName) {
-        throw new Error(
-          '[ngx-signal-forms] injectFieldControl() could not resolve field name from element. ' +
-            `Element: ${htmlElement.outerHTML}`,
-        );
-      }
-
-      const formInstance = formContext.form;
-
-      // Navigate the field path (supports nested paths like "address.city")
-      const pathParts = fieldName.split('.');
-      let control: unknown = formInstance;
-
-      for (const part of pathParts) {
-        if (!isRecord(control) || !(part in control)) {
-          throw new Error(
-            `[ngx-signal-forms] Field "${fieldName}" not found in form. ` +
-              `Could not access property "${part}".`,
-          );
-        }
-        control = control[part];
-      }
-
-      return control;
-    },
-  );
+    return control;
+  });
 }

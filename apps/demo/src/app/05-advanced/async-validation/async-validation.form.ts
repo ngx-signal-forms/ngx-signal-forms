@@ -130,7 +130,9 @@ export class AsyncValidationComponent {
     submission: {
       action: async (data) => {
         // Simulate actual registration delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 1000);
+        });
         console.log('Registered:', data());
       },
       onInvalid: createOnInvalidHandler(),

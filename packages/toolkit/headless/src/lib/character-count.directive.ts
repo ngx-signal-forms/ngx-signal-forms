@@ -123,7 +123,7 @@ export class NgxHeadlessCharacterCountDirective implements CharacterCountStateSi
    */
   readonly currentLength = computed(() => {
     const state = this.#fieldState();
-    const value = state?.value?.() ?? '';
+    const value = state.value();
     return typeof value === 'string' ? value.length : 0;
   });
 

@@ -178,7 +178,7 @@ export class RatingControlComponent implements FormValueControl<number> {
   /**
    * Normalized current value for ARIA attributes and keyboard handling.
    */
-  protected readonly currentValue = computed(() => this.value() ?? 0);
+  protected readonly currentValue = computed(() => this.value());
 
   /**
    * Accessible value text for screen readers.

@@ -178,7 +178,9 @@ export class GlobalConfigurationComponent {
   readonly configForm = form(this.#model, globalConfigSchema, {
     submission: {
       action: async () => {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 1000);
+        });
         this.#model.set({ userEmail: '', userPhone: '', userWebsite: '' });
         this.configForm().reset();
       },

@@ -203,10 +203,13 @@ export class ErrorDisplayModeSelectorComponent {
   protected readonly currentModeConfig = computed(() => {
     const availableModes = this.errorDisplayModes();
 
+    if (availableModes.length === 0) {
+      return ERROR_DISPLAY_MODES[1];
+    }
+
     return (
       availableModes.find((mode) => mode.mode === this.selectedMode()) ??
-      availableModes[0] ??
-      ERROR_DISPLAY_MODES[1]
+      availableModes[0]
     );
   });
 }

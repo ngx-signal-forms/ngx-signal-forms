@@ -32,14 +32,12 @@ import { assertInjector } from './assert-injector';
  * ```
  */
 export function injectFormContext(
+  // Angular's Injector is inherently mutable; Readonly<Injector> is not practical here.
+  // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
   injector?: Injector,
 ): NgxSignalFormContext | undefined {
-  return assertInjector(
-    injectFormContext as (...args: unknown[]) => unknown,
-    injector,
-    () => {
-      // Return undefined if context is not available (component can work without provider)
-      return inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true }) ?? undefined;
-    },
-  );
+  return assertInjector(injectFormContext, injector, () => {
+    // Return undefined if context is not available (component can work without provider)
+    return inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true }) ?? undefined;
+  });
 }

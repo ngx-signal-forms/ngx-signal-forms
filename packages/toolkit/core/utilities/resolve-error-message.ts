@@ -1,7 +1,13 @@
 import type { ValidationError } from '@angular/forms/signals';
 import type { ErrorMessageRegistry } from '../providers/error-messages.provider';
 
-type ValidationErrorParams = ValidationError & Record<string, unknown>;
+type ValidationErrorParams = Readonly<
+  ValidationError & Record<string, unknown>
+>;
+
+interface ResolveErrorMessageOptions {
+  readonly stripWarningPrefix?: boolean;
+}
 
 function getNumericValidationParam(
   params: ValidationErrorParams,
@@ -24,18 +30,20 @@ function getNumericValidationParam(
 
 export function resolveValidationErrorMessage(
   error: ValidationError,
-  registry?: ErrorMessageRegistry | null,
-  options?: { stripWarningPrefix?: boolean },
+  registry?: Readonly<ErrorMessageRegistry> | null,
+  options?: ResolveErrorMessageOptions,
 ): string {
   if (error.message) {
     return error.message;
   }
 
+  const errorParams: ValidationErrorParams = { ...error };
+
   if (registry) {
     const registryMessage = registry[error.kind];
     if (registryMessage !== undefined) {
       if (typeof registryMessage === 'function') {
-        return registryMessage(error as ValidationErrorParams);
+        return registryMessage(errorParams);
       }
 
       return registryMessage;
@@ -47,10 +55,10 @@ export function resolveValidationErrorMessage(
 
 export function getDefaultValidationMessage(
   error: ValidationError,
-  options?: { stripWarningPrefix?: boolean },
+  options?: ResolveErrorMessageOptions,
 ): string {
   const kind = error.kind;
-  const errorParams = error as ValidationErrorParams;
+  const errorParams: ValidationErrorParams = { ...error };
 
   switch (kind) {
     case 'required':

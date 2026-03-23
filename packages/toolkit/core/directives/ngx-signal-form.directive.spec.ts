@@ -227,7 +227,9 @@ describe('NgxSignalFormDirective', () => {
           event.preventDefault();
           void submit(this.contactForm, async () => {
             // Simulate async operation
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise<void>((resolve) => {
+              setTimeout(resolve, 50);
+            });
           });
         }
       }
@@ -278,7 +280,9 @@ describe('NgxSignalFormDirective', () => {
         handleSubmit(event: Event): void {
           event.preventDefault();
           void submit(this.contactForm, async () => {
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise<void>((resolve) => {
+              setTimeout(resolve, 50);
+            });
           });
         }
 
@@ -336,7 +340,9 @@ describe('NgxSignalFormDirective', () => {
           onSubmit(event: Event): void {
             event.preventDefault();
             void submit(this.contactForm, async () => {
-              await new Promise((resolve) => setTimeout(resolve, 50));
+              await new Promise<void>((resolve) => {
+                setTimeout(resolve, 50);
+              });
             });
           }
         }

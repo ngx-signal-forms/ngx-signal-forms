@@ -375,7 +375,7 @@ export class WizardComponent {
       $implicit: idx,
       stepNumber: idx + 1,
       isActive: true,
-      isCompleted: step ? this.isStepCompleted(step.stepId()) : false,
+      isCompleted: this.isStepCompleted(step.stepId()),
       canNavigate: true,
     };
   });

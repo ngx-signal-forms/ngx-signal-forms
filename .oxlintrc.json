@@ -88,6 +88,16 @@
       }
     },
     {
+      "files": [
+        "apps/demo/src/**/*.ts",
+        "packages/toolkit/debugger/**/*.ts",
+        "packages/toolkit/vite.config.mts"
+      ],
+      "rules": {
+        "@typescript-eslint/prefer-readonly-parameter-types": "off"
+      }
+    },
+    {
       "files": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
       "jsPlugins": ["@nx/eslint-plugin"],
       "rules": {

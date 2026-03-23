@@ -158,7 +158,9 @@ export class CrossFieldValidationComponent {
   readonly bookingForm = form(this.#model, bookingSchema, {
     submission: {
       action: async (data) => {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 1000);
+        });
         console.log('Booking Confirmed:', data());
       },
       onInvalid: createOnInvalidHandler(),

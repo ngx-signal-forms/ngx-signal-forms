@@ -162,7 +162,9 @@ export class ErrorMessagesComponent {
   readonly errorMessagesForm = form(this.#model, errorMessagesSchema, {
     submission: {
       action: async () => {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 1000);
+        });
         this.#model.set({ email: '', password: '', bio: '' });
         this.errorMessagesForm().reset();
       },

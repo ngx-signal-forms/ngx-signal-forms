@@ -118,7 +118,9 @@ export class YourFirstFormComponent {
   readonly contactForm = form(this.#model, contactFormSchema, {
     submission: {
       action: async () => {
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 1500);
+        });
         this.#model.set({ name: '', email: '', message: '' });
         this.contactForm().reset();
       },

@@ -82,7 +82,7 @@ export class BadgeComponent {
       variantClass = solidClasses[appearance];
     } else if (variant === 'outline') {
       variantClass = outlineClasses[appearance];
-    } else if (variant === 'ghost') {
+    } else {
       variantClass = ghostClasses[appearance];
     }
 

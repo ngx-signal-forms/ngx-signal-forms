@@ -5,6 +5,8 @@ import {
   runInInjectionContext,
 } from '@angular/core';
 
+type InjectionContextDebugFn = Function;
+
 /**
  * `assertInjector` extends Angular's `assertInInjectionContext` with an optional `Injector`.
  * After assertion, it runs the `runner` function with a guaranteed `Injector`,
@@ -29,7 +31,11 @@ import {
  * ```
  */
 export function assertInjector<Runner extends () => unknown>(
-  fn: (...args: unknown[]) => unknown,
+  // Passed through to Angular's assertInInjectionContext for diagnostics only.
+  // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
+  fn: InjectionContextDebugFn,
+  // Angular's Injector is inherently mutable; Readonly<Injector> is not practical here.
+  // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
   injector: Injector | undefined | null,
   runner: Runner,
 ): ReturnType<Runner>;
@@ -57,12 +63,20 @@ export function assertInjector<Runner extends () => unknown>(
  * ```
  */
 export function assertInjector(
-  fn: (...args: unknown[]) => unknown,
+  // Passed through to Angular's assertInInjectionContext for diagnostics only.
+  // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
+  fn: InjectionContextDebugFn,
+  // Angular's Injector is inherently mutable; Readonly<Injector> is not practical here.
+  // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
   injector: Injector | undefined | null,
 ): Injector;
 
 export function assertInjector(
-  fn: (...args: unknown[]) => unknown,
+  // Passed through to Angular's assertInInjectionContext for diagnostics only.
+  // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
+  fn: InjectionContextDebugFn,
+  // Angular's Injector is inherently mutable; Readonly<Injector> is not practical here.
+  // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
   injector: Injector | undefined | null,
   runner?: () => unknown,
 ) {

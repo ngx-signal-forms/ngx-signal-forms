@@ -147,7 +147,9 @@ export class FieldStatesForm {
   readonly userForm = form(this.#model, fieldStatesSchema, {
     submission: {
       action: async () => {
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 1500);
+        });
         this.#model.set({ username: '', email: '', password: '' });
         this.userForm().reset();
       },

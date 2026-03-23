@@ -79,7 +79,9 @@ export class AccessibilityToolkitFormComponent {
   readonly signupForm = form(this.#model, accessibilityValidationSchema, {
     submission: {
       action: async () => {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 1000);
+        });
         this.#model.set({ email: '', password: '', confirmPassword: '' });
         this.signupForm().reset();
       },

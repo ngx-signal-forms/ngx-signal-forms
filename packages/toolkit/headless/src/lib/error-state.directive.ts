@@ -135,9 +135,11 @@ export class NgxHeadlessErrorStateDirective<
    * Resolved error display strategy.
    */
   readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
+    const contextStrategy = this.#injectedContext?.errorStrategy();
+
     return resolveErrorDisplayStrategy(
       this.strategy(),
-      this.#injectedContext?.errorStrategy?.(),
+      contextStrategy,
       undefined,
     );
   });
@@ -148,12 +150,12 @@ export class NgxHeadlessErrorStateDirective<
   readonly #resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(
     () => {
       const inputStatus = this.submittedStatus();
-      if (inputStatus !== undefined && inputStatus !== null) {
+      if (inputStatus !== undefined) {
         return inputStatus;
       }
 
-      const contextStatus = this.#injectedContext?.submittedStatus?.();
-      if (contextStatus !== undefined && contextStatus !== null) {
+      const contextStatus = this.#injectedContext?.submittedStatus();
+      if (contextStatus !== undefined) {
         return contextStatus;
       }
 

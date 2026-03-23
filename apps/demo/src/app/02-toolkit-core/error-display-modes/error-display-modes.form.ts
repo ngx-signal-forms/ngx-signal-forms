@@ -93,11 +93,11 @@ export class ErrorDisplayHelpersComponent {
   readonly #formContext = injectFormContext();
 
   protected readonly resolvedStrategy = computed<ErrorDisplayStrategy>(
-    () => this.#formContext?.errorStrategy?.() ?? 'on-touch',
+    () => this.#formContext.errorStrategy() ?? 'on-touch',
   );
 
   protected readonly submittedStatus = computed<SubmittedStatus>(
-    () => this.#formContext?.submittedStatus?.() ?? 'unsubmitted',
+    () => this.#formContext.submittedStatus() ?? 'unsubmitted',
   );
 
   // showErrors() helper computes visibility based on strategy, field state, and submission
@@ -457,12 +457,12 @@ export class ErrorDisplayModesFormComponent {
 
   protected readonly improvementLength = computed(() => {
     const current = this.productForm.improvementSuggestions().value();
-    return (current ?? '').length;
+    return current.length;
   });
 
   protected readonly detailedLength = computed(() => {
     const current = this.productForm.detailedFeedback().value();
-    return (current ?? '').length;
+    return current.length;
   });
 
   /** Track submission attempts manually */

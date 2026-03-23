@@ -23,7 +23,9 @@ test.describe('Advanced Scenarios - Async Validation', () => {
     page,
   }) => {
     await page.route('**/fake-api/check-user/*', async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 800);
+      });
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

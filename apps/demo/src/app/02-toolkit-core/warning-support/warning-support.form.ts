@@ -122,7 +122,9 @@ export class WarningsSupportFormComponent {
     this.isSubmitting.set(true);
 
     void submitWithWarnings(this.passwordForm, async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 1000);
+      });
 
       this.successMessage.set(
         '✓ Account created successfully! Notice how warnings did not block submission.',

@@ -102,7 +102,7 @@ export const outlineFormFieldSchema: SchemaFn<OutlineFormFieldModel> = (
       // Validate that at least one article is present
       validate(offensePath.articles, (ctx) => {
         const articles = ctx.value();
-        if (!articles || articles.length === 0) {
+        if (articles.length === 0) {
           return {
             kind: 'no_articles',
             message: 'Tenminste één wetsartikel is verplicht',
@@ -137,7 +137,7 @@ export const outlineFormFieldSchema: SchemaFn<OutlineFormFieldModel> = (
       // Check for duplicate articles within the same offense
       validate(offensePath.articles, (ctx) => {
         const articles = ctx.value();
-        if (!articles || articles.length <= 1) return null;
+        if (articles.length <= 1) return null;
 
         // Normalize and check for duplicates
         const normalizedArticles = articles
@@ -162,7 +162,7 @@ export const outlineFormFieldSchema: SchemaFn<OutlineFormFieldModel> = (
     // Validate at least one offense exists
     validate(factPath.offenses, (ctx) => {
       const offenses = ctx.value();
-      if (!offenses || offenses.length === 0) {
+      if (offenses.length === 0) {
         return {
           kind: 'no_offenses',
           message: 'Tenminste één strafbaar feit is verplicht',

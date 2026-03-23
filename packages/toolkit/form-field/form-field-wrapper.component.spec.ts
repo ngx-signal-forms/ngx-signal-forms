@@ -312,7 +312,8 @@ describe('NgxSignalFormWrapperComponent', () => {
       // Implicit label association (input nested in label)
       expect(label).toBeTruthy();
       expect(input).toBeTruthy();
-      expect(label?.contains(input as Node)).toBe(true);
+      expect(input).toBeInstanceOf(Node);
+      expect(label?.contains(input)).toBe(true);
 
       // fieldName is auto-resolved from input id="email" → error id="email-error"
       const errorElement = container.querySelector('[id="email-error"]');
@@ -471,7 +472,8 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(
         host?.classList.contains('ngx-signal-form-field-wrapper--messages-top'),
       ).toBe(true);
-      expect(messages?.compareDocumentPosition(content as Node)).toBe(
+      expect(content).toBeInstanceOf(Node);
+      expect(messages?.compareDocumentPosition(content)).toBe(
         Node.DOCUMENT_POSITION_FOLLOWING,
       );
       expect(assistiveRow?.querySelector('ngx-signal-form-error')).toBeFalsy();

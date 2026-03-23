@@ -155,7 +155,9 @@ export class ComplexFormsComponent {
     submission: {
       action: async () => {
         // Simulate async operation
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 500);
+        });
         console.log('Complex form submitted:', this.#model());
       },
       onInvalid: createOnInvalidHandler(),

@@ -238,7 +238,8 @@ describe('NgxSignalFormFieldset', () => {
     expect(
       host?.classList.contains('ngx-signal-form-fieldset--messages-top'),
     ).toBe(true);
-    expect(message?.compareDocumentPosition(content as Node)).toBe(
+    expect(content).toBeInstanceOf(Node);
+    expect(message?.compareDocumentPosition(content)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
   });
@@ -294,7 +295,8 @@ describe('NgxSignalFormFieldset', () => {
     expect(
       host?.classList.contains('ngx-signal-form-fieldset--messages-bottom'),
     ).toBe(true);
-    expect(content?.compareDocumentPosition(message as Node)).toBe(
+    expect(message).toBeInstanceOf(Node);
+    expect(content?.compareDocumentPosition(message)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
   });

@@ -30,12 +30,8 @@ import { normalizeSignalFormsConfig } from './normalize-config';
  * ```
  */
 export function injectFormConfig(injector?: Injector): NgxSignalFormsConfig {
-  return assertInjector(
-    injectFormConfig as (...args: unknown[]) => unknown,
-    injector,
-    () => {
-      const config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
-      return normalizeSignalFormsConfig(config);
-    },
-  );
+  return assertInjector(injectFormConfig, injector, () => {
+    const config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
+    return normalizeSignalFormsConfig(config);
+  });
 }

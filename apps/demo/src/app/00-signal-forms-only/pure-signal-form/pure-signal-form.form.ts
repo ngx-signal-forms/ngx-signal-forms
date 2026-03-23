@@ -145,7 +145,9 @@ export class PureSignalFormComponent {
     submission: {
       action: async (f) => {
         // Simulate async operation
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 500);
+        });
 
         // Reset form after successful submission
         f().reset({ email: '', password: '', confirmPassword: '' });

@@ -7,6 +7,22 @@ import {
   type ErrorMessageRegistry,
 } from './error-messages.provider';
 
+const readNumericParam = (
+  params: Readonly<Record<string, unknown>>,
+  key: string,
+): number => {
+  const value = params[key];
+  return typeof value === 'number' ? value : 0;
+};
+
+const readStringParam = (
+  params: Readonly<Record<string, unknown>>,
+  key: string,
+): string => {
+  const value = params[key];
+  return typeof value === 'string' ? value : '';
+};
+
 describe('provideErrorMessages', () => {
   describe('Static Configuration', () => {
     it('should provide static error messages as string literals', () => {
@@ -32,9 +48,9 @@ describe('provideErrorMessages', () => {
         providers: [
           provideErrorMessages({
             minLength: (params: Record<string, unknown>) =>
-              `At least ${(params as { minLength: number }).minLength} characters`,
+              `At least ${readNumericParam(params, 'minLength')} characters`,
             maxLength: (params: Record<string, unknown>) =>
-              `Maximum ${(params as { maxLength: number }).maxLength} characters`,
+              `Maximum ${readNumericParam(params, 'maxLength')} characters`,
           }),
         ],
       });
@@ -78,10 +94,10 @@ describe('provideErrorMessages', () => {
           provideErrorMessages({
             required: 'Required field',
             minLength: (params: Record<string, unknown>) =>
-              `Min ${(params as { minLength: number }).minLength} chars`,
+              `Min ${readNumericParam(params, 'minLength')} chars`,
             email: 'Invalid email',
             max: (params: Record<string, unknown>) =>
-              `Cannot exceed ${(params as { max: number }).max}`,
+              `Cannot exceed ${readNumericParam(params, 'max')}`,
           }),
         ],
       });
@@ -120,9 +136,7 @@ describe('provideErrorMessages', () => {
                 email: '有効なメールアドレスを入力してください',
               },
             };
-            return (
-              messages[locale as keyof typeof messages] || messages['en-US']
-            );
+            return locale === 'ja-JP' ? messages['ja-JP'] : messages['en-US'];
           }),
         ],
       });
@@ -138,13 +152,13 @@ describe('provideErrorMessages', () => {
         providers: [
           provideErrorMessages(() => ({
             minLength: (params: Record<string, unknown>) =>
-              `Minimum length is ${(params as { minLength: number }).minLength} characters`,
+              `Minimum length is ${readNumericParam(params, 'minLength')} characters`,
             maxLength: (params: Record<string, unknown>) =>
-              `Maximum length is ${(params as { maxLength: number }).maxLength} characters`,
+              `Maximum length is ${readNumericParam(params, 'maxLength')} characters`,
             min: (params: Record<string, unknown>) =>
-              `Minimum value is ${(params as { min: number }).min}`,
+              `Minimum value is ${readNumericParam(params, 'min')}`,
             max: (params: Record<string, unknown>) =>
-              `Maximum value is ${(params as { max: number }).max}`,
+              `Maximum value is ${readNumericParam(params, 'max')}`,
           })),
         ],
       });
@@ -220,7 +234,7 @@ describe('provideErrorMessages', () => {
         required: 'Required field',
         email: 'Invalid email',
         minLength: (params: Record<string, unknown>) =>
-          `Min ${(params as { minLength: number }).minLength} chars`,
+          `Min ${readNumericParam(params, 'minLength')} chars`,
       };
 
       TestBed.configureTestingModule({
@@ -236,7 +250,7 @@ describe('provideErrorMessages', () => {
       const messageFactory = (): ErrorMessageRegistry => ({
         required: 'Required',
         custom: (params: Record<string, unknown>) =>
-          `Invalid: ${(params as { value: string }).value}`,
+          `Invalid: ${readStringParam(params, 'value')}`,
       });
 
       TestBed.configureTestingModule({
@@ -301,9 +315,9 @@ describe('provideErrorMessages', () => {
 
     it('should preserve function references in registry', () => {
       const minLengthMessage = (params: Record<string, unknown>) =>
-        `Min ${(params as { minLength: number }).minLength}`;
+        `Min ${readNumericParam(params, 'minLength')}`;
       const maxLengthMessage = (params: Record<string, unknown>) =>
-        `Max ${(params as { maxLength: number }).maxLength}`;
+        `Max ${readNumericParam(params, 'maxLength')}`;
 
       TestBed.configureTestingModule({
         providers: [

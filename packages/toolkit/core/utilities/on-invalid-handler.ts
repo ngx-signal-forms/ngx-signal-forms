@@ -9,13 +9,13 @@ export interface OnInvalidHandlerOptions {
    * Whether to focus the first invalid field on invalid submission.
    * @default true
    */
-  focusFirstInvalid?: boolean;
+  readonly focusFirstInvalid?: boolean;
 
   /**
    * Additional callback to run when the form is invalid on submission.
    * Called after focus (if enabled).
    */
-  afterInvalid?: (field: FieldTree<unknown>) => void;
+  readonly afterInvalid?: (field: FieldTree<unknown>) => void;
 }
 
 /**
@@ -62,7 +62,7 @@ export interface OnInvalidHandlerOptions {
  * @public
  */
 export function createOnInvalidHandler(
-  options: OnInvalidHandlerOptions = {},
+  options: Readonly<OnInvalidHandlerOptions> = {},
 ): (field: FieldTree<unknown>) => void {
   const { focusFirstInvalid: shouldFocus = true, afterInvalid } = options;
 

@@ -29,19 +29,12 @@ describe('assertInjector (ngxtension patterns)', () => {
   });
 
   function injectDummy(injector?: Injector) {
-    const resolvedInjector = assertInjector(
-      injectDummy as (...args: unknown[]) => unknown,
-      injector,
-    );
+    const resolvedInjector = assertInjector(injectDummy, injector);
     return runInInjectionContext(resolvedInjector, () => inject(token));
   }
 
   function injectDummyTwo(injector?: Injector) {
-    return assertInjector(
-      injectDummyTwo as (...args: unknown[]) => unknown,
-      injector,
-      () => inject(token) + 1,
-    );
+    return assertInjector(injectDummyTwo, injector, () => inject(token) + 1);
   }
 
   it('given no custom injector, when run in injection context, then return value', () => {
@@ -211,13 +204,9 @@ describe('assertInjector', () => {
     it('should support the Custom Inject Function (CIF) pattern', () => {
       // Simulating a CIF like injectFormConfig
       function injectTestConfig(injector?: Injector) {
-        return assertInjector(
-          injectTestConfig as () => unknown,
-          injector,
-          () => {
-            return inject(TEST_CONFIG, { optional: true }) ?? { default: true };
-          },
-        );
+        return assertInjector(injectTestConfig, injector, () => {
+          return inject(TEST_CONFIG, { optional: true }) ?? { default: true };
+        });
       }
 
       const config = { custom: 'config' };
@@ -235,13 +224,9 @@ describe('assertInjector', () => {
     it('should support manual injector passing for testing', () => {
       // Simulating a CIF with manual injector
       function injectTestConfig(injector?: Injector) {
-        return assertInjector(
-          injectTestConfig as () => unknown,
-          injector,
-          () => {
-            return inject(TEST_CONFIG, { optional: true }) ?? { default: true };
-          },
-        );
+        return assertInjector(injectTestConfig, injector, () => {
+          return inject(TEST_CONFIG, { optional: true }) ?? { default: true };
+        });
       }
 
       const config = { test: 'config' };
@@ -258,10 +243,7 @@ describe('assertInjector', () => {
     it('should support returning injector for manual runInInjectionContext', () => {
       // Simulating alternative CIF pattern
       function injectTestDependency(injector?: Injector) {
-        const resolvedInjector = assertInjector(
-          injectTestDependency as () => unknown,
-          injector,
-        );
+        const resolvedInjector = assertInjector(injectTestDependency, injector);
         return runInInjectionContext(resolvedInjector, () => {
           return inject(TEST_DEP, { optional: true }) ?? 'default';
         });

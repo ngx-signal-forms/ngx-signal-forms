@@ -17,7 +17,8 @@ import type { ValidationError } from '@angular/forms/signals';
  * ```
  */
 export function isWarningError(error: ValidationError): boolean {
-  return error.kind?.startsWith('warn:') ?? false;
+  const kind = Reflect.get(error, 'kind');
+  return typeof kind === 'string' && kind.startsWith('warn:');
 }
 
 /**
@@ -37,7 +38,8 @@ export function isWarningError(error: ValidationError): boolean {
  * ```
  */
 export function isBlockingError(error: ValidationError): boolean {
-  return !!error.kind && !error.kind.startsWith('warn:');
+  const kind = Reflect.get(error, 'kind');
+  return typeof kind === 'string' && !kind.startsWith('warn:');
 }
 
 /**

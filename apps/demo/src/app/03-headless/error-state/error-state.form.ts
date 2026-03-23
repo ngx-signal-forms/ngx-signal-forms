@@ -162,7 +162,9 @@ export class HeadlessErrorStateComponent {
   readonly profileForm = form(this.#model, headlessSchema, {
     submission: {
       action: async (data) => {
-        await new Promise((resolve) => setTimeout(resolve, 600));
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 600);
+        });
         console.log('Saved profile:', data());
       },
       onInvalid: createOnInvalidHandler(),

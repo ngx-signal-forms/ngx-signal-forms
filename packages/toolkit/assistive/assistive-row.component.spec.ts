@@ -49,9 +49,14 @@ describe('NgxFormFieldAssistiveRowComponent', () => {
     expect(left).toBeTruthy();
     expect(right).toBeTruthy();
 
-    expect(
-      within(left as HTMLElement).getByTestId('assistive-text'),
-    ).toBeInTheDocument();
+    expect(left).toBeInstanceOf(HTMLElement);
+    if (!(left instanceof HTMLElement)) {
+      throw new Error(
+        'Expected left assistive row container to be an HTMLElement',
+      );
+    }
+
+    expect(within(left).getByTestId('assistive-text')).toBeInTheDocument();
 
     const rightHost = right?.querySelector(
       'ngx-signal-form-field-character-count',
