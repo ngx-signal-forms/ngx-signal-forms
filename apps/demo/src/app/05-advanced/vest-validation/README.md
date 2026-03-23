@@ -8,6 +8,10 @@ Every blocking rule comes from a single Vest suite, while Angular Signal Forms a
 The first-class Vest adapter maps both blocking errors and advisory warnings from the same suite run.
 The demo also enables Vest `warn()` output so non-blocking guidance appears through the same form-field wrappers.
 
+If you are migrating from `ngx-vest-forms`, see
+[`docs/MIGRATING_FROM_NGX_VEST_FORMS.md`](../../../../../docs/MIGRATING_FROM_NGX_VEST_FORMS.md)
+for the quick API mapping and the advanced cases that still need deliberate review.
+
 Warnings are displayed through `ngx-signal-form-field-wrapper`, which uses the same
 `ngx-signal-form-error` assistive component for both blocking errors and polite
 warning status messages.

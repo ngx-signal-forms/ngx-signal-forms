@@ -9,16 +9,27 @@ Vest 6 implements the Standard Schema interface, so it already works with Angula
 
 This entry point adds a discoverable, toolkit-branded adapter for Vest users without adding runtime coupling to the main toolkit entry point.
 
+It is designed to be used **together with** Angular Signal Forms validators and Standard Schema tools such as Zod or OpenAPI-generated schemas — not instead of them.
+
 ## Installation
 
 > **Vest v6+ required** — Standard Schema support was introduced in Vest 6.
 > Earlier versions do not expose the Standard Schema interface and will not work.
+
+If you are migrating from `ngx-vest-forms`, upgrade to **Vest 6.x first**.
+This entry point does **not** support Vest 5.x.
 
 ```bash
 pnpm add @ngx-signal-forms/toolkit vest@^6.0.0
 ```
 
 `vest` is an optional peer dependency (`^6.0.0`) of `@ngx-signal-forms/toolkit`. You only need it when importing this entry point.
+
+If you are migrating from `ngx-vest-forms`, start with the short overview in
+[`docs/MIGRATING_FROM_NGX_VEST_FORMS.md`](../../docs/MIGRATING_FROM_NGX_VEST_FORMS.md).
+
+For Vest-specific API changes, also see the official
+[Vest 6 upgrade guide](https://vestjs.dev/docs/upgrade_guide).
 
 ## Usage
 
@@ -151,6 +162,12 @@ warning UX.
 Angular Signal Forms already has an excellent built-in schema API.
 Use the default Angular validators first when the rule is simple, local to the field, and tightly coupled to UI behavior.
 
+If you are deciding whether this entry point is worth adding to your form, the short answer is:
+
+- start with **Angular Signal Forms validators** for straightforward field and UI-state rules
+- add **Vest** when validation starts reading more like business policy than field metadata
+- combine **Zod / OpenAPI Standard Schema + Vest** when you want generated contract rules plus richer policy rules
+
 ### Prefer Angular Signal Forms validators when
 
 - the rule is simple and declarative
@@ -182,6 +199,30 @@ Typical examples:
 - onboarding flows with step-specific business constraints
 - async checks like “username already taken” or “email already registered”
 
+### Pros and cons at a glance
+
+| Approach                            | Pros                                                                                                                                                                                                                              | Cons                                                                                                                                                                                               |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Angular Signal Forms validators** | built into Angular; smallest dependency surface; simple declarative rules; good fit for field-local validation; Angular can expose constraint metadata such as required/min/max to controls                                       | can become repetitive for larger business-policy suites; less natural when many named rules target the same field; policy logic can end up scattered across the form schema                        |
+| **Vest**                            | validation reads like a business rule suite; multiple named rules per field stay organized; strong fit for conditional and cross-field policy; async business checks are natural; reusable outside a single Angular form callback | adds another validation abstraction and dependency; simple required/email/min rules can feel heavier than Angular built-ins; Angular-specific constraint metadata is not the reason to choose Vest |
+
+### A practical way to choose
+
+Ask this question:
+
+> Does this rule mostly describe **UI/field constraints**, or does it describe **business policy**?
+
+- If it is mostly a field or control constraint, prefer Angular's built-in validators.
+- If it reads like a business rule, workflow rule, eligibility rule, or policy decision, Vest is usually the better fit.
+
+Examples:
+
+- `email is required` → Angular validator
+- `password must be at least 12 characters` → Angular validator
+- `VAT number is required only for business accounts in certain countries` → Vest
+- `username is unique unless the account is in migration mode` → Vest
+- `the selected shipping method is not allowed for hazardous items` → Vest
+
 ### Practical recommendation
 
 Use:
@@ -189,7 +230,18 @@ Use:
 - **Angular Signal Forms validators** for simple field and UI-state rules
 - **Vest** for richer business validation logic
 
+Prefer not to force one tool to do everything.
+
+For many real forms, the cleanest layering is:
+
+1. **Angular Signal Forms validators** for simple local rules
+2. **Zod / OpenAPI Standard Schema** for reusable contract validation
+3. **Vest** for business-policy rules and `warn()` guidance
+
 That usually gives the cleanest result and avoids turning every required field into a mini rules engine.
+
+These layers are easy to combine in one Signal Forms schema callback.
+You can keep tiny UI-local rules in Angular, reuse generated contract rules through `validateStandardSchema(...)`, and add only the business-specific rules through `validateVest(...)`.
 
 ## Using Vest together with Zod or OpenAPI-generated schemas
 
@@ -231,13 +283,19 @@ Vest can then add business rules such as:
 
 That is usually where Vest earns its keep.
 
-## Combining Zod and Vest in Angular Signal Forms
+## Combining Angular validators, Zod, and Vest in Angular Signal Forms
 
-You can combine them by registering both validators in the same Signal Forms schema callback.
+You can combine all three by registering them in the same Signal Forms schema callback.
 
 ```typescript
 import { signal } from '@angular/core';
-import { form, validateStandardSchema } from '@angular/forms/signals';
+import {
+  email,
+  form,
+  minLength,
+  required,
+  validateStandardSchema,
+} from '@angular/forms/signals';
 import { create, enforce, test, warn } from 'vest';
 import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 import { CreateAccountBodySchema } from './generated/openapi.zod';
@@ -277,6 +335,11 @@ const model = signal<CreateAccountModel>({
 });
 
 const accountForm = form(model, (path) => {
+  // Small UI-local rules
+  required(path.email, { message: 'Email is required' });
+  email(path.email, { message: 'Enter a valid email address' });
+  minLength(path.password, 12, { message: 'Use at least 12 characters' });
+
   // Contract and generated rules from OpenAPI / Zod
   validateStandardSchema(path, CreateAccountBodySchema);
 
@@ -284,6 +347,12 @@ const accountForm = form(model, (path) => {
   validateVest(path, accountBusinessSuite, { includeWarnings: true });
 });
 ```
+
+This is usually the sweet spot:
+
+- Angular handles small control-level rules cleanly
+- Zod / OpenAPI covers shared contract rules
+- Vest keeps higher-order policy rules readable
 
 ### Suggested rule layering
 
@@ -308,3 +377,4 @@ This approach is especially useful when:
 - your frontend still needs richer business validation than the API contract can express cleanly
 
 In that setup, Zod covers the **shape of valid data**, while Vest covers the **business meaning of valid input**.
+Angular validators then cover the **small local UX constraints** that are easiest to keep next to the form field.
