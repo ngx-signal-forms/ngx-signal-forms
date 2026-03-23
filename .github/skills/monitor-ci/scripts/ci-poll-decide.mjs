@@ -61,7 +61,7 @@ try {
       message: 'Failed to parse ci_information JSON',
       noProgressCount: inputNoProgressCount + 1,
       envRerunCount,
-    })
+    }),
   );
   process.exit(0);
 }
