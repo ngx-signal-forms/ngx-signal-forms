@@ -18,6 +18,15 @@
 npm install @ngx-signal-forms/toolkit
 ```
 
+Optional Vest integration (v6+ required for Standard Schema support):
+
+```bash
+npm install @ngx-signal-forms/toolkit vest@^6.0.0
+```
+
+Use `vest` only when you import the optional `@ngx-signal-forms/toolkit/vest`
+entry point.
+
 ---
 
 ## AI Skills for toolkit development
@@ -92,6 +101,13 @@ The toolkit adds the pieces Angular intentionally leaves to app and library auth
 ### Debugger: `@ngx-signal-forms/toolkit/debugger`
 
 - a development-only form state inspector
+
+### Vest: `@ngx-signal-forms/toolkit/vest`
+
+- optional convenience helpers for using [Vest](https://vestjs.dev) with Angular Signal Forms
+- `validateVest(...)` as a thin wrapper around Angular Standard Schema support
+- `validateVestWarnings(...)` when only the warning bridge is needed
+- guidance for mapping Vest `warn()` output to toolkit-native warning UX
 
 ---
 
@@ -362,6 +378,36 @@ The debugger supports `FieldState`, but it cannot traverse child fields, so visi
 
 ---
 
+### `@ngx-signal-forms/toolkit/vest`
+
+Use this when your validation is mostly business policy and you want an optional,
+toolkit-branded Vest integration without making Vest part of every project.
+
+> **Requires Vest v6+** — Standard Schema support was introduced in Vest 6.
+
+**Key exports**:
+
+- `validateVest()` — Register a Vest suite through the toolkit's first-class Angular adapter
+- `validateVestWarnings()` — Register only the warning bridge
+
+```typescript
+import { form } from '@angular/forms/signals';
+import { validateVest } from '@ngx-signal-forms/toolkit/vest';
+
+const accountForm = form(accountModel, (path) => {
+  validateVest(path, accountBusinessSuite, { includeWarnings: true });
+});
+```
+
+Use Vest `warn()` for advisory guidance only. With `{ includeWarnings: true }`, the
+toolkit renders those messages through `ngx-signal-form-field-wrapper` or
+`ngx-signal-form-error` as `role="status"` warnings, while blocking Vest failures
+continue to render as `role="alert"` errors.
+
+**[📖 Full Documentation →](./packages/toolkit/vest/README.md)**
+
+---
+
 ## Configuration
 
 For global defaults, add providers to `app.config.ts`:
@@ -396,6 +442,7 @@ Live demo: [https://ngx-signal-forms.github.io/ngx-signal-forms/](https://ngx-si
 Start here:
 
 - [Toolkit API reference](./packages/toolkit/README.md)
+- [Vest integration guide](./packages/toolkit/vest/README.md)
 - [GitHub Releases](https://github.com/ngx-signal-forms/ngx-signal-forms/releases)
 - [Beta release archive](./docs/archive/)
 - [Assistive components](./packages/toolkit/assistive/README.md)
@@ -405,6 +452,8 @@ Start here:
 - [CSS framework integration](./docs/CSS_FRAMEWORK_INTEGRATION.md)
 - [Warnings support](./docs/WARNINGS_SUPPORT.md)
 - [Package architecture](./docs/PACKAGE_ARCHITECTURE.md)
+- [Advanced demo: Vest-only validation](./apps/demo/src/app/05-advanced/vest-validation/README.md)
+- [Advanced demo: Zod + Vest validation](./apps/demo/src/app/05-advanced/zod-vest-validation/README.md)
 
 ## Browser Support
 

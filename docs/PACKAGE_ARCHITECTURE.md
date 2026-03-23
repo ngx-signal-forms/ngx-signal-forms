@@ -9,6 +9,7 @@ single publishable package with multiple entry points:
 2. **`@ngx-signal-forms/toolkit/assistive`** - Styled feedback components
 3. **`@ngx-signal-forms/toolkit/form-field`** - Form field wrapper components
 4. **`@ngx-signal-forms/toolkit/headless`** - Renderless primitives
+5. **`@ngx-signal-forms/toolkit/vest`** - Optional Vest convenience helpers
 
 ## Package Structure
 
@@ -54,6 +55,12 @@ packages/toolkit/
 │   │       └── utilities.ts            # Shared utility functions
 │   ├── index.ts
 │   └── public_api.ts
+├── vest/                                # Optional Vest integration entry
+│   ├── src/
+│   │   ├── index.ts
+│   │   └── validate-vest.ts
+│   ├── ng-package.json
+│   └── README.md
 ├── index.ts                             # Primary entry (providers/types)
 ├── README.md
 └── package.json
@@ -65,6 +72,7 @@ packages/toolkit/
 - `@ngx-signal-forms/toolkit/assistive` - Styled feedback components
 - `@ngx-signal-forms/toolkit/form-field` - Form field wrapper (optional)
 - `@ngx-signal-forms/toolkit/headless` - Headless primitives (optional)
+- `@ngx-signal-forms/toolkit/vest` - Optional Vest helpers
 
 ## Installation
 
@@ -125,21 +133,29 @@ import {
 } from '@ngx-signal-forms/toolkit/headless';
 ```
 
+### Secondary Entry (Vest Helpers - Optional)
+
+```typescript
+import { validateVest } from '@ngx-signal-forms/toolkit/vest';
+```
+
 ## Dependency Graph
 
-```
+```text
 @angular/core (peer)
 @angular/forms/signals (peer) ← Signal Forms API
+vest ^6.0.0 (optional peer) ← Only when using /vest (v6+ required for Standard Schema)
         ↓
 @ngx-signal-forms/toolkit (main package)
 ├── Primary: Providers/types
 ├── /core (directives, utilities)
 ├── /assistive (optional secondary entry - styled feedback)
 ├── /form-field (optional secondary entry)
-└── /headless (optional secondary entry - renderless primitives)
+├── /headless (optional secondary entry - renderless primitives)
+└── /vest (optional secondary entry - Vest DX helpers)
 ```
 
-## Key Design Decisions
+## Design Summary
 
 ### Why Toolkit is the Main Package
 
@@ -162,6 +178,13 @@ import {
 3. **Design System Integration**: Perfect for custom component libraries
 4. **Host Directive Composition**: Works with Angular's Directive Composition API
 5. **Minimal Bundle**: Include only what you need
+
+### Why Vest is a Secondary Entry
+
+1. **Optional dependency**: Most toolkit users do not need Vest
+2. **Native Angular integration**: Angular Signal Forms already supports Standard Schema
+3. **DX-focused layer**: Keeps the helper thin and discoverable for Vest users
+4. **No runtime coupling**: Core, assistive, and form-field stay vendor-agnostic
 
 ## Future Considerations
 

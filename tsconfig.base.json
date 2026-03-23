@@ -33,6 +33,9 @@
       "@ngx-signal-forms/toolkit/form-field": [
         "./packages/toolkit/form-field/public_api.ts"
       ],
+      "@ngx-signal-forms/toolkit/vest": [
+        "./packages/toolkit/vest/src/index.ts"
+      ],
       "@ngx-signal-forms/toolkit/headless": [
         "./packages/toolkit/headless/src/index.ts"
       ],

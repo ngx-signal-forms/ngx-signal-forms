@@ -22,7 +22,13 @@
   },
   "peerDependencies": {
     "@angular/core": ">=21.2.0",
-    "@angular/forms": ">=21.2.0"
+    "@angular/forms": ">=21.2.0",
+    "vest": "^6.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vest": {
+      "optional": true
+    }
   },
   "dependencies": {},
   "sideEffects": false

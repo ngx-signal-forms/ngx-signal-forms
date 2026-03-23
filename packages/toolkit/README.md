@@ -10,6 +10,7 @@
 | `@ngx-signal-forms/toolkit/assistive`  | Error, hint, and character count components |
 | `@ngx-signal-forms/toolkit/form-field` | Form field wrapper and fieldset components  |
 | `@ngx-signal-forms/toolkit/headless`   | Renderless primitives for custom UI         |
+| `@ngx-signal-forms/toolkit/vest`       | Optional Vest convenience helpers           |
 | `@ngx-signal-forms/toolkit/debugger`   | Development-time form inspection tools      |
 
 ---
@@ -214,6 +215,85 @@ import {
   isWarningError,
   isBlockingError,
 } from '@ngx-signal-forms/toolkit/assistive';
+```
+
+---
+
+## Vest (`@ngx-signal-forms/toolkit/vest`)
+
+Optional helper APIs for consumers who use [Vest](https://vestjs.dev/) with Angular Signal Forms.
+
+Angular Signal Forms already supports Standard Schema validators natively.
+Vest 6+ suites implement that interface, and this entry point adds a first-class Angular adapter for Vest's richer suite results.
+
+> **Vest v6+ required** — Standard Schema support was introduced in Vest 6. Earlier versions will not work.
+
+```typescript
+import {
+  validateVest,
+  validateVestWarnings,
+} from '@ngx-signal-forms/toolkit/vest';
+```
+
+### validateVest
+
+First-class Angular Signal Forms adapter for Vest suites.
+It reads Vest's `run()` result directly so blocking errors and optional `warn()` guidance can be mapped from the same suite execution.
+Pass `{ includeWarnings: true }` when you want Vest `warn()` results translated into toolkit warning messages.
+
+```typescript
+import { signal } from '@angular/core';
+import { form } from '@angular/forms/signals';
+import { create, enforce, test } from 'vest';
+import { validateVest } from '@ngx-signal-forms/toolkit/vest';
+
+interface SignupModel {
+  email: string;
+}
+
+const signupSuite = create((data: SignupModel) => {
+  test('email', 'Email is required', () => {
+    enforce(data.email).isNotBlank();
+  });
+});
+
+const signupModel = signal<SignupModel>({ email: '' });
+const signupForm = form(signupModel, (path) => {
+  validateVest(path, signupSuite, { includeWarnings: true });
+});
+```
+
+Use Vest `warn()` for advisory guidance only. Those messages render through
+`ngx-signal-form-field-wrapper` or `NgxSignalFormErrorComponent` as polite status
+updates, while blocking Vest failures keep rendering as alerts.
+
+### validateVestWarnings
+
+Registers only the warning bridge for a Vest suite. This is useful when blocking validation already comes from another source but you still want Vest `warn()` output to appear in toolkit form-field components.
+
+```typescript
+validateVestWarnings(path, signupSuite);
+```
+
+Install `vest@^6.0.0` only when using this entry point.
+
+**When to use it:**
+
+- Prefer Angular Signal Forms validators for simple field rules like `required`, `email`, length, and range checks.
+- Prefer Vest when validation is mostly business logic: conditional rules, cross-field policy checks, or async server-backed validation.
+- Combining generated Zod/OpenAPI schemas with Vest is a strong pattern: use Zod for API-contract and structural validation, then layer Vest on top for richer business rules.
+- When using Angular 21.2 `submit()` with `warn:*` messages, call `submit(..., { ignoreValidators: 'all' })` and gate the action with `hasOnlyWarnings(form().errorSummary())` if warnings should remain non-blocking.
+
+```typescript
+import { form, validateStandardSchema } from '@angular/forms/signals';
+import { validateVest } from '@ngx-signal-forms/toolkit/vest';
+import { GeneratedOpenApiSchema } from './generated/openapi.zod';
+import { checkoutBusinessSuite } from './checkout.vest';
+
+const checkoutForm = form(checkoutModel, (path) => {
+  validateStandardSchema(path, GeneratedOpenApiSchema);
+  validateVest(path, checkoutBusinessSuite);
+});
 ```
 
 ### NgxSignalFormErrorComponent
