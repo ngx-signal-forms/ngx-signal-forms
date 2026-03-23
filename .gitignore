@@ -56,3 +56,4 @@ build.log
 
 .claude/worktrees
 .claude/settings.local.json
+.nx/polygraph
