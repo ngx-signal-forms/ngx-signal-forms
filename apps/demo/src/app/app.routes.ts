@@ -236,6 +236,22 @@ export const appRoutes: Routes = [
           ),
         title: getRouteTitle('/advanced-scenarios/cross-field-validation'),
       },
+      {
+        path: 'vest-validation',
+        loadComponent: () =>
+          import('./05-advanced/vest-validation/vest-validation.page').then(
+            (m) => m.VestValidationPage,
+          ),
+        title: getRouteTitle('/advanced-scenarios/vest-validation'),
+      },
+      {
+        path: 'zod-vest-validation',
+        loadComponent: () =>
+          import('./05-advanced/zod-vest-validation/zod-vest-validation.page').then(
+            (m) => m.ZodVestValidationPage,
+          ),
+        title: getRouteTitle('/advanced-scenarios/zod-vest-validation'),
+      },
     ],
   },
 

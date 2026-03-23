@@ -77,6 +77,44 @@ This section demonstrates **production-ready patterns** for real-world applicati
 
 ---
 
+### vest-validation
+
+**Focus:** Pure Vest business validation through Angular Signal Forms
+
+**What you'll learn:**
+
+- `validateVest(path, suite)` as a thin adapter over Angular Standard Schema support
+- Conditional business rules that branch on multiple fields
+- How toolkit wrappers render Vest-produced blocking errors and `warn()` guidance without special UI code
+- How to keep warnings advisory while using Angular 21.2 `submit()`
+
+**Technologies:**
+
+- Vest 6 Standard Schema support
+- `@ngx-signal-forms/toolkit/vest`
+- Angular Signal Forms + toolkit form-field wrapper
+
+---
+
+### zod-vest-validation
+
+**Focus:** Layer contract validation and business policy without duplication
+
+**What you'll learn:**
+
+- Zod for structural and contract rules
+- Vest for higher-order business policy
+- How both layers merge into one Angular Signal Forms error tree
+- How warnings still render through the wrapper / assistive layer without custom markup
+
+**Technologies:**
+
+- Zod Standard Schema validation
+- Vest business suites
+- Angular Signal Forms layered validation callbacks
+
+---
+
 ### Consolidated examples (route cleanup)
 
 The following overlapping demos were consolidated to reduce duplication:

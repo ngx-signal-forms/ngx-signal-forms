@@ -1,84 +1,106 @@
 {
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "run-e2e",
-      "type": "shell",
-      "command": "npx nx e2e demo-e2e --skip-nx-cache",
-      "isBackground": false
-    },
-    {
-      "label": "lint",
-      "type": "shell",
-      "command": "npx nx run-many -t lint",
-      "isBackground": false
-    },
-    {
-      "label": "e2e-lint",
-      "type": "shell",
-      "command": "npx nx run demo-e2e:lint",
-      "isBackground": false
-    },
-    {
-      "label": "focused-complex-forms-e2e",
-      "type": "shell",
-      "command": "pnpm",
-      "args": [
-        "exec",
-        "playwright",
-        "test",
-        "apps/demo-e2e/src/forms/04-form-field-wrapper/complex-forms.spec.ts",
-        "--config",
-        "apps/demo-e2e/playwright.config.ts",
-        "--project=chromium"
-      ],
-      "isBackground": false,
-      "group": "test"
-    },
-    {
-      "label": "focused-complex-forms-e2e-rerun",
-      "type": "shell",
-      "command": "cd apps/demo-e2e && pnpm exec playwright test src/forms/04-form-field-wrapper/complex-forms.spec.ts --config playwright.config.ts --project=chromium",
-      "isBackground": false,
-      "group": "test"
-    },
-    {
-      "label": "build-toolkit-and-demo",
-      "type": "shell",
-      "command": "pnpm nx build toolkit --skip-nx-cache && pnpm nx build demo --skip-nx-cache",
-      "isBackground": false,
-      "group": "build"
-    },
-    {
-      "label": "playwright-complex-forms-focused",
-      "type": "shell",
-      "command": "pnpm exec playwright test apps/demo-e2e/src/forms/04-form-field-wrapper/complex-forms.spec.ts --config apps/demo-e2e/playwright.config.ts --project=chromium",
-      "isBackground": false,
-      "group": "test"
-    },
-    {
-      "label": "build-demo-static",
-      "type": "shell",
-      "command": "pnpm",
-      "args": ["nx", "build", "demo", "--outputStyle=static"],
-      "isBackground": false,
-      "group": "build"
-    },
-    {
-      "label": "focused-custom-controls-e2e",
-      "type": "shell",
-      "command": "pnpm",
-      "args": [
-        "exec",
-        "playwright",
-        "test",
-        "apps/demo-e2e/src/forms/04-form-field-wrapper/custom-controls.spec.ts",
-        "--config",
-        "apps/demo-e2e/playwright.config.ts",
-        "--project=chromium"
-      ],
-      "isBackground": false,
-      "group": "test"
-    }
-  ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "run-e2e",
+			"type": "shell",
+			"command": "npx nx e2e demo-e2e --skip-nx-cache",
+			"isBackground": false
+		},
+		{
+			"label": "lint",
+			"type": "shell",
+			"command": "npx nx run-many -t lint",
+			"isBackground": false
+		},
+		{
+			"label": "e2e-lint",
+			"type": "shell",
+			"command": "npx nx run demo-e2e:lint",
+			"isBackground": false
+		},
+		{
+			"label": "focused-complex-forms-e2e",
+			"type": "shell",
+			"command": "pnpm",
+			"args": [
+				"exec",
+				"playwright",
+				"test",
+				"apps/demo-e2e/src/forms/04-form-field-wrapper/complex-forms.spec.ts",
+				"--config",
+				"apps/demo-e2e/playwright.config.ts",
+				"--project=chromium"
+			],
+			"isBackground": false,
+			"group": "test"
+		},
+		{
+			"label": "focused-complex-forms-e2e-rerun",
+			"type": "shell",
+			"command": "cd apps/demo-e2e && pnpm exec playwright test src/forms/04-form-field-wrapper/complex-forms.spec.ts --config playwright.config.ts --project=chromium",
+			"isBackground": false,
+			"group": "test"
+		},
+		{
+			"label": "build-toolkit-and-demo",
+			"type": "shell",
+			"command": "pnpm nx build toolkit --skip-nx-cache && pnpm nx build demo --skip-nx-cache",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "playwright-complex-forms-focused",
+			"type": "shell",
+			"command": "pnpm exec playwright test apps/demo-e2e/src/forms/04-form-field-wrapper/complex-forms.spec.ts --config apps/demo-e2e/playwright.config.ts --project=chromium",
+			"isBackground": false,
+			"group": "test"
+		},
+		{
+			"label": "build-demo-static",
+			"type": "shell",
+			"command": "pnpm",
+			"args": [
+				"nx",
+				"build",
+				"demo",
+				"--outputStyle=static"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "focused-custom-controls-e2e",
+			"type": "shell",
+			"command": "pnpm",
+			"args": [
+				"exec",
+				"playwright",
+				"test",
+				"apps/demo-e2e/src/forms/04-form-field-wrapper/custom-controls.spec.ts",
+				"--config",
+				"apps/demo-e2e/playwright.config.ts",
+				"--project=chromium"
+			],
+			"isBackground": false,
+			"group": "test"
+		},
+		{
+			"label": "focused-vest-and-zod-vest-e2e",
+			"type": "shell",
+			"command": "pnpm",
+			"args": [
+				"exec",
+				"playwright",
+				"test",
+				"apps/demo-e2e/src/forms/05-advanced/vest-validation.spec.ts",
+				"apps/demo-e2e/src/forms/05-advanced/zod-vest-validation.spec.ts",
+				"--config",
+				"apps/demo-e2e/playwright.config.ts",
+				"--project=chromium"
+			],
+			"isBackground": false,
+			"group": "test"
+		}
+	]
 }

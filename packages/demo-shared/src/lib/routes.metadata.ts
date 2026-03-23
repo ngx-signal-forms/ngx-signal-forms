@@ -17,6 +17,8 @@ export const DEMO_PATHS = {
   advancedWizard: '/advanced-scenarios/advanced-wizard',
   asyncValidation: '/advanced-scenarios/async-validation',
   crossFieldValidation: '/advanced-scenarios/cross-field-validation',
+  vestValidation: '/advanced-scenarios/vest-validation',
+  zodVestValidation: '/advanced-scenarios/zod-vest-validation',
 } as const;
 
 export const DEMO_CATEGORIES = [
@@ -131,6 +133,14 @@ export const DEMO_CATEGORIES = [
       {
         path: '/advanced-scenarios/cross-field-validation',
         label: 'Cross-Field Validation',
+      },
+      {
+        path: '/advanced-scenarios/vest-validation',
+        label: 'Vest-Only Validation',
+      },
+      {
+        path: '/advanced-scenarios/zod-vest-validation',
+        label: 'Zod + Vest Validation',
       },
     ],
   },
