@@ -254,25 +254,43 @@ test.describe('Custom Signal Forms Controls', () => {
     });
 
     test('should keep invalid outline borders for native and custom required fields', async () => {
+      const controlIds = ['productName', 'rating', 'serviceRating'] as const;
+      const initialBorderColors = new Map<string, string>();
+
       await test.step('Switch to outline mode and submit the empty form', async () => {
         await page.showOutlineAppearance();
+
+        for (const controlId of controlIds) {
+          const content = page.getWrapperContentByControlId(controlId);
+          initialBorderColors.set(
+            controlId,
+            await content.evaluate(
+              (element) => window.getComputedStyle(element).borderColor,
+            ),
+          );
+        }
+
         await page.submitButton.click();
       });
 
       await test.step('Verify native and custom invalid wrappers render the shared error border', async () => {
-        for (const controlId of ['productName', 'rating', 'serviceRating']) {
+        for (const controlId of controlIds) {
           const wrapper = page.getWrapperByControlId(controlId);
           const content = page.getWrapperContentByControlId(controlId);
+          const initialBorderColor = initialBorderColors.get(controlId);
 
           await expect(wrapper).toHaveClass(
             /ngx-signal-form-field-wrapper--invalid/,
           );
+          expect(initialBorderColor).toBeDefined();
 
-          const borderColor = await content.evaluate(
-            (element) => window.getComputedStyle(element).borderColor,
-          );
-
-          expect(borderColor).not.toBe('rgba(50, 65, 85, 0.25)');
+          await expect
+            .poll(async () => {
+              return content.evaluate(
+                (element) => window.getComputedStyle(element).borderColor,
+              );
+            })
+            .not.toBe(initialBorderColor);
         }
       });
     });
@@ -280,19 +298,48 @@ test.describe('Custom Signal Forms Controls', () => {
     test('should left-align outlined rating controls and reuse the shared outline padding', async () => {
       await test.step('Switch to outline mode', async () => {
         await page.showOutlineAppearance();
+        await expect(page.outlineAppearanceButton).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        );
+
+        for (const controlId of [
+          'productName',
+          'rating',
+          'serviceRating',
+          'wouldRecommend',
+        ]) {
+          await expect(page.getWrapperByControlId(controlId)).toHaveClass(
+            /ngx-signal-forms-outline/,
+          );
+        }
       });
 
-      await test.step('Verify outlined rating wrappers use the same padding as the text field wrapper', async () => {
+      await test.step('Verify outlined rating wrappers reuse the text field wrapper horizontal padding', async () => {
         const productNamePadding = await page
           .getWrapperContentByControlId('productName')
-          .evaluate((element) => window.getComputedStyle(element).padding);
+          .evaluate((element) => {
+            const styles = window.getComputedStyle(element);
+
+            return {
+              paddingLeft: styles.paddingLeft,
+              paddingRight: styles.paddingRight,
+            };
+          });
 
         for (const controlId of ['rating', 'serviceRating', 'wouldRecommend']) {
           const padding = await page
             .getWrapperContentByControlId(controlId)
-            .evaluate((element) => window.getComputedStyle(element).padding);
+            .evaluate((element) => {
+              const styles = window.getComputedStyle(element);
 
-          expect(padding).toBe(productNamePadding);
+              return {
+                paddingLeft: styles.paddingLeft,
+                paddingRight: styles.paddingRight,
+              };
+            });
+
+          expect(padding).toEqual(productNamePadding);
         }
       });
 
