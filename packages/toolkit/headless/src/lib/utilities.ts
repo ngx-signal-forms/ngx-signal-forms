@@ -53,6 +53,10 @@ export type FieldStateLike = {
   errors?: ErrorReadableState['errors'];
 };
 
+function normalizeValidationErrors(errors: unknown): ValidationError[] {
+  return Array.isArray(errors) ? errors : [];
+}
+
 /**
  * Read a boolean flag from FieldState using duck-typing.
  *
@@ -104,12 +108,12 @@ export function readErrors(state: unknown): ValidationError[] {
 
   const summary = (state as FieldStateLike).errorSummary;
   if (typeof summary === 'function') {
-    return summary();
+    return normalizeValidationErrors(summary());
   }
 
   const errors = (state as FieldStateLike).errors;
   if (typeof errors === 'function') {
-    return errors();
+    return normalizeValidationErrors(errors());
   }
 
   return [];
@@ -138,7 +142,7 @@ export function readDirectErrors(state: unknown): ValidationError[] {
 
   const errors = (state as FieldStateLike).errors;
   if (typeof errors === 'function') {
-    return errors();
+    return normalizeValidationErrors(errors());
   }
 
   return [];

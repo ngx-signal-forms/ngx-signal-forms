@@ -7,7 +7,7 @@ import {
   Injector,
   signal,
 } from '@angular/core';
-import { FORM_FIELD } from '@angular/forms/signals';
+import { FORM_FIELD, type FieldState } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORM_CONTEXT } from '../tokens';
 import type { ErrorDisplayStrategy } from '../types';
 import { shouldShowErrors } from '../utilities/error-strategies';
@@ -16,7 +16,20 @@ import {
   generateWarningId,
   resolveFieldName,
 } from '../utilities/field-resolution';
+import type {
+  ErrorReadableState,
+  ErrorVisibilityState,
+} from '../utilities/field-state-types';
 import { isBlockingError, isWarningError } from '../utilities/warning-error';
+
+type RequiredFieldState = Pick<FieldState<unknown>, 'required'>;
+
+interface AutoAriaFieldState
+  extends Partial<ErrorReadableState>, Partial<RequiredFieldState> {}
+
+function isAutoAriaFieldState(value: unknown): value is AutoAriaFieldState {
+  return value != null && typeof value === 'object';
+}
 
 /**
  * Automatically manages ARIA attributes for Signal Forms controls.
@@ -56,21 +69,54 @@ import { isBlockingError, isWarningError } from '../utilities/warning-error';
   },
 })
 export class NgxSignalFormAutoAriaDirective {
-  #shouldShowBy(
-    predicate: (error: Readonly<{ kind: string }>) => boolean,
-  ): boolean {
+  #resolveFieldState(): AutoAriaFieldState | null {
     const field = this.#formField.field();
-    const fieldState = field();
+    const fieldState =
+      typeof field === 'function' ? field() : this.#formField.state();
 
-    const errors = fieldState.errors();
-    const hasMatchingErrors = errors.some(predicate);
+    return isAutoAriaFieldState(fieldState) ? fieldState : null;
+  }
+
+  #hasUsableFieldState(): boolean {
+    return this.#resolveFieldState() !== null;
+  }
+
+  #shouldShowBy(errorType: 'blocking' | 'warning'): boolean {
+    const fieldState = this.#resolveFieldState();
+
+    if (!fieldState) {
+      return false;
+    }
+
+    const errors =
+      typeof fieldState.errors === 'function' ? fieldState.errors() : [];
+
+    if (!Array.isArray(errors)) {
+      return false;
+    }
+
+    const hasMatchingErrors = errors.some(
+      errorType === 'blocking' ? isBlockingError : isWarningError,
+    );
     if (!hasMatchingErrors) return false;
 
     const strategy: ErrorDisplayStrategy =
       this.#context?.errorStrategy() ?? 'on-touch';
     const submittedStatus = this.#context?.submittedStatus() ?? 'unsubmitted';
 
-    return shouldShowErrors(fieldState, strategy, submittedStatus);
+    if (
+      typeof fieldState.invalid !== 'function' ||
+      typeof fieldState.touched !== 'function'
+    ) {
+      return false;
+    }
+
+    const errorVisibilityState: ErrorVisibilityState = {
+      invalid: fieldState.invalid,
+      touched: fieldState.touched,
+    };
+
+    return shouldShowErrors(errorVisibilityState, strategy, submittedStatus);
   }
 
   readonly #element = inject(ElementRef<HTMLElement>);
@@ -99,7 +145,7 @@ export class NgxSignalFormAutoAriaDirective {
    * Respects form-level ErrorDisplayStrategy from NgxSignalFormDirective (`[formRoot]`).
    */
   readonly #shouldShowErrors = computed(() => {
-    return this.#shouldShowBy((error) => isBlockingError(error));
+    return this.#shouldShowBy('blocking');
   });
 
   /**
@@ -107,7 +153,7 @@ export class NgxSignalFormAutoAriaDirective {
    * Warnings use same visibility logic as errors.
    */
   readonly #shouldShowWarnings = computed(() => {
-    return this.#shouldShowBy((error) => isWarningError(error));
+    return this.#shouldShowBy('warning');
   });
 
   /**
@@ -118,6 +164,10 @@ export class NgxSignalFormAutoAriaDirective {
    * appears when errors should be visible according to the strategy.
    */
   protected readonly ariaInvalid = computed(() => {
+    if (!this.#hasUsableFieldState()) {
+      return null;
+    }
+
     return this.#shouldShowErrors() ? 'true' : 'false';
   });
 
@@ -126,8 +176,15 @@ export class NgxSignalFormAutoAriaDirective {
    * Returns 'true' | null based on the field's `required()` signal.
    */
   protected readonly ariaRequired = computed(() => {
-    const fieldState = this.#formField.state();
-    return fieldState.required() ? 'true' : null;
+    const fieldState = this.#resolveFieldState();
+
+    if (!fieldState) {
+      return null;
+    }
+
+    return typeof fieldState.required === 'function' && fieldState.required()
+      ? 'true'
+      : null;
   });
 
   /**

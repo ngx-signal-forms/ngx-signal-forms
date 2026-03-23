@@ -25,10 +25,19 @@ import type { FieldTree } from '@angular/forms/signals';
  */
 export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
   const errors = formTree().errorSummary();
-  if (errors.length === 0) return false;
+  if (!Array.isArray(errors) || errors.length === 0) return false;
 
   const firstError = errors[0];
+
+  if (typeof firstError.fieldTree !== 'function') {
+    return false;
+  }
+
   const fieldState = firstError.fieldTree();
+
+  if (!fieldState || typeof fieldState.focusBoundControl !== 'function') {
+    return false;
+  }
 
   fieldState.focusBoundControl();
   return true;

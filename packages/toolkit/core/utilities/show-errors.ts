@@ -181,8 +181,18 @@ function computeShowErrorsInternal(
     const fieldState = unwrapValue(field);
     const strategyValue = unwrapValue(strategy);
 
-    const isInvalid = fieldState.invalid?.() ?? false;
-    const isTouched = fieldState.touched?.() ?? false;
+    const isInvalid =
+      fieldState &&
+      typeof fieldState === 'object' &&
+      typeof fieldState.invalid === 'function'
+        ? fieldState.invalid()
+        : false;
+    const isTouched =
+      fieldState &&
+      typeof fieldState === 'object' &&
+      typeof fieldState.touched === 'function'
+        ? fieldState.touched()
+        : false;
 
     const status = submittedStatus ? unwrapValue(submittedStatus) : undefined;
     const fallbackStatus = status ?? (isTouched ? 'submitted' : 'unsubmitted');

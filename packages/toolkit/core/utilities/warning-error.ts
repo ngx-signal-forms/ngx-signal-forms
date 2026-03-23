@@ -39,7 +39,9 @@ export function isWarningError(error: ValidationError): boolean {
  */
 export function isBlockingError(error: ValidationError): boolean {
   const kind = Reflect.get(error, 'kind');
-  return typeof kind === 'string' && !kind.startsWith('warn:');
+  return (
+    typeof kind === 'string' && kind.length > 0 && !kind.startsWith('warn:')
+  );
 }
 
 /**

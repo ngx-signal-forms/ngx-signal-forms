@@ -12,6 +12,7 @@ import {
   injectFormContext,
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
+  showErrors,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
@@ -91,41 +92,36 @@ export class ErrorDisplayHelpersComponent {
   readonly emailField = input.required<FieldTree<string>>();
 
   readonly #formContext = injectFormContext();
+  readonly #nameFieldState = computed<FieldState<string>>(() =>
+    this.nameField()(),
+  );
+  readonly #emailFieldState = computed<FieldState<string>>(() =>
+    this.emailField()(),
+  );
 
   protected readonly resolvedStrategy = computed<ErrorDisplayStrategy>(
-    () => this.#formContext.errorStrategy() ?? 'on-touch',
+    () => this.#formContext?.errorStrategy() ?? 'on-touch',
   );
 
   protected readonly submittedStatus = computed<SubmittedStatus>(
-    () => this.#formContext.submittedStatus() ?? 'unsubmitted',
+    () => this.#formContext?.submittedStatus() ?? 'unsubmitted',
   );
 
-  // showErrors() helper computes visibility based on strategy, field state, and submission
-  // We wrap in computed to properly unwrap InputSignal → FieldTree → FieldState
-  protected readonly showNameErrors = computed(() =>
-    this.#computeShowErrors(this.nameField()()),
+  protected readonly showNameErrors = showErrors(
+    this.#nameFieldState,
+    this.resolvedStrategy,
+    this.submittedStatus,
   );
 
-  protected readonly showEmailErrors = computed(() =>
-    this.#computeShowErrors(this.emailField()()),
+  protected readonly showEmailErrors = showErrors(
+    this.#emailFieldState,
+    this.resolvedStrategy,
+    this.submittedStatus,
   );
 
   protected readonly showPersonalInfoErrors = computed(
     () => this.showNameErrors() || this.showEmailErrors(),
   );
-
-  // Inline showErrors logic to handle InputSignal<FieldTree<T>> properly
-  #computeShowErrors(fieldState: FieldState<string>): boolean {
-    const strategy = this.resolvedStrategy();
-    const status = this.submittedStatus();
-
-    if (!fieldState.invalid()) return false;
-    if (strategy === 'immediate') return true;
-    if (strategy === 'on-touch') return fieldState.touched();
-    if (strategy === 'on-submit')
-      return status === 'submitted' || status === 'submitting';
-    return false;
-  }
 }
 
 /**

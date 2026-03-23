@@ -10,15 +10,15 @@ export function resolveErrorDisplayStrategy(
   contextStrategy?: ResolvedErrorDisplayStrategy | null,
   configDefault?: ResolvedErrorDisplayStrategy | null,
 ): ResolvedErrorDisplayStrategy {
-  if (inputStrategy !== undefined && inputStrategy !== 'inherit') {
+  if (inputStrategy != null && inputStrategy !== 'inherit') {
     return inputStrategy;
   }
 
-  if (contextStrategy !== undefined) {
+  if (contextStrategy != null) {
     return contextStrategy;
   }
 
-  if (configDefault !== undefined) {
+  if (configDefault != null) {
     return configDefault;
   }
 
