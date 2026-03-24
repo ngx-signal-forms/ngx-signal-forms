@@ -147,6 +147,23 @@ validateHttp(path.username, {
 });
 ```
 
+### Standard Schema (Zod, ArkType, etc.)
+
+Angular Signal Forms supports the [Standard Schema](https://standardschema.dev/) interface natively. Any library implementing it (Zod, ArkType, Valibot) can be used directly:
+
+```typescript
+import { validateStandardSchema } from '@angular/forms/signals';
+import { z } from 'zod';
+
+const accountSchema = z.object({
+  email: z.string().email(),
+});
+
+form(signal(data), (path) => {
+  validateStandardSchema(path, accountSchema);
+});
+```
+
 ## Field State Signals
 
 ```typescript
@@ -220,10 +237,9 @@ const addressSchema = schema<Address>((path) => {
   required(path.city);
 });
 
+// Apply a reusable schema to an array of items
 form(signal(data), (path) => {
-  apply(path.address, addressSchema);
-  applyEach(path.items, itemSchema);
-  applyWhenValue(path.payment, (p): p is Card => p.type === 'card', cardSchema);
+  applyEach(path.items, addressSchema);
 });
 ```
 

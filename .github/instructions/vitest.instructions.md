@@ -146,12 +146,9 @@ const mock = new Spy();
 
 - Use Vitest Browser UI for all component tests whenever possible.
 - **Browser Mode is stable in Vitest 4** (no longer experimental).
-- Always use `render()` from Angular Testing Library.
+- For **component classes in full Browser Mode**, prefer Angular's native `TestBed.createComponent(...)`. Use Angular Testing Library `render()` when you need inline templates, directive-heavy scenarios, or template composition helpers.
 - Use role-based queries (`getByRole`, `findByRole`, etc.) for DOM assertions.
-- **For user interactions, ALWAYS use `userEvent` from `@testing-library/user-event`** (NOT `fireEvent`).
-  - `userEvent` simulates realistic user interactions with all necessary event sequences
-  - `fireEvent` only dispatches raw DOM events and misses browser behavior
-  - Never use `fireEvent` - it bypasses important accessibility and interactability checks
+- **For user interactions in full Browser Mode, prefer `page` locators or `userEvent` from `vitest/browser`**. Use `@testing-library/user-event` only for partial-browser or non-browser Angular Testing Library tests. Never default to `fireEvent` (see "User Interactions" section below).
 - **Vitest 4 Browser Provider:** Import browser providers from dedicated packages:
   - `import { playwright } from '@vitest/browser-playwright'`
   - `import { webdriverio } from '@vitest/browser-webdriverio'`
@@ -165,45 +162,47 @@ const mock = new Spy();
 - For async operations, always `await TestBed.inject(ApplicationRef).whenStable()` after triggering effects/signals.
 - When creating a Test Component, use Template Driven Forms.
 - Run tests in headless mode for CI pipelines and Browser UI for debugging.
-- **Always use `userEvent` from `@testing-library/user-event`, NEVER `fireEvent`** - see "User Interactions with userEvent" section below.
 - **Debugging improvements in Vitest 4:**
   - Use `--inspect` flag to connect to Chrome DevTools manually (playwright/webdriverio)
   - VS Code extension supports "Debug Test" button for browser tests
   - Vitest automatically disables `trackUnhandledErrors` option when debugging
 
-### Choosing Between Bindings API and componentProperties
+### Choosing Between `TestBed.createComponent()` and `render()`
 
-**Angular Testing Library v18.1.0+ and Angular v20.1+** introduced the new `bindings` API with `inputBinding`, `outputBinding`, and `twoWayBinding`. Choose the appropriate approach based on what you're rendering:
+**Angular v20.1+** supports `bindings` directly on `TestBed.createComponent(...)`, and Angular Testing Library also supports bindings for its `render()` helpers. Choose the approach based on what you're rendering:
 
-#### Component-Based Rendering (Use `bindings`)
+#### Component Class Rendering (Prefer `TestBed.createComponent`)
 
-When rendering **component classes directly**, use the `bindings` property:
+When testing a **component class directly** in full Browser Mode, prefer Angular's native test API:
 
 ```typescript
 import { inputBinding, outputBinding, twoWayBinding } from '@angular/core';
 import { signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
 
-// Rendering a component class
-await render(MyFormComponent, {
+// Creating a component directly
+const fixture = TestBed.createComponent(MyFormComponent, {
   bindings: [
     inputBinding('initialData', signal({ name: 'John' })),
     outputBinding('dataSubmit', vi.fn()),
   ],
 });
+
+await fixture.whenStable();
 ```
 
 **When to use:**
 
-- Testing standalone components with defined `input()` or `@Input()` properties
-- Testing components with `output()` or `@Output()` properties
+- Testing standalone components with defined `input()` properties
+- Testing components with `output()` properties
 - Testing components with `model()` two-way bindings
-- Need type-safe, signal-based property binding
+- Using full Browser Mode with `page` / `expect.element`
+- Need Angular-native, signal-based property binding without an extra helper layer
 
-**Deprecation notice:** `componentInputs`, `inputs`, `componentOutputs`, and `on` are deprecated. Use `bindings` instead for component-based rendering.
+#### Template-Based Rendering (Use `render`)
 
-#### Template-Based Rendering (Use `componentProperties`)
-
-When rendering **template strings** (e.g., testing directives in HTML context), use `componentProperties`:
+When rendering **template strings** (e.g., testing directives in HTML context), use Angular Testing Library `render()` with `componentProperties`:
 
 ```typescript
 // Rendering an inline template string
@@ -230,47 +229,51 @@ await render(
 
 **Note:** `componentProperties` is **NOT deprecated** and remains the correct choice for template-based rendering.
 
-### Bindings API Examples (Component-Based Rendering)
+### Bindings Examples (Component Class Rendering)
 
 **Setting Input Properties:**
 
 ```typescript
 import { inputBinding } from '@angular/core';
+import { signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 
 // With signal (preferred for reactivity)
 const nameSignal = signal('John');
-await render(GreetingComponent, {
+const fixture = TestBed.createComponent(GreetingComponent, {
   bindings: [inputBinding('name', nameSignal)],
 });
 
 // With inline function
-await render(GreetingComponent, {
+TestBed.createComponent(GreetingComponent, {
   bindings: [inputBinding('age', () => 25)],
 });
 
 // With aliased input (use alias name, not property name)
-await render(GreetingComponent, {
+TestBed.createComponent(GreetingComponent, {
   bindings: [inputBinding('greetingAlias', signal('Hello'))],
 });
 
 // Update signal after rendering
 nameSignal.set('Jane');
-fixture.detectChanges(); // Or use findBy queries for auto-retry
+await fixture.whenStable();
 ```
 
 **Testing Output Properties:**
 
 ```typescript
 import { outputBinding } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
+import { page } from 'vitest/browser';
 
 const onClickSpy = vi.fn();
-await render(ButtonComponent, {
+TestBed.createComponent(ButtonComponent, {
   bindings: [outputBinding('clicked', onClickSpy)],
 });
 
-// Trigger action that emits the output
-await userEvent.click(screen.getByRole('button'));
+// Trigger the user-visible action with page/userEvent in Browser Mode
+await page.getByRole('button').click();
 
 // Assert output was emitted with correct value
 expect(onClickSpy).toHaveBeenCalledWith(expectedValue);
@@ -280,16 +283,19 @@ expect(onClickSpy).toHaveBeenCalledWith(expectedValue);
 
 ```typescript
 import { twoWayBinding } from '@angular/core';
+import { signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { page } from 'vitest/browser';
 
 // For model() properties - MUST use writable signal
 const valueSignal = signal('initial');
-await render(InputComponent, {
+TestBed.createComponent(InputComponent, {
   bindings: [twoWayBinding('value', valueSignal)],
 });
 
 // Verify two-way sync works
 expect(valueSignal()).toBe('initial');
-await userEvent.type(screen.getByRole('textbox'), 'updated');
+await page.getByRole('textbox').fill('updated');
 expect(valueSignal()).toBe('updated');
 ```
 
@@ -359,73 +365,51 @@ await render(
   - `expect.element().toBeInViewport()` - Check if element is in viewport (Browser Mode)
   - `expect.element().toMatchScreenshot()` - Visual regression testing (Browser Mode)
 
-### User Interactions with userEvent
+### User Interactions
 
-**ALWAYS use `userEvent` from `@testing-library/user-event` - NEVER use `fireEvent`**
+**Default rule:** in full Vitest Browser Mode, prefer `page` locators or `userEvent` from `vitest/browser`; do not default to `fireEvent`.
 
-`userEvent` simulates realistic user interactions with proper event sequences and accessibility checks, while `fireEvent` only dispatches raw DOM events and misses browser behavior.
+Vitest Browser Mode can drive real browser interactions through the configured provider. That gives you actionability checks and behavior closer to production than synthetic DOM events.
 
-**Setup pattern:**
+**Preferred pattern for full Browser Mode:**
 
 ```typescript
-import { render, screen } from '@angular/core/testing';
-import { userEvent } from '@testing-library/user-event';
+import { expect, test } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+import { page, userEvent } from 'vitest/browser';
 
 test('user can type and submit', async () => {
-  const user = userEvent.setup(); // ✅ Setup user instance
-  await render(MyComponent);
+  TestBed.createComponent(MyComponent);
 
-  // Use user instance for all interactions
-  const input = screen.getByRole('textbox', { name: /email/i });
-  await user.type(input, 'test@example.com'); // ✅ Correct
-  await user.click(screen.getByRole('button', { name: /submit/i }));
+  await userEvent.fill(
+    page.getByRole('textbox', { name: /email/i }),
+    'test@example.com',
+  );
+  await page.getByRole('button', { name: /submit/i }).click();
 
-  // ❌ WRONG - Never use fireEvent
-  // fireEvent.click(button);
-  // fireEvent.change(input, { target: { value: 'test' } });
+  await expect.element(page.getByRole('status')).toHaveTextContent(/saved/i);
 });
 ```
 
-**Common userEvent methods (all use async/await):**
+**Use `@testing-library/user-event` only when you are not using full Browser Mode** (for example, partial-browser migration tests or Node/jsdom Angular Testing Library tests):
 
 ```typescript
-const user = userEvent.setup();
+import userEvent from '@testing-library/user-event';
+import { render, screen } from '@testing-library/angular';
 
-// Text input
-await user.type(element, 'text to type');
-await user.clear(element); // Clear text field
+test('user can type and submit', async () => {
+  const user = userEvent.setup();
+  await render(MyComponent);
 
-// Clicking
-await user.click(element);
-await user.dblClick(element);
-
-// Keyboard
-await user.keyboard('{Enter}'); // Type Enter key
-await user.keyboard('{Control>}a{/Control}'); // Ctrl+A
-
-// Selection
-await user.selectOptions(selectElement, 'option value');
-await user.deselectOptions(selectElement, 'option value');
-
-// Hovering
-await user.hover(element);
-await user.unhover(element);
-
-// File upload
-await user.upload(inputElement, file);
-
-// Tab navigation
-await user.tab(); // Tab to next element
-await user.tab({ shift: true }); // Shift+Tab to previous
+  await user.type(
+    screen.getByRole('textbox', { name: /email/i }),
+    'test@example.com',
+  );
+  await user.click(screen.getByRole('button', { name: /submit/i }));
+});
 ```
 
-**Why NOT to use `fireEvent`:**
-
-- ❌ Doesn't trigger all necessary event sequences
-- ❌ Skips accessibility checks (allows clicking disabled elements, etc.)
-- ❌ Doesn't simulate realistic browser behavior
-- ❌ May miss bugs that users would catch
-- ✅ `userEvent` does all of the above
+**Do not use `fireEvent` by default.** Reach for it only when you must trigger a low-level event that user-facing APIs cannot express clearly.
 
 ## Testing Strategies & Tips
 
@@ -521,24 +505,24 @@ expect(animal.bark()).toBeUndefined();
 
 ### Quick Decision Matrix - Rendering Approach
 
-| Test Scenario                            | Rendering Method | API to Use                        | Example                                                               |
-| ---------------------------------------- | ---------------- | --------------------------------- | --------------------------------------------------------------------- |
-| Testing a component class                | Component-based  | `bindings` with `inputBinding()`  | `await render(MyComponent, { bindings: [...] })`                      |
-| Testing a directive in template          | Template-based   | `componentProperties`             | `await render('<div [myDir]="val">', { componentProperties: {...} })` |
-| Testing multiple components in HTML      | Template-based   | `componentProperties`             | `await render('<ngx-a [x]="y" />', { componentProperties: {...} })`   |
-| Component with `@Input()` decorators     | Component-based  | `bindings` with `inputBinding()`  | Works with both decorators and signal inputs                          |
-| Component with `output()` or `@Output()` | Component-based  | `bindings` with `outputBinding()` | `outputBinding('click', vi.fn())`                                     |
-| Component with `model()` (two-way)       | Component-based  | `bindings` with `twoWayBinding()` | `twoWayBinding('value', signal(''))`                                  |
+| Test Scenario                            | Rendering Method | API to Use                                   | Example                                                               |
+| ---------------------------------------- | ---------------- | -------------------------------------------- | --------------------------------------------------------------------- |
+| Testing a component class                | Component-based  | `TestBed.createComponent(..., { bindings })` | `TestBed.createComponent(MyComponent, { bindings: [...] })`           |
+| Testing a directive in template          | Template-based   | `componentProperties`                        | `await render('<div [myDir]="val">', { componentProperties: {...} })` |
+| Testing multiple components in HTML      | Template-based   | `componentProperties`                        | `await render('<ngx-a [x]="y" />', { componentProperties: {...} })`   |
+| Component with `@Input()` decorators     | Component-based  | `TestBed.createComponent(..., { bindings })` | Works with both decorators and signal inputs                          |
+| Component with `output()` or `@Output()` | Component-based  | `TestBed.createComponent(..., { bindings })` | `outputBinding('click', vi.fn())`                                     |
+| Component with `model()` (two-way)       | Component-based  | `TestBed.createComponent(..., { bindings })` | `twoWayBinding('value', signal(''))`                                  |
 
 ### Quick Decision Matrix - Test Approach
 
-| Test Scenario                  | Approach         | Tools                                |
-| ------------------------------ | ---------------- | ------------------------------------ |
-| Component + Service dependency | Fake the service | `render()` + Fake implementation     |
-| Service with HTTP calls        | Mock HTTP        | `TestBed` + `HttpTestingController`  |
-| Component with `httpResource`  | Mock HTTP        | `render()` + `HttpTestingController` |
-| Pure functions/utils           | Direct call      | No setup needed                      |
-| Async signals/effects          | Use polling      | `expect.poll()` + `whenStable()`     |
+| Test Scenario                  | Approach         | Tools                                                 |
+| ------------------------------ | ---------------- | ----------------------------------------------------- |
+| Component + Service dependency | Fake the service | `TestBed.createComponent()` + Fake implementation     |
+| Service with HTTP calls        | Mock HTTP        | `TestBed` + `HttpTestingController`                   |
+| Component with `httpResource`  | Mock HTTP        | `TestBed.createComponent()` + `HttpTestingController` |
+| Pure functions/utils           | Direct call      | No setup needed                                       |
+| Async signals/effects          | Use polling      | `expect.poll()` + `whenStable()`                      |
 
 ### HttpResource
 

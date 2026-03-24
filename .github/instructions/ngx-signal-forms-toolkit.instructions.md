@@ -32,6 +32,7 @@ Use the correct entry point for the thing you need.
 | `@ngx-signal-forms/toolkit/assistive`  | Error, hint, character-count, assistive row  |
 | `@ngx-signal-forms/toolkit/form-field` | Wrapper, floating label, grouped fieldset    |
 | `@ngx-signal-forms/toolkit/headless`   | Renderless directives and utility primitives |
+| `@ngx-signal-forms/toolkit/vest`       | Vest v6+ and Standard Schema helpers         |
 | `@ngx-signal-forms/toolkit/debugger`   | Visual debugging tools for development       |
 
 ### Import rules

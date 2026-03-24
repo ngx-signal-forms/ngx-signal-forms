@@ -92,7 +92,7 @@ High-quality Angular 21+ applications with TypeScript, using Signals for state m
 
 **IMPORTANT: This project focuses on Angular 21+ Signal Forms.**
 
-**For comprehensive Signal Forms guidance, see `.github/instructions/signal-forms.instructions.md`**
+**For comprehensive Signal Forms guidance, see `.github/instructions/angular-signal-forms.instructions.md`**
 
 **Quick reference:**
 
@@ -105,7 +105,7 @@ High-quality Angular 21+ applications with TypeScript, using Signals for state m
 import { form, FormField, required, email } from '@angular/forms/signals';
 
 @Component({
-  imports: [Field],
+  imports: [FormField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <input [formField]="userForm.email" />
@@ -131,7 +131,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   imports: [ReactiveFormsModule],
-  template: `<form [formGroup]="form"><input formFieldName="email" /></form>`,
+  template: `<form [formGroup]="form"><input formControlName="email" /></form>`,
 })
 export class LegacyFormComponent {
   readonly #fb = inject(FormBuilder);
@@ -352,21 +352,6 @@ test('should display', async ({ page }) => {
   await expect(page.getByRole('heading')).toBeVisible();
 });
 ```
-
-## Implementation Workflow
-
-1. **Verify Angular Version** - Check `package.json` for exact version
-2. **Plan Architecture** - Define features, signals, routes, forms
-3. **Define Models** - TypeScript interfaces, form types, API types
-4. **Scaffold** - `ng generate component/service/guard`
-5. **Implement** - OnPush, signals, inject(), declarative templates
-6. **Add Forms** - Prefer Signal Forms for new code
-7. **Data Layer** - Use `resource()` or HttpClient with signals
-8. **Route** - Lazy load with functional guards
-9. **Style** - SCSS, responsive, accessible (WCAG 2.2)
-10. **Test** - Vitest (unit), Playwright (E2E), >80% coverage
-11. **Optimize** - Zoneless, defer blocks, lazy loading
-12. **Deploy** - `ng build --configuration production`
 
 ## Quick Reference
 

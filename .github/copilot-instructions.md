@@ -18,20 +18,24 @@ applyTo: '**'
 
 - **Framework**: Angular 21.1+ with signals, standalone components (see [angular.instructions.md](./instructions/angular.instructions.md))
 - **Forms**: Angular 21.1 Signal Forms (see [angular-signal-forms.instructions.md](./instructions/angular-signal-forms.instructions.md))
-- **Forms Enhancement**: @ngx-signal-forms/toolkit (see [ngx-signal-forms-toolkit.instructions.md](./instructions/ngx-signal-forms-toolkit.instructions.md))
+- **Forms Enhancement**: @ngx-signal-forms/toolkit — use the `ngx-signal-forms` skill (nested structure with core, assistive, form-field, headless, vest, debugger sub-skills)
+- **Toolkit Instructions**: [ngx-signal-forms-toolkit.instructions.md](./instructions/ngx-signal-forms-toolkit.instructions.md)
 - **Testing**: Vitest (unit), Playwright (E2E)
 - **Styling**: Tailwind CSS 4.x (see [tailwind.instructions.md](./instructions/tailwind.instructions.md))
 - **TypeScript**: 5.8+ with strict mode
 
 ## Project Structure
 
-### Library Entry Points
+### Toolkit Entry Points
 
-| Entry Point                            | Description                            |
-| -------------------------------------- | -------------------------------------- |
-| `@ngx-signal-forms/toolkit`            | Core providers, directives, utilities  |
-| `@ngx-signal-forms/toolkit/form-field` | Optional form field wrapper components |
-| `@ngx-signal-forms/toolkit/headless`   | Headless primitives (coming soon)      |
+| Entry Point                            | Description                                        |
+| -------------------------------------- | -------------------------------------------------- |
+| `@ngx-signal-forms/toolkit`            | Core providers, directives, utilities              |
+| `@ngx-signal-forms/toolkit/assistive`  | Standalone error, hint, character count components |
+| `@ngx-signal-forms/toolkit/form-field` | Styled wrapper and fieldset components             |
+| `@ngx-signal-forms/toolkit/headless`   | Renderless state directives and utilities          |
+| `@ngx-signal-forms/toolkit/vest`       | Vest v6+ integration (optional)                    |
+| `@ngx-signal-forms/toolkit/debugger`   | Development form inspection tools                  |
 
 ### Developer Commands
 

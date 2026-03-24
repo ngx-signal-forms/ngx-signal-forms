@@ -29,29 +29,6 @@ entry point.
 
 ---
 
-## AI Skills for toolkit development
-
-This repository also includes focused AI skills for developers working on or with the toolkit.
-
-### Available skills
-
-- `ngx-signal-forms-toolkit-core` — `.github/skills/ngx-signal-forms-toolkit-core/`
-- `ngx-signal-forms-toolkit-assistive` — `.github/skills/ngx-signal-forms-toolkit-assistive/`
-- `ngx-signal-forms-toolkit-form-field` — `.github/skills/ngx-signal-forms-toolkit-form-field/`
-- `ngx-signal-forms-toolkit-headless` — `.github/skills/ngx-signal-forms-toolkit-headless/`
-- `ngx-signal-forms-toolkit-debugger` — `.github/skills/ngx-signal-forms-toolkit-debugger/`
-
-Each skill is scoped to a specific public entry point or feature family and includes repo-grounded guidance plus demo references.
-
-### How developers can use them
-
-- **Copy them directly today**: copy the skill folders from `.github/skills/` into a local skills directory for Copilot, Codex, or another compatible agent workflow.
-- **Package/distribute them later**: these skills can later be packaged or exposed through tooling such as `skill.sh`, or surfaced through documentation/discovery workflows that use `mcp_context7_query-docs`.
-
-If the goal is to work on a specific toolkit area, start with the matching skill before editing code so the agent stays aligned with the correct entry point and demo patterns.
-
----
-
 ## Why use it?
 
 Angular Signal Forms already gives you:
@@ -551,6 +528,18 @@ Start here:
 - [Package architecture](./docs/PACKAGE_ARCHITECTURE.md)
 - [Advanced demo: Vest-only validation](./apps/demo/src/app/05-advanced/vest-validation/README.md)
 - [Advanced demo: Zod + Vest validation](./apps/demo/src/app/05-advanced/zod-vest-validation/README.md)
+
+## Developer Resources
+
+### AI skill
+
+Install the `ngx-signal-forms` skill for AI-assisted toolkit development:
+
+```bash
+npx skills add https://github.com/ngx-signal-forms/ngx-signal-forms --skill ngx-signal-forms
+```
+
+The skill covers the full toolkit — entry points, patterns, ARIA automation, and demo references.
 
 ## Browser Support
 

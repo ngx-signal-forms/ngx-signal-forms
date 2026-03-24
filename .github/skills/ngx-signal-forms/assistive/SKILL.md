@@ -1,0 +1,100 @@
+---
+name: ngx-signal-forms-assistive
+description: Implements @ngx-signal-forms/toolkit/assistive standalone feedback components. Use when adding inline error display, helper hint text, character counters, or assistive layout rows without a full field wrapper. Part of the ngx-signal-forms skill suite.
+---
+
+# Toolkit Assistive
+
+Implements the `@ngx-signal-forms/toolkit/assistive` entry point.
+
+Read `../references/api.md` for the full export list and component input signatures.
+
+## Principle
+
+The assistive entry point provides accessible feedback rendering that sits between raw Angular field state and the fully styled `form-field` wrapper. Use it when you want pre-built accessible components but full control over layout structure. Use `form-field/SKILL.md` instead when a complete wrapper shell is acceptable.
+
+## Workflow
+
+1. Import from `@ngx-signal-forms/toolkit/assistive` — these components are also re-exported by `NgxFormField` for convenience when a form-field wrapper is present.
+
+2. **`NgxSignalFormErrorComponent`** — displays validation errors (and optionally warnings) for a single field or a pre-aggregated error list:
+   - Always provide `[formField]` for single-field usage.
+   - Always provide `fieldName` when used standalone (not inside `ngx-signal-form-field-wrapper`).
+   - Inside a wrapper, `fieldName` is inherited automatically.
+   - Use `listStyle="bullets"` for grouped summaries; default `'plain'` for inline single-field output.
+
+3. **`NgxFormFieldHintComponent`** — static helper text that participates in `aria-describedby` linkage. Place before or after the input; the wrapper handles ordering automatically.
+
+4. **`NgxFormFieldCharacterCountComponent`** — live character count with progressive color states:
+   - Provide `[formField]` for the bound field.
+   - Omit `maxLength` when a `maxLength` validator on the field provides it.
+   - Use `colorThresholds` to customize warning/danger thresholds (default: 80% warning, 95% danger).
+
+5. **`NgxFormFieldAssistiveRowComponent`** — groups hint text and character count into a single stable row when both appear below the same input.
+
+6. Keep warning and error semantics distinct. Errors use `role="alert"` (assertive); warnings use `role="status"` (polite). Do not homogenize them.
+
+## Standalone Usage Example
+
+```typescript
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { form, FormField, required, maxLength } from '@angular/forms/signals';
+import {
+  NgxSignalFormErrorComponent,
+  NgxFormFieldHintComponent,
+  NgxFormFieldCharacterCountComponent,
+  NgxFormFieldAssistiveRowComponent,
+} from '@ngx-signal-forms/toolkit/assistive';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  selector: 'app-bio-field',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxSignalFormErrorComponent,
+    NgxFormFieldHintComponent,
+    NgxFormFieldCharacterCountComponent,
+    NgxFormFieldAssistiveRowComponent,
+  ],
+  template: `
+    <form [formRoot]="profileForm">
+      <label for="bio">Bio</label>
+      <textarea id="bio" [formField]="profileForm.bio"></textarea>
+      <ngx-form-field-assistive-row>
+        <ngx-form-field-hint>Briefly describe yourself.</ngx-form-field-hint>
+        <ngx-form-field-character-count [formField]="profileForm.bio" />
+      </ngx-form-field-assistive-row>
+      <ngx-signal-form-error [formField]="profileForm.bio" fieldName="bio" />
+    </form>
+  `,
+})
+export class BioFieldComponent {
+  readonly #model = signal({ bio: '' });
+  protected readonly profileForm = form(this.#model, (path) => {
+    maxLength(path.bio, 500);
+  });
+}
+```
+
+## Warning Semantics
+
+`warningError()` and friends are also available from `@ngx-signal-forms/toolkit/assistive` (they are also exported from the root entry point — use whichever import location is already in the file):
+
+```typescript
+import {
+  warningError,
+  isWarningError,
+  isBlockingError,
+} from '@ngx-signal-forms/toolkit/assistive';
+```
+
+`NgxSignalFormErrorComponent` automatically renders warnings with `role="status"` — no manual ARIA needed.
+
+## Error Handling
+
+- If errors don't display: check that `fieldName` is provided when the component is used standalone.
+- If character count doesn't update: verify the field value is a string and `[formField]` is bound.
+- If hints don't appear in `aria-describedby`: confirm the component is inside a `ngx-signal-form-field-wrapper` or use `NgxHeadlessFieldNameDirective` to wire it manually.
+- For grouped summaries or fieldset-level output, switch to `form-field/SKILL.md` (`NgxSignalFormFieldset`).
