@@ -30,7 +30,7 @@ import { isBlockingError } from './warning-error';
  *
  * @public
  */
-// oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+/* oxlint-disable @typescript-eslint/prefer-readonly-parameter-types -- Angular Signal Forms models FieldTree as a callable object, and wrapping it in Readonly<T> removes its call signature. */
 export function createSubmittedStatusTracker(
   formTree: FieldTree<unknown> | Signal<FieldTree<unknown>>,
 ): Signal<SubmittedStatus> {
@@ -79,6 +79,7 @@ export function createSubmittedStatusTracker(
     return submitted() ? 'submitted' : 'unsubmitted';
   });
 }
+/* oxlint-enable @typescript-eslint/prefer-readonly-parameter-types */
 
 /**
  * Computed signal indicating whether a form has been submitted.
