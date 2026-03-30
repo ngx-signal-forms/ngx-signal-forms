@@ -1,8 +1,8 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import type { FieldTree } from '@angular/forms/signals';
+import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import { describe, expect, it, vi } from 'vitest';
-import { hasSubmitted } from './submission-helpers';
+import { hasSubmitted, submitWithWarnings } from './submission-helpers';
 /**
  * Test suite for submission helper utilities.
  *
@@ -120,9 +120,13 @@ describe('Submission Helpers', () => {
           message: string;
         }
         const submittingState = signal(false);
-        const mockForm = createMockFormWithSubmitting(() =>
-          submittingState(),
-        ) as FieldTree<ContactForm>;
+        const mockForm: FieldTree<ContactForm> = Object.assign(
+          createMockFormWithSubmitting(() => submittingState()),
+          {
+            email: createMockLeafField(''),
+            message: createMockLeafField(''),
+          },
+        );
 
         // Act
         const result = TestBed.runInInjectionContext(() =>
@@ -173,6 +177,52 @@ describe('Submission Helpers', () => {
       expect(hasSubmittedResult()).toBe(true);
     });
   });
+
+  describe('submitWithWarnings', () => {
+    it('should allow submission after touched state settles to warning-only', async () => {
+      const action = vi.fn(async () => undefined);
+      const markAsTouched = vi.fn(() => {
+        queueMicrotask(() => {
+          errorsState.set([
+            { kind: 'warn:weak-password', message: 'Weak password' },
+          ]);
+        });
+      });
+      const errorsState = signal<ValidationError[]>([
+        { kind: 'required', message: 'Password is required' },
+      ]);
+      const mockForm = createMockFormForSubmitWithWarnings(
+        () => errorsState(),
+        markAsTouched,
+      );
+
+      await submitWithWarnings(mockForm, action);
+
+      expect(markAsTouched).toHaveBeenCalledOnce();
+      expect(action).toHaveBeenCalledOnce();
+    });
+
+    it('should not submit when blocking errors remain after settling', async () => {
+      const action = vi.fn(async () => undefined);
+      const markAsTouched = vi.fn(() => {
+        queueMicrotask(() => {
+          errorsState.set([{ kind: 'required', message: 'Email is required' }]);
+        });
+      });
+      const errorsState = signal<ValidationError[]>([
+        { kind: 'required', message: 'Email is required' },
+      ]);
+      const mockForm = createMockFormForSubmitWithWarnings(
+        () => errorsState(),
+        markAsTouched,
+      );
+
+      await submitWithWarnings(mockForm, action);
+
+      expect(markAsTouched).toHaveBeenCalledOnce();
+      expect(action).not.toHaveBeenCalled();
+    });
+  });
 });
 
 /**
@@ -197,12 +247,12 @@ function createMockFormWithSubmitting(
     hidden: () => false,
     submitting,
     submittedStatus: () => 'unsubmitted' as const,
-    reset: vi.fn(),
-    markAsTouched: vi.fn(),
-    markAsDirty: vi.fn(),
-    resetSubmittedStatus: vi.fn(),
+    reset: createVoidSpy(),
+    markAsTouched: createVoidSpy(),
+    markAsDirty: createVoidSpy(),
+    resetSubmittedStatus: createVoidSpy(),
     errorSummary: () => [],
-  }) as unknown as FieldTree<unknown>;
+  });
 }
 
 /**
@@ -229,12 +279,12 @@ function createMockFormWithSubmittingAndTouched(
     hidden: () => false,
     submitting,
     submittedStatus: () => 'unsubmitted' as const,
-    reset: vi.fn(),
-    markAsTouched: vi.fn(),
-    markAsDirty: vi.fn(),
-    resetSubmittedStatus: vi.fn(),
+    reset: createVoidSpy(),
+    markAsTouched: createVoidSpy(),
+    markAsDirty: createVoidSpy(),
+    resetSubmittedStatus: createVoidSpy(),
     errorSummary: () => [],
-  }) as unknown as FieldTree<unknown>;
+  });
 }
 
 /**
@@ -263,10 +313,66 @@ function createMockFormCompleteWithTouched(
     hidden: () => false,
     submitting,
     submittedStatus: () => 'unsubmitted' as const,
-    reset: vi.fn(),
-    markAsTouched: vi.fn(),
-    markAsDirty: vi.fn(),
-    resetSubmittedStatus: vi.fn(),
+    reset: createVoidSpy(),
+    markAsTouched: createVoidSpy(),
+    markAsDirty: createVoidSpy(),
+    resetSubmittedStatus: createVoidSpy(),
     errorSummary: () => [],
-  }) as unknown as FieldTree<unknown>;
+  });
+}
+
+function createMockFormForSubmitWithWarnings(
+  errors: () => readonly ValidationError[],
+  markAsTouched: () => void,
+): FieldTree<unknown> {
+  const formTree = (() => ({
+    value: () => ({}),
+    valid: () => errors().length === 0,
+    invalid: () => errors().length > 0,
+    touched: () => false,
+    dirty: () => true,
+    errors,
+    pending: () => false,
+    disabled: () => false,
+    readonly: () => false,
+    hidden: () => false,
+    submitting: () => false,
+    submittedStatus: () => 'unsubmitted' as const,
+    reset: createVoidSpy(),
+    markAsTouched,
+    markAsDirty: createVoidSpy(),
+    resetSubmittedStatus: createVoidSpy(),
+    errorSummary: errors,
+  })) satisfies FieldTree<unknown>;
+
+  return formTree;
+}
+
+function createMockLeafField(value: string): FieldTree<string> {
+  return signal({
+    value: () => value,
+    valid: () => true,
+    invalid: () => false,
+    touched: () => false,
+    dirty: () => false,
+    errors: () => [],
+    pending: () => false,
+    disabled: () => false,
+    readonly: () => false,
+    hidden: () => false,
+    submitting: () => false,
+    keyInParent: () => '',
+    formFieldBindings: () => [],
+    controlValue: signal(value),
+    markAsDirty: createVoidSpy(),
+    markAsTouched: createVoidSpy(),
+    reset: createVoidSpy(),
+    focusBoundControl: createVoidSpy(),
+    errorSummary: () => [],
+    metadata: () => undefined,
+  });
+}
+
+function createVoidSpy(): () => void {
+  return vi.fn((): void => undefined);
 }

@@ -3,7 +3,6 @@ import {
   Component,
   computed,
   signal,
-  viewChild,
 } from '@angular/core';
 import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
@@ -63,33 +62,69 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
           />
         </ngx-display-controls-card>
 
-        <!-- Side-by-side layout for form and debugger -->
-        <ngx-split-layout>
-          <!-- Interactive Demo Form -->
-          <ngx-error-display-modes-form
-            #formComponent
-            [errorDisplayMode]="selectedMode()"
-            left
-          />
-
-          <!-- Real-time Form State -->
-          @if (formComponent) {
-            <div right>
-              <ngx-signal-form-debugger
-                [formTree]="formComponent.productForm"
-                [errorStrategy]="selectedMode()"
+        @switch (selectedMode()) {
+          @case ('immediate') {
+            <ngx-split-layout>
+              <ngx-error-display-modes-form
+                #formComponent
+                [errorDisplayMode]="'immediate'"
+                left
               />
-            </div>
+
+              @if (formComponent) {
+                <div right>
+                  <ngx-signal-form-debugger
+                    [formTree]="formComponent.productForm"
+                    [errorStrategy]="'immediate'"
+                  />
+                </div>
+              }
+            </ngx-split-layout>
           }
-        </ngx-split-layout>
+
+          @case ('on-submit') {
+            <ngx-split-layout>
+              <ngx-error-display-modes-form
+                #formComponent
+                [errorDisplayMode]="'on-submit'"
+                left
+              />
+
+              @if (formComponent) {
+                <div right>
+                  <ngx-signal-form-debugger
+                    [formTree]="formComponent.productForm"
+                    [errorStrategy]="'on-submit'"
+                  />
+                </div>
+              }
+            </ngx-split-layout>
+          }
+
+          @default {
+            <ngx-split-layout>
+              <ngx-error-display-modes-form
+                #formComponent
+                [errorDisplayMode]="'on-touch'"
+                left
+              />
+
+              @if (formComponent) {
+                <div right>
+                  <ngx-signal-form-debugger
+                    [formTree]="formComponent.productForm"
+                    [errorStrategy]="'on-touch'"
+                  />
+                </div>
+              }
+            </ngx-split-layout>
+          }
+        }
       </ngx-example-cards>
     </div>
   `,
 })
 export class ErrorDisplayModesPageComponent {
-  protected readonly formComponent =
-    viewChild<ErrorDisplayModesFormComponent>('formComponent');
-
   protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
   protected readonly currentControlChips = computed(() => [
     {

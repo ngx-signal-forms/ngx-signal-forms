@@ -2,6 +2,7 @@ import {
   assertInInjectionContext,
   computed,
   effect,
+  isSignal,
   signal,
   type Signal,
 } from '@angular/core';
@@ -29,23 +30,24 @@ import { isBlockingError } from './warning-error';
  *
  * @public
  */
+// oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
 export function createSubmittedStatusTracker(
   formTree: FieldTree<unknown> | Signal<FieldTree<unknown>>,
 ): Signal<SubmittedStatus> {
   assertInInjectionContext(createSubmittedStatusTracker);
 
   const resolve = (): FieldTree<unknown> => {
-    if (typeof formTree === 'function') {
-      const result = (formTree as () => unknown)();
-      // Signal<FieldTree>: calling the signal returns the FieldTree (a function)
-      if (typeof result === 'function') {
-        return result as FieldTree<unknown>;
-      }
-      // Plain FieldTree: calling it returned a FieldState (an object)
-      if (result && typeof result === 'object') {
-        return formTree as FieldTree<unknown>;
+    if (isFieldTree(formTree)) {
+      return formTree;
+    }
+
+    if (isSignal(formTree)) {
+      const resolvedFieldTree = formTree();
+      if (isFieldTree(resolvedFieldTree)) {
+        return resolvedFieldTree;
       }
     }
+
     throw new Error(
       'createSubmittedStatusTracker requires a FieldTree or Signal<FieldTree>.',
     );
@@ -169,7 +171,7 @@ export function hasSubmitted(formTree: FieldTree<unknown>): Signal<boolean> {
  *
  * @public
  */
-export function hasOnlyWarnings(errors: ValidationError[]): boolean {
+export function hasOnlyWarnings(errors: readonly ValidationError[]): boolean {
   if (errors.length === 0) return true;
   return errors.every((error) => !isBlockingError(error));
 }
@@ -194,7 +196,7 @@ export function hasOnlyWarnings(errors: ValidationError[]): boolean {
  * @public
  */
 export function getBlockingErrors(
-  errors: ValidationError[],
+  errors: readonly ValidationError[],
 ): ValidationError[] {
   return errors.filter(isBlockingError);
 }
@@ -269,9 +271,11 @@ export function canSubmitWithWarnings(
  * 4. Manages submitting state during async operation
  *
  * **Implementation Note:**
- * This uses Angular's `submit()` helper internally, which calls `markAllAsTouched()`
- * and manages the `submitting()` state. However, we intercept before the callback
- * to check for blocking errors instead of `form().invalid()`.
+ * Angular's public `submit()` helper still gates submission on `invalid()` and does
+ * not expose a warning-aware validity predicate. This helper therefore mirrors the
+ * relevant parts of Angular's submission flow in user land: it marks fields as
+ * touched, waits one microtask for the current input/blur cycle to settle, and then
+ * filters the resulting validation summary down to blocking errors only.
  *
  * @param formTree The form tree to submit
  * @param action Async action to execute if no blocking errors
@@ -307,6 +311,11 @@ export async function submitWithWarnings<TModel>(
   // We need to traverse all fields since FieldState doesn't have markAllAsTouched()
   markAllFieldsAsTouched(formTree);
 
+  // Allow the current input/blur cycle to settle before reading errorSummary().
+  // Without this, a submit fired while the last control still has focus can read
+  // stale blocking errors from the pre-blur state.
+  await waitForValidationSettlement();
+
   // Check for blocking errors only (allow warnings)
   const allErrors = formState.errorSummary();
   const blockingErrors = getBlockingErrors(allErrors);
@@ -337,11 +346,15 @@ function markAllFieldsAsTouched(field: FieldTree<unknown>): void {
   for (const key of Object.keys(field)) {
     if (key === 'length' || typeof key === 'symbol') continue;
 
-    const child = (field as Record<string, unknown>)[key];
+    const child = Reflect.get(field, key);
     if (typeof child === 'function' && isFieldTree(child)) {
-      markAllFieldsAsTouched(child as FieldTree<unknown>);
+      markAllFieldsAsTouched(child);
     }
   }
+}
+
+function waitForValidationSettlement(): Promise<void> {
+  return new Promise((resolve) => queueMicrotask(resolve));
 }
 
 /**
@@ -350,17 +363,11 @@ function markAllFieldsAsTouched(field: FieldTree<unknown>): void {
  *
  * @internal
  */
-function isFieldTree(value: unknown): boolean {
-  if (typeof value !== 'function') return false;
+function isFieldTree(value: unknown): value is FieldTree<unknown> {
+  if (!isCallable(value)) return false;
 
   try {
-    const result = (value as () => unknown)();
-    return (
-      result !== null &&
-      typeof result === 'object' &&
-      'markAsTouched' in result &&
-      typeof (result as Record<string, unknown>)['markAsTouched'] === 'function'
-    );
+    return hasCallableProperty(value(), 'markAsTouched');
   } catch (error) {
     if (typeof ngDevMode === 'undefined' || ngDevMode) {
       console.warn(
@@ -370,4 +377,19 @@ function isFieldTree(value: unknown): boolean {
     }
     return false;
   }
+}
+
+function isCallable(value: unknown): value is () => unknown {
+  return typeof value === 'function';
+}
+
+function hasCallableProperty<TProperty extends string>(
+  value: unknown,
+  property: TProperty,
+): value is Record<TProperty, () => unknown> {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    isCallable(Reflect.get(value, property))
+  );
 }
