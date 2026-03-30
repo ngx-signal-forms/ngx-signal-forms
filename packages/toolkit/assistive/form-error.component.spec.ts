@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import {
   email,
   form,
@@ -848,7 +849,9 @@ describe('NgxSignalFormErrorComponent', () => {
         );
       }
 
-      await expect(render(TestComponent)).rejects.toThrow(
+      const fixture = TestBed.createComponent(TestComponent);
+
+      expect(() => fixture.detectChanges()).toThrow(
         /requires an explicit `fieldName` input or a parent ngx-signal-form-field-wrapper context/u,
       );
     });

@@ -41,6 +41,10 @@
       "cache": true,
       "inputs": ["default", "^production"]
     },
+    "test-browser": {
+      "cache": true,
+      "inputs": ["default", "^production"]
+    },
     "@nx/angular:package": {
       "cache": true,
       "dependsOn": ["^build"],

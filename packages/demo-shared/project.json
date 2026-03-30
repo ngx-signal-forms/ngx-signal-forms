@@ -15,6 +15,14 @@
         "assets": ["packages/demo-shared/*.md"]
       }
     },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "configFile": "packages/demo-shared/vitest.config.mts",
+        "reportsDirectory": "{projectRoot}/../../coverage/packages/demo-shared"
+      }
+    },
     "lint": {
       "executor": "nx:run-commands",
       "options": {

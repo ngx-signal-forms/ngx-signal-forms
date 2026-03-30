@@ -1,4 +1,6 @@
-import { signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxHeadlessFieldNameDirective } from './field-name.directive';
@@ -51,18 +53,22 @@ describe('NgxHeadlessFieldNameDirective', () => {
   });
 
   it('throws when no input and no host id exist', async () => {
-    await expect(
-      render(
-        `
-        <div ngxSignalFormHeadlessFieldName #fieldName="fieldName">
-          <span data-testid="resolved">{{ fieldName.resolvedFieldName() }}</span>
-        </div>
-        `,
-        {
-          imports: [NgxHeadlessFieldNameDirective],
-        },
-      ),
-    ).rejects.toThrow(
+    @Component({
+      imports: [NgxHeadlessFieldNameDirective],
+      template: `
+        <div ngxSignalFormHeadlessFieldName></div>
+      `,
+    })
+    class TestHostComponent {}
+
+    const fixture = TestBed.createComponent(TestHostComponent);
+    fixture.detectChanges();
+
+    const directive = fixture.debugElement
+      .query(By.directive(NgxHeadlessFieldNameDirective))
+      .injector.get(NgxHeadlessFieldNameDirective);
+
+    expect(() => directive.resolvedFieldName()).toThrow(
       /requires either a non-empty `fieldName` input or a host element `id`/u,
     );
   });

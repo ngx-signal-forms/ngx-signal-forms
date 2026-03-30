@@ -1,4 +1,5 @@
-import { signal } from '@angular/core';
+import { inputBinding, signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import {
   DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
   NGX_SIGNAL_FORMS_CONFIG,
@@ -6,6 +7,18 @@ import {
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxSignalFormFieldWrapperComponent as NgxSignalFormWrapperComponent } from './form-field-wrapper.component';
+
+type MockValidationError = {
+  kind?: string;
+  key?: string;
+  message: string;
+};
+
+type MockFieldState = {
+  invalid: () => boolean;
+  touched: () => boolean;
+  errors: () => MockValidationError[];
+};
 
 /**
  * Test suite for NgxSignalFormWrapperComponent.
@@ -25,11 +38,28 @@ import { NgxSignalFormFieldWrapperComponent as NgxSignalFormWrapperComponent } f
  * Returns a signal containing field state with invalid, touched, and errors methods.
  */
 const createMockFieldState = () =>
-  signal({
+  signal<MockFieldState>({
     invalid: () => false,
     touched: () => false,
     errors: () => [],
   });
+
+const createWrapperComponent = (
+  field: ReturnType<typeof createMockFieldState> = createMockFieldState(),
+  fieldName?: string,
+): NgxSignalFormWrapperComponent => {
+  const bindings = [inputBinding('formField', () => field)];
+
+  if (fieldName !== undefined) {
+    bindings.push(inputBinding('fieldName', () => fieldName));
+  }
+
+  const fixture = TestBed.createComponent(NgxSignalFormWrapperComponent, {
+    bindings,
+  });
+
+  return fixture.componentInstance;
+};
 
 describe('NgxSignalFormWrapperComponent', () => {
   describe('Field name generation', () => {
@@ -71,20 +101,11 @@ describe('NgxSignalFormWrapperComponent', () => {
         errors: () => [{ kind: 'required', message: 'Required' }],
       });
 
-      await expect(
-        render(
-          `<ngx-signal-form-field-wrapper [formField]="field">
-            <label>Email</label>
-            <input type="email" />
-          </ngx-signal-form-field-wrapper>`,
-          {
-            imports: [NgxSignalFormWrapperComponent],
-            componentProperties: {
-              field: invalidField,
-            },
-          },
-        ),
-      ).rejects.toThrow(/Could not resolve a deterministic field name/u);
+      const component = createWrapperComponent(invalidField);
+
+      expect(() => component.resolvedFieldName()).toThrow(
+        /Could not resolve a deterministic field name/u,
+      );
     });
 
     it('should generate different unique IDs for multiple components without explicit fieldName', async () => {
@@ -176,19 +197,11 @@ describe('NgxSignalFormWrapperComponent', () => {
         errors: () => [{ kind: 'required', message: 'Required' }],
       });
 
-      await expect(
-        render(
-          `<ngx-signal-form-field-wrapper [formField]="field" fieldName="">
-            <input type="text" />
-          </ngx-signal-form-field-wrapper>`,
-          {
-            imports: [NgxSignalFormWrapperComponent],
-            componentProperties: {
-              field: invalidField,
-            },
-          },
-        ),
-      ).rejects.toThrow(/Could not resolve a deterministic field name/u);
+      const component = createWrapperComponent(invalidField, '');
+
+      expect(() => component.resolvedFieldName()).toThrow(
+        /Could not resolve a deterministic field name/u,
+      );
     });
 
     it('should pass derived control id to error component for ARIA attribute generation', async () => {
@@ -472,10 +485,20 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(
         host?.classList.contains('ngx-signal-form-field-wrapper--messages-top'),
       ).toBe(true);
-      expect(content).toBeInstanceOf(Node);
-      expect(messages?.compareDocumentPosition(content)).toBe(
-        Node.DOCUMENT_POSITION_FOLLOWING,
-      );
+      expect(messages).toBeTruthy();
+      expect(content).toBeTruthy();
+
+      if (
+        !(messages instanceof HTMLElement) ||
+        !(content instanceof HTMLElement)
+      ) {
+        throw new Error('Expected messages and content containers to render.');
+      }
+
+      expect(
+        messages.compareDocumentPosition(content) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
       expect(assistiveRow?.querySelector('ngx-signal-form-error')).toBeFalsy();
       expect(messages?.querySelector('ngx-signal-form-error')).toBeTruthy();
     });
@@ -862,6 +885,12 @@ describe('NgxSignalFormWrapperComponent', () => {
 
       const label = screen.getByText('Email Address');
       const input = screen.getByRole('textbox');
+
+      expect(label).toBeInstanceOf(HTMLLabelElement);
+
+      if (!(label instanceof HTMLLabelElement)) {
+        throw new Error('Expected rendered label to be an HTMLLabelElement.');
+      }
 
       expect(label.htmlFor).toBe('email');
       expect(input.getAttribute('id')).toBe('email');
@@ -1959,20 +1988,11 @@ describe('NgxSignalFormWrapperComponent', () => {
         errors: () => [{ kind: 'required', message: 'Required' }],
       });
 
-      await expect(
-        render(
-          `<ngx-signal-form-field-wrapper [formField]="field">
-            <label>Custom Control</label>
-            <div data-ngx-signal-form-control role="slider"></div>
-          </ngx-signal-form-field-wrapper>`,
-          {
-            imports: [NgxSignalFormWrapperComponent],
-            componentProperties: {
-              field: invalidField,
-            },
-          },
-        ),
-      ).rejects.toThrow(/Could not resolve a deterministic field name/u);
+      const component = createWrapperComponent(invalidField);
+
+      expect(() => component.resolvedFieldName()).toThrow(
+        /Could not resolve a deterministic field name/u,
+      );
     });
   });
 
@@ -2072,20 +2092,11 @@ describe('NgxSignalFormWrapperComponent', () => {
         errors: () => [{ kind: 'required', message: 'Required' }],
       });
 
-      await expect(
-        render(
-          `<ngx-signal-form-field-wrapper [formField]="field">
-            <label>No ID Field</label>
-            <input type="text" />
-          </ngx-signal-form-field-wrapper>`,
-          {
-            imports: [NgxSignalFormWrapperComponent],
-            componentProperties: {
-              field: invalidField,
-            },
-          },
-        ),
-      ).rejects.toThrow(/Could not resolve a deterministic field name/u);
+      const component = createWrapperComponent(invalidField);
+
+      expect(() => component.resolvedFieldName()).toThrow(
+        /Could not resolve a deterministic field name/u,
+      );
     });
 
     it('should provide context signal that updates with resolvedFieldName', async () => {

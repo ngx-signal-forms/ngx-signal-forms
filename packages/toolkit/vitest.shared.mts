@@ -61,6 +61,7 @@ export const toolkitSharedConfig = {
   },
   optimizeDeps: {
     include: [
+      '@analogjs/vitest-angular/setup-serializers',
       '@analogjs/vitest-angular/setup-snapshots',
       '@angular/compiler',
       '@angular/platform-browser/testing',

@@ -8,7 +8,8 @@ import { defineConfig } from 'vitest/config';
  * instead of the deprecated `vitest.workspace.ts` file.
  *
  * This configuration explicitly defines which projects contain Vitest tests,
- * preventing the test explorer from loading Playwright E2E specs from demo-e2e.
+ * preventing the test explorer from loading Playwright E2E specs from demo-e2e
+ * or defaulting unit-test runs into Vitest browser mode.
  *
  * @see https://vitest.dev/blog/vitest-3-2.html#workspace-is-deprecated
  * @see https://vitest.dev/guide/migration.html#vitest-4
@@ -17,11 +18,12 @@ export default defineConfig({
   test: {
     /**
      * Projects array replaces the deprecated vitest.workspace.ts
-     * Only includes projects with actual Vitest unit/component tests.
+     * Only includes projects that should participate in default headless test runs.
+     * Browser-mode coverage stays available through the explicit Nx target.
      */
     projects: [
+      'packages/demo-shared/vitest.config.mts',
       'packages/toolkit/vitest.jsdom.config.mts',
-      'packages/toolkit/vitest.browser.config.mts',
     ],
   },
 });

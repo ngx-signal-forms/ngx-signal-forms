@@ -1,34 +1,7 @@
 import '@angular/compiler';
 import '@analogjs/vitest-angular/setup-snapshots';
+import '@analogjs/vitest-angular/setup-serializers';
+import { setupTestBed } from '@analogjs/vitest-angular/setup-testbed';
 import '@testing-library/jest-dom/vitest';
-import { NgModule, provideZonelessChangeDetection } from '@angular/core';
-import {
-  ɵgetCleanupHook as getCleanupHook,
-  getTestBed,
-} from '@angular/core/testing';
-import {
-  BrowserTestingModule,
-  platformBrowserTesting,
-} from '@angular/platform-browser/testing';
-import { afterEach, beforeEach } from 'vitest';
 
-const ANGULAR_JSDOM_TESTBED_SETUP = Symbol.for(
-  'ngx-signal-forms:toolkit:testbed-setup:jsdom',
-);
-
-beforeEach(getCleanupHook(false));
-afterEach(getCleanupHook(true));
-
-if (!Reflect.get(globalThis, ANGULAR_JSDOM_TESTBED_SETUP)) {
-  @NgModule({
-    providers: [provideZonelessChangeDetection()],
-  })
-  class ZonelessTestModule {}
-
-  getTestBed().initTestEnvironment(
-    [BrowserTestingModule, ZonelessTestModule],
-    platformBrowserTesting(),
-  );
-
-  Reflect.set(globalThis, ANGULAR_JSDOM_TESTBED_SETUP, true);
-}
+setupTestBed();

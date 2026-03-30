@@ -1,13 +1,21 @@
 /// <reference types='vitest' />
 
-import { resolve } from 'node:path';
 import { defineConfig } from 'vitest/config';
+import { toolkitSharedConfig } from './vitest.shared.mts';
 
 export default defineConfig({
+  ...toolkitSharedConfig,
   test: {
-    projects: [
-      resolve(__dirname, 'vitest.jsdom.config.mts'),
-      resolve(__dirname, 'vitest.browser.config.mts'),
+    ...toolkitSharedConfig.test,
+    name: 'toolkit-jsdom',
+    setupFiles: ['./test-setup.ts'],
+    environment: 'jsdom',
+    include: [
+      '{src,core,form-field,headless,assistive,testing,debugger,vest}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
     ],
+    exclude: [
+      '{src,core,form-field,headless,assistive,testing,debugger,vest}/**/*.browser.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+    ],
+    pool: 'forks',
   },
 });

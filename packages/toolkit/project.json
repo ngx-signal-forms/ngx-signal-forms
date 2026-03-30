@@ -49,8 +49,16 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "configFile": "packages/toolkit/vite.config.mts",
-        "reportsDirectory": "{projectRoot}/../../coverage/packages/toolkit"
+        "configFile": "packages/toolkit/vitest.jsdom.config.mts",
+        "reportsDirectory": "{projectRoot}/../../coverage/packages/toolkit/jsdom"
+      }
+    },
+    "test-browser": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "configFile": "packages/toolkit/vitest.browser.config.mts",
+        "reportsDirectory": "{projectRoot}/../../coverage/packages/toolkit/browser"
       }
     },
     "lint": {
