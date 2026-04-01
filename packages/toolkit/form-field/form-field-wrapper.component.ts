@@ -14,14 +14,14 @@ import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
   FormFieldAppearanceInput,
-} from '@ngx-signal-forms/toolkit';
+} from '@ngx-signal-forms/toolkit/core';
 import {
   NGX_SIGNAL_FORM_CONTEXT,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORMS_CONFIG,
   resolveErrorDisplayStrategy,
-} from '@ngx-signal-forms/toolkit';
-import { shouldShowErrors } from '@ngx-signal-forms/toolkit/core';
+  shouldShowErrors,
+} from '@ngx-signal-forms/toolkit/core';
 import {
   isBlockingError,
   isWarningError,

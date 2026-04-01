@@ -6,7 +6,10 @@ import {
   input,
   type Signal,
 } from '@angular/core';
-import { generateErrorId, generateWarningId } from '@ngx-signal-forms/toolkit';
+import {
+  generateErrorId,
+  generateWarningId,
+} from '@ngx-signal-forms/toolkit/core';
 
 /**
  * Field name state signals exposed by the headless directive.
