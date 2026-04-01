@@ -179,6 +179,37 @@
       }
     },
     {
+      "files": [
+        "packages/toolkit/assistive/**/*.ts",
+        "packages/toolkit/form-field/**/*.ts",
+        "packages/toolkit/headless/**/*.ts",
+        "packages/toolkit/vest/**/*.ts",
+        "packages/toolkit/debugger/**/*.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@ngx-signal-forms/toolkit",
+                "message": "Secondary entry points must import from '@ngx-signal-forms/toolkit/core' to prevent duplicate InjectionToken instances across ng-packagr FESM bundles."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "packages/toolkit/**/*.spec.ts",
+        "packages/toolkit/**/*.test.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    },
+    {
       "files": ["**/*.html"],
       "jsPlugins": ["@angular-eslint/eslint-plugin-template"],
       "rules": {

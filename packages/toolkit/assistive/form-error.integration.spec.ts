@@ -41,18 +41,19 @@ describe('NgxSignalFormErrorComponent (integration)', () => {
   });
 
   /**
-   * Regression test for the published-package token split bug (beta.8):
+   * Regression test for the published-package token split bug (beta.8).
    *
-   * When `form-field-wrapper` and `form-error` were imported from different entry
-   * points (`@ngx-signal-forms/toolkit` vs `@ngx-signal-forms/toolkit/core`), the
-   * bundled FESM artifacts contained two separate `NGX_SIGNAL_FORM_FIELD_CONTEXT`
-   * token instances. The wrapper provided one instance while the error component
-   * injected the other, so Angular DI could never match them and the error component
-   * fell back to throwing "requires an explicit fieldName".
+   * **What this test covers:** Angular DI correctly resolves `NGX_SIGNAL_FORM_FIELD_CONTEXT`
+   * from the parent wrapper so that `ngx-signal-form-error` inherits the field name without
+   * an explicit `fieldName` input.
    *
-   * After the fix all secondary entry points (form-field, assistive, headless) import
-   * `NGX_SIGNAL_FORM_FIELD_CONTEXT` exclusively from `@ngx-signal-forms/toolkit/core`,
-   * guaranteeing a single token identity at runtime.
+   * **What this test does NOT cover:** Token object identity at the FESM bundle level.
+   * Under Vitest the TS module graph resolves `@ngx-signal-forms/toolkit` via `export * from './core'`,
+   * so both import paths still yield the same `InjectionToken` instance at source level.
+   * The published-package split (two distinct token instances in separate FESM bundles) is
+   * prevented by a `no-restricted-imports` lint rule in `.oxlintrc.json` that enforces all
+   * secondary entry points (`form-field`, `assistive`, `headless`, …) import exclusively
+   * from `@ngx-signal-forms/toolkit/core`.
    */
   it('inherits fieldName from parent ngx-signal-form-field-wrapper without explicit fieldName input', async () => {
     @Component({
