@@ -45,9 +45,9 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
       <h2 class="mb-4 text-2xl font-bold">Zod + Vest Validation Demo</h2>
       <p class="mb-6 text-gray-600 dark:text-gray-400">
         Zod covers the contract shape. Vest adds business policy. Angular Signal
-        Forms and the toolkit present both layers through one form tree, while the
-        first-class Vest adapter keeps blocking errors and warnings in the same Vest
-        validation pass.
+        Forms and the toolkit present both layers through one form tree, while
+        the first-class Vest adapter keeps blocking errors and warnings in the
+        same Vest validation pass.
       </p>
 
       <div class="mb-6 grid gap-4">
@@ -83,9 +83,9 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
         class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-100"
       >
         Try including your first or last name in the password to trigger a Vest
-        business-policy error. Remove special characters or the VAT country prefix
-        to see non-blocking Vest warnings rendered by the same wrapper-driven
-        assistive UI used for blocking errors.
+        business-policy error. Remove special characters or the VAT country
+        prefix to see non-blocking Vest warnings rendered by the same
+        wrapper-driven assistive UI used for blocking errors.
       </div>
 
       <form
@@ -255,9 +255,7 @@ export class ZodVestValidationComponent {
   readonly appearance = input<FormFieldAppearance>('outline');
   readonly #onInvalid = createOnInvalidHandler();
 
-  readonly #model = signal<Readonly<ZodVestValidationModel>>(
-    createZodVestValidationModel(),
-  );
+  readonly #model = signal(createZodVestValidationModel());
   protected readonly submissionMessage = signal<string | null>(null);
 
   readonly accountForm = form(this.#model, zodVestValidationSchema, {

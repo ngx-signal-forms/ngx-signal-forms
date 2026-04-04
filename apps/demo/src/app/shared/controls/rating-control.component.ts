@@ -123,29 +123,29 @@ export class RatingControlComponent implements FormValueControl<number> {
    * Maximum rating value (number of stars).
    * @default 5
    */
-  readonly maxRating = input<number>(5);
+  readonly maxRating = input(5);
 
   /**
    * The current rating value - required by FormValueControl interface.
    * Bound bidirectionally with the form field via [formField] directive.
    */
-  readonly value = model<number>(0);
+  readonly value = model(0);
 
   /**
    * Touched state - tracks user interaction.
    * Set to true on blur or when user selects a rating.
    */
-  readonly touched = model<boolean>(false);
+  readonly touched = model(false);
 
   /**
    * Disabled state - read-only input from form.
    */
-  readonly disabled = input<boolean>(false);
+  readonly disabled = input(false);
 
   /**
    * Invalid state - read-only input from form validation.
    */
-  readonly invalid = input<boolean>(false);
+  readonly invalid = input(false);
 
   /**
    * Validation errors - read-only input from form.
@@ -156,12 +156,12 @@ export class RatingControlComponent implements FormValueControl<number> {
   /**
    * Required constraint from form validation.
    */
-  readonly required = input<boolean>(false);
+  readonly required = input(false);
 
   /**
    * Currently hovered star (for visual feedback).
    */
-  readonly hoveredRating = model<number>(0);
+  readonly hoveredRating = model(0);
 
   /**
    * Track focus state for styling.

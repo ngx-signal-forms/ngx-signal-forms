@@ -78,7 +78,9 @@ type LearningCardConfig = {
       <div class="grid gap-4 md:grid-cols-2">
         @for (section of learning().sections; track section.title) {
           <div>
-            <h3 class="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+            <h3
+              class="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+            >
               {{ section.title }}
             </h3>
             <ul class="space-y-1 text-xs text-gray-700 dark:text-gray-300">

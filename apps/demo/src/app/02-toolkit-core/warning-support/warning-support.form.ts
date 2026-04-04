@@ -95,7 +95,7 @@ export class WarningsSupportFormComponent {
    */
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
 
-  readonly #formModel = signal<PasswordFormModel>({
+  readonly #formModel = signal({
     username: '',
     email: '',
     password: '',
@@ -103,7 +103,7 @@ export class WarningsSupportFormComponent {
 
   readonly passwordForm = createPasswordForm(this.#formModel);
   protected readonly isSubmitting = signal(false);
-  protected readonly successMessage = signal<string>('');
+  protected readonly successMessage = signal('');
   /**
    * Form submission using submitWithWarnings() from the toolkit.
    *

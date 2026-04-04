@@ -42,10 +42,10 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
       <h2 class="mb-4 text-2xl font-bold">Vest-Only Validation Demo</h2>
       <p class="mb-6 text-gray-600 dark:text-gray-400">
         This form uses the toolkit's first-class Vest adapter, so one Vest suite
-        drives blocking rules and advisory warnings through the same Angular Signal
-        Forms tree. Vest warnings stay advisory and render through the same
-        assistive layer as blocking errors, so the form can still submit when only
-        warning messages remain.
+        drives blocking rules and advisory warnings through the same Angular
+        Signal Forms tree. Vest warnings stay advisory and render through the
+        same assistive layer as blocking errors, so the form can still submit
+        when only warning messages remain.
       </p>
 
       <form
@@ -59,7 +59,10 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
             [appearance]="appearance()"
           >
             <label for="vest-account-type">Account type</label>
-            <select id="vest-account-type" [formField]="accountForm.accountType">
+            <select
+              id="vest-account-type"
+              [formField]="accountForm.accountType"
+            >
               <option value="">Choose one</option>
               <option value="personal">Personal</option>
               <option value="business">Business</option>
@@ -181,13 +184,17 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
         >
           <p class="font-semibold">Try the warning path</p>
           <ul class="mt-2 list-disc space-y-1 pl-5">
-            <li>Use <code>gmail.com</code> to see a non-blocking email warning.</li>
-            <li>Use more than 50 seats to see an annual billing review warning.</li>
+            <li>
+              Use <code>gmail.com</code> to see a non-blocking email warning.
+            </li>
+            <li>
+              Use more than 50 seats to see an annual billing review warning.
+            </li>
             <li>
               These messages render below the field through
               <code>ngx-signal-form-field-wrapper</code>, which uses
-              <code>ngx-signal-form-error</code> for both alerts and warning status
-              messages.
+              <code>ngx-signal-form-error</code> for both alerts and warning
+              status messages.
             </li>
           </ul>
         </div>
@@ -223,9 +230,7 @@ export class VestValidationComponent {
   readonly appearance = input<FormFieldAppearance>('outline');
   readonly #onInvalid = createOnInvalidHandler();
 
-  readonly #model = signal<Readonly<VestValidationModel>>(
-    createVestValidationModel(),
-  );
+  readonly #model = signal(createVestValidationModel());
   protected readonly submissionMessage = signal<string | null>(null);
 
   readonly accountForm = form(this.#model, vestValidationSchema, {

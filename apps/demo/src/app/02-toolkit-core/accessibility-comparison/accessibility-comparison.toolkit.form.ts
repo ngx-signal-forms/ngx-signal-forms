@@ -66,10 +66,10 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
 })
 export class AccessibilityToolkitFormComponent {
   /** Success message announced via role="status" elsewhere on the page */
-  protected readonly successMessage = signal<string>('');
+  protected readonly successMessage = signal('');
 
   /// Form data signal (single source of truth)
-  readonly #model = signal<AccessibilityFormModel>({
+  readonly #model = signal({
     email: '',
     password: '',
     confirmPassword: '',

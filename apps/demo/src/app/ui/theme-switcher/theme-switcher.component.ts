@@ -86,7 +86,7 @@ export class NgxThemeSwitcherComponent implements OnInit, OnDestroy {
     this.getInitialPreference(),
   );
   // Derived effective theme (light/dark) respecting system when in system mode
-  private readonly systemDark = signal<boolean>(
+  private readonly systemDark = signal(
     globalThis.matchMedia('(prefers-color-scheme: dark)').matches,
   );
   readonly effectiveTheme = computed<'light' | 'dark'>(() => {

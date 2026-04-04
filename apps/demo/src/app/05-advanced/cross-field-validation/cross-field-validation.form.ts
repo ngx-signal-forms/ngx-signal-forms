@@ -94,7 +94,11 @@ const bookingSchema = schema<Booking>((path) => {
             [appearance]="appearance()"
           >
             <label for="checkOut">Check-Out</label>
-            <input id="checkOut" type="date" [formField]="bookingForm.checkOut" />
+            <input
+              id="checkOut"
+              type="date"
+              [formField]="bookingForm.checkOut"
+            />
           </ngx-signal-form-field-wrapper>
         </div>
 
@@ -148,7 +152,7 @@ export class CrossFieldValidationComponent {
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
 
-  readonly #model = signal<Booking>({
+  readonly #model = signal({
     checkIn: '',
     checkOut: '',
     guests: 1,

@@ -65,7 +65,7 @@ export class OutlineFormFieldComponent {
   /**
    * Form model signal with default values (1 fact to start)
    */
-  readonly #model = signal<OutlineFormFieldModel>({
+  readonly #model = signal({
     facts: [createEmptyFact(1)],
   });
 

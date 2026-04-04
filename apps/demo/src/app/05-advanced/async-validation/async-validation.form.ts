@@ -125,7 +125,7 @@ export class AsyncValidationComponent {
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
 
-  readonly #model = signal<Registration>({ username: '' });
+  readonly #model = signal({ username: '' });
   readonly regForm = form(this.#model, registrationSchema, {
     submission: {
       action: async (data) => {

@@ -60,7 +60,9 @@ import { WizardContainerComponent } from './components/wizard-container.componen
               <li>Form-per-step architecture with separate .form.ts files</li>
               <li>NgRx Signal Store with feature composition</li>
               <li>Zod schemas for type-safe validation</li>
-              <li>Cross-field validation (passport expiry vs departure date)</li>
+              <li>
+                Cross-field validation (passport expiry vs departure date)
+              </li>
               <li>Auto-save with rxMethod debouncing</li>
               <li>Angular 21.1 lifecycle patterns (effect, DestroyRef)</li>
             </ul>

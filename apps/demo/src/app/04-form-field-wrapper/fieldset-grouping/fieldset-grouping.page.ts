@@ -147,7 +147,9 @@ import { FIELDSET_GROUPING_CONTENT } from './fieldset-grouping.content';
           description="Move every grouped summary together so you can judge whether top or bottom placement makes the section hierarchy easier to parse."
         >
           <fieldset class="space-y-3">
-            <legend class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            <legend
+              class="text-sm font-semibold text-gray-900 dark:text-gray-100"
+            >
               Error placement
             </legend>
 

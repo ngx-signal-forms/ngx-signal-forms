@@ -35,7 +35,9 @@ import { fieldStatesSchema } from './field-states.validations';
         >
           <div class="flex items-center gap-2">
             <span class="text-amber-600 dark:text-amber-400">⚠️</span>
-            <span class="text-sm font-medium text-amber-800 dark:text-amber-300">
+            <span
+              class="text-sm font-medium text-amber-800 dark:text-amber-300"
+            >
               Unsaved changes
             </span>
           </div>
@@ -82,7 +84,10 @@ import { fieldStatesSchema } from './field-states.validations';
           [formField]="userForm.password"
           fieldName="password"
         />
-        <ngx-signal-form-error [errors]="passwordWarnings" fieldName="password" />
+        <ngx-signal-form-error
+          [errors]="passwordWarnings"
+          fieldName="password"
+        />
       </div>
 
       <div class="form-field">
@@ -109,7 +114,11 @@ import { fieldStatesSchema } from './field-states.validations';
           >
             Prefill Form
           </button>
-          <button type="button" (click)="resetForm()" class="btn-secondary text-sm">
+          <button
+            type="button"
+            (click)="resetForm()"
+            class="btn-secondary text-sm"
+          >
             Reset
           </button>
         </div>
@@ -141,7 +150,7 @@ import { fieldStatesSchema } from './field-states.validations';
   `,
 })
 export class FieldStatesForm {
-  readonly #model = signal<FieldStatesModel>(createInitialFieldStatesModel());
+  readonly #model = signal(createInitialFieldStatesModel());
 
   /** Public form instance for state tracking in parent page */
   readonly userForm = form(this.#model, fieldStatesSchema, {

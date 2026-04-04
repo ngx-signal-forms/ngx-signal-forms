@@ -53,7 +53,11 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
           <label for="firstName">
             First Name <span class="text-red-500">*</span>
           </label>
-          <input id="firstName" type="text" [formField]="travelerForm.firstName" />
+          <input
+            id="firstName"
+            type="text"
+            [formField]="travelerForm.firstName"
+          />
           <ngx-signal-form-field-hint position="left">
             Enter your legal first name as shown on passport
           </ngx-signal-form-field-hint>
@@ -67,7 +71,11 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
           <label for="lastName">
             Last Name <span class="text-red-500">*</span>
           </label>
-          <input id="lastName" type="text" [formField]="travelerForm.lastName" />
+          <input
+            id="lastName"
+            type="text"
+            [formField]="travelerForm.lastName"
+          />
         </ngx-signal-form-field-wrapper>
 
         <!-- Email -->

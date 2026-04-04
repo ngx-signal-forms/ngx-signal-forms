@@ -100,7 +100,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
   `,
 })
 export class AccessibilityMinimalFormComponent {
-  readonly #model = signal<AccessibilityFormModel>({
+  readonly #model = signal({
     email: '',
     password: '',
     confirmPassword: '',

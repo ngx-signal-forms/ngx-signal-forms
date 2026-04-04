@@ -86,8 +86,8 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
     <div class="px-6 pt-0 pb-6">
       <h2 class="mb-4 text-2xl font-bold">Headless Fieldset + Utilities</h2>
       <p class="mb-6 text-gray-600 dark:text-gray-400">
-        Use headless directives for field grouping and field-name resolution, plus
-        headless utilities for fully custom UI.
+        Use headless directives for field grouping and field-name resolution,
+        plus headless utilities for fully custom UI.
       </p>
 
       <form [formRoot]="deliveryForm" class="max-w-2xl space-y-6">
@@ -134,7 +134,10 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
                   role="alert"
                   class="headless-alert-error text-xs"
                 >
-                  @for (error of emailState.resolvedErrors(); track error.kind) {
+                  @for (
+                    error of emailState.resolvedErrors();
+                    track error.kind
+                  ) {
                     <div>{{ error.message }}</div>
                   }
                 </div>
@@ -227,11 +230,14 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
                     class="form-input"
                     [formField]="deliveryForm.address.street"
                     placeholder="123 Main St"
-                    [attr.aria-invalid]="streetState.hasErrors() ? 'true' : null"
+                    [attr.aria-invalid]="
+                      streetState.hasErrors() ? 'true' : null
+                    "
                     [attr.aria-describedby]="
                       streetState.showErrors() && streetState.hasErrors()
                         ? streetState.errorId()
-                        : streetState.showWarnings() && streetState.hasWarnings()
+                        : streetState.showWarnings() &&
+                            streetState.hasWarnings()
                           ? streetState.warningId()
                           : null
                     "
@@ -311,7 +317,10 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
                       role="alert"
                       class="headless-alert-error text-xs"
                     >
-                      @for (error of cityState.resolvedErrors(); track error.kind) {
+                      @for (
+                        error of cityState.resolvedErrors();
+                        track error.kind
+                      ) {
                         <div>{{ error.message }}</div>
                       }
                     </div>
@@ -344,11 +353,14 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
                     class="form-input"
                     [formField]="deliveryForm.address.postalCode"
                     placeholder="12345"
-                    [attr.aria-invalid]="postalState.hasErrors() ? 'true' : null"
+                    [attr.aria-invalid]="
+                      postalState.hasErrors() ? 'true' : null
+                    "
                     [attr.aria-describedby]="
                       postalState.showErrors() && postalState.hasErrors()
                         ? postalState.errorId()
-                        : postalState.showWarnings() && postalState.hasWarnings()
+                        : postalState.showWarnings() &&
+                            postalState.hasWarnings()
                           ? postalState.warningId()
                           : null
                     "
@@ -400,7 +412,9 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
           </p>
 
           <div class="mt-4 space-y-2">
-            <label for="deliveryNotes" class="text-sm font-medium"> Notes </label>
+            <label for="deliveryNotes" class="text-sm font-medium">
+              Notes
+            </label>
             <textarea
               id="deliveryNotes"
               rows="4"
@@ -479,7 +493,7 @@ export class HeadlessFieldsetUtilitiesComponent {
     deliveryNotes: '',
   };
 
-  readonly #model = signal<HeadlessDeliveryModel>(this.#initialData);
+  readonly #model = signal(this.#initialData);
   readonly deliveryForm = form(this.#model, deliverySchema, {
     submission: {
       action: async (data) => {

@@ -47,7 +47,9 @@ import type { FieldTree } from '@angular/forms/signals';
 
                 <!-- Value -->
                 <td class="px-2 py-2 text-center">
-                  <code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-gray-900">
+                  <code
+                    class="rounded bg-gray-100 px-1 py-0.5 dark:bg-gray-900"
+                  >
                     {{ getFieldValue(fieldName) }}
                   </code>
                 </td>

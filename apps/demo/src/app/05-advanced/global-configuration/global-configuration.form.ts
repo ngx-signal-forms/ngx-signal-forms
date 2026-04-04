@@ -149,7 +149,9 @@ import { globalConfigSchema } from './global-configuration.validations';
             </dd>
           </div>
           <div class="flex gap-2">
-            <dt class="font-medium text-gray-700 dark:text-gray-300">Auto ARIA:</dt>
+            <dt class="font-medium text-gray-700 dark:text-gray-300">
+              Auto ARIA:
+            </dt>
             <dd class="text-gray-600 dark:text-gray-400">Enabled (global)</dd>
           </div>
           <div class="flex gap-2">
@@ -169,7 +171,7 @@ export class GlobalConfigurationComponent {
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
 
-  readonly #model = signal<GlobalConfigModel>({
+  readonly #model = signal({
     userEmail: '',
     userPhone: '',
     userWebsite: '',

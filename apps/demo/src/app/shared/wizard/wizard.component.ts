@@ -314,7 +314,7 @@ export class WizardComponent {
   // ══════════════════════════════════════════════════════════════════════════
 
   /** Current active step ID (two-way bindable). */
-  readonly currentStep = model<string>('');
+  readonly currentStep = model('');
 
   /** Array of step IDs that are marked as completed. */
   readonly completedSteps = input<string[]>([]);
@@ -348,7 +348,7 @@ export class WizardComponent {
   // Internal State
   // ══════════════════════════════════════════════════════════════════════════
 
-  readonly #visitedSteps = signal<Set<string>>(new Set());
+  readonly #visitedSteps = signal(new Set());
 
   // ══════════════════════════════════════════════════════════════════════════
   // Computed Values

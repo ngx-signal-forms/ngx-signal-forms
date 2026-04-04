@@ -108,7 +108,7 @@ export class YourFirstFormComponent {
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
 
   /** Form data model */
-  readonly #model = signal<ContactFormModel>({
+  readonly #model = signal({
     name: '',
     email: '',
     message: '',

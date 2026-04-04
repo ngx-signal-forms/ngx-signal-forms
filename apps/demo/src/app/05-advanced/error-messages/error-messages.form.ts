@@ -153,7 +153,7 @@ export class ErrorMessagesComponent {
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
 
-  readonly #model = signal<ErrorMessagesModel>({
+  readonly #model = signal({
     email: '',
     password: '',
     bio: '',

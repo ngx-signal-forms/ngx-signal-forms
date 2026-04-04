@@ -134,7 +134,7 @@ import { pureSignalFormSchema } from './pure-signal-form.validations';
 })
 export class PureSignalFormComponent {
   /** Form data model */
-  readonly #model = signal<PureSignalFormModel>({
+  readonly #model = signal({
     email: '',
     password: '',
     confirmPassword: '',
@@ -156,7 +156,7 @@ export class PureSignalFormComponent {
   });
 
   /** Manual touch state tracking (required for error display logic) */
-  readonly #touchedFields = signal<Set<string>>(new Set());
+  readonly #touchedFields = signal(new Set());
 
   /**
    * Manual touch tracking - must be called on blur for each field

@@ -61,7 +61,7 @@ export class CustomControlsComponent {
   /**
    * Form model signal with default values.
    */
-  readonly #model = signal<CustomControlsModel>(initialCustomControlsModel);
+  readonly #model = signal(initialCustomControlsModel);
 
   /**
    * Create form instance with validation schema.

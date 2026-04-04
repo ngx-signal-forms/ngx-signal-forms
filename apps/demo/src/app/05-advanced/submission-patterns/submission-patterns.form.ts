@@ -46,7 +46,9 @@ import { submissionSchema } from './submission-patterns.validations';
       >
         <span class="text-2xl">📊</span>
         <div class="flex-1">
-          <div class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+          <div
+            class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             Submission State
           </div>
           <div class="flex items-center gap-2">
@@ -221,7 +223,11 @@ import { submissionSchema } from './submission-patterns.validations';
 
       <!-- Form actions using toolkit submission helpers -->
       <div class="mt-8 flex gap-4">
-        <button type="submit" [disabled]="isFormSubmitting()" class="btn-primary">
+        <button
+          type="submit"
+          [disabled]="isFormSubmitting()"
+          class="btn-primary"
+        >
           @if (isFormSubmitting()) {
             <span>Submitting...</span>
           } @else {

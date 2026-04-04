@@ -212,7 +212,10 @@ let nextDisplayControlsId = 0;
           }
 
           @if (chips().length) {
-            <div class="control-deck__chips" aria-label="Current control settings">
+            <div
+              class="control-deck__chips"
+              aria-label="Current control settings"
+            >
               @for (chip of chips(); track chip.label) {
                 <span class="control-chip">
                   <strong>{{ chip.label }}:</strong> {{ chip.value }}

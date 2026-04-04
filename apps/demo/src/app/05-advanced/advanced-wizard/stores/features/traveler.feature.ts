@@ -16,7 +16,7 @@ type TravelerState = {
 
 export function withTravelerManagement() {
   return signalStoreFeature(
-    withState<TravelerState>({
+    withState({
       traveler: createEmptyTraveler(),
     }),
 

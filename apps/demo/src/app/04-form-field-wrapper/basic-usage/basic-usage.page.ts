@@ -120,7 +120,9 @@ import { OutlineFormFieldComponent } from './outline-form-field.form';
               >
                 Basic Form State
               </h3>
-              <ngx-signal-form-debugger [formTree]="formComponent.showcaseForm" />
+              <ngx-signal-form-debugger
+                [formTree]="formComponent.showcaseForm"
+              />
             </div>
           }
           @if (outlineFormComponent) {

@@ -112,10 +112,8 @@ export class FieldsetFormComponent {
   readonly appearance = input<FormFieldAppearance>('standard');
   readonly errorPlacement = input<FieldsetErrorPlacement>('top');
 
-  readonly #placementPreviewModel = signal<PlacementPreviewModel>(
-    createPlacementPreviewValue(),
-  );
-  readonly #placementDesignPreviewModel = signal<PlacementDesignPreviewModel>(
+  readonly #placementPreviewModel = signal(createPlacementPreviewValue());
+  readonly #placementDesignPreviewModel = signal(
     createPlacementDesignPreviewValue(),
   );
 

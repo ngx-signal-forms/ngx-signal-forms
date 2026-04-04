@@ -128,7 +128,9 @@ import { WizardStepInterface } from '../wizard-step.interface';
 
             @if (dest.activities.length > 0) {
               <div class="activities-list">
-                <h5 class="mb-2 text-sm font-medium text-gray-600">Activities:</h5>
+                <h5 class="mb-2 text-sm font-medium text-gray-600">
+                  Activities:
+                </h5>
                 <ul class="space-y-2">
                   @for (activity of dest.activities; track $index) {
                     <li class="activity-item flex items-center justify-between">
@@ -160,8 +162,8 @@ import { WizardStepInterface } from '../wizard-step.interface';
         class="confirmation-notice mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4"
       >
         <p class="text-sm text-blue-800">
-          Please review your booking details above. By clicking "Confirm Booking",
-          you agree to our terms and conditions.
+          Please review your booking details above. By clicking "Confirm
+          Booking", you agree to our terms and conditions.
         </p>
       </div>
     </div>
