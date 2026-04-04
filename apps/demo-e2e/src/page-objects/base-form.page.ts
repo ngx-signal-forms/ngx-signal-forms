@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 
 /**
  * Base Page Object for all forms in the demo app
@@ -122,5 +122,6 @@ export abstract class ErrorStrategyFormPage extends BaseFormPage {
     mode: 'immediate' | 'onTouch' | 'onSubmit',
   ): Promise<void> {
     await this.errorModeRadios[mode].check();
+    await expect(this.errorModeRadios[mode]).toBeChecked();
   }
 }

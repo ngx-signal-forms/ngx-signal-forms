@@ -30,6 +30,15 @@ entry point.
 `vest@6.3.0` is excluded because of an upstream packaging issue in the
 published build (as of April 2025). Use `6.2.7` or a newer fixed release.
 
+## Release & Support
+
+- Compatibility matrix: [`COMPATIBILITY.md`](./COMPATIBILITY.md)
+
+> `@ngx-signal-forms/toolkit` aims to keep its own public API stable, but it
+> currently builds on Angular Signal Forms, which Angular still marks as
+> experimental. See the compatibility guidance before adopting a stable major in
+> production.
+
 ---
 
 ## Why use it?

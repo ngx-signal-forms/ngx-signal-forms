@@ -17,6 +17,13 @@
       "options": {
         "config": "{projectRoot}/playwright.config.ts"
       }
+    },
+    "e2e-ci": {
+      "executor": "@nx/playwright:playwright",
+      "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-e2e"],
+      "options": {
+        "config": "{projectRoot}/playwright.config.ts"
+      }
     }
   }
 }

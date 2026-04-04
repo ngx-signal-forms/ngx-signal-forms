@@ -1,0 +1,62 @@
+# Compatibility
+
+This document describes the compatibility contract for
+`@ngx-signal-forms/toolkit`.
+
+## Current package contract
+
+- Package: `@ngx-signal-forms/toolkit`
+- Current peer dependencies:
+  - `@angular/core >=21.2.0`
+  - `@angular/forms >=21.2.0`
+  - `vest >=6.0.0 <6.3.0 || >=6.3.1` (optional)
+
+## Angular compatibility
+
+| Toolkit line | Angular range | Status    | Notes                         |
+| ------------ | ------------- | --------- | ----------------------------- |
+| `1.x`        | `>=21.2.0`    | Supported | Current peer dependency range |
+
+## Angular Signal Forms status
+
+Angular currently marks Signal Forms as **experimental** in Angular 21.x.
+
+That means:
+
+- Angular may still change the upstream Signal Forms API outside the normal
+  stability expectations that apply to stable Angular APIs.
+- Toolkit releases will treat upstream Angular Signal Forms changes as
+  compatibility constraints, even when the toolkit's own public API does not
+  change.
+- Consumers should pin Angular upgrades carefully and run their own validation
+  suite before adopting new Angular minors.
+
+## Vest compatibility
+
+The Vest adapter is optional and only required when importing
+`@ngx-signal-forms/toolkit/vest`.
+
+| Vest version    | Status        | Notes                                           |
+| --------------- | ------------- | ----------------------------------------------- |
+| `6.0.0 - 6.2.x` | Supported     | Standard Schema-compatible                      |
+| `6.3.0`         | Not supported | Excluded because of an upstream packaging issue |
+| `>=6.3.1`       | Supported     | Supported by the current peer range             |
+
+## Runtime and tooling baseline
+
+The repository currently validates and publishes with the following Node
+versions:
+
+| Use case         | Version used in automation |
+| ---------------- | -------------------------- |
+| CI workflow      | Node 22                    |
+| Publish workflow | Node 24                    |
+
+Consumers should use an active LTS Node version that is compatible with Angular
+21 and their package manager/tooling stack.
+
+## Browser expectations
+
+The demo and end-to-end suite validate evergreen browser behavior through
+Playwright's Chromium project. Consumers should align browser support with
+Angular's current browser support guidance for Angular 21.
