@@ -2,7 +2,36 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "types": []
+    "types": [],
+    "paths": {
+      "@ngx-signal-forms/toolkit": [
+        "../../dist/packages/toolkit",
+        "../../packages/toolkit/index.ts"
+      ],
+      "@ngx-signal-forms/toolkit/assistive": [
+        "../../dist/packages/toolkit/assistive",
+        "../../packages/toolkit/assistive/index.ts"
+      ],
+      "@ngx-signal-forms/toolkit/debugger": [
+        "../../dist/packages/toolkit/debugger",
+        "../../packages/toolkit/debugger/index.ts"
+      ],
+      "@ngx-signal-forms/toolkit/form-field": [
+        "../../dist/packages/toolkit/form-field",
+        "../../packages/toolkit/form-field/public_api.ts"
+      ],
+      "@ngx-signal-forms/toolkit/headless": [
+        "../../dist/packages/toolkit/headless",
+        "../../packages/toolkit/headless/src/index.ts"
+      ],
+      "@ngx-signal-forms/toolkit/vest": [
+        "../../dist/packages/toolkit/vest",
+        "../../packages/toolkit/vest/src/index.ts"
+      ],
+      "@ngx-signal-forms/demo-shared": [
+        "../../packages/demo-shared/src/index.ts"
+      ]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": [
