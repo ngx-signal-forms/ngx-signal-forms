@@ -10,7 +10,7 @@ import {
 import {
   createUniqueId,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 
 /**
  * Form field hint component for displaying helper text.

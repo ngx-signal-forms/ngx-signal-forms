@@ -1,5 +1,5 @@
 /**
- * Re-export warning utilities from core.
+ * Re-export warning utilities from the primary public entry point.
  *
  * These utilities are defined in core because they're pure functions
  * used by core directives (auto-aria, submission-helpers).
@@ -9,4 +9,4 @@ export {
   isBlockingError,
   isWarningError,
   warningError,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';

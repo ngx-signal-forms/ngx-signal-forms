@@ -1,8 +1,5 @@
-// Primary entry point
-// Re-export core items for convenient imports:
-// - @ngx-signal-forms/toolkit (primary)
-// - @ngx-signal-forms/toolkit/core (secondary, optional)
-
-// ng-packagr allows relative imports between entry points within the same package
+// Primary public entry point.
+// Re-export the internal core source barrel here so consumers only need
+// `@ngx-signal-forms/toolkit` for shared directives, tokens, providers, and utilities.
 // eslint-disable-next-line @nx/enforce-module-boundaries
 export * from './core';

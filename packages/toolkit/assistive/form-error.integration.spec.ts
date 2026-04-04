@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { FormField, form, required, schema } from '@angular/forms/signals';
-import { NgxSignalFormDirective } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxSignalFormErrorComponent } from './form-error.component';
@@ -14,7 +15,7 @@ describe('NgxSignalFormErrorComponent (integration)', () => {
     // Define a test component to ensure DI context for Signal Forms
     @Component({
       selector: 'test-form-error',
-      imports: [FormField, NgxSignalFormDirective, NgxSignalFormErrorComponent],
+      imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
       template: `
         <form [formRoot]="contactForm" [errorStrategy]="errorStrategy">
           <input id="email" [formField]="contactForm.email" />
@@ -37,5 +38,51 @@ describe('NgxSignalFormErrorComponent (integration)', () => {
 
     const alert = screen.queryByRole('alert');
     expect(alert).toBeFalsy();
+  });
+
+  /**
+   * Regression test for the published-package token split bug.
+   *
+   * **What this test covers:** Angular DI correctly resolves `NGX_SIGNAL_FORM_FIELD_CONTEXT`
+   * from the parent wrapper so that `ngx-signal-form-error` inherits the field name without
+   * an explicit `fieldName` input when the form context comes from the public root entry point.
+   *
+   * **Why this matters:** The toolkit intentionally exposes a single shared public entry point
+   * for these core runtime symbols. Secondary entry points consume that root module so packaged
+   * builds share the same token instances instead of duplicating them behind `./core`.
+   */
+  it('inherits fieldName from parent ngx-signal-form-field-wrapper without explicit fieldName input', async () => {
+    @Component({
+      selector: 'test-wrapper-context',
+      imports: [
+        FormField,
+        NgxSignalFormToolkit,
+        NgxSignalFormFieldWrapperComponent,
+      ],
+      template: `
+        <form [formRoot]="contactForm" errorStrategy="immediate">
+          <ngx-signal-form-field-wrapper [formField]="contactForm.email">
+            <label for="email">Email</label>
+            <input id="email" [formField]="contactForm.email" />
+          </ngx-signal-form-field-wrapper>
+        </form>
+      `,
+    })
+    class TestWrapperContextComponent {
+      readonly model = signal({ email: '' });
+      readonly contactForm = form(
+        this.model,
+        schema((path) => {
+          required(path.email, { message: 'Email is required' });
+        }),
+      );
+    }
+
+    await render(TestWrapperContextComponent);
+
+    /// The wrapper uses 'immediate' strategy, so the error should be visible right away
+    const alert = screen.queryByRole('alert');
+    expect(alert).toBeTruthy();
+    expect(alert?.textContent).toContain('Email is required');
   });
 });

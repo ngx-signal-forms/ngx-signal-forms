@@ -14,7 +14,7 @@ import {
   isWarningError,
   shouldShowErrors,
   type ErrorDisplayStrategy,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 import {
   DebuggerBadgeComponent,
   DebuggerBadgeIconDirective,

@@ -20,8 +20,8 @@ import {
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORMS_CONFIG,
   resolveErrorDisplayStrategy,
+  shouldShowErrors,
 } from '@ngx-signal-forms/toolkit';
-import { shouldShowErrors } from '@ngx-signal-forms/toolkit/core';
 import {
   isBlockingError,
   isWarningError,

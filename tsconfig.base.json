@@ -26,7 +26,6 @@
       "@ngx-signal-forms/toolkit/assistive": [
         "./packages/toolkit/assistive/index.ts"
       ],
-      "@ngx-signal-forms/toolkit/core": ["./packages/toolkit/core/index.ts"],
       "@ngx-signal-forms/toolkit/debugger": [
         "./packages/toolkit/debugger/index.ts"
       ],

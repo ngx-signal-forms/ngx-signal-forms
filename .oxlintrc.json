@@ -179,6 +179,22 @@
       }
     },
     {
+      "files": ["apps/demo/src/**/*.ts", "packages/toolkit/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@ngx-signal-forms/toolkit/core",
+                "message": "Use '@ngx-signal-forms/toolkit'. The /core entry point is internal-only and is not published."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["**/*.html"],
       "jsPlugins": ["@angular-eslint/eslint-plugin-template"],
       "rules": {
