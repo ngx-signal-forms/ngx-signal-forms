@@ -98,8 +98,9 @@ export class NgxThemeSwitcherComponent implements OnInit, OnDestroy {
   private mediaListener?: (event: MediaQueryListEvent) => void;
   private storageListener?: (event: StorageEvent) => void;
 
-  // Apply classes reactively
-  // oxlint-disable-next-line no-unused-private-class-members -- side-effect effect
+  // Apply theme classes reactively.
+  // Named Angular effect fields are intentionally unread because Angular owns their lifecycle.
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
   readonly #apply = effect(() => {
     const theme = this.effectiveTheme();
     const root = document.documentElement;

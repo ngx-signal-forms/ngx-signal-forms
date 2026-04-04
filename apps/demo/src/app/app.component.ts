@@ -50,8 +50,9 @@ export class AppComponent implements AfterViewInit {
     return getRouteTitle(url);
   }
 
-  // Keep the browser tab title in sync with the current route title
-  // oxlint-disable-next-line no-unused-private-class-members -- allowed for effect()
+  // Keep the browser tab title in sync with the current route title.
+  // Named Angular effect fields are intentionally unread because Angular owns their lifecycle.
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
   readonly #syncTitle = effect(() => {
     const t = this.pageTitle();
     if (t) this.title.setTitle(t);
@@ -111,8 +112,9 @@ export class AppComponent implements AfterViewInit {
     );
   }
 
-  // Reset scroll position on navigation (after view init ensures element exists)
-  // oxlint-disable-next-line no-unused-private-class-members -- kept as reactive effect
+  // Reset scroll position on navigation after the view is initialized.
+  // Named Angular effect fields are intentionally unread because Angular owns their lifecycle.
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
   readonly #resetScrollEffect = effect(() => {
     this.currentPath();
     queueMicrotask(() => {

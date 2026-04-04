@@ -359,51 +359,52 @@ export class NgxFormFieldCharacterCountComponent {
     );
   }
 
-  constructor() {
-    effect(() => {
-      if (!this.liveAnnounce()) {
-        this.#lastAnnouncedState.set(null);
+  // Named Angular effect fields are intentionally unread.
+  // Angular registers and destroys the effect for the component lifecycle.
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
+  readonly #liveAnnouncementEffect = effect(() => {
+    if (!this.liveAnnounce()) {
+      this.#lastAnnouncedState.set(null);
+      this.#announcementText.set('');
+      return;
+    }
+
+    const state = this.displayLimitState();
+    const max = this.#resolvedMaxLength();
+    if (max === 0 || state === 'disabled') {
+      this.#lastAnnouncedState.set(null);
+      this.#announcementText.set('');
+      return;
+    }
+
+    const current = this.currentLength();
+    const remaining = Math.max(0, max - current);
+    const over = Math.max(0, current - max);
+    const last = this.#lastAnnouncedState();
+
+    if (state === last) return;
+
+    this.#lastAnnouncedState.set(state);
+
+    switch (state) {
+      case 'warning':
+        this.#announcementText.set(
+          `Approaching limit: ${remaining} characters remaining.`,
+        );
+        break;
+      case 'danger':
+        this.#announcementText.set(
+          `Almost at limit: ${remaining} characters remaining.`,
+        );
+        break;
+      case 'exceeded':
+        this.#announcementText.set(
+          `Character limit exceeded by ${over} characters.`,
+        );
+        break;
+      default:
         this.#announcementText.set('');
-        return;
-      }
-
-      const state = this.displayLimitState();
-      const max = this.#resolvedMaxLength();
-      if (max === 0 || state === 'disabled') {
-        this.#lastAnnouncedState.set(null);
-        this.#announcementText.set('');
-        return;
-      }
-
-      const current = this.currentLength();
-      const remaining = Math.max(0, max - current);
-      const over = Math.max(0, current - max);
-      const last = this.#lastAnnouncedState();
-
-      if (state === last) return;
-
-      this.#lastAnnouncedState.set(state);
-
-      switch (state) {
-        case 'warning':
-          this.#announcementText.set(
-            `Approaching limit: ${remaining} characters remaining.`,
-          );
-          break;
-        case 'danger':
-          this.#announcementText.set(
-            `Almost at limit: ${remaining} characters remaining.`,
-          );
-          break;
-        case 'exceeded':
-          this.#announcementText.set(
-            `Character limit exceeded by ${over} characters.`,
-          );
-          break;
-        default:
-          this.#announcementText.set('');
-          break;
-      }
-    });
-  }
+        break;
+    }
+  });
 }

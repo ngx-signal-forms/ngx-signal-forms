@@ -130,21 +130,22 @@ export class SignalFormDebuggerComponent {
 
   #warned = false;
 
-  constructor() {
-    effect(() => {
-      if (!isDevMode()) return;
+  // Named Angular effect fields are intentionally unread.
+  // Angular registers and destroys the effect for the component lifecycle.
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
+  readonly #fieldTreeWarningEffect = effect(() => {
+    if (!isDevMode()) return;
 
-      const input = this.formTree();
-      if (!input || this.#isFieldTree(input) || this.#warned) return;
+    const input = this.formTree();
+    if (!input || this.#isFieldTree(input) || this.#warned) return;
 
-      this.#warned = true;
-      console.warn(
-        '[NgxSignalFormDebugger] Pass the FieldTree function (e.g. form) to formTree. ' +
-          'A FieldState (e.g. form()) is supported, but it cannot traverse child fields ' +
-          'and may show errors as visible immediately.',
-      );
-    });
-  }
+    this.#warned = true;
+    console.warn(
+      '[NgxSignalFormDebugger] Pass the FieldTree function (e.g. form) to formTree. ' +
+        'A FieldState (e.g. form()) is supported, but it cannot traverse child fields ' +
+        'and may show errors as visible immediately.',
+    );
+  });
 
   /** Normalize to root FieldState regardless of input shape */
   protected readonly rootState = computed<FieldState<unknown>>(() => {

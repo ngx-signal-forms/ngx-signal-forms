@@ -80,47 +80,48 @@ export class WizardContainerComponent {
    */
   readonly #pendingFocus = signal(false);
 
-  constructor() {
-    // Focus step heading after render when component becomes available
-    // afterRenderEffect runs after DOM updates - ideal for @defer content
-    afterRenderEffect(() => {
-      const stepRef = this.currentStepRef();
-      const shouldFocus = this.#pendingFocus();
+  // Named Angular effect fields are intentionally unread.
+  // Angular registers and destroys the effect for the component lifecycle.
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
+  readonly #focusHeadingEffect = afterRenderEffect(() => {
+    const stepRef = this.currentStepRef();
+    const shouldFocus = this.#pendingFocus();
 
-      if (shouldFocus && stepRef) {
-        stepRef.focusHeading();
-        this.#pendingFocus.set(false);
+    if (shouldFocus && stepRef) {
+      stepRef.focusHeading();
+      this.#pendingFocus.set(false);
+    }
+  });
+
+  // Named Angular effect fields are intentionally unread.
+  // Angular registers and destroys the effect for the component lifecycle.
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
+  readonly #savingIndicatorEffect = effect((onCleanup) => {
+    const isSaving = this.store.isSaving();
+
+    if (isSaving) {
+      // Show indicator after delay (prevents flicker on fast saves)
+      if (!this.showSavingIndicator()) {
+        const showTimeoutId = setTimeout(() => {
+          this.showSavingIndicator.set(true);
+          this.#shownAt = Date.now();
+        }, SHOW_SAVING_AFTER_MS);
+
+        onCleanup(() => clearTimeout(showTimeoutId));
       }
-    });
+    } else if (this.showSavingIndicator() && this.#shownAt) {
+      // Ensure minimum display time before hiding
+      const elapsed = Date.now() - this.#shownAt;
+      const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
 
-    // Angular 21.1 pattern: use onCleanup for automatic timeout cleanup
-    effect((onCleanup) => {
-      const isSaving = this.store.isSaving();
+      const hideTimeoutId = setTimeout(() => {
+        this.showSavingIndicator.set(false);
+        this.#shownAt = null;
+      }, remaining);
 
-      if (isSaving) {
-        // Show indicator after delay (prevents flicker on fast saves)
-        if (!this.showSavingIndicator()) {
-          const showTimeoutId = setTimeout(() => {
-            this.showSavingIndicator.set(true);
-            this.#shownAt = Date.now();
-          }, SHOW_SAVING_AFTER_MS);
-
-          onCleanup(() => clearTimeout(showTimeoutId));
-        }
-      } else if (this.showSavingIndicator() && this.#shownAt) {
-        // Ensure minimum display time before hiding
-        const elapsed = Date.now() - this.#shownAt;
-        const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
-
-        const hideTimeoutId = setTimeout(() => {
-          this.showSavingIndicator.set(false);
-          this.#shownAt = null;
-        }, remaining);
-
-        onCleanup(() => clearTimeout(hideTimeoutId));
-      }
-    });
-  }
+      onCleanup(() => clearTimeout(hideTimeoutId));
+    }
+  });
 
   /**
    * Handle step navigation events from the wizard progress indicator.
