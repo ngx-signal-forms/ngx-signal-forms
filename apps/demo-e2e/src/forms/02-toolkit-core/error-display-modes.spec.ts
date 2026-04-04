@@ -90,16 +90,19 @@ test.describe('Error Display Modes', () => {
         await formPage.selectErrorMode(mode);
 
         await formPage.fillValidData();
-        await formPage.emailInput.blur();
 
-        /// Valid fields should not have aria-invalid="true"
-        await expect(formPage.nameInput).not.toHaveAttribute(
+        // Move focus away from the last filled field (rating) to trigger
+        // blur events and Angular change detection, flushing the computed
+        // signal chain (model → validators → errors → ariaInvalid → DOM).
+        await formPage.page.keyboard.press('Tab');
+
+        await expect(formPage.nameInput).toHaveAttribute(
           'aria-invalid',
-          'true',
+          'false',
         );
-        await expect(formPage.emailInput).not.toHaveAttribute(
+        await expect(formPage.emailInput).toHaveAttribute(
           'aria-invalid',
-          'true',
+          'false',
         );
 
         /// Clear form for next iteration by reloading page
