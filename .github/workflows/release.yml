@@ -41,6 +41,11 @@ on:
         required: false
         type: boolean
         default: false
+      first_release:
+        description: 'Treat as first Nx-managed release (uses --first-release)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -125,13 +130,22 @@ jobs:
             echo "cmd=$VERSION" >> $GITHUB_OUTPUT
           fi
 
+      - name: Determine first-release flag
+        id: first_release_flag
+        run: |
+          if [ "${{ inputs.first_release }}" = "true" ]; then
+            echo "flag=--first-release" >> "$GITHUB_OUTPUT"
+          else
+            echo "flag=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Preview Release Changelog
         run: |
           echo "## 📋 Release Preview" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Running: \`nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run\`" >> $GITHUB_STEP_SUMMARY
+          echo "Running: \`nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run > /tmp/release-preview.txt 2>&1 || true
+          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }} > /tmp/release-preview.txt 2>&1 || true
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           head -100 /tmp/release-preview.txt >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
@@ -140,13 +154,13 @@ jobs:
 
       - name: Release (Dry Run)
         if: ${{ inputs.dry_run }}
-        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run
+        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release
         if: ${{ !inputs.dry_run }}
-        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish
+        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish ${{ steps.first_release_flag.outputs.flag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -171,6 +185,7 @@ jobs:
           echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
           echo "- Version: ${{ steps.version_cmd.outputs.cmd }}" >> $GITHUB_STEP_SUMMARY
           echo "- Dry Run: ${{ inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
+          echo "- First Release Mode: ${{ inputs.first_release }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ inputs.dry_run }}" != "true" ]; then
             echo "- Git Tag: ${{ steps.release_info.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
