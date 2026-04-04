@@ -6,6 +6,8 @@ autoInstallPeers: true
 
 onlyBuiltDependencies:
   - '@swc/core'
+  - msw
   - nx
+  - simple-git-hooks
 
 strictPeerDependencies: false
