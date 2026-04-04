@@ -18,14 +18,17 @@
 npm install @ngx-signal-forms/toolkit
 ```
 
-Optional Vest integration (v6+ required for Standard Schema support):
+Optional Vest integration (Vest 6 required for Standard Schema support):
 
 ```bash
-npm install @ngx-signal-forms/toolkit vest@^6.0.0
+npm install @ngx-signal-forms/toolkit vest@6.2.7
 ```
 
 Use `vest` only when you import the optional `@ngx-signal-forms/toolkit/vest`
 entry point.
+
+`vest@6.3.0` is currently excluded because of an upstream packaging issue in the
+published build. Use `6.2.7` or a newer fixed release.
 
 ---
 

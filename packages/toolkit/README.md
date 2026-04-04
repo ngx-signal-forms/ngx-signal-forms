@@ -226,7 +226,8 @@ Optional helper APIs for consumers who use [Vest](https://vestjs.dev/) with Angu
 Angular Signal Forms already supports Standard Schema validators natively.
 Vest 6+ suites implement that interface, and this entry point adds a first-class Angular adapter for Vest's richer suite results.
 
-> **Vest v6+ required** — Standard Schema support was introduced in Vest 6. Earlier versions will not work.
+> **Vest v6 required** — Standard Schema support was introduced in Vest 6. Earlier versions will not work.
+> `vest@6.3.0` is currently excluded because of an upstream packaging issue in the published build.
 
 ```typescript
 import {
@@ -275,7 +276,7 @@ Registers only the warning bridge for a Vest suite. This is useful when blocking
 validateVestWarnings(path, signupSuite);
 ```
 
-Install `vest@^6.0.0` only when using this entry point.
+Install `vest@6.2.7` only when using this entry point, or move to a newer fixed `6.3.x` release once available.
 
 **When to use it:**
 

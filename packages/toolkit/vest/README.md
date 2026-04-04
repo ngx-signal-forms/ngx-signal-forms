@@ -15,15 +15,16 @@ It is designed to be used **together with** Angular Signal Forms validators and 
 
 > **Vest v6+ required** — Standard Schema support was introduced in Vest 6.
 > Earlier versions do not expose the Standard Schema interface and will not work.
+> `vest@6.3.0` is currently excluded because of an upstream packaging issue in the published build.
 
 If you are migrating from `ngx-vest-forms`, upgrade to **Vest 6.x first**.
 This entry point does **not** support Vest 5.x.
 
 ```bash
-pnpm add @ngx-signal-forms/toolkit vest@^6.0.0
+pnpm add @ngx-signal-forms/toolkit vest@6.2.7
 ```
 
-`vest` is an optional peer dependency (`^6.0.0`) of `@ngx-signal-forms/toolkit`. You only need it when importing this entry point.
+`vest` is an optional peer dependency (`>=6.0.0 <6.3.0 || >=6.3.1`) of `@ngx-signal-forms/toolkit`. You only need it when importing this entry point.
 
 If you are migrating from `ngx-vest-forms`, start with the short overview in
 [`docs/MIGRATING_FROM_NGX_VEST_FORMS.md`](../../docs/MIGRATING_FROM_NGX_VEST_FORMS.md).
