@@ -55,9 +55,7 @@ describe('NgxHeadlessFieldNameDirective', () => {
   it('throws when no input and no host id exist', async () => {
     @Component({
       imports: [NgxHeadlessFieldNameDirective],
-      template: `
-        <div ngxSignalFormHeadlessFieldName></div>
-      `,
+      template: ` <div ngxSignalFormHeadlessFieldName></div> `,
     })
     class TestHostComponent {}
 

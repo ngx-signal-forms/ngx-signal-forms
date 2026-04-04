@@ -60,16 +60,16 @@ import { NgxFormFieldCharacterCountComponent } from './character-count.component
   `,
 })
 class TestWrapperComponent {
-  readonly textModel = input<string>('');
-  readonly maxLength = input<number>(100);
+  readonly textModel = input('');
+  readonly maxLength = input(100);
   readonly position = input<'left' | 'right'>('right');
-  readonly showLimitColors = input<boolean>(true);
-  readonly liveAnnounce = input<boolean>(false);
+  readonly showLimitColors = input(true);
+  readonly liveAnnounce = input(false);
   readonly colorThresholds = input<
     { warning: number; danger: number } | undefined
   >(undefined);
 
-  readonly #model = signal<{ text: string }>({ text: '' });
+  readonly #model = signal({ text: '' });
   protected readonly testForm = form(this.#model);
 
   constructor() {
@@ -89,9 +89,9 @@ class TestWrapperComponent {
   `,
 })
 class AutoDetectMaxLengthWrapperComponent {
-  readonly textModel = input<string>('');
+  readonly textModel = input('');
 
-  readonly #model = signal<{ text: string }>({ text: '' });
+  readonly #model = signal({ text: '' });
   protected readonly testForm = form(this.#model, (path) => {
     signalMaxLength(path.text, 50);
   });

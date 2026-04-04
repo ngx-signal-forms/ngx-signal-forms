@@ -237,7 +237,7 @@ export class NgxFormFieldCharacterCountComponent {
    *
    * @default true
    */
-  readonly showLimitColors = input<boolean>(true);
+  readonly showLimitColors = input(true);
 
   /**
    * Enable polite live announcements when approaching or exceeding the limit.
@@ -258,7 +258,7 @@ export class NgxFormFieldCharacterCountComponent {
    *
    * @default { warning: 80, danger: 95 }
    */
-  readonly colorThresholds = input<{ warning: number; danger: number }>({
+  readonly colorThresholds = input({
     warning: 80,
     danger: 95,
   });
@@ -342,7 +342,7 @@ export class NgxFormFieldCharacterCountComponent {
     CharacterCountLimitState | 'disabled' | null
   >(null);
 
-  readonly #announcementText = signal<string>('');
+  readonly #announcementText = signal('');
 
   protected readonly announcementText = computed(() =>
     this.#announcementText(),

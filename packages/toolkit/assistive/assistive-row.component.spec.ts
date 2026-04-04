@@ -31,7 +31,7 @@ import { NgxFormFieldCharacterCountComponent } from './character-count.component
 })
 class TestWrapperComponent {
   readonly alignment = input<'start' | 'center' | 'end'>('start');
-  readonly maxLength = input<number>(10);
+  readonly maxLength = input(10);
 
   readonly #model = signal({ text: '' });
   protected readonly testForm = form(this.#model);

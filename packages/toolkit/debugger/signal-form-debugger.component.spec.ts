@@ -15,7 +15,7 @@ describe('SignalFormDebuggerComponent', () => {
   let componentRef: ComponentRef<SignalFormDebuggerComponent>;
   let debuggerEl: HTMLElement;
 
-  const model = signal<TestData>({ name: '', email: '' });
+  const model = signal({ name: '', email: '' });
   let testForm: ReturnType<typeof form<TestData>>;
 
   beforeEach(async () => {

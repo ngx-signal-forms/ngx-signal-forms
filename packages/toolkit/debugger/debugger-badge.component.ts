@@ -54,9 +54,7 @@ export class DebuggerBadgeIconDirective {}
     '[attr.data-variant]': 'variant()',
     '[attr.data-appearance]': 'appearance()',
   },
-  template: `
-    <ng-content></ng-content>
-  `,
+  template: ` <ng-content></ng-content> `,
   styles: `
     :host {
       /* Base badge styles */

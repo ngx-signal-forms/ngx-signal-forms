@@ -106,12 +106,12 @@ export class NgxHeadlessCharacterCountDirective implements CharacterCountStateSi
   /**
    * Warning threshold as percentage (0-1). Default: 0.8 (80%).
    */
-  readonly warningThreshold = input<number>(DEFAULT_WARNING_THRESHOLD);
+  readonly warningThreshold = input(DEFAULT_WARNING_THRESHOLD);
 
   /**
    * Danger threshold as percentage (0-1). Default: 0.95 (95%).
    */
-  readonly dangerThreshold = input<number>(DEFAULT_DANGER_THRESHOLD);
+  readonly dangerThreshold = input(DEFAULT_DANGER_THRESHOLD);
 
   /**
    * The current field state.

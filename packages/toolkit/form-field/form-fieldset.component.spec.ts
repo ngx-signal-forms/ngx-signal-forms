@@ -14,7 +14,7 @@ type MockState = {
 };
 
 const createFieldsetState = (overrides: Partial<MockState> = {}) =>
-  signal<MockState>({
+  signal({
     invalid: () => true,
     valid: () => false,
     touched: () => true,

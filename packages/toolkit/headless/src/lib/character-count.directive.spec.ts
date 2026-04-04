@@ -21,7 +21,9 @@ describe('NgxHeadlessCharacterCountDirective', () => {
               [field]="contactForm.bio"
               [maxLength]="100"
             >
-              <span data-testid="current-length">{{ charCount.currentLength() }}</span>
+              <span data-testid="current-length">{{
+                charCount.currentLength()
+              }}</span>
             </div>
           </div>
         `,
@@ -50,7 +52,9 @@ describe('NgxHeadlessCharacterCountDirective', () => {
               [field]="contactForm.bio"
               [maxLength]="200"
             >
-              <span data-testid="max-length">{{ charCount.resolvedMaxLength() }}</span>
+              <span data-testid="max-length">{{
+                charCount.resolvedMaxLength()
+              }}</span>
             </div>
           </div>
         `,
@@ -168,7 +172,9 @@ describe('NgxHeadlessCharacterCountDirective', () => {
               [field]="contactForm.bio"
               [maxLength]="100"
             >
-              <span data-testid="percent-used">{{ charCount.percentUsed() }}</span>
+              <span data-testid="percent-used">{{
+                charCount.percentUsed()
+              }}</span>
             </div>
           </div>
         `,
@@ -199,7 +205,9 @@ describe('NgxHeadlessCharacterCountDirective', () => {
               [field]="contactForm.bio"
               [maxLength]="100"
             >
-              <span data-testid="limit-state">{{ charCount.limitState() }}</span>
+              <span data-testid="limit-state">{{
+                charCount.limitState()
+              }}</span>
             </div>
           </div>
         `,
@@ -229,7 +237,9 @@ describe('NgxHeadlessCharacterCountDirective', () => {
               [maxLength]="100"
               [warningThreshold]="0.8"
             >
-              <span data-testid="limit-state">{{ charCount.limitState() }}</span>
+              <span data-testid="limit-state">{{
+                charCount.limitState()
+              }}</span>
             </div>
           </div>
         `,
@@ -262,7 +272,9 @@ describe('NgxHeadlessCharacterCountDirective', () => {
               [maxLength]="100"
               [dangerThreshold]="0.95"
             >
-              <span data-testid="limit-state">{{ charCount.limitState() }}</span>
+              <span data-testid="limit-state">{{
+                charCount.limitState()
+              }}</span>
             </div>
           </div>
         `,
@@ -294,7 +306,9 @@ describe('NgxHeadlessCharacterCountDirective', () => {
               [field]="contactForm.bio"
               [maxLength]="10"
             >
-              <span data-testid="limit-state">{{ charCount.limitState() }}</span>
+              <span data-testid="limit-state">{{
+                charCount.limitState()
+              }}</span>
             </div>
           </div>
         `,
@@ -326,7 +340,9 @@ describe('NgxHeadlessCharacterCountDirective', () => {
               [maxLength]="100"
               [warningThreshold]="0.5"
             >
-              <span data-testid="limit-state">{{ charCount.limitState() }}</span>
+              <span data-testid="limit-state">{{
+                charCount.limitState()
+              }}</span>
             </div>
           </div>
         `,
@@ -360,7 +376,9 @@ describe('NgxHeadlessCharacterCountDirective', () => {
               [warningThreshold]="0.5"
               [dangerThreshold]="0.7"
             >
-              <span data-testid="limit-state">{{ charCount.limitState() }}</span>
+              <span data-testid="limit-state">{{
+                charCount.limitState()
+              }}</span>
             </div>
           </div>
         `,
@@ -396,7 +414,8 @@ describe('NgxHeadlessCharacterCountDirective', () => {
             >
               <div class="custom-counter" [class]="charCount.limitState()">
                 <span data-testid="count">
-                  {{ charCount.currentLength() }} / {{ charCount.resolvedMaxLength() }}
+                  {{ charCount.currentLength() }} /
+                  {{ charCount.resolvedMaxLength() }}
                 </span>
                 @if (charCount.isExceeded()) {
                   <span data-testid="over-limit">Over limit!</span>
@@ -433,8 +452,12 @@ describe('NgxHeadlessCharacterCountDirective', () => {
               [field]="contactForm.bio"
               [maxLength]="20"
             >
-              <span data-testid="current-length">{{ charCount.currentLength() }}</span>
-              <span data-testid="limit-state">{{ charCount.limitState() }}</span>
+              <span data-testid="current-length">{{
+                charCount.currentLength()
+              }}</span>
+              <span data-testid="limit-state">{{
+                charCount.limitState()
+              }}</span>
             </div>
           </div>
         `,

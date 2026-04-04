@@ -628,7 +628,10 @@ describe('NgxSignalFormErrorComponent', () => {
         imports: [FormField, NgxSignalFormErrorComponent],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
-          <input id="user.profile.email" [formField]="contactForm.user.profile.email" />
+          <input
+            id="user.profile.email"
+            [formField]="contactForm.user.profile.email"
+          />
           <ngx-signal-form-error
             [formField]="contactForm.user.profile.email"
             fieldName="user.profile.email"

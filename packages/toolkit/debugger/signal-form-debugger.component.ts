@@ -156,10 +156,10 @@ export class SignalFormDebuggerComponent {
   });
 
   /** Title for the debugger display */
-  readonly title = signalInput<string>('Form State & Validation');
+  readonly title = signalInput('Form State & Validation');
 
   /** Subtitle for context */
-  readonly subtitle = signalInput<string>('Live debugging information');
+  readonly subtitle = signalInput('Live debugging information');
 
   // ============================================================================
   // Form State Computed Values
