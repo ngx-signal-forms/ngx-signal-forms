@@ -27,19 +27,14 @@ npm install @ngx-signal-forms/toolkit vest@6.2.7
 Use `vest` only when you import the optional `@ngx-signal-forms/toolkit/vest`
 entry point.
 
-`vest@6.3.0` is currently excluded because of an upstream packaging issue in the
-published build. Use `6.2.7` or a newer fixed release.
+`vest@6.3.0` is excluded because of an upstream packaging issue in the
+published build (as of April 2025). Use `6.2.7` or a newer fixed release.
 
 ---
 
 ## Why use it?
 
-Angular Signal Forms already gives you:
-
-- `form()` and validation schemas
-- `[formField]` bindings
-- `submit()` and `submitting()`
-- field state such as `touched()`, `dirty()`, `invalid()`, and `errorSummary()`
+Angular Signal Forms already gives you form creation, validation, field state, and submission.
 
 The toolkit adds the pieces Angular intentionally leaves to app and library authors:
 
@@ -55,11 +50,27 @@ The toolkit adds the pieces Angular intentionally leaves to app and library auth
 
 ### Core: `@ngx-signal-forms/toolkit`
 
-- form-level context via `[formRoot]`
+- **enhanced `[formRoot]`** — replaces Angular's `FormRoot` with toolkit context (see below)
 - automatic ARIA attributes for supported controls
 - strategy-aware error visibility helpers
 - submission helpers such as `focusFirstInvalid()` and `createOnInvalidHandler()`
 - warning utilities
+
+#### `[formRoot]`: Angular's vs the toolkit's
+
+Angular's native `FormRoot` handles `novalidate`, `event.preventDefault()`, and calling `submit()`.
+The toolkit's `NgxSignalFormDirective` (included in `NgxSignalFormToolkit`) matches the same `form[formRoot]` selector and replicates that baseline, then adds:
+
+1. **DI context** — child toolkit components (error display, field wrappers, headless directives) access form state through `NGX_SIGNAL_FORM_CONTEXT` without prop drilling
+2. **Submitted status tracking** — derives `'unsubmitted' → 'submitting' → 'submitted'` from Angular's native `submitting()` signal, which Angular does not expose as a status
+3. **Error display strategy** — the `[errorStrategy]` input controls when validation feedback becomes visible (`'immediate'`, `'on-touch'`, or `'on-submit'`)
+
+**Import `NgxSignalFormToolkit` instead of `FormRoot`** — do not import both.
+
+```typescript
+// Instead of:  imports: [FormRoot, FormField]
+// Use:         imports: [NgxSignalFormToolkit, FormField]
+```
 
 ### Assistive: `@ngx-signal-forms/toolkit/assistive`
 
@@ -93,14 +104,16 @@ The toolkit adds the pieces Angular intentionally leaves to app and library auth
 
 ## Angular vs toolkit
 
-| Concern                                  | Angular Signal Forms                              | Toolkit                                       |
-| ---------------------------------------- | ------------------------------------------------- | --------------------------------------------- |
-| Form model, validation, submit lifecycle | ✅ Native                                         | ➖ Builds on top                              |
-| Progressive error timing                 | ❌ Manual                                         | ✅ Built in                                   |
-| Warning semantics                        | ❌ Manual convention needed                       | ✅ Built in via `warningError()`              |
-| Automatic ARIA linking                   | ❌ Manual                                         | ✅ Built in                                   |
-| Reusable field UI                        | ❌ App-specific                                   | ✅ Assistive + form-field entry points        |
-| CSS status classes                       | ✅ Native `provideSignalFormsConfig({ classes })` | ➖ Use Angular’s native API alongside toolkit |
+| Concern                                  | Angular Signal Forms                              | Toolkit                                              |
+| ---------------------------------------- | ------------------------------------------------- | ---------------------------------------------------- |
+| Form model, validation, submit lifecycle | ✅ Native                                         | ➖ Builds on top                                     |
+| `[formRoot]` form context                | ✅ `novalidate`, `preventDefault`, `submit()`     | ✅ Adds DI context, submitted status, error strategy |
+| Progressive error timing                 | ❌ Manual                                         | ✅ Built in via `errorStrategy`                      |
+| Submitted status tracking                | ❌ Only `submitting()` signal                     | ✅ `unsubmitted → submitting → submitted`            |
+| Warning semantics                        | ❌ Manual convention needed                       | ✅ Built in via `warningError()`                     |
+| Automatic ARIA linking                   | ❌ Manual                                         | ✅ Built in                                          |
+| Reusable field UI                        | ❌ App-specific                                   | ✅ Assistive + form-field entry points               |
+| CSS status classes                       | ✅ Native `provideSignalFormsConfig({ classes })` | ➖ Use Angular’s native API alongside toolkit        |
 
 ---
 
@@ -117,15 +130,15 @@ In practice, it is often easiest to combine all three in the same form and let e
 
 ### Decision table
 
-| Option                                     | Best for                                         | Strengths                                                                                                                                                                                             | Tradeoffs                                                                                                             |
-| ------------------------------------------ | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **Angular Signal Forms schema validation** | simple field-local validation and UI constraints | built into Angular; smallest dependency surface; straightforward rules like `required`, `email`, `min`, `max`, `minLength`, `maxLength`; good fit for local control logic                             | can get verbose when many business-policy rules accumulate; less ergonomic for large conditional rule sets            |
-| **Zod / OpenAPI / Standard Schema**        | reusable contract and structural validation      | ideal when schemas already exist or are generated; keeps backend/frontend contract rules in one place; strong for shape, enums, bounds, and format rules; works through `validateStandardSchema(...)` | not the best place for complex business policy; easy to over-centralize rules that really belong in application logic |
-| **Vest**                                   | business-policy validation                       | expressive for conditional, cross-field, and multi-rule logic; good fit for async business checks and advisory `warn()` guidance; keeps policy rules readable and grouped                             | adds an extra validation abstraction; heavier than Angular built-ins for very simple rules                            |
+| Option                                     | Best for                                                 | Strengths                                                                                                                                                                                                                                                                         | Tradeoffs                                                                                                             |
+| ------------------------------------------ | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Angular Signal Forms schema validation** | field-local validation, async checks, and UI constraints | built into Angular; smallest dependency surface; covers `required`, `email`, `min`, `max`, `minLength`, `maxLength`, `pattern`; custom rules via `validate()` / `validateAsync()` / `validateHttp()`; conditional logic via `applyWhenValue()`; `debounce()` for expensive checks | can get verbose when many business-policy rules accumulate; less ergonomic for large grouped rule sets                |
+| **Zod / OpenAPI / Standard Schema**        | reusable contract and structural validation              | ideal when schemas already exist or are generated; keeps backend/frontend contract rules in one place; strong for shape, enums, bounds, and format rules; works through `validateStandardSchema(...)`                                                                             | not the best place for complex business policy; easy to over-centralize rules that really belong in application logic |
+| **Vest**                                   | business-policy validation                               | expressive for conditional, cross-field, and multi-rule logic; good fit for async business checks and advisory `warn()` guidance; keeps policy rules readable and grouped                                                                                                         | adds an extra validation abstraction; heavier than Angular built-ins for very simple rules                            |
 
 ### Quick rule of thumb
 
-- **Angular validators** for simple UI and field constraints
+- **Angular validators** for field constraints, custom checks, and async validation
 - **Zod / OpenAPI Standard Schema** for reusable contract validation
 - **Vest** for business-policy rules and non-trivial conditional logic
 
@@ -154,6 +167,7 @@ This is a normal and recommended setup when a form has a mix of local UI rules, 
 ```typescript
 import { signal } from '@angular/core';
 import {
+  debounce,
   email,
   form,
   minLength,
@@ -173,6 +187,7 @@ const signupForm = form(model, (path) => {
   // Small field-local UI rules
   required(path.email, { message: 'Email is required' });
   email(path.email, { message: 'Enter a valid email address' });
+  debounce(path.email, 300);
   minLength(path.password, 12, { message: 'Use at least 12 characters' });
 
   // Shared contract rules from Zod / OpenAPI / Standard Schema
@@ -197,7 +212,11 @@ If you want the deeper decision guide for Vest specifically, see:
 
 ## Code Comparison
 
-### Without toolkit
+### Without toolkit (Angular's `FormRoot`)
+
+```typescript
+// imports: [FormRoot, FormField]
+```
 
 ```html
 <form [formRoot]="userForm">
@@ -218,7 +237,11 @@ If you want the deeper decision guide for Vest specifically, see:
 </form>
 ```
 
-### With toolkit
+### With toolkit (`NgxSignalFormToolkit` replaces `FormRoot`)
+
+```typescript
+// imports: [NgxSignalFormToolkit, FormField, NgxFormField]
+```
 
 ```html
 <form [formRoot]="userForm">
@@ -226,17 +249,19 @@ If you want the deeper decision guide for Vest specifically, see:
     <label for="email">Email</label>
     <input id="email" [formField]="userForm.email" />
   </ngx-signal-form-field-wrapper>
-  <button type="submit">Submit</button>
+  <button type="submit">Send</button>
 </form>
 ```
 
-**Result:** less repeated ARIA and visibility logic, with Angular still handling the underlying form state.
+**Result:** same `[formRoot]` binding, but the toolkit's version provides DI context, submitted status, and error strategy — so child components like `<ngx-signal-form-field-wrapper>` handle ARIA and error visibility automatically.
 
 ---
 
 ## Quick Start
 
-The toolkit works with Angular Signal Forms as-is. Most projects only need the toolkit imports and, optionally, a global default strategy.
+The toolkit works with Angular Signal Forms as-is. Replace Angular's `FormRoot` with `NgxSignalFormToolkit` and add any toolkit entry points you need.
+
+> **Note:** The `schema()` wrapper is optional. You can pass the validation callback directly to `form()` as the second argument. `schema()` is useful when you want to define reusable validation schemas in separate files.
 
 ```typescript
 import { Component, signal } from '@angular/core';
@@ -245,16 +270,17 @@ import {
   schema,
   required,
   email,
-  FormField,
+  FormField, // Angular's [formField] — unchanged
 } from '@angular/forms/signals';
 import {
-  NgxSignalFormToolkit,
+  NgxSignalFormToolkit, // Replaces Angular's FormRoot — provides [formRoot] with toolkit context
   createOnInvalidHandler,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
   selector: 'app-contact',
+  // NgxSignalFormToolkit replaces FormRoot — do not import both
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="contactForm">
@@ -287,17 +313,18 @@ export class ContactComponent {
 }
 ```
 
-### What you get automatically
+### What the toolkit adds here
 
-- ✅ Form-level context for toolkit components inside `[formRoot]`
-- ✅ Declarative submission via `form()` options — no manual `submit()` calls needed
-- ✅ `aria-invalid` and `aria-describedby` for accessibility
+Because `NgxSignalFormToolkit` provides `[formRoot]` with DI context, the field wrapper and error components work automatically:
+
+- ✅ Submitted status tracking (`unsubmitted → submitting → submitted`) for strategy-aware display
+- ✅ `aria-invalid`, `aria-required`, and `aria-describedby` wired by the auto-ARIA directive
 - ✅ **Errors** display after blur OR submit (default `'on-touch'` strategy) with `role="alert"`
 - ✅ **Warnings** (non-blocking) display with `role="status"` when no errors present
 - ✅ **Hints** render below the input with proper ARIA association
 - ✅ Consistent layout with label, input, feedback messages in semantic structure
 
-> **Note:** Angular still owns `submit()`, `submitting()`, field state, and validation. The toolkit layers accessibility and display behavior on top.
+> **Note:** Angular still owns `form()`, `submit()`, `submitting()`, field state, and validation. The toolkit layers accessibility, error timing, and display behavior on top.
 
 ---
 
@@ -548,7 +575,7 @@ The skill covers the full toolkit — entry points, patterns, ARIA automation, a
 
 - Angular 21.2+ (Signal Forms API)
 - All modern browsers with ES2022+ support
-- TypeScript 5.8+
+- TypeScript 5.9+
 
 ## Accessibility
 
