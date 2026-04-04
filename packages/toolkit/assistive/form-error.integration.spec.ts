@@ -58,7 +58,6 @@ describe('NgxSignalFormErrorComponent (integration)', () => {
         FormField,
         NgxSignalFormToolkit,
         NgxSignalFormFieldWrapperComponent,
-        NgxSignalFormErrorComponent,
       ],
       template: `
         <form [formRoot]="contactForm" errorStrategy="immediate">
