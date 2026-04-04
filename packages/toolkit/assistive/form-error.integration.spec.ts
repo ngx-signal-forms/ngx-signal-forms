@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { FormField, form, required, schema } from '@angular/forms/signals';
-import { NgxSignalFormDirective } from '@ngx-signal-forms/toolkit/core';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
@@ -15,7 +15,7 @@ describe('NgxSignalFormErrorComponent (integration)', () => {
     // Define a test component to ensure DI context for Signal Forms
     @Component({
       selector: 'test-form-error',
-      imports: [FormField, NgxSignalFormDirective, NgxSignalFormErrorComponent],
+      imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
       template: `
         <form [formRoot]="contactForm" [errorStrategy]="errorStrategy">
           <input id="email" [formField]="contactForm.email" />
@@ -41,26 +41,22 @@ describe('NgxSignalFormErrorComponent (integration)', () => {
   });
 
   /**
-   * Regression test for the published-package token split bug (beta.8).
+   * Regression test for the published-package token split bug.
    *
    * **What this test covers:** Angular DI correctly resolves `NGX_SIGNAL_FORM_FIELD_CONTEXT`
    * from the parent wrapper so that `ngx-signal-form-error` inherits the field name without
-   * an explicit `fieldName` input.
+   * an explicit `fieldName` input when the form context comes from the public root entry point.
    *
-   * **What this test does NOT cover:** Token object identity at the FESM bundle level.
-   * Under Vitest the TS module graph resolves `@ngx-signal-forms/toolkit` via `export * from './core'`,
-   * so both import paths still yield the same `InjectionToken` instance at source level.
-   * The published-package split (two distinct token instances in separate FESM bundles) is
-   * prevented by a `no-restricted-imports` lint rule in `.oxlintrc.json` that enforces all
-   * secondary entry points (`form-field`, `assistive`, `headless`, …) import exclusively
-   * from `@ngx-signal-forms/toolkit/core`.
+   * **Why this matters:** The toolkit intentionally exposes a single shared public entry point
+   * for these core runtime symbols. Secondary entry points consume that root module so packaged
+   * builds share the same token instances instead of duplicating them behind `./core`.
    */
   it('inherits fieldName from parent ngx-signal-form-field-wrapper without explicit fieldName input', async () => {
     @Component({
       selector: 'test-wrapper-context',
       imports: [
         FormField,
-        NgxSignalFormDirective,
+        NgxSignalFormToolkit,
         NgxSignalFormFieldWrapperComponent,
         NgxSignalFormErrorComponent,
       ],

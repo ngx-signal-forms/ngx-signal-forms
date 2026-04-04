@@ -179,34 +179,19 @@
       }
     },
     {
-      "files": [
-        "packages/toolkit/assistive/**/*.ts",
-        "packages/toolkit/form-field/**/*.ts",
-        "packages/toolkit/headless/**/*.ts",
-        "packages/toolkit/vest/**/*.ts",
-        "packages/toolkit/debugger/**/*.ts"
-      ],
+      "files": ["apps/demo/src/**/*.ts", "packages/toolkit/**/*.ts"],
       "rules": {
         "no-restricted-imports": [
           "error",
           {
             "paths": [
               {
-                "name": "@ngx-signal-forms/toolkit",
-                "message": "Secondary entry points must import from '@ngx-signal-forms/toolkit/core' to prevent duplicate InjectionToken instances across ng-packagr FESM bundles."
+                "name": "@ngx-signal-forms/toolkit/core",
+                "message": "Use '@ngx-signal-forms/toolkit'. The /core entry point is internal-only and is not published."
               }
             ]
           }
         ]
-      }
-    },
-    {
-      "files": [
-        "packages/toolkit/**/*.spec.ts",
-        "packages/toolkit/**/*.test.ts"
-      ],
-      "rules": {
-        "no-restricted-imports": "off"
       }
     },
     {

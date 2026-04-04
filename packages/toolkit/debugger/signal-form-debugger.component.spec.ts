@@ -1,7 +1,7 @@
 import { ComponentRef, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { form, required, schema } from '@angular/forms/signals';
-import { NGX_SIGNAL_FORM_CONTEXT } from '@ngx-signal-forms/toolkit/core';
+import { NGX_SIGNAL_FORM_CONTEXT } from '@ngx-signal-forms/toolkit';
 import { SignalFormDebuggerComponent } from './signal-form-debugger.component';
 
 describe('SignalFormDebuggerComponent', () => {

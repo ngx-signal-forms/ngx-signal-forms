@@ -7,13 +7,13 @@ import {
   input,
 } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit/core';
+import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import {
   injectFormContext,
   NGX_SIGNAL_FORMS_CONFIG,
   resolveErrorDisplayStrategy,
   showErrors,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 import {
   isBlockingError,
   isWarningError,

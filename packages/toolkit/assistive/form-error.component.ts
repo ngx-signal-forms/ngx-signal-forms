@@ -21,7 +21,7 @@ import {
   type ErrorDisplayStrategy,
   type ErrorReadableState,
   type SubmittedStatus,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 
 export type NgxSignalFormErrorListStyle = 'plain' | 'bullets';
 

@@ -9,7 +9,7 @@ import {
   showErrors,
   type ErrorDisplayStrategy,
   type SubmittedStatus,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 
 import type { ValidationError } from '@angular/forms/signals';
 import {

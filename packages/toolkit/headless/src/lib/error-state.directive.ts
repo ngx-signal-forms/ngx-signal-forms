@@ -12,7 +12,7 @@ import {
   showErrors,
   type ErrorDisplayStrategy,
   type SubmittedStatus,
-} from '@ngx-signal-forms/toolkit/core';
+} from '@ngx-signal-forms/toolkit';
 
 import { readDirectErrors } from './utilities';
 
