@@ -1,4 +1,12 @@
-import { computed, Directive, inject, input, type Signal } from '@angular/core';
+import {
+  computed,
+  Directive,
+  effect,
+  inject,
+  input,
+  signal,
+  type Signal,
+} from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import { submit } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
@@ -7,7 +15,6 @@ import type {
   ResolvedErrorDisplayStrategy,
   SubmittedStatus,
 } from '../types';
-import { createSubmittedStatusTracker } from '../utilities/submission-helpers';
 
 /**
  * Form context provided to child directives and components.
@@ -183,26 +190,61 @@ export class NgxSignalFormDirective {
     });
 
   /**
-   * Submission status derived from Angular Signal Forms' native signals.
+   * Tracks whether a submit has been attempted via the form's submit event.
+   *
+   * This is set in `onSubmit()` BEFORE calling Angular's `submit()`.
+   * Unlike `submitting()`, which only fires for valid forms, this flag
+   * captures ALL submit attempts — including invalid ones.
+   *
+   * This is critical for the `'on-submit'` error strategy: Angular's `submit()`
+   * only sets `submitting()` to `true` when the form is valid. Without this flag,
+   * errors would never appear for invalid forms with `'on-submit'` strategy.
+   */
+  readonly #submitAttempted = signal(false);
+
+  /**
+   * Watches for form reset to clear the `#submitAttempted` flag.
+   *
+   * When `form.reset()` is called, `touched()` transitions from `true` to `false`.
+   * This effect detects that transition and resets submission state.
+   */
+  constructor() {
+    const prevTouched = signal(false);
+    effect(() => {
+      const nowTouched = this.formRoot()().touched();
+      if (prevTouched() && !nowTouched) {
+        this.#submitAttempted.set(false);
+      }
+      prevTouched.set(nowTouched);
+    });
+  }
+
+  /**
+   * Submission status derived from Angular Signal Forms' native signals
+   * and the directive's own submit-attempt tracking.
    *
    * Angular 21.2 provides a `submitting()` signal on `FieldState`,
-   * but NOT a `submittedStatus()` signal. The toolkit derives `SubmittedStatus`
-   * from these native signals:
+   * but NOT a `submittedStatus()` signal. The toolkit derives it:
    *
-   * - `'unsubmitted'` - Form hasn't been submitted yet
-   * - `'submitting'` - Form is currently being submitted (`submitting()` is true)
-   * - `'submitted'` - Form has completed a submission (tracked via `submitting()` transition)
+   * - `'unsubmitted'` - No submission attempt yet
+   * - `'submitting'` - `submitting()` is currently `true` (valid form, action running)
+   * - `'submitted'` - A submit was attempted (via `onSubmit`), regardless of validity
    *
    * **Reset behavior**: When `form.reset()` is called, the status returns to `'unsubmitted'`.
    * This is detected by watching for `touched()` becoming `false` after being `true`.
    */
-  readonly submittedStatus = createSubmittedStatusTracker(this.formRoot);
+  readonly submittedStatus: Signal<SubmittedStatus> = computed(() => {
+    const state = this.formRoot()();
+    if (state.submitting()) return 'submitting';
+    return this.#submitAttempted() ? 'submitted' : 'unsubmitted';
+  });
 
   /// Replicates Angular's FormRoot.onSubmit behavior.
   /// @see https://github.com/angular/angular/blob/main/packages/forms/signals/src/directive/ng_signal_form.ts
   // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- DOM Event is a browser API type and is passed through Angular's submit host listener.
   protected onSubmit(event: Readonly<Event>): void {
     event.preventDefault();
+    this.#submitAttempted.set(true);
     void submit(this.formRoot());
   }
 }

@@ -199,7 +199,7 @@ describe('NgxSignalFormDirective', () => {
 
       // User sees form is not yet submitted
       expect(screen.getByTestId('submitted-status')).toHaveTextContent(
-        'unsubmitted',
+        /^unsubmitted$/,
       );
     });
 
@@ -237,7 +237,7 @@ describe('NgxSignalFormDirective', () => {
       await render(TestComponent);
 
       expect(screen.getByTestId('submitted-status')).toHaveTextContent(
-        'unsubmitted',
+        /^unsubmitted$/,
       );
 
       const user = userEvent.setup();
@@ -249,7 +249,7 @@ describe('NgxSignalFormDirective', () => {
       await vi.waitFor(
         () => {
           expect(screen.getByTestId('submitted-status')).toHaveTextContent(
-            'submitted',
+            /^submitted$/,
           );
         },
         { timeout: 2000 },
@@ -301,7 +301,7 @@ describe('NgxSignalFormDirective', () => {
 
       await vi.waitFor(() => {
         expect(screen.getByTestId('submitted-status')).toHaveTextContent(
-          'submitted',
+          /^submitted$/,
         );
       });
 
@@ -415,7 +415,7 @@ describe('NgxSignalFormDirective', () => {
         // submitting() never became true (because form is invalid)
         await vi.waitFor(() => {
           expect(screen.getByTestId('submitted-status')).toHaveTextContent(
-            'submitted',
+            /^submitted$/,
           );
         });
       });
@@ -461,7 +461,7 @@ describe('NgxSignalFormDirective', () => {
         await user.click(submitButton);
         await vi.waitFor(() => {
           expect(screen.getByTestId('submitted-status')).toHaveTextContent(
-            'submitted',
+            /^submitted$/,
           );
         });
 
@@ -469,13 +469,13 @@ describe('NgxSignalFormDirective', () => {
         await user.click(submitButton);
         await vi.waitFor(() => {
           expect(screen.getByTestId('submitted-status')).toHaveTextContent(
-            'submitted',
+            /^submitted$/,
           );
         });
 
         // Status should remain 'submitted'
         expect(screen.getByTestId('submitted-status')).toHaveTextContent(
-          'submitted',
+          /^submitted$/,
         );
       });
 
@@ -527,7 +527,7 @@ describe('NgxSignalFormDirective', () => {
         await user.click(submitButton);
         await vi.waitFor(() => {
           expect(screen.getByTestId('submitted-status')).toHaveTextContent(
-            'submitted',
+            /^submitted$/,
           );
         });
 
@@ -543,7 +543,7 @@ describe('NgxSignalFormDirective', () => {
         await user.click(submitButton);
         await vi.waitFor(() => {
           expect(screen.getByTestId('submitted-status')).toHaveTextContent(
-            'submitted',
+            /^submitted$/,
           );
         });
       });

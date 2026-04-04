@@ -1,10 +1,10 @@
 import {
   afterNextRender,
+  afterRenderEffect,
   booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   ElementRef,
   inject,
   input,
@@ -558,16 +558,20 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
       }
     });
 
-    // Set data-signal-field attribute for debugging/testing
-    effect(() => {
-      const fieldName = this.resolvedFieldName();
-      const hostEl = this.#getHostElement();
+    // Set data-signal-field attribute for debugging/testing.
+    // Uses afterRenderEffect write phase — this is a signal-triggered DOM mutation,
+    // so it should run at the optimal time in the render cycle to avoid layout thrashing.
+    afterRenderEffect({
+      write: () => {
+        const fieldName = this.resolvedFieldName();
+        const hostEl = this.#getHostElement();
 
-      const inputEl = this.#findBoundControl(hostEl);
+        const inputEl = this.#findBoundControl(hostEl);
 
-      if (inputEl) {
-        inputEl.setAttribute('data-signal-field', fieldName);
-      }
+        if (inputEl) {
+          inputEl.setAttribute('data-signal-field', fieldName);
+        }
+      },
     });
   }
 }
