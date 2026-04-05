@@ -44,6 +44,7 @@ import { errorMessagesSchema } from './error-messages.validations';
   template: `
     <form
       [formRoot]="errorMessagesForm"
+      ngxSignalForm
       [errorStrategy]="errorDisplayMode()"
       class="form-container"
     >

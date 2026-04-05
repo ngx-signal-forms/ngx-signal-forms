@@ -17,7 +17,11 @@ describe('NgxSignalFormErrorComponent (integration)', () => {
       selector: 'test-form-error',
       imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
       template: `
-        <form [formRoot]="contactForm" [errorStrategy]="errorStrategy">
+        <form
+          [formRoot]="contactForm"
+          ngxSignalForm
+          [errorStrategy]="errorStrategy"
+        >
           <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
             [formField]="contactForm.email"
@@ -63,7 +67,7 @@ describe('NgxSignalFormErrorComponent (integration)', () => {
         NgxSignalFormFieldWrapperComponent,
       ],
       template: `
-        <form [formRoot]="contactForm" errorStrategy="immediate">
+        <form [formRoot]="contactForm" ngxSignalForm errorStrategy="immediate">
           <ngx-signal-form-field-wrapper [formField]="contactForm.email">
             <label for="email">Email</label>
             <input id="email" [formField]="contactForm.email" />

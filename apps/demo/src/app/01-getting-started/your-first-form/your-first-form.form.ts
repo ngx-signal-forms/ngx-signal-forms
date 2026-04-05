@@ -27,6 +27,7 @@ import { contactFormSchema } from './your-first-form.validations';
   template: `
     <form
       [formRoot]="contactForm"
+      ngxSignalForm
       [errorStrategy]="errorDisplayMode()"
       class="form-container"
     >

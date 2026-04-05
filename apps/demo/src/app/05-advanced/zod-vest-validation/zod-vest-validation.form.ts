@@ -90,6 +90,7 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
 
       <form
         [formRoot]="accountForm"
+        ngxSignalForm
         [errorStrategy]="errorDisplayMode()"
         class="max-w-3xl space-y-6"
       >

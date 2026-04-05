@@ -51,8 +51,9 @@ export function injectFieldControl(
 
     if (!formContext) {
       throw new Error(
-        '[ngx-signal-forms] injectFieldControl() requires NgxSignalFormDirective ' +
-          'to be present in the component tree. Add [formRoot] to your form element.',
+        '[ngx-signal-forms] injectFieldControl() requires form context in the component tree. ' +
+          'Add [formRoot] and ngxSignalForm to your <form> element: ' +
+          '<form [formRoot]="myForm" ngxSignalForm>',
       );
     }
 

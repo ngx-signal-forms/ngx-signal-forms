@@ -24,6 +24,7 @@
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 // Individual imports
+import { FormRoot } from '@angular/forms/signals';
 import {
   NgxSignalFormDirective,
   NgxSignalFormAutoAriaDirective,
@@ -47,7 +48,7 @@ import {
 
 ### NgxSignalFormToolkit
 
-Bundle containing `NgxSignalFormDirective` and `NgxSignalFormAutoAriaDirective`.
+Bundle containing Angular `FormRoot`, `NgxSignalFormDirective`, and `NgxSignalFormAutoAriaDirective`.
 
 ```typescript
 @Component({
@@ -57,20 +58,26 @@ Bundle containing `NgxSignalFormDirective` and `NgxSignalFormAutoAriaDirective`.
 
 ### NgxSignalFormDirective
 
-Selector: `form[formRoot]`
+Selector: `form[formRoot][ngxSignalForm]`
 
 **Inputs:**
 
-- `formRoot` (required) — The form field tree
 - `errorStrategy` — typically `'immediate' | 'on-touch' | 'on-submit'`
 
 **Exposed signals:**
 
 - `submittedStatus` — `Signal<'unsubmitted' | 'submitting' | 'submitted'>`
 
-**What it adds beyond Angular's `FormRoot`:**
+**How to import it individually:**
 
-Angular's native `FormRoot` handles three things: `novalidate`, `event.preventDefault()`, and calling `submit()`. The toolkit directive replicates that baseline and adds:
+```typescript
+import { FormRoot } from '@angular/forms/signals';
+import { NgxSignalFormDirective } from '@ngx-signal-forms/toolkit';
+```
+
+**What it adds on top of Angular's `FormRoot`:**
+
+Angular's native `FormRoot` remains the owner of `novalidate`, `event.preventDefault()`, and `submit()`. The toolkit enhancer adds:
 
 - **DI context** (`NGX_SIGNAL_FORM_CONTEXT`) so child components like `<ngx-signal-form-error>` can access form-level state without prop drilling.
 - **Submitted status tracking** (`submittedStatus`) to derive `'unsubmitted' → 'submitting' → 'submitted'`, which Angular does not expose directly.
@@ -79,12 +86,10 @@ Angular's native `FormRoot` handles three things: `novalidate`, `event.preventDe
 **Submission patterns:**
 
 ```html
-<!-- Declarative (recommended): configure submission in form(), no (submit) binding needed -->
-<form [formRoot]="myForm" [errorStrategy]="'on-submit'">
+<!-- Angular owns [formRoot], toolkit opts in via ngxSignalForm -->
+<form [formRoot]="myForm" ngxSignalForm [errorStrategy]="'on-submit'">
   <button type="submit">Submit</button>
 </form>
-
-<!-- [formRoot] replicates FormRoot behavior, so provide submission.action in form() -->
 ```
 
 ### NgxSignalFormAutoAriaDirective
@@ -124,7 +129,7 @@ provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-submit' });
 ```
 
 For one-off differences, prefer form-level or field-level inputs such as
-`[errorStrategy]` or wrapper `appearance` instead of subtree-scoped config overrides.
+`ngxSignalForm [errorStrategy]` or wrapper `appearance` instead of subtree-scoped config overrides.
 
 ### Error Messages
 
@@ -152,7 +157,7 @@ provideErrorMessages({
 | `submitWithWarnings(form, callback)`  | Submit helper that blocks only on blocking errors     |
 | `combineShowErrors(...signals)`       | Combines multiple visibility signals                  |
 | `showErrors(field, strategy, status)` | `Signal<boolean>` — should show errors                |
-| `injectFormContext()`                 | Get `NgxSignalFormDirective` context or `undefined`   |
+| `injectFormContext()`                 | Get `ngxSignalForm` context or `undefined`            |
 | `unwrapValue(signalOrValue)`          | Extract value from `Signal` or static                 |
 
 `showErrors()` is the main public API for component and template work. `unwrapValue()` is mainly useful when building lower-level utilities.

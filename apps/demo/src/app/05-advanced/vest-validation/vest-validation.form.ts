@@ -50,6 +50,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
 
       <form
         [formRoot]="accountForm"
+        ngxSignalForm
         [errorStrategy]="errorDisplayMode()"
         class="max-w-3xl space-y-6"
       >

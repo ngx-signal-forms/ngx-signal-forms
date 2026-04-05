@@ -5,6 +5,7 @@ import {
   isSignal,
   signal,
   type Signal,
+  type WritableSignal,
 } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import type { SubmittedStatus } from '../types';
@@ -19,8 +20,13 @@ import { isBlockingError } from './warning-error';
  * - `'submitting'` — `submitting()` is currently `true`
  * - `'submitted'` — `submitting()` transitioned from `true` to `false`
  *
- * Resets to `'unsubmitted'` when `touched()` transitions from `true` to `false`
- * (i.e. after `form.reset()`).
+ * When an optional writable submit-attempt signal is supplied, invalid submit
+ * attempts can also transition the derived status to `'submitted'` even though
+ * Angular's `submitting()` signal never becomes `true` for invalid forms.
+ * The tracker **owns the reset lifecycle** for this signal: when `touched()`
+ * transitions from `true` to `false` (i.e. after `form.reset()`), the tracker
+ * resets both its internal `submitted` state and the external `submitAttempted`
+ * signal back to `false`.
  *
  * @param formTree A `FieldTree` or `Signal<FieldTree>` (supports deferred resolution via `input.required()`)
  * @returns Signal with the current `SubmittedStatus`
@@ -33,6 +39,7 @@ import { isBlockingError } from './warning-error';
 /* oxlint-disable @typescript-eslint/prefer-readonly-parameter-types -- Angular Signal Forms models FieldTree as a callable object, and wrapping it in Readonly<T> removes its call signature. */
 export function createSubmittedStatusTracker(
   formTree: FieldTree<unknown> | Signal<FieldTree<unknown>>,
+  submitAttempted?: WritableSignal<boolean>,
 ): Signal<SubmittedStatus> {
   assertInInjectionContext(createSubmittedStatusTracker);
 
@@ -67,6 +74,7 @@ export function createSubmittedStatusTracker(
     }
     if (prevTouched() && !nowTouched && !nowSubmitting) {
       submitted.set(false);
+      submitAttempted?.set(false);
     }
 
     prevSubmitting.set(nowSubmitting);
@@ -76,7 +84,7 @@ export function createSubmittedStatusTracker(
   return computed(() => {
     const state = resolve()();
     if (state.submitting()) return 'submitting';
-    return submitted() ? 'submitted' : 'unsubmitted';
+    return submitted() || submitAttempted?.() ? 'submitted' : 'unsubmitted';
   });
 }
 /* oxlint-enable @typescript-eslint/prefer-readonly-parameter-types */

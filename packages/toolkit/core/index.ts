@@ -39,6 +39,7 @@ export {
 // export * from './directives/form-busy.directive';
 
 // Convenience imports
+import { FormRoot } from '@angular/forms/signals';
 import { NgxSignalFormAutoAriaDirective } from './directives/auto-aria.directive';
 import { NgxSignalFormDirective } from './directives/ngx-signal-form.directive';
 
@@ -57,7 +58,7 @@ import { NgxSignalFormDirective } from './directives/ngx-signal-form.directive';
  *   selector: 'ngx-my-form',
  *   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
  *   template: `
- *     <form [formRoot]="myForm">
+ *     <form [formRoot]="myForm" ngxSignalForm>
  *       <input [formField]="myForm.email" />
  *       <ngx-signal-form-error [formField]="myForm.email" fieldName="email" />
  *     </form>
@@ -70,7 +71,8 @@ import { NgxSignalFormDirective } from './directives/ngx-signal-form.directive';
  *
  * @remarks
  * **Contents:**
- * - {@link NgxSignalFormDirective} - Provides form context to child components
+ * - {@link FormRoot} - Angular-owned submit and `novalidate` behavior
+ * - {@link NgxSignalFormDirective} - Adds toolkit context and error strategy
  * - {@link NgxSignalFormAutoAriaDirective} - Automatically applies ARIA attributes
  *
  * **For error display:** Import `NgxSignalFormErrorComponent` from `@ngx-signal-forms/toolkit/assistive`
@@ -83,6 +85,7 @@ import { NgxSignalFormDirective } from './directives/ngx-signal-form.directive';
  * @public
  */
 export const NgxSignalFormToolkit = [
+  FormRoot,
   NgxSignalFormDirective,
   NgxSignalFormAutoAriaDirective,
 ] as const;

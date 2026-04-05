@@ -62,6 +62,7 @@ const registrationSchema = schema<Registration>((path) => {
 
       <form
         [formRoot]="regForm"
+        ngxSignalForm
         [errorStrategy]="errorDisplayMode()"
         class="max-w-md space-y-6"
       >

@@ -1,20 +1,19 @@
 import {
   computed,
   Directive,
-  effect,
   inject,
   input,
   signal,
   type Signal,
 } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
-import { submit } from '@angular/forms/signals';
+import { FormRoot, type FieldTree } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type {
   ErrorDisplayStrategy,
   ResolvedErrorDisplayStrategy,
   SubmittedStatus,
 } from '../types';
+import { createSubmittedStatusTracker } from '../utilities/submission-helpers';
 
 /**
  * Form context provided to child directives and components.
@@ -49,53 +48,38 @@ export interface NgxSignalFormContext {
 }
 
 /**
- * Directive that transparently enhances Angular's `[formRoot]` with toolkit context.
+ * Directive that enhances Angular's `FormRoot` with toolkit context.
  *
- * Matches the same `form[formRoot]` selector as Angular's `FormRoot` directive,
- * replacing it with toolkit-specific features (DI context, submitted status
- * tracking, error strategy) while replicating the same base behavior
- * (`novalidate`, `preventDefault`, `submit()`).
+ * This directive is intentionally additive: Angular's public `FormRoot`
+ * continues to own submission behavior while the toolkit layers on extra DI
+ * context, submitted-status tracking, and form-level error strategy.
  *
- * **Import `NgxSignalFormToolkit` instead of `FormRoot`** — do not import both.
+ * Use it together with Angular's `[formRoot]` binding on the same `<form>`.
  *
- * ### Why we replicate FormRoot instead of composing via `hostDirectives`
+ * ### Why this uses a separate selector instead of `hostDirectives`
  *
- * Using `hostDirectives: [FormRoot]` on the same `form[formRoot]` selector risks
- * double-instantiation: if a user imports both `FormRoot` and `NgxSignalFormToolkit`,
- * both directives match independently, causing duplicate `submit()` calls.
+ * The toolkit does not compose Angular's `FormRoot` via `hostDirectives` because
+ * that would either duplicate `FormRoot` on the host element or make the toolkit
+ * proxy Angular's public API surface again. A separate additive attribute keeps
+ * Angular's public API in the lead.
  *
- * The replicated behavior is limited to 3 trivial host behaviors (see source reference
- * below). The actual submission logic lives in the `submit()` function imported from
- * `@angular/forms/signals`, so changes to Angular's submit handling are picked up
- * automatically.
- *
- * ### Replicated from Angular's FormRoot
- *
- * The following behavior is replicated from Angular's `FormRoot` directive:
- * - `host: { novalidate: '' }` — disables browser validation
- * - `host: { '(submit)': 'onSubmit($event)' }` — intercepts form submit
- * - `onSubmit`: calls `event.preventDefault()` and `submit(fieldTree())`
- *
- * @see {@link https://github.com/angular/angular/blob/main/packages/forms/signals/src/directive/ng_signal_form.ts Angular FormRoot source}
- *
- * ### Toolkit additions (on top of FormRoot behavior)
+ * ### Toolkit additions (on top of Angular's `FormRoot`)
  *
  * 1. DI context for child toolkit components (`NGX_SIGNAL_FORM_CONTEXT`)
  * 2. Submitted status tracking (`unsubmitted` → `submitting` → `submitted`)
  * 3. Error display strategy management (`errorStrategy` input)
  *
- * ### Submission patterns
+ * ### Submission ownership
  *
- * - **Declarative** (recommended): Configure `submission: { action, onInvalid }` in `form()`.
- *   The directive calls `submit()` automatically on form submit.
- * - **Manual**: Add `(submit)="handler($event)"` for custom logic.
- *   The directive still handles `preventDefault()` and status tracking.
+ * Angular's `FormRoot` remains the only directive that calls `submit()` and
+ * prevents the native submit. The toolkit only observes submit attempts so the
+ * `'on-submit'` strategy can also work for invalid submissions.
  *
- * @example Declarative submission (recommended)
+ * @example Angular-led form with toolkit enhancement
  * ```typescript
  * @Component({
  *   template: `
- *     <form [formRoot]="userForm">
+ *     <form [formRoot]="userForm" ngxSignalForm>
  *       <input [formField]="userForm.email" type="email" />
  *       <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
  *       <button type="submit">Submit</button>
@@ -116,29 +100,18 @@ export interface NgxSignalFormContext {
  * }
  * ```
  *
- * @example Manual submission
- * ```html
- * <form [formRoot]="userForm" (submit)="save($event)">
- *   <button type="submit">Submit</button>
- * </form>
- * ```
- *
  * @example With error strategy
  * ```html
- * <form [formRoot]="userForm" [errorStrategy]="'on-submit'">
+ * <form [formRoot]="userForm" ngxSignalForm [errorStrategy]="'on-submit'">
  *   <!-- Errors appear only after form submission -->
  * </form>
  * ```
  */
 @Directive({
-  // eslint-disable-next-line @angular-eslint/directive-selector -- Matches Angular's FormRoot selector to transparently enhance it
-  selector: 'form[formRoot]',
-  exportAs: 'ngxFormRoot',
-  /// Replicates Angular's FormRoot host config.
-  /// @see https://github.com/angular/angular/blob/main/packages/forms/signals/src/directive/ng_signal_form.ts
+  selector: 'form[formRoot][ngxSignalForm]',
+  exportAs: 'ngxSignalForm',
   host: {
-    novalidate: '',
-    '(submit)': 'onSubmit($event)',
+    '(submit)': 'onSubmitAttempt()',
   },
   providers: [
     {
@@ -158,11 +131,14 @@ export interface NgxSignalFormContext {
 })
 export class NgxSignalFormDirective {
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
+  readonly #angularFormRoot = inject(FormRoot);
 
   /**
-   * The Signal Forms instance (FieldTree) bound via `[formRoot]`.
+   * The Angular Signal Forms instance owned by Angular's public `FormRoot`.
    */
-  readonly formRoot = input.required<FieldTree<unknown>>();
+  readonly formRoot = computed<FieldTree<unknown>>(() => {
+    return this.#angularFormRoot.fieldTree();
+  });
 
   /**
    * Error display strategy for this form.
@@ -190,34 +166,20 @@ export class NgxSignalFormDirective {
     });
 
   /**
-   * Tracks whether a submit has been attempted via the form's submit event.
+   * Tracks whether a submit has been attempted via the form's native submit event.
    *
-   * This is set in `onSubmit()` BEFORE calling Angular's `submit()`.
-   * Unlike `submitting()`, which only fires for valid forms, this flag
+   * Set in `onSubmitAttempt()` when the user clicks submit.
+   * Unlike Angular's `submitting()`, which only fires for valid forms, this flag
    * captures ALL submit attempts — including invalid ones.
    *
    * This is critical for the `'on-submit'` error strategy: Angular's `submit()`
    * only sets `submitting()` to `true` when the form is valid. Without this flag,
    * errors would never appear for invalid forms with `'on-submit'` strategy.
+   *
+   * Reset lifecycle is owned by `createSubmittedStatusTracker`, which clears
+   * this signal when `touched()` transitions from `true` to `false` (form reset).
    */
   readonly #submitAttempted = signal(false);
-
-  /**
-   * Watches for form reset to clear the `#submitAttempted` flag.
-   *
-   * When `form.reset()` is called, `touched()` transitions from `true` to `false`.
-   * This effect detects that transition and resets submission state.
-   */
-  constructor() {
-    const prevTouched = signal(false);
-    effect(() => {
-      const nowTouched = this.formRoot()().touched();
-      if (prevTouched() && !nowTouched) {
-        this.#submitAttempted.set(false);
-      }
-      prevTouched.set(nowTouched);
-    });
-  }
 
   /**
    * Submission status derived from Angular Signal Forms' native signals
@@ -228,23 +190,15 @@ export class NgxSignalFormDirective {
    *
    * - `'unsubmitted'` - No submission attempt yet
    * - `'submitting'` - `submitting()` is currently `true` (valid form, action running)
-   * - `'submitted'` - A submit was attempted (via `onSubmit`), regardless of validity
+   * - `'submitted'` - A submit was attempted (via `onSubmitAttempt`), regardless of validity
    *
    * **Reset behavior**: When `form.reset()` is called, the status returns to `'unsubmitted'`.
    * This is detected by watching for `touched()` becoming `false` after being `true`.
    */
-  readonly submittedStatus: Signal<SubmittedStatus> = computed(() => {
-    const state = this.formRoot()();
-    if (state.submitting()) return 'submitting';
-    return this.#submitAttempted() ? 'submitted' : 'unsubmitted';
-  });
+  readonly submittedStatus: Signal<SubmittedStatus> =
+    createSubmittedStatusTracker(this.formRoot, this.#submitAttempted);
 
-  /// Replicates Angular's FormRoot.onSubmit behavior.
-  /// @see https://github.com/angular/angular/blob/main/packages/forms/signals/src/directive/ng_signal_form.ts
-  // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- DOM Event is a browser API type and is passed through Angular's submit host listener.
-  protected onSubmit(event: Readonly<Event>): void {
-    event.preventDefault();
+  protected onSubmitAttempt(): void {
     this.#submitAttempted.set(true);
-    void submit(this.formRoot());
   }
 }

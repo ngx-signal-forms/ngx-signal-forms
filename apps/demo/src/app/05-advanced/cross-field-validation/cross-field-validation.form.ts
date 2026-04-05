@@ -77,6 +77,7 @@ const bookingSchema = schema<Booking>((path) => {
 
       <form
         [formRoot]="bookingForm"
+        ngxSignalForm
         [errorStrategy]="errorDisplayMode()"
         class="max-w-md space-y-6"
       >

@@ -109,7 +109,7 @@ ngx-signal-form-debugger {
 
 ## With Form Context
 
-For `'on-submit'` error strategy, wrap your form with `[formRoot]`:
+For `'on-submit'` error strategy, add `ngxSignalForm` alongside `[formRoot]` so the debugger and assistive components can inherit toolkit form context:
 
 ```typescript
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
@@ -118,7 +118,7 @@ import { SignalFormDebuggerComponent } from '@ngx-signal-forms/toolkit/debugger'
 @Component({
   imports: [FormField, NgxSignalFormToolkit, SignalFormDebuggerComponent],
   template: `
-    <form [formRoot]="userForm" [errorStrategy]="'on-submit'">
+    <form [formRoot]="userForm" ngxSignalForm [errorStrategy]="'on-submit'">
       <input [formField]="userForm.email" />
       <button type="submit">Submit</button>
     </form>

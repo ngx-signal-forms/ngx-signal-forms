@@ -36,7 +36,7 @@ export type NgxSignalFormErrorListStyle = 'plain' | 'bullets';
  * `'on-touch'` strategy. Angular's `submit()` helper calls `markAllAsTouched()`,
  * so `field.touched()` becomes true after submission - we just check that.
  *
- * **When to use `[formRoot]`:**
+ * **When to use `ngxSignalForm` alongside `[formRoot]`:**
  * - Form-level `errorStrategy` override
  * - Auto-linked `aria-describedby` (via auto-aria directive)
  * - Access to form context in custom components
@@ -62,7 +62,7 @@ export type NgxSignalFormErrorListStyle = 'plain' | 'bullets';
  *
  * @example With Form-Level Strategy Override
  * ```html
- * <form [formRoot]="form" [errorStrategy]="'immediate'">
+ * <form [formRoot]="form" ngxSignalForm [errorStrategy]="'immediate'">
  *   <ngx-signal-form-error [formField]="form.email" fieldName="email" />
  * </form>
  * ```
@@ -307,7 +307,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    *
    * For `'on-touch'` strategy (default), this input is NOT needed.
    * Only needed for `'on-submit'` strategy.
-   * When inside `[formRoot]`, this is automatically injected from context.
+   * When inside `ngxSignalForm`, this is automatically injected from context.
    */
   readonly submittedStatus = input<SubmittedStatus | undefined>(undefined);
 

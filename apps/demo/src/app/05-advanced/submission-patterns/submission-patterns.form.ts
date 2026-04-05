@@ -37,6 +37,7 @@ import { submissionSchema } from './submission-patterns.validations';
   template: `
     <form
       [formRoot]="registrationForm"
+      ngxSignalForm
       [errorStrategy]="errorDisplayMode()"
       class="form-container"
     >

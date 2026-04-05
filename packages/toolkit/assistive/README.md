@@ -25,7 +25,7 @@ Features:
 - Strategy-based display: `'on-touch'`, `'on-submit'`, `'immediate'`
 - 3-tier message resolution: validator → registry → defaults
 
-Use `[formRoot]` on the surrounding form when you rely on the `'on-submit'` strategy so assistive components can inherit submission state automatically.
+Use `ngxSignalForm` alongside `[formRoot]` on the surrounding form when you rely on the `'on-submit'` strategy so assistive components can inherit submission state automatically.
 
 ### NgxFormFieldHintComponent
 
