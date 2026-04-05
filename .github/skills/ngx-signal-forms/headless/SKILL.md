@@ -40,6 +40,41 @@ For ready-to-render components with built-in markup, use `assistive/SKILL.md` or
 
 5. **Use `NgxHeadlessFieldsetDirective`** for aggregated group state — validity, errors, and warnings across a field tree without rebuilding the traversal.
 
+## Error Summary Directive Pattern
+
+Use `ngxSignalFormHeadlessErrorSummary` when you need a form-level summary with full DOM control, want warning entries, or need a design that differs from the styled `NgxSignalFormErrorSummaryComponent`.
+
+```html
+<div
+  ngxSignalFormHeadlessErrorSummary
+  #summary="errorSummary"
+  [formTree]="myForm"
+>
+  @if (summary.shouldShow() && summary.hasErrors()) {
+  <div role="alert" aria-live="assertive" aria-atomic="true">
+    <p>Please fix the following errors:</p>
+    <ul>
+      @for (entry of summary.entries(); track entry.kind + entry.fieldName) {
+      <li>
+        <button type="button" (click)="entry.focus()">
+          <strong>{{ entry.fieldName }}</strong>: {{ entry.message }}
+        </button>
+      </li>
+      }
+    </ul>
+  </div>
+  } @if (summary.shouldShow() && summary.hasWarnings()) {
+  <div role="status">
+    @for (w of summary.warningEntries(); track w.kind + w.fieldName) {
+    <p>{{ w.fieldName }}: {{ w.message }}</p>
+    }
+  </div>
+  }
+</div>
+```
+
+For a styled out-of-the-box error summary without warnings, use `NgxSignalFormErrorSummaryComponent` from `@ngx-signal-forms/toolkit/assistive` instead.
+
 ## Template Directive Pattern
 
 ```html

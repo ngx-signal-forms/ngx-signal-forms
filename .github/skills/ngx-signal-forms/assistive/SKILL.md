@@ -32,7 +32,59 @@ The assistive entry point provides accessible feedback rendering that sits betwe
 
 5. **`NgxFormFieldAssistiveRowComponent`** — groups hint text and character count into a single stable row when both appear below the same input.
 
-6. Keep warning and error semantics distinct. Errors use `role="alert"` (assertive); warnings use `role="status"` (polite). Do not homogenize them.
+6. **`NgxSignalFormErrorSummaryComponent`** — form-level error summary (GOV.UK pattern):
+   - Place at the top of the form, between any server status banners and the first field.
+   - Always provide `[formTree]` — pass the form tree directly (e.g., `[formTree]="myForm"`), not `myForm()`.
+   - `summaryLabel` defaults to `'Please fix the following errors:'`. Override with a meaningful label.
+   - Renders blocking errors only (no warnings). For warnings, use `NgxHeadlessErrorSummaryDirective` instead.
+   - Inherits `errorStrategy` and `submittedStatus` from `ngxSignalForm` context automatically — no extra wiring needed when used inside `form[formRoot][ngxSignalForm]`.
+   - Each entry is a focusable button that calls `focusBoundControl()` on click.
+   - Uses `role="alert"` + `aria-live="assertive"` for screen readers.
+
+7. Keep warning and error semantics distinct. Errors use `role="alert"` (assertive); warnings use `role="status"` (polite). Do not homogenize them.
+
+## Error Summary Usage Example
+
+```typescript
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { form, FormField } from '@angular/forms/signals';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormErrorSummaryComponent } from '@ngx-signal-forms/toolkit/assistive';
+
+@Component({
+  selector: 'app-registration-form',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxSignalFormErrorSummaryComponent,
+  ],
+  template: `
+    <form
+      [formRoot]="registrationForm"
+      ngxSignalForm
+      [errorStrategy]="'on-submit'"
+    >
+      <!-- Error summary at top of form — inherits strategy from ngxSignalForm context -->
+      <ngx-signal-form-error-summary
+        [formTree]="registrationForm"
+        summaryLabel="Please fix the following errors before submitting:"
+      />
+
+      <label for="email">Email</label>
+      <input id="email" type="email" [formField]="registrationForm.email" />
+
+      <button type="submit">Submit</button>
+    </form>
+  `,
+})
+export class RegistrationFormComponent {
+  readonly #model = signal({ email: '' });
+  protected readonly registrationForm = form(this.#model, {
+    /* validators */
+  });
+}
+```
 
 ## Standalone Usage Example
 
@@ -98,3 +150,6 @@ import {
 - If character count doesn't update: verify the field value is a string and `[formField]` is bound.
 - If hints don't appear in `aria-describedby`: confirm the component is inside a `ngx-signal-form-field-wrapper` or use `NgxHeadlessFieldNameDirective` to wire it manually.
 - For grouped summaries or fieldset-level output, switch to `form-field/SKILL.md` (`NgxSignalFormFieldset`).
+- If error summary does not show: verify `ngxSignalForm` is applied to the `<form>` element so context is active, or provide `strategy` and `submittedStatus` explicitly.
+- If error summary entries don't focus controls on click: ensure the bound `<input>` / `<textarea>` / `<select>` has a stable `id` attribute — `focusBoundControl()` requires it.
+- For warning entries in the summary, use `NgxHeadlessErrorSummaryDirective` from `@ngx-signal-forms/toolkit/headless` instead.

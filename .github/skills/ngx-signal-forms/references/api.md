@@ -103,6 +103,7 @@ unwrapValue(signalOrValue): value
 ```typescript
 import {
   NgxSignalFormErrorComponent, // <ngx-signal-form-error>
+  NgxSignalFormErrorSummaryComponent, // <ngx-signal-form-error-summary>
   NgxFormFieldHintComponent, // <ngx-form-field-hint>
   NgxFormFieldCharacterCountComponent, // <ngx-form-field-character-count>
   NgxFormFieldAssistiveRowComponent, // <ngx-form-field-assistive-row>
@@ -122,6 +123,30 @@ import {
 | `strategy`        | ErrorDisplayStrategy    | Override                                             |
 | `submittedStatus` | Signal<SubmittedStatus> | For `on-submit` without `[formRoot]`                 |
 | `listStyle`       | `'plain' \| 'bullets'`  | `'plain'` default; `'bullets'` for grouped summaries |
+
+### NgxSignalFormErrorSummaryComponent inputs
+
+Selector: `ngx-signal-form-error-summary`
+
+| Input             | Type                 | Default                              | Notes                                   |
+| ----------------- | -------------------- | ------------------------------------ | --------------------------------------- |
+| `formTree`        | `FieldTree<unknown>` | required                             | Root form tree to aggregate errors from |
+| `summaryLabel`    | string               | `'Please fix the following errors:'` | Header text above the error list        |
+| `strategy`        | ErrorDisplayStrategy | Inherited from form context          | Override error display strategy         |
+| `submittedStatus` | SubmittedStatus      | Inherited from form context          | Manual submission status override       |
+
+Renders a styled GOV.UK-pattern list of blocking errors only (no warnings). Each entry is a focusable button that calls `focusBoundControl()` on click. Inherits `errorStrategy` and `submittedStatus` from `ngxSignalForm` context automatically. Uses `role="alert"` + `aria-live="assertive"`. Deduplicated — same error shown once even if multiple fields produce it.
+
+**CSS custom properties for theming:**
+
+- `--ngx-error-summary-border-color` (default: `#dc2626`)
+- `--ngx-error-summary-bg` (default: `#fef2f2`)
+- `--ngx-error-summary-label-color` (default: `#991b1b`)
+- `--ngx-error-summary-link-color` (default: `#dc2626`)
+- `--ngx-error-summary-link-hover-color` (default: `#991b1b`)
+- `--ngx-error-summary-focus-color` (default: `#2563eb`)
+
+For full DOM control over the error summary (incl. warning entries), use `NgxHeadlessErrorSummaryDirective` from `@ngx-signal-forms/toolkit/headless`.
 
 ### NgxFormFieldCharacterCountComponent inputs
 
@@ -175,8 +200,9 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 ```typescript
 import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
-// Bundle: [NgxHeadlessErrorStateDirective, NgxHeadlessFieldsetDirective,
-//          NgxHeadlessCharacterCountDirective, NgxHeadlessFieldNameDirective]
+// Bundle: [NgxHeadlessErrorStateDirective, NgxHeadlessErrorSummaryDirective,
+//          NgxHeadlessFieldsetDirective, NgxHeadlessCharacterCountDirective,
+//          NgxHeadlessFieldNameDirective]
 ```
 
 ### NgxHeadlessErrorStateDirective
@@ -191,6 +217,33 @@ Signals:
 - `hasErrors()` / `hasWarnings()`
 - `resolvedErrors()` / `resolvedWarnings()` — `ResolvedError[]` with `.message`, `.kind`
 - `errorId` / `warningId` — stable IDs for `aria-describedby`
+
+### NgxHeadlessErrorSummaryDirective
+
+Selector: `[ngxSignalFormHeadlessErrorSummary]` | Export: `#summary="errorSummary"`
+
+Inputs: `formTree` (required), `strategy`, `submittedStatus`
+
+Signals/methods (implements `ErrorSummarySignals`):
+
+- `entries()` — `ErrorSummaryEntry[]` — blocking errors ready for rendering
+- `warningEntries()` — `ErrorSummaryEntry[]` — warning entries (not available in styled component)
+- `hasErrors()` / `hasWarnings()`
+- `shouldShow()` — computed from strategy + submittedStatus
+- `focusFirst()` — focus the control for the first error entry
+
+`ErrorSummaryEntry` interface:
+
+```typescript
+interface ErrorSummaryEntry {
+  readonly kind: string;
+  readonly message: string;
+  readonly fieldName: string;
+  readonly focus: () => void; // focuses the bound control
+}
+```
+
+Use this directive instead of `NgxSignalFormErrorSummaryComponent` when you need full DOM control, want to include warnings, or need a custom design that doesn't match the default styled output.
 
 ### NgxHeadlessCharacterCountDirective
 

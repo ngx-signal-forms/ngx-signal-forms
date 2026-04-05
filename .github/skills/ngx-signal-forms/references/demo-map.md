@@ -35,7 +35,7 @@ Repository paths in `apps/demo/src/app/` organized by feature. Use these when wo
 
 - `05-advanced/global-configuration/` — App-level defaults with `provideNgxSignalFormsConfig()`
 - `05-advanced/error-messages/` — Centralized message resolution with `provideErrorMessages()`
-- `05-advanced/submission-patterns/` — Submission lifecycle, invalid handling, `focusFirstInvalid`
+- `05-advanced/submission-patterns/` — Submission lifecycle, invalid handling, `focusFirstInvalid`, `NgxSignalFormErrorSummaryComponent` (GOV.UK pattern)
 - `05-advanced/advanced-wizard/` — Wrapper appearance across step-based multi-page flows
 
 ## Supporting Docs in Repository
