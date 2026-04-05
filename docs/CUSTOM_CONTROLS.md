@@ -106,7 +106,7 @@ The toolkit reads `formFieldBindings` internally for ARIA association and focus 
 
 ### Warning Rendering in Custom Controls
 
-Angular Signal Forms has no native warning concept. The toolkit uses a `warning::` prefix convention on error kinds. Custom controls should render warnings when using the toolkit:
+Angular Signal Forms has no native warning concept. The toolkit uses a `warn:` prefix convention on error kinds. Custom controls should render warnings when using the toolkit:
 
 ```html
 <app-custom-field [formField]="form.password">
@@ -206,6 +206,7 @@ Usage with toolkit:
 
 ## Related
 
-- [Angular Signal Forms Overview](./Angular%20Signal%20Forms%20Overview.md)
+- [Angular Signal Forms API](https://angular.dev/api/forms/signals)
+- [Angular Public API Policy](./ANGULAR_PUBLIC_API_POLICY.md)
 - [Package Architecture](./PACKAGE_ARCHITECTURE.md)
 - [Warnings Support](./WARNINGS_SUPPORT.md)

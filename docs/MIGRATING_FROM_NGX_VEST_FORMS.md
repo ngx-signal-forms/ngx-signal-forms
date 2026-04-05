@@ -332,7 +332,7 @@ If warning-only forms should still submit:
 
 See also:
 
-- [`packages/toolkit/vest/README.md`](../toolkit/vest/README.md)
+- [`packages/toolkit/vest/README.md`](../packages/toolkit/vest/README.md)
 - [`docs/WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md)
 
 ## Advanced features that need deliberate review

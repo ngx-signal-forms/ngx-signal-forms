@@ -90,10 +90,10 @@ provideNgxSignalFormErrorMessages({
 
 Angular Signal Forms has no native warning concept. The toolkit uses a convention based on the error `kind` prefix:
 
-| Kind Prefix | Type    | Blocks Submission | ARIA            |
-| ----------- | ------- | ----------------- | --------------- |
-| (no prefix) | Error   | Yes               | `role="alert"`  |
-| `warn:`     | Warning | No                | `role="status"` |
+| Kind Prefix | Type    | Blocks Submission                                                                                     | ARIA            |
+| ----------- | ------- | ----------------------------------------------------------------------------------------------------- | --------------- |
+| (no prefix) | Error   | Yes                                                                                                   | `role="alert"`  |
+| `warn:`     | Warning | Toolkit policy: No. Angular `submit()` still treats all `ValidationError`s as blocking unless handled | `role="status"` |
 
 ### Creating Warnings
 
@@ -203,10 +203,10 @@ In this example:
 
 - Missing password → blocking error, prevents submission
 - Short password → blocking error, prevents submission
-- No uppercase → warning, shown as polite status, submission still allowed
+- No uppercase → warning, shown as polite status; use warning-aware submit flow to allow submission
 
 ## Related
 
 - [Warnings Support](./WARNINGS_SUPPORT.md) — Full warnings convention documentation
 - [Custom Controls](./CUSTOM_CONTROLS.md) — Custom control integration
-- [Angular Signal Forms Overview](./Angular%20Signal%20Forms%20Overview.md) — Core API reference
+- [Angular Signal Forms API](https://angular.dev/api/forms/signals) — Core API reference

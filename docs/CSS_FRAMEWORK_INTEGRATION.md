@@ -415,12 +415,12 @@ provideNgxSignalFormsConfig({
 
 ## Quick Reference
 
-| Framework        | Invalid Class            | Valid Class       | Notes                              |
-| ---------------- | ------------------------ | ----------------- | ---------------------------------- |
-| Bootstrap 5.3    | `is-invalid`             | `is-valid`        | Use with `.form-control`           |
-| Tailwind CSS 4   | `user-invalid:*` variant | `valid:*` variant | Built-in, no config needed         |
-| Angular Material | `ng-invalid`             | `ng-valid`        | Use `ErrorStateMatcher` for timing |
-| Default Angular  | `ng-invalid`             | `ng-valid`        | Works out of the box               |
+| Framework        | Invalid Class            | Valid Class       | Notes                                                      |
+| ---------------- | ------------------------ | ----------------- | ---------------------------------------------------------- |
+| Bootstrap 5.3    | `is-invalid`             | `is-valid`        | Use with `.form-control`                                   |
+| Tailwind CSS 4   | `user-invalid:*` variant | `valid:*` variant | Built-in, no config needed                                 |
+| Angular Material | `ng-invalid`             | `ng-valid`        | Use `ErrorStateMatcher` for timing                         |
+| Default Angular  | configurable             | configurable      | Configure via `provideSignalFormsConfig({ classes: ... })` |
 
 ---
 

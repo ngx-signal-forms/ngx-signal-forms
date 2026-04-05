@@ -5,7 +5,7 @@ Use this guide if you are upgrading from `@ngx-signal-forms/toolkit@1.0.0-beta.6
 - Release baseline: `v1.0.0-beta.6`
 - Target release: `v1.0.0-beta.7`
 
-For the high-level summary, see [Changelog: beta.7](./CHANGELOG_BETA7.md).
+For the high-level summary, see the release notes and migration highlights in this document.
 
 ## Who should read this
 
