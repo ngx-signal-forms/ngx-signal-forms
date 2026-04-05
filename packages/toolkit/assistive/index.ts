@@ -24,5 +24,6 @@
 export { NgxFormFieldAssistiveRowComponent } from './assistive-row.component';
 export { NgxFormFieldCharacterCountComponent } from './character-count.component';
 export { NgxSignalFormErrorComponent } from './form-error.component';
+export { NgxSignalFormErrorSummaryComponent } from './error-summary.component';
 export { NgxFormFieldHintComponent } from './hint.component';
 export { isBlockingError, isWarningError, warningError } from './warning-error';

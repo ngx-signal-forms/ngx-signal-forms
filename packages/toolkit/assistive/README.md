@@ -75,6 +75,45 @@ Layout container for hint, error, and character count.
 </ngx-signal-form-field-assistive-row>
 ```
 
+### NgxSignalFormErrorSummaryComponent
+
+Form-level error summary that aggregates all errors from a form tree into a clickable list. Each entry focuses the associated control via Angular's `focusBoundControl()`.
+
+```html
+<ngx-signal-form-error-summary
+  [formTree]="myForm"
+  summaryLabel="Please fix the following errors:"
+/>
+```
+
+Features:
+
+- `role="alert"` with `aria-live="assertive"` for screen reader announcement
+- Clickable entries that focus the invalid control
+- Strategy-aware visibility (inherits from `ngxSignalForm` context)
+- Deduplicated errors via `errorSummary()` traversal
+
+**Inputs:**
+
+| Input          | Type                   | Default                              | Description                          |
+| -------------- | ---------------------- | ------------------------------------ | ------------------------------------ |
+| `formTree`     | `FieldTree<unknown>`   | required                             | Root form to aggregate errors from   |
+| `summaryLabel` | `string`               | `'Please fix the following errors:'` | Label displayed above the error list |
+| `strategy`     | `ErrorDisplayStrategy` | inherited from context               | When to show errors                  |
+
+**CSS Custom Properties:**
+
+```css
+:root {
+  --ngx-error-summary-border-color: #dc2626;
+  --ngx-error-summary-bg: #fef2f2;
+  --ngx-error-summary-label-color: #991b1b;
+  --ngx-error-summary-link-color: #dc2626;
+  --ngx-error-summary-link-hover-color: #991b1b;
+  --ngx-error-summary-focus-color: #2563eb;
+}
+```
+
 ## Utilities
 
 ### Warning Support

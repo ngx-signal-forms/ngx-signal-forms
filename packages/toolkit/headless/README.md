@@ -44,6 +44,7 @@ Included with `@ngx-signal-forms/toolkit`:
 ```typescript
 import {
   NgxHeadlessErrorStateDirective,
+  NgxHeadlessErrorSummaryDirective,
   NgxHeadlessCharacterCountDirective,
   NgxHeadlessFieldsetDirective,
   NgxHeadlessFieldNameDirective,
@@ -288,6 +289,77 @@ Exposes error state signals for custom error display implementations.
   </ul>
   }
 </div>
+```
+
+---
+
+### NgxHeadlessErrorSummaryDirective
+
+Aggregates all errors from a form tree into a clickable summary list. Uses Angular's `errorSummary()` API to traverse the full field tree and `focusBoundControl()` to focus controls on click.
+
+| Selector  | `[ngxSignalFormHeadlessErrorSummary]` |
+| --------- | ------------------------------------- |
+| Export As | `errorSummary`                        |
+
+**Inputs:**
+
+| Input             | Type                   | Description                                           |
+| ----------------- | ---------------------- | ----------------------------------------------------- |
+| `formTree`        | `FieldTree<unknown>`   | The root form field tree to aggregate errors from     |
+| `strategy`        | `ErrorDisplayStrategy` | When to show errors (optional, inherits from context) |
+| `submittedStatus` | `SubmittedStatus`      | Submission state for 'on-submit' strategy (optional)  |
+
+**Signals (via `exportAs` or `inject()`):**
+
+| Signal           | Type                          | Description                                      |
+| ---------------- | ----------------------------- | ------------------------------------------------ |
+| `entries`        | `Signal<ErrorSummaryEntry[]>` | Resolved error entries with messages and focus() |
+| `warningEntries` | `Signal<ErrorSummaryEntry[]>` | Resolved warning entries                         |
+| `hasErrors`      | `Signal<boolean>`             | Whether any blocking errors exist                |
+| `hasWarnings`    | `Signal<boolean>`             | Whether any warnings exist                       |
+| `shouldShow`     | `Signal<boolean>`             | Whether to show (strategy-aware + has errors)    |
+| `focusFirst`     | `() => void`                  | Focus the first invalid control                  |
+
+**ErrorSummaryEntry:**
+
+```typescript
+interface ErrorSummaryEntry {
+  readonly kind: string;
+  readonly message: string;
+  readonly fieldName: string;
+  readonly focus: () => void; // Calls Angular's focusBoundControl()
+}
+```
+
+**Example:**
+
+```html
+<form [formRoot]="myForm" ngxSignalForm [errorStrategy]="'on-submit'">
+  <!-- ...fields... -->
+
+  <div
+    ngxSignalFormHeadlessErrorSummary
+    #summary="errorSummary"
+    [formTree]="myForm"
+  >
+    @if (summary.shouldShow()) {
+    <div role="alert" aria-live="assertive" class="my-error-summary">
+      <p>Please fix the following errors:</p>
+      <ul>
+        @for (entry of summary.entries(); track entry.kind + entry.fieldName) {
+        <li>
+          <button type="button" (click)="entry.focus()">
+            {{ entry.fieldName }}: {{ entry.message }}
+          </button>
+        </li>
+        }
+      </ul>
+    </div>
+    }
+  </div>
+
+  <button type="submit">Submit</button>
+</form>
 ```
 
 ---

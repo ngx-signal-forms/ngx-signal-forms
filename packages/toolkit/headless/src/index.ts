@@ -12,6 +12,7 @@
 // Import directives for bundle
 import { NgxHeadlessCharacterCountDirective } from './lib/character-count.directive';
 import { NgxHeadlessErrorStateDirective } from './lib/error-state.directive';
+import { NgxHeadlessErrorSummaryDirective } from './lib/error-summary.directive';
 import { NgxHeadlessFieldNameDirective } from './lib/field-name.directive';
 import { NgxHeadlessFieldsetDirective } from './lib/fieldset.directive';
 
@@ -34,6 +35,12 @@ export {
   type CharacterCountLimitState,
   type CharacterCountStateSignals,
 } from './lib/character-count.directive';
+
+export {
+  NgxHeadlessErrorSummaryDirective,
+  type ErrorSummaryEntry,
+  type ErrorSummarySignals,
+} from './lib/error-summary.directive';
 
 export {
   NgxHeadlessFieldNameDirective,
@@ -73,6 +80,7 @@ export {
  */
 export const NgxHeadlessToolkit = [
   NgxHeadlessErrorStateDirective,
+  NgxHeadlessErrorSummaryDirective,
   NgxHeadlessFieldsetDirective,
   NgxHeadlessCharacterCountDirective,
   NgxHeadlessFieldNameDirective,
