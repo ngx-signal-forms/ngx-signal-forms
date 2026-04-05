@@ -53,14 +53,18 @@ export {
   createErrorState,
   createUniqueId,
   dedupeValidationErrors,
+  focusBoundControlFromError,
   readDirectErrors,
   readErrors,
   readFieldFlag,
+  resolveFieldNameFromError,
+  toErrorSummaryEntry,
   type BooleanStateKey,
   type CharacterCountResult,
   type CreateCharacterCountOptions,
   type CreateErrorStateOptions,
   type ErrorStateResult,
+  type ErrorSummaryEntryData,
   type FieldStateLike,
 } from './lib/utilities';
 

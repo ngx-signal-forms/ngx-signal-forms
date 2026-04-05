@@ -22,6 +22,7 @@ export * from './utilities/field-resolution';
 export type * from './utilities/field-state-types';
 export * from './utilities/focus-first-invalid';
 export { updateAt, updateNested } from './utilities/immutable-array';
+export * from './utilities/inject-field-control';
 export * from './utilities/inject-form-context';
 export * from './utilities/on-invalid-handler';
 export * from './utilities/resolve-error-message';

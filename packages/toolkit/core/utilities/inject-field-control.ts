@@ -1,4 +1,5 @@
 import { ElementRef, Injector } from '@angular/core';
+import type { FieldTree } from '@angular/forms/signals';
 import { assertInjector } from './assert-injector';
 import { resolveFieldName } from './field-resolution';
 import { injectFormContext } from './inject-form-context';
@@ -15,35 +16,36 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
  *
  * @param element - The HTML element or ElementRef to resolve the field name from
  * @param injector - Optional injector for use outside injection context
- * @returns The field control signal from the form
- * @throws Error if field cannot be resolved or FormProviderDirective is not found
+ * @returns The resolved `FieldTree<TValue>` from the form
+ * @throws Error if field cannot be resolved or form context is not found
  *
  * @example
  * ```typescript
- * /// Inside a directive
+ * /// Inside a directive — typed result
  * @Directive({ selector: '[myDirective]' })
  * export class MyDirective {
  *   readonly #element = inject(ElementRef);
- *   readonly fieldControl = injectFieldControl(this.#element);
+ *   readonly fieldControl = injectFieldControl<string>(this.#element);
+ *   // fieldControl is FieldTree<string>
  *
  *   constructor() {
  *     effect(() => {
- *       console.log('Field state:', this.fieldControl());
+ *       console.log('Value:', this.fieldControl().value());
  *     });
  *   }
  * }
  *
  * /// Outside injection context
  * function myUtility(element: HTMLElement, injector: Injector) {
- *   const fieldControl = injectFieldControl(element, injector);
- *   // Use fieldControl...
+ *   const fieldControl = injectFieldControl<number>(element, injector);
+ *   // fieldControl is FieldTree<number>
  * }
  * ```
  */
-export function injectFieldControl(
+export function injectFieldControl<TValue = unknown>(
   element: HTMLElement | ElementRef<HTMLElement>,
   injector?: Injector,
-): unknown {
+): FieldTree<TValue> {
   return assertInjector(injectFieldControl, injector, () => {
     const htmlElement =
       element instanceof ElementRef ? element.nativeElement : element;
@@ -82,6 +84,6 @@ export function injectFieldControl(
       control = control[part];
     }
 
-    return control;
+    return control as FieldTree<TValue>;
   });
 }

@@ -1,30 +1,29 @@
 import { computed, Directive, inject, input } from '@angular/core';
-import type { FieldTree, ValidationError } from '@angular/forms/signals';
+import type { FieldTree } from '@angular/forms/signals';
 import {
   injectFormContext,
   isBlockingError,
   isWarningError,
   NGX_ERROR_MESSAGES,
   resolveErrorDisplayStrategy,
-  resolveValidationErrorMessage,
   showErrors,
   type ErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 
-import { dedupeValidationErrors, readErrors } from './utilities';
+import {
+  dedupeValidationErrors,
+  readErrors,
+  toErrorSummaryEntry,
+  type ErrorSummaryEntryData,
+} from './utilities';
+
+const STRIP_WARNING_PREFIX = { stripWarningPrefix: true } as const;
 
 /**
  * A resolved error-summary entry with kind, message, and focus capability.
  */
-export interface ErrorSummaryEntry {
-  readonly kind: string;
-  readonly message: string;
-  /** Focus the control bound to the field that produced this error. */
-  readonly focus: () => void;
-  /** The field name (path) for display and linking. */
-  readonly fieldName: string;
-}
+export type ErrorSummaryEntry = ErrorSummaryEntryData;
 
 /**
  * Error summary signals exposed by the headless directive.
@@ -150,11 +149,19 @@ export class NgxHeadlessErrorSummaryDirective implements ErrorSummarySignals {
   );
 
   readonly entries = computed(() =>
-    this.#blockingErrors().map((error) => this.#toEntry(error)),
+    this.#blockingErrors().map((error) =>
+      toErrorSummaryEntry(error, this.#errorMessagesRegistry),
+    ),
   );
 
   readonly warningEntries = computed(() =>
-    this.#warningErrors().map((error) => this.#toEntry(error)),
+    this.#warningErrors().map((error) =>
+      toErrorSummaryEntry(
+        error,
+        this.#errorMessagesRegistry,
+        STRIP_WARNING_PREFIX,
+      ),
+    ),
   );
 
   readonly hasErrors = computed(() => this.#blockingErrors().length > 0);
@@ -168,49 +175,4 @@ export class NgxHeadlessErrorSummaryDirective implements ErrorSummarySignals {
     const first = this.entries()[0];
     first?.focus();
   };
-
-  #toEntry(error: ValidationError): ErrorSummaryEntry {
-    const message = resolveValidationErrorMessage(
-      error,
-      this.#errorMessagesRegistry,
-      { stripWarningPrefix: isWarningError(error) },
-    );
-
-    const fieldName = this.#resolveFieldName(error);
-
-    return {
-      kind: error.kind,
-      message,
-      fieldName,
-      focus: () => {
-        const errorWithField = error as ValidationError & {
-          fieldTree?: () => {
-            focusBoundControl?: (options?: FocusOptions) => void;
-          };
-        };
-        if (typeof errorWithField.fieldTree === 'function') {
-          const fieldState = errorWithField.fieldTree();
-          if (
-            fieldState &&
-            typeof fieldState.focusBoundControl === 'function'
-          ) {
-            fieldState.focusBoundControl();
-          }
-        }
-      },
-    };
-  }
-
-  #resolveFieldName(error: ValidationError): string {
-    const errorWithField = error as ValidationError & {
-      fieldTree?: () => { name?: () => string };
-    };
-    if (typeof errorWithField.fieldTree === 'function') {
-      const fieldState = errorWithField.fieldTree();
-      if (fieldState && typeof fieldState.name === 'function') {
-        return fieldState.name();
-      }
-    }
-    return error.kind;
-  }
 }

@@ -6,9 +6,11 @@ import {
   generateWarningId,
   isBlockingError,
   isWarningError,
+  resolveValidationErrorMessage,
   showErrors,
   unwrapValue,
   type ErrorDisplayStrategy,
+  type ErrorMessageRegistry,
   type ErrorReadableState,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
@@ -440,5 +442,94 @@ export function createCharacterCount(
     limitState,
     isExceeded,
     percentUsed,
+  };
+}
+
+// ============================================================================
+// Error Summary Entry Utilities
+// ============================================================================
+
+/**
+ * A resolved error-summary entry ready for rendering.
+ */
+export interface ErrorSummaryEntryData {
+  readonly kind: string;
+  readonly message: string;
+  readonly fieldName: string;
+  readonly focus: () => void;
+}
+
+/**
+ * Duck-typed access to `ValidationError.WithFieldTree` properties.
+ *
+ * Angular Signal Forms' `errorSummary()` returns errors with an optional
+ * `fieldTree` reference, but the public `ValidationError` type doesn't
+ * include it. This type bridges the gap via duck-typing.
+ */
+type ValidationErrorWithFieldTree = ValidationError & {
+  fieldTree?: () => {
+    name?: () => string;
+    focusBoundControl?: (options?: FocusOptions) => void;
+  };
+};
+
+/**
+ * Resolve the field name from a `ValidationError` via duck-typed access
+ * to `error.fieldTree().name()`.
+ *
+ * Falls back to the error's `kind` when the field tree is not available.
+ *
+ * @public
+ */
+export function resolveFieldNameFromError(error: ValidationError): string {
+  const e = error as ValidationErrorWithFieldTree;
+  if (typeof e.fieldTree === 'function') {
+    const fieldState = e.fieldTree();
+    if (fieldState && typeof fieldState.name === 'function') {
+      return fieldState.name();
+    }
+  }
+  return error.kind;
+}
+
+/**
+ * Focus the form control bound to the field that produced a validation error.
+ *
+ * Uses duck-typed access to `error.fieldTree().focusBoundControl()`.
+ *
+ * @public
+ */
+export function focusBoundControlFromError(error: ValidationError): void {
+  const e = error as ValidationErrorWithFieldTree;
+  if (typeof e.fieldTree === 'function') {
+    const fieldState = e.fieldTree();
+    if (fieldState && typeof fieldState.focusBoundControl === 'function') {
+      fieldState.focusBoundControl();
+    }
+  }
+}
+
+/**
+ * Maps a `ValidationError` into an `ErrorSummaryEntryData` with resolved
+ * message, field name, and focus callback.
+ *
+ * @param registry - Error message registry for 3-tier message resolution
+ * @param options - Settings (e.g. `{ stripWarningPrefix: true }`)
+ *
+ * @public
+ */
+export function toErrorSummaryEntry(
+  error: ValidationError,
+  registry?: Readonly<ErrorMessageRegistry> | null,
+  options?: { stripWarningPrefix?: boolean },
+): ErrorSummaryEntryData {
+  const message = resolveValidationErrorMessage(error, registry, options);
+  const fieldName = resolveFieldNameFromError(error);
+
+  return {
+    kind: error.kind,
+    message,
+    fieldName,
+    focus: () => focusBoundControlFromError(error),
   };
 }

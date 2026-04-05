@@ -5,13 +5,12 @@ import {
   inject,
   input,
 } from '@angular/core';
-import type { FieldTree, ValidationError } from '@angular/forms/signals';
+import type { FieldTree } from '@angular/forms/signals';
 import {
   injectFormContext,
   isBlockingError,
   NGX_ERROR_MESSAGES,
   resolveErrorDisplayStrategy,
-  resolveValidationErrorMessage,
   showErrors,
   type ErrorDisplayStrategy,
   type SubmittedStatus,
@@ -19,17 +18,8 @@ import {
 import {
   dedupeValidationErrors,
   readErrors,
+  toErrorSummaryEntry,
 } from '@ngx-signal-forms/toolkit/headless';
-
-/**
- * A resolved error-summary entry for rendering.
- */
-interface SummaryEntry {
-  readonly kind: string;
-  readonly message: string;
-  readonly fieldName: string;
-  readonly focus: () => void;
-}
 
 /**
  * Form-level error summary component with WCAG 2.2 compliance.
@@ -216,50 +206,8 @@ export class NgxSignalFormErrorSummaryComponent {
   );
 
   protected readonly entries = computed(() =>
-    this.#blockingErrors().map((error) => this.#toEntry(error)),
+    this.#blockingErrors().map((error) =>
+      toErrorSummaryEntry(error, this.#errorMessagesRegistry),
+    ),
   );
-
-  #toEntry(error: ValidationError): SummaryEntry {
-    const message = resolveValidationErrorMessage(
-      error,
-      this.#errorMessagesRegistry,
-    );
-
-    const fieldName = this.#resolveFieldName(error);
-
-    return {
-      kind: error.kind,
-      message,
-      fieldName,
-      focus: () => {
-        const errorWithField = error as ValidationError & {
-          fieldTree?: () => {
-            focusBoundControl?: (options?: FocusOptions) => void;
-          };
-        };
-        if (typeof errorWithField.fieldTree === 'function') {
-          const fieldState = errorWithField.fieldTree();
-          if (
-            fieldState &&
-            typeof fieldState.focusBoundControl === 'function'
-          ) {
-            fieldState.focusBoundControl();
-          }
-        }
-      },
-    };
-  }
-
-  #resolveFieldName(error: ValidationError): string {
-    const errorWithField = error as ValidationError & {
-      fieldTree?: () => { name?: () => string };
-    };
-    if (typeof errorWithField.fieldTree === 'function') {
-      const fieldState = errorWithField.fieldTree();
-      if (fieldState && typeof fieldState.name === 'function') {
-        return fieldState.name();
-      }
-    }
-    return error.kind;
-  }
 }
