@@ -61,8 +61,7 @@ These APIs are part of `@ngx-signal-forms/toolkit`. They build on top of Angular
 
 The toolkit never provides an alternative API for something Angular already owns. For example:
 
-- **Submit handling**: Angular's `submit()` or `FormRoot` handles form submission. The toolkit's `ngxSignalForm` only tracks submitted status — it does not call `submit()` or intercept the submit event.
-- **Field binding**: Angular's `[formField]` directive is the only way to bind fields. The toolkit never introduces its own field binding syntax.
+- **Submit handling**: Angular's `submit()` or `FormRoot` handles form submission. The toolkit's `ngxSignalForm` only tracks submitted status — it does not call `submit()` or intercept the submit event.- **Field binding**: Angular's `[formField]` directive is the only way to bind fields. The toolkit never introduces its own field binding syntax.
 - **Validation**: Angular's `schema()` and validators define rules. The toolkit only adds the warning convention (`warn:` prefix) and message resolution on top.
 
 ### 2. Enhance, Don't Replace
