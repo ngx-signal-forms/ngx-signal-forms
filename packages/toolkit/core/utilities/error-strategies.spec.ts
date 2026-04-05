@@ -384,42 +384,25 @@ describe('error-strategies', () => {
 
   describe('shouldShowErrors', () => {
     it('should work with immediate strategy', () => {
-      const fieldState = {
-        invalid: () => true,
-        touched: () => false,
-      };
-
-      expect(shouldShowErrors(fieldState, 'immediate', 'unsubmitted')).toBe(
+      expect(shouldShowErrors(true, false, 'immediate', 'unsubmitted')).toBe(
         true,
       );
     });
 
     it('should work with on-touch strategy', () => {
-      const fieldState = {
-        invalid: () => true,
-        touched: () => true,
-      };
-
-      expect(shouldShowErrors(fieldState, 'on-touch', 'unsubmitted')).toBe(
+      expect(shouldShowErrors(true, true, 'on-touch', 'unsubmitted')).toBe(
         true,
       );
-      expect(
-        shouldShowErrors(
-          { invalid: () => true, touched: () => false },
-          'on-touch',
-          'unsubmitted',
-        ),
-      ).toBe(false);
+      expect(shouldShowErrors(true, false, 'on-touch', 'unsubmitted')).toBe(
+        false,
+      );
     });
 
     it('should work with on-submit strategy', () => {
-      const fieldState = {
-        invalid: () => true,
-        touched: () => false,
-      };
-
-      expect(shouldShowErrors(fieldState, 'on-submit', 'submitted')).toBe(true);
-      expect(shouldShowErrors(fieldState, 'on-submit', 'unsubmitted')).toBe(
+      expect(shouldShowErrors(true, false, 'on-submit', 'submitted')).toBe(
+        true,
+      );
+      expect(shouldShowErrors(true, false, 'on-submit', 'unsubmitted')).toBe(
         false,
       );
     });

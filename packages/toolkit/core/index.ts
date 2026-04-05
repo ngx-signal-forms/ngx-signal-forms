@@ -25,8 +25,13 @@ export { updateAt, updateNested } from './utilities/immutable-array';
 export * from './utilities/inject-field-control';
 export * from './utilities/inject-form-context';
 export * from './utilities/on-invalid-handler';
+export * from './utilities/read-direct-errors';
 export * from './utilities/resolve-error-message';
-export * from './utilities/resolve-strategy';
+export {
+  resolveErrorDisplayStrategy,
+  resolveStrategyFromContext,
+  resolveSubmittedStatusFromContext,
+} from './utilities/resolve-strategy';
 export { combineShowErrors, showErrors } from './utilities/show-errors';
 export * from './utilities/submission-helpers';
 export { unwrapValue } from './utilities/unwrap-signal-or-value';

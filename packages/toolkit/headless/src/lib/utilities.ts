@@ -1,11 +1,12 @@
 import { computed } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
-  createUniqueId as createCoreUniqueId,
+  createUniqueId,
   generateErrorId,
   generateWarningId,
   isBlockingError,
   isWarningError,
+  readDirectErrors,
   resolveValidationErrorMessage,
   showErrors,
   unwrapValue,
@@ -122,35 +123,6 @@ export function readErrors(state: unknown): ValidationError[] {
 }
 
 /**
- * Read only direct errors from FieldState (excludes nested field errors).
- *
- * Unlike `readErrors()` which uses `errorSummary()`, this only reads
- * the direct `errors()` on the field itself. Use this when nested fields
- * display their own errors and you only want group-level validation.
- *
- * @param state - The field state object (from `fieldTree()`)
- * @returns Array of ValidationError directly on this field, empty if not accessible
- *
- * @example
- * ```typescript
- * const addressState = addressField();
- * const groupErrors = readDirectErrors(addressState); // Only cross-field validations
- * ```
- */
-export function readDirectErrors(state: unknown): ValidationError[] {
-  if (!state || typeof state !== 'object') {
-    return [];
-  }
-
-  const errors = (state as FieldStateLike).errors;
-  if (typeof errors === 'function') {
-    return normalizeValidationErrors(errors());
-  }
-
-  return [];
-}
-
-/**
  * Deduplicate validation errors by kind + message combination.
  *
  * Useful for fieldsets that aggregate errors from multiple fields -
@@ -188,25 +160,8 @@ export function dedupeValidationErrors(
   return result;
 }
 
-/**
- * Generate a unique ID with the given prefix.
- *
- * Creates sequential IDs like "field-1", "fieldset-2", etc.
- * Useful for generating stable IDs when explicit IDs aren't provided.
- *
- * @param prefix - Prefix for the ID (e.g., "field", "fieldset")
- * @returns Unique ID string
- *
- * @example
- * ```typescript
- * const id1 = createUniqueId('field'); // "field-1"
- * const id2 = createUniqueId('field'); // "field-2"
- * const id3 = createUniqueId('fieldset'); // "fieldset-3"
- * ```
- */
-export function createUniqueId(prefix: string): string {
-  return createCoreUniqueId(prefix);
-}
+// Re-exported from core for convenience
+export { createUniqueId, readDirectErrors };
 
 /**
  * Options for creating error state signals.
@@ -423,7 +378,6 @@ export function createCharacterCount(
     const current = currentLength();
     const ratio = current / max;
 
-    /// Exceeded only when OVER the limit, not at exactly 100%
     if (ratio > 1) return 'exceeded';
 
     const danger = unwrapValue(dangerThreshold);

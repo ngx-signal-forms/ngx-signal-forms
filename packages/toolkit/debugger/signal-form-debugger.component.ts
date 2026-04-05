@@ -224,7 +224,12 @@ export class SignalFormDebuggerComponent {
     const submitted = this.submittedStatus();
 
     const rootState = this.rootState();
-    const rootVisible = shouldShowErrors(rootState, strategy, submitted);
+    const rootVisible = shouldShowErrors(
+      rootState.invalid(),
+      rootState.touched(),
+      strategy,
+      submitted,
+    );
 
     if (this.#isFieldTree(input)) {
       const state = (input as () => FieldState<unknown>)();
@@ -236,7 +241,12 @@ export class SignalFormDebuggerComponent {
         value,
         (childField, nextModel) => {
           const childState = (childField as () => FieldState<unknown>)();
-          const visible = shouldShowErrors(childState, strategy, submitted);
+          const visible = shouldShowErrors(
+            childState.invalid(),
+            childState.touched(),
+            strategy,
+            submitted,
+          );
           const isLeaf = !nextModel || typeof nextModel !== 'object';
 
           if (!isLeaf) {
@@ -284,8 +294,10 @@ export class SignalFormDebuggerComponent {
 
   /** Root-level blocking errors */
   protected readonly rootBlockingErrors = computed(() => {
+    const state = this.rootState();
     const rootVisible = shouldShowErrors(
-      this.rootState(),
+      state.invalid(),
+      state.touched(),
       this.errorStrategy(),
       this.submittedStatus(),
     );
@@ -296,8 +308,10 @@ export class SignalFormDebuggerComponent {
 
   /** Root-level warnings */
   protected readonly rootWarningErrors = computed(() => {
+    const state = this.rootState();
     const rootVisible = shouldShowErrors(
-      this.rootState(),
+      state.invalid(),
+      state.touched(),
       this.errorStrategy(),
       this.submittedStatus(),
     );

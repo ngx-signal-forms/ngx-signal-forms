@@ -181,7 +181,6 @@ export class NgxHeadlessCharacterCountDirective implements CharacterCountStateSi
     const current = this.currentLength();
     const ratio = current / max;
 
-    /// Exceeded only when OVER the limit, not at exactly 100%
     if (ratio > 1) return 'exceeded';
 
     const danger = this.dangerThreshold();

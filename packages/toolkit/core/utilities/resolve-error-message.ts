@@ -37,13 +37,11 @@ export function resolveValidationErrorMessage(
     return error.message;
   }
 
-  const errorParams: ValidationErrorParams = { ...error };
-
   if (registry) {
     const registryMessage = registry[error.kind];
     if (registryMessage !== undefined) {
       if (typeof registryMessage === 'function') {
-        return registryMessage(errorParams);
+        return registryMessage({ ...error } as ValidationErrorParams);
       }
 
       return registryMessage;
@@ -58,7 +56,7 @@ export function getDefaultValidationMessage(
   options?: ResolveErrorMessageOptions,
 ): string {
   const kind = error.kind;
-  const errorParams: ValidationErrorParams = { ...error };
+  const errorParams: ValidationErrorParams = error as ValidationErrorParams;
 
   switch (kind) {
     case 'required':

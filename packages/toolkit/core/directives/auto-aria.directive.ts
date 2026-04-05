@@ -16,10 +16,7 @@ import {
   generateWarningId,
   resolveFieldName,
 } from '../utilities/field-resolution';
-import type {
-  ErrorReadableState,
-  ErrorVisibilityState,
-} from '../utilities/field-state-types';
+import type { ErrorReadableState } from '../utilities/field-state-types';
 import { isBlockingError, isWarningError } from '../utilities/warning-error';
 
 type RequiredFieldState = Pick<FieldState<unknown>, 'required'>;
@@ -111,12 +108,12 @@ export class NgxSignalFormAutoAriaDirective {
       return false;
     }
 
-    const errorVisibilityState: ErrorVisibilityState = {
-      invalid: fieldState.invalid,
-      touched: fieldState.touched,
-    };
-
-    return shouldShowErrors(errorVisibilityState, strategy, submittedStatus);
+    return shouldShowErrors(
+      fieldState.invalid(),
+      fieldState.touched(),
+      strategy,
+      submittedStatus,
+    );
   }
 
   readonly #element = inject(ElementRef<HTMLElement>);

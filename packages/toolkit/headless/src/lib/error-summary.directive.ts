@@ -5,7 +5,8 @@ import {
   isBlockingError,
   isWarningError,
   NGX_ERROR_MESSAGES,
-  resolveErrorDisplayStrategy,
+  resolveStrategyFromContext,
+  resolveSubmittedStatusFromContext,
   showErrors,
   type ErrorDisplayStrategy,
   type SubmittedStatus,
@@ -109,25 +110,16 @@ export class NgxHeadlessErrorSummaryDirective implements ErrorSummarySignals {
 
   readonly #fieldState = computed(() => this.formTree()());
 
-  readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
-    const contextStrategy = this.#formContext?.errorStrategy();
-    return resolveErrorDisplayStrategy(
-      this.strategy(),
-      contextStrategy,
-      undefined,
-    );
-  });
+  readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() =>
+    resolveStrategyFromContext(this.strategy(), this.#formContext),
+  );
 
   readonly #resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(
-    () => {
-      const inputStatus = this.submittedStatus();
-      if (inputStatus !== undefined) return inputStatus;
-
-      const contextStatus = this.#formContext?.submittedStatus();
-      if (contextStatus !== undefined) return contextStatus;
-
-      return undefined;
-    },
+    () =>
+      resolveSubmittedStatusFromContext(
+        this.submittedStatus(),
+        this.#formContext,
+      ),
   );
 
   readonly #showErrorsSignal = showErrors(

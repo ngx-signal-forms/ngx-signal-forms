@@ -15,11 +15,12 @@ import {
   isWarningError,
   NGX_ERROR_MESSAGES,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
-  resolveErrorDisplayStrategy,
+  resolveStrategyFromContext,
+  resolveSubmittedStatusFromContext,
   resolveValidationErrorMessage,
-  showErrors,
+  readDirectErrors,
+  shouldShowErrors,
   type ErrorDisplayStrategy,
-  type ErrorReadableState,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 
@@ -158,21 +159,6 @@ export type NgxSignalFormErrorListStyle = 'plain' | 'bullets';
   styleUrl: './form-error.component.scss',
 })
 export class NgxSignalFormErrorComponent<TValue = unknown> {
-  readonly #readErrors = (state: unknown): ValidationError[] => {
-    if (!state || typeof state !== 'object') {
-      return [];
-    }
-
-    const errors = (state as Partial<ErrorReadableState>).errors;
-    if (typeof errors === 'function') {
-      return errors();
-    }
-
-    return [];
-  };
-
-  #warnedUnknownField = false;
-
   /**
    * Try to inject form context (optional - may not be available).
    */
@@ -275,10 +261,6 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
       return contextFieldName;
     }
 
-    if (!this.#warnedUnknownField) {
-      this.#warnedUnknownField = true;
-    }
-
     throw new Error(
       '[ngx-signal-forms] ngx-signal-form-error requires an explicit `fieldName` input or a parent ngx-signal-form-field-wrapper context.',
     );
@@ -325,42 +307,16 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
     generateWarningId(this.#resolvedFieldName()),
   );
 
-  /**
-   * Resolved error display strategy (input or injected from context).
-   *
-   * Resolution priority:
-   * 1. Field-level strategy (if not 'inherit' or undefined)
-   * 2. Form-level strategy from context
-   * 3. Default 'on-touch'
-   */
-  readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
-    const contextStrategy = this.#injectedContext?.errorStrategy();
+  readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() =>
+    resolveStrategyFromContext(this.strategy(), this.#injectedContext),
+  );
 
-    return resolveErrorDisplayStrategy(
-      this.strategy(),
-      contextStrategy,
-      undefined,
-    );
-  });
-
-  /**
-   * Resolved submitted status (input or injected from context).
-   * Returns undefined if not provided - this is fine for 'on-touch' strategy.
-   */
   readonly #resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(
-    () => {
-      const inputStatus = this.submittedStatus();
-      if (inputStatus !== undefined) {
-        return inputStatus;
-      }
-
-      const contextStatus = this.#injectedContext?.submittedStatus();
-      if (contextStatus !== undefined) {
-        return contextStatus;
-      }
-
-      return undefined;
-    },
+    () =>
+      resolveSubmittedStatusFromContext(
+        this.submittedStatus(),
+        this.#injectedContext,
+      ),
   );
 
   /**
@@ -376,7 +332,6 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
 
   /**
    * Computed signal for error visibility based on strategy.
-   * Type assertion needed due to FieldState/CompatFieldState union type complexity.
    *
    * When using direct errors input (no formField), defaults to showing errors
    * since the parent component controls visibility.
@@ -390,12 +345,19 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
       return true;
     }
 
-    // Use strategy-based visibility for single fields
-    return showErrors(
-      () => fieldState,
-      this.#resolvedStrategy,
-      this.#resolvedSubmittedStatus,
-    )();
+    const isInvalid =
+      typeof fieldState.invalid === 'function' ? fieldState.invalid() : false;
+    const isTouched =
+      typeof fieldState.touched === 'function' ? fieldState.touched() : false;
+    const status = this.#resolvedSubmittedStatus();
+    const fallbackStatus = status ?? (isTouched ? 'submitted' : 'unsubmitted');
+
+    return shouldShowErrors(
+      isInvalid,
+      isTouched,
+      this.#resolvedStrategy(),
+      fallbackStatus,
+    );
   });
 
   /**
@@ -429,7 +391,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
     }
 
     const fieldState = fieldTree();
-    return this.#readErrors(fieldState);
+    return readDirectErrors(fieldState);
   });
 
   /**

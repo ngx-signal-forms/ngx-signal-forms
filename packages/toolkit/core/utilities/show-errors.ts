@@ -198,7 +198,8 @@ function computeShowErrorsInternal(
     const fallbackStatus = status ?? (isTouched ? 'submitted' : 'unsubmitted');
 
     return shouldShowErrors(
-      { invalid: () => isInvalid, touched: () => isTouched },
+      isInvalid,
+      isTouched,
       strategyValue,
       fallbackStatus,
     );

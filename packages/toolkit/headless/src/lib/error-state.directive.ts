@@ -7,7 +7,8 @@ import {
   isBlockingError,
   isWarningError,
   NGX_ERROR_MESSAGES,
-  resolveErrorDisplayStrategy,
+  resolveStrategyFromContext,
+  resolveSubmittedStatusFromContext,
   resolveValidationErrorMessage,
   showErrors,
   type ErrorDisplayStrategy,
@@ -131,36 +132,16 @@ export class NgxHeadlessErrorStateDirective<
    */
   readonly submittedStatus = input<SubmittedStatus | undefined>(undefined);
 
-  /**
-   * Resolved error display strategy.
-   */
-  readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
-    const contextStrategy = this.#injectedContext?.errorStrategy();
+  readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() =>
+    resolveStrategyFromContext(this.strategy(), this.#injectedContext),
+  );
 
-    return resolveErrorDisplayStrategy(
-      this.strategy(),
-      contextStrategy,
-      undefined,
-    );
-  });
-
-  /**
-   * Resolved submitted status.
-   */
   readonly #resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(
-    () => {
-      const inputStatus = this.submittedStatus();
-      if (inputStatus !== undefined) {
-        return inputStatus;
-      }
-
-      const contextStatus = this.#injectedContext?.submittedStatus();
-      if (contextStatus !== undefined) {
-        return contextStatus;
-      }
-
-      return undefined;
-    },
+    () =>
+      resolveSubmittedStatusFromContext(
+        this.submittedStatus(),
+        this.#injectedContext,
+      ),
   );
 
   /**

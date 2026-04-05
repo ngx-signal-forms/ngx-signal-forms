@@ -10,7 +10,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import type { FieldTree, ValidationError } from '@angular/forms/signals';
+import type { FieldTree } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
   FormFieldAppearanceInput,
@@ -19,6 +19,7 @@ import {
   NGX_SIGNAL_FORM_CONTEXT,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORMS_CONFIG,
+  readDirectErrors,
   resolveErrorDisplayStrategy,
   shouldShowErrors,
 } from '@ngx-signal-forms/toolkit';
@@ -467,21 +468,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     return formContext ? formContext.submittedStatus() : 'unsubmitted';
   });
 
-  /**
-   * All validation messages from the field.
-   * Uses safe duck-typing access pattern.
-   */
-  readonly #allMessages = computed(() => {
-    const fieldState = this.formField()();
-
-    if (!fieldState || typeof fieldState !== 'object') {
-      return [] as ValidationError[];
-    }
-
-    const errorsGetter = (fieldState as { errors?: () => ValidationError[] })
-      .errors;
-    return typeof errorsGetter === 'function' ? errorsGetter() : [];
-  });
+  readonly #allMessages = computed(() => readDirectErrors(this.formField()()));
 
   /**
    * Whether field has blocking errors.
@@ -521,7 +508,8 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     if (!fieldState || typeof fieldState !== 'object') return false;
 
     return shouldShowErrors(
-      fieldState,
+      fieldState.invalid(),
+      fieldState.touched(),
       this.effectiveStrategy(),
       this.submittedStatus(),
     );

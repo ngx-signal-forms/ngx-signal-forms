@@ -23,7 +23,8 @@ import type { ErrorDisplayStrategy, SubmittedStatus } from '../types';
  * 3. Immediately evaluates the strategy logic
  * 4. Returns a boolean result without creating signals or subscriptions
  *
- * @param fieldState - The field state object with `invalid()` and `touched()` methods
+ * @param isInvalid - Whether the field is currently invalid
+ * @param isTouched - Whether the field has been touched (blurred)
  * @param strategy - The error display strategy
  * @param submittedStatus - Angular's submission status
  * @returns `true` if errors should be displayed
@@ -37,22 +38,11 @@ import type { ErrorDisplayStrategy, SubmittedStatus } from '../types';
  *     : form().touched()
  *       ? 'submitted'
  *       : 'unsubmitted';
- *   const showErrors = shouldShowErrors(field, 'on-touch', status);
+ *   const visible = shouldShowErrors(field.invalid(), field.touched(), 'on-touch', status);
  *
- *   if (showErrors) {
+ *   if (visible) {
  *     displayErrors(field.errors());
  *   }
- * }
- * ```
- *
- * @example Custom error display logic
- * ```typescript
- * function getFieldCssClasses(field: FieldState<string>, status: SubmittedStatus) {
- *   const hasErrors = shouldShowErrors(field, 'immediate', status);
- *   return {
- *     'field-error': hasErrors,
- *     'field-valid': !hasErrors && field.valid()
- *   };
  * }
  * ```
  *
@@ -60,16 +50,12 @@ import type { ErrorDisplayStrategy, SubmittedStatus } from '../types';
  * @see {@link ErrorDisplayStrategy} For available strategies
  */
 export function shouldShowErrors(
-  fieldState: {
-    invalid: () => boolean;
-    touched: () => boolean;
-  },
+  isInvalid: boolean,
+  isTouched: boolean,
   strategy: ErrorDisplayStrategy,
   submittedStatus: SubmittedStatus,
 ): boolean {
   const hasSubmitted = submittedStatus !== 'unsubmitted';
-  const isInvalid = fieldState.invalid();
-  const isTouched = fieldState.touched();
 
   switch (strategy) {
     case 'immediate':
