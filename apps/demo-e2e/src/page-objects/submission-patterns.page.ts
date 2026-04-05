@@ -1,13 +1,14 @@
 import { DEMO_PATHS } from '@ngx-signal-forms/demo-shared';
 import { Locator, Page } from '@playwright/test';
-import { BaseFormPage } from './base-form.page';
+import { ErrorStrategyFormPage } from './base-form.page';
+
 /**
  * Page Object for "Advanced - Submission Patterns" demo
  * Route: /advanced-scenarios/submission-patterns
  *
  * Demonstrates async form submission patterns
  */
-export class SubmissionPatternsPage extends BaseFormPage {
+export class SubmissionPatternsPage extends ErrorStrategyFormPage {
   readonly submitButton: Locator;
   readonly stateIndicator: Locator;
 
@@ -22,10 +23,17 @@ export class SubmissionPatternsPage extends BaseFormPage {
     await this.waitForReady();
   }
 
-  /**
-   * Submit the form
-   */
   async submit(): Promise<void> {
     await this.submitButton.click();
+  }
+
+  /** The styled error summary box (only present in DOM when visible) */
+  get errorSummary(): Locator {
+    return this.page.locator('ngx-signal-form-error-summary [role="alert"]');
+  }
+
+  /** Individual clickable entries inside the error summary */
+  get errorSummaryEntries(): Locator {
+    return this.page.locator('.ngx-signal-form-error-summary__link');
   }
 }

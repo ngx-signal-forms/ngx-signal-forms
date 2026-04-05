@@ -31,6 +31,22 @@ readonly myForm = form(this.#model, schema, {
 });
 ```
 
+## Feature Spotlight: Error Summary (GOV.UK Pattern)
+
+This demo includes a `<ngx-signal-form-error-summary>` at the top of the form. It aggregates all field errors into a clickable list — each entry focuses the associated control when clicked.
+
+- **Strategy-aware**: Inherits `errorStrategy` from the form context (works with `on-touch`, `on-submit`, `immediate`)
+- **Click-to-focus**: Uses Angular's `focusBoundControl()` under the hood
+- **Deduplicated**: Same error shown only once even if multiple fields produce it
+- **WCAG 2.2**: Uses `role="alert"` with `aria-live="assertive"` for screen readers
+
+```html
+<ngx-signal-form-error-summary
+  [formTree]="registrationForm"
+  summaryLabel="Please fix the following errors before submitting:"
+/>
+```
+
 ## Feature Spotlight: "On Submit" Error Strategy
 
 Some forms shouldn't show inline errors immediately (while typing) or even on blur. They should stay quiet until the user hits "Save".
@@ -53,3 +69,4 @@ This demo binds the strategy as `[errorStrategy]="errorDisplayMode()"` (defaults
    - Observe the loading state text.
    - See the server error banner when the simulated request fails.
 3. **Validation Check**: Clear a required field and submit. Errors are shown according to the selected error display strategy.
+4. **Error Summary**: With errors present, observe the error summary at the top of the form. Click any entry to jump to the corresponding field.
