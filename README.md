@@ -59,26 +59,29 @@ The toolkit adds the pieces Angular intentionally leaves to app and library auth
 
 ### Core: `@ngx-signal-forms/toolkit`
 
-- **enhanced `[formRoot]`** — replaces Angular's `FormRoot` with toolkit context (see below)
+- **`ngxSignalForm` enhancer** — adds toolkit context alongside Angular's `FormRoot` (see below)
 - automatic ARIA attributes for supported controls
 - strategy-aware error visibility helpers
 - submission helpers such as `focusFirstInvalid()` and `createOnInvalidHandler()`
 - warning utilities
 
-#### `[formRoot]`: Angular's vs the toolkit's
+#### `[formRoot]` + `ngxSignalForm`: additive enhancement
 
 Angular's native `FormRoot` handles `novalidate`, `event.preventDefault()`, and calling `submit()`.
-The toolkit's `NgxSignalFormDirective` (included in `NgxSignalFormToolkit`) matches the same `form[formRoot]` selector and replicates that baseline, then adds:
+The toolkit's `NgxSignalFormDirective` (selector: `form[formRoot][ngxSignalForm]`) is an **additive enhancer** — it activates on `<form>` elements that already have `[formRoot]` when you also add the `ngxSignalForm` attribute. It adds:
 
 1. **DI context** — child toolkit components (error display, field wrappers, headless directives) access form state through `NGX_SIGNAL_FORM_CONTEXT` without prop drilling
 2. **Submitted status tracking** — derives `'unsubmitted' → 'submitting' → 'submitted'` from Angular's native `submitting()` signal, which Angular does not expose as a status
 3. **Error display strategy** — the `[errorStrategy]` input controls when validation feedback becomes visible (`'immediate'`, `'on-touch'`, or `'on-submit'`)
 
-**Import `NgxSignalFormToolkit` instead of `FormRoot`** — do not import both.
+**`NgxSignalFormToolkit` bundles `FormRoot` + `NgxSignalFormDirective` + `NgxSignalFormAutoAriaDirective`** — import it instead of `FormRoot` separately.
 
 ```typescript
-// Instead of:  imports: [FormRoot, FormField]
-// Use:         imports: [NgxSignalFormToolkit, FormField]
+imports: [FormField, NgxSignalFormToolkit];
+```
+
+```html
+<form [formRoot]="myForm" ngxSignalForm [errorStrategy]="'on-touch'"></form>
 ```
 
 ### Assistive: `@ngx-signal-forms/toolkit/assistive`
@@ -246,14 +249,14 @@ If you want the deeper decision guide for Vest specifically, see:
 </form>
 ```
 
-### With toolkit (`NgxSignalFormToolkit` replaces `FormRoot`)
+### With toolkit (`NgxSignalFormToolkit` enhances `FormRoot`)
 
 ```typescript
 // imports: [NgxSignalFormToolkit, FormField, NgxFormField]
 ```
 
 ```html
-<form [formRoot]="userForm">
+<form [formRoot]="userForm" ngxSignalForm>
   <ngx-signal-form-field-wrapper [formField]="userForm.email">
     <label for="email">Email</label>
     <input id="email" [formField]="userForm.email" />
@@ -262,13 +265,13 @@ If you want the deeper decision guide for Vest specifically, see:
 </form>
 ```
 
-**Result:** same `[formRoot]` binding, but the toolkit's version provides DI context, submitted status, and error strategy — so child components like `<ngx-signal-form-field-wrapper>` handle ARIA and error visibility automatically.
+**Result:** `[formRoot]` binds the form as usual; `ngxSignalForm` adds DI context, submitted status, and error strategy — so child components like `<ngx-signal-form-field-wrapper>` handle ARIA and error visibility automatically.
 
 ---
 
 ## Quick Start
 
-The toolkit works with Angular Signal Forms as-is. Replace Angular's `FormRoot` with `NgxSignalFormToolkit` and add any toolkit entry points you need.
+The toolkit works with Angular Signal Forms as-is. Import `NgxSignalFormToolkit` (which bundles `FormRoot`) and add `ngxSignalForm` to your `<form>` element.
 
 > **Note:** The `schema()` wrapper is optional. You can pass the validation callback directly to `form()` as the second argument. `schema()` is useful when you want to define reusable validation schemas in separate files.
 
@@ -282,17 +285,17 @@ import {
   FormField, // Angular's [formField] — unchanged
 } from '@angular/forms/signals';
 import {
-  NgxSignalFormToolkit, // Replaces Angular's FormRoot — provides [formRoot] with toolkit context
+  NgxSignalFormToolkit, // Bundles FormRoot + NgxSignalFormDirective + AutoARIA
   createOnInvalidHandler,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
   selector: 'app-contact',
-  // NgxSignalFormToolkit replaces FormRoot — do not import both
+  // NgxSignalFormToolkit includes FormRoot — no separate FormRoot import needed
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form [formRoot]="contactForm">
+    <form [formRoot]="contactForm" ngxSignalForm>
       <ngx-signal-form-field-wrapper [formField]="contactForm.email">
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" type="email" />
@@ -324,7 +327,7 @@ export class ContactComponent {
 
 ### What the toolkit adds here
 
-Because `NgxSignalFormToolkit` provides `[formRoot]` with DI context, the field wrapper and error components work automatically:
+Because `ngxSignalForm` provides DI context alongside `[formRoot]`, the field wrapper and error components work automatically:
 
 - ✅ Submitted status tracking (`unsubmitted → submitting → submitted`) for strategy-aware display
 - ✅ `aria-invalid`, `aria-required`, and `aria-describedby` wired by the auto-ARIA directive
@@ -472,7 +475,7 @@ Use this during development to inspect field state, visibility rules, and resolv
 - `SignalFormDebuggerComponent` — Standalone component
 
 ```html
-<form [formRoot]="form">
+<form [formRoot]="form" ngxSignalForm>
   <!-- ... fields ... -->
   <ngx-signal-form-debugger [formTree]="form" />
 </form>

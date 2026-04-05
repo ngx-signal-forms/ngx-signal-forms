@@ -175,7 +175,7 @@ The component uses `<ng-content>` to project your custom content:
    - Live region announcements
 
 4. **Strategy Inheritance**
-   - Inherits from `NgxSignalFormDirective` (`[formRoot]`) if present
+   - Inherits from `NgxSignalFormDirective` (`ngxSignalForm`) if present
    - Can override per-field with `[strategy]` input
    - Falls back to global config
 

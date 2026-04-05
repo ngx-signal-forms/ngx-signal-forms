@@ -1,6 +1,6 @@
 ---
 name: ngx-signal-forms
-description: Implements @ngx-signal-forms/toolkit for Angular Signal Forms. Use whenever working with any toolkit entry point — form[formRoot], auto-ARIA, error strategies (on-touch/on-submit/immediate), error message registries, form field wrappers (ngx-signal-form-field-wrapper), grouped fieldsets, standalone assistive components (errors, hints, character count), renderless headless primitives, Vest validation integration, or development-time form debugging. Always invoke this skill when the user mentions @ngx-signal-forms/toolkit, an error strategy, a form wrapper, field visibility, or custom form controls, even if they don't use the skill name explicitly.
+description: Implements @ngx-signal-forms/toolkit for Angular Signal Forms. Use whenever working with any toolkit entry point — form[formRoot][ngxSignalForm], auto-ARIA, error strategies (on-touch/on-submit/immediate), error message registries, form field wrappers (ngx-signal-form-field-wrapper), grouped fieldsets, standalone assistive components (errors, hints, character count), renderless headless primitives, Vest validation integration, or development-time form debugging. Always invoke this skill when the user mentions @ngx-signal-forms/toolkit, an error strategy, a form wrapper, field visibility, or custom form controls, even if they don't use the skill name explicitly.
 ---
 
 # ngx-signal-forms Toolkit
@@ -11,7 +11,7 @@ An orchestrator skill for `@ngx-signal-forms/toolkit` — the enhancement layer 
 
 Use this skill when the task involves:
 
-- Setting up `form[formRoot]`, error strategies, or auto-ARIA
+- Setting up `form[formRoot][ngxSignalForm]`, error strategies, or auto-ARIA
 - Adding form field wrappers or grouped fieldsets
 - Displaying validation errors, hints, or character counts
 - Building custom form controls with full markup control

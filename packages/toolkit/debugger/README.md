@@ -20,7 +20,7 @@ import { form, FormField, required } from '@angular/forms/signals';
 @Component({
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormDebugger],
   template: `
-    <form [formRoot]="userForm">
+    <form [formRoot]="userForm" ngxSignalForm>
       <input [formField]="userForm.email" />
       <button type="submit">Submit</button>
     </form>

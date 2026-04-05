@@ -20,7 +20,7 @@ internal tokens, or removed beta APIs.
 - **Angular peer dependency:** `@angular/core` and `@angular/forms` `>=21.2.0`
 - **TypeScript:** `5.8+`
 - **Architecture:** standalone components, signals, `OnPush`, zoneless-compatible
-- **Forms API:** Angular Signal Forms with `[formField]` and toolkit `form[formRoot]`
+- **Forms API:** Angular Signal Forms with `[formField]` and toolkit `form[formRoot][ngxSignalForm]`
 
 ## Current Public Entry Points
 
@@ -97,7 +97,7 @@ Do **not** mention removed/internal config fields such as:
 
 ## Recommended Core Pattern
 
-Prefer `[formRoot]` for toolkit-backed forms.
+Prefer `[formRoot]` + `ngxSignalForm` for toolkit-backed forms.
 
 ```typescript
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
@@ -110,7 +110,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form [formRoot]="userForm">
+    <form [formRoot]="userForm" ngxSignalForm>
       <ngx-signal-form-field-wrapper
         [formField]="userForm.email"
         appearance="outline"
@@ -131,15 +131,15 @@ export class ExampleComponent {
 }
 ```
 
-### Why `[formRoot]` is the default
+### Why `[formRoot]` + `ngxSignalForm` is the default
 
-`NgxSignalFormDirective` on `form[formRoot]` replicates Angular `FormRoot` baseline behavior and adds:
+`NgxSignalFormDirective` on `form[formRoot][ngxSignalForm]` enhances Angular's `FormRoot` and adds:
 
 - form context for child toolkit components
 - derived `submittedStatus`
 - form-level `errorStrategy`
 
-Use `[formRoot]` whenever you need:
+Use `[formRoot]` + `ngxSignalForm` whenever you need:
 
 - `'on-submit'` error timing
 - form-level strategy overrides
@@ -267,7 +267,7 @@ protected readonly showEmailErrors = showErrors(this.form.email, 'on-touch');
 ```
 
 - `submittedStatus` is optional for `'on-touch'`.
-- `'on-submit'` needs real submission state, usually provided by `[formRoot]`.
+- `'on-submit'` needs real submission state, usually provided by `ngxSignalForm` alongside `[formRoot]`.
 - Use `combineShowErrors()` when aggregating multiple field visibility signals.
 - Use `shouldShowErrors()` only for lower-level imperative logic.
 
@@ -494,7 +494,7 @@ Do **not**:
 ### Do
 
 - use bundle imports when appropriate
-- use `[formRoot]` for toolkit-backed forms
+- use `[formRoot]` + `ngxSignalForm` for toolkit-backed forms
 - use `appearance="outline"` or `appearance="standard"`
 - provide real bound-control `id`s
 - use explicit `fieldName` when wrapper context or `id` is unavailable

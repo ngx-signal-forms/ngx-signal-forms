@@ -114,18 +114,18 @@ That is why upgrading to Vest 6 is not just a recommendation here — it is a ha
 
 ## Quick mapping
 
-| `ngx-vest-forms`                            | `ngx-signal-forms` + toolkit                              | Notes                                                         |
-| ------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------- |
-| `<form ngxVestForm ...>`                    | `<form [formRoot]="myForm">`                              | Angular Signal Forms owns the form lifecycle                  |
-| `[ngModel]` + `name="email"`                | `[formField]="myForm.email"`                              | No `name`/`ngModel` wiring needed for normal fields           |
-| `(formValueChange)="formValue.set($event)"` | model `signal(...)` passed into `form(...)`               | The model signal is the source of truth                       |
-| `NgxDeepPartial<T>` model building          | explicit Signal Forms model type                          | Prefer stable initial values over incremental partial objects |
-| `<ngx-control-wrapper>`                     | `<ngx-signal-form-field-wrapper>`                         | Wrapper now layers on top of Signal Forms field state         |
-| `errorsChange` or wrapper-export state      | `form.email().errors()` / toolkit wrappers                | Field state comes from Angular Signal Forms                   |
-| `warn()` warnings in separate warning state | `warn()` + `validateVest(..., { includeWarnings: true })` | Toolkit maps warnings to `warn:*` validation errors           |
-| `validationConfig`                          | no direct equivalent in the current quick path            | Re-check complex cross-field timing per form                  |
-| `validateRootForm`                          | no dedicated toolkit directive                            | Revisit form-level business rules explicitly during migration |
-| `triggerFormValidation()`                   | no direct equivalent in this guide                        | Dynamic structure changes need separate review                |
+| `ngx-vest-forms`                            | `ngx-signal-forms` + toolkit                              | Notes                                                                 |
+| ------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------- |
+| `<form ngxVestForm ...>`                    | `<form [formRoot]="myForm" ngxSignalForm>`                | Angular Signal Forms owns the form lifecycle; toolkit adds DI context |
+| `[ngModel]` + `name="email"`                | `[formField]="myForm.email"`                              | No `name`/`ngModel` wiring needed for normal fields                   |
+| `(formValueChange)="formValue.set($event)"` | model `signal(...)` passed into `form(...)`               | The model signal is the source of truth                               |
+| `NgxDeepPartial<T>` model building          | explicit Signal Forms model type                          | Prefer stable initial values over incremental partial objects         |
+| `<ngx-control-wrapper>`                     | `<ngx-signal-form-field-wrapper>`                         | Wrapper now layers on top of Signal Forms field state                 |
+| `errorsChange` or wrapper-export state      | `form.email().errors()` / toolkit wrappers                | Field state comes from Angular Signal Forms                           |
+| `warn()` warnings in separate warning state | `warn()` + `validateVest(..., { includeWarnings: true })` | Toolkit maps warnings to `warn:*` validation errors                   |
+| `validationConfig`                          | no direct equivalent in the current quick path            | Re-check complex cross-field timing per form                          |
+| `validateRootForm`                          | no dedicated toolkit directive                            | Revisit form-level business rules explicitly during migration         |
+| `triggerFormValidation()`                   | no direct equivalent in this guide                        | Dynamic structure changes need separate review                        |
 
 ## Minimal before/after
 
@@ -206,7 +206,7 @@ const signupSuite = create((data: SignupModel) => {
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <form [formRoot]="signupForm">
+    <form [formRoot]="signupForm" ngxSignalForm>
       <ngx-signal-form-field-wrapper [formField]="signupForm.email">
         <label for="email">Email</label>
         <input id="email" [formField]="signupForm.email" />

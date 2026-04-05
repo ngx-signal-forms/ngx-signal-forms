@@ -154,7 +154,7 @@ export const appConfig: ApplicationConfig = {
 When one form needs a different display strategy, prefer a local template override:
 
 ```html
-<form [formRoot]="registrationForm" errorStrategy="immediate">
+<form [formRoot]="registrationForm" ngxSignalForm errorStrategy="immediate">
   <!-- This form shows errors immediately without changing global defaults -->
 </form>
 ```
@@ -266,10 +266,10 @@ const submittedStatus = computed<SubmittedStatus>(() => {
 });
 ```
 
-When you use the toolkit's `NgxSignalFormDirective` (`[formRoot]`), the derived status is provided via DI for convenience:
+When you use the toolkit's `NgxSignalFormDirective` (`ngxSignalForm`), the derived status is provided via DI for convenience:
 
 ```html
-<form [formRoot]="registrationForm">
+<form [formRoot]="registrationForm" ngxSignalForm>
   <!-- NgxSignalFormErrorComponent automatically receives submittedStatus -->
   <ngx-signal-form-error
     [formField]="registrationForm.email"
@@ -506,7 +506,9 @@ export const appConfig: ApplicationConfig = {
 
 ```html
 <!-- ✅ Correct: Override timing locally when only one form differs -->
-<form [formRoot]="registrationForm" errorStrategy="immediate">...</form>
+<form [formRoot]="registrationForm" ngxSignalForm errorStrategy="immediate">
+  ...
+</form>
 ```
 
 ### Submission state not updating

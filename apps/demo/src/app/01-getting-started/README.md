@@ -31,7 +31,7 @@ This section demonstrates your **first experience** with the toolkit - seeing im
 **Technologies:**
 
 - `@ngx-signal-forms/toolkit` - Core toolkit directives
-- `NgxSignalFormDirective` (`[formRoot]`) - Form context
+- `NgxSignalFormDirective` (`ngxSignalForm`) - Form context
 - `NgxSignalFormErrorComponent` - Error display
 - `NgxSignalFormAutoAriaDirective` - Auto-ARIA
 
@@ -68,7 +68,7 @@ This section demonstrates your **first experience** with the toolkit - seeing im
 @Component({
   imports: [FormField, NgxSignalFormToolkit],  // Added toolkit bundle
   template: `
-    <form [formRoot]="form">
+    <form [formRoot]="form" ngxSignalForm>
       <input id="email" [formField]="form.email" />
       <!-- Auto-ARIA applied ✅ -->
 
@@ -95,7 +95,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 **What's in the bundle:**
 
-- `NgxSignalFormDirective` (`[formRoot]`) - Form context and submission tracking
+- `NgxSignalFormDirective` (`ngxSignalForm`) - Form context and submission tracking
 - `NgxSignalFormAutoAriaDirective` - Automatic ARIA attributes
 
 **Error display component:** Import `NgxSignalFormErrorComponent` from `@ngx-signal-forms/toolkit/assistive`.
@@ -170,7 +170,7 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
 **Provides context to child components:**
 
 ```html
-<form [formRoot]="contactForm">
+<form [formRoot]="contactForm" ngxSignalForm>
   <!-- All child form-error components inherit submission state -->
   <ngx-signal-form-error [formField]="contactForm.name" fieldName="name" />
   <ngx-signal-form-error [formField]="contactForm.email" fieldName="email" />
@@ -183,7 +183,7 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
 - Submission state tracking (toolkit-derived from `submitting()` + `touched()`)
 - Error display strategy (inheritable)
 
-**Note:** Angular Signal Forms exposes `submitting()` and `touched()` signals; the toolkit derives a `SubmittedStatus` value from them and shares it via dependency injection when you use `[formRoot]` (FormRoot-equivalent behavior plus toolkit enhancements).
+**Note:** Angular Signal Forms exposes `submitting()` and `touched()` signals; the toolkit derives a `SubmittedStatus` value from them and shares it via dependency injection when you use `ngxSignalForm` alongside `[formRoot]`.
 
 ## 📊 Code Reduction Analysis
 

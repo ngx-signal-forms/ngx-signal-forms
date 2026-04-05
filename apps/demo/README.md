@@ -167,7 +167,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 @Component({
   imports: [FormField, NgxSignalFormToolkit],
   template: `
-    <form [formRoot]="myForm">
+    <form [formRoot]="myForm" ngxSignalForm>
       <input [formField]="myForm.email" />
       <ngx-signal-form-error [formField]="myForm.email" fieldName="email" />
     </form>
@@ -227,8 +227,8 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 ## 🔧 Technology Stack
 
-- **Angular**: 21.1.2 (Signal Forms experimental API)
-- **TypeScript**: 5.8+ (strict mode)
+- **Angular**: 21.2.x (Signal Forms experimental API)
+- **TypeScript**: ~5.9 (strict mode)
 - **Toolkit**: @ngx-signal-forms/toolkit
 - **Styling**: Tailwind CSS 4.x
 - **Testing**: Vitest (unit), Playwright (E2E)

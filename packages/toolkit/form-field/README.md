@@ -79,7 +79,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 @Component({
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form [formRoot]="contactForm">
+    <form [formRoot]="contactForm" ngxSignalForm>
       <ngx-signal-form-field-wrapper [formField]="contactForm.email" outline>
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" />
@@ -110,7 +110,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 @Component({
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form [formRoot]="contactForm">
+    <form [formRoot]="contactForm" ngxSignalForm>
       <ngx-signal-form-field-wrapper [formField]="contactForm.email" appearance="outline">
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" />
@@ -940,7 +940,7 @@ const contactSchema = schema<ContactForm>((path) => {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form [formRoot]="contactForm">
+    <form [formRoot]="contactForm" ngxSignalForm>
       <!-- Outlined email field with custom required marker -->
       <ngx-signal-form-field-wrapper
         [formField]="contactForm.email"

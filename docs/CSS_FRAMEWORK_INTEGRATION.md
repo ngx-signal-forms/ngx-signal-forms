@@ -125,7 +125,7 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
 ```
 
 ```html
-<form [formRoot]="userForm">
+<form [formRoot]="userForm" ngxSignalForm>
   <div class="mb-3">
     <label for="email" class="form-label">Email</label>
     <input
@@ -191,7 +191,7 @@ Tailwind uses utility classes and supports the `invalid:` and `user-invalid:` va
 Tailwind 4's `user-invalid:` variant matches the toolkit's `'on-touch'` strategy — it only applies after user interaction:
 
 ```html
-<form [formRoot]="userForm" class="space-y-4">
+<form [formRoot]="userForm" ngxSignalForm class="space-y-4">
   <div>
     <label for="email" class="block text-sm font-medium text-gray-700">
       Email

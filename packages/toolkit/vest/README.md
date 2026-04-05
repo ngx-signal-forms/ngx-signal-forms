@@ -66,7 +66,7 @@ const signupSuite = create((data: SignupModel) => {
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <form [formRoot]="signupForm">
+    <form [formRoot]="signupForm" ngxSignalForm>
       <label for="email">Email</label>
       <input id="email" [formField]="signupForm.email" />
       <ngx-signal-form-error [formField]="signupForm.email" fieldName="email" />

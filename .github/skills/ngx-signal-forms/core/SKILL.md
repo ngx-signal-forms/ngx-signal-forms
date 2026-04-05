@@ -1,6 +1,6 @@
 ---
 name: ngx-signal-forms-core
-description: Implements the core @ngx-signal-forms/toolkit entry point. Use when adding form[formRoot], auto-ARIA, error visibility strategies, global config, error-message registries, warning helpers, submission helpers (focusFirstInvalid, submitWithWarnings), or immutable array utilities. Part of the ngx-signal-forms skill suite; read the hub SKILL.md first if unsure which sub-skill applies.
+description: Implements the core @ngx-signal-forms/toolkit entry point. Use when adding form[formRoot][ngxSignalForm], auto-ARIA, error visibility strategies, global config, error-message registries, warning helpers, submission helpers (focusFirstInvalid, submitWithWarnings), or immutable array utilities. Part of the ngx-signal-forms skill suite; read the hub SKILL.md first if unsure which sub-skill applies.
 ---
 
 # Toolkit Core

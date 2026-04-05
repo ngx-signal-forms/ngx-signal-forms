@@ -11,10 +11,10 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 ### Directives
 
-| Export                           | Selector         | Description                                                 |
-| -------------------------------- | ---------------- | ----------------------------------------------------------- |
-| `NgxSignalFormDirective`         | `form[formRoot]` | Form context, submitted status, error strategy              |
-| `NgxSignalFormAutoAriaDirective` | auto             | Applies `aria-invalid`, `aria-required`, `aria-describedby` |
+| Export                           | Selector                        | Description                                                 |
+| -------------------------------- | ------------------------------- | ----------------------------------------------------------- |
+| `NgxSignalFormDirective`         | `form[formRoot][ngxSignalForm]` | Form context, submitted status, error strategy              |
+| `NgxSignalFormAutoAriaDirective` | auto                            | Applies `aria-invalid`, `aria-required`, `aria-describedby` |
 
 **NgxSignalFormDirective inputs:**
 
