@@ -17,13 +17,13 @@
     "format": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "oxfmt . --threads=1"
+        "command": "oxfmt ."
       }
     },
     "format-check": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "oxfmt . --check --threads=1"
+        "command": "oxfmt . --check"
       }
     },
     "local-registry": {
