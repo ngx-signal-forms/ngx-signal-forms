@@ -1,6 +1,6 @@
 ---
 name: ngx-signal-forms-assistive
-description: Implements @ngx-signal-forms/toolkit/assistive standalone feedback components. Use when adding inline error display, helper hint text, character counters, or assistive layout rows without a full field wrapper. Part of the ngx-signal-forms skill suite.
+description: Implements @ngx-signal-forms/toolkit/assistive standalone feedback components. Use when adding inline error display, form-level error summaries, helper hint text, character counters, or assistive layout rows without a full field wrapper. Part of the ngx-signal-forms skill suite.
 ---
 
 # Toolkit Assistive
@@ -111,7 +111,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
     NgxFormFieldAssistiveRowComponent,
   ],
   template: `
-    <form [formRoot]="profileForm">
+    <form [formRoot]="profileForm" ngxSignalForm>
       <label for="bio">Bio</label>
       <textarea id="bio" [formField]="profileForm.bio"></textarea>
       <ngx-form-field-assistive-row>

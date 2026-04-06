@@ -6,8 +6,10 @@
 
 ```typescript
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-// = [NgxSignalFormDirective, NgxSignalFormAutoAriaDirective]
+// = [FormRoot, NgxSignalFormDirective, NgxSignalFormAutoAriaDirective]
 ```
+
+`NgxSignalFormToolkit` bundles Angular `FormRoot` plus the toolkit enhancer directives. Use it with `form[formRoot][ngxSignalForm]`.
 
 ### Directives
 
@@ -16,11 +18,10 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 | `NgxSignalFormDirective`         | `form[formRoot][ngxSignalForm]` | Form context, submitted status, error strategy              |
 | `NgxSignalFormAutoAriaDirective` | auto                            | Applies `aria-invalid`, `aria-required`, `aria-describedby` |
 
-**NgxSignalFormDirective inputs:**
+**NgxSignalFormDirective input:**
 
 | Input           | Type                   | Default      |
 | --------------- | ---------------------- | ------------ |
-| `formRoot`      | field tree             | required     |
 | `errorStrategy` | `ErrorDisplayStrategy` | `'on-touch'` |
 
 **NgxSignalFormDirective exposed signals:**
@@ -37,7 +38,25 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 ```typescript
 provideNgxSignalFormsConfig(config: NgxSignalFormsUserConfig): EnvironmentProviders
 provideNgxSignalFormsConfigForComponent(config: NgxSignalFormsUserConfig): Provider[]
-provideErrorMessages(messages: Record<string, string | ((params) => string)>): Provider
+provideErrorMessages(configOrFactory: ErrorMessageRegistry | (() => ErrorMessageRegistry)): Provider
+provideFieldLabels(configOrFactory: FieldLabelMap | (() => FieldLabelResolver)): Provider
+```
+
+### Provider-related exports
+
+```typescript
+interface ErrorMessageRegistry {
+  [errorKind: string]:
+    | string
+    | ((params: Record<string, unknown>) => string)
+    | undefined;
+}
+
+type FieldLabelResolver = (rawFieldPath: string) => string;
+type FieldLabelMap = Record<string, string>;
+interface NgxSignalFormFieldContext {
+  readonly fieldName: Signal<string>;
+}
 ```
 
 ### Config Interface
@@ -55,11 +74,36 @@ interface NgxSignalFormsUserConfig {
 ### Types
 
 ```typescript
+type SignalLike<T> = Signal<T> | (() => T)
+interface NgxSignalFormsConfig { ... }
+type NgxSignalFormsUserConfig = DeepPartial<NgxSignalFormsConfig>
 type ResolvedErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit';
 type ErrorDisplayStrategy = ResolvedErrorDisplayStrategy | 'inherit';
 type FormFieldAppearance = 'standard' | 'outline';
 type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
 type SubmittedStatus = 'unsubmitted' | 'submitting' | 'submitted';
+type ErrorVisibilityState = Pick<FieldState<unknown>, 'invalid' | 'touched'>
+type ErrorReadableState = Pick<FieldState<unknown>, 'errors' | 'invalid' | 'touched'>
+type PartialErrorVisibilityState = Partial<ErrorVisibilityState>
+interface SplitErrors {
+  readonly blocking: ValidationError[]
+  readonly warnings: ValidationError[]
+}
+interface OnInvalidHandlerOptions {
+  readonly focusFirstInvalid?: boolean
+  readonly afterInvalid?: (field: FieldTree<unknown>) => void
+}
+```
+
+### Tokens
+
+```typescript
+const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: NgxSignalFormsConfig;
+const NGX_SIGNAL_FORMS_CONFIG: InjectionToken<NgxSignalFormsConfig>;
+const NGX_SIGNAL_FORM_CONTEXT: InjectionToken<NgxSignalFormContext>;
+const NGX_SIGNAL_FORM_FIELD_CONTEXT: InjectionToken<NgxSignalFormFieldContext>;
+const NGX_ERROR_MESSAGES: InjectionToken<ErrorMessageRegistry>;
+const NGX_FIELD_LABEL_RESOLVER: InjectionToken<FieldLabelResolver>;
 ```
 
 ### Utilities
@@ -67,11 +111,17 @@ type SubmittedStatus = 'unsubmitted' | 'submitting' | 'submitted';
 ```typescript
 // Error visibility
 showErrors(field, strategy, submittedStatus?): Signal<boolean>
-combineShowErrors(...signals): Signal<boolean>
-shouldShowErrors(field, strategy, submittedStatus?): boolean
+combineShowErrors(signals: readonly Signal<boolean>[]): Signal<boolean>
+shouldShowErrors(isInvalid, isTouched, strategy, submittedStatus): boolean
+
+// Field and control resolution
+injectFieldControl<TValue>(element, injector?): FieldTree<TValue>
+resolveFieldName(element): string | null
+generateErrorId(fieldName: string): string
+generateWarningId(fieldName: string): string
 
 // Submission helpers
-focusFirstInvalid(form): void
+focusFirstInvalid(form): boolean
 createOnInvalidHandler(options?): (form) => void
 createSubmittedStatusTracker(form): Signal<SubmittedStatus>
 hasSubmitted(form): Signal<boolean>
@@ -86,7 +136,19 @@ canSubmitWithWarnings(form): boolean
 submitWithWarnings(form, callback): Promise<void>
 
 // Form context injection
-injectFormContext(): NgxSignalFormDirective | undefined
+injectFormContext(injector?): NgxSignalFormContext | undefined
+
+// Message resolution
+resolveValidationErrorMessage(error, registry?, options?): string
+getDefaultValidationMessage(error, options?): string
+
+// Strategy/context helpers
+resolveErrorDisplayStrategy(inputStrategy, contextStrategy?, configDefault?): ResolvedErrorDisplayStrategy
+resolveStrategyFromContext(inputStrategy, formContext, configDefault?): ResolvedErrorDisplayStrategy
+resolveSubmittedStatusFromContext(inputStatus, formContext): SubmittedStatus | undefined
+
+// Error grouping
+splitByKind(errors): { blocking: ValidationError[]; warnings: ValidationError[] }
 
 // Immutable array helpers
 updateAt(array, index, updater): array
@@ -115,14 +177,19 @@ import {
 
 ### NgxSignalFormErrorComponent inputs
 
-| Input             | Type                    | Notes                                                |
-| ----------------- | ----------------------- | ---------------------------------------------------- |
-| `formField`       | field                   | Single-field usage                                   |
-| `errors`          | ValidationError[]       | Pre-aggregated list (alternative to `formField`)     |
-| `fieldName`       | string                  | Required standalone; inherited inside wrapper        |
-| `strategy`        | ErrorDisplayStrategy    | Override                                             |
-| `submittedStatus` | Signal<SubmittedStatus> | For `on-submit` without `[formRoot]`                 |
-| `listStyle`       | `'plain' \| 'bullets'`  | `'plain'` default; `'bullets'` for grouped summaries |
+| Input             | Type                        | Notes                                                |
+| ----------------- | --------------------------- | ---------------------------------------------------- |
+| `formField`       | field                       | Single-field usage                                   |
+| `errors`          | `Signal<ValidationError[]>` | Pre-aggregated list (alternative to `formField`)     |
+| `fieldName`       | string                      | Required standalone; inherited inside wrapper        |
+| `strategy`        | ErrorDisplayStrategy        | Override                                             |
+| `submittedStatus` | `SubmittedStatus`           | For `on-submit` without form context                 |
+| `listStyle`       | `plain` or `bullets`        | `'plain'` default; `'bullets'` for grouped summaries |
+
+### Other assistive exports
+
+- `NgxFormFieldHintComponent` — static descriptive hint content
+- `NgxFormFieldAssistiveRowComponent` — stable row container for hint + character count
 
 ### NgxSignalFormErrorSummaryComponent inputs
 
@@ -168,6 +235,12 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 //          NgxFormFieldHintComponent, NgxFormFieldCharacterCountComponent,
 //          NgxFormFieldAssistiveRowComponent, NgxSignalFormErrorComponent,
 //          NgxSignalFormFieldset]
+
+import {
+  NgxFloatingLabelDirective,
+  NgxSignalFormFieldWrapperComponent,
+  NgxSignalFormFieldset,
+} from '@ngx-signal-forms/toolkit/form-field';
 ```
 
 ### NgxSignalFormFieldWrapperComponent inputs
@@ -177,7 +250,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 | `formField`          | field                                  | Required                        |
 | `fieldName`          | string                                 | Derived from bound control `id` |
 | `strategy`           | ErrorDisplayStrategy                   | Inherited                       |
-| `appearance`         | `'standard' \| 'outline' \| 'inherit'` | `'standard'`                    |
+| `appearance`         | `'standard' \| 'outline' \| 'inherit'` | `'inherit'`                     |
 | `errorPlacement`     | `'top' \| 'bottom'`                    | `'bottom'`                      |
 | `showRequiredMarker` | boolean                                | From config                     |
 | `requiredMarker`     | string                                 | `'*'`                           |
@@ -274,11 +347,29 @@ Signals: `resolvedFieldName()`, `errorId`, `warningId`, `hintId`
 ```typescript
 createErrorState(options: CreateErrorStateOptions): ErrorStateResult
 createCharacterCount(options: CreateCharacterCountOptions): CharacterCountResult
+createFieldStateFlags(fieldState: () => unknown): FieldStateFlags
 readErrors(field): ValidationError[]
 readDirectErrors(field): ValidationError[]
 readFieldFlag(field, key: BooleanStateKey): boolean
 dedupeValidationErrors(errors): ValidationError[]
 createUniqueId(prefix: string): string
+humanizeFieldPath(fieldName: string): string
+resolveFieldNameFromError(error, resolver?): string
+focusBoundControlFromError(error): void
+toErrorSummaryEntry(error, registry?, options?, labelResolver?): ErrorSummaryEntryData
+```
+
+### Headless utility/result types
+
+```typescript
+type BooleanStateKey = 'invalid' | 'valid' | 'touched' | 'dirty' | 'pending'
+type FieldStateLike = { ... }
+interface FieldStateFlags { ... }
+interface CreateErrorStateOptions<TValue = unknown> { ... }
+interface ErrorStateResult { ... }
+interface CreateCharacterCountOptions { ... }
+interface CharacterCountResult { ... }
+interface ErrorSummaryEntryData { ... }
 ```
 
 ---
@@ -304,6 +395,14 @@ interface ValidateVestOptions {
 ```typescript
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 // Bundle: [SignalFormDebuggerComponent, DebuggerBadgeComponent, DebuggerBadgeIconDirective]
+
+import {
+  SignalFormDebuggerComponent,
+  DebuggerBadgeComponent,
+  DebuggerBadgeIconDirective,
+  type DebuggerBadgeAppearance,
+  type DebuggerBadgeVariant,
+} from '@ngx-signal-forms/toolkit/debugger';
 ```
 
 ### SignalFormDebuggerComponent inputs

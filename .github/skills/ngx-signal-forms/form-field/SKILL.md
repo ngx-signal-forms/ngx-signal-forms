@@ -34,7 +34,9 @@ The form-field entry point provides a pre-styled field shell (label + control + 
    - Default: child wrapper errors + group-level errors each show separately. Set `includeNestedErrors` to show all child errors in the group summary.
    - Use `fields` input to restrict which fields count toward the group summary.
 
-6. **Custom controls:** Implement `FormValueControl<T>` from `@angular/forms/signals`. Give the host a stable `id` so the wrapper links correctly.
+6. **Use `form[formRoot][ngxSignalForm]` for toolkit-backed forms.** The wrapper and fieldset components work best when they can inherit toolkit form context and submitted-status behavior from `ngxSignalForm`.
+
+7. **Custom controls:** Implement `FormValueControl<T>` from `@angular/forms/signals`. Give the host a stable `id` so the wrapper links correctly.
 
 ## Basic Usage
 
@@ -49,7 +51,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form [formRoot]="profileForm" [errorStrategy]="'on-submit'">
+    <form [formRoot]="profileForm" ngxSignalForm [errorStrategy]="'on-submit'">
       <ngx-signal-form-field-wrapper
         [formField]="profileForm.email"
         appearance="outline"

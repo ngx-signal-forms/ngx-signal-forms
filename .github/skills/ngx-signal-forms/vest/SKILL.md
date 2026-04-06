@@ -7,7 +7,7 @@ description: Implements @ngx-signal-forms/toolkit/vest Vest validation integrati
 
 Implements the `@ngx-signal-forms/toolkit/vest` entry point.
 
-Requires `vest@^6.0.0`. Vest 5 and earlier are not supported.
+Requires `vest@^6.0.0`. Vest 5 and earlier are not supported. Prefer `vest@6.2.7` or `>=6.3.1`; `6.3.0` is excluded because of an upstream packaging/runtime break.
 
 ## When to Use Vest vs Angular Validators
 

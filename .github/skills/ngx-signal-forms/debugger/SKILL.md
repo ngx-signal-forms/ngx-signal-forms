@@ -50,7 +50,7 @@ import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormDebugger],
   template: `
     <div class="split-layout">
-      <form [formRoot]="demoForm">
+      <form [formRoot]="demoForm" ngxSignalForm>
         <input id="name" [formField]="demoForm.name" />
         <button type="submit">Submit</button>
       </form>
@@ -90,5 +90,5 @@ export class DebugFormComponent {
 ## Error Handling
 
 - If child fields don't appear in the tree: check that you passed `formTree` (not `formTree()`).
-- If submitted state doesn't show: verify the form uses `[formRoot]`.
+- If submitted state doesn't show: verify the form uses `form[formRoot][ngxSignalForm]`.
 - If strategy mismatch in debugger: set `[errorStrategy]` explicitly on the debugger component.

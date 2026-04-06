@@ -1,6 +1,6 @@
 ---
 name: ngx-signal-forms-headless
-description: Implements @ngx-signal-forms/toolkit/headless renderless primitives. Use when building custom design-system components with full DOM control — headless error state, character count, fieldset aggregation, or field-name resolution — via directives or programmatic utilities. Part of the ngx-signal-forms skill suite.
+description: Implements @ngx-signal-forms/toolkit/headless renderless primitives. Use when building custom design-system components with full DOM control — headless error state, error summaries, character count, fieldset aggregation, or field-name resolution — via directives or programmatic utilities. Part of the ngx-signal-forms skill suite.
 ---
 
 # Toolkit Headless
@@ -170,5 +170,5 @@ createUniqueId('my-field'); // 'my-field-1', 'my-field-2', ...
 ## Error Handling
 
 - If IDs are inconsistent: add explicit `fieldName` instead of relying on implicit host `id` detection.
-- If `'on-submit'` errors don't appear: ensure the form uses `[formRoot]` to provide submitted status.
+- If `'on-submit'` errors don't appear: ensure the form uses `form[formRoot][ngxSignalForm]` so submitted status and toolkit context are available.
 - If the component is recreating the full wrapper layout: stop and use `form-field/SKILL.md` instead.

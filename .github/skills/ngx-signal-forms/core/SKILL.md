@@ -15,12 +15,13 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 
 ## Workflow
 
-1. **Prefer `[formRoot]` for all toolkit-backed forms.** Without it, error strategies and child component context injection do not function. Add `novalidate` manually only when opting out of `[formRoot]`.
+1. **Use `form[formRoot][ngxSignalForm]` for toolkit-backed forms.** Angular `FormRoot` owns native form submission behavior, while `ngxSignalForm` activates toolkit form context, submitted-status tracking, and form-level error strategy behavior. Add `novalidate` manually only when opting out of Angular `[formRoot]` entirely.
 
 2. **Choose error strategy deliberately:**
    - `'on-touch'` — show errors after user interaction (default, good for most forms)
    - `'immediate'` — show errors from first load (useful for live guidance or sign-up flows)
-   - `'on-submit'` — show errors only after submission attempt (requires `[formRoot]` for submitted status)
+
+- `'on-submit'` — show errors only after submission attempt (requires `form[formRoot][ngxSignalForm]` for toolkit submission context)
 
 3. **Let auto-ARIA manage ARIA attributes.** `NgxSignalFormAutoAriaDirective` (bundled in `NgxSignalFormToolkit`) handles `aria-invalid`, `aria-required`, and `aria-describedby` for all `[formField]` controls except radio/checkbox. Never add those attributes manually.
 
@@ -47,7 +48,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form [formRoot]="userForm" [errorStrategy]="'on-submit'">
+    <form [formRoot]="userForm" ngxSignalForm [errorStrategy]="'on-submit'">
       <ngx-signal-form-field-wrapper
         [formField]="userForm.email"
         appearance="outline"
@@ -130,7 +131,7 @@ patchState(store, (s) => ({
 
 ## Error Handling
 
-- If `'on-submit'` errors don't appear: verify `[formRoot]` is present — `submittedStatus` requires it.
+- If `'on-submit'` errors don't appear: verify the form uses `form[formRoot][ngxSignalForm]` — toolkit `submittedStatus` and form context require it.
 - If `aria-describedby` links are missing: ensure bound controls have a stable `id` attribute.
 - If ARIA attributes are duplicated: check for manual additions alongside auto-ARIA; remove the manual ones.
 - If submission helpers don't block on warnings: use `submitWithWarnings()` and ensure the validator uses `warningError()` with a `warn:` prefix kind.

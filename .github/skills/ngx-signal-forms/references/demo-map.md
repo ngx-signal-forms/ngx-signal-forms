@@ -1,42 +1,35 @@
 # Demo App Map
 
-Repository paths in `apps/demo/src/app/` organized by feature. Use these when working inside the `ngx-signal-forms` repository. All paths are optional — if unavailable, use installed package docs.
-
-## 00 — Signal Forms Only (No Toolkit)
-
-- `00-signal-forms-only/pure-signal-form/` — Baseline Angular Signal Forms form without any toolkit; shows what the toolkit replaces
+Repository paths in `apps/demo/src/app/` organized by the current live demo. Use these when working inside the `ngx-signal-forms` repository. All paths are optional — if unavailable, use installed package docs.
 
 ## 01 — Getting Started
 
-- `01-getting-started/your-first-form/` — First meaningful toolkit adoption: auto-ARIA, error components, reduced boilerplate
+- `01-getting-started/your-first-form/` — Smallest recommended toolkit setup: `form[formRoot][ngxSignalForm]`, auto-ARIA, and inline errors
 
 ## 02 — Toolkit Core
 
-- `02-toolkit-core/accessibility-comparison/` — ARIA automation and boilerplate reduction before/after `[formRoot]`
 - `02-toolkit-core/error-display-modes/` — `'immediate'`, `'on-touch'`, `'on-submit'` strategy comparison
 - `02-toolkit-core/warning-support/` — Non-blocking warnings vs blocking errors; warning ARIA (`role="status"` vs `role="alert"`)
 
 ## 03 — Headless
 
-- `03-headless/error-state/error-state.form.ts` — Custom error rendering via headless visibility and message state
-- `03-headless/error-state/error-state.page.ts` — Headless UI side-by-side with debugger
-- `03-headless/fieldset-utilities/fieldset-utilities.form.ts` — Aggregated group state with fieldset utilities
-- `03-headless/fieldset-utilities/fieldset-utilities.page.ts` — Why grouped state helps when markup is fully custom
+- `03-headless/fieldset-utilities/fieldset-utilities.form.ts` — Aggregated group state, summary utilities, and state flags for custom markup
+- `03-headless/fieldset-utilities/fieldset-utilities.page.ts` — Headless UI patterns and grouped-state explanation
 
 ## 04 — Form Field Wrapper
 
-- `04-form-field-wrapper/basic-usage/` — Smallest wrapper happy path; standard vs outline appearance
-- `04-form-field-wrapper/basic-usage/outline-form-field.*` — Outline appearance with floating label
 - `04-form-field-wrapper/complex-forms/` — Production-style nested objects, arrays, and dense layouts
-- `04-form-field-wrapper/fieldset-grouping/` — Grouped summaries and fieldset-level validation placement
 - `04-form-field-wrapper/custom-controls/` — Wrapper integration with custom `FormValueControl` components
 
 ## 05 — Advanced
 
 - `05-advanced/global-configuration/` — App-level defaults with `provideNgxSignalFormsConfig()`
-- `05-advanced/error-messages/` — Centralized message resolution with `provideErrorMessages()`
-- `05-advanced/submission-patterns/` — Submission lifecycle, invalid handling, `focusFirstInvalid`, `NgxSignalFormErrorSummaryComponent` (GOV.UK pattern)
-- `05-advanced/advanced-wizard/` — Wrapper appearance across step-based multi-page flows
+- `05-advanced/submission-patterns/` — Submission lifecycle, invalid handling, `focusFirstInvalid`, and `NgxSignalFormErrorSummaryComponent`
+- `05-advanced/advanced-wizard/` — Multi-step flow with NgRx Signals + Zod
+- `05-advanced/async-validation/` — Remote/pending validation flows
+- `05-advanced/cross-field-validation/` — Dependent sibling validation rules
+- `05-advanced/vest-validation/` — Vest-only business validation
+- `05-advanced/zod-vest-validation/` — Structural validation plus business rules
 
 ## Supporting Docs in Repository
 
