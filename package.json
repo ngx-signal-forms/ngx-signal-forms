@@ -101,7 +101,7 @@
     "typescript": "~5.9.3",
     "verdaccio": "^6.3.2",
     "vest": "6.2.7",
-    "vite": "^8.0.3",
+    "vite": "^8.0.5",
     "vitest": "4.1.2",
     "lint-staged": "^16.4.0"
   },
