@@ -7,6 +7,7 @@ export * from './tokens';
 // Providers
 export * from './providers/config.provider';
 export * from './providers/error-messages.provider';
+export * from './providers/field-labels.provider';
 
 // Directives
 export * from './directives/auto-aria.directive';
@@ -38,6 +39,8 @@ export { unwrapValue } from './utilities/unwrap-signal-or-value';
 export {
   isBlockingError,
   isWarningError,
+  splitByKind,
+  type SplitErrors,
   warningError,
 } from './utilities/warning-error';
 

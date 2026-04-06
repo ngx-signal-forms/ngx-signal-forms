@@ -3,9 +3,11 @@ import { describe, expect, it } from 'vitest';
 import {
   createUniqueId,
   dedupeValidationErrors,
+  humanizeFieldPath,
   readDirectErrors,
   readErrors,
   readFieldFlag,
+  resolveFieldNameFromError,
   type BooleanStateKey,
   type FieldStateLike,
 } from './utilities';
@@ -484,6 +486,105 @@ describe('Headless Utilities', () => {
         expect(result[0].kind).toBe('warn:weak');
         expect(result[1].kind).toBe('required');
       });
+    });
+  });
+
+  // ============================================================================
+  // resolveFieldNameFromError
+  // ============================================================================
+
+  describe('humanizeFieldPath', () => {
+    it('should split camelCase and capitalize', () => {
+      expect(humanizeFieldPath('postalCode')).toBe('Postal code');
+    });
+
+    it('should join nested segments with " / "', () => {
+      expect(humanizeFieldPath('address.postalCode')).toBe(
+        'Address / Postal code',
+      );
+    });
+
+    it('should strip Angular internal form prefix', () => {
+      expect(humanizeFieldPath('ng.form0.email')).toBe('Email');
+      expect(humanizeFieldPath('ng.form12.address.city')).toBe(
+        'Address / City',
+      );
+    });
+
+    it('should handle underscores and hyphens', () => {
+      expect(humanizeFieldPath('first_name')).toBe('First name');
+      expect(humanizeFieldPath('last-name')).toBe('Last name');
+    });
+
+    it('should return the original string when empty after stripping', () => {
+      expect(humanizeFieldPath('')).toBe('');
+    });
+  });
+
+  describe('resolveFieldNameFromError', () => {
+    it('should strip Angular internal form prefixes and humanize nested paths', () => {
+      const error = {
+        kind: 'required',
+        message: 'Postal code is required',
+        fieldTree: () => ({
+          name: () => 'ng.form0.address.postalCode',
+        }),
+      } as ValidationError;
+
+      expect(resolveFieldNameFromError(error)).toBe('Address / Postal code');
+    });
+
+    it('should humanize fallback kinds when no field tree is available', () => {
+      expect(resolveFieldNameFromError({ kind: 'passwordMismatch' })).toBe(
+        'Password mismatch',
+      );
+    });
+
+    it('should use a custom resolver when provided', () => {
+      const dutchLabels: Record<string, string> = {
+        'address.postalCode': 'Postcode',
+        contactEmail: 'E-mailadres',
+      };
+      const resolver = (path: string) =>
+        dutchLabels[path] ?? humanizeFieldPath(path);
+
+      const error = {
+        kind: 'required',
+        message: 'required',
+        fieldTree: () => ({
+          name: () => 'ng.form0.address.postalCode',
+        }),
+      } as ValidationError;
+
+      expect(resolveFieldNameFromError(error, resolver)).toBe('Postcode');
+    });
+
+    it('should fall back to humanizeFieldPath for unmapped paths in custom resolver', () => {
+      const resolver = (path: string) => {
+        const map: Record<string, string> = { email: 'E-mail' };
+        return map[path] ?? humanizeFieldPath(path);
+      };
+
+      const error = {
+        kind: 'required',
+        message: 'required',
+        fieldTree: () => ({
+          name: () => 'ng.form0.address.street',
+        }),
+      } as ValidationError;
+
+      expect(resolveFieldNameFromError(error, resolver)).toBe(
+        'Address / Street',
+      );
+    });
+
+    it('should pass the kind to the resolver when no fieldTree exists', () => {
+      const resolver = (path: string) =>
+        path === 'passwordMismatch' ? 'Wachtwoord mismatch' : path;
+
+      expect(
+        resolveFieldNameFromError({ kind: 'passwordMismatch' }, resolver),
+      ).toBe('Wachtwoord mismatch');
     });
   });
 

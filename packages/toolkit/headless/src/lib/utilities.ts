@@ -4,15 +4,15 @@ import {
   createUniqueId,
   generateErrorId,
   generateWarningId,
-  isBlockingError,
-  isWarningError,
   readDirectErrors,
   resolveValidationErrorMessage,
   showErrors,
+  splitByKind,
   unwrapValue,
   type ErrorDisplayStrategy,
   type ErrorMessageRegistry,
   type ErrorReadableState,
+  type FieldLabelResolver,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 
@@ -83,10 +83,44 @@ export function readFieldFlag(state: unknown, key: BooleanStateKey): boolean {
     return false;
   }
 
-  const fn = (state as Record<BooleanStateKey, (() => boolean) | undefined>)[
-    key
-  ];
-  return typeof fn === 'function' ? fn() : false;
+  const fn: unknown = Reflect.get(state, key);
+  return typeof fn === 'function' ? !!fn() : false;
+}
+
+/**
+ * Computed boolean state flags from a reactive field state signal.
+ */
+export interface FieldStateFlags {
+  readonly isInvalid: () => boolean;
+  readonly isValid: () => boolean;
+  readonly isTouched: () => boolean;
+  readonly isDirty: () => boolean;
+  readonly isPending: () => boolean;
+}
+
+/**
+ * Creates computed boolean state flags from a field state signal.
+ *
+ * Eliminates the repeated pattern of 5 individual `readFieldFlag` computeds
+ * found in fieldset directives and components.
+ *
+ * @remarks Must be called in an injection context (constructor, field
+ * initializer, or `runInInjectionContext`) because it creates `computed`
+ * signals internally.
+ *
+ * @param fieldState - A signal/computed that returns the field state object
+ * @returns Object with computed signals for each boolean flag
+ */
+export function createFieldStateFlags(
+  fieldState: () => unknown,
+): FieldStateFlags {
+  return {
+    isInvalid: computed(() => readFieldFlag(fieldState(), 'invalid')),
+    isValid: computed(() => readFieldFlag(fieldState(), 'valid')),
+    isTouched: computed(() => readFieldFlag(fieldState(), 'touched')),
+    isDirty: computed(() => readFieldFlag(fieldState(), 'dirty')),
+    isPending: computed(() => readFieldFlag(fieldState(), 'pending')),
+  };
 }
 
 /**
@@ -260,14 +294,12 @@ export function createErrorState<TValue = unknown>(
     resolvedSubmittedStatus,
   );
 
-  const allErrors = computed(() => fieldState().errors());
+  const split = computed(() => splitByKind(fieldState().errors()));
 
-  const errors = computed(() => allErrors().filter(isBlockingError));
-
-  const warnings = computed(() => allErrors().filter(isWarningError));
-
-  const hasErrors = computed(() => errors().length > 0);
-  const hasWarnings = computed(() => warnings().length > 0);
+  const errors = computed(() => split().blocking);
+  const warnings = computed(() => split().warnings);
+  const hasErrors = computed(() => split().blocking.length > 0);
+  const hasWarnings = computed(() => split().warnings.length > 0);
 
   const errorId = computed(() => generateErrorId(resolvedFieldName()));
   const warningId = computed(() => generateWarningId(resolvedFieldName()));
@@ -421,11 +453,70 @@ export interface ErrorSummaryEntryData {
  * include it. This type bridges the gap via duck-typing.
  */
 type ValidationErrorWithFieldTree = ValidationError & {
-  fieldTree?: () => {
-    name?: () => string;
-    focusBoundControl?: (options?: FocusOptions) => void;
-  };
+  fieldTree?: () =>
+    | {
+        name?: () => string;
+        focusBoundControl?: (options?: Readonly<FocusOptions>) => void;
+      }
+    | undefined;
 };
+
+const ANGULAR_FORM_NAME_PREFIX = /^ng\.form\d+\./u;
+
+/**
+ * Strips the Angular internal form prefix (`ng.form0.`) from a field path,
+ * splits camelCase, capitalizes each segment, and joins nested paths with
+ * ` / `.
+ *
+ * This is the default field-label resolver used by error summaries. Override
+ * it globally via `provideFieldLabels()` or `NGX_FIELD_LABEL_RESOLVER`.
+ *
+ * @example
+ * ```typescript
+ * humanizeFieldPath('address.postalCode'); // 'Address / Postal code'
+ * humanizeFieldPath('ng.form0.email');     // 'Email'
+ * ```
+ *
+ * @public
+ */
+export function humanizeFieldPath(fieldName: string): string {
+  const strippedFieldName = fieldName
+    .trim()
+    .replace(ANGULAR_FORM_NAME_PREFIX, '');
+
+  const segments = strippedFieldName
+    .split('.')
+    .map((segment) =>
+      segment
+        .replace(/[_-]+/gu, ' ')
+        .replace(/([a-z\d])([A-Z])/gu, '$1 $2')
+        .replace(/\s+/gu, ' ')
+        .trim(),
+    )
+    .filter((segment) => segment.length > 0);
+
+  if (segments.length === 0) {
+    return fieldName;
+  }
+
+  return segments
+    .map(
+      (segment) =>
+        `${segment.charAt(0).toUpperCase()}${segment.slice(1).toLowerCase()}`,
+    )
+    .join(' / ');
+}
+
+/**
+ * Strips the Angular internal form prefix from a raw field name.
+ *
+ * Resolver functions receive the stripped path, not the raw `ng.form0.*` name.
+ *
+ * @internal
+ */
+function stripAngularPrefix(rawName: string): string {
+  return rawName.trim().replace(ANGULAR_FORM_NAME_PREFIX, '');
+}
 
 /**
  * Resolve the field name from a `ValidationError` via duck-typed access
@@ -433,17 +524,29 @@ type ValidationErrorWithFieldTree = ValidationError & {
  *
  * Falls back to the error's `kind` when the field tree is not available.
  *
+ * @param error - The validation error to extract a field name from
+ * @param resolver - Optional custom resolver; receives the field path
+ *   **without** the Angular internal prefix. Falls back to
+ *   `humanizeFieldPath` when `undefined`.
+ *
  * @public
  */
-export function resolveFieldNameFromError(error: ValidationError): string {
+export function resolveFieldNameFromError(
+  error: ValidationError,
+  resolver?: FieldLabelResolver | null,
+): string {
+  const resolve = resolver ?? humanizeFieldPath;
+
   const e = error as ValidationErrorWithFieldTree;
   if (typeof e.fieldTree === 'function') {
     const fieldState = e.fieldTree();
     if (fieldState && typeof fieldState.name === 'function') {
-      return fieldState.name();
+      const stripped = stripAngularPrefix(fieldState.name());
+      return resolve(stripped);
     }
   }
-  return error.kind;
+
+  return resolve(error.kind);
 }
 
 /**
@@ -467,18 +570,22 @@ export function focusBoundControlFromError(error: ValidationError): void {
  * Maps a `ValidationError` into an `ErrorSummaryEntryData` with resolved
  * message, field name, and focus callback.
  *
+ * @param error - The validation error to map
  * @param registry - Error message registry for 3-tier message resolution
  * @param options - Settings (e.g. `{ stripWarningPrefix: true }`)
+ * @param labelResolver - Optional field-label resolver; falls back to
+ *   `humanizeFieldPath` when `undefined`
  *
  * @public
  */
 export function toErrorSummaryEntry(
   error: ValidationError,
   registry?: Readonly<ErrorMessageRegistry> | null,
-  options?: { stripWarningPrefix?: boolean },
+  options?: Readonly<{ stripWarningPrefix?: boolean }>,
+  labelResolver?: FieldLabelResolver | null,
 ): ErrorSummaryEntryData {
   const message = resolveValidationErrorMessage(error, registry, options);
-  const fieldName = resolveFieldNameFromError(error);
+  const fieldName = resolveFieldNameFromError(error, labelResolver);
 
   return {
     kind: error.kind,

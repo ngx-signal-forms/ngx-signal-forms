@@ -51,9 +51,11 @@ export {
 export {
   createCharacterCount,
   createErrorState,
+  createFieldStateFlags,
   createUniqueId,
   dedupeValidationErrors,
   focusBoundControlFromError,
+  humanizeFieldPath,
   readDirectErrors,
   readErrors,
   readFieldFlag,
@@ -66,6 +68,7 @@ export {
   type ErrorStateResult,
   type ErrorSummaryEntryData,
   type FieldStateLike,
+  type FieldStateFlags,
 } from './lib/utilities';
 
 /**

@@ -45,6 +45,37 @@ export function isBlockingError(error: ValidationError): boolean {
 }
 
 /**
+ * Result of splitting validation errors into blocking errors and warnings.
+ */
+export interface SplitErrors {
+  readonly blocking: ValidationError[];
+  readonly warnings: ValidationError[];
+}
+
+/**
+ * Splits an array of validation errors into blocking errors and warnings
+ * in a single pass. More efficient than calling `.filter(isBlockingError)`
+ * and `.filter(isWarningError)` separately.
+ *
+ * @param errors - Array of ValidationError to partition
+ * @returns Object with `blocking` and `warnings` arrays
+ */
+export function splitByKind(errors: readonly ValidationError[]): SplitErrors {
+  const blocking: ValidationError[] = [];
+  const warnings: ValidationError[] = [];
+
+  for (const error of errors) {
+    if (isWarningError(error)) {
+      warnings.push(error);
+    } else {
+      blocking.push(error);
+    }
+  }
+
+  return { blocking, warnings };
+}
+
+/**
  * Creates a warning validation error using the 'warn:' kind convention.
  *
  * **What are warnings?**
