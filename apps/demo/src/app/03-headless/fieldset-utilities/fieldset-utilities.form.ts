@@ -19,6 +19,7 @@ import { createOnInvalidHandler } from '@ngx-signal-forms/toolkit';
 import {
   createCharacterCount,
   createErrorState,
+  createFieldStateFlags,
   NgxHeadlessToolkit,
 } from '@ngx-signal-forms/toolkit/headless';
 
@@ -82,6 +83,63 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
   selector: 'ngx-headless-fieldset-utilities',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, FormRoot, NgxHeadlessToolkit],
+  styles: `
+    .headless-summary {
+      border: 2px solid var(--ngx-error-summary-border-color, #dc2626);
+      border-radius: 0.375rem;
+      padding: 1rem;
+      background: var(--ngx-error-summary-bg, #fef2f2);
+    }
+
+    .headless-summary__label {
+      font-weight: 600;
+      margin-block-end: 0.5rem;
+      color: var(--ngx-error-summary-label-color, #991b1b);
+    }
+
+    .headless-summary__description {
+      margin-block-end: 0.75rem;
+      font-size: 0.875rem;
+      color: rgb(127 29 29);
+    }
+
+    .headless-summary__list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .headless-summary__link {
+      all: unset;
+      cursor: pointer;
+      color: var(--ngx-error-summary-link-color, #dc2626);
+      text-decoration: underline;
+      font-size: 0.875rem;
+    }
+
+    .headless-summary__link:hover {
+      color: var(--ngx-error-summary-link-hover-color, #991b1b);
+    }
+
+    .headless-summary__link:focus-visible {
+      outline: 2px solid var(--ngx-error-summary-focus-color, #2563eb);
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+
+    .headless-summary__field-name {
+      font-weight: 600;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .headless-summary__description {
+        color: rgb(252 165 165);
+      }
+    }
+  `,
   template: `
     <div class="px-6 pt-0 pb-6">
       <h2 class="mb-4 text-2xl font-bold">Headless Fieldset + Utilities</h2>
@@ -91,6 +149,55 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
       </p>
 
       <form [formRoot]="deliveryForm" class="max-w-2xl space-y-6">
+        <div
+          ngxSignalFormHeadlessErrorSummary
+          #formSummary="errorSummary"
+          [formTree]="deliveryForm"
+          data-testid="delivery-form-summary"
+        >
+          @if (formSummary.shouldShow() && formSummary.hasErrors()) {
+            <div
+              class="headless-summary"
+              role="alert"
+              aria-live="assertive"
+              aria-atomic="true"
+            >
+              <p class="headless-summary__label">Custom form error summary</p>
+              <p class="headless-summary__description">
+                This summary uses
+                <code
+                  class="rounded bg-gray-100 px-1.5 py-0.5 text-xs dark:bg-gray-900"
+                >
+                  NgxHeadlessErrorSummaryDirective
+                </code>
+                with library-aligned styling and fully custom markup.
+              </p>
+
+              <ul class="headless-summary__list" role="list">
+                @for (
+                  entry of formSummary.entries();
+                  track entry.kind + entry.fieldName
+                ) {
+                  <li>
+                    <button
+                      type="button"
+                      class="headless-summary__link"
+                      [attr.data-testid]="'summary-entry-' + entry.kind"
+                      (click)="entry.focus()"
+                    >
+                      <span class="headless-summary__field-name">{{
+                        entry.fieldName
+                      }}</span
+                      >:
+                      {{ entry.message }}
+                    </button>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        </div>
+
         <div class="headless-card">
           <div
             ngxSignalFormHeadlessFieldName
@@ -437,6 +544,17 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
               <span>{{ notesCount.remaining() }} remaining</span>
             </div>
 
+            <div
+              class="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400"
+              data-testid="notes-utility-flags"
+            >
+              <span>notes touched: {{ notesFlags.isTouched() }}</span>
+              <span>notes dirty: {{ notesFlags.isDirty() }}</span>
+              <span>notes valid: {{ notesFlags.isValid() }}</span>
+              <span>notes invalid: {{ notesFlags.isInvalid() }}</span>
+              <span>notes pending: {{ notesFlags.isPending() }}</span>
+            </div>
+
             @if (notesError.showErrors() && notesError.hasErrors()) {
               <div
                 [id]="notesError.errorId()"
@@ -517,6 +635,10 @@ export class HeadlessFieldsetUtilitiesComponent {
     field: this.deliveryForm.deliveryNotes,
     maxLength: 200,
   });
+
+  protected readonly notesFlags = createFieldStateFlags(
+    this.deliveryForm.deliveryNotes,
+  );
 
   protected readonly notesDescribedBy = computed(() => {
     const ids = [this.notesCounterId];

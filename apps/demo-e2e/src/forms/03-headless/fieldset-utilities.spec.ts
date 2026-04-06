@@ -32,6 +32,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
       await test.step('Verify delivery notes section with utilities', async () => {
         await expect(page.getByLabel('Notes')).toBeVisible();
         await expect(page.getByText(/0\s*\/\s*200/)).toBeVisible();
+        await expect(page.getByTestId('notes-utility-flags')).toBeVisible();
       });
 
       await test.step('Verify action buttons', async () => {
@@ -49,6 +50,67 @@ test.describe('Headless - Fieldset + Utilities', () => {
       await expect(fieldset.getByText('invalid:')).toBeVisible();
       await expect(fieldset.getByText('pending:')).toBeVisible();
     });
+
+    test('should render utility-derived notes flags', async ({ page }) => {
+      const notesFlags = page.getByTestId('notes-utility-flags');
+
+      await test.step('Verify initial utility flags', async () => {
+        await expect(notesFlags).toContainText('notes touched: false');
+        await expect(notesFlags).toContainText('notes dirty: false');
+      });
+
+      await test.step('Update notes and verify flags react', async () => {
+        const notesInput = page.getByLabel('Notes');
+        await notesInput.fill('Enough detail for utility flags');
+        await notesInput.blur();
+
+        await expect(notesFlags).toContainText('notes touched: true');
+        await expect(notesFlags).toContainText('notes dirty: true');
+      });
+    });
+  });
+
+  test.describe('Headless Error Summary', () => {
+    test('should show a custom form-level summary after invalid submit', async ({
+      page,
+    }) => {
+      await test.step('Submit empty form', async () => {
+        await page.getByRole('button', { name: 'Submit request' }).click();
+      });
+
+      await test.step('Verify the headless summary is visible', async () => {
+        const summary = page.getByTestId('delivery-form-summary');
+        await expect(summary).toBeVisible();
+        const summaryAlert = summary.getByRole('alert');
+        await expect(summaryAlert).toBeVisible();
+        await expect(summaryAlert).toContainText('Custom form error summary');
+        await expect(summaryAlert).toContainText('Contact email');
+        await expect(summaryAlert).toContainText('Address / Street');
+        await expect(summaryAlert).not.toContainText('ng.form0');
+        await expect(summaryAlert).toContainText('Email is required');
+        await expect(summaryAlert).toContainText('Street is required');
+      });
+    });
+
+    test('should focus the related field when a summary entry is clicked', async ({
+      page,
+    }) => {
+      await test.step('Trigger summary entries', async () => {
+        await page.getByRole('button', { name: 'Submit request' }).click();
+        await expect(page.getByTestId('delivery-form-summary')).toBeVisible();
+      });
+
+      await test.step('Click the email summary entry', async () => {
+        await page
+          .getByTestId('delivery-form-summary')
+          .getByRole('button', { name: /Email is required/i })
+          .click();
+      });
+
+      await test.step('Contact email input should be focused', async () => {
+        await expect(page.getByLabel('Contact email *')).toBeFocused();
+      });
+    });
   });
 
   test.describe('Contact Email - FieldName + ErrorState', () => {
@@ -62,9 +124,8 @@ test.describe('Headless - Fieldset + Utilities', () => {
 
       await test.step('Verify error is shown', async () => {
         await expect(emailInput).toHaveAttribute('aria-invalid', 'true');
-        const alert = page
-          .locator('[role="alert"]')
-          .filter({ hasText: 'Email is required' });
+        const describedBy = await emailInput.getAttribute('aria-describedby');
+        const alert = page.locator(`#${describedBy}`);
         await expect(alert).toBeVisible();
       });
     });
@@ -79,9 +140,8 @@ test.describe('Headless - Fieldset + Utilities', () => {
 
       await test.step('Verify format error', async () => {
         await expect(emailInput).toHaveAttribute('aria-invalid', 'true');
-        const alert = page
-          .locator('[role="alert"]')
-          .filter({ hasText: 'Enter a valid email address' });
+        const describedBy = await emailInput.getAttribute('aria-describedby');
+        const alert = page.locator(`#${describedBy}`);
         await expect(alert).toBeVisible();
       });
     });
@@ -102,9 +162,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
 
       await test.step('Verify error is cleared', async () => {
         await expect(emailInput).not.toHaveAttribute('aria-invalid', 'true');
-        await expect(
-          page.locator('[role="alert"]').filter({ hasText: 'Email' }),
-        ).toBeHidden();
+        await expect(page.locator('#contactEmail-error')).toBeHidden();
       });
     });
   });
@@ -286,11 +344,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
       });
 
       await test.step('Verify all required errors shown', async () => {
-        await expect(
-          page
-            .locator('[role="alert"]')
-            .filter({ hasText: 'Email is required' }),
-        ).toBeVisible();
+        await expect(page.locator('#contactEmail-error')).toBeVisible();
         await expect(
           page
             .getByRole('group', { name: 'Shipping address' })
@@ -349,10 +403,8 @@ test.describe('Headless - Fieldset + Utilities', () => {
 
       await test.step('Verify aria-describedby points to error', async () => {
         await expect(emailInput).toHaveAttribute('aria-describedby', /error/);
-        const errorElement = page
-          .locator('[role="alert"]')
-          .filter({ hasText: 'Email is required' })
-          .first();
+        const describedBy = await emailInput.getAttribute('aria-describedby');
+        const errorElement = page.locator(`#${describedBy}`);
         await expect(errorElement).toBeVisible();
         await expect(errorElement).toContainText('Email is required');
       });

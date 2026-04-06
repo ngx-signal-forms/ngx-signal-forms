@@ -6,6 +6,7 @@ export const HEADLESS_FIELDSET_UTILITIES_CONTENT = {
       {
         title: 'Directives',
         items: [
+          '<strong>ngxSignalFormHeadlessErrorSummary:</strong> Form-level summary with custom markup',
           '<strong>ngxSignalFormHeadlessFieldset:</strong> Aggregate group state and errors',
           '<strong>ngxSignalFormHeadlessFieldName:</strong> Resolve IDs and names for ARIA',
           '<strong>ngxSignalFormHeadlessErrorState:</strong> Custom error and warning UI',
@@ -16,6 +17,7 @@ export const HEADLESS_FIELDSET_UTILITIES_CONTENT = {
         items: [
           '<strong>createErrorState:</strong> Programmatic error visibility signals',
           '<strong>createCharacterCount:</strong> Character count without directives',
+          '<strong>createFieldStateFlags:</strong> Reusable valid/invalid/touched/dirty/pending signals',
         ],
       },
     ],

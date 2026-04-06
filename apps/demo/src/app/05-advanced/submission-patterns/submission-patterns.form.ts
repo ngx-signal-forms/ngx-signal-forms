@@ -10,6 +10,7 @@ import { form, FormField } from '@angular/forms/signals';
 import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
+  type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import {
   createOnInvalidHandler,
@@ -138,6 +139,7 @@ import { submissionSchema } from './submission-patterns.validations';
       <!-- Aggregates all field errors into a clickable list; each entry focuses the invalid control -->
       <ngx-signal-form-error-summary
         [formTree]="registrationForm"
+        [submittedStatus]="explicitSubmittedStatus()"
         summaryLabel="Please fix the following errors before submitting:"
       />
 
@@ -291,6 +293,14 @@ export class SubmissionPatternsComponent {
   });
 
   protected readonly model = this.#model.asReadonly();
+
+  /// Demonstrates passing submittedStatus explicitly via the public API.
+  /// The value is read from the same form context that the component would
+  /// inherit automatically — the round-trip is intentional to showcase that
+  /// the input works for consumers who don't use ngxSignalForm at all.
+  protected readonly explicitSubmittedStatus = computed<
+    SubmittedStatus | undefined
+  >(() => this.formContext?.submittedStatus());
 
   readonly registrationForm = form(this.#model, submissionSchema, {
     submission: {
