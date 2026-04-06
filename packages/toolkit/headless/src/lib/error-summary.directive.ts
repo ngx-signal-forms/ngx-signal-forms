@@ -2,12 +2,12 @@ import { computed, Directive, inject, input } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import {
   injectFormContext,
-  isBlockingError,
-  isWarningError,
   NGX_ERROR_MESSAGES,
+  NGX_FIELD_LABEL_RESOLVER,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
   showErrors,
+  splitByKind,
   type ErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
@@ -90,6 +90,9 @@ export class NgxHeadlessErrorSummaryDirective implements ErrorSummarySignals {
   readonly #errorMessagesRegistry = inject(NGX_ERROR_MESSAGES, {
     optional: true,
   });
+  readonly #labelResolver = inject(NGX_FIELD_LABEL_RESOLVER, {
+    optional: true,
+  });
 
   /**
    * The root form FieldTree to aggregate errors from.
@@ -128,36 +131,34 @@ export class NgxHeadlessErrorSummaryDirective implements ErrorSummarySignals {
     this.#resolvedSubmittedStatus,
   );
 
-  readonly #allMessages = computed(() =>
-    dedupeValidationErrors(readErrors(this.#fieldState())),
-  );
-
-  readonly #blockingErrors = computed(() =>
-    this.#allMessages().filter(isBlockingError),
-  );
-
-  readonly #warningErrors = computed(() =>
-    this.#allMessages().filter(isWarningError),
+  readonly #split = computed(() =>
+    splitByKind(dedupeValidationErrors(readErrors(this.#fieldState()))),
   );
 
   readonly entries = computed(() =>
-    this.#blockingErrors().map((error) =>
-      toErrorSummaryEntry(error, this.#errorMessagesRegistry),
-    ),
-  );
-
-  readonly warningEntries = computed(() =>
-    this.#warningErrors().map((error) =>
+    this.#split().blocking.map((error) =>
       toErrorSummaryEntry(
         error,
         this.#errorMessagesRegistry,
-        STRIP_WARNING_PREFIX,
+        undefined,
+        this.#labelResolver,
       ),
     ),
   );
 
-  readonly hasErrors = computed(() => this.#blockingErrors().length > 0);
-  readonly hasWarnings = computed(() => this.#warningErrors().length > 0);
+  readonly warningEntries = computed(() =>
+    this.#split().warnings.map((error) =>
+      toErrorSummaryEntry(
+        error,
+        this.#errorMessagesRegistry,
+        STRIP_WARNING_PREFIX,
+        this.#labelResolver,
+      ),
+    ),
+  );
+
+  readonly hasErrors = computed(() => this.#split().blocking.length > 0);
+  readonly hasWarnings = computed(() => this.#split().warnings.length > 0);
 
   readonly shouldShow = computed(
     () => this.#showErrorsSignal() && this.hasErrors(),

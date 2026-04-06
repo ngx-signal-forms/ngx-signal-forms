@@ -1,32 +1,19 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   inject,
   input,
 } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
-import {
-  injectFormContext,
-  isBlockingError,
-  NGX_ERROR_MESSAGES,
-  resolveStrategyFromContext,
-  resolveSubmittedStatusFromContext,
-  showErrors,
-  type ErrorDisplayStrategy,
-  type SubmittedStatus,
-} from '@ngx-signal-forms/toolkit';
-import {
-  dedupeValidationErrors,
-  readErrors,
-  toErrorSummaryEntry,
-} from '@ngx-signal-forms/toolkit/headless';
+import { NgxHeadlessErrorSummaryDirective } from '@ngx-signal-forms/toolkit/headless';
 
 /**
  * Form-level error summary component with WCAG 2.2 compliance.
  *
  * Renders a clickable list of validation errors aggregated from a form tree.
  * Each entry focuses the associated control on click via Angular's `focusBoundControl()`.
+ *
+ * Built on top of `NgxHeadlessErrorSummaryDirective` which provides all the
+ * error aggregation, deduplication, strategy resolution, and focus management.
  *
  * ## Accessibility
  *
@@ -56,8 +43,14 @@ import {
 @Component({
   selector: 'ngx-signal-form-error-summary',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  hostDirectives: [
+    {
+      directive: NgxHeadlessErrorSummaryDirective,
+      inputs: ['formTree', 'strategy', 'submittedStatus'],
+    },
+  ],
   template: `
-    @if (shouldShow() && hasErrors()) {
+    @if (summary.shouldShow() && summary.hasErrors()) {
       <div
         class="ngx-signal-form-error-summary"
         role="alert"
@@ -70,7 +63,10 @@ import {
           </p>
         }
         <ul class="ngx-signal-form-error-summary__list" role="list">
-          @for (entry of entries(); track entry.kind + entry.fieldName) {
+          @for (
+            entry of summary.entries();
+            track entry.kind + entry.fieldName
+          ) {
             <li class="ngx-signal-form-error-summary__item">
               <button
                 type="button"
@@ -137,71 +133,11 @@ import {
   `,
 })
 export class NgxSignalFormErrorSummaryComponent {
-  readonly #formContext = injectFormContext();
-  readonly #errorMessagesRegistry = inject(NGX_ERROR_MESSAGES, {
-    optional: true,
-  });
-
-  /**
-   * The root form FieldTree to aggregate errors from.
-   */
-  readonly formTree = input.required<FieldTree<unknown>>();
+  protected readonly summary = inject(NgxHeadlessErrorSummaryDirective);
 
   /**
    * Label displayed above the error list.
    * @default 'Please fix the following errors:'
    */
   readonly summaryLabel = input('Please fix the following errors:');
-
-  /**
-   * Error display strategy override.
-   */
-  readonly strategy = input<ErrorDisplayStrategy | undefined>(undefined);
-
-  /**
-   * Form submission status (optional).
-   */
-  readonly submittedStatus = input<SubmittedStatus | undefined>(undefined);
-
-  readonly #fieldState = computed(() => this.formTree()());
-
-  readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() =>
-    resolveStrategyFromContext(this.strategy(), this.#formContext),
-  );
-
-  readonly #resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(
-    () =>
-      resolveSubmittedStatusFromContext(
-        this.submittedStatus(),
-        this.#formContext,
-      ),
-  );
-
-  readonly #showErrorsSignal = showErrors(
-    this.#fieldState,
-    this.#resolvedStrategy,
-    this.#resolvedSubmittedStatus,
-  );
-
-  readonly #allMessages = computed(() =>
-    dedupeValidationErrors(readErrors(this.#fieldState())),
-  );
-
-  readonly #blockingErrors = computed(() =>
-    this.#allMessages().filter(isBlockingError),
-  );
-
-  protected readonly hasErrors = computed(
-    () => this.#blockingErrors().length > 0,
-  );
-
-  protected readonly shouldShow = computed(
-    () => this.#showErrorsSignal() && this.hasErrors(),
-  );
-
-  protected readonly entries = computed(() =>
-    this.#blockingErrors().map((error) =>
-      toErrorSummaryEntry(error, this.#errorMessagesRegistry),
-    ),
-  );
 }
