@@ -44,9 +44,6 @@ export {
   warningError,
 } from './utilities/warning-error';
 
-// Future exports:
-// export * from './directives/form-busy.directive';
-
 // Convenience imports
 import { FormRoot } from '@angular/forms/signals';
 import { NgxSignalFormAutoAriaDirective } from './directives/auto-aria.directive';

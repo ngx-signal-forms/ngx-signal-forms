@@ -7,7 +7,6 @@ export {
 } from '@ngx-signal-forms/toolkit/assistive';
 
 // Core form field components
-export * from './floating-label.directive';
 export * from './form-field-wrapper.component';
 export * from './form-fieldset.component';
 
@@ -17,7 +16,6 @@ import {
   NgxFormFieldHintComponent,
   NgxSignalFormErrorComponent,
 } from '@ngx-signal-forms/toolkit/assistive';
-import { NgxFloatingLabelDirective } from './floating-label.directive';
 import { NgxSignalFormFieldWrapperComponent } from './form-field-wrapper.component';
 import { NgxSignalFormFieldset } from './form-fieldset.component';
 
@@ -42,7 +40,6 @@ import { NgxSignalFormFieldset } from './form-fieldset.component';
  */
 export const NgxFormField = [
   NgxSignalFormFieldWrapperComponent,
-  NgxFloatingLabelDirective,
   NgxFormFieldHintComponent,
   NgxFormFieldCharacterCountComponent,
   NgxFormFieldAssistiveRowComponent,

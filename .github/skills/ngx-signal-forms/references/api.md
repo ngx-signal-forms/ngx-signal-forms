@@ -231,13 +231,12 @@ For full DOM control over the error summary (incl. warning entries), use `NgxHea
 
 ```typescript
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-// Bundle: [NgxSignalFormFieldWrapperComponent, NgxFloatingLabelDirective,
+// Bundle: [NgxSignalFormFieldWrapperComponent,
 //          NgxFormFieldHintComponent, NgxFormFieldCharacterCountComponent,
 //          NgxFormFieldAssistiveRowComponent, NgxSignalFormErrorComponent,
 //          NgxSignalFormFieldset]
 
 import {
-  NgxFloatingLabelDirective,
   NgxSignalFormFieldWrapperComponent,
   NgxSignalFormFieldset,
 } from '@ngx-signal-forms/toolkit/form-field';

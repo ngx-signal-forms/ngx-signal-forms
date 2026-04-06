@@ -43,7 +43,6 @@ packages/toolkit/
 ├── form-field/                          # Optional form-field entry
 │   ├── form-field-wrapper.component.ts
 │   ├── form-fieldset.component.ts
-│   ├── floating-label.directive.ts
 │   └── public_api.ts
 ├── headless/                            # Headless primitives entry
 │   ├── src/

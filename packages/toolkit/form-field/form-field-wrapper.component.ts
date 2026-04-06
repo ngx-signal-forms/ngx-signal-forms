@@ -41,7 +41,7 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
  * - Accessibility-compliant structure
  * - Content projection for labels and inputs
  * - Type-safe field binding with generics
- * - Optional floating label styling (via ngxFloatingLabel directive)
+ * - Outlined appearance with floating label (`appearance="outline"`)
  * - Support for hints and character counts
  *
  * @template TValue The type of the field value (defaults to unknown)

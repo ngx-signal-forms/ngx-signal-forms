@@ -304,7 +304,6 @@ provideErrorMessages({
 - `NgxFormField`
 - `NgxSignalFormFieldWrapperComponent`
 - `NgxSignalFormFieldset`
-- `NgxFloatingLabelDirective`
 
 ### Wrapper component
 

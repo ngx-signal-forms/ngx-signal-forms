@@ -72,6 +72,31 @@ export const toolkitSharedConfig = {
     maxConcurrency: process.env.CI ? 2 : 5,
     maxWorkers: process.env.CI ? 2 : undefined,
     ...sharedProjectTestConfig,
+    coverage: {
+      provider: 'v8',
+      include: [
+        'core/**/*.ts',
+        'assistive/**/*.ts',
+        'form-field/**/*.ts',
+        'headless/**/*.ts',
+        'vest/**/*.ts',
+        'debugger/**/*.ts',
+      ],
+      exclude: [
+        '**/*.spec.ts',
+        '**/*.test.ts',
+        '**/index.ts',
+        '**/public_api.ts',
+        '**/test-setup*.ts',
+        '**/test.utilities.ts',
+      ],
+      thresholds: {
+        statements: 80,
+        branches: 75,
+        functions: 80,
+        lines: 80,
+      },
+    },
   } satisfies NonNullable<UserWorkspaceConfig['test']>,
   define: {
     'import.meta.vitest': true,

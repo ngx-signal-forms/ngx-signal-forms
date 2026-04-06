@@ -434,7 +434,6 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import {
   NgxSignalFormFieldWrapperComponent,
   NgxSignalFormFieldset,
-  NgxFloatingLabelDirective,
   NgxFormFieldHintComponent,
   NgxFormFieldCharacterCountComponent,
 } from '@ngx-signal-forms/toolkit/form-field';
@@ -470,19 +469,6 @@ validation summaries and design-library style error positioning, prefer
 ```
 
 The wrapper uses a strict identity model: if you do not pass `fieldName`, the projected bound control must have an `id`.
-
-### NgxFloatingLabelDirective (`appearance="outline"`)
-
-Attribute directive for Material-like outlined inputs.
-
-```html
-<ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
-  <label for="email">Email</label>
-  <input id="email" [formField]="form.email" placeholder=" " />
-</ngx-signal-form-field-wrapper>
-```
-
-**Note:** Add `placeholder=" "` for floating label animation. Prefer `appearance="outline"` in new examples.
 
 ### NgxSignalFormFieldset
 

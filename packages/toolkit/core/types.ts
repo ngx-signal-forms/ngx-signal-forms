@@ -1,5 +1,4 @@
 import type { Signal } from '@angular/core';
-import type { DeepPartial } from 'ts-essentials';
 
 /**
  * Submission status of a form.
@@ -116,6 +115,5 @@ export interface NgxSignalFormsConfig {
 
 /**
  * User-provided configuration (all properties optional).
- * Uses DeepPartial to allow partial configuration with type safety.
  */
-export type NgxSignalFormsUserConfig = DeepPartial<NgxSignalFormsConfig>;
+export type NgxSignalFormsUserConfig = Partial<NgxSignalFormsConfig>;

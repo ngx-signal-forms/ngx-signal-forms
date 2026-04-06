@@ -62,7 +62,6 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 **Includes:**
 
 - Form field wrapper component (`ngx-signal-form-field-wrapper`)
-- `NgxFloatingLabelDirective` - Outlined layout with floating label
 - `NgxFormFieldHintComponent` - Helper text
 - `NgxFormFieldCharacterCountComponent` - Character counter
 - `NgxFormFieldAssistiveRowComponent` - Assistive content row
@@ -269,7 +268,7 @@ The form field component supports non-blocking warnings in addition to blocking 
 
 #### Outlined CSS Custom Properties
 
-**Standard layout** (without `outline` directive):
+**Standard layout**:
 
 ```css
 :root {
@@ -301,30 +300,12 @@ The form field component supports non-blocking warnings in addition to blocking 
 
 ---
 
-### NgxFloatingLabelDirective
+### Outlined Appearance
 
-Enables the outlined layout where the label sits inside the input border, matching Material Design outlined input patterns.
-When you import `NgxFormField`, the directive is already included.
-
-**Recommended: Use `appearance` input**
+Use `appearance="outline"` for Material Design outlined input patterns with floating labels.
 
 ```html
 <ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
-  <label for="email">Email Address</label>
-  <input
-    id="email"
-    type="email"
-    [formField]="form.email"
-    required
-    placeholder="you@example.com"
-  />
-</ngx-signal-form-field-wrapper>
-```
-
-**Legacy: `outline` boolean attribute (still works)**
-
-```html
-<ngx-signal-form-field-wrapper [formField]="form.email" outline>
   <label for="email">Email Address</label>
   <input
     id="email"
@@ -440,7 +421,7 @@ export class OutlineSectionComponent {}
 
 #### CSS Custom Properties
 
-**Outlined layout** (with `outline` directive):
+**Outlined layout** (`appearance="outline"`):
 
 ```css
 :root {
@@ -1005,7 +986,6 @@ export class ContactFormComponent {
 ### Public Exports
 
 - `NgxFormField`
-- `NgxFloatingLabelDirective`
 - `NgxSignalFormFieldWrapperComponent`
 - `NgxSignalFormFieldset`
 - Re-exported assistive components from `@ngx-signal-forms/toolkit/assistive`

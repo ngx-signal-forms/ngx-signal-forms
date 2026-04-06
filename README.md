@@ -93,9 +93,8 @@ imports: [FormField, NgxSignalFormToolkit];
 
 ### Form field: `@ngx-signal-forms/toolkit/form-field`
 
-- `<ngx-signal-form-field-wrapper>`
+- `<ngx-signal-form-field-wrapper>` with `appearance="outline"` support
 - `<ngx-signal-form-fieldset>`
-- floating-label support for `appearance="outline"`
 
 ### Headless: `@ngx-signal-forms/toolkit/headless`
 
