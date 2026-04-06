@@ -23,7 +23,7 @@ test.describe('Demo Application - Navigation & Shell', () => {
       const title = page.locator('h1').first();
       await expect(title).toBeVisible();
       const titleText = await title.innerText();
-      expect(titleText).toContain('Pure Signal Forms');
+      expect(titleText).toContain('Your First Form');
 
       const sidebar = page.locator('nav, [role="navigation"]').first();
       await expect(sidebar).toBeVisible();
@@ -33,13 +33,17 @@ test.describe('Demo Application - Navigation & Shell', () => {
     });
   });
 
-  test('should display all 6 navigation categories', async ({ page }) => {
+  test('should display all navigation categories', async ({ page }) => {
     await test.step('Verify all category headers are visible', async () => {
       const categories = DEMO_CATEGORIES.map((c) => c.label);
+      const primaryNavigation = page.getByLabel('Primary navigation');
+
+      await expect(primaryNavigation).toBeVisible();
 
       for (const category of categories) {
-        const categoryElement = page.getByRole('link', {
-          name: new RegExp(category),
+        const categoryElement = primaryNavigation.getByRole('link', {
+          name: category,
+          exact: true,
         });
         await expect(categoryElement).toBeVisible({ timeout: 5000 });
       }
@@ -74,23 +78,19 @@ test.describe('Demo Application - Navigation & Shell', () => {
   test('should navigate to each demo example', async ({ page }) => {
     await test.step('Navigate through all demo examples', async () => {
       const examples = [
-        '/signal-forms-only/pure-signal-form',
         '/getting-started/your-first-form',
-        '/toolkit-core/accessibility-comparison',
         '/toolkit-core/error-display-modes',
         '/toolkit-core/warning-support',
-        '/toolkit-core/field-states',
-        '/headless/error-state',
         '/headless/fieldset-utilities',
-        '/form-field-wrapper/basic-usage',
         '/form-field-wrapper/complex-forms',
         '/form-field-wrapper/custom-controls',
         '/advanced-scenarios/global-configuration',
         '/advanced-scenarios/submission-patterns',
-        '/advanced-scenarios/error-messages',
         '/advanced-scenarios/advanced-wizard',
         '/advanced-scenarios/async-validation',
         '/advanced-scenarios/cross-field-validation',
+        '/advanced-scenarios/vest-validation',
+        '/advanced-scenarios/zod-vest-validation',
       ];
 
       for (const examplePath of examples) {
@@ -118,7 +118,7 @@ test.describe('Demo Application - Navigation & Shell', () => {
         .first();
       await expect(activeLink).toBeVisible({ timeout: 2000 });
 
-      await page.goto(`/toolkit-core/accessibility-comparison`);
+      await page.goto(`/toolkit-core/error-display-modes`);
       await page.waitForLoadState('domcontentloaded');
 
       // Verify active state updated
@@ -136,8 +136,12 @@ test.describe('Demo Application - Navigation & Shell', () => {
       await page.waitForLoadState('domcontentloaded');
 
       // Navigate to first page by clicking link (creates proper history entry)
-      const gettingStartedNav = page.getByRole('link', {
-        name: /Getting Started/i,
+      const primaryNavigation = page.getByLabel('Primary navigation');
+      await expect(primaryNavigation).toBeVisible();
+
+      const gettingStartedNav = primaryNavigation.getByRole('link', {
+        name: 'Getting Started',
+        exact: true,
       });
       await gettingStartedNav.click();
       await page.waitForLoadState('domcontentloaded');
@@ -156,8 +160,9 @@ test.describe('Demo Application - Navigation & Shell', () => {
       expect(firstPageUrl).toContain('/getting-started/your-first-form');
 
       // Navigate to second page by clicking link
-      const toolkitCoreNav = page.getByRole('link', {
-        name: /Toolkit Core/i,
+      const toolkitCoreNav = primaryNavigation.getByRole('link', {
+        name: 'Toolkit Core',
+        exact: true,
       });
       await toolkitCoreNav.click();
       await page.waitForLoadState('domcontentloaded');
@@ -165,13 +170,13 @@ test.describe('Demo Application - Navigation & Shell', () => {
       await expect(sectionNavigation).toBeVisible();
 
       const accessibilityLink = sectionNavigation.getByRole('link', {
-        name: /Accessibility Comparison/i,
+        name: /Error Display Modes/i,
       });
       await accessibilityLink.click();
       await page.waitForLoadState('domcontentloaded');
 
       const secondPageUrl = page.url();
-      expect(secondPageUrl).toContain('/toolkit-core/accessibility-comparison');
+      expect(secondPageUrl).toContain('/toolkit-core/error-display-modes');
 
       // Go back to first page
       await page.goBack();
@@ -238,7 +243,7 @@ test.describe('Demo Application - Theme Switching', () => {
 
   test('should maintain theme across navigation', async ({ page }) => {
     await test.step('Set theme and navigate, verify persistence', async () => {
-      await page.goto(`/toolkit-core/accessibility-comparison`);
+      await page.goto(`/toolkit-core/error-display-modes`);
       await page.waitForLoadState('domcontentloaded');
 
       /// Verify page loaded successfully (theme persists across navigation)
@@ -339,31 +344,5 @@ test.describe('Demo Application - Route Handling', () => {
       const url = page.url();
       expect(url).toContain('mode=immediate');
     });
-  });
-});
-
-test.describe('Demo Application - Legacy Route Redirects', () => {
-  test('should redirect dynamic-list to complex-forms', async ({ page }) => {
-    await page.goto('/advanced-scenarios/dynamic-list');
-    await page.waitForLoadState('domcontentloaded');
-
-    await expect(page).toHaveURL(/\/form-field-wrapper\/complex-forms$/);
-    await expect(page.locator('main h1').first()).toBeVisible();
-  });
-
-  test('should redirect nested-groups to complex-forms', async ({ page }) => {
-    await page.goto('/advanced-scenarios/nested-groups');
-    await page.waitForLoadState('domcontentloaded');
-
-    await expect(page).toHaveURL(/\/form-field-wrapper\/complex-forms$/);
-    await expect(page.locator('main h1').first()).toBeVisible();
-  });
-
-  test('should redirect stepper-form to advanced-wizard', async ({ page }) => {
-    await page.goto('/advanced-scenarios/stepper-form');
-    await page.waitForLoadState('domcontentloaded');
-
-    await expect(page).toHaveURL(/\/advanced-scenarios\/advanced-wizard$/);
-    await expect(page.locator('main h1').first()).toBeVisible();
   });
 });

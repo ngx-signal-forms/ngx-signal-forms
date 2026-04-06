@@ -1,19 +1,12 @@
 export const DEMO_PATHS = {
-  pureSignalForm: '/signal-forms-only/pure-signal-form',
   yourFirstForm: '/getting-started/your-first-form',
-  accessibilityComparison: '/toolkit-core/accessibility-comparison',
   errorDisplayModes: '/toolkit-core/error-display-modes',
   warningSupport: '/toolkit-core/warning-support',
-  fieldStates: '/toolkit-core/field-states',
-  errorState: '/headless/error-state',
   fieldsetUtilities: '/headless/fieldset-utilities',
-  basicUsage: '/form-field-wrapper/basic-usage',
   complexForms: '/form-field-wrapper/complex-forms',
-  fieldsetGrouping: '/form-field-wrapper/fieldset-grouping',
   customControls: '/form-field-wrapper/custom-controls',
   globalConfiguration: '/advanced-scenarios/global-configuration',
   submissionPatterns: '/advanced-scenarios/submission-patterns',
-  errorMessages: '/advanced-scenarios/error-messages',
   advancedWizard: '/advanced-scenarios/advanced-wizard',
   asyncValidation: '/advanced-scenarios/async-validation',
   crossFieldValidation: '/advanced-scenarios/cross-field-validation',
@@ -22,17 +15,6 @@ export const DEMO_PATHS = {
 } as const;
 
 export const DEMO_CATEGORIES = [
-  {
-    id: 'signal-forms-only',
-    label: 'Signal Forms Only',
-    pattern: /^\/signal-forms-only\//,
-    links: [
-      {
-        path: '/signal-forms-only/pure-signal-form',
-        label: 'Pure Signal Forms (Baseline)',
-      },
-    ],
-  },
   {
     id: 'getting-started',
     label: 'Getting Started',
@@ -50,20 +32,12 @@ export const DEMO_CATEGORIES = [
     pattern: /^\/toolkit-core\//,
     links: [
       {
-        path: '/toolkit-core/accessibility-comparison',
-        label: 'Accessibility Comparison',
-      },
-      {
         path: '/toolkit-core/error-display-modes',
         label: 'Error Display Modes',
       },
       {
         path: '/toolkit-core/warning-support',
         label: 'Warning Support',
-      },
-      {
-        path: '/toolkit-core/field-states',
-        label: 'Field States',
       },
     ],
   },
@@ -72,10 +46,6 @@ export const DEMO_CATEGORIES = [
     label: 'Headless',
     pattern: /^\/headless\//,
     links: [
-      {
-        path: '/headless/error-state',
-        label: 'Error State + Character Count',
-      },
       {
         path: '/headless/fieldset-utilities',
         label: 'Fieldset + Utilities',
@@ -88,16 +58,8 @@ export const DEMO_CATEGORIES = [
     pattern: /^\/form-field-wrapper\//,
     links: [
       {
-        path: '/form-field-wrapper/basic-usage',
-        label: 'Basic Usage',
-      },
-      {
         path: '/form-field-wrapper/complex-forms',
         label: 'Complex Forms (Nested + Arrays)',
-      },
-      {
-        path: '/form-field-wrapper/fieldset-grouping',
-        label: 'Fieldset Grouping + Errors',
       },
       {
         path: '/form-field-wrapper/custom-controls',
@@ -119,12 +81,8 @@ export const DEMO_CATEGORIES = [
         label: 'Submission Patterns',
       },
       {
-        path: '/advanced-scenarios/error-messages',
-        label: 'Error Messages',
-      },
-      {
         path: '/advanced-scenarios/advanced-wizard',
-        label: 'Advanced Wizard (NgRx Signal Store)',
+        label: 'Advanced Wizard (@ngrx/signals + Zod)',
       },
       {
         path: '/advanced-scenarios/async-validation',

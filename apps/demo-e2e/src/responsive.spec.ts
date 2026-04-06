@@ -33,9 +33,9 @@ test.describe('Demo - Page Loading', () => {
     await test.step('Verify forms are present', async () => {
       const routes = [
         DEMO_PATHS.yourFirstForm,
-        DEMO_PATHS.accessibilityComparison,
         DEMO_PATHS.errorDisplayModes,
-        DEMO_PATHS.basicUsage,
+        DEMO_PATHS.warningSupport,
+        DEMO_PATHS.complexForms,
       ];
 
       for (const route of routes) {

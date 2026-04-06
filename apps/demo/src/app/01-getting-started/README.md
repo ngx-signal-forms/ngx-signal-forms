@@ -35,12 +35,12 @@ This section demonstrates your **first experience** with the toolkit - seeing im
 - `NgxSignalFormErrorComponent` - Error display
 - `NgxSignalFormAutoAriaDirective` - Auto-ARIA
 
-## 💡 What Changes from Signal Forms Only
+## 💡 What Changes from Archived Baseline Examples
 
 ### Before (0% Toolkit - Manual)
 
 ```typescript
-// 00-signal-forms-only/pure-signal-form
+// Archived baseline reference: 00-signal-forms-only/pure-signal-form
 @Component({
   imports: [Field],  // Only Angular Signal Forms
   template: `
@@ -243,8 +243,8 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
 
 - Error display strategies (immediate, on-touch, on-submit)
 - Warning support (non-blocking validation)
-- Field state visualization
-- Accessibility comparison side-by-side
+- How the same first-form setup behaves under different visibility strategies
+- How warning messages complement blocking errors
 
 ### Level 4: Form Field Wrapper
 
@@ -286,4 +286,4 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
 
 ---
 
-**Next:** Explore `02-toolkit-core/` for full toolkit features! 🚀
+**Next:** Explore `02-toolkit-core/error-display-modes` for the next active demo step. 🚀

@@ -48,7 +48,7 @@ import { YourFirstFormComponent } from './your-first-form.form';
   template: `
     <ngx-page-header
       title="Your First Form with Toolkit"
-      subtitle="Contact form with automatic ARIA, error display strategies, and 43% less code"
+      subtitle="Contact form onboarding with automatic ARIA, strategy controls, and baseline-to-toolkit setup guidance"
     />
 
     <ngx-example-cards

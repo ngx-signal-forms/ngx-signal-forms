@@ -5,8 +5,16 @@
 export const YOUR_FIRST_FORM_CONTENT = {
   demonstrated: {
     icon: '🎯',
-    title: "What You'll See (Basic Toolkit)",
+    title: "What You'll See (Toolkit Onboarding)",
     sections: [
+      {
+        title: 'Why toolkit first',
+        items: [
+          '<strong>Auto-ARIA by default:</strong> No manual <code>aria-invalid</code>/<code>aria-describedby</code> wiring',
+          '<strong>One form contract:</strong> <code>[formRoot]</code> + <code>ngxSignalForm</code> for consistent behavior',
+          '<strong>Deterministic identity:</strong> Input <code>id</code> drives robust field linking and assistive UX',
+        ],
+      },
       {
         title: 'Form Fields & Validations',
         items: [
@@ -17,16 +25,16 @@ export const YOUR_FIRST_FORM_CONTENT = {
         ],
       },
       {
-        title: 'Toolkit Features (20% Adoption)',
+        title: 'Toolkit features used here',
         items: [
-          '[formRoot] directive - Form context',
-          'Automatic ARIA attributes (aria-invalid, aria-describedby)',
-          'NgxSignalFormErrorComponent - Reusable error display',
-          'Error display strategies (immediate, on-touch, on-submit)',
+          '<code>[formRoot]</code> + <code>ngxSignalForm</code> form context',
+          'Automatic ARIA attributes managed by toolkit directives',
+          '<code>NgxSignalFormErrorComponent</code> for reusable error rendering',
+          'Runtime strategy comparison (<code>immediate</code>, <code>on-touch</code>, <code>on-submit</code>)',
         ],
       },
       {
-        title: 'What You Control',
+        title: 'What stays under your control',
         items: [
           'HTML structure and layout',
           'Label placement and styling',
@@ -50,28 +58,28 @@ export const YOUR_FIRST_FORM_CONTENT = {
         ],
       },
       {
-        title: '✨ What Toolkit Automated',
+        title: '✨ What toolkit automates',
         items: [
-          '<strong>0 manual ARIA bindings</strong> (was 9 per field)',
-          '<strong>0 error visibility functions</strong> (was 3)',
-          '<strong>Auto touch tracking</strong> on blur',
-          '<strong>43% less code</strong> (140 lines → 80 lines)',
-          '<strong>Strategy switching</strong> without code changes',
+          '<strong>0 manual ARIA bindings</strong> for the showcased fields',
+          '<strong>No per-field visibility helpers</strong> for standard error timing',
+          '<strong>Consistent touch/submit behavior</strong> through form context',
+          '<strong>Cleaner templates</strong> compared with hand-wired accessibility logic',
+          '<strong>Strategy switching</strong> without rewriting field markup',
         ],
       },
       {
-        title: '📊 Code Reduction Breakdown',
+        title: '📊 Baseline-to-toolkit framing',
         items: [
-          '<strong>Pure Signal Forms:</strong> 9 ARIA bindings, 3 visibility functions, manual touch',
-          '<strong>Basic Toolkit:</strong> All automated, just [formField] + error component',
-          '<strong>Next Level:</strong> Form field wrapper reduces 24% more',
+          '<strong>Without toolkit:</strong> Manual ARIA/error plumbing scales linearly with field count',
+          '<strong>With this setup:</strong> Form context + error component cover core accessibility behavior',
+          '<strong>Next level:</strong> Wrapper-centric pages optimize larger and nested forms',
         ],
       },
     ],
     nextStep: {
-      text: 'Ready for even less boilerplate?',
-      link: '/form-field-wrapper/basic-usage',
-      linkText: 'Form Field Wrapper Component →',
+      text: 'Continue with strategy and warning behavior',
+      link: '/toolkit-core/error-display-modes',
+      linkText: 'Toolkit Core →',
     },
   },
 } as const;

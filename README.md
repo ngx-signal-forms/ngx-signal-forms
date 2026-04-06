@@ -564,6 +564,16 @@ export const appConfig: ApplicationConfig = {
 
 Live demo: [https://ngx-signal-forms.github.io/ngx-signal-forms/](https://ngx-signal-forms.github.io/ngx-signal-forms/)
 
+Current demo learning path:
+
+- **Getting Started** — `your-first-form` for the smallest toolkit-first setup
+- **Toolkit Core** — `error-display-modes` and `warning-support`
+- **Headless** — `fieldset-utilities` for custom markup and grouped state
+- **Form Field Wrapper** — `complex-forms` and `custom-controls`
+- **Advanced Scenarios** — global config, submission patterns, async/cross-field validation, Vest, and the wizard
+
+Archived exploratory demo folders still exist under `apps/demo/src/app/**` as reference material, but the live demo now routes through the consolidated examples above.
+
 Start here:
 
 - [Toolkit API reference](./packages/toolkit/README.md)

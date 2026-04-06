@@ -28,10 +28,13 @@ import { WizardContainerComponent } from './components/wizard-container.componen
   template: `
     <div class="page-container">
       <header class="page-header mb-8">
-        <h1 class="text-2xl font-bold">Travel Booking Wizard</h1>
+        <h1 class="text-2xl font-bold">
+          Travel Booking Wizard (@ngrx/signals + Zod)
+        </h1>
         <p class="mt-2 text-gray-600">
           Plan your trip with our multi-step booking wizard. This demo showcases
-          Angular 21 Signal Forms with NgRx Signal Store integration.
+          Angular 21 Signal Forms with @ngrx/signals state management and
+          Zod-driven validation.
         </p>
       </header>
 

@@ -1,80 +1,54 @@
 # Toolkit Core (100% Toolkit)
 
-> **Deep Dive:** Comprehensive toolkit features and patterns
+> **Deep Dive:** Core toolkit behavior without extra route duplication
 
 ## 🎯 Purpose
 
-This section demonstrates **complete toolkit adoption** with focus on core features. Each example highlights a specific toolkit capability in isolation.
+This section now focuses on the two live examples that best explain the toolkit's core UX model:
 
-**Adoption Level:** 100% toolkit
+- how validation feedback becomes visible
+- how warnings differ from blocking errors
 
-- ✅ Full auto-ARIA implementation
-- ✅ Error display component
-- ✅ Error display strategies
-- ✅ Warning support
-- ✅ Field state visualization
+Concepts that used to live in standalone comparison/state pages are now taught through the onboarding page, strategy controls, and debugger views on active examples.
 
-**Key Focus:** Understanding toolkit features before combining them in production.
-
-## 📂 Examples
-
-### accessibility-comparison
-
-**Focus:** Side-by-side comparison of manual vs toolkit ARIA
-
-**What you'll learn:**
-
-- Exact code reduction (~67%)
-- ARIA attribute automation
-- WCAG 2.2 compliance differences
-- Screen reader behavior
-
-**Key Takeaway:** Visualize the value proposition of auto-ARIA
-
----
+## 📂 Active Examples
 
 ### error-display-modes
 
-**Focus:** Four error display strategies in action
+**Focus:** Error visibility strategies in action
 
 **What you'll learn:**
 
-- `immediate` - Show errors as user types
-- `on-touch` - Show after blur/submit (WCAG recommended)
-- `on-submit` - Show only after submission
-- `manual` - Full programmatic control
+- `immediate` — show feedback as soon as validation fails
+- `on-touch` — show feedback after blur or submit (default recommendation)
+- `on-submit` — defer field-level feedback until submit attempt
+- How the debugger reveals hidden vs visible errors under each mode
 
-**Key Takeaway:** Choose the right UX for your use case
+**Primary takeaway:** Choose timing intentionally, not ad hoc per template.
 
 ---
 
 ### warning-support
 
-**Focus:** Non-blocking validation messages
+**Focus:** Non-blocking validation patterns
 
 **What you'll learn:**
 
-- Warnings vs errors (WCAG distinction)
-- `warningError()` utility
-- ARIA roles: `alert` vs `status`
-- Progressive guidance patterns
+- `warningError()` and warning semantics
+- `role="alert"` vs `role="status"`
+- Why advisory guidance should not block submit
+- How warning visibility interacts with the same error strategy model
 
-**Key Takeaway:** Guide users without blocking submission
+**Primary takeaway:** Guide users without turning every suggestion into a hard stop.
 
----
+## 📦 Consolidated Concepts
 
-### field-states
+The following older demos are no longer routed, but their teaching goals were preserved:
 
-**Focus:** Visualizing form field states
+- **Accessibility comparison** → folded into `getting-started/your-first-form` onboarding and the main project README/code comparison
+- **Field states** → surfaced through debugger panels and strategy explanations in active demos
 
-**What you'll learn:**
-
-- `touched`, `dirty`, `pristine`, `valid`, `invalid`
-- `pending` state (async validation)
-- Signal-based state reactivity
-- Debug visualization patterns
-
-**Key Takeaway:** Understanding form state lifecycle
+If you need the old implementation details, the source folders remain in the repo as archived references.
 
 ## 🎨 Detailed Feature Breakdown
 
@@ -232,24 +206,6 @@ const blockingErrors = field().errors().filter(isBlockingError);
 
 ## 🔍 Example Use Cases
 
-### Accessibility Comparison
-
-**Goal:** Show the exact code difference
-
-**Value:**
-
-- Convince stakeholders of toolkit ROI
-- Training new developers
-- Migration planning
-
-**Pattern:**
-
-```typescript
-// Side-by-side components
-@Component({ /* Manual implementation */ })
-@Component({ /* Toolkit implementation */ })
-```
-
 ### Error Display Modes
 
 **Goal:** Choose the right strategy for your UX
@@ -301,24 +257,15 @@ validate(path.email, (ctx) => {
 });
 ```
 
-### Field States
+### Debugging State Through Active Demos
 
-**Goal:** Debug form behavior during development
+**Goal:** Understand field lifecycle without a dedicated state-only route.
 
 **Value:**
 
-- Understanding state lifecycle
-- Debugging validation timing
-- Testing async validators
-
-**Pattern:**
-
-```typescript
-// Debug panel component
-@for (field of Object.entries(form()); track field[0]) {
-  <div>{{ field[0] }}: {{ field[1]().value() }}</div>
-}
-```
+- Inspect touched/dirty/invalid transitions in realistic forms
+- See how hidden errors become visible under different strategies
+- Verify warning vs blocking error separation in debugger output
 
 ## ➡️ Next Steps
 
@@ -381,4 +328,4 @@ validate(path.email, (ctx) => {
 
 ---
 
-**Next:** Try `04-form-field-wrapper/` for production-ready layouts! 🚀
+**Next:** Continue to `04-form-field-wrapper/complex-forms` for wrapper-based long-form composition. 🚀

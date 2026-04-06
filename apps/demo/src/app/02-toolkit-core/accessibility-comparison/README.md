@@ -1,48 +1,21 @@
-# Accessibility Comparison
+# Accessibility Comparison (archived reference)
 
-## Overview
+This comparison page is **no longer routed in the live demo**.
 
-Side-by-side comparison of a minimal toolkit setup versus full toolkit usage to highlight accessibility and boilerplate differences.
+Its original teaching goal — showing the jump from hand-wired accessibility to toolkit-assisted forms — is now covered by:
 
-## Form model
+- `01-getting-started/your-first-form` for the toolkit-first onboarding example
+- the root `README.md` code comparison for manual vs toolkit markup
+- `02-toolkit-core/error-display-modes` for how the same form context changes visibility timing
 
-- Signal model in both forms using `signal<AccessibilityFormModel>()`.
-- Form instance created via `form(model, accessibilityValidationSchema)`.
+## Keep this folder for
 
-## Validation overview
+- historical side-by-side implementation reference
+- reviewing how a minimal toolkit setup differs from a fully wrapped version
+- migration discussions where explicit before/after code samples are useful
 
-### Errors
+## Prefer these live examples instead
 
-- Email: required + email format.
-- Password: required + minimum length 8.
-- Confirm password: required.
-- Cross-field: confirm password must match password.
-
-### Warnings
-
-- None.
-
-## Toolkit usage
-
-- `NgxSignalFormToolkit` for auto-ARIA and shared form context.
-- `NgxFormField` wrapper for automatic error display.
-- Minimal form runs without `[formRoot]` to show default `on-touch` behavior.
-- Full form uses `[formRoot]` and `focusFirstInvalid()` for submission UX.
-
-## Other tools
-
-- None.
-
-## Key files
-
-- `accessibility-comparison.minimal.form.ts` — minimal toolkit variant.
-- `accessibility-comparison.toolkit.form.ts` — full toolkit variant.
-- `accessibility-comparison.validations.ts` — shared schema.
-- `accessibility-comparison.page.ts` — comparison page.
-
-## How to test
-
-1. Run the demo app.
-2. Navigate to `/toolkit-core/accessibility-comparison`.
-3. Compare error behavior between minimal and full implementations.
-4. Submit invalid data to see `focusFirstInvalid()` in action.
+- `getting-started/your-first-form`
+- `toolkit-core/error-display-modes`
+- `toolkit-core/warning-support`

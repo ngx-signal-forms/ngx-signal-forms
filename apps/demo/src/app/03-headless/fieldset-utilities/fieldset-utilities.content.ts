@@ -42,8 +42,8 @@ export const HEADLESS_FIELDSET_UTILITIES_CONTENT = {
     ],
     nextStep: {
       text: 'Next: prebuilt wrappers →',
-      link: '/form-field-wrapper/basic-usage',
-      linkText: 'Form Field Wrapper',
+      link: '/form-field-wrapper/complex-forms',
+      linkText: 'Complex Forms',
     },
   },
 } as const;

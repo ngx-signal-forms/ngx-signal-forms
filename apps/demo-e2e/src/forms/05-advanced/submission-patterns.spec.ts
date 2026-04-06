@@ -35,6 +35,40 @@ test.describe('Advanced - Submission Patterns', () => {
         .first();
       await expect(errorMessage).toBeVisible();
     });
+
+    test('should focus first invalid field on submit (WCAG 2.2 focus order)', async () => {
+      await page.submitButton.click();
+
+      await expect(page.page.locator('#username')).toBeFocused({
+        timeout: 3000,
+      });
+    });
+
+    test('should focus second field when first is valid', async () => {
+      await page.fillField('username', 'valid_user');
+      await page.submitButton.click();
+
+      await expect(page.page.locator('#password')).toBeFocused({
+        timeout: 3000,
+      });
+    });
+
+    test('should not focus any field when form is valid', async () => {
+      await page.fillField('username', 'valid_user');
+      await page.fillField('password', 'password123');
+      await page.fillField('confirmPassword', 'password123');
+
+      const usernameInput = page.page.locator('#username');
+      const passwordInput = page.page.locator('#password');
+      const confirmInput = page.page.locator('#confirmPassword');
+
+      await page.submitButton.click();
+
+      // None of the inputs should receive error-driven focus
+      await expect(usernameInput).not.toBeFocused();
+      await expect(passwordInput).not.toBeFocused();
+      await expect(confirmInput).not.toBeFocused();
+    });
   });
 
   test.describe('Successful Submission', () => {

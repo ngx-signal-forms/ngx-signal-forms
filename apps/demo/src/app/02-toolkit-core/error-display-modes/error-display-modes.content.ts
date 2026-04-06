@@ -70,9 +70,9 @@ export const ERROR_DISPLAY_MODES_CONTENT = {
       },
     ],
     nextStep: {
-      text: 'Learn about field state management →',
-      link: '/toolkit-core/field-states',
-      linkText: 'Field States',
+      text: 'Continue with non-blocking validation patterns →',
+      link: '/toolkit-core/warning-support',
+      linkText: 'Warning Support',
     },
   },
 } as const;

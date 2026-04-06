@@ -115,16 +115,6 @@ This section demonstrates **production-ready patterns** for real-world applicati
 
 ---
 
-### Consolidated examples (route cleanup)
-
-The following overlapping demos were consolidated to reduce duplication:
-
-- `advanced-scenarios/dynamic-list` → `form-field-wrapper/complex-forms`
-- `advanced-scenarios/nested-groups` → `form-field-wrapper/complex-forms`
-- `advanced-scenarios/stepper-form` → `advanced-scenarios/advanced-wizard`
-
-Legacy paths are redirected so existing links keep working.
-
 ## 🎨 Global Configuration
 
 ### provideNgxSignalFormsConfig
@@ -562,4 +552,4 @@ return [
 
 ---
 
-**Congratulations!** You've completed all 5 sections of the demo. You now understand the complete toolkit from 0% to 100% adoption! 🎉
+**Congratulations!** You've completed the active demo path from onboarding through advanced production patterns. 🎉

@@ -60,9 +60,9 @@ export const SUBMISSION_PATTERNS_CONTENT = {
       },
     ],
     nextStep: {
-      text: 'Review all examples from the beginning',
-      link: '/signal-forms-only/pure-signal-form',
-      linkText: 'Back to Pure Signal Forms →',
+      text: 'Review onboarding and core setup patterns',
+      link: '/getting-started/your-first-form',
+      linkText: 'Back to Getting Started →',
     },
   },
 } as const;

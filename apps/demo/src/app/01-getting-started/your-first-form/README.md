@@ -2,7 +2,7 @@
 
 ## Overview
 
-This demo is your introduction to **@ngx-signal-forms/toolkit**. It takes a standard contact form and enhances it with the toolkit's core directives to solve the accessibility boilerplate problems shown in the "Pure Signal Forms" demo.
+This demo is your introduction to **@ngx-signal-forms/toolkit**. It takes a standard contact form and enhances it with the toolkit's core directives to solve the accessibility boilerplate you would otherwise hand-wire in plain Signal Forms templates.
 
 ## Feature Spotlight: `NgxSignalFormToolkit`
 
@@ -20,7 +20,7 @@ The `NgxSignalFormToolkit` is a directive applied to the `<form>` element. It ac
 
 ```html
 <!-- Just add the directive and bind the form signal -->
-<form [formRoot]="contactForm">
+<form [formRoot]="contactForm" ngxSignalForm>
   <!-- Clean inputs, no manual aria bindings needed! -->
   <input [formField]="contactForm.name" />
 
@@ -46,3 +46,4 @@ Instead of writing `at @if (touched && invalid)` blocks, use this component. It:
 
 1. **Auto-ARIA**: Inspect the inputs. Notice `aria-required="true"` and `aria-invalid` appear automatically.
 2. **Error Strategies**: Use the dropdown at the top to switch between "On Touch", "On Submit", and "Immediate". Notice how `NgxSignalFormError` respects this global setting instantly without code changes.
+3. **Deterministic field linking**: Confirm each control has a stable `id`, and toolkit-managed errors/hints stay connected through `aria-describedby`.

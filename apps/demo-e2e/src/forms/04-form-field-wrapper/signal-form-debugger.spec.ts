@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
 import { FormFieldWrapperComplexPage } from '../../page-objects/form-field-wrapper-complex.page';
-import { FormFieldWrapperPage } from '../../page-objects/form-field-wrapper.page';
 
 function parseValidationCounts(headerText: string | null): {
   visible: number;
@@ -214,103 +213,5 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
         debugger_.getByText(/Errors shown because fields were touched/i),
       ).toBeVisible();
     });
-  });
-});
-
-test.describe('Signal Form Debugger - Outline Form Field Page', () => {
-  test.beforeEach(async ({ page }) => {
-    const formPage = new FormFieldWrapperPage(page);
-    await formPage.goto();
-  });
-
-  /**
-   * Helper to get the debugger component
-   */
-  const getDebugger = (page: import('@playwright/test').Page) =>
-    getDebuggerByHeading(page, 'Outline Form State');
-
-  test('should show 0/4 visible errors on initial load', async ({ page }) => {
-    const debugger_ = getDebugger(page);
-    const validationErrorsHeader = debugger_.getByText(
-      /Validation Errors \d+\/\d+/,
-    );
-    await expect(validationErrorsHeader).toBeVisible();
-
-    const headerText = await validationErrorsHeader.textContent();
-    const { visible, total } = parseValidationCounts(headerText);
-    expect(visible).toBe(0);
-    expect(total).toBe(4);
-  });
-
-  test('should show 1/4 after touching Pleegdatum field', async ({ page }) => {
-    const pleegdatumInput = page.getByLabel('Pleegdatum', { exact: true });
-    await pleegdatumInput.focus();
-    await pleegdatumInput.blur();
-
-    const debugger_ = getDebugger(page);
-    const validationErrorsHeader = debugger_.getByText(
-      /Validation Errors \d+\/\d+/,
-    );
-    const headerText = await validationErrorsHeader.textContent();
-    const { visible, total } = parseValidationCounts(headerText);
-
-    expect(visible).toBe(1);
-    expect(total).toBe(4);
-  });
-
-  test('should show Pleegdatum error as visible after touch', async ({
-    page,
-  }) => {
-    const pleegdatumInput = page.getByLabel('Pleegdatum', { exact: true });
-    await pleegdatumInput.focus();
-    await pleegdatumInput.blur();
-
-    const debugger_ = getDebugger(page);
-
-    // Find the Pleegdatum error entry in the debugger
-    const pleegdatumErrorEntry = debugger_
-      .getByRole('listitem')
-      .filter({ hasText: 'Pleegdatum is verplicht' });
-    await expect(pleegdatumErrorEntry).toBeVisible();
-
-    // Find the Validation Errors section to scope the check
-    const validationErrorsSection = debugger_
-      .locator('details')
-      .filter({ has: page.getByText('Validation Errors') });
-
-    // Count hidden badges - should be 3 (total 4 - 1 visible)
-    // We scope to validation errors section to avoid counting warning badges
-    const hiddenBadges =
-      validationErrorsSection.getByText('Hidden by strategy');
-    const count = hiddenBadges;
-    await expect(count).toHaveCount(3);
-  });
-});
-
-test.describe('Signal Form Debugger - Warnings Section', () => {
-  test.beforeEach(async ({ page }) => {
-    const formPage = new FormFieldWrapperPage(page);
-    await formPage.goto();
-  });
-
-  /**
-   * Helper to get the debugger component
-   */
-  const getDebugger = (page: import('@playwright/test').Page) =>
-    getDebuggerByHeading(page, 'Outline Form State');
-
-  test('should show warnings section with visible/total count', async ({
-    page,
-  }) => {
-    const debugger_ = getDebugger(page);
-    const warningsHeader = debugger_.getByText(/Warnings.*\d+\/\d+/);
-    await expect(warningsHeader).toBeVisible();
-  });
-
-  test('should display warning messages', async ({ page }) => {
-    const debugger_ = getDebugger(page);
-    await expect(
-      debugger_.getByText(/Overweeg een plaatsbeschrijving toe te voegen/),
-    ).toBeVisible();
   });
 });

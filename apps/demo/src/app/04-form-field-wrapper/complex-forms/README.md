@@ -46,4 +46,4 @@ Complex form with nested objects and dynamic arrays using the form field wrapper
 2. Navigate to `/form-field-wrapper/complex-forms`.
 3. Add/remove skills and contacts to see array validation.
 4. Choose SMS as contact method to trigger the warning.
-5. Visit `/form-field-wrapper/fieldset-grouping` for the dedicated grouped fieldset and aggregated error demo.
+5. Use the grouped sections inside this page to inspect aggregated fieldset and nested error behavior.

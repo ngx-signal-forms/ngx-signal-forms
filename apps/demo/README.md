@@ -1,118 +1,103 @@
 # @ngx-signal-forms/toolkit - Interactive Demo
 
-> Progressive examples demonstrating Angular 21+ Signal Forms with and without the toolkit
+> Consolidated examples demonstrating clean Angular Signal Forms + toolkit adoption patterns
 
 ## 🎯 Demo Structure
 
-This demo follows a **progressive learning path** from vanilla Angular Signal Forms to full toolkit adoption:
+The live demo now follows a **consolidated learning path** focused on the examples we want developers to copy first:
 
 ```text
-📂 Demo Structure
-├─ 00-signal-forms-only/     [0% toolkit]  ← Baseline: What Signal Forms looks like
-├─ 01-getting-started/       [20% toolkit] ← First steps with toolkit
-├─ 02-toolkit-core/          [100%]        ← Core toolkit features
-├─ 03-headless/              [100%]        ← Headless primitives
-├─ 04-form-field-wrapper/    [100%]        ← Form field component
-└─ 05-advanced/              [100%]        ← Production patterns + canonical advanced wizard
+📂 Live Demo Structure
+├─ 01-getting-started/       ← Toolkit onboarding and first setup
+├─ 02-toolkit-core/          ← Error strategies + warning behavior
+├─ 03-headless/              ← Renderless grouping and utility patterns
+├─ 04-form-field-wrapper/    ← Nested forms and custom control integration
+└─ 05-advanced/              ← Configuration, submission, async, wizard, Vest
 ```
 
-## 📚 Learning Path
+Archived exploratory examples still exist in the source tree for historical/reference purposes, but they are no longer part of the live route graph.
 
-### Level 1: Signal Forms Only (0% Toolkit)
+## 📚 Current Learning Path
 
-**Path:** `00-signal-forms-only/`
-
-Start here to understand what Angular Signal Forms looks like **without** the toolkit.
-
-- ✅ Manual ARIA attributes (`aria-invalid`, `aria-describedby`)
-- ✅ Manual error visibility logic
-- ✅ Template-based error display
-- ⚠️ ~67% more boilerplate code
-
-**Example:** `pure-signal-form` - Login form with email/password validation
-
-### Level 2: Getting Started (20% Toolkit)
+### Level 1: Getting Started
 
 **Path:** `01-getting-started/`
 
-Your first toolkit experience - see the immediate benefits.
+Start here for the recommended first toolkit example.
 
-- ✅ Auto-ARIA (no manual attributes needed)
-- ✅ Automatic error component
-- ✅ Progressive error disclosure
-- ❌ No form field wrapper yet (still manual layout)
+- ✅ `[formRoot]` + `ngxSignalForm` in the smallest useful setup
+- ✅ Auto-ARIA and reusable error rendering
+- ✅ Deterministic control `id` guidance for field linking
+- ✅ Strategy toggle so you can compare timing behavior immediately
 
-**Example:** `your-first-form` - Contact form with name/email/message
+**Example:** `your-first-form` — contact form onboarding
 
-### Level 3: Toolkit Core (100% Toolkit)
+### Level 2: Toolkit Core
 
 **Path:** `02-toolkit-core/`
 
-Deep dive into core toolkit features.
+Focus on the two core behaviors most teams need first.
 
-| Example                      | Focus                          | What You Learn                          |
-| ---------------------------- | ------------------------------ | --------------------------------------- |
-| **accessibility-comparison** | Side-by-side manual vs toolkit | 67% code reduction, auto-ARIA benefits  |
-| **error-display-modes**      | Error strategies               | immediate, on-touch, on-submit          |
-| **warning-support**          | Non-blocking validation        | Warnings vs errors, WCAG compliance     |
-| **field-states**             | State visualization            | touched, dirty, pending, invalid states |
+| Example                 | Focus                   | What You Learn                                  |
+| ----------------------- | ----------------------- | ----------------------------------------------- |
+| **error-display-modes** | Error strategies        | `immediate`, `on-touch`, `on-submit`            |
+| **warning-support**     | Non-blocking validation | Warnings vs errors and accessible announcements |
 
-### Level 4: Headless (100% Toolkit)
+### Level 3: Headless
 
 **Path:** `03-headless/`
 
-Renderless primitives for custom UI.
+Renderless primitives for custom UI systems.
 
-- ✅ Strategy-aware error visibility with `NgxHeadlessErrorState`
-- ✅ Character count and limits with `NgxHeadlessCharacterCount`
-- ✅ Field grouping with `NgxHeadlessFieldset`
-- ✅ Field name resolution with `NgxHeadlessFieldName`
-- ✅ Full control over markup and styling
+- ✅ Headless error summary
+- ✅ Grouped fieldset state
+- ✅ Character count + utility helpers
+- ✅ Explicit field naming and custom markup ownership
 
-### Level 5: Form Field Wrapper (100% Toolkit)
+**Example:** `fieldset-utilities`
+
+### Level 4: Form Field Wrapper
 
 **Path:** `04-form-field-wrapper/`
 
-"Batteries included" approach with the form field component.
+The batteries-included path for reusable field UI.
 
-| Example           | Focus                   | What You Learn                                  |
-| ----------------- | ----------------------- | ----------------------------------------------- |
-| **basic-usage**   | NgxFormField            | Content projection, automatic error display     |
-| **complex-forms** | Real-world registration | 8 fields, nested objects, password confirmation |
+| Example             | Focus                     | What You Learn                                      |
+| ------------------- | ------------------------- | --------------------------------------------------- |
+| **complex-forms**   | Nested objects + arrays   | Wrapper composition, grouped sections, long-form UX |
+| **custom-controls** | FormValueControl patterns | Custom control integration with wrapper + auto-ARIA |
 
-### Level 6: Advanced Scenarios (100% Toolkit)
+### Level 5: Advanced Scenarios
 
 **Path:** `05-advanced/`
 
 Production-ready patterns for real applications.
 
-| Example                    | Focus                       | What You Learn                                |
-| -------------------------- | --------------------------- | --------------------------------------------- |
-| **global-configuration**   | provideNgxSignalFormsConfig | Custom defaults, field resolution, debug mode |
-| **submission-patterns**    | Async submission            | Loading states, server errors, WCAG patterns  |
-| **error-messages**         | Error message registry      | 3-tier priority, i18n                         |
-| **advanced-wizard**        | Wizard + NgRx Signal Store  | Form-per-step architecture, autosave, Zod     |
-| **async-validation**       | Server checks               | Pending states and async errors               |
-| **cross-field-validation** | Dependent logic             | Validations using sibling field values        |
+| Example                    | Focus                    | What You Learn                                 |
+| -------------------------- | ------------------------ | ---------------------------------------------- |
+| **global-configuration**   | App-level defaults       | `provideNgxSignalFormsConfig`, local overrides |
+| **submission-patterns**    | Async submission UX      | Loading, server errors, error summary patterns |
+| **advanced-wizard**        | Multi-step orchestration | Wizard flow with NgRx Signal Store + Zod       |
+| **async-validation**       | Remote checks            | Pending states and async validation            |
+| **cross-field-validation** | Dependent rules          | Sibling-aware validation logic                 |
+| **vest-validation**        | Business rules via Vest  | Standard Schema + toolkit wrapper integration  |
+| **zod-vest-validation**    | Layered validation       | Contract validation + business policy together |
 
-### Feature-to-Example Matrix (Primary Ownership)
+## Feature-to-Example Matrix
 
-Each core capability has exactly one primary demo to avoid overlap.
-
-| Capability                        | Primary Example                             | Secondary Notes                                          |
-| --------------------------------- | ------------------------------------------- | -------------------------------------------------------- |
-| Auto-ARIA + baseline comparison   | `toolkit-core/accessibility-comparison`     | Shows manual vs toolkit side-by-side                     |
-| Error strategy modes              | `toolkit-core/error-display-modes`          | immediate / on-touch / on-submit                         |
-| Warning support                   | `toolkit-core/warning-support`              | Non-blocking validation patterns                         |
-| Field state introspection         | `toolkit-core/field-states`                 | touched/dirty/pending/invalid                            |
-| Wrapper fundamentals              | `form-field-wrapper/basic-usage`            | Smallest happy path, including appearance and outline    |
-| Nested groups + arrays            | `form-field-wrapper/complex-forms`          | Consolidates dynamic lists, nested groups, and fieldsets |
-| Global toolkit defaults           | `advanced-scenarios/global-configuration`   | App-level provider composition                           |
-| Async submit + server error UX    | `advanced-scenarios/submission-patterns`    | Submission lifecycle + resilience                        |
-| Error message registry/i18n       | `advanced-scenarios/error-messages`         | 3-tier message priority                                  |
-| Async remote validation           | `advanced-scenarios/async-validation`       | Pending + debounced remote checks                        |
-| Cross-field constraints           | `advanced-scenarios/cross-field-validation` | Sibling/dependent validation                             |
-| Advanced multi-step orchestration | `advanced-scenarios/advanced-wizard`        | Canonical wizard (NgRx Signal Store + Zod)               |
+- **Toolkit onboarding** → `getting-started/your-first-form` — smallest recommended setup
+- **Error strategy modes** → `toolkit-core/error-display-modes` — compare timing behavior directly
+- **Warning support** → `toolkit-core/warning-support` — non-blocking validation semantics
+- **Headless grouped state** → `headless/fieldset-utilities` — summary, fieldset aggregation, utility helpers
+- **Wrapper long-form composition** → `form-field-wrapper/complex-forms` — consolidated wrapper basics, grouped sections, nested arrays
+- **Custom control integration** → `form-field-wrapper/custom-controls` — wrapper + custom value controls
+- **Global toolkit defaults** → `advanced-scenarios/global-configuration` — app-level provider composition and per-form overrides
+- **Async submit + server error UX** → `advanced-scenarios/submission-patterns` — submission lifecycle and recovery
+- **Async remote validation** → `advanced-scenarios/async-validation` — pending + remote validation
+- **Cross-field constraints** → `advanced-scenarios/cross-field-validation` — dependent field rules
+- **Business validation with Vest** → `advanced-scenarios/vest-validation` — blocking + warning policy rules
+- **Contract + policy layering** → `advanced-scenarios/zod-vest-validation` — Zod + Vest without duplicate UI plumbing
+- **Advanced multi-step orchestration** → `advanced-scenarios/advanced-wizard` — canonical wizard example
 
 ## Quick Start
 
@@ -125,18 +110,17 @@ pnpm nx serve demo
 # Production build
 pnpm nx build demo
 
-# Run tests
-pnpm nx test demo
+# End-to-end demo validation
+pnpm nx e2e demo-e2e
 ```
 
 ### Navigate Examples
 
-1. Start at **Signal Forms Only** to see the baseline
-2. Progress to **Getting Started** for first toolkit benefits
-3. Explore **Toolkit Core** for deep feature understanding
-4. Explore **Headless** for custom UI composition
-5. Try **Form Field Wrapper** for production-ready patterns
-6. Study **Advanced Scenarios** for complex flows
+1. Start at **Getting Started** for the toolkit-first baseline
+2. Use **Toolkit Core** to compare error timing and warning behavior
+3. Explore **Headless** for custom markup patterns
+4. Use **Form Field Wrapper** for production-ready field composition
+5. Finish with **Advanced Scenarios** for submission, configuration, and business validation
 
 ## Key Concepts
 
@@ -146,7 +130,7 @@ pnpm nx test demo
 import { form, FormField, required, email } from '@angular/forms/signals';
 
 @Component({
-  imports: [Field],
+  imports: [FormField],
   template: `<input [formField]="myForm.email" />`,
 })
 class MyComponent {
@@ -194,16 +178,16 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 ### What the Toolkit Adds
 
-| Feature                 | Without Toolkit                           | With Toolkit                 |
-| ----------------------- | ----------------------------------------- | ---------------------------- |
-| **ARIA Attributes**     | Manual `aria-invalid`, `aria-describedby` | Automatic ✅                 |
-| **Error Display**       | Manual templates + conditions             | Component ✅                 |
-| **Error Strategies**    | Manual state tracking                     | 3 built-in strategies ✅     |
-| **Warning Support**     | Not supported                             | Built-in ✅                  |
-| **Field States**        | Manual tracking                           | Automatic visualization ✅   |
-| **Form Field Wrapper**  | Manual layout                             | Component with projection ✅ |
-| **WCAG 2.2 Compliance** | Manual implementation                     | Automatic ✅                 |
-| **Code Reduction**      | Baseline                                  | ~67% less code ✅            |
+| Feature                 | Without Toolkit                           | With Toolkit                   |
+| ----------------------- | ----------------------------------------- | ------------------------------ |
+| **ARIA Attributes**     | Manual `aria-invalid`, `aria-describedby` | Automatic ✅                   |
+| **Error Display**       | Manual templates + conditions             | Component ✅                   |
+| **Error Strategies**    | Manual state tracking                     | 3 built-in strategies ✅       |
+| **Warning Support**     | Not supported                             | Built-in ✅                    |
+| **Field visibility UX** | Manual timing/debug instrumentation       | Strategy + debugger tooling ✅ |
+| **Form Field Wrapper**  | Manual layout                             | Component with projection ✅   |
+| **WCAG 2.2 Compliance** | Manual implementation                     | Automatic ✅                   |
+| **Code Reduction**      | Baseline                                  | ~67% less code ✅              |
 
 ### WCAG 2.2 Compliance Features
 
@@ -263,4 +247,4 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 - Check `id` attribute is set on input elements
 - Verify toolkit directives are imported
 
-**Next:** Start with `00-signal-forms-only/` to see the baseline, then progress through each section! 🚀
+**Next:** Start with `01-getting-started/your-first-form` and then move through the consolidated sections! 🚀

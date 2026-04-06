@@ -1,43 +1,19 @@
-# Headless Error State
+# Headless Error State (archived reference)
 
-## Overview
+This isolated headless error-state page is no longer routed.
 
-Custom markup built with headless directives to control error visibility and character count without the prebuilt wrapper components.
+Its patterns now live inside `03-headless/fieldset-utilities`, which combines:
 
-## Form model
+- per-field headless error state
+- fieldset aggregation
+- character count utilities
+- custom summary interactions
 
-- Signal model via `signal<HeadlessProfile>()`.
-- Form instance created with `form(model, headlessSchema)`.
+## Use this archived folder for
 
-## Validation overview
+- small focused examples of `NgxHeadlessErrorStateDirective`
+- comparing the minimal headless API against the richer grouped demo
 
-**Errors**
+## Prefer this live example instead
 
-- Email: required + email format.
-- Bio: required + maximum length 160.
-
-**Warnings**
-
-- None.
-
-## Toolkit usage
-
-- `NgxHeadlessErrorStateDirective` for error visibility state and IDs.
-- `NgxHeadlessCharacterCountDirective` for character counting.
-- Manual ARIA bindings using `errorId()` and `showErrors()` from the headless directive.
-
-## Other tools
-
-- None.
-
-## Key files
-
-- `error-state.form.ts` — form and headless directive usage.
-- `error-state.page.ts` — demo wrapper and debugger.
-
-## How to test
-
-1. Run the demo app.
-2. Navigate to `/headless/error-state`.
-3. Blur fields to show error output through headless helpers.
-4. Type in the bio to see character count updates.
+- `headless/fieldset-utilities`

@@ -53,9 +53,9 @@ export const COMPLEX_FORMS_CONTENT = {
       },
     ],
     nextStep: {
-      text: 'Need grouped summaries too?',
-      link: '/form-field-wrapper/fieldset-grouping',
-      linkText: 'Explore Fieldset Grouping + Errors →',
+      text: 'Next: custom FormValueControl integration',
+      link: '/form-field-wrapper/custom-controls',
+      linkText: 'Explore Custom Controls →',
     },
   },
 } as const;

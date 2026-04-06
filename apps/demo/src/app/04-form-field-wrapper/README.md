@@ -1,80 +1,48 @@
 # Form Field Wrapper (100% Toolkit)
 
-> **Production Ready:** Complete form field component with automatic error display
+> **Production Ready:** Wrapper-based form composition with the live examples we want teams to copy
 
 ## 🎯 Purpose
 
-This section demonstrates the **"batteries included"** approach using `NgxFormField` - a complete form field bundle with automatic error display, consistent layout, and content projection.
+This section demonstrates the batteries-included path using `NgxFormField` and related wrapper primitives.
 
-**Adoption Level:** 100% toolkit
+Instead of splitting wrapper basics, grouped fieldsets, and long-form behavior across multiple pages, the live demo now centers those lessons in two examples:
 
-- ✅ Form field wrapper component
-- ✅ Content projection (label + input)
-- ✅ Automatic error display
-- ✅ Consistent spacing and layout
-- ✅ ~80% code reduction
+- `complex-forms` for nested/grouped/array-heavy forms
+- `custom-controls` for non-native control integration
 
-**Key Focus:** Production-ready forms with minimal boilerplate.
-
-## 📂 Examples
-
-### basic-usage
-
-**Focus:** Introduction to NgxFormField
-
-**What you'll learn:**
-
-- Component API and inputs
-- Content projection patterns
-- Automatic error display
-- Layout consistency
-- Strategy inheritance
-
-**Technologies:**
-
-- `@ngx-signal-forms/toolkit/form-field` - Form field component
-- Content projection with `<ng-content>`
-- Automatic error integration
-
----
+## 📂 Active Examples
 
 ### complex-forms
 
-**Focus:** Real-world registration form (8 fields)
+**Focus:** Wrapper composition in realistic long forms
 
 **What you'll learn:**
 
-- Nested form structures
-- Password confirmation validation
-- Dynamic arrays (contacts)
-- Terms and conditions checkbox
-- Production patterns
+- Nested object structures
+- Dynamic arrays
+- Grouped fieldsets and aggregated section feedback
+- Strategy + appearance controls in a realistic layout
+- Long-form readability and wrapper consistency
 
-**Technologies:**
+### custom-controls
 
-- 8-field registration form
-- Cross-field validation
-- Nested objects and arrays
-- Complete user journey
-
----
-
-### fieldset-grouping
-
-**Focus:** Grouped fieldsets and aggregated errors
+**Focus:** Integrating custom controls with wrapper semantics
 
 **What you'll learn:**
 
-- Fieldset grouping patterns
-- Aggregated validation summaries
-- Error placement for fieldsets and radio groups
-- Grouped feedback without overloading individual fields
+- `FormValueControl`-style custom control patterns
+- How wrapper-driven labels/errors link to non-native controls
+- Mixed native + custom input composition in one form
 
-**Technologies:**
+## 📦 Consolidated Concepts
 
-- `NgxSignalFormFieldset`
-- Fieldset-level error summaries
-- Placement playground for grouped feedback
+The following older demos are no longer part of the live route graph:
+
+- **basic-usage** → core wrapper patterns are now shown inside `complex-forms`
+- **fieldset-grouping** → grouped section summaries and placement behavior now live inside `complex-forms`
+
+Those folders remain in the repo as archived implementation references if you need the earlier isolated examples.
 
 ## 🎨 API Reference
 
@@ -416,4 +384,4 @@ ngx-signal-form-field-wrapper > div {
 
 ---
 
-**Next:** Explore `05-advanced/` for production patterns and global configuration! 🚀
+**Next:** Explore `05-advanced/global-configuration` for app-level defaults and advanced composition patterns. 🚀

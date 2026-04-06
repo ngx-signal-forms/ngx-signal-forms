@@ -13,46 +13,28 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Accessibility - ARIA Attributes', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`/toolkit-core/accessibility-comparison`);
+    await page.goto(`/getting-started/your-first-form`);
     await page.waitForLoadState('domcontentloaded');
   });
 
-  test('should have aria-invalid attribute on both forms', async ({ page }) => {
-    await test.step('Verify Minimal toolkit form (form 0)', async () => {
-      const minimalForm = page.locator('form').nth(0);
-      const emailInput = minimalForm
-        .locator('input[type="email"], input[type="text"]')
-        .first();
+  test('should apply aria-invalid on invalid controls', async ({ page }) => {
+    await test.step('Verify aria-invalid on touched invalid field', async () => {
+      const form = page.locator('form').first();
+      const emailInput = form.locator('#contact-email');
 
       await emailInput.focus();
       await emailInput.blur();
 
-      await expect(emailInput).toHaveAttribute('aria-invalid', /(true|false)/);
-    });
-
-    await test.step('Verify Full toolkit form with [formRoot] (form 1)', async () => {
-      const fullForm = page.locator('form').nth(1);
-      const emailInput = fullForm
-        .locator('input[type="email"], input[type="text"]')
-        .first();
-
-      await emailInput.focus();
-      await emailInput.blur();
-
-      // Full form should have aria-invalid managed by auto-ARIA directive
       await expect(emailInput).toHaveAttribute('aria-invalid', 'true');
     });
   });
 
-  test('should have aria-describedby linking to error messages on Full toolkit form', async ({
+  test('should have aria-describedby linking to error messages', async ({
     page,
   }) => {
-    await test.step('Verify aria-describedby linkage on Full form with auto-ARIA', async () => {
-      // Get the Full toolkit form (second form, index 1) which uses [formRoot]
-      const fullForm = page.locator('form').nth(1);
-      const emailInput = fullForm
-        .locator('input[type="email"], input[type="text"]')
-        .first();
+    await test.step('Verify aria-describedby linkage on invalid field', async () => {
+      const form = page.locator('form').first();
+      const emailInput = form.locator('#contact-email');
 
       // Trigger validation visibility by touching (blur) the field; the
       // Auto-ARIA directive links error container IDs via aria-describedby
@@ -103,7 +85,7 @@ test.describe('Accessibility - ARIA Attributes', () => {
   }) => {
     await test.step('Verify aria-invalid updates', async () => {
       const form = page.locator('form').first();
-      const emailInput = form.locator('input[type="email"]').first();
+      const emailInput = form.locator('#contact-email');
 
       // First, trigger invalid state
       await emailInput.focus();
