@@ -36,6 +36,7 @@ readonly myForm = form(this.#model, schema, {
 This demo includes a `<ngx-signal-form-error-summary>` at the top of the form. It aggregates all field errors into a clickable list — each entry focuses the associated control when clicked.
 
 - **Strategy-aware**: Inherits `errorStrategy` from the form context (works with `on-touch`, `on-submit`, `immediate`)
+- **Explicit public API showcase**: Passes `[submittedStatus]` explicitly while still reading the value from toolkit form context
 - **Click-to-focus**: Uses Angular's `focusBoundControl()` under the hood
 - **Deduplicated**: Same error shown only once even if multiple fields produce it
 - **WCAG 2.2**: Uses `role="alert"` with `aria-live="assertive"` for screen readers
@@ -43,9 +44,15 @@ This demo includes a `<ngx-signal-form-error-summary>` at the top of the form. I
 ```html
 <ngx-signal-form-error-summary
   [formTree]="registrationForm"
+  [submittedStatus]="explicitSubmittedStatus()"
   summaryLabel="Please fix the following errors before submitting:"
 />
 ```
+
+Field names shown in the summary (e.g. `Username`, `Password`) are resolved
+via `humanizeFieldPath` by default. Use `provideFieldLabels()` to customize
+them for i18n or project-specific labels — see the
+[toolkit README](../../../../../packages/toolkit/README.md#field-label-customization).
 
 ## Feature Spotlight: "On Submit" Error Strategy
 

@@ -42,6 +42,8 @@ import {
   canSubmitWithWarnings,
   submitWithWarnings,
   injectFormContext,
+  provideFieldLabels,
+  splitByKind,
   unwrapValue,
 } from '@ngx-signal-forms/toolkit';
 ```
@@ -145,22 +147,54 @@ provideErrorMessages({
 
 ### Utilities
 
-| Function                              | Description                                           |
-| ------------------------------------- | ----------------------------------------------------- |
-| `focusFirstInvalid(form)`             | Focus first invalid field via `errorSummary()`        |
-| `createOnInvalidHandler(options?)`    | Creates `onInvalid` handler for `FormSubmitOptions`   |
-| `createSubmittedStatusTracker(form)`  | Derives `unsubmitted/submitting/submitted` status     |
-| `hasSubmitted(form)`                  | `Signal<boolean>` — completed at least one submission |
-| `hasOnlyWarnings(errors)`             | Returns `true` when no blocking errors are present    |
-| `getBlockingErrors(errors)`           | Filters out warning-only validation messages          |
-| `canSubmitWithWarnings(form)`         | Allows submission when only warnings remain           |
-| `submitWithWarnings(form, callback)`  | Submit helper that blocks only on blocking errors     |
-| `combineShowErrors(...signals)`       | Combines multiple visibility signals                  |
-| `showErrors(field, strategy, status)` | `Signal<boolean>` — should show errors                |
-| `injectFormContext()`                 | Get `ngxSignalForm` context or `undefined`            |
-| `unwrapValue(signalOrValue)`          | Extract value from `Signal` or static                 |
+- `focusFirstInvalid(form)` — Focus first invalid field via `errorSummary()`
+- `createOnInvalidHandler(options?)` — Creates `onInvalid` handler for
+  `FormSubmitOptions`
+- `createSubmittedStatusTracker(form)` — Derives
+  `unsubmitted/submitting/submitted` status
+- `hasSubmitted(form)` — `Signal<boolean>` for whether at least one submission
+  completed
+- `hasOnlyWarnings(errors)` — Returns `true` when no blocking errors are
+  present
+- `getBlockingErrors(errors)` — Filters out warning-only validation messages
+- `canSubmitWithWarnings(form)` — Allows submission when only warnings remain
+- `submitWithWarnings(form, callback)` — Submit helper that blocks only on
+  blocking errors
+- `combineShowErrors(...signals)` — Combines multiple visibility signals
+- `showErrors(field, strategy, status)` — `Signal<boolean>` for whether errors
+  should be visible now
+- `injectFormContext()` — Get `ngxSignalForm` context or `undefined`
+- `splitByKind(errors)` — Partition validation messages into `blocking` and
+  `warnings`
+- `unwrapValue(signalOrValue)` — Extract value from `Signal` or static
 
 `showErrors()` is the main public API for component and template work. `unwrapValue()` is mainly useful when building lower-level utilities.
+
+### Field Label Customization
+
+By default, error summaries humanize field paths (`address.postalCode` →
+`Address / Postal code`). Override this for i18n or custom labels:
+
+```typescript
+import { provideFieldLabels } from '@ngx-signal-forms/toolkit';
+
+// Static map — unmapped paths fall back to humanizeFieldPath
+provideFieldLabels({
+  contactEmail: 'E-mailadres',
+  'address.postalCode': 'Postcode',
+  'address.street': 'Straat',
+});
+
+// Dynamic resolver (ngx-translate, $localize, etc.)
+provideFieldLabels(() => {
+  const translate = inject(TranslateService);
+  return (fieldPath) =>
+    translate.instant(`fields.${fieldPath}`) || humanizeFieldPath(fieldPath);
+});
+```
+
+Import `humanizeFieldPath` from `@ngx-signal-forms/toolkit/headless` to use
+it as a fallback inside custom resolvers.
 
 ### Immutable Array Helpers
 
@@ -213,6 +247,7 @@ patchState(store, (s) => ({
 ```typescript
 import {
   NgxSignalFormErrorComponent,
+  NgxSignalFormErrorSummaryComponent,
   NgxFormFieldHintComponent,
   NgxFormFieldCharacterCountComponent,
   NgxFormFieldAssistiveRowComponent,
@@ -318,6 +353,26 @@ Displays validation errors with ARIA roles.
 
 - Errors: `role="alert"` (assertive)
 - Warnings: `role="status"` (polite)
+
+### NgxSignalFormErrorSummaryComponent
+
+Form-level error summary that renders blocking validation errors as a clickable
+list and focuses the related control when an entry is activated.
+
+**Inputs:**
+
+- `formTree` (required) — Root form tree to aggregate
+- `summaryLabel` — Optional heading text above the list
+- `strategy` — Override visibility strategy
+- `submittedStatus` — Optional submission-state override for `'on-submit'`
+
+```html
+<ngx-signal-form-error-summary
+  [formTree]="form"
+  [strategy]="'on-submit'"
+  [submittedStatus]="submittedStatus()"
+/>
+```
 
 ### NgxFormFieldHintComponent
 
@@ -497,11 +552,13 @@ import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
 // Individual imports
 import {
   NgxHeadlessErrorStateDirective,
+  NgxHeadlessErrorSummaryDirective,
   NgxHeadlessCharacterCountDirective,
   NgxHeadlessFieldsetDirective,
   NgxHeadlessFieldNameDirective,
   createErrorState,
   createCharacterCount,
+  createFieldStateFlags,
   readFieldFlag,
   readErrors,
   dedupeValidationErrors,
@@ -606,6 +663,9 @@ const state = createErrorState({ field: form.email, fieldName: 'email' });
 // Programmatic character count
 const count = createCharacterCount({ field: form.bio, maxLength: 500 });
 
+// Reusable field-state flags
+const flags = createFieldStateFlags(() => form.email());
+
 // Safe field state reading
 readFieldFlag(field(), 'invalid'); // boolean
 readErrors(field()); // uses errorSummary() or errors()
@@ -613,7 +673,24 @@ dedupeValidationErrors(errors); // remove duplicates by message
 createUniqueId('field'); // 'field-1', 'field-2', ...
 ```
 
+`createFieldStateFlags()` is the companion utility for custom UIs that need the
+common state signals in one place:
+
+```typescript
+const flags = createFieldStateFlags(() => form.email());
+
+flags.isTouched();
+flags.isDirty();
+flags.isValid();
+flags.isInvalid();
+flags.isPending();
+```
+
 Use the headless entry point when you want toolkit state logic but fully custom markup. Use the `assistive` or `form-field` entry points when you want ready-to-render UI.
+
+Use `createFieldStateFlags()` when you need the common `isInvalid()`,
+`isValid()`, `isTouched()`, `isDirty()`, and `isPending()` signals without
+repeating five separate `readFieldFlag(...)` computeds.
 
 ---
 

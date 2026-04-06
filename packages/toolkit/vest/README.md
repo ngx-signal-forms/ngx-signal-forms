@@ -120,6 +120,28 @@ validateVest(path, signupSuite, { includeWarnings: true });
 
 If you need only the warning bridge, the entry point also exports `validateVestWarnings(...)`.
 
+### validateVestWarnings()
+
+Use `validateVestWarnings()` when blocking validation already comes from
+Angular validators, Zod / Standard Schema, or another source, but you still
+want Vest `warn()` messages to appear as toolkit warnings.
+
+```typescript
+import { email, form, required } from '@angular/forms/signals';
+import { validateVestWarnings } from '@ngx-signal-forms/toolkit/vest';
+
+const checkoutForm = form(checkoutModel, (path) => {
+  required(path.email, { message: 'Email is required' });
+  email(path.email, { message: 'Enter a valid email address' });
+
+  validateVestWarnings(path, checkoutAdvisorySuite);
+});
+```
+
+Prefer `validateVest(path, suite, { includeWarnings: true })` when the same
+Vest suite should provide both blocking errors and warnings. Prefer
+`validateVestWarnings()` when Vest is advisory-only.
+
 ## When to use Vest warnings
 
 Use Vest `warn()` when the message is advisory guidance and the user should still be

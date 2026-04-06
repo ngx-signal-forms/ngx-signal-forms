@@ -581,6 +581,30 @@ effect(() => {
 });
 ```
 
+### createFieldStateFlags()
+
+Returns reusable signal readers for the common field-state flags without having
+to wire each one with separate `readFieldFlag(...)` calls.
+
+```typescript
+import { createFieldStateFlags } from '@ngx-signal-forms/toolkit/headless';
+
+const flags = createFieldStateFlags(form.deliveryNotes);
+
+effect(() => {
+  console.log({
+    touched: flags.isTouched(),
+    dirty: flags.isDirty(),
+    valid: flags.isValid(),
+    invalid: flags.isInvalid(),
+    pending: flags.isPending(),
+  });
+});
+```
+
+Use it when a custom section, debug panel, or utility display needs several
+field-state badges at once.
+
 ### readFieldFlag()
 
 Safely reads boolean state flags from a FieldTree or FieldState-like object. Handles null/undefined gracefully.
@@ -647,6 +671,41 @@ const anotherField = createUniqueId('field'); // 'field-3'
 ```
 
 **Note:** Counter is global across all prefixes to guarantee uniqueness
+
+### humanizeFieldPath()
+
+Default field-label resolver that converts internal field paths into
+human-readable display names. Strips Angular prefixes, splits camelCase,
+and joins nested segments with `/`.
+
+```typescript
+import { humanizeFieldPath } from '@ngx-signal-forms/toolkit/headless';
+
+humanizeFieldPath('address.postalCode'); // 'Address / Postal code'
+humanizeFieldPath('ng.form0.contactEmail'); // 'Contact email'
+humanizeFieldPath('first_name'); // 'First name'
+```
+
+Use `humanizeFieldPath` as a fallback inside custom label resolvers:
+
+```typescript
+import { provideFieldLabels } from '@ngx-signal-forms/toolkit';
+import { humanizeFieldPath } from '@ngx-signal-forms/toolkit/headless';
+
+provideFieldLabels({
+  contactEmail: 'E-mailadres',
+  'address.postalCode': 'Postcode',
+});
+// Unmapped paths fall back to the raw path. To humanize unmapped paths,
+// use a factory resolver:
+provideFieldLabels(() => {
+  const labels: Record<string, string> = {
+    contactEmail: 'E-mailadres',
+    'address.postalCode': 'Postcode',
+  };
+  return (path) => labels[path] ?? humanizeFieldPath(path);
+});
+```
 
 ---
 

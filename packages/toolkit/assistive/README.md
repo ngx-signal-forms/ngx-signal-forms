@@ -95,11 +95,34 @@ Features:
 
 **Inputs:**
 
-| Input          | Type                   | Default                              | Description                          |
-| -------------- | ---------------------- | ------------------------------------ | ------------------------------------ |
-| `formTree`     | `FieldTree<unknown>`   | required                             | Root form to aggregate errors from   |
-| `summaryLabel` | `string`               | `'Please fix the following errors:'` | Label displayed above the error list |
-| `strategy`     | `ErrorDisplayStrategy` | inherited from context               | When to show errors                  |
+- `formTree` (`FieldTree<unknown>`, required) — Root form to aggregate errors
+  from
+- `summaryLabel` (`string`, default:
+  `'Please fix the following errors:'`) — Label displayed above the error
+  list
+- `strategy` (`ErrorDisplayStrategy`, inherited from context) — When to show
+  errors
+- `submittedStatus` (`SubmittedStatus`, inherited from context) — Manual
+  submission state override for `'on-submit'` visibility
+
+When used outside a `form[formRoot][ngxSignalForm]` context, pass
+`[submittedStatus]` explicitly if you want `'on-submit'` visibility behavior.
+
+**Customizing field names:**
+
+By default, field names in the summary are derived from the field path
+(`address.postalCode` → `Address / Postal code`). Override this for i18n or
+custom labels with `provideFieldLabels()` from `@ngx-signal-forms/toolkit`:
+
+```typescript
+provideFieldLabels({
+  contactEmail: 'E-mailadres',
+  'address.postalCode': 'Postcode',
+});
+```
+
+See the [toolkit README](../README.md#field-label-customization) for dynamic
+resolvers and `humanizeFieldPath` fallback patterns.
 
 **CSS Custom Properties:**
 
@@ -143,6 +166,9 @@ if (isBlockingError(error)) {
   // Prevents form submission
 }
 ```
+
+For partitioning a `ValidationError[]` into blocking errors and warnings in one
+pass, use `splitByKind()` from `@ngx-signal-forms/toolkit`.
 
 ## Architecture
 

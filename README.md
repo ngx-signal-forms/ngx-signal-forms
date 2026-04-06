@@ -63,7 +63,7 @@ The toolkit adds the pieces Angular intentionally leaves to app and library auth
 - automatic ARIA attributes for supported controls
 - strategy-aware error visibility helpers
 - submission helpers such as `focusFirstInvalid()` and `createOnInvalidHandler()`
-- warning utilities
+- warning utilities including `warningError()` and `splitByKind()`
 
 #### `[formRoot]` + `ngxSignalForm`: additive enhancement
 
@@ -87,6 +87,7 @@ imports: [FormField, NgxSignalFormToolkit];
 ### Assistive: `@ngx-signal-forms/toolkit/assistive`
 
 - `<ngx-signal-form-error>` for accessible error and warning output
+- `<ngx-signal-form-error-summary>` for form-level error summaries
 - `<ngx-signal-form-field-hint>`
 - `<ngx-signal-form-field-character-count>`
 
@@ -99,7 +100,12 @@ imports: [FormField, NgxSignalFormToolkit];
 ### Headless: `@ngx-signal-forms/toolkit/headless`
 
 - renderless directives for custom design systems
-- utility functions such as `createErrorState()`, `createCharacterCount()`, and `readErrors()`
+- `NgxHeadlessErrorSummaryDirective` for fully custom form-level error summaries
+- utility functions such as `createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()`, and `readErrors()`
+
+Use the headless summary directive when you want toolkit-managed aggregation,
+focus behavior, and strategy-aware visibility while keeping your own summary
+markup.
 
 ### Debugger: `@ngx-signal-forms/toolkit/debugger`
 
@@ -354,6 +360,8 @@ Because `ngxSignalForm` provides DI context alongside `[formRoot]`, the field wr
 - `createOnInvalidHandler()` — Factory for `onInvalid` callbacks (auto-focuses first invalid control)
 - `hasSubmitted()` — Convenience signal for completed submissions
 - `warningError()` — Create non-blocking validation messages
+- `splitByKind()` — Partition validation messages into blocking errors and warnings
+- `provideFieldLabels()` — Customize field names in error summaries (i18n, custom labels)
 
 ```typescript
 import {
@@ -375,6 +383,7 @@ Use this when you want feedback components without adopting the full field wrapp
 **Key exports**:
 
 - `NgxSignalFormErrorComponent` — Error/warning display with ARIA roles
+- `NgxSignalFormErrorSummaryComponent` — Form-level summary for blocking errors
 - `NgxFormFieldHintComponent` — Helper text below inputs
 - `NgxFormFieldCharacterCountComponent` — Character counter with maxLength detection
 - `NgxFormFieldAssistiveRowComponent` — Layout row for hints and counters
@@ -438,7 +447,7 @@ Use this when you need full control over markup and styling but do not want to r
 - `NgxHeadlessErrorStateDirective` — Error/warning state as signals
 - `NgxHeadlessCharacterCountDirective` — Character count and limit states
 - `NgxHeadlessFieldsetDirective` — Aggregated validation for field groups
-- `createErrorState()`, `createCharacterCount()` — Programmatic utilities
+- `createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()` — Programmatic utilities
 
 Headless APIs keep `fieldName` explicit because they do not own the rendered
 input structure for you.

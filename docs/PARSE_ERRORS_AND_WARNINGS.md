@@ -20,7 +20,7 @@ When using `errorSummary()`, errors are enriched with field tree references:
 
 ## How Errors Flow
 
-```
+```text
 signal({ email: '', name: '' })
   │
   ▼
@@ -48,9 +48,22 @@ The toolkit's `readErrors()` utility prefers `errorSummary()` when available, fa
 
 ```typescript
 // packages/toolkit/headless/src/lib/utilities.ts
-export function readErrors(fieldState: FieldStateLike): ValidationError[] {
-  if (fieldState?.errorSummary) return fieldState.errorSummary();
-  if (fieldState?.errors) return fieldState.errors();
+export function readErrors(state: unknown): ValidationError[] {
+  if (typeof state !== 'object' || state === null) return [];
+
+  const candidate = state as {
+    errorSummary?: () => ValidationError[];
+    errors?: () => ValidationError[];
+  };
+
+  if (typeof candidate.errorSummary === 'function') {
+    return candidate.errorSummary();
+  }
+
+  if (typeof candidate.errors === 'function') {
+    return candidate.errors();
+  }
+
   return [];
 }
 ```
@@ -59,7 +72,7 @@ export function readErrors(fieldState: FieldStateLike): ValidationError[] {
 
 The toolkit resolves error messages through a 3-tier priority system:
 
-```
+```text
 1. Validator message    → error.message (set in schema definition)
 2. Registry message     → NGX_ERROR_MESSAGES provider (app-wide defaults)
 3. Fallback             → "Invalid" (last resort)
@@ -85,6 +98,41 @@ provideNgxSignalFormErrorMessages({
     `Minimum ${requiredLength} characters needed`,
 });
 ```
+
+## Field Label Resolution
+
+Error summaries display a human-readable label next to each message. By default,
+`humanizeFieldPath` strips the Angular prefix, splits camelCase, and joins
+segments with `/`:
+
+```text
+ng.form0.address.postalCode → Address / Postal code
+contactEmail                → Contact email
+```
+
+Override globally via `provideFieldLabels()`:
+
+```typescript
+import { provideFieldLabels } from '@ngx-signal-forms/toolkit';
+
+provideFieldLabels({
+  contactEmail: 'E-mailadres',
+  'address.postalCode': 'Postcode',
+});
+```
+
+For dynamic i18n or a full custom resolver, pass a factory:
+
+```typescript
+provideFieldLabels(() => {
+  const translate = inject(TranslateService);
+  return (path) =>
+    translate.instant(`fields.${path}`) || humanizeFieldPath(path);
+});
+```
+
+Import `humanizeFieldPath` from `@ngx-signal-forms/toolkit/headless` to compose
+it as a fallback inside custom resolvers.
 
 ## Warnings Convention
 
@@ -118,13 +166,17 @@ const myForm = form(signal({ password: '' }), (path) => {
 
 ```typescript
 import {
+  splitByKind,
   isBlockingError,
   isWarningError,
-} from '@ngx-signal-forms/toolkit/assistive';
+} from '@ngx-signal-forms/toolkit';
 
 const allErrors = form.email().errors();
-const blocking = allErrors.filter(isBlockingError); // Real errors
-const warnings = allErrors.filter(isWarningError); // Non-blocking warnings
+const { blocking, warnings } = splitByKind(allErrors);
+
+// Keep the item-level guards for single error checks
+const firstIsBlocking = allErrors[0] ? isBlockingError(allErrors[0]) : false;
+const firstIsWarning = allErrors[0] ? isWarningError(allErrors[0]) : false;
 ```
 
 ### Toolkit Components Handle This Automatically

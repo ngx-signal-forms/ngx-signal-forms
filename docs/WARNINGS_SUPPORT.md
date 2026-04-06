@@ -390,22 +390,32 @@ const onSubmit = async () => {
 
 ### Checking for Warnings
 
-Since warnings are technically "errors" in Signal Forms, you can filter by the `kind` field or use toolkit helpers:
+Since warnings are technically "errors" in Signal Forms, use `splitByKind()`
+when you need both groups, and keep `isWarningError()` / `isBlockingError()`
+for single-item checks:
 
 ```typescript
 import {
+  splitByKind,
   isBlockingError,
   isWarningError,
-} from '@ngx-signal-forms/toolkit/assistive';
+} from '@ngx-signal-forms/toolkit';
 
-const hasWarnings = computed(() => {
-  return form.email().errors().some(isWarningError);
-});
+const partitioned = computed(() => splitByKind(form.email().errors()));
 
-const hasBlockingErrors = computed(() => {
-  return form.email().errors().some(isBlockingError);
+const hasWarnings = computed(() => partitioned().warnings.length > 0);
+
+const hasBlockingErrors = computed(() => partitioned().blocking.length > 0);
+
+// Still useful for checking a single ValidationError item
+const firstErrorIsWarning = computed(() => {
+  const first = form.email().errors()[0];
+  return first ? isWarningError(first) : false;
 });
 ```
+
+`splitByKind()` is exported from `@ngx-signal-forms/toolkit` so component,
+headless, and custom submit flows can all share the same partitioning logic.
 
 ## Historical Comparison (Vest-based libraries)
 
