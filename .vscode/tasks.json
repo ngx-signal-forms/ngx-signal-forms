@@ -96,6 +96,34 @@
       ],
       "isBackground": false,
       "group": "test"
+    },
+    {
+      "label": "focused-headless-fieldset-utilities-e2e",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "exec",
+        "playwright",
+        "test",
+        "apps/demo-e2e/src/forms/03-headless/fieldset-utilities.spec.ts",
+        "--config",
+        "apps/demo-e2e/playwright.config.ts",
+        "--project=chromium",
+        "--reporter=line"
+      ],
+      "isBackground": false,
+      "group": "test"
+    },
+    {
+      "label": "kill-demo-port-4200",
+      "type": "shell",
+      "command": "zsh",
+      "args": [
+        "-lc",
+        "lsof -nP -iTCP:4200 -sTCP:LISTEN -t | xargs -r kill; echo fresh"
+      ],
+      "isBackground": false,
+      "group": "build"
     }
   ]
 }
