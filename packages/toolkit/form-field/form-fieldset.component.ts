@@ -13,18 +13,15 @@ import {
   NGX_SIGNAL_FORMS_CONFIG,
   resolveErrorDisplayStrategy,
   showErrors,
+  splitByKind,
 } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 import {
-  isBlockingError,
-  isWarningError,
-  NgxSignalFormErrorComponent,
-} from '@ngx-signal-forms/toolkit/assistive';
-import {
+  createFieldStateFlags,
   createUniqueId,
   dedupeValidationErrors,
   readDirectErrors,
   readErrors,
-  readFieldFlag,
 } from '@ngx-signal-forms/toolkit/headless';
 
 export type FieldsetErrorPlacement = 'top' | 'bottom';
@@ -238,7 +235,6 @@ export class NgxSignalFormFieldset<TFieldset = unknown> {
     const override = this.fields();
     const includeNested = this.includeNestedErrors();
 
-    /// Select read function based on includeNestedErrors
     const readFn = includeNested ? readErrors : readDirectErrors;
 
     if (override && override.length > 0) {
@@ -249,37 +245,18 @@ export class NgxSignalFormFieldset<TFieldset = unknown> {
     return dedupeValidationErrors(readFn(this.#fieldsetState()));
   });
 
-  /**
-   * Blocking errors (kind does NOT start with 'warn:').
-   * Uses shared `isBlockingError` utility from toolkit.
-   */
-  readonly blockingErrors = computed(() =>
-    this.#allMessages().filter(isBlockingError),
-  );
+  readonly #split = computed(() => splitByKind(this.#allMessages()));
 
-  /**
-   * Non-blocking warnings (kind starts with 'warn:').
-   * Uses shared `isWarningError` utility from toolkit.
-   */
-  readonly warningErrors = computed(() =>
-    this.#allMessages().filter(isWarningError),
-  );
+  readonly blockingErrors = computed(() => this.#split().blocking);
+  readonly warningErrors = computed(() => this.#split().warnings);
 
-  readonly isInvalid = computed(() =>
-    readFieldFlag(this.#fieldsetState(), 'invalid'),
-  );
-  readonly isValid = computed(() =>
-    readFieldFlag(this.#fieldsetState(), 'valid'),
-  );
-  readonly isTouched = computed(() =>
-    readFieldFlag(this.#fieldsetState(), 'touched'),
-  );
-  readonly isDirty = computed(() =>
-    readFieldFlag(this.#fieldsetState(), 'dirty'),
-  );
-  readonly isPending = computed(() =>
-    readFieldFlag(this.#fieldsetState(), 'pending'),
-  );
+  readonly #flags = createFieldStateFlags(this.#fieldsetState);
+
+  readonly isInvalid = this.#flags.isInvalid;
+  readonly isValid = this.#flags.isValid;
+  readonly isTouched = this.#flags.isTouched;
+  readonly isDirty = this.#flags.isDirty;
+  readonly isPending = this.#flags.isPending;
 
   readonly shouldShowErrors = computed(() => {
     return this.#showErrorsSignal() && this.blockingErrors().length > 0;

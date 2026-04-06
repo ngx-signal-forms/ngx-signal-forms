@@ -6,7 +6,7 @@ import {
   input,
 } from '@angular/core';
 import type { FieldState } from '@angular/forms/signals';
-import { isBlockingError, isWarningError } from '@ngx-signal-forms/toolkit';
+import { splitByKind } from '@ngx-signal-forms/toolkit';
 
 /**
  * Simple Form State Display for Angular Signal Forms
@@ -214,12 +214,16 @@ export class SignalFormStateDisplayComponent {
     this.#errorSummaryOf(this.formState()),
   );
 
-  protected readonly blockingErrors = computed(() =>
-    this.allErrors().filter(isBlockingError),
+  protected readonly errorPartition = computed(() =>
+    splitByKind(this.allErrors()),
   );
 
-  protected readonly warningErrors = computed(() =>
-    this.allErrors().filter(isWarningError),
+  protected readonly blockingErrors = computed(
+    () => this.errorPartition().blocking,
+  );
+
+  protected readonly warningErrors = computed(
+    () => this.errorPartition().warnings,
   );
 
   protected readonly hasErrors = computed(

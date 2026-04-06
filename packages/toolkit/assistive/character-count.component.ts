@@ -273,7 +273,6 @@ export class NgxFormFieldCharacterCountComponent {
       return Math.max(0, manualMax);
     }
 
-    /// Try to auto-detect from field validation
     const fieldState = this.formField()();
     if (this.#hasMaxLengthSignal(fieldState)) {
       const validatorMax = fieldState.maxLength();
@@ -287,7 +286,7 @@ export class NgxFormFieldCharacterCountComponent {
 
   /**
    * Headless character count state from the toolkit.
-   * Provides currentLength, remaining, limitState, etc.
+   * Re-created when maxLength or thresholds change (rare).
    */
   readonly #charCountState = computed(() => {
     const max = this.#resolvedMaxLength();
@@ -302,9 +301,6 @@ export class NgxFormFieldCharacterCountComponent {
     });
   });
 
-  /**
-   * Current character length from the field value.
-   */
   protected readonly currentLength = computed(() => {
     const state = this.#charCountState();
     if (state) return state.currentLength();
@@ -342,11 +338,7 @@ export class NgxFormFieldCharacterCountComponent {
     CharacterCountLimitState | 'disabled' | null
   >(null);
 
-  readonly #announcementText = signal('');
-
-  protected readonly announcementText = computed(() =>
-    this.#announcementText(),
-  );
+  protected readonly announcementText = signal('');
 
   #hasMaxLengthSignal(
     fieldState: unknown,
@@ -365,7 +357,7 @@ export class NgxFormFieldCharacterCountComponent {
   readonly #liveAnnouncementEffect = effect(() => {
     if (!this.liveAnnounce()) {
       this.#lastAnnouncedState.set(null);
-      this.#announcementText.set('');
+      this.announcementText.set('');
       return;
     }
 
@@ -373,7 +365,7 @@ export class NgxFormFieldCharacterCountComponent {
     const max = this.#resolvedMaxLength();
     if (max === 0 || state === 'disabled') {
       this.#lastAnnouncedState.set(null);
-      this.#announcementText.set('');
+      this.announcementText.set('');
       return;
     }
 
@@ -388,22 +380,22 @@ export class NgxFormFieldCharacterCountComponent {
 
     switch (state) {
       case 'warning':
-        this.#announcementText.set(
+        this.announcementText.set(
           `Approaching limit: ${remaining} characters remaining.`,
         );
         break;
       case 'danger':
-        this.#announcementText.set(
+        this.announcementText.set(
           `Almost at limit: ${remaining} characters remaining.`,
         );
         break;
       case 'exceeded':
-        this.#announcementText.set(
+        this.announcementText.set(
           `Character limit exceeded by ${over} characters.`,
         );
         break;
       default:
-        this.#announcementText.set('');
+        this.announcementText.set('');
         break;
     }
   });

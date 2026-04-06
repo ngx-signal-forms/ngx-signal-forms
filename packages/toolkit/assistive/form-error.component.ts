@@ -11,15 +11,14 @@ import {
   generateErrorId,
   generateWarningId,
   injectFormContext,
-  isBlockingError,
-  isWarningError,
   NGX_ERROR_MESSAGES,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
+  readDirectErrors,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
   resolveValidationErrorMessage,
-  readDirectErrors,
   shouldShowErrors,
+  splitByKind,
   type ErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
@@ -394,57 +393,33 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
     return readDirectErrors(fieldState);
   });
 
-  /**
-   * Computed array of blocking errors (kind does NOT start with 'warn:').
-   */
-  readonly #blockingErrors = computed(() => {
-    return this.#allMessages().filter(isBlockingError);
-  });
+  readonly #split = computed(() => splitByKind(this.#allMessages()));
 
-  /**
-   * Computed array of warnings (kind starts with 'warn:').
-   */
-  readonly #warningErrors = computed(() => {
-    return this.#allMessages().filter(isWarningError);
-  });
-
-  /**
-   * Whether the field has blocking errors.
-   */
   protected readonly hasErrors = computed(
-    () => this.#blockingErrors().length > 0,
+    () => this.#split().blocking.length > 0,
   );
 
-  /**
-   * Whether the field has non-blocking warnings.
-   */
   protected readonly hasWarnings = computed(
-    () => this.#warningErrors().length > 0,
+    () => this.#split().warnings.length > 0,
   );
 
-  /**
-   * Computed array of resolved error messages (not warnings).
-   */
-  protected readonly resolvedErrors = computed(() => {
-    return this.#blockingErrors().map((error) => ({
+  protected readonly resolvedErrors = computed(() =>
+    this.#split().blocking.map((error) => ({
       kind: error.kind,
       message: resolveValidationErrorMessage(
         error,
         this.#errorMessagesRegistry,
       ),
-    }));
-  });
+    })),
+  );
 
-  /**
-   * Computed array of resolved warning messages.
-   */
-  protected readonly resolvedWarnings = computed(() => {
-    return this.#warningErrors().map((warning) => ({
+  protected readonly resolvedWarnings = computed(() =>
+    this.#split().warnings.map((warning) => ({
       kind: warning.kind,
       message: resolveValidationErrorMessage(
         warning,
         this.#errorMessagesRegistry,
       ),
-    }));
-  });
+    })),
+  );
 }

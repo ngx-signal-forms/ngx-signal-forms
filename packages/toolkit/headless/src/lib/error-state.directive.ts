@@ -4,13 +4,12 @@ import {
   generateErrorId,
   generateWarningId,
   injectFormContext,
-  isBlockingError,
-  isWarningError,
   NGX_ERROR_MESSAGES,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
   resolveValidationErrorMessage,
   showErrors,
+  splitByKind,
   type ErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
@@ -173,34 +172,14 @@ export class NgxHeadlessErrorStateDirective<
    */
   readonly showWarnings = this.showErrors;
 
-  /**
-   * All validation messages from the field.
-   */
-  readonly #allMessages = computed(() => {
-    return readDirectErrors(this.#fieldState());
-  });
-
-  /**
-   * Blocking errors (kind does NOT start with 'warn:').
-   */
-  readonly errors = computed(() => this.#allMessages().filter(isBlockingError));
-
-  /**
-   * Warning errors (kind starts with 'warn:').
-   */
-  readonly warnings = computed(() =>
-    this.#allMessages().filter(isWarningError),
+  readonly #split = computed(() =>
+    splitByKind(readDirectErrors(this.#fieldState())),
   );
 
-  /**
-   * Whether the field has blocking errors.
-   */
-  readonly hasErrors = computed(() => this.errors().length > 0);
-
-  /**
-   * Whether the field has warnings.
-   */
-  readonly hasWarnings = computed(() => this.warnings().length > 0);
+  readonly errors = computed(() => this.#split().blocking);
+  readonly warnings = computed(() => this.#split().warnings);
+  readonly hasErrors = computed(() => this.#split().blocking.length > 0);
+  readonly hasWarnings = computed(() => this.#split().warnings.length > 0);
 
   /**
    * Resolved error messages using 3-tier priority.

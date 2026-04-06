@@ -2,21 +2,20 @@ import { computed, Directive, inject, input } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import {
   injectFormContext,
-  isBlockingError,
-  isWarningError,
   NGX_SIGNAL_FORMS_CONFIG,
   resolveErrorDisplayStrategy,
   showErrors,
+  splitByKind,
   type ErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 
 import type { ValidationError } from '@angular/forms/signals';
 import {
+  createFieldStateFlags,
   createUniqueId,
   dedupeValidationErrors,
   readErrors,
-  readFieldFlag,
 } from './utilities';
 
 /**
@@ -176,29 +175,12 @@ export class NgxHeadlessFieldsetDirective<
     return dedupeValidationErrors(readErrors(this.#fieldsetState()));
   });
 
-  /**
-   * Blocking errors from all fields.
-   */
-  readonly aggregatedErrors = computed(() =>
-    this.#allMessages().filter(isBlockingError),
-  );
+  readonly #split = computed(() => splitByKind(this.#allMessages()));
 
-  /**
-   * Warning errors from all fields.
-   */
-  readonly aggregatedWarnings = computed(() =>
-    this.#allMessages().filter(isWarningError),
-  );
-
-  /**
-   * Whether the fieldset has blocking errors.
-   */
-  readonly hasErrors = computed(() => this.aggregatedErrors().length > 0);
-
-  /**
-   * Whether the fieldset has warnings.
-   */
-  readonly hasWarnings = computed(() => this.aggregatedWarnings().length > 0);
+  readonly aggregatedErrors = computed(() => this.#split().blocking);
+  readonly aggregatedWarnings = computed(() => this.#split().warnings);
+  readonly hasErrors = computed(() => this.#split().blocking.length > 0);
+  readonly hasWarnings = computed(() => this.#split().warnings.length > 0);
 
   /**
    * Whether to show errors based on strategy.
@@ -217,27 +199,11 @@ export class NgxHeadlessFieldsetDirective<
     return this.#showErrorsSignal() && this.hasWarnings();
   });
 
-  /**
-   * Fieldset validation state flags.
-   * Uses shared readFieldFlag utility.
-   */
-  readonly isInvalid = computed(() =>
-    readFieldFlag(this.#fieldsetState(), 'invalid'),
-  );
+  readonly #flags = createFieldStateFlags(this.#fieldsetState);
 
-  readonly isValid = computed(() =>
-    readFieldFlag(this.#fieldsetState(), 'valid'),
-  );
-
-  readonly isTouched = computed(() =>
-    readFieldFlag(this.#fieldsetState(), 'touched'),
-  );
-
-  readonly isDirty = computed(() =>
-    readFieldFlag(this.#fieldsetState(), 'dirty'),
-  );
-
-  readonly isPending = computed(() =>
-    readFieldFlag(this.#fieldsetState(), 'pending'),
-  );
+  readonly isInvalid = this.#flags.isInvalid;
+  readonly isValid = this.#flags.isValid;
+  readonly isTouched = this.#flags.isTouched;
+  readonly isDirty = this.#flags.isDirty;
+  readonly isPending = this.#flags.isPending;
 }
