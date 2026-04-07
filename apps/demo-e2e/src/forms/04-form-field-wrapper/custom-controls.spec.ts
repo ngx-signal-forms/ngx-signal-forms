@@ -34,6 +34,7 @@ test.describe('Custom Signal Forms Controls', () => {
         await expect(page.ratingControl).toBeVisible();
         await expect(page.serviceRatingControl).toBeVisible();
         await expect(page.wouldRecommendControl).toBeVisible();
+        await expect(page.emailUpdatesSwitch).toBeVisible();
       });
 
       await test.step('Verify rating control has correct number of stars', async () => {
@@ -116,6 +117,66 @@ test.describe('Custom Signal Forms Controls', () => {
       await test.step('Press Home to go to min rating', async () => {
         await page.ratingControl.press('Home');
         await expect(page.ratingControl).toHaveAttribute('aria-valuenow', '0');
+      });
+    });
+
+    test('should toggle the switch control with the expected accessibility label', async () => {
+      await test.step('Verify the switch starts unchecked with an accessible name', async () => {
+        await expect(page.emailUpdatesSwitch).not.toBeChecked();
+        await expect(page.emailUpdatesSwitch).toHaveAccessibleName(
+          /email updates/iu,
+        );
+      });
+
+      await test.step('Toggle the switch on and off', async () => {
+        await page.emailUpdatesSwitch.click();
+        await expect(page.emailUpdatesSwitch).toBeChecked();
+
+        await page.emailUpdatesSwitch.press('Space');
+        await expect(page.emailUpdatesSwitch).not.toBeChecked();
+      });
+    });
+
+    test('should show and clear switch errors within the form-field wrapper', async () => {
+      await test.step('Touch the switch without enabling it', async () => {
+        await page.emailUpdatesSwitch.focus();
+        await page.emailUpdatesSwitch.blur();
+      });
+
+      await test.step('Verify the wrapper exposes the switch error state', async () => {
+        const switchError = page.getErrorById('emailUpdates');
+        const switchWrapper = page.getWrapperByControlId('emailUpdates');
+
+        await expect(switchError).toBeVisible();
+        await expect(switchError).toContainText(
+          'Enable email updates to complete this demo',
+        );
+        await expect(page.emailUpdatesSwitch).toHaveAttribute(
+          'aria-invalid',
+          'true',
+        );
+        await expect(page.emailUpdatesSwitch).toHaveAttribute(
+          'aria-describedby',
+          /emailUpdates-error/,
+        );
+        await expect(switchWrapper).toHaveClass(
+          /ngx-signal-form-field-wrapper--invalid/,
+        );
+      });
+
+      await test.step('Verify enabling the switch clears the error', async () => {
+        await page.emailUpdatesSwitch.click();
+
+        await expect(page.emailUpdatesSwitch).toBeChecked();
+        await expect(page.getErrorById('emailUpdates')).toHaveCount(0);
+        await expect(page.emailUpdatesSwitch).toHaveAttribute(
+          'aria-invalid',
+          'false',
+        );
+        await expect(page.emailUpdatesSwitch).not.toHaveAttribute(
+          'aria-describedby',
+          /emailUpdates-error/,
+        );
       });
     });
   });
@@ -204,6 +265,11 @@ test.describe('Custom Signal Forms Controls', () => {
         const productNameError = page.getErrorById('productName');
         await expect(productNameError).toBeVisible();
       });
+
+      await test.step('Verify switch error is shown', async () => {
+        const switchError = page.getErrorById('emailUpdates');
+        await expect(switchError).toBeVisible();
+      });
     });
 
     test('should submit successfully with valid custom control values', async () => {
@@ -244,6 +310,7 @@ test.describe('Custom Signal Forms Controls', () => {
           'rating',
           'serviceRating',
           'wouldRecommend',
+          'emailUpdates',
           'feedback',
         ]) {
           const wrapper = page.getWrapperByControlId(controlId);

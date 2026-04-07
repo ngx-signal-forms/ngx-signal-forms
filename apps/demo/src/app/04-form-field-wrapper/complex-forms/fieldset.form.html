@@ -207,7 +207,7 @@
           ngxSignalFormFieldset
           [fieldsetField]="placementPreviewForm.address"
           [errorPlacement]="errorPlacement()"
-          [strategy]="'immediate'"
+          strategy="immediate"
           class="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700"
           fieldsetId="placement-preview-address"
           includeNestedErrors
@@ -255,7 +255,7 @@
           ngxSignalFormFieldset
           [fieldsetField]="placementPreviewForm.deliveryMethod"
           [errorPlacement]="errorPlacement()"
-          [strategy]="'immediate'"
+          strategy="immediate"
           class="space-y-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700"
           fieldsetId="placement-preview-delivery"
         >
@@ -307,7 +307,7 @@
           appearance="outline"
           [formField]="placementPreviewForm.email"
           [errorPlacement]="errorPlacement()"
-          [strategy]="'immediate'"
+          strategy="immediate"
         >
           <label for="placementPreviewEmail">Email address *</label>
           <input

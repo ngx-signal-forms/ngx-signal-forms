@@ -12,7 +12,10 @@ import {
   type FormFieldAppearance,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import { RatingControlComponent } from '../../shared/controls';
+import {
+  RatingControlComponent,
+  SwitchControlComponent,
+} from '../../shared/controls';
 import {
   initialCustomControlsModel,
   type CustomControlsModel,
@@ -33,7 +36,7 @@ import { customControlsSchema } from './custom-controls.validations';
  *
  * @example
  * ```html
- * <ngx-custom-controls [errorDisplayMode]="'on-touch'" />
+ * <ngx-custom-controls errorDisplayMode="on-touch" />
  * ```
  */
 @Component({
@@ -44,6 +47,7 @@ import { customControlsSchema } from './custom-controls.validations';
     NgxSignalFormToolkit,
     NgxFormField,
     RatingControlComponent,
+    SwitchControlComponent,
   ],
   templateUrl: './custom-controls.html',
 })

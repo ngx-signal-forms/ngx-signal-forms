@@ -67,7 +67,7 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
             <ngx-split-layout>
               <ngx-error-display-modes-form
                 #formComponent
-                [errorDisplayMode]="'immediate'"
+                errorDisplayMode="immediate"
                 left
               />
 
@@ -75,7 +75,7 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
                 <div right>
                   <ngx-signal-form-debugger
                     [formTree]="formComponent.productForm"
-                    [errorStrategy]="'immediate'"
+                    errorStrategy="immediate"
                   />
                 </div>
               }
@@ -86,7 +86,7 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
             <ngx-split-layout>
               <ngx-error-display-modes-form
                 #formComponent
-                [errorDisplayMode]="'on-submit'"
+                errorDisplayMode="on-submit"
                 left
               />
 
@@ -94,7 +94,7 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
                 <div right>
                   <ngx-signal-form-debugger
                     [formTree]="formComponent.productForm"
-                    [errorStrategy]="'on-submit'"
+                    errorStrategy="on-submit"
                   />
                 </div>
               }
@@ -105,7 +105,7 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
             <ngx-split-layout>
               <ngx-error-display-modes-form
                 #formComponent
-                [errorDisplayMode]="'on-touch'"
+                errorDisplayMode="on-touch"
                 left
               />
 
@@ -113,7 +113,7 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
                 <div right>
                   <ngx-signal-form-debugger
                     [formTree]="formComponent.productForm"
-                    [errorStrategy]="'on-touch'"
+                    errorStrategy="on-touch"
                   />
                 </div>
               }

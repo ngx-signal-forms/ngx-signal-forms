@@ -15,6 +15,9 @@ export interface CustomControlsModel {
   /** Would recommend to friend (boolean rating mapped to 0/1) */
   wouldRecommend: number;
 
+  /** Email updates preference controlled by a switch */
+  emailUpdates: boolean;
+
   /** Optional feedback text */
   feedback: string;
 }
@@ -27,5 +30,6 @@ export const initialCustomControlsModel: CustomControlsModel = {
   rating: 0,
   serviceRating: 0,
   wouldRecommend: 0,
+  emailUpdates: false,
   feedback: '',
 };

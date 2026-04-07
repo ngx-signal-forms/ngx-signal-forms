@@ -17,6 +17,7 @@ export class CustomControlsPage extends BaseFormPage {
 
   // Native input fields
   readonly productNameInput: Locator;
+  readonly emailUpdatesSwitch: Locator;
   readonly feedbackTextarea: Locator;
 
   // Custom rating controls
@@ -39,6 +40,7 @@ export class CustomControlsPage extends BaseFormPage {
 
     // Native inputs
     this.productNameInput = this.form.locator('#productName');
+    this.emailUpdatesSwitch = this.form.locator('#emailUpdates');
     this.feedbackTextarea = this.form.locator('#feedback');
 
     // Custom rating controls (by id)
@@ -136,6 +138,15 @@ export class CustomControlsPage extends BaseFormPage {
   }
 
   /**
+   * Enable the switch when the demo requires it for a valid submission.
+   */
+  async enableEmailUpdates(): Promise<void> {
+    if (!(await this.emailUpdatesSwitch.isChecked())) {
+      await this.emailUpdatesSwitch.click();
+    }
+  }
+
+  /**
    * Fill the entire form with valid data.
    */
   async fillValidForm(): Promise<void> {
@@ -143,6 +154,7 @@ export class CustomControlsPage extends BaseFormPage {
     await this.selectStar(this.ratingControl, 4);
     await this.selectStar(this.serviceRatingControl, 5);
     await this.selectStar(this.wouldRecommendControl, 2);
+    await this.enableEmailUpdates();
     await this.feedbackTextarea.fill('Great product!');
   }
 }

@@ -94,7 +94,7 @@ const placementDesignPreviewSchema = schema<PlacementDesignPreviewModel>(
  *
  * @example
  * ```html
- * <ngx-fieldset-form [errorDisplayMode]="'on-touch'" />
+ * <ngx-fieldset-form errorDisplayMode="on-touch" />
  * ```
  */
 @Component({

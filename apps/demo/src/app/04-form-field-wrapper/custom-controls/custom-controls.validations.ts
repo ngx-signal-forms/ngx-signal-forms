@@ -6,6 +6,7 @@ import type { CustomControlsModel } from './custom-controls.model';
  *
  * Demonstrates:
  * - Required validation on custom rating controls
+ * - Native checkbox switch control inside the form field wrapper
  * - Min value validation for ratings
  * - Standard text field validation
  */
@@ -25,4 +26,10 @@ export const customControlsSchema = schema<CustomControlsModel>((path) => {
 
   // Would recommend is optional but if provided must be valid
   // (0 = not answered, 1+ = answered)
+
+  // Require the switch in this demo so the compact wrapper row can exercise
+  // the same error/ARIA flows as the other controls.
+  required(path.emailUpdates, {
+    message: 'Enable email updates to complete this demo',
+  });
 });

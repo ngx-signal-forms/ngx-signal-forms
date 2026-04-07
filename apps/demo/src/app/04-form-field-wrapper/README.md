@@ -210,11 +210,11 @@ validate(path, (ctx) => {
 
 ```html
 <!-- Form uses 'on-touch' by default -->
-<form [formRoot]="form" [errorStrategy]="'on-touch'">
+<form [formRoot]="form" ngxSignalForm errorStrategy="on-touch">
   <!-- But password confirmation shows immediately -->
   <ngx-signal-form-field-wrapper
     [formField]="form.confirmPassword"
-    [strategy]="'immediate'"
+    strategy="immediate"
   >
     <label for="confirmPassword">Confirm Password</label>
     <input
@@ -357,7 +357,7 @@ ngx-signal-form-field-wrapper {
 
 ```typescript
 // Verify strategy is set
-<form [formRoot]="form" [errorStrategy]="'on-touch'">
+<form [formRoot]="form" ngxSignalForm errorStrategy="on-touch">
 
 // Or check field state
 {{ form.email().touched() }}  // Should be true after blur

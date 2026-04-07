@@ -16,10 +16,17 @@ export const CUSTOM_CONTROLS_CONTENT: ExampleCardConfig = {
         ],
       },
       {
+        title: 'Switch styling',
+        items: [
+          'SwitchControl keeps a native checkbox input and styles it as a compact switch',
+          'Form field wrapper collapses to a short label-plus-toggle row for switch controls',
+        ],
+      },
+      {
         title: 'Wrapper Integration',
         items: [
-          'Auto-derives fieldName from component ID',
-          'Displays errors and labels automatically',
+          'Auto-derives field names for simple projected controls and supports explicit fieldName for nested custom controls',
+          'Displays errors, hints, and labels automatically',
         ],
       },
       {
@@ -53,6 +60,7 @@ export const CUSTOM_CONTROLS_CONTENT: ExampleCardConfig = {
         title: 'Accessibility',
         items: [
           'Use proper ARIA roles (e.g., slider)',
+          'Switch rows use a native checkbox with role="switch" so keyboard and screen reader support stay intact',
           'Implement keyboard navigation and a visible focus state for parity with native controls',
         ],
       },

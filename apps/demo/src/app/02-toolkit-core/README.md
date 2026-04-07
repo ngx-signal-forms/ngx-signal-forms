@@ -59,7 +59,7 @@ If you need the old implementation details, the source folders remain in the rep
 **When to use:** Real-time feedback for critical fields (passwords, credit cards)
 
 ```typescript
-<form [formRoot]="form" [errorStrategy]="'immediate'">
+<form [formRoot]="form" ngxSignalForm errorStrategy="immediate">
   <!-- Errors show as user types -->
 </form>
 ```
@@ -75,7 +75,7 @@ If you need the old implementation details, the source folders remain in the rep
 **When to use:** Most forms - balances UX and accessibility
 
 ```typescript
-<form [formRoot]="form" [errorStrategy]="'on-touch'">
+<form [formRoot]="form" ngxSignalForm errorStrategy="on-touch">
   <!-- Errors show after blur OR submit -->
 </form>
 ```
@@ -93,7 +93,7 @@ If you need the old implementation details, the source folders remain in the rep
 **When to use:** Long forms where field-level errors would be overwhelming
 
 ```typescript
-<form [formRoot]="form" [errorStrategy]="'on-submit'">
+<form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">
   <!-- Errors show only after submit attempt -->
 </form>
 ```

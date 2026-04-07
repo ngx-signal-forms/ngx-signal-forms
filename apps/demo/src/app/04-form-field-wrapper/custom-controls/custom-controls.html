@@ -74,6 +74,21 @@
       </ngx-signal-form-field-hint>
     </ngx-signal-form-field-wrapper>
 
+    <ngx-signal-form-field-wrapper
+      [appearance]="appearance()"
+      fieldName="emailUpdates"
+      [formField]="reviewForm.emailUpdates"
+    >
+      <label for="emailUpdates">Email updates *</label>
+      <ngx-switch-control
+        inputId="emailUpdates"
+        [field]="reviewForm.emailUpdates"
+      />
+      <ngx-signal-form-field-hint position="left">
+        Required in this demo so the switch can show wrapper validation.
+      </ngx-signal-form-field-hint>
+    </ngx-signal-form-field-wrapper>
+
     <!-- Feedback - Standard textarea for comparison -->
     <ngx-signal-form-field-wrapper
       [appearance]="appearance()"
