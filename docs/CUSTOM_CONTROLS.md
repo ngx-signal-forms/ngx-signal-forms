@@ -81,7 +81,9 @@ field.
 ### Recommended pattern
 
 Prefer a native checkbox as the actual bound control and add `role="switch"` to
-that focusable element:
+that focusable element. When the toolkit should treat it as a switch for wrapper
+layout and auto-ARIA, declare that explicitly with
+`ngxSignalFormControl="switch"`:
 
 ```html
 <label for="emailUpdates">Email updates</label>
@@ -89,6 +91,7 @@ that focusable element:
   id="emailUpdates"
   type="checkbox"
   role="switch"
+  ngxSignalFormControl="switch"
   [formField]="form.emailUpdates"
 />
 ```
@@ -130,6 +133,20 @@ The toolkit can enhance switch-like controls with:
 The toolkit does **not** invent base switch semantics for you. If the underlying
 control does not already behave like a switch, you still need to provide the
 correct role, keyboard behavior, checked-state wiring, and accessible name.
+
+If your control already owns `aria-describedby`, `aria-invalid`, or
+`aria-required`, opt out of toolkit ARIA management on that host element with
+`ngxSignalFormControlAria="manual"`. Use `buildAriaDescribedBy` from
+`@ngx-signal-forms/toolkit` to assemble the described-by chain without
+duplicating the toolkit's ID-generation conventions.
+
+Practical ownership rule:
+
+- **auto** (default) for native-like controls that should inherit toolkit ARIA
+- **manual** when the widget already owns its ARIA attributes and described-by chain
+
+To fully disable toolkit ARIA participation on a bespoke host, use
+`ngxSignalFormAutoAriaDisabled` on the control element instead of an `ariaMode` value.
 
 ### Third-party component libraries
 
@@ -201,6 +218,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
       [id]="inputId()"
       type="checkbox"
       role="switch"
+      ngxSignalFormControl="switch"
       [formField]="field()"
     />
   `,
@@ -341,11 +359,8 @@ Usage with toolkit:
 
 ```html
 <form [formRoot]="myForm" ngxSignalForm errorStrategy="on-touch">
-  <ngx-signal-form-field-wrapper
-    [formField]="myForm.country"
-    fieldName="country"
-    label="Country"
-  >
+  <ngx-signal-form-field-wrapper [formField]="myForm.country">
+    <label for="country">Country</label>
     <app-custom-select [formField]="myForm.country" [options]="countries" />
   </ngx-signal-form-field-wrapper>
 </form>

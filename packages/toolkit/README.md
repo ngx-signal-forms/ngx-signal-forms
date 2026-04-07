@@ -28,8 +28,11 @@ import { FormRoot } from '@angular/forms/signals';
 import {
   NgxSignalFormDirective,
   NgxSignalFormAutoAriaDirective,
+  NgxSignalFormControlSemanticsDirective,
   provideNgxSignalFormsConfig,
   provideNgxSignalFormsConfigForComponent,
+  provideNgxSignalFormControlPresets,
+  provideNgxSignalFormControlPresetsForComponent,
   provideErrorMessages,
   combineShowErrors,
   showErrors,
@@ -50,7 +53,7 @@ import {
 
 ### NgxSignalFormToolkit
 
-Bundle containing Angular `FormRoot`, `NgxSignalFormDirective`, and `NgxSignalFormAutoAriaDirective`.
+Bundle containing Angular `FormRoot`, `NgxSignalFormDirective`, `NgxSignalFormAutoAriaDirective`, and `NgxSignalFormControlSemanticsDirective`.
 
 ```typescript
 @Component({
@@ -101,9 +104,16 @@ Automatically applies to supported `[formField]` controls, including custom cont
 Current behavior:
 
 - covers text-like inputs, textareas, selects, and custom `[formField]` hosts
-- excludes `radio` and standard `checkbox` inputs
-- checkbox-based switches opt back in with `role="switch"`
+- excludes `radio` and standard `checkbox` inputs unless they explicitly opt in with `ngxSignalFormControl`
+- checkbox-based switches opt back in with `role="switch"`, or with explicit control semantics when the toolkit should treat them as a switch family
 - can be disabled per control with `ngxSignalFormAutoAriaDisabled`
+- leaves consumer-owned `aria-invalid`, `aria-required`, and `aria-describedby` alone when `ngxSignalFormControlAria="manual"` is present
+
+Rule of thumb:
+
+- use the default **auto** mode for native-like controls and simple custom hosts
+- use **manual** mode when the control already owns its ARIA state and described-by chain
+- use **disabled** only for bespoke hosts where the toolkit should not participate at all
 
 **Standalone scope note:** Angular standalone imports are template-local. If a
 custom control component renders the real `<input [formField]>`,
@@ -118,6 +128,102 @@ Auto-applies:
 - `aria-required`
 - `aria-describedby` (links to error elements)
 
+### NgxSignalFormControlSemanticsDirective
+
+Use `NgxSignalFormControlSemanticsDirective` when a control should participate in
+wrapper layout or auto-ARIA as a specific control family instead of relying on
+DOM heuristics alone.
+
+```html
+<app-star-rating
+  id="productRating"
+  role="slider"
+  ngxSignalFormControl="slider"
+  ngxSignalFormControlAria="manual"
+  [formField]="form.productRating"
+/>
+```
+
+This is usually the more valuable example than `switch`: a native checkbox with
+`role="switch"` already carries most of its semantics, while sliders and
+third-party composite widgets benefit much more from an explicit toolkit
+contract.
+
+Key behavior:
+
+- accepts simple kinds such as `slider`, `composite`, or `switch`, or object input such as `[ngxSignalFormControl]="{ kind: 'slider', layout: 'stacked' }"`
+- supports one-off overrides with `ngxSignalFormControlLayout` and `ngxSignalFormControlAria`
+- writes stable `data-ngx-signal-form-control-*` attributes for wrapper styling and projected control discovery
+- does **not** replace the widget's underlying semantics; if a control is conceptually a slider, combobox, or switch, keep the correct native/library semantics on the actual interactive host
+
+Use `switch` when you want a checkbox-based toggle to opt into the switch
+family. Use `slider` or `composite` when documenting richer custom controls or
+third-party widgets.
+
+The important boundary is ownership, not control popularity: manual mode is not
+the normal path for everyday inputs, but it is the correct path when a widget
+already manages its own ARIA attributes.
+
+### Control semantics presets
+
+If you need global or feature-scoped defaults for
+`ngxSignalFormControlAria` / `ngxSignalFormControlLayout`, use the dedicated
+control preset providers rather than extending `NgxSignalFormsConfig`.
+
+Why this is the better fit:
+
+- the settings are specific to semantic control families, not the whole form system
+- they need both global and subtree-scoped overrides
+- explicit directive inputs should still override provider defaults cleanly
+
+```typescript
+provideNgxSignalFormControlPresets({
+  slider: {
+    layout: 'custom',
+    ariaMode: 'manual',
+  },
+  composite: {
+    layout: 'custom',
+  },
+});
+
+@Component({
+  providers: [
+    ...provideNgxSignalFormControlPresetsForComponent({
+      composite: {
+        ariaMode: 'manual',
+      },
+    }),
+  ],
+})
+export class SearchFeatureComponent {}
+```
+
+Use the directive inputs for one-off control overrides:
+
+- `ngxSignalFormControl`
+- `ngxSignalFormControlLayout`
+- `ngxSignalFormControlAria`
+
+### `buildAriaDescribedBy`
+
+When a control opts into `ngxSignalFormControlAria="manual"`, the consumer
+owns its `aria-describedby` chain. Use `buildAriaDescribedBy` to assemble the
+chain without duplicating the toolkit's ID-generation conventions:
+
+```typescript
+import { buildAriaDescribedBy, shouldShowErrors } from '@ngx-signal-forms/toolkit';
+
+protected readonly describedBy = computed(() =>
+  buildAriaDescribedBy('accessibilityAudit', {
+    baseIds: ['accessibilityAudit-hint'],
+    showErrors: shouldShowErrors(
+      fieldState.invalid(), fieldState.touched(), strategy, submittedStatus,
+    ),
+  }),
+);
+```
+
 ### Configuration
 
 ```typescript
@@ -125,9 +231,13 @@ Auto-applies:
 interface NgxSignalFormsUserConfig {
   autoAria?: boolean; // Default: true
   defaultErrorStrategy?: 'immediate' | 'on-touch' | 'on-submit'; // Default: 'on-touch'
-  defaultFormFieldAppearance?: 'standard' | 'outline'; // Default: 'standard'
+  defaultFormFieldAppearance?: 'stacked' | 'outline' | 'plain'; // Default: 'stacked'
 }
 ```
+
+`NgxSignalFormsUserConfig` is intentionally for form-system-wide behavior.
+Control-family semantics such as default ARIA mode or wrapper layout live in
+the dedicated control preset providers above.
 
 > For CSS status classes such as `ng-invalid` or `ng-touched`, use Angular’s native `provideSignalFormsConfig({ classes })`. The toolkit focuses on ARIA wiring and visibility strategy rather than class generation.
 
@@ -460,7 +570,7 @@ validation summaries and design-library style error positioning, prefer
 - `formField` (required)
 - `fieldName` — Optional explicit override; otherwise derived from the bound control `id`
 - `strategy` — Override error strategy
-- `appearance` — `'standard' | 'outline' | 'inherit'`
+- `appearance` — `'stacked' | 'outline' | 'plain' | 'inherit'`
 - `errorPlacement` — Optional per-field override for automatic messages at the `top` or `bottom` (default: `bottom`)
 - `showRequiredMarker` / `requiredMarker` — Required field indicator for outlined fields
 
@@ -692,7 +802,7 @@ repeating five separate `readFieldFlag(...)` computeds.
 
 - [Main README](https://github.com/ngx-signal-forms/ngx-signal-forms#readme) — Overview, installation, quick start
 - [GitHub Releases](https://github.com/ngx-signal-forms/ngx-signal-forms/releases) — Published release notes
-- [Beta release notes archive](../../docs/archive/) — Historical beta changelogs and migration guides
+- [RC2 release notes](../../docs/RELEASE_NOTES_RC2.md) — Current release-candidate notes and migration guidance
 - [Form Field Theming](./form-field/THEMING.md) — CSS custom properties guide
 - [CSS Framework Integration](../../docs/CSS_FRAMEWORK_INTEGRATION.md) — Bootstrap, Tailwind, Material setup
 - [Warnings Support](../../docs/WARNINGS_SUPPORT.md) — Non-blocking validation

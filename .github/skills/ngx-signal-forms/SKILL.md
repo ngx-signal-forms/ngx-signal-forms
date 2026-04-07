@@ -72,4 +72,4 @@ Adding a debug panel during development?                    → debugger
 4. Bound controls inside `ngx-signal-form-field-wrapper` must have a stable `id` — wrapper derives field identity from it.
 5. Switch-style boolean controls should use a native checkbox with `role="switch"` on the actual bound control whenever possible.
 6. Angular standalone imports are template-local — if a child custom control renders the real `[formField]` element, import toolkit auto-ARIA in that child component too.
-7. Do not use removed APIs: `manual` strategy, `bare` appearance, `computeShowErrors`, `canSubmit`, `isSubmitting`, `fieldNameResolver`, `strictFieldResolution`.
+7. Do not use removed APIs: `manual` strategy, `computeShowErrors`, `canSubmit`, `isSubmitting`, `fieldNameResolver`, `strictFieldResolution`.

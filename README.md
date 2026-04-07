@@ -74,7 +74,7 @@ The toolkit's `NgxSignalFormDirective` (selector: `form[formRoot][ngxSignalForm]
 2. **Submitted status tracking** — derives `'unsubmitted' → 'submitting' → 'submitted'` from Angular's native `submitting()` signal, which Angular does not expose as a status
 3. **Error display strategy** — the `[errorStrategy]` input controls when validation feedback becomes visible (`'immediate'`, `'on-touch'`, or `'on-submit'`)
 
-**`NgxSignalFormToolkit` bundles `FormRoot` + `NgxSignalFormDirective` + `NgxSignalFormAutoAriaDirective`** — import it instead of `FormRoot` separately.
+**`NgxSignalFormToolkit` bundles `FormRoot` + `NgxSignalFormDirective` + `NgxSignalFormAutoAriaDirective` + `NgxSignalFormControlSemanticsDirective`** — import it instead of `FormRoot` separately.
 
 ```typescript
 imports: [FormField, NgxSignalFormToolkit];
@@ -290,7 +290,7 @@ import {
   FormField, // Angular's [formField] — unchanged
 } from '@angular/forms/signals';
 import {
-  NgxSignalFormToolkit, // Bundles FormRoot + NgxSignalFormDirective + AutoARIA
+  NgxSignalFormToolkit, // Bundles FormRoot + NgxSignalFormDirective + AutoARIA + control semantics
   createOnInvalidHandler,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
@@ -578,7 +578,7 @@ Start here:
 - [Toolkit API reference](./packages/toolkit/README.md)
 - [Vest integration guide](./packages/toolkit/vest/README.md)
 - [GitHub Releases](https://github.com/ngx-signal-forms/ngx-signal-forms/releases)
-- [Beta release archive](./docs/archive/)
+- [RC2 release notes](./docs/RELEASE_NOTES_RC2.md)
 - [Assistive components](./packages/toolkit/assistive/README.md)
 - [Form field components](./packages/toolkit/form-field/README.md)
 - [Headless primitives](./packages/toolkit/headless/README.md)
@@ -612,7 +612,7 @@ The skill covers the full toolkit — entry points, patterns, ARIA automation, a
 The toolkit is designed with WCAG 2.2 AA form patterns in mind:
 
 - automatic `aria-invalid`, `aria-required`, and `aria-describedby` wiring for supported controls
-- custom on/off controls should expose real switch semantics on the bound control (prefer a native checkbox styled as a switch, or a library component that already exposes `role="switch"` semantics); see [`docs/CUSTOM_CONTROLS.md`](./docs/CUSTOM_CONTROLS.md) and [MDN switch role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/switch_role)
+- custom on/off controls should expose real switch semantics on the bound control (prefer a native checkbox styled as a switch, or a library component that already exposes `role="switch"` semantics); use `ngxSignalFormControl="switch"` when the toolkit should also apply stable wrapper/layout behavior, and use `ngxSignalFormControlAria="manual"` only when the control already owns its ARIA state; see [`docs/CUSTOM_CONTROLS.md`](./docs/CUSTOM_CONTROLS.md) and [MDN switch role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/switch_role)
 - `role="alert"` for blocking errors and `role="status"` for warnings
 - default `on-touch` error timing to avoid premature error noise
 - focus helpers for invalid submissions

@@ -89,7 +89,7 @@ export const appConfig = {
   providers: [
     provideNgxSignalFormsConfig({
       defaultErrorStrategy: 'on-submit', // 'immediate' | 'on-touch' | 'on-submit'
-      defaultFormFieldAppearance: 'outline', // 'standard' | 'outline'
+      defaultFormFieldAppearance: 'outline', // 'stacked' | 'outline' | 'plain'
       autoAria: true, // default: true
     }),
     provideErrorMessages({

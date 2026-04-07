@@ -184,6 +184,81 @@ Suggested replacements:
 | `/form-field-wrapper/fieldset-grouping`  | `/form-field-wrapper/complex-forms`                         |
 | `/advanced-scenarios/error-messages`     | `/advanced-scenarios/submission-patterns`                   |
 
+### 7. Rename `'standard'` appearance to `'stacked'`
+
+The default form-field wrapper appearance was renamed from `'standard'` to `'stacked'` to better describe its layout behavior (label stacked above input). A new `'plain'` appearance was also added for low-chrome or custom-control fields.
+
+Update any explicit references:
+
+| Before (RC1)                                            | After (RC2)                                     |
+| ------------------------------------------------------- | ----------------------------------------------- |
+| `appearance="standard"`                                 | `appearance="stacked"`                          |
+| `defaultFormFieldAppearance: 'standard'`                | `defaultFormFieldAppearance: 'stacked'`         |
+| host class `.ngx-signal-forms-standard` (if overridden) | host class removed — `'stacked'` is the default |
+
+If you never explicitly set `appearance="standard"` (the old default), no template changes are needed — the default is now `'stacked'` and behaves identically.
+
+New `'plain'` appearance option:
+
+```html
+<!-- Minimal chrome for custom controls (rating, slider, etc.) -->
+<ngx-signal-form-field-wrapper appearance="plain" [formField]="form.rating">
+  <label for="rating">Rating</label>
+  <my-rating-control id="rating" [formField]="form.rating" />
+</ngx-signal-form-field-wrapper>
+```
+
+### 8. Adopt explicit control semantics (optional, recommended)
+
+A new directive-first API lets you declare control metadata explicitly instead of relying on DOM heuristics:
+
+```html
+<!-- Before: wrapper inferred switch from :has(input[role='switch']) -->
+<input type="checkbox" role="switch" [formField]="form.toggle" />
+
+<!-- After: explicit semantic declaration -->
+<input
+  type="checkbox"
+  role="switch"
+  ngxSignalFormControl="switch"
+  [formField]="form.toggle"
+/>
+```
+
+Available control kinds: `'text-like'`, `'textarea-select-like'`, `'switch'`, `'checkbox'`, `'radio-group'`, `'slider'`, `'composite'`.
+
+For custom controls that manage their own ARIA attributes, opt out of auto-ARIA:
+
+```html
+<my-custom-control
+  ngxSignalFormControl="composite"
+  ngxSignalFormControlAria="manual"
+  [formField]="form.custom"
+/>
+```
+
+The existing DOM-based auto-detection remains as a fallback, so this migration is optional but recommended for new code.
+
+### 9. Register app-level control presets (optional)
+
+If you want to configure control semantics globally instead of per-template, use the new preset provider:
+
+```typescript
+import { provideNgxSignalFormControlPresets } from '@ngx-signal-forms/toolkit';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideNgxSignalFormControlPresets({
+      overrides: {
+        switch: { layout: 'inline-control' },
+      },
+    }),
+  ],
+});
+```
+
+Built-in preset families: `text-like`, `textarea-select-like`, `switch`, `checkbox`, `radio-group`, `slider`, `composite`.
+
 ---
 
 ## Changed
@@ -198,6 +273,12 @@ Suggested replacements:
 - Added or surfaced stronger low-level helpers including `splitByKind(...)` and `readDirectErrors(...)`.
 - Improved error-message resolution coverage and supporting tests.
 - Simplified shared strategy and error-visibility logic.
+- Renamed `'standard'` appearance to `'stacked'`; added `'plain'` appearance.
+- Added `NgxSignalFormControlSemanticsDirective` for explicit control metadata.
+- Added `provideNgxSignalFormControlPresets(...)` for app-level control configuration.
+- Added `resolveNgxSignalFormControlSemantics(...)` utility for metadata resolution.
+- Added `buildAriaDescribedBy(...)` utility for manual ARIA `described-by` chains.
+- Wrapper and auto-ARIA now share a unified control-semantics contract.
 - Improved internal type safety and deduplicated summary logic.
 
 ### Demo app changes

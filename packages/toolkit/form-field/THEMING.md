@@ -14,18 +14,32 @@ A theming system based entirely on **CSS Custom Properties (Variables)**. It exp
 - **Runtime Theming:** Support Light/Dark modes or multiple themes instantly without rebuilding.
 - **Framework Integration:** Easily map tokens from Bootstrap, Tailwind, or Material to the toolkit.
 
+### Control-aware styling hooks
+
+`ngx-signal-form-field-wrapper` exposes stable data attributes that you can use
+for custom-control styling without coupling your CSS to internal markup:
+
+- `data-ngx-signal-form-control-kind`
+- `data-ngx-signal-form-control-layout`
+- `data-ngx-signal-form-control-aria-mode`
+
+These are derived from explicit control semantics when present (for example
+`ngxSignalFormControl="switch"`) and fall back to toolkit heuristics for older
+markup. Prefer these attributes over `:has(...)` selectors for long-term theme
+customizations.
+
 ### Architecture: Semantic Layering
 
 The system works in layers to ensure consistency while allowing deep customization.
 
-1.  **Layer 1: Design Tokens** `(--_field-clr-primary)`
-    - Internal defaults. Do not override these.
-2.  **Layer 2: Shared Feedback (Base)** `(--ngx-signal-form-feedback-font-size)`
-    - **Public API.** Controls the "micro-copy" typography and spacing across Errors, Warnings, Hints, and Character Counts.
-3.  **Layer 3: Semantic Colors** `(--ngx-form-field-color-primary)`
-    - **Public API.** The main integration point. Maps abstract roles (Primary, Error) to concrete colors.
-4.  **Layer 4: Component Properties** `(--ngx-form-field-focus-color)`
-    - **Public API.** Derived from layers 2 & 3. Override these for specific use cases.
+1. **Layer 1: Design Tokens** `(--_field-clr-primary)`
+   - Internal defaults. Do not override these.
+2. **Layer 2: Shared Feedback (Base)** `(--ngx-signal-form-feedback-font-size)`
+   - **Public API.** Controls the "micro-copy" typography and spacing across Errors, Warnings, Hints, and Character Counts.
+3. **Layer 3: Semantic Colors** `(--ngx-form-field-color-primary)`
+   - **Public API.** The main integration point. Maps abstract roles (Primary, Error) to concrete colors.
+4. **Layer 4: Component Properties** `(--ngx-form-field-focus-color)`
+   - **Public API.** Derived from layers 2 & 3. Override these for specific use cases.
 
 ---
 
@@ -132,11 +146,11 @@ Groups related fields with consistent spacing.
 
 This component wraps your `label` and `input` to provide layout, borders, and states.
 
-### Layout Modes: Standard vs Outline
+### Layout Modes: Stacked, Outline, and Plain
 
-The form field wrapper supports two appearance modes via the `appearance` input:
+The form field wrapper supports three appearance modes via the `appearance` input:
 
-**Standard Layout** (`appearance="standard"` or default)
+**Stacked Layout** (`appearance="stacked"` or default)
 
 - Label positioned above the input
 - Traditional stacked form field design
@@ -151,9 +165,15 @@ The form field wrapper supports two appearance modes via the `appearance` input:
 - Uses `--ngx-form-field-outline-input-*` properties
 - Requires CSS `:has()` selector (Chrome 105+, Firefox 121+, Safari 15.4+)
 
+**Plain Layout** (`appearance="plain"`)
+
+- Keeps wrapper semantics, labels, hints, and errors
+- Removes border and background chrome from the field container
+- Best for custom controls that draw their own focus or visual treatment
+
 ```html
-<!-- Standard (default) -->
-<ngx-signal-form-field-wrapper [formField]="form.email" appearance="standard">
+<!-- Stacked (default) -->
+<ngx-signal-form-field-wrapper [formField]="form.email" appearance="stacked">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
 </ngx-signal-form-field-wrapper>
@@ -187,11 +207,11 @@ The form field wrapper supports two appearance modes via the `appearance` input:
 
 If the semantic colors aren't enough, you can override specific parts of the component.
 
-> **Layout-Specific Properties:** Properties prefixed with `--ngx-form-field-outline-*` only apply when `appearance="outline"`. Standard layout uses the non-prefixed variants (e.g., `--ngx-form-field-label-*` vs `--ngx-form-field-outline-label-*`).
+> **Layout-Specific Properties:** Properties prefixed with `--ngx-form-field-outline-*` only apply when `appearance="outline"`. Stacked layout uses the non-prefixed variants (e.g., `--ngx-form-field-label-*` vs `--ngx-form-field-outline-label-*`).
 
 #### Layout & Spacing
 
-**Applies to both standard and outline layouts.**
+**Applies to both stacked and outline layouts.**
 
 | Property                              | Default                                                                           | Description                          |
 | :------------------------------------ | :-------------------------------------------------------------------------------- | :----------------------------------- |
@@ -205,7 +225,7 @@ If the semantic colors aren't enough, you can override specific parts of the com
 
 #### Prefix & Suffix
 
-**Applies to both standard and outline layouts.**
+**Applies to both stacked and outline layouts.**
 
 | Property                        | Default                                      | Description               |
 | :------------------------------ | :------------------------------------------- | :------------------------ |
@@ -214,9 +234,9 @@ If the semantic colors aren't enough, you can override specific parts of the com
 | `--ngx-form-field-prefix-color` | `var(--ngx-form-field-color-text-secondary)` | Prefix color              |
 | `--ngx-form-field-suffix-color` | `var(--ngx-form-field-color-text-secondary)` | Suffix color              |
 
-#### Labels (Standard Layout)
+#### Labels (Stacked Layout)
 
-**Only applies when `appearance="standard"` (default).**
+**Only applies when `appearance="stacked"` (default).**
 
 | Property                               | Default                                      | Description         |
 | :------------------------------------- | :------------------------------------------- | :------------------ |
@@ -247,9 +267,9 @@ If the semantic colors aren't enough, you can override specific parts of the com
 | `--ngx-form-field-required-marker-color`  | `var(--ngx-form-field-color-error)` | Required marker color  |
 | `--ngx-form-field-required-marker-weight` | `600`                               | Required marker weight |
 
-#### Input (Standard Layout)
+#### Input (Stacked Layout)
 
-**Only applies when `appearance="standard"` (default).**
+**Only applies when `appearance="stacked"` (default).**
 
 | Property                             | Default                                      | Description        |
 | :----------------------------------- | :------------------------------------------- | :----------------- |
@@ -274,7 +294,7 @@ If the semantic colors aren't enough, you can override specific parts of the com
 
 #### States & Focus
 
-**Applies to both standard and outline layouts.**
+**Applies to both stacked and outline layouts.**
 
 | Property                              | Default                                                               | Description          |
 | :------------------------------------ | :-------------------------------------------------------------------- | :------------------- |

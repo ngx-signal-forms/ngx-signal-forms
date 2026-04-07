@@ -21,7 +21,7 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 
 - Bound control must have a stable `id` — the wrapper derives field identity from it.
 - For nested custom controls or dynamically identified inner controls, pass explicit `fieldName` on the wrapper instead of relying on implicit id discovery.
-- Set `appearance="outline"` for modern outlined inputs; `appearance="standard"` for underlined; `appearance="inherit"` to follow parent config.
+- Set `appearance="outline"` for modern outlined inputs; `appearance="stacked"` for label-above layout; `appearance="plain"` for minimal chrome; `appearance="inherit"` to follow parent config.
 - Add `placeholder=" "` (a single space) alongside `appearance="outline"` when you want the floating label animation.
 
 3. **Error placement:**

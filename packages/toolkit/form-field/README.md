@@ -99,6 +99,12 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 Reusable form field wrapper with automatic error display and consistent layout.
 
+For custom controls, the wrapper also exposes stable host metadata via
+`data-ngx-signal-form-control-kind`, `data-ngx-signal-form-control-layout`,
+and `data-ngx-signal-form-control-aria-mode`. Prefer driving wrapper-specific
+styling from those attributes instead of DOM-shape selectors when you need
+control-specific layouts.
+
 **Usage:**
 
 ```typescript
@@ -134,6 +140,106 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   />
 </ngx-signal-form-field-wrapper>
 ```
+
+#### Explicit Control Semantics
+
+When a custom control should be treated differently from a plain text input,
+declare that on the actual `[formField]` host element.
+
+```typescript
+import { FormField } from '@angular/forms/signals';
+import {
+  NgxSignalFormAutoAriaDirective,
+  NgxSignalFormControlSemanticsDirective,
+} from '@ngx-signal-forms/toolkit';
+
+@Component({
+  imports: [
+    FormField,
+    NgxSignalFormAutoAriaDirective,
+    NgxSignalFormControlSemanticsDirective,
+  ],
+  template: `
+    <ngx-signal-form-field-wrapper [formField]="form.productRating">
+      <label for="productRating">Product rating</label>
+      <app-star-rating
+        id="productRating"
+        role="slider"
+        [formField]="form.productRating"
+        ngxSignalFormControl="slider"
+        ngxSignalFormControlAria="manual"
+      />
+    </ngx-signal-form-field-wrapper>
+  `,
+})
+export class ExampleComponent {}
+```
+
+This is a stronger showcase than `switch`: checkbox-based switches already map
+well to native semantics, while slider and composite widgets are where explicit
+control semantics add the most value.
+
+Use `ngxSignalFormControlAria="manual"` when the control or a third-party
+widget already owns its ARIA attributes and the toolkit should leave them
+alone. Use `buildAriaDescribedBy` to assemble the described-by chain without
+duplicating the toolkit's ID conventions:
+
+- **auto** (default) for native-like controls and simple custom hosts
+- **manual** when the control already owns `aria-describedby`, `aria-invalid`, and `aria-required`
+
+To fully disable toolkit ARIA participation, use the `ngxSignalFormAutoAriaDisabled`
+attribute on the control element instead of an `ariaMode` value.
+
+```typescript
+import { buildAriaDescribedBy, shouldShowErrors } from '@ngx-signal-forms/toolkit';
+
+protected readonly describedBy = computed(() =>
+  buildAriaDescribedBy('accessibilityAudit', {
+    baseIds: ['accessibilityAudit-hint'],
+    showErrors: shouldShowErrors(
+      fieldState.invalid(), fieldState.touched(), strategy, submittedStatus,
+    ),
+  }),
+);
+```
+
+If you want that behavior to be the default for a whole control family, prefer
+the semantics preset providers over adding another top-level toolkit config.
+
+```typescript
+import {
+  provideNgxSignalFormControlPresets,
+  provideNgxSignalFormControlPresetsForComponent,
+} from '@ngx-signal-forms/toolkit';
+
+// App or feature-level default
+provideNgxSignalFormControlPresets({
+  slider: {
+    layout: 'custom',
+    ariaMode: 'manual',
+  },
+});
+
+// Component-scoped override
+@Component({
+  providers: [
+    ...provideNgxSignalFormControlPresetsForComponent({
+      composite: {
+        layout: 'custom',
+        ariaMode: 'manual',
+      },
+    }),
+  ],
+})
+export class ExampleShell {}
+```
+
+Use the provider when the default should apply to many controls. Use
+`ngxSignalFormControlAria`, `ngxSignalFormControlLayout`, or
+`[ngxSignalFormControl]` when a single control needs an explicit override.
+
+Keep `switch` in your own code when that is the real control family. It is
+still supported; it is just no longer the clearest primary docs example.
 
 #### Message Placement
 
@@ -231,15 +337,15 @@ Add icons, text, or interactive elements before or after the input using `prefix
 
 #### Wrapper Inputs
 
-| Input                | Type                                   | Default      | Description                                                            |
-| -------------------- | -------------------------------------- | ------------ | ---------------------------------------------------------------------- |
-| `formField`          | `FieldTree<TValue>`                    | _required_   | Signal Forms field tree bound to the wrapper                           |
-| `fieldName`          | `string \| undefined`                  | Derived      | Explicit error ID prefix, otherwise resolved from the bound control ID |
-| `strategy`           | `ErrorDisplayStrategy \| null`         | Inherited    | Error display strategy override                                        |
-| `appearance`         | `'standard' \| 'outline' \| 'inherit'` | `'inherit'`  | Wrapper appearance variant                                             |
-| `errorPlacement`     | `'top' \| 'bottom'`                    | `'bottom'`   | Render automatic messages above or below the control                   |
-| `showRequiredMarker` | `unknown`                              | Config value | Toggle the outlined required marker                                    |
-| `requiredMarker`     | `string \| undefined`                  | Config value | Custom outlined required marker text                                   |
+| Input                | Type                                             | Default      | Description                                                            |
+| -------------------- | ------------------------------------------------ | ------------ | ---------------------------------------------------------------------- |
+| `formField`          | `FieldTree<TValue>`                              | _required_   | Signal Forms field tree bound to the wrapper                           |
+| `fieldName`          | `string \| undefined`                            | Derived      | Explicit error ID prefix, otherwise resolved from the bound control ID |
+| `strategy`           | `ErrorDisplayStrategy \| null`                   | Inherited    | Error display strategy override                                        |
+| `appearance`         | `'stacked' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'`  | Wrapper appearance variant                                             |
+| `errorPlacement`     | `'top' \| 'bottom'`                              | `'bottom'`   | Render automatic messages above or below the control                   |
+| `showRequiredMarker` | `unknown`                                        | Config value | Toggle the outlined required marker                                    |
+| `requiredMarker`     | `string \| undefined`                            | Config value | Custom outlined required marker text                                   |
 
 #### Warning Support
 
@@ -268,7 +374,7 @@ The form field component supports non-blocking warnings in addition to blocking 
 
 #### Outlined CSS Custom Properties
 
-**Standard layout**:
+**Stacked layout**:
 
 ```css
 :root {
@@ -320,8 +426,8 @@ Use `appearance="outline"` for Material Design outlined input patterns with floa
 **Override global config:**
 
 ```html
-<!-- Force standard appearance even if global config sets outline -->
-<ngx-signal-form-field-wrapper [formField]="form.notes" appearance="standard">
+<!-- Force stacked appearance even if global config sets outline -->
+<ngx-signal-form-field-wrapper [formField]="form.notes" appearance="stacked">
   <label for="notes">Notes</label>
   <textarea id="notes" [formField]="form.notes"></textarea>
 </ngx-signal-form-field-wrapper>
@@ -329,10 +435,10 @@ Use `appearance="outline"` for Material Design outlined input patterns with floa
 
 #### Wrapper inputs (appearance)
 
-| Input        | Type                                   | Default     | Description                                |
-| ------------ | -------------------------------------- | ----------- | ------------------------------------------ |
-| `appearance` | `'standard' \| 'outline' \| 'inherit'` | `'inherit'` | Visual style: standard, outline, or config |
-| `outline`    | `boolean`                              | `false`     | Legacy: Forces outline (use appearance)    |
+| Input        | Type                                             | Default     | Description                                      |
+| ------------ | ------------------------------------------------ | ----------- | ------------------------------------------------ |
+| `appearance` | `'stacked' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style: stacked, outline, plain, or config |
+| `outline`    | `boolean`                                        | `false`     | Legacy: Forces outline (use appearance)          |
 
 #### Wrapper inputs (outlined-specific)
 
@@ -495,13 +601,13 @@ Requires CSS `:has()` selector:
 - Focus state applied to container meets WCAG 2.2 Level AA
 - Input outline removed safely (container provides visible focus indicator)
 - Required fields automatically detected via CSS `:has()` selector
-- ARIA attributes handled by the form field wrapper component
+- ARIA attributes on the bound control are handled by the toolkit auto-ARIA layer; the wrapper exposes layout metadata and message placement
 
 #### Error/Warning Alignment
 
 The form field component automatically aligns error and warning messages with the input text for a polished, professional appearance.
 
-**Standard layout:**
+**Stacked layout:**
 
 - Errors have 8px horizontal padding (`0.5rem`) for breathing room on both sides
 
@@ -514,7 +620,7 @@ The form field component automatically aligns error and warning messages with th
 
 - No configuration needed - alignment is built-in via CSS custom property override
 - Works seamlessly with `ngx-signal-form-error` component
-- Responsive to both standard and outlined form field layouts
+- Responsive to both stacked and outlined form field layouts
 - No `::ng-deep` required - uses CSS custom properties for clean encapsulation
 
 **Implementation details:**
