@@ -249,9 +249,7 @@ import { provideNgxSignalFormControlPresets } from '@ngx-signal-forms/toolkit';
 bootstrapApplication(AppComponent, {
   providers: [
     provideNgxSignalFormControlPresets({
-      overrides: {
-        switch: { layout: 'inline-control' },
-      },
+      switch: { layout: 'inline-control' },
     }),
   ],
 });
