@@ -1,6 +1,5 @@
 import {
-  afterNextRender,
-  afterRenderEffect,
+  afterEveryRender,
   booleanAttribute,
   ChangeDetectionStrategy,
   Component,
@@ -16,10 +15,13 @@ import type {
   FormFieldAppearanceInput,
 } from '@ngx-signal-forms/toolkit';
 import {
+  NGX_SIGNAL_FORM_CONTROL_PRESETS,
   NGX_SIGNAL_FORM_CONTEXT,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORMS_CONFIG,
   readDirectErrors,
+  type ResolvedNgxSignalFormControlSemantics,
+  resolveNgxSignalFormControlSemantics,
   resolveErrorDisplayStrategy,
   shouldShowErrors,
 } from '@ngx-signal-forms/toolkit';
@@ -32,6 +34,16 @@ import {
 
 export type FormFieldErrorPlacement = 'top' | 'bottom';
 
+function supportsOutlinedAppearance(
+  controlKind: ResolvedNgxSignalFormControlSemantics['kind'],
+): boolean {
+  return (
+    controlKind !== 'checkbox' &&
+    controlKind !== 'radio-group' &&
+    controlKind !== 'switch'
+  );
+}
+
 /**
  * Form field wrapper component with automatic error/warning display.
  *
@@ -42,6 +54,7 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
  * - Content projection for labels and inputs
  * - Type-safe field binding with generics
  * - Outlined appearance with floating label (`appearance="outline"`)
+ * - Plain appearance for custom or low-chrome fields (`appearance="plain"`)
  * - Support for hints and character counts
  *
  * @template TValue The type of the field value (defaults to unknown)
@@ -146,12 +159,17 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
   host: {
     '[attr.outline]': 'isOutline() ? "" : null',
     '[attr.aria-invalid]': 'showInvalidState() ? "true" : "false"',
+    '[attr.data-ngx-signal-form-control-aria-mode]':
+      'resolvedControlAriaMode()',
+    '[attr.data-ngx-signal-form-control-kind]': 'resolvedControlKind()',
+    '[attr.data-ngx-signal-form-control-layout]': 'resolvedControlLayout()',
     '[class.ngx-signal-form-field-wrapper--invalid]': 'showInvalidState()',
     '[class.ngx-signal-form-field-wrapper--warning]': 'showWarningState()',
     '[class.ngx-signal-form-field-wrapper--messages-top]': 'isTopPlacement()',
     '[class.ngx-signal-form-field-wrapper--messages-bottom]':
       '!isTopPlacement()',
     '[class.ngx-signal-forms-outline]': 'isOutline()',
+    '[class.ngx-signal-forms-plain]': 'isPlain()',
     '[attr.data-error-placement]': 'errorPlacement()',
     '[attr.data-show-required]':
       'isOutline() && resolvedShowRequiredMarker() ? "true" : null',
@@ -159,7 +177,7 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
       'isOutline() && resolvedShowRequiredMarker() ? resolvedRequiredMarker() : null',
   },
   template: `
-    <!-- Label slot (outside bordered container for standard layout, visually inside for outline via CSS) -->
+    <!-- Label slot (outside bordered container for stacked layout, visually inside for outline via CSS) -->
     <div class="ngx-signal-form-field-wrapper__label">
       <ng-content select="label" />
     </div>
@@ -322,8 +340,9 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   /**
    * Form field appearance variant.
    *
-   * - `'standard'`: Label above input (default)
-   * - `'outline'`: Material Design outlined appearance with floating label
+   * - `'stacked'`: Label above input (default)
+   * - `'outline'`: Material-inspired outlined appearance with floating label
+   * - `'plain'`: Minimal wrapper chrome while keeping labels, hints, and errors
    * - `'inherit'`: Use the global config default
    *
    * @default 'inherit'
@@ -347,6 +366,8 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    */
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
 
+  readonly #controlPresets = inject(NGX_SIGNAL_FORM_CONTROL_PRESETS);
+
   /**
    * Form context (optional, for submission state tracking).
    */
@@ -363,19 +384,48 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    */
   readonly #inputElementId = signal<string | null>(null);
 
+  readonly #controlSemantics = signal<ResolvedNgxSignalFormControlSemantics>({
+    kind: null,
+    layout: null,
+    ariaMode: null,
+  });
+
+  readonly #normalizedAppearance = this.appearance;
+
   /**
    * Whether outline appearance should be applied.
    */
   protected readonly isOutline = computed(() => {
-    const componentAppearance = this.appearance();
+    if (!supportsOutlinedAppearance(this.#controlSemantics().kind)) {
+      return false;
+    }
+
+    const componentAppearance = this.#normalizedAppearance();
     if (componentAppearance === 'outline') {
       return true;
     }
-    if (componentAppearance === 'standard') {
+    if (componentAppearance === 'stacked') {
+      return false;
+    }
+    if (componentAppearance === 'plain') {
       return false;
     }
 
     return this.#config.defaultFormFieldAppearance === 'outline';
+  });
+
+  protected readonly isPlain = computed(() => {
+    const componentAppearance = this.#normalizedAppearance();
+
+    if (componentAppearance === 'plain') {
+      return true;
+    }
+
+    if (componentAppearance !== 'inherit') {
+      return false;
+    }
+
+    return this.#config.defaultFormFieldAppearance === 'plain';
   });
 
   /**
@@ -400,6 +450,18 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     }
 
     return this.#config.requiredMarker;
+  });
+
+  protected readonly resolvedControlKind = computed(() => {
+    return this.#controlSemantics().kind;
+  });
+
+  protected readonly resolvedControlLayout = computed(() => {
+    return this.#controlSemantics().layout;
+  });
+
+  protected readonly resolvedControlAriaMode = computed(() => {
+    return this.#controlSemantics().ariaMode;
   });
 
   /**
@@ -530,34 +592,48 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   });
 
   constructor() {
-    // Query DOM for input element ID after first render (content projection complete).
-    // Uses afterNextRender (Angular 19+) instead of legacy ngAfterContentInit.
-    // The signal update triggers error component to re-render with correct ID.
-    afterNextRender(() => {
-      const hostEl = this.#getHostElement();
-
-      const inputEl = this.#findBoundControl(hostEl);
-
-      if (inputEl) {
-        const id = inputEl.getAttribute('id');
-        if (id) {
-          this.#inputElementId.set(id);
-        }
-      }
-    });
-
-    // Set data-signal-field attribute for debugging/testing.
-    // Uses afterRenderEffect write phase — this is a signal-triggered DOM mutation,
-    // so it should run at the optimal time in the render cycle to avoid layout thrashing.
-    afterRenderEffect({
-      write: () => {
-        const fieldName = this.resolvedFieldName();
+    // Single afterEveryRender with proper phased callbacks:
+    // - earlyRead: read projected control metadata from the DOM before writes
+    // - write: update signals only when values changed, then write data-signal-field
+    afterEveryRender({
+      earlyRead: () => {
         const hostEl = this.#getHostElement();
-
         const inputEl = this.#findBoundControl(hostEl);
 
+        return {
+          inputEl,
+          inputId: inputEl?.getAttribute('id') ?? null,
+          semantics: resolveNgxSignalFormControlSemantics(
+            inputEl,
+            this.#controlPresets,
+          ),
+        };
+      },
+      write: (
+        renderState: Readonly<{
+          inputEl: HTMLElement | null;
+          inputId: string | null;
+          semantics: ResolvedNgxSignalFormControlSemantics;
+        }>,
+      ) => {
+        const { inputEl, inputId, semantics } = renderState;
+
+        if (inputId && inputId !== this.#inputElementId()) {
+          this.#inputElementId.set(inputId);
+        }
+
+        const current = this.#controlSemantics();
+        if (
+          current.kind !== semantics.kind ||
+          current.layout !== semantics.layout ||
+          current.ariaMode !== semantics.ariaMode
+        ) {
+          this.#controlSemantics.set(semantics);
+        }
+
+        // Set data-signal-field attribute for debugging/testing.
         if (inputEl) {
-          inputEl.setAttribute('data-signal-field', fieldName);
+          inputEl.setAttribute('data-signal-field', this.resolvedFieldName());
         }
       },
     });

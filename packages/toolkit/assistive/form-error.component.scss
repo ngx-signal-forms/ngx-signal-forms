@@ -70,8 +70,14 @@
   flex-direction: column;
   gap: var(--ngx-signal-form-error-message-spacing);
   padding: var(--ngx-signal-form-error-padding);
-  padding-left: var(--ngx-signal-form-error-padding-horizontal);
-  padding-right: var(--ngx-signal-form-error-padding-horizontal);
+  padding-left: var(
+    --ngx-signal-form-error-padding-inline-start,
+    var(--ngx-signal-form-error-padding-horizontal)
+  );
+  padding-right: var(
+    --ngx-signal-form-error-padding-inline-end,
+    var(--ngx-signal-form-error-padding-horizontal)
+  );
   border-width: var(--ngx-signal-form-error-border-width);
   border-style: solid;
   border-radius: var(--ngx-signal-form-error-border-radius);

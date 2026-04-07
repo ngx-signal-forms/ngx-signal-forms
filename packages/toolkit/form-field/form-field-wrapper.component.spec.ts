@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import {
   DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
   NGX_SIGNAL_FORMS_CONFIG,
+  NgxSignalFormControlSemanticsDirective,
 } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
@@ -872,6 +873,50 @@ describe('NgxSignalFormWrapperComponent', () => {
         wrapper?.classList.contains('ngx-signal-form-field-wrapper--invalid'),
       ).toBe(true);
       expect(errorElement?.textContent).toContain('Email updates required');
+    });
+
+    it('should honor explicit switch semantics without relying on role heuristics', async () => {
+      const invalidField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'required', message: 'Email updates required' }],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field">
+          <label for="emailUpdates">Email updates</label>
+          <input
+            id="emailUpdates"
+            type="checkbox"
+            ngxSignalFormControl="switch"
+          />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [
+            NgxSignalFormWrapperComponent,
+            NgxSignalFormControlSemanticsDirective,
+          ],
+          componentProperties: {
+            field: invalidField,
+          },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-signal-form-field-wrapper');
+
+      expect(wrapper).toHaveAttribute(
+        'data-ngx-signal-form-control-kind',
+        'switch',
+      );
+      expect(wrapper).toHaveAttribute(
+        'data-ngx-signal-form-control-layout',
+        'inline-control',
+      );
+      expect(wrapper).toHaveAttribute(
+        'data-ngx-signal-form-control-aria-mode',
+        'auto',
+      );
+      expect(container.querySelector('[id="emailUpdates-error"]')).toBeTruthy();
     });
 
     it('should work with radio button groups', async () => {
@@ -2168,8 +2213,8 @@ describe('NgxSignalFormWrapperComponent', () => {
   });
 
   describe('Appearance input', () => {
-    describe('Standard appearance', () => {
-      it('should use standard appearance by default (inherit from config default)', async () => {
+    describe('Stacked appearance', () => {
+      it('should use stacked appearance by default (inherit from config default)', async () => {
         const { container } = await render(
           `<ngx-signal-form-field-wrapper [formField]="field">
             <label for="email">Email</label>
@@ -2186,14 +2231,14 @@ describe('NgxSignalFormWrapperComponent', () => {
         const formField = container.querySelector(
           'ngx-signal-form-field-wrapper',
         );
-        // Default config is 'standard', so should NOT have outline class
+        // Default config is 'stacked', so should NOT have outline class
         expect(formField).not.toHaveClass('ngx-signal-forms-outline');
         expect(formField).not.toHaveAttribute('outline');
       });
 
-      it('should use standard appearance when explicitly set', async () => {
+      it('should use stacked appearance when explicitly set', async () => {
         const { container } = await render(
-          `<ngx-signal-form-field-wrapper [formField]="field" appearance="standard">
+          `<ngx-signal-form-field-wrapper [formField]="field" appearance="stacked">
             <label for="email">Email</label>
             <input id="email" type="email" />
           </ngx-signal-form-field-wrapper>`,
@@ -2211,9 +2256,9 @@ describe('NgxSignalFormWrapperComponent', () => {
         expect(formField).not.toHaveClass('ngx-signal-forms-outline');
       });
 
-      it('should override global outline config with standard appearance', async () => {
+      it('should override global outline config with stacked appearance', async () => {
         const { container } = await render(
-          `<ngx-signal-form-field-wrapper [formField]="field" appearance="standard">
+          `<ngx-signal-form-field-wrapper [formField]="field" appearance="stacked">
             <label for="email">Email</label>
             <input id="email" type="email" />
           </ngx-signal-form-field-wrapper>`,
@@ -2237,7 +2282,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         const formField = container.querySelector(
           'ngx-signal-form-field-wrapper',
         );
-        // Should be standard despite global config
+        // Should be stacked despite global config
         expect(formField).not.toHaveClass('ngx-signal-forms-outline');
       });
     });
@@ -2264,7 +2309,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         expect(formField).toHaveAttribute('outline', '');
       });
 
-      it('should override global standard config with outline appearance', async () => {
+      it('should override global stacked config with outline appearance', async () => {
         const { container } = await render(
           `<ngx-signal-form-field-wrapper [formField]="field" appearance="outline">
             <label for="email">Email</label>
@@ -2277,7 +2322,7 @@ describe('NgxSignalFormWrapperComponent', () => {
                 provide: NGX_SIGNAL_FORMS_CONFIG,
                 useValue: {
                   ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-                  defaultFormFieldAppearance: 'standard',
+                  defaultFormFieldAppearance: 'stacked',
                 },
               },
             ],
@@ -2292,6 +2337,48 @@ describe('NgxSignalFormWrapperComponent', () => {
         );
         // Should be outline despite global config
         expect(formField).toHaveClass('ngx-signal-forms-outline');
+      });
+
+      it('should ignore outline appearance for checkbox rows', async () => {
+        const { container } = await render(
+          `<ngx-signal-form-field-wrapper [formField]="field" appearance="outline">
+            <label for="consent">Consent</label>
+            <input id="consent" type="checkbox" />
+          </ngx-signal-form-field-wrapper>`,
+          {
+            imports: [NgxSignalFormWrapperComponent],
+            componentProperties: {
+              field: createMockFieldState(),
+            },
+          },
+        );
+
+        const formField = container.querySelector(
+          'ngx-signal-form-field-wrapper',
+        );
+        expect(formField).not.toHaveClass('ngx-signal-forms-outline');
+        expect(formField).not.toHaveAttribute('outline');
+      });
+
+      it('should ignore outline appearance for switch rows', async () => {
+        const { container } = await render(
+          `<ngx-signal-form-field-wrapper [formField]="field" appearance="outline">
+            <label for="updates">Updates</label>
+            <input id="updates" type="checkbox" role="switch" />
+          </ngx-signal-form-field-wrapper>`,
+          {
+            imports: [NgxSignalFormWrapperComponent],
+            componentProperties: {
+              field: createMockFieldState(),
+            },
+          },
+        );
+
+        const formField = container.querySelector(
+          'ngx-signal-form-field-wrapper',
+        );
+        expect(formField).not.toHaveClass('ngx-signal-forms-outline');
+        expect(formField).not.toHaveAttribute('outline');
       });
     });
 
@@ -2325,7 +2412,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         expect(formField).toHaveClass('ngx-signal-forms-outline');
       });
 
-      it('should inherit standard from global config', async () => {
+      it('should inherit stacked from global config', async () => {
         const { container } = await render(
           `<ngx-signal-form-field-wrapper [formField]="field" appearance="inherit">
             <label for="email">Email</label>
@@ -2338,7 +2425,7 @@ describe('NgxSignalFormWrapperComponent', () => {
                 provide: NGX_SIGNAL_FORMS_CONFIG,
                 useValue: {
                   ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-                  defaultFormFieldAppearance: 'standard',
+                  defaultFormFieldAppearance: 'stacked',
                 },
               },
             ],
@@ -2383,6 +2470,36 @@ describe('NgxSignalFormWrapperComponent', () => {
         // Should inherit outline from config
         expect(formField).toHaveClass('ngx-signal-forms-outline');
       });
+
+      it('should ignore inherited outline config for checkbox rows', async () => {
+        const { container } = await render(
+          `<ngx-signal-form-field-wrapper [formField]="field" appearance="inherit">
+            <label for="marketing">Marketing consent</label>
+            <input id="marketing" type="checkbox" />
+          </ngx-signal-form-field-wrapper>`,
+          {
+            imports: [NgxSignalFormWrapperComponent],
+            providers: [
+              {
+                provide: NGX_SIGNAL_FORMS_CONFIG,
+                useValue: {
+                  ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+                  defaultFormFieldAppearance: 'outline',
+                },
+              },
+            ],
+            componentProperties: {
+              field: createMockFieldState(),
+            },
+          },
+        );
+
+        const formField = container.querySelector(
+          'ngx-signal-form-field-wrapper',
+        );
+        expect(formField).not.toHaveClass('ngx-signal-forms-outline');
+        expect(formField).not.toHaveAttribute('outline');
+      });
     });
 
     describe('Required marker with appearance', () => {
@@ -2407,9 +2524,9 @@ describe('NgxSignalFormWrapperComponent', () => {
         expect(formField).toHaveAttribute('data-required-marker', ' *');
       });
 
-      it('should not show required marker with standard appearance', async () => {
+      it('should not show required marker with stacked appearance', async () => {
         const { container } = await render(
-          `<ngx-signal-form-field-wrapper [formField]="field" appearance="standard">
+          `<ngx-signal-form-field-wrapper [formField]="field" appearance="stacked">
             <label for="email">Email</label>
             <input id="email" type="email" required />
           </ngx-signal-form-field-wrapper>`,
@@ -2426,6 +2543,27 @@ describe('NgxSignalFormWrapperComponent', () => {
         );
         expect(formField).not.toHaveAttribute('data-show-required', 'true');
         expect(formField).not.toHaveAttribute('data-required-marker');
+      });
+
+      it('should use plain appearance when explicitly set', async () => {
+        const { container } = await render(
+          `<ngx-signal-form-field-wrapper [formField]="field" appearance="plain">
+            <label for="email">Email</label>
+            <input id="email" type="email" />
+          </ngx-signal-form-field-wrapper>`,
+          {
+            imports: [NgxSignalFormWrapperComponent],
+            componentProperties: {
+              field: createMockFieldState(),
+            },
+          },
+        );
+
+        const formField = container.querySelector(
+          'ngx-signal-form-field-wrapper',
+        );
+        expect(formField).toHaveClass('ngx-signal-forms-plain');
+        expect(formField).not.toHaveClass('ngx-signal-forms-outline');
       });
     });
   });

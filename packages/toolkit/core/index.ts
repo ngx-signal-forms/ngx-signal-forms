@@ -6,11 +6,13 @@ export * from './tokens';
 
 // Providers
 export * from './providers/config.provider';
+export * from './providers/control-semantics.provider';
 export * from './providers/error-messages.provider';
 export * from './providers/field-labels.provider';
 
 // Directives
 export * from './directives/auto-aria.directive';
+export * from './directives/control-semantics.directive';
 export {
   NgxSignalFormDirective,
   type NgxSignalFormContext,
@@ -18,6 +20,7 @@ export {
 
 // Utilities
 export * from './utilities/create-unique-id';
+export * from './utilities/control-semantics';
 export { shouldShowErrors } from './utilities/error-strategies';
 export * from './utilities/field-resolution';
 export type * from './utilities/field-state-types';
@@ -47,6 +50,7 @@ export {
 // Convenience imports
 import { FormRoot } from '@angular/forms/signals';
 import { NgxSignalFormAutoAriaDirective } from './directives/auto-aria.directive';
+import { NgxSignalFormControlSemanticsDirective } from './directives/control-semantics.directive';
 import { NgxSignalFormDirective } from './directives/ngx-signal-form.directive';
 
 /**
@@ -80,6 +84,7 @@ import { NgxSignalFormDirective } from './directives/ngx-signal-form.directive';
  * - {@link FormRoot} - Angular-owned submit and `novalidate` behavior
  * - {@link NgxSignalFormDirective} - Adds toolkit context and error strategy
  * - {@link NgxSignalFormAutoAriaDirective} - Automatically applies ARIA attributes
+ * - {@link NgxSignalFormControlSemanticsDirective} - Declares stable wrapper/ARIA semantics for a control
  *
  * **For error display:** Import `NgxSignalFormErrorComponent` from `@ngx-signal-forms/toolkit/assistive`
  *
@@ -94,4 +99,5 @@ export const NgxSignalFormToolkit = [
   FormRoot,
   NgxSignalFormDirective,
   NgxSignalFormAutoAriaDirective,
+  NgxSignalFormControlSemanticsDirective,
 ] as const;

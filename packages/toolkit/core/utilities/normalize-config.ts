@@ -11,5 +11,11 @@ import { DEFAULT_NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 export function normalizeSignalFormsConfig(
   config?: NgxSignalFormsUserConfig | null,
 ): NgxSignalFormsConfig {
-  return { ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG, ...config };
+  return {
+    ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+    ...config,
+    defaultFormFieldAppearance:
+      config?.defaultFormFieldAppearance ??
+      DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultFormFieldAppearance,
+  };
 }
