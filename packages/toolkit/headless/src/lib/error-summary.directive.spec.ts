@@ -25,7 +25,7 @@ describe('NgxHeadlessErrorSummaryDirective', () => {
               ngxSignalFormHeadlessErrorSummary
               #summary="errorSummary"
               [formTree]="contactForm"
-              [strategy]="'immediate'"
+              strategy="immediate"
             >
               @if (summary.hasErrors()) {
                 <span data-testid="has-errors">Has Errors</span>
@@ -61,7 +61,7 @@ describe('NgxHeadlessErrorSummaryDirective', () => {
               ngxSignalFormHeadlessErrorSummary
               #summary="errorSummary"
               [formTree]="contactForm"
-              [strategy]="'immediate'"
+              strategy="immediate"
             >
               @if (summary.hasErrors()) {
                 <span data-testid="has-errors">Has Errors</span>
@@ -100,7 +100,7 @@ describe('NgxHeadlessErrorSummaryDirective', () => {
               ngxSignalFormHeadlessErrorSummary
               #summary="errorSummary"
               [formTree]="contactForm"
-              [strategy]="'immediate'"
+              strategy="immediate"
             >
               @for (
                 entry of summary.entries();
@@ -148,7 +148,7 @@ describe('NgxHeadlessErrorSummaryDirective', () => {
               ngxSignalFormHeadlessErrorSummary
               #summary="errorSummary"
               [formTree]="contactForm"
-              [strategy]="'on-touch'"
+              strategy="on-touch"
             >
               @if (summary.shouldShow()) {
                 <span data-testid="visible-summary">Visible</span>
@@ -190,7 +190,7 @@ describe('NgxHeadlessErrorSummaryDirective', () => {
               ngxSignalFormHeadlessErrorSummary
               #summary="errorSummary"
               [formTree]="contactForm"
-              [strategy]="'on-touch'"
+              strategy="on-touch"
             >
               @if (summary.shouldShow()) {
                 <span data-testid="visible-summary">Visible</span>
@@ -239,7 +239,7 @@ describe('NgxHeadlessErrorSummaryDirective', () => {
               ngxSignalFormHeadlessErrorSummary
               #summary="errorSummary"
               [formTree]="contactForm"
-              [strategy]="'immediate'"
+              strategy="immediate"
             >
               @for (
                 entry of summary.entries();

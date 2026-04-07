@@ -522,7 +522,7 @@
 
 // Input, textarea, select (inside main content wrapper)
 // No label styling here - label is in its own class above
-:host ::ng-deep .ngx-signal-form-field-wrapper__main input,
+:host ::ng-deep .ngx-signal-form-field-wrapper__main input:not([role='switch']),
 :host ::ng-deep .ngx-signal-form-field-wrapper__main textarea,
 :host ::ng-deep .ngx-signal-form-field-wrapper__main select {
   font-size: var(--_input-size);
@@ -541,10 +541,6 @@
   &:focus {
     outline: none;
     // Focus styling handled by container :focus-within
-  }
-
-  &[aria-invalid='true'] {
-    // Invalid styling handled by container :has()
   }
 
   &:disabled {
@@ -723,7 +719,7 @@
 :host(.ngx-signal-forms-outline)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
-  input,
+  input:not([role='switch']),
 :host(.ngx-signal-forms-outline)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
@@ -857,7 +853,10 @@
 
 // Case 2 continuation: Reset input styles for checkbox/radio
 // Text fields get width: 100% which distorts checkboxes.
-:host ::ng-deep .ngx-signal-form-field-wrapper__main input[type='checkbox'],
+:host
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__main
+  input[type='checkbox']:not([role='switch']),
 :host ::ng-deep .ngx-signal-form-field-wrapper__main input[type='radio'] {
   width: auto; // Do not stretch
   margin-right: 0.5rem; // Small gap if needed
@@ -865,6 +864,99 @@
 
 :host(.ngx-signal-forms-outline) .ngx-signal-form-field-wrapper__assistive {
   grid-area: assistive;
+}
+
+// checkbox-based switches (e.g. input[type='checkbox'][role='switch'])
+// These should render as a compact label + control row instead of a stacked field.
+:host:has(input[type='checkbox'][role='switch']) {
+  --ngx-form-field-hint-padding-horizontal: 0;
+  --ngx-signal-form-error-padding-horizontal: 0;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'label control'
+    'assistive assistive';
+  align-items: center;
+  column-gap: var(--_field-space-md);
+  row-gap: var(--_field-space-3xs);
+
+  .ngx-signal-form-field-wrapper__label {
+    grid-area: label;
+    padding-inline-start: 0;
+    margin: 0;
+    font-size: var(--_input-size);
+    font-weight: var(--_field-weight-normal);
+    line-height: var(--_input-line-height);
+    color: var(--_color-text);
+  }
+
+  .ngx-signal-form-field-wrapper__content {
+    grid-area: control;
+    width: auto;
+    min-height: auto;
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    box-shadow: none;
+    justify-self: end;
+    cursor: default;
+
+    &:hover,
+    &:focus-within {
+      border-color: transparent;
+      box-shadow: none;
+    }
+  }
+
+  .ngx-signal-form-field-wrapper__main {
+    width: auto;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .ngx-signal-form-field-wrapper__assistive {
+    grid-area: assistive;
+  }
+}
+
+:host.ngx-signal-form-field-wrapper--invalid:has(
+    input[type='checkbox'][role='switch']
+  ) {
+  .ngx-signal-form-field-wrapper__label,
+  .ngx-signal-form-field-wrapper__label label {
+    color: var(--_invalid-color);
+  }
+}
+
+:host.ngx-signal-form-field-wrapper--messages-top:has(
+    input[type='checkbox'][role='switch']
+  ) {
+  grid-template-areas:
+    'messages messages'
+    'label control'
+    'assistive assistive';
+
+  .ngx-signal-form-field-wrapper__messages {
+    grid-area: messages;
+  }
+}
+
+:host(.ngx-signal-forms-outline):has(input[type='checkbox'][role='switch']) {
+  .ngx-signal-form-field-wrapper__label {
+    position: static;
+    z-index: auto;
+    display: block;
+    padding: 0;
+    pointer-events: auto;
+
+    label {
+      font-size: var(--_input-size);
+      line-height: var(--_input-line-height);
+      font-weight: var(--_field-weight-normal);
+      color: var(--_color-text);
+    }
+  }
 }
 
 // Case 3: Bare appearance

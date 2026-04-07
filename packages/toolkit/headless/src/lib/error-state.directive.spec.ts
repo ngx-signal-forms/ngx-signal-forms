@@ -21,7 +21,7 @@ describe('NgxHeadlessErrorStateDirective', () => {
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
-              [strategy]="'immediate'"
+              strategy="immediate"
             >
               @if (errorState.hasErrors()) {
                 <span data-testid="has-errors">Has Errors</span>
@@ -59,7 +59,7 @@ describe('NgxHeadlessErrorStateDirective', () => {
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
-              [strategy]="'immediate'"
+              strategy="immediate"
             >
               @if (!errorState.hasErrors()) {
                 <span data-testid="no-errors">No Errors</span>
@@ -97,7 +97,7 @@ describe('NgxHeadlessErrorStateDirective', () => {
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
-              [strategy]="'on-touch'"
+              strategy="on-touch"
             >
               @if (errorState.showErrors()) {
                 <span data-testid="show-errors">Show Errors</span>
@@ -144,7 +144,7 @@ describe('NgxHeadlessErrorStateDirective', () => {
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
-              [strategy]="'immediate'"
+              strategy="immediate"
             >
               @for (error of errorState.errors(); track error.kind) {
                 <span [attr.data-testid]="'error-' + error.kind">{{
@@ -184,7 +184,7 @@ describe('NgxHeadlessErrorStateDirective', () => {
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
-              [strategy]="'immediate'"
+              strategy="immediate"
             >
               @for (error of errorState.resolvedErrors(); track error.kind) {
                 <span data-testid="error-message">{{ error.message }}</span>
@@ -222,7 +222,7 @@ describe('NgxHeadlessErrorStateDirective', () => {
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
-              [strategy]="'immediate'"
+              strategy="immediate"
             >
               <span data-testid="error-id">{{ errorState.errorId() }}</span>
               <span data-testid="warning-id">{{ errorState.warningId() }}</span>
@@ -258,7 +258,7 @@ describe('NgxHeadlessErrorStateDirective', () => {
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
-              [strategy]="'immediate'"
+              strategy="immediate"
             >
               @if (errorState.showErrors()) {
                 <span data-testid="show-errors">Show Errors</span>
@@ -296,7 +296,7 @@ describe('NgxHeadlessErrorStateDirective', () => {
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
-              [strategy]="'on-submit'"
+              strategy="on-submit"
               [submittedStatus]="submittedStatus()"
             >
               @if (errorState.showErrors()) {
@@ -346,7 +346,7 @@ describe('NgxHeadlessErrorStateDirective', () => {
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
-              [strategy]="'immediate'"
+              strategy="immediate"
             >
               @if (errorState.showErrors() && errorState.hasErrors()) {
                 <div
@@ -402,7 +402,7 @@ describe('NgxHeadlessErrorStateDirective', () => {
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
-              [strategy]="'on-touch'"
+              strategy="on-touch"
             >
               @if (errorState.showErrors()) {
                 <span data-testid="show-errors">Show Errors</span>

@@ -163,6 +163,52 @@ describe('NgxSignalFormAutoAriaDirective', () => {
       expect(input?.hasAttribute('aria-invalid')).toBe(false);
     });
 
+    it('should apply to checkbox switches with role="switch"', async () => {
+      @Component({
+        template:
+          '<input type="checkbox" role="switch" id="emailUpdates" [formField]="switchControl()" />',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAriaDirective],
+      })
+      class TestComponent {
+        switchControl = createMockControl(true, true, [
+          { kind: 'required', message: 'Switch is required' },
+        ]);
+      }
+
+      const { container } = await render(TestComponent);
+
+      const input = container.querySelector('input');
+      expect(input?.getAttribute('aria-invalid')).toBe('true');
+      expect(input?.getAttribute('aria-describedby')).toBe(
+        'emailUpdates-error',
+      );
+    });
+
+    it('should resolve aria-describedby after a dynamically bound switch id is rendered', async () => {
+      @Component({
+        template:
+          '<input type="checkbox" role="switch" [id]="fieldId" [formField]="switchControl()" />',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAriaDirective],
+      })
+      class TestComponent {
+        readonly fieldId = 'emailUpdates';
+
+        switchControl = createMockControl(true, true, [
+          { kind: 'required', message: 'Switch is required' },
+        ]);
+      }
+
+      const { container } = await render(TestComponent);
+
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const input = container.querySelector('input');
+      expect(input?.getAttribute('aria-invalid')).toBe('true');
+      expect(input?.getAttribute('aria-describedby')).toBe(
+        'emailUpdates-error',
+      );
+    });
+
     it('should NOT apply when ngxSignalFormAutoAriaDisabled is present', async () => {
       @Component({
         template:

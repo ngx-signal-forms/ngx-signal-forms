@@ -89,7 +89,7 @@ Angular's native `FormRoot` remains the owner of `novalidate`, `event.preventDef
 
 ```html
 <!-- Angular owns [formRoot], toolkit opts in via ngxSignalForm -->
-<form [formRoot]="myForm" ngxSignalForm [errorStrategy]="'on-submit'">
+<form [formRoot]="myForm" ngxSignalForm errorStrategy="on-submit">
   <button type="submit">Submit</button>
 </form>
 ```
@@ -101,8 +101,16 @@ Automatically applies to supported `[formField]` controls, including custom cont
 Current behavior:
 
 - covers text-like inputs, textareas, selects, and custom `[formField]` hosts
-- excludes `radio` and `checkbox` inputs
+- excludes `radio` and standard `checkbox` inputs
+- checkbox-based switches opt back in with `role="switch"`
 - can be disabled per control with `ngxSignalFormAutoAriaDisabled`
+
+**Standalone scope note:** Angular standalone imports are template-local. If a
+custom control component renders the real `<input [formField]>`,
+`<textarea [formField]>`, or other bound host inside its own template, import
+`NgxSignalFormToolkit` or `NgxSignalFormAutoAriaDirective` in that custom
+control component itself. Importing the toolkit only in a parent form component
+does not make the directive available inside child component templates.
 
 Auto-applies:
 
@@ -131,7 +139,7 @@ provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-submit' });
 ```
 
 For one-off differences, prefer form-level or field-level inputs such as
-`ngxSignalForm [errorStrategy]` or wrapper `appearance` instead of subtree-scoped config overrides.
+`ngxSignalForm errorStrategy` or wrapper `appearance` instead of subtree-scoped config overrides.
 
 ### Error Messages
 
@@ -369,7 +377,7 @@ list and focuses the related control when an entry is activated.
 ```html
 <ngx-signal-form-error-summary
   [formTree]="form"
-  [strategy]="'on-submit'"
+  strategy="on-submit"
   [submittedStatus]="submittedStatus()"
 />
 ```

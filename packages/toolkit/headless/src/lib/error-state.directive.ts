@@ -84,7 +84,7 @@ export interface ErrorStateSignals {
  * ## With Form Context (for on-submit strategy)
  *
  * ```html
- * <form [formRoot]="form" [errorStrategy]="'on-submit'">
+ * <form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">
  *   <div ngxSignalFormHeadlessErrorState #errorState="errorState" [field]="form.email" fieldName="email">
  *     @if (errorState.showErrors()) {
  *       @for (error of errorState.resolvedErrors(); track error.kind) {

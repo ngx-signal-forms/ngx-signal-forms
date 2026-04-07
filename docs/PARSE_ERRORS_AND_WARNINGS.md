@@ -216,7 +216,7 @@ The headless `NgxHeadlessErrorStateDirective` exposes separate signals:
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit],
   template: `
-    <form [formRoot]="regForm" ngxSignalForm [errorStrategy]="'on-touch'">
+    <form [formRoot]="regForm" ngxSignalForm errorStrategy="on-touch">
       <label for="password">Password</label>
       <input id="password" type="password" [formField]="regForm.password" />
       <ngx-signal-form-error

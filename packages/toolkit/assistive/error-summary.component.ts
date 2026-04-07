@@ -33,7 +33,7 @@ import { NgxHeadlessErrorSummaryDirective } from '@ngx-signal-forms/toolkit/head
  * ## With Form-Level Strategy
  *
  * ```html
- * <form [formRoot]="myForm" ngxSignalForm [errorStrategy]="'on-submit'">
+ * <form [formRoot]="myForm" ngxSignalForm errorStrategy="on-submit">
  *   ...fields...
  *   <ngx-signal-form-error-summary [formTree]="myForm" />
  *   <button type="submit">Submit</button>

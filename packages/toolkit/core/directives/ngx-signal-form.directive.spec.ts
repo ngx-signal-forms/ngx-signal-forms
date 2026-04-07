@@ -10,7 +10,11 @@ import {
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
+import {
+  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+  NGX_SIGNAL_FORM_CONTEXT,
+  NGX_SIGNAL_FORMS_CONFIG,
+} from '../tokens';
 import type { ErrorDisplayStrategy, NgxSignalFormsConfig } from '../types';
 import { NgxSignalFormDirective } from './ngx-signal-form.directive';
 
@@ -20,8 +24,7 @@ import { NgxSignalFormDirective } from './ngx-signal-form.directive';
 const createTestConfig = (
   overrides: Partial<NgxSignalFormsConfig>,
 ): NgxSignalFormsConfig => ({
-  autoAria: true,
-  defaultErrorStrategy: 'on-touch',
+  ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
   ...overrides,
 });
 
@@ -83,7 +86,7 @@ describe('NgxSignalFormDirective', () => {
           <form
             [formRoot]="contactForm"
             ngxSignalForm
-            [errorStrategy]="'immediate'"
+            errorStrategy="immediate"
           >
             <ngx-signal-form-context-display />
           </form>
@@ -237,7 +240,7 @@ describe('NgxSignalFormDirective', () => {
         readonly #model = signal({ email: 'test@example.com' });
         readonly contactForm = form(this.#model, {
           submission: {
-            action: () => undefined,
+            action: async () => null,
           },
         });
 
@@ -300,7 +303,7 @@ describe('NgxSignalFormDirective', () => {
         readonly #model = signal({ email: 'test@example.com' });
         readonly contactForm = form(this.#model, {
           submission: {
-            action: () => undefined,
+            action: async () => null,
           },
         });
 
@@ -369,7 +372,7 @@ describe('NgxSignalFormDirective', () => {
           readonly #model = signal({ email: 'test@example.com' });
           readonly contactForm = form(this.#model, {
             submission: {
-              action: () => undefined,
+              action: async () => null,
             },
           });
 

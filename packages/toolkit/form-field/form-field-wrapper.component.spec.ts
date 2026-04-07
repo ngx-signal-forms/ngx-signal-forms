@@ -837,6 +837,43 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(label).toBeTruthy();
     });
 
+    it('should work with switch inputs', async () => {
+      const invalidField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'required', message: 'Email updates required' }],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field">
+          <label for="emailUpdates">Email updates</label>
+          <input id="emailUpdates" type="checkbox" role="switch" />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: invalidField,
+          },
+        },
+      );
+
+      const switchControl = screen.getByRole('switch');
+      const errorElement = container.querySelector('[id="emailUpdates-error"]');
+      const wrapper = container.querySelector('ngx-signal-form-field-wrapper');
+      const assistiveRow = container.querySelector(
+        'ngx-signal-form-field-assistive-row',
+      );
+
+      expect(switchControl).toBeTruthy();
+      expect(errorElement).toBeTruthy();
+      expect(assistiveRow?.querySelector('ngx-signal-form-error')).toBeTruthy();
+      expect(wrapper).toHaveAttribute('aria-invalid', 'true');
+      expect(
+        wrapper?.classList.contains('ngx-signal-form-field-wrapper--invalid'),
+      ).toBe(true);
+      expect(errorElement?.textContent).toContain('Email updates required');
+    });
+
     it('should work with radio button groups', async () => {
       await render(
         `<ngx-signal-form-field-wrapper [formField]="field" fieldName="test-field">

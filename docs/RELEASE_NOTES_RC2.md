@@ -37,9 +37,7 @@ Compared to **RC1** (`v1.0.0-rc.0`), this release is mostly additive and consoli
   - Move form-level strategy configuration onto the explicit toolkit host:
 
     ```html
-    <form [formRoot]="myForm" ngxSignalForm [errorStrategy]="'on-submit'">
-      ...
-    </form>
+    <form [formRoot]="myForm" ngxSignalForm errorStrategy="on-submit">...</form>
     ```
 
 - **`shouldShowErrors()` changed signature**
@@ -121,7 +119,7 @@ Recommended update:
 If you also configure form-level strategy behavior, move that configuration onto the same host:
 
 ```html
-<form [formRoot]="myForm" ngxSignalForm [errorStrategy]="'on-submit'"></form>
+<form [formRoot]="myForm" ngxSignalForm errorStrategy="on-submit"></form>
 ```
 
 ### 2. Re-test submit-time validation flows

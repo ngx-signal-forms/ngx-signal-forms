@@ -72,7 +72,154 @@ export class CustomToggleDirective implements FormCheckboxControl {
 }
 ```
 
+## Switch Semantics for Custom Toggle Controls
+
+If your custom control represents an on/off switch rather than a plain checkbox,
+document and implement it as a **switch**, not just a visually restyled boolean
+field.
+
+### Recommended pattern
+
+Prefer a native checkbox as the actual bound control and add `role="switch"` to
+that focusable element:
+
+```html
+<label for="emailUpdates">Email updates</label>
+<input
+  id="emailUpdates"
+  type="checkbox"
+  role="switch"
+  [formField]="form.emailUpdates"
+/>
+```
+
+This keeps the built-in browser behavior for:
+
+- focusability
+- Space-key toggling
+- click/touch toggling
+- form participation
+
+and lets the toolkit layer its own `aria-invalid`, `aria-required`, and
+`aria-describedby` behavior on top.
+
+### Why this matters
+
+Per MDN, a switch is a checkbox-like control with **on/off** semantics. A proper
+switch:
+
+- exposes `role="switch"`
+- uses a boolean checked state (`true` / `false`)
+- does **not** use an indeterminate / mixed state
+- is keyboard accessible with the Space key
+- has an accessible name via a visible `<label>` or `aria-label`
+
+Reference:
+
+- [MDN: ARIA `switch` role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/switch_role)
+
+### What the toolkit does and does not do
+
+The toolkit can enhance switch-like controls with:
+
+- `aria-invalid`
+- `aria-required`
+- `aria-describedby`
+- strategy-aware error visibility
+
+The toolkit does **not** invent base switch semantics for you. If the underlying
+control does not already behave like a switch, you still need to provide the
+correct role, keyboard behavior, checked-state wiring, and accessible name.
+
+### Third-party component libraries
+
+#### Angular Material
+
+Use the semantics and ARIA behavior that Material already provides for
+`mat-slide-toggle`. Do **not** try to layer toolkit auto-ARIA on top of
+Material's internal control markup inside `mat-form-field`.
+
+- keep Material in charge of switch semantics and error rendering
+- use toolkit strategy alignment only at the form/policy level when needed
+- if you need wrapper-style toolkit UI, prefer a native checkbox-based switch or
+  a dedicated adapter component rather than mixing two field systems
+
+#### PrimeNG
+
+Treat PrimeNG toggle/switch components as library-owned widgets.
+
+- if the PrimeNG component already exposes switch semantics and manages ARIA,
+  avoid duplicating toolkit auto-ARIA on the internal control
+- if you wrap it, verify the rendered DOM actually exposes the accessible name,
+  checked state, and described-by linkage you expect
+- if it does **not** expose switch semantics correctly, use an adapter or prefer
+  a native checkbox-based implementation
+
+#### ng-bootstrap / Bootstrap switch styling
+
+This is usually the easiest integration path because it commonly rests on a
+native checkbox.
+
+- keep the actual control as `input[type="checkbox"]`
+- add `role="switch"` when the UI is conceptually a switch
+- let the toolkit enhance that input with its ARIA/error wiring
+
+## Practical rule of thumb
+
+- **Native checkbox + switch styling** → best fit with the toolkit
+- **Library switch that already owns semantics** → let the library own semantics
+- **Custom non-native widget** → you must supply switch semantics yourself before
+  the toolkit can enhance it safely
+
 ## Toolkit Integration
+
+### Standalone imports are template-local
+
+When a custom control renders the actual `[formField]` host element inside its
+own template, import the toolkit auto-ARIA support in that **same standalone
+component**.
+
+Angular standalone imports are template-scoped:
+
+- imports on the parent form component apply to the parent template only
+- imports on the custom control component apply to the custom control template
+- parent imports do **not** flow automatically into child component templates
+
+That means this setup is correct for a switch-style custom control:
+
+```typescript
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { FormField, type FieldTree } from '@angular/forms/signals';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  selector: 'ngx-switch-control',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [FormField, NgxSignalFormToolkit],
+  template: `
+    <input
+      [id]="inputId()"
+      type="checkbox"
+      role="switch"
+      [formField]="field()"
+    />
+  `,
+})
+export class SwitchControlComponent {
+  readonly field = input<FieldTree<boolean>>();
+  readonly inputId = input.required<string>();
+}
+```
+
+If you import `NgxSignalFormToolkit` only in the parent form component, the
+toolkit directives are available to the parent's `custom-controls.html`, but not
+to the `<input [formField]>` declared inside `SwitchControlComponent`.
+
+Use whichever import fits your component best:
+
+- `NgxSignalFormToolkit` when you want the bundle import
+- `NgxSignalFormAutoAriaDirective` when you only need auto-ARIA on the leaf
+  control
 
 ### focusBoundControl() and Focus
 
@@ -193,7 +340,7 @@ export class CustomSelectComponent implements FormValueControl<string> {
 Usage with toolkit:
 
 ```html
-<form [formRoot]="myForm" ngxSignalForm [errorStrategy]="'on-touch'">
+<form [formRoot]="myForm" ngxSignalForm errorStrategy="on-touch">
   <ngx-signal-form-field-wrapper
     [formField]="myForm.country"
     fieldName="country"

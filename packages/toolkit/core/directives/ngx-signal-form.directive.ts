@@ -102,7 +102,7 @@ export interface NgxSignalFormContext {
  *
  * @example With error strategy
  * ```html
- * <form [formRoot]="userForm" ngxSignalForm [errorStrategy]="'on-submit'">
+ * <form [formRoot]="userForm" ngxSignalForm errorStrategy="on-submit">
  *   <!-- Errors appear only after form submission -->
  * </form>
  * ```

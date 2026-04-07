@@ -26,7 +26,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'on-touch'"
+            strategy="on-touch"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -59,7 +59,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'on-submit'"
+            strategy="on-submit"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -93,7 +93,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'on-touch'"
+            strategy="on-touch"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -130,7 +130,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'on-touch'"
+            strategy="on-touch"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -168,7 +168,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'on-touch'"
+            strategy="on-touch"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -201,7 +201,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'immediate'"
+            strategy="immediate"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -240,7 +240,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'immediate'"
+            strategy="immediate"
           />
         `,
       })
@@ -272,7 +272,7 @@ describe('NgxSignalFormErrorComponent', () => {
         template: `
           <ngx-signal-form-error
             fieldName="address"
-            [listStyle]="'bullets'"
+            listStyle="bullets"
             [errors]="errors"
           />
         `,
@@ -303,7 +303,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'immediate'"
+            strategy="immediate"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -337,7 +337,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'on-submit'"
+            strategy="on-submit"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -385,7 +385,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'on-touch'"
+            strategy="on-touch"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -420,7 +420,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'on-touch'"
+            strategy="on-touch"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -453,7 +453,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'on-submit'"
+            strategy="on-submit"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -486,7 +486,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'on-submit'"
+            strategy="on-submit"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -535,7 +535,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'immediate'"
+            strategy="immediate"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -568,7 +568,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'immediate'"
+            strategy="immediate"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -600,7 +600,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'immediate'"
+            strategy="immediate"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -635,7 +635,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.user.profile.email"
             fieldName="user.profile.email"
-            [strategy]="'immediate'"
+            strategy="immediate"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -669,7 +669,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'on-touch'"
+            strategy="on-touch"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -702,7 +702,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="email"
-            [strategy]="'on-touch'"
+            strategy="on-touch"
             [submittedStatus]="submittedStatus()"
           />
         `,
@@ -751,7 +751,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
             [formField]="contactForm.email"
-            [strategy]="'immediate'"
+            strategy="immediate"
           />
         `,
       })
@@ -798,7 +798,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <ngx-signal-form-error
             [formField]="contactForm.email"
             fieldName="explicit-name"
-            [strategy]="'immediate'"
+            strategy="immediate"
           />
         `,
       })
@@ -838,7 +838,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
             [formField]="contactForm.email"
-            [strategy]="'immediate'"
+            strategy="immediate"
           />
         `,
       })
@@ -882,7 +882,7 @@ describe('NgxSignalFormErrorComponent', () => {
           <input id="email" [formField]="contactForm.email" />
           <ngx-signal-form-error
             [formField]="contactForm.email"
-            [strategy]="'immediate'"
+            strategy="immediate"
           />
         `,
       })

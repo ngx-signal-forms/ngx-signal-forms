@@ -59,7 +59,7 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
  * <ngx-signal-form-field-wrapper
  *   [formField]="form.password"
  *   fieldName="password"
- *   [strategy]="'on-submit'"
+ *   strategy="on-submit"
  * >
  *   <label for="password">Password</label>
  *   <input id="password" type="password" [formField]="form.password" />

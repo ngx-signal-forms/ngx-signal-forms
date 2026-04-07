@@ -62,7 +62,7 @@ export type NgxSignalFormErrorListStyle = 'plain' | 'bullets';
  *
  * @example With Form-Level Strategy Override
  * ```html
- * <form [formRoot]="form" ngxSignalForm [errorStrategy]="'immediate'">
+ * <form [formRoot]="form" ngxSignalForm errorStrategy="immediate">
  *   <ngx-signal-form-error [formField]="form.email" fieldName="email" />
  * </form>
  * ```

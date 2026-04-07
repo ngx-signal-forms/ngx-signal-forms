@@ -235,8 +235,8 @@ describe('NgxFormFieldHintComponent', () => {
     it('should render multiple hints with different positions', async () => {
       const { container } = await render(
         `<div>
-          <ngx-signal-form-field-hint [position]="'left'">Left hint</ngx-signal-form-field-hint>
-          <ngx-signal-form-field-hint [position]="'right'">Right hint</ngx-signal-form-field-hint>
+          <ngx-signal-form-field-hint position="left">Left hint</ngx-signal-form-field-hint>
+          <ngx-signal-form-field-hint position="right">Right hint</ngx-signal-form-field-hint>
           <ngx-signal-form-field-hint>No position</ngx-signal-form-field-hint>
         </div>`,
         {
@@ -407,7 +407,7 @@ describe('NgxFormFieldHintComponent', () => {
 
     it('should work with character count guidance', async () => {
       await render(
-        `<ngx-signal-form-field-hint [position]="'left'">
+        `<ngx-signal-form-field-hint position="left">
           Recommended: 150-300 characters
         </ngx-signal-form-field-hint>`,
         {

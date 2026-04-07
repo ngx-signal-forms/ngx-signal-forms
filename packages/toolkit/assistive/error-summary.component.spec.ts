@@ -20,7 +20,7 @@ describe('NgxSignalFormErrorSummaryComponent', () => {
         />
         <ngx-signal-form-error-summary
           [formTree]="contactForm"
-          [strategy]="'immediate'"
+          strategy="immediate"
           summaryLabel="Fix these issues"
         />
       `,
@@ -59,7 +59,7 @@ describe('NgxSignalFormErrorSummaryComponent', () => {
         <input id="email" [formField]="contactForm.email" />
         <ngx-signal-form-error-summary
           [formTree]="contactForm"
-          [strategy]="'on-submit'"
+          strategy="on-submit"
           [submittedStatus]="submittedStatus()"
         />
       `,

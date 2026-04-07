@@ -99,7 +99,7 @@ interface LoginModel {
         #errorState="errorState"
         [field]="loginForm.email"
         fieldName="email"
-        [strategy]="'on-touch'"
+        strategy="on-touch"
       >
         <label for="email">Email</label>
         <input
@@ -271,7 +271,7 @@ Exposes error state signals for custom error display implementations.
   #errorState="errorState"
   [field]="form.email"
   fieldName="email"
-  [strategy]="'immediate'"
+  strategy="immediate"
 >
   <label for="email">Email</label>
   <input
@@ -334,7 +334,7 @@ interface ErrorSummaryEntry {
 **Example:**
 
 ```html
-<form [formRoot]="myForm" ngxSignalForm [errorStrategy]="'on-submit'">
+<form [formRoot]="myForm" ngxSignalForm errorStrategy="on-submit">
   <!-- ...fields... -->
 
   <div

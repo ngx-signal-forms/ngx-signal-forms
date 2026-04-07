@@ -118,12 +118,12 @@ import { SignalFormDebuggerComponent } from '@ngx-signal-forms/toolkit/debugger'
 @Component({
   imports: [FormField, NgxSignalFormToolkit, SignalFormDebuggerComponent],
   template: `
-    <form [formRoot]="userForm" ngxSignalForm [errorStrategy]="'on-submit'">
+    <form [formRoot]="userForm" ngxSignalForm errorStrategy="on-submit">
       <input [formField]="userForm.email" />
       <button type="submit">Submit</button>
     </form>
 
-    <ngx-signal-form-debugger [formTree]="userForm" [errorStrategy]="'on-submit'" />
+    <ngx-signal-form-debugger [formTree]="userForm" errorStrategy="on-submit" />
   `,
 })
 ```

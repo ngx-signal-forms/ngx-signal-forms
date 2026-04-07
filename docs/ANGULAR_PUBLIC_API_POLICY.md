@@ -70,7 +70,7 @@ The toolkit's `ngxSignalForm` directive is additive — it requires Angular's `[
 
 ```html
 <!-- Angular owns the form, toolkit enhances it -->
-<form [formRoot]="myForm" ngxSignalForm [errorStrategy]="'on-submit'"></form>
+<form [formRoot]="myForm" ngxSignalForm errorStrategy="on-submit"></form>
 ```
 
 ### 3. Standalone Components Work Without Toolkit Context

@@ -78,7 +78,7 @@ type DebuggerError = {
  * <ngx-signal-form-debugger
  *   [formTree]="userForm"
  *   title="Registration Form"
- *   [errorStrategy]="'on-submit'"
+ *   errorStrategy="on-submit"
  * />
  * ```
  */

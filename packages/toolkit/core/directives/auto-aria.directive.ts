@@ -36,7 +36,8 @@ function isAutoAriaFieldState(value: unknown): value is AutoAriaFieldState {
  * - `aria-describedby`: Links to error messages for screen readers
  *
  * **Selector Strategy**: Automatically applies to all form controls with `[formField]` attribute,
- * except radio buttons and checkboxes (which require special handling).
+ * except radio buttons and standard checkboxes. Checkbox-based switches opt back in
+ * with `role="switch"`.
  *
  * **Opt-out**: Add `ngxSignalFormAutoAriaDisabled` attribute to disable.
  *
@@ -54,6 +55,7 @@ function isAutoAriaFieldState(value: unknown): value is AutoAriaFieldState {
 @Directive({
   // eslint-disable-next-line @angular-eslint/directive-selector -- Targets Angular Signal Forms' [formField] directive
   selector: `
+    input[type="checkbox"][role="switch"][formField]:not([ngxSignalFormAutoAriaDisabled]),
     input[formField]:not([ngxSignalFormAutoAriaDisabled]):not([type="radio"]):not([type="checkbox"]),
     textarea[formField]:not([ngxSignalFormAutoAriaDisabled]),
     select[formField]:not([ngxSignalFormAutoAriaDisabled]),
@@ -265,6 +267,12 @@ export class NgxSignalFormAutoAriaDirective {
 
     afterNextRender(
       () => {
+        const resolvedFieldName = resolveFieldName(this.#element.nativeElement);
+
+        if (resolvedFieldName !== this.#fieldName()) {
+          this.#fieldName.set(resolvedFieldName);
+        }
+
         this.#domVersion.update((value) => value + 1);
       },
       { injector: this.#injector },

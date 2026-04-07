@@ -81,7 +81,7 @@ imports: [FormField, NgxSignalFormToolkit];
 ```
 
 ```html
-<form [formRoot]="myForm" ngxSignalForm [errorStrategy]="'on-touch'"></form>
+<form [formRoot]="myForm" ngxSignalForm errorStrategy="on-touch"></form>
 ```
 
 ### Assistive: `@ngx-signal-forms/toolkit/assistive`
@@ -612,6 +612,7 @@ The skill covers the full toolkit — entry points, patterns, ARIA automation, a
 The toolkit is designed with WCAG 2.2 AA form patterns in mind:
 
 - automatic `aria-invalid`, `aria-required`, and `aria-describedby` wiring for supported controls
+- custom on/off controls should expose real switch semantics on the bound control (prefer a native checkbox styled as a switch, or a library component that already exposes `role="switch"` semantics); see [`docs/CUSTOM_CONTROLS.md`](./docs/CUSTOM_CONTROLS.md) and [MDN switch role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/switch_role)
 - `role="alert"` for blocking errors and `role="status"` for warnings
 - default `on-touch` error timing to avoid premature error noise
 - focus helpers for invalid submissions
