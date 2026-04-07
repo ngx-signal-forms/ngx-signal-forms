@@ -1191,26 +1191,6 @@
   }
 }
 
-:host(.ngx-signal-forms-outline)[data-ngx-signal-form-control-kind='switch'],
-:host(.ngx-signal-forms-outline):has(input[type='checkbox'][role='switch']) {
-  .ngx-signal-form-field-wrapper__label {
-    position: static;
-    z-index: auto;
-    display: flex;
-    align-items: center;
-    padding-block: var(--_selection-row-padding-block);
-    padding-inline: var(--_selection-row-padding-inline) 0;
-    pointer-events: auto;
-
-    label {
-      font-size: var(--_input-size);
-      line-height: var(--_input-line-height);
-      font-weight: var(--_field-weight-normal);
-      color: var(--_color-text);
-    }
-  }
-}
-
 // Case 3: Plain appearance
 // Removes text-field-like styling (border, background, padding) from the wrapper.
 :host(.ngx-signal-forms-plain) {

@@ -455,11 +455,11 @@ test.describe('Custom Signal Forms Controls', () => {
         }
       });
 
-      await test.step('Verify switch and checkbox rows still expose outline mode while keeping their semantic row layouts', async () => {
+      await test.step('Verify switch and checkbox rows keep their semantic layouts without text-field outline chrome', async () => {
         for (const controlId of ['emailUpdates', 'shareReviewPublicly']) {
           const wrapper = page.getWrapperByControlId(controlId);
-          await expect(wrapper).toHaveAttribute('outline', '');
-          await expect(wrapper).toHaveClass(/ngx-signal-forms-outline/);
+          await expect(wrapper).not.toHaveAttribute('outline', '');
+          await expect(wrapper).not.toHaveClass(/ngx-signal-forms-outline/);
         }
 
         await expect(
@@ -477,12 +477,17 @@ test.describe('Custom Signal Forms Controls', () => {
     test('should keep invalid outline borders only for outlined text-like required fields', async () => {
       const outlinedControlIds = ['productName'] as const;
       const plainControlIds = ['rating', 'serviceRating'] as const;
+      const rowControlIds = ['emailUpdates', 'shareReviewPublicly'] as const;
       const initialBorderColors = new Map<string, string>();
 
       await test.step('Switch to outline mode and submit the empty form', async () => {
         await page.showOutlineAppearance();
 
-        for (const controlId of [...outlinedControlIds, ...plainControlIds]) {
+        for (const controlId of [
+          ...outlinedControlIds,
+          ...plainControlIds,
+          ...rowControlIds,
+        ]) {
           const content = page.getWrapperContentByControlId(controlId);
           initialBorderColors.set(
             controlId,
@@ -527,6 +532,29 @@ test.describe('Custom Signal Forms Controls', () => {
           );
           await expect(wrapper).toHaveClass(/ngx-signal-forms-plain/);
           await expect(wrapper).not.toHaveClass(/ngx-signal-forms-outline/);
+          expect(initialBorderColor).toBeDefined();
+
+          await expect
+            .poll(async () => {
+              return content.evaluate(
+                (element) => window.getComputedStyle(element).borderColor,
+              );
+            })
+            .toBe(initialBorderColor);
+        }
+      });
+
+      await test.step('Verify row-based controls stay non-outlined even when invalid', async () => {
+        for (const controlId of rowControlIds) {
+          const wrapper = page.getWrapperByControlId(controlId);
+          const content = page.getWrapperContentByControlId(controlId);
+          const initialBorderColor = initialBorderColors.get(controlId);
+
+          await expect(wrapper).toHaveClass(
+            /ngx-signal-form-field-wrapper--invalid/,
+          );
+          await expect(wrapper).not.toHaveClass(/ngx-signal-forms-outline/);
+          await expect(wrapper).not.toHaveAttribute('outline', '');
           expect(initialBorderColor).toBeDefined();
 
           await expect
