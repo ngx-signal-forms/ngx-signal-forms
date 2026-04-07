@@ -125,7 +125,7 @@ export class ComplexFormsComponent {
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
 
   /** Form field appearance input */
-  readonly appearance = input<FormFieldAppearance>('standard');
+  readonly appearance = input<FormFieldAppearance>('stacked');
 
   /** Form data model */
   readonly #model = signal<ComplexFormModel>({

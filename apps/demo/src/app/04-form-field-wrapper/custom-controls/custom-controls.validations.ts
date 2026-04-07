@@ -32,4 +32,18 @@ export const customControlsSchema = schema<CustomControlsModel>((path) => {
   required(path.emailUpdates, {
     message: 'Enable email updates to complete this demo',
   });
+
+  // Standard checkbox that only participates in toolkit checkbox flows when it
+  // explicitly opts into checkbox semantics.
+  required(path.shareReviewPublicly, {
+    message: 'Please confirm that this review can be shared publicly',
+  });
+
+  // Slider-style custom control with component-owned ARIA wiring.
+  required(path.accessibilityAudit, {
+    message: 'Please rate the accessibility experience',
+  });
+  min(path.accessibilityAudit, 1, {
+    message: 'Accessibility audit must be at least 1 star',
+  });
 });

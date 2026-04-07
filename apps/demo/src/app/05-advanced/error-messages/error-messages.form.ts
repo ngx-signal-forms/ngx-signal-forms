@@ -38,7 +38,7 @@ import { errorMessagesSchema } from './error-messages.validations';
       required: 'This field is required',
       email: 'Please enter a valid email address',
       minLength: (params: Record<string, unknown>) =>
-        `Minimum ${(params as { minLength: number }).minLength} characters required`,
+        `Minimum ${String(params['minLength'])} characters required`,
     }),
   ],
   template: `

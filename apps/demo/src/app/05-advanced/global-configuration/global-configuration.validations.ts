@@ -33,4 +33,15 @@ export const globalConfigSchema = schema<GlobalConfigModel>((path) => {
     }
     return null;
   });
+
+  // Accept terms validation
+  validate(path.acceptTerms, (ctx) => {
+    if (!ctx.value()) {
+      return {
+        kind: 'accept-terms',
+        message: 'You must accept the terms of service',
+      };
+    }
+    return null;
+  });
 });

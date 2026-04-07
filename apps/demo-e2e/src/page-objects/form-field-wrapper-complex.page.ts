@@ -83,6 +83,20 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
   }
 
   /**
+   * Get preferences newsletter switch control
+   */
+  get newsletterSwitch(): Locator {
+    return this.form.locator('#newsletter');
+  }
+
+  /**
+   * Get preferences notifications checkbox control
+   */
+  get notificationsCheckbox(): Locator {
+    return this.form.locator('#notifications');
+  }
+
+  /**
    * Get contact method radios within preferences
    */
   get preferencesContactRadios(): Locator {

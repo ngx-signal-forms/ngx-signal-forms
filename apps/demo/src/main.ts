@@ -11,7 +11,10 @@ import {
   withEnabledBlockingInitialNavigation,
   withViewTransitions,
 } from '@angular/router';
-import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
+import {
+  provideNgxSignalFormControlPresets,
+  provideNgxSignalFormsConfig,
+} from '@ngx-signal-forms/toolkit';
 import { AppComponent } from './app/app.component';
 import { appRoutes } from './app/app.routes';
 
@@ -58,6 +61,9 @@ void (async () => {
       provideNgxSignalFormsConfig({
         defaultErrorStrategy: 'on-touch',
         autoAria: true,
+      }),
+      provideNgxSignalFormControlPresets({
+        switch: { layout: 'inline-control', ariaMode: 'auto' },
       }),
       provideRouter(
         appRoutes,

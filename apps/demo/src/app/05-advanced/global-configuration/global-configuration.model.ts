@@ -8,4 +8,5 @@ export interface GlobalConfigModel {
   userEmail: string;
   userPhone: string;
   userWebsite: string;
+  acceptTerms: boolean;
 }

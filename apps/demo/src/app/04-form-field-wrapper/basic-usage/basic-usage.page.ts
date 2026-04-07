@@ -79,7 +79,7 @@ import { OutlineFormFieldComponent } from './outline-form-field.form';
 
         <ngx-display-controls-section
           title="🎨 Wrapper styling"
-          description="Use standard for the everyday baseline and outline for the denser design-system treatment shown in the second example."
+          description="Use stacked for the everyday baseline and outline for the denser design-system treatment shown in the second example."
         >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
         </ngx-display-controls-section>
@@ -89,7 +89,7 @@ import { OutlineFormFieldComponent } from './outline-form-field.form';
         <div left class="flex flex-col gap-12">
           <section>
             <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-              Standard wrapper baseline
+              Stacked wrapper baseline
             </h2>
             <ngx-basic-usage
               #formComponent
@@ -151,7 +151,7 @@ export class BasicUsagePage {
 
   protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
-    signal<FormFieldAppearance>('standard');
+    signal<FormFieldAppearance>('stacked');
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',

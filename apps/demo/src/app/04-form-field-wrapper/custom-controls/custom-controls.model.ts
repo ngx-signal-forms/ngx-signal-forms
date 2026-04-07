@@ -18,6 +18,12 @@ export interface CustomControlsModel {
   /** Email updates preference controlled by a switch */
   emailUpdates: boolean;
 
+  /** Standard checkbox that explicitly opts into checkbox semantics */
+  shareReviewPublicly: boolean;
+
+  /** Custom slider control that owns its ARIA relationships manually */
+  accessibilityAudit: number;
+
   /** Optional feedback text */
   feedback: string;
 }
@@ -31,5 +37,7 @@ export const initialCustomControlsModel: CustomControlsModel = {
   serviceRating: 0,
   wouldRecommend: 0,
   emailUpdates: false,
+  shareReviewPublicly: false,
+  accessibilityAudit: 0,
   feedback: '',
 };

@@ -110,6 +110,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
       class="ngx-switch-control__input"
       [id]="inputId()"
       type="checkbox"
+      ngxSignalFormControl="switch"
       role="switch"
       [formField]="field()"
     />

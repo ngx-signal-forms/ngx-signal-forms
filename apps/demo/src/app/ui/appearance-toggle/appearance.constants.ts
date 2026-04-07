@@ -1,4 +1,13 @@
+import type { ResolvedFormFieldAppearance } from '@ngx-signal-forms/toolkit';
+
+export const APPEARANCE_OPTIONS = [
+  'stacked',
+  'outline',
+  'plain',
+] as const satisfies readonly ResolvedFormFieldAppearance[];
+
 export const APPEARANCE_LABELS = {
-  standard: 'Standard',
+  stacked: 'Stacked',
   outline: 'Outline',
-} as const;
+  plain: 'Plain',
+} as const satisfies Record<ResolvedFormFieldAppearance, string>;

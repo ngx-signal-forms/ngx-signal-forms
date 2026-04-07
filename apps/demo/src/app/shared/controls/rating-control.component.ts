@@ -29,7 +29,6 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
  */
 @Component({
   selector: 'ngx-rating-control',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     'data-ngx-signal-form-control': '',
@@ -39,8 +38,10 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
     '[attr.aria-valuemax]': 'maxRating()',
     '[attr.aria-valuenow]': 'currentValue()',
     '[attr.aria-valuetext]': 'valueText()',
-    '[attr.aria-invalid]': 'invalid()',
-    '[attr.aria-disabled]': 'disabled()',
+    '[attr.aria-describedby]': 'describedBy()',
+    '[attr.aria-invalid]': 'invalid() ? "true" : "false"',
+    '[attr.aria-disabled]': 'disabled() ? "true" : "false"',
+    '[attr.aria-required]': 'required() ? "true" : null',
     '[class.rating-control--disabled]': 'disabled()',
     '[class.rating-control--invalid]': 'invalid()',
     '[class.rating-control--focused]': 'focused()',
@@ -51,16 +52,26 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
   styles: `
     :host {
       display: inline-flex;
-      gap: 0.25rem;
-      padding: 0.25rem;
-      border-radius: 0.25rem;
+      align-items: center;
+      gap: 0.375rem;
+      min-block-size: 2rem;
+      padding: 0.25rem 0.125rem;
+      border-radius: 9999px;
       outline: none;
       cursor: pointer;
-      transition: box-shadow 0.15s ease-in-out;
+      transition:
+        background-color 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out,
+        transform 0.15s ease-in-out;
     }
 
     :host(:focus-visible) {
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+      background-color: color-mix(in srgb, #fbbf24 10%, transparent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, #007bc7 30%, transparent);
+    }
+
+    :host([data-signal-field]:focus-visible) {
+      box-shadow: none;
     }
 
     :host(.rating-control--disabled) {
@@ -69,16 +80,25 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
     }
 
     .star {
-      font-size: 1.5rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-inline-size: 1.5rem;
+      min-block-size: 1.5rem;
+      font-size: 1.625rem;
       line-height: 1;
       transition:
         transform 0.1s ease-in-out,
-        color 0.15s ease-in-out;
+        color 0.15s ease-in-out,
+        filter 0.15s ease-in-out;
       user-select: none;
     }
 
     .star:hover:not(.star--disabled) {
-      transform: scale(1.2);
+      transform: scale(1.14);
+      filter: drop-shadow(
+        0 0 0.35rem color-mix(in srgb, #fbbf24 35%, transparent)
+      );
     }
 
     .star--filled {
@@ -124,6 +144,12 @@ export class RatingControlComponent implements FormValueControl<number> {
    * @default 5
    */
   readonly maxRating = input(5);
+
+  /**
+   * Optional aria-describedby chain for demos or wrappers that keep ARIA
+   * ownership on the custom control host.
+   */
+  readonly describedBy = input<string | null>(null);
 
   /**
    * The current rating value - required by FormValueControl interface.

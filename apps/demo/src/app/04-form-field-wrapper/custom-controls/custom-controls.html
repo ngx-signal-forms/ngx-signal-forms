@@ -12,7 +12,7 @@
   class="form-container"
 >
   <div class="space-y-6">
-    <!-- Product Name - Standard input for comparison -->
+    <!-- Product Name - Stacked input for comparison -->
     <ngx-signal-form-field-wrapper
       [appearance]="appearance()"
       [formField]="reviewForm.productName"
@@ -28,7 +28,7 @@
 
     <!-- Product Rating - Custom RatingControl with auto-derived fieldName -->
     <ngx-signal-form-field-wrapper
-      [appearance]="appearance()"
+      appearance="plain"
       [formField]="reviewForm.rating"
     >
       <label for="rating">Product Rating *</label>
@@ -45,7 +45,7 @@
 
     <!-- Service Rating - Custom RatingControl -->
     <ngx-signal-form-field-wrapper
-      [appearance]="appearance()"
+      appearance="plain"
       [formField]="reviewForm.serviceRating"
     >
       <label for="serviceRating">Service Quality *</label>
@@ -59,7 +59,7 @@
 
     <!-- Would Recommend - Custom RatingControl as thumbs up/down (2 stars) -->
     <ngx-signal-form-field-wrapper
-      [appearance]="appearance()"
+      appearance="plain"
       [formField]="reviewForm.wouldRecommend"
     >
       <label for="wouldRecommend">Would Recommend?</label>
@@ -85,11 +85,49 @@
         [field]="reviewForm.emailUpdates"
       />
       <ngx-signal-form-field-hint position="left">
-        Required in this demo so the switch can show wrapper validation.
+        Required in this demo so the switch can show wrapper validation. The
+        internal checkbox declares ngxSignalFormControl="switch" so the wrapper
+        can use explicit control semantics.
       </ngx-signal-form-field-hint>
     </ngx-signal-form-field-wrapper>
 
-    <!-- Feedback - Standard textarea for comparison -->
+    <ngx-signal-form-field-wrapper
+      [appearance]="appearance()"
+      [formField]="reviewForm.shareReviewPublicly"
+    >
+      <label for="shareReviewPublicly">Share this review publicly *</label>
+      <input
+        id="shareReviewPublicly"
+        type="checkbox"
+        ngxSignalFormControl="checkbox"
+        [formField]="reviewForm.shareReviewPublicly"
+      />
+      <ngx-signal-form-field-hint position="left">
+        This is a native checkbox. It only opts into toolkit ARIA and wrapper
+        behavior because it explicitly declares checkbox semantics.
+      </ngx-signal-form-field-hint>
+    </ngx-signal-form-field-wrapper>
+
+    <ngx-signal-form-field-wrapper
+      appearance="plain"
+      [formField]="reviewForm.accessibilityAudit"
+      errorPlacement="top"
+    >
+      <label for="accessibilityAudit">Accessibility Audit *</label>
+      <ngx-rating-control
+        id="accessibilityAudit"
+        ngxSignalFormControl="slider"
+        [describedBy]="accessibilityAuditDescribedBy()"
+        [formField]="reviewForm.accessibilityAudit"
+        [maxRating]="5"
+      />
+      <ngx-signal-form-field-hint id="accessibilityAudit-hint" position="left">
+        This slider uses a component-scoped slider preset for custom layout and
+        manual ARIA, so the control owns its described-by chain itself.
+      </ngx-signal-form-field-hint>
+    </ngx-signal-form-field-wrapper>
+
+    <!-- Feedback - Stacked textarea for comparison -->
     <ngx-signal-form-field-wrapper
       [appearance]="appearance()"
       [formField]="reviewForm.feedback"
@@ -105,25 +143,30 @@
   </div>
 
   <!-- Form Actions -->
-  <div class="mt-8 flex items-center gap-4">
-    <button
-      class="btn-primary"
-      type="submit"
-      [disabled]="reviewForm().submitting()"
-    >
-      @if (reviewForm().submitting()) { Submitting... } @else { Submit Review }
-    </button>
+  <div
+    class="mt-8 flex flex-col items-start gap-3 border-t border-gray-200/80 pt-4 dark:border-gray-700/80"
+  >
+    <div class="flex flex-wrap items-center gap-4">
+      <button
+        class="btn-primary"
+        type="submit"
+        [disabled]="reviewForm().submitting()"
+      >
+        @if (reviewForm().submitting()) { Submitting... } @else { Submit Review
+        }
+      </button>
 
-    <button class="btn-secondary" type="reset" (click)="resetForm()">
-      Reset
-    </button>
+      <button class="btn-secondary" type="reset" (click)="resetForm()">
+        Reset
+      </button>
+    </div>
 
-    <div class="ml-auto text-sm text-gray-600 dark:text-gray-400">
+    <p class="text-sm text-gray-600 dark:text-gray-400">
       @if (reviewForm().valid()) {
       <span class="text-green-600 dark:text-green-400">✓ All fields valid</span>
       } @else {
       <span>* Required fields</span>
       }
-    </div>
+    </p>
   </div>
 </form>

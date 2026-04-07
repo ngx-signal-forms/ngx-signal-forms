@@ -95,6 +95,43 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
     });
   });
 
+  test.describe('Mixed Control Families', () => {
+    test('should render newsletter as a switch with correct data attributes', async () => {
+      const newsletter = page.newsletterSwitch;
+      await expect(newsletter).toBeVisible();
+      await expect(newsletter).toHaveAttribute('role', 'switch');
+      await expect(newsletter).toHaveAttribute(
+        'data-ngx-signal-form-control-kind',
+        'switch',
+      );
+    });
+
+    test('should render notifications as a checkbox with correct data attributes', async () => {
+      const notifications = page.notificationsCheckbox;
+      await expect(notifications).toBeVisible();
+      await expect(notifications).toHaveAttribute(
+        'data-ngx-signal-form-control-kind',
+        'checkbox',
+      );
+    });
+
+    test('should wrap switch and checkbox in form field wrappers', async () => {
+      const newsletterWrapper = page.preferencesFieldset.locator(
+        'ngx-signal-form-field-wrapper',
+      );
+      await expect(newsletterWrapper.first()).toBeVisible();
+      const count = await newsletterWrapper.count();
+      expect(count).toBeGreaterThanOrEqual(2);
+    });
+
+    test('should apply auto-ARIA to switch control after interaction', async () => {
+      const newsletter = page.newsletterSwitch;
+      await newsletter.focus();
+      await newsletter.blur();
+      await expect(newsletter).toHaveAttribute('aria-invalid', /(true|false)/);
+    });
+  });
+
   test.describe('Form Submission', () => {
     test('should have submit button', async () => {
       await expect(page.submitButton).toBeVisible();

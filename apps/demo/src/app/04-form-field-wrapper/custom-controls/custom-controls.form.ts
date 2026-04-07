@@ -1,13 +1,19 @@
+// Custom controls demo form - product review with rating, switch, checkbox controls
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   input,
   signal,
 } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import {
+  buildAriaDescribedBy,
   createOnInvalidHandler,
+  createSubmittedStatusTracker,
   NgxSignalFormToolkit,
+  provideNgxSignalFormControlPresetsForComponent,
+  shouldShowErrors,
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
 } from '@ngx-signal-forms/toolkit';
@@ -16,10 +22,7 @@ import {
   RatingControlComponent,
   SwitchControlComponent,
 } from '../../shared/controls';
-import {
-  initialCustomControlsModel,
-  type CustomControlsModel,
-} from './custom-controls.model';
+import { initialCustomControlsModel } from './custom-controls.model';
 import { customControlsSchema } from './custom-controls.validations';
 
 /**
@@ -42,6 +45,14 @@ import { customControlsSchema } from './custom-controls.validations';
 @Component({
   selector: 'ngx-custom-controls',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    ...provideNgxSignalFormControlPresetsForComponent({
+      slider: {
+        layout: 'custom',
+        ariaMode: 'manual',
+      },
+    }),
+  ],
   imports: [
     FormField,
     NgxSignalFormToolkit,
@@ -50,8 +61,17 @@ import { customControlsSchema } from './custom-controls.validations';
     SwitchControlComponent,
   ],
   templateUrl: './custom-controls.html',
+  styles: `
+    :host {
+      display: block;
+    }
+  `,
 })
-export class CustomControlsComponent {
+export class CustomControlsFormComponent {
+  readonly #submitAttempted = signal(false);
+
+  readonly #handleInvalidSubmission = createOnInvalidHandler();
+
   /**
    * Error display mode input - controls when errors are shown.
    */
@@ -60,7 +80,7 @@ export class CustomControlsComponent {
   /**
    * Form field appearance input
    */
-  readonly appearance = input<FormFieldAppearance>('standard');
+  readonly appearance = input<FormFieldAppearance>('stacked');
 
   /**
    * Form model signal with default values.
@@ -77,8 +97,30 @@ export class CustomControlsComponent {
         console.log('Review submitted:', this.#model());
         return null;
       },
-      onInvalid: createOnInvalidHandler(),
+      onInvalid: (formTree) => {
+        this.#submitAttempted.set(true);
+        this.#handleInvalidSubmission(formTree);
+      },
     },
+  });
+
+  protected readonly submittedStatus = createSubmittedStatusTracker(
+    this.reviewForm,
+    this.#submitAttempted,
+  );
+
+  protected readonly accessibilityAuditDescribedBy = computed(() => {
+    const fieldState = this.reviewForm.accessibilityAudit();
+
+    return buildAriaDescribedBy('accessibilityAudit', {
+      baseIds: ['accessibilityAudit-hint'],
+      showErrors: shouldShowErrors(
+        fieldState.invalid(),
+        fieldState.touched(),
+        this.errorDisplayMode(),
+        this.submittedStatus(),
+      ),
+    });
   });
 
   /**

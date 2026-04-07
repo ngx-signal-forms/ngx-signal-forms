@@ -113,6 +113,21 @@ import { globalConfigSchema } from './global-configuration.validations';
             Optional - Must be a valid URL if provided
           </ngx-signal-form-field-hint>
         </ngx-signal-form-field-wrapper>
+
+        <!-- Accept terms switch (demonstrates app-level preset via provideNgxSignalFormControlPresets) -->
+        <ngx-signal-form-field-wrapper
+          [formField]="configForm.acceptTerms"
+          [appearance]="appearance()"
+        >
+          <label for="acceptTerms">Accept terms of service</label>
+          <input
+            id="acceptTerms"
+            type="checkbox"
+            role="switch"
+            ngxSignalFormControl="switch"
+            [formField]="configForm.acceptTerms"
+          />
+        </ngx-signal-form-field-wrapper>
       </div>
 
       <!-- Form actions -->
@@ -176,6 +191,7 @@ export class GlobalConfigurationComponent {
     userEmail: '',
     userPhone: '',
     userWebsite: '',
+    acceptTerms: false,
   });
 
   readonly configForm = form(this.#model, globalConfigSchema, {
@@ -184,7 +200,12 @@ export class GlobalConfigurationComponent {
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 1000);
         });
-        this.#model.set({ userEmail: '', userPhone: '', userWebsite: '' });
+        this.#model.set({
+          userEmail: '',
+          userPhone: '',
+          userWebsite: '',
+          acceptTerms: false,
+        });
         this.configForm().reset();
       },
       onInvalid: createOnInvalidHandler(),
@@ -197,6 +218,7 @@ export class GlobalConfigurationComponent {
       userEmail: '',
       userPhone: '',
       userWebsite: '',
+      acceptTerms: false,
     });
   }
 }
