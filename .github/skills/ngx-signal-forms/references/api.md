@@ -30,8 +30,10 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 **NgxSignalFormAutoAriaDirective:**
 
-- Applied automatically to `input[formField]` (except radio/checkbox), `textarea[formField]`, `select[formField]`, and custom `[formField]` hosts.
+- Applied automatically to text-like `input[formField]`, `textarea[formField]`, `select[formField]`, checkbox switches using `input[type="checkbox"][role="switch"][formField]`, and custom `[formField]` hosts.
+- Standard checkboxes and radios remain excluded.
 - Opt out per control with `ngxSignalFormAutoAriaDisabled` directive.
+- In standalone Angular, import the toolkit bundle or directive in the component whose template renders the actual bound element; parent imports do not flow into child templates.
 
 ### Providers
 
@@ -244,15 +246,15 @@ import {
 
 ### NgxSignalFormFieldWrapperComponent inputs
 
-| Input                | Type                                   | Default                         |
-| -------------------- | -------------------------------------- | ------------------------------- |
-| `formField`          | field                                  | Required                        |
-| `fieldName`          | string                                 | Derived from bound control `id` |
-| `strategy`           | ErrorDisplayStrategy                   | Inherited                       |
-| `appearance`         | `'standard' \| 'outline' \| 'inherit'` | `'inherit'`                     |
-| `errorPlacement`     | `'top' \| 'bottom'`                    | `'bottom'`                      |
-| `showRequiredMarker` | boolean                                | From config                     |
-| `requiredMarker`     | string                                 | `'*'`                           |
+| Input                | Type                                   | Default                                                                                         |
+| -------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `formField`          | field                                  | Required                                                                                        |
+| `fieldName`          | string                                 | Derived from bound control `id`; pass explicitly for nested custom controls or dynamic identity |
+| `strategy`           | ErrorDisplayStrategy                   | Inherited                                                                                       |
+| `appearance`         | `'standard' \| 'outline' \| 'inherit'` | `'inherit'`                                                                                     |
+| `errorPlacement`     | `'top' \| 'bottom'`                    | `'bottom'`                                                                                      |
+| `showRequiredMarker` | boolean                                | From config                                                                                     |
+| `requiredMarker`     | string                                 | `'*'`                                                                                           |
 
 ### NgxSignalFormFieldset inputs
 

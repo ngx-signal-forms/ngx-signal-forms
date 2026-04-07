@@ -60,11 +60,7 @@ import { NgxSignalFormErrorSummaryComponent } from '@ngx-signal-forms/toolkit/as
     NgxSignalFormErrorSummaryComponent,
   ],
   template: `
-    <form
-      [formRoot]="registrationForm"
-      ngxSignalForm
-      [errorStrategy]="'on-submit'"
-    >
+    <form [formRoot]="registrationForm" ngxSignalForm errorStrategy="on-submit">
       <!-- Error summary at top of form — inherits strategy from ngxSignalForm context -->
       <ngx-signal-form-error-summary
         [formTree]="registrationForm"

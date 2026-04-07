@@ -23,13 +23,15 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 
 - `'on-submit'` — show errors only after submission attempt (requires `form[formRoot][ngxSignalForm]` for toolkit submission context)
 
-3. **Let auto-ARIA manage ARIA attributes.** `NgxSignalFormAutoAriaDirective` (bundled in `NgxSignalFormToolkit`) handles `aria-invalid`, `aria-required`, and `aria-describedby` for all `[formField]` controls except radio/checkbox. Never add those attributes manually.
+3. **Let auto-ARIA manage ARIA attributes.** `NgxSignalFormAutoAriaDirective` (bundled in `NgxSignalFormToolkit`) handles `aria-invalid`, `aria-required`, and `aria-describedby` for text-like `[formField]` controls, selects, textareas, custom hosts, and checkbox-based switches that opt in with `role="switch"`. Standard checkboxes and radios stay excluded. Never add those attributes manually.
 
-4. **Use `provideErrorMessages()` for centralized validation copy.** Message priority: validator-provided `error.message` → registry → toolkit default.
+4. **Remember that standalone imports are template-local.** Importing `NgxSignalFormToolkit` in a parent form component does not make `NgxSignalFormAutoAriaDirective` available inside a child component's template. If a custom control renders the actual `<input [formField]>` itself, import the toolkit bundle or the directive in that child component.
 
-5. **Use warning helpers for non-blocking guidance.** Warnings use `kind: 'warn:*'` convention and render with polite ARIA (`role="status"`). Blocking errors render with assertive ARIA (`role="alert"`).
+5. **Use `provideErrorMessages()` for centralized validation copy.** Message priority: validator-provided `error.message` → registry → toolkit default.
 
-6. **Use submission helpers over manual state tracking:**
+6. **Use warning helpers for non-blocking guidance.** Warnings use `kind: 'warn:*'` convention and render with polite ARIA (`role="status"`). Blocking errors render with assertive ARIA (`role="alert"`).
+
+7. **Use submission helpers over manual state tracking:**
    - `focusFirstInvalid(form)` — focus on invalid target after failed submit
    - `createOnInvalidHandler()` — creates an `onInvalid` callback for `form()` submit options
    - `submitWithWarnings(form, callback)` — submit even when only warnings remain
@@ -48,7 +50,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form [formRoot]="userForm" ngxSignalForm [errorStrategy]="'on-submit'">
+    <form [formRoot]="userForm" ngxSignalForm errorStrategy="on-submit">
       <ngx-signal-form-field-wrapper
         [formField]="userForm.email"
         appearance="outline"
@@ -132,6 +134,7 @@ patchState(store, (s) => ({
 ## Error Handling
 
 - If `'on-submit'` errors don't appear: verify the form uses `form[formRoot][ngxSignalForm]` — toolkit `submittedStatus` and form context require it.
-- If `aria-describedby` links are missing: ensure bound controls have a stable `id` attribute.
+- If `aria-describedby` links are missing: ensure bound controls have a stable `id` attribute; for nested or dynamically identified controls inside wrappers, prefer an explicit `fieldName` on the wrapper.
+- If a switch does not receive auto-ARIA: confirm the actual bound element is `input[type="checkbox"][role="switch"]` and that the component rendering it imported the toolkit in its own standalone `imports`.
 - If ARIA attributes are duplicated: check for manual additions alongside auto-ARIA; remove the manual ones.
 - If submission helpers don't block on warnings: use `submitWithWarnings()` and ensure the validator uses `warningError()` with a `warn:` prefix kind.

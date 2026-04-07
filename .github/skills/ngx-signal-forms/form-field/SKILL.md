@@ -18,9 +18,11 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 1. **Import using `NgxFormField` bundle** from `@ngx-signal-forms/toolkit/form-field`. Don't import from the root package.
 
 2. **Wrap controls in `ngx-signal-form-field-wrapper`:**
-   - Bound control must have a stable `id` — the wrapper derives field identity from it.
-   - Set `appearance="outline"` for modern outlined inputs; `appearance="standard"` for underlined; `appearance="inherit"` to follow parent config.
-   - Add `placeholder=" "` (a single space) alongside `appearance="outline"` when you want the floating label animation.
+
+- Bound control must have a stable `id` — the wrapper derives field identity from it.
+- For nested custom controls or dynamically identified inner controls, pass explicit `fieldName` on the wrapper instead of relying on implicit id discovery.
+- Set `appearance="outline"` for modern outlined inputs; `appearance="standard"` for underlined; `appearance="inherit"` to follow parent config.
+- Add `placeholder=" "` (a single space) alongside `appearance="outline"` when you want the floating label animation.
 
 3. **Error placement:**
    - Default for wrapper: `errorPlacement="bottom"`
@@ -38,6 +40,9 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 
 7. **Custom controls:** Implement `FormValueControl<T>` from `@angular/forms/signals`. Give the host a stable `id` so the wrapper links correctly.
 
+- For switch-style boolean controls, prefer a native checkbox with `role="switch"` on the actual bound element.
+- If the custom control renders the real `[formField]` element in its own template, import toolkit auto-ARIA in that child component because standalone imports do not cascade.
+
 ## Basic Usage
 
 ```typescript
@@ -51,7 +56,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form [formRoot]="profileForm" ngxSignalForm [errorStrategy]="'on-submit'">
+    <form [formRoot]="profileForm" ngxSignalForm errorStrategy="on-submit">
       <ngx-signal-form-field-wrapper
         [formField]="profileForm.email"
         appearance="outline"
@@ -117,7 +122,8 @@ Use `includeNestedErrors` on the fieldset only when the overall summary must agg
 
 ## Error Handling
 
-- If wrapper errors don't appear: confirm the bound control has an `id` attribute matching the field.
+- If wrapper errors don't appear: confirm the bound control has an `id` attribute matching the field, or add explicit `fieldName` when the control is nested.
 - If grouped summary duplicates child messages: remove `includeNestedErrors` or scope `fields` explicitly.
 - If floating label doesn't animate: add `placeholder=" "` (a single space) and use `appearance="outline"`.
+- If a switch row collapses or inherits text-input styling: make sure the bound control is a real switch (`input[type='checkbox'][role='switch']`) so switch-specific wrapper styling can apply.
 - For fully custom markup without wrapper assumptions, switch to `headless/SKILL.md`.

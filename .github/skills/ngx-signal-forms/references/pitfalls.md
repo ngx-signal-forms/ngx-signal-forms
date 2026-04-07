@@ -132,18 +132,96 @@ These were removed or are not public:
 
 Required only for `appearance="outline"` (floating label behavior).
 
+## Angular Template Binding — Prefer Static Attributes for Literal Strings
+
+```html
+<!-- Wrong — Angular parses this as an expression, not a string literal -->
+<ngx-signal-form-field-wrapper [strategy]="on-submit"
+  >...</ngx-signal-form-field-wrapper
+>
+
+<!-- Correct — use a plain attribute for literal values -->
+<ngx-signal-form-field-wrapper strategy="on-submit"
+  >...</ngx-signal-form-field-wrapper
+>
+```
+
+For literal string inputs, prefer the plain attribute form because it is shorter
+and easier to scan. Use property binding only when the value comes from a real
+template expression. In skill docs and examples, prefer the plain attribute form
+for static strings so the canonical pattern stays obvious.
+
+## Switch Semantics — Use a Real Switch, Not Just Switch Styling
+
+```html
+<!-- Wrong — visually switch-like, but still just a plain checkbox semantic -->
+<input id="emailUpdates" type="checkbox" [formField]="form.emailUpdates" />
+
+<!-- Correct — native checkbox plus real switch semantics -->
+<input
+  id="emailUpdates"
+  type="checkbox"
+  role="switch"
+  [formField]="form.emailUpdates"
+/>
+```
+
+Use a native checkbox with `role="switch"` on the actual bound control when the
+UI is conceptually an on/off switch. This preserves native keyboard behavior and
+lets toolkit auto-ARIA opt the control back in.
+
+## Standalone Imports — Parent Imports Do Not Flow Into Child Templates
+
+```typescript
+// Wrong mental model
+// Importing NgxSignalFormToolkit in the parent component does NOT make
+// NgxSignalFormAutoAriaDirective available inside a child custom control template.
+
+// Correct
+@Component({
+  imports: [FormField, NgxSignalFormToolkit],
+  template: `<input [formField]="field()" role="switch" type="checkbox" />`,
+})
+export class SwitchControlComponent {}
+```
+
+Angular standalone imports are template-local. If the real `[formField]` host
+element lives inside `SwitchControlComponent`, that component needs the toolkit
+import in its own `imports` array.
+
+## Nested Custom Controls May Need Explicit `fieldName`
+
+```html
+<!-- Fragile — wrapper relies on discovering identity from nested markup timing -->
+<ngx-signal-form-field-wrapper [formField]="form.emailUpdates">
+  <label for="emailUpdates">Email updates</label>
+  <app-switch-control inputId="emailUpdates" [field]="form.emailUpdates" />
+</ngx-signal-form-field-wrapper>
+
+<!-- Safer for nested/dynamic controls -->
+<ngx-signal-form-field-wrapper
+  [formField]="form.emailUpdates"
+  fieldName="emailUpdates"
+>
+  <label for="emailUpdates">Email updates</label>
+  <app-switch-control inputId="emailUpdates" [field]="form.emailUpdates" />
+</ngx-signal-form-field-wrapper>
+```
+
+When the actual bound control is nested inside a custom component or its `id` is
+resolved dynamically, pass `fieldName` explicitly on the wrapper to keep error
+IDs and described-by wiring deterministic.
+
 ## Error Strategy `'on-submit'` Without `[formRoot]`
 
 ```html
 <!-- Wrong — no submitted status source, errors never show -->
 <form (submit)="save($event)" novalidate>
-  <ngx-signal-form-field-wrapper
-    [formField]="form.email"
-    [strategy]="'on-submit'"
+  <ngx-signal-form-field-wrapper [formField]="form.email" strategy="on-submit"
     >...</ngx-signal-form-field-wrapper
   >
 </form>
 
 <!-- Correct — [formRoot] provides submittedStatus context -->
-<form [formRoot]="form" [errorStrategy]="'on-submit'">...</form>
+<form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">...</form>
 ```
