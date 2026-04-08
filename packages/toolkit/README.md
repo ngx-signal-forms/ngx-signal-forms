@@ -115,6 +115,10 @@ Rule of thumb:
 - use **manual** mode when the control already owns its ARIA state and described-by chain
 - use **disabled** only for bespoke hosts where the toolkit should not participate at all
 
+Manual mode is about **ARIA ownership on the control host**, not about opting
+out of the wrapper. Wrapper labels, hints, errors, and field context can still
+be used when ARIA ownership is manual.
+
 **Standalone scope note:** Angular standalone imports are template-local. If a
 custom control component renders the real `<input [formField]>`,
 `<textarea [formField]>`, or other bound host inside its own template, import
@@ -223,6 +227,11 @@ protected readonly describedBy = computed(() =>
   }),
 );
 ```
+
+This is commonly paired with `appearance="plain"` on the wrapper for sliders,
+ratings, and composite widgets: the wrapper still contributes labels and
+feedback, while the control keeps ownership of both its visual UI and its
+ARIA chain.
 
 ### Configuration
 

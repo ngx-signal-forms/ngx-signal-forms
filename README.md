@@ -82,6 +82,11 @@ The toolkit's `NgxSignalFormDirective` (selector: `form[formRoot][ngxSignalForm]
 > control preset providers mainly for custom controls, switch-style toggles,
 > slider/composite widgets, or third-party components where the toolkit cannot
 > safely infer the desired wrapper/layout/ARIA behavior.
+>
+> `ngxSignalFormControlAria="manual"` does **not** disable wrapper behavior.
+> It only means the control host owns `aria-describedby`, `aria-invalid`, and
+> `aria-required` itself, while the wrapper can still provide labels, hints,
+> errors, and field context.
 
 ```typescript
 imports: [FormField, NgxSignalFormToolkit];
@@ -106,6 +111,45 @@ imports: [FormField, NgxSignalFormToolkit];
 Most wrapper use cases need no extra control metadata. Explicit control
 semantics are primarily for non-text-like or non-native controls such as
 switches, sliders, composites, and third-party widgets.
+
+For those controls, `appearance="plain"` is often the right wrapper mode: the
+wrapper still provides semantic structure and feedback, but it does not force
+text-input chrome around a widget that already has its own visual UI.
+
+### Quick FAQ: switches and custom controls
+
+**Does RC2 switch alignment support introduce a breaking change for native switches?**
+
+No — not for the default native switch case.
+
+If you already use a real bound control like:
+
+```html
+<input type="checkbox" role="switch" [formField]="form.enabled" />
+```
+
+the toolkit still recognizes it as a switch and applies the switch-specific
+wrapper and auto-ARIA behavior out of the box.
+
+**Do I need `ngxSignalFormControl="switch"` for a native `input[type="checkbox"][role="switch"]`?**
+
+No. For that native pattern, the new directive is optional.
+
+Add explicit control semantics only when you want one of the advanced paths:
+
+- the bound host is a custom component or third-party widget
+- you want explicit semantics instead of relying on heuristics
+- you want manual ARIA ownership
+- you want preset-driven defaults for a control family
+
+**What is actually breaking in RC2, then?**
+
+The main consumer-facing change here is the appearance rename:
+
+- `standard` → `stacked`
+- `bare` → `plain`
+
+The new switch/control-semantics APIs are additive for the native switch path.
 
 ### Headless: `@ngx-signal-forms/toolkit/headless`
 
@@ -624,6 +668,7 @@ The toolkit is designed with WCAG 2.2 AA form patterns in mind:
 
 - automatic `aria-invalid`, `aria-required`, and `aria-describedby` wiring for supported controls
 - custom on/off controls should expose real switch semantics on the bound control (prefer a native checkbox styled as a switch, or a library component that already exposes `role="switch"` semantics); use `ngxSignalFormControl="switch"` when the toolkit should also apply stable wrapper/layout behavior, and use `ngxSignalFormControlAria="manual"` only when the control already owns its ARIA state; this is mainly an edge-case/custom-control integration path rather than something regular text/select/textarea fields need; see [`docs/CUSTOM_CONTROLS.md`](./docs/CUSTOM_CONTROLS.md) and [MDN switch role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/switch_role)
+- `ngxSignalFormControlAria="manual"` is about **ARIA ownership on the control host**, not about disabling the wrapper; labels, hints, errors, and field context can still come from the toolkit wrapper in manual mode
 - `role="alert"` for blocking errors and `role="status"` for warnings
 - default `on-touch` error timing to avoid premature error noise
 - focus helpers for invalid submissions

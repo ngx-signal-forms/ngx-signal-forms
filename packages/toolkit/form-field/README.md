@@ -179,6 +179,11 @@ This is a stronger showcase than `switch`: checkbox-based switches already map
 well to native semantics, while slider and composite widgets are where explicit
 control semantics add the most value.
 
+For these controls, `appearance="plain"` is often the right wrapper mode:
+the wrapper still provides labels, hints, errors, and field identity, but it
+does not force text-input chrome around a widget that already has its own
+visual treatment.
+
 Use `ngxSignalFormControlAria="manual"` when the control or a third-party
 widget already owns its ARIA attributes and the toolkit should leave them
 alone. Use `buildAriaDescribedBy` to assemble the described-by chain without
@@ -186,6 +191,34 @@ duplicating the toolkit's ID conventions:
 
 - **auto** (default) for native-like controls and simple custom hosts
 - **manual** when the control already owns `aria-describedby`, `aria-invalid`, and `aria-required`
+
+Manual ARIA ownership is about who writes the `aria-*` attributes on the
+control host. It does **not** mean the wrapper stops contributing labels,
+hints, errors, or validation context.
+
+#### FAQ: does this add boilerplate for normal switches?
+
+**Does a native `input[type="checkbox"][role="switch"]` still work out of the box?**
+
+Yes.
+
+If the actual bound host is still a native checkbox with `role="switch"`, the
+wrapper can still infer switch semantics automatically. You do **not** need to
+add `ngxSignalFormControl="switch"` just to keep the default native switch path
+working.
+
+**When should I add `ngxSignalFormControl="switch"` anyway?**
+
+Use it when you want explicit semantics instead of inference, or when the bound
+host is not the native checkbox itself — for example a custom control host or a
+third-party component wrapper.
+
+**Is manual ARIA ownership required for default switches?**
+
+No. Keep the default auto-ARIA mode for ordinary native switches. Switch to
+`ngxSignalFormControlAria="manual"` only when the control already owns its own
+ARIA contract and the toolkit should preserve that instead of writing the
+attributes itself.
 
 To fully disable toolkit ARIA participation, use the `ngxSignalFormAutoAriaDisabled`
 attribute on the control element instead of an `ariaMode` value.

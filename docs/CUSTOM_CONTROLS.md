@@ -163,6 +163,19 @@ Practical ownership rule:
 - **auto** (default) for native-like controls that should inherit toolkit ARIA
 - **manual** when the widget already owns its ARIA attributes and described-by chain
 
+Manual mode is about **who writes the `aria-*` attributes on the control host**.
+It does **not** mean you stop using the wrapper. The wrapper can still provide:
+
+- the visible `<label>`
+- hint and error content
+- field identity / error ID conventions
+- validation context and strategy-aware visibility
+
+`appearance="plain"` is also commonly paired with custom sliders and composite
+controls for the same reason: the wrapper still contributes semantics and
+feedback, while the widget keeps ownership of its own visual chrome. These are
+related choices, but they are not the same choice.
+
 To fully disable toolkit ARIA participation on a bespoke host, use
 `ngxSignalFormAutoAriaDisabled` on the control element instead of an `ariaMode` value.
 
@@ -212,6 +225,58 @@ For native controls and simple wrapper usage, you normally do **not** need
 `ngxSignalFormControl`, `ngxSignalFormControlAria="manual"`, or preset
 providers. Those APIs are for the cases where the toolkit cannot safely infer
 the desired control family or ARIA ownership from ordinary markup.
+
+Rule of thumb:
+
+- if the toolkit can safely manage ARIA, stay in the default auto mode
+- if the widget already manages ARIA correctly, switch only the ARIA ownership to manual
+- if the widget also has its own visual treatment, `appearance="plain"` is often the right wrapper companion
+
+## FAQ
+
+### Does RC2 switch alignment support break native switches?
+
+No — not for the normal native switch pattern.
+
+This still works out of the box:
+
+```html
+<input
+  id="emailUpdates"
+  type="checkbox"
+  role="switch"
+  [formField]="form.emailUpdates"
+/>
+```
+
+The toolkit still recognizes that native pattern as a switch for wrapper and
+auto-ARIA behavior.
+
+### Do I now need `ngxSignalFormControl="switch"` for every switch?
+
+No.
+
+For a real native checkbox with `role="switch"`, the directive is optional.
+Use the directive when you want explicit semantics, preset-driven defaults, or
+the bound host is a custom/third-party control where the toolkit should not
+have to guess.
+
+### When do the new directives actually become useful?
+
+They are mainly for advanced cases:
+
+- custom hosts such as `<my-switch [formField]="..."></my-switch>`
+- third-party widgets whose control family is not obvious from the bound host
+- widgets that should opt into manual ARIA ownership
+- cases where a whole feature should inherit preset semantics for sliders,
+  composites, or switches
+
+### Is this more boilerplate for the normal case?
+
+No. The normal native switch case stays on the low-boilerplate path.
+
+The new APIs are there so custom and third-party controls can become more
+predictable without forcing extra ceremony onto native controls.
 
 ### Standalone imports are template-local
 
