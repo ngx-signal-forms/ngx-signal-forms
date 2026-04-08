@@ -965,16 +965,59 @@ ngx-signal-form-fieldset {
   /* Layout */
   --ngx-signal-form-fieldset-gap: 1rem;
   --ngx-signal-form-fieldset-padding: 1rem;
-  --ngx-signal-form-fieldset-border-radius: 0.5rem;
+  --ngx-signal-form-fieldset-border-radius: 0.75rem;
+  --ngx-signal-form-fieldset-surface-border-radius: 0.75rem;
 
-  /* Background */
+  /* Base layers */
   --ngx-signal-form-fieldset-bg: transparent;
+  --ngx-signal-form-fieldset-surface-bg: transparent;
+  --ngx-signal-form-fieldset-legend-color: var(--ngx-form-field-color-text);
+  --ngx-signal-form-fieldset-legend-bg: transparent;
+
+  /* State surfaces */
   --ngx-signal-form-fieldset-invalid-bg: rgba(220, 38, 38, 0.05);
   --ngx-signal-form-fieldset-warning-bg: rgba(245, 158, 11, 0.05);
+  --ngx-signal-form-fieldset-invalid-surface-bg: rgba(220, 38, 38, 0.05);
+  --ngx-signal-form-fieldset-warning-surface-bg: rgba(245, 158, 11, 0.05);
 
   /* Border */
   --ngx-signal-form-fieldset-invalid-border-color: #dc2626;
   --ngx-signal-form-fieldset-warning-border-color: #f59e0b;
+
+  /* State legend styling */
+  --ngx-signal-form-fieldset-invalid-legend-color: #dc2626;
+  --ngx-signal-form-fieldset-warning-legend-color: #f59e0b;
+  --ngx-signal-form-fieldset-invalid-legend-bg: transparent;
+  --ngx-signal-form-fieldset-warning-legend-bg: transparent;
+}
+```
+
+The grouped fieldset intentionally separates the legend from the surfaced content area.
+By default, error and warning tinting only applies to the inner content surface, not the legend row.
+
+That means you can keep the legend visually clean:
+
+```css
+ngx-signal-form-fieldset {
+  --ngx-signal-form-fieldset-invalid-surface-bg: color-mix(
+    in srgb,
+    #dc2626 6%,
+    white
+  );
+  --ngx-signal-form-fieldset-invalid-legend-color: #dc2626;
+}
+```
+
+Or intentionally give the legend its own state chip treatment:
+
+```css
+ngx-signal-form-fieldset {
+  --ngx-signal-form-fieldset-invalid-legend-bg: color-mix(
+    in srgb,
+    #dc2626 10%,
+    white
+  );
+  --ngx-signal-form-fieldset-legend-border-radius: 999px;
 }
 ```
 

@@ -16,9 +16,9 @@ import type {
 } from '@ngx-signal-forms/toolkit';
 import {
   NGX_SIGNAL_FORM_CONTROL_PRESETS,
-  NGX_SIGNAL_FORM_CONTEXT,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORMS_CONFIG,
+  injectFormContext,
   readDirectErrors,
   type ResolvedNgxSignalFormControlSemantics,
   resolveNgxSignalFormControlSemantics,
@@ -31,18 +31,15 @@ import {
   NgxFormFieldAssistiveRowComponent,
   NgxSignalFormErrorComponent,
 } from '@ngx-signal-forms/toolkit/assistive';
+import {
+  hasPaddedControlContent,
+  isSelectionGroupKind,
+  isTextualControlKind,
+  supportsOutlinedAppearance,
+  type FormFieldControlKind,
+} from './form-field.utils';
 
 export type FormFieldErrorPlacement = 'top' | 'bottom';
-
-function supportsOutlinedAppearance(
-  controlKind: ResolvedNgxSignalFormControlSemantics['kind'],
-): boolean {
-  return (
-    controlKind !== 'checkbox' &&
-    controlKind !== 'radio-group' &&
-    controlKind !== 'switch'
-  );
-}
 
 /**
  * Form field wrapper component with automatic error/warning display.
@@ -168,6 +165,13 @@ function supportsOutlinedAppearance(
     '[class.ngx-signal-form-field-wrapper--messages-top]': 'isTopPlacement()',
     '[class.ngx-signal-form-field-wrapper--messages-bottom]':
       '!isTopPlacement()',
+    '[class.ngx-signal-form-field-wrapper--textual]': 'isTextualControl()',
+    '[class.ngx-signal-form-field-wrapper--checkbox]': 'isCheckboxControl()',
+    '[class.ngx-signal-form-field-wrapper--selection-group]':
+      'isSelectionGroupControl()',
+    '[class.ngx-signal-form-field-wrapper--switch]': 'isSwitchControl()',
+    '[class.ngx-signal-form-field-wrapper--padded-control]':
+      'hasPaddedContentControl()',
     '[class.ngx-signal-forms-outline]': 'isOutline()',
     '[class.ngx-signal-forms-plain]': 'isPlain()',
     '[attr.data-error-placement]': 'errorPlacement()',
@@ -371,7 +375,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   /**
    * Form context (optional, for submission state tracking).
    */
-  readonly #formContext = inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true });
+  readonly #formContext = injectFormContext();
 
   /**
    * Reference to the host element for DOM queries.
@@ -380,7 +384,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
 
   /**
    * Signal holding the input element's ID attribute.
-   * Set by afterNextRender after content projection is complete.
+   * Updated from the post-render DOM inspection after content projection settles.
    */
   readonly #inputElementId = signal<string | null>(null);
 
@@ -390,42 +394,38 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     ariaMode: null,
   });
 
-  readonly #normalizedAppearance = this.appearance;
+  readonly #controlKind = computed<FormFieldControlKind>(
+    () => this.#controlSemantics().kind,
+  );
 
   /**
    * Whether outline appearance should be applied.
    */
   protected readonly isOutline = computed(() => {
-    if (!supportsOutlinedAppearance(this.#controlSemantics().kind)) {
+    const controlKind = this.#controlKind();
+    if (!supportsOutlinedAppearance(controlKind)) {
       return false;
     }
 
-    const componentAppearance = this.#normalizedAppearance();
-    if (componentAppearance === 'outline') {
-      return true;
+    switch (this.appearance()) {
+      case 'outline':
+        return true;
+      case 'stacked':
+      case 'plain':
+        return false;
+      default:
+        return this.#config.defaultFormFieldAppearance === 'outline';
     }
-    if (componentAppearance === 'stacked') {
-      return false;
-    }
-    if (componentAppearance === 'plain') {
-      return false;
-    }
-
-    return this.#config.defaultFormFieldAppearance === 'outline';
   });
 
   protected readonly isPlain = computed(() => {
-    const componentAppearance = this.#normalizedAppearance();
+    const appearance = this.appearance();
 
-    if (componentAppearance === 'plain') {
-      return true;
-    }
-
-    if (componentAppearance !== 'inherit') {
-      return false;
-    }
-
-    return this.#config.defaultFormFieldAppearance === 'plain';
+    return (
+      appearance === 'plain' ||
+      (appearance === 'inherit' &&
+        this.#config.defaultFormFieldAppearance === 'plain')
+    );
   });
 
   /**
@@ -453,7 +453,27 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   });
 
   protected readonly resolvedControlKind = computed(() => {
-    return this.#controlSemantics().kind;
+    return this.#controlKind();
+  });
+
+  protected readonly isTextualControl = computed(() => {
+    return isTextualControlKind(this.#controlKind());
+  });
+
+  protected readonly isCheckboxControl = computed(() => {
+    return this.#controlKind() === 'checkbox';
+  });
+
+  protected readonly isSelectionGroupControl = computed(() => {
+    return isSelectionGroupKind(this.#controlKind());
+  });
+
+  protected readonly isSwitchControl = computed(() => {
+    return this.#controlKind() === 'switch';
+  });
+
+  protected readonly hasPaddedContentControl = computed(() => {
+    return hasPaddedControlContent(this.#controlKind());
   });
 
   protected readonly resolvedControlLayout = computed(() => {
@@ -609,13 +629,8 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
           ),
         };
       },
-      write: (
-        renderState: Readonly<{
-          inputEl: HTMLElement | null;
-          inputId: string | null;
-          semantics: ResolvedNgxSignalFormControlSemantics;
-        }>,
-      ) => {
+      // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- afterEveryRender passes DOM-backed render state with mutable HTMLElement references.
+      write: (renderState) => {
         const { inputEl, inputId, semantics } = renderState;
 
         if (inputId && inputId !== this.#inputElementId()) {

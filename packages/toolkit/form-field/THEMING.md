@@ -134,9 +134,31 @@ Layout container for hint/error and character count alignment.
 
 Groups related fields with consistent spacing.
 
-| Property                         | Default  | Description            |
-| :------------------------------- | :------- | :--------------------- |
-| `--ngx-signal-form-fieldset-gap` | `0.5rem` | Spacing between fields |
+- `--ngx-signal-form-fieldset-gap` — default `1rem`; spacing between grouped controls
+- `--ngx-signal-form-fieldset-padding` — default `1rem`; inner padding around the surfaced fieldset content
+- `--ngx-signal-form-fieldset-border-radius` — default `0.75rem`; outer fieldset border radius
+- `--ngx-signal-form-fieldset-surface-border-radius` — default `var(--...fieldset-radius...)`; optional override for the inner surfaced content radius
+- `--ngx-signal-form-fieldset-bg` — default `transparent`; base fieldset background token
+- `--ngx-signal-form-fieldset-surface-bg` — default `var(--...fieldset-bg...)`; background behind grouped controls, below the legend
+- `--ngx-signal-form-fieldset-legend-color` — default `var(--...fieldset-color...)`; legend text color in default state
+- `--ngx-signal-form-fieldset-legend-bg` — default `transparent`; legend background that stays separate from the surfaced content
+- `--ngx-signal-form-fieldset-legend-border-radius` — default `0.25rem`; legend background radius
+- `--ngx-signal-form-fieldset-invalid-border-color` — default `#db1818`; border color when errors are shown
+- `--ngx-signal-form-fieldset-warning-border-color` — default `#f59e0b`; border color when warnings are shown
+- `--ngx-signal-form-fieldset-invalid-surface-bg` — default `var(--...invalid-bg...)`; error-tinted background below the legend
+- `--ngx-signal-form-fieldset-warning-surface-bg` — default `var(--...warning-bg...)`; warning-tinted background below the legend
+- `--ngx-signal-form-fieldset-invalid-legend-color` — default `var(--...invalid-border...)`; legend color in error state
+- `--ngx-signal-form-fieldset-warning-legend-color` — default `var(--...warning-border...)`; legend color in warning state
+- `--ngx-signal-form-fieldset-invalid-legend-bg` — default `var(--...legend-bg...)`; optional legend background in error state
+- `--ngx-signal-form-fieldset-warning-legend-bg` — default `var(--...legend-bg...)`; optional legend background in warning state
+
+The fieldset uses two visual layers by design:
+
+- the **host** owns the semantic border
+- the inner **surface** owns the tinted background
+- the **legend** stays outside that tinted surface unless you explicitly theme it
+
+That keeps radio-group and checkbox-group labels readable while still giving the grouped controls a visible error or warning container.
 
 ---
 

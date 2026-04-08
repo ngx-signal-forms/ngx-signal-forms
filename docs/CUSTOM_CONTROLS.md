@@ -2,6 +2,24 @@
 
 This guide explains how custom form controls interact with Angular Signal Forms and the `@ngx-signal-forms/toolkit`.
 
+## When to read this guide
+
+Most toolkit users do **not** need the APIs described here.
+
+If your form uses native inputs, textareas, selects, and standard wrapper
+usage, the toolkit defaults are usually enough and you can skip this guide.
+
+Reach for this guide when you are working with:
+
+- custom controls that implement Angular Signal Forms control interfaces
+- switch-style toggles that are more than a plain checkbox row
+- slider or composite widgets
+- third-party controls that already own some or all ARIA attributes
+- cases where wrapper layout or auto-ARIA should follow an explicit control family instead of toolkit heuristics
+
+In short: this is mostly an **edge-case / custom-control integration guide**,
+not a baseline requirement for ordinary forms.
+
 ## Angular Control Interfaces
 
 Angular Signal Forms provides three interfaces for custom controls:
@@ -189,6 +207,11 @@ native checkbox.
   the toolkit can enhance it safely
 
 ## Toolkit Integration
+
+For native controls and simple wrapper usage, you normally do **not** need
+`ngxSignalFormControl`, `ngxSignalFormControlAria="manual"`, or preset
+providers. Those APIs are for the cases where the toolkit cannot safely infer
+the desired control family or ARIA ownership from ordinary markup.
 
 ### Standalone imports are template-local
 

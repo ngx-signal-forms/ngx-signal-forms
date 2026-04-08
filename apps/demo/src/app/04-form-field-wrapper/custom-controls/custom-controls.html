@@ -34,7 +34,7 @@
       <label for="rating">Product Rating *</label>
       <ngx-rating-control
         id="rating"
-        data-ngx-signal-form-control="true"
+        [ngxSignalFormControl]="sliderSemantics"
         [formField]="reviewForm.rating"
         [maxRating]="5"
       />
@@ -51,7 +51,7 @@
       <label for="serviceRating">Service Quality *</label>
       <ngx-rating-control
         id="serviceRating"
-        data-ngx-signal-form-control="true"
+        [ngxSignalFormControl]="sliderSemantics"
         [formField]="reviewForm.serviceRating"
         [maxRating]="5"
       />
@@ -65,7 +65,7 @@
       <label for="wouldRecommend">Would Recommend?</label>
       <ngx-rating-control
         id="wouldRecommend"
-        data-ngx-signal-form-control="true"
+        [ngxSignalFormControl]="sliderSemantics"
         [formField]="reviewForm.wouldRecommend"
         [maxRating]="2"
       />

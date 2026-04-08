@@ -76,6 +76,13 @@ The toolkit's `NgxSignalFormDirective` (selector: `form[formRoot][ngxSignalForm]
 
 **`NgxSignalFormToolkit` bundles `FormRoot` + `NgxSignalFormDirective` + `NgxSignalFormAutoAriaDirective` + `NgxSignalFormControlSemanticsDirective`** — import it instead of `FormRoot` separately.
 
+> **Most forms do not need explicit control semantics.** Native text inputs,
+> textareas, selects, and ordinary wrapper usage work with the toolkit defaults.
+> Reach for `ngxSignalFormControl`, `ngxSignalFormControlAria="manual"`, or
+> control preset providers mainly for custom controls, switch-style toggles,
+> slider/composite widgets, or third-party components where the toolkit cannot
+> safely infer the desired wrapper/layout/ARIA behavior.
+
 ```typescript
 imports: [FormField, NgxSignalFormToolkit];
 ```
@@ -95,6 +102,10 @@ imports: [FormField, NgxSignalFormToolkit];
 
 - `<ngx-signal-form-field-wrapper>` with `appearance="outline"` support
 - `<ngx-signal-form-fieldset>`
+
+Most wrapper use cases need no extra control metadata. Explicit control
+semantics are primarily for non-text-like or non-native controls such as
+switches, sliders, composites, and third-party widgets.
 
 ### Headless: `@ngx-signal-forms/toolkit/headless`
 
@@ -612,7 +623,7 @@ The skill covers the full toolkit — entry points, patterns, ARIA automation, a
 The toolkit is designed with WCAG 2.2 AA form patterns in mind:
 
 - automatic `aria-invalid`, `aria-required`, and `aria-describedby` wiring for supported controls
-- custom on/off controls should expose real switch semantics on the bound control (prefer a native checkbox styled as a switch, or a library component that already exposes `role="switch"` semantics); use `ngxSignalFormControl="switch"` when the toolkit should also apply stable wrapper/layout behavior, and use `ngxSignalFormControlAria="manual"` only when the control already owns its ARIA state; see [`docs/CUSTOM_CONTROLS.md`](./docs/CUSTOM_CONTROLS.md) and [MDN switch role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/switch_role)
+- custom on/off controls should expose real switch semantics on the bound control (prefer a native checkbox styled as a switch, or a library component that already exposes `role="switch"` semantics); use `ngxSignalFormControl="switch"` when the toolkit should also apply stable wrapper/layout behavior, and use `ngxSignalFormControlAria="manual"` only when the control already owns its ARIA state; this is mainly an edge-case/custom-control integration path rather than something regular text/select/textarea fields need; see [`docs/CUSTOM_CONTROLS.md`](./docs/CUSTOM_CONTROLS.md) and [MDN switch role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/switch_role)
 - `role="alert"` for blocking errors and `role="status"` for warnings
 - default `on-touch` error timing to avoid premature error noise
 - focus helpers for invalid submissions

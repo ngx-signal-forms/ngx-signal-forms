@@ -91,33 +91,35 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
   template: `
     <ng-content select="legend" />
 
-    @if (showMessages() && isTopPlacement()) {
-      <div class="ngx-signal-form-fieldset__messages">
-        <ngx-signal-form-error
-          [errors]="filteredErrorsSignal"
-          [fieldName]="resolvedFieldsetId()"
-          [strategy]="resolvedStrategy()"
-          [submittedStatus]="submittedStatus()"
-          listStyle="bullets"
-        />
-      </div>
-    }
+    <div class="ngx-signal-form-fieldset__surface">
+      @if (showMessages() && isTopPlacement()) {
+        <div class="ngx-signal-form-fieldset__messages">
+          <ngx-signal-form-error
+            [errors]="filteredErrorsSignal"
+            [fieldName]="resolvedFieldsetId()"
+            [strategy]="resolvedStrategy()"
+            [submittedStatus]="submittedStatus()"
+            listStyle="bullets"
+          />
+        </div>
+      }
 
-    <div class="ngx-signal-form-fieldset__content">
-      <ng-content />
+      <div class="ngx-signal-form-fieldset__content">
+        <ng-content />
+      </div>
+
+      @if (showMessages() && !isTopPlacement()) {
+        <div class="ngx-signal-form-fieldset__messages">
+          <ngx-signal-form-error
+            [errors]="filteredErrorsSignal"
+            [fieldName]="resolvedFieldsetId()"
+            [strategy]="resolvedStrategy()"
+            [submittedStatus]="submittedStatus()"
+            listStyle="bullets"
+          />
+        </div>
+      }
     </div>
-
-    @if (showMessages() && !isTopPlacement()) {
-      <div class="ngx-signal-form-fieldset__messages">
-        <ngx-signal-form-error
-          [errors]="filteredErrorsSignal"
-          [fieldName]="resolvedFieldsetId()"
-          [strategy]="resolvedStrategy()"
-          [submittedStatus]="submittedStatus()"
-          listStyle="bullets"
-        />
-      </div>
-    }
   `,
 })
 export class NgxSignalFormFieldset<TFieldset = unknown> {

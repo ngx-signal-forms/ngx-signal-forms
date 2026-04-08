@@ -72,6 +72,12 @@ export class CustomControlsFormComponent {
 
   readonly #handleInvalidSubmission = createOnInvalidHandler();
 
+  readonly sliderSemantics = {
+    kind: 'slider',
+    layout: 'stacked',
+    ariaMode: 'auto',
+  } as const;
+
   /**
    * Error display mode input - controls when errors are shown.
    */
