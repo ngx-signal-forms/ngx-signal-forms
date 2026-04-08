@@ -30,8 +30,8 @@ function mergeNgxSignalFormControlPresets(
     }
 
     normalized[rawKind] = {
-      ...normalized[rawKind],
-      ...override,
+      layout: override.layout ?? normalized[rawKind].layout,
+      ariaMode: override.ariaMode ?? normalized[rawKind].ariaMode,
     };
   }
 

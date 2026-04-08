@@ -70,11 +70,11 @@
   flex-direction: column;
   gap: var(--ngx-signal-form-error-message-spacing);
   padding: var(--ngx-signal-form-error-padding);
-  padding-left: var(
+  padding-inline-start: var(
     --ngx-signal-form-error-padding-inline-start,
     var(--ngx-signal-form-error-padding-horizontal)
   );
-  padding-right: var(
+  padding-inline-end: var(
     --ngx-signal-form-error-padding-inline-end,
     var(--ngx-signal-form-error-padding-horizontal)
   );

@@ -75,11 +75,11 @@ import {
       font-size: var(--ngx-form-field-hint-font-size, 0.75rem);
       line-height: var(--ngx-form-field-hint-line-height, 1rem);
       color: var(--ngx-form-field-hint-color, rgba(50, 65, 85, 0.75));
-      padding-left: var(
+      padding-inline-start: var(
         --ngx-form-field-hint-padding-inline-start,
         var(--ngx-form-field-hint-padding-horizontal, 0.5rem)
       );
-      padding-right: var(
+      padding-inline-end: var(
         --ngx-form-field-hint-padding-inline-end,
         var(--ngx-form-field-hint-padding-horizontal, 0.5rem)
       );
