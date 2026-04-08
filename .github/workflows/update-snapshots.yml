@@ -1,0 +1,88 @@
+name: Update Snapshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: 'Which snapshot suites to update'
+        required: true
+        type: choice
+        default: all
+        options:
+          - all
+          - playwright
+          - vitest
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-snapshots-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  update:
+    if: ${{ github.ref_name != github.event.repository.default_branch }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Configure Git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Update Playwright snapshots
+        if: ${{ inputs.scope == 'all' || inputs.scope == 'playwright' }}
+        run: pnpm exec playwright test apps/demo-e2e/src --config apps/demo-e2e/playwright.config.ts --project=chromium --update-snapshots
+
+      - name: Update Vitest browser screenshots
+        if: ${{ inputs.scope == 'all' || inputs.scope == 'vitest' }}
+        run: pnpm nx test-browser toolkit -- --update
+
+      - name: Commit snapshot updates
+        id: commit
+        run: |
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git add -A
+          git commit -m "test(snapshots): update ${INPUT_SCOPE} baselines"
+          git push origin "${GITHUB_REF_NAME}"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+        env:
+          INPUT_SCOPE: ${{ inputs.scope }}
+
+      - name: Summary
+        run: |
+          if [[ "${{ steps.commit.outputs.changed }}" == "true" ]]; then
+            echo "### Snapshot baselines updated" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Scope: ${{ inputs.scope }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Branch: ${{ github.ref_name }}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### No snapshot changes detected" >> "$GITHUB_STEP_SUMMARY"
+          fi

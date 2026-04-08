@@ -76,6 +76,27 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
     });
   });
 
+  test.describe('Snapshot Regression', () => {
+    test('should match aria structure for complex form on initial load', async () => {
+      await expect(page.personalInfoFieldset).toMatchAriaSnapshot(`
+        - text: 👤 Personal Information First Name *
+        - textbox "First Name *"
+        - text: Last Name *
+        - textbox "Last Name *"
+        - text: Email *
+        - textbox "Email *"
+        - text: Age *
+        - spinbutton "Age *": "0"
+      `);
+    });
+
+    test('should match screenshot for personal information fieldset', async () => {
+      await expect(page.personalInfoFieldset).toHaveScreenshot(
+        'personal-information.initial.png',
+      );
+    });
+  });
+
   test.describe('Auto Error Display', () => {
     test('should automatically display errors with field wrapper', async () => {
       const firstInput = page.allFormControls.first();

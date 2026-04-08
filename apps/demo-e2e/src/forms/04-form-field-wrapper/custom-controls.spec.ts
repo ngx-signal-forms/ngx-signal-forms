@@ -35,18 +35,17 @@ test.describe('Custom Signal Forms Controls', () => {
         await expect(page.serviceRatingControl).toBeVisible();
         await expect(page.wouldRecommendControl).toBeVisible();
         await expect(page.emailUpdatesSwitch).toBeVisible();
+        await expect(page.shareReviewPubliclyCheckbox).toBeVisible();
+        await expect(page.accessibilityAuditControl).toBeVisible();
       });
 
       await test.step('Verify rating control has correct number of stars', async () => {
-        // Product rating has 5 stars
         const productStars = page.getStars(page.ratingControl);
         await expect(productStars).toHaveCount(5);
 
-        // Service rating has 5 stars
         const serviceStars = page.getStars(page.serviceRatingControl);
         await expect(serviceStars).toHaveCount(5);
 
-        // Would recommend has 2 stars
         const recommendStars = page.getStars(page.wouldRecommendControl);
         await expect(recommendStars).toHaveCount(2);
       });
@@ -55,6 +54,10 @@ test.describe('Custom Signal Forms Controls', () => {
     test('should have correct ARIA attributes on rating controls', async () => {
       await test.step('Verify role="slider" on rating control', async () => {
         await expect(page.ratingControl).toHaveAttribute('role', 'slider');
+        await expect(page.accessibilityAuditControl).toHaveAttribute(
+          'role',
+          'slider',
+        );
       });
 
       await test.step('Verify aria-valuemin and aria-valuemax', async () => {
@@ -64,6 +67,10 @@ test.describe('Custom Signal Forms Controls', () => {
 
       await test.step('Verify initial aria-valuenow is 0', async () => {
         await expect(page.ratingControl).toHaveAttribute('aria-valuenow', '0');
+        await expect(page.accessibilityAuditControl).toHaveAttribute(
+          'aria-valuenow',
+          '0',
+        );
       });
     });
   });
@@ -179,6 +186,115 @@ test.describe('Custom Signal Forms Controls', () => {
         );
       });
     });
+
+    test('should opt a standard checkbox into toolkit checkbox ARIA and wrapper state', async () => {
+      await test.step('Touch the checkbox without enabling it', async () => {
+        await page.shareReviewPubliclyCheckbox.focus();
+        await page.shareReviewPubliclyCheckbox.blur();
+      });
+
+      await test.step('Verify checkbox wrapper metadata and ARIA wiring', async () => {
+        const checkboxError = page.getErrorById('shareReviewPublicly');
+        const checkboxWrapper = page.getWrapperByControlId(
+          'shareReviewPublicly',
+        );
+
+        await expect(checkboxError).toBeVisible();
+        await expect(checkboxError).toContainText(
+          'Please confirm that this review can be shared publicly',
+        );
+        await expect(page.shareReviewPubliclyCheckbox).toHaveAttribute(
+          'aria-invalid',
+          'true',
+        );
+        await expect(page.shareReviewPubliclyCheckbox).toHaveAttribute(
+          'aria-describedby',
+          /shareReviewPublicly-error/,
+        );
+        await expect(checkboxWrapper).toHaveAttribute(
+          'data-ngx-signal-form-control-kind',
+          'checkbox',
+        );
+        await expect(checkboxWrapper).toHaveAttribute(
+          'data-ngx-signal-form-control-layout',
+          'group',
+        );
+      });
+
+      await test.step('Verify checking the checkbox clears the error', async () => {
+        await page.shareReviewPubliclyCheckbox.click();
+
+        await expect(page.shareReviewPubliclyCheckbox).toBeChecked();
+        await expect(page.getErrorById('shareReviewPublicly')).toHaveCount(0);
+        await expect(page.shareReviewPubliclyCheckbox).toHaveAttribute(
+          'aria-invalid',
+          'false',
+        );
+      });
+    });
+
+    test('should preserve manual ARIA ownership for the preset-driven slider example', async () => {
+      await test.step('Verify the slider starts with its hint-only described-by chain', async () => {
+        const sliderWrapper = page.getWrapperByControlId('accessibilityAudit');
+
+        await expect(page.accessibilityAuditControl).toHaveAttribute(
+          'aria-describedby',
+          'accessibilityAudit-hint',
+        );
+        await expect(page.accessibilityAuditControl).toHaveAttribute(
+          'aria-required',
+          'true',
+        );
+        await expect(sliderWrapper).toHaveAttribute(
+          'data-ngx-signal-form-control-kind',
+          'slider',
+        );
+        await expect(sliderWrapper).toHaveAttribute(
+          'data-ngx-signal-form-control-layout',
+          'custom',
+        );
+        await expect(sliderWrapper).toHaveAttribute(
+          'data-ngx-signal-form-control-aria-mode',
+          'manual',
+        );
+      });
+
+      await test.step('Touch the slider without selecting a rating', async () => {
+        await page.accessibilityAuditControl.focus();
+        await page.accessibilityAuditControl.blur();
+      });
+
+      await test.step('Verify the control keeps its own described-by chain when the wrapper error appears', async () => {
+        const sliderError = page.getErrorById('accessibilityAudit');
+
+        await expect(sliderError).toBeVisible();
+        await expect(sliderError).toContainText(
+          'Accessibility audit must be at least 1 star',
+        );
+        await expect(page.accessibilityAuditControl).toHaveAttribute(
+          'aria-describedby',
+          'accessibilityAudit-hint accessibilityAudit-error',
+        );
+        await expect(page.accessibilityAuditControl).toHaveAttribute(
+          'aria-invalid',
+          'true',
+        );
+      });
+
+      await test.step('Verify selecting a rating restores the hint-only described-by chain', async () => {
+        await page.selectStar(page.accessibilityAuditControl, 4);
+
+        await expect(page.getErrorById('accessibilityAudit')).toHaveCount(0);
+        await expect(page.accessibilityAuditControl).toHaveAttribute(
+          'aria-describedby',
+          'accessibilityAudit-hint',
+        );
+        await expect(page.accessibilityAuditControl).toHaveAttribute(
+          'aria-invalid',
+          'false',
+        );
+      });
+    });
   });
 
   test.describe('Form Field Wrapper Integration', () => {
@@ -189,7 +305,6 @@ test.describe('Custom Signal Forms Controls', () => {
       });
 
       await test.step('Verify error has correct id derived from rating control id', async () => {
-        // Error should have id="rating-error" (from control id="rating")
         const errorElement = page.getErrorById('rating');
         await expect(errorElement).toBeVisible();
       });
@@ -207,7 +322,6 @@ test.describe('Custom Signal Forms Controls', () => {
       });
 
       await test.step('Verify aria-describedby points to error element', async () => {
-        // The autoAria directive should add aria-describedby
         await expect(page.ratingControl).toHaveAttribute(
           'aria-describedby',
           /rating-error/,
@@ -239,11 +353,9 @@ test.describe('Custom Signal Forms Controls', () => {
       });
 
       await test.step('Verify each has its own error with correct id', async () => {
-        // rating-error for first control
         const ratingError = page.getErrorById('rating');
         await expect(ratingError).toBeVisible();
 
-        // serviceRating-error for second control
         const serviceError = page.getErrorById('serviceRating');
         await expect(serviceError).toBeVisible();
       });
@@ -270,6 +382,16 @@ test.describe('Custom Signal Forms Controls', () => {
         const switchError = page.getErrorById('emailUpdates');
         await expect(switchError).toBeVisible();
       });
+
+      await test.step('Verify checkbox opt-in error is shown', async () => {
+        const checkboxError = page.getErrorById('shareReviewPublicly');
+        await expect(checkboxError).toBeVisible();
+      });
+
+      await test.step('Verify manual slider error is shown', async () => {
+        const sliderError = page.getErrorById('accessibilityAudit');
+        await expect(sliderError).toBeVisible();
+      });
     });
 
     test('should submit successfully with valid custom control values', async () => {
@@ -278,7 +400,6 @@ test.describe('Custom Signal Forms Controls', () => {
       });
 
       await test.step('Verify form is valid', async () => {
-        // Check that no errors are visible
         const errors = page.form.locator('[role="alert"]');
         await expect(errors).toHaveCount(0);
       });
@@ -295,7 +416,7 @@ test.describe('Custom Signal Forms Controls', () => {
   });
 
   test.describe('Outline appearance integration', () => {
-    test('should apply outline appearance to native and custom wrappers', async () => {
+    test('should apply outline only to text-like wrappers while custom plain and selection rows keep their own layouts', async () => {
       await test.step('Switch the demo to outline mode', async () => {
         await page.showOutlineAppearance();
         await expect(page.outlineAppearanceButton).toHaveAttribute(
@@ -304,30 +425,61 @@ test.describe('Custom Signal Forms Controls', () => {
         );
       });
 
-      await test.step('Verify native and custom wrappers receive outline styling hooks', async () => {
-        for (const controlId of [
-          'productName',
-          'rating',
-          'serviceRating',
-          'wouldRecommend',
-          'emailUpdates',
-          'feedback',
-        ]) {
+      await test.step('Verify native text-like wrappers receive outline styling hooks', async () => {
+        for (const controlId of ['productName', 'feedback']) {
           const wrapper = page.getWrapperByControlId(controlId);
           await expect(wrapper).toHaveAttribute('outline', '');
           await expect(wrapper).toHaveClass(/ngx-signal-forms-outline/);
         }
       });
+
+      await test.step('Verify custom rating and slider wrappers stay plain even when the demo toggles to outline mode', async () => {
+        for (const controlId of [
+          'rating',
+          'serviceRating',
+          'wouldRecommend',
+          'accessibilityAudit',
+        ]) {
+          const wrapper = page.getWrapperByControlId(controlId);
+          await expect(wrapper).not.toHaveAttribute('outline', '');
+          await expect(wrapper).toHaveClass(/ngx-signal-forms-plain/);
+          await expect(wrapper).not.toHaveClass(/ngx-signal-forms-outline/);
+        }
+      });
+
+      await test.step('Verify switch and checkbox rows keep their semantic layouts without text-field outline chrome', async () => {
+        for (const controlId of ['emailUpdates', 'shareReviewPublicly']) {
+          const wrapper = page.getWrapperByControlId(controlId);
+          await expect(wrapper).not.toHaveAttribute('outline', '');
+          await expect(wrapper).not.toHaveClass(/ngx-signal-forms-outline/);
+        }
+
+        await expect(
+          page.getWrapperByControlId('emailUpdates'),
+        ).toHaveAttribute(
+          'data-ngx-signal-form-control-layout',
+          'inline-control',
+        );
+        await expect(
+          page.getWrapperByControlId('shareReviewPublicly'),
+        ).toHaveAttribute('data-ngx-signal-form-control-layout', 'group');
+      });
     });
 
-    test('should keep invalid outline borders for native and custom required fields', async () => {
-      const controlIds = ['productName', 'rating', 'serviceRating'] as const;
+    test('should keep invalid outline borders only for outlined text-like required fields', async () => {
+      const outlinedControlIds = ['productName'] as const;
+      const plainControlIds = ['rating', 'serviceRating'] as const;
+      const rowControlIds = ['emailUpdates', 'shareReviewPublicly'] as const;
       const initialBorderColors = new Map<string, string>();
 
       await test.step('Switch to outline mode and submit the empty form', async () => {
         await page.showOutlineAppearance();
 
-        for (const controlId of controlIds) {
+        for (const controlId of [
+          ...outlinedControlIds,
+          ...plainControlIds,
+          ...rowControlIds,
+        ]) {
           const content = page.getWrapperContentByControlId(controlId);
           initialBorderColors.set(
             controlId,
@@ -340,8 +492,8 @@ test.describe('Custom Signal Forms Controls', () => {
         await page.submitButton.click();
       });
 
-      await test.step('Verify native and custom invalid wrappers render the shared error border', async () => {
-        for (const controlId of controlIds) {
+      await test.step('Verify outlined native wrappers render the shared error border', async () => {
+        for (const controlId of outlinedControlIds) {
           const wrapper = page.getWrapperByControlId(controlId);
           const content = page.getWrapperContentByControlId(controlId);
           const initialBorderColor = initialBorderColors.get(controlId);
@@ -360,9 +512,55 @@ test.describe('Custom Signal Forms Controls', () => {
             .not.toBe(initialBorderColor);
         }
       });
+
+      await test.step('Verify plain custom wrappers still report invalid state without outline chrome', async () => {
+        for (const controlId of plainControlIds) {
+          const wrapper = page.getWrapperByControlId(controlId);
+          const initialBorderColor = initialBorderColors.get(controlId);
+          const content = page.getWrapperContentByControlId(controlId);
+
+          await expect(wrapper).toHaveClass(
+            /ngx-signal-form-field-wrapper--invalid/,
+          );
+          await expect(wrapper).toHaveClass(/ngx-signal-forms-plain/);
+          await expect(wrapper).not.toHaveClass(/ngx-signal-forms-outline/);
+          expect(initialBorderColor).toBeDefined();
+
+          await expect
+            .poll(async () => {
+              return content.evaluate(
+                (element) => window.getComputedStyle(element).borderColor,
+              );
+            })
+            .toBe(initialBorderColor);
+        }
+      });
+
+      await test.step('Verify row-based controls stay non-outlined even when invalid', async () => {
+        for (const controlId of rowControlIds) {
+          const wrapper = page.getWrapperByControlId(controlId);
+          const content = page.getWrapperContentByControlId(controlId);
+          const initialBorderColor = initialBorderColors.get(controlId);
+
+          await expect(wrapper).toHaveClass(
+            /ngx-signal-form-field-wrapper--invalid/,
+          );
+          await expect(wrapper).not.toHaveClass(/ngx-signal-forms-outline/);
+          await expect(wrapper).not.toHaveAttribute('outline', '');
+          expect(initialBorderColor).toBeDefined();
+
+          await expect
+            .poll(async () => {
+              return content.evaluate(
+                (element) => window.getComputedStyle(element).borderColor,
+              );
+            })
+            .toBe(initialBorderColor);
+        }
+      });
     });
 
-    test('should left-align outlined rating controls and reuse the shared outline padding', async () => {
+    test('should keep plain rating controls aligned with shared wrapper padding when the page switches to outline mode', async () => {
       await test.step('Switch to outline mode', async () => {
         await page.showOutlineAppearance();
         await expect(page.outlineAppearanceButton).toHaveAttribute(
@@ -370,19 +568,21 @@ test.describe('Custom Signal Forms Controls', () => {
           'true',
         );
 
-        for (const controlId of [
-          'productName',
-          'rating',
-          'serviceRating',
-          'wouldRecommend',
-        ]) {
+        await expect(page.getWrapperByControlId('productName')).toHaveClass(
+          /ngx-signal-forms-outline/,
+        );
+
+        for (const controlId of ['rating', 'serviceRating', 'wouldRecommend']) {
           await expect(page.getWrapperByControlId(controlId)).toHaveClass(
+            /ngx-signal-forms-plain/,
+          );
+          await expect(page.getWrapperByControlId(controlId)).not.toHaveClass(
             /ngx-signal-forms-outline/,
           );
         }
       });
 
-      await test.step('Verify outlined rating wrappers reuse the text field wrapper horizontal padding', async () => {
+      await test.step('Verify plain rating wrappers keep the shared horizontal padding', async () => {
         const productNamePadding = await page
           .getWrapperContentByControlId('productName')
           .evaluate((element) => {
@@ -410,17 +610,10 @@ test.describe('Custom Signal Forms Controls', () => {
         }
       });
 
-      await test.step('Verify outlined rating controls are left aligned inside the shared wrapper layout', async () => {
+      await test.step('Verify plain rating controls stay flush-left inside their wrapper layout', async () => {
         for (const controlId of ['rating', 'serviceRating', 'wouldRecommend']) {
-          const main = page.getWrapperMainByControlId(controlId);
           const control = page.form.locator(`#${controlId}`);
 
-          const mainAlignItems = await main.evaluate(
-            (element) => window.getComputedStyle(element).alignItems,
-          );
-          const controlAlignSelf = await control.evaluate(
-            (element) => window.getComputedStyle(element).alignSelf,
-          );
           const geometry = await control.evaluate((element) => {
             const controlRect = element.getBoundingClientRect();
             const parentRect = element.parentElement?.getBoundingClientRect();
@@ -432,10 +625,39 @@ test.describe('Custom Signal Forms Controls', () => {
             };
           });
 
-          expect(mainAlignItems).toBe('flex-start');
-          expect(controlAlignSelf).toBe('flex-start');
           expect(geometry.offsetFromParentLeft).toBe(0);
         }
+      });
+    });
+  });
+
+  test.describe('Snapshot Regression', () => {
+    test('should match aria structure for custom controls form', async () => {
+      await expect(page.form).toMatchAriaSnapshot();
+    });
+
+    test('should capture visual baseline for stacked appearance', async () => {
+      await expect(page.stackedAppearanceButton).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+
+      await expect(page.form).toHaveScreenshot('custom-controls-stacked.png', {
+        animations: 'disabled',
+        caret: 'hide',
+      });
+    });
+
+    test('should capture visual baseline for outline appearance', async () => {
+      await page.showOutlineAppearance();
+      await expect(page.outlineAppearanceButton).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+
+      await expect(page.form).toHaveScreenshot('custom-controls-outline.png', {
+        animations: 'disabled',
+        caret: 'hide',
       });
     });
   });
@@ -456,7 +678,6 @@ test.describe('Custom Signal Forms Controls', () => {
       });
 
       await test.step('Verify native input error id is correct', async () => {
-        // Clear and blur to trigger error
         await page.productNameInput.clear();
         await page.productNameInput.blur();
 
@@ -465,9 +686,8 @@ test.describe('Custom Signal Forms Controls', () => {
       });
 
       await test.step('Verify custom control maintains its error id', async () => {
-        // Clear rating and blur
         await page.ratingControl.focus();
-        await page.ratingControl.press('Home'); // Set to 0
+        await page.ratingControl.press('Home');
         await page.ratingControl.blur();
 
         const ratingError = page.getErrorById('rating');

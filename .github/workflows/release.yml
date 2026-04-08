@@ -87,6 +87,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
       - name: Configure Nx Cloud access
         run: |
           TOKEN="$NX_CLOUD_ACCESS_TOKEN_RW"
@@ -115,7 +118,7 @@ jobs:
       - name: Verify Quality (Lint, Test, Build, E2E)
         # Using affected ensures we only verify what changed, but caching handles the rest.
         # We target all projects to ensure workspace health before release.
-        run: pnpm exec nx affected -t lint test build e2e-ci --outputStyle=static
+        run: pnpm exec nx affected -t lint test test-browser build e2e-ci --outputStyle=static
 
       - name: Determine version command
         id: version_cmd

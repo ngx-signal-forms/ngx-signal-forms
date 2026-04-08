@@ -18,7 +18,23 @@ export default defineConfig({
       enabled: true,
       provider: playwright(),
       headless: Boolean(process.env.CI),
-      instances: [{ browser: 'chromium' }],
+      screenshotDirectory: '__screenshots__',
+      screenshotFailures: true,
+      instances: [
+        {
+          browser: 'chromium',
+          viewport: { width: 1280, height: 720 },
+        },
+      ],
+      expect: {
+        toMatchScreenshot: {
+          comparatorName: 'pixelmatch',
+          comparatorOptions: {
+            threshold: 0.2,
+            allowedMismatchedPixelRatio: 0.01,
+          },
+        },
+      },
     },
   },
 });
