@@ -121,6 +121,8 @@ These were removed or are not public:
 | `isSubmitting()`               | `submittedStatus()` from `[formRoot]` |
 | `fieldNameResolver` config     | Provide `id` on bound control         |
 | `strictFieldResolution` config | Removed — strict by default           |
+| `appearance="standard"`        | `appearance="stacked"` (renamed)      |
+| `appearance="bare"`            | `appearance="plain"` (renamed)        |
 
 ## Floating Labels Require a Placeholder Space
 
@@ -199,6 +201,30 @@ semantics directive as well:
 })
 export class SwitchControlComponent {}
 ```
+
+## Custom Controls — Declare Semantics to Avoid Layout Heuristics
+
+Without `ngxSignalFormControl`, the wrapper must infer the control kind from DOM heuristics. This can produce wrong wrapper layout (e.g., outlined text-field chrome around a slider) or suppress auto-ARIA for valid switch controls.
+
+```html
+<!-- Wrong — wrapper guesses control kind from DOM, may get layout wrong -->
+<ngx-signal-form-field-wrapper appearance="plain" [formField]="form.rating">
+  <label for="rating">Rating</label>
+  <ngx-rating-control id="rating" [formField]="form.rating" />
+</ngx-signal-form-field-wrapper>
+
+<!-- Correct — explicit semantics give the wrapper stable contract -->
+<ngx-signal-form-field-wrapper appearance="plain" [formField]="form.rating">
+  <label for="rating">Rating</label>
+  <ngx-rating-control
+    id="rating"
+    [ngxSignalFormControl]="{ kind: 'slider', layout: 'stacked' }"
+    [formField]="form.rating"
+  />
+</ngx-signal-form-field-wrapper>
+```
+
+When multiple controls in a component use the same semantics, use `provideNgxSignalFormControlPresetsForComponent()` to set defaults once instead of repeating the object on every control.
 
 Angular standalone imports are template-local. If the real `[formField]` host
 element lives inside `SwitchControlComponent`, that component needs the toolkit

@@ -1,6 +1,6 @@
 ---
 name: ngx-signal-forms
-description: Implements @ngx-signal-forms/toolkit for Angular Signal Forms. Use whenever working with any toolkit entry point — form[formRoot][ngxSignalForm], auto-ARIA, error strategies (on-touch/on-submit/immediate), error message registries, field-label resolution, form field wrappers (ngx-signal-form-field-wrapper), grouped fieldsets, error summaries, standalone assistive components (errors, hints, character count), renderless headless primitives, Vest validation integration, or development-time form debugging. Always invoke this skill when the user mentions @ngx-signal-forms/toolkit, an error strategy, an error summary, a form wrapper, field visibility, or custom form controls, even if they don't use the skill name explicitly.
+description: Implements @ngx-signal-forms/toolkit for Angular Signal Forms. Use whenever working with any toolkit entry point — form[formRoot][ngxSignalForm], auto-ARIA, control semantics (ngxSignalFormControl directive, provideNgxSignalFormControlPresets), error strategies (on-touch/on-submit/immediate), error message registries, field-label resolution, form field wrappers (ngx-signal-form-field-wrapper), grouped fieldsets, error summaries, standalone assistive components (errors, hints, character count), renderless headless primitives, Vest validation integration, or development-time form debugging. Always invoke this skill when the user mentions @ngx-signal-forms/toolkit, an error strategy, an error summary, a form wrapper, field visibility, control semantics, or custom form controls, even if they don't use the skill name explicitly.
 ---
 
 # ngx-signal-forms Toolkit
@@ -12,6 +12,7 @@ An orchestrator skill for `@ngx-signal-forms/toolkit` — the enhancement layer 
 Use this skill when the task involves:
 
 - Setting up `form[formRoot][ngxSignalForm]`, error strategies, or auto-ARIA
+- Declaring control semantics with `ngxSignalFormControl` or setting up control preset providers
 - Adding form-level error summaries or field-label resolution
 - Adding form field wrappers or grouped fieldsets
 - Displaying validation errors, hints, or character counts
@@ -35,14 +36,15 @@ Use this skill when the task involves:
 
 ## Sub-Skill Routing
 
-| Task                                           | Sub-skill to read                          |
-| ---------------------------------------------- | ------------------------------------------ |
-| `[formRoot]`, error strategy, ARIA, submission | [core/SKILL.md](core/SKILL.md)             |
-| Field wrappers, fieldsets, floating labels     | [form-field/SKILL.md](form-field/SKILL.md) |
-| Standalone error/hint/char-count components    | [assistive/SKILL.md](assistive/SKILL.md)   |
-| Custom markup with full control over DOM       | [headless/SKILL.md](headless/SKILL.md)     |
-| Vest suite integration                         | [vest/SKILL.md](vest/SKILL.md)             |
-| Dev-time form inspection                       | [debugger/SKILL.md](debugger/SKILL.md)     |
+| Task                                                              | Sub-skill to read                          |
+| ----------------------------------------------------------------- | ------------------------------------------ |
+| `[formRoot]`, error strategy, ARIA, submission                    | [core/SKILL.md](core/SKILL.md)             |
+| Control semantics directive, preset providers                     | [core/SKILL.md](core/SKILL.md)             |
+| Field wrappers, fieldsets, floating labels, custom control layout | [form-field/SKILL.md](form-field/SKILL.md) |
+| Standalone error/hint/char-count components                       | [assistive/SKILL.md](assistive/SKILL.md)   |
+| Custom markup with full control over DOM                          | [headless/SKILL.md](headless/SKILL.md)     |
+| Vest suite integration                                            | [vest/SKILL.md](vest/SKILL.md)             |
+| Dev-time form inspection                                          | [debugger/SKILL.md](debugger/SKILL.md)     |
 
 ## Shared References
 
@@ -68,8 +70,8 @@ Adding a debug panel during development?                    → debugger
 
 1. `@angular/forms/signals` is always the source of truth — never replace `form()`, `[formField]`, or field state signals with toolkit abstractions.
 2. Always import from the correct secondary entry point. Do not import `NgxFormField` from the root package.
-3. Do not manually add `aria-invalid`, `aria-required`, or `aria-describedby` to controls managed by `NgxSignalFormAutoAriaDirective`.
+3. Do not manually add `aria-invalid`, `aria-required`, or `aria-describedby` to controls managed by `NgxSignalFormAutoAriaDirective` unless `ngxSignalFormControlAria="manual"` is explicitly set on that control.
 4. Bound controls inside `ngx-signal-form-field-wrapper` must have a stable `id` — wrapper derives field identity from it.
-5. Switch-style boolean controls should use a native checkbox with `role="switch"` on the actual bound control whenever possible.
+5. Declare control semantics explicitly with `ngxSignalFormControl` for non-text-like controls (switches, checkboxes, sliders, composites) — the wrapper and auto-ARIA use this to avoid brittle DOM heuristics. For switch controls also add `role="switch"` on the actual interactive element.
 6. Angular standalone imports are template-local — if a child custom control renders the real `[formField]` element, import toolkit auto-ARIA in that child component too.
-7. Do not use removed APIs: `manual` strategy, `computeShowErrors`, `canSubmit`, `isSubmitting`, `fieldNameResolver`, `strictFieldResolution`.
+7. Do not use removed APIs: `manual` strategy, `computeShowErrors`, `canSubmit`, `isSubmitting`, `fieldNameResolver`, `strictFieldResolution`. Use `stacked` not `standard` for the default appearance.
