@@ -72,6 +72,6 @@ Adding a debug panel during development?                    → debugger
 2. Always import from the correct secondary entry point. Do not import `NgxFormField` from the root package.
 3. Do not manually add `aria-invalid`, `aria-required`, or `aria-describedby` to controls managed by `NgxSignalFormAutoAriaDirective` unless `ngxSignalFormControlAria="manual"` is explicitly set on that control.
 4. Bound controls inside `ngx-signal-form-field-wrapper` must have a stable `id` — wrapper derives field identity from it.
-5. Declare control semantics explicitly with `ngxSignalFormControl` for non-text-like controls (switches, checkboxes, sliders, composites) — the wrapper and auto-ARIA use this to avoid brittle DOM heuristics. For switch controls also add `role="switch"` on the actual interactive element.
+5. Declare control semantics explicitly with `ngxSignalFormControl` for controls outside the default native field families (switches, checkboxes, sliders, composites) — the wrapper and auto-ARIA use this to avoid brittle DOM heuristics. For switch controls also add `role="switch"` on the actual interactive element.
 6. Angular standalone imports are template-local — if a child custom control renders the real `[formField]` element, import toolkit auto-ARIA in that child component too.
 7. Do not use removed APIs: `manual` strategy, `computeShowErrors`, `canSubmit`, `isSubmitting`, `fieldNameResolver`, `strictFieldResolution`. Use `stacked` not `standard` for the default appearance.

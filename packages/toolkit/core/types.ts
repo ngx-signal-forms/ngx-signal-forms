@@ -102,8 +102,8 @@ export type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
  * behavior without the toolkit hard-coding every possible custom control.
  */
 export type NgxSignalFormControlKind =
-  | 'text-like'
-  | 'textarea-select-like'
+  | 'input-like'
+  | 'standalone-field-like'
   | 'switch'
   | 'checkbox'
   | 'radio-group'

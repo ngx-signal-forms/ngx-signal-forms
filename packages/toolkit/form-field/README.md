@@ -181,7 +181,7 @@ control semantics add the most value.
 
 For these controls, `appearance="plain"` is often the right wrapper mode:
 the wrapper still provides labels, hints, errors, and field identity, but it
-does not force text-input chrome around a widget that already has its own
+does not force the default field chrome around a widget that already has its own
 visual treatment.
 
 Use `ngxSignalFormControlAria="manual"` when the control or a third-party
@@ -189,7 +189,7 @@ widget already owns its ARIA attributes and the toolkit should leave them
 alone. Use `buildAriaDescribedBy` to assemble the described-by chain without
 duplicating the toolkit's ID conventions:
 
-- **auto** (default) for native-like controls and simple custom hosts
+- **auto** (default) for standard native field hosts and simple custom hosts
 - **manual** when the control already owns `aria-describedby`, `aria-invalid`, and `aria-required`
 
 Manual ARIA ownership is about who writes the `aria-*` attributes on the

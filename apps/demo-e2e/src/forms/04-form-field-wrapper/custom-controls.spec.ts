@@ -428,7 +428,7 @@ test.describe('Custom Signal Forms Controls', () => {
   });
 
   test.describe('Outline appearance integration', () => {
-    test('should apply outline only to text-like wrappers while custom plain and selection rows keep their own layouts', async () => {
+    test('should apply outline only to native textual wrappers while custom plain and selection rows keep their own layouts', async () => {
       await test.step('Switch the demo to outline mode', async () => {
         await page.showOutlineAppearance();
         await expect(page.outlineAppearanceButton).toHaveAttribute(
@@ -437,7 +437,7 @@ test.describe('Custom Signal Forms Controls', () => {
         );
       });
 
-      await test.step('Verify native text-like wrappers receive outline styling hooks', async () => {
+      await test.step('Verify native textual wrappers receive outline styling hooks', async () => {
         for (const controlId of ['productName', 'feedback']) {
           const wrapper = page.getWrapperByControlId(controlId);
           await expect(wrapper).toHaveAttribute('outline', '');
@@ -478,7 +478,7 @@ test.describe('Custom Signal Forms Controls', () => {
       });
     });
 
-    test('should keep invalid outline borders only for outlined text-like required fields', async () => {
+    test('should keep invalid outline borders only for outlined native textual required fields', async () => {
       const outlinedControlIds = ['productName'] as const;
       const plainControlIds = [
         'rating',

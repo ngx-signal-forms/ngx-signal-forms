@@ -460,7 +460,7 @@
   transition: var(--_transition-chrome);
 }
 
-// Stacked/outlined field chrome belongs to text-like controls only.
+// Stacked/outlined field chrome belongs to the default textual field families.
 // Checkbox, switch, slider, radio-group and composite rows manage their own
 // visual treatment and should not inherit the default bordered container.
 :host(.ngx-signal-form-field-wrapper--textual)

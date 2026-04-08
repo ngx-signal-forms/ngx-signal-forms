@@ -31,8 +31,8 @@ const TEXT_LIKE_INPUT_TYPE_VALUES = [
 const TEXT_LIKE_INPUT_TYPES = new Set<string>(TEXT_LIKE_INPUT_TYPE_VALUES);
 
 const CONTROL_KIND_VALUES = [
-  'text-like',
-  'textarea-select-like',
+  'input-like',
+  'standalone-field-like',
   'switch',
   'checkbox',
   'radio-group',
@@ -158,7 +158,7 @@ export function inferNgxSignalFormControlKind(
     element instanceof HTMLTextAreaElement ||
     element instanceof HTMLSelectElement
   ) {
-    return 'textarea-select-like';
+    return 'standalone-field-like';
   }
 
   if (element instanceof HTMLInputElement) {
@@ -175,7 +175,7 @@ export function inferNgxSignalFormControlKind(
     }
 
     if (TEXT_LIKE_INPUT_TYPES.has(element.type)) {
-      return 'text-like';
+      return 'input-like';
     }
   }
 

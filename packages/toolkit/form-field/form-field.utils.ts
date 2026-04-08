@@ -23,7 +23,7 @@ export function supportsOutlinedAppearance(
 }
 
 /**
- * Determines whether a control family uses the standard text-like field shell.
+ * Determines whether a control family uses the standard textual field shell.
  *
  * @param controlKind Resolved control kind for the projected host.
  * @returns True when the wrapper should treat the control as textual.
@@ -33,8 +33,8 @@ export function isTextualControlKind(
 ): boolean {
   return (
     controlKind === null ||
-    controlKind === 'text-like' ||
-    controlKind === 'textarea-select-like'
+    controlKind === 'input-like' ||
+    controlKind === 'standalone-field-like'
   );
 }
 

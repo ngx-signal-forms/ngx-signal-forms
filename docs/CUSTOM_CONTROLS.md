@@ -6,7 +6,7 @@ This guide explains how custom form controls interact with Angular Signal Forms 
 
 Most toolkit users do **not** need the APIs described here.
 
-If your form uses native inputs, textareas, selects, and standard wrapper
+If your form uses the default native field families (`<input>`, `<textarea>`, `<select>`) and standard wrapper
 usage, the toolkit defaults are usually enough and you can skip this guide.
 
 Reach for this guide when you are working with:
@@ -24,11 +24,11 @@ not a baseline requirement for ordinary forms.
 
 Angular Signal Forms provides three interfaces for custom controls:
 
-| Interface             | Use Case                                              |
-| --------------------- | ----------------------------------------------------- |
-| `FormValueControl<T>` | Text-like inputs (input, textarea, custom editors)    |
-| `FormUiControl`       | UI-only controls (no value, just focus/state/display) |
-| `FormCheckboxControl` | Toggle/checkbox-like inputs                           |
+| Interface             | Use Case                                                  |
+| --------------------- | --------------------------------------------------------- |
+| `FormValueControl<T>` | Value-carrying controls (input, textarea, custom editors) |
+| `FormUiControl`       | UI-only controls (no value, just focus/state/display)     |
+| `FormCheckboxControl` | Toggle/checkbox-like inputs                               |
 
 ### FormValueControl\<T\>
 
@@ -160,7 +160,7 @@ duplicating the toolkit's ID-generation conventions.
 
 Practical ownership rule:
 
-- **auto** (default) for native-like controls that should inherit toolkit ARIA
+- **auto** (default) for standard native field hosts that should inherit toolkit ARIA
 - **manual** when the widget already owns its ARIA attributes and described-by chain
 
 Manual mode is about **who writes the `aria-*` attributes on the control host**.
@@ -221,7 +221,7 @@ native checkbox.
 
 ## Toolkit Integration
 
-For native controls and simple wrapper usage, you normally do **not** need
+For standard `<input>`, `<textarea>`, and `<select>` wrapper usage, you normally do **not** need
 `ngxSignalFormControl`, `ngxSignalFormControlAria="manual"`, or preset
 providers. Those APIs are for the cases where the toolkit cannot safely infer
 the desired control family or ARIA ownership from ordinary markup.

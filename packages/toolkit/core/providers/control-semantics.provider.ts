@@ -23,7 +23,7 @@ function mergeNgxSignalFormControlPresets(
       if (typeof ngDevMode === 'undefined' || ngDevMode) {
         console.warn(
           `[ngx-signal-forms] Ignoring unknown control kind "${rawKind}" in preset overrides. ` +
-            `Valid kinds: text-like, textarea-select-like, switch, checkbox, radio-group, slider, composite.`,
+            `Valid kinds: input-like, standalone-field-like, switch, checkbox, radio-group, slider, composite.`,
         );
       }
       continue;

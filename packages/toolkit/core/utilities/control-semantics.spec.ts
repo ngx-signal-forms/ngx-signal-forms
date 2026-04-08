@@ -12,8 +12,8 @@ import {
 
 describe('isNgxSignalFormControlKind', () => {
   it.each([
-    'text-like',
-    'textarea-select-like',
+    'input-like',
+    'standalone-field-like',
     'switch',
     'checkbox',
     'radio-group',
@@ -127,10 +127,10 @@ describe('inferNgxSignalFormControlKind', () => {
     expect(inferNgxSignalFormControlKind(null)).toBeNull();
   });
 
-  it('should infer text-like for text input', () => {
+  it('should infer input-like for text input', () => {
     const el = document.createElement('input');
     el.type = 'text';
-    expect(inferNgxSignalFormControlKind(el)).toBe('text-like');
+    expect(inferNgxSignalFormControlKind(el)).toBe('input-like');
   });
 
   it.each([
@@ -147,25 +147,25 @@ describe('inferNgxSignalFormControlKind', () => {
     'time',
     'url',
     'week',
-  ])('should infer text-like for input type "%s"', (type) => {
+  ])('should infer input-like for input type "%s"', (type) => {
     const el = document.createElement('input');
     el.type = type;
-    expect(inferNgxSignalFormControlKind(el)).toBe('text-like');
+    expect(inferNgxSignalFormControlKind(el)).toBe('input-like');
   });
 
-  it('should infer text-like for input with no type', () => {
+  it('should infer input-like for input with no type', () => {
     const el = document.createElement('input');
-    expect(inferNgxSignalFormControlKind(el)).toBe('text-like');
+    expect(inferNgxSignalFormControlKind(el)).toBe('input-like');
   });
 
-  it('should infer textarea-select-like for textarea', () => {
+  it('should infer standalone-field-like for textarea', () => {
     const el = document.createElement('textarea');
-    expect(inferNgxSignalFormControlKind(el)).toBe('textarea-select-like');
+    expect(inferNgxSignalFormControlKind(el)).toBe('standalone-field-like');
   });
 
-  it('should infer textarea-select-like for select', () => {
+  it('should infer standalone-field-like for select', () => {
     const el = document.createElement('select');
-    expect(inferNgxSignalFormControlKind(el)).toBe('textarea-select-like');
+    expect(inferNgxSignalFormControlKind(el)).toBe('standalone-field-like');
   });
 
   it('should infer checkbox for checkbox input', () => {
@@ -244,7 +244,7 @@ describe('resolveNgxSignalFormControlSemantics', () => {
     const el = document.createElement('input');
     el.type = 'text';
     const result = resolveNgxSignalFormControlSemantics(el, presets);
-    expect(result.kind).toBe('text-like');
+    expect(result.kind).toBe('input-like');
     expect(result.layout).toBe('stacked');
     expect(result.ariaMode).toBe('auto');
   });
@@ -263,7 +263,7 @@ describe('resolveNgxSignalFormControlSemantics', () => {
     el.type = 'text';
     el.setAttribute('data-ngx-signal-form-control-layout', 'custom');
     const result = resolveNgxSignalFormControlSemantics(el, presets);
-    expect(result.kind).toBe('text-like');
+    expect(result.kind).toBe('input-like');
     expect(result.layout).toBe('custom');
   });
 
@@ -272,7 +272,7 @@ describe('resolveNgxSignalFormControlSemantics', () => {
     el.type = 'text';
     el.setAttribute('data-ngx-signal-form-control-aria-mode', 'manual');
     const result = resolveNgxSignalFormControlSemantics(el, presets);
-    expect(result.kind).toBe('text-like');
+    expect(result.kind).toBe('input-like');
     expect(result.ariaMode).toBe('manual');
   });
 

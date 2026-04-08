@@ -109,12 +109,12 @@ imports: [FormField, NgxSignalFormToolkit];
 - `<ngx-signal-form-fieldset>`
 
 Most wrapper use cases need no extra control metadata. Explicit control
-semantics are primarily for non-text-like or non-native controls such as
+semantics are primarily for controls outside the default native field families (`<input>`, `<textarea>`, `<select>`), such as
 switches, sliders, composites, and third-party widgets.
 
 For those controls, `appearance="plain"` is often the right wrapper mode: the
 wrapper still provides semantic structure and feedback, but it does not force
-text-input chrome around a widget that already has its own visual UI.
+the default field chrome around a widget that already has its own visual UI.
 
 ### Quick FAQ: switches and custom controls
 

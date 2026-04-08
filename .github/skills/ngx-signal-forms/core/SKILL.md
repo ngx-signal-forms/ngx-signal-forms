@@ -23,11 +23,11 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 
 - `'on-submit'` — show errors only after submission attempt (requires `form[formRoot][ngxSignalForm]` for toolkit submission context)
 
-3. **Let auto-ARIA manage ARIA attributes.** `NgxSignalFormAutoAriaDirective` (bundled in `NgxSignalFormToolkit`) handles `aria-invalid`, `aria-required`, and `aria-describedby` for text-like `[formField]` controls, selects, textareas, custom hosts, and checkbox-based switches that opt in with `role="switch"`. Standard checkboxes and radios stay excluded. Never add those attributes manually.
+3. **Let auto-ARIA manage ARIA attributes.** `NgxSignalFormAutoAriaDirective` (bundled in `NgxSignalFormToolkit`) handles `aria-invalid`, `aria-required`, and `aria-describedby` for native `<input>`, `<textarea>`, and `<select>` controls, custom hosts, and checkbox-based switches that opt in with `role="switch"`. Standard checkboxes and radios stay excluded. Never add those attributes manually.
 
 4. **Remember that standalone imports are template-local.** Importing `NgxSignalFormToolkit` in a parent form component does not make `NgxSignalFormAutoAriaDirective` available inside a child component's template. If a custom control renders the actual `<input [formField]>` itself, import the toolkit bundle or the directive in that child component.
 
-5. **Declare control semantics for non-text-like controls.** `NgxSignalFormControlSemanticsDirective` (included in `NgxSignalFormToolkit`) writes stable `data-ngx-signal-form-control-*` attributes the wrapper and auto-ARIA use to pick correct layout and ARIA behavior instead of guessing from DOM heuristics.
+5. **Declare control semantics for controls outside the default native field families.** `NgxSignalFormControlSemanticsDirective` (included in `NgxSignalFormToolkit`) writes stable `data-ngx-signal-form-control-*` attributes the wrapper and auto-ARIA use to pick correct layout and ARIA behavior instead of guessing from DOM heuristics.
    - Use `ngxSignalFormControl="switch"` on a native `input[type="checkbox"][role="switch"]` to opt it into switch wrapper styling and ARIA.
    - Use `ngxSignalFormControl="checkbox"` on a plain `input[type="checkbox"]` when it should opt in to wrapper validation display.
    - Use `ngxSignalFormControl="slider"` or `ngxSignalFormControl="composite"` on a custom component host to declare layout and ARIA ownership.

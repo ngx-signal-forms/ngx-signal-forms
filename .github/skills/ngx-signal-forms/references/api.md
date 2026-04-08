@@ -32,7 +32,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 **NgxSignalFormAutoAriaDirective:**
 
-- Applied automatically to text-like `input[formField]`, `textarea[formField]`, `select[formField]`, checkbox switches using `input[type="checkbox"][role="switch"][formField]`, and custom `[formField]` hosts.
+- Applied automatically to native `input[formField]`, `textarea[formField]`, and `select[formField]` controls (internally mapped to the `input-like` / `standalone-field-like` families), checkbox switches using `input[type="checkbox"][role="switch"][formField]`, and custom `[formField]` hosts.
 - Standard checkboxes and radios remain excluded unless the control explicitly opts in with `ngxSignalFormControl`.
 - Opt out per control with `ngxSignalFormAutoAriaDisabled` directive.
 - Leaves existing `aria-describedby`, `aria-invalid`, and `aria-required` in place when `ngxSignalFormControlAria="manual"` is present.
@@ -101,8 +101,8 @@ type NgxSignalFormControlPresetOverrides = Partial<
   Record<NgxSignalFormControlKind, Partial<NgxSignalFormControlPreset>>
 >;
 type NgxSignalFormControlKind =
-  | 'text-like'
-  | 'textarea-select-like'
+  | 'input-like'
+  | 'standalone-field-like'
   | 'switch'
   | 'checkbox'
   | 'radio-group'

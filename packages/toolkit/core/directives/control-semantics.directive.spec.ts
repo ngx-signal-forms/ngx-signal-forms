@@ -264,7 +264,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
     it('should emit data-ngx-signal-form-control marker when semantics present', async () => {
       @Component({
         template:
-          '<div data-testid="host" ngxSignalFormControl="text-like"></div>',
+          '<div data-testid="host" ngxSignalFormControl="input-like"></div>',
         imports: [NgxSignalFormControlSemanticsDirective],
       })
       class TestComponent {}

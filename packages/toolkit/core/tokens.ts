@@ -32,11 +32,11 @@ export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: NgxSignalFormsConfig = {
  */
 export const DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS: NgxSignalFormControlPresetRegistry =
   {
-    'text-like': {
+    'input-like': {
       layout: 'stacked',
       ariaMode: 'auto',
     },
-    'textarea-select-like': {
+    'standalone-field-like': {
       layout: 'stacked',
       ariaMode: 'auto',
     },

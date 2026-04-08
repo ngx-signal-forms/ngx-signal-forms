@@ -103,7 +103,7 @@ Automatically applies to supported `[formField]` controls, including custom cont
 
 Current behavior:
 
-- covers text-like inputs, textareas, selects, and custom `[formField]` hosts
+- covers native `<input>`, `<textarea>`, and `<select>` controls (internally mapped to the `input-like` and `standalone-field-like` families), plus custom `[formField]` hosts
 - excludes `radio` and standard `checkbox` inputs unless they explicitly opt in with `ngxSignalFormControl`
 - checkbox-based switches opt back in with `role="switch"`, or with explicit control semantics when the toolkit should treat them as a switch family
 - can be disabled per control with `ngxSignalFormAutoAriaDisabled`
@@ -111,7 +111,7 @@ Current behavior:
 
 Rule of thumb:
 
-- use the default **auto** mode for native-like controls and simple custom hosts
+- use the default **auto** mode for standard native field hosts and simple custom hosts
 - use **manual** mode when the control already owns its ARIA state and described-by chain
 - use **disabled** only for bespoke hosts where the toolkit should not participate at all
 

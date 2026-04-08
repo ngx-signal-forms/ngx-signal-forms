@@ -40,7 +40,7 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 
 7. **Custom controls:** Implement `FormValueControl<T>`, `FormCheckboxControl`, or `FormUiControl` from `@angular/forms/signals`. Give the host a stable `id` so the wrapper links correctly.
 
-- Use `appearance="plain"` for widget-style controls (sliders, star-rating, switch rows) where outlined or stacked text-input chrome would look wrong.
+- Use `appearance="plain"` for widget-style controls (sliders, star-rating, switch rows) where outlined or stacked default field chrome would look wrong.
 - Declare control semantics explicitly with `ngxSignalFormControl` on the bound host. Without it, the wrapper falls back to DOM heuristics that can produce the wrong layout or ARIA behavior:
 
   ```html
