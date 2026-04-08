@@ -73,12 +73,13 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 - For `ariaMode: 'manual'` controls, assemble `aria-describedby` with `buildAriaDescribedBy` from `@ngx-signal-forms/toolkit` so the ID-naming conventions stay consistent:
 
   ```typescript
-  import { buildAriaDescribedBy, generateErrorId } from '@ngx-signal-forms/toolkit';
+  import { computed } from '@angular/core';
+  import { buildAriaDescribedBy } from '@ngx-signal-forms/toolkit';
   readonly sliderDescribedBy = computed(() =>
-    buildAriaDescribedBy(
-      generateErrorId('rating'),
-      this.showErrors() ? 'rating-hint' : null,
-    ),
+    buildAriaDescribedBy('rating', {
+      baseIds: ['rating-hint'],
+      showErrors: this.showErrors(),
+    }),
   );
   ```
 

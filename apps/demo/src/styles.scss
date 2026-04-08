@@ -437,11 +437,13 @@
     @apply m-0 shrink-0;
   }
 
-  .choice-group-option:hover {
+  .choice-group-option:hover,
+  .choice-group-option:focus-within {
     background: rgb(15 23 42 / 0.03);
   }
 
-  .dark .choice-group-option:hover {
+  .dark .choice-group-option:hover,
+  .dark .choice-group-option:focus-within {
     background: rgb(255 255 255 / 0.04);
   }
 

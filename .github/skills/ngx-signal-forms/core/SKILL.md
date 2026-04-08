@@ -34,7 +34,7 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
    - Pass an object for combined overrides: `[ngxSignalFormControl]="{ kind: 'slider', layout: 'stacked', ariaMode: 'manual' }"`.
    - Use `ngxSignalFormControlAria="manual"` alone when you only need to suppress auto-ARIA without declaring a kind.
 
-6. **Use `provideNgxSignalFormControlPresets()` for component-wide semantic defaults.** When all sliders or all switches in a feature should share the same `layout`/`ariaMode`, avoid repeating the directive object on every element:
+6. **Use the preset provider that matches the scope you need.** Use `provideNgxSignalFormControlPresets()` for app- or feature-level defaults, and `provideNgxSignalFormControlPresetsForComponent()` for component-scoped semantic defaults. When all sliders or all switches in a feature should share the same `layout`/`ariaMode`, avoid repeating the directive object on every element:
 
    ```typescript
    providers: [

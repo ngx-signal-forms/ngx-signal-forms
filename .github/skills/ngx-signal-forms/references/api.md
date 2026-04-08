@@ -5,6 +5,7 @@
 ### Bundle
 
 ```typescript
+import { FormField } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 // = [FormRoot, NgxSignalFormDirective, NgxSignalFormAutoAriaDirective, NgxSignalFormControlSemanticsDirective]
 ```
@@ -63,10 +64,14 @@ provideFieldLabels(configOrFactory: FieldLabelMap | (() => FieldLabelResolver)):
 - Prefer these providers for default `ariaMode` / `layout` behavior instead of extending `NgxSignalFormsUserConfig`.
 
 ```typescript
-provideNgxSignalFormControlPresets({
-  switch: { ariaMode: 'manual' },
-  composite: { layout: 'custom' },
-});
+export const appConfig = {
+  providers: [
+    provideNgxSignalFormControlPresets({
+      switch: { ariaMode: 'manual' },
+      composite: { layout: 'custom' },
+    }),
+  ],
+};
 ```
 
 ### Provider-related exports
@@ -126,35 +131,36 @@ interface NgxSignalFormsUserConfig {
 ### Types
 
 ```typescript
-type SignalLike<T> = Signal<T> | (() => T)
-interface NgxSignalFormsConfig { ... }
-type NgxSignalFormsUserConfig = DeepPartial<NgxSignalFormsConfig>
+type SignalLike<T> = Signal<T> | (() => T);
 type ResolvedErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit';
 type ErrorDisplayStrategy = ResolvedErrorDisplayStrategy | 'inherit';
 type ResolvedFormFieldAppearance = 'stacked' | 'outline' | 'plain';
 type FormFieldAppearance = ResolvedFormFieldAppearance;
 type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
 type SubmittedStatus = 'unsubmitted' | 'submitting' | 'submitted';
-type ErrorVisibilityState = Pick<FieldState<unknown>, 'invalid' | 'touched'>
-type ErrorReadableState = Pick<FieldState<unknown>, 'errors' | 'invalid' | 'touched'>
-type PartialErrorVisibilityState = Partial<ErrorVisibilityState>
+type ErrorVisibilityState = Pick<FieldState<unknown>, 'invalid' | 'touched'>;
+type ErrorReadableState = Pick<
+  FieldState<unknown>,
+  'errors' | 'invalid' | 'touched'
+>;
+type PartialErrorVisibilityState = Partial<ErrorVisibilityState>;
 interface SplitErrors {
-  readonly blocking: ValidationError[]
-  readonly warnings: ValidationError[]
+  readonly blocking: ValidationError[];
+  readonly warnings: ValidationError[];
 }
 interface OnInvalidHandlerOptions {
-  readonly focusFirstInvalid?: boolean
-  readonly afterInvalid?: (field: FieldTree<unknown>) => void
+  readonly focusFirstInvalid?: boolean;
+  readonly afterInvalid?: (field: FieldTree<unknown>) => void;
 }
 interface NgxSignalFormControlSemantics {
-  readonly kind?: NgxSignalFormControlKind
-  readonly layout?: NgxSignalFormControlLayout
-  readonly ariaMode?: NgxSignalFormControlAriaMode
+  readonly kind?: NgxSignalFormControlKind;
+  readonly layout?: NgxSignalFormControlLayout;
+  readonly ariaMode?: NgxSignalFormControlAriaMode;
 }
 interface ResolvedNgxSignalFormControlSemantics {
-  readonly kind: NgxSignalFormControlKind | null
-  readonly layout: NgxSignalFormControlLayout | null
-  readonly ariaMode: NgxSignalFormControlAriaMode | null
+  readonly kind: NgxSignalFormControlKind | null;
+  readonly layout: NgxSignalFormControlLayout | null;
+  readonly ariaMode: NgxSignalFormControlAriaMode | null;
 }
 ```
 

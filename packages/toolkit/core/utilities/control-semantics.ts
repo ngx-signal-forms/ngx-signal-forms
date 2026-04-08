@@ -64,6 +64,9 @@ const CONTROL_ARIA_MODES = new Set<string>(CONTROL_ARIA_MODE_VALUES);
  * This narrow guard is shared by both the directive and DOM-reading utilities
  * so explicit semantics declared in markup are validated in one place instead
  * of duplicating string comparisons across the toolkit.
+ *
+ * @param value Raw DOM attribute or directive input value to validate.
+ * @returns True when the value matches a supported control kind.
  */
 export function isNgxSignalFormControlKind(
   value: string | null | undefined,
@@ -76,6 +79,9 @@ export function isNgxSignalFormControlKind(
  *
  * Keeping layout validation centralized ensures wrapper metadata and directive
  * inputs stay aligned even if the set of supported layouts grows later.
+ *
+ * @param value Raw DOM attribute or directive input value to validate.
+ * @returns True when the value matches a supported wrapper layout.
  */
 export function isNgxSignalFormControlLayout(
   value: string | null | undefined,
@@ -88,6 +94,9 @@ export function isNgxSignalFormControlLayout(
  *
  * This exists so callers can safely treat DOM attributes as typed semantics
  * without trusting arbitrary string values rendered by user markup.
+ *
+ * @param value Raw DOM attribute or directive input value to validate.
+ * @returns True when the value matches a supported ARIA ownership mode.
  */
 export function isNgxSignalFormControlAriaMode(
   value: string | null | undefined,
@@ -103,6 +112,9 @@ export function isNgxSignalFormControlAriaMode(
  * The wrapper and auto-ARIA layers use this instead of reading directive state
  * directly so projected controls, custom elements, and plain DOM lookups all
  * share the same transport format.
+ *
+ * @param element Rendered control host to inspect.
+ * @returns The explicit semantics declared on the host, or an empty object.
  */
 export function readNgxSignalFormControlSemantics(
   element: HTMLElement | null,
@@ -131,6 +143,9 @@ export function readNgxSignalFormControlSemantics(
  * This fallback preserves backwards compatibility for existing wrapper usage
  * while still allowing explicit semantics to override heuristic guesses when a
  * custom control needs deterministic behavior.
+ *
+ * @param element Rendered control host to inspect.
+ * @returns The inferred control kind, or `null` when no safe heuristic exists.
  */
 export function inferNgxSignalFormControlKind(
   element: HTMLElement | null,
@@ -197,6 +212,10 @@ export function inferNgxSignalFormControlKind(
  *
  * This ordering keeps explicit consumer intent authoritative while still
  * providing sensible defaults for older markup and built-in control families.
+ *
+ * @param element Rendered control host to inspect.
+ * @param presets Preset registry used for layout and ARIA fallback values.
+ * @returns Fully resolved semantics used by wrapper and auto-ARIA logic.
  */
 export function resolveNgxSignalFormControlSemantics(
   element: HTMLElement | null,

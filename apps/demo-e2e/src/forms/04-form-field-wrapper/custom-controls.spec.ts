@@ -233,6 +233,10 @@ test.describe('Custom Signal Forms Controls', () => {
           'aria-invalid',
           'false',
         );
+        await expect(page.shareReviewPubliclyCheckbox).not.toHaveAttribute(
+          'aria-describedby',
+          /shareReviewPublicly-error/,
+        );
       });
     });
 
@@ -476,7 +480,11 @@ test.describe('Custom Signal Forms Controls', () => {
 
     test('should keep invalid outline borders only for outlined text-like required fields', async () => {
       const outlinedControlIds = ['productName'] as const;
-      const plainControlIds = ['rating', 'serviceRating'] as const;
+      const plainControlIds = [
+        'rating',
+        'serviceRating',
+        'accessibilityAudit',
+      ] as const;
       const rowControlIds = ['emailUpdates', 'shareReviewPublicly'] as const;
       const initialBorderColors = new Map<string, string>();
 

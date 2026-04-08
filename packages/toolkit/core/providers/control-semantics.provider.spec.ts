@@ -1,4 +1,5 @@
-import { Injector } from '@angular/core';
+import { createEnvironmentInjector, EnvironmentInjector } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { describe, expect, it, vi } from 'vitest';
 import {
   DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS,
@@ -10,15 +11,9 @@ import {
 } from './control-semantics.provider';
 
 const createInjectorFromEnvProviders = (
-  envProviders: unknown,
-  parent?: Injector,
-) => {
-  const providersRecord = envProviders as {
-    ɵproviders: Parameters<typeof Injector.create>[0]['providers'];
-  };
-
-  return Injector.create({ providers: providersRecord.ɵproviders, parent });
-};
+  providers: Parameters<typeof createEnvironmentInjector>[0],
+  parent: EnvironmentInjector = TestBed.inject(EnvironmentInjector),
+) => createEnvironmentInjector(providers, parent);
 
 describe('provideNgxSignalFormControlPresets', () => {
   it('should return environment providers', () => {
@@ -38,7 +33,7 @@ describe('provideNgxSignalFormControlPresets', () => {
         ariaMode: 'manual',
       },
     });
-    const injector = createInjectorFromEnvProviders(providers);
+    const injector = createInjectorFromEnvProviders([providers]);
 
     const resolved = injector.get(NGX_SIGNAL_FORM_CONTROL_PRESETS);
     expect(resolved.slider.ariaMode).toBe('manual');
@@ -57,7 +52,7 @@ describe('provideNgxSignalFormControlPresets', () => {
       // @ts-expect-error — intentional typo to test dev-mode warning
       text_like: { ariaMode: 'manual' },
     });
-    const injector = createInjectorFromEnvProviders(providers);
+    const injector = createInjectorFromEnvProviders([providers]);
 
     injector.get(NGX_SIGNAL_FORM_CONTROL_PRESETS);
 
@@ -70,7 +65,7 @@ describe('provideNgxSignalFormControlPresets', () => {
 
   it('should return defaults when given empty overrides', () => {
     const providers = provideNgxSignalFormControlPresets({});
-    const injector = createInjectorFromEnvProviders(providers);
+    const injector = createInjectorFromEnvProviders([providers]);
 
     const resolved = injector.get(NGX_SIGNAL_FORM_CONTROL_PRESETS);
     expect(resolved).toEqual(DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS);
@@ -90,7 +85,7 @@ describe('provideNgxSignalFormControlPresetsForComponent', () => {
   });
 
   it('should inherit parent preset overrides instead of resetting to defaults', () => {
-    const parentInjector = createInjectorFromEnvProviders(
+    const parentInjector = createInjectorFromEnvProviders([
       provideNgxSignalFormControlPresets({
         slider: {
           layout: 'custom',
@@ -100,16 +95,16 @@ describe('provideNgxSignalFormControlPresetsForComponent', () => {
           ariaMode: 'manual',
         },
       }),
-    );
+    ]);
 
-    const childInjector = Injector.create({
-      providers: provideNgxSignalFormControlPresetsForComponent({
+    const childInjector = createInjectorFromEnvProviders(
+      provideNgxSignalFormControlPresetsForComponent({
         composite: {
           layout: 'group',
         },
       }),
-      parent: parentInjector,
-    });
+      parentInjector,
+    );
 
     const resolved = childInjector.get(NGX_SIGNAL_FORM_CONTROL_PRESETS);
 

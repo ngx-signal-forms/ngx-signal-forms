@@ -128,7 +128,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       const newsletter = page.newsletterSwitch;
       await newsletter.focus();
       await newsletter.blur();
-      await expect(newsletter).toHaveAttribute('aria-invalid', /(true|false)/);
+      await expect(newsletter).toHaveAttribute('aria-invalid', 'false');
     });
   });
 

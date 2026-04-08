@@ -119,7 +119,7 @@ import { globalConfigSchema } from './global-configuration.validations';
           [formField]="configForm.acceptTerms"
           [appearance]="appearance()"
         >
-          <label for="acceptTerms">Accept terms of service</label>
+          <label for="acceptTerms">Accept terms of service *</label>
           <input
             id="acceptTerms"
             type="checkbox"

@@ -24,7 +24,7 @@
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 // Individual imports
-import { FormRoot } from '@angular/forms/signals';
+import { FormField, FormRoot } from '@angular/forms/signals';
 import {
   NgxSignalFormDirective,
   NgxSignalFormAutoAriaDirective,
@@ -181,15 +181,19 @@ Why this is the better fit:
 - explicit directive inputs should still override provider defaults cleanly
 
 ```typescript
-provideNgxSignalFormControlPresets({
-  slider: {
-    layout: 'custom',
-    ariaMode: 'manual',
-  },
-  composite: {
-    layout: 'custom',
-  },
-});
+export const appConfig = {
+  providers: [
+    provideNgxSignalFormControlPresets({
+      slider: {
+        layout: 'custom',
+        ariaMode: 'manual',
+      },
+      composite: {
+        layout: 'custom',
+      },
+    }),
+  ],
+};
 
 @Component({
   providers: [
@@ -216,6 +220,7 @@ owns its `aria-describedby` chain. Use `buildAriaDescribedBy` to assemble the
 chain without duplicating the toolkit's ID-generation conventions:
 
 ```typescript
+import { computed } from '@angular/core';
 import { buildAriaDescribedBy, shouldShowErrors } from '@ngx-signal-forms/toolkit';
 
 protected readonly describedBy = computed(() =>
@@ -811,7 +816,6 @@ repeating five separate `readFieldFlag(...)` computeds.
 
 - [Main README](https://github.com/ngx-signal-forms/ngx-signal-forms#readme) — Overview, installation, quick start
 - [GitHub Releases](https://github.com/ngx-signal-forms/ngx-signal-forms/releases) — Published release notes
-- [RC2 release notes](../../docs/RELEASE_NOTES_RC2.md) — Current release-candidate notes and migration guidance
 - [Form Field Theming](./form-field/THEMING.md) — CSS custom properties guide
 - [CSS Framework Integration](../../docs/CSS_FRAMEWORK_INTEGRATION.md) — Bootstrap, Tailwind, Material setup
 - [Warnings Support](../../docs/WARNINGS_SUPPORT.md) — Non-blocking validation

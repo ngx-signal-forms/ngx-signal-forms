@@ -598,6 +598,35 @@ describe('NgxSignalFormAutoAriaDirective', () => {
 
       expect(input?.hasAttribute('aria-describedby')).toBe(false);
     });
+
+    it('should replace stale managed ids when the control id changes', async () => {
+      @Component({
+        template: '<input [id]="fieldId()" [formField]="emailControl()" />',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAriaDirective],
+      })
+      class TestComponent {
+        readonly fieldId = signal('email');
+
+        emailControl = createMockControl(true, true, [
+          { kind: 'required', message: 'Email is required' },
+        ]);
+      }
+
+      const { container, fixture } = await render(TestComponent);
+
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const input = container.querySelector('input');
+      expect(input?.getAttribute('aria-describedby')).toBe('email-error');
+
+      fixture.componentInstance.fieldId.set('contactEmail');
+      fixture.detectChanges();
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(input?.getAttribute('aria-describedby')).toBe(
+        'contactEmail-error',
+      );
+    });
   });
 
   describe('Edge Cases', () => {

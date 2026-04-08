@@ -633,7 +633,6 @@ Start here:
 - [Toolkit API reference](./packages/toolkit/README.md)
 - [Vest integration guide](./packages/toolkit/vest/README.md)
 - [GitHub Releases](https://github.com/ngx-signal-forms/ngx-signal-forms/releases)
-- [RC2 release notes](./docs/RELEASE_NOTES_RC2.md)
 - [Assistive components](./packages/toolkit/assistive/README.md)
 - [Form field components](./packages/toolkit/form-field/README.md)
 - [Headless primitives](./packages/toolkit/headless/README.md)

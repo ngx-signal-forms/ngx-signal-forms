@@ -387,6 +387,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * Updated from the post-render DOM inspection after content projection settles.
    */
   readonly #inputElementId = signal<string | null>(null);
+  readonly #boundControlElement = signal<HTMLElement | null>(null);
 
   readonly #controlSemantics = signal<ResolvedNgxSignalFormControlSemantics>({
     kind: null,
@@ -632,8 +633,14 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
       // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- afterEveryRender passes DOM-backed render state with mutable HTMLElement references.
       write: (renderState) => {
         const { inputEl, inputId, semantics } = renderState;
+        const previousBoundControl = this.#boundControlElement();
 
-        if (inputId && inputId !== this.#inputElementId()) {
+        if (previousBoundControl !== inputEl) {
+          previousBoundControl?.removeAttribute('data-signal-field');
+          this.#boundControlElement.set(inputEl);
+        }
+
+        if (inputId !== this.#inputElementId()) {
           this.#inputElementId.set(inputId);
         }
 

@@ -134,6 +134,7 @@ export class CustomControlsFormComponent {
    */
   protected resetForm(): void {
     this.reviewForm().reset();
+    this.#submitAttempted.set(false);
     this.#model.set(initialCustomControlsModel);
   }
 }

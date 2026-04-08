@@ -149,6 +149,7 @@ export class NgxSignalFormAutoAriaDirective {
   readonly #formField = inject(FORM_FIELD);
 
   readonly #domSnapshot = signal(INITIAL_DOM_SNAPSHOT);
+  readonly #managedDescribedByIds = signal<readonly string[]>([]);
 
   readonly #isManualAriaMode = computed(() => {
     return this.#controlSemantics?.ariaMode() === 'manual';
@@ -260,6 +261,30 @@ export class NgxSignalFormAutoAriaDirective {
     );
   }
 
+  #resolveManagedDescribedByIds(
+    snapshot: AutoAriaDomSnapshot,
+  ): readonly string[] {
+    if (this.#isManualAriaMode()) {
+      return [];
+    }
+
+    if (!snapshot.fieldName) {
+      return snapshot.hintIds;
+    }
+
+    const managedIds = [...snapshot.hintIds];
+
+    if (this.#shouldShowErrors()) {
+      managedIds.push(generateErrorId(snapshot.fieldName));
+    }
+
+    if (this.#shouldShowWarnings()) {
+      managedIds.push(generateWarningId(snapshot.fieldName));
+    }
+
+    return Array.from(new Set(managedIds));
+  }
+
   #readPreservedDescribedBy(fieldName: string | null): string | null {
     const raw = this.#element.nativeElement.getAttribute('aria-describedby');
 
@@ -270,13 +295,16 @@ export class NgxSignalFormAutoAriaDirective {
     const parts = raw.split(' ').filter(Boolean);
 
     if (!fieldName) {
-      return parts.length > 0 ? parts.join(' ') : null;
+      const preserved = parts.filter(
+        (part: string) => !this.#managedDescribedByIds().includes(part),
+      );
+
+      return preserved.length > 0 ? preserved.join(' ') : null;
     }
 
-    const generatedIds = new Set([
-      generateErrorId(fieldName),
-      generateWarningId(fieldName),
-    ]);
+    const generatedIds = new Set(this.#managedDescribedByIds());
+    generatedIds.add(generateErrorId(fieldName));
+    generatedIds.add(generateWarningId(fieldName));
 
     const preserved = parts.filter((part: string) => !generatedIds.has(part));
 
@@ -350,6 +378,9 @@ export class NgxSignalFormAutoAriaDirective {
         },
         write: (snapshot) => {
           const current = this.#domSnapshot();
+          const previousManagedDescribedByIds = this.#managedDescribedByIds();
+          const managedDescribedByIds =
+            this.#resolveManagedDescribedByIds(snapshot);
 
           if (
             current.fieldName !== snapshot.fieldName ||
@@ -361,14 +392,45 @@ export class NgxSignalFormAutoAriaDirective {
             this.#domSnapshot.set(snapshot);
           }
 
-          if (!this.#isManualAriaMode()) {
-            this.#writeManagedAttribute('aria-invalid', this.ariaInvalid());
-            this.#writeManagedAttribute(
-              'aria-describedby',
-              this.ariaDescribedBy(),
-            );
-            this.#writeManagedAttribute('aria-required', this.ariaRequired());
+          if (
+            !this.#haveSameIds(
+              previousManagedDescribedByIds,
+              managedDescribedByIds,
+            )
+          ) {
+            this.#managedDescribedByIds.set(managedDescribedByIds);
           }
+
+          if (this.#isManualAriaMode()) {
+            const currentDescribedBy =
+              this.#element.nativeElement.getAttribute('aria-describedby');
+            const describedByParts = currentDescribedBy
+              ? currentDescribedBy.split(' ').filter(Boolean)
+              : [];
+            const hasManagedDescribedByIds = previousManagedDescribedByIds.some(
+              (id) => describedByParts.includes(id),
+            );
+
+            if (hasManagedDescribedByIds) {
+              this.#writeManagedAttribute(
+                'aria-describedby',
+                snapshot.describedBy,
+              );
+            }
+
+            if (previousManagedDescribedByIds.length > 0) {
+              this.#managedDescribedByIds.set([]);
+            }
+
+            return;
+          }
+
+          this.#writeManagedAttribute('aria-invalid', this.ariaInvalid());
+          this.#writeManagedAttribute(
+            'aria-describedby',
+            this.ariaDescribedBy(),
+          );
+          this.#writeManagedAttribute('aria-required', this.ariaRequired());
         },
       },
       { injector: this.#injector },

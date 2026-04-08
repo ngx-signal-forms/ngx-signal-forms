@@ -511,7 +511,7 @@ Do **not**:
 
 ### Don’t
 
-- document removed APIs (`manual`, old config fields)
+- document removed APIs (old config fields)
 - invent exports that are not public (`computeShowErrors`, `canSubmit`, `isSubmitting`)
 - manually add `aria-invalid`/`aria-required` to toolkit-managed controls
 - rely on implicit field-name generation without `id` or `fieldName`

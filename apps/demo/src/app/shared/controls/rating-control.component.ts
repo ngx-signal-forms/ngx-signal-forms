@@ -67,7 +67,7 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
 
     :host(:focus-visible) {
       background-color: color-mix(in srgb, #fbbf24 10%, transparent);
-      box-shadow: 0 0 0 3px color-mix(in srgb, #007bc7 30%, transparent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, #007bc7 55%, transparent);
     }
 
     :host([data-signal-field]:focus-visible) {

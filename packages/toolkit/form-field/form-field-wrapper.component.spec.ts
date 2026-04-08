@@ -1,4 +1,4 @@
-import { inputBinding, signal } from '@angular/core';
+import { Component, inputBinding, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
@@ -232,6 +232,45 @@ describe('NgxSignalFormWrapperComponent', () => {
 
       const errorId = errorContainer?.getAttribute('id');
       expect(errorId).toBe('derived-id-error');
+    });
+
+    it('should clear stale projected control metadata when a custom control loses its id', async () => {
+      const invalidField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'required', message: 'Required' }],
+      });
+
+      @Component({
+        template: `
+          <ngx-signal-form-field-wrapper [formField]="field" fieldName="rating">
+            <label for="rating-control">Rating</label>
+            <div
+              [attr.id]="controlId()"
+              data-ngx-signal-form-control
+              role="slider"
+            ></div>
+          </ngx-signal-form-field-wrapper>
+        `,
+        imports: [NgxSignalFormWrapperComponent],
+      })
+      class TestComponent {
+        readonly controlId = signal('rating-control');
+        readonly field = invalidField;
+      }
+
+      const { container, fixture } = await render(TestComponent);
+
+      await fixture.whenStable();
+
+      const control = container.querySelector('[role="slider"]');
+      expect(control).toHaveAttribute('data-signal-field', 'rating');
+
+      fixture.componentInstance.controlId.set(null);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(control?.hasAttribute('data-signal-field')).toBe(false);
     });
   });
 

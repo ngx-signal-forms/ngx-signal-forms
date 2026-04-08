@@ -226,7 +226,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
 
       fixture.componentInstance.kind.set('slider');
       fixture.detectChanges();
-      await TestBed.inject(TestBed).flushEffects?.();
+      await fixture.whenStable();
 
       expect(host.getAttribute('data-ngx-signal-form-control-kind')).toBe(
         'slider',
@@ -253,7 +253,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
 
       fixture.componentInstance.kind.set('unknown-invalid');
       fixture.detectChanges();
-      await TestBed.inject(TestBed).flushEffects?.();
+      await fixture.whenStable();
 
       expect(host.hasAttribute('data-ngx-signal-form-control')).toBe(false);
       expect(host.getAttribute('data-ngx-signal-form-control-kind')).toBeNull();

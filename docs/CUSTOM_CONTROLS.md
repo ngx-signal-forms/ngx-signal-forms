@@ -449,7 +449,11 @@ Usage with toolkit:
 <form [formRoot]="myForm" ngxSignalForm errorStrategy="on-touch">
   <ngx-signal-form-field-wrapper [formField]="myForm.country">
     <label for="country">Country</label>
-    <app-custom-select [formField]="myForm.country" [options]="countries" />
+    <app-custom-select
+      id="country"
+      [formField]="myForm.country"
+      [options]="countries"
+    />
   </ngx-signal-form-field-wrapper>
 </form>
 ```
