@@ -639,6 +639,37 @@ test.describe('Custom Signal Forms Controls', () => {
     });
   });
 
+  test.describe('Snapshot Regression', () => {
+    test('should match aria structure for custom controls form', async () => {
+      await expect(page.form).toMatchAriaSnapshot();
+    });
+
+    test('should capture visual baseline for stacked appearance', async () => {
+      await expect(page.stackedAppearanceButton).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+
+      await expect(page.form).toHaveScreenshot('custom-controls-stacked.png', {
+        animations: 'disabled',
+        caret: 'hide',
+      });
+    });
+
+    test('should capture visual baseline for outline appearance', async () => {
+      await page.showOutlineAppearance();
+      await expect(page.outlineAppearanceButton).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+
+      await expect(page.form).toHaveScreenshot('custom-controls-outline.png', {
+        animations: 'disabled',
+        caret: 'hide',
+      });
+    });
+  });
+
   test.describe('Mixed Native and Custom Controls', () => {
     test('should handle mix of native inputs and custom controls', async () => {
       await test.step('Fill native input', async () => {

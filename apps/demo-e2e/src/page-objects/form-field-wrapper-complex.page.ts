@@ -8,10 +8,18 @@ import { BaseFormPage } from './base-form.page';
  * Demonstrates complex form structures with nested fields and fieldset grouping
  */
 export class FormFieldWrapperComplexPage extends BaseFormPage {
+  readonly addSkillButton: Locator;
+  readonly resetButton: Locator;
   readonly submitButton: Locator;
 
   constructor(page: Page) {
     super(page);
+    this.addSkillButton = this.form.getByRole('button', {
+      name: /Add Skill/i,
+    });
+    this.resetButton = this.form.getByRole('button', {
+      name: /^Reset$/i,
+    });
     this.submitButton = this.form.getByRole('button', {
       name: /Submit Application|Submitting/i,
     });
@@ -104,6 +112,13 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
   }
 
   /**
+   * Get dynamic skill-name inputs, one per skill row
+   */
+  get skillRows(): Locator {
+    return this.page.getByRole('textbox', { name: /Skill Name/i });
+  }
+
+  /**
    * Get all inputs, textareas, and selects within the form
    */
   get allFormControls(): Locator {
@@ -115,6 +130,13 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
    */
   async submit(): Promise<void> {
     await this.submitButton.click();
+  }
+
+  /**
+   * Get skill name input by row index
+   */
+  getSkillNameInput(index: number): Locator {
+    return this.skillRows.nth(index);
   }
 
   /**

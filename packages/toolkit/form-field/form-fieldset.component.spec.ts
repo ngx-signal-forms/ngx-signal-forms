@@ -61,6 +61,34 @@ describe('NgxSignalFormFieldset', () => {
     expect(container.querySelector('fieldset > legend')?.textContent).toBe(
       'Shipping Address',
     );
+    expect(
+      container.querySelector('fieldset > .ngx-signal-form-fieldset__surface'),
+    ).not.toBeNull();
+  });
+
+  it('wraps grouped content in a dedicated surface layer', async () => {
+    const fieldset = createFieldsetState();
+
+    const { container } = await render(
+      `<ngx-signal-form-fieldset [fieldsetField]="fieldset">
+        <div class="content">Projected</div>
+      </ngx-signal-form-fieldset>`,
+      {
+        imports: [NgxSignalFormFieldset],
+        componentProperties: {
+          fieldset,
+        },
+      },
+    );
+
+    const host = container.querySelector('ngx-signal-form-fieldset');
+    const surface = host?.querySelector('.ngx-signal-form-fieldset__surface');
+    const content = surface?.querySelector(
+      '.ngx-signal-form-fieldset__content',
+    );
+
+    expect(surface).not.toBeNull();
+    expect(content?.querySelector('.content')?.textContent).toBe('Projected');
   });
 
   it('aggregates errors from fieldsetField errorSummary', async () => {

@@ -155,5 +155,40 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
         })(),
       ]);
     });
+
+    test('should reset dynamic skills back to baseline without stale touched errors', async () => {
+      await expect(page.getSkillNameInput(0)).toBeVisible();
+
+      const baselineSkillRows = await page.skillRows.count();
+      expect(baselineSkillRows).toBe(1);
+
+      await test.step('add a skill row and trigger a touched validation error', async () => {
+        await page.addSkillButton.click();
+        await expect(page.skillRows).toHaveCount(baselineSkillRows + 1);
+
+        const addedSkillNameInput = page.getSkillNameInput(1);
+        await addedSkillNameInput.focus();
+        await addedSkillNameInput.blur();
+
+        await expect(
+          page.errorAlerts
+            .filter({ hasText: /Skill name is required/i })
+            .first(),
+        ).toBeVisible();
+      });
+
+      await test.step('reset and verify the form returns to its initial skills state', async () => {
+        await page.resetButton.click();
+
+        await expect(page.skillRows).toHaveCount(baselineSkillRows);
+        await expect(
+          page.errorAlerts.filter({ hasText: /Skill name is required/i }),
+        ).toHaveCount(0);
+        await expect(page.getSkillNameInput(0)).not.toHaveAttribute(
+          'aria-invalid',
+          'true',
+        );
+      });
+    });
   });
 });
