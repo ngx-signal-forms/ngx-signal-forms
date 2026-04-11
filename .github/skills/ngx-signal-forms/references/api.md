@@ -123,10 +123,17 @@ interface NgxSignalFormsUserConfig {
   autoAria?: boolean; // default: true
   defaultErrorStrategy?: 'immediate' | 'on-touch' | 'on-submit'; // default: 'on-touch'
   defaultFormFieldAppearance?: 'stacked' | 'outline' | 'plain'; // default: 'stacked'
+  // Migration: replace legacy `standard` with `stacked` and `bare` with `plain`.
   showRequiredMarker?: boolean;
   requiredMarker?: string; // default: '*'
 }
 ```
+
+Migration note for `defaultFormFieldAppearance`:
+
+- `standard` was intentionally renamed to `stacked` (equivalent default textual field style)
+- `bare` was intentionally renamed to `plain` (minimal wrapper chrome)
+- Recommended update: `standard` → `stacked`, `bare` → `plain`
 
 ### Types
 

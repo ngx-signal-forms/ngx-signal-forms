@@ -186,7 +186,7 @@ export class ErrorMessagesComponent {
   minLength: (params: Record<string, unknown>) => {
     const minLength = params['minLength'];
 
-    return typeof minLength === 'number'
+    return typeof minLength === 'number' && Number.isFinite(minLength)
       ? \`Minimum \${minLength} characters required\`
       : 'Minimum length requirement not available';
   },

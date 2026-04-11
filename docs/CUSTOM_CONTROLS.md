@@ -410,6 +410,7 @@ When building custom controls that work with the toolkit:
   template: `
     <select
       #select
+      [id]="selectId()"
       (change)="onChange(select.value)"
       (blur)="onTouched()"
       [disabled]="disabled()"
@@ -426,6 +427,7 @@ export class CustomSelectComponent implements FormValueControl<string> {
   readonly #select =
     viewChild.required<ElementRef<HTMLSelectElement>>('select');
 
+  readonly selectId = input.required<string>();
   readonly options = input<{ value: string; label: string }[]>([]);
   readonly disabled = input<boolean>(false);
   readonly invalid = input<boolean>(false);
@@ -448,9 +450,9 @@ Usage with toolkit:
 ```html
 <form [formRoot]="myForm" ngxSignalForm errorStrategy="on-touch">
   <ngx-signal-form-field-wrapper [formField]="myForm.country">
-    <label for="country">Country</label>
+    <label for="country-select">Country</label>
     <app-custom-select
-      id="country"
+      [selectId]="'country-select'"
       [formField]="myForm.country"
       [options]="countries"
     />

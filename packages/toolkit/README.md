@@ -36,6 +36,7 @@ import {
   provideErrorMessages,
   combineShowErrors,
   showErrors,
+  shouldShowErrors,
   focusFirstInvalid,
   createOnInvalidHandler,
   createSubmittedStatusTracker,
@@ -249,6 +250,11 @@ interface NgxSignalFormsUserConfig {
 }
 ```
 
+Migration note (intentional breaking rename):
+
+- `standard` → `stacked` (equivalent default textual field appearance)
+- `bare` → `plain` (low-chrome wrapper appearance)
+
 `NgxSignalFormsUserConfig` is intentionally for form-system-wide behavior.
 Control-family semantics such as default ARIA mode or wrapper layout live in
 the dedicated control preset providers above.
@@ -300,7 +306,9 @@ provideErrorMessages({
   `warnings`
 - `unwrapValue(signalOrValue)` — Extract value from `Signal` or static
 
-`showErrors()` is the main public API for component and template work. `unwrapValue()` is mainly useful when building lower-level utilities.
+`shouldShowErrors()` is the pure boolean strategy helper.
+`showErrors()` is the reactive helper that returns `Signal<boolean>` from a `FieldTree`.
+`unwrapValue()` is mainly useful when building lower-level utilities.
 
 ### Field Label Customization
 

@@ -31,9 +31,10 @@
       appearance="plain"
       [formField]="reviewForm.rating"
     >
-      <label for="rating">Product Rating *</label>
+      <label id="rating-label" for="rating">Product Rating *</label>
       <ngx-rating-control
         id="rating"
+        [labelledBy]="'rating-label'"
         [ngxSignalFormControl]="sliderSemantics"
         [formField]="reviewForm.rating"
         [maxRating]="5"
@@ -48,9 +49,12 @@
       appearance="plain"
       [formField]="reviewForm.serviceRating"
     >
-      <label for="serviceRating">Service Quality *</label>
+      <label id="serviceRating-label" for="serviceRating"
+        >Service Quality *</label
+      >
       <ngx-rating-control
         id="serviceRating"
+        [labelledBy]="'serviceRating-label'"
         [ngxSignalFormControl]="sliderSemantics"
         [formField]="reviewForm.serviceRating"
         [maxRating]="5"
@@ -62,9 +66,12 @@
       appearance="plain"
       [formField]="reviewForm.wouldRecommend"
     >
-      <label for="wouldRecommend">Would Recommend?</label>
+      <label id="wouldRecommend-label" for="wouldRecommend"
+        >Would Recommend?</label
+      >
       <ngx-rating-control
         id="wouldRecommend"
+        [labelledBy]="'wouldRecommend-label'"
         [ngxSignalFormControl]="sliderSemantics"
         [formField]="reviewForm.wouldRecommend"
         [maxRating]="2"
@@ -85,9 +92,7 @@
         [field]="reviewForm.emailUpdates"
       />
       <ngx-signal-form-field-hint position="left">
-        Required in this demo so the switch can show wrapper validation. The
-        internal checkbox declares ngxSignalFormControl="switch" so the wrapper
-        can use explicit control semantics.
+        Stay in the loop with occasional product updates and release notes.
       </ngx-signal-form-field-hint>
     </ngx-signal-form-field-wrapper>
 
@@ -103,8 +108,7 @@
         [formField]="reviewForm.shareReviewPublicly"
       />
       <ngx-signal-form-field-hint position="left">
-        This is a native checkbox. It only opts into toolkit ARIA and wrapper
-        behavior because it explicitly declares checkbox semantics.
+        Enable this to let us feature your review publicly.
       </ngx-signal-form-field-hint>
     </ngx-signal-form-field-wrapper>
 
@@ -113,17 +117,19 @@
       [formField]="reviewForm.accessibilityAudit"
       errorPlacement="top"
     >
-      <label for="accessibilityAudit">Accessibility Audit *</label>
+      <label id="accessibilityAudit-label" for="accessibilityAudit"
+        >Accessibility Audit *</label
+      >
       <ngx-rating-control
         id="accessibilityAudit"
+        [labelledBy]="'accessibilityAudit-label'"
         ngxSignalFormControl="slider"
         [describedBy]="accessibilityAuditDescribedBy()"
         [formField]="reviewForm.accessibilityAudit"
         [maxRating]="5"
       />
       <ngx-signal-form-field-hint id="accessibilityAudit-hint" position="left">
-        This slider uses a component-scoped slider preset for custom layout and
-        manual ARIA, so the control owns its described-by chain itself.
+        Rate how accessible and easy to navigate this experience felt.
       </ngx-signal-form-field-hint>
     </ngx-signal-form-field-wrapper>
 

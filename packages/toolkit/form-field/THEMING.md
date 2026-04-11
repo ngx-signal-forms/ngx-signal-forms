@@ -20,8 +20,20 @@ A theming system based entirely on **CSS Custom Properties (Variables)**. It exp
 for custom-control styling without coupling your CSS to internal markup:
 
 - `data-ngx-signal-form-control-kind`
+  - Allowed values: `input-like`, `standalone-field-like`, `switch`,
+    `checkbox`, `radio-group`, `slider`, `composite`
 - `data-ngx-signal-form-control-layout`
+  - Allowed values: `stacked`, `inline-control`, `group`, `custom`
 - `data-ngx-signal-form-control-aria-mode`
+  - Allowed values: `auto`, `manual`
+
+Directive syntax for explicit semantics (on the actual control host):
+
+- String kind form: `ngxSignalFormControl="switch"` (and other kind values)
+- Object form:
+  `[ngxSignalFormControl]="{ kind: 'slider', layout: 'custom', ariaMode: 'manual' }"`
+- Optional per-property overrides:
+  `ngxSignalFormControlLayout="group"`, `ngxSignalFormControlAria="manual"`
 
 These are derived from explicit control semantics when present (for example
 `ngxSignalFormControl="switch"`) and fall back to toolkit heuristics for older

@@ -34,6 +34,7 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
     'data-ngx-signal-form-control': '',
     role: 'slider',
     tabindex: '0',
+    '[attr.aria-labelledby]': 'labelledBy()',
     '[attr.aria-valuemin]': '0',
     '[attr.aria-valuemax]': 'maxRating()',
     '[attr.aria-valuenow]': 'currentValue()',
@@ -139,6 +140,12 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
   `,
 })
 export class RatingControlComponent implements FormValueControl<number> {
+  /**
+   * Optional aria-labelledby source for visible labels projected outside
+   * the custom control host.
+   */
+  readonly labelledBy = input<string | null>(null);
+
   /**
    * Maximum rating value (number of stars).
    * @default 5

@@ -473,6 +473,9 @@ Use `appearance="outline"` for Material Design outlined input patterns with floa
 | `appearance` | `'stacked' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style: stacked, outline, plain, or config |
 | `outline`    | `boolean`                                        | `false`     | Legacy: Forces outline (use appearance)          |
 
+**Migration note:** `appearance="standard"` was renamed to
+`appearance="stacked"`. Use `stacked` everywhere going forward.
+
 #### Wrapper inputs (outlined-specific)
 
 | Input                | Type      | Default | Description                                             |

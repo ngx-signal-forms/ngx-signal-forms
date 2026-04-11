@@ -2,18 +2,18 @@
 - textbox "Product Name *":
     - /placeholder: Enter product name
 - text: Product Rating *
-- slider
+- slider "Product Rating *"
 - text: Use arrow keys or click to rate Service Quality *
-- slider
+- slider "Service Quality *"
 - text: Would Recommend?
-- slider
+- slider "Would Recommend?"
 - text: ☆ = No, ★ = Maybe, ★★ = Definitely! Email updates *
 - switch "Email updates *"
-- text: Required in this demo so the switch can show wrapper validation. The internal checkbox declares ngxSignalFormControl="switch" so the wrapper can use explicit control semantics. Share this review publicly *
+- text: Stay in the loop with occasional product updates and release notes. Share this review publicly *
 - checkbox "Share this review publicly *"
-- text: This is a native checkbox. It only opts into toolkit ARIA and wrapper behavior because it explicitly declares checkbox semantics. Accessibility Audit *
-- slider
-- text: This slider uses a component-scoped slider preset for custom layout and manual ARIA, so the control owns its described-by chain itself. Additional Feedback (optional)
+- text: Enable this to let us feature your review publicly. Accessibility Audit *
+- slider "Accessibility Audit *"
+- text: Rate how accessible and easy to navigate this experience felt. Additional Feedback (optional)
 - textbox "Additional Feedback (optional)":
     - /placeholder: Tell us more about your experience...
 - button "Submit Review"

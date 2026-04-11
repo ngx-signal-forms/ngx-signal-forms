@@ -115,7 +115,7 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
    * Get dynamic skill-name inputs, one per skill row
    */
   get skillRows(): Locator {
-    return this.page.getByRole('textbox', { name: /Skill Name/i });
+    return this.form.getByRole('textbox', { name: /Skill Name/i });
   }
 
   /**

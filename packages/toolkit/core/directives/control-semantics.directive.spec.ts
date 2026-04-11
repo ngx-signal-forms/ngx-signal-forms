@@ -1,5 +1,4 @@
 import { Component, signal } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import {
@@ -275,7 +274,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
       expect(host.hasAttribute('data-ngx-signal-form-control')).toBe(true);
     });
 
-    it('should not emit marker when only layout override without kind', async () => {
+    it('should emit marker when only layout override without kind', async () => {
       @Component({
         template:
           '<div data-testid="host" ngxSignalFormControlLayout="stacked"></div>',

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { DEFAULT_NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import { normalizeSignalFormsConfig } from './normalize-config';
 
@@ -21,13 +21,25 @@ describe('normalizeSignalFormsConfig', () => {
     );
   });
 
-  it('should preserve provided defaultErrorStrategy signals', () => {
-    const strategySpy = vi.fn().mockReturnValue('on-touch');
+  it('should preserve provided defaultErrorStrategy values', () => {
+    const strategy = 'immediate';
 
     const result = normalizeSignalFormsConfig({
-      defaultErrorStrategy: strategySpy,
+      defaultErrorStrategy: strategy,
     });
 
-    expect(result.defaultErrorStrategy).toBe(strategySpy);
+    expect(result.defaultErrorStrategy).toBe(strategy);
+  });
+
+  it('should keep defaults when optional values are explicitly undefined', () => {
+    const result = normalizeSignalFormsConfig({
+      autoAria: undefined,
+      defaultErrorStrategy: undefined,
+      defaultFormFieldAppearance: undefined,
+      showRequiredMarker: undefined,
+      requiredMarker: undefined,
+    });
+
+    expect(result).toEqual(DEFAULT_NGX_SIGNAL_FORMS_CONFIG);
   });
 });
