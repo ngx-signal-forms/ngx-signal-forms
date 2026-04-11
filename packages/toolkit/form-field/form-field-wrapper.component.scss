@@ -139,6 +139,21 @@
   }
 }
 
+// Light mode override (when app explicitly sets light theme against OS dark preference)
+@media (prefers-color-scheme: dark) {
+  :host-context(:root:not(.dark)) {
+    --_field-clr-primary: #007bc7;
+    --_field-clr-danger: #db1818;
+    --_field-clr-warning: #f59e0b;
+    --_field-clr-text: #324155;
+    --_field-clr-text-secondary: rgba(50, 65, 85, 0.75);
+    --_field-clr-surface: #ffffff;
+    --_field-clr-border: rgba(50, 65, 85, 0.25);
+    --_field-clr-border-hover: #324155;
+    --_field-clr-disabled: #f3f4f6;
+  }
+}
+
 // Explicit dark theme override (activated by the demo theme switcher)
 // Kept separate from prefers-color-scheme so manual theme selection wins.
 :host-context(.dark) {

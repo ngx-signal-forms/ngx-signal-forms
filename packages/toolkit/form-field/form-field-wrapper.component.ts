@@ -403,6 +403,11 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * Whether outline appearance should be applied.
    */
   protected readonly isOutline = computed(() => {
+    // Defer outline until the projected control is discovered so selection
+    // controls never flash outline chrome on the first render frame.
+    if (this.#boundControlElement() === null) {
+      return false;
+    }
     const controlKind = this.#controlKind();
     if (!supportsOutlinedAppearance(controlKind)) {
       return false;

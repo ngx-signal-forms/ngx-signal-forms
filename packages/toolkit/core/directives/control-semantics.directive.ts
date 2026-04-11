@@ -24,8 +24,9 @@ type NgxSignalFormControlDirectiveValue =
  * control host.
  *
  * The directive writes stable `data-ngx-signal-form-control-*` attributes so
- * wrapper styling, projected-control discovery, and auto-ARIA can share one
- * contract instead of relying purely on DOM heuristics.
+ * wrapper styling and projected-control discovery can use DOM-based semantics
+ * instead of relying purely on DOM heuristics. The auto-ARIA directive reads
+ * semantics via Angular DI rather than these attributes.
  *
  * @example
  * ```html
