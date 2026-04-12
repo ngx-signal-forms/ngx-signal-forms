@@ -17,13 +17,13 @@
  *   <ngx-form-field-character-count [formField]="form.phone" [maxLength]="14" />
  * </ngx-form-field-assistive-row>
  *
- * <ngx-signal-form-error [formField]="form.email" fieldName="email" />
+ * <ngx-form-field-error [formField]="form.email" fieldName="email" />
  * ```
  */
 
 export { NgxFormFieldAssistiveRowComponent } from './assistive-row.component';
 export { NgxFormFieldCharacterCountComponent } from './character-count.component';
-export { NgxSignalFormErrorComponent } from './form-error.component';
-export { NgxSignalFormErrorSummaryComponent } from './error-summary.component';
+export { NgxFormFieldErrorComponent } from './form-field-error.component';
+export { NgxFormFieldErrorSummaryComponent } from './form-field-error-summary.component';
 export { NgxFormFieldHintComponent } from './hint.component';
 export { isBlockingError, isWarningError, warningError } from './warning-error';

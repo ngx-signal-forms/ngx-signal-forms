@@ -10,12 +10,12 @@ npm install @ngx-signal-forms/toolkit
 
 ## Components
 
-### NgxSignalFormErrorComponent
+### NgxFormFieldErrorComponent
 
 WCAG 2.2 compliant error and warning display component.
 
 ```html
-<ngx-signal-form-error [formField]="form.email" fieldName="email" />
+<ngx-form-field-error [formField]="form.email" fieldName="email" />
 ```
 
 Features:
@@ -75,12 +75,12 @@ Layout container for hint, error, and character count.
 </ngx-signal-form-field-assistive-row>
 ```
 
-### NgxSignalFormErrorSummaryComponent
+### NgxFormFieldErrorSummaryComponent
 
 Form-level error summary that aggregates all errors from a form tree into a clickable list. Each entry focuses the associated control via Angular's `focusBoundControl()`.
 
 ```html
-<ngx-signal-form-error-summary
+<ngx-form-field-error-summary
   [formTree]="myForm"
   summaryLabel="Please fix the following errors:"
 />

@@ -55,7 +55,7 @@ export interface ErrorStateSignals {
 /**
  * Headless error state directive for custom error display implementations.
  *
- * Extracts error state logic from `NgxSignalFormErrorComponent` into a renderless
+ * Extracts error state logic from `NgxFormFieldErrorComponent` into a renderless
  * directive that exposes signals for custom templates.
  *
  * ## Features

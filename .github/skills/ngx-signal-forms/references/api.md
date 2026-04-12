@@ -242,8 +242,8 @@ unwrapValue(signalOrValue): value
 
 ```typescript
 import {
-  NgxSignalFormErrorComponent, // <ngx-signal-form-error>
-  NgxSignalFormErrorSummaryComponent, // <ngx-signal-form-error-summary>
+  NgxFormFieldErrorComponent, // <ngx-form-field-error>
+  NgxFormFieldErrorSummaryComponent, // <ngx-form-field-error-summary>
   NgxFormFieldHintComponent, // <ngx-form-field-hint>
   NgxFormFieldCharacterCountComponent, // <ngx-form-field-character-count>
   NgxFormFieldAssistiveRowComponent, // <ngx-form-field-assistive-row>
@@ -253,7 +253,7 @@ import {
 } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
-### NgxSignalFormErrorComponent inputs
+### NgxFormFieldErrorComponent inputs
 
 | Input             | Type                        | Notes                                                |
 | ----------------- | --------------------------- | ---------------------------------------------------- |
@@ -269,9 +269,9 @@ import {
 - `NgxFormFieldHintComponent` — static descriptive hint content
 - `NgxFormFieldAssistiveRowComponent` — stable row container for hint + character count
 
-### NgxSignalFormErrorSummaryComponent inputs
+### NgxFormFieldErrorSummaryComponent inputs
 
-Selector: `ngx-signal-form-error-summary`
+Selector: `ngx-form-field-error-summary`
 
 | Input             | Type                 | Default                              | Notes                                   |
 | ----------------- | -------------------- | ------------------------------------ | --------------------------------------- |
@@ -311,7 +311,7 @@ For full DOM control over the error summary (incl. warning entries), use `NgxHea
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 // Bundle: [NgxSignalFormFieldWrapperComponent,
 //          NgxFormFieldHintComponent, NgxFormFieldCharacterCountComponent,
-//          NgxFormFieldAssistiveRowComponent, NgxSignalFormErrorComponent,
+//          NgxFormFieldAssistiveRowComponent, NgxFormFieldErrorComponent,
 //          NgxSignalFormFieldset]
 
 import {
@@ -393,7 +393,7 @@ interface ErrorSummaryEntry {
 }
 ```
 
-Use this directive instead of `NgxSignalFormErrorSummaryComponent` when you need full DOM control, want to include warnings, or need a custom design that doesn't match the default styled output.
+Use this directive instead of `NgxFormFieldErrorSummaryComponent` when you need full DOM control, want to include warnings, or need a custom design that doesn't match the default styled output.
 
 ### NgxHeadlessCharacterCountDirective
 

@@ -13,7 +13,7 @@ If you are migrating from `ngx-vest-forms`, see
 for the quick API mapping and the advanced cases that still need deliberate review.
 
 Warnings are displayed through `ngx-signal-form-field-wrapper`, which uses the same
-`ngx-signal-form-error` assistive component for both blocking errors and polite
+`ngx-form-field-error` assistive component for both blocking errors and polite
 warning status messages.
 
 ## Key files

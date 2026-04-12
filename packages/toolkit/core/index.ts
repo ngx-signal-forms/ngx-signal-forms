@@ -62,15 +62,15 @@ import { NgxSignalFormDirective } from './directives/ngx-signal-form.directive';
  * @example
  * ```typescript
  * import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
- * import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+ * import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
  *
  * @Component({
  *   selector: 'ngx-my-form',
- *   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
+ *   imports: [FormField, NgxSignalFormToolkit, NgxFormFieldErrorComponent],
  *   template: `
  *     <form [formRoot]="myForm" ngxSignalForm>
  *       <input [formField]="myForm.email" />
- *       <ngx-signal-form-error [formField]="myForm.email" fieldName="email" />
+ *       <ngx-form-field-error [formField]="myForm.email" fieldName="email" />
  *     </form>
  *   `
  * })
@@ -86,7 +86,7 @@ import { NgxSignalFormDirective } from './directives/ngx-signal-form.directive';
  * - {@link NgxSignalFormAutoAriaDirective} - Automatically applies ARIA attributes
  * - {@link NgxSignalFormControlSemanticsDirective} - Declares stable wrapper/ARIA semantics for a control
  *
- * **For error display:** Import `NgxSignalFormErrorComponent` from `@ngx-signal-forms/toolkit/assistive`
+ * **For error display:** Import `NgxFormFieldErrorComponent` from `@ngx-signal-forms/toolkit/assistive`
  *
  * **Benefits:**
  * - Single import instead of multiple individual imports

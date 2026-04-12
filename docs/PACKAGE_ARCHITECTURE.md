@@ -40,7 +40,7 @@ packages/toolkit/
 ├── assistive/                           # Styled assistive components entry
 │   ├── assistive-row.component.ts
 │   ├── character-count.component.ts
-│   ├── form-error.component.ts
+│   ├── form-field-error.component.ts
 │   ├── hint.component.ts
 │   ├── warning-error.ts
 │   └── index.ts
@@ -104,14 +104,14 @@ import {
   NgxSignalFormAutoAriaDirective,
   NgxSignalFormDirective,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
 ### Secondary Entry (Assistive Components - Optional)
 
 ```typescript
 import {
-  NgxSignalFormErrorComponent,
+  NgxFormFieldErrorComponent,
   NgxFormFieldHintComponent,
   NgxFormFieldCharacterCountComponent,
   NgxFormFieldAssistiveRowComponent,

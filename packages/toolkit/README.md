@@ -94,7 +94,7 @@ import { NgxSignalFormDirective } from '@ngx-signal-forms/toolkit';
 
 Angular's native `FormRoot` remains the owner of `novalidate`, `event.preventDefault()`, and `submit()`. The toolkit enhancer adds:
 
-- **DI context** (`NGX_SIGNAL_FORM_CONTEXT`) so child components like `<ngx-signal-form-error>` can access form-level state without prop drilling.
+- **DI context** (`NGX_SIGNAL_FORM_CONTEXT`) so child components like `<ngx-form-field-error>` can access form-level state without prop drilling.
 - **Submitted status tracking** (`submittedStatus`) to derive `'unsubmitted' → 'submitting' → 'submitted'`, which Angular does not expose directly.
 - **Error display strategy** (`errorStrategy`) so validation feedback can appear on touch, on submit, or immediately.
 
@@ -421,8 +421,8 @@ patchState(store, (s) => ({
 
 ```typescript
 import {
-  NgxSignalFormErrorComponent,
-  NgxSignalFormErrorSummaryComponent,
+  NgxFormFieldErrorComponent,
+  NgxFormFieldErrorSummaryComponent,
   NgxFormFieldHintComponent,
   NgxFormFieldCharacterCountComponent,
   NgxFormFieldAssistiveRowComponent,
@@ -480,7 +480,7 @@ const signupForm = form(signupModel, (path) => {
 ```
 
 Use Vest `warn()` for advisory guidance only. Those messages render through
-`ngx-signal-form-field-wrapper` or `NgxSignalFormErrorComponent` as polite status
+`ngx-signal-form-field-wrapper` or `NgxFormFieldErrorComponent` as polite status
 updates, while blocking Vest failures keep rendering as alerts.
 
 ### validateVestWarnings
@@ -512,7 +512,7 @@ const checkoutForm = form(checkoutModel, (path) => {
 });
 ```
 
-### NgxSignalFormErrorComponent
+### NgxFormFieldErrorComponent
 
 Displays validation errors with ARIA roles.
 
@@ -523,13 +523,13 @@ Displays validation errors with ARIA roles.
 - `strategy` — Override error display strategy
 
 ```html
-<ngx-signal-form-error [formField]="form.email" fieldName="email" />
+<ngx-form-field-error [formField]="form.email" fieldName="email" />
 ```
 
 - Errors: `role="alert"` (assertive)
 - Warnings: `role="status"` (polite)
 
-### NgxSignalFormErrorSummaryComponent
+### NgxFormFieldErrorSummaryComponent
 
 Form-level error summary that renders blocking validation errors as a clickable
 list and focuses the related control when an entry is activated.
@@ -542,7 +542,7 @@ list and focuses the related control when an entry is activated.
 - `submittedStatus` — Optional submission-state override for `'on-submit'`
 
 ```html
-<ngx-signal-form-error-summary
+<ngx-form-field-error-summary
   [formTree]="form"
   strategy="on-submit"
   [submittedStatus]="submittedStatus()"

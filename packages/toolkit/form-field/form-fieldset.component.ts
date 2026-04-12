@@ -15,7 +15,7 @@ import {
   showErrors,
   splitByKind,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 import {
   createFieldStateFlags,
   createUniqueId,
@@ -31,7 +31,7 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
  *
  * Similar to HTML `<fieldset>`, this component groups form fields and displays
  * aggregated validation messages for all contained fields. It uses
- * `NgxSignalFormErrorComponent` internally for consistent error/warning styling.
+ * `NgxFormFieldErrorComponent` internally for consistent error/warning styling.
  *
  * ## Features
  *
@@ -75,7 +75,7 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
 @Component({
   selector: 'ngx-signal-form-fieldset, [ngxSignalFormFieldset]',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgxSignalFormErrorComponent],
+  imports: [NgxFormFieldErrorComponent],
   styleUrl: './form-fieldset.component.scss',
   exportAs: 'ngxSignalFormFieldset',
   host: {
@@ -94,7 +94,7 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
     <div class="ngx-signal-form-fieldset__surface">
       @if (showMessages() && isTopPlacement()) {
         <div class="ngx-signal-form-fieldset__messages">
-          <ngx-signal-form-error
+          <ngx-form-field-error
             [errors]="filteredErrorsSignal"
             [fieldName]="resolvedFieldsetId()"
             [strategy]="resolvedStrategy()"
@@ -110,7 +110,7 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
 
       @if (showMessages() && !isTopPlacement()) {
         <div class="ngx-signal-form-fieldset__messages">
-          <ngx-signal-form-error
+          <ngx-form-field-error
             [errors]="filteredErrorsSignal"
             [fieldName]="resolvedFieldsetId()"
             [strategy]="resolvedStrategy()"
@@ -283,7 +283,7 @@ export class NgxSignalFormFieldset<TFieldset = unknown> {
   });
 
   /**
-   * Filtered errors signal for NgxSignalFormErrorComponent.
+   * Filtered errors signal for NgxFormFieldErrorComponent.
    *
    * Passes blocking errors OR warnings, never both.
    * Warnings are suppressed when errors exist (UX best practice).

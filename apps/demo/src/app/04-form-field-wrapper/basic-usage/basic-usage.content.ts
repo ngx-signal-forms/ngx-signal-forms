@@ -22,7 +22,7 @@ export const BASIC_USAGE_CONTENT = {
       {
         title: 'Wrapper Capabilities',
         items: [
-          'Automatic error display (no manual <code>&lt;ngx-signal-form-error&gt;</code>)',
+          'Automatic error display (no manual <code>&lt;ngx-form-field-error&gt;</code>)',
           'Multiple field types: text, email, URL, number, textarea, select, checkbox',
           'Consistent spacing via CSS custom properties',
           'Proper label/input associations',

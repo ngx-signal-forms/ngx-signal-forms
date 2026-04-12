@@ -21,7 +21,7 @@ import {
  * Basic Usage - Demonstrates NgxFormField
  *
  * This example showcases the NgxFormField bundle which combines:
- * - **Automatic Error Display**: No need to manually add `<ngx-signal-form-error>`
+ * - **Automatic Error Display**: No need to manually add `<ngx-form-field-error>`
  * - **Consistent Layout**: Standardized spacing via CSS custom properties
  * - **Accessibility**: Proper structure with semantic HTML
  * - **Multiple Field Types**: Works with all form controls
@@ -34,7 +34,7 @@ import {
  * - Error display mode integration
  *
  * 📚 Compare with getting-started to see the difference:
- * - Getting Started: Manual error display with `<ngx-signal-form-error>`
+ * - Getting Started: Manual error display with `<ngx-form-field-error>`
  * - Basic Usage: Automatic error display via wrapper
  *
  * @example

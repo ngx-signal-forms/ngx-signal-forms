@@ -98,8 +98,8 @@ imports: [FormField, NgxSignalFormToolkit];
 
 ### Assistive: `@ngx-signal-forms/toolkit/assistive`
 
-- `<ngx-signal-form-error>` for accessible error and warning output
-- `<ngx-signal-form-error-summary>` for form-level error summaries
+- `<ngx-form-field-error>` for accessible error and warning output
+- `<ngx-form-field-error-summary>` for form-level error summaries
 - `<ngx-signal-form-field-hint>`
 - `<ngx-signal-form-field-character-count>`
 
@@ -436,8 +436,8 @@ Use this when you want feedback components without adopting the full field wrapp
 
 **Key exports**:
 
-- `NgxSignalFormErrorComponent` — Error/warning display with ARIA roles
-- `NgxSignalFormErrorSummaryComponent` — Form-level summary for blocking errors
+- `NgxFormFieldErrorComponent` — Error/warning display with ARIA roles
+- `NgxFormFieldErrorSummaryComponent` — Form-level summary for blocking errors
 - `NgxFormFieldHintComponent` — Helper text below inputs
 - `NgxFormFieldCharacterCountComponent` — Character counter with maxLength detection
 - `NgxFormFieldAssistiveRowComponent` — Layout row for hints and counters
@@ -445,7 +445,7 @@ Use this when you want feedback components without adopting the full field wrapp
 
 ```typescript
 import {
-  NgxSignalFormErrorComponent,
+  NgxFormFieldErrorComponent,
   NgxFormFieldHintComponent,
   warningError,
 } from '@ngx-signal-forms/toolkit/assistive';
@@ -454,7 +454,7 @@ import {
 ```html
 <label for="email">Email</label>
 <input id="email" [formField]="form.email" />
-<ngx-signal-form-error [formField]="form.email" fieldName="email" />
+<ngx-form-field-error [formField]="form.email" fieldName="email" />
 <ngx-signal-form-field-hint
   >We'll never share your email</ngx-signal-form-field-hint
 >
@@ -580,7 +580,7 @@ const accountForm = form(accountModel, (path) => {
 
 Use Vest `warn()` for advisory guidance only. With `{ includeWarnings: true }`, the
 toolkit renders those messages through `ngx-signal-form-field-wrapper` or
-`ngx-signal-form-error` as `role="status"` warnings, while blocking Vest failures
+`ngx-form-field-error` as `role="status"` warnings, while blocking Vest failures
 continue to render as `role="alert"` errors.
 
 **[📖 Full Documentation →](./packages/toolkit/vest/README.md)**

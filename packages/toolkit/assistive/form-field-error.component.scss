@@ -1,12 +1,12 @@
 /**
- * NgxSignalFormErrorComponent Styles
+ * NgxFormFieldErrorComponent Styles
  *
  * CSS Custom Properties (Public API)
  * All properties prefixed with --ngx-signal-form-* for namespacing.
  * Override these in your app or component styles to customize appearance.
  *
  * @example Customize in your component:
- *   ngx-signal-form-error {
+ *   ngx-form-field-error {
  *     --ngx-signal-form-error-color: #b91c1c;
  *     --ngx-signal-form-error-bg: #fef2f2;
  *   }
@@ -65,7 +65,7 @@
   }
 }
 
-.ngx-signal-form-error {
+.ngx-form-field-error {
   display: flex;
   flex-direction: column;
   gap: var(--ngx-signal-form-error-message-spacing);
@@ -88,23 +88,23 @@
   transform-origin: top center;
 }
 
-.ngx-signal-form-error--error {
+.ngx-form-field-error--error {
   color: var(--ngx-signal-form-error-color);
   background-color: var(--ngx-signal-form-error-bg);
   border-color: var(--ngx-signal-form-error-border);
 }
 
-.ngx-signal-form-error--warning {
+.ngx-form-field-error--warning {
   color: var(--ngx-signal-form-warning-color);
   background-color: var(--ngx-signal-form-warning-bg);
   border-color: var(--ngx-signal-form-warning-border);
 }
 
-.ngx-signal-form-error__message {
+.ngx-form-field-error__message {
   margin: 0;
 }
 
-.ngx-signal-form-error__list {
+.ngx-form-field-error__list {
   margin: 0;
   padding-inline-start: 1.25rem;
   display: flex;
@@ -112,13 +112,13 @@
   gap: var(--ngx-signal-form-error-message-spacing);
 }
 
-.ngx-signal-form-error--bullets .ngx-signal-form-error__message {
+.ngx-form-field-error--bullets .ngx-form-field-error__message {
   display: list-item;
 }
 
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
-  .ngx-signal-form-error {
+  .ngx-form-field-error {
     transition: none;
     animation: none;
   }

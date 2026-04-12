@@ -85,7 +85,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       );
 
       // When explicit fieldName is provided, error component should receive it
-      const errorComponent = container.querySelector('ngx-signal-form-error');
+      const errorComponent = container.querySelector('ngx-form-field-error');
       expect(errorComponent).toBeTruthy();
 
       // The error ID should be based on the explicit fieldName
@@ -139,7 +139,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       );
 
       const errorComponents = container.querySelectorAll(
-        'ngx-signal-form-error',
+        'ngx-form-field-error',
       );
       expect(errorComponents).toHaveLength(3);
 
@@ -179,7 +179,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       );
 
       const errorComponents = container.querySelectorAll(
-        'ngx-signal-form-error',
+        'ngx-form-field-error',
       );
       expect(errorComponents).toHaveLength(3);
 
@@ -224,7 +224,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         },
       );
 
-      const errorComponent = container.querySelector('ngx-signal-form-error');
+      const errorComponent = container.querySelector('ngx-form-field-error');
       expect(errorComponent).toBeTruthy();
 
       const errorContainer = container.querySelector('[id="derived-id-error"]');
@@ -487,7 +487,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(
         host?.querySelector('.ngx-signal-form-field-wrapper__messages'),
       ).toBeNull();
-      expect(assistiveRow?.querySelector('ngx-signal-form-error')).toBeTruthy();
+      expect(assistiveRow?.querySelector('ngx-form-field-error')).toBeTruthy();
     });
 
     it('renders messages above the control when errorPlacement is top', async () => {
@@ -539,8 +539,8 @@ describe('NgxSignalFormWrapperComponent', () => {
         messages.compareDocumentPosition(content) &
           Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-      expect(assistiveRow?.querySelector('ngx-signal-form-error')).toBeFalsy();
-      expect(messages?.querySelector('ngx-signal-form-error')).toBeTruthy();
+      expect(assistiveRow?.querySelector('ngx-form-field-error')).toBeFalsy();
+      expect(messages?.querySelector('ngx-form-field-error')).toBeTruthy();
     });
   });
 
@@ -906,7 +906,7 @@ describe('NgxSignalFormWrapperComponent', () => {
 
       expect(switchControl).toBeTruthy();
       expect(errorElement).toBeTruthy();
-      expect(assistiveRow?.querySelector('ngx-signal-form-error')).toBeTruthy();
+      expect(assistiveRow?.querySelector('ngx-form-field-error')).toBeTruthy();
       expect(wrapper).toHaveAttribute('aria-invalid', 'true');
       expect(
         wrapper?.classList.contains('ngx-signal-form-field-wrapper--invalid'),
@@ -1114,7 +1114,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         },
       );
 
-      const errorComponent = container.querySelector('ngx-signal-form-error');
+      const errorComponent = container.querySelector('ngx-form-field-error');
       expect(errorComponent).toBeTruthy();
     });
 
@@ -2171,7 +2171,7 @@ describe('NgxSignalFormWrapperComponent', () => {
     it('should provide field context to child components via DI', async () => {
       /**
        * This test verifies the wrapper provides NGX_SIGNAL_FORM_FIELD_CONTEXT
-       * which allows child components (like ngx-signal-form-error) to inherit
+       * which allows child components (like ngx-form-field-error) to inherit
        * the resolved field name without explicit input binding.
        *
        * The provider uses forwardRef because:

@@ -79,7 +79,7 @@ All content reflects the current public API:
 | Sub-Skill      | Covers                                                                                                                               |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | **core**       | `form[formRoot][ngxSignalForm]`, error strategies, auto-ARIA, submission helpers, warning semantics, global config, message registry |
-| **assistive**  | `NgxSignalFormErrorComponent`, hints, character count, assistive rows (standalone components)                                        |
+| **assistive**  | `NgxFormFieldErrorComponent`, hints, character count, assistive rows (standalone components)                                         |
 | **form-field** | `NgxSignalFormFieldWrapperComponent`, `NgxSignalFormFieldset`, floating labels, grouped fieldsets                                    |
 | **headless**   | Renderless directives (`NgxHeadlessErrorStateDirective`, fieldset, char count), template/host-directive patterns, utility functions  |
 | **vest**       | Vest v6+ integration, blocking vs warning validation, submission gating                                                              |

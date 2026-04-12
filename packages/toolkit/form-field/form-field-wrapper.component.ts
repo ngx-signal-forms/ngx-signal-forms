@@ -29,7 +29,7 @@ import {
   isBlockingError,
   isWarningError,
   NgxFormFieldAssistiveRowComponent,
-  NgxSignalFormErrorComponent,
+  NgxFormFieldErrorComponent,
 } from '@ngx-signal-forms/toolkit/assistive';
 import {
   hasPaddedControlContent,
@@ -140,7 +140,7 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
 @Component({
   selector: 'ngx-signal-form-field-wrapper',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgxSignalFormErrorComponent, NgxFormFieldAssistiveRowComponent],
+  imports: [NgxFormFieldErrorComponent, NgxFormFieldAssistiveRowComponent],
   providers: [
     {
       provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
@@ -188,7 +188,7 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
 
     @if (isTopPlacement() && shouldShowErrors()) {
       <div class="ngx-signal-form-field-wrapper__messages">
-        <ngx-signal-form-error
+        <ngx-form-field-error
           [formField]="formField()"
           [strategy]="effectiveStrategy()"
           [submittedStatus]="submittedStatus()"
@@ -220,7 +220,7 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
     >
       <!-- Left side: hint (hidden when errors shown) or errors -->
       @if (!isTopPlacement() && shouldShowErrors()) {
-        <ngx-signal-form-error
+        <ngx-form-field-error
           [formField]="formField()"
           [strategy]="effectiveStrategy()"
           [submittedStatus]="submittedStatus()"

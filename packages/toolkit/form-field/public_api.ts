@@ -3,7 +3,7 @@ export {
   NgxFormFieldAssistiveRowComponent,
   NgxFormFieldCharacterCountComponent,
   NgxFormFieldHintComponent,
-  NgxSignalFormErrorComponent,
+  NgxFormFieldErrorComponent,
 } from '@ngx-signal-forms/toolkit/assistive';
 
 // Core form field components
@@ -14,7 +14,7 @@ import {
   NgxFormFieldAssistiveRowComponent,
   NgxFormFieldCharacterCountComponent,
   NgxFormFieldHintComponent,
-  NgxSignalFormErrorComponent,
+  NgxFormFieldErrorComponent,
 } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxSignalFormFieldWrapperComponent } from './form-field-wrapper.component';
 import { NgxSignalFormFieldset } from './form-fieldset.component';
@@ -43,6 +43,6 @@ export const NgxFormField = [
   NgxFormFieldHintComponent,
   NgxFormFieldCharacterCountComponent,
   NgxFormFieldAssistiveRowComponent,
-  NgxSignalFormErrorComponent,
+  NgxFormFieldErrorComponent,
   NgxSignalFormFieldset,
 ] as const;

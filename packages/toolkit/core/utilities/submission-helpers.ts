@@ -121,7 +121,7 @@ export function createSubmittedStatusTracker(
  * ```typescript
  * @Component({
  *   template: `
- *     <ngx-signal-form-error
+ *     <ngx-form-field-error
  *       [formField]="form.email"
  *       fieldName="email"
  *       [strategy]="hasSubmitted() ? 'immediate' : 'on-touch'"

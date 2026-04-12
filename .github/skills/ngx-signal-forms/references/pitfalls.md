@@ -71,7 +71,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit';
 
 // Correct
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import { validateVest } from '@ngx-signal-forms/toolkit/vest';

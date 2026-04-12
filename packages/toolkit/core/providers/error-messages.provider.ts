@@ -166,7 +166,7 @@ export interface ErrorMessageRegistry {
 /**
  * Injection token for error message registry.
  *
- * Used by NgxSignalFormErrorComponent to resolve error messages.
+ * Used by NgxFormFieldErrorComponent to resolve error messages.
  * Completely optional - if not provided, validator messages work automatically.
  *
  * @see {@link ErrorMessageRegistry}

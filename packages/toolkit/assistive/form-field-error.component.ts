@@ -23,7 +23,7 @@ import {
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 
-export type NgxSignalFormErrorListStyle = 'plain' | 'bullets';
+export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
 
 /**
  * Reusable error and warning display component with WCAG 2.2 compliance.
@@ -55,7 +55,7 @@ export type NgxSignalFormErrorListStyle = 'plain' | 'bullets';
  * ```html
  * <form (submit)="save($event)" novalidate>
  *   <input [formField]="form.email" />
- *   <ngx-signal-form-error [formField]="form.email" fieldName="email" />
+ *   <ngx-form-field-error [formField]="form.email" fieldName="email" />
  *   <button type="submit">Submit</button>
  * </form>
  * ```
@@ -63,7 +63,7 @@ export type NgxSignalFormErrorListStyle = 'plain' | 'bullets';
  * @example With Form-Level Strategy Override
  * ```html
  * <form [formRoot]="form" ngxSignalForm errorStrategy="immediate">
- *   <ngx-signal-form-error [formField]="form.email" fieldName="email" />
+ *   <ngx-form-field-error [formField]="form.email" fieldName="email" />
  * </form>
  * ```
  *
@@ -90,23 +90,23 @@ export type NgxSignalFormErrorListStyle = 'plain' | 'bullets';
  * - Auto-generated IDs for aria-describedby linking
  */
 @Component({
-  selector: 'ngx-signal-form-error',
+  selector: 'ngx-form-field-error',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- Blocking Errors (ARIA role="alert" for assertive announcement) -->
     @if (showErrors() && hasErrors()) {
       <div
         [id]="errorId()"
-        class="ngx-signal-form-error ngx-signal-form-error--error"
+        class="ngx-form-field-error ngx-form-field-error--error"
         role="alert"
         aria-live="assertive"
         aria-atomic="true"
       >
         @if (usesBulletList()) {
-          <ul class="ngx-signal-form-error__list" role="list">
+          <ul class="ngx-form-field-error__list" role="list">
             @for (error of resolvedErrors(); track error.kind) {
               <li
-                class="ngx-signal-form-error__message ngx-signal-form-error__message--error"
+                class="ngx-form-field-error__message ngx-form-field-error__message--error"
               >
                 {{ error.message }}
               </li>
@@ -115,7 +115,7 @@ export type NgxSignalFormErrorListStyle = 'plain' | 'bullets';
         } @else {
           @for (error of resolvedErrors(); track error.kind) {
             <p
-              class="ngx-signal-form-error__message ngx-signal-form-error__message--error"
+              class="ngx-form-field-error__message ngx-form-field-error__message--error"
             >
               {{ error.message }}
             </p>
@@ -128,16 +128,16 @@ export type NgxSignalFormErrorListStyle = 'plain' | 'bullets';
     @if (showWarnings() && hasWarnings()) {
       <div
         [id]="warningId()"
-        class="ngx-signal-form-error ngx-signal-form-error--warning"
+        class="ngx-form-field-error ngx-form-field-error--warning"
         role="status"
         aria-live="polite"
         aria-atomic="true"
       >
         @if (usesBulletList()) {
-          <ul class="ngx-signal-form-error__list" role="list">
+          <ul class="ngx-form-field-error__list" role="list">
             @for (warning of resolvedWarnings(); track warning.kind) {
               <li
-                class="ngx-signal-form-error__message ngx-signal-form-error__message--warning"
+                class="ngx-form-field-error__message ngx-form-field-error__message--warning"
               >
                 {{ warning.message }}
               </li>
@@ -146,7 +146,7 @@ export type NgxSignalFormErrorListStyle = 'plain' | 'bullets';
         } @else {
           @for (warning of resolvedWarnings(); track warning.kind) {
             <p
-              class="ngx-signal-form-error__message ngx-signal-form-error__message--warning"
+              class="ngx-form-field-error__message ngx-form-field-error__message--warning"
             >
               {{ warning.message }}
             </p>
@@ -155,9 +155,9 @@ export type NgxSignalFormErrorListStyle = 'plain' | 'bullets';
       </div>
     }
   `,
-  styleUrl: './form-error.component.scss',
+  styleUrl: './form-field-error.component.scss',
 })
-export class NgxSignalFormErrorComponent<TValue = unknown> {
+export class NgxFormFieldErrorComponent<TValue = unknown> {
   /**
    * Try to inject form context (optional - may not be available).
    */
@@ -206,7 +206,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    *
    * @example Fieldset with aggregated errors
    * ```html
-   * <ngx-signal-form-error
+   * <ngx-form-field-error
    *   [errors]="aggregatedErrors"
    *   [fieldName]="'address'"
    *   [strategy]="strategy()"
@@ -261,7 +261,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
     }
 
     throw new Error(
-      '[ngx-signal-forms] ngx-signal-form-error requires an explicit `fieldName` input or a parent ngx-signal-form-field-wrapper context.',
+      '[ngx-signal-forms] ngx-form-field-error requires an explicit `fieldName` input or a parent ngx-signal-form-field-wrapper context.',
     );
   });
 
@@ -281,7 +281,7 @@ export class NgxSignalFormErrorComponent<TValue = unknown> {
    * - `plain` (default): stacked paragraph messages for inline field feedback
    * - `bullets`: unordered list for grouped summaries such as fieldsets
    */
-  readonly listStyle = input<NgxSignalFormErrorListStyle>('plain');
+  readonly listStyle = input<NgxFormFieldErrorListStyle>('plain');
 
   /**
    * Form submission status (optional).

@@ -506,7 +506,7 @@ export function validateVestWarnings<TValue>(
  * blocking errors and optional `warn()` output in a single validation pass.
  *
  * Pass `{ includeWarnings: true }` to also surface Vest `warn()` results through
- * the toolkit's `warn:*` convention so `ngx-signal-form-error`,
+ * the toolkit's `warn:*` convention so `ngx-form-field-error`,
  * `ngx-signal-form-field-wrapper`, and related components can render them as
  * polite, non-blocking guidance.
  *

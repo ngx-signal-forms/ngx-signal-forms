@@ -17,7 +17,7 @@ The assistive entry point provides accessible feedback rendering that sits betwe
 
 1. Import from `@ngx-signal-forms/toolkit/assistive` — these components are also re-exported by `NgxFormField` for convenience when a form-field wrapper is present.
 
-2. **`NgxSignalFormErrorComponent`** — displays validation errors (and optionally warnings) for a single field or a pre-aggregated error list:
+2. **`NgxFormFieldErrorComponent`** — displays validation errors (and optionally warnings) for a single field or a pre-aggregated error list:
    - Always provide `[formField]` for single-field usage.
    - Always provide `fieldName` when used standalone (not inside `ngx-signal-form-field-wrapper`).
    - Inside a wrapper, `fieldName` is inherited automatically.
@@ -32,7 +32,7 @@ The assistive entry point provides accessible feedback rendering that sits betwe
 
 5. **`NgxFormFieldAssistiveRowComponent`** — groups hint text and character count into a single stable row when both appear below the same input.
 
-6. **`NgxSignalFormErrorSummaryComponent`** — form-level error summary (GOV.UK pattern):
+6. **`NgxFormFieldErrorSummaryComponent`** — form-level error summary (GOV.UK pattern):
    - Place at the top of the form, between any server status banners and the first field.
    - Always provide `[formTree]` — pass the form tree directly (e.g., `[formTree]="myForm"`), not `myForm()`.
    - `summaryLabel` defaults to `'Please fix the following errors:'`. Override with a meaningful label.
@@ -49,20 +49,16 @@ The assistive entry point provides accessible feedback rendering that sits betwe
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormErrorSummaryComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldErrorSummaryComponent } from '@ngx-signal-forms/toolkit/assistive';
 
 @Component({
   selector: 'app-registration-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    FormField,
-    NgxSignalFormToolkit,
-    NgxSignalFormErrorSummaryComponent,
-  ],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormFieldErrorSummaryComponent],
   template: `
     <form [formRoot]="registrationForm" ngxSignalForm errorStrategy="on-submit">
       <!-- Error summary at top of form — inherits strategy from ngxSignalForm context -->
-      <ngx-signal-form-error-summary
+      <ngx-form-field-error-summary
         [formTree]="registrationForm"
         summaryLabel="Please fix the following errors before submitting:"
       />
@@ -88,7 +84,7 @@ export class RegistrationFormComponent {
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { form, FormField, required, maxLength } from '@angular/forms/signals';
 import {
-  NgxSignalFormErrorComponent,
+  NgxFormFieldErrorComponent,
   NgxFormFieldHintComponent,
   NgxFormFieldCharacterCountComponent,
   NgxFormFieldAssistiveRowComponent,
@@ -101,7 +97,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
   imports: [
     FormField,
     NgxSignalFormToolkit,
-    NgxSignalFormErrorComponent,
+    NgxFormFieldErrorComponent,
     NgxFormFieldHintComponent,
     NgxFormFieldCharacterCountComponent,
     NgxFormFieldAssistiveRowComponent,
@@ -114,7 +110,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
         <ngx-form-field-hint>Briefly describe yourself.</ngx-form-field-hint>
         <ngx-form-field-character-count [formField]="profileForm.bio" />
       </ngx-form-field-assistive-row>
-      <ngx-signal-form-error [formField]="profileForm.bio" fieldName="bio" />
+      <ngx-form-field-error [formField]="profileForm.bio" fieldName="bio" />
     </form>
   `,
 })
@@ -138,7 +134,7 @@ import {
 } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
-`NgxSignalFormErrorComponent` automatically renders warnings with `role="status"` — no manual ARIA needed.
+`NgxFormFieldErrorComponent` automatically renders warnings with `role="status"` — no manual ARIA needed.
 
 ## Error Handling
 

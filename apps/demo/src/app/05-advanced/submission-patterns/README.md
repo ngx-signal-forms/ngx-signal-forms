@@ -33,7 +33,7 @@ readonly myForm = form(this.#model, schema, {
 
 ## Feature Spotlight: Error Summary (GOV.UK Pattern)
 
-This demo includes a `<ngx-signal-form-error-summary>` at the top of the form. It aggregates all field errors into a clickable list — each entry focuses the associated control when clicked.
+This demo includes a `<ngx-form-field-error-summary>` at the top of the form. It aggregates all field errors into a clickable list — each entry focuses the associated control when clicked.
 
 - **Strategy-aware**: Inherits `errorStrategy` from the form context (works with `on-touch`, `on-submit`, `immediate`)
 - **Explicit public API showcase**: Passes `[submittedStatus]` explicitly while still reading the value from toolkit form context
@@ -42,7 +42,7 @@ This demo includes a `<ngx-signal-form-error-summary>` at the top of the form. I
 - **WCAG 2.2**: Uses `role="alert"` with `aria-live="assertive"` for screen readers
 
 ```html
-<ngx-signal-form-error-summary
+<ngx-form-field-error-summary
   [formTree]="registrationForm"
   [submittedStatus]="explicitSubmittedStatus()"
   summaryLabel="Please fix the following errors before submitting:"

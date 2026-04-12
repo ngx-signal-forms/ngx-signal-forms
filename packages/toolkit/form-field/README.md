@@ -16,7 +16,7 @@ Form field components and directives for enhanced form layouts and accessibility
 
 ## 🎨 Theming
 
-All components in this entry point (`ngx-signal-form-field-wrapper`, `ngx-signal-form-fieldset`) and their dependencies (`ngx-signal-form-error`) share a unified theming system based on CSS Custom Properties.
+All components in this entry point (`ngx-signal-form-field-wrapper`, `ngx-signal-form-fieldset`) and their dependencies (`ngx-form-field-error`) share a unified theming system based on CSS Custom Properties.
 
 **[📖 Read the Complete Theming Guide →](./THEMING.md)**
 
@@ -24,7 +24,7 @@ All components in this entry point (`ngx-signal-form-field-wrapper`, `ngx-signal
 
 - **`ngx-signal-form-field-wrapper`**: Outlined layout, borders, colors, spacing.
 - **`ngx-signal-form-fieldset`**: Grouping gap and indentation.
-- **`ngx-signal-form-error`**: Shared feedback typography and colors.
+- **`ngx-form-field-error`**: Shared feedback typography and colors.
 - **`ngx-signal-form-field-hint`**: Helper text colors and spacing.
 - **`ngx-signal-form-field-character-count`**: Progressive color states.
 
@@ -65,7 +65,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 - `NgxFormFieldHintComponent` - Helper text
 - `NgxFormFieldCharacterCountComponent` - Character counter
 - `NgxFormFieldAssistiveRowComponent` - Assistive content row
-- `NgxSignalFormErrorComponent` - Error and warning display
+- `NgxFormFieldErrorComponent` - Error and warning display
 - `NgxSignalFormFieldset` - Grouped field validation
 
 **Usage:**
@@ -658,7 +658,7 @@ The form field component automatically aligns error and warning messages with th
 **Automatic behavior:**
 
 - No configuration needed - alignment is built-in via CSS custom property override
-- Works seamlessly with `ngx-signal-form-error` component
+- Works seamlessly with `ngx-form-field-error` component
 - Responsive to both stacked and outlined form field layouts
 - No `::ng-deep` required - uses CSS custom properties for clean encapsulation
 
@@ -673,7 +673,7 @@ The form-field component sets the `--ngx-signal-form-error-padding-horizontal` C
 }
 
 /* Form error component consumes it */
-.ngx-signal-form-error {
+.ngx-form-field-error {
   padding-left: var(--ngx-signal-form-error-padding-horizontal);
   padding-right: var(--ngx-signal-form-error-padding-horizontal);
 }
@@ -1069,7 +1069,7 @@ ngx-signal-form-fieldset {
 
 #### Fieldset Accessibility
 
-- Uses `NgxSignalFormErrorComponent` internally for consistent ARIA attributes
+- Uses `NgxFormFieldErrorComponent` internally for consistent ARIA attributes
 - Errors use `role="alert"` with `aria-live="assertive"` for immediate screen reader announcement
 - Warnings use `role="status"` with `aria-live="polite"`
 - `aria-busy="true"` is set when the fieldset has pending validation
