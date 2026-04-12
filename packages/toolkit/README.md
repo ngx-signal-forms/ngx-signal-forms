@@ -13,6 +13,15 @@
 | `@ngx-signal-forms/toolkit/vest`       | Optional Vest convenience helpers           |
 | `@ngx-signal-forms/toolkit/debugger`   | Development-time form inspection tools      |
 
+### Which entry point do I pick?
+
+- **Want ready-to-use styled fields?** → `form-field` (wrapper + fieldset, bundled via `NgxFormField`)
+- **Want to render your own markup but reuse toolkit error/hint/count components?** → `assistive`
+- **Want signals-only, fully custom markup?** → `headless` (directives + factory helpers)
+- **Want richer validation suites with cross-field business rules?** → `vest` (optional adapter)
+- **Need to inspect form state during development?** → `debugger` (dev-only)
+- **Always** import the three core directives (`form[formRoot][ngxSignalForm]`, auto-ARIA, control semantics) from the root entry point via `NgxSignalFormToolkit`.
+
 ---
 
 ## Core (`@ngx-signal-forms/toolkit`)
@@ -133,6 +142,23 @@ Auto-applies:
 - `aria-required`
 - `aria-describedby` (links to error elements)
 
+### When should I use manual ARIA ownership?
+
+`ngxSignalFormControlAria="manual"` tells the toolkit to stop writing
+`aria-invalid`, `aria-required`, and `aria-describedby` on the control host.
+Use it when the control already owns its own ARIA state — typically:
+
+- custom widgets that manage `aria-describedby` themselves (sliders, combobox
+  patterns, composite pickers)
+- third-party components whose hosts already wire validation attributes
+- controls where you want to drive `aria-describedby` from hints, errors, and
+  custom helper text in one chain
+
+Reach for `buildAriaDescribedBy()` to reconstruct the `aria-describedby` chain
+without duplicating the toolkit's ID-generation conventions. Manual mode only
+turns off ARIA writes on the control host — wrapper labels, hints, errors,
+and field context still render normally.
+
 ### NgxSignalFormControlSemanticsDirective
 
 Use `NgxSignalFormControlSemanticsDirective` when a control should participate in
@@ -247,17 +273,26 @@ interface NgxSignalFormsUserConfig {
   autoAria?: boolean; // Default: true
   defaultErrorStrategy?: 'immediate' | 'on-touch' | 'on-submit'; // Default: 'on-touch'
   defaultFormFieldAppearance?: 'stacked' | 'outline' | 'plain'; // Default: 'stacked'
+  showRequiredMarker?: boolean; // Default: false
+  requiredMarker?: string; // Default: '*'
 }
 ```
-
-Migration note (intentional breaking rename):
-
-- `standard` → `stacked` (equivalent default textual field appearance)
-- `bare` → `plain` (low-chrome wrapper appearance)
 
 `NgxSignalFormsUserConfig` is intentionally for form-system-wide behavior.
 Control-family semantics such as default ARIA mode or wrapper layout live in
 the dedicated control preset providers above.
+
+### Removed APIs — do not use
+
+The following symbols and config fields existed in earlier betas and have been
+removed. Template examples, IDE auto-imports, and older tutorials may still
+reference them; treat any mention as a bug report against those docs.
+
+- Visibility helpers: `computeShowErrors()`, `createShowErrorsSignal()`
+- Submission helpers: `canSubmit()`, `isSubmitting()`
+- Config fields: `fieldNameResolver`, `strictFieldResolution`, `debug`
+- Error display strategy: `'manual'` (use `'immediate'` / `'on-touch'` / `'on-submit'`)
+- Form field appearances: `'standard'` → `'stacked'`, `'bare'` → `'plain'`
 
 > For CSS status classes such as `ng-invalid` or `ng-touched`, use Angular’s native `provideSignalFormsConfig({ classes })`. The toolkit focuses on ARIA wiring and visibility strategy rather than class generation.
 

@@ -79,7 +79,10 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="contactForm" ngxSignalForm>
-      <ngx-signal-form-field-wrapper [formField]="contactForm.email" outline>
+      <ngx-signal-form-field-wrapper
+        [formField]="contactForm.email"
+        appearance="outline"
+      >
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" />
 ```

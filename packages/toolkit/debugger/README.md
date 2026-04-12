@@ -130,17 +130,29 @@ import { SignalFormDebuggerComponent } from '@ngx-signal-forms/toolkit/debugger'
 
 ## Development Only
 
-This component is intended for development and debugging purposes. Consider excluding it from production builds or conditionally rendering it:
+This component is intended for development and debugging purposes. The
+debugger itself uses Angular's `isDevMode()` to guard its dev-time warnings,
+so production builds (served by `ng build --configuration=production`) skip
+the noisy tree-walk paths automatically. If you want to skip rendering it
+entirely in production, gate it on `isDevMode()` the same way:
 
 ```typescript
+import { Component, isDevMode } from '@angular/core';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+
 @Component({
+  imports: [NgxSignalFormDebugger],
   template: `
-    @if (!isProduction) {
+    @if (isDevMode) {
       <ngx-signal-form-debugger [formTree]="form" />
     }
   `,
 })
 export class MyFormComponent {
-  protected readonly isProduction = environment.production;
+  protected readonly isDevMode = isDevMode();
 }
 ```
+
+`isDevMode()` reads Angular's own production flag, which is the same flag
+flipped by the Angular CLI's `production` build configuration. Prefer it
+over project-specific `environment.production` imports.
