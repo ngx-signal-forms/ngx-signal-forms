@@ -114,4 +114,4 @@ Errors if a new state like 'standby' is added }
 - **View**: The DOM rendered by the component's template inside the host element.
 - **Standalone**: By default, components are standalone (since Angular 19, `standalone: true` is default). For older versions, `standalone: true` must be explicit or the component must be part of an `NgModule`.
 - **Component Tree**: Angular applications are structured as a tree of components, where each component can host child components.
-- **Component Naming**: Do not add suffixes the `Component` suffix for Component classes (e.g., AppComponent) unless the project has been configured to use that naming configuration.
+- **Component Naming**: Since Angular 20, newly generated components drop the `Component` suffix by default (e.g., `App` instead of `AppComponent`). **This `ngx-signal-forms` repository, however, keeps the `Component` suffix on all component classes** (e.g., `CardComponent`, `ErrorDisplayModeSelectorComponent`). When generating or adding components in this workspace, match the existing convention and always use the `Component` suffix — both for the class name and the file name (`*.component.ts`).

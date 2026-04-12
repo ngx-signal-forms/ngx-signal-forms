@@ -1,68 +1,72 @@
 # End-to-End (E2E) Testing
 
-This project uses [Cypress](https://www.cypress.io/) for end-to-end (E2E) testing, which simulates real user interactions in a browser. The E2E tests are located primarily within the `devtools/` package.
+> **Repository override.** This file has been customized for the `ngx-signal-forms` workspace. The upstream Angular `angular-developer` skill bundle ships a Cypress-oriented version of this reference; this repo uses **Playwright** instead. If you re-sync these skills from upstream, reapply the changes below or regenerate against the actual project.
+
+This workspace uses [Playwright](https://playwright.dev/) for end-to-end (E2E) testing via the `@nx/playwright` plugin. E2E tests for the demo application live in the `apps/demo-e2e/` Nx project and run against the demo dev server.
 
 ## Running E2E Tests
 
-The primary way to run E2E tests is through the `pnpm` script defined in the root `package.json`.
+E2E runs are wired through Nx targets on the `demo-e2e` project:
 
-1.  **Build DevTools:** The E2E tests run against a built version of the devtools extension. You must build it first:
+```shell
+# Run all E2E tests (spins up `pnpm nx serve demo` automatically via webServer)
+pnpm nx e2e demo-e2e
 
-    ```shell
-    pnpm -F ng-devtools-mcp build:dev
-    ```
+# CI target (same config, used in pipelines)
+pnpm nx e2e-ci demo-e2e
+```
 
-2.  **Run Cypress:** Use the `cy:open` or `cy:run` script:
-    - To open the interactive Cypress Test Runner:
-      ```shell
-      pnpm -F ng-devtools-mcp cy:open
-      ```
-    - To run the tests headlessly in the terminal (ideal for CI):
-      ```shell
-      pnpm -F ng-devtools-mcp cy:run
-      ```
+Useful Playwright CLI flags (pass after `--`):
+
+```shell
+# Headed / UI mode for debugging
+pnpm nx e2e demo-e2e -- --ui
+
+# Run a single spec
+pnpm nx e2e demo-e2e -- src/navigation.spec.ts
+
+# Filter by test title
+pnpm nx e2e demo-e2e -- -g "navigation"
+```
 
 ## Test Structure
 
-- **Configuration:** The main Cypress configuration is located at `devtools/cypress.json`.
-- **Specs:** Test files (specs) are located in `devtools/cypress/integration/`.
-- **Custom Commands:** Reusable custom commands and actions are defined in `devtools/cypress/support/`.
+- **Configuration:** `apps/demo-e2e/playwright.config.ts` — uses `nxE2EPreset` and auto-starts `pnpm nx serve demo` on `http://localhost:4200` via the `webServer` option.
+- **Specs:** Test files live in `apps/demo-e2e/src/*.spec.ts` (e.g. `navigation.spec.ts`, `responsive.spec.ts`).
+- **Project config:** `apps/demo-e2e/project.json` declares the `e2e` and `e2e-ci` Nx targets and lists `demo` as an implicit dependency.
 
-### Example E2E Test Snippet
+## Example E2E Test Snippet
 
-A typical test might look like this:
+A typical spec uses Playwright's `test`/`expect` API and `test.describe` / `test.step` for structure:
 
 ```typescript
-// in devtools/cypress/integration/profiler.spec.ts
+// apps/demo-e2e/src/navigation.spec.ts
+import { expect, test } from '@playwright/test';
 
-describe('Profiler', () => {
-  beforeEach(() => {
-    cy.visit('/?e2e-app');
-    cy.wait(1000);
-    cy.get('ng-devtools-tabs').find('a').contains('Profiler').click();
+test.describe('Demo Application - Navigation & Shell', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
   });
 
-  it('should record and display profiling data', () => {
-    // Find the record button and click it
-    cy.get('button[aria-label="start-recording-button"]').click();
+  test('should load home page successfully', async ({ page }) => {
+    await test.step('Verify page title and main layout', async () => {
+      const title = page.locator('h1').first();
+      await expect(title).toBeVisible();
+      await expect(title).toContainText('Your First Form');
 
-    // Interact with the test application to generate profiling data
-    cy.get('body').find('#cards button').first().click();
-    cy.wait(500);
-
-    // Stop recording
-    cy.get('button[aria-label="stop-recording-button"]').click();
-
-    // Assert that the flame graph is now visible
-    cy.get('ng-devtools-recording-timeline')
-      .find('canvas')
-      .should('be.visible');
+      const sidebar = page.locator('nav, [role="navigation"]').first();
+      await expect(sidebar).toBeVisible();
+    });
   });
 });
 ```
 
-### Best Practices
+## Best Practices
 
-- **Use `data-` attributes:** Whenever possible, use `data-cy` or similar attributes for selecting elements to make tests more resilient to CSS or structural changes.
-- **Custom Commands:** Encapsulate common sequences of actions into custom commands in the `support` directory to keep tests clean and readable.
-- **Wait for Application State:** Use `cy.wait()` for arbitrary waits sparingly. Prefer to wait for specific UI elements to appear or for network requests to complete to avoid flaky tests.
+- **Prefer role/label locators.** Use `page.getByRole(...)`, `page.getByLabel(...)`, and `page.getByText(...)` over CSS selectors where possible — this keeps tests resilient and exercises the accessibility tree, which is especially important for a forms/toolkit project.
+- **Use `data-testid` as a fallback.** When an element cannot be located by role/label, add a `data-testid` attribute and select via `page.getByTestId(...)` instead of brittle CSS.
+- **Avoid fixed waits.** Do not use `page.waitForTimeout(...)` in committed specs. Prefer `expect(locator).toBeVisible()`, `page.waitForLoadState(...)`, or `page.waitForResponse(...)`; Playwright's web-first assertions auto-retry.
+- **Scope with `test.step`.** Group related assertions under `test.step('…', async () => { … })` so failures report a meaningful step name in the HTML reporter.
+- **Reuse fixtures, not globals.** Share setup via Playwright [fixtures](https://playwright.dev/docs/test-fixtures) rather than module-level state or custom commands.
+- **Let Nx manage the dev server.** The `webServer` block in `playwright.config.ts` starts `pnpm nx serve demo` automatically; do not start a separate server manually when running locally.

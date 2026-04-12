@@ -70,6 +70,21 @@ describe('provideNgxSignalFormControlPresets', () => {
     const resolved = injector.get(NGX_SIGNAL_FORM_CONTROL_PRESETS);
     expect(resolved).toEqual(DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS);
   });
+
+  it('should preserve base preset invariants when override fields are explicitly undefined', () => {
+    const providers = provideNgxSignalFormControlPresets({
+      slider: {
+        layout: undefined,
+        ariaMode: undefined,
+      },
+    });
+    const injector = createInjectorFromEnvProviders([providers]);
+
+    const resolved = injector.get(NGX_SIGNAL_FORM_CONTROL_PRESETS);
+    expect(resolved.slider).toEqual(
+      DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS.slider,
+    );
+  });
 });
 
 describe('provideNgxSignalFormControlPresetsForComponent', () => {

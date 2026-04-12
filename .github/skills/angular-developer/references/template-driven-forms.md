@@ -1,6 +1,8 @@
-# Template-Driven Forms
+# Template-Driven Forms (Legacy / External Contexts Only)
 
-Template-driven forms use two-way data binding (`[(ngModel)]`) to update the data model in the component as changes are made in the template and vice versa. They are ideal for simple forms and use directives in the HTML template to manage form state and validation.
+> **Repository override.** In the `ngx-signal-forms` workspace, Angular **Signal Forms** (`@angular/forms/signals`) together with the `@ngx-signal-forms/toolkit` patterns are the default and required approach for all new code. This reference is retained only for legacy Angular applications or when advising on external codebases. Do **not** use template-driven forms (`[(ngModel)]` / `FormsModule`) in this repo — see `references/signal-forms.md` and the toolkit docs instead. If you re-sync these skills from upstream, reapply this override.
+
+Template-driven forms use two-way data binding (`[(ngModel)]`) to update the data model in the component as changes are made in the template and vice versa. They can still be useful in simple legacy forms, but they are not the recommended pattern for this repository.
 
 ## Core Directives
 
