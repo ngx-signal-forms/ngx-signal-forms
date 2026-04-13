@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       skip_cloud:
-        description: 'Skip Nx Cloud (use when quota exceeded)'
+        description: 'Skip Nx Cloud (use when cloud auth, plan, or service is failing)'
         required: false
         type: boolean
         default: false
@@ -21,14 +21,12 @@ jobs:
   main:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RW'] }}
-      NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
     steps:
       - uses: actions/checkout@v5
         with:
           filter: tree:0
           fetch-depth: 0
+          persist-credentials: false
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -45,6 +43,9 @@ jobs:
 
       - name: Configure Nx Cloud access
         id: nx_cloud
+        env:
+          NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RW'] }}
+          NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
         run: |
           if [ "${{ inputs.skip_cloud }}" = "true" ]; then
             echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
@@ -72,7 +73,7 @@ jobs:
             echo "No Nx Cloud token configured. Running without Nx Cloud."
           fi
 
-      # Set BASE/HEAD for affected commands; continue if Nx Cloud quota exceeded
+      # Set BASE/HEAD for affected commands; continue if the helper cannot resolve SHAs
       - uses: nrwl/nx-set-shas@v4
         continue-on-error: true
 
@@ -80,13 +81,27 @@ jobs:
         run: pnpm exec nx report
 
       - name: Check formatting
-        run: pnpm run format:check
+        run: bash .github/scripts/nx-safe.sh pnpm run format:check
 
-      # Run tasks locally - no DTE distribution to conserve Nx Cloud credits
-      # Set skip_cloud=true via workflow_dispatch when quota is exceeded
-      # NX_NO_CLOUD is also enabled automatically if no token is available
+      # Run tasks locally - no DTE distribution to conserve Nx Cloud credits.
+      # Set skip_cloud=true via workflow_dispatch to force-disable Nx Cloud.
+      # If Nx Cloud is unavailable or rejects the workspace at runtime,
+      # nx-safe.sh automatically retries with NX_NO_CLOUD=true so CI never
+      # hard-blocks on cloud availability.
       - name: Run affected tasks
-        run: pnpm exec nx affected -t lint test build e2e-ci --parallel=3 --outputStyle=static
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx affected -t lint test test-browser build e2e-ci --parallel=3 --outputStyle=static
+
+      - name: Upload test artifacts
+        if: ${{ always() && !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            apps/demo-e2e/playwright-report/
+            dist/.playwright/apps/demo-e2e/test-output/
+            coverage/packages/toolkit/browser/
+          if-no-files-found: ignore
+          retention-days: 14
 
       # https://nx.dev/ci/features/self-healing-ci
       # continue-on-error: fix-ci requires Nx Cloud, may fail if quota exceeded

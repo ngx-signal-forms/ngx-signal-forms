@@ -5,7 +5,6 @@ import {
   signal,
 } from '@angular/core';
 import { FormField, FormRoot, form } from '@angular/forms/signals';
-import type { PureSignalFormModel } from './pure-signal-form.model';
 import { pureSignalFormSchema } from './pure-signal-form.validations';
 
 /**

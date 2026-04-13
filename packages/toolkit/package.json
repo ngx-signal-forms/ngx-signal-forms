@@ -31,5 +31,9 @@
     }
   },
   "dependencies": {},
+  "devDependencies": {
+    "@angular/core": "catalog:angular",
+    "@angular/forms": "catalog:angular"
+  },
   "sideEffects": false
 }

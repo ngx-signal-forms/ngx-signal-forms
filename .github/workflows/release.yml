@@ -58,9 +58,6 @@ jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RW'] }}
-      NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -87,7 +84,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
       - name: Configure Nx Cloud access
+        env:
+          NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RW'] }}
+          NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
         run: |
           TOKEN="$NX_CLOUD_ACCESS_TOKEN_RW"
           if [ -z "$TOKEN" ]; then
@@ -110,33 +113,57 @@ jobs:
         run: pnpm exec nx report --outputStyle=static
 
       - name: Check formatting
-        run: pnpm run format:check
+        run: bash .github/scripts/nx-safe.sh pnpm run format:check
 
       - name: Verify Quality (Lint, Test, Build, E2E)
         # Using affected ensures we only verify what changed, but caching handles the rest.
         # We target all projects to ensure workspace health before release.
-        run: pnpm exec nx affected -t lint test build e2e-ci --outputStyle=static
+        # nx-safe.sh falls back to local execution if Nx Cloud rejects our token.
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx affected -t lint test test-browser build e2e-ci --outputStyle=static
+
+      - name: Validate release inputs
+        env:
+          VERSION: ${{ inputs.version }}
+          CUSTOM_VERSION: ${{ inputs.custom_version }}
+          PRERELEASE_ID: ${{ inputs.prerelease_id }}
+        run: |
+          if [[ "$VERSION" == pre* ]] && [[ ! "$PRERELEASE_ID" =~ ^(beta|rc|alpha)$ ]]; then
+            echo "❌ prerelease_id must be one of: beta, rc, alpha." >&2
+            exit 1
+          fi
+
+          if [ "$VERSION" = "custom" ]; then
+            if [ -z "$CUSTOM_VERSION" ]; then
+              echo "❌ custom_version is required when version=custom." >&2
+              exit 1
+            fi
+
+            if [[ ! "$CUSTOM_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+              echo "❌ custom_version must be a valid semver-like version such as 1.2.3 or 1.2.3-beta.1." >&2
+              exit 1
+            fi
+          fi
 
       - name: Determine version command
         id: version_cmd
         run: |
           VERSION="${{ inputs.version }}"
           if [ "$VERSION" = "custom" ]; then
-            echo "cmd=${{ inputs.custom_version }}" >> $GITHUB_OUTPUT
+            printf 'cmd=%s\n' "${{ inputs.custom_version }}" >> "$GITHUB_OUTPUT"
           elif [[ "$VERSION" == pre* ]]; then
             # prepatch, preminor, premajor, prerelease all use --preid
-            echo "cmd=$VERSION --preid=${{ inputs.prerelease_id }}" >> $GITHUB_OUTPUT
+            printf 'cmd=%s --preid=%s\n' "$VERSION" "${{ inputs.prerelease_id }}" >> "$GITHUB_OUTPUT"
           else
-            echo "cmd=$VERSION" >> $GITHUB_OUTPUT
+            printf 'cmd=%s\n' "$VERSION" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Determine first-release flag
         id: first_release_flag
         run: |
           if [ "${{ inputs.first_release }}" = "true" ]; then
-            echo "flag=--first-release" >> "$GITHUB_OUTPUT"
+            printf 'flag=%s\n' '--first-release' >> "$GITHUB_OUTPUT"
           else
-            echo "flag=" >> "$GITHUB_OUTPUT"
+            printf 'flag=\n' >> "$GITHUB_OUTPUT"
           fi
 
       - name: Preview Release Changelog
@@ -154,12 +181,16 @@ jobs:
 
       - name: Release (Dry Run)
         if: ${{ inputs.dry_run }}
-        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }}
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release
         if: ${{ !inputs.dry_run }}
+        # Run nx release directly, never through nx-safe.sh: this command is
+        # non-idempotent (version bump, changelog, tag, commit, push). If Nx
+        # Cloud fails mid-sequence, retrying could create duplicate tags or a
+        # corrupted release. Fail loudly and let a human re-run cleanly.
         run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish ${{ steps.first_release_flag.outputs.flag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

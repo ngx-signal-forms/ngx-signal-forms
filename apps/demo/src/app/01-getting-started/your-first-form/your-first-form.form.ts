@@ -11,7 +11,6 @@ import {
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
-import type { ContactFormModel } from './your-first-form.model';
 import { contactFormSchema } from './your-first-form.validations';
 
 /**

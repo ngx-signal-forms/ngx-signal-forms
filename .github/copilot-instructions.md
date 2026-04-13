@@ -21,6 +21,7 @@ applyTo: '**'
 - **Forms Enhancement**: @ngx-signal-forms/toolkit — use the `ngx-signal-forms` skill (nested structure with core, assistive, form-field, headless, vest, debugger sub-skills)
 - **Toolkit Instructions**: [ngx-signal-forms-toolkit.instructions.md](./instructions/ngx-signal-forms-toolkit.instructions.md)
 - **Testing**: Vitest (unit), Playwright (E2E)
+- **Snapshots**: Playwright aria baselines in `apps/demo-e2e/src/__snapshots__`, Playwright image baselines in `apps/demo-e2e/src/__screenshots__`, Vitest browser screenshots in per-package `__screenshots__` folders
 - **Styling**: Tailwind CSS 4.x (see [tailwind.instructions.md](./instructions/tailwind.instructions.md))
 - **TypeScript**: 5.8+ with strict mode
 
@@ -180,6 +181,16 @@ Follow [`.github/instructions/angular.instructions.md`](./instructions/angular.i
 - Use accessible locators
 - use #playwright and #chrome-devtools for debugging
 - Test real user flows
+
+### Snapshot Baselines
+
+- Treat committed snapshot baselines as part of the test contract for accessibility and visual regressions.
+- Playwright aria snapshots are stored in `apps/demo-e2e/src/__snapshots__/**` as `.aria.yml` files.
+- Playwright screenshot baselines are stored in `apps/demo-e2e/src/__screenshots__/chromium/**` as `.png` files, following `apps/demo-e2e/playwright.config.ts`.
+- Vitest browser screenshot baselines are stored in package-local `__screenshots__` directories, following `packages/toolkit/vitest.browser.config.mts`.
+- Playwright only creates missing snapshots automatically during local runs; existing baselines must be updated intentionally. CI does not update Playwright snapshots.
+- When markup, accessibility tree output, or visual rendering changes intentionally, update the affected snapshots in the same PR and review the generated diffs before accepting them.
+- Prefer focused snapshot updates over broad rewrites. Use [`.github/workflows/update-snapshots.yml`](../.github/workflows/update-snapshots.yml) when baselines need to be refreshed in CI for `playwright`, `vitest`, or `all` scopes.
 
 ## Accessibility Checklist
 

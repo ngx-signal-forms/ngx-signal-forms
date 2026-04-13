@@ -11,7 +11,6 @@ import {
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import type { PasswordFormModel } from './warning-support.model';
 import { createPasswordForm } from './warning-support.validations';
 
 @Component({
