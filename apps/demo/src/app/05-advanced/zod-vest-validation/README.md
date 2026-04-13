@@ -11,7 +11,7 @@ The toolkit renders both layers through the same field wrappers and error timing
 The first-class Vest adapter also maps blocking errors and advisory warnings from the same Vest suite run.
 
 Warnings are displayed through `ngx-signal-form-field-wrapper`, which internally uses
-`ngx-signal-form-error` to render blocking messages as alerts and Vest warnings as
+`ngx-form-field-error` to render blocking messages as alerts and Vest warnings as
 polite status updates.
 
 ## Key files

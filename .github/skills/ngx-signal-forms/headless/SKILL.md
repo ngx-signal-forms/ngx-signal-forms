@@ -42,7 +42,7 @@ For ready-to-render components with built-in markup, use `assistive/SKILL.md` or
 
 ## Error Summary Directive Pattern
 
-Use `ngxSignalFormHeadlessErrorSummary` when you need a form-level summary with full DOM control, want warning entries, or need a design that differs from the styled `NgxSignalFormErrorSummaryComponent`.
+Use `ngxSignalFormHeadlessErrorSummary` when you need a form-level summary with full DOM control, want warning entries, or need a design that differs from the styled `NgxFormFieldErrorSummaryComponent`.
 
 ```html
 <div
@@ -73,7 +73,7 @@ Use `ngxSignalFormHeadlessErrorSummary` when you need a form-level summary with 
 </div>
 ```
 
-For a styled out-of-the-box error summary without warnings, use `NgxSignalFormErrorSummaryComponent` from `@ngx-signal-forms/toolkit/assistive` instead.
+For a styled out-of-the-box error summary without warnings, use `NgxFormFieldErrorSummaryComponent` from `@ngx-signal-forms/toolkit/assistive` instead.
 
 ## Template Directive Pattern
 

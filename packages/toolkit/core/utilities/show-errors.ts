@@ -5,15 +5,19 @@ import type {
   SubmittedStatus,
 } from '../types';
 import { shouldShowErrors } from './error-strategies';
-import type {
-  ErrorVisibilityState,
-  PartialErrorVisibilityState,
-} from './field-state-types';
+import type { ErrorVisibilityState } from './field-state-types';
 import { unwrapValue } from './unwrap-signal-or-value';
 
 /**
  * Creates a reactive computed signal that determines if a form field's errors should
  * be shown to the user based on the error display strategy.
+ *
+ * This is the **single source of truth** for error-visibility timing across the
+ * toolkit. `createErrorState()`, `NgxHeadlessErrorStateDirective`,
+ * `NgxHeadlessErrorSummaryDirective`, and the wrapper component all route
+ * through `shouldShowErrors()` (or this computed wrapper) so visibility timing
+ * cannot drift between the factory and directive surfaces. If you find
+ * yourself writing a parallel visibility predicate, use this instead.
  *
  * ## Simplified Architecture (aligned with Angular Signal Forms)
  *
@@ -36,7 +40,10 @@ import { unwrapValue } from './unwrap-signal-or-value';
  *
  * @param field - The form field state (FieldTree from Angular Signal Forms)
  * @param strategy - The error display strategy (defaults to 'on-touch')
- * @param submittedStatus - Optional: Only needed for 'on-submit' strategy
+ * @param submittedStatus - Optional for `'on-touch'` and `'immediate'`.
+ *   **Required** for `'on-submit'`: without it the helper defaults to
+ *   `'unsubmitted'` and errors will never surface. In dev mode a one-shot
+ *   `console.warn` is emitted to flag the miswiring.
  * @returns A computed signal returning `true` when errors should be displayed
  *
  * @example Simple usage (recommended - no submittedStatus needed)
@@ -78,7 +85,45 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * @see {@link combineShowErrors} For combining multiple error signals
  */
 export function showErrors(
-  field: ReactiveOrStatic<ErrorVisibilityState | PartialErrorVisibilityState>,
+  field: ReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>,
+  strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
+  submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
+): Signal<boolean> {
+  return createShowErrorsComputed(field, strategy, submittedStatus);
+}
+
+/**
+ * Creates a reactive visibility-timing computed for a `FieldState`.
+ *
+ * This is the single extraction point behind `showErrors()`, the wrapper
+ * component's `shouldShowErrors`, `NgxSignalFormAutoAriaDirective`, and
+ * `NgxFormFieldErrorComponent`. Each of those used to build its own
+ * `computed(() => shouldShowErrors(field.invalid(), field.touched(), strategy, status))`
+ * inline — consolidating here means visibility timing cannot drift between
+ * them.
+ *
+ * **When to use directly:** internal toolkit code that already owns a
+ * `FieldState` signal and wants the same visibility rules without routing
+ * through `showErrors()`'s type-wide `ErrorVisibilityState` parameter.
+ *
+ * **When to use `showErrors()` instead:** public callers that want the
+ * documented entry point and may pass partial shapes.
+ *
+ * @param field Reactive or static field state. `null`/`undefined` shapes
+ *   short-circuit to `false`.
+ * @param strategy Reactive or static `ErrorDisplayStrategy`.
+ * @param submittedStatus Reactive or static submission status. **Required**
+ *   for `'on-submit'` strategy — without it the helper defaults to
+ *   `'unsubmitted'` and errors will never surface. A one-shot
+ *   `console.warn` is emitted in dev mode (`ngDevMode`) when the miswiring
+ *   is detected.
+ * @returns A computed `Signal<boolean>` that is `true` when the strategy
+ *   says errors should be visible.
+ *
+ * @public
+ */
+export function createShowErrorsComputed(
+  field: ReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>,
   strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
   submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
 ): Signal<boolean> {
@@ -173,29 +218,47 @@ export function combineShowErrors(
 }
 
 function computeShowErrorsInternal(
-  field: ReactiveOrStatic<ErrorVisibilityState | PartialErrorVisibilityState>,
+  field: ReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>,
   strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
   submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
 ): Signal<boolean> {
+  let warnedMissingStatus = false;
+
   return computed(() => {
     const fieldState = unwrapValue(field);
     const strategyValue = unwrapValue(strategy);
 
-    const isInvalid =
-      fieldState &&
-      typeof fieldState === 'object' &&
-      typeof fieldState.invalid === 'function'
-        ? fieldState.invalid()
-        : false;
-    const isTouched =
-      fieldState &&
-      typeof fieldState === 'object' &&
-      typeof fieldState.touched === 'function'
-        ? fieldState.touched()
-        : false;
+    // Angular 21.2's `FieldState` guarantees `invalid`/`touched` signals, so
+    // the only shapes we defend against here are nullish (no field yet) and
+    // caller-supplied partials where a signal may be absent.
+    const isInvalid = fieldState?.invalid?.() ?? false;
+    const isTouched = fieldState?.touched?.() ?? false;
 
-    const status = submittedStatus ? unwrapValue(submittedStatus) : undefined;
-    const fallbackStatus = status ?? (isTouched ? 'submitted' : 'unsubmitted');
+    const resolvedStatus =
+      submittedStatus === undefined ? undefined : unwrapValue(submittedStatus);
+
+    // `on-submit` requires an explicit submission status to fire. Previously
+    // the helper fell back to `touched → 'submitted'`, which silently
+    // defeated the strategy for standalone `showErrors()` / `createErrorState()`
+    // consumers who forgot to wire `submittedStatus`. Default to
+    // `'unsubmitted'` instead — errors won't surface until a real status is
+    // supplied, and in dev mode we emit a one-shot console warning to make
+    // the miswiring obvious.
+    if (
+      (typeof ngDevMode === 'undefined' || ngDevMode) &&
+      strategyValue === 'on-submit' &&
+      resolvedStatus === undefined &&
+      !warnedMissingStatus
+    ) {
+      warnedMissingStatus = true;
+      // oxlint-disable-next-line no-console -- dev-only diagnostic
+      console.warn(
+        "[ngx-signal-forms] showErrors(): 'on-submit' strategy requires an explicit submittedStatus signal. " +
+          "Without it, errors will never surface. Wire the status from NgxSignalFormDirective ('ngxSignalForm') or pass submittedStatus explicitly.",
+      );
+    }
+
+    const fallbackStatus = resolvedStatus ?? 'unsubmitted';
 
     return shouldShowErrors(
       isInvalid,

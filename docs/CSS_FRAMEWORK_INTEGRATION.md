@@ -121,7 +121,7 @@ export const appConfig: ApplicationConfig = {
 For better accessibility, use the toolkit's error component instead of Bootstrap's `.invalid-feedback`:
 
 ```typescript
-import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
 ```html
@@ -135,7 +135,7 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
       [formField]="userForm.email"
     />
     <!-- Toolkit handles ARIA, visibility, and strategy -->
-    <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
+    <ngx-form-field-error [formField]="userForm.email" fieldName="email" />
   </div>
 </form>
 ```
@@ -176,7 +176,7 @@ Bootstrap's floating labels work with the toolkit:
     [formField]="userForm.email"
   />
   <label for="email">Email address</label>
-  <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
+  <ngx-form-field-error [formField]="userForm.email" fieldName="email" />
 </div>
 ```
 
@@ -202,7 +202,7 @@ Tailwind 4's `user-invalid:` variant matches the toolkit's `'on-touch'` strategy
       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm user-invalid:border-red-500 user-invalid:text-red-600 focus:border-indigo-500 focus:ring-indigo-500 user-invalid:focus:border-red-500 user-invalid:focus:ring-red-500"
       [formField]="userForm.email"
     />
-    <ngx-signal-form-error
+    <ngx-form-field-error
       [formField]="userForm.email"
       fieldName="email"
       class="mt-1 text-sm text-red-600"
@@ -378,7 +378,7 @@ For fields outside `mat-form-field`, use the toolkit normally:
 <div>
   <label for="notes">Notes</label>
   <textarea id="notes" [formField]="userForm.notes"></textarea>
-  <ngx-signal-form-error [formField]="userForm.notes" fieldName="notes" />
+  <ngx-form-field-error [formField]="userForm.notes" fieldName="notes" />
 </div>
 ```
 

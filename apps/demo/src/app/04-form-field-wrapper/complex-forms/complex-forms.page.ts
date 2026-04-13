@@ -84,7 +84,7 @@ import { ComplexFormsComponent } from './complex-forms.form';
 
         <ngx-display-controls-section
           title="🎨 Long-form styling"
-          description="Compare whether the standard or outline wrapper does a better job of keeping long sections and array rows scannable."
+          description="Compare whether the stacked or outline wrapper does a better job of keeping long sections and array rows scannable."
         >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
         </ngx-display-controls-section>

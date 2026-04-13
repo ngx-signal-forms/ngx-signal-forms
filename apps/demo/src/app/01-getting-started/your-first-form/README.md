@@ -13,7 +13,7 @@ The `NgxSignalFormToolkit` is a directive applied to the `<form>` element. It ac
 ### Key Powers
 
 1. **Auto-ARIA**: automatically syncs `aria-invalid` and `aria-describedby` on your inputs by matching them to their computed signal state.
-2. **Validation Context**: Provides a registry for error messages so child components (like `NgxSignalFormError`) know what to display without you passing strings down.
+2. **Validation Context**: Provides a registry for error messages so child components (like `NgxFormFieldError`) know what to display without you passing strings down.
 3. **Form Context**: Shares form-level state such as error strategy and submitted status with child toolkit components, so error rendering stays consistent without prop drilling.
 
 ### Usage
@@ -25,11 +25,11 @@ The `NgxSignalFormToolkit` is a directive applied to the `<form>` element. It ac
   <input [formField]="contactForm.name" />
 
   <!-- Reusable error component -->
-  <ngx-signal-form-error [formField]="contactForm.name" />
+  <ngx-form-field-error [formField]="contactForm.name" />
 </form>
 ```
 
-## Feature Spotlight: `NgxSignalFormError`
+## Feature Spotlight: `NgxFormFieldError`
 
 Instead of writing `at @if (touched && invalid)` blocks, use this component. It:
 
@@ -45,5 +45,5 @@ Instead of writing `at @if (touched && invalid)` blocks, use this component. It:
 ## How to Test
 
 1. **Auto-ARIA**: Inspect the inputs. Notice `aria-required="true"` and `aria-invalid` appear automatically.
-2. **Error Strategies**: Use the dropdown at the top to switch between "On Touch", "On Submit", and "Immediate". Notice how `NgxSignalFormError` respects this global setting instantly without code changes.
+2. **Error Strategies**: Use the dropdown at the top to switch between "On Touch", "On Submit", and "Immediate". Notice how `NgxFormFieldError` respects this global setting instantly without code changes.
 3. **Deterministic field linking**: Confirm each control has a stable `id`, and toolkit-managed errors/hints stay connected through `aria-describedby`.

@@ -1,234 +1,118 @@
 # 1.0.0-rc.1 (2026-04-06)
 
-**Compare:** [v1.0.0-rc.0...v1.0.0-rc.1](https://github.com/ngx-signal-forms/ngx-signal-forms/compare/v1.0.0-rc.0...v1.0.0-rc.1)
+## Breaking changes
 
-This release candidate focuses on three things:
+### Form field appearance naming
 
-- clarifying how the toolkit layers on top of Angular Signal Forms
-- adding first-class form-level summary primitives
-- reducing demo and documentation sprawl so the recommended patterns are easier to find and adopt
+The appearance rename was intentional and is a breaking API change for wrapper appearance inputs and config defaults.
 
-Compared to **RC1** (`v1.0.0-rc.0`), this release is mostly additive and consolidating. The main consumer-facing migration is that toolkit-backed forms must now opt in explicitly with `ngxSignalForm`.
+- `standard` was renamed to `stacked`
+- `bare` was renamed to `plain`
+
+Recommended migration mapping:
+
+- `appearance="standard"` → `appearance="stacked"`
+- `appearance="bare"` → `appearance="plain"`
+- `defaultFormFieldAppearance: 'standard'` → `defaultFormFieldAppearance: 'stacked'`
+- `defaultFormFieldAppearance: 'bare'` → `defaultFormFieldAppearance: 'plain'`
+
+Rationale:
+
+- `stacked` better describes the default label-above-control layout
+- `plain` clearly communicates low-chrome wrapper behavior for custom controls
+
+## Verification note
+
+Before publishing, run appearance-focused validation to confirm the new defaults:
+
+- wrapper unit tests covering `stacked`, `outline`, and `inherit` behavior
+- focused form-field visual checks (including `custom-controls-stacked` snapshots)
 
 ---
+
+# 1.0.0-rc.3 (upcoming)
 
 ## Breaking changes
 
-### Toolkit API and behavior
+### Error components renamed for `NgxFormField*` prefix consistency
 
-- **Toolkit form enhancement is now explicit**
-  - `NgxSignalFormDirective` no longer enhances plain `form[formRoot]` by itself.
-  - Toolkit-backed forms must now opt in with `ngxSignalForm`.
-  - Before:
+The error display and error summary components used a mixed
+`NgxSignalFormError*` prefix while every other field-scoped helper
+(`NgxFormFieldHintComponent`, `NgxFormFieldCharacterCountComponent`,
+`NgxFormFieldAssistiveRowComponent`) used `NgxFormField*`. The rename
+closes that gap.
 
-    ```html
-    <form [formRoot]="myForm">...</form>
-    ```
+| Before                                     | After                                     |
+| ------------------------------------------ | ----------------------------------------- |
+| `NgxSignalFormErrorComponent`              | `NgxFormFieldErrorComponent`              |
+| `NgxSignalFormErrorSummaryComponent`       | `NgxFormFieldErrorSummaryComponent`       |
+| `NgxSignalFormErrorListStyle`              | `NgxFormFieldErrorListStyle`              |
+| selector `<ngx-signal-form-error>`         | selector `<ngx-form-field-error>`         |
+| selector `<ngx-signal-form-error-summary>` | selector `<ngx-form-field-error-summary>` |
 
-  - After:
+Recommended migration:
 
-    ```html
-    <form [formRoot]="myForm" ngxSignalForm>...</form>
-    ```
+```ts
+// before
+import {
+  NgxSignalFormErrorComponent,
+  NgxSignalFormErrorSummaryComponent,
+} from '@ngx-signal-forms/toolkit/assistive';
 
-  - This applies to forms that rely on toolkit behavior such as injected toolkit form context, form-level `errorStrategy`, submitted-status tracking, or child toolkit components that expect toolkit form context.
-
-- **Form-level error strategy now belongs on the `ngxSignalForm` host**
-  - Move form-level strategy configuration onto the explicit toolkit host:
-
-    ```html
-    <form [formRoot]="myForm" ngxSignalForm errorStrategy="on-submit">...</form>
-    ```
-
-- **`shouldShowErrors()` changed signature**
-  - The helper no longer accepts a field-state object.
-  - Before:
-
-    ```typescript
-    shouldShowErrors(fieldState, strategy, submittedStatus);
-    ```
-
-  - After:
-
-    ```typescript
-    shouldShowErrors(isInvalid, isTouched, strategy, submittedStatus);
-    ```
-
-  - Migrate imperative callers by passing booleans such as `field.invalid()` and `field.touched()`.
-
----
-
-## `@ngx-signal-forms/toolkit`
-
-### Toolkit highlights
-
-- **Explicit additive Angular integration** — `NgxSignalFormToolkit` now bundles Angular's `FormRoot` together with the toolkit directives, and `NgxSignalFormDirective` is now an explicit enhancer on `form[formRoot][ngxSignalForm]`. This makes the ownership model clearer: Angular owns native form submission behavior, while the toolkit adds form context, submitted-state tracking, and error strategy behavior.
-
-- **New form-level summary APIs** — Added `NgxSignalFormErrorSummaryComponent` to the assistive entry point and `NgxHeadlessErrorSummaryDirective` to the headless entry point. These APIs make accessible summary-level validation flows a first-class part of the toolkit instead of something every consumer has to rebuild.
-
-- **Stronger error and warning composition** — Added `provideFieldLabels(...)`, surfaced stronger low-level helpers such as `splitByKind(...)` and `readDirectErrors(...)`, and improved error-message resolution behavior and test coverage.
-
-- **Better headless utility ergonomics** — Added `createFieldStateFlags(...)` and improved shared summary, visibility, and focus behavior across assistive and headless layers.
-
-- **Internal cleanup without broad public API churn** — Simplified strategy resolution, deduplicated summary-related logic, and tightened type safety across toolkit internals.
-
----
-
-## Demo application (`apps/demo`)
-
-### Demo highlights
-
-- **Consolidated live learning path** — The live demo now centers on the examples users should copy first: Getting Started, Toolkit Core, Headless, Form Field Wrapper, and Advanced Scenarios.
-
-- **Stronger submission and summary UX examples** — `submission-patterns` now demonstrates summary rendering, invalid-submit focus behavior, and recovery flows more clearly.
-
-- **More focused example surface** — `fieldset-utilities` is now the main headless showcase, `complex-forms` and `custom-controls` are now the primary form-field-wrapper examples, and the advanced wizard, async validation, cross-field validation, Vest, and Zod + Vest examples were retained and aligned to the new navigation model.
-
-- **Less exploratory noise** — Older exploratory routes were removed from the live navigation surface, resulting in a more opinionated and easier-to-follow demo experience.
-
----
-
-## Documentation
-
-### Documentation highlights
-
-- Updated the root and package docs to reflect the new additive `ngxSignalForm` model.
-- Expanded guidance for Angular public API policy, custom controls, parsing errors and warnings, nested form arrays, warnings support, and migration from `ngx-vest-forms`.
-- Removed outdated overview material and streamlined form guides.
-
-## Migration guide
-
-### 1. Update toolkit-backed forms
-
-Search for forms that use toolkit primitives and add `ngxSignalForm`.
-
-Typical candidates:
-
-- forms using `NgxSignalFormToolkit`
-- forms using toolkit wrappers
-- forms using toolkit error components
-- forms relying on form-level strategy behavior
-- forms expecting submitted-status-aware behavior from toolkit children
-
-Recommended update:
+// after
+import {
+  NgxFormFieldErrorComponent,
+  NgxFormFieldErrorSummaryComponent,
+} from '@ngx-signal-forms/toolkit/assistive';
+```
 
 ```html
-<form [formRoot]="myForm" ngxSignalForm></form>
+<!-- before -->
+<ngx-signal-form-error [formField]="form.email" fieldName="email" />
+<ngx-signal-form-error-summary [formTree]="form" />
+
+<!-- after -->
+<ngx-form-field-error [formField]="form.email" fieldName="email" />
+<ngx-form-field-error-summary [formTree]="form" />
 ```
 
-If you also configure form-level strategy behavior, move that configuration onto the same host:
+CSS custom properties are **unchanged**: existing theme overrides that
+target `--ngx-signal-form-error-color`, `--ngx-signal-form-error-bg`,
+etc. continue to work without modification.
 
-```html
-<form [formRoot]="myForm" ngxSignalForm errorStrategy="on-submit"></form>
-```
+### Auto-ARIA decoupled from internal selectors
 
-### 2. Re-test submit-time validation flows
+`NgxSignalFormAutoAriaDirective` used to inject
+`NgxSignalFormControlSemanticsDirective` directly and scan the DOM for
+`ngx-signal-form-field-wrapper` / `ngx-signal-form-field-hint` elements
+to assemble `aria-describedby`. It now reads two new Angular DI tokens
+exported from the root entry point:
 
-After adding `ngxSignalForm`, verify:
+- `NGX_SIGNAL_FORM_ARIA_MODE` — contributed by the control-semantics
+  directive, replaces the direct class injection.
+- `NGX_SIGNAL_FORM_HINT_REGISTRY` — contributed by the form-field
+  wrapper, removes the wrapper-relative `closest(...)` DOM walk.
 
-- `on-submit` strategy behavior
-- invalid-submit focus behavior
-- summary visibility behavior
-- `aria-describedby` and `aria-invalid` wiring on invalid fields
+Consumer-facing behaviour is unchanged: hints inside
+`NgxSignalFormFieldWrapperComponent` still contribute to
+`aria-describedby`, and manual-ARIA mode still takes ownership of the
+control host's ARIA attributes. Only custom direct consumers of those
+internal paths (there should be none outside the toolkit itself) need
+to update.
 
-### 3. Adopt the new summary APIs where appropriate
+## Non-breaking refinements
 
-If you currently maintain a custom summary implementation, consider switching to:
-
-- `NgxSignalFormErrorSummaryComponent` for styled summary UI
-- `NgxHeadlessErrorSummaryDirective` for custom markup with toolkit-managed state
-
-This is not required, but it is the recommended direction for RC2.
-
-### 4. Improve label and warning handling
-
-Where grouped or summary-level errors need better wording or clearer separation:
-
-- use `provideFieldLabels(...)` for human-friendly or localized field names
-- use `splitByKind(...)` for explicit warning vs blocking-error handling
-
-### 5. Update imperative `shouldShowErrors()` usage
-
-If you call `shouldShowErrors()` directly in custom imperative logic, update those call sites to pass booleans instead of a field-state object.
-
-Before:
-
-```typescript
-shouldShowErrors(fieldState, strategy, submittedStatus);
-```
-
-After:
-
-```typescript
-shouldShowErrors(
-  fieldState.invalid(),
-  fieldState.touched(),
-  strategy,
-  submittedStatus,
-);
-```
-
-### 6. Update demo links and references
-
-The live demo route graph was consolidated. If you reference older demo routes in docs, tests, screenshots, or bookmarks, update them.
-
-Suggested replacements:
-
-| RC1-era route                            | RC2 replacement                                             |
-| ---------------------------------------- | ----------------------------------------------------------- |
-| `/signal-forms-only/pure-signal-form`    | `/getting-started/your-first-form`                          |
-| `/toolkit-core/accessibility-comparison` | `/toolkit-core/error-display-modes`                         |
-| `/toolkit-core/field-states`             | `/headless/fieldset-utilities` or debugger-related examples |
-| `/headless/error-state`                  | `/headless/fieldset-utilities`                              |
-| `/form-field-wrapper/basic-usage`        | `/form-field-wrapper/complex-forms`                         |
-| `/form-field-wrapper/fieldset-grouping`  | `/form-field-wrapper/complex-forms`                         |
-| `/advanced-scenarios/error-messages`     | `/advanced-scenarios/submission-patterns`                   |
-
----
-
-## Changed
-
-### Toolkit changes
-
-- `NgxSignalFormToolkit` now bundles Angular `FormRoot` together with toolkit directives.
-- `NgxSignalFormDirective` now targets `form[formRoot][ngxSignalForm]` as an explicit additive enhancer.
-- Added `NgxSignalFormErrorSummaryComponent`.
-- Added `NgxHeadlessErrorSummaryDirective`.
-- Added `provideFieldLabels(...)`.
-- Added or surfaced stronger low-level helpers including `splitByKind(...)` and `readDirectErrors(...)`.
-- Improved error-message resolution coverage and supporting tests.
-- Simplified shared strategy and error-visibility logic.
-- Improved internal type safety and deduplicated summary logic.
-
-### Demo app changes
-
-- Consolidated the live route graph around the strongest onboarding and reference examples.
-- Removed several exploratory demo routes from the live navigation surface.
-- Promoted `your-first-form` as the main onboarding example.
-- Promoted `fieldset-utilities` as the main headless example.
-- Promoted `complex-forms` and `custom-controls` as the main form-field-wrapper examples.
-- Expanded `submission-patterns` around summary and focus behavior.
-- Kept advanced validation examples while aligning them to the new route model.
-- Updated E2E coverage to match the consolidated live app surface.
-
-### Documentation changes
-
-- Refreshed package and root docs to reflect the additive toolkit model.
-- Added and updated migration and integration guidance across the docs surface.
-- Removed outdated overview material and simplified the reference path through the docs.
-
----
-
-## Verification
-
-Validated during release preparation on **macOS**:
-
-- `pnpm nx build toolkit --skip-nx-cache && pnpm nx build demo --skip-nx-cache`
-- `npx nx run-many -t lint`
-- `npx nx e2e demo-e2e --skip-nx-cache`
-
-Result: all checks passed, including the full demo E2E suite (`173 passed`).
-
----
-
-**Full Changelog:** [v1.0.0-rc.0...v1.0.0-rc.1](https://github.com/ngx-signal-forms/ngx-signal-forms/compare/v1.0.0-rc.0...v1.0.0-rc.1)
+- Main `packages/toolkit/README.md` now matches the public config
+  surface (five fields) and carries explicit "Removed APIs" guidance,
+  a "Which entry point do I pick?" decision aid, and a "Manual ARIA
+  ownership" paragraph.
+- `packages/toolkit/debugger/README.md` switches the production-gate
+  example from `environment.production` to `isDevMode()`, matching
+  what the component itself uses internally.
+- `packages/toolkit/form-field/README.md` now consistently uses
+  `appearance="outline"` everywhere (a legacy boolean `outline`
+  attribute example was stale).
+- `createErrorState()` and `NgxHeadlessErrorStateDirective` now share a
+  single internal `buildHeadlessErrorState()` helper, removing ~60
+  lines of duplicated split/resolve/ID logic and unifying them on the
+  safer `readDirectErrors()` read path.

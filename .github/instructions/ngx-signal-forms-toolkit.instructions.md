@@ -48,7 +48,7 @@ Use the correct entry point for the thing you need.
 ```typescript
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
 ## Stable Public Types
@@ -68,13 +68,13 @@ type ErrorDisplayStrategy = ResolvedErrorDisplayStrategy | 'inherit';
 ### Form field appearance
 
 ```typescript
-type FormFieldAppearance = 'standard' | 'outline';
+type ResolvedFormFieldAppearance = 'stacked' | 'outline' | 'plain';
+type FormFieldAppearance = ResolvedFormFieldAppearance;
 type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
 ```
 
-- Global config supports only `'standard' | 'outline'`.
+- Global config supports only `'stacked' | 'outline' | 'plain'`.
 - Component inputs may also use `'inherit'`.
-- Do **not** reference the removed `bare` appearance.
 
 ### Current public config surface
 
@@ -82,7 +82,7 @@ type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
 interface NgxSignalFormsConfig {
   autoAria: boolean;
   defaultErrorStrategy: 'immediate' | 'on-touch' | 'on-submit';
-  defaultFormFieldAppearance: 'standard' | 'outline';
+  defaultFormFieldAppearance: 'stacked' | 'outline' | 'plain';
   showRequiredMarker: boolean;
   requiredMarker: string;
 }
@@ -154,10 +154,14 @@ Current public exports include:
 
 - `NgxSignalFormDirective`
 - `NgxSignalFormAutoAriaDirective`
+- `NgxSignalFormControlSemanticsDirective`
 - `NgxSignalFormToolkit`
 - `provideNgxSignalFormsConfig()`
 - `provideNgxSignalFormsConfigForComponent()`
+- `provideNgxSignalFormControlPresets()`
+- `provideNgxSignalFormControlPresetsForComponent()`
 - `provideErrorMessages()`
+- `provideFieldLabels()`
 - `showErrors()` / `combineShowErrors()`
 - `shouldShowErrors()`
 - `focusFirstInvalid()`
@@ -169,6 +173,9 @@ Current public exports include:
 - `canSubmitWithWarnings()`
 - `submitWithWarnings()`
 - `injectFormContext()`
+- `buildAriaDescribedBy()`
+- `resolveNgxSignalFormControlSemantics()`
+- `splitByKind()`
 - `unwrapValue()`
 - `updateAt()` / `updateNested()`
 - `warningError()` / `isWarningError()` / `isBlockingError()`
@@ -195,7 +202,7 @@ Toolkit UI that needs ARIA linkage must have either:
 ### Guidance
 
 - For `ngx-signal-form-field-wrapper`, prefer giving the bound control an `id`.
-- For standalone `ngx-signal-form-error`, pass `fieldName` unless wrapper context provides it.
+- For standalone `ngx-form-field-error`, pass `fieldName` unless wrapper context provides it.
 - For grouped fieldsets, use `fieldsetId` when you need deterministic test or ARIA references.
 - Do **not** invent fake field names in examples.
 
@@ -205,7 +212,7 @@ Toolkit UI that needs ARIA linkage must have either:
   <input id="email" [formField]="form.email" />
 </ngx-signal-form-field-wrapper>
 
-<ngx-signal-form-error [formField]="form.email" fieldName="email" />
+<ngx-form-field-error [formField]="form.email" fieldName="email" />
 ```
 
 ## Automatic ARIA
@@ -314,7 +321,7 @@ Important inputs:
 - `formField` — required
 - `fieldName` — optional explicit override, otherwise derived from bound control `id`
 - `strategy`
-- `appearance` — `'standard' | 'outline' | 'inherit'`
+- `appearance` — `'stacked' | 'outline' | 'plain' | 'inherit'`
 - `errorPlacement` — `'top' | 'bottom'` (default: `'bottom'`)
 - `showRequiredMarker`
 - `requiredMarker`
@@ -392,12 +399,12 @@ Use `includeNestedErrors` only when the group itself must surface all nested err
 
 ### Use `@ngx-signal-forms/toolkit/assistive` for:
 
-- `NgxSignalFormErrorComponent`
+- `NgxFormFieldErrorComponent`
 - `NgxFormFieldHintComponent`
 - `NgxFormFieldCharacterCountComponent`
 - `NgxFormFieldAssistiveRowComponent`
 
-### `NgxSignalFormErrorComponent`
+### `NgxFormFieldErrorComponent`
 
 Important inputs:
 
@@ -482,11 +489,11 @@ ngx-signal-form-field-wrapper {
 }
 ```
 
-Do **not**:
+Avoid:
 
-- use `::ng-deep`
-- target internal selectors as if they were public API
-- hard-code private structure assumptions in examples
+- `::ng-deep` (or any other shadow-piercing escape hatch)
+- targeting internal selectors as if they were public API
+- hard-coding private structure assumptions in examples
 
 ## Current Do / Don’t
 
@@ -494,7 +501,7 @@ Do **not**:
 
 - use bundle imports when appropriate
 - use `[formRoot]` + `ngxSignalForm` for toolkit-backed forms
-- use `appearance="outline"` or `appearance="standard"`
+- use `appearance="outline"`, `appearance="stacked"`, or `appearance="plain"`
 - provide real bound-control `id`s
 - use explicit `fieldName` when wrapper context or `id` is unavailable
 - use `warningError()` for non-blocking guidance
@@ -504,7 +511,7 @@ Do **not**:
 
 ### Don’t
 
-- document removed APIs (`manual`, `bare`, old config fields)
+- document removed APIs (old config fields)
 - invent exports that are not public (`computeShowErrors`, `canSubmit`, `isSubmitting`)
 - manually add `aria-invalid`/`aria-required` to toolkit-managed controls
 - rely on implicit field-name generation without `id` or `fieldName`

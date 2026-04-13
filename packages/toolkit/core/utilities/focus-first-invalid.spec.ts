@@ -102,6 +102,26 @@ describe('focusFirstInvalid', () => {
       expect(result).toBe(false);
     });
 
+    it('should skip error with missing fieldTree and focus the next focusable one', () => {
+      const errorWithoutFieldTree = {
+        kind: 'required',
+        message: 'Required',
+      } satisfies ValidationError.WithOptionalFieldTree;
+
+      const nextFocusSpy = vi.fn();
+      const mockField = createMockFieldWithErrors([
+        errorWithoutFieldTree,
+        createMockError(() => {
+          nextFocusSpy();
+        }),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(true);
+      expect(nextFocusSpy).toHaveBeenCalledOnce();
+    });
+
     it('should return false when fieldTree returns invalid state', () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- This test intentionally simulates a malformed runtime error payload.
       const errorWithNullFieldTree = {
@@ -117,6 +137,98 @@ describe('focusFirstInvalid', () => {
 
       // Assert
       expect(result).toBe(false);
+    });
+  });
+
+  describe('Non-interactive fields (hidden/disabled)', () => {
+    it('should skip errors on hidden fields and focus the next visible one', () => {
+      const hiddenFocusSpy = vi.fn();
+      const visibleFocusSpy = vi.fn();
+
+      const mockField = createMockFieldWithErrors([
+        createMockError(
+          () => {
+            hiddenFocusSpy();
+          },
+          { hidden: true },
+        ),
+        createMockError(() => {
+          visibleFocusSpy();
+        }),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(true);
+      expect(hiddenFocusSpy).not.toHaveBeenCalled();
+      expect(visibleFocusSpy).toHaveBeenCalledOnce();
+    });
+
+    it('should skip errors on disabled fields and focus the next enabled one', () => {
+      const disabledFocusSpy = vi.fn();
+      const enabledFocusSpy = vi.fn();
+
+      const mockField = createMockFieldWithErrors([
+        createMockError(
+          () => {
+            disabledFocusSpy();
+          },
+          { disabled: true },
+        ),
+        createMockError(() => {
+          enabledFocusSpy();
+        }),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(true);
+      expect(disabledFocusSpy).not.toHaveBeenCalled();
+      expect(enabledFocusSpy).toHaveBeenCalledOnce();
+    });
+
+    it('should return false when every error is on a hidden or disabled field', () => {
+      const hiddenSpy = vi.fn();
+      const disabledSpy = vi.fn();
+
+      const mockField = createMockFieldWithErrors([
+        createMockError(
+          () => {
+            hiddenSpy();
+          },
+          { hidden: true },
+        ),
+        createMockError(
+          () => {
+            disabledSpy();
+          },
+          { disabled: true },
+        ),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(false);
+      expect(hiddenSpy).not.toHaveBeenCalled();
+      expect(disabledSpy).not.toHaveBeenCalled();
+    });
+
+    it('should still focus readonly fields — their errors are user-actionable', () => {
+      const readonlyFocusSpy = vi.fn();
+
+      const mockField = createMockFieldWithErrors([
+        createMockError(
+          () => {
+            readonlyFocusSpy();
+          },
+          { readonly: true },
+        ),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(true);
+      expect(readonlyFocusSpy).toHaveBeenCalledOnce();
     });
   });
 });
@@ -153,6 +265,11 @@ function createMockField(valid: boolean): FieldTree<unknown> {
  */
 function createMockError(
   focusBoundControlSpy: () => void,
+  stateOverrides: Readonly<{
+    hidden?: boolean;
+    disabled?: boolean;
+    readonly?: boolean;
+  }> = {},
 ): ValidationError.WithFieldTree {
   return {
     kind: 'required',
@@ -165,6 +282,9 @@ function createMockError(
       invalid: true,
       valid: false,
       value: '',
+      hidden: stateOverrides.hidden ?? false,
+      disabled: stateOverrides.disabled ?? false,
+      isReadonly: stateOverrides.readonly ?? false,
     }),
   } satisfies ValidationError.WithFieldTree;
 }
@@ -175,12 +295,18 @@ function createMockFieldTree<TValue>({
   invalid,
   valid,
   value,
+  hidden = false,
+  disabled = false,
+  isReadonly = false,
 }: {
   errors: ValidationError.WithFieldTree[];
   focusBoundControl?: (options?: FocusOptions) => void;
   invalid: boolean;
   valid: boolean;
   value: TValue;
+  hidden?: boolean;
+  disabled?: boolean;
+  isReadonly?: boolean;
 }): FieldTree<TValue> {
   let fieldTree!: FieldTree<TValue>;
 
@@ -195,13 +321,13 @@ function createMockFieldTree<TValue>({
     },
     value: valueSignal,
     controlValue: valueSignal,
-    disabled: signal(false),
+    disabled: signal(disabled),
     disabledReasons: signal<DisabledReason[]>([]),
     dirty: signal(false),
     errorSummary: errorSignal,
     errors: errorSignal,
     formFieldBindings: signal<FormField<unknown>[]>([]),
-    hidden: signal(false),
+    hidden: signal(hidden),
     invalid: signal(invalid),
     keyInParent: signal<string | number>('root'),
     max: signal<number | undefined>(undefined),
@@ -211,7 +337,7 @@ function createMockFieldTree<TValue>({
     name: signal('root'),
     pattern: signal<readonly RegExp[]>([]),
     pending: signal(false),
-    readonly: signal(false),
+    readonly: signal(isReadonly),
     required: signal(false),
     submitting: signal(false),
     touched: signal(false),

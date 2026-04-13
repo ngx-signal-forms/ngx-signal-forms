@@ -29,11 +29,11 @@ export class SubmissionPatternsPage extends ErrorStrategyFormPage {
 
   /** The styled error summary box (only present in DOM when visible) */
   get errorSummary(): Locator {
-    return this.page.locator('ngx-signal-form-error-summary [role="alert"]');
+    return this.page.locator('ngx-form-field-error-summary [role="alert"]');
   }
 
   /** Individual clickable entries inside the error summary */
   get errorSummaryEntries(): Locator {
-    return this.page.locator('.ngx-signal-form-error-summary__link');
+    return this.page.locator('.ngx-form-field-error-summary__link');
   }
 }

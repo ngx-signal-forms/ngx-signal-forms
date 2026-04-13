@@ -14,7 +14,7 @@ export const GLOBAL_CONFIG_CONTENT = {
         items: [
           '• <strong>provideNgxSignalFormsConfig():</strong> Configure toolkit defaults in app.config.ts',
           '• <strong>defaultErrorStrategy:</strong> Set global error display mode (immediate, on-touch, on-submit)',
-          '• <strong>defaultFormFieldAppearance:</strong> Set default form field style (standard or outline)',
+          '• <strong>defaultFormFieldAppearance:</strong> Set default form field style (stacked, outline, or plain)',
           '• <strong>autoAria:</strong> Enable/disable automatic ARIA attributes globally',
           '• <strong>Form-level override:</strong> Use <code class="code-inline">ngxSignalForm</code> with <code class="code-inline">[formRoot]</code>, then bind <code class="code-inline">[errorStrategy]</code> when a single form needs different timing',
         ],
@@ -44,7 +44,7 @@ export const GLOBAL_CONFIG_CONTENT = {
         title: 'Override Patterns',
         items: [
           '• <strong>Form-level:</strong> Use <code class="code-inline">ngxSignalForm</code> with <code class="code-inline">[formRoot]</code>, then bind <code class="code-inline">[errorStrategy]</code> to override per form',
-          '• <strong>Field-level:</strong> Pass <code class="code-inline">[strategy]</code> to NgxSignalFormErrorComponent for individual fields',
+          '• <strong>Field-level:</strong> Pass <code class="code-inline">[strategy]</code> to NgxFormFieldErrorComponent for individual fields',
           '• <strong>Priority:</strong> Field > Form > Global configuration',
         ],
       },

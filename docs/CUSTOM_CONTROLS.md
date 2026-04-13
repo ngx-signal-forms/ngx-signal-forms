@@ -2,15 +2,33 @@
 
 This guide explains how custom form controls interact with Angular Signal Forms and the `@ngx-signal-forms/toolkit`.
 
+## When to read this guide
+
+Most toolkit users do **not** need the APIs described here.
+
+If your form uses the default native field families (`<input>`, `<textarea>`, `<select>`) and standard wrapper
+usage, the toolkit defaults are usually enough and you can skip this guide.
+
+Reach for this guide when you are working with:
+
+- custom controls that implement Angular Signal Forms control interfaces
+- switch-style toggles that are more than a plain checkbox row
+- slider or composite widgets
+- third-party controls that already own some or all ARIA attributes
+- cases where wrapper layout or auto-ARIA should follow an explicit control family instead of toolkit heuristics
+
+In short: this is mostly an **edge-case / custom-control integration guide**,
+not a baseline requirement for ordinary forms.
+
 ## Angular Control Interfaces
 
 Angular Signal Forms provides three interfaces for custom controls:
 
-| Interface             | Use Case                                              |
-| --------------------- | ----------------------------------------------------- |
-| `FormValueControl<T>` | Text-like inputs (input, textarea, custom editors)    |
-| `FormUiControl`       | UI-only controls (no value, just focus/state/display) |
-| `FormCheckboxControl` | Toggle/checkbox-like inputs                           |
+| Interface             | Use Case                                                  |
+| --------------------- | --------------------------------------------------------- |
+| `FormValueControl<T>` | Value-carrying controls (input, textarea, custom editors) |
+| `FormUiControl`       | UI-only controls (no value, just focus/state/display)     |
+| `FormCheckboxControl` | Toggle/checkbox-like inputs                               |
 
 ### FormValueControl\<T\>
 
@@ -81,7 +99,9 @@ field.
 ### Recommended pattern
 
 Prefer a native checkbox as the actual bound control and add `role="switch"` to
-that focusable element:
+that focusable element. When the toolkit should treat it as a switch for wrapper
+layout and auto-ARIA, declare that explicitly with
+`ngxSignalFormControl="switch"`:
 
 ```html
 <label for="emailUpdates">Email updates</label>
@@ -89,6 +109,7 @@ that focusable element:
   id="emailUpdates"
   type="checkbox"
   role="switch"
+  ngxSignalFormControl="switch"
   [formField]="form.emailUpdates"
 />
 ```
@@ -130,6 +151,33 @@ The toolkit can enhance switch-like controls with:
 The toolkit does **not** invent base switch semantics for you. If the underlying
 control does not already behave like a switch, you still need to provide the
 correct role, keyboard behavior, checked-state wiring, and accessible name.
+
+If your control already owns `aria-describedby`, `aria-invalid`, or
+`aria-required`, opt out of toolkit ARIA management on that host element with
+`ngxSignalFormControlAria="manual"`. Use `buildAriaDescribedBy` from
+`@ngx-signal-forms/toolkit` to assemble the described-by chain without
+duplicating the toolkit's ID-generation conventions.
+
+Practical ownership rule:
+
+- **auto** (default) for standard native field hosts that should inherit toolkit ARIA
+- **manual** when the widget already owns its ARIA attributes and described-by chain
+
+Manual mode is about **who writes the `aria-*` attributes on the control host**.
+It does **not** mean you stop using the wrapper. The wrapper can still provide:
+
+- the visible `<label>`
+- hint and error content
+- field identity / error ID conventions
+- validation context and strategy-aware visibility
+
+`appearance="plain"` is also commonly paired with custom sliders and composite
+controls for the same reason: the wrapper still contributes semantics and
+feedback, while the widget keeps ownership of its own visual chrome. These are
+related choices, but they are not the same choice.
+
+To fully disable toolkit ARIA participation on a bespoke host, use
+`ngxSignalFormAutoAriaDisabled` on the control element instead of an `ariaMode` value.
 
 ### Third-party component libraries
 
@@ -173,6 +221,63 @@ native checkbox.
 
 ## Toolkit Integration
 
+For standard `<input>`, `<textarea>`, and `<select>` wrapper usage, you normally do **not** need
+`ngxSignalFormControl`, `ngxSignalFormControlAria="manual"`, or preset
+providers. Those APIs are for the cases where the toolkit cannot safely infer
+the desired control family or ARIA ownership from ordinary markup.
+
+Rule of thumb:
+
+- if the toolkit can safely manage ARIA, stay in the default auto mode
+- if the widget already manages ARIA correctly, switch only the ARIA ownership to manual
+- if the widget also has its own visual treatment, `appearance="plain"` is often the right wrapper companion
+
+## FAQ
+
+### Does RC2 switch alignment support break native switches?
+
+No — not for the normal native switch pattern.
+
+This still works out of the box:
+
+```html
+<input
+  id="emailUpdates"
+  type="checkbox"
+  role="switch"
+  [formField]="form.emailUpdates"
+/>
+```
+
+The toolkit still recognizes that native pattern as a switch for wrapper and
+auto-ARIA behavior.
+
+### Do I now need `ngxSignalFormControl="switch"` for every switch?
+
+No.
+
+For a real native checkbox with `role="switch"`, the directive is optional.
+Use the directive when you want explicit semantics, preset-driven defaults, or
+the bound host is a custom/third-party control where the toolkit should not
+have to guess.
+
+### When do the new directives actually become useful?
+
+They are mainly for advanced cases:
+
+- custom hosts such as `<my-switch [formField]="..."></my-switch>`
+- third-party widgets whose control family is not obvious from the bound host
+- widgets that should opt into manual ARIA ownership
+- cases where a whole feature should inherit preset semantics for sliders,
+  composites, or switches
+
+### Is this more boilerplate for the normal case?
+
+No. The normal native switch case stays on the low-boilerplate path.
+
+The new APIs are there so custom and third-party controls can become more
+predictable without forcing extra ceremony onto native controls.
+
 ### Standalone imports are template-local
 
 When a custom control renders the actual `[formField]` host element inside its
@@ -201,6 +306,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
       [id]="inputId()"
       type="checkbox"
       role="switch"
+      ngxSignalFormControl="switch"
       [formField]="field()"
     />
   `,
@@ -258,7 +364,7 @@ Angular Signal Forms has no native warning concept. The toolkit uses a `warn:` p
 ```html
 <app-custom-field [formField]="form.password">
   <!-- The toolkit's error component handles warnings automatically -->
-  <ngx-signal-form-error [formField]="form.password" fieldName="password" />
+  <ngx-form-field-error [formField]="form.password" fieldName="password" />
 </app-custom-field>
 ```
 
@@ -304,6 +410,7 @@ When building custom controls that work with the toolkit:
   template: `
     <select
       #select
+      [id]="selectId()"
       (change)="onChange(select.value)"
       (blur)="onTouched()"
       [disabled]="disabled()"
@@ -320,6 +427,7 @@ export class CustomSelectComponent implements FormValueControl<string> {
   readonly #select =
     viewChild.required<ElementRef<HTMLSelectElement>>('select');
 
+  readonly selectId = input.required<string>();
   readonly options = input<{ value: string; label: string }[]>([]);
   readonly disabled = input<boolean>(false);
   readonly invalid = input<boolean>(false);
@@ -341,12 +449,13 @@ Usage with toolkit:
 
 ```html
 <form [formRoot]="myForm" ngxSignalForm errorStrategy="on-touch">
-  <ngx-signal-form-field-wrapper
-    [formField]="myForm.country"
-    fieldName="country"
-    label="Country"
-  >
-    <app-custom-select [formField]="myForm.country" [options]="countries" />
+  <ngx-signal-form-field-wrapper [formField]="myForm.country">
+    <label for="country-select">Country</label>
+    <app-custom-select
+      [selectId]="'country-select'"
+      [formField]="myForm.country"
+      [options]="countries"
+    />
   </ngx-signal-form-field-wrapper>
 </form>
 ```

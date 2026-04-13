@@ -16,8 +16,3 @@ export type ErrorReadableState = Pick<
   FieldState<unknown>,
   'errors' | 'invalid' | 'touched'
 >;
-
-/**
- * Partial visibility state used for duck-typed compatibility.
- */
-export type PartialErrorVisibilityState = Partial<ErrorVisibilityState>;

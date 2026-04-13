@@ -21,7 +21,7 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 
 - Bound control must have a stable `id` — the wrapper derives field identity from it.
 - For nested custom controls or dynamically identified inner controls, pass explicit `fieldName` on the wrapper instead of relying on implicit id discovery.
-- Set `appearance="outline"` for modern outlined inputs; `appearance="standard"` for underlined; `appearance="inherit"` to follow parent config.
+- Set `appearance="outline"` for modern outlined inputs; `appearance="stacked"` for label-above layout; `appearance="plain"` for minimal chrome; `appearance="inherit"` to follow parent config.
 - Add `placeholder=" "` (a single space) alongside `appearance="outline"` when you want the floating label animation.
 
 3. **Error placement:**
@@ -38,10 +38,65 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 
 6. **Use `form[formRoot][ngxSignalForm]` for toolkit-backed forms.** The wrapper and fieldset components work best when they can inherit toolkit form context and submitted-status behavior from `ngxSignalForm`.
 
-7. **Custom controls:** Implement `FormValueControl<T>` from `@angular/forms/signals`. Give the host a stable `id` so the wrapper links correctly.
+7. **Custom controls:** Implement `FormValueControl<T>`, `FormCheckboxControl`, or `FormUiControl` from `@angular/forms/signals`. Give the host a stable `id` so the wrapper links correctly.
 
-- For switch-style boolean controls, prefer a native checkbox with `role="switch"` on the actual bound element.
-- If the custom control renders the real `[formField]` element in its own template, import toolkit auto-ARIA in that child component because standalone imports do not cascade.
+- Use `appearance="plain"` for widget-style controls (sliders, star-rating, switch rows) where outlined or stacked default field chrome would look wrong.
+- Declare control semantics explicitly with `ngxSignalFormControl` on the bound host. Without it, the wrapper falls back to DOM heuristics that can produce the wrong layout or ARIA behavior:
+
+  ```html
+  <!-- Native switch: role="switch" on the element + declare kind -->
+  <input
+    id="emailUpdates"
+    type="checkbox"
+    role="switch"
+    ngxSignalFormControl="switch"
+    [formField]="form.emailUpdates"
+  />
+
+  <!-- Native checkbox opt-in: declare kind so wrapper uses inline-control layout -->
+  <input
+    id="agreeToTerms"
+    type="checkbox"
+    ngxSignalFormControl="checkbox"
+    [formField]="form.agreeToTerms"
+  />
+
+  <!-- Custom component: declare kind + layout; opt out of auto-ARIA when the
+       component manages its own describedby/invalid attributes -->
+  <ngx-rating-control
+    id="rating"
+    [ngxSignalFormControl]="{ kind: 'slider', layout: 'stacked', ariaMode: 'manual' }"
+    [formField]="form.rating"
+  />
+  ```
+
+- `ariaMode: 'manual'` inside the `ngxSignalFormControl` config and the standalone `ngxSignalFormControlAria="manual"` attribute are equivalent — the config-object form is for declaring full semantics in one place, the standalone attribute for a one-off override when `kind`/`layout` already come from a preset or DOM heuristic (see the _Error Handling_ section below for an example).
+- For either form, assemble `aria-describedby` with `buildAriaDescribedBy` from `@ngx-signal-forms/toolkit` so the ID-naming conventions stay consistent:
+
+  ```typescript
+  import { computed } from '@angular/core';
+  import { buildAriaDescribedBy } from '@ngx-signal-forms/toolkit';
+  readonly sliderDescribedBy = computed(() =>
+    buildAriaDescribedBy('rating', {
+      baseIds: ['rating-hint'],
+      showErrors: this.showErrors(),
+    }),
+  );
+  ```
+
+- When many controls of the same kind share the same semantics, use `provideNgxSignalFormControlPresetsForComponent()` in the host component `providers` instead of repeating the directive object:
+
+  ```typescript
+  providers: [
+    ...provideNgxSignalFormControlPresetsForComponent({
+      slider: { layout: 'custom', ariaMode: 'manual' },
+    }),
+  ];
+  ```
+
+  Then use the shorter `ngxSignalFormControl="slider"` (or a minimal object) on each control — the preset fills in `layout` and `ariaMode` automatically.
+
+- For switch-style custom components that render their own `input[type="checkbox"][role="switch"]` internally, import `NgxSignalFormToolkit` in that child component's `imports`, since standalone imports do not cascade from the parent form.
 
 ## Basic Usage
 
@@ -125,5 +180,7 @@ Use `includeNestedErrors` on the fieldset only when the overall summary must agg
 - If wrapper errors don't appear: confirm the bound control has an `id` attribute matching the field, or add explicit `fieldName` when the control is nested.
 - If grouped summary duplicates child messages: remove `includeNestedErrors` or scope `fields` explicitly.
 - If floating label doesn't animate: add `placeholder=" "` (a single space) and use `appearance="outline"`.
-- If a switch row collapses or inherits text-input styling: make sure the bound control is a real switch (`input[type='checkbox'][role='switch']`) so switch-specific wrapper styling can apply.
+- If a switch row collapses or inherits text-input styling: make sure the bound control declares `ngxSignalFormControl="switch"` (in addition to `role="switch"` for a11y) so the wrapper uses switch-specific layout.
+- If a slider or composite control gets an outlined text-field shell: add `ngxSignalFormControl="slider"` (or `"composite"`) to the bound host so the wrapper picks up the correct layout.
+- If auto-ARIA conflicts with a custom control's own ARIA attributes: add `ngxSignalFormControlAria="manual"` on the control host to suppress toolkit ARIA management. Use `buildAriaDescribedBy` to assemble the `aria-describedby` value manually.
 - For fully custom markup without wrapper assumptions, switch to `headless/SKILL.md`.

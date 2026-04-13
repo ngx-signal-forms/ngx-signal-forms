@@ -1,5 +1,5 @@
 import {
-  afterNextRender,
+  afterEveryRender,
   computed,
   Directive,
   ElementRef,
@@ -8,25 +8,32 @@ import {
   signal,
 } from '@angular/core';
 import { FORM_FIELD, type FieldState } from '@angular/forms/signals';
-import { NGX_SIGNAL_FORM_CONTEXT } from '../tokens';
-import type { ErrorDisplayStrategy } from '../types';
-import { shouldShowErrors } from '../utilities/error-strategies';
+import {
+  NGX_SIGNAL_FORM_ARIA_MODE,
+  NGX_SIGNAL_FORM_CONTEXT,
+  NGX_SIGNAL_FORM_HINT_REGISTRY,
+} from '../tokens';
 import {
   generateErrorId,
   generateWarningId,
   resolveFieldName,
 } from '../utilities/field-resolution';
-import type { ErrorReadableState } from '../utilities/field-state-types';
+import { createShowErrorsComputed } from '../utilities/show-errors';
 import { isBlockingError, isWarningError } from '../utilities/warning-error';
 
-type RequiredFieldState = Pick<FieldState<unknown>, 'required'>;
-
-interface AutoAriaFieldState
-  extends Partial<ErrorReadableState>, Partial<RequiredFieldState> {}
-
-function isAutoAriaFieldState(value: unknown): value is AutoAriaFieldState {
-  return value != null && typeof value === 'object';
+interface AutoAriaDomSnapshot {
+  readonly fieldName: string | null;
+  readonly describedBy: string | null;
+  readonly ariaInvalid: string | null;
+  readonly ariaRequired: string | null;
 }
+
+const INITIAL_DOM_SNAPSHOT: AutoAriaDomSnapshot = {
+  fieldName: null,
+  describedBy: null,
+  ariaInvalid: null,
+  ariaRequired: null,
+};
 
 /**
  * Automatically manages ARIA attributes for Signal Forms controls.
@@ -37,9 +44,13 @@ function isAutoAriaFieldState(value: unknown): value is AutoAriaFieldState {
  *
  * **Selector Strategy**: Automatically applies to all form controls with `[formField]` attribute,
  * except radio buttons and standard checkboxes. Checkbox-based switches opt back in
- * with `role="switch"`.
+ * with `role="switch"`, and explicit control semantics can opt checkbox/radio hosts in
+ * without relying on native-role heuristics.
  *
- * **Opt-out**: Add `ngxSignalFormAutoAriaDisabled` attribute to disable.
+ * **Ownership model**:
+ * - default: toolkit owns `aria-invalid`, `aria-required`, and `aria-describedby`
+ * - `ngxSignalFormControlAria="manual"`: the control owns those ARIA attributes
+ * - `ngxSignalFormAutoAriaDisabled`: disable toolkit participation entirely for bespoke hosts
  *
  * @example
  * ```html
@@ -55,25 +66,31 @@ function isAutoAriaFieldState(value: unknown): value is AutoAriaFieldState {
 @Directive({
   // eslint-disable-next-line @angular-eslint/directive-selector -- Targets Angular Signal Forms' [formField] directive
   selector: `
+    input[type="checkbox"][ngxSignalFormControl][formField]:not([ngxSignalFormAutoAriaDisabled]),
+    input[type="radio"][ngxSignalFormControl][formField]:not([ngxSignalFormAutoAriaDisabled]),
     input[type="checkbox"][role="switch"][formField]:not([ngxSignalFormAutoAriaDisabled]),
     input[formField]:not([ngxSignalFormAutoAriaDisabled]):not([type="radio"]):not([type="checkbox"]),
     textarea[formField]:not([ngxSignalFormAutoAriaDisabled]),
     select[formField]:not([ngxSignalFormAutoAriaDisabled]),
     [formField]:not(input):not(textarea):not(select):not([ngxSignalFormAutoAriaDisabled])
   `,
-  host: {
-    '[attr.aria-invalid]': 'ariaInvalid()',
-    '[attr.aria-describedby]': 'ariaDescribedBy()',
-    '[attr.aria-required]': 'ariaRequired()',
-  },
 })
 export class NgxSignalFormAutoAriaDirective {
-  #resolveFieldState(): AutoAriaFieldState | null {
+  /**
+   * Resolves the `FieldState` for the currently bound control.
+   *
+   * The dual `this.#formField.field()` vs `this.#formField.state()` branch
+   * is load-bearing: `FormField.field` is an `InputSignal<Field<T>>` which
+   * may not be set when the directive initializes (the consumer can forget
+   * the `[formField]` binding), and the fallback to `state()` lets
+   * `FORM_FIELD`-provided siblings keep working. Do not collapse.
+   */
+  #resolveFieldState(): FieldState<unknown> | null {
     const field = this.#formField.field();
     const fieldState =
       typeof field === 'function' ? field() : this.#formField.state();
 
-    return isAutoAriaFieldState(fieldState) ? fieldState : null;
+    return fieldState ?? null;
   }
 
   #hasUsableFieldState(): boolean {
@@ -87,57 +104,66 @@ export class NgxSignalFormAutoAriaDirective {
       return false;
     }
 
-    const errors =
-      typeof fieldState.errors === 'function' ? fieldState.errors() : [];
-
-    if (!Array.isArray(errors)) {
-      return false;
-    }
+    const errors = fieldState.errors();
 
     const hasMatchingErrors = errors.some(
       errorType === 'blocking' ? isBlockingError : isWarningError,
     );
     if (!hasMatchingErrors) return false;
 
-    const strategy: ErrorDisplayStrategy =
-      this.#context?.errorStrategy() ?? 'on-touch';
-    const submittedStatus = this.#context?.submittedStatus() ?? 'unsubmitted';
-
-    if (
-      typeof fieldState.invalid !== 'function' ||
-      typeof fieldState.touched !== 'function'
-    ) {
-      return false;
-    }
-
-    return shouldShowErrors(
-      fieldState.invalid(),
-      fieldState.touched(),
-      strategy,
-      submittedStatus,
-    );
+    return this.#visibilityByStrategy();
   }
 
   readonly #element = inject(ElementRef<HTMLElement>);
   readonly #injector = inject(Injector);
   readonly #context = inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true });
+  readonly #ariaModeSignal = inject(NGX_SIGNAL_FORM_ARIA_MODE, {
+    optional: true,
+    self: true,
+  });
+  readonly #hintRegistry = inject(NGX_SIGNAL_FORM_HINT_REGISTRY, {
+    optional: true,
+  });
 
   /// Inject Angular's FormField to avoid creating a duplicate `formField` input,
   /// which triggers the pass-through flag and disables FormField's blur/value binding.
   readonly #formField = inject(FORM_FIELD);
 
-  /**
-   * Resolved field name for this field.
-   */
-  readonly #fieldName = signal<string | null>(null);
+  readonly #domSnapshot = signal(INITIAL_DOM_SNAPSHOT);
+  readonly #managedDescribedByIds = signal<readonly string[]>([]);
+
+  readonly #isManualAriaMode = computed(() => {
+    return this.#ariaModeSignal?.() === 'manual';
+  });
 
   /**
-   * Existing aria-describedby value captured on init.
-   * Used to preserve developer-specified associations (hints, descriptions).
+   * Shared visibility-timing computed. Centralizes the `shouldShowErrors`
+   * decision so `#shouldShowBy` only contributes the per-error-type filter.
+   * Keeps auto-aria in lockstep with the wrapper component and the form
+   * field error component.
    */
-  readonly #existingDescribedBy = signal<string | null>(null);
+  readonly #visibilityByStrategy = createShowErrorsComputed(
+    () => this.#resolveFieldState(),
+    () => this.#context?.errorStrategy() ?? 'on-touch',
+    () => this.#context?.submittedStatus() ?? 'unsubmitted',
+  );
 
-  readonly #domVersion = signal(0);
+  /**
+   * Hint IDs contributed by the surrounding hint registry (typically provided
+   * by the form field wrapper). Filters by field name when the hint records
+   * it; falls back to "belongs to any field" when the hint has not declared
+   * one.
+   */
+  readonly #hintIds = computed((): readonly string[] => {
+    const registry = this.#hintRegistry;
+    if (!registry) return [];
+
+    const fieldName = this.#domSnapshot().fieldName;
+    return registry
+      .hints()
+      .filter((hint) => !hint.fieldName || hint.fieldName === fieldName)
+      .map((hint) => hint.id);
+  });
 
   /**
    * Computed signal that determines if errors should be shown based on error display strategy.
@@ -163,6 +189,10 @@ export class NgxSignalFormAutoAriaDirective {
    * appears when errors should be visible according to the strategy.
    */
   protected readonly ariaInvalid = computed(() => {
+    if (this.#isManualAriaMode()) {
+      return this.#domSnapshot().ariaInvalid;
+    }
+
     if (!this.#hasUsableFieldState()) {
       return null;
     }
@@ -175,15 +205,17 @@ export class NgxSignalFormAutoAriaDirective {
    * Returns 'true' | null based on the field's `required()` signal.
    */
   protected readonly ariaRequired = computed(() => {
+    if (this.#isManualAriaMode()) {
+      return this.#domSnapshot().ariaRequired;
+    }
+
     const fieldState = this.#resolveFieldState();
 
     if (!fieldState) {
       return null;
     }
 
-    return typeof fieldState.required === 'function' && fieldState.required()
-      ? 'true'
-      : null;
+    return fieldState.required() ? 'true' : null;
   });
 
   /**
@@ -194,15 +226,18 @@ export class NgxSignalFormAutoAriaDirective {
    * appends error/warning IDs when they should be shown.
    */
   protected readonly ariaDescribedBy = computed(() => {
-    this.#domVersion();
-    const fieldName = this.#fieldName();
-    if (!fieldName) return this.#existingDescribedBy();
+    if (this.#isManualAriaMode()) {
+      return this.#domSnapshot().describedBy;
+    }
 
-    const existing = this.#existingDescribedBy();
+    const snapshot = this.#domSnapshot();
+    const fieldName = snapshot.fieldName;
+    if (!fieldName) return snapshot.describedBy;
+
+    const existing = snapshot.describedBy;
     const parts: string[] = existing ? existing.split(' ').filter(Boolean) : [];
 
-    const hintIds = this.#resolveHintIds(fieldName);
-    for (const hintId of hintIds) {
+    for (const hintId of this.#hintIds()) {
       if (!parts.includes(hintId)) {
         parts.push(hintId);
       }
@@ -227,53 +262,154 @@ export class NgxSignalFormAutoAriaDirective {
     return parts.length > 0 ? parts.join(' ') : null;
   });
 
-  #resolveHintIds(fieldName: string): string[] {
-    const host = this.#element.nativeElement;
-    const maybeWrapper = host.closest('ngx-signal-form-field-wrapper');
-    if (!(maybeWrapper instanceof HTMLElement)) return [];
-
-    const wrapper = maybeWrapper;
-
-    const hintElements = Array.from(
-      wrapper.querySelectorAll(
-        'ngx-signal-form-field-hint[data-ngx-signal-form-hint]',
-      ),
+  #haveSameIds(current: readonly string[], next: readonly string[]): boolean {
+    return (
+      current.length === next.length &&
+      current.every((currentId, index) => currentId === next[index])
     );
+  }
 
-    const hintIds: string[] = [];
-
-    for (const matchingHint of hintElements) {
-      const hintField = matchingHint.getAttribute('data-signal-field');
-      if (hintField && hintField !== fieldName) {
-        continue;
-      }
-
-      const id = matchingHint.getAttribute('id');
-      if (id) {
-        hintIds.push(id);
-      }
+  #resolveManagedDescribedByIds(
+    snapshot: AutoAriaDomSnapshot,
+  ): readonly string[] {
+    if (this.#isManualAriaMode()) {
+      return [];
     }
 
-    return hintIds;
+    const hintIds = this.#hintIds();
+
+    if (!snapshot.fieldName) {
+      return hintIds;
+    }
+
+    const managedIds = [...hintIds];
+
+    if (this.#shouldShowErrors()) {
+      managedIds.push(generateErrorId(snapshot.fieldName));
+    }
+
+    if (this.#shouldShowWarnings()) {
+      managedIds.push(generateWarningId(snapshot.fieldName));
+    }
+
+    return Array.from(new Set(managedIds));
+  }
+
+  #readPreservedDescribedBy(fieldName: string | null): string | null {
+    const raw = this.#element.nativeElement.getAttribute('aria-describedby');
+
+    if (!raw) {
+      return null;
+    }
+
+    const parts = raw.split(' ').filter(Boolean);
+
+    if (!fieldName) {
+      const preserved = parts.filter(
+        (part: string) => !this.#managedDescribedByIds().includes(part),
+      );
+
+      return preserved.length > 0 ? preserved.join(' ') : null;
+    }
+
+    const generatedIds = new Set(this.#managedDescribedByIds());
+    generatedIds.add(generateErrorId(fieldName));
+    generatedIds.add(generateWarningId(fieldName));
+
+    const preserved = parts.filter((part: string) => !generatedIds.has(part));
+
+    return preserved.length > 0 ? preserved.join(' ') : null;
+  }
+
+  #readDomSnapshot(): AutoAriaDomSnapshot {
+    const fieldName = resolveFieldName(this.#element.nativeElement);
+
+    return {
+      fieldName,
+      describedBy: this.#readPreservedDescribedBy(fieldName),
+      ariaInvalid: this.#element.nativeElement.getAttribute('aria-invalid'),
+      ariaRequired: this.#element.nativeElement.getAttribute('aria-required'),
+    };
+  }
+
+  #writeManagedAttribute(
+    name: 'aria-describedby' | 'aria-invalid' | 'aria-required',
+    value: string | null,
+  ): void {
+    if (value === null) {
+      this.#element.nativeElement.removeAttribute(name);
+      return;
+    }
+
+    this.#element.nativeElement.setAttribute(name, value);
   }
 
   constructor() {
-    const existingDescribedBy =
-      this.#element.nativeElement.getAttribute('aria-describedby');
-    this.#existingDescribedBy.set(existingDescribedBy);
+    this.#domSnapshot.set(this.#readDomSnapshot());
 
-    const fieldName = resolveFieldName(this.#element.nativeElement);
-    this.#fieldName.set(fieldName);
+    // Single afterEveryRender with proper phased callbacks:
+    // - earlyRead: read DOM attributes before any writes (prevents layout thrashing)
+    // - write: update the snapshot signal and write managed ARIA attributes to the DOM
+    afterEveryRender(
+      {
+        earlyRead: () => {
+          return this.#readDomSnapshot();
+        },
+        write: (snapshot) => {
+          const current = this.#domSnapshot();
+          const previousManagedDescribedByIds = this.#managedDescribedByIds();
+          const managedDescribedByIds =
+            this.#resolveManagedDescribedByIds(snapshot);
 
-    afterNextRender(
-      () => {
-        const resolvedFieldName = resolveFieldName(this.#element.nativeElement);
+          if (
+            current.fieldName !== snapshot.fieldName ||
+            current.describedBy !== snapshot.describedBy ||
+            current.ariaInvalid !== snapshot.ariaInvalid ||
+            current.ariaRequired !== snapshot.ariaRequired
+          ) {
+            this.#domSnapshot.set(snapshot);
+          }
 
-        if (resolvedFieldName !== this.#fieldName()) {
-          this.#fieldName.set(resolvedFieldName);
-        }
+          if (
+            !this.#haveSameIds(
+              previousManagedDescribedByIds,
+              managedDescribedByIds,
+            )
+          ) {
+            this.#managedDescribedByIds.set(managedDescribedByIds);
+          }
 
-        this.#domVersion.update((value) => value + 1);
+          if (this.#isManualAriaMode()) {
+            const currentDescribedBy =
+              this.#element.nativeElement.getAttribute('aria-describedby');
+            const describedByParts = currentDescribedBy
+              ? currentDescribedBy.split(' ').filter(Boolean)
+              : [];
+            const hasManagedDescribedByIds = previousManagedDescribedByIds.some(
+              (id) => describedByParts.includes(id),
+            );
+
+            if (hasManagedDescribedByIds) {
+              this.#writeManagedAttribute(
+                'aria-describedby',
+                snapshot.describedBy,
+              );
+            }
+
+            if (previousManagedDescribedByIds.length > 0) {
+              this.#managedDescribedByIds.set([]);
+            }
+
+            return;
+          }
+
+          this.#writeManagedAttribute('aria-invalid', this.ariaInvalid());
+          this.#writeManagedAttribute(
+            'aria-describedby',
+            this.ariaDescribedBy(),
+          );
+          this.#writeManagedAttribute('aria-required', this.ariaRequired());
+        },
       },
       { injector: this.#injector },
     );

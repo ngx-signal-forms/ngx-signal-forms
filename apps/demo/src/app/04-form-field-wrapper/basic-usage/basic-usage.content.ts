@@ -22,7 +22,7 @@ export const BASIC_USAGE_CONTENT = {
       {
         title: 'Wrapper Capabilities',
         items: [
-          'Automatic error display (no manual <code>&lt;ngx-signal-form-error&gt;</code>)',
+          'Automatic error display (no manual <code>&lt;ngx-form-field-error&gt;</code>)',
           'Multiple field types: text, email, URL, number, textarea, select, checkbox',
           'Consistent spacing via CSS custom properties',
           'Proper label/input associations',
@@ -47,7 +47,7 @@ export const BASIC_USAGE_CONTENT = {
       {
         title: '🎨 Appearance & Outline Options',
         items: [
-          'Use the <strong>Appearance selector</strong> to toggle between standard and outline mode natively supported by the wrapper.',
+          'Use the <strong>Appearance selector</strong> to toggle between stacked and outline mode natively supported by the wrapper.',
           'The Outline mode provides a more distinct visual boundary, often preferred in enterprise applications like Material Design.',
         ],
       },

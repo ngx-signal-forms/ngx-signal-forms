@@ -17,6 +17,14 @@ import {
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import { errorMessagesSchema } from './error-messages.validations';
 
+function formatMinLengthMessage(params: Record<string, unknown>): string {
+  const minLength = params['minLength'];
+
+  return typeof minLength === 'number' && Number.isFinite(minLength)
+    ? `Minimum ${minLength} characters required`
+    : 'Minimum length requirement not available';
+}
+
 /**
  * Error Messages Component
  *
@@ -36,8 +44,7 @@ import { errorMessagesSchema } from './error-messages.validations';
     provideErrorMessages({
       required: 'This field is required',
       email: 'Please enter a valid email address',
-      minLength: (params: Record<string, unknown>) =>
-        `Minimum ${(params as { minLength: number }).minLength} characters required`,
+      minLength: formatMinLengthMessage,
     }),
   ],
   template: `
@@ -175,8 +182,13 @@ export class ErrorMessagesComponent {
   protected readonly providerCode = `provideErrorMessages({
   required: 'This field is required',
   email: 'Please enter a valid email address',
-  minLength: (params: Record<string, unknown>) =>
-    \`Minimum \${(params as { minLength: number }).minLength} characters required\`,
+  minLength: (params: Record<string, unknown>) => {
+    const minLength = params['minLength'];
+
+    return typeof minLength === 'number' && Number.isFinite(minLength)
+      ? \`Minimum \${minLength} characters required\`
+      : 'Minimum length requirement not available';
+  },
 })`;
 
   protected readonly schemaCode = `form(userData, (path) => {

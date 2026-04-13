@@ -28,7 +28,7 @@ Demonstrates how different error display strategies change when validation feedb
 ## Toolkit usage
 
 - `NgxSignalFormToolkit` for auto-ARIA and form context.
-- `NgxSignalFormErrorComponent` for field-level error rendering.
+- `NgxFormFieldErrorComponent` for field-level error rendering.
 - `injectFormContext()` plus local computed signals for custom visibility helpers.
 - Error strategy set on the form via `[errorStrategy]`.
 

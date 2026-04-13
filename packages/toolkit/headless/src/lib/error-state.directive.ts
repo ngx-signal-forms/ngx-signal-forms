@@ -1,20 +1,17 @@
 import { computed, Directive, inject, input } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
-  generateErrorId,
-  generateWarningId,
   injectFormContext,
   NGX_ERROR_MESSAGES,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
   resolveValidationErrorMessage,
   showErrors,
-  splitByKind,
   type ErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 
-import { readDirectErrors } from './utilities';
+import { buildHeadlessErrorState } from './utilities';
 
 /**
  * Resolved error with kind and message.
@@ -55,7 +52,7 @@ export interface ErrorStateSignals {
 /**
  * Headless error state directive for custom error display implementations.
  *
- * Extracts error state logic from `NgxSignalFormErrorComponent` into a renderless
+ * Extracts error state logic from `NgxFormFieldErrorComponent` into a renderless
  * directive that exposes signals for custom templates.
  *
  * ## Features
@@ -148,15 +145,14 @@ export class NgxHeadlessErrorStateDirective<
    */
   readonly #fieldState = computed(() => this.field()());
 
-  /**
-   * Generated error ID for aria-describedby.
-   */
-  readonly errorId = computed(() => generateErrorId(this.fieldName()));
+  readonly #core = buildHeadlessErrorState(this.#fieldState, this.fieldName);
 
-  /**
-   * Generated warning ID for aria-describedby.
-   */
-  readonly warningId = computed(() => generateWarningId(this.fieldName()));
+  readonly errorId = this.#core.errorId;
+  readonly warningId = this.#core.warningId;
+  readonly errors = this.#core.errors;
+  readonly warnings = this.#core.warnings;
+  readonly hasErrors = this.#core.hasErrors;
+  readonly hasWarnings = this.#core.hasWarnings;
 
   /**
    * Whether errors should be shown based on strategy.
@@ -171,15 +167,6 @@ export class NgxHeadlessErrorStateDirective<
    * Whether warnings should be shown (same logic as errors).
    */
   readonly showWarnings = this.showErrors;
-
-  readonly #split = computed(() =>
-    splitByKind(readDirectErrors(this.#fieldState())),
-  );
-
-  readonly errors = computed(() => this.#split().blocking);
-  readonly warnings = computed(() => this.#split().warnings);
-  readonly hasErrors = computed(() => this.#split().blocking.length > 0);
-  readonly hasWarnings = computed(() => this.#split().warnings.length > 0);
 
   /**
    * Resolved error messages using 3-tier priority.

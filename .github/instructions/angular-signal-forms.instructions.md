@@ -295,7 +295,7 @@ provideSignalFormsConfig({
 
 ## Custom Controls
 
-Implement `FormValueControl<T>` for text-like inputs:
+Implement `FormValueControl<T>` for value-carrying controls:
 
 ```typescript
 @Directive({

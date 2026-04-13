@@ -15,7 +15,7 @@ import { accessibilityValidationSchema } from './accessibility-comparison.valida
  * - `aria-invalid="true"` when field is invalid AND touched
  * - `aria-describedby` linking to error containers
  * - `<ngx-signal-form-field-wrapper>` automatic error display (for 'on-touch')
- * - `<ngx-signal-form-error>` automatic error display (for 'on-touch')
+ * - `<ngx-form-field-error>` automatic error display (for 'on-touch')
  *
  * ⚠️ What DOES require `[formRoot]`:
  * - `'on-submit'` error strategy (needs `submittedStatus`)

@@ -1,5 +1,13 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { form, FormField, required, schema } from '@angular/forms/signals';
+import {
+  disabled,
+  form,
+  FormField,
+  FormRoot,
+  hidden,
+  required,
+  schema,
+} from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -269,6 +277,98 @@ describe('NgxHeadlessErrorSummaryDirective', () => {
 
       await user.click(button);
       expect(document.activeElement).toBe(screen.getByTestId('email-input'));
+    });
+  });
+
+  describe('non-interactive fields (hidden/disabled)', () => {
+    it('should omit entries for hidden fields from the summary', async () => {
+      @Component({
+        selector: 'ngx-test-summary-hidden',
+        imports: [FormField, NgxHeadlessErrorSummaryDirective],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <div>
+            <input id="email" [formField]="contactForm.email" />
+            <input id="secret" [formField]="contactForm.secret" />
+            <div
+              ngxSignalFormHeadlessErrorSummary
+              #summary="errorSummary"
+              [formTree]="contactForm"
+              strategy="immediate"
+            >
+              @for (
+                entry of summary.entries();
+                track entry.kind + entry.fieldName
+              ) {
+                <span [attr.data-testid]="'entry-' + entry.kind">{{
+                  entry.message
+                }}</span>
+              }
+            </div>
+          </div>
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '', secret: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'Email is required' });
+            required(path.secret, { message: 'Secret is required' });
+            hidden(path.secret, () => true);
+          }),
+        );
+      }
+
+      await render(TestComponent);
+
+      expect(screen.queryByText('Email is required')).toBeTruthy();
+      expect(screen.queryByText('Secret is required')).toBeNull();
+    });
+
+    it('should omit entries for disabled fields from the summary', async () => {
+      @Component({
+        selector: 'ngx-test-summary-disabled',
+        imports: [FormField, NgxHeadlessErrorSummaryDirective],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <div>
+            <input id="email" [formField]="contactForm.email" />
+            <input id="token" [formField]="contactForm.token" />
+            <div
+              ngxSignalFormHeadlessErrorSummary
+              #summary="errorSummary"
+              [formTree]="contactForm"
+              strategy="immediate"
+            >
+              @for (
+                entry of summary.entries();
+                track entry.kind + entry.fieldName
+              ) {
+                <span [attr.data-testid]="'entry-' + entry.kind">{{
+                  entry.message
+                }}</span>
+              }
+            </div>
+          </div>
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '', token: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'Email is required' });
+            required(path.token, { message: 'Token is required' });
+            disabled(path.token, () => true);
+          }),
+        );
+      }
+
+      await render(TestComponent);
+
+      expect(screen.queryByText('Email is required')).toBeTruthy();
+      expect(screen.queryByText('Token is required')).toBeNull();
     });
   });
 });

@@ -151,11 +151,11 @@ When one form needs a different display strategy, prefer a local template overri
 
 ### Configuration Options
 
-| Option                       | Type                     | Default      | Description                      |
-| ---------------------------- | ------------------------ | ------------ | -------------------------------- |
-| `autoAria`                   | `boolean`                | `true`       | Enable automatic ARIA attributes |
-| `defaultErrorStrategy`       | `ErrorDisplayStrategy`   | `'on-touch'` | Default error display strategy   |
-| `defaultFormFieldAppearance` | `'default' \| 'outline'` | `undefined`  | Default form field appearance    |
+| Option                       | Type                                | Default      | Description                      |
+| ---------------------------- | ----------------------------------- | ------------ | -------------------------------- |
+| `autoAria`                   | `boolean`                           | `true`       | Enable automatic ARIA attributes |
+| `defaultErrorStrategy`       | `ErrorDisplayStrategy`              | `'on-touch'` | Default error display strategy   |
+| `defaultFormFieldAppearance` | `'stacked' \| 'outline' \| 'plain'` | `'stacked'`  | Default form field appearance    |
 
 ### Field Identity
 
@@ -260,8 +260,8 @@ When you use the toolkit's `NgxSignalFormDirective` (`ngxSignalForm`), the deriv
 
 ```html
 <form [formRoot]="registrationForm" ngxSignalForm>
-  <!-- NgxSignalFormErrorComponent automatically receives submittedStatus -->
-  <ngx-signal-form-error
+  <!-- NgxFormFieldErrorComponent automatically receives submittedStatus -->
+  <ngx-form-field-error
     [formField]="registrationForm.email"
     fieldName="email"
   />

@@ -10,7 +10,7 @@ import {
   createOnInvalidHandler,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 import { contactFormSchema } from './your-first-form.validations';
 
 /**
@@ -22,7 +22,7 @@ import { contactFormSchema } from './your-first-form.validations';
 @Component({
   selector: 'ngx-your-first-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormFieldErrorComponent],
   template: `
     <form
       [formRoot]="contactForm"
@@ -42,7 +42,7 @@ import { contactFormSchema } from './your-first-form.validations';
 
         />
         <!-- Toolkit handles ARIA automatically! No manual bindings needed -->
-        <ngx-signal-form-error
+        <ngx-form-field-error
           [formField]="contactForm.name"
           fieldName="contact-name"
         />
@@ -59,7 +59,7 @@ import { contactFormSchema } from './your-first-form.validations';
           placeholder="you@example.com"
 
         />
-        <ngx-signal-form-error
+        <ngx-form-field-error
           [formField]="contactForm.email"
           fieldName="contact-email"
         />
@@ -76,7 +76,7 @@ import { contactFormSchema } from './your-first-form.validations';
           placeholder="Your message (min 10 characters)"
 
         ></textarea>
-        <ngx-signal-form-error
+        <ngx-form-field-error
           [formField]="contactForm.message"
           fieldName="contact-message"
         />

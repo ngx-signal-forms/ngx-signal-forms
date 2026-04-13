@@ -174,7 +174,7 @@ const registrationForm = form(
 
 ## Template Integration
 
-### Using NgxSignalFormErrorComponent
+### Using NgxFormFieldErrorComponent
 
 The component automatically separates errors and warnings:
 
@@ -184,7 +184,7 @@ The component automatically separates errors and warnings:
   <input id="email" [formField]="form.email" />
 
   <!-- Displays both errors and warnings -->
-  <ngx-signal-form-error [formField]="form.email" fieldName="email" />
+  <ngx-form-field-error [formField]="form.email" fieldName="email" />
 </form>
 ```
 
@@ -194,14 +194,12 @@ The component automatically separates errors and warnings:
 <!-- Error container (if errors exist) -->
 <div
   id="email-error"
-  class="ngx-signal-form-error ngx-signal-form-error--error"
+  class="ngx-form-field-error ngx-form-field-error--error"
   role="alert"
   aria-live="assertive"
   aria-atomic="true"
 >
-  <p
-    class="ngx-signal-form-error__message ngx-signal-form-error__message--error"
-  >
+  <p class="ngx-form-field-error__message ngx-form-field-error__message--error">
     Invalid email format
   </p>
 </div>
@@ -209,13 +207,13 @@ The component automatically separates errors and warnings:
 <!-- Warning container (if warnings exist) -->
 <div
   id="email-warning"
-  class="ngx-signal-form-error ngx-signal-form-error--warning"
+  class="ngx-form-field-error ngx-form-field-error--warning"
   role="status"
   aria-live="polite"
   aria-atomic="true"
 >
   <p
-    class="ngx-signal-form-error__message ngx-signal-form-error__message--warning"
+    class="ngx-form-field-error__message ngx-form-field-error__message--warning"
   >
     Disposable email addresses may not receive important notifications
   </p>

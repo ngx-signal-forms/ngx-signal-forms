@@ -15,7 +15,7 @@ import {
   showErrors,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 
 import {
   productFeedbackSchema,
@@ -140,7 +140,7 @@ export class ErrorDisplayHelpersComponent {
     ErrorDisplayHelpersComponent,
     FormField,
     NgxSignalFormToolkit,
-    NgxSignalFormErrorComponent,
+    NgxFormFieldErrorComponent,
   ],
   template: `
     <!-- Product Feedback Form -->
@@ -179,7 +179,7 @@ export class ErrorDisplayHelpersComponent {
           <div class="form-hint" id="name-hint">
             We use this to personalize our response
           </div>
-          <ngx-signal-form-error
+          <ngx-form-field-error
             [formField]="productForm.name"
             fieldName="name"
           />
@@ -200,7 +200,7 @@ export class ErrorDisplayHelpersComponent {
           <div class="form-hint" id="email-hint">
             For follow-up questions (we respect your privacy)
           </div>
-          <ngx-signal-form-error
+          <ngx-form-field-error
             [formField]="productForm.email"
             fieldName="email"
           />
@@ -221,7 +221,7 @@ export class ErrorDisplayHelpersComponent {
           <div class="form-hint" id="company-hint">
             Helps us understand your use case
           </div>
-          <ngx-signal-form-error
+          <ngx-form-field-error
             [formField]="productForm.company"
             fieldName="company"
           />
@@ -257,7 +257,7 @@ export class ErrorDisplayHelpersComponent {
           <div class="form-hint" id="product-hint">
             Which product are you providing feedback about?
           </div>
-          <ngx-signal-form-error
+          <ngx-form-field-error
             [formField]="productForm.productUsed"
             fieldName="productUsed"
           />
@@ -275,7 +275,7 @@ export class ErrorDisplayHelpersComponent {
             aria-describedby="rating-hint"
           />
           <div class="form-hint" id="rating-hint">1 = Poor, 5 = Excellent</div>
-          <ngx-signal-form-error
+          <ngx-form-field-error
             [formField]="productForm.overallRating"
             fieldName="overallRating"
           />
@@ -308,7 +308,7 @@ export class ErrorDisplayHelpersComponent {
                 {{ improvementLength() }}/500
               </span>
             </div>
-            <ngx-signal-form-error
+            <ngx-form-field-error
               [formField]="productForm.improvementSuggestions"
               fieldName="improvementSuggestions"
             />
@@ -341,7 +341,7 @@ export class ErrorDisplayHelpersComponent {
               {{ detailedLength() }}/1000
             </span>
           </div>
-          <ngx-signal-form-error
+          <ngx-form-field-error
             [formField]="productForm.detailedFeedback"
             fieldName="detailedFeedback"
           />

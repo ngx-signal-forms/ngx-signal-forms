@@ -9,7 +9,7 @@ import {
   createOnInvalidHandler,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 
 import { createInitialFieldStatesModel } from './field-states.model';
 import { fieldStatesSchema } from './field-states.validations';
@@ -21,7 +21,7 @@ import { fieldStatesSchema } from './field-states.validations';
 @Component({
   selector: 'ngx-field-states-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormFieldErrorComponent],
   template: `
     <form [formRoot]="userForm">
       @if (userForm().dirty()) {
@@ -50,7 +50,7 @@ import { fieldStatesSchema } from './field-states.validations';
           [formField]="userForm.email"
           placeholder="you@example.com"
         />
-        <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
+        <ngx-form-field-error [formField]="userForm.email" fieldName="email" />
       </div>
 
       <div class="form-field">
@@ -62,7 +62,7 @@ import { fieldStatesSchema } from './field-states.validations';
           [formField]="userForm.username"
           placeholder="johndoe"
         />
-        <ngx-signal-form-error
+        <ngx-form-field-error
           [formField]="userForm.username"
           fieldName="username"
         />
@@ -77,11 +77,11 @@ import { fieldStatesSchema } from './field-states.validations';
           [formField]="userForm.password"
           placeholder="••••••••"
         />
-        <ngx-signal-form-error
+        <ngx-form-field-error
           [formField]="userForm.password"
           fieldName="password"
         />
-        <ngx-signal-form-error
+        <ngx-form-field-error
           [errors]="passwordWarnings"
           fieldName="password"
         />

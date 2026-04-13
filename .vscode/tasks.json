@@ -124,6 +124,29 @@
       ],
       "isBackground": false,
       "group": "build"
+    },
+    {
+      "label": "build-demo-development-no-cache",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "nx",
+        "build",
+        "demo",
+        "--configuration=development",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "isBackground": false,
+      "group": "build"
+    },
+    {
+      "label": "build-all",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["build:all"],
+      "isBackground": false,
+      "group": "build"
     }
   ]
 }

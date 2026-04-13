@@ -30,7 +30,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  * @example With error component
  * ```html
  * <ngx-form-field-assistive-row>
- *   <ngx-signal-form-error [formField]="form.email" />
+ *   <ngx-form-field-error [formField]="form.email" />
  *   <ngx-form-field-character-count [formField]="form.email" [maxLength]="100" />
  * </ngx-form-field-assistive-row>
  * ```

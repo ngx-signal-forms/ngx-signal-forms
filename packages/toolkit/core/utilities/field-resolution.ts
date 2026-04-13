@@ -30,6 +30,59 @@ export function generateErrorId(fieldName: string): string {
 }
 
 /**
+ * Options for building an `aria-describedby` chain in manual ARIA mode.
+ */
+export interface AriaDescribedByChainOptions {
+  /** Base IDs that are always included (e.g. hint elements). */
+  readonly baseIds?: readonly string[];
+  /** Whether the error ID should be appended. */
+  readonly showErrors?: boolean;
+  /** Whether the warning ID should be appended. */
+  readonly showWarnings?: boolean;
+}
+
+/**
+ * Builds an `aria-describedby` ID chain for a field, following the same
+ * conventions as the auto-ARIA layer.
+ *
+ * Use this when a custom control opts into `ngxSignalFormControlAria="manual"`
+ * and needs to assemble its own described-by chain without duplicating the
+ * ID-generation logic.
+ *
+ * @param fieldName - The field name (must match the control's `id`)
+ * @param options - Controls which IDs are included in the chain
+ * @returns A space-separated ID string, or `null` if no IDs apply
+ *
+ * @example
+ * ```typescript
+ * protected readonly describedBy = computed(() =>
+ *   buildAriaDescribedBy('accessibilityAudit', {
+ *     baseIds: ['accessibilityAudit-hint'],
+ *     showErrors: shouldShowErrors(
+ *       fieldState.invalid(), fieldState.touched(), strategy, submittedStatus,
+ *     ),
+ *   }),
+ * );
+ * ```
+ */
+export function buildAriaDescribedBy(
+  fieldName: string,
+  options: AriaDescribedByChainOptions = {},
+): string | null {
+  const parts: string[] = options.baseIds ? [...options.baseIds] : [];
+
+  if (options.showErrors) {
+    parts.push(generateErrorId(fieldName));
+  }
+
+  if (options.showWarnings) {
+    parts.push(generateWarningId(fieldName));
+  }
+
+  return parts.length > 0 ? parts.join(' ') : null;
+}
+
+/**
  * Generates a warning ID for a field, following WCAG best practices.
  *
  * @param fieldName - The field name

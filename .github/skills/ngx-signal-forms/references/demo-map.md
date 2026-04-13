@@ -19,12 +19,12 @@ Repository paths in `apps/demo/src/app/` organized by the current live demo. Use
 ## 04 — Form Field Wrapper
 
 - `04-form-field-wrapper/complex-forms/` — Production-style nested objects, arrays, and dense layouts
-- `04-form-field-wrapper/custom-controls/` — Wrapper integration with custom `FormValueControl` components
+- `04-form-field-wrapper/custom-controls/` — Wrapper integration with custom `FormValueControl` components, checkbox opt-in via `ngxSignalFormControl`, slider with manual ARIA and `buildAriaDescribedBy`, and component-scoped control presets via `provideNgxSignalFormControlPresetsForComponent`
 
 ## 05 — Advanced
 
 - `05-advanced/global-configuration/` — App-level defaults with `provideNgxSignalFormsConfig()`
-- `05-advanced/submission-patterns/` — Submission lifecycle, invalid handling, `focusFirstInvalid`, and `NgxSignalFormErrorSummaryComponent`
+- `05-advanced/submission-patterns/` — Submission lifecycle, invalid handling, `focusFirstInvalid`, and `NgxFormFieldErrorSummaryComponent`
 - `05-advanced/advanced-wizard/` — Multi-step flow with NgRx Signals + Zod
 - `05-advanced/async-validation/` — Remote/pending validation flows
 - `05-advanced/cross-field-validation/` — Dependent sibling validation rules

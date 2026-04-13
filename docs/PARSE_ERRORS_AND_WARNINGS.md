@@ -91,7 +91,7 @@ const myForm = form(signal({ email: '' }), (path) => {
 
 ```typescript
 // In providers
-provideNgxSignalFormErrorMessages({
+provideErrorMessages({
   required: 'This field is required',
   email: 'Please enter a valid email',
   minlength: ({ requiredLength }) =>
@@ -181,12 +181,12 @@ const firstIsWarning = allErrors[0] ? isWarningError(allErrors[0]) : false;
 
 ### Toolkit Components Handle This Automatically
 
-The `NgxSignalFormErrorComponent` renders errors and warnings separately:
+The `NgxFormFieldErrorComponent` renders errors and warnings separately:
 
 ```html
 <!-- Errors: role="alert", aria-live="assertive" -->
 <!-- Warnings: role="status", aria-live="polite" -->
-<ngx-signal-form-error [formField]="form.password" fieldName="password" />
+<ngx-form-field-error [formField]="form.password" fieldName="password" />
 ```
 
 The headless `NgxHeadlessErrorStateDirective` exposes separate signals:
@@ -219,7 +219,7 @@ The headless `NgxHeadlessErrorStateDirective` exposes separate signals:
     <form [formRoot]="regForm" ngxSignalForm errorStrategy="on-touch">
       <label for="password">Password</label>
       <input id="password" type="password" [formField]="regForm.password" />
-      <ngx-signal-form-error
+      <ngx-form-field-error
         [formField]="regForm.password"
         fieldName="password"
       />

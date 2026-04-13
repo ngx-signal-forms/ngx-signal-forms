@@ -75,8 +75,14 @@ import {
       font-size: var(--ngx-form-field-hint-font-size, 0.75rem);
       line-height: var(--ngx-form-field-hint-line-height, 1rem);
       color: var(--ngx-form-field-hint-color, rgba(50, 65, 85, 0.75));
-      padding-left: var(--ngx-form-field-hint-padding-horizontal, 0.5rem);
-      padding-right: var(--ngx-form-field-hint-padding-horizontal, 0.5rem);
+      padding-inline-start: var(
+        --ngx-form-field-hint-padding-inline-start,
+        var(--ngx-form-field-hint-padding-horizontal, 0.5rem)
+      );
+      padding-inline-end: var(
+        --ngx-form-field-hint-padding-inline-end,
+        var(--ngx-form-field-hint-padding-horizontal, 0.5rem)
+      );
       text-align: var(--ngx-form-field-hint-align, right);
     }
 
@@ -110,11 +116,20 @@ export class NgxFormFieldHintComponent {
    */
   readonly position = input<'left' | 'right' | null>(null);
 
-  protected readonly resolvedFieldName = computed(() => {
+  /**
+   * Resolved field name from the wrapper's `NGX_SIGNAL_FORM_FIELD_CONTEXT`,
+   * or `null` when the hint is rendered outside a wrapper. Public so wrappers
+   * can expose it through `NGX_SIGNAL_FORM_HINT_REGISTRY` for auto-ARIA.
+   */
+  readonly resolvedFieldName = computed(() => {
     return this.#fieldContext?.fieldName() ?? null;
   });
 
-  protected readonly resolvedId = computed(() => {
+  /**
+   * Stable DOM id used by `aria-describedby`. Public so wrappers can forward
+   * it to auto-ARIA via the hint registry without reading the DOM.
+   */
+  readonly resolvedId = computed(() => {
     const explicit = this.#explicitId();
     if (explicit) return explicit;
 
