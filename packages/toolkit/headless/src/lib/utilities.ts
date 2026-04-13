@@ -164,10 +164,17 @@ export function readErrors(state: unknown): ValidationError[] {
  * `error.fieldTree()` extraction that Angular doesn't expose on the public
  * `ValidationError` type.
  *
- * **Asymmetry note**: when `fieldTree` is missing or returns a non-object,
- * this returns `true` (show the error) — the conservative default for
- * malformed or mock errors is "don't silently hide". `focusFirstInvalid`
- * does the opposite (skip unknowns) because it has nothing to focus.
+ * ## Default-policy asymmetry vs `focusFirstInvalid`
+ *
+ * When an error has no `fieldTree` (or a malformed one), this function
+ * returns `true` — **show** the error. Silently hiding a validation
+ * message from the user is the worst outcome, so the default errs on the
+ * side of surfacing even malformed errors. `focusFirstInvalid` in
+ * `packages/toolkit/core/utilities/focus-first-invalid.ts` takes the
+ * inverse default and **skips** unknown-fieldTree errors, because there
+ * is nothing to focus and silently focusing an unrelated field would be
+ * worse than skipping. Both policies are deliberate; do not "normalize"
+ * them.
  *
  * @internal
  */
@@ -326,6 +333,22 @@ export interface ErrorStateResult {
  *   }
  * });
  * ```
+ *
+ * @remarks
+ * **Why `showWarnings` aliases `showErrors`:** toolkit warnings are
+ * `ValidationError`s with `kind: 'warn:*'` produced by the same validator
+ * pipeline as blocking errors. Angular Signal Forms sees them as regular
+ * errors and marks `field.invalid() === true` regardless of the `warn:`
+ * prefix; the toolkit only splits them later via `splitByKind()` /
+ * `isWarningError()` from `@ngx-signal-forms/toolkit` core. Because the
+ * `invalid()` gate is shared, the same `shouldShowErrors(strategy, status)`
+ * decision applies to both surfaces — routing them through one signal is
+ * intentional. Consumers that need to show warnings on a field that is
+ * otherwise valid would need a non-invalidating validation channel, which
+ * Angular does not currently expose.
+ *
+ * @see {@link splitByKind} and {@link isWarningError} for the warning
+ *   convention.
  */
 export function createErrorState<TValue = unknown>(
   options: Readonly<CreateErrorStateOptions<TValue>>,

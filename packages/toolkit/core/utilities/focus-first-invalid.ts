@@ -35,6 +35,18 @@ import { isFieldStateInteractive } from './field-interactivity';
  * errors are absent from `errorSummary()`. The filter below is defensive and
  * becomes a no-op if Angular starts excluding them.
  *
+ * ## Default-policy asymmetry vs `isErrorOnInteractiveField`
+ *
+ * When an error has no `fieldTree` (or a malformed one), this function
+ * **skips** it: there is nothing to focus, and silently focusing an
+ * unrelated field would be worse than skipping. The error-surfacing
+ * predicate `isErrorOnInteractiveField` in
+ * `packages/toolkit/headless/src/lib/utilities.ts` takes the inverse
+ * default — it returns `true` and **shows** the error, because silently
+ * hiding a validation message from the user is the worst outcome.
+ * Both policies are deliberate and documented in-place; do not
+ * "normalize" them without understanding the blast radius.
+ *
  * @public
  */
 export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
