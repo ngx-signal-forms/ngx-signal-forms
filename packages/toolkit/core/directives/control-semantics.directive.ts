@@ -1,5 +1,8 @@
 import { computed, Directive, inject, input } from '@angular/core';
-import { NGX_SIGNAL_FORM_CONTROL_PRESETS } from '../tokens';
+import {
+  NGX_SIGNAL_FORM_ARIA_MODE,
+  NGX_SIGNAL_FORM_CONTROL_PRESETS,
+} from '../tokens';
 import type {
   NgxSignalFormControlAriaMode,
   NgxSignalFormControlKind,
@@ -57,6 +60,12 @@ type NgxSignalFormControlDirectiveValue =
     '[attr.data-ngx-signal-form-control-layout]': 'layout()',
     '[attr.data-ngx-signal-form-control-aria-mode]': 'ariaMode()',
   },
+  providers: [
+    {
+      provide: NGX_SIGNAL_FORM_ARIA_MODE,
+      useFactory: () => inject(NgxSignalFormControlSemanticsDirective).ariaMode,
+    },
+  ],
 })
 export class NgxSignalFormControlSemanticsDirective {
   readonly #presets = inject(NGX_SIGNAL_FORM_CONTROL_PRESETS);

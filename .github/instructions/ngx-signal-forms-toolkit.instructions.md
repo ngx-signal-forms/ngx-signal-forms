@@ -48,7 +48,7 @@ Use the correct entry point for the thing you need.
 ```typescript
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
 ## Stable Public Types
@@ -202,7 +202,7 @@ Toolkit UI that needs ARIA linkage must have either:
 ### Guidance
 
 - For `ngx-signal-form-field-wrapper`, prefer giving the bound control an `id`.
-- For standalone `ngx-signal-form-error`, pass `fieldName` unless wrapper context provides it.
+- For standalone `ngx-form-field-error`, pass `fieldName` unless wrapper context provides it.
 - For grouped fieldsets, use `fieldsetId` when you need deterministic test or ARIA references.
 - Do **not** invent fake field names in examples.
 
@@ -212,7 +212,7 @@ Toolkit UI that needs ARIA linkage must have either:
   <input id="email" [formField]="form.email" />
 </ngx-signal-form-field-wrapper>
 
-<ngx-signal-form-error [formField]="form.email" fieldName="email" />
+<ngx-form-field-error [formField]="form.email" fieldName="email" />
 ```
 
 ## Automatic ARIA
@@ -399,12 +399,12 @@ Use `includeNestedErrors` only when the group itself must surface all nested err
 
 ### Use `@ngx-signal-forms/toolkit/assistive` for:
 
-- `NgxSignalFormErrorComponent`
+- `NgxFormFieldErrorComponent`
 - `NgxFormFieldHintComponent`
 - `NgxFormFieldCharacterCountComponent`
 - `NgxFormFieldAssistiveRowComponent`
 
-### `NgxSignalFormErrorComponent`
+### `NgxFormFieldErrorComponent`
 
 Important inputs:
 
@@ -489,11 +489,11 @@ ngx-signal-form-field-wrapper {
 }
 ```
 
-Do **not**:
+Avoid:
 
-- use `::ng-deep`
-- target internal selectors as if they were public API
-- hard-code private structure assumptions in examples
+- `::ng-deep` (or any other shadow-piercing escape hatch)
+- targeting internal selectors as if they were public API
+- hard-coding private structure assumptions in examples
 
 ## Current Do / Don’t
 

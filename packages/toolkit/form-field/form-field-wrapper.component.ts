@@ -4,32 +4,38 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  contentChildren,
   ElementRef,
   inject,
   input,
+  type Signal,
   signal,
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
   FormFieldAppearanceInput,
+  NgxSignalFormHintDescriptor,
 } from '@ngx-signal-forms/toolkit';
 import {
   NGX_SIGNAL_FORM_CONTROL_PRESETS,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
+  NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
+  createShowErrorsComputed,
   injectFormContext,
+  isFieldStateHidden,
   readDirectErrors,
   type ResolvedNgxSignalFormControlSemantics,
   resolveNgxSignalFormControlSemantics,
   resolveErrorDisplayStrategy,
-  shouldShowErrors,
 } from '@ngx-signal-forms/toolkit';
 import {
   isBlockingError,
   isWarningError,
   NgxFormFieldAssistiveRowComponent,
-  NgxSignalFormErrorComponent,
+  NgxFormFieldErrorComponent,
+  NgxFormFieldHintComponent,
 } from '@ngx-signal-forms/toolkit/assistive';
 import {
   hasPaddedControlContent,
@@ -140,7 +146,7 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
 @Component({
   selector: 'ngx-signal-form-field-wrapper',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgxSignalFormErrorComponent, NgxFormFieldAssistiveRowComponent],
+  imports: [NgxFormFieldErrorComponent, NgxFormFieldAssistiveRowComponent],
   providers: [
     {
       provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
@@ -151,11 +157,19 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
         };
       },
     },
+    {
+      provide: NGX_SIGNAL_FORM_HINT_REGISTRY,
+      useFactory: () => {
+        const component = inject(NgxSignalFormFieldWrapperComponent);
+        return { hints: component.hintDescriptors };
+      },
+    },
   ],
   styleUrl: './form-field-wrapper.component.scss',
   host: {
     '[attr.outline]': 'isOutline() ? "" : null',
     '[attr.aria-invalid]': 'showInvalidState() ? "true" : "false"',
+    '[attr.hidden]': 'isFieldHidden() ? "" : null',
     '[attr.data-ngx-signal-form-control-aria-mode]':
       'resolvedControlAriaMode()',
     '[attr.data-ngx-signal-form-control-kind]': 'resolvedControlKind()',
@@ -188,7 +202,7 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
 
     @if (isTopPlacement() && shouldShowErrors()) {
       <div class="ngx-signal-form-field-wrapper__messages">
-        <ngx-signal-form-error
+        <ngx-form-field-error
           [formField]="formField()"
           [strategy]="effectiveStrategy()"
           [submittedStatus]="submittedStatus()"
@@ -220,7 +234,7 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
     >
       <!-- Left side: hint (hidden when errors shown) or errors -->
       @if (!isTopPlacement() && shouldShowErrors()) {
-        <ngx-signal-form-error
+        <ngx-form-field-error
           [formField]="formField()"
           [strategy]="effectiveStrategy()"
           [submittedStatus]="submittedStatus()"
@@ -533,6 +547,30 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   });
 
   /**
+   * Hint children projected into this wrapper. Used to expose a
+   * `NgxSignalFormHintRegistry` to the `NgxSignalFormAutoAriaDirective` that
+   * runs on the bound control, without auto-ARIA needing to query the DOM.
+   *
+   * @internal Angular's `contentChildren` API requires non-private visibility,
+   * so this uses `protected` instead of `#`.
+   */
+  protected readonly hintChildren = contentChildren(NgxFormFieldHintComponent, {
+    descendants: true,
+  });
+
+  /**
+   * Reactive view of the projected hints, shaped for the
+   * `NGX_SIGNAL_FORM_HINT_REGISTRY` contract in the core package.
+   */
+  readonly hintDescriptors: Signal<readonly NgxSignalFormHintDescriptor[]> =
+    computed(() =>
+      this.hintChildren().map((hint) => ({
+        id: hint.resolvedId(),
+        fieldName: hint.resolvedFieldName(),
+      })),
+    );
+
+  /**
    * Effective error display strategy combining component input and form context defaults.
    */
   protected readonly effectiveStrategy = computed(() => {
@@ -556,7 +594,17 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     return formContext ? formContext.submittedStatus() : 'unsubmitted';
   });
 
-  readonly #allMessages = computed(() => readDirectErrors(this.formField()()));
+  /**
+   * Cached field state signal. Every downstream computed
+   * (`#allMessages`, `isFieldHidden`, `#showErrorsByStrategy`, and the
+   * `resolvedControlSemantics` effects) used to re-read `this.formField()()`
+   * independently. With a single cache the signal graph collapses those
+   * reads into one dependency node, which matters on forms with dozens of
+   * wrappers all reacting to the same change-detection cycle.
+   */
+  readonly #fieldState = computed(() => this.formField()());
+
+  readonly #allMessages = computed(() => readDirectErrors(this.#fieldState()));
 
   /**
    * Whether field has blocking errors.
@@ -584,23 +632,45 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   });
 
   /**
+   * Whether the bound field is currently hidden via Angular's `hidden()`
+   * schema logic. When `true` we suppress error/warning rendering and mark
+   * the host element with the `hidden` attribute so screen readers skip it
+   * — Angular Signal Forms documents that hiding is the consumer's job
+   * (`@if`), but the wrapper stays safe even if the consumer forgets.
+   *
+   * **Why no `disabled()` check here**: disabled fields are excluded from
+   * Angular's validation entirely, so `errors().length === 0` already
+   * short-circuits `shouldShowErrors()`. A disabled field is also still
+   * visually present, so tagging the wrapper `[attr.hidden]` would be
+   * wrong. `focusFirstInvalid` and the error summary (which can aggregate
+   * across subtrees) do check both; this component only needs `hidden()`.
+   */
+  protected readonly isFieldHidden = computed(() => {
+    return isFieldStateHidden(this.#fieldState());
+  });
+
+  /**
+   * Visibility-timing computed shared with `showErrors()`, auto-aria, and
+   * the error component. Reads `invalid()` / `touched()` off the field state
+   * and runs the same strategy logic — keeping every surface in lockstep.
+   */
+  readonly #showErrorsByStrategy = createShowErrorsComputed(
+    this.#fieldState,
+    this.effectiveStrategy,
+    this.submittedStatus,
+  );
+
+  /**
    * Whether to actually display errors based on current strategy and field state.
    * This controls when the error component replaces the hint.
+   *
+   * Short-circuits on `hidden()` and empty-error cases before consulting the
+   * shared visibility-timing helper.
    */
   protected readonly shouldShowErrors = computed(() => {
-    const errors = this.#allMessages();
-    if (errors.length === 0) return false;
-
-    const fieldState = this.formField()();
-
-    if (!fieldState || typeof fieldState !== 'object') return false;
-
-    return shouldShowErrors(
-      fieldState.invalid(),
-      fieldState.touched(),
-      this.effectiveStrategy(),
-      this.submittedStatus(),
-    );
+    if (this.isFieldHidden()) return false;
+    if (this.#allMessages().length === 0) return false;
+    return this.#showErrorsByStrategy();
   });
 
   /**
@@ -624,7 +694,26 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     afterEveryRender({
       earlyRead: () => {
         const hostEl = this.#getHostElement();
-        const inputEl = this.#findBoundControl(hostEl);
+
+        // DOM-query cache: skip `querySelector` when the previously bound
+        // control is still mounted inside this host AND still carries an
+        // `id` attribute (without the id it no longer satisfies the query
+        // `#findBoundControl` runs, so the cache must release it). This is
+        // a hot path on large forms — every change-detection cycle used
+        // to run a `querySelector` chain per wrapper before. The
+        // `isConnected` + `hostEl.contains` guard covers the common
+        // `@if`-branch-swap case (Angular removes the old node from its
+        // parent on branch change). Not handled: moving `[formField]` to
+        // a sibling element inside the same template branch without a
+        // re-render — a rare author-error edge case; if it surfaces we'd
+        // add a `MutationObserver` in a follow-up.
+        const cached = this.#boundControlElement();
+        const cacheHit =
+          cached &&
+          cached.isConnected &&
+          hostEl.contains(cached) &&
+          cached.hasAttribute('id');
+        const inputEl = cacheHit ? cached : this.#findBoundControl(hostEl);
 
         return {
           inputEl,

@@ -1,6 +1,14 @@
-import type { ValidationError } from '@angular/forms/signals';
+import { signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import {
+  form,
+  schema,
+  validate,
+  type ValidationError,
+} from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
 import {
+  createErrorState,
   createUniqueId,
   dedupeValidationErrors,
   humanizeFieldPath,
@@ -644,6 +652,75 @@ describe('Headless Utilities', () => {
       const id = createUniqueId('my-custom-prefix');
 
       expect(id).toMatch(/^my-custom-prefix-\d+$/);
+    });
+  });
+
+  // ============================================================================
+  // Warning visibility coupling contract
+  // ============================================================================
+
+  describe('warning visibility coupling (createErrorState)', () => {
+    // The toolkit's `createErrorState()` aliases `showWarnings: showErrorsSignal`
+    // because warnings are regular `ValidationError`s that Angular still marks
+    // as `invalid() === true` (they come from the same validator pipeline as
+    // blocking errors; the toolkit only splits them later via `splitByKind`).
+    //
+    // These tests are a *contract* against Angular — if a future release
+    // changed warning semantics so that `kind: 'warn:*'` errors no longer
+    // marked the field invalid, the `showWarnings === showErrors` aliasing
+    // would silently break. Keep them passing or audit `createErrorState`
+    // before shipping.
+
+    function buildWarningOnlyForm() {
+      const model = signal({ password: 'short' });
+      return TestBed.runInInjectionContext(() =>
+        form(
+          model,
+          schema((path) => {
+            validate(path.password, (ctx) => {
+              return ctx.value().length < 12
+                ? {
+                    kind: 'warn:weak-password',
+                    message: 'Consider a stronger password',
+                  }
+                : null;
+            });
+          }),
+        ),
+      );
+    }
+
+    it('Angular marks a warning-only field as invalid()', () => {
+      const passwordForm = buildWarningOnlyForm();
+      const passwordState = passwordForm.password();
+
+      // Contract: Angular does not distinguish warnings from errors. The
+      // toolkit's warning visibility relies on this.
+      expect(passwordState.errors().length).toBeGreaterThan(0);
+      expect(passwordState.invalid()).toBe(true);
+    });
+
+    it('createErrorState surfaces warning-only fields via showWarnings after touch', () => {
+      const passwordForm = buildWarningOnlyForm();
+
+      const errorState = TestBed.runInInjectionContext(() =>
+        createErrorState({
+          field: passwordForm.password,
+          fieldName: 'password',
+        }),
+      );
+
+      // Before touch, on-touch strategy hides both errors and warnings.
+      expect(errorState.showErrors()).toBe(false);
+      expect(errorState.showWarnings()).toBe(false);
+
+      passwordForm.password().markAsTouched();
+
+      // After touch, the warning surfaces because `invalid()` is true and
+      // the same visibility gate drives both showErrors and showWarnings.
+      expect(errorState.hasWarnings()).toBe(true);
+      expect(errorState.hasErrors()).toBe(false);
+      expect(errorState.showWarnings()).toBe(true);
     });
   });
 });

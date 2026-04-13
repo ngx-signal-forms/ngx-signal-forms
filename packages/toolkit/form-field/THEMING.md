@@ -74,7 +74,7 @@ These components inherit from the **Shared Feedback** layer but can be overridde
 
 ### Error & Warning Messages
 
-**Component:** `ngx-signal-form-error`
+**Component:** `ngx-form-field-error`
 
 controls the display of validation errors and warnings.
 

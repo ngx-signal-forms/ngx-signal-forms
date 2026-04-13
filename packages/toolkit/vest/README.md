@@ -43,7 +43,7 @@ import {
   hasOnlyWarnings,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 
 interface SignupModel {
@@ -63,13 +63,13 @@ const signupSuite = create((data: SignupModel) => {
 
 @Component({
   selector: 'ngx-signup-form',
-  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormFieldErrorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formRoot]="signupForm" ngxSignalForm>
       <label for="email">Email</label>
       <input id="email" [formField]="signupForm.email" />
-      <ngx-signal-form-error [formField]="signupForm.email" fieldName="email" />
+      <ngx-form-field-error [formField]="signupForm.email" fieldName="email" />
       <button type="submit">Create account</button>
     </form>
   `,
@@ -100,7 +100,7 @@ export class SignupFormComponent {
 }
 ```
 
-Use `NgxSignalFormErrorComponent` directly when you want custom markup. When you use
+Use `NgxFormFieldErrorComponent` directly when you want custom markup. When you use
 `ngx-signal-form-field-wrapper`, it renders the same assistive component for you and
 will show blocking errors as alerts plus warnings as polite status messages.
 
@@ -112,7 +112,7 @@ will show blocking errors as alerts plus warnings as polite status messages.
 - Opt-in warning behavior: pass `{ includeWarnings: true }` to translate Vest `warn()` results into toolkit-native `warn:*` messages.
 - Shared execution: blocking errors and warnings are read from the same Vest run, so enabling warnings does not require a second suite pass.
 
-That makes `ngx-signal-form-error`, `ngx-signal-form-field-wrapper`, and related toolkit components render Vest warnings as polite, non-blocking guidance.
+That makes `ngx-form-field-error`, `ngx-signal-form-field-wrapper`, and related toolkit components render Vest warnings as polite, non-blocking guidance.
 
 ```typescript
 validateVest(path, signupSuite, { includeWarnings: true });
@@ -160,8 +160,8 @@ regular blocking Vest tests.
 ## How warnings should be displayed
 
 - Use `ngx-signal-form-field-wrapper` in normal toolkit forms. It already renders
-  `ngx-signal-form-error` underneath the control.
-- Use `NgxSignalFormErrorComponent` directly when you build a custom field layout.
+  `ngx-form-field-error` underneath the control.
+- Use `NgxFormFieldErrorComponent` directly when you build a custom field layout.
 - Warnings become visible through `validateVest(..., { includeWarnings: true })`.
 - Warnings render as `role="status"` and blocking errors render as `role="alert"`.
 

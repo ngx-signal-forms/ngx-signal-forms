@@ -4,18 +4,18 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
-import { NgxSignalFormErrorComponent } from './form-error.component';
+import { NgxFormFieldErrorComponent } from './form-field-error.component';
 
 /**
- * Integration test: render NgxSignalFormErrorComponent with a real Signal Form
+ * Integration test: render NgxFormFieldErrorComponent with a real Signal Form
  * and assert that errors are NOT shown initially when using 'on-touch' strategy.
  */
-describe('NgxSignalFormErrorComponent (integration)', () => {
+describe('NgxFormFieldErrorComponent (integration)', () => {
   it('does not show errors on initial render with on-touch strategy', async () => {
     // Define a test component to ensure DI context for Signal Forms
     @Component({
       selector: 'test-form-error',
-      imports: [FormField, NgxSignalFormToolkit, NgxSignalFormErrorComponent],
+      imports: [FormField, NgxSignalFormToolkit, NgxFormFieldErrorComponent],
       template: `
         <form
           [formRoot]="contactForm"
@@ -23,7 +23,7 @@ describe('NgxSignalFormErrorComponent (integration)', () => {
           [errorStrategy]="errorStrategy"
         >
           <input id="email" [formField]="contactForm.email" />
-          <ngx-signal-form-error
+          <ngx-form-field-error
             [formField]="contactForm.email"
             fieldName="email"
           />
@@ -51,7 +51,7 @@ describe('NgxSignalFormErrorComponent (integration)', () => {
    * Regression test for the published-package token split bug.
    *
    * **What this test covers:** Angular DI correctly resolves `NGX_SIGNAL_FORM_FIELD_CONTEXT`
-   * from the parent wrapper so that `ngx-signal-form-error` inherits the field name without
+   * from the parent wrapper so that `ngx-form-field-error` inherits the field name without
    * an explicit `fieldName` input when the form context comes from the public root entry point.
    *
    * **Why this matters:** The toolkit intentionally exposes a single shared public entry point

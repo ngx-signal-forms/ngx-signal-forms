@@ -203,7 +203,7 @@ export class SignalFormStateDisplayComponent {
         ? (result as Array<{ kind: string; message?: string }>)
         : [];
     }
-    return (state.errors?.() ?? []) as Array<{
+    return state.errors() as Array<{
       kind: string;
       message?: string;
     }>;

@@ -10,10 +10,6 @@ import {
 
 import { createEmptyTraveler, Traveler } from '../../schemas/wizard.schemas';
 
-type TravelerState = {
-  traveler: Traveler;
-};
-
 export function withTravelerManagement() {
   return signalStoreFeature(
     withState({

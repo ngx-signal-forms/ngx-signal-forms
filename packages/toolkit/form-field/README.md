@@ -16,7 +16,7 @@ Form field components and directives for enhanced form layouts and accessibility
 
 ## 🎨 Theming
 
-All components in this entry point (`ngx-signal-form-field-wrapper`, `ngx-signal-form-fieldset`) and their dependencies (`ngx-signal-form-error`) share a unified theming system based on CSS Custom Properties.
+All components in this entry point (`ngx-signal-form-field-wrapper`, `ngx-signal-form-fieldset`) and their dependencies (`ngx-form-field-error`) share a unified theming system based on CSS Custom Properties.
 
 **[📖 Read the Complete Theming Guide →](./THEMING.md)**
 
@@ -24,7 +24,7 @@ All components in this entry point (`ngx-signal-form-field-wrapper`, `ngx-signal
 
 - **`ngx-signal-form-field-wrapper`**: Outlined layout, borders, colors, spacing.
 - **`ngx-signal-form-fieldset`**: Grouping gap and indentation.
-- **`ngx-signal-form-error`**: Shared feedback typography and colors.
+- **`ngx-form-field-error`**: Shared feedback typography and colors.
 - **`ngx-signal-form-field-hint`**: Helper text colors and spacing.
 - **`ngx-signal-form-field-character-count`**: Progressive color states.
 
@@ -65,7 +65,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 - `NgxFormFieldHintComponent` - Helper text
 - `NgxFormFieldCharacterCountComponent` - Character counter
 - `NgxFormFieldAssistiveRowComponent` - Assistive content row
-- `NgxSignalFormErrorComponent` - Error and warning display
+- `NgxFormFieldErrorComponent` - Error and warning display
 - `NgxSignalFormFieldset` - Grouped field validation
 
 **Usage:**
@@ -79,7 +79,10 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="contactForm" ngxSignalForm>
-      <ngx-signal-form-field-wrapper [formField]="contactForm.email" outline>
+      <ngx-signal-form-field-wrapper
+        [formField]="contactForm.email"
+        appearance="outline"
+      >
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" />
 ```
@@ -140,6 +143,51 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   />
 </ngx-signal-form-field-wrapper>
 ```
+
+#### How the wrapper resolves and caches the bound control
+
+After each render the wrapper inspects its projected content to find the
+bound control host:
+
+1. First it looks for a native `<input>`, `<textarea>`, `<select>`, or
+   `<button type="button">` that carries an `id`.
+2. If none is found, it falls back to any `[id]` element that also has
+   `[formField]` (or an equivalent `data-ngx-signal-form-control` marker).
+
+The resolved element is **cached** between renders. The cache is a hot-path
+optimization for forms with many wrappers: without it every change-detection
+cycle would re-run a `querySelector` chain per wrapper. The cache is
+invalidated when the previously-bound element is removed from the host
+subtree or loses its `id` attribute — the common `@if` branch-swap and "drop
+the `id`" cases are both covered. Moving `[formField]` to a sibling element
+inside the same template branch without a re-render is **not** handled; if
+you need that, re-key the branch so Angular tears the wrapper down.
+
+**Strict field-name resolution.** If neither an explicit `fieldName` input
+nor a bound-control `id` is available, the wrapper **throws**. This keeps
+`aria-describedby` linking deterministic and prevents silently inventing
+field names that would then drift from the real control.
+
+#### Hidden field handling
+
+The wrapper reflects Angular Signal Forms' `hidden()` signal onto its host
+via `[attr.hidden]`. When the field's `hidden()` returns `true`:
+
+- the host element carries `hidden=""` so screen readers and AT skip it
+- error and warning rendering short-circuits before reaching the strategy
+  helper
+- wrapper state classes (`--invalid`, `--warning`) are not applied
+
+Angular documents that hiding a field is the consumer's job (`@if`), but
+leaving a hidden field mounted is not a fatal mistake — the wrapper stays
+safe either way.
+
+Note the deliberate asymmetry with `disabled()`: disabled fields are still
+**visually present**, so tagging the wrapper `[attr.hidden]` would be wrong.
+Disabled fields are excluded from Angular's validation entirely, so their
+error lists are already empty and `shouldShowErrors()` short-circuits
+naturally. `focusFirstInvalid()` and the error summary still check both
+`hidden()` and `disabled()`, because they can aggregate across subtrees.
 
 #### Explicit Control Semantics
 
@@ -655,7 +703,7 @@ The form field component automatically aligns error and warning messages with th
 **Automatic behavior:**
 
 - No configuration needed - alignment is built-in via CSS custom property override
-- Works seamlessly with `ngx-signal-form-error` component
+- Works seamlessly with `ngx-form-field-error` component
 - Responsive to both stacked and outlined form field layouts
 - No `::ng-deep` required - uses CSS custom properties for clean encapsulation
 
@@ -670,7 +718,7 @@ The form-field component sets the `--ngx-signal-form-error-padding-horizontal` C
 }
 
 /* Form error component consumes it */
-.ngx-signal-form-error {
+.ngx-form-field-error {
   padding-left: var(--ngx-signal-form-error-padding-horizontal);
   padding-right: var(--ngx-signal-form-error-padding-horizontal);
 }
@@ -1066,7 +1114,7 @@ ngx-signal-form-fieldset {
 
 #### Fieldset Accessibility
 
-- Uses `NgxSignalFormErrorComponent` internally for consistent ARIA attributes
+- Uses `NgxFormFieldErrorComponent` internally for consistent ARIA attributes
 - Errors use `role="alert"` with `aria-live="assertive"` for immediate screen reader announcement
 - Warnings use `role="status"` with `aria-live="polite"`
 - `aria-busy="true"` is set when the fieldset has pending validation

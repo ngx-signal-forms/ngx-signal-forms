@@ -20,8 +20,7 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 2. **Choose error strategy deliberately:**
    - `'on-touch'` — show errors after user interaction (default, good for most forms)
    - `'immediate'` — show errors from first load (useful for live guidance or sign-up flows)
-
-- `'on-submit'` — show errors only after submission attempt (requires `form[formRoot][ngxSignalForm]` for toolkit submission context)
+   - `'on-submit'` — show errors only after submission attempt. Inside `form[formRoot][ngxSignalForm]` the wrapper, auto-ARIA, and headless directives inherit `submittedStatus` automatically. **Standalone callers of `showErrors()` / `createShowErrorsComputed()` MUST pass `submittedStatus` explicitly when using `'on-submit'`** — otherwise the helper stays at `'unsubmitted'` and errors never surface (dev mode logs a one-shot `console.warn` to flag the silent failure).
 
 3. **Let auto-ARIA manage ARIA attributes.** `NgxSignalFormAutoAriaDirective` (bundled in `NgxSignalFormToolkit`) handles `aria-invalid`, `aria-required`, and `aria-describedby` for native `<input>`, `<textarea>`, and `<select>` controls, custom hosts, and checkbox-based switches that opt in with `role="switch"`. Standard checkboxes and radios stay excluded. Never add those attributes manually.
 
@@ -51,10 +50,12 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 8. **Use warning helpers for non-blocking guidance.** Warnings use `kind: 'warn:*'` convention and render with polite ARIA (`role="status"`). Blocking errors render with assertive ARIA (`role="alert"`).
 
 9. **Use submission helpers over manual state tracking:**
-   - `focusFirstInvalid(form)` — focus on invalid target after failed submit
+   - `focusFirstInvalid(form)` — focus on invalid target after failed submit. Skips errors whose bound field is `hidden()` or `disabled()` — focusing a non-interactive control would either throw or strand focus on something the user cannot operate. Also skips orphan errors with no field tree (nothing to focus is better than stealing focus to an unrelated control).
    - `createOnInvalidHandler()` — creates an `onInvalid` callback for `form()` submit options
    - `submitWithWarnings(form, callback)` — submit even when only warnings remain
    - `hasSubmitted(form)` — `Signal<boolean>` for completed submission tracking
+
+10. **Field interactivity helpers** (`isFieldStateInteractive`, `isFieldStateHidden`) drive consistent behavior across focus, wrapper rendering, and error surfacing. The wrapper mirrors `hidden()` onto the host via `[attr.hidden]` so screen readers skip it. `readonly()` counts as interactive — the control is still visible and focusable, and the error remains meaningful. Headless aggregation filters errors through `isErrorOnInteractiveField()`, which uses the same predicate but **keeps orphan errors visible** — the asymmetry vs. `focusFirstInvalid()` is deliberate: silently hiding a validation message is worse than showing one without focus.
 
 ## Core Pattern
 

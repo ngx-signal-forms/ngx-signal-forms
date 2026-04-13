@@ -7,8 +7,6 @@ export type DisplayControlChip = {
   value: string;
 };
 
-let nextDisplayControlsId = 0;
-
 @Component({
   selector: 'ngx-display-controls-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -250,5 +248,5 @@ export class DisplayControlsCardComponent {
   readonly chips = input<readonly DisplayControlChip[]>([]);
   readonly layout = input<DisplayControlsLayout>('single');
 
-  protected readonly titleId = `display-controls-title-${nextDisplayControlsId++}`;
+  protected readonly titleId = `display-controls-title-${crypto.randomUUID()}`;
 }

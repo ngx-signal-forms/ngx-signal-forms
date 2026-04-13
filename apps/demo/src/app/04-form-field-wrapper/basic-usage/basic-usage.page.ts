@@ -31,7 +31,7 @@ import { OutlineFormFieldComponent } from './outline-form-field.form';
  * Basic Usage of Form Field Wrapper
  *
  * Demonstrates the NgxFormField bundle which provides:
- * - **Automatic Error Display**: No need to manually add `<ngx-signal-form-error>`
+ * - **Automatic Error Display**: No need to manually add `<ngx-form-field-error>`
  * - **Consistent Layout**: Standardized spacing via CSS custom properties
  * - **Multiple Field Types**: Works with all form controls
  * - **Clean Markup**: Reduced boilerplate compared to manual error handling

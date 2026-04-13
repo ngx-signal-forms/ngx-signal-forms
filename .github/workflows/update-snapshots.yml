@@ -1,0 +1,135 @@
+name: Update Snapshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: 'Which snapshot suites to update'
+        required: true
+        type: choice
+        default: all
+        options:
+          - all
+          - playwright
+          - vitest
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-snapshots-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  update:
+    # Only allow regenerating snapshots on feature branches. The default branch
+    # is blocked outright, and long-lived release/beta/rc/production refs are
+    # allowlisted out so a dispatched run can never auto-push to them.
+    if: >-
+      ${{
+        github.ref_name != github.event.repository.default_branch &&
+        !startsWith(github.ref_name, 'release/') &&
+        !startsWith(github.ref_name, 'beta/') &&
+        !startsWith(github.ref_name, 'rc/') &&
+        github.ref_name != 'production'
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+          filter: tree:0
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Configure Git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Configure Nx Cloud access
+        env:
+          NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RW'] }}
+          NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
+        run: |
+          TOKEN="$NX_CLOUD_ACCESS_TOKEN_RO"
+          if [ -z "$TOKEN" ]; then
+            TOKEN="$NX_CLOUD_ACCESS_TOKEN_RW"
+          fi
+
+          if [ -n "$TOKEN" ]; then
+            echo "NX_CLOUD_ACCESS_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+            echo "NX_NO_CLOUD=false" >> "$GITHUB_ENV"
+            echo "Nx Cloud enabled for snapshot workflow."
+          else
+            echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
+            echo "No Nx Cloud token configured. Running snapshot workflow without Nx Cloud."
+          fi
+
+      - name: Update Playwright snapshots
+        if: ${{ inputs.scope == 'all' || inputs.scope == 'playwright' }}
+        run: pnpm exec playwright test apps/demo-e2e/src --config apps/demo-e2e/playwright.config.ts --project=chromium --update-snapshots
+
+      - name: Update Vitest browser screenshots
+        if: ${{ inputs.scope == 'all' || inputs.scope == 'vitest' }}
+        run: bash .github/scripts/nx-safe.sh pnpm nx test-browser toolkit -- --update
+
+      - name: Commit snapshot updates
+        id: commit
+        env:
+          INPUT_SCOPE: ${{ inputs.scope }}
+          TARGET_BRANCH: ${{ github.ref_name }}
+        run: |
+          # Stage only known snapshot directories so stray working-tree changes
+          # (install artifacts, generated caches, etc.) can never ride along.
+          # -A handles add/modify/delete within the given pathspecs.
+          git add -A -- \
+            'apps/demo-e2e/src/__screenshots__' \
+            'apps/demo-e2e/src/__snapshots__' \
+            'apps/demo-e2e/src/**/*.spec.ts-snapshots' \
+            'packages/toolkit/**/__screenshots__' \
+            'packages/toolkit/**/__snapshots__'
+
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No snapshot changes to commit."
+            exit 0
+          fi
+
+          git commit -m "test(snapshots): update ${INPUT_SCOPE} baselines"
+          git push origin "${TARGET_BRANCH}"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Summary
+        env:
+          CHANGED: ${{ steps.commit.outputs.changed }}
+          INPUT_SCOPE: ${{ inputs.scope }}
+          TARGET_BRANCH: ${{ github.ref_name }}
+        run: |
+          if [[ "$CHANGED" == "true" ]]; then
+            {
+              echo "### Snapshot baselines updated"
+              echo "- Scope: $INPUT_SCOPE"
+              echo "- Branch: $TARGET_BRANCH"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### No snapshot changes detected" >> "$GITHUB_STEP_SUMMARY"
+          fi

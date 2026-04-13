@@ -367,7 +367,7 @@
                   }
 
                   <!-- Array-level validation errors for articles -->
-                  <ngx-signal-form-error
+                  <ngx-form-field-error
                     [formField]="showcaseForm.facts[factIndex].offenses[offenseIndex].articles"
                     [fieldName]="'articles-' + factIndex + '-' + offenseIndex"
                   />
@@ -404,7 +404,7 @@
       }
 
       <!-- Array-level validation errors for offenses -->
-      <ngx-signal-form-error
+      <ngx-form-field-error
         [formField]="showcaseForm.facts[factIndex].offenses"
         [fieldName]="'offenses-' + factIndex"
       />

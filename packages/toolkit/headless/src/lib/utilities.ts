@@ -4,6 +4,7 @@ import {
   createUniqueId,
   generateErrorId,
   generateWarningId,
+  isFieldStateInteractive,
   readDirectErrors,
   resolveValidationErrorMessage,
   showErrors,
@@ -157,6 +158,37 @@ export function readErrors(state: unknown): ValidationError[] {
 }
 
 /**
+ * Predicate: returns `true` when the field behind a `ValidationError` is
+ * interactive (not hidden, not disabled). Composes the shared
+ * {@link isFieldStateInteractive} predicate from core with the duck-typed
+ * `error.fieldTree()` extraction that Angular doesn't expose on the public
+ * `ValidationError` type.
+ *
+ * ## Default-policy asymmetry vs `focusFirstInvalid`
+ *
+ * When an error has no `fieldTree` (or a malformed one), this function
+ * returns `true` — **show** the error. Silently hiding a validation
+ * message from the user is the worst outcome, so the default errs on the
+ * side of surfacing even malformed errors. `focusFirstInvalid` in
+ * `packages/toolkit/core/utilities/focus-first-invalid.ts` takes the
+ * inverse default and **skips** unknown-fieldTree errors, because there
+ * is nothing to focus and silently focusing an unrelated field would be
+ * worse than skipping. Both policies are deliberate; do not "normalize"
+ * them.
+ *
+ * @internal
+ */
+export function isErrorOnInteractiveField(error: ValidationError): boolean {
+  const e = error as ValidationErrorWithFieldTree;
+  if (typeof e.fieldTree !== 'function') return true;
+
+  const fieldState = e.fieldTree();
+  if (!fieldState || typeof fieldState !== 'object') return true;
+
+  return isFieldStateInteractive(fieldState);
+}
+
+/**
  * Deduplicate validation errors by kind + message combination.
  *
  * Useful for fieldsets that aggregate errors from multiple fields -
@@ -196,6 +228,47 @@ export function dedupeValidationErrors(
 
 // Re-exported from core for convenience
 export { createUniqueId, readDirectErrors };
+
+/**
+ * Core error-state signals shared between `createErrorState()` (the
+ * standalone factory) and `NgxHeadlessErrorStateDirective` (the directive
+ * variant). The split on `readDirectErrors()` is intentionally the safer
+ * path: it handles a field state whose `errors()` is missing or not an
+ * array, which matters for tests and for custom control adapters.
+ *
+ * @internal
+ */
+interface HeadlessErrorStateCore {
+  readonly errors: ReadSignal<ValidationError[]>;
+  readonly warnings: ReadSignal<ValidationError[]>;
+  readonly hasErrors: ReadSignal<boolean>;
+  readonly hasWarnings: ReadSignal<boolean>;
+  readonly errorId: ReadSignal<string>;
+  readonly warningId: ReadSignal<string>;
+}
+
+/**
+ * Shared builder used by both `createErrorState()` and
+ * `NgxHeadlessErrorStateDirective` to derive the error/warning split,
+ * presence flags, and ARIA region IDs.
+ *
+ * @internal Exposed to `error-state.directive.ts` via a named export only.
+ */
+export function buildHeadlessErrorState(
+  fieldState: ReadSignal<unknown>,
+  fieldName: ReadSignal<string>,
+): HeadlessErrorStateCore {
+  const split = computed(() => splitByKind(readDirectErrors(fieldState())));
+
+  return {
+    errors: computed(() => split().blocking),
+    warnings: computed(() => split().warnings),
+    hasErrors: computed(() => split().blocking.length > 0),
+    hasWarnings: computed(() => split().warnings.length > 0),
+    errorId: computed(() => generateErrorId(fieldName())),
+    warningId: computed(() => generateWarningId(fieldName())),
+  };
+}
 
 /**
  * Options for creating error state signals.
@@ -260,6 +333,22 @@ export interface ErrorStateResult {
  *   }
  * });
  * ```
+ *
+ * @remarks
+ * **Why `showWarnings` aliases `showErrors`:** toolkit warnings are
+ * `ValidationError`s with `kind: 'warn:*'` produced by the same validator
+ * pipeline as blocking errors. Angular Signal Forms sees them as regular
+ * errors and marks `field.invalid() === true` regardless of the `warn:`
+ * prefix; the toolkit only splits them later via `splitByKind()` /
+ * `isWarningError()` from `@ngx-signal-forms/toolkit` core. Because the
+ * `invalid()` gate is shared, the same `shouldShowErrors(strategy, status)`
+ * decision applies to both surfaces — routing them through one signal is
+ * intentional. Consumers that need to show warnings on a field that is
+ * otherwise valid would need a non-invalidating validation channel, which
+ * Angular does not currently expose.
+ *
+ * @see {@link splitByKind} and {@link isWarningError} for the warning
+ *   convention.
  */
 export function createErrorState<TValue = unknown>(
   options: Readonly<CreateErrorStateOptions<TValue>>,
@@ -294,25 +383,12 @@ export function createErrorState<TValue = unknown>(
     resolvedSubmittedStatus,
   );
 
-  const split = computed(() => splitByKind(fieldState().errors()));
-
-  const errors = computed(() => split().blocking);
-  const warnings = computed(() => split().warnings);
-  const hasErrors = computed(() => split().blocking.length > 0);
-  const hasWarnings = computed(() => split().warnings.length > 0);
-
-  const errorId = computed(() => generateErrorId(resolvedFieldName()));
-  const warningId = computed(() => generateWarningId(resolvedFieldName()));
+  const core = buildHeadlessErrorState(fieldState, resolvedFieldName);
 
   return {
     showErrors: showErrorsSignal,
     showWarnings: showErrorsSignal,
-    errors,
-    warnings,
-    hasErrors,
-    hasWarnings,
-    errorId,
-    warningId,
+    ...core,
     fieldName: resolvedFieldName,
   };
 }

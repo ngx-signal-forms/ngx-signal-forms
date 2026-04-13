@@ -15,7 +15,6 @@ import {
   provideErrorMessages,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import type { ErrorMessagesModel } from './error-messages.model';
 import { errorMessagesSchema } from './error-messages.validations';
 
 function formatMinLengthMessage(params: Record<string, unknown>): string {

@@ -364,7 +364,7 @@ Angular Signal Forms has no native warning concept. The toolkit uses a `warn:` p
 ```html
 <app-custom-field [formField]="form.password">
   <!-- The toolkit's error component handles warnings automatically -->
-  <ngx-signal-form-error [formField]="form.password" fieldName="password" />
+  <ngx-form-field-error [formField]="form.password" fieldName="password" />
 </app-custom-field>
 ```
 

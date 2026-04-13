@@ -85,7 +85,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       );
 
       // When explicit fieldName is provided, error component should receive it
-      const errorComponent = container.querySelector('ngx-signal-form-error');
+      const errorComponent = container.querySelector('ngx-form-field-error');
       expect(errorComponent).toBeTruthy();
 
       // The error ID should be based on the explicit fieldName
@@ -139,7 +139,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       );
 
       const errorComponents = container.querySelectorAll(
-        'ngx-signal-form-error',
+        'ngx-form-field-error',
       );
       expect(errorComponents).toHaveLength(3);
 
@@ -179,7 +179,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       );
 
       const errorComponents = container.querySelectorAll(
-        'ngx-signal-form-error',
+        'ngx-form-field-error',
       );
       expect(errorComponents).toHaveLength(3);
 
@@ -224,7 +224,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         },
       );
 
-      const errorComponent = container.querySelector('ngx-signal-form-error');
+      const errorComponent = container.querySelector('ngx-form-field-error');
       expect(errorComponent).toBeTruthy();
 
       const errorContainer = container.querySelector('[id="derived-id-error"]');
@@ -232,6 +232,54 @@ describe('NgxSignalFormWrapperComponent', () => {
 
       const errorId = errorContainer?.getAttribute('id');
       expect(errorId).toBe('derived-id-error');
+    });
+
+    it('should rebind to a new projected control when an @if branch swaps the bound element', async () => {
+      // Regression guard for the DOM-query cache in `earlyRead`: when an
+      // `@if` branch swaps which element carries the projected id, the
+      // cache must release the old element (no longer contained in the
+      // host after branch change) and re-query for the new one. The cache
+      // uses `hostEl.contains(cached)` + `isConnected` to detect this.
+      const invalidField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'required', message: 'Required' }],
+      });
+
+      @Component({
+        template: `
+          <ngx-signal-form-field-wrapper [formField]="field">
+            <label for="branch-a">Branch</label>
+            @if (useBranchA()) {
+              <input id="branch-a" type="text" />
+            } @else {
+              <input id="branch-b" type="text" />
+            }
+          </ngx-signal-form-field-wrapper>
+        `,
+        imports: [NgxSignalFormWrapperComponent],
+      })
+      class TestComponent {
+        readonly useBranchA = signal(true);
+        readonly field = invalidField;
+      }
+
+      const { container, fixture } = await render(TestComponent);
+      await fixture.whenStable();
+
+      const branchA = container.querySelector('#branch-a');
+      expect(branchA).toHaveAttribute('data-signal-field', 'branch-a');
+
+      fixture.componentInstance.useBranchA.set(false);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const branchB = container.querySelector('#branch-b');
+      expect(branchB).toBeTruthy();
+      expect(branchB).toHaveAttribute('data-signal-field', 'branch-b');
+      // Old branch element is gone from the DOM, so there's nothing left
+      // to carry the stale attribute — cache eviction worked.
+      expect(container.querySelector('#branch-a')).toBeNull();
     });
 
     it('should clear stale projected control metadata when a custom control loses its id', async () => {
@@ -487,7 +535,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(
         host?.querySelector('.ngx-signal-form-field-wrapper__messages'),
       ).toBeNull();
-      expect(assistiveRow?.querySelector('ngx-signal-form-error')).toBeTruthy();
+      expect(assistiveRow?.querySelector('ngx-form-field-error')).toBeTruthy();
     });
 
     it('renders messages above the control when errorPlacement is top', async () => {
@@ -539,8 +587,8 @@ describe('NgxSignalFormWrapperComponent', () => {
         messages.compareDocumentPosition(content) &
           Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-      expect(assistiveRow?.querySelector('ngx-signal-form-error')).toBeFalsy();
-      expect(messages?.querySelector('ngx-signal-form-error')).toBeTruthy();
+      expect(assistiveRow?.querySelector('ngx-form-field-error')).toBeFalsy();
+      expect(messages?.querySelector('ngx-form-field-error')).toBeTruthy();
     });
   });
 
@@ -906,7 +954,7 @@ describe('NgxSignalFormWrapperComponent', () => {
 
       expect(switchControl).toBeTruthy();
       expect(errorElement).toBeTruthy();
-      expect(assistiveRow?.querySelector('ngx-signal-form-error')).toBeTruthy();
+      expect(assistiveRow?.querySelector('ngx-form-field-error')).toBeTruthy();
       expect(wrapper).toHaveAttribute('aria-invalid', 'true');
       expect(
         wrapper?.classList.contains('ngx-signal-form-field-wrapper--invalid'),
@@ -1114,7 +1162,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         },
       );
 
-      const errorComponent = container.querySelector('ngx-signal-form-error');
+      const errorComponent = container.querySelector('ngx-form-field-error');
       expect(errorComponent).toBeTruthy();
     });
 
@@ -2171,7 +2219,7 @@ describe('NgxSignalFormWrapperComponent', () => {
     it('should provide field context to child components via DI', async () => {
       /**
        * This test verifies the wrapper provides NGX_SIGNAL_FORM_FIELD_CONTEXT
-       * which allows child components (like ngx-signal-form-error) to inherit
+       * which allows child components (like ngx-form-field-error) to inherit
        * the resolved field name without explicit input binding.
        *
        * The provider uses forwardRef because:
@@ -2744,6 +2792,81 @@ describe('NgxSignalFormWrapperComponent', () => {
         );
         expect(formField).not.toHaveClass('ngx-signal-forms-outline');
       });
+    });
+  });
+
+  describe('hidden() field behavior', () => {
+    it('should suppress errors and apply the hidden host attr when field().hidden() is true', async () => {
+      const hiddenField = signal({
+        invalid: () => true,
+        touched: () => true,
+        hidden: () => true,
+        errors: () => [{ kind: 'required', message: 'Required' }],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field" fieldName="secret">
+          <label for="secret">Secret</label>
+          <input id="secret" type="text" />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field: hiddenField },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-signal-form-field-wrapper');
+      expect(wrapper).toHaveAttribute('hidden', '');
+
+      // No error component should render even though the field is invalid + touched.
+      expect(container.querySelector('ngx-form-field-error')).toBeNull();
+    });
+
+    it('should still render errors when field().hidden() is false', async () => {
+      const visibleField = signal({
+        invalid: () => true,
+        touched: () => true,
+        hidden: () => false,
+        errors: () => [{ kind: 'required', message: 'Required' }],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field" fieldName="email">
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field: visibleField },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-signal-form-field-wrapper');
+      expect(wrapper).not.toHaveAttribute('hidden');
+      expect(container.querySelector('ngx-form-field-error')).toBeTruthy();
+    });
+
+    it('should treat fields without a hidden() method as visible', async () => {
+      const legacyField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'required', message: 'Required' }],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field" fieldName="legacy">
+          <label for="legacy">Legacy</label>
+          <input id="legacy" type="text" />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field: legacyField },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-signal-form-field-wrapper');
+      expect(wrapper).not.toHaveAttribute('hidden');
+      expect(container.querySelector('ngx-form-field-error')).toBeTruthy();
     });
   });
 });

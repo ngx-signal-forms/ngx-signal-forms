@@ -1,6 +1,7 @@
 import { InjectionToken, type Signal } from '@angular/core';
 import type { NgxSignalFormContext } from './directives/ngx-signal-form.directive';
 import type {
+  NgxSignalFormControlAriaMode,
   NgxSignalFormControlPresetRegistry,
   NgxSignalFormsConfig,
 } from './types';
@@ -105,4 +106,48 @@ export const NGX_SIGNAL_FORM_CONTEXT = new InjectionToken<NgxSignalFormContext>(
 export const NGX_SIGNAL_FORM_FIELD_CONTEXT =
   new InjectionToken<NgxSignalFormFieldContext>(
     'NGX_SIGNAL_FORM_FIELD_CONTEXT',
+  );
+
+/**
+ * Injection token for the resolved ARIA ownership mode for a single control
+ * host. Provided by `NgxSignalFormControlSemanticsDirective` at its own
+ * directive level, and read by `NgxSignalFormAutoAriaDirective` via
+ * `{ optional: true, self: true }`.
+ *
+ * Decouples auto-ARIA from the control-semantics directive: auto-ARIA no
+ * longer needs a direct class import, which lets the two directives evolve
+ * independently.
+ */
+export const NGX_SIGNAL_FORM_ARIA_MODE = new InjectionToken<
+  Signal<NgxSignalFormControlAriaMode | null>
+>('NGX_SIGNAL_FORM_ARIA_MODE');
+
+/**
+ * Describes a hint element that should contribute to `aria-describedby` for
+ * a specific field. `fieldName` may be `null` when a hint has not been
+ * correlated to a field yet — in that case the registry consumer decides
+ * whether to include it.
+ */
+export interface NgxSignalFormHintDescriptor {
+  readonly id: string;
+  readonly fieldName: string | null;
+}
+
+/**
+ * Registry of hints that live inside a form field wrapper (or any other
+ * provider of `NGX_SIGNAL_FORM_HINT_REGISTRY`). `NgxSignalFormAutoAriaDirective`
+ * reads this registry instead of querying the DOM for hint elements.
+ */
+export interface NgxSignalFormHintRegistry {
+  readonly hints: Signal<readonly NgxSignalFormHintDescriptor[]>;
+}
+
+/**
+ * Injection token for the hint registry contributed by a form field wrapper.
+ * Decouples auto-ARIA from DOM knowledge of the wrapper and hint component
+ * selectors: hint IDs are now handed to auto-ARIA by whoever owns the wrapper.
+ */
+export const NGX_SIGNAL_FORM_HINT_REGISTRY =
+  new InjectionToken<NgxSignalFormHintRegistry>(
+    'NGX_SIGNAL_FORM_HINT_REGISTRY',
   );

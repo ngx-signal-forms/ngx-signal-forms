@@ -294,7 +294,7 @@ describe('NgxSignalFormFieldset', () => {
       },
     );
 
-    const errorList = container.querySelector('.ngx-signal-form-error__list');
+    const errorList = container.querySelector('.ngx-form-field-error__list');
     expect(errorList?.tagName).toBe('UL');
     expect(errorList?.querySelectorAll('li')).toHaveLength(2);
   });

@@ -29,7 +29,7 @@ import { YourFirstFormComponent } from './your-first-form.form';
  * Shows:
  * - [formRoot] directive for context and submission tracking
  * - Automatic ARIA attributes
- * - NgxSignalFormErrorComponent for reusable error display
+ * - NgxFormFieldErrorComponent for reusable error display
  * - Error display strategies
  * - Manual HTML layout (you control structure)
  */

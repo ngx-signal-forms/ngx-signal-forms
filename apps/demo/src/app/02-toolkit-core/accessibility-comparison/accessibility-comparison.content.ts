@@ -50,7 +50,7 @@ export const ACCESSIBILITY_COMPARISON_CONTENT = {
         title: '✅ Full Toolkit (With [formRoot])',
         items: [
           'Add <code>[formRoot]="form"</code> binding',
-          'Unlocks: <code>&lt;ngx-signal-form-error&gt;</code> component',
+          'Unlocks: <code>&lt;ngx-form-field-error&gt;</code> component',
           'Unlocks: Form-level <code>[errorStrategy]</code> override',
           'Unlocks: <code>submittedStatus</code> via DI in children',
           'Use when: Most projects (recommended)',

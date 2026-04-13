@@ -260,8 +260,8 @@ When you use the toolkit's `NgxSignalFormDirective` (`ngxSignalForm`), the deriv
 
 ```html
 <form [formRoot]="registrationForm" ngxSignalForm>
-  <!-- NgxSignalFormErrorComponent automatically receives submittedStatus -->
-  <ngx-signal-form-error
+  <!-- NgxFormFieldErrorComponent automatically receives submittedStatus -->
+  <ngx-form-field-error
     [formField]="registrationForm.email"
     fieldName="email"
   />

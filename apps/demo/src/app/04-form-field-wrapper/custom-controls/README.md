@@ -55,6 +55,6 @@ That combination demonstrates both one-off explicit semantics and provider-scope
 
 1. **Interaction**: Click the stars to set a value. Watch the debug panel update instantly.
 2. **Keyboard**: Tab into the rating control. Use arrow keys. Notice the "touched" state updates on blur/exit.
-3. **Validation**: Clear the rating (if allowed). See the standard `NgxSignalFormError` render below the custom component.
+3. **Validation**: Clear the rating (if allowed). See the standard `NgxFormFieldError` render below the custom component.
 4. **Checkbox opt-in**: Blur the public-review checkbox without checking it and verify the wrapper/error linkage comes from explicit checkbox semantics.
 5. **Manual ARIA slider**: Blur the accessibility-audit slider empty and verify it keeps its own `aria-describedby` chain while still rendering wrapper errors.

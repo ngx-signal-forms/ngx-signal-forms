@@ -4,6 +4,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 // For CI, you may want to set BASE_URL to the deployed application.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+const isCI = Boolean(process.env['CI']);
 
 /**
  * Read environment variables from file.
@@ -18,18 +19,39 @@ const preset = nxE2EPreset(__filename, { testDir: './src' });
 
 export default defineConfig({
   ...preset,
+  updateSnapshots: isCI ? 'none' : 'missing',
+  forbidOnly: isCI,
+  retries: isCI ? 1 : 0,
+  reporter: [
+    ['list'],
+    ['html', { open: 'never', outputFolder: 'playwright-report' }],
+  ],
+  expect: {
+    toMatchAriaSnapshot: {
+      children: 'contain',
+      pathTemplate: '{testDir}/__snapshots__/{testFilePath}/{arg}{ext}',
+    },
+    toHaveScreenshot: {
+      animations: 'disabled',
+      caret: 'hide',
+      scale: 'css',
+      pathTemplate:
+        '{testDir}/__screenshots__{/projectName}/{testFilePath}/{arg}{ext}',
+    },
+  },
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     ...preset.use,
     baseURL,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
   },
   /* Run your local dev server before starting the tests */
   webServer: {
     command: 'pnpm nx serve demo',
     url: 'http://localhost:4200',
-    reuseExistingServer: !process.env['CI'],
+    reuseExistingServer: !isCI,
     cwd: workspaceRoot,
     timeout: 120000,
   },

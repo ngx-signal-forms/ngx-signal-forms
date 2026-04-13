@@ -24,7 +24,7 @@ import { NgxHeadlessErrorSummaryDirective } from '@ngx-signal-forms/toolkit/head
  * ## Usage
  *
  * ```html
- * <ngx-signal-form-error-summary
+ * <ngx-form-field-error-summary
  *   [formTree]="myForm"
  *   summaryLabel="Please fix the following errors:"
  * />
@@ -35,13 +35,13 @@ import { NgxHeadlessErrorSummaryDirective } from '@ngx-signal-forms/toolkit/head
  * ```html
  * <form [formRoot]="myForm" ngxSignalForm errorStrategy="on-submit">
  *   ...fields...
- *   <ngx-signal-form-error-summary [formTree]="myForm" />
+ *   <ngx-form-field-error-summary [formTree]="myForm" />
  *   <button type="submit">Submit</button>
  * </form>
  * ```
  */
 @Component({
-  selector: 'ngx-signal-form-error-summary',
+  selector: 'ngx-form-field-error-summary',
   changeDetection: ChangeDetectionStrategy.OnPush,
   hostDirectives: [
     {
@@ -52,28 +52,28 @@ import { NgxHeadlessErrorSummaryDirective } from '@ngx-signal-forms/toolkit/head
   template: `
     @if (summary.shouldShow() && summary.hasErrors()) {
       <div
-        class="ngx-signal-form-error-summary"
+        class="ngx-form-field-error-summary"
         role="alert"
         aria-live="assertive"
         aria-atomic="true"
       >
         @if (summaryLabel()) {
-          <p class="ngx-signal-form-error-summary__label">
+          <p class="ngx-form-field-error-summary__label">
             {{ summaryLabel() }}
           </p>
         }
-        <ul class="ngx-signal-form-error-summary__list" role="list">
+        <ul class="ngx-form-field-error-summary__list" role="list">
           @for (
             entry of summary.entries();
             track entry.kind + entry.fieldName
           ) {
-            <li class="ngx-signal-form-error-summary__item">
+            <li class="ngx-form-field-error-summary__item">
               <button
                 type="button"
-                class="ngx-signal-form-error-summary__link"
+                class="ngx-form-field-error-summary__link"
                 (click)="entry.focus()"
               >
-                <span class="ngx-signal-form-error-summary__field-name">{{
+                <span class="ngx-form-field-error-summary__field-name">{{
                   entry.fieldName
                 }}</span
                 >:
@@ -86,7 +86,7 @@ import { NgxHeadlessErrorSummaryDirective } from '@ngx-signal-forms/toolkit/head
     }
   `,
   styles: `
-    .ngx-signal-form-error-summary {
+    .ngx-form-field-error-summary {
       border: 2px solid var(--ngx-error-summary-border-color, #dc2626);
       border-radius: 0.375rem;
       padding: 1rem;
@@ -94,13 +94,13 @@ import { NgxHeadlessErrorSummaryDirective } from '@ngx-signal-forms/toolkit/head
       background: var(--ngx-error-summary-bg, #fef2f2);
     }
 
-    .ngx-signal-form-error-summary__label {
+    .ngx-form-field-error-summary__label {
       font-weight: 600;
       margin-block-end: 0.5rem;
       color: var(--ngx-error-summary-label-color, #991b1b);
     }
 
-    .ngx-signal-form-error-summary__list {
+    .ngx-form-field-error-summary__list {
       list-style: none;
       margin: 0;
       padding: 0;
@@ -109,7 +109,7 @@ import { NgxHeadlessErrorSummaryDirective } from '@ngx-signal-forms/toolkit/head
       gap: 0.25rem;
     }
 
-    .ngx-signal-form-error-summary__link {
+    .ngx-form-field-error-summary__link {
       all: unset;
       cursor: pointer;
       color: var(--ngx-error-summary-link-color, #dc2626);
@@ -127,12 +127,12 @@ import { NgxHeadlessErrorSummaryDirective } from '@ngx-signal-forms/toolkit/head
       }
     }
 
-    .ngx-signal-form-error-summary__field-name {
+    .ngx-form-field-error-summary__field-name {
       font-weight: 600;
     }
   `,
 })
-export class NgxSignalFormErrorSummaryComponent {
+export class NgxFormFieldErrorSummaryComponent {
   protected readonly summary = inject(NgxHeadlessErrorSummaryDirective);
 
   /**

@@ -98,8 +98,8 @@ imports: [FormField, NgxSignalFormToolkit];
 
 ### Assistive: `@ngx-signal-forms/toolkit/assistive`
 
-- `<ngx-signal-form-error>` for accessible error and warning output
-- `<ngx-signal-form-error-summary>` for form-level error summaries
+- `<ngx-form-field-error>` for accessible error and warning output
+- `<ngx-form-field-error-summary>` for form-level error summaries
 - `<ngx-signal-form-field-hint>`
 - `<ngx-signal-form-field-character-count>`
 
@@ -118,38 +118,28 @@ the default field chrome around a widget that already has its own visual UI.
 
 ### Quick FAQ: switches and custom controls
 
-**Does RC2 switch alignment support introduce a breaking change for native switches?**
+**Do I need `ngxSignalFormControl="switch"` for a native checkbox styled as a switch?**
 
-No — not for the default native switch case.
-
-If you already use a real bound control like:
+No. A native `input[type="checkbox"][role="switch"]` with `[formField]` works out
+of the box — the toolkit recognizes it as a switch and applies the switch-specific
+wrapper and auto-ARIA behavior without any extra directives.
 
 ```html
 <input type="checkbox" role="switch" [formField]="form.enabled" />
 ```
 
-the toolkit still recognizes it as a switch and applies the switch-specific
-wrapper and auto-ARIA behavior out of the box.
+**When should I reach for `ngxSignalFormControl`, then?**
 
-**Do I need `ngxSignalFormControl="switch"` for a native `input[type="checkbox"][role="switch"]`?**
-
-No. For that native pattern, the new directive is optional.
-
-Add explicit control semantics only when you want one of the advanced paths:
+Use explicit control semantics when you need one of the advanced paths:
 
 - the bound host is a custom component or third-party widget
-- you want explicit semantics instead of relying on heuristics
-- you want manual ARIA ownership
-- you want preset-driven defaults for a control family
+- you want explicit semantics instead of relying on DOM heuristics
+- you want manual ARIA ownership (`ngxSignalFormControlAria="manual"`)
+- you want preset-driven defaults for a control family (sliders, composites, etc.)
 
-**What is actually breaking in RC2, then?**
-
-The main consumer-facing change here is the appearance rename:
-
-- `standard` → `stacked`
-- `bare` → `plain`
-
-The new switch/control-semantics APIs are additive for the native switch path.
+See [`docs/CUSTOM_CONTROLS.md`](./docs/CUSTOM_CONTROLS.md) for concrete
+examples and [`docs/decisions/0001-control-semantics-architecture.md`](./docs/decisions/0001-control-semantics-architecture.md)
+for the design rationale behind the directive + presets split.
 
 ### Headless: `@ngx-signal-forms/toolkit/headless`
 
@@ -436,8 +426,8 @@ Use this when you want feedback components without adopting the full field wrapp
 
 **Key exports**:
 
-- `NgxSignalFormErrorComponent` — Error/warning display with ARIA roles
-- `NgxSignalFormErrorSummaryComponent` — Form-level summary for blocking errors
+- `NgxFormFieldErrorComponent` — Error/warning display with ARIA roles
+- `NgxFormFieldErrorSummaryComponent` — Form-level summary for blocking errors
 - `NgxFormFieldHintComponent` — Helper text below inputs
 - `NgxFormFieldCharacterCountComponent` — Character counter with maxLength detection
 - `NgxFormFieldAssistiveRowComponent` — Layout row for hints and counters
@@ -445,7 +435,7 @@ Use this when you want feedback components without adopting the full field wrapp
 
 ```typescript
 import {
-  NgxSignalFormErrorComponent,
+  NgxFormFieldErrorComponent,
   NgxFormFieldHintComponent,
   warningError,
 } from '@ngx-signal-forms/toolkit/assistive';
@@ -454,7 +444,7 @@ import {
 ```html
 <label for="email">Email</label>
 <input id="email" [formField]="form.email" />
-<ngx-signal-form-error [formField]="form.email" fieldName="email" />
+<ngx-form-field-error [formField]="form.email" fieldName="email" />
 <ngx-signal-form-field-hint
   >We'll never share your email</ngx-signal-form-field-hint
 >
@@ -580,7 +570,7 @@ const accountForm = form(accountModel, (path) => {
 
 Use Vest `warn()` for advisory guidance only. With `{ includeWarnings: true }`, the
 toolkit renders those messages through `ngx-signal-form-field-wrapper` or
-`ngx-signal-form-error` as `role="status"` warnings, while blocking Vest failures
+`ngx-form-field-error` as `role="status"` warnings, while blocking Vest failures
 continue to render as `role="alert"` errors.
 
 **[📖 Full Documentation →](./packages/toolkit/vest/README.md)**
@@ -625,8 +615,6 @@ Current demo learning path:
 - **Headless** — `fieldset-utilities` for custom markup and grouped state
 - **Form Field Wrapper** — `complex-forms` and `custom-controls`
 - **Advanced Scenarios** — global config, submission patterns, async/cross-field validation, Vest, and the wizard
-
-Archived exploratory demo folders still exist under `apps/demo/src/app/**` as reference material, but the live demo now routes through the consolidated examples above.
 
 Start here:
 

@@ -4,13 +4,13 @@ import type { SubmittedStatus } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { NgxSignalFormErrorSummaryComponent } from './error-summary.component';
+import { NgxFormFieldErrorSummaryComponent } from './form-field-error-summary.component';
 
-describe('NgxSignalFormErrorSummaryComponent', () => {
+describe('NgxFormFieldErrorSummaryComponent', () => {
   it('renders entries through the composed headless directive inputs', async () => {
     @Component({
       selector: 'ngx-test-error-summary-immediate',
-      imports: [FormField, NgxSignalFormErrorSummaryComponent],
+      imports: [FormField, NgxFormFieldErrorSummaryComponent],
       changeDetection: ChangeDetectionStrategy.OnPush,
       template: `
         <input
@@ -18,7 +18,7 @@ describe('NgxSignalFormErrorSummaryComponent', () => {
           data-testid="email-input"
           [formField]="contactForm.email"
         />
-        <ngx-signal-form-error-summary
+        <ngx-form-field-error-summary
           [formTree]="contactForm"
           strategy="immediate"
           summaryLabel="Fix these issues"
@@ -53,11 +53,11 @@ describe('NgxSignalFormErrorSummaryComponent', () => {
   it('respects submittedStatus passed through the composed public API', async () => {
     @Component({
       selector: 'ngx-test-error-summary-submit',
-      imports: [FormField, NgxSignalFormErrorSummaryComponent],
+      imports: [FormField, NgxFormFieldErrorSummaryComponent],
       changeDetection: ChangeDetectionStrategy.OnPush,
       template: `
         <input id="email" [formField]="contactForm.email" />
-        <ngx-signal-form-error-summary
+        <ngx-form-field-error-summary
           [formTree]="contactForm"
           strategy="on-submit"
           [submittedStatus]="submittedStatus()"
