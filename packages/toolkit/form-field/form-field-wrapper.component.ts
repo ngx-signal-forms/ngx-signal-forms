@@ -22,13 +22,13 @@ import {
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
+  createShowErrorsComputed,
   injectFormContext,
   isFieldStateHidden,
   readDirectErrors,
   type ResolvedNgxSignalFormControlSemantics,
   resolveNgxSignalFormControlSemantics,
   resolveErrorDisplayStrategy,
-  shouldShowErrors,
 } from '@ngx-signal-forms/toolkit';
 import {
   isBlockingError,
@@ -642,25 +642,27 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   });
 
   /**
+   * Visibility-timing computed shared with `showErrors()`, auto-aria, and
+   * the error component. Reads `invalid()` / `touched()` off the field state
+   * and runs the same strategy logic — keeping every surface in lockstep.
+   */
+  readonly #showErrorsByStrategy = createShowErrorsComputed(
+    () => this.formField()(),
+    this.effectiveStrategy,
+    this.submittedStatus,
+  );
+
+  /**
    * Whether to actually display errors based on current strategy and field state.
    * This controls when the error component replaces the hint.
+   *
+   * Short-circuits on `hidden()` and empty-error cases before consulting the
+   * shared visibility-timing helper.
    */
   protected readonly shouldShowErrors = computed(() => {
     if (this.isFieldHidden()) return false;
-
-    const errors = this.#allMessages();
-    if (errors.length === 0) return false;
-
-    const fieldState = this.formField()();
-
-    if (!fieldState || typeof fieldState !== 'object') return false;
-
-    return shouldShowErrors(
-      fieldState.invalid(),
-      fieldState.touched(),
-      this.effectiveStrategy(),
-      this.submittedStatus(),
-    );
+    if (this.#allMessages().length === 0) return false;
+    return this.#showErrorsByStrategy();
   });
 
   /**

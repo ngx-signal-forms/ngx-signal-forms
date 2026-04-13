@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
+  createShowErrorsComputed,
   generateErrorId,
   generateWarningId,
   injectFormContext,
@@ -17,7 +18,6 @@ import {
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
   resolveValidationErrorMessage,
-  shouldShowErrors,
   splitByKind,
   type ErrorDisplayStrategy,
   type SubmittedStatus,
@@ -330,33 +330,31 @@ export class NgxFormFieldErrorComponent<TValue = unknown> {
   });
 
   /**
+   * Shared visibility-timing computed. Routed through `createShowErrorsComputed`
+   * so this component stays in lockstep with the wrapper, auto-aria, and
+   * `showErrors()` itself. The `direct-errors` escape hatch (where `formField`
+   * is absent and the component renders caller-provided `ValidationError[]`)
+   * is layered on top in `showErrors` below.
+   */
+  readonly #showErrorsByStrategy = createShowErrorsComputed(
+    this.#fieldState,
+    this.#resolvedStrategy,
+    this.#resolvedSubmittedStatus,
+  );
+
+  /**
    * Computed signal for error visibility based on strategy.
    *
    * When using direct errors input (no formField), defaults to showing errors
    * since the parent component controls visibility.
    */
   protected readonly showErrors = computed(() => {
-    const fieldState = this.#fieldState();
-
     // When using direct errors (no formField), always show
     // The parent component (e.g., fieldset) controls visibility
-    if (!fieldState) {
+    if (!this.#fieldState()) {
       return true;
     }
-
-    const isInvalid =
-      typeof fieldState.invalid === 'function' ? fieldState.invalid() : false;
-    const isTouched =
-      typeof fieldState.touched === 'function' ? fieldState.touched() : false;
-    const status = this.#resolvedSubmittedStatus();
-    const fallbackStatus = status ?? (isTouched ? 'submitted' : 'unsubmitted');
-
-    return shouldShowErrors(
-      isInvalid,
-      isTouched,
-      this.#resolvedStrategy(),
-      fallbackStatus,
-    );
+    return this.#showErrorsByStrategy();
   });
 
   /**

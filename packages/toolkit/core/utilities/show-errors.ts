@@ -85,7 +85,47 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * @see {@link combineShowErrors} For combining multiple error signals
  */
 export function showErrors(
-  field: ReactiveOrStatic<ErrorVisibilityState | PartialErrorVisibilityState>,
+  field: ReactiveOrStatic<
+    ErrorVisibilityState | PartialErrorVisibilityState | null | undefined
+  >,
+  strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
+  submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
+): Signal<boolean> {
+  return createShowErrorsComputed(field, strategy, submittedStatus);
+}
+
+/**
+ * Creates a reactive visibility-timing computed for a `FieldState`.
+ *
+ * This is the single extraction point behind `showErrors()`, the wrapper
+ * component's `shouldShowErrors`, `NgxSignalFormAutoAriaDirective`, and
+ * `NgxFormFieldErrorComponent`. Each of those used to build its own
+ * `computed(() => shouldShowErrors(field.invalid(), field.touched(), strategy, status))`
+ * inline — consolidating here means visibility timing cannot drift between
+ * them.
+ *
+ * **When to use directly:** internal toolkit code that already owns a
+ * `FieldState` signal and wants the same visibility rules without routing
+ * through `showErrors()`'s type-wide `ErrorVisibilityState` parameter.
+ *
+ * **When to use `showErrors()` instead:** public callers that want the
+ * documented entry point and may pass partial shapes.
+ *
+ * @param field Reactive or static field state. `null`/`undefined` shapes
+ *   short-circuit to `false`.
+ * @param strategy Reactive or static `ErrorDisplayStrategy`.
+ * @param submittedStatus Optional submission status. Required for
+ *   `'on-submit'` strategy — without it, the helper defaults to
+ *   `'unsubmitted'` and errors will never surface under `on-submit`.
+ * @returns A computed `Signal<boolean>` that is `true` when the strategy
+ *   says errors should be visible.
+ *
+ * @public
+ */
+export function createShowErrorsComputed(
+  field: ReactiveOrStatic<
+    ErrorVisibilityState | PartialErrorVisibilityState | null | undefined
+  >,
   strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
   submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
 ): Signal<boolean> {
@@ -180,7 +220,9 @@ export function combineShowErrors(
 }
 
 function computeShowErrorsInternal(
-  field: ReactiveOrStatic<ErrorVisibilityState | PartialErrorVisibilityState>,
+  field: ReactiveOrStatic<
+    ErrorVisibilityState | PartialErrorVisibilityState | null | undefined
+  >,
   strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
   submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
 ): Signal<boolean> {

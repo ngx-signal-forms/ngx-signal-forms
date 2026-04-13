@@ -13,14 +13,13 @@ import {
   NGX_SIGNAL_FORM_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
 } from '../tokens';
-import type { ErrorDisplayStrategy } from '../types';
-import { shouldShowErrors } from '../utilities/error-strategies';
 import {
   generateErrorId,
   generateWarningId,
   resolveFieldName,
 } from '../utilities/field-resolution';
 import type { ErrorReadableState } from '../utilities/field-state-types';
+import { createShowErrorsComputed } from '../utilities/show-errors';
 import { isBlockingError, isWarningError } from '../utilities/warning-error';
 
 interface AutoAriaDomSnapshot {
@@ -118,23 +117,7 @@ export class NgxSignalFormAutoAriaDirective {
     );
     if (!hasMatchingErrors) return false;
 
-    const strategy: ErrorDisplayStrategy =
-      this.#context?.errorStrategy() ?? 'on-touch';
-    const submittedStatus = this.#context?.submittedStatus() ?? 'unsubmitted';
-
-    if (
-      typeof fieldState.invalid !== 'function' ||
-      typeof fieldState.touched !== 'function'
-    ) {
-      return false;
-    }
-
-    return shouldShowErrors(
-      fieldState.invalid(),
-      fieldState.touched(),
-      strategy,
-      submittedStatus,
-    );
+    return this.#visibilityByStrategy();
   }
 
   readonly #element = inject(ElementRef<HTMLElement>);
@@ -158,6 +141,18 @@ export class NgxSignalFormAutoAriaDirective {
   readonly #isManualAriaMode = computed(() => {
     return this.#ariaModeSignal?.() === 'manual';
   });
+
+  /**
+   * Shared visibility-timing computed. Centralizes the `shouldShowErrors`
+   * decision so `#shouldShowBy` only contributes the per-error-type filter.
+   * Keeps auto-aria in lockstep with the wrapper component and the form
+   * field error component.
+   */
+  readonly #visibilityByStrategy = createShowErrorsComputed(
+    () => this.#resolveFieldState(),
+    () => this.#context?.errorStrategy() ?? 'on-touch',
+    () => this.#context?.submittedStatus() ?? 'unsubmitted',
+  );
 
   /**
    * Hint IDs contributed by the surrounding hint registry (typically provided

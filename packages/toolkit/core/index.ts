@@ -40,7 +40,11 @@ export {
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
 } from './utilities/resolve-strategy';
-export { combineShowErrors, showErrors } from './utilities/show-errors';
+export {
+  combineShowErrors,
+  createShowErrorsComputed,
+  showErrors,
+} from './utilities/show-errors';
 export * from './utilities/submission-helpers';
 export { unwrapValue } from './utilities/unwrap-signal-or-value';
 export {

@@ -1,7 +1,11 @@
 import { signal, WritableSignal } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 import type { ErrorDisplayStrategy, SubmittedStatus } from '../types';
-import { combineShowErrors, showErrors } from './show-errors';
+import {
+  combineShowErrors,
+  createShowErrorsComputed,
+  showErrors,
+} from './show-errors';
 
 /**
  * Test suite for show-errors utility functions.
@@ -54,6 +58,61 @@ describe('show-errors utilities', () => {
       expect(result()).toBe(true);
 
       strategy.set('on-touch');
+      expect(result()).toBe(false);
+    });
+  });
+
+  describe('createShowErrorsComputed', () => {
+    it('should be a function and match showErrors behavior', () => {
+      // Extraction target: the helper must be the canonical path behind
+      // showErrors(). Keeping them observationally equivalent is load-bearing
+      // for the wrapper/auto-aria/form-field-error dedupe.
+      expect(typeof createShowErrorsComputed).toBe('function');
+
+      const fieldState = createMockFieldState(true, true);
+      const submittedStatus = signal<SubmittedStatus>('unsubmitted');
+
+      const viaFactory = createShowErrorsComputed(
+        fieldState,
+        'on-touch',
+        submittedStatus,
+      );
+      const viaPublicApi = showErrors(fieldState, 'on-touch', submittedStatus);
+
+      expect(viaFactory()).toBe(viaPublicApi());
+    });
+
+    it('should return false for null field state', () => {
+      const strategy = signal<ErrorDisplayStrategy>('on-touch');
+      const submittedStatus = signal<SubmittedStatus>('unsubmitted');
+
+      const result = createShowErrorsComputed(
+        () => null,
+        strategy,
+        submittedStatus,
+      );
+
+      expect(result()).toBe(false);
+    });
+
+    it('should react to strategy and status changes', () => {
+      const fieldState = createMockFieldState(true, false);
+      const strategy = signal<ErrorDisplayStrategy>('on-submit');
+      const submittedStatus = signal<SubmittedStatus>('unsubmitted');
+
+      const result = createShowErrorsComputed(
+        fieldState,
+        strategy,
+        submittedStatus,
+      );
+
+      expect(result()).toBe(false);
+
+      submittedStatus.set('submitted');
+      expect(result()).toBe(true);
+
+      strategy.set('on-touch');
+      submittedStatus.set('unsubmitted');
       expect(result()).toBe(false);
     });
   });
