@@ -198,6 +198,47 @@ export function dedupeValidationErrors(
 export { createUniqueId, readDirectErrors };
 
 /**
+ * Core error-state signals shared between `createErrorState()` (the
+ * standalone factory) and `NgxHeadlessErrorStateDirective` (the directive
+ * variant). The split on `readDirectErrors()` is intentionally the safer
+ * path: it handles a field state whose `errors()` is missing or not an
+ * array, which matters for tests and for custom control adapters.
+ *
+ * @internal
+ */
+interface HeadlessErrorStateCore {
+  readonly errors: ReadSignal<ValidationError[]>;
+  readonly warnings: ReadSignal<ValidationError[]>;
+  readonly hasErrors: ReadSignal<boolean>;
+  readonly hasWarnings: ReadSignal<boolean>;
+  readonly errorId: ReadSignal<string>;
+  readonly warningId: ReadSignal<string>;
+}
+
+/**
+ * Shared builder used by both `createErrorState()` and
+ * `NgxHeadlessErrorStateDirective` to derive the error/warning split,
+ * presence flags, and ARIA region IDs.
+ *
+ * @internal Exposed to `error-state.directive.ts` via a named export only.
+ */
+export function buildHeadlessErrorState(
+  fieldState: ReadSignal<unknown>,
+  fieldName: ReadSignal<string>,
+): HeadlessErrorStateCore {
+  const split = computed(() => splitByKind(readDirectErrors(fieldState())));
+
+  return {
+    errors: computed(() => split().blocking),
+    warnings: computed(() => split().warnings),
+    hasErrors: computed(() => split().blocking.length > 0),
+    hasWarnings: computed(() => split().warnings.length > 0),
+    errorId: computed(() => generateErrorId(fieldName())),
+    warningId: computed(() => generateWarningId(fieldName())),
+  };
+}
+
+/**
  * Options for creating error state signals.
  */
 export interface CreateErrorStateOptions<TValue = unknown> {
@@ -294,25 +335,12 @@ export function createErrorState<TValue = unknown>(
     resolvedSubmittedStatus,
   );
 
-  const split = computed(() => splitByKind(fieldState().errors()));
-
-  const errors = computed(() => split().blocking);
-  const warnings = computed(() => split().warnings);
-  const hasErrors = computed(() => split().blocking.length > 0);
-  const hasWarnings = computed(() => split().warnings.length > 0);
-
-  const errorId = computed(() => generateErrorId(resolvedFieldName()));
-  const warningId = computed(() => generateWarningId(resolvedFieldName()));
+  const core = buildHeadlessErrorState(fieldState, resolvedFieldName);
 
   return {
     showErrors: showErrorsSignal,
     showWarnings: showErrorsSignal,
-    errors,
-    warnings,
-    hasErrors,
-    hasWarnings,
-    errorId,
-    warningId,
+    ...core,
     fieldName: resolvedFieldName,
   };
 }
