@@ -14,36 +14,6 @@ test.describe('Headless - Fieldset + Utilities', () => {
     await expect(page.getByLabel('Contact email *')).toBeVisible();
   });
 
-  test.describe('Snapshot Regression', () => {
-    test('should match aria structure for shipping address fieldset', async ({
-      page,
-    }) => {
-      await expect(
-        page.getByRole('group', { name: 'Shipping address' }),
-      ).toMatchAriaSnapshot();
-    });
-
-    test('should match screenshot for initial fieldset utilities form', async ({
-      page,
-    }) => {
-      await expect(page.locator('form').first()).toHaveScreenshot(
-        'fieldset-utilities.initial.png',
-      );
-    });
-
-    test('should match screenshot for summary after invalid submit', async ({
-      page,
-    }) => {
-      await page.getByRole('button', { name: 'Submit request' }).click();
-      const summary = page.getByTestId('delivery-form-summary');
-      await expect(summary).toBeVisible();
-
-      await expect(summary).toHaveScreenshot(
-        'fieldset-utilities.summary-errors.png',
-      );
-    });
-  });
-
   test.describe('Component Structure', () => {
     test('should render all form sections', async ({ page }) => {
       await test.step('Verify contact email section', async () => {

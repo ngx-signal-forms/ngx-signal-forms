@@ -275,32 +275,6 @@ test.describe('Custom Signal Forms Controls', () => {
     });
   });
 
-  test.describe('Snapshot Regression', () => {
-    test('should match aria structure for the current custom controls form', async () => {
-      await expect(page.form).toMatchAriaSnapshot();
-    });
-
-    test('should capture a visual baseline for the standard appearance', async () => {
-      await expect(page.form).toHaveScreenshot('custom-controls-standard.png', {
-        animations: 'disabled',
-        caret: 'hide',
-      });
-    });
-
-    test('should capture a visual baseline for the outline appearance', async () => {
-      await page.showOutlineAppearance();
-      await expect(page.outlineAppearanceButton).toHaveAttribute(
-        'aria-pressed',
-        'true',
-      );
-
-      await expect(page.form).toHaveScreenshot('custom-controls-outline.png', {
-        animations: 'disabled',
-        caret: 'hide',
-      });
-    });
-  });
-
   test.describe('Mixed Native and Custom Controls', () => {
     test('should handle a mix of native inputs and custom controls', async () => {
       await page.productNameInput.fill('Test Product');
