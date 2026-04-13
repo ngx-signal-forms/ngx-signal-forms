@@ -19,6 +19,31 @@ test.describe('Error Display Modes', () => {
     await expect(formPage.form).toBeVisible();
   });
 
+  test.describe('Snapshot Regression', () => {
+    test('should match aria structure in default mode', async () => {
+      await expect(formPage.form).toMatchAriaSnapshot();
+    });
+
+    test('should match screenshot in default mode', async () => {
+      await expect(formPage.form).toHaveScreenshot(
+        'error-display-modes.default.png',
+      );
+    });
+
+    test('should match screenshot with on-submit validation state', async () => {
+      await formPage.selectErrorMode('onSubmit');
+      await formPage.submit();
+
+      await formPage.nameInput.focus();
+      await formPage.nameInput.blur();
+      await expect(formPage.nameInput).toHaveAttribute('aria-invalid', 'true');
+
+      await expect(formPage.form).toHaveScreenshot(
+        'error-display-modes.on-submit.png',
+      );
+    });
+  });
+
   test('should allow switching between all 3 modes', async () => {
     await test.step('Switch through all error display modes', async () => {
       const modes = ['immediate', 'onTouch', 'onSubmit'] as const;

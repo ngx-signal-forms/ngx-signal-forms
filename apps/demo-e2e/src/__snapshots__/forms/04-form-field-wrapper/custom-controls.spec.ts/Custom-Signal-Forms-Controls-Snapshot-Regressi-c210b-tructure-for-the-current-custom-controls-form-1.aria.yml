@@ -1,0 +1,17 @@
+- text: Product Name *
+- textbox "Product Name *":
+    - /placeholder: Enter product name
+- text: Product Rating *
+- slider
+- text: Use arrow keys or click to rate Service Quality *
+- slider
+- text: Would Recommend?
+- slider
+- text: ☆ = No, ★ = Maybe, ★★ = Definitely! Email updates *
+- switch "Email updates *"
+- text: Required in this demo so the switch can show wrapper validation. Additional Feedback (optional)
+- textbox "Additional Feedback (optional)":
+    - /placeholder: Tell us more about your experience...
+- button "Submit Review"
+- button "Reset"
+- text: '* Required fields'
