@@ -1,5 +1,5 @@
 import { signal, WritableSignal } from '@angular/core';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ErrorDisplayStrategy, SubmittedStatus } from '../types';
 import {
   combineShowErrors,
@@ -114,6 +114,65 @@ describe('show-errors utilities', () => {
       strategy.set('on-touch');
       submittedStatus.set('unsubmitted');
       expect(result()).toBe(false);
+    });
+  });
+
+  describe("'on-submit' without submittedStatus", () => {
+    // Regression: previously, omitting submittedStatus under `on-submit`
+    // triggered a silent `touched → submitted` fallback. A touched-but-
+    // not-submitted field would then behave as if the form had been
+    // submitted, defeating the strategy. New contract: errors stay hidden
+    // until a real status is wired; a dev-mode warning flags the miswiring.
+
+    let warnSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
+    it('keeps errors hidden for a touched invalid field', () => {
+      const fieldState = createMockFieldState(true, true);
+
+      const result = showErrors(fieldState, 'on-submit');
+
+      expect(result()).toBe(false);
+    });
+
+    it('emits a dev-mode console.warn once', () => {
+      const fieldState = createMockFieldState(true, true);
+
+      const result = showErrors(fieldState, 'on-submit');
+      result();
+      result();
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain('on-submit');
+      expect(warnSpy.mock.calls[0][0]).toContain('submittedStatus');
+    });
+
+    it('does not warn when an explicit submittedStatus is wired', () => {
+      const fieldState = createMockFieldState(true, true);
+      const submittedStatus = signal<SubmittedStatus>('unsubmitted');
+
+      const result = showErrors(fieldState, 'on-submit', submittedStatus);
+      result();
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('does not warn for strategies other than on-submit', () => {
+      const fieldState = createMockFieldState(true, true);
+
+      const onTouch = showErrors(fieldState, 'on-touch');
+      const immediate = showErrors(fieldState, 'immediate');
+      onTouch();
+      immediate();
+
+      expect(warnSpy).not.toHaveBeenCalled();
     });
   });
 
