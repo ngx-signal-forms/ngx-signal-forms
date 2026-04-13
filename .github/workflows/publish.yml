@@ -141,7 +141,8 @@ jobs:
         run: pnpm exec nx report --outputStyle=static
 
       - name: Build toolkit package
-        run: pnpm exec nx run toolkit:post-build --skip-nx-cache --outputStyle=static
+        # nx-safe.sh falls back to local execution if Nx Cloud is unreachable.
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx run toolkit:post-build --skip-nx-cache --outputStyle=static
 
       - name: Validate npm trusted publishing preflight
         run: |

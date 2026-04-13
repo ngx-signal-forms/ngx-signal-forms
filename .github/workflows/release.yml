@@ -113,12 +113,13 @@ jobs:
         run: pnpm exec nx report --outputStyle=static
 
       - name: Check formatting
-        run: pnpm run format:check
+        run: bash .github/scripts/nx-safe.sh pnpm run format:check
 
       - name: Verify Quality (Lint, Test, Build, E2E)
         # Using affected ensures we only verify what changed, but caching handles the rest.
         # We target all projects to ensure workspace health before release.
-        run: pnpm exec nx affected -t lint test test-browser build e2e-ci --outputStyle=static
+        # nx-safe.sh falls back to local execution if Nx Cloud rejects our token.
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx affected -t lint test test-browser build e2e-ci --outputStyle=static
 
       - name: Determine version command
         id: version_cmd
@@ -157,13 +158,13 @@ jobs:
 
       - name: Release (Dry Run)
         if: ${{ inputs.dry_run }}
-        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }}
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release
         if: ${{ !inputs.dry_run }}
-        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish ${{ steps.first_release_flag.outputs.flag }}
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish ${{ steps.first_release_flag.outputs.flag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

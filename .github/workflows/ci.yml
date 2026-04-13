@@ -80,13 +80,15 @@ jobs:
         run: pnpm exec nx report
 
       - name: Check formatting
-        run: pnpm run format:check
+        run: bash .github/scripts/nx-safe.sh pnpm run format:check
 
-      # Run tasks locally - no DTE distribution to conserve Nx Cloud credits
-      # Set skip_cloud=true via workflow_dispatch when quota is exceeded
-      # NX_NO_CLOUD is also enabled automatically if no token is available
+      # Run tasks locally - no DTE distribution to conserve Nx Cloud credits.
+      # Set skip_cloud=true via workflow_dispatch to force-disable Nx Cloud.
+      # If Nx Cloud is unreachable or rejects our token at runtime, nx-safe.sh
+      # automatically retries with NX_NO_CLOUD=true so CI never hard-blocks on
+      # cloud availability.
       - name: Run affected tasks
-        run: pnpm exec nx affected -t lint test test-browser build e2e-ci --parallel=3 --outputStyle=static
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx affected -t lint test test-browser build e2e-ci --parallel=3 --outputStyle=static
 
       - name: Upload test artifacts
         if: ${{ always() && !cancelled() }}
