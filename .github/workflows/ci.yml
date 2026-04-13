@@ -94,8 +94,8 @@ jobs:
         with:
           name: test-artifacts-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            playwright-report/
-            test-results/
+            apps/demo-e2e/playwright-report/
+            dist/.playwright/apps/demo-e2e/test-output/
             coverage/packages/toolkit/browser/
           if-no-files-found: ignore
           retention-days: 14
