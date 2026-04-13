@@ -118,38 +118,28 @@ the default field chrome around a widget that already has its own visual UI.
 
 ### Quick FAQ: switches and custom controls
 
-**Does RC2 switch alignment support introduce a breaking change for native switches?**
+**Do I need `ngxSignalFormControl="switch"` for a native checkbox styled as a switch?**
 
-No — not for the default native switch case.
-
-If you already use a real bound control like:
+No. A native `input[type="checkbox"][role="switch"]` with `[formField]` works out
+of the box — the toolkit recognizes it as a switch and applies the switch-specific
+wrapper and auto-ARIA behavior without any extra directives.
 
 ```html
 <input type="checkbox" role="switch" [formField]="form.enabled" />
 ```
 
-the toolkit still recognizes it as a switch and applies the switch-specific
-wrapper and auto-ARIA behavior out of the box.
+**When should I reach for `ngxSignalFormControl`, then?**
 
-**Do I need `ngxSignalFormControl="switch"` for a native `input[type="checkbox"][role="switch"]`?**
-
-No. For that native pattern, the new directive is optional.
-
-Add explicit control semantics only when you want one of the advanced paths:
+Use explicit control semantics when you need one of the advanced paths:
 
 - the bound host is a custom component or third-party widget
-- you want explicit semantics instead of relying on heuristics
-- you want manual ARIA ownership
-- you want preset-driven defaults for a control family
+- you want explicit semantics instead of relying on DOM heuristics
+- you want manual ARIA ownership (`ngxSignalFormControlAria="manual"`)
+- you want preset-driven defaults for a control family (sliders, composites, etc.)
 
-**What is actually breaking in RC2, then?**
-
-The main consumer-facing change here is the appearance rename:
-
-- `standard` → `stacked`
-- `bare` → `plain`
-
-The new switch/control-semantics APIs are additive for the native switch path.
+See [`docs/CUSTOM_CONTROLS.md`](./docs/CUSTOM_CONTROLS.md) for concrete
+examples and [`docs/decisions/0001-control-semantics-architecture.md`](./docs/decisions/0001-control-semantics-architecture.md)
+for the design rationale behind the directive + presets split.
 
 ### Headless: `@ngx-signal-forms/toolkit/headless`
 
@@ -625,8 +615,6 @@ Current demo learning path:
 - **Headless** — `fieldset-utilities` for custom markup and grouped state
 - **Form Field Wrapper** — `complex-forms` and `custom-controls`
 - **Advanced Scenarios** — global config, submission patterns, async/cross-field validation, Vest, and the wizard
-
-Archived exploratory demo folders still exist under `apps/demo/src/app/**` as reference material, but the live demo now routes through the consolidated examples above.
 
 Start here:
 

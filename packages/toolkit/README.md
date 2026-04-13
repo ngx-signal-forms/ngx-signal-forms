@@ -240,6 +240,30 @@ Use the directive inputs for one-off control overrides:
 - `ngxSignalFormControlLayout`
 - `ngxSignalFormControlAria`
 
+**Preset families** (`kind` values):
+
+| Kind                    | Default layout   | Default ARIA mode | Typical hosts                                           |
+| ----------------------- | ---------------- | ----------------- | ------------------------------------------------------- |
+| `input-like`            | `stacked`        | `auto`            | `<input>` (text, email, number, password, date)         |
+| `standalone-field-like` | `stacked`        | `auto`            | `<textarea>`, `<select>`                                |
+| `switch`                | `inline-control` | `auto`            | `input[type="checkbox"][role="switch"]`, custom toggles |
+| `checkbox`              | `group`          | `auto`            | Standalone `<input type="checkbox">`                    |
+| `radio-group`           | `group`          | `auto`            | Radio clusters                                          |
+| `slider`                | `stacked`        | `auto`            | Range inputs, rating widgets, custom sliders            |
+| `composite`             | `custom`         | `auto`            | Date pickers, comboboxes, multi-part widgets            |
+
+**Override hierarchy** (highest precedence first):
+
+1. **Directive inputs** on the control host
+   (`[ngxSignalFormControl]`, `ngxSignalFormControlLayout`, `ngxSignalFormControlAria`)
+2. **Component-scoped presets** via `provideNgxSignalFormControlPresetsForComponent()`
+3. **App-level presets** via `provideNgxSignalFormControlPresets()`
+4. **Toolkit defaults** (`DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS`)
+
+For a practical walk-through of plugging in sliders, date pickers, switches,
+and third-party composite widgets, see
+[`docs/CUSTOM_CONTROLS.md`](../../docs/CUSTOM_CONTROLS.md).
+
 ### `buildAriaDescribedBy`
 
 When a control opts into `ngxSignalFormControlAria="manual"`, the consumer
@@ -334,8 +358,19 @@ provideErrorMessages({
 - `submitWithWarnings(form, callback)` — Submit helper that blocks only on
   blocking errors
 - `combineShowErrors(...signals)` — Combines multiple visibility signals
-- `showErrors(field, strategy, status)` — `Signal<boolean>` for whether errors
-  should be visible now
+- `showErrors(field, strategy, status?)` — `Signal<boolean>` for whether errors
+  should be visible now. `status` is optional for `'immediate'` and
+  `'on-touch'`; **required** for `'on-submit'` — without it the helper stays
+  at `'unsubmitted'` and errors never surface (dev mode logs a one-shot
+  `console.warn`). Inside a `[formRoot][ngxSignalForm]` form the wrapper,
+  auto-ARIA, and headless directives inherit the status from
+  `NgxSignalFormDirective` automatically; standalone `showErrors()` callers
+  must pass it through.
+- `createShowErrorsComputed(field, strategy, status?)` — Lower-level
+  extraction used internally by `showErrors()`, `NgxHeadlessErrorStateDirective`,
+  `NgxFormFieldErrorComponent`, and the wrapper. Reach for it when you already
+  own a `FieldState` signal and want the same visibility-timing rules without
+  routing through `showErrors()`'s wider `ErrorVisibilityState` parameter.
 - `injectFormContext()` — Get `ngxSignalForm` context or `undefined`
 - `splitByKind(errors)` — Partition validation messages into `blocking` and
   `warnings`
@@ -344,6 +379,57 @@ provideErrorMessages({
 `shouldShowErrors()` is the pure boolean strategy helper.
 `showErrors()` is the reactive helper that returns `Signal<boolean>` from a `FieldTree`.
 `unwrapValue()` is mainly useful when building lower-level utilities.
+
+### Field Interactivity Predicates
+
+Two small helpers drive consistent behavior across focus management, wrapper
+rendering, and error surfacing so every layer asks the same "can the user
+interact with this field?" question:
+
+- `isFieldStateInteractive(fieldState)` — `false` when the field is
+  `hidden()` or `disabled()`, `true` otherwise. `readonly()` counts as
+  interactive: the control is still visible and focusable, and the error
+  remains meaningful.
+- `isFieldStateHidden(fieldState)` — narrow check that only reads `hidden()`.
+  The wrapper uses this to reflect `[attr.hidden]` without also marking
+  disabled-but-visible fields as hidden.
+
+**Where the toolkit uses them:**
+
+- `focusFirstInvalid()` skips errors whose bound field is non-interactive —
+  focusing a hidden or disabled control would either throw or strand focus on
+  something the user cannot operate.
+- `NgxSignalFormFieldWrapperComponent` mirrors `hidden()` onto the host via
+  `[attr.hidden]` so screen readers skip the wrapper entirely.
+- Headless aggregation (`NgxHeadlessErrorSummaryDirective`,
+  `NgxHeadlessFieldsetDirective`) filters `errorSummary()` through
+  `isErrorOnInteractiveField()`, which routes through the same predicate.
+
+**Focus vs. summary asymmetry — deliberate.** `focusFirstInvalid()` and
+`isErrorOnInteractiveField()` take **opposite defaults** when an error has no
+`fieldTree` or the tree is malformed:
+
+- `focusFirstInvalid()` **skips** orphan errors — there is nothing to focus,
+  and stealing focus to an unrelated control would be worse than skipping.
+- `isErrorOnInteractiveField()` **keeps** orphan errors visible — silently
+  hiding a validation message from the user is the worst outcome.
+
+Both policies are documented in-place next to the code; the asymmetry is
+intentional and should not be "normalized".
+
+### Warning Visibility
+
+Warnings share the **same visibility-timing rules** as errors. The wrapper and
+`NgxFormFieldErrorComponent` route through `createShowErrorsComputed()` for
+both, and the headless `shouldShowWarnings()` signal reuses the same strategy
+gating. There is no separate `showWarnings()` helper — if you need a reactive
+"should I render warnings now?" signal, use `hasWarnings()` from the field
+state flags combined with `shouldShowErrors()`.
+
+Visual priority inside the wrapper is: **blocking errors** → **warnings** →
+**hints**. When a field has blocking errors, warnings are suppressed (errors
+take the red border); when a field has only warnings, the wrapper renders
+the amber warning state.
 
 ### Field Label Customization
 
@@ -861,7 +947,9 @@ repeating five separate `readFieldFlag(...)` computeds.
 - [GitHub Releases](https://github.com/ngx-signal-forms/ngx-signal-forms/releases) — Published release notes
 - [Form Field Theming](./form-field/THEMING.md) — CSS custom properties guide
 - [CSS Framework Integration](../../docs/CSS_FRAMEWORK_INTEGRATION.md) — Bootstrap, Tailwind, Material setup
+- [Custom Controls](../../docs/CUSTOM_CONTROLS.md) — Custom and third-party widget integration
 - [Warnings Support](../../docs/WARNINGS_SUPPORT.md) — Non-blocking validation
+- [Control Semantics Architecture](../../docs/decisions/0001-control-semantics-architecture.md) — Why the control-semantics contract is split across directive, providers, presets, and DI tokens
 - [Assistive Components](./assistive/README.md) — Detailed assistive docs
 - [Headless Primitives](./headless/README.md) — Detailed headless docs
 - [Debugger](./debugger/README.md) — Development-only form inspection tools

@@ -144,6 +144,51 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 </ngx-signal-form-field-wrapper>
 ```
 
+#### How the wrapper resolves and caches the bound control
+
+After each render the wrapper inspects its projected content to find the
+bound control host:
+
+1. First it looks for a native `<input>`, `<textarea>`, `<select>`, or
+   `<button type="button">` that carries an `id`.
+2. If none is found, it falls back to any `[id]` element that also has
+   `[formField]` (or an equivalent `data-ngx-signal-form-control` marker).
+
+The resolved element is **cached** between renders. The cache is a hot-path
+optimization for forms with many wrappers: without it every change-detection
+cycle would re-run a `querySelector` chain per wrapper. The cache is
+invalidated when the previously-bound element is removed from the host
+subtree or loses its `id` attribute — the common `@if` branch-swap and "drop
+the `id`" cases are both covered. Moving `[formField]` to a sibling element
+inside the same template branch without a re-render is **not** handled; if
+you need that, re-key the branch so Angular tears the wrapper down.
+
+**Strict field-name resolution.** If neither an explicit `fieldName` input
+nor a bound-control `id` is available, the wrapper **throws**. This keeps
+`aria-describedby` linking deterministic and prevents silently inventing
+field names that would then drift from the real control.
+
+#### Hidden field handling
+
+The wrapper reflects Angular Signal Forms' `hidden()` signal onto its host
+via `[attr.hidden]`. When the field's `hidden()` returns `true`:
+
+- the host element carries `hidden=""` so screen readers and AT skip it
+- error and warning rendering short-circuits before reaching the strategy
+  helper
+- wrapper state classes (`--invalid`, `--warning`) are not applied
+
+Angular documents that hiding a field is the consumer's job (`@if`), but
+leaving a hidden field mounted is not a fatal mistake — the wrapper stays
+safe either way.
+
+Note the deliberate asymmetry with `disabled()`: disabled fields are still
+**visually present**, so tagging the wrapper `[attr.hidden]` would be wrong.
+Disabled fields are excluded from Angular's validation entirely, so their
+error lists are already empty and `shouldShowErrors()` short-circuits
+naturally. `focusFirstInvalid()` and the error summary still check both
+`hidden()` and `disabled()`, because they can aggregate across subtrees.
+
 #### Explicit Control Semantics
 
 When a custom control should be treated differently from a plain text input,
