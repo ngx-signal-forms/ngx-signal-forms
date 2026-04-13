@@ -121,8 +121,15 @@ These were removed or are not public:
 | `isSubmitting()`               | `submittedStatus()` from `[formRoot]` |
 | `fieldNameResolver` config     | Provide `id` on bound control         |
 | `strictFieldResolution` config | Removed — strict by default           |
-| `appearance="standard"`        | `appearance="stacked"` (renamed)      |
-| `appearance="bare"`            | `appearance="plain"` (renamed)        |
+
+## Renamed — Update the Name, Same Behavior
+
+These still exist under a new name:
+
+| Old                     | New                    |
+| ----------------------- | ---------------------- |
+| `appearance="standard"` | `appearance="stacked"` |
+| `appearance="bare"`     | `appearance="plain"`   |
 
 ## Floating Labels Require a Placeholder Space
 
@@ -269,3 +276,21 @@ IDs and described-by wiring deterministic.
 <!-- Correct — [formRoot] provides submittedStatus context -->
 <form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">...</form>
 ```
+
+## Standalone `showErrors('on-submit')` Without `submittedStatus`
+
+```typescript
+// Wrong — silently never shows errors. Dev mode logs a one-shot
+// console.warn('[ngx-signal-forms] showErrors(...) called with strategy "on-submit"...').
+const visible = showErrors(form.email, 'on-submit');
+
+// Correct — pass the submitted-status signal explicitly
+const visible = showErrors(form.email, 'on-submit', () => submittedStatus());
+```
+
+Inside `form[formRoot][ngxSignalForm]` the wrapper, auto-ARIA, and headless
+directives inherit `submittedStatus` from the form context automatically — this
+pitfall only applies to standalone callers of `showErrors()` or
+`createShowErrorsComputed()` outside that context (custom utilities,
+hand-rolled components, services). Either pass the status, or move the work
+inside the form context so inheritance can do it for you.

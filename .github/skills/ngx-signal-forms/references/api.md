@@ -188,18 +188,41 @@ const NGX_FIELD_LABEL_RESOLVER: InjectionToken<FieldLabelResolver>;
 ```typescript
 // Error visibility
 showErrors(field, strategy, submittedStatus?): Signal<boolean>
+// `submittedStatus` is optional for 'immediate' and 'on-touch'; REQUIRED for
+// 'on-submit' — without it the helper stays at 'unsubmitted' and errors never
+// surface (dev mode logs a one-shot console.warn). Inside [formRoot][ngxSignalForm]
+// the wrapper, auto-ARIA, and headless directives inherit it automatically.
+createShowErrorsComputed(field, strategy, submittedStatus?): Signal<boolean>
+// Lower-level extraction used internally by showErrors(), the wrapper,
+// NgxFormFieldErrorComponent, and NgxHeadlessErrorStateDirective. Reach for it
+// when you already own a FieldState signal and want the same visibility-timing
+// rules without routing through showErrors()'s ErrorVisibilityState parameter.
 combineShowErrors(signals: readonly Signal<boolean>[]): Signal<boolean>
 shouldShowErrors(isInvalid, isTouched, strategy, submittedStatus): boolean
+
+// Field interactivity (drives focus management, wrapper rendering, summary filtering)
+isFieldStateInteractive(fieldState): boolean // false when hidden() or disabled(); readonly() counts as interactive
+isFieldStateHidden(fieldState): boolean       // narrow check on hidden() only
 
 // Field and control resolution
 injectFieldControl<TValue>(element, injector?): FieldTree<TValue>
 resolveFieldName(element): string | null
 generateErrorId(fieldName: string): string
 generateWarningId(fieldName: string): string
+buildAriaDescribedBy(fieldName, options: AriaDescribedByChainOptions): string | null
 resolveNgxSignalFormControlSemantics(element, presets): ResolvedNgxSignalFormControlSemantics
+
+interface AriaDescribedByChainOptions {
+  readonly baseIds?: readonly string[];     // hint or helper IDs to prepend
+  readonly showErrors?: boolean;             // whether the error ID should be in the chain
+  readonly showWarnings?: boolean;           // whether the warning ID should be in the chain
+}
 
 // Submission helpers
 focusFirstInvalid(form): boolean
+// Skips errors whose bound field is non-interactive (hidden/disabled) and
+// **skips orphan errors** with no field tree — focusing nothing is better than
+// stealing focus to an unrelated control.
 createOnInvalidHandler(options?): (form) => void
 createSubmittedStatusTracker(form): Signal<SubmittedStatus>
 hasSubmitted(form): Signal<boolean>

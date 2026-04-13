@@ -70,7 +70,8 @@ The form-field entry point provides a pre-styled field shell (label + control + 
   />
   ```
 
-- For `ariaMode: 'manual'` controls, assemble `aria-describedby` with `buildAriaDescribedBy` from `@ngx-signal-forms/toolkit` so the ID-naming conventions stay consistent:
+- `ariaMode: 'manual'` inside the `ngxSignalFormControl` config and the standalone `ngxSignalFormControlAria="manual"` attribute are equivalent — the config-object form is for declaring full semantics in one place, the standalone attribute for a one-off override when `kind`/`layout` already come from a preset or DOM heuristic (see the _Error Handling_ section below for an example).
+- For either form, assemble `aria-describedby` with `buildAriaDescribedBy` from `@ngx-signal-forms/toolkit` so the ID-naming conventions stay consistent:
 
   ```typescript
   import { computed } from '@angular/core';
