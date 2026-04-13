@@ -18,7 +18,6 @@ import {
   createEmptyFact,
   createEmptyOffense,
   type FactEntry,
-  type OutlineFormFieldModel,
 } from './outline-form-field.model';
 import { outlineFormFieldSchema } from './outline-form-field.validations';
 

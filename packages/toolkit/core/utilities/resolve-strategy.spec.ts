@@ -91,9 +91,7 @@ describe('resolveStrategyFromContext', () => {
 
   it('should handle inherit input by falling through to context', () => {
     const context = createMockFormContext({ errorStrategy: 'on-submit' });
-    expect(resolveStrategyFromContext('inherit' as any, context)).toBe(
-      'on-submit',
-    );
+    expect(resolveStrategyFromContext('inherit', context)).toBe('on-submit');
   });
 });
 

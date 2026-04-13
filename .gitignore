@@ -49,9 +49,8 @@ vite.config.*.timestamp*
 vitest.config.*.timestamp*
 
 #generated files
-**/__screenshots__/*
-**/__snapshots__/*
 test-results/
+playwright-report/
 build.log
 
 .claude/worktrees

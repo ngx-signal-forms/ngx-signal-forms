@@ -75,14 +75,12 @@ export class BadgeComponent {
       danger: 'bg-transparent text-red-700 dark:text-red-300',
     };
 
-    let variantClass = '';
-    if (variant === 'solid') {
-      variantClass = solidClasses[appearance];
-    } else if (variant === 'outline') {
-      variantClass = outlineClasses[appearance];
-    } else {
-      variantClass = ghostClasses[appearance];
-    }
+    const variantClass =
+      variant === 'solid'
+        ? solidClasses[appearance]
+        : variant === 'outline'
+          ? outlineClasses[appearance]
+          : ghostClasses[appearance];
 
     return `${baseClasses} ${variantClass}`;
   };
