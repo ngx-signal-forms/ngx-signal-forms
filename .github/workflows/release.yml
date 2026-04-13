@@ -187,7 +187,11 @@ jobs:
 
       - name: Release
         if: ${{ !inputs.dry_run }}
-        run: bash .github/scripts/nx-safe.sh pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish ${{ steps.first_release_flag.outputs.flag }}
+        # Run nx release directly, never through nx-safe.sh: this command is
+        # non-idempotent (version bump, changelog, tag, commit, push). If Nx
+        # Cloud fails mid-sequence, retrying could create duplicate tags or a
+        # corrupted release. Fail loudly and let a human re-run cleanly.
+        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish ${{ steps.first_release_flag.outputs.flag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

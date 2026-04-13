@@ -66,8 +66,10 @@ Current local skills:
 
 These generic skills are **not published as Copilot plugins** in this environment, so the practical global install method is copying them into `~/.copilot/skills`.
 
+Run these from the repo root, or set `REPO` to the repo path:
+
 ```bash
-REPO="/Users/arjenalthoff/dev/ngx-signal-forms/ngx-signal-forms-e2e-snapshots"
+REPO="${REPO:-$(pwd)}"
 
 SKILLS=(
   accessibility-a11y
@@ -116,9 +118,9 @@ done
 
 Claude currently has **repository-local config**:
 
-| Item                    | Current state                  | Source repo                                   | Notes                                |
-| ----------------------- | ------------------------------ | --------------------------------------------- | ------------------------------------ |
-| `.claude/settings.json` | enables `nx@nx-claude-plugins` | <https://github.com/nrwl/nx-ai-agents-config> | should be moved to global user scope |
+| Item                    | Current state                  | Source repo                                   | Notes                                                                                          |
+| ----------------------- | ------------------------------ | --------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `.claude/settings.json` | enables `nx@nx-claude-plugins` | <https://github.com/nrwl/nx-ai-agents-config> | shared team config; the Nx marketplace/plugin is workspace-specific, so this file is committed |
 
 Current local Claude config:
 
@@ -142,8 +144,10 @@ Current local Claude config:
 
 #### 1. Install generic standalone skills globally
 
+Run these from the repo root, or set `REPO` to the repo path:
+
 ```bash
-REPO="/Users/arjenalthoff/dev/ngx-signal-forms/ngx-signal-forms-e2e-snapshots"
+REPO="${REPO:-$(pwd)}"
 
 SKILLS=(
   accessibility-a11y
@@ -207,7 +211,8 @@ Repo:
 
 #### Claude
 
-- `CLAUDE.md` only
+- `CLAUDE.md`
+- `.claude/settings.json` (shared-team config; enables the workspace-specific Nx marketplace/plugin)
 
 ### Remove from this repository after global install
 
@@ -217,7 +222,7 @@ Repo:
 
 #### Claude
 
-- `.claude/settings.json`
+- _(none — generic skills are loaded from `~/.claude/skills` by each contributor; only workspace-specific Claude config stays in the repo)_
 
 ## Verification Commands
 
