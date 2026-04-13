@@ -234,6 +234,54 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(errorId).toBe('derived-id-error');
     });
 
+    it('should rebind to a new projected control when an @if branch swaps the bound element', async () => {
+      // Regression guard for the DOM-query cache in `earlyRead`: when an
+      // `@if` branch swaps which element carries the projected id, the
+      // cache must release the old element (no longer contained in the
+      // host after branch change) and re-query for the new one. The cache
+      // uses `hostEl.contains(cached)` + `isConnected` to detect this.
+      const invalidField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'required', message: 'Required' }],
+      });
+
+      @Component({
+        template: `
+          <ngx-signal-form-field-wrapper [formField]="field">
+            <label for="branch-a">Branch</label>
+            @if (useBranchA()) {
+              <input id="branch-a" type="text" />
+            } @else {
+              <input id="branch-b" type="text" />
+            }
+          </ngx-signal-form-field-wrapper>
+        `,
+        imports: [NgxSignalFormWrapperComponent],
+      })
+      class TestComponent {
+        readonly useBranchA = signal(true);
+        readonly field = invalidField;
+      }
+
+      const { container, fixture } = await render(TestComponent);
+      await fixture.whenStable();
+
+      const branchA = container.querySelector('#branch-a');
+      expect(branchA).toHaveAttribute('data-signal-field', 'branch-a');
+
+      fixture.componentInstance.useBranchA.set(false);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const branchB = container.querySelector('#branch-b');
+      expect(branchB).toBeTruthy();
+      expect(branchB).toHaveAttribute('data-signal-field', 'branch-b');
+      // Old branch element is gone from the DOM, so there's nothing left
+      // to carry the stale attribute — cache eviction worked.
+      expect(container.querySelector('#branch-a')).toBeNull();
+    });
+
     it('should clear stale projected control metadata when a custom control loses its id', async () => {
       const invalidField = signal({
         invalid: () => true,

@@ -594,7 +594,17 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     return formContext ? formContext.submittedStatus() : 'unsubmitted';
   });
 
-  readonly #allMessages = computed(() => readDirectErrors(this.formField()()));
+  /**
+   * Cached field state signal. Every downstream computed
+   * (`#allMessages`, `isFieldHidden`, `#showErrorsByStrategy`, and the
+   * `resolvedControlSemantics` effects) used to re-read `this.formField()()`
+   * independently. With a single cache the signal graph collapses those
+   * reads into one dependency node, which matters on forms with dozens of
+   * wrappers all reacting to the same change-detection cycle.
+   */
+  readonly #fieldState = computed(() => this.formField()());
+
+  readonly #allMessages = computed(() => readDirectErrors(this.#fieldState()));
 
   /**
    * Whether field has blocking errors.
@@ -636,7 +646,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * across subtrees) do check both; this component only needs `hidden()`.
    */
   protected readonly isFieldHidden = computed(() => {
-    return isFieldStateHidden(this.formField()());
+    return isFieldStateHidden(this.#fieldState());
   });
 
   /**
@@ -645,7 +655,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * and runs the same strategy logic — keeping every surface in lockstep.
    */
   readonly #showErrorsByStrategy = createShowErrorsComputed(
-    () => this.formField()(),
+    this.#fieldState,
     this.effectiveStrategy,
     this.submittedStatus,
   );
@@ -684,7 +694,26 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     afterEveryRender({
       earlyRead: () => {
         const hostEl = this.#getHostElement();
-        const inputEl = this.#findBoundControl(hostEl);
+
+        // DOM-query cache: skip `querySelector` when the previously bound
+        // control is still mounted inside this host AND still carries an
+        // `id` attribute (without the id it no longer satisfies the query
+        // `#findBoundControl` runs, so the cache must release it). This is
+        // a hot path on large forms — every change-detection cycle used
+        // to run a `querySelector` chain per wrapper before. The
+        // `isConnected` + `hostEl.contains` guard covers the common
+        // `@if`-branch-swap case (Angular removes the old node from its
+        // parent on branch change). Not handled: moving `[formField]` to
+        // a sibling element inside the same template branch without a
+        // re-render — a rare author-error edge case; if it surfaces we'd
+        // add a `MutationObserver` in a follow-up.
+        const cached = this.#boundControlElement();
+        const cacheHit =
+          cached &&
+          cached.isConnected &&
+          hostEl.contains(cached) &&
+          cached.hasAttribute('id');
+        const inputEl = cacheHit ? cached : this.#findBoundControl(hostEl);
 
         return {
           inputEl,
