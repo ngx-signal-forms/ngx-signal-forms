@@ -18,7 +18,7 @@ import {
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
-import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
+import { getAppearanceLabel } from '../../ui/appearance-toggle';
 import {
   ERROR_DISPLAY_MODE_LABELS,
   ErrorDisplayModeSelectorComponent,
@@ -106,7 +106,7 @@ export class ZodVestValidationPage {
     },
     {
       label: 'Appearance',
-      value: APPEARANCE_LABELS[this.selectedAppearance()],
+      value: getAppearanceLabel(this.selectedAppearance()),
     },
   ]);
   protected readonly content = ZOD_VEST_VALIDATION_CONTENT;

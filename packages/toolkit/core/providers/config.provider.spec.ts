@@ -1,4 +1,5 @@
-import { Injector } from '@angular/core';
+import { createEnvironmentInjector, EnvironmentInjector } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
@@ -9,13 +10,10 @@ import {
   provideNgxSignalFormsConfigForComponent,
 } from './config.provider';
 
-const createInjectorFromEnvProviders = (envProviders: unknown) => {
-  const providersRecord = envProviders as {
-    ɵproviders: Parameters<typeof Injector.create>[0]['providers'];
-  };
-
-  return Injector.create({ providers: providersRecord.ɵproviders });
-};
+const createInjectorFromEnvProviders = (
+  providers: Parameters<typeof createEnvironmentInjector>[0],
+  parent: EnvironmentInjector = TestBed.inject(EnvironmentInjector),
+) => createEnvironmentInjector(providers, parent);
 
 describe('provideNgxSignalFormsConfig', () => {
   it('should return environment providers', () => {
@@ -36,7 +34,7 @@ describe('provideNgxSignalFormsConfig', () => {
     };
 
     const providers = provideNgxSignalFormsConfig(config);
-    const injector = createInjectorFromEnvProviders(providers);
+    const injector = createInjectorFromEnvProviders([providers]);
 
     const resolved = injector.get(NGX_SIGNAL_FORMS_CONFIG);
     expect(resolved.autoAria).toBe(false);
@@ -47,7 +45,7 @@ describe('provideNgxSignalFormsConfig', () => {
 
   it('should work with empty config', () => {
     const providers = provideNgxSignalFormsConfig({});
-    const injector = createInjectorFromEnvProviders(providers);
+    const injector = createInjectorFromEnvProviders([providers]);
 
     const resolved = injector.get(NGX_SIGNAL_FORMS_CONFIG);
     expect(resolved).toEqual({ ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG });
@@ -69,7 +67,7 @@ describe('provideNgxSignalFormsConfigForComponent', () => {
     };
 
     const providers = provideNgxSignalFormsConfigForComponent(config);
-    const injector = Injector.create({ providers });
+    const injector = createInjectorFromEnvProviders(providers);
 
     const resolved = injector.get(NGX_SIGNAL_FORMS_CONFIG);
     expect(resolved.autoAria).toBe(false);

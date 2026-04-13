@@ -71,4 +71,46 @@ test.describe('Advanced - Global Configuration', () => {
       await expect(input).toHaveAttribute('aria-invalid', 'true');
     });
   });
+
+  test.describe('Control Presets', () => {
+    test('should render accept-terms switch with preset data attributes', async ({
+      page: playwrightPage,
+    }) => {
+      const acceptTerms = playwrightPage.locator('#acceptTerms');
+      await expect(acceptTerms).toBeVisible();
+      await expect(acceptTerms).toHaveAttribute('role', 'switch');
+      await expect(acceptTerms).toHaveAttribute(
+        'data-ngx-signal-form-control-kind',
+        'switch',
+      );
+    });
+
+    test('should apply auto-ARIA to switch after interaction', async ({
+      page: playwrightPage,
+    }) => {
+      const acceptTerms = playwrightPage.locator('#acceptTerms');
+      await acceptTerms.focus();
+      await acceptTerms.blur();
+      await expect(acceptTerms).toHaveAttribute('aria-invalid', /(true|false)/);
+    });
+
+    test('should show accept-terms error after submit without checking', async ({
+      page: playwrightPage,
+    }) => {
+      const submitButton = playwrightPage.getByRole('button', {
+        name: /Submit Form/i,
+      });
+      await submitButton.click();
+
+      const acceptTerms = playwrightPage.locator('#acceptTerms');
+      await acceptTerms.focus();
+      await acceptTerms.blur();
+
+      const wrapper = acceptTerms.locator(
+        'xpath=ancestor::ngx-signal-form-field-wrapper',
+      );
+      const errors = wrapper.locator('[role="alert"]');
+      await expect(errors.first()).toBeVisible({ timeout: 3000 });
+    });
+  });
 });

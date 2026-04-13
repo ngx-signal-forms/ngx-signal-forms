@@ -11,5 +11,24 @@ import { DEFAULT_NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 export function normalizeSignalFormsConfig(
   config?: NgxSignalFormsUserConfig | null,
 ): NgxSignalFormsConfig {
-  return { ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG, ...config };
+  if (!config) {
+    return {
+      ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+    };
+  }
+
+  return {
+    autoAria: config.autoAria ?? DEFAULT_NGX_SIGNAL_FORMS_CONFIG.autoAria,
+    defaultErrorStrategy:
+      config.defaultErrorStrategy ??
+      DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy,
+    defaultFormFieldAppearance:
+      config.defaultFormFieldAppearance ??
+      DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultFormFieldAppearance,
+    showRequiredMarker:
+      config.showRequiredMarker ??
+      DEFAULT_NGX_SIGNAL_FORMS_CONFIG.showRequiredMarker,
+    requiredMarker:
+      config.requiredMarker ?? DEFAULT_NGX_SIGNAL_FORMS_CONFIG.requiredMarker,
+  };
 }

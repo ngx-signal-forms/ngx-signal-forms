@@ -89,6 +89,9 @@ import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 
 Only add ARIA manually for headless usage where you control the markup explicitly.
 
+If you explicitly opt a control into `ngxSignalFormControlAria="manual"`, the
+toolkit preserves your existing ARIA attributes instead of generating them.
+
 ## Wrapper Identity — Always Provide `id`
 
 ```html
@@ -112,13 +115,14 @@ These were removed or are not public:
 | Removed                        | Use Instead                           |
 | ------------------------------ | ------------------------------------- |
 | `'manual'` strategy            | `showErrors()` + manual signal        |
-| `'bare'` appearance            | `'standard'`                          |
 | `computeShowErrors()`          | `showErrors()`                        |
 | `createShowErrorsSignal()`     | `showErrors()`                        |
 | `canSubmit()`                  | `canSubmitWithWarnings()`             |
 | `isSubmitting()`               | `submittedStatus()` from `[formRoot]` |
 | `fieldNameResolver` config     | Provide `id` on bound control         |
 | `strictFieldResolution` config | Removed — strict by default           |
+| `appearance="standard"`        | `appearance="stacked"` (renamed)      |
+| `appearance="bare"`            | `appearance="plain"` (renamed)        |
 
 ## Floating Labels Require a Placeholder Space
 
@@ -170,6 +174,19 @@ Use a native checkbox with `role="switch"` on the actual bound control when the
 UI is conceptually an on/off switch. This preserves native keyboard behavior and
 lets toolkit auto-ARIA opt the control back in.
 
+For custom controls or fallback-free wrapper behavior, prefer the explicit
+semantics directive as well:
+
+```html
+<input
+  id="emailUpdates"
+  type="checkbox"
+  role="switch"
+  ngxSignalFormControl="switch"
+  [formField]="form.emailUpdates"
+/>
+```
+
 ## Standalone Imports — Parent Imports Do Not Flow Into Child Templates
 
 ```typescript
@@ -185,9 +202,36 @@ lets toolkit auto-ARIA opt the control back in.
 export class SwitchControlComponent {}
 ```
 
+## Custom Controls — Declare Semantics to Avoid Layout Heuristics
+
+Without `ngxSignalFormControl`, the wrapper must infer the control kind from DOM heuristics. This can produce wrong wrapper layout (e.g., outlined text-field chrome around a slider) or suppress auto-ARIA for valid switch controls.
+
+```html
+<!-- Wrong — wrapper guesses control kind from DOM, may get layout wrong -->
+<ngx-signal-form-field-wrapper appearance="plain" [formField]="form.rating">
+  <label for="rating">Rating</label>
+  <ngx-rating-control id="rating" [formField]="form.rating" />
+</ngx-signal-form-field-wrapper>
+
+<!-- Correct — explicit semantics give the wrapper stable contract -->
+<ngx-signal-form-field-wrapper appearance="plain" [formField]="form.rating">
+  <label for="rating">Rating</label>
+  <ngx-rating-control
+    id="rating"
+    [ngxSignalFormControl]="{ kind: 'slider', layout: 'stacked' }"
+    [formField]="form.rating"
+  />
+</ngx-signal-form-field-wrapper>
+```
+
+When multiple controls in a component use the same semantics, use `provideNgxSignalFormControlPresetsForComponent()` to set defaults once instead of repeating the object on every control.
+
 Angular standalone imports are template-local. If the real `[formField]` host
 element lives inside `SwitchControlComponent`, that component needs the toolkit
 import in its own `imports` array.
+
+The same rule applies to `ngxSignalFormControl`: import the toolkit bundle or
+directive in the component that renders the actual control host.
 
 ## Nested Custom Controls May Need Explicit `fieldName`
 

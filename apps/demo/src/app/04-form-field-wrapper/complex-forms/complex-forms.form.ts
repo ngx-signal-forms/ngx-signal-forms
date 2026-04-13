@@ -14,8 +14,33 @@ import {
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { SwitchControlComponent } from '../../shared/controls';
 import type { ComplexFormModel } from './complex-forms.model';
 import { complexFormSchema } from './complex-forms.validations';
+
+function createInitialComplexFormModel(): ComplexFormModel {
+  return {
+    personalInfo: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      age: 0,
+    },
+    addressInfo: {
+      street: '',
+      city: '',
+      zipCode: '',
+      country: '',
+    },
+    skills: [{ name: '', level: 1 }],
+    contacts: [{ type: 'email', value: '' }],
+    preferences: {
+      newsletter: false,
+      notifications: false,
+      contactMethod: '',
+    },
+  };
+}
 
 /**
  * Complex Forms Component
@@ -28,7 +53,12 @@ import { complexFormSchema } from './complex-forms.validations';
 @Component({
   selector: 'ngx-complex-forms',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxFormField,
+    SwitchControlComponent,
+  ],
   styles: `
     :host {
       display: block;
@@ -43,6 +73,12 @@ import { complexFormSchema } from './complex-forms.validations';
 
     .complex-array-fieldset {
       --ngx-signal-form-fieldset-gap: 0;
+    }
+
+    .preferences-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
     }
 
     .array-entry-grid + .array-entry-grid {
@@ -125,30 +161,10 @@ export class ComplexFormsComponent {
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
 
   /** Form field appearance input */
-  readonly appearance = input<FormFieldAppearance>('standard');
+  readonly appearance = input<FormFieldAppearance>('stacked');
 
   /** Form data model */
-  readonly #model = signal<ComplexFormModel>({
-    personalInfo: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      age: 0,
-    },
-    addressInfo: {
-      street: '',
-      city: '',
-      zipCode: '',
-      country: '',
-    },
-    skills: [{ name: '', level: 1 }],
-    contacts: [{ type: 'email', value: '' }],
-    preferences: {
-      newsletter: false,
-      notifications: false,
-      contactMethod: '',
-    },
-  });
+  readonly #model = signal(createInitialComplexFormModel());
 
   /** Create form with validation schema */
   readonly complexForm = form(this.#model, complexFormSchema, {
@@ -208,26 +224,7 @@ export class ComplexFormsComponent {
    * Reset form to initial state
    */
   protected resetForm(): void {
-    this.#model.set({
-      personalInfo: {
-        firstName: '',
-        lastName: '',
-        email: '',
-        age: 0,
-      },
-      addressInfo: {
-        street: '',
-        city: '',
-        zipCode: '',
-        country: '',
-      },
-      skills: [{ name: '', level: 1 }],
-      contacts: [{ type: 'email', value: '' }],
-      preferences: {
-        newsletter: false,
-        notifications: false,
-        contactMethod: '',
-      },
-    });
+    this.#model.set(createInitialComplexFormModel());
+    this.complexForm().reset();
   }
 }

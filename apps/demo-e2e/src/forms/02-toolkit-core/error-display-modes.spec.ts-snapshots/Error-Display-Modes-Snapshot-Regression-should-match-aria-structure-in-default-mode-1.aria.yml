@@ -1,0 +1,38 @@
+- form:
+    - text: 'Toolkit helpers Strategy: on-touch Submitted: unsubmitted Powered by injectFormContext + showErrors Name errors visible:'
+    - strong: 'no'
+    - text: 'Email errors visible:'
+    - strong: 'no'
+    - group "Personal Information":
+        - text: Personal Information Full Name *
+        - textbox "Full Name *":
+            - /placeholder: Your full name
+        - text: We use this to personalize our response Email Address *
+        - textbox "Email Address *":
+            - /placeholder: your.email@company.com
+        - text: For follow-up questions (we respect your privacy) Company
+        - textbox "Company":
+            - /placeholder: Your company (optional)
+        - text: Helps us understand your use case
+    - group "Your Feedback":
+        - text: Your Feedback Which product did you use? *
+        - combobox "Which product did you use? *":
+            - option "Select a product..." [selected]
+            - option "Web Application"
+            - option "Mobile Application"
+            - option "API Documentation"
+            - option "User Documentation"
+            - option "Other"
+        - text: Which product are you providing feedback about? Overall Rating *
+        - spinbutton "Overall Rating *"
+        - text: 1 = Poor, 5 = Excellent Additional Comments
+        - textbox "Additional Comments":
+            - /placeholder: Share your detailed experience...
+        - text: /Any additional thoughts or suggestions 0\/\d+/
+    - group "⚙️ Preferences":
+        - text: ''
+        - checkbox "Allow us to contact you for follow-up questions"
+        - text: Allow us to contact you for follow-up questions We promise not to spam you
+        - checkbox "Subscribe to product updates"
+        - text: Subscribe to product updates Monthly digest of new features and improvements
+    - button "Submit Feedback"

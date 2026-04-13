@@ -1,6 +1,9 @@
 import { InjectionToken, type Signal } from '@angular/core';
 import type { NgxSignalFormContext } from './directives/ngx-signal-form.directive';
-import type { NgxSignalFormsConfig } from './types';
+import type {
+  NgxSignalFormControlPresetRegistry,
+  NgxSignalFormsConfig,
+} from './types';
 
 /**
  * Context provided by form field wrapper components.
@@ -18,10 +21,46 @@ export interface NgxSignalFormFieldContext {
 export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: NgxSignalFormsConfig = {
   autoAria: true,
   defaultErrorStrategy: 'on-touch',
-  defaultFormFieldAppearance: 'standard',
+  defaultFormFieldAppearance: 'stacked',
   showRequiredMarker: true,
   requiredMarker: ' *',
 } as const;
+
+/**
+ * Default semantic presets applied when consumers opt into explicit control
+ * semantics.
+ */
+export const DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS: NgxSignalFormControlPresetRegistry =
+  {
+    'input-like': {
+      layout: 'stacked',
+      ariaMode: 'auto',
+    },
+    'standalone-field-like': {
+      layout: 'stacked',
+      ariaMode: 'auto',
+    },
+    switch: {
+      layout: 'inline-control',
+      ariaMode: 'auto',
+    },
+    checkbox: {
+      layout: 'group',
+      ariaMode: 'auto',
+    },
+    'radio-group': {
+      layout: 'group',
+      ariaMode: 'auto',
+    },
+    slider: {
+      layout: 'stacked',
+      ariaMode: 'auto',
+    },
+    composite: {
+      layout: 'custom',
+      ariaMode: 'auto',
+    },
+  } as const;
 
 /**
  * Injection token for the global ngx-signal-forms configuration.
@@ -34,6 +73,20 @@ export const NGX_SIGNAL_FORMS_CONFIG = new InjectionToken<NgxSignalFormsConfig>(
     }),
   },
 );
+
+/**
+ * Injection token for semantic control presets used by explicit control
+ * metadata and wrapper inference.
+ */
+export const NGX_SIGNAL_FORM_CONTROL_PRESETS =
+  new InjectionToken<NgxSignalFormControlPresetRegistry>(
+    'NGX_SIGNAL_FORM_CONTROL_PRESETS',
+    {
+      factory: () => ({
+        ...DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS,
+      }),
+    },
+  );
 
 /**
  * Injection token for the form context (provided by `NgxSignalFormDirective`

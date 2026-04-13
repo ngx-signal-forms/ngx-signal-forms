@@ -47,7 +47,7 @@ export const BASIC_USAGE_CONTENT = {
       {
         title: '🎨 Appearance & Outline Options',
         items: [
-          'Use the <strong>Appearance selector</strong> to toggle between standard and outline mode natively supported by the wrapper.',
+          'Use the <strong>Appearance selector</strong> to toggle between stacked and outline mode natively supported by the wrapper.',
           'The Outline mode provides a more distinct visual boundary, often preferred in enterprise applications like Material Design.',
         ],
       },

@@ -57,7 +57,7 @@ export class BasicUsageComponent {
   /**
    * Form field appearance input
    */
-  readonly appearance = input<FormFieldAppearance>('standard');
+  readonly appearance = input<FormFieldAppearance>('stacked');
 
   /**
    * Form model signal with default values

@@ -12,7 +12,7 @@
   class="form-container"
 >
   <div class="space-y-6">
-    <!-- Product Name - Standard input for comparison -->
+    <!-- Product Name - Stacked input for comparison -->
     <ngx-signal-form-field-wrapper
       [appearance]="appearance()"
       [formField]="reviewForm.productName"
@@ -28,13 +28,14 @@
 
     <!-- Product Rating - Custom RatingControl with auto-derived fieldName -->
     <ngx-signal-form-field-wrapper
-      [appearance]="appearance()"
+      appearance="plain"
       [formField]="reviewForm.rating"
     >
-      <label for="rating">Product Rating *</label>
+      <label id="rating-label" for="rating">Product Rating *</label>
       <ngx-rating-control
         id="rating"
-        data-ngx-signal-form-control="true"
+        [labelledBy]="'rating-label'"
+        [ngxSignalFormControl]="sliderSemantics"
         [formField]="reviewForm.rating"
         [maxRating]="5"
       />
@@ -45,13 +46,16 @@
 
     <!-- Service Rating - Custom RatingControl -->
     <ngx-signal-form-field-wrapper
-      [appearance]="appearance()"
+      appearance="plain"
       [formField]="reviewForm.serviceRating"
     >
-      <label for="serviceRating">Service Quality *</label>
+      <label id="serviceRating-label" for="serviceRating"
+        >Service Quality *</label
+      >
       <ngx-rating-control
         id="serviceRating"
-        data-ngx-signal-form-control="true"
+        [labelledBy]="'serviceRating-label'"
+        [ngxSignalFormControl]="sliderSemantics"
         [formField]="reviewForm.serviceRating"
         [maxRating]="5"
       />
@@ -59,13 +63,16 @@
 
     <!-- Would Recommend - Custom RatingControl as thumbs up/down (2 stars) -->
     <ngx-signal-form-field-wrapper
-      [appearance]="appearance()"
+      appearance="plain"
       [formField]="reviewForm.wouldRecommend"
     >
-      <label for="wouldRecommend">Would Recommend?</label>
+      <label id="wouldRecommend-label" for="wouldRecommend"
+        >Would Recommend?</label
+      >
       <ngx-rating-control
         id="wouldRecommend"
-        data-ngx-signal-form-control="true"
+        [labelledBy]="'wouldRecommend-label'"
+        [ngxSignalFormControl]="sliderSemantics"
         [formField]="reviewForm.wouldRecommend"
         [maxRating]="2"
       />
@@ -85,11 +92,48 @@
         [field]="reviewForm.emailUpdates"
       />
       <ngx-signal-form-field-hint position="left">
-        Required in this demo so the switch can show wrapper validation.
+        Stay in the loop with occasional product updates and release notes.
       </ngx-signal-form-field-hint>
     </ngx-signal-form-field-wrapper>
 
-    <!-- Feedback - Standard textarea for comparison -->
+    <ngx-signal-form-field-wrapper
+      [appearance]="appearance()"
+      [formField]="reviewForm.shareReviewPublicly"
+    >
+      <label for="shareReviewPublicly">Share this review publicly *</label>
+      <input
+        id="shareReviewPublicly"
+        type="checkbox"
+        ngxSignalFormControl="checkbox"
+        [formField]="reviewForm.shareReviewPublicly"
+      />
+      <ngx-signal-form-field-hint position="left">
+        Enable this to let us feature your review publicly.
+      </ngx-signal-form-field-hint>
+    </ngx-signal-form-field-wrapper>
+
+    <ngx-signal-form-field-wrapper
+      appearance="plain"
+      [formField]="reviewForm.accessibilityAudit"
+      errorPlacement="top"
+    >
+      <label id="accessibilityAudit-label" for="accessibilityAudit"
+        >Accessibility Audit *</label
+      >
+      <ngx-rating-control
+        id="accessibilityAudit"
+        [labelledBy]="'accessibilityAudit-label'"
+        ngxSignalFormControl="slider"
+        [describedBy]="accessibilityAuditDescribedBy()"
+        [formField]="reviewForm.accessibilityAudit"
+        [maxRating]="5"
+      />
+      <ngx-signal-form-field-hint id="accessibilityAudit-hint" position="left">
+        Rate how accessible and easy to navigate this experience felt.
+      </ngx-signal-form-field-hint>
+    </ngx-signal-form-field-wrapper>
+
+    <!-- Feedback - Stacked textarea for comparison -->
     <ngx-signal-form-field-wrapper
       [appearance]="appearance()"
       [formField]="reviewForm.feedback"
@@ -105,25 +149,30 @@
   </div>
 
   <!-- Form Actions -->
-  <div class="mt-8 flex items-center gap-4">
-    <button
-      class="btn-primary"
-      type="submit"
-      [disabled]="reviewForm().submitting()"
-    >
-      @if (reviewForm().submitting()) { Submitting... } @else { Submit Review }
-    </button>
+  <div
+    class="mt-8 flex flex-col items-start gap-3 border-t border-gray-200/80 pt-4 dark:border-gray-700/80"
+  >
+    <div class="flex flex-wrap items-center gap-4">
+      <button
+        class="btn-primary"
+        type="submit"
+        [disabled]="reviewForm().submitting()"
+      >
+        @if (reviewForm().submitting()) { Submitting... } @else { Submit Review
+        }
+      </button>
 
-    <button class="btn-secondary" type="reset" (click)="resetForm()">
-      Reset
-    </button>
+      <button class="btn-secondary" type="reset" (click)="resetForm()">
+        Reset
+      </button>
+    </div>
 
-    <div class="ml-auto text-sm text-gray-600 dark:text-gray-400">
+    <p class="text-sm text-gray-600 dark:text-gray-400">
       @if (reviewForm().valid()) {
       <span class="text-green-600 dark:text-green-400">✓ All fields valid</span>
       } @else {
       <span>* Required fields</span>
       }
-    </div>
+    </p>
   </div>
 </form>

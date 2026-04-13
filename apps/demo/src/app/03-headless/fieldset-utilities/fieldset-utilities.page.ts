@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
+  CardComponent,
   ExampleCardsComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
@@ -19,6 +20,7 @@ import { HeadlessFieldsetUtilitiesComponent } from './fieldset-utilities.form';
     }
   `,
   imports: [
+    CardComponent,
     ExampleCardsComponent,
     HeadlessFieldsetUtilitiesComponent,
     PageHeaderComponent,
@@ -45,6 +47,29 @@ import { HeadlessFieldsetUtilitiesComponent } from './fieldset-utilities.form';
         }
       </ngx-split-layout>
     </ngx-example-cards>
+
+    <!-- Escape-hatch guidance: wrapper vs headless decision -->
+    <ngx-card variant="educational" data-testid="escape-hatch-card">
+      <div card-header>
+        {{ content.escapeHatch.icon }} {{ content.escapeHatch.title }}
+      </div>
+      <div class="grid gap-4 md:grid-cols-2">
+        @for (section of content.escapeHatch.sections; track section.title) {
+          <div>
+            <h3
+              class="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+            >
+              {{ section.title }}
+            </h3>
+            <ul class="space-y-1 text-xs text-gray-700 dark:text-gray-300">
+              @for (item of section.items; track item) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+    </ngx-card>
   `,
 })
 export class HeadlessFieldsetUtilitiesPageComponent {

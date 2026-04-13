@@ -401,6 +401,52 @@
     color: var(--color-text-muted);
   }
 
+  /* Choice-group fieldset (radio/checkbox groups inside preferences) */
+  .choice-group-fieldset {
+    --ngx-signal-form-fieldset-gap: 0.25rem;
+    --ngx-signal-form-fieldset-padding: 0;
+    --ngx-signal-form-fieldset-border-width: 0;
+    --ngx-signal-form-fieldset-content-offset: 0;
+    --ngx-signal-form-fieldset-message-margin-top: 0.25rem;
+    --ngx-signal-form-fieldset-message-margin-bottom: 0.25rem;
+    --ngx-signal-form-fieldset-legend-padding: 0;
+    --ngx-signal-form-fieldset-legend-font-size: 0.875rem;
+    --ngx-signal-form-fieldset-legend-line-height: 1.25rem;
+    --ngx-signal-form-fieldset-legend-font-weight: 400;
+    --ngx-signal-form-fieldset-color: var(--color-text-muted);
+    --ngx-signal-form-fieldset-muted-color: var(--color-text-muted);
+  }
+
+  .choice-group-fieldset__legend {
+    @apply block text-sm font-normal tracking-wide;
+    padding-inline-start: 0.125rem;
+    color: var(--color-text-muted);
+  }
+
+  .choice-group-fieldset__options {
+    @apply flex flex-col gap-1;
+  }
+
+  .choice-group-option {
+    @apply flex min-h-7 cursor-pointer items-center gap-2.5 rounded-xl text-sm;
+    padding-inline: 0.125rem;
+    color: var(--color-text);
+  }
+
+  .choice-group-option input {
+    @apply m-0 shrink-0;
+  }
+
+  .choice-group-option:hover,
+  .choice-group-option:focus-within {
+    background: rgb(15 23 42 / 0.03);
+  }
+
+  .dark .choice-group-option:hover,
+  .dark .choice-group-option:focus-within {
+    background: rgb(255 255 255 / 0.04);
+  }
+
   /* Fieldset demo styling */
   .fieldset-demo {
     @apply rounded-lg border p-6;

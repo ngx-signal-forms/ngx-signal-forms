@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FORM_FIELD } from '@angular/forms/signals';
+import { NgxSignalFormControlSemanticsDirective } from '../index';
 import { NgxFormFieldHintComponent } from '@ngx-signal-forms/toolkit/assistive';
 import { render } from '@testing-library/angular';
 import { describe, expect, it, vi } from 'vitest';
@@ -201,6 +202,122 @@ describe('NgxSignalFormAutoAriaDirective', () => {
       const { container } = await render(TestComponent);
 
       await TestBed.inject(ApplicationRef).whenStable();
+
+      const input = container.querySelector('input');
+      expect(input?.getAttribute('aria-invalid')).toBe('true');
+      expect(input?.getAttribute('aria-describedby')).toBe(
+        'emailUpdates-error',
+      );
+    });
+
+    it('should apply explicit switch semantics to checkbox inputs without role="switch"', async () => {
+      @Component({
+        template:
+          '<input type="checkbox" id="emailUpdates" ngxSignalFormControl="switch" [formField]="switchControl()" />',
+        imports: [
+          MockFormFieldDirective,
+          NgxSignalFormAutoAriaDirective,
+          NgxSignalFormControlSemanticsDirective,
+        ],
+      })
+      class TestComponent {
+        switchControl = createMockControl(true, true, [
+          { kind: 'required', message: 'Switch is required' },
+        ]);
+      }
+
+      const { container } = await render(TestComponent);
+
+      const input = container.querySelector('input');
+      expect(input?.getAttribute('aria-invalid')).toBe('true');
+      expect(input?.getAttribute('aria-describedby')).toBe(
+        'emailUpdates-error',
+      );
+    });
+
+    it('should preserve consumer-owned aria attributes in manual semantics mode', async () => {
+      @Component({
+        template:
+          '<input type="checkbox" id="emailUpdates" aria-describedby="emailUpdates-hint" aria-invalid="mixed" aria-required="true" ngxSignalFormControl="switch" ngxSignalFormControlAria="manual" [formField]="switchControl()" />',
+        imports: [
+          MockFormFieldDirective,
+          NgxSignalFormAutoAriaDirective,
+          NgxSignalFormControlSemanticsDirective,
+        ],
+      })
+      class TestComponent {
+        switchControl = createMockControl(true, true, [
+          { kind: 'required', message: 'Switch is required' },
+        ]);
+      }
+
+      const { container } = await render(TestComponent);
+
+      const input = container.querySelector('input');
+      expect(input?.getAttribute('aria-describedby')).toBe('emailUpdates-hint');
+      expect(input?.getAttribute('aria-invalid')).toBe('mixed');
+      expect(input?.getAttribute('aria-required')).toBe('true');
+    });
+
+    it('should preserve dynamically updated aria attributes in manual semantics mode', async () => {
+      @Component({
+        template:
+          '<input type="checkbox" id="emailUpdates" [attr.aria-describedby]="describedBy()" [attr.aria-invalid]="ariaInvalid()" [attr.aria-required]="ariaRequired()" ngxSignalFormControl="switch" ngxSignalFormControlAria="manual" [formField]="switchControl()" />',
+        imports: [
+          MockFormFieldDirective,
+          NgxSignalFormAutoAriaDirective,
+          NgxSignalFormControlSemanticsDirective,
+        ],
+      })
+      class TestComponent {
+        readonly describedBy = signal('emailUpdates-hint');
+        readonly ariaInvalid = signal('mixed');
+        readonly ariaRequired = signal('true');
+
+        switchControl = createMockControl(true, true, [
+          { kind: 'required', message: 'Switch is required' },
+        ]);
+      }
+
+      const { container, fixture } = await render(TestComponent);
+
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const input = container.querySelector('input');
+      expect(input?.getAttribute('aria-describedby')).toBe('emailUpdates-hint');
+      expect(input?.getAttribute('aria-invalid')).toBe('mixed');
+      expect(input?.getAttribute('aria-required')).toBe('true');
+
+      fixture.componentInstance.describedBy.set('emailUpdates-details');
+      fixture.componentInstance.ariaInvalid.set('false');
+      fixture.componentInstance.ariaRequired.set('false');
+      fixture.detectChanges();
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(input?.getAttribute('aria-describedby')).toBe(
+        'emailUpdates-details',
+      );
+      expect(input?.getAttribute('aria-invalid')).toBe('false');
+      expect(input?.getAttribute('aria-required')).toBe('false');
+    });
+
+    it('should apply switch ARIA when both role="switch" and ngxSignalFormControl="switch" are present', async () => {
+      @Component({
+        template:
+          '<input type="checkbox" role="switch" id="emailUpdates" ngxSignalFormControl="switch" [formField]="switchControl()" />',
+        imports: [
+          MockFormFieldDirective,
+          NgxSignalFormAutoAriaDirective,
+          NgxSignalFormControlSemanticsDirective,
+        ],
+      })
+      class TestComponent {
+        switchControl = createMockControl(true, true, [
+          { kind: 'required', message: 'Switch is required' },
+        ]);
+      }
+
+      const { container } = await render(TestComponent);
 
       const input = container.querySelector('input');
       expect(input?.getAttribute('aria-invalid')).toBe('true');
@@ -480,6 +597,35 @@ describe('NgxSignalFormAutoAriaDirective', () => {
       fixture.detectChanges();
 
       expect(input?.hasAttribute('aria-describedby')).toBe(false);
+    });
+
+    it('should replace stale managed ids when the control id changes', async () => {
+      @Component({
+        template: '<input [id]="fieldId()" [formField]="emailControl()" />',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAriaDirective],
+      })
+      class TestComponent {
+        readonly fieldId = signal('email');
+
+        emailControl = createMockControl(true, true, [
+          { kind: 'required', message: 'Email is required' },
+        ]);
+      }
+
+      const { container, fixture } = await render(TestComponent);
+
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const input = container.querySelector('input');
+      expect(input?.getAttribute('aria-describedby')).toBe('email-error');
+
+      fixture.componentInstance.fieldId.set('contactEmail');
+      fixture.detectChanges();
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(input?.getAttribute('aria-describedby')).toBe(
+        'contactEmail-error',
+      );
     });
   });
 

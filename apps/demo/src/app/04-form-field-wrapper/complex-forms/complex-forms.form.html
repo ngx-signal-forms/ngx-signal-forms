@@ -337,70 +337,75 @@
       ⚙️ Preferences
     </legend>
 
-    <div class="space-y-2">
-      <label class="flex items-center space-x-3">
-        <input
-          id="newsletter"
-          type="checkbox"
-          [formField]="complexForm.preferences.newsletter"
-          class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+    <div class="preferences-stack">
+      <!-- Switch semantics: newsletter toggle wrapped with explicit control kind -->
+      <ngx-signal-form-field-wrapper
+        fieldName="newsletter"
+        [formField]="complexForm.preferences.newsletter"
+        [appearance]="appearance()"
+      >
+        <label for="newsletter">Subscribe to newsletter</label>
+        <ngx-switch-control
+          inputId="newsletter"
+          [field]="complexForm.preferences.newsletter"
         />
-        <span class="text-sm text-gray-700 dark:text-gray-300">
-          Subscribe to newsletter
-        </span>
-      </label>
+      </ngx-signal-form-field-wrapper>
 
-      <label class="flex items-center space-x-3">
+      <!-- Checkbox semantics: notifications checkbox with explicit control kind -->
+      <ngx-signal-form-field-wrapper
+        [formField]="complexForm.preferences.notifications"
+        [appearance]="appearance()"
+      >
+        <label for="notifications">Enable email notifications</label>
         <input
           id="notifications"
           type="checkbox"
+          ngxSignalFormControl="checkbox"
           [formField]="complexForm.preferences.notifications"
-          class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
-        <span class="text-sm text-gray-700 dark:text-gray-300">
-          Enable email notifications
-        </span>
-      </label>
+      </ngx-signal-form-field-wrapper>
 
       <fieldset
         ngxSignalFormFieldset
         [fieldsetField]="complexForm.preferences.contactMethod"
         fieldsetId="contact-method"
-        class="space-y-3"
+        class="choice-group-fieldset"
       >
-        <legend class="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <legend class="choice-group-fieldset__legend">
           Preferred contact method *
         </legend>
 
-        <label class="flex cursor-pointer items-center space-x-3">
-          <input
-            type="radio"
-            [formField]="complexForm.preferences.contactMethod"
-            value="email"
-            class="form-radio h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          <span class="text-sm text-gray-700 dark:text-gray-300"> Email </span>
-        </label>
+        <div class="choice-group-fieldset__options">
+          <label class="choice-group-option">
+            <input
+              type="radio"
+              [formField]="complexForm.preferences.contactMethod"
+              value="email"
+              class="form-radio h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span>Email</span>
+          </label>
 
-        <label class="flex cursor-pointer items-center space-x-3">
-          <input
-            type="radio"
-            [formField]="complexForm.preferences.contactMethod"
-            value="sms"
-            class="form-radio h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          <span class="text-sm text-gray-700 dark:text-gray-300"> SMS </span>
-        </label>
+          <label class="choice-group-option">
+            <input
+              type="radio"
+              [formField]="complexForm.preferences.contactMethod"
+              value="sms"
+              class="form-radio h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span>SMS</span>
+          </label>
 
-        <label class="flex cursor-pointer items-center space-x-3">
-          <input
-            type="radio"
-            [formField]="complexForm.preferences.contactMethod"
-            value="phone"
-            class="form-radio h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          <span class="text-sm text-gray-700 dark:text-gray-300"> Phone </span>
-        </label>
+          <label class="choice-group-option">
+            <input
+              type="radio"
+              [formField]="complexForm.preferences.contactMethod"
+              value="phone"
+              class="form-radio h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span>Phone</span>
+          </label>
+        </div>
       </fieldset>
     </div>
   </ngx-signal-form-fieldset>
