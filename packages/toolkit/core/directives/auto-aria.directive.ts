@@ -8,8 +8,11 @@ import {
   signal,
 } from '@angular/core';
 import { FORM_FIELD, type FieldState } from '@angular/forms/signals';
-import { NGX_SIGNAL_FORM_CONTEXT } from '../tokens';
-import { NgxSignalFormControlSemanticsDirective } from './control-semantics.directive';
+import {
+  NGX_SIGNAL_FORM_ARIA_MODE,
+  NGX_SIGNAL_FORM_CONTEXT,
+  NGX_SIGNAL_FORM_HINT_REGISTRY,
+} from '../tokens';
 import type { ErrorDisplayStrategy } from '../types';
 import { shouldShowErrors } from '../utilities/error-strategies';
 import {
@@ -25,7 +28,6 @@ interface AutoAriaDomSnapshot {
   readonly describedBy: string | null;
   readonly ariaInvalid: string | null;
   readonly ariaRequired: string | null;
-  readonly hintIds: readonly string[];
 }
 
 const INITIAL_DOM_SNAPSHOT: AutoAriaDomSnapshot = {
@@ -33,7 +35,6 @@ const INITIAL_DOM_SNAPSHOT: AutoAriaDomSnapshot = {
   describedBy: null,
   ariaInvalid: null,
   ariaRequired: null,
-  hintIds: [],
 };
 
 type RequiredFieldState = Pick<FieldState<unknown>, 'required'>;
@@ -139,9 +140,12 @@ export class NgxSignalFormAutoAriaDirective {
   readonly #element = inject(ElementRef<HTMLElement>);
   readonly #injector = inject(Injector);
   readonly #context = inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true });
-  readonly #controlSemantics = inject(NgxSignalFormControlSemanticsDirective, {
+  readonly #ariaModeSignal = inject(NGX_SIGNAL_FORM_ARIA_MODE, {
     optional: true,
     self: true,
+  });
+  readonly #hintRegistry = inject(NGX_SIGNAL_FORM_HINT_REGISTRY, {
+    optional: true,
   });
 
   /// Inject Angular's FormField to avoid creating a duplicate `formField` input,
@@ -152,7 +156,24 @@ export class NgxSignalFormAutoAriaDirective {
   readonly #managedDescribedByIds = signal<readonly string[]>([]);
 
   readonly #isManualAriaMode = computed(() => {
-    return this.#controlSemantics?.ariaMode() === 'manual';
+    return this.#ariaModeSignal?.() === 'manual';
+  });
+
+  /**
+   * Hint IDs contributed by the surrounding hint registry (typically provided
+   * by the form field wrapper). Filters by field name when the hint records
+   * it; falls back to "belongs to any field" when the hint has not declared
+   * one.
+   */
+  readonly #hintIds = computed((): readonly string[] => {
+    const registry = this.#hintRegistry;
+    if (!registry) return [];
+
+    const fieldName = this.#domSnapshot().fieldName;
+    return registry
+      .hints()
+      .filter((hint) => !hint.fieldName || hint.fieldName === fieldName)
+      .map((hint) => hint.id);
   });
 
   /**
@@ -229,7 +250,7 @@ export class NgxSignalFormAutoAriaDirective {
     const existing = snapshot.describedBy;
     const parts: string[] = existing ? existing.split(' ').filter(Boolean) : [];
 
-    for (const hintId of snapshot.hintIds) {
+    for (const hintId of this.#hintIds()) {
       if (!parts.includes(hintId)) {
         parts.push(hintId);
       }
@@ -268,11 +289,13 @@ export class NgxSignalFormAutoAriaDirective {
       return [];
     }
 
+    const hintIds = this.#hintIds();
+
     if (!snapshot.fieldName) {
-      return snapshot.hintIds;
+      return hintIds;
     }
 
-    const managedIds = [...snapshot.hintIds];
+    const managedIds = [...hintIds];
 
     if (this.#shouldShowErrors()) {
       managedIds.push(generateErrorId(snapshot.fieldName));
@@ -319,38 +342,7 @@ export class NgxSignalFormAutoAriaDirective {
       describedBy: this.#readPreservedDescribedBy(fieldName),
       ariaInvalid: this.#element.nativeElement.getAttribute('aria-invalid'),
       ariaRequired: this.#element.nativeElement.getAttribute('aria-required'),
-      hintIds: fieldName ? this.#resolveHintIds(fieldName) : [],
     };
-  }
-
-  #resolveHintIds(fieldName: string): string[] {
-    const host = this.#element.nativeElement;
-    const maybeWrapper = host.closest('ngx-signal-form-field-wrapper');
-    if (!(maybeWrapper instanceof HTMLElement)) return [];
-
-    const wrapper = maybeWrapper;
-
-    const hintElements = Array.from(
-      wrapper.querySelectorAll(
-        'ngx-signal-form-field-hint[data-ngx-signal-form-hint]',
-      ),
-    );
-
-    const hintIds: string[] = [];
-
-    for (const matchingHint of hintElements) {
-      const hintField = matchingHint.getAttribute('data-signal-field');
-      if (hintField && hintField !== fieldName) {
-        continue;
-      }
-
-      const id = matchingHint.getAttribute('id');
-      if (id) {
-        hintIds.push(id);
-      }
-    }
-
-    return hintIds;
   }
 
   #writeManagedAttribute(
@@ -386,8 +378,7 @@ export class NgxSignalFormAutoAriaDirective {
             current.fieldName !== snapshot.fieldName ||
             current.describedBy !== snapshot.describedBy ||
             current.ariaInvalid !== snapshot.ariaInvalid ||
-            current.ariaRequired !== snapshot.ariaRequired ||
-            !this.#haveSameIds(current.hintIds, snapshot.hintIds)
+            current.ariaRequired !== snapshot.ariaRequired
           ) {
             this.#domSnapshot.set(snapshot);
           }

@@ -116,11 +116,20 @@ export class NgxFormFieldHintComponent {
    */
   readonly position = input<'left' | 'right' | null>(null);
 
-  protected readonly resolvedFieldName = computed(() => {
+  /**
+   * Resolved field name from the wrapper's `NGX_SIGNAL_FORM_FIELD_CONTEXT`,
+   * or `null` when the hint is rendered outside a wrapper. Public so wrappers
+   * can expose it through `NGX_SIGNAL_FORM_HINT_REGISTRY` for auto-ARIA.
+   */
+  readonly resolvedFieldName = computed(() => {
     return this.#fieldContext?.fieldName() ?? null;
   });
 
-  protected readonly resolvedId = computed(() => {
+  /**
+   * Stable DOM id used by `aria-describedby`. Public so wrappers can forward
+   * it to auto-ARIA via the hint registry without reading the DOM.
+   */
+  readonly resolvedId = computed(() => {
     const explicit = this.#explicitId();
     if (explicit) return explicit;
 

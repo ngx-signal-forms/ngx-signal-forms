@@ -1,18 +1,54 @@
 import {
   ApplicationRef,
+  ChangeDetectionStrategy,
   Component,
   computed,
+  contentChildren,
   Directive,
+  inject,
   input as signalInput,
   signal,
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FORM_FIELD } from '@angular/forms/signals';
 import { NgxSignalFormControlSemanticsDirective } from '../index';
+import { NGX_SIGNAL_FORM_HINT_REGISTRY } from '../tokens';
 import { NgxFormFieldHintComponent } from '@ngx-signal-forms/toolkit/assistive';
 import { render } from '@testing-library/angular';
 import { describe, expect, it, vi } from 'vitest';
 import { NgxSignalFormAutoAriaDirective } from './auto-aria.directive';
+
+/**
+ * Minimal test stand-in for the real form-field wrapper. Provides the
+ * `NGX_SIGNAL_FORM_HINT_REGISTRY` by projecting hint children via
+ * `contentChildren`, matching how the real wrapper wires auto-ARIA without
+ * pulling the form-field package into core tests.
+ */
+@Component({
+  selector: 'ngx-signal-form-field-wrapper',
+  template: '<ng-content />',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    {
+      provide: NGX_SIGNAL_FORM_HINT_REGISTRY,
+      useFactory: () => {
+        const wrapper = inject(TestHintRegistryHostComponent);
+        return { hints: wrapper.hintDescriptors };
+      },
+    },
+  ],
+})
+class TestHintRegistryHostComponent {
+  protected readonly hintChildren = contentChildren(NgxFormFieldHintComponent, {
+    descendants: true,
+  });
+  readonly hintDescriptors = computed(() =>
+    this.hintChildren().map((hint) => ({
+      id: hint.resolvedId(),
+      fieldName: hint.resolvedFieldName(),
+    })),
+  );
+}
 
 /**
  * Mock FormField directive for tests.
@@ -471,6 +507,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
           MockFormFieldDirective,
           NgxSignalFormAutoAriaDirective,
           NgxFormFieldHintComponent,
+          TestHintRegistryHostComponent,
         ],
       })
       class TestComponent {
@@ -499,6 +536,7 @@ describe('NgxSignalFormAutoAriaDirective', () => {
           MockFormFieldDirective,
           NgxSignalFormAutoAriaDirective,
           NgxFormFieldHintComponent,
+          TestHintRegistryHostComponent,
         ],
       })
       class TestComponent {

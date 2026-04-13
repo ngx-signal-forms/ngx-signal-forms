@@ -4,19 +4,23 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  contentChildren,
   ElementRef,
   inject,
   input,
+  type Signal,
   signal,
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
   FormFieldAppearanceInput,
+  NgxSignalFormHintDescriptor,
 } from '@ngx-signal-forms/toolkit';
 import {
   NGX_SIGNAL_FORM_CONTROL_PRESETS,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
+  NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
   injectFormContext,
   readDirectErrors,
@@ -30,6 +34,7 @@ import {
   isWarningError,
   NgxFormFieldAssistiveRowComponent,
   NgxFormFieldErrorComponent,
+  NgxFormFieldHintComponent,
 } from '@ngx-signal-forms/toolkit/assistive';
 import {
   hasPaddedControlContent,
@@ -149,6 +154,13 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
         return {
           fieldName: component.resolvedFieldName,
         };
+      },
+    },
+    {
+      provide: NGX_SIGNAL_FORM_HINT_REGISTRY,
+      useFactory: () => {
+        const component = inject(NgxSignalFormFieldWrapperComponent);
+        return { hints: component.hintDescriptors };
       },
     },
   ],
@@ -531,6 +543,30 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
       '[ngx-signal-forms] Could not resolve a deterministic field name for ngx-signal-form-field-wrapper. Add an explicit `fieldName` input or an `id` attribute to the bound control.',
     );
   });
+
+  /**
+   * Hint children projected into this wrapper. Used to expose a
+   * `NgxSignalFormHintRegistry` to the `NgxSignalFormAutoAriaDirective` that
+   * runs on the bound control, without auto-ARIA needing to query the DOM.
+   *
+   * @internal Angular's `contentChildren` API requires non-private visibility,
+   * so this uses `protected` instead of `#`.
+   */
+  protected readonly hintChildren = contentChildren(NgxFormFieldHintComponent, {
+    descendants: true,
+  });
+
+  /**
+   * Reactive view of the projected hints, shaped for the
+   * `NGX_SIGNAL_FORM_HINT_REGISTRY` contract in the core package.
+   */
+  readonly hintDescriptors: Signal<readonly NgxSignalFormHintDescriptor[]> =
+    computed(() =>
+      this.hintChildren().map((hint) => ({
+        id: hint.resolvedId(),
+        fieldName: hint.resolvedFieldName(),
+      })),
+    );
 
   /**
    * Effective error display strategy combining component input and form context defaults.
