@@ -489,11 +489,11 @@ ngx-signal-form-field-wrapper {
 }
 ```
 
-Do **not**:
+Avoid:
 
-- use `::ng-deep`
-- target internal selectors as if they were public API
-- hard-code private structure assumptions in examples
+- `::ng-deep` (or any other shadow-piercing escape hatch)
+- targeting internal selectors as if they were public API
+- hard-coding private structure assumptions in examples
 
 ## Current Do / Don’t
 
