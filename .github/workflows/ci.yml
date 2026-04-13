@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       skip_cloud:
-        description: 'Skip Nx Cloud (use when quota exceeded)'
+        description: 'Skip Nx Cloud (use when cloud auth, plan, or service is failing)'
         required: false
         type: boolean
         default: false
@@ -21,14 +21,12 @@ jobs:
   main:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RW'] }}
-      NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
     steps:
       - uses: actions/checkout@v5
         with:
           filter: tree:0
           fetch-depth: 0
+          persist-credentials: false
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -45,6 +43,9 @@ jobs:
 
       - name: Configure Nx Cloud access
         id: nx_cloud
+        env:
+          NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RW'] }}
+          NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
         run: |
           if [ "${{ inputs.skip_cloud }}" = "true" ]; then
             echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
@@ -72,7 +73,7 @@ jobs:
             echo "No Nx Cloud token configured. Running without Nx Cloud."
           fi
 
-      # Set BASE/HEAD for affected commands; continue if Nx Cloud quota exceeded
+      # Set BASE/HEAD for affected commands; continue if the helper cannot resolve SHAs
       - uses: nrwl/nx-set-shas@v4
         continue-on-error: true
 
@@ -84,9 +85,9 @@ jobs:
 
       # Run tasks locally - no DTE distribution to conserve Nx Cloud credits.
       # Set skip_cloud=true via workflow_dispatch to force-disable Nx Cloud.
-      # If Nx Cloud is unreachable or rejects our token at runtime, nx-safe.sh
-      # automatically retries with NX_NO_CLOUD=true so CI never hard-blocks on
-      # cloud availability.
+      # If Nx Cloud is unavailable or rejects the workspace at runtime,
+      # nx-safe.sh automatically retries with NX_NO_CLOUD=true so CI never
+      # hard-blocks on cloud availability.
       - name: Run affected tasks
         run: bash .github/scripts/nx-safe.sh pnpm exec nx affected -t lint test test-browser build e2e-ci --parallel=3 --outputStyle=static
 

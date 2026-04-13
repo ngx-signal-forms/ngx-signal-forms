@@ -58,9 +58,6 @@ jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RW'] }}
-      NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -91,6 +88,9 @@ jobs:
         run: pnpm exec playwright install --with-deps
 
       - name: Configure Nx Cloud access
+        env:
+          NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RW'] }}
+          NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
         run: |
           TOKEN="$NX_CLOUD_ACCESS_TOKEN_RW"
           if [ -z "$TOKEN" ]; then
@@ -121,26 +121,49 @@ jobs:
         # nx-safe.sh falls back to local execution if Nx Cloud rejects our token.
         run: bash .github/scripts/nx-safe.sh pnpm exec nx affected -t lint test test-browser build e2e-ci --outputStyle=static
 
+      - name: Validate release inputs
+        env:
+          VERSION: ${{ inputs.version }}
+          CUSTOM_VERSION: ${{ inputs.custom_version }}
+          PRERELEASE_ID: ${{ inputs.prerelease_id }}
+        run: |
+          if [[ "$VERSION" == pre* ]] && [[ ! "$PRERELEASE_ID" =~ ^(beta|rc|alpha)$ ]]; then
+            echo "❌ prerelease_id must be one of: beta, rc, alpha." >&2
+            exit 1
+          fi
+
+          if [ "$VERSION" = "custom" ]; then
+            if [ -z "$CUSTOM_VERSION" ]; then
+              echo "❌ custom_version is required when version=custom." >&2
+              exit 1
+            fi
+
+            if [[ ! "$CUSTOM_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+              echo "❌ custom_version must be a valid semver-like version such as 1.2.3 or 1.2.3-beta.1." >&2
+              exit 1
+            fi
+          fi
+
       - name: Determine version command
         id: version_cmd
         run: |
           VERSION="${{ inputs.version }}"
           if [ "$VERSION" = "custom" ]; then
-            echo "cmd=${{ inputs.custom_version }}" >> $GITHUB_OUTPUT
+            printf 'cmd=%s\n' "${{ inputs.custom_version }}" >> "$GITHUB_OUTPUT"
           elif [[ "$VERSION" == pre* ]]; then
             # prepatch, preminor, premajor, prerelease all use --preid
-            echo "cmd=$VERSION --preid=${{ inputs.prerelease_id }}" >> $GITHUB_OUTPUT
+            printf 'cmd=%s --preid=%s\n' "$VERSION" "${{ inputs.prerelease_id }}" >> "$GITHUB_OUTPUT"
           else
-            echo "cmd=$VERSION" >> $GITHUB_OUTPUT
+            printf 'cmd=%s\n' "$VERSION" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Determine first-release flag
         id: first_release_flag
         run: |
           if [ "${{ inputs.first_release }}" = "true" ]; then
-            echo "flag=--first-release" >> "$GITHUB_OUTPUT"
+            printf 'flag=%s\n' '--first-release' >> "$GITHUB_OUTPUT"
           else
-            echo "flag=" >> "$GITHUB_OUTPUT"
+            printf 'flag=\n' >> "$GITHUB_OUTPUT"
           fi
 
       - name: Preview Release Changelog
