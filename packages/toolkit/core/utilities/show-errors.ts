@@ -15,6 +15,13 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * Creates a reactive computed signal that determines if a form field's errors should
  * be shown to the user based on the error display strategy.
  *
+ * This is the **single source of truth** for error-visibility timing across the
+ * toolkit. `createErrorState()`, `NgxHeadlessErrorStateDirective`,
+ * `NgxHeadlessErrorSummaryDirective`, and the wrapper component all route
+ * through `shouldShowErrors()` (or this computed wrapper) so visibility timing
+ * cannot drift between the factory and directive surfaces. If you find
+ * yourself writing a parallel visibility predicate, use this instead.
+ *
  * ## Simplified Architecture (aligned with Angular Signal Forms)
  *
  * Angular's `submit()` helper calls `markAllAsTouched()`, which means `field.touched()`

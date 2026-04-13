@@ -2746,4 +2746,79 @@ describe('NgxSignalFormWrapperComponent', () => {
       });
     });
   });
+
+  describe('hidden() field behavior', () => {
+    it('should suppress errors and apply the hidden host attr when field().hidden() is true', async () => {
+      const hiddenField = signal({
+        invalid: () => true,
+        touched: () => true,
+        hidden: () => true,
+        errors: () => [{ kind: 'required', message: 'Required' }],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field" fieldName="secret">
+          <label for="secret">Secret</label>
+          <input id="secret" type="text" />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field: hiddenField },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-signal-form-field-wrapper');
+      expect(wrapper).toHaveAttribute('hidden', '');
+
+      // No error component should render even though the field is invalid + touched.
+      expect(container.querySelector('ngx-form-field-error')).toBeNull();
+    });
+
+    it('should still render errors when field().hidden() is false', async () => {
+      const visibleField = signal({
+        invalid: () => true,
+        touched: () => true,
+        hidden: () => false,
+        errors: () => [{ kind: 'required', message: 'Required' }],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field" fieldName="email">
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field: visibleField },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-signal-form-field-wrapper');
+      expect(wrapper).not.toHaveAttribute('hidden');
+      expect(container.querySelector('ngx-form-field-error')).toBeTruthy();
+    });
+
+    it('should treat fields without a hidden() method as visible', async () => {
+      const legacyField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'required', message: 'Required' }],
+      });
+
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field" fieldName="legacy">
+          <label for="legacy">Legacy</label>
+          <input id="legacy" type="text" />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field: legacyField },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-signal-form-field-wrapper');
+      expect(wrapper).not.toHaveAttribute('hidden');
+      expect(container.querySelector('ngx-form-field-error')).toBeTruthy();
+    });
+  });
 });

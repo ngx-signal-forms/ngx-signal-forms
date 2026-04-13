@@ -23,6 +23,7 @@ import {
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
   injectFormContext,
+  isFieldStateHidden,
   readDirectErrors,
   type ResolvedNgxSignalFormControlSemantics,
   resolveNgxSignalFormControlSemantics,
@@ -168,6 +169,7 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
   host: {
     '[attr.outline]': 'isOutline() ? "" : null',
     '[attr.aria-invalid]': 'showInvalidState() ? "true" : "false"',
+    '[attr.hidden]': 'isFieldHidden() ? "" : null',
     '[attr.data-ngx-signal-form-control-aria-mode]':
       'resolvedControlAriaMode()',
     '[attr.data-ngx-signal-form-control-kind]': 'resolvedControlKind()',
@@ -620,10 +622,32 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   });
 
   /**
+   * Whether the bound field is currently hidden via Angular's `hidden()`
+   * schema logic. When `true` we suppress error/warning rendering and mark
+   * the host element with the `hidden` attribute so screen readers skip it
+   * — Angular Signal Forms documents that hiding is the consumer's job
+   * (`@if`), but the wrapper stays safe even if the consumer forgets.
+   *
+   * **Why no `disabled()` check here**: disabled fields are excluded from
+   * Angular's validation entirely, so `errors().length === 0` already
+   * short-circuits `shouldShowErrors()`. A disabled field is also still
+   * visually present, so tagging the wrapper `[attr.hidden]` would be
+   * wrong. `focusFirstInvalid` and the error summary (which can aggregate
+   * across subtrees) do check both; this component only needs `hidden()`.
+   */
+  protected readonly isFieldHidden = computed(() => {
+    const fieldState = this.formField()();
+    if (!fieldState || typeof fieldState !== 'object') return false;
+    return isFieldStateHidden(fieldState);
+  });
+
+  /**
    * Whether to actually display errors based on current strategy and field state.
    * This controls when the error component replaces the hint.
    */
   protected readonly shouldShowErrors = computed(() => {
+    if (this.isFieldHidden()) return false;
+
     const errors = this.#allMessages();
     if (errors.length === 0) return false;
 

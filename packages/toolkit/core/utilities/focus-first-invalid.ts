@@ -1,12 +1,21 @@
 import type { FieldTree } from '@angular/forms/signals';
+import { isFieldStateInteractive } from './field-interactivity';
 
 /**
- * Focus the first invalid field in a form after failed submission.
+ * Focus the first **focusable** invalid field in a form after failed submission.
  *
- * Uses Angular's native `focusBoundControl()` on the first error from `errorSummary()`.
+ * Iterates `errorSummary()` and focuses the first error whose bound field is
+ * both interactive (not `hidden()` or `disabled()`) and exposes a
+ * `focusBoundControl()` method. Skips errors that point at fields the user
+ * cannot interact with — focusing them would either throw (no DOM element) or
+ * strand focus on a non-interactive control.
+ *
+ * `readonly()` fields are **not** skipped: they are visible, focusable, and
+ * the validation error is usually still meaningful to the user even though
+ * they cannot edit the value directly.
  *
  * @param formTree The root form tree to search for invalid fields
- * @returns `true` if an invalid field was found and focused, `false` otherwise
+ * @returns `true` if a focusable invalid field was found and focused, `false` otherwise
  *
  * @example With declarative submission
  * ```typescript
@@ -21,24 +30,31 @@ import type { FieldTree } from '@angular/forms/signals';
  * @remarks
  * Custom controls must call `registerAsBinding()` for `focusBoundControl()` to work.
  *
+ * Angular Signal Forms documents that a hidden field "is ignored when
+ * determining the valid, touched, and dirty states" but does not guarantee its
+ * errors are absent from `errorSummary()`. The filter below is defensive and
+ * becomes a no-op if Angular starts excluding them.
+ *
  * @public
  */
 export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
   const errors = formTree().errorSummary();
   if (!Array.isArray(errors) || errors.length === 0) return false;
 
-  const firstError = errors[0];
+  for (const error of errors) {
+    if (typeof error.fieldTree !== 'function') continue;
 
-  if (typeof firstError.fieldTree !== 'function') {
-    return false;
+    const fieldState = error.fieldTree();
+
+    if (!fieldState || typeof fieldState.focusBoundControl !== 'function') {
+      continue;
+    }
+
+    if (!isFieldStateInteractive(fieldState)) continue;
+
+    fieldState.focusBoundControl();
+    return true;
   }
 
-  const fieldState = firstError.fieldTree();
-
-  if (!fieldState || typeof fieldState.focusBoundControl !== 'function') {
-    return false;
-  }
-
-  fieldState.focusBoundControl();
-  return true;
+  return false;
 }

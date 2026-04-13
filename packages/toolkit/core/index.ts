@@ -22,6 +22,10 @@ export {
 export * from './utilities/create-unique-id';
 export * from './utilities/control-semantics';
 export { shouldShowErrors } from './utilities/error-strategies';
+export {
+  isFieldStateHidden,
+  isFieldStateInteractive,
+} from './utilities/field-interactivity';
 export * from './utilities/field-resolution';
 export type * from './utilities/field-state-types';
 export * from './utilities/focus-first-invalid';

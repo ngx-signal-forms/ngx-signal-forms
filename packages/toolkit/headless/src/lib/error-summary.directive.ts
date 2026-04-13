@@ -1,5 +1,5 @@
 import { computed, Directive, inject, input } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
+import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   injectFormContext,
   NGX_ERROR_MESSAGES,
@@ -14,6 +14,7 @@ import {
 
 import {
   dedupeValidationErrors,
+  isErrorOnInteractiveField,
   readErrors,
   toErrorSummaryEntry,
   type ErrorSummaryEntryData,
@@ -131,9 +132,23 @@ export class NgxHeadlessErrorSummaryDirective implements ErrorSummarySignals {
     this.#resolvedSubmittedStatus,
   );
 
-  readonly #split = computed(() =>
-    splitByKind(dedupeValidationErrors(readErrors(this.#fieldState()))),
-  );
+  /**
+   * Errors with `errorSummary()` traversal, then filtered to drop entries
+   * whose underlying field is `hidden()` or `disabled()`. Angular's docs say
+   * hidden/disabled fields do not contribute to form validation state, but
+   * they may still appear in `errorSummary()`. A summary entry for such a
+   * field has no actionable target — `focus()` would either throw or strand
+   * focus on a non-interactive control — so we exclude them before dedupe.
+   *
+   * `readonly()` is intentionally **not** filtered: the field is visible and
+   * focusable, and its error is usually still meaningful to the user.
+   */
+  readonly #split = computed(() => {
+    const visibleErrors = readErrors(this.#fieldState()).filter(
+      (error: ValidationError) => isErrorOnInteractiveField(error),
+    );
+    return splitByKind(dedupeValidationErrors(visibleErrors));
+  });
 
   readonly entries = computed(() =>
     this.#split().blocking.map((error) =>

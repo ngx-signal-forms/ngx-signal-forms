@@ -4,6 +4,7 @@ import {
   createUniqueId,
   generateErrorId,
   generateWarningId,
+  isFieldStateInteractive,
   readDirectErrors,
   resolveValidationErrorMessage,
   showErrors,
@@ -154,6 +155,30 @@ export function readErrors(state: unknown): ValidationError[] {
   }
 
   return [];
+}
+
+/**
+ * Predicate: returns `true` when the field behind a `ValidationError` is
+ * interactive (not hidden, not disabled). Composes the shared
+ * {@link isFieldStateInteractive} predicate from core with the duck-typed
+ * `error.fieldTree()` extraction that Angular doesn't expose on the public
+ * `ValidationError` type.
+ *
+ * **Asymmetry note**: when `fieldTree` is missing or returns a non-object,
+ * this returns `true` (show the error) — the conservative default for
+ * malformed or mock errors is "don't silently hide". `focusFirstInvalid`
+ * does the opposite (skip unknowns) because it has nothing to focus.
+ *
+ * @internal
+ */
+export function isErrorOnInteractiveField(error: ValidationError): boolean {
+  const e = error as ValidationErrorWithFieldTree;
+  if (typeof e.fieldTree !== 'function') return true;
+
+  const fieldState = e.fieldTree();
+  if (!fieldState || typeof fieldState !== 'object') return true;
+
+  return isFieldStateInteractive(fieldState);
 }
 
 /**
