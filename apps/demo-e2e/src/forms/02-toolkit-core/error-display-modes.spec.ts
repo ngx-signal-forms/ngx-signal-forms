@@ -111,4 +111,41 @@ test.describe('Error Display Modes', () => {
       }
     });
   });
+
+  test.describe('Snapshot Regression', () => {
+    test('should match aria structure in default mode', async () => {
+      await expect(formPage.errorModeRadios.onTouch).toBeChecked();
+      await expect(formPage.form).toMatchAriaSnapshot();
+    });
+
+    test('should capture visual baseline in default mode', async () => {
+      await expect(formPage.errorModeRadios.onTouch).toBeChecked();
+
+      await expect(formPage.form).toHaveScreenshot(
+        'error-display-modes-default.png',
+        {
+          animations: 'disabled',
+          caret: 'hide',
+        },
+      );
+    });
+
+    test('should capture visual baseline after submit in on-submit mode', async () => {
+      await formPage.selectErrorMode('onSubmit');
+      await formPage.submit();
+
+      await formPage.nameInput.focus();
+      await formPage.nameInput.blur();
+
+      await expect(formPage.page.locator('#submission-error')).toBeVisible();
+
+      await expect(formPage.form).toHaveScreenshot(
+        'error-display-modes-on-submit.png',
+        {
+          animations: 'disabled',
+          caret: 'hide',
+        },
+      );
+    });
+  });
 });

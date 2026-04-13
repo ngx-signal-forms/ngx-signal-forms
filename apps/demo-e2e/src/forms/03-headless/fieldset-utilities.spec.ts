@@ -420,4 +420,41 @@ test.describe('Headless - Fieldset + Utilities', () => {
       });
     });
   });
+
+  test.describe('Snapshot Regression', () => {
+    test('should match aria structure for shipping address fieldset', async ({
+      page,
+    }) => {
+      await expect(
+        page.getByRole('group', { name: 'Shipping address' }),
+      ).toMatchAriaSnapshot();
+    });
+
+    test('should capture visual baseline for initial form state', async ({
+      page,
+    }) => {
+      await expect(page.locator('form').first()).toHaveScreenshot(
+        'fieldset-utilities-initial.png',
+        {
+          animations: 'disabled',
+          caret: 'hide',
+        },
+      );
+    });
+
+    test('should capture visual baseline with summary after invalid submit', async ({
+      page,
+    }) => {
+      await page.getByRole('button', { name: 'Submit request' }).click();
+      await expect(page.getByTestId('delivery-form-summary')).toBeVisible();
+
+      await expect(page.locator('form').first()).toHaveScreenshot(
+        'fieldset-utilities-summary.png',
+        {
+          animations: 'disabled',
+          caret: 'hide',
+        },
+      );
+    });
+  });
 });

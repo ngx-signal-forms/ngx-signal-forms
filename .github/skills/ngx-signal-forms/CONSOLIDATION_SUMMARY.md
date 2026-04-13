@@ -60,7 +60,7 @@ The nested structure mirrors `angular-developer` (many references), `pr-toolkit`
 
 All content reflects the current public API:
 
-- Removed APIs flagged clearly (`manual` strategy, `bare` appearance, `computeShowErrors`, etc.)
+- Removed APIs flagged clearly (`manual` strategy, `computeShowErrors`, etc.)
 - All six entry points documented (including `vest` and `debugger`)
 - Modern patterns emphasized (signal calls, immutable updates, `[formRoot]`, `OnPush`)
 
@@ -79,7 +79,7 @@ All content reflects the current public API:
 | Sub-Skill      | Covers                                                                                                                               |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | **core**       | `form[formRoot][ngxSignalForm]`, error strategies, auto-ARIA, submission helpers, warning semantics, global config, message registry |
-| **assistive**  | `NgxSignalFormErrorComponent`, hints, character count, assistive rows (standalone components)                                        |
+| **assistive**  | `NgxFormFieldErrorComponent`, hints, character count, assistive rows (standalone components)                                         |
 | **form-field** | `NgxSignalFormFieldWrapperComponent`, `NgxSignalFormFieldset`, floating labels, grouped fieldsets                                    |
 | **headless**   | Renderless directives (`NgxHeadlessErrorStateDirective`, fieldset, char count), template/host-directive patterns, utility functions  |
 | **vest**       | Vest v6+ integration, blocking vs warning validation, submission gating                                                              |
@@ -107,7 +107,7 @@ Tools and agents referencing the old skill names will see the new unified skill 
 ## Quality Assurance
 
 - ✅ All public APIs documented (checked against `packages/toolkit/*/public_api.ts` and `packages/toolkit/README.md`)
-- ✅ Removed APIs explicitly flagged (`manual`, `bare`, `computeShowErrors`, `canSubmit`, `isSubmitting`)
+- ✅ Removed APIs explicitly flagged (`manual`, `computeShowErrors`, `canSubmit`, `isSubmitting`)
 - ✅ Latest Angular 21.2+ standards reflected (signal calls, `OnPush`, `@if/@for`, helper functions)
 - ✅ Vest v6+ and debugger entry points included (were missing from old skills)
 - ✅ Common pitfalls documented with before/after examples

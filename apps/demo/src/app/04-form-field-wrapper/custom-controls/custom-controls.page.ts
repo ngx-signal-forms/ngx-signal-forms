@@ -24,7 +24,7 @@ import {
 } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import { CUSTOM_CONTROLS_CONTENT } from './custom-controls.content';
-import { CustomControlsComponent } from './custom-controls.form';
+import { CustomControlsFormComponent } from './custom-controls.form';
 
 /**
  * Custom Controls Demo Page
@@ -41,7 +41,7 @@ import { CustomControlsComponent } from './custom-controls.form';
 @Component({
   selector: 'ngx-custom-controls-page',
   imports: [
-    CustomControlsComponent,
+    CustomControlsFormComponent,
     ErrorDisplayModeSelectorComponent,
     ExampleCardsComponent,
     PageHeaderComponent,
@@ -101,11 +101,11 @@ import { CustomControlsComponent } from './custom-controls.form';
 })
 export class CustomControlsPage {
   protected readonly formComponent =
-    viewChild.required<CustomControlsComponent>('formComponent');
+    viewChild.required<CustomControlsFormComponent>('formComponent');
 
   protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
-    signal<FormFieldAppearance>('standard');
+    signal<FormFieldAppearance>('stacked');
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',

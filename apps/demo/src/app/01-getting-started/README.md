@@ -24,7 +24,7 @@ This section demonstrates your **first experience** with the toolkit - seeing im
 
 - Import and use `NgxSignalFormToolkit` bundle
 - Automatic ARIA attributes (no manual setup)
-- Use `NgxSignalFormErrorComponent` for errors
+- Use `NgxFormFieldErrorComponent` for errors
 - Progressive error disclosure (on-touch strategy)
 - Form provider directive for submission tracking
 
@@ -32,7 +32,7 @@ This section demonstrates your **first experience** with the toolkit - seeing im
 
 - `@ngx-signal-forms/toolkit` - Core toolkit directives
 - `NgxSignalFormDirective` (`ngxSignalForm`) - Form context
-- `NgxSignalFormErrorComponent` - Error display
+- `NgxFormFieldErrorComponent` - Error display
 - `NgxSignalFormAutoAriaDirective` - Auto-ARIA
 
 ## 💡 What Changes from Archived Baseline Examples
@@ -72,7 +72,7 @@ This section demonstrates your **first experience** with the toolkit - seeing im
       <input id="email" [formField]="form.email" />
       <!-- Auto-ARIA applied ✅ -->
 
-      <ngx-signal-form-error [formField]="form.email" fieldName="email" />
+      <ngx-form-field-error [formField]="form.email" fieldName="email" />
       <!-- Auto error display ✅ -->
     </form>
   `,
@@ -98,7 +98,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 - `NgxSignalFormDirective` (`ngxSignalForm`) - Form context and submission tracking
 - `NgxSignalFormAutoAriaDirective` - Automatic ARIA attributes
 
-**Error display component:** Import `NgxSignalFormErrorComponent` from `@ngx-signal-forms/toolkit/assistive`.
+**Error display component:** Import `NgxFormFieldErrorComponent` from `@ngx-signal-forms/toolkit/assistive`.
 
 #### Alternative: Individual Imports
 
@@ -107,10 +107,10 @@ import {
   NgxSignalFormDirective,
   NgxSignalFormAutoAriaDirective,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 
 @Component({
-  imports: [FormField, NgxSignalFormDirective, NgxSignalFormAutoAriaDirective, NgxSignalFormErrorComponent],
+  imports: [FormField, NgxSignalFormDirective, NgxSignalFormAutoAriaDirective, NgxFormFieldErrorComponent],
 })
 ```
 
@@ -155,7 +155,7 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
 }
 
 <!-- After: Component (1 line) -->
-<ngx-signal-form-error [formField]="form.email" fieldName="email" />
+<ngx-form-field-error [formField]="form.email" fieldName="email" />
 ```
 
 **Features:**
@@ -172,8 +172,8 @@ import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive
 ```html
 <form [formRoot]="contactForm" ngxSignalForm>
   <!-- All child form-error components inherit submission state -->
-  <ngx-signal-form-error [formField]="contactForm.name" fieldName="name" />
-  <ngx-signal-form-error [formField]="contactForm.email" fieldName="email" />
+  <ngx-form-field-error [formField]="contactForm.name" fieldName="name" />
+  <ngx-form-field-error [formField]="contactForm.email" fieldName="email" />
 </form>
 ```
 

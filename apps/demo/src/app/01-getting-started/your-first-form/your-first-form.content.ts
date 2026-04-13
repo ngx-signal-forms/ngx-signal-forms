@@ -29,7 +29,7 @@ export const YOUR_FIRST_FORM_CONTENT = {
         items: [
           '<code>[formRoot]</code> + <code>ngxSignalForm</code> form context',
           'Automatic ARIA attributes managed by toolkit directives',
-          '<code>NgxSignalFormErrorComponent</code> for reusable error rendering',
+          '<code>NgxFormFieldErrorComponent</code> for reusable error rendering',
           'Runtime strategy comparison (<code>immediate</code>, <code>on-touch</code>, <code>on-submit</code>)',
         ],
       },

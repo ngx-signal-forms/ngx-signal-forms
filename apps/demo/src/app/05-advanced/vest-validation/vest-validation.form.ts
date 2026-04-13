@@ -194,7 +194,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
             <li>
               These messages render below the field through
               <code>ngx-signal-form-field-wrapper</code>, which uses
-              <code>ngx-signal-form-error</code> for both alerts and warning
+              <code>ngx-form-field-error</code> for both alerts and warning
               status messages.
             </li>
           </ul>

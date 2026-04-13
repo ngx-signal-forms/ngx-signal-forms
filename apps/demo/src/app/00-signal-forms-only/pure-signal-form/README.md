@@ -38,12 +38,12 @@ You must write the condition for _when_ to show an error (usually "touched AND i
 
 ## Toolkit Comparison
 
-| Feature              | Pure Signal Forms (This Demo) | With Toolkit                                  |
-| :------------------- | :---------------------------- | :-------------------------------------------- |
-| **ARIA Attributes**  | Manual binding required       | **Automated** by `NgxSignalFormToolkit`       |
-| **Error Visibility** | Manual `if` blocks            | **Managed** by `NgxSignalFormError` / Wrapper |
-| **ID Linking**       | Manual string concatenation   | **Auto-generated** & linked                   |
-| **Boilerplate**      | High (verbose templates)      | Low (clean HTML)                              |
+| Feature              | Pure Signal Forms (This Demo) | With Toolkit                                 |
+| :------------------- | :---------------------------- | :------------------------------------------- |
+| **ARIA Attributes**  | Manual binding required       | **Automated** by `NgxSignalFormToolkit`      |
+| **Error Visibility** | Manual `if` blocks            | **Managed** by `NgxFormFieldError` / Wrapper |
+| **ID Linking**       | Manual string concatenation   | **Auto-generated** & linked                  |
+| **Boilerplate**      | High (verbose templates)      | Low (clean HTML)                             |
 
 ## Key Files
 

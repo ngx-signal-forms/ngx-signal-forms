@@ -81,7 +81,7 @@ Toolkit components (errors, hints, character counts) work without `ngxSignalForm
 <!-- No ngxSignalForm - components fall back to defaults -->
 <form [formRoot]="myForm">
   <input [formField]="myForm.email" />
-  <ngx-signal-form-error [formField]="myForm.email" fieldName="email" />
+  <ngx-form-field-error [formField]="myForm.email" fieldName="email" />
 </form>
 ```
 

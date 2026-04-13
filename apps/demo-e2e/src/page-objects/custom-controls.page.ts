@@ -9,7 +9,7 @@ import { BaseFormPage } from './base-form.page';
 export class CustomControlsPage extends BaseFormPage {
   readonly route = DEMO_PATHS.customControls;
 
-  readonly standardAppearanceButton: Locator;
+  readonly stackedAppearanceButton: Locator;
   readonly outlineAppearanceButton: Locator;
 
   // Form wrapper locators
@@ -18,18 +18,20 @@ export class CustomControlsPage extends BaseFormPage {
   // Native input fields
   readonly productNameInput: Locator;
   readonly emailUpdatesSwitch: Locator;
+  readonly shareReviewPubliclyCheckbox: Locator;
   readonly feedbackTextarea: Locator;
 
   // Custom rating controls
   readonly ratingControl: Locator;
   readonly serviceRatingControl: Locator;
   readonly wouldRecommendControl: Locator;
+  readonly accessibilityAuditControl: Locator;
 
   constructor(page: Page) {
     super(page);
 
-    this.standardAppearanceButton = this.page.getByRole('button', {
-      name: 'Standard',
+    this.stackedAppearanceButton = this.page.getByRole('button', {
+      name: 'Stacked',
     });
     this.outlineAppearanceButton = this.page.getByRole('button', {
       name: 'Outline',
@@ -41,12 +43,16 @@ export class CustomControlsPage extends BaseFormPage {
     // Native inputs
     this.productNameInput = this.form.locator('#productName');
     this.emailUpdatesSwitch = this.form.locator('#emailUpdates');
+    this.shareReviewPubliclyCheckbox = this.form.locator(
+      '#shareReviewPublicly',
+    );
     this.feedbackTextarea = this.form.locator('#feedback');
 
     // Custom rating controls (by id)
     this.ratingControl = this.form.locator('#rating');
     this.serviceRatingControl = this.form.locator('#serviceRating');
     this.wouldRecommendControl = this.form.locator('#wouldRecommend');
+    this.accessibilityAuditControl = this.form.locator('#accessibilityAudit');
   }
 
   /**
@@ -147,6 +153,15 @@ export class CustomControlsPage extends BaseFormPage {
   }
 
   /**
+   * Enable the public sharing checkbox for successful submissions.
+   */
+  async enablePublicReviewSharing(): Promise<void> {
+    if (!(await this.shareReviewPubliclyCheckbox.isChecked())) {
+      await this.shareReviewPubliclyCheckbox.click();
+    }
+  }
+
+  /**
    * Fill the entire form with valid data.
    */
   async fillValidForm(): Promise<void> {
@@ -155,6 +170,8 @@ export class CustomControlsPage extends BaseFormPage {
     await this.selectStar(this.serviceRatingControl, 5);
     await this.selectStar(this.wouldRecommendControl, 2);
     await this.enableEmailUpdates();
+    await this.enablePublicReviewSharing();
+    await this.selectStar(this.accessibilityAuditControl, 5);
     await this.feedbackTextarea.fill('Great product!');
   }
 }

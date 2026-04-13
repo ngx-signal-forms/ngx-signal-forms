@@ -316,21 +316,19 @@ test.describe('Demo Application - Route Handling', () => {
   test('should handle invalid routes gracefully', async ({ page }) => {
     await test.step('Navigate to non-existent route', async () => {
       // Navigate to invalid route - Angular will redirect or show 404
-      await page
-        .goto(`/invalid-route-that-does-not-exist`, {
-          waitUntil: 'domcontentloaded',
-        })
-        .catch(() => {
-          // Route may not exist, that's expected
-        });
+      await page.goto(`/invalid-route-that-does-not-exist`, {
+        waitUntil: 'domcontentloaded',
+      });
+
+      await expect(page).toHaveURL(/\/getting-started\/your-first-form$/);
 
       // Verify app shell is still present (navigation and basic structure)
-      const nav = page.locator('nav').first();
-      await expect(nav).toBeVisible({ timeout: 2000 });
+      const primaryNavigation = page.getByLabel('Primary navigation');
+      await expect(primaryNavigation).toBeVisible();
 
       // Main content should be visible
-      const main = page.locator('main').first();
-      await expect(main).toBeVisible({ timeout: 2000 });
+      const main = page.getByRole('main');
+      await expect(main).toBeVisible();
     });
   });
 

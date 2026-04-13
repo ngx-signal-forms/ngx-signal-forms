@@ -81,7 +81,7 @@ export interface NgxSignalFormContext {
  *   template: `
  *     <form [formRoot]="userForm" ngxSignalForm>
  *       <input [formField]="userForm.email" type="email" />
- *       <ngx-signal-form-error [formField]="userForm.email" fieldName="email" />
+ *       <ngx-form-field-error [formField]="userForm.email" fieldName="email" />
  *       <button type="submit">Submit</button>
  *     </form>
  *   `

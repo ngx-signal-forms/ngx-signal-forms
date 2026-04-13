@@ -17,7 +17,7 @@ import {
   NGX_SIGNAL_FORM_CONTEXT,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormErrorSummaryComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldErrorSummaryComponent } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import type { SubmissionModel } from './submission-patterns.model';
 import { submissionSchema } from './submission-patterns.validations';
@@ -39,7 +39,7 @@ import { submissionSchema } from './submission-patterns.validations';
     FormField,
     NgxSignalFormToolkit,
     NgxFormField,
-    NgxSignalFormErrorSummaryComponent,
+    NgxFormFieldErrorSummaryComponent,
   ],
   template: `
     <form
@@ -137,7 +137,7 @@ import { submissionSchema } from './submission-patterns.validations';
 
       <!-- Form-level error summary (GOV.UK pattern) -->
       <!-- Aggregates all field errors into a clickable list; each entry focuses the invalid control -->
-      <ngx-signal-form-error-summary
+      <ngx-form-field-error-summary
         [formTree]="registrationForm"
         [submittedStatus]="explicitSubmittedStatus()"
         summaryLabel="Please fix the following errors before submitting:"

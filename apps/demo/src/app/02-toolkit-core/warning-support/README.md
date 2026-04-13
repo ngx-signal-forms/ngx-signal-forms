@@ -37,7 +37,7 @@ with a plain `<form novalidate>` plus `submitWithWarnings(...)`.
 
 ## Toolkit Visualization
 
-The `NgxSignalFormError` component (and the Wrapper) automatically handles styling differentiation:
+The `NgxFormFieldError` component (and the Wrapper) automatically handles styling differentiation:
 
 - **Errors**: Render in **Red** with `role="alert"`.
 - **Warnings**: Render in **Yellow/Orange** (often with a different icon).

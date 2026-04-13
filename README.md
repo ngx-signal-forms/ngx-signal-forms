@@ -74,7 +74,19 @@ The toolkit's `NgxSignalFormDirective` (selector: `form[formRoot][ngxSignalForm]
 2. **Submitted status tracking** — derives `'unsubmitted' → 'submitting' → 'submitted'` from Angular's native `submitting()` signal, which Angular does not expose as a status
 3. **Error display strategy** — the `[errorStrategy]` input controls when validation feedback becomes visible (`'immediate'`, `'on-touch'`, or `'on-submit'`)
 
-**`NgxSignalFormToolkit` bundles `FormRoot` + `NgxSignalFormDirective` + `NgxSignalFormAutoAriaDirective`** — import it instead of `FormRoot` separately.
+**`NgxSignalFormToolkit` bundles `FormRoot` + `NgxSignalFormDirective` + `NgxSignalFormAutoAriaDirective` + `NgxSignalFormControlSemanticsDirective`** — import it instead of `FormRoot` separately.
+
+> **Most forms do not need explicit control semantics.** Native text inputs,
+> textareas, selects, and ordinary wrapper usage work with the toolkit defaults.
+> Reach for `ngxSignalFormControl`, `ngxSignalFormControlAria="manual"`, or
+> control preset providers mainly for custom controls, switch-style toggles,
+> slider/composite widgets, or third-party components where the toolkit cannot
+> safely infer the desired wrapper/layout/ARIA behavior.
+>
+> `ngxSignalFormControlAria="manual"` does **not** disable wrapper behavior.
+> It only means the control host owns `aria-describedby`, `aria-invalid`, and
+> `aria-required` itself, while the wrapper can still provide labels, hints,
+> errors, and field context.
 
 ```typescript
 imports: [FormField, NgxSignalFormToolkit];
@@ -86,8 +98,8 @@ imports: [FormField, NgxSignalFormToolkit];
 
 ### Assistive: `@ngx-signal-forms/toolkit/assistive`
 
-- `<ngx-signal-form-error>` for accessible error and warning output
-- `<ngx-signal-form-error-summary>` for form-level error summaries
+- `<ngx-form-field-error>` for accessible error and warning output
+- `<ngx-form-field-error-summary>` for form-level error summaries
 - `<ngx-signal-form-field-hint>`
 - `<ngx-signal-form-field-character-count>`
 
@@ -95,6 +107,49 @@ imports: [FormField, NgxSignalFormToolkit];
 
 - `<ngx-signal-form-field-wrapper>` with `appearance="outline"` support
 - `<ngx-signal-form-fieldset>`
+
+Most wrapper use cases need no extra control metadata. Explicit control
+semantics are primarily for controls outside the default native field families (`<input>`, `<textarea>`, `<select>`), such as
+switches, sliders, composites, and third-party widgets.
+
+For those controls, `appearance="plain"` is often the right wrapper mode: the
+wrapper still provides semantic structure and feedback, but it does not force
+the default field chrome around a widget that already has its own visual UI.
+
+### Quick FAQ: switches and custom controls
+
+**Does RC2 switch alignment support introduce a breaking change for native switches?**
+
+No — not for the default native switch case.
+
+If you already use a real bound control like:
+
+```html
+<input type="checkbox" role="switch" [formField]="form.enabled" />
+```
+
+the toolkit still recognizes it as a switch and applies the switch-specific
+wrapper and auto-ARIA behavior out of the box.
+
+**Do I need `ngxSignalFormControl="switch"` for a native `input[type="checkbox"][role="switch"]`?**
+
+No. For that native pattern, the new directive is optional.
+
+Add explicit control semantics only when you want one of the advanced paths:
+
+- the bound host is a custom component or third-party widget
+- you want explicit semantics instead of relying on heuristics
+- you want manual ARIA ownership
+- you want preset-driven defaults for a control family
+
+**What is actually breaking in RC2, then?**
+
+The main consumer-facing change here is the appearance rename:
+
+- `standard` → `stacked`
+- `bare` → `plain`
+
+The new switch/control-semantics APIs are additive for the native switch path.
 
 ### Headless: `@ngx-signal-forms/toolkit/headless`
 
@@ -290,7 +345,7 @@ import {
   FormField, // Angular's [formField] — unchanged
 } from '@angular/forms/signals';
 import {
-  NgxSignalFormToolkit, // Bundles FormRoot + NgxSignalFormDirective + AutoARIA
+  NgxSignalFormToolkit, // Bundles FormRoot + NgxSignalFormDirective + AutoARIA + control semantics
   createOnInvalidHandler,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
@@ -381,8 +436,8 @@ Use this when you want feedback components without adopting the full field wrapp
 
 **Key exports**:
 
-- `NgxSignalFormErrorComponent` — Error/warning display with ARIA roles
-- `NgxSignalFormErrorSummaryComponent` — Form-level summary for blocking errors
+- `NgxFormFieldErrorComponent` — Error/warning display with ARIA roles
+- `NgxFormFieldErrorSummaryComponent` — Form-level summary for blocking errors
 - `NgxFormFieldHintComponent` — Helper text below inputs
 - `NgxFormFieldCharacterCountComponent` — Character counter with maxLength detection
 - `NgxFormFieldAssistiveRowComponent` — Layout row for hints and counters
@@ -390,7 +445,7 @@ Use this when you want feedback components without adopting the full field wrapp
 
 ```typescript
 import {
-  NgxSignalFormErrorComponent,
+  NgxFormFieldErrorComponent,
   NgxFormFieldHintComponent,
   warningError,
 } from '@ngx-signal-forms/toolkit/assistive';
@@ -399,7 +454,7 @@ import {
 ```html
 <label for="email">Email</label>
 <input id="email" [formField]="form.email" />
-<ngx-signal-form-error [formField]="form.email" fieldName="email" />
+<ngx-form-field-error [formField]="form.email" fieldName="email" />
 <ngx-signal-form-field-hint
   >We'll never share your email</ngx-signal-form-field-hint
 >
@@ -525,7 +580,7 @@ const accountForm = form(accountModel, (path) => {
 
 Use Vest `warn()` for advisory guidance only. With `{ includeWarnings: true }`, the
 toolkit renders those messages through `ngx-signal-form-field-wrapper` or
-`ngx-signal-form-error` as `role="status"` warnings, while blocking Vest failures
+`ngx-form-field-error` as `role="status"` warnings, while blocking Vest failures
 continue to render as `role="alert"` errors.
 
 **[📖 Full Documentation →](./packages/toolkit/vest/README.md)**
@@ -578,7 +633,6 @@ Start here:
 - [Toolkit API reference](./packages/toolkit/README.md)
 - [Vest integration guide](./packages/toolkit/vest/README.md)
 - [GitHub Releases](https://github.com/ngx-signal-forms/ngx-signal-forms/releases)
-- [Beta release archive](./docs/archive/)
 - [Assistive components](./packages/toolkit/assistive/README.md)
 - [Form field components](./packages/toolkit/form-field/README.md)
 - [Headless primitives](./packages/toolkit/headless/README.md)
@@ -612,7 +666,8 @@ The skill covers the full toolkit — entry points, patterns, ARIA automation, a
 The toolkit is designed with WCAG 2.2 AA form patterns in mind:
 
 - automatic `aria-invalid`, `aria-required`, and `aria-describedby` wiring for supported controls
-- custom on/off controls should expose real switch semantics on the bound control (prefer a native checkbox styled as a switch, or a library component that already exposes `role="switch"` semantics); see [`docs/CUSTOM_CONTROLS.md`](./docs/CUSTOM_CONTROLS.md) and [MDN switch role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/switch_role)
+- custom on/off controls should expose real switch semantics on the bound control (prefer a native checkbox styled as a switch, or a library component that already exposes `role="switch"` semantics); use `ngxSignalFormControl="switch"` when the toolkit should also apply stable wrapper/layout behavior, and use `ngxSignalFormControlAria="manual"` only when the control already owns its ARIA state; this is mainly an edge-case/custom-control integration path rather than something regular text/select/textarea fields need; see [`docs/CUSTOM_CONTROLS.md`](./docs/CUSTOM_CONTROLS.md) and [MDN switch role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/switch_role)
+- `ngxSignalFormControlAria="manual"` is about **ARIA ownership on the control host**, not about disabling the wrapper; labels, hints, errors, and field context can still come from the toolkit wrapper in manual mode
 - `role="alert"` for blocking errors and `role="status"` for warnings
 - default `on-touch` error timing to avoid premature error noise
 - focus helpers for invalid submissions

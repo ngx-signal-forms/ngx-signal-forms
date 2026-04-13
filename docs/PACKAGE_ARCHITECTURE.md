@@ -10,6 +10,7 @@ single publishable package with multiple entry points:
 3. **`@ngx-signal-forms/toolkit/form-field`** - Form field wrapper components
 4. **`@ngx-signal-forms/toolkit/headless`** - Renderless primitives
 5. **`@ngx-signal-forms/toolkit/vest`** - Optional Vest convenience helpers
+6. **`@ngx-signal-forms/toolkit/debugger`** - Development-time form inspection tools
 
 ## Package Structure
 
@@ -20,23 +21,26 @@ packages/toolkit/
 ├── core/                               # Core implementation (public entry)
 │   ├── directives/
 │   │   ├── auto-aria.directive.ts
+│   │   ├── control-semantics.directive.ts
 │   │   └── ngx-signal-form.directive.ts
 │   ├── utilities/
+│   │   ├── control-semantics.ts
 │   │   ├── error-strategies.ts
 │   │   ├── field-resolution.ts
 │   │   ├── show-errors.ts
-│   │   ├── status-classes.ts
 │   │   └── warning-error.ts
 │   ├── providers/
 │   │   ├── config.provider.ts
-│   │   └── error-messages.provider.ts
+│   │   ├── control-semantics.provider.ts
+│   │   ├── error-messages.provider.ts
+│   │   └── field-labels.provider.ts
 │   ├── tokens.ts
 │   ├── types.ts
 │   └── public_api.ts
 ├── assistive/                           # Styled assistive components entry
 │   ├── assistive-row.component.ts
 │   ├── character-count.component.ts
-│   ├── form-error.component.ts
+│   ├── form-field-error.component.ts
 │   ├── hint.component.ts
 │   ├── warning-error.ts
 │   └── index.ts
@@ -60,6 +64,10 @@ packages/toolkit/
 │   │   └── validate-vest.ts
 │   ├── ng-package.json
 │   └── README.md
+├── debugger/                            # Development-time debugging tools
+│   ├── debugger.component.ts
+│   ├── index.ts
+│   └── ng-package.json
 ├── index.ts                             # Primary entry (providers/types)
 ├── README.md
 └── package.json
@@ -72,6 +80,7 @@ packages/toolkit/
 - `@ngx-signal-forms/toolkit/form-field` - Form field wrapper (optional)
 - `@ngx-signal-forms/toolkit/headless` - Headless primitives (optional)
 - `@ngx-signal-forms/toolkit/vest` - Optional Vest helpers
+- `@ngx-signal-forms/toolkit/debugger` - Development-time inspection tools
 
 ## Installation
 
@@ -95,14 +104,14 @@ import {
   NgxSignalFormAutoAriaDirective,
   NgxSignalFormDirective,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
 ### Secondary Entry (Assistive Components - Optional)
 
 ```typescript
 import {
-  NgxSignalFormErrorComponent,
+  NgxFormFieldErrorComponent,
   NgxFormFieldHintComponent,
   NgxFormFieldCharacterCountComponent,
   NgxFormFieldAssistiveRowComponent,
@@ -151,7 +160,8 @@ vest ^6.0.0 (optional peer) ← Only when using /vest (v6+ required for Standard
 ├── /assistive (optional secondary entry - styled feedback)
 ├── /form-field (optional secondary entry)
 ├── /headless (optional secondary entry - renderless primitives)
-└── /vest (optional secondary entry - Vest DX helpers)
+├── /vest (optional secondary entry - Vest DX helpers)
+└── /debugger (optional secondary entry - development-time inspection)
 ```
 
 ## Design Summary

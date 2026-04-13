@@ -5,18 +5,20 @@
 ### Bundle
 
 ```typescript
+import { FormField } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-// = [FormRoot, NgxSignalFormDirective, NgxSignalFormAutoAriaDirective]
+// = [FormRoot, NgxSignalFormDirective, NgxSignalFormAutoAriaDirective, NgxSignalFormControlSemanticsDirective]
 ```
 
-`NgxSignalFormToolkit` bundles Angular `FormRoot` plus the toolkit enhancer directives. Use it with `form[formRoot][ngxSignalForm]`.
+`NgxSignalFormToolkit` bundles Angular `FormRoot` plus the toolkit enhancer directives, including `NgxSignalFormControlSemanticsDirective`. Use it with `form[formRoot][ngxSignalForm]`.
 
 ### Directives
 
-| Export                           | Selector                        | Description                                                 |
-| -------------------------------- | ------------------------------- | ----------------------------------------------------------- |
-| `NgxSignalFormDirective`         | `form[formRoot][ngxSignalForm]` | Form context, submitted status, error strategy              |
-| `NgxSignalFormAutoAriaDirective` | auto                            | Applies `aria-invalid`, `aria-required`, `aria-describedby` |
+| Export                                   | Selector                                    | Description                                                 |
+| ---------------------------------------- | ------------------------------------------- | ----------------------------------------------------------- |
+| `NgxSignalFormDirective`                 | `form[formRoot][ngxSignalForm]`             | Form context, submitted status, error strategy              |
+| `NgxSignalFormAutoAriaDirective`         | auto                                        | Applies `aria-invalid`, `aria-required`, `aria-describedby` |
+| `NgxSignalFormControlSemanticsDirective` | `[ngxSignalFormControl]` and related inputs | Declares stable wrapper/ARIA semantics for a control        |
 
 **NgxSignalFormDirective input:**
 
@@ -30,18 +32,46 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 **NgxSignalFormAutoAriaDirective:**
 
-- Applied automatically to text-like `input[formField]`, `textarea[formField]`, `select[formField]`, checkbox switches using `input[type="checkbox"][role="switch"][formField]`, and custom `[formField]` hosts.
-- Standard checkboxes and radios remain excluded.
+- Applied automatically to native `input[formField]`, `textarea[formField]`, and `select[formField]` controls (internally mapped to the `input-like` / `standalone-field-like` families), checkbox switches using `input[type="checkbox"][role="switch"][formField]`, and custom `[formField]` hosts.
+- Standard checkboxes and radios remain excluded unless the control explicitly opts in with `ngxSignalFormControl`.
 - Opt out per control with `ngxSignalFormAutoAriaDisabled` directive.
+- Leaves existing `aria-describedby`, `aria-invalid`, and `aria-required` in place when `ngxSignalFormControlAria="manual"` is present.
 - In standalone Angular, import the toolkit bundle or directive in the component whose template renders the actual bound element; parent imports do not flow into child templates.
+
+**NgxSignalFormControlSemanticsDirective:**
+
+- Accepts `ngxSignalFormControl="switch"` or an object form like `[ngxSignalFormControl]="{ kind: 'slider', layout: 'stacked' }"`.
+- Optional overrides: `ngxSignalFormControlLayout`, `ngxSignalFormControlAria`.
+- Writes stable `data-ngx-signal-form-control-*` attributes used by the wrapper and auto-ARIA.
+- Explicit directive inputs override any preset provider defaults.
+- Declares toolkit behavior only; keep real widget semantics such as `role="switch"` on the actual interactive host when applicable.
 
 ### Providers
 
 ```typescript
 provideNgxSignalFormsConfig(config: NgxSignalFormsUserConfig): EnvironmentProviders
 provideNgxSignalFormsConfigForComponent(config: NgxSignalFormsUserConfig): Provider[]
+provideNgxSignalFormControlPresets(presets: NgxSignalFormControlPresetOverrides): EnvironmentProviders
+provideNgxSignalFormControlPresetsForComponent(presets: NgxSignalFormControlPresetOverrides): Provider[]
 provideErrorMessages(configOrFactory: ErrorMessageRegistry | (() => ErrorMessageRegistry)): Provider
 provideFieldLabels(configOrFactory: FieldLabelMap | (() => FieldLabelResolver)): Provider
+```
+
+**Control semantics preset providers:**
+
+- `provideNgxSignalFormControlPresets(...)` sets global or feature-level defaults for control families.
+- `provideNgxSignalFormControlPresetsForComponent(...)` scopes those defaults to a component subtree.
+- Prefer these providers for default `ariaMode` / `layout` behavior instead of extending `NgxSignalFormsUserConfig`.
+
+```typescript
+export const appConfig = {
+  providers: [
+    provideNgxSignalFormControlPresets({
+      switch: { ariaMode: 'manual' },
+      composite: { layout: 'custom' },
+    }),
+  ],
+};
 ```
 
 ### Provider-related exports
@@ -59,6 +89,31 @@ type FieldLabelMap = Record<string, string>;
 interface NgxSignalFormFieldContext {
   readonly fieldName: Signal<string>;
 }
+interface NgxSignalFormControlPreset {
+  readonly layout: NgxSignalFormControlLayout;
+  readonly ariaMode: NgxSignalFormControlAriaMode;
+}
+type NgxSignalFormControlPresetRegistry = Record<
+  NgxSignalFormControlKind,
+  NgxSignalFormControlPreset
+>;
+type NgxSignalFormControlPresetOverrides = Partial<
+  Record<NgxSignalFormControlKind, Partial<NgxSignalFormControlPreset>>
+>;
+type NgxSignalFormControlKind =
+  | 'input-like'
+  | 'standalone-field-like'
+  | 'switch'
+  | 'checkbox'
+  | 'radio-group'
+  | 'slider'
+  | 'composite';
+type NgxSignalFormControlLayout =
+  | 'stacked'
+  | 'inline-control'
+  | 'group'
+  | 'custom';
+type NgxSignalFormControlAriaMode = 'auto' | 'manual';
 ```
 
 ### Config Interface
@@ -67,33 +122,52 @@ interface NgxSignalFormFieldContext {
 interface NgxSignalFormsUserConfig {
   autoAria?: boolean; // default: true
   defaultErrorStrategy?: 'immediate' | 'on-touch' | 'on-submit'; // default: 'on-touch'
-  defaultFormFieldAppearance?: 'standard' | 'outline'; // default: 'standard'
+  defaultFormFieldAppearance?: 'stacked' | 'outline' | 'plain'; // default: 'stacked'
+  // Migration: replace legacy `standard` with `stacked` and `bare` with `plain`.
   showRequiredMarker?: boolean;
   requiredMarker?: string; // default: '*'
 }
 ```
 
+Migration note for `defaultFormFieldAppearance`:
+
+- `standard` was intentionally renamed to `stacked` (equivalent default textual field style)
+- `bare` was intentionally renamed to `plain` (minimal wrapper chrome)
+- Recommended update: `standard` → `stacked`, `bare` → `plain`
+
 ### Types
 
 ```typescript
-type SignalLike<T> = Signal<T> | (() => T)
-interface NgxSignalFormsConfig { ... }
-type NgxSignalFormsUserConfig = DeepPartial<NgxSignalFormsConfig>
+type SignalLike<T> = Signal<T> | (() => T);
 type ResolvedErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit';
 type ErrorDisplayStrategy = ResolvedErrorDisplayStrategy | 'inherit';
-type FormFieldAppearance = 'standard' | 'outline';
+type ResolvedFormFieldAppearance = 'stacked' | 'outline' | 'plain';
+type FormFieldAppearance = ResolvedFormFieldAppearance;
 type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
 type SubmittedStatus = 'unsubmitted' | 'submitting' | 'submitted';
-type ErrorVisibilityState = Pick<FieldState<unknown>, 'invalid' | 'touched'>
-type ErrorReadableState = Pick<FieldState<unknown>, 'errors' | 'invalid' | 'touched'>
-type PartialErrorVisibilityState = Partial<ErrorVisibilityState>
+type ErrorVisibilityState = Pick<FieldState<unknown>, 'invalid' | 'touched'>;
+type ErrorReadableState = Pick<
+  FieldState<unknown>,
+  'errors' | 'invalid' | 'touched'
+>;
+type PartialErrorVisibilityState = Partial<ErrorVisibilityState>;
 interface SplitErrors {
-  readonly blocking: ValidationError[]
-  readonly warnings: ValidationError[]
+  readonly blocking: ValidationError[];
+  readonly warnings: ValidationError[];
 }
 interface OnInvalidHandlerOptions {
-  readonly focusFirstInvalid?: boolean
-  readonly afterInvalid?: (field: FieldTree<unknown>) => void
+  readonly focusFirstInvalid?: boolean;
+  readonly afterInvalid?: (field: FieldTree<unknown>) => void;
+}
+interface NgxSignalFormControlSemantics {
+  readonly kind?: NgxSignalFormControlKind;
+  readonly layout?: NgxSignalFormControlLayout;
+  readonly ariaMode?: NgxSignalFormControlAriaMode;
+}
+interface ResolvedNgxSignalFormControlSemantics {
+  readonly kind: NgxSignalFormControlKind | null;
+  readonly layout: NgxSignalFormControlLayout | null;
+  readonly ariaMode: NgxSignalFormControlAriaMode | null;
 }
 ```
 
@@ -102,6 +176,7 @@ interface OnInvalidHandlerOptions {
 ```typescript
 const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: NgxSignalFormsConfig;
 const NGX_SIGNAL_FORMS_CONFIG: InjectionToken<NgxSignalFormsConfig>;
+const NGX_SIGNAL_FORM_CONTROL_PRESETS: InjectionToken<NgxSignalFormControlPresetRegistry>;
 const NGX_SIGNAL_FORM_CONTEXT: InjectionToken<NgxSignalFormContext>;
 const NGX_SIGNAL_FORM_FIELD_CONTEXT: InjectionToken<NgxSignalFormFieldContext>;
 const NGX_ERROR_MESSAGES: InjectionToken<ErrorMessageRegistry>;
@@ -121,6 +196,7 @@ injectFieldControl<TValue>(element, injector?): FieldTree<TValue>
 resolveFieldName(element): string | null
 generateErrorId(fieldName: string): string
 generateWarningId(fieldName: string): string
+resolveNgxSignalFormControlSemantics(element, presets): ResolvedNgxSignalFormControlSemantics
 
 // Submission helpers
 focusFirstInvalid(form): boolean
@@ -166,8 +242,8 @@ unwrapValue(signalOrValue): value
 
 ```typescript
 import {
-  NgxSignalFormErrorComponent, // <ngx-signal-form-error>
-  NgxSignalFormErrorSummaryComponent, // <ngx-signal-form-error-summary>
+  NgxFormFieldErrorComponent, // <ngx-form-field-error>
+  NgxFormFieldErrorSummaryComponent, // <ngx-form-field-error-summary>
   NgxFormFieldHintComponent, // <ngx-form-field-hint>
   NgxFormFieldCharacterCountComponent, // <ngx-form-field-character-count>
   NgxFormFieldAssistiveRowComponent, // <ngx-form-field-assistive-row>
@@ -177,7 +253,7 @@ import {
 } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
-### NgxSignalFormErrorComponent inputs
+### NgxFormFieldErrorComponent inputs
 
 | Input             | Type                        | Notes                                                |
 | ----------------- | --------------------------- | ---------------------------------------------------- |
@@ -193,9 +269,9 @@ import {
 - `NgxFormFieldHintComponent` — static descriptive hint content
 - `NgxFormFieldAssistiveRowComponent` — stable row container for hint + character count
 
-### NgxSignalFormErrorSummaryComponent inputs
+### NgxFormFieldErrorSummaryComponent inputs
 
-Selector: `ngx-signal-form-error-summary`
+Selector: `ngx-form-field-error-summary`
 
 | Input             | Type                 | Default                              | Notes                                   |
 | ----------------- | -------------------- | ------------------------------------ | --------------------------------------- |
@@ -235,7 +311,7 @@ For full DOM control over the error summary (incl. warning entries), use `NgxHea
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 // Bundle: [NgxSignalFormFieldWrapperComponent,
 //          NgxFormFieldHintComponent, NgxFormFieldCharacterCountComponent,
-//          NgxFormFieldAssistiveRowComponent, NgxSignalFormErrorComponent,
+//          NgxFormFieldAssistiveRowComponent, NgxFormFieldErrorComponent,
 //          NgxSignalFormFieldset]
 
 import {
@@ -246,15 +322,15 @@ import {
 
 ### NgxSignalFormFieldWrapperComponent inputs
 
-| Input                | Type                                   | Default                                                                                         |
-| -------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `formField`          | field                                  | Required                                                                                        |
-| `fieldName`          | string                                 | Derived from bound control `id`; pass explicitly for nested custom controls or dynamic identity |
-| `strategy`           | ErrorDisplayStrategy                   | Inherited                                                                                       |
-| `appearance`         | `'standard' \| 'outline' \| 'inherit'` | `'inherit'`                                                                                     |
-| `errorPlacement`     | `'top' \| 'bottom'`                    | `'bottom'`                                                                                      |
-| `showRequiredMarker` | boolean                                | From config                                                                                     |
-| `requiredMarker`     | string                                 | `'*'`                                                                                           |
+| Input                | Type                                             | Default                                                                                         |
+| -------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `formField`          | field                                            | Required                                                                                        |
+| `fieldName`          | string                                           | Derived from bound control `id`; pass explicitly for nested custom controls or dynamic identity |
+| `strategy`           | ErrorDisplayStrategy                             | Inherited                                                                                       |
+| `appearance`         | `'stacked' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'`                                                                                     |
+| `errorPlacement`     | `'top' \| 'bottom'`                              | `'bottom'`                                                                                      |
+| `showRequiredMarker` | boolean                                          | From config                                                                                     |
+| `requiredMarker`     | string                                           | `'*'`                                                                                           |
 
 ### NgxSignalFormFieldset inputs
 
@@ -317,7 +393,7 @@ interface ErrorSummaryEntry {
 }
 ```
 
-Use this directive instead of `NgxSignalFormErrorSummaryComponent` when you need full DOM control, want to include warnings, or need a custom design that doesn't match the default styled output.
+Use this directive instead of `NgxFormFieldErrorSummaryComponent` when you need full DOM control, want to include warnings, or need a custom design that doesn't match the default styled output.
 
 ### NgxHeadlessCharacterCountDirective
 

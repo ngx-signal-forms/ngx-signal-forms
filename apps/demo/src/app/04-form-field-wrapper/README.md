@@ -97,13 +97,13 @@ The component uses `<ng-content>` to project your custom content:
 <div class="form-field">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
-  <ngx-signal-form-error [formField]="form.email" fieldName="email" />
+  <ngx-form-field-error [formField]="form.email" fieldName="email" />
 </div>
 
 <div class="form-field">
   <label for="password">Password</label>
   <input id="password" type="password" [formField]="form.password" />
-  <ngx-signal-form-error [formField]="form.password" fieldName="password" />
+  <ngx-form-field-error [formField]="form.password" fieldName="password" />
 </div>
 ```
 
@@ -128,7 +128,7 @@ The component uses `<ng-content>` to project your custom content:
 ### What's Included Automatically
 
 1. **Error Display**
-   - Automatic `NgxSignalFormErrorComponent` integration
+   - Automatic `NgxFormFieldErrorComponent` integration
    - Progressive disclosure based on strategy
    - Warning vs error separation
 
