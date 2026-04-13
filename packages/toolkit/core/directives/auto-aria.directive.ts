@@ -18,7 +18,6 @@ import {
   generateWarningId,
   resolveFieldName,
 } from '../utilities/field-resolution';
-import type { ErrorReadableState } from '../utilities/field-state-types';
 import { createShowErrorsComputed } from '../utilities/show-errors';
 import { isBlockingError, isWarningError } from '../utilities/warning-error';
 
@@ -35,15 +34,6 @@ const INITIAL_DOM_SNAPSHOT: AutoAriaDomSnapshot = {
   ariaInvalid: null,
   ariaRequired: null,
 };
-
-type RequiredFieldState = Pick<FieldState<unknown>, 'required'>;
-
-interface AutoAriaFieldState
-  extends Partial<ErrorReadableState>, Partial<RequiredFieldState> {}
-
-function isAutoAriaFieldState(value: unknown): value is AutoAriaFieldState {
-  return value != null && typeof value === 'object';
-}
 
 /**
  * Automatically manages ARIA attributes for Signal Forms controls.
@@ -86,12 +76,21 @@ function isAutoAriaFieldState(value: unknown): value is AutoAriaFieldState {
   `,
 })
 export class NgxSignalFormAutoAriaDirective {
-  #resolveFieldState(): AutoAriaFieldState | null {
+  /**
+   * Resolves the `FieldState` for the currently bound control.
+   *
+   * The dual `this.#formField.field()` vs `this.#formField.state()` branch
+   * is load-bearing: `FormField.field` is an `InputSignal<Field<T>>` which
+   * may not be set when the directive initializes (the consumer can forget
+   * the `[formField]` binding), and the fallback to `state()` lets
+   * `FORM_FIELD`-provided siblings keep working. Do not collapse.
+   */
+  #resolveFieldState(): FieldState<unknown> | null {
     const field = this.#formField.field();
     const fieldState =
       typeof field === 'function' ? field() : this.#formField.state();
 
-    return isAutoAriaFieldState(fieldState) ? fieldState : null;
+    return fieldState ?? null;
   }
 
   #hasUsableFieldState(): boolean {
@@ -105,12 +104,7 @@ export class NgxSignalFormAutoAriaDirective {
       return false;
     }
 
-    const errors =
-      typeof fieldState.errors === 'function' ? fieldState.errors() : [];
-
-    if (!Array.isArray(errors)) {
-      return false;
-    }
+    const errors = fieldState.errors();
 
     const hasMatchingErrors = errors.some(
       errorType === 'blocking' ? isBlockingError : isWarningError,
@@ -221,9 +215,7 @@ export class NgxSignalFormAutoAriaDirective {
       return null;
     }
 
-    return typeof fieldState.required === 'function' && fieldState.required()
-      ? 'true'
-      : null;
+    return fieldState.required() ? 'true' : null;
   });
 
   /**

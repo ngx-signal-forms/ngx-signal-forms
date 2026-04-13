@@ -1,11 +1,7 @@
 /**
- * Duck-typed predicates for Angular Signal Forms `FieldState` interactivity.
- *
- * These helpers let toolkit code (focus management, error summaries, wrapper
- * rendering) consistently ask "is the user able to interact with this field?"
- * without hard-coupling to the `FieldState` interface — which keeps the
- * toolkit robust against `CompatFieldState`, mock states in tests, and
- * future Angular shape evolutions that may omit either signal.
+ * Predicates for Angular Signal Forms `FieldState` interactivity used across
+ * focus management, error summaries, and wrapper rendering so every surface
+ * asks the same "can the user interact with this field?" question.
  *
  * ## Consistency rules
  *
@@ -18,8 +14,15 @@
  * - `readonly()` → **interactive**. The field is visible and focusable and
  *   its errors remain meaningful; only editing is suppressed.
  *
- * When the shape is missing `hidden`/`disabled` signals, the defaults err on
- * the side of "treat as interactive" so nothing silently disappears.
+ * ## Why duck-typed
+ *
+ * Callers here typically bridge from a bare `ValidationError` whose
+ * `fieldTree()` result is typed as `FieldState<unknown>` but, in tests and
+ * at framework boundaries, may be a partial shape without every signal.
+ * Angular 21.2's stable `FieldState` guarantees the signals on real field
+ * states, but these bridge helpers still need to tolerate the partial case
+ * so they default to "interactive" when a signal is missing — nothing is
+ * silently hidden from screen readers.
  *
  * @internal
  */

@@ -5,10 +5,7 @@ import type {
   SubmittedStatus,
 } from '../types';
 import { shouldShowErrors } from './error-strategies';
-import type {
-  ErrorVisibilityState,
-  PartialErrorVisibilityState,
-} from './field-state-types';
+import type { ErrorVisibilityState } from './field-state-types';
 import { unwrapValue } from './unwrap-signal-or-value';
 
 /**
@@ -88,9 +85,7 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * @see {@link combineShowErrors} For combining multiple error signals
  */
 export function showErrors(
-  field: ReactiveOrStatic<
-    ErrorVisibilityState | PartialErrorVisibilityState | null | undefined
-  >,
+  field: ReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>,
   strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
   submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
 ): Signal<boolean> {
@@ -128,9 +123,7 @@ export function showErrors(
  * @public
  */
 export function createShowErrorsComputed(
-  field: ReactiveOrStatic<
-    ErrorVisibilityState | PartialErrorVisibilityState | null | undefined
-  >,
+  field: ReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>,
   strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
   submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
 ): Signal<boolean> {
@@ -225,9 +218,7 @@ export function combineShowErrors(
 }
 
 function computeShowErrorsInternal(
-  field: ReactiveOrStatic<
-    ErrorVisibilityState | PartialErrorVisibilityState | null | undefined
-  >,
+  field: ReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>,
   strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
   submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
 ): Signal<boolean> {
@@ -237,18 +228,11 @@ function computeShowErrorsInternal(
     const fieldState = unwrapValue(field);
     const strategyValue = unwrapValue(strategy);
 
-    const isInvalid =
-      fieldState &&
-      typeof fieldState === 'object' &&
-      typeof fieldState.invalid === 'function'
-        ? fieldState.invalid()
-        : false;
-    const isTouched =
-      fieldState &&
-      typeof fieldState === 'object' &&
-      typeof fieldState.touched === 'function'
-        ? fieldState.touched()
-        : false;
+    // Angular 21.2's `FieldState` guarantees `invalid`/`touched` signals, so
+    // the only shapes we defend against here are nullish (no field yet) and
+    // caller-supplied partials where a signal may be absent.
+    const isInvalid = fieldState?.invalid?.() ?? false;
+    const isTouched = fieldState?.touched?.() ?? false;
 
     const resolvedStatus =
       submittedStatus === undefined ? undefined : unwrapValue(submittedStatus);

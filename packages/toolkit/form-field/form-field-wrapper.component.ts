@@ -636,9 +636,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * across subtrees) do check both; this component only needs `hidden()`.
    */
   protected readonly isFieldHidden = computed(() => {
-    const fieldState = this.formField()();
-    if (!fieldState || typeof fieldState !== 'object') return false;
-    return isFieldStateHidden(fieldState);
+    return isFieldStateHidden(this.formField()());
   });
 
   /**
