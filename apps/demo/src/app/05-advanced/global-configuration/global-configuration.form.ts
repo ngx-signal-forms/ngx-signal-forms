@@ -14,7 +14,6 @@ import {
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import type { GlobalConfigModel } from './global-configuration.model';
 import { globalConfigSchema } from './global-configuration.validations';
 
 /**

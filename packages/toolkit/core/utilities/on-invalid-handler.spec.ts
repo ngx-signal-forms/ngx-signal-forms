@@ -52,7 +52,10 @@ describe('createOnInvalidHandler', () => {
   });
 
   it('should call afterInvalid callback when provided', () => {
-    const afterInvalid = vi.fn();
+    const callbacks = {
+      afterInvalid(_field: FieldTree<unknown>): void {},
+    };
+    const afterInvalid = vi.spyOn(callbacks, 'afterInvalid');
     const mockFieldTree = createMockFieldTree();
 
     const handler = createOnInvalidHandler({ afterInvalid });
@@ -64,8 +67,12 @@ describe('createOnInvalidHandler', () => {
 
   it('should call afterInvalid after focus when both are enabled', () => {
     const callOrder: string[] = [];
-    const focusFn = vi.fn(() => callOrder.push('focus'));
-    const afterInvalid = vi.fn(() => callOrder.push('afterInvalid'));
+    const focusFn = vi.fn(() => {
+      callOrder.push('focus');
+    });
+    const afterInvalid = vi.fn(() => {
+      callOrder.push('afterInvalid');
+    });
 
     const mockFieldTree = createMockFieldTree([
       {
@@ -82,10 +89,14 @@ describe('createOnInvalidHandler', () => {
     handler(mockFieldTree);
 
     expect(afterInvalid).toHaveBeenCalledOnce();
+    expect(callOrder).toEqual(['focus', 'afterInvalid']);
   });
 
   it('should skip focus but still call afterInvalid when focus is disabled', () => {
-    const afterInvalid = vi.fn();
+    const callbacks = {
+      afterInvalid(_field: FieldTree<unknown>): void {},
+    };
+    const afterInvalid = vi.spyOn(callbacks, 'afterInvalid');
     const mockFieldTree = createMockFieldTree();
 
     const handler = createOnInvalidHandler({

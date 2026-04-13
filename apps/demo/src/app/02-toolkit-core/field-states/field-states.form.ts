@@ -11,10 +11,7 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 
-import {
-  createInitialFieldStatesModel,
-  type FieldStatesModel,
-} from './field-states.model';
+import { createInitialFieldStatesModel } from './field-states.model';
 import { fieldStatesSchema } from './field-states.validations';
 
 /**

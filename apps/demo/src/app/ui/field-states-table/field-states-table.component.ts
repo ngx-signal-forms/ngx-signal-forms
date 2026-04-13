@@ -128,7 +128,6 @@ export class FieldStatesTableComponent {
    */
   protected getFieldValue(fieldName: string): string {
     const formTree = this.form();
-    if (!formTree) return '(empty)';
 
     // Access field via dot notation: formTree[fieldName]
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -155,7 +154,6 @@ export class FieldStatesTableComponent {
    */
   protected getFieldDirty(fieldName: string): boolean {
     const formTree = this.form();
-    if (!formTree) return false;
 
     // Access field: formTree[fieldName]().dirty()
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -168,7 +166,6 @@ export class FieldStatesTableComponent {
    */
   protected getFieldTouched(fieldName: string): boolean {
     const formTree = this.form();
-    if (!formTree) return false;
 
     // Access field: formTree[fieldName]().touched()
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -181,7 +178,6 @@ export class FieldStatesTableComponent {
    */
   protected getFieldInvalid(fieldName: string): boolean {
     const formTree = this.form();
-    if (!formTree) return false;
 
     // Access field: formTree[fieldName]().invalid()
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -194,7 +190,6 @@ export class FieldStatesTableComponent {
    */
   protected getFieldValid(fieldName: string): boolean {
     const formTree = this.form();
-    if (!formTree) return false;
 
     // Access field: formTree[fieldName]().valid()
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any

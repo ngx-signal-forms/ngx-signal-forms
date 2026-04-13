@@ -1,11 +1,5 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import {
-  form,
-  FormField,
-  FormRoot,
-  required,
-  schema,
-} from '@angular/forms/signals';
+import { form, FormField, required, schema } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';

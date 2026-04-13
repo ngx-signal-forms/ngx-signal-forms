@@ -16,10 +16,7 @@ import {
   RatingControlComponent,
   SwitchControlComponent,
 } from '../../shared/controls';
-import {
-  initialCustomControlsModel,
-  type CustomControlsModel,
-} from './custom-controls.model';
+import { initialCustomControlsModel } from './custom-controls.model';
 import { customControlsSchema } from './custom-controls.validations';
 
 /**

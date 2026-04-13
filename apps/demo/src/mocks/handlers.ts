@@ -164,7 +164,7 @@ export const wizardHandlers = [
     const trip = (await request.json()) as DraftData;
 
     // Basic validation
-    if (!trip.traveler?.firstName || !trip.destinations?.length) {
+    if (!trip.traveler.firstName || trip.destinations.length === 0) {
       return HttpResponse.json(
         { error: 'Invalid booking data' },
         { status: 400 },
