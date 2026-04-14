@@ -305,7 +305,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         imports: [NgxSignalFormWrapperComponent],
       })
       class TestComponent {
-        readonly controlId = signal('rating-control');
+        readonly controlId = signal<string | null>('rating-control');
         readonly field = invalidField;
       }
 
