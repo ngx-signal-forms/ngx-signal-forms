@@ -117,6 +117,12 @@ export const NGX_SIGNAL_FORM_FIELD_CONTEXT =
  * Decouples auto-ARIA from the control-semantics directive: auto-ARIA no
  * longer needs a direct class import, which lets the two directives evolve
  * independently.
+ *
+ * @internal This token is an internal contract between the control-semantics
+ * directive and the auto-ARIA directive. Consumers should use
+ * `ngxSignalFormControlAria` on their control host instead of providing this
+ * token directly — that keeps the public API focused on the declarative
+ * directive input.
  */
 export const NGX_SIGNAL_FORM_ARIA_MODE = new InjectionToken<
   Signal<NgxSignalFormControlAriaMode | null>
@@ -137,6 +143,8 @@ export interface NgxSignalFormHintDescriptor {
  * Registry of hints that live inside a form field wrapper (or any other
  * provider of `NGX_SIGNAL_FORM_HINT_REGISTRY`). `NgxSignalFormAutoAriaDirective`
  * reads this registry instead of querying the DOM for hint elements.
+ *
+ * @internal
  */
 export interface NgxSignalFormHintRegistry {
   readonly hints: Signal<readonly NgxSignalFormHintDescriptor[]>;
@@ -146,6 +154,11 @@ export interface NgxSignalFormHintRegistry {
  * Injection token for the hint registry contributed by a form field wrapper.
  * Decouples auto-ARIA from DOM knowledge of the wrapper and hint component
  * selectors: hint IDs are now handed to auto-ARIA by whoever owns the wrapper.
+ *
+ * @internal This token is an internal contract between the form field wrapper
+ * component and the auto-ARIA directive. Consumers authoring their own wrapper
+ * component may provide it, but it is not part of the stable public API
+ * surface and may evolve alongside auto-ARIA internals.
  */
 export const NGX_SIGNAL_FORM_HINT_REGISTRY =
   new InjectionToken<NgxSignalFormHintRegistry>(

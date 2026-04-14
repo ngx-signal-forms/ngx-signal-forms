@@ -5,10 +5,12 @@ import {
   required,
   schema,
   submit,
+  validate,
   type FieldTree,
 } from '@angular/forms/signals';
 import { describe, expect, it, vi } from 'vitest';
 import { submitWithWarnings } from './submission-helpers';
+import { warningError } from './warning-error';
 
 /**
  * Drift guard for `submitWithWarnings`.
@@ -21,9 +23,10 @@ import { submitWithWarnings } from './submission-helpers';
  * drifts silently in production unless a test is exercising a **real**
  * Angular signal form rather than a hand-rolled mock.
  *
- * These tests therefore pin equivalence on a warning-free form across two
- * scenarios (invalid short-circuit, valid submission). When one of them
- * fails after an Angular upgrade, treat it as a signal to re-read
+ * These tests therefore pin equivalence (or deliberate divergence) across
+ * three scenarios: invalid short-circuit on blocking errors, warning-only
+ * divergence (native blocks, toolkit runs), and valid submission. When one
+ * of them fails after an Angular upgrade, treat it as a signal to re-read
  * `submission-helpers.ts` and realign before updating the assertion.
  *
  * @see ./submission-helpers.spec.ts — unit tests against mock field trees
@@ -64,6 +67,53 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
     // Both should short-circuit: action is never invoked.
     expect(nativeAction).not.toHaveBeenCalled();
     expect(toolkitAction).not.toHaveBeenCalled();
+
+    // Both should still have marked the form touched.
+    expect(toolkitForm().touched()).toBe(nativeForm().touched());
+  });
+
+  it('invokes the action when the only errors are warnings, while native submit() short-circuits', async () => {
+    // This pins the warning-aware behavior that `submitWithWarnings` exists to
+    // provide: Angular treats `warn:*` errors as `invalid()` and blocks `submit`,
+    // while the toolkit helper must filter blocking errors from `errorSummary()`
+    // and still run the action. If this test fails after an Angular upgrade,
+    // Angular has likely changed how it categorizes validation errors — realign
+    // `getBlockingErrors` / `isBlockingError` before updating the assertion.
+    const makeWarningOnlyForm = (): FieldTree<{ username: string }> => {
+      const model = signal({ username: 'abc' });
+      return TestBed.runInInjectionContext(() =>
+        form(
+          model,
+          schema<{ username: string }>((path) => {
+            validate(path.username, (ctx) => {
+              const value = ctx.value();
+              if (value && value.length < 6) {
+                return warningError(
+                  'short-username',
+                  'Consider using 6+ characters',
+                );
+              }
+              return null;
+            });
+          }),
+        ),
+      );
+    };
+
+    const nativeForm = makeWarningOnlyForm();
+    const nativeAction = vi.fn(async () => undefined);
+    await submit(nativeForm, nativeAction);
+
+    const toolkitForm = makeWarningOnlyForm();
+    const toolkitAction = vi.fn(async () => undefined);
+    await submitWithWarnings(toolkitForm, toolkitAction);
+
+    // Angular's native submit() treats the warn:* error as blocking and
+    // short-circuits — this is the foot-gun submitWithWarnings fixes.
+    expect(nativeAction).not.toHaveBeenCalled();
+
+    // The toolkit helper must see the warning and still run the action.
+    expect(toolkitAction).toHaveBeenCalledOnce();
 
     // Both should still have marked the form touched.
     expect(toolkitForm().touched()).toBe(nativeForm().touched());

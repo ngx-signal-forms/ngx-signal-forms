@@ -18,17 +18,10 @@
 npm install @ngx-signal-forms/toolkit
 ```
 
-Optional Vest integration (Vest 6 required for Standard Schema support):
-
-```bash
-npm install @ngx-signal-forms/toolkit vest@6.2.7
-```
-
-Use `vest` only when you import the optional `@ngx-signal-forms/toolkit/vest`
-entry point.
-
-`vest@6.3.0` is excluded because of an upstream packaging issue in the
-published build (as of April 2025). Use `6.2.7` or a newer fixed release.
+Using Vest for business-policy validation? See the
+[`@ngx-signal-forms/toolkit/vest`](#ngx-signal-formstoolkitvest) entry point
+below for install and usage details — Vest is an optional peer dependency and
+is only needed when you import that entry point.
 
 ## Release & Support
 
@@ -548,10 +541,20 @@ toolkit-branded Vest integration without making Vest part of every project.
 
 > **Requires Vest v6+** — Standard Schema support was introduced in Vest 6.
 
+**Install** (only needed when you import this entry point):
+
+```bash
+npm install @ngx-signal-forms/toolkit vest@6.2.7
+```
+
+`vest` is declared as an optional peer dependency
+(`>=6.0.0 <6.3.0 || >=6.3.1`). `vest@6.3.0` is excluded because of an upstream
+packaging issue in the published build (as of April 2025) — use `6.2.7` or a
+newer fixed release.
+
 If you are migrating from `ngx-vest-forms`, upgrade to **Vest 6.x first**.
 The optional `@ngx-signal-forms/toolkit/vest` entry point does **not** support Vest 5.x.
-
-Migrating from `ngx-vest-forms`? Start with the short overview in
+Start with the short overview in
 [`docs/MIGRATING_FROM_NGX_VEST_FORMS.md`](./docs/MIGRATING_FROM_NGX_VEST_FORMS.md).
 
 **Key exports**:

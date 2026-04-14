@@ -30,7 +30,13 @@ const TEXT_LIKE_INPUT_TYPE_VALUES = [
 
 const TEXT_LIKE_INPUT_TYPES = new Set<string>(TEXT_LIKE_INPUT_TYPE_VALUES);
 
-const CONTROL_KIND_VALUES = [
+/**
+ * Canonical list of supported control kinds. Exposed so dev-mode diagnostics
+ * (e.g. the preset-provider warning) can stay in sync with the type.
+ *
+ * @internal
+ */
+export const NGX_SIGNAL_FORM_CONTROL_KIND_VALUES = [
   'input-like',
   'standalone-field-like',
   'switch',
@@ -40,7 +46,7 @@ const CONTROL_KIND_VALUES = [
   'composite',
 ] as const satisfies readonly NgxSignalFormControlKind[];
 
-const CONTROL_KINDS = new Set<string>(CONTROL_KIND_VALUES);
+const CONTROL_KINDS = new Set<string>(NGX_SIGNAL_FORM_CONTROL_KIND_VALUES);
 
 const CONTROL_LAYOUT_VALUES = [
   'stacked',

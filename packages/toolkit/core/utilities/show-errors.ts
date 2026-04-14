@@ -12,12 +12,16 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * Creates a reactive computed signal that determines if a form field's errors should
  * be shown to the user based on the error display strategy.
  *
- * This is the **single source of truth** for error-visibility timing across the
- * toolkit. `createErrorState()`, `NgxHeadlessErrorStateDirective`,
- * `NgxHeadlessErrorSummaryDirective`, and the wrapper component all route
- * through `shouldShowErrors()` (or this computed wrapper) so visibility timing
- * cannot drift between the factory and directive surfaces. If you find
- * yourself writing a parallel visibility predicate, use this instead.
+ * This is the shared visibility-timing primitive: `createErrorState()`,
+ * `NgxHeadlessErrorStateDirective`, `NgxHeadlessErrorSummaryDirective`,
+ * `NgxSignalFormAutoAriaDirective`, `NgxFormFieldErrorComponent`, and the
+ * form-field wrapper all route their visibility decisions through
+ * `shouldShowErrors()` (via this computed) so the when-to-show rule stays
+ * identical across surfaces. Individual consumers may layer their own
+ * short-circuits on top — the wrapper additionally suppresses output when
+ * `isFieldHidden()` or the `errors` array is empty — but the underlying
+ * strategy evaluation is not reimplemented anywhere. Add layer-specific
+ * filters at the call site rather than forking this primitive.
  *
  * ## Simplified Architecture (aligned with Angular Signal Forms)
  *

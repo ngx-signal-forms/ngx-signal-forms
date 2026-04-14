@@ -2,11 +2,11 @@
   --_fieldset-gap: var(--ngx-signal-form-fieldset-gap, 1rem);
   --_fieldset-padding: var(--ngx-signal-form-fieldset-padding, 1rem);
   --_fieldset-content-offset: var(--ngx-signal-form-fieldset-content-offset, 0);
-  --_fieldset-message-gap: var(
+  --_fieldset-message-margin-top: var(
     --ngx-signal-form-fieldset-message-margin-top,
     var(--_fieldset-gap)
   );
-  --_fieldset-message-gap-top: var(
+  --_fieldset-message-margin-bottom: var(
     --ngx-signal-form-fieldset-message-margin-bottom,
     var(--_fieldset-gap)
   );
@@ -185,11 +185,11 @@
 }
 
 .ngx-signal-form-fieldset__messages {
-  margin-top: var(--_fieldset-message-gap);
+  margin-top: var(--_fieldset-message-margin-top);
 }
 
 :host(.ngx-signal-form-fieldset--messages-top)
   .ngx-signal-form-fieldset__messages {
   margin-top: 0;
-  margin-bottom: var(--_fieldset-message-gap-top);
+  margin-bottom: var(--_fieldset-message-margin-bottom);
 }

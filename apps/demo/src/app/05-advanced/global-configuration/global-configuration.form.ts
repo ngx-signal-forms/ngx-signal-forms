@@ -19,14 +19,16 @@ import { globalConfigSchema } from './global-configuration.validations';
 /**
  * Global Configuration Component
  *
- * Demonstrates global toolkit configuration with provideNgxSignalFormsConfig.
+ * Demonstrates global toolkit configuration with provideNgxSignalFormsConfig()
+ * and app-level control presets with provideNgxSignalFormControlPresets().
  * Shows how to:
  * - Set default error display strategies globally
  * - Configure automatic ARIA attributes
  * - Rely on deterministic control ids for ARIA linkage
+ * - Apply control-family defaults for switch-style controls
  * - Override global settings per form/field
  *
- * Note: Global configuration is set in app.config.ts via provideNgxSignalFormsConfig()
+ * Note: This demo configures both providers in apps/demo/src/main.ts.
  */
 @Component({
   selector: 'ngx-global-configuration',
@@ -50,14 +52,16 @@ import { globalConfigSchema } from './global-configuration.validations';
               Global Configuration Active
             </h3>
             <p class="text-sm text-blue-800 dark:text-blue-200">
-              This form uses global configuration set in
+              This demo app configures toolkit defaults in
               <code class="rounded bg-blue-100 px-1 py-0.5 dark:bg-blue-900"
-                >app.config.ts</code
+                >apps/demo/src/main.ts</code
               >. The global
               <code class="rounded bg-blue-100 px-1 py-0.5 dark:bg-blue-900"
                 >defaultErrorStrategy</code
               >
-              is "on-touch", but you can override it using the selector below.
+              is "on-touch", and the app-level switch preset keeps the terms
+              control on the compact inline layout with automatic ARIA. Use the
+              selector below to override the timing for this form only.
             </p>
           </div>
         </div>
@@ -171,10 +175,18 @@ import { globalConfigSchema } from './global-configuration.validations';
           </div>
           <div class="flex gap-2">
             <dt class="font-medium text-gray-700 dark:text-gray-300">
+              App-level preset:
+            </dt>
+            <dd class="text-gray-600 dark:text-gray-400">
+              switch → inline-control + auto ARIA
+            </dd>
+          </div>
+          <div class="flex gap-2">
+            <dt class="font-medium text-gray-700 dark:text-gray-300">
               Field Resolution:
             </dt>
             <dd class="text-gray-600 dark:text-gray-400">
-              Bound control id → deterministic field name
+              Projected control id → deterministic field name
             </dd>
           </div>
         </dl>

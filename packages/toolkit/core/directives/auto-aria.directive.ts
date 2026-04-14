@@ -79,11 +79,11 @@ export class NgxSignalFormAutoAriaDirective {
   /**
    * Resolves the `FieldState` for the currently bound control.
    *
-   * The dual `this.#formField.field()` vs `this.#formField.state()` branch
-   * is load-bearing: `FormField.field` is an `InputSignal<Field<T>>` which
-   * may not be set when the directive initializes (the consumer can forget
-   * the `[formField]` binding), and the fallback to `state()` lets
-   * `FORM_FIELD`-provided siblings keep working. Do not collapse.
+   * Covers the `FORM_FIELD`-provided sibling case where `field()` is still
+   * unset on first read: Angular's `FormField.field` is an `InputSignal<Field<T>>`
+   * that can be `undefined` before the binding materializes, and the
+   * fallback to `state()` lets sibling directives keep working during that
+   * window. Do not collapse the two branches.
    */
   #resolveFieldState(): FieldState<unknown> | null {
     const field = this.#formField.field();
@@ -165,18 +165,12 @@ export class NgxSignalFormAutoAriaDirective {
       .map((hint) => hint.id);
   });
 
-  /**
-   * Computed signal that determines if errors should be shown based on error display strategy.
-   * Respects form-level ErrorDisplayStrategy from NgxSignalFormDirective (`[formRoot]`).
-   */
+  /** Delegates to `#visibilityByStrategy` after filtering to blocking errors. */
   readonly #shouldShowErrors = computed(() => {
     return this.#shouldShowBy('blocking');
   });
 
-  /**
-   * Computed signal that determines if warnings should be shown.
-   * Warnings use same visibility logic as errors.
-   */
+  /** Delegates to `#visibilityByStrategy` after filtering to warnings. */
   readonly #shouldShowWarnings = computed(() => {
     return this.#shouldShowBy('warning');
   });
@@ -296,6 +290,14 @@ export class NgxSignalFormAutoAriaDirective {
   }
 
   #readPreservedDescribedBy(fieldName: string | null): string | null {
+    // First-render note: at construction time `#managedDescribedByIds()` is
+    // still empty, so the preserved list returned here can momentarily
+    // include IDs that the write phase will take ownership of on the same
+    // tick (hint IDs, generated error/warning IDs). The phased
+    // `afterEveryRender` dance reconciles this in the immediately following
+    // `write` callback — do not "simplify" by calling this once eagerly,
+    // and do not assume the snapshot is authoritative until the first write
+    // has run.
     const raw = this.#element.nativeElement.getAttribute('aria-describedby');
 
     if (!raw) {

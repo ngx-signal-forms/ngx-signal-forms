@@ -77,11 +77,22 @@ test.describe('Advanced - Global Configuration', () => {
       page: playwrightPage,
     }) => {
       const acceptTerms = playwrightPage.locator('#acceptTerms');
-      await expect(acceptTerms).toBeVisible();
+      const acceptTermsWrapper = playwrightPage
+        .locator('ngx-signal-form-field-wrapper')
+        .filter({ has: acceptTerms });
+
       await expect(acceptTerms).toHaveAttribute('role', 'switch');
-      await expect(acceptTerms).toHaveAttribute(
+      await expect(acceptTermsWrapper).toHaveAttribute(
         'data-ngx-signal-form-control-kind',
         'switch',
+      );
+      await expect(acceptTermsWrapper).toHaveAttribute(
+        'data-ngx-signal-form-control-layout',
+        'inline-control',
+      );
+      await expect(acceptTermsWrapper).toHaveAttribute(
+        'data-ngx-signal-form-control-aria-mode',
+        'auto',
       );
     });
 

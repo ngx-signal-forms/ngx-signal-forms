@@ -68,5 +68,20 @@ export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
     return true;
   }
 
+  // The form is invalid but every error was filtered out: no bound control,
+  // missing fieldTree, or every candidate is non-interactive. This typically
+  // means a custom control forgot to call `registerAsBinding()`, so the user
+  // sees the error message but focus is stranded wherever the submit button
+  // was. Warn in dev mode so the wiring mistake is obvious.
+  if (typeof ngDevMode === 'undefined' || ngDevMode) {
+    console.warn(
+      '[ngx-signal-forms] focusFirstInvalid() found validation errors but ' +
+        'could not focus any of them. Typical cause: a custom control is ' +
+        'missing `registerAsBinding()` so its `focusBoundControl()` is ' +
+        'unavailable. Fields hidden or disabled via `hidden()`/`disabled()` ' +
+        'are deliberately skipped.',
+    );
+  }
+
   return false;
 }

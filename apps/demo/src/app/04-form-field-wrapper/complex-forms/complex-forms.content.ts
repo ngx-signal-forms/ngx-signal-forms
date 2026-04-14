@@ -24,9 +24,17 @@ export const COMPLEX_FORMS_CONTENT = {
         items: [
           '• <strong>Multi-section forms:</strong> Personal info + Address + Skills',
           '• <strong>Array operations:</strong> CRUD for skills and contacts',
-          '• <strong>Mixed field types:</strong> Text, number, select, checkbox',
+          '• <strong>Mixed field types:</strong> Text, number, select, switch, checkbox, and radio-group controls in one form',
           '• <strong>Conditional validation:</strong> Based on user input',
           '• <strong>Responsive grid:</strong> Mobile-first layout',
+        ],
+      },
+      {
+        title: 'Control Semantics in Long Forms',
+        items: [
+          '• <strong>Explicit metadata:</strong> Switch and checkbox rows opt into the correct wrapper behavior instead of relying on DOM heuristics',
+          '• <strong>Grouped feedback:</strong> Fieldsets still aggregate warnings and errors while nested controls keep their own semantics',
+          '• <strong>Consistent accessibility:</strong> Auto-ARIA keeps labels, hints, and errors linked across nested sections',
         ],
       },
     ],
@@ -48,7 +56,7 @@ export const COMPLEX_FORMS_CONTENT = {
           '• <strong>Without wrapper:</strong> ~320 lines (manual labels/errors/layout)',
           '• <strong>With wrapper:</strong> ~280 lines (33% less boilerplate)',
           '• <strong>Zero manual ARIA:</strong> Automatic accessibility',
-          '• <strong>Consistent UX:</strong> Unified error display',
+          '• <strong>Consistent UX:</strong> Unified error display and stable control-family layouts',
         ],
       },
     ],

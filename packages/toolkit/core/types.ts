@@ -98,8 +98,47 @@ export type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
 /**
  * Semantic control families understood by the toolkit wrapper layer.
  *
- * Keep this intentionally small so consumers can opt into stable wrapper
- * behavior without the toolkit hard-coding every possible custom control.
+ * Kept intentionally small so consumers can opt into stable wrapper behavior
+ * without the toolkit hard-coding every possible custom control. The union is
+ * closed: adding a new value is a toolkit change, not a consumer extension.
+ *
+ * ## Consumer extensibility
+ *
+ * - **Override preset behavior** for an existing kind via
+ *   `provideNgxSignalFormControlPresets({ slider: { layout: 'custom', ariaMode: 'manual' } })`.
+ * - **Declare per-control semantics** on the host via the
+ *   `NgxSignalFormControlSemanticsDirective` inputs:
+ *   `ngxSignalFormControl`, `ngxSignalFormControlLayout`,
+ *   `ngxSignalFormControlAria`.
+ * - **Custom widgets that don't fit any native kind** should use
+ *   `ngxSignalFormControl="composite"` together with
+ *   `appearance="plain"` (and usually `ariaMode="manual"`). The wrapper
+ *   still contributes labels, hints, errors, and field identity but stays
+ *   out of the control's own chrome and ARIA contract.
+ *
+ * ## Toolkit-internal: adding a new kind
+ *
+ * Adding a value to this union is a breaking change and requires updating
+ * four coupled locations; TypeScript will fail the build until all are in
+ * sync:
+ *
+ * 1. This union type.
+ * 2. `NGX_SIGNAL_FORM_CONTROL_KIND_VALUES` in
+ *    `packages/toolkit/core/utilities/control-semantics.ts` — the runtime
+ *    list used by DOM validation and dev diagnostics.
+ * 3. `DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS` in
+ *    `packages/toolkit/core/tokens.ts` — the default `layout` + `ariaMode`
+ *    for the new kind.
+ * 4. `CONTROL_KIND_CAPABILITIES` in
+ *    `packages/toolkit/form-field/form-field.utils.ts` — the
+ *    wrapper-layout capability flags (`textual`, `supportsOutline`,
+ *    `selectionGroup`, `paddedContent`).
+ *
+ * The `satisfies` clauses on (2) and (4) enforce exhaustiveness at compile
+ * time, so the TS error from adding only (1) tells you exactly what's
+ * missing. Heuristic inference in
+ * `inferNgxSignalFormControlKind` (same file as (2)) is optional and only
+ * needed if the new kind has a reliable DOM fingerprint.
  */
 export type NgxSignalFormControlKind =
   | 'input-like'

@@ -31,7 +31,25 @@ type NgxSignalFormControlDirectiveValue =
  * instead of relying purely on DOM heuristics. The auto-ARIA directive reads
  * semantics via Angular DI rather than these attributes.
  *
- * @example
+ * **Input shape:** prefer the three dedicated attribute inputs
+ * (`ngxSignalFormControl="<kind>"`, `ngxSignalFormControlLayout`,
+ * `ngxSignalFormControlAria`) — they read naturally in templates and show
+ * intent at a glance. The object-literal form of `ngxSignalFormControl` is a
+ * power-user escape hatch for one-off combinations that would otherwise need
+ * three separate bindings.
+ *
+ * **Combining both forms is supported.** When an element carries both the
+ * object-literal input and one of the standalone overrides
+ * (`ngxSignalFormControlLayout` / `ngxSignalFormControlAria`), the standalone
+ * override wins — that is the intentional precedence used by the override
+ * inputs and what the resolution logic implements. Treat the object form as
+ * the "base" semantics and the standalone inputs as explicit last-mile
+ * overrides.
+ *
+ * Precedence order for each resolved value (layout / ariaMode):
+ * standalone override input → object-literal field → preset default.
+ *
+ * @example Declarative form (preferred)
  * ```html
  * <app-star-rating
  *   id="rating"
@@ -42,12 +60,20 @@ type NgxSignalFormControlDirectiveValue =
  * />
  * ```
  *
- * @example
+ * @example Object-literal form (power-user escape hatch)
  * ```html
  * <third-party-date-range-picker
  *   id="travelDates"
- *   ngxSignalFormControl
  *   [ngxSignalFormControl]="{ kind: 'composite', layout: 'stacked', ariaMode: 'manual' }"
+ * />
+ * ```
+ *
+ * @example Combining both forms (object-literal base + standalone override)
+ * ```html
+ * <third-party-date-range-picker
+ *   id="travelDates"
+ *   [ngxSignalFormControl]="{ kind: 'composite', layout: 'stacked' }"
+ *   ngxSignalFormControlAria="manual"
  * />
  * ```
  */
