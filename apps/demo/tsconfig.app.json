@@ -8,6 +8,9 @@
         "../../packages/toolkit/index.ts",
         "../../dist/packages/toolkit"
       ],
+      "@ngx-signal-forms/toolkit/core": [
+        "../../packages/toolkit/core/index.ts"
+      ],
       "@ngx-signal-forms/toolkit/assistive": [
         "../../packages/toolkit/assistive/index.ts",
         "../../dist/packages/toolkit/assistive"

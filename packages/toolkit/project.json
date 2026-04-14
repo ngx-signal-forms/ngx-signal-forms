@@ -33,8 +33,10 @@
       "options": {
         "commands": [
           "mkdir -p dist/packages/toolkit",
-          "cp README.md dist/packages/toolkit/README.md"
+          "cp README.md dist/packages/toolkit/README.md",
+          "node packages/toolkit/scripts/strip-internal-exports.mjs"
         ],
+        "parallel": false,
         "cwd": "{workspaceRoot}"
       }
     },
