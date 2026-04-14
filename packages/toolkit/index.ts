@@ -1,5 +1,7 @@
-// Primary public entry point.
-// Re-export the internal core source barrel here so consumers only need
-// `@ngx-signal-forms/toolkit` for shared directives, tokens, providers, and utilities.
-// eslint-disable-next-line @nx/enforce-module-boundaries
-export * from './core';
+// Primary public entry point. Re-exports the `/core` secondary entry point
+// so consumers importing from `@ngx-signal-forms/toolkit` get the same
+// directives, tokens, providers, and utilities they always have. `/core`
+// itself is a build-time-only secondary entry — it's stripped from the
+// published `exports` map by a post-build step, so consumers cannot reach
+// it via the supported resolver path.
+export * from '@ngx-signal-forms/toolkit/core';

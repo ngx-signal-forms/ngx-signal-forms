@@ -1,11 +1,11 @@
 // Types
 export type * from './types';
 
-// Tokens — symbols tagged `@internal` in their JSDoc are documented as
-// non-public but still re-exported here because ng-packagr secondary entry
-// points cannot reach outside their own tree. Hiding them behind a
-// dedicated internal sub-path would require promoting `core/` into its own
-// secondary entry point; that refactor is tracked as a follow-up.
+// Tokens — symbols tagged `@internal` are intentionally exported from this
+// barrel because `/core` is a build-time-only secondary entry point hidden
+// from the published `exports` map. Other toolkit entries (form-field,
+// assistive, headless, debugger) import internal plumbing from
+// `@ngx-signal-forms/toolkit/core` at build time; consumers cannot reach in.
 export * from './tokens';
 
 // Providers
