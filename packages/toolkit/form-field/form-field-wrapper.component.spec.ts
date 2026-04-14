@@ -8,7 +8,7 @@ import {
   provideNgxSignalFormControlPresetsForComponent,
 } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NgxSignalFormFieldWrapperComponent as NgxSignalFormWrapperComponent } from './form-field-wrapper.component';
 
 type MockValidationError = {
@@ -3006,6 +3006,101 @@ describe('NgxSignalFormWrapperComponent', () => {
       const wrapper = container.querySelector('ngx-signal-form-field-wrapper');
       expect(wrapper).not.toHaveAttribute('hidden');
       expect(container.querySelector('ngx-form-field-error')).toBeTruthy();
+    });
+  });
+
+  describe('Dev-mode diagnostics', () => {
+    // An `<input type="file">` is discovered by the native-control selector
+    // but fails every branch of `inferNgxSignalFormControlKind` (not a text-like
+    // type, no role, no `data-ngx-signal-form-control`), so semantics resolve
+    // to `kind: null` — the exact wiring-mistake path the warning exists for.
+
+    const classificationWarningMarker = 'could not infer a control kind';
+    const getClassificationWarnings = (
+      spy: ReturnType<typeof vi.spyOn>,
+    ): readonly string[] => {
+      const messages: string[] = [];
+      for (const call of spy.mock.calls) {
+        const first: unknown = call[0];
+        if (
+          typeof first === 'string' &&
+          first.includes(classificationWarningMarker)
+        ) {
+          messages.push(first);
+        }
+      }
+      return messages;
+    };
+
+    let warnSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
+    it('should warn once when a bound control cannot be classified to a kind', async () => {
+      const field = createMockFieldState();
+
+      await render(
+        `<ngx-signal-form-field-wrapper [formField]="field">
+          <label for="upload">Upload</label>
+          <input id="upload" type="file" />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field },
+        },
+      );
+
+      const warnings = getClassificationWarnings(warnSpy);
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain('ngxSignalFormControl="..."');
+    });
+
+    it('should NOT warn when the bound control resolves to a known kind', async () => {
+      const field = createMockFieldState();
+
+      await render(
+        `<ngx-signal-form-field-wrapper [formField]="field">
+          <label for="name">Name</label>
+          <input id="name" type="text" />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field },
+        },
+      );
+
+      expect(getClassificationWarnings(warnSpy)).toHaveLength(0);
+    });
+
+    it('should keep the warning one-shot across re-renders of the same wrapper', async () => {
+      const field = createMockFieldState();
+
+      const { rerender } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field">
+          <label for="upload">Upload</label>
+          <input id="upload" type="file" />
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field },
+        },
+      );
+
+      // Trigger a re-render by toggling field state; the warning must not fire again.
+      field.set({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'required', message: 'File is required' }],
+      });
+      await rerender({ componentProperties: { field } });
+
+      expect(getClassificationWarnings(warnSpy)).toHaveLength(1);
     });
   });
 });
