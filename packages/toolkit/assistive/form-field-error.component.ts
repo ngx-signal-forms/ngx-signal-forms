@@ -12,7 +12,6 @@ import {
   generateErrorId,
   generateWarningId,
   injectFormContext,
-  NGX_ERROR_MESSAGES,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   readDirectErrors,
   resolveStrategyFromContext,
@@ -22,6 +21,7 @@ import {
   type ErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
+import { NGX_ERROR_MESSAGES } from '@ngx-signal-forms/toolkit/core';
 
 export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
 

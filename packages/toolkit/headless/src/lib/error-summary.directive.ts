@@ -2,8 +2,6 @@ import { computed, Directive, inject, input } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   injectFormContext,
-  NGX_ERROR_MESSAGES,
-  NGX_FIELD_LABEL_RESOLVER,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
   showErrors,
@@ -11,6 +9,10 @@ import {
   type ErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
+import {
+  NGX_ERROR_MESSAGES,
+  NGX_FIELD_LABEL_RESOLVER,
+} from '@ngx-signal-forms/toolkit/core';
 
 import {
   dedupeValidationErrors,

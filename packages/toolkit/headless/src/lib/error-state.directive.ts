@@ -2,7 +2,6 @@ import { computed, Directive, inject, input } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   injectFormContext,
-  NGX_ERROR_MESSAGES,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
   resolveValidationErrorMessage,
@@ -10,6 +9,7 @@ import {
   type ErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
+import { NGX_ERROR_MESSAGES } from '@ngx-signal-forms/toolkit/core';
 
 import { buildHeadlessErrorState } from './utilities';
 

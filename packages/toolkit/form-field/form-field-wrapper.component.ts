@@ -15,12 +15,10 @@ import type { FieldTree } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
   FormFieldAppearanceInput,
-  NgxSignalFormHintDescriptor,
 } from '@ngx-signal-forms/toolkit';
 import {
   NGX_SIGNAL_FORM_CONTROL_PRESETS,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
-  NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
   createShowErrorsComputed,
   injectFormContext,
@@ -30,6 +28,10 @@ import {
   resolveNgxSignalFormControlSemantics,
   resolveErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
+import {
+  NGX_SIGNAL_FORM_HINT_REGISTRY,
+  type NgxSignalFormHintDescriptor,
+} from '@ngx-signal-forms/toolkit/core';
 import {
   isBlockingError,
   isWarningError,

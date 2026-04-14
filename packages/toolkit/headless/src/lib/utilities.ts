@@ -11,11 +11,13 @@ import {
   splitByKind,
   unwrapValue,
   type ErrorDisplayStrategy,
-  type ErrorMessageRegistry,
   type ErrorReadableState,
-  type FieldLabelResolver,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
+import type {
+  ErrorMessageRegistry,
+  FieldLabelResolver,
+} from '@ngx-signal-forms/toolkit/core';
 
 import type { CharacterCountLimitState } from './character-count.directive';
 import {
