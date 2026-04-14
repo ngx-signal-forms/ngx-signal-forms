@@ -306,20 +306,6 @@ interface NgxSignalFormsUserConfig {
 Control-family semantics such as default ARIA mode or wrapper layout live in
 the dedicated control preset providers above.
 
-### Removed APIs — do not use
-
-The following symbols and config fields existed in earlier betas and have been
-removed. Template examples, IDE auto-imports, and older tutorials may still
-reference them; treat any mention as a bug report against those docs.
-
-- Visibility helpers: `computeShowErrors()`, `createShowErrorsSignal()`
-- Submission helpers: `canSubmit()`, `isSubmitting()`
-- Config fields: `fieldNameResolver`, `strictFieldResolution`, `debug`
-- Error display strategy: `'manual'` (use `'immediate'` / `'on-touch'` / `'on-submit'`)
-- Form field appearances: `'standard'` → `'stacked'`, `'bare'` → `'plain'`
-
-> For CSS status classes such as `ng-invalid` or `ng-touched`, use Angular’s native `provideSignalFormsConfig({ classes })`. The toolkit focuses on ARIA wiring and visibility strategy rather than class generation.
-
 **Providers:**
 
 ```typescript

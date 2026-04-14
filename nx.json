@@ -8,8 +8,6 @@
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
       "default",
-      "!{projectRoot}/.eslintrc.json",
-      "!{projectRoot}/eslint.config.mjs",
       "!{workspaceRoot}/.oxlintrc.json",
       "!{workspaceRoot}/.oxfmtrc.json",
       "!{projectRoot}/vite.config.{js,cjs,mjs,ts,cts,mts}",
@@ -17,14 +15,9 @@
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
       "!{projectRoot}/src/test-setup.[jt]s",
-      "!{projectRoot}/test-setup.[jt]s",
-      "!{projectRoot}/jest.config.[jt]s"
+      "!{projectRoot}/test-setup.[jt]s"
     ],
-    "sharedGlobals": [
-      "{workspaceRoot}/.github/workflows/ci.yml",
-      "{workspaceRoot}/.github/workflows/release.yml",
-      "{workspaceRoot}/.github/workflows/publish.yml"
-    ]
+    "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
   },
   "nxCloudId": "6996105d7ca3ad8352dfd299",
   "targetDefaults": {
@@ -64,7 +57,6 @@
       "inputs": ["production", "^production"]
     }
   },
-  "plugins": [],
   "generators": {
     "@nx/angular:application": {
       "e2eTestRunner": "playwright",

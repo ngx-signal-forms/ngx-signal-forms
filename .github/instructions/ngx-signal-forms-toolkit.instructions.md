@@ -29,7 +29,7 @@ Use the correct entry point for the thing you need.
 | Entry point                            | Public purpose                               |
 | -------------------------------------- | -------------------------------------------- |
 | `@ngx-signal-forms/toolkit`            | Core directives, providers, and utilities    |
-| `@ngx-signal-forms/toolkit/assistive`  | Error, hint, character-count, assistive row  |
+| `@ngx-signal-forms/toolkit/assistive`  | Error, error summary, hint, character-count  |
 | `@ngx-signal-forms/toolkit/form-field` | Wrapper, floating label, grouped fieldset    |
 | `@ngx-signal-forms/toolkit/headless`   | Renderless directives and utility primitives |
 | `@ngx-signal-forms/toolkit/vest`       | Vest v6+ and Standard Schema helpers         |
@@ -150,43 +150,71 @@ Use `[formRoot]` + `ngxSignalForm` whenever you need:
 
 ### Root entry point: `@ngx-signal-forms/toolkit`
 
-Current public exports include:
+Current public exports, grouped by category:
 
-- `NgxSignalFormDirective`
-- `NgxSignalFormAutoAriaDirective`
-- `NgxSignalFormControlSemanticsDirective`
-- `NgxSignalFormToolkit`
-- `provideNgxSignalFormsConfig()`
-- `provideNgxSignalFormsConfigForComponent()`
-- `provideNgxSignalFormControlPresets()`
-- `provideNgxSignalFormControlPresetsForComponent()`
+**Directives & bundles:**
+
+- `NgxSignalFormDirective` — form enhancer on `form[formRoot][ngxSignalForm]`
+- `NgxSignalFormAutoAriaDirective` — automatic ARIA wiring
+- `NgxSignalFormControlSemanticsDirective` — declares control kind/layout/aria for wrapper and auto-ARIA
+- `NgxSignalFormToolkit` — bundle of all above
+
+**Providers:**
+
+- `provideNgxSignalFormsConfig()` / `provideNgxSignalFormsConfigForComponent()`
+- `provideNgxSignalFormControlPresets()` / `provideNgxSignalFormControlPresetsForComponent()`
 - `provideErrorMessages()`
 - `provideFieldLabels()`
-- `showErrors()` / `combineShowErrors()`
+
+**Error visibility:**
+
+- `showErrors()` / `createShowErrorsComputed()` / `combineShowErrors()`
 - `shouldShowErrors()`
-- `focusFirstInvalid()`
-- `createOnInvalidHandler()`
-- `createSubmittedStatusTracker()`
-- `hasSubmitted()`
-- `hasOnlyWarnings()`
-- `getBlockingErrors()`
-- `canSubmitWithWarnings()`
-- `submitWithWarnings()`
-- `injectFormContext()`
-- `buildAriaDescribedBy()`
-- `resolveNgxSignalFormControlSemantics()`
-- `splitByKind()`
-- `unwrapValue()`
-- `updateAt()` / `updateNested()`
+- `resolveErrorDisplayStrategy()` / `resolveStrategyFromContext()` / `resolveSubmittedStatusFromContext()`
+
+**Submission helpers:**
+
+- `focusFirstInvalid()` / `createOnInvalidHandler()`
+- `createSubmittedStatusTracker()` / `hasSubmitted()`
+
+**Warning helpers:**
+
 - `warningError()` / `isWarningError()` / `isBlockingError()`
+- `hasOnlyWarnings()` / `getBlockingErrors()` / `splitByKind()`
+- `canSubmitWithWarnings()` / `submitWithWarnings()`
+
+**Field & control resolution:**
+
+- `injectFieldControl()` / `injectFormContext()`
+- `resolveFieldName()` / `resolveNgxSignalFormControlSemantics()` / `readNgxSignalFormControlSemantics()`
+- `inferNgxSignalFormControlKind()`
+- `isFieldStateInteractive()` / `isFieldStateHidden()`
+- `isNgxSignalFormControlKind()` / `isNgxSignalFormControlAriaMode()` / `isNgxSignalFormControlLayout()`
+
+**ARIA & ID generation:**
+
+- `buildAriaDescribedBy()`
+- `generateErrorId()` / `generateWarningId()` / `createUniqueId()`
+
+**Message resolution:**
+
+- `resolveValidationErrorMessage()` / `getDefaultValidationMessage()`
+
+**Utilities:**
+
+- `readDirectErrors()` / `unwrapValue()`
+- `updateAt()` / `updateNested()`
+
+**Tokens (advanced):**
+
+- `NGX_SIGNAL_FORMS_CONFIG` / `NGX_SIGNAL_FORM_CONTEXT` / `NGX_SIGNAL_FORM_FIELD_CONTEXT`
+- `NGX_SIGNAL_FORM_CONTROL_PRESETS` / `DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS`
 
 Do **not** document or recommend removed/non-public APIs such as:
 
-- `computeShowErrors()`
-- `createShowErrorsSignal()`
+- `computeShowErrors()` / `createShowErrorsSignal()`
 - `injectFormConfig()` from the root public API
-- `canSubmit()`
-- `isSubmitting()`
+- `canSubmit()` / `isSubmitting()`
 
 ## Deterministic Field Identity
 
@@ -215,13 +243,41 @@ Toolkit UI that needs ARIA linkage must have either:
 <ngx-form-field-error [formField]="form.email" fieldName="email" />
 ```
 
+## Control Semantics
+
+`NgxSignalFormControlSemanticsDirective` (part of `NgxSignalFormToolkit`) declares stable control behavior for the wrapper and auto-ARIA layers.
+
+Use it for controls outside the default native field families:
+
+```html
+<!-- String shorthand -->
+<input
+  type="checkbox"
+  role="switch"
+  [formField]="form.active"
+  ngxSignalFormControl="switch"
+/>
+
+<!-- Object form -->
+<app-star-rating
+  [formField]="form.rating"
+  [ngxSignalFormControl]="{ kind: 'composite', layout: 'custom' }"
+  ngxSignalFormControlAria="manual"
+/>
+```
+
+Control kinds: `'input-like'` | `'standalone-field-like'` | `'switch'` | `'checkbox'` | `'radio-group'` | `'slider'` | `'composite'`
+
+Override defaults globally with `provideNgxSignalFormControlPresets()` or per-component with `provideNgxSignalFormControlPresetsForComponent()`.
+
 ## Automatic ARIA
 
 `NgxSignalFormAutoAriaDirective` is part of `NgxSignalFormToolkit`.
 
 It currently auto-applies to:
 
-- `input[formField]` except `radio` and `checkbox`
+- `input[formField]` (except standard `radio` and `checkbox`)
+- `input[type="checkbox"][role="switch"][formField]` (switch controls)
 - `textarea[formField]`
 - `select[formField]`
 - custom hosts with `[formField]`
@@ -235,8 +291,10 @@ It manages:
 ### Rules
 
 - Do **not** manually add `aria-invalid` or `aria-required` for toolkit-managed controls.
-- Use `ngxSignalFormAutoAriaDisabled` only when you intentionally need to opt out.
+- Use `ngxSignalFormAutoAriaDisabled` to opt out per control.
+- Use `ngxSignalFormControlAria="manual"` when the control owns its own ARIA contract.
 - Prefer real `id` attributes on bound controls so ARIA linkage stays deterministic.
+- In standalone Angular, import the toolkit bundle in the component whose template renders the actual `[formField]` element — parent imports don't flow into child templates.
 
 ## Errors and Warnings
 
@@ -400,6 +458,7 @@ Use `includeNestedErrors` only when the group itself must surface all nested err
 ### Use `@ngx-signal-forms/toolkit/assistive` for:
 
 - `NgxFormFieldErrorComponent`
+- `NgxFormFieldErrorSummaryComponent`
 - `NgxFormFieldHintComponent`
 - `NgxFormFieldCharacterCountComponent`
 - `NgxFormFieldAssistiveRowComponent`
@@ -416,6 +475,19 @@ Important inputs:
 - `listStyle` — `'plain' | 'bullets'`
 
 Use `listStyle="bullets"` for grouped summaries, not for normal inline single-field feedback.
+
+### `NgxFormFieldErrorSummaryComponent`
+
+Form-level error summary (GOV.UK pattern). Aggregates all blocking errors into a focusable list.
+
+Important inputs:
+
+- `formTree` — required (pass the `form`, not `form()`)
+- `summaryLabel` — header text (default: `'Please fix the following errors:'`)
+- `strategy`
+- `submittedStatus`
+
+Uses `role="alert"` + `aria-live="assertive"`. Inherits strategy and submitted status from `ngxSignalForm` context automatically. For full DOM control or warning entries, use `NgxHeadlessErrorSummaryDirective` instead.
 
 ### `NgxFormFieldHintComponent`
 
@@ -442,18 +514,26 @@ Use `@ngx-signal-forms/toolkit/headless` when you want toolkit state logic with 
 
 Public directives and helpers include:
 
-- `NgxHeadlessToolkit`
+**Directives:**
+
+- `NgxHeadlessToolkit` — bundle of all headless directives
 - `NgxHeadlessErrorStateDirective`
+- `NgxHeadlessErrorSummaryDirective` — renderless form-level error summary (supports warnings)
 - `NgxHeadlessFieldsetDirective`
 - `NgxHeadlessCharacterCountDirective`
 - `NgxHeadlessFieldNameDirective`
-- `createErrorState()`
-- `createCharacterCount()`
+
+**Factory functions:**
+
+- `createErrorState()` / `createCharacterCount()` / `createFieldStateFlags()`
 - `createUniqueId()`
+
+**Reading utilities:**
+
+- `readErrors()` / `readDirectErrors()` / `readFieldFlag()`
 - `dedupeValidationErrors()`
-- `readDirectErrors()`
-- `readErrors()`
-- `readFieldFlag()`
+- `humanizeFieldPath()` / `resolveFieldNameFromError()`
+- `focusBoundControlFromError()` / `toErrorSummaryEntry()`
 
 ## Debugger Entry Point
 
@@ -461,10 +541,10 @@ Use `@ngx-signal-forms/toolkit/debugger` for development-only debugging.
 
 Current public debugger exports include:
 
-- `NgxSignalFormDebugger`
+- `NgxSignalFormDebugger` — bundle of all debugger components
 - `SignalFormDebuggerComponent`
-- `DebuggerBadgeComponent`
-- `DebuggerBadgeIconDirective`
+- `DebuggerBadgeComponent` / `DebuggerBadgeIconDirective`
+- Types: `DebuggerBadgeAppearance`, `DebuggerBadgeVariant`
 
 Pass the **field tree** (for example `userForm`), not the root field state (`userForm()`).
 
@@ -507,15 +587,16 @@ Avoid:
 - use `warningError()` for non-blocking guidance
 - use `showErrors()` for reactive visibility logic
 - use grouped fieldsets for grouped validation summaries
+- declare `ngxSignalFormControl` on non-native controls (switches, sliders, composites)
 - treat `headless` and `debugger` as real public entry points
 
 ### Don’t
 
-- document removed APIs (old config fields)
-- invent exports that are not public (`computeShowErrors`, `canSubmit`, `isSubmitting`)
-- manually add `aria-invalid`/`aria-required` to toolkit-managed controls
+- document removed APIs (`computeShowErrors`, `createShowErrorsSignal`, `canSubmit`, `isSubmitting`, `fieldNameResolver`, `strictFieldResolution`, `manual` strategy)
+- manually add `aria-invalid`/`aria-required`/`aria-describedby` to toolkit-managed controls
 - rely on implicit field-name generation without `id` or `fieldName`
 - import assistive or form-field APIs from the root package when they belong to secondary entry points
+- skip declaring `ngxSignalFormControl` on non-native controls (switches, sliders, composites) — wrapper and auto-ARIA need it
 
 ## Resources
 
