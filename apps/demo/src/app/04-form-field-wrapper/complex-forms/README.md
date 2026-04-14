@@ -2,7 +2,7 @@
 
 ## Overview
 
-Complex form with nested objects and dynamic arrays using the form field wrapper to keep templates readable and error handling consistent.
+Complex form with nested objects, dynamic arrays, and mixed control families using the form field wrapper to keep templates readable, error handling consistent, and switch/checkbox rows explicit.
 
 ## Form model
 
@@ -28,6 +28,7 @@ Complex form with nested objects and dynamic arrays using the form field wrapper
 - `NgxSignalFormToolkit` for auto-ARIA and form context.
 - `NgxFormField` wrapper for automatic error rendering and layout.
 - `NgxSignalFormFieldset` for realistic section structure inside a longer form.
+- Explicit control semantics keep the newsletter switch and notification checkbox on the correct wrapper layouts without relying on projection heuristics.
 
 ## Other tools
 
@@ -47,3 +48,4 @@ Complex form with nested objects and dynamic arrays using the form field wrapper
 3. Add/remove skills and contacts to see array validation.
 4. Choose SMS as contact method to trigger the warning.
 5. Use the grouped sections inside this page to inspect aggregated fieldset and nested error behavior.
+6. Inspect the preferences section to see switch and checkbox semantics rendered with the expected wrapper treatment.

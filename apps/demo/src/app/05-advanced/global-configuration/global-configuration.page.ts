@@ -29,8 +29,10 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
 /**
  * Global Configuration Page
  *
- * Demonstrates global toolkit configuration via provideNgxSignalFormsConfig().
- * Shows how to set defaults for error strategies, ARIA attributes, and field resolution.
+ * Demonstrates global toolkit configuration via provideNgxSignalFormsConfig()
+ * plus app-level control presets via provideNgxSignalFormControlPresets().
+ * Shows how to set defaults for error strategies, ARIA attributes,
+ * control-family semantics, and field resolution.
  */
 @Component({
   selector: 'ngx-global-configuration-page',
@@ -56,7 +58,7 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
   template: `
     <ngx-page-header
       title="Global Toolkit Configuration"
-      subtitle="Configure toolkit defaults globally with provideNgxSignalFormsConfig()"
+      subtitle="Configure global toolkit defaults and app-level control presets from the demo bootstrap layer"
     />
 
     <ngx-example-cards

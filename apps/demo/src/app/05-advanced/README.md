@@ -24,12 +24,15 @@ This section demonstrates **production-ready patterns** for real-world applicati
 **What you'll learn:**
 
 - `provideNgxSignalFormsConfig` setup
+- `provideNgxSignalFormControlPresets` setup for app-level control-family defaults
 - Custom default error strategies
 - Form-level strategy overrides when one form needs different timing
+- How explicit semantics still override app-level presets when needed
 
 **Technologies:**
 
 - App-level configuration providers
+- App-level control semantics presets
 - TypeScript configuration types
 
 ---
@@ -117,28 +120,22 @@ This section demonstrates **production-ready patterns** for real-world applicati
 
 ## 🎨 Global Configuration
 
-### provideNgxSignalFormsConfig
+### provideNgxSignalFormsConfig + provideNgxSignalFormControlPresets
 
-**Setup in app.config.ts:**
+**Setup in this demo app's `apps/demo/src/main.ts`:**
 
 ```typescript
-import { ApplicationConfig } from '@angular/core';
-import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
-
-export const appConfig: ApplicationConfig = {
+await bootstrapApplication(AppComponent, {
   providers: [
     provideNgxSignalFormsConfig({
-      // Auto-ARIA (default: true)
       autoAria: true,
-
-      // Default error strategy (default: 'on-touch')
       defaultErrorStrategy: 'on-touch',
-
-      // Default appearance for form fields
-      defaultFormFieldAppearance: 'outline',
+    }),
+    provideNgxSignalFormControlPresets({
+      switch: { layout: 'inline-control', ariaMode: 'auto' },
     }),
   ],
-};
+});
 ```
 
 When one form needs a different display strategy, prefer a local template override:
@@ -156,6 +153,17 @@ When one form needs a different display strategy, prefer a local template overri
 | `autoAria`                   | `boolean`                           | `true`       | Enable automatic ARIA attributes |
 | `defaultErrorStrategy`       | `ErrorDisplayStrategy`              | `'on-touch'` | Default error display strategy   |
 | `defaultFormFieldAppearance` | `'stacked' \| 'outline' \| 'plain'` | `'stacked'`  | Default form field appearance    |
+
+### App-level control-family presets
+
+Use `provideNgxSignalFormControlPresets()` when a whole application wants one semantic family to inherit the same wrapper layout or ARIA mode by default.
+
+In this demo app, every control that opts into `ngxSignalFormControl="switch"` inherits:
+
+- `layout: 'inline-control'`
+- `ariaMode: 'auto'`
+
+That keeps switch rows compact without repeating layout inputs on every control.
 
 ### Field Identity
 
@@ -429,7 +437,8 @@ protected async save(): Promise<void> {
 
 ### Before Deploying
 
-- [ ] Global config set in `app.config.ts`
+- [ ] Global configuration provider registered in app bootstrap
+- [ ] App-level control presets configured where repeated switch/checkbox/slider families need stable defaults
 - [ ] Default error strategy chosen (`on-touch` recommended)
 - [ ] Server error handling implemented
 - [ ] Loading states for all async operations
@@ -480,7 +489,7 @@ protected async save(): Promise<void> {
 
 **Problem:** Global config not working
 
-**Solution:** Verify the provider is in `app.config.ts` for global defaults. For one-off differences, prefer per-form or per-field strategy inputs instead of subtree-level provider overrides.
+**Solution:** Verify the provider is registered in your app bootstrap (`main.ts` in this demo, or `app.config.ts` in a typical standalone setup). For one-off differences, prefer per-form or per-field strategy inputs instead of subtree-level provider overrides.
 
 ```typescript
 // ❌ Wrong: In component providers when you expect global defaults
@@ -488,10 +497,10 @@ protected async save(): Promise<void> {
   providers: [provideNgxSignalFormsConfig(...)], // Won't work globally
 })
 
-// ✅ Correct: In app.config.ts
-export const appConfig: ApplicationConfig = {
+// ✅ Correct: In app bootstrap / global providers
+await bootstrapApplication(AppComponent, {
   providers: [provideNgxSignalFormsConfig(...)],
-};
+});
 ```
 
 ```html

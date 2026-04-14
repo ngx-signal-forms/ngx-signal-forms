@@ -2,7 +2,7 @@
 
 ## Overview
 
-Shows how global toolkit defaults (set in `apps/demo/src/main.ts`) affect form behavior and how a form can still override the error strategy locally.
+Shows how global toolkit defaults and app-level control-family presets (set in `apps/demo/src/main.ts`) affect form behavior, while one form can still override the error strategy locally.
 
 ## Form model
 
@@ -16,6 +16,7 @@ Shows how global toolkit defaults (set in `apps/demo/src/main.ts`) affect form b
 - Email: required + email format.
 - Phone: required + `123-456-7890` format.
 - Website: optional but must be a valid URL when provided.
+- Accept terms: must be checked before submission.
 
 ### Warnings
 
@@ -24,6 +25,7 @@ Shows how global toolkit defaults (set in `apps/demo/src/main.ts`) affect form b
 ## Toolkit usage
 
 - `provideNgxSignalFormsConfig()` in `apps/demo/src/main.ts` sets defaults.
+- `provideNgxSignalFormControlPresets()` in `apps/demo/src/main.ts` sets the app-wide switch preset to `layout: 'inline-control'` and `ariaMode: 'auto'`.
 - `NgxSignalFormToolkit` for auto-ARIA and form context.
 - `NgxFormField` wrapper for layout and errors.
 - Bound control `id` values provide deterministic field identity for ARIA linkage.
@@ -44,4 +46,5 @@ Shows how global toolkit defaults (set in `apps/demo/src/main.ts`) affect form b
 1. Run the demo app.
 2. Navigate to `/advanced-scenarios/global-configuration`.
 3. Inspect the configuration panel and error strategy override.
-4. Enter invalid phone or URL values to see validation output.
+4. Blur the accept-terms switch to verify the app-level preset keeps the row inline while auto-ARIA remains active.
+5. Enter invalid phone or URL values to see validation output.

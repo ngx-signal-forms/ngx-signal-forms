@@ -6,6 +6,8 @@
 
 This section demonstrates the batteries-included path using `NgxFormField` and related wrapper primitives.
 
+The live examples also show how wrapper rendering now follows explicit control semantics instead of guessing from DOM shape alone, so switch rows, checkbox groups, and custom manual-ARIA controls stay predictable.
+
 Instead of splitting wrapper basics, grouped fieldsets, and long-form behavior across multiple pages, the live demo now centers those lessons in two examples:
 
 - `complex-forms` for nested/grouped/array-heavy forms
@@ -23,6 +25,7 @@ Instead of splitting wrapper basics, grouped fieldsets, and long-form behavior a
 - Dynamic arrays
 - Grouped fieldsets and aggregated section feedback
 - Strategy + appearance controls in a realistic layout
+- Switch, checkbox, and radio-group semantics inside one long form
 - Long-form readability and wrapper consistency
 
 ### custom-controls
@@ -33,6 +36,8 @@ Instead of splitting wrapper basics, grouped fieldsets, and long-form behavior a
 
 - `FormValueControl`-style custom control patterns
 - How wrapper-driven labels/errors link to non-native controls
+- How explicit semantics and component-scoped presets replace fragile wrapper heuristics
+- When a custom control should stay in manual ARIA mode
 - Mixed native + custom input composition in one form
 
 ## 📦 Consolidated Concepts
@@ -146,6 +151,12 @@ The component uses `<ng-content>` to project your custom content:
    - Inherits from `NgxSignalFormDirective` (`ngxSignalForm`) if present
    - Can override per-field with `[strategy]` input
    - Falls back to global config
+
+5. **Control-family semantics**
+
+- Wrapper layout follows explicit `ngxSignalFormControl` metadata
+- Component or app presets can provide family defaults
+- Manual-ARIA controls keep ownership of `aria-describedby` when needed
 
 ## 🔍 Advanced Patterns
 
@@ -294,6 +305,7 @@ ngx-signal-form-field-wrapper {
 **What you'll learn:**
 
 - Global configuration with `provideNgxSignalFormsConfig`
+- App-level control presets with `provideNgxSignalFormControlPresets`
 - Custom field name resolvers
 - Async submission patterns with loading states
 - Server error handling
