@@ -8,7 +8,10 @@ import type {
   NgxSignalFormControlPresetOverrides,
   NgxSignalFormControlPresetRegistry,
 } from '../types';
-import { isNgxSignalFormControlKind } from '../utilities/control-semantics';
+import {
+  isNgxSignalFormControlKind,
+  NGX_SIGNAL_FORM_CONTROL_KIND_VALUES,
+} from '../utilities/control-semantics';
 
 function mergeNgxSignalFormControlPresets(
   base: NgxSignalFormControlPresetRegistry,
@@ -23,7 +26,7 @@ function mergeNgxSignalFormControlPresets(
       if (typeof ngDevMode === 'undefined' || ngDevMode) {
         console.warn(
           `[ngx-signal-forms] Ignoring unknown control kind "${rawKind}" in preset overrides. ` +
-            `Valid kinds: input-like, standalone-field-like, switch, checkbox, radio-group, slider, composite.`,
+            `Valid kinds: ${NGX_SIGNAL_FORM_CONTROL_KIND_VALUES.join(', ')}.`,
         );
       }
       continue;

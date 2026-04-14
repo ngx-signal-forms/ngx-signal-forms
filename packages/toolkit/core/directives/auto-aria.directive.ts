@@ -296,6 +296,14 @@ export class NgxSignalFormAutoAriaDirective {
   }
 
   #readPreservedDescribedBy(fieldName: string | null): string | null {
+    // First-render note: at construction time `#managedDescribedByIds()` is
+    // still empty, so the preserved list returned here can momentarily
+    // include IDs that the write phase will take ownership of on the same
+    // tick (hint IDs, generated error/warning IDs). The phased
+    // `afterEveryRender` dance reconciles this in the immediately following
+    // `write` callback — do not "simplify" by calling this once eagerly,
+    // and do not assume the snapshot is authoritative until the first write
+    // has run.
     const raw = this.#element.nativeElement.getAttribute('aria-describedby');
 
     if (!raw) {

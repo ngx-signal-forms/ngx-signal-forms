@@ -31,7 +31,14 @@ type NgxSignalFormControlDirectiveValue =
  * instead of relying purely on DOM heuristics. The auto-ARIA directive reads
  * semantics via Angular DI rather than these attributes.
  *
- * @example
+ * **Input shape:** prefer the three dedicated attribute inputs
+ * (`ngxSignalFormControl="<kind>"`, `ngxSignalFormControlLayout`,
+ * `ngxSignalFormControlAria`) — they read naturally in templates and show
+ * intent at a glance. The object-literal form of `ngxSignalFormControl` is a
+ * power-user escape hatch for one-off combinations that would otherwise need
+ * three separate bindings. Do not mix both forms on the same element.
+ *
+ * @example Declarative form (preferred)
  * ```html
  * <app-star-rating
  *   id="rating"
@@ -42,11 +49,10 @@ type NgxSignalFormControlDirectiveValue =
  * />
  * ```
  *
- * @example
+ * @example Object-literal form (power-user escape hatch)
  * ```html
  * <third-party-date-range-picker
  *   id="travelDates"
- *   ngxSignalFormControl
  *   [ngxSignalFormControl]="{ kind: 'composite', layout: 'stacked', ariaMode: 'manual' }"
  * />
  * ```

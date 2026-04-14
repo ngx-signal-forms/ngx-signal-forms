@@ -281,6 +281,15 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
       return nativeControl;
     }
 
+    // Custom-control discovery order:
+    // 1. `[formField]`            — the normal Signal Forms binding
+    // 2. `[ng-reflect-form-field]`— Angular's dev-mode reflection attribute.
+    //    Only populated in dev builds and only for inputs that serialize to
+    //    strings, but it catches custom controls that declare `formField`
+    //    before the directive host binding has settled the first render.
+    //    Dev-only fallback — the canonical selector is `data-ngx-signal-form-control`.
+    // 3. `[data-ngx-signal-form-control]` — the stable runtime contract
+    //    written by `NgxSignalFormControlSemanticsDirective`.
     return this.#queryHostElement(
       hostEl,
       '[id][formField], [id][ng-reflect-form-field], [id][data-ngx-signal-form-control]',
@@ -747,7 +756,11 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
           this.#controlSemantics.set(semantics);
         }
 
-        // Set data-signal-field attribute for debugging/testing.
+        // `data-signal-field` is a **stable runtime contract**: custom controls
+        // rely on it as a CSS selector (`:host([data-signal-field]:focus-visible)`),
+        // tests use it for control discovery, and the assistive hint component
+        // mirrors it so screen-reader correlation can key off a single hook.
+        // Keep this write in production — it is not a dev-only debug affordance.
         if (inputEl) {
           inputEl.setAttribute('data-signal-field', this.resolvedFieldName());
         }
