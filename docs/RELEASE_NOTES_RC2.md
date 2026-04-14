@@ -85,13 +85,20 @@ etc. continue to work without modification.
 `NgxSignalFormAutoAriaDirective` used to inject
 `NgxSignalFormControlSemanticsDirective` directly and scan the DOM for
 `ngx-signal-form-field-wrapper` / `ngx-signal-form-field-hint` elements
-to assemble `aria-describedby`. It now reads two new Angular DI tokens
-exported from the root entry point:
+to assemble `aria-describedby`. It now reads two Angular DI tokens that
+are exported from the root entry point but marked `@internal`:
 
 - `NGX_SIGNAL_FORM_ARIA_MODE` — contributed by the control-semantics
   directive, replaces the direct class injection.
 - `NGX_SIGNAL_FORM_HINT_REGISTRY` — contributed by the form-field
   wrapper, removes the wrapper-relative `closest(...)` DOM walk.
+
+Both tokens are internal plumbing between the toolkit's own directives
+and are **not part of the stable public API**. Consumers should use
+`ngxSignalFormControlAria` on the control host instead of providing
+`NGX_SIGNAL_FORM_ARIA_MODE` directly, and should let
+`NgxSignalFormFieldWrapperComponent` own hint registration rather than
+providing `NGX_SIGNAL_FORM_HINT_REGISTRY` themselves.
 
 Consumer-facing behaviour is unchanged: hints inside
 `NgxSignalFormFieldWrapperComponent` still contribute to
