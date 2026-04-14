@@ -54,7 +54,7 @@ provideNgxSignalFormsConfigForComponent(config: NgxSignalFormsUserConfig): Provi
 provideNgxSignalFormControlPresets(presets: NgxSignalFormControlPresetOverrides): EnvironmentProviders
 provideNgxSignalFormControlPresetsForComponent(presets: NgxSignalFormControlPresetOverrides): Provider[]
 provideErrorMessages(configOrFactory: ErrorMessageRegistry | (() => ErrorMessageRegistry)): Provider
-provideFieldLabels(configOrFactory: FieldLabelMap | (() => FieldLabelResolver)): Provider
+provideFieldLabels(configOrFactory: FieldLabelMap | (() => (rawFieldPath: string) => string)): Provider
 ```
 
 **Control semantics preset providers:**
@@ -84,7 +84,6 @@ interface ErrorMessageRegistry {
     | undefined;
 }
 
-type FieldLabelResolver = (rawFieldPath: string) => string;
 type FieldLabelMap = Record<string, string>;
 interface NgxSignalFormFieldContext {
   readonly fieldName: Signal<string>;
@@ -125,7 +124,7 @@ interface NgxSignalFormsUserConfig {
   defaultFormFieldAppearance?: 'stacked' | 'outline' | 'plain'; // default: 'stacked'
   // Migration: replace legacy `standard` with `stacked` and `bare` with `plain`.
   showRequiredMarker?: boolean;
-  requiredMarker?: string; // default: '*'
+  requiredMarker?: string; // default: ' *'
 }
 ```
 
@@ -150,7 +149,6 @@ type ErrorReadableState = Pick<
   FieldState<unknown>,
   'errors' | 'invalid' | 'touched'
 >;
-type PartialErrorVisibilityState = Partial<ErrorVisibilityState>;
 interface SplitErrors {
   readonly blocking: ValidationError[];
   readonly warnings: ValidationError[];
@@ -174,14 +172,14 @@ interface ResolvedNgxSignalFormControlSemantics {
 ### Tokens
 
 ```typescript
-const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: NgxSignalFormsConfig;
+const DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS: NgxSignalFormControlPresetRegistry;
 const NGX_SIGNAL_FORMS_CONFIG: InjectionToken<NgxSignalFormsConfig>;
 const NGX_SIGNAL_FORM_CONTROL_PRESETS: InjectionToken<NgxSignalFormControlPresetRegistry>;
 const NGX_SIGNAL_FORM_CONTEXT: InjectionToken<NgxSignalFormContext>;
 const NGX_SIGNAL_FORM_FIELD_CONTEXT: InjectionToken<NgxSignalFormFieldContext>;
-const NGX_ERROR_MESSAGES: InjectionToken<ErrorMessageRegistry>;
-const NGX_FIELD_LABEL_RESOLVER: InjectionToken<FieldLabelResolver>;
 ```
+
+> `NGX_ERROR_MESSAGES` and `NGX_FIELD_LABEL_RESOLVER` are internal tokens (used by sibling entry points via `@ngx-signal-forms/toolkit/core`). Use `provideErrorMessages()` and `provideFieldLabels()` instead.
 
 ### Utilities
 
@@ -211,6 +209,11 @@ generateErrorId(fieldName: string): string
 generateWarningId(fieldName: string): string
 buildAriaDescribedBy(fieldName, options: AriaDescribedByChainOptions): string | null
 resolveNgxSignalFormControlSemantics(element, presets): ResolvedNgxSignalFormControlSemantics
+
+// Type guard utilities
+isNgxSignalFormControlKind(value): value is NgxSignalFormControlKind
+isNgxSignalFormControlLayout(value): value is NgxSignalFormControlLayout
+isNgxSignalFormControlAriaMode(value): value is NgxSignalFormControlAriaMode
 
 interface AriaDescribedByChainOptions {
   readonly baseIds?: readonly string[];     // hint or helper IDs to prepend
@@ -353,7 +356,7 @@ import {
 | `appearance`         | `'stacked' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'`                                                                                     |
 | `errorPlacement`     | `'top' \| 'bottom'`                              | `'bottom'`                                                                                      |
 | `showRequiredMarker` | boolean                                          | From config                                                                                     |
-| `requiredMarker`     | string                                           | `'*'`                                                                                           |
+| `requiredMarker`     | string                                           | `' *'`                                                                                          |
 
 ### NgxSignalFormFieldset inputs
 
@@ -377,6 +380,17 @@ import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
 //          NgxHeadlessFieldsetDirective, NgxHeadlessCharacterCountDirective,
 //          NgxHeadlessFieldNameDirective]
 ```
+
+### Additional exports
+
+Directive-level types and constants also available from this entry point:
+
+- `ErrorStateSignals`, `ResolvedError` — from `NgxHeadlessErrorStateDirective`
+- `FieldsetStateSignals` — from `NgxHeadlessFieldsetDirective`
+- `CharacterCountStateSignals`, `CharacterCountLimitState` — from `NgxHeadlessCharacterCountDirective`
+- `DEFAULT_WARNING_THRESHOLD` (80), `DEFAULT_DANGER_THRESHOLD` (95) — default thresholds
+- `ErrorSummaryEntry`, `ErrorSummarySignals` — from `NgxHeadlessErrorSummaryDirective`
+- `FieldNameStateSignals` — from `NgxHeadlessFieldNameDirective`
 
 ### NgxHeadlessErrorStateDirective
 
@@ -463,6 +477,7 @@ toErrorSummaryEntry(error, registry?, options?, labelResolver?): ErrorSummaryEnt
 
 ```typescript
 type BooleanStateKey = 'invalid' | 'valid' | 'touched' | 'dirty' | 'pending'
+type CharacterCountLimitState = 'ok' | 'warning' | 'danger' | 'exceeded'
 type FieldStateLike = { ... }
 interface FieldStateFlags { ... }
 interface CreateErrorStateOptions<TValue = unknown> { ... }
