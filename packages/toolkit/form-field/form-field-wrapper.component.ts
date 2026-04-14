@@ -574,6 +574,12 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
   /**
    * Reactive view of the projected hints, shaped for the
    * `NGX_SIGNAL_FORM_HINT_REGISTRY` contract in the core package.
+   *
+   * @internal Exposed so this component can provide itself into the hint
+   * registry via a decorator-level `useFactory` (TypeScript access modifiers
+   * would block that). Not part of the stable public component API — consumers
+   * reading hints should go through `NGX_SIGNAL_FORM_HINT_REGISTRY`, which is
+   * itself `@internal`, rather than touching this field directly.
    */
   readonly hintDescriptors: Signal<readonly NgxSignalFormHintDescriptor[]> =
     computed(() =>

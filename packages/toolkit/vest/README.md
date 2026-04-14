@@ -15,7 +15,7 @@ It is designed to be used **together with** Angular Signal Forms validators and 
 
 > **Vest v6+ required** — Standard Schema support was introduced in Vest 6.
 > Earlier versions do not expose the Standard Schema interface and will not work.
-> `vest@6.3.0` is currently excluded because of an upstream packaging issue in the published build.
+> `vest@6.3.0` is currently excluded because its published build ships a broken `exports` map that prevents the Standard Schema entry point from resolving under Node's ESM loader. Use `6.2.x` or `>=6.3.1` instead. The exclusion in our peer range (`>=6.0.0 <6.3.0 || >=6.3.1`) can be dropped once no Vest release in the supported range still carries the faulty build.
 
 If you are migrating from `ngx-vest-forms`, upgrade to **Vest 6.x first**.
 This entry point does **not** support Vest 5.x.

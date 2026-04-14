@@ -133,6 +133,10 @@ export const NGX_SIGNAL_FORM_ARIA_MODE = new InjectionToken<
  * a specific field. `fieldName` may be `null` when a hint has not been
  * correlated to a field yet — in that case the registry consumer decides
  * whether to include it.
+ *
+ * @internal This type is the wire format for the already-internal
+ * `NgxSignalFormHintRegistry` contract between the form field wrapper and the
+ * auto-ARIA directive. Consumers should not depend on its shape.
  */
 export interface NgxSignalFormHintDescriptor {
   readonly id: string;
