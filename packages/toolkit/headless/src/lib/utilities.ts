@@ -376,7 +376,7 @@ export function createErrorState<TValue = unknown>(
     if (submittedStatus !== undefined) {
       return unwrapValue(submittedStatus);
     }
-    return undefined;
+    return;
   });
 
   const showErrorsSignal = showErrors(
@@ -566,9 +566,9 @@ export function humanizeFieldPath(fieldName: string): string {
     .split('.')
     .map((segment) =>
       segment
-        .replace(/[_-]+/gu, ' ')
-        .replace(/([a-z\d])([A-Z])/gu, '$1 $2')
-        .replace(/\s+/gu, ' ')
+        .replaceAll(/[_-]+/gu, ' ')
+        .replaceAll(/([a-z\d])([A-Z])/gu, '$1 $2')
+        .replaceAll(/\s+/gu, ' ')
         .trim(),
     )
     .filter((segment) => segment.length > 0);
@@ -669,6 +669,8 @@ export function toErrorSummaryEntry(
     kind: error.kind,
     message,
     fieldName,
-    focus: () => focusBoundControlFromError(error),
+    focus: () => {
+      focusBoundControlFromError(error);
+    },
   };
 }

@@ -5,13 +5,25 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "oxlint . --type-aware"
+        "command": "oxlint ."
       }
     },
     "lint-fix": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "oxlint . --type-aware --fix"
+        "command": "oxlint . --fix"
+      }
+    },
+    "lint-fix-suggestions": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "oxlint . --fix-suggestions"
+      }
+    },
+    "lint-fix-dangerously": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "oxlint . --fix-dangerously"
       }
     },
     "format": {

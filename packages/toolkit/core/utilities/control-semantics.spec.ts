@@ -30,7 +30,7 @@ describe('isNgxSignalFormControlKind', () => {
 
   it('should reject null and undefined', () => {
     expect(isNgxSignalFormControlKind(null)).toBe(false);
-    expect(isNgxSignalFormControlKind(undefined)).toBe(false);
+    expect(isNgxSignalFormControlKind()).toBe(false);
   });
 });
 
@@ -49,7 +49,7 @@ describe('isNgxSignalFormControlLayout', () => {
 
   it('should reject null and undefined', () => {
     expect(isNgxSignalFormControlLayout(null)).toBe(false);
-    expect(isNgxSignalFormControlLayout(undefined)).toBe(false);
+    expect(isNgxSignalFormControlLayout()).toBe(false);
   });
 });
 
@@ -65,7 +65,7 @@ describe('isNgxSignalFormControlAriaMode', () => {
 
   it('should reject null and undefined', () => {
     expect(isNgxSignalFormControlAriaMode(null)).toBe(false);
-    expect(isNgxSignalFormControlAriaMode(undefined)).toBe(false);
+    expect(isNgxSignalFormControlAriaMode()).toBe(false);
   });
 });
 

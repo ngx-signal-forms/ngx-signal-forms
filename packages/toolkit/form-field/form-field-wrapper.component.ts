@@ -385,13 +385,13 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * Whether to show the required marker in outlined fields.
    * Falls back to NgxSignalFormsConfig.showRequiredMarker when unset.
    */
-  readonly showRequiredMarker = input<unknown>(undefined);
+  readonly showRequiredMarker = input<unknown>();
 
   /**
    * Custom character(s) for the required marker in outlined fields.
    * Falls back to NgxSignalFormsConfig.requiredMarker when unset.
    */
-  readonly requiredMarker = input<string | undefined>(undefined);
+  readonly requiredMarker = input<string | undefined>();
 
   /**
    * Toolkit configuration for default appearance.

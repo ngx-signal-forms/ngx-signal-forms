@@ -38,9 +38,7 @@ export function withWizardNavigation() {
         WIZARD_STEPS.indexOf(store.currentStep()),
       ),
       isFirstStep: computed(() => store.currentStep() === WIZARD_STEPS[0]),
-      isLastStep: computed(
-        () => store.currentStep() === WIZARD_STEPS[WIZARD_STEPS.length - 1],
-      ),
+      isLastStep: computed(() => store.currentStep() === WIZARD_STEPS.at(-1)),
     })),
 
     // Second computed block: derived from currentStepIndex

@@ -127,7 +127,7 @@ describe('show-errors utilities', () => {
     let warnSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
-      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     });
 
     afterEach(() => {

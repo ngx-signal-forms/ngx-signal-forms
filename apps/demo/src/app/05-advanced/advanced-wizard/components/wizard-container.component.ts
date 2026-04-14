@@ -107,7 +107,9 @@ export class WizardContainerComponent {
           this.#shownAt = Date.now();
         }, SHOW_SAVING_AFTER_MS);
 
-        onCleanup(() => clearTimeout(showTimeoutId));
+        onCleanup(() => {
+          clearTimeout(showTimeoutId);
+        });
       }
     } else if (this.showSavingIndicator() && this.#shownAt) {
       // Ensure minimum display time before hiding
@@ -119,7 +121,9 @@ export class WizardContainerComponent {
         this.#shownAt = null;
       }, remaining);
 
-      onCleanup(() => clearTimeout(hideTimeoutId));
+      onCleanup(() => {
+        clearTimeout(hideTimeoutId);
+      });
     }
   });
 

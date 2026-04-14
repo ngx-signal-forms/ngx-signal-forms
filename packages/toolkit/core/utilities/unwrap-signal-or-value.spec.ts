@@ -39,7 +39,7 @@ describe('unwrapValue', () => {
     });
 
     it('should return undefined directly', () => {
-      const result = unwrapValue(undefined);
+      const result = unwrapValue();
       expect(result).toBeUndefined();
     });
   });
@@ -152,7 +152,7 @@ describe('unwrapValue', () => {
     });
 
     it('should call function returning undefined', () => {
-      const fn = () => undefined;
+      const fn = () => {};
       const result = unwrapValue(fn);
       expect(result).toBeUndefined();
     });

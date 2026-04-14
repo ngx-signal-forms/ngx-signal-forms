@@ -56,7 +56,7 @@ export class ShikiHighlightDirective {
       return;
     }
 
-    const code = this.#element.nativeElement.textContent || '';
+    const code = this.#element.nativeElement.textContent ?? '';
     if (!code.trim()) {
       return;
     }

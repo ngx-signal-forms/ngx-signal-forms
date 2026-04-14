@@ -79,7 +79,7 @@ export class NgxHeadlessFieldNameDirective implements FieldNameStateSignals {
    * The field name to use for ID generation.
    * If not provided, uses the host element `id`.
    */
-  readonly fieldName = input<string | undefined>(undefined);
+  readonly fieldName = input<string | undefined>();
 
   /**
    * Resolved field name.

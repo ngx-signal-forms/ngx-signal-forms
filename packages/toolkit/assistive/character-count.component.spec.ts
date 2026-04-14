@@ -67,7 +67,7 @@ class TestWrapperComponent {
   readonly liveAnnounce = input(false);
   readonly colorThresholds = input<
     { warning: number; danger: number } | undefined
-  >(undefined);
+  >();
 
   readonly #model = signal({ text: '' });
   protected readonly testForm = form(this.#model);

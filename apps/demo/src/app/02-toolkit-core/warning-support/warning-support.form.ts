@@ -129,7 +129,9 @@ export class WarningsSupportFormComponent {
         '✓ Account created successfully! Notice how warnings did not block submission.',
       );
 
-      setTimeout(() => this.successMessage.set(''), 5000);
+      setTimeout(() => {
+        this.successMessage.set('');
+      }, 5000);
     }).finally(() => {
       this.isSubmitting.set(false);
     });

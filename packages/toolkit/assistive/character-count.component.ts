@@ -220,7 +220,7 @@ export class NgxFormFieldCharacterCountComponent {
    * />
    * ```
    */
-  readonly maxLength = input<number | undefined>(undefined);
+  readonly maxLength = input<number | undefined>();
 
   /**
    * Text alignment position.

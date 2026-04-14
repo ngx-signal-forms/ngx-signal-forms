@@ -343,7 +343,7 @@ describe('error-strategies', () => {
       });
 
       it('should handle undefined field state gracefully', () => {
-        const fieldState = signal(undefined);
+        const fieldState = signal();
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
         const result = showErrors(fieldState, 'immediate', submittedStatus);

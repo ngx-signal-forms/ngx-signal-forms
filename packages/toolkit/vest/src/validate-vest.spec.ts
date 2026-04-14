@@ -143,7 +143,7 @@ describe('validateVest', () => {
     });
 
     const rejectedRun = Promise.reject(new Error('Suite crashed'));
-    void rejectedRun.catch(() => undefined);
+    void rejectedRun.catch(() => {});
 
     const failingWarningSuite = {
       ...blockingSuite,

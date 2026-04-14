@@ -8,7 +8,7 @@
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
       "default",
-      "!{workspaceRoot}/.oxlintrc.json",
+      "!{workspaceRoot}/oxlint.config.ts",
       "!{workspaceRoot}/.oxfmtrc.json",
       "!{projectRoot}/vite.config.{js,cjs,mjs,ts,cts,mts}",
       "!{projectRoot}/vitest.config.{js,cjs,mjs,ts,cts,mts}",
@@ -28,7 +28,7 @@
     },
     "lint": {
       "cache": true,
-      "inputs": ["default", "{workspaceRoot}/.oxlintrc.json"]
+      "inputs": ["default", "{workspaceRoot}/oxlint.config.ts"]
     },
     "@nx/vitest:test": {
       "cache": true,

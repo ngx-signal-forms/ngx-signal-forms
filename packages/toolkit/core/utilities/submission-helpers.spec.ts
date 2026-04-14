@@ -180,7 +180,7 @@ describe('Submission Helpers', () => {
 
   describe('submitWithWarnings', () => {
     it('should allow submission after touched state settles to warning-only', async () => {
-      const action = vi.fn(async () => undefined);
+      const action = vi.fn(async () => {});
       const markAsTouched = vi.fn(() => {
         queueMicrotask(() => {
           errorsState.set([
@@ -203,7 +203,7 @@ describe('Submission Helpers', () => {
     });
 
     it('should not submit when blocking errors remain after settling', async () => {
-      const action = vi.fn(async () => undefined);
+      const action = vi.fn(async () => {});
       const markAsTouched = vi.fn(() => {
         queueMicrotask(() => {
           errorsState.set([{ kind: 'required', message: 'Email is required' }]);
@@ -369,7 +369,7 @@ function createMockLeafField(value: string): FieldTree<string> {
     reset: createVoidSpy(),
     focusBoundControl: createVoidSpy(),
     errorSummary: () => [],
-    metadata: () => undefined,
+    metadata: () => {},
   });
 }
 

@@ -40,7 +40,9 @@ describe('createOnInvalidHandler', () => {
     const handler = createOnInvalidHandler();
 
     // Should not throw
-    expect(() => handler(mockFieldTree)).not.toThrow();
+    expect(() => {
+      handler(mockFieldTree);
+    }).not.toThrow();
   });
 
   it('should not throw when focusFirstInvalid is disabled', () => {
@@ -48,7 +50,9 @@ describe('createOnInvalidHandler', () => {
 
     const handler = createOnInvalidHandler({ focusFirstInvalid: false });
 
-    expect(() => handler(mockFieldTree)).not.toThrow();
+    expect(() => {
+      handler(mockFieldTree);
+    }).not.toThrow();
   });
 
   it('should call afterInvalid callback when provided', () => {
@@ -112,6 +116,8 @@ describe('createOnInvalidHandler', () => {
     const handler = createOnInvalidHandler({});
     const mockFieldTree = createMockFieldTree();
 
-    expect(() => handler(mockFieldTree)).not.toThrow();
+    expect(() => {
+      handler(mockFieldTree);
+    }).not.toThrow();
   });
 });

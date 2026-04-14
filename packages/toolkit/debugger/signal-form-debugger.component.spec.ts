@@ -282,7 +282,7 @@ describe('SignalFormDebuggerComponent', () => {
     };
 
     beforeEach(() => {
-      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     });
 
     afterEach(() => {

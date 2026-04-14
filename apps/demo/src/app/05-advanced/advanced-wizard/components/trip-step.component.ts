@@ -446,7 +446,7 @@ export class TripStepComponent implements WizardStepInterface {
   }
 
   async validateAndFocus(): Promise<boolean> {
-    await submitWithWarnings(this.tripForm, async () => undefined);
+    await submitWithWarnings(this.tripForm, async () => {});
 
     if (this.tripForm().invalid() || !this.hasDestinations()) {
       const focused = focusFirstInvalid(this.tripForm);

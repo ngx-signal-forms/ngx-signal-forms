@@ -107,9 +107,9 @@ export class AppComponent implements AfterViewInit {
     element.addEventListener('scroll', update, { passive: true });
 
     // Clean up
-    this.destroyRef.onDestroy(() =>
-      element.removeEventListener('scroll', update),
-    );
+    this.destroyRef.onDestroy(() => {
+      element.removeEventListener('scroll', update);
+    });
   }
 
   // Reset scroll position on navigation after the view is initialized.

@@ -273,7 +273,7 @@ export class NgxFormFieldErrorComponent<TValue = unknown> {
    *
    * @default undefined (inherits from form or 'on-touch')
    */
-  readonly strategy = input<ErrorDisplayStrategy | undefined>(undefined);
+  readonly strategy = input<ErrorDisplayStrategy | undefined>();
 
   /**
    * Visual layout for rendered validation messages.
@@ -290,7 +290,7 @@ export class NgxFormFieldErrorComponent<TValue = unknown> {
    * Only needed for `'on-submit'` strategy.
    * When inside `ngxSignalForm`, this is automatically injected from context.
    */
-  readonly submittedStatus = input<SubmittedStatus | undefined>(undefined);
+  readonly submittedStatus = input<SubmittedStatus | undefined>();
 
   /**
    * Computed error ID for aria-describedby linking.

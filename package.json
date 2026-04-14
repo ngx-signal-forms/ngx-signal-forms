@@ -40,7 +40,7 @@
     "@angular/router": "catalog:angular",
     "@ngrx/signals": "21.1.0",
     "@shikijs/core": "catalog:shiki",
-    "msw": "2.12.14",
+    "msw": "2.13.3",
     "rxjs": "~7.8.2",
     "shiki": "catalog:shiki",
     "zod": "^4.3.6"
@@ -94,7 +94,7 @@
     "nx": "catalog:nx",
     "oxfmt": "^0.45.0",
     "oxlint": "^1.60.0",
-    "oxlint-tsgolint": "^0.20.0",
+    "oxlint-tsgolint": "^0.21.0",
     "postcss": "catalog:tailwind",
     "simple-git-hooks": "^2.13.1",
     "tailwindcss": "catalog:tailwind",

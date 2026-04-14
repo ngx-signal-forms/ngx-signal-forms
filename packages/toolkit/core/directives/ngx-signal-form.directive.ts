@@ -144,9 +144,7 @@ export class NgxSignalFormDirective {
    * Error display strategy for this form.
    * Overrides the global default for all fields in this form.
    */
-  readonly errorStrategy = input<ErrorDisplayStrategy | null | undefined>(
-    undefined,
-  );
+  readonly errorStrategy = input<ErrorDisplayStrategy | null | undefined>();
 
   /**
    * Resolved error display strategy (form-level or global default).

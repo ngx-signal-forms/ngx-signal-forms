@@ -155,8 +155,8 @@ function isFieldTree(value: unknown): value is FieldTree<unknown> {
 function normalizeWarningKindSegment(value: string): string {
   return value
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/^-+|-+$/g, '')
     .slice(0, 48);
 }
 
@@ -443,7 +443,7 @@ function registerVestValidation<TValue>(
       const entry = getOrCreateVestRun(suite, fieldTree, value());
 
       if (!entry.initialResult?.isPending()) {
-        return undefined;
+        return;
       }
 
       return {
@@ -460,7 +460,7 @@ function registerVestValidation<TValue>(
         loader: async ({ params }) => {
           const result = await params.runResult;
           if (!isVestResultLike(result)) {
-            return undefined;
+            return;
           }
 
           return {

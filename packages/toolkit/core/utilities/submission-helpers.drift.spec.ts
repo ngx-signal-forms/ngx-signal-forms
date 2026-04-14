@@ -55,12 +55,12 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
 
   it('matches Angular submit() when the form has only blocking errors', async () => {
     const nativeForm = makeContactForm();
-    const nativeAction = vi.fn(async () => undefined);
+    const nativeAction = vi.fn(async () => {});
 
     await submit(nativeForm, nativeAction);
 
     const toolkitForm = makeContactForm();
-    const toolkitAction = vi.fn(async () => undefined);
+    const toolkitAction = vi.fn(async () => {});
 
     await submitWithWarnings(toolkitForm, toolkitAction);
 
@@ -101,11 +101,11 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
     };
 
     const nativeForm = makeWarningOnlyForm();
-    const nativeAction = vi.fn(async () => undefined);
+    const nativeAction = vi.fn(async () => {});
     await submit(nativeForm, nativeAction);
 
     const toolkitForm = makeWarningOnlyForm();
-    const toolkitAction = vi.fn(async () => undefined);
+    const toolkitAction = vi.fn(async () => {});
     await submitWithWarnings(toolkitForm, toolkitAction);
 
     // Angular's native submit() treats the warn:* error as blocking and
@@ -127,13 +127,13 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
 
     const nativeForm = makeContactForm();
     fillValidValues(nativeForm);
-    const nativeAction = vi.fn(async () => undefined);
+    const nativeAction = vi.fn(async () => {});
 
     await submit(nativeForm, nativeAction);
 
     const toolkitForm = makeContactForm();
     fillValidValues(toolkitForm);
-    const toolkitAction = vi.fn(async () => undefined);
+    const toolkitAction = vi.fn(async () => {});
 
     await submitWithWarnings(toolkitForm, toolkitAction);
 

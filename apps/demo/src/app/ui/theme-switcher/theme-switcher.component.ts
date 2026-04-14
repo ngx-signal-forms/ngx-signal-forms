@@ -115,7 +115,9 @@ export class NgxThemeSwitcherComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Listen for system preference changes only if user hasn't explicitly chosen
     this.mediaQuery = globalThis.matchMedia('(prefers-color-scheme: dark)');
-    this.mediaListener = (event) => this.systemDark.set(event.matches);
+    this.mediaListener = (event) => {
+      this.systemDark.set(event.matches);
+    };
     this.mediaQuery.addEventListener('change', this.mediaListener);
 
     // Listen for storage changes from other tabs

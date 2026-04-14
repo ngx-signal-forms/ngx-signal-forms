@@ -19,7 +19,7 @@ describe('readDirectErrors', () => {
 
   it('returns empty array for null/undefined/non-object input', () => {
     expect(readDirectErrors(null)).toEqual([]);
-    expect(readDirectErrors(undefined)).toEqual([]);
+    expect(readDirectErrors()).toEqual([]);
     expect(readDirectErrors('text')).toEqual([]);
     expect(readDirectErrors(42)).toEqual([]);
   });

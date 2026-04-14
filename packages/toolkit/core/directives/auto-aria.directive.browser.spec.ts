@@ -21,7 +21,7 @@ import { NgxFormField } from '../../form-field/public_api';
 })
 class MockFormFieldDirective {
   readonly field = signalInput<unknown>(undefined, { alias: 'formField' });
-  readonly state = signal<unknown>(undefined);
+  readonly state = signal<unknown>();
 }
 
 function createMockControl(

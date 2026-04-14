@@ -226,7 +226,7 @@ describe('Headless Utilities', () => {
       });
 
       it('should return empty array when state is undefined', () => {
-        expect(readErrors(undefined)).toEqual([]);
+        expect(readErrors()).toEqual([]);
       });
 
       it('should return empty array when state is not an object', () => {
@@ -343,7 +343,7 @@ describe('Headless Utilities', () => {
       });
 
       it('should return empty array when state is undefined', () => {
-        expect(readDirectErrors(undefined)).toEqual([]);
+        expect(readDirectErrors()).toEqual([]);
       });
 
       it('should return empty array when state is not an object', () => {

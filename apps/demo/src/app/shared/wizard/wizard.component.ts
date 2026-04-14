@@ -359,7 +359,7 @@ export class WizardComponent {
     const allSteps = this.steps();
     const idx = allSteps.findIndex((s) => s.stepId() === stepId);
     // Default to first step if not found
-    return idx >= 0 ? idx : 0;
+    return Math.max(idx, 0);
   });
 
   protected readonly activeStep = computed(() => {

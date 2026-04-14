@@ -112,7 +112,7 @@ export class NgxHeadlessFieldsetDirective<
   /**
    * Unique identifier for the fieldset.
    */
-  readonly fieldsetId = input<string | undefined>(undefined);
+  readonly fieldsetId = input<string | undefined>();
 
   /**
    * Error display strategy override.

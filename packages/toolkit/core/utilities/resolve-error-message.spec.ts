@@ -65,7 +65,7 @@ describe('resolveValidationErrorMessage — 3-tier priority', () => {
   it('should use default messages when registry is undefined', () => {
     const error: ValidationError = { kind: 'email' };
 
-    expect(resolveValidationErrorMessage(error, undefined)).toBe(
+    expect(resolveValidationErrorMessage(error)).toBe(
       'Please enter a valid email address',
     );
   });
@@ -117,9 +117,9 @@ describe('getDefaultValidationMessage', () => {
   });
 
   it('should strip warn: prefix when stripWarningPrefix option is set', () => {
-    expect(
-      getDefaultValidationMessage({ kind: 'warn:weak_password' }, undefined),
-    ).toBe('warn:weak password');
+    expect(getDefaultValidationMessage({ kind: 'warn:weak_password' })).toBe(
+      'warn:weak password',
+    );
 
     expect(
       getDefaultValidationMessage(

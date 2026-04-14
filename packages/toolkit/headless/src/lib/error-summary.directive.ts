@@ -106,13 +106,13 @@ export class NgxHeadlessErrorSummaryDirective implements ErrorSummarySignals {
    * Error display strategy override.
    * If undefined, inherits from form context or defaults to 'on-touch'.
    */
-  readonly strategy = input<ErrorDisplayStrategy | undefined>(undefined);
+  readonly strategy = input<ErrorDisplayStrategy | undefined>();
 
   /**
    * Form submission status (optional).
    * If not provided, inherits from form context.
    */
-  readonly submittedStatus = input<SubmittedStatus | undefined>(undefined);
+  readonly submittedStatus = input<SubmittedStatus | undefined>();
 
   readonly #fieldState = computed(() => this.formTree()());
 

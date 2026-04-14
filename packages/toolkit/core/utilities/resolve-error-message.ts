@@ -79,7 +79,7 @@ export function getDefaultValidationMessage(
       const normalizedKind = options?.stripWarningPrefix
         ? kind.replace(/^warn:/, '')
         : kind;
-      return normalizedKind.replace(/_/g, ' ');
+      return normalizedKind.replaceAll('_', ' ');
     }
   }
 }

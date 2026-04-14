@@ -854,7 +854,9 @@ describe('NgxFormFieldErrorComponent', () => {
 
       const fixture = TestBed.createComponent(TestComponent);
 
-      expect(() => fixture.detectChanges()).toThrow(
+      expect(() => {
+        fixture.detectChanges();
+      }).toThrow(
         /requires an explicit `fieldName` input or a parent ngx-signal-form-field-wrapper context/u,
       );
     });

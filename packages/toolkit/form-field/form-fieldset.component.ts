@@ -148,7 +148,7 @@ export class NgxSignalFormFieldset<TFieldset = unknown> {
    * deterministic `aria-describedby` references or tests, but does not affect
    * validation logic.
    */
-  readonly fieldsetId = input<string | undefined>(undefined);
+  readonly fieldsetId = input<string | undefined>();
 
   /**
    * Error display strategy for this fieldset.

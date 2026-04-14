@@ -369,7 +369,9 @@ function markAllFieldsAsTouched(field: FieldTree<unknown>): void {
 }
 
 function waitForValidationSettlement(): Promise<void> {
-  return new Promise((resolve) => queueMicrotask(resolve));
+  return new Promise((resolve) => {
+    queueMicrotask(resolve);
+  });
 }
 
 /**
