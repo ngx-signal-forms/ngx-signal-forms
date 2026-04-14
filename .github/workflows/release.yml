@@ -110,7 +110,8 @@ jobs:
         continue-on-error: true
 
       - name: Nx Report
-        run: pnpm exec nx report --outputStyle=static
+        # nx-safe.sh keeps diagnostics available even if Nx Cloud auth is broken.
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx report --outputStyle=static
 
       - name: Check formatting
         run: bash .github/scripts/nx-safe.sh pnpm run format:check
@@ -172,7 +173,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Running: \`nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }} > /tmp/release-preview.txt 2>&1 || true
+          bash .github/scripts/nx-safe.sh pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }} > /tmp/release-preview.txt 2>&1 || true
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           head -100 /tmp/release-preview.txt >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

@@ -78,7 +78,8 @@ jobs:
         continue-on-error: true
 
       - name: Nx Report
-        run: pnpm exec nx report
+        # nx-safe.sh keeps diagnostics available even if Nx Cloud auth is broken.
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx report
 
       - name: Check formatting
         run: bash .github/scripts/nx-safe.sh pnpm run format:check

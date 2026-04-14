@@ -59,13 +59,15 @@ jobs:
 
           if [ -n "$TOKEN" ]; then
             echo "NX_CLOUD_ACCESS_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+            echo "NX_NO_CLOUD=false" >> "$GITHUB_ENV"
           else
             echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
             echo "No Nx Cloud token configured. Running without Nx Cloud."
           fi
 
       - name: Build Demo
-        run: pnpm exec nx run demo:build --configuration=production --baseHref=/ngx-signal-forms/
+        # nx-safe.sh retries locally if Nx Cloud rejects workspace authorization.
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx run demo:build --configuration=production --baseHref=/ngx-signal-forms/
 
       - name: Create 404.html for SPA routing
         run: cp dist/apps/demo/browser/index.html dist/apps/demo/browser/404.html

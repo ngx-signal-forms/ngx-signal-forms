@@ -150,7 +150,8 @@ jobs:
           fi
 
       - name: Nx Report
-        run: pnpm exec nx report --outputStyle=static
+        # nx-safe.sh keeps diagnostics available even if Nx Cloud auth is broken.
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx report --outputStyle=static
 
       - name: Build toolkit package
         # nx-safe.sh falls back to local execution if Nx Cloud is unreachable.
