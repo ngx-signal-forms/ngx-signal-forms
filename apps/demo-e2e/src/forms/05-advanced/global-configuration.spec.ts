@@ -77,11 +77,10 @@ test.describe('Advanced - Global Configuration', () => {
       page: playwrightPage,
     }) => {
       const acceptTerms = playwrightPage.locator('#acceptTerms');
-      const acceptTermsWrapper = acceptTerms.locator(
-        'xpath=ancestor::ngx-signal-form-field-wrapper',
-      );
+      const acceptTermsWrapper = playwrightPage
+        .locator('ngx-signal-form-field-wrapper')
+        .filter({ has: acceptTerms });
 
-      await expect(acceptTerms).toBeVisible();
       await expect(acceptTerms).toHaveAttribute('role', 'switch');
       await expect(acceptTermsWrapper).toHaveAttribute(
         'data-ngx-signal-form-control-kind',
