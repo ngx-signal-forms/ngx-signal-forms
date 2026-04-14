@@ -1,7 +1,11 @@
 // Types
 export type * from './types';
 
-// Tokens
+// Tokens — symbols tagged `@internal` in their JSDoc are documented as
+// non-public but still re-exported here because ng-packagr secondary entry
+// points cannot reach outside their own tree. Hiding them behind a
+// dedicated internal sub-path would require promoting `core/` into its own
+// secondary entry point; that refactor is tracked as a follow-up.
 export * from './tokens';
 
 // Providers

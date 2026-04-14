@@ -282,14 +282,17 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     }
 
     // Custom-control discovery order:
-    // 1. `[formField]`            — the normal Signal Forms binding
-    // 2. `[ng-reflect-form-field]`— Angular's dev-mode reflection attribute.
-    //    Only populated in dev builds and only for inputs that serialize to
-    //    strings, but it catches custom controls that declare `formField`
-    //    before the directive host binding has settled the first render.
-    //    Dev-only fallback — the canonical selector is `data-ngx-signal-form-control`.
-    // 3. `[data-ngx-signal-form-control]` — the stable runtime contract
-    //    written by `NgxSignalFormControlSemanticsDirective`.
+    // 1. `[id][formField]` — the canonical Signal Forms binding, works in
+    //    both dev and prod builds.
+    // 2. `[id][ng-reflect-form-field]` — Angular's dev-mode reflection
+    //    attribute, populated only in dev builds and only for inputs whose
+    //    value serializes to a string. Lets dev tooling discover custom
+    //    controls that haven't yet settled their `formField` host binding
+    //    on the first render. Safe to ignore in production.
+    // 3. `[id][data-ngx-signal-form-control]` — the stable attribute
+    //    written by `NgxSignalFormControlSemanticsDirective`. This is the
+    //    recommended fallback for custom control hosts that do not carry
+    //    a native `[formField]` binding themselves.
     return this.#queryHostElement(
       hostEl,
       '[id][formField], [id][ng-reflect-form-field], [id][data-ngx-signal-form-control]',
@@ -417,6 +420,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     layout: null,
     ariaMode: null,
   });
+  #warnedUnresolvedKind = false;
 
   readonly #controlKind = computed<FormFieldControlKind>(
     () => this.#controlSemantics().kind,
@@ -704,18 +708,14 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
       earlyRead: () => {
         const hostEl = this.#getHostElement();
 
-        // DOM-query cache: skip `querySelector` when the previously bound
-        // control is still mounted inside this host AND still carries an
-        // `id` attribute (without the id it no longer satisfies the query
-        // `#findBoundControl` runs, so the cache must release it). This is
-        // a hot path on large forms — every change-detection cycle used
-        // to run a `querySelector` chain per wrapper before. The
-        // `isConnected` + `hostEl.contains` guard covers the common
-        // `@if`-branch-swap case (Angular removes the old node from its
-        // parent on branch change). Not handled: moving `[formField]` to
-        // a sibling element inside the same template branch without a
-        // re-render — a rare author-error edge case; if it surfaces we'd
-        // add a `MutationObserver` in a follow-up.
+        // DOM-query cache: reuse the previously bound control when it is
+        // still mounted inside this host AND still carries an `id` (without
+        // the id it no longer satisfies the `#findBoundControl` selector).
+        // The `isConnected` + `hostEl.contains` guard covers the common
+        // `@if`-branch-swap case where Angular detaches the old node from
+        // its parent on branch change. Moving `[formField]` to a sibling
+        // inside the same template branch without a re-render is an
+        // author-error edge case this cache does not catch.
         const cached = this.#boundControlElement();
         const cacheHit =
           cached &&
@@ -756,11 +756,32 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
           this.#controlSemantics.set(semantics);
         }
 
-        // `data-signal-field` is a **stable runtime contract**: custom controls
-        // rely on it as a CSS selector (`:host([data-signal-field]:focus-visible)`),
-        // tests use it for control discovery, and the assistive hint component
-        // mirrors it so screen-reader correlation can key off a single hook.
-        // Keep this write in production — it is not a dev-only debug affordance.
+        // A bound control whose semantics couldn't be resolved renders with
+        // default textual chrome silently — authors typically discover this
+        // only when outlined appearance or selection-group layout doesn't
+        // apply to their custom control. Fire a one-shot dev warning so the
+        // mis-wiring is visible without spamming change detection.
+        if (
+          inputEl &&
+          semantics.kind === null &&
+          !this.#warnedUnresolvedKind &&
+          (typeof ngDevMode === 'undefined' || ngDevMode)
+        ) {
+          this.#warnedUnresolvedKind = true;
+          console.warn(
+            '[ngx-signal-forms] Form-field wrapper could not infer a control ' +
+              'kind for its bound control and will render with default textual ' +
+              'chrome. Declare semantics via `ngxSignalFormControl="..."` on the ' +
+              'control host (or register a preset) to opt into the right layout ' +
+              'and ARIA wiring.',
+            inputEl,
+          );
+        }
+
+        // `data-signal-field` is a stable runtime contract keyed off by
+        // custom controls (as a `:host([data-signal-field]:focus-visible)`
+        // selector), test discovery, and the assistive hint component for
+        // screen-reader correlation.
         if (inputEl) {
           inputEl.setAttribute('data-signal-field', this.resolvedFieldName());
         }

@@ -350,13 +350,19 @@ function markAllFieldsAsTouched(field: FieldTree<unknown>): void {
   const state = field();
   state.markAsTouched();
 
-  // Check if this field has children (object or array)
-  // Signal Forms fields have dynamic properties for child fields
   for (const key of Object.keys(field)) {
     if (key === 'length' || typeof key === 'symbol') continue;
 
     const child = Reflect.get(field, key);
-    if (typeof child === 'function' && isFieldTree(child)) {
+    if (typeof child !== 'function') continue;
+
+    // Invoking the child callable is the only way to detect whether it is a
+    // FieldTree — a throw here means either a genuine FieldTree whose
+    // evaluation is broken, or a non-field callable we should skip. We cannot
+    // safely distinguish the two, so we surface the throw to the caller: if
+    // submitWithWarnings silently skipped a broken subtree, the form would
+    // submit with unvalidated data.
+    if (isFieldTree(child)) {
       markAllFieldsAsTouched(child);
     }
   }
@@ -370,22 +376,18 @@ function waitForValidationSettlement(): Promise<void> {
  * Type guard to check if a value is a FieldTree.
  * A FieldTree is a function that returns a FieldState with specific methods.
  *
+ * Throws if invoking `value()` throws. Callers that already know `value` is
+ * callable must decide how to handle that: {@link markAllFieldsAsTouched}
+ * surfaces the throw so `submitWithWarnings` cannot silently ship a form with
+ * an untouched, unvalidated subtree. {@link createSubmittedStatusTracker}
+ * invokes the guard only on values it controls, so a throw there indicates a
+ * wiring bug that should be surfaced.
+ *
  * @internal
  */
 function isFieldTree(value: unknown): value is FieldTree<unknown> {
   if (!isCallable(value)) return false;
-
-  try {
-    return hasCallableProperty(value(), 'markAsTouched');
-  } catch (error) {
-    if (typeof ngDevMode === 'undefined' || ngDevMode) {
-      console.warn(
-        '[ngx-signal-forms] FieldTree detection failed unexpectedly.',
-        error,
-      );
-    }
-    return false;
-  }
+  return hasCallableProperty(value(), 'markAsTouched');
 }
 
 function isCallable(value: unknown): value is () => unknown {

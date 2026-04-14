@@ -4,6 +4,8 @@ import {
   DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
   NGX_SIGNAL_FORMS_CONFIG,
   NgxSignalFormControlSemanticsDirective,
+  provideNgxSignalFormControlPresets,
+  provideNgxSignalFormControlPresetsForComponent,
 } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
@@ -2792,6 +2794,143 @@ describe('NgxSignalFormWrapperComponent', () => {
         );
         expect(formField).not.toHaveClass('ngx-signal-forms-outline');
       });
+    });
+  });
+
+  describe('Preset overrides via provideNgxSignalFormControlPresets', () => {
+    // The headline "dynamic wrapper extensibility" feature: consumers override
+    // preset defaults through DI, and the wrapper must reflect that override
+    // in its resolved semantics (layout, aria-mode). Unit tests on the
+    // provider itself only cover the injector-tree merge; this test pins
+    // end-to-end propagation into the rendered wrapper host attributes so a
+    // regression in the `inject(NGX_SIGNAL_FORM_CONTROL_PRESETS)` wiring or
+    // `resolveNgxSignalFormControlSemantics` cannot ship silently.
+    it('should reflect environment-scoped preset overrides in wrapper host attributes', async () => {
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field">
+          <label for="rating">Rating</label>
+          <div
+            id="rating"
+            role="slider"
+            tabindex="0"
+            data-ngx-signal-form-control
+          ></div>
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          providers: [
+            provideNgxSignalFormControlPresets({
+              slider: { layout: 'inline-control', ariaMode: 'manual' },
+            }),
+          ],
+          componentProperties: { field: createMockFieldState() },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-signal-form-field-wrapper');
+
+      // Heuristic still resolves `kind` from `role="slider"`, but layout and
+      // ariaMode must come from the override, not the defaults.
+      expect(wrapper).toHaveAttribute(
+        'data-ngx-signal-form-control-kind',
+        'slider',
+      );
+      expect(wrapper).toHaveAttribute(
+        'data-ngx-signal-form-control-layout',
+        'inline-control',
+      );
+      expect(wrapper).toHaveAttribute(
+        'data-ngx-signal-form-control-aria-mode',
+        'manual',
+      );
+    });
+
+    it('should reflect component-scoped preset overrides independently of ancestors', async () => {
+      // Pins the scoping guarantee: `provideNgxSignalFormControlPresetsForComponent`
+      // applies to the wrapper's subtree only. A sibling wrapper outside the
+      // component-scoped provider would still see defaults — a regression in
+      // the Provider[] return type (vs EnvironmentProviders) or injector tree
+      // traversal would break this.
+      @Component({
+        selector: 'ngx-preset-override-host',
+        standalone: true,
+        imports: [NgxSignalFormWrapperComponent],
+        providers: [
+          provideNgxSignalFormControlPresetsForComponent({
+            slider: { layout: 'inline-control', ariaMode: 'manual' },
+          }),
+        ],
+        template: `
+          <ngx-signal-form-field-wrapper [formField]="field">
+            <label for="rating">Rating</label>
+            <div
+              id="rating"
+              role="slider"
+              tabindex="0"
+              data-ngx-signal-form-control
+            ></div>
+          </ngx-signal-form-field-wrapper>
+        `,
+      })
+      class HostComponent {
+        readonly field = createMockFieldState();
+      }
+
+      const { container } = await render(HostComponent);
+
+      const wrapper = container.querySelector('ngx-signal-form-field-wrapper');
+      expect(wrapper).toHaveAttribute(
+        'data-ngx-signal-form-control-kind',
+        'slider',
+      );
+      expect(wrapper).toHaveAttribute(
+        'data-ngx-signal-form-control-layout',
+        'inline-control',
+      );
+      expect(wrapper).toHaveAttribute(
+        'data-ngx-signal-form-control-aria-mode',
+        'manual',
+      );
+    });
+
+    it('should let explicit directive inputs win over provider overrides', async () => {
+      const { container } = await render(
+        `<ngx-signal-form-field-wrapper [formField]="field">
+          <label for="rating">Rating</label>
+          <div
+            id="rating"
+            role="slider"
+            tabindex="0"
+            ngxSignalFormControlLayout="stacked"
+          ></div>
+        </ngx-signal-form-field-wrapper>`,
+        {
+          imports: [
+            NgxSignalFormWrapperComponent,
+            NgxSignalFormControlSemanticsDirective,
+          ],
+          providers: [
+            provideNgxSignalFormControlPresets({
+              slider: { layout: 'inline-control', ariaMode: 'manual' },
+            }),
+          ],
+          componentProperties: { field: createMockFieldState() },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-signal-form-field-wrapper');
+
+      // Explicit `ngxSignalFormControlLayout` wins over the provider
+      // override, but aria-mode (unset explicitly) still comes from the
+      // provider. This pins the three-layer resolution order.
+      expect(wrapper).toHaveAttribute(
+        'data-ngx-signal-form-control-layout',
+        'stacked',
+      );
+      expect(wrapper).toHaveAttribute(
+        'data-ngx-signal-form-control-aria-mode',
+        'manual',
+      );
     });
   });
 

@@ -143,6 +143,8 @@ export interface NgxSignalFormHintDescriptor {
  * Registry of hints that live inside a form field wrapper (or any other
  * provider of `NGX_SIGNAL_FORM_HINT_REGISTRY`). `NgxSignalFormAutoAriaDirective`
  * reads this registry instead of querying the DOM for hint elements.
+ *
+ * @internal
  */
 export interface NgxSignalFormHintRegistry {
   readonly hints: Signal<readonly NgxSignalFormHintDescriptor[]>;

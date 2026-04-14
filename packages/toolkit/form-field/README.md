@@ -322,6 +322,65 @@ Use the provider when the default should apply to many controls. Use
 Keep `switch` in your own code when that is the real control family. It is
 still supported; it is just no longer the clearest primary docs example.
 
+#### What if my control doesn't fit any kind?
+
+`NgxSignalFormControlKind` is an intentionally closed union — you cannot add a
+new value from user code, and the toolkit will not grow the set for every
+possible third-party widget. This is a design choice: wrapper chrome decisions
+depend on an internal capability table, and a consumer-supplied kind couldn't
+be classified safely.
+
+**The escape hatch is `composite`.** It is the designated kind for widgets
+that don't map onto a native field family and need the wrapper to stay out of
+their visual chrome and ARIA contract:
+
+```typescript
+@Component({
+  imports: [
+    NgxSignalFormFieldWrapperComponent,
+    NgxSignalFormControlSemanticsDirective,
+  ],
+  template: `
+    <ngx-signal-form-field-wrapper
+      [formField]="form.travelDates"
+      appearance="plain"
+    >
+      <label for="travelDates">Travel dates</label>
+      <third-party-date-range-picker
+        id="travelDates"
+        [formField]="form.travelDates"
+        ngxSignalFormControl="composite"
+        ngxSignalFormControlAria="manual"
+      />
+    </ngx-signal-form-field-wrapper>
+  `,
+})
+export class ExampleComponent {}
+```
+
+What this combination gives you:
+
+- `ngxSignalFormControl="composite"` — wrapper treats the host as a widget
+  that owns its own layout, skips textual chrome, and applies the
+  padded-content class so the wrapper's padding still frames the control.
+- `appearance="plain"` — removes the bordered field container; the widget's
+  own visual treatment is the source of truth.
+- `ngxSignalFormControlAria="manual"` — tells the auto-ARIA directive to
+  leave `aria-invalid`, `aria-describedby`, and `aria-required` alone. The
+  widget keeps whatever ARIA contract it already implements.
+
+The wrapper still contributes the label, hints, the error summary row, field
+identity (`data-signal-field`), and the `id` correlation for assistive tech.
+Use `buildAriaDescribedBy()` inside your widget if you want to assemble an
+`aria-describedby` string that includes the toolkit's standard hint / error /
+warning IDs without duplicating the ID conventions.
+
+If the escape hatch is not enough for your case — for example you need a
+genuinely new wrapper layout family — that is a toolkit feature request.
+Opening an issue with a concrete use case is the right path; the
+extensibility ceiling is intentional and the maintainers prefer growing the
+`NgxSignalFormControlKind` union deliberately over ad-hoc per-app kinds.
+
 #### Message Placement
 
 The wrapper also supports `errorPlacement`, but treat it as the secondary,
