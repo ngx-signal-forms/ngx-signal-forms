@@ -114,7 +114,7 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
       cursor: not-allowed;
     }
 
-    @media (prefers-color-scheme: dark) {
+    :host-context(.dark) {
       .star--empty {
         color: #4b5563;
       }

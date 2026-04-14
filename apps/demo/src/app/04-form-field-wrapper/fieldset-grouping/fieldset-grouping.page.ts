@@ -93,7 +93,7 @@ import { FIELDSET_GROUPING_CONTENT } from './fieldset-grouping.content';
       outline-offset: 2px;
     }
 
-    @media (prefers-color-scheme: dark) {
+    :host-context(.dark) {
       .page-segmented {
         background: rgba(31, 41, 55, 0.96);
       }

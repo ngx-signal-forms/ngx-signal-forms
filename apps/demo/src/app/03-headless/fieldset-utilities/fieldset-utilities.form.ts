@@ -134,7 +134,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
       font-weight: 600;
     }
 
-    @media (prefers-color-scheme: dark) {
+    :host-context(.dark) {
       .headless-summary__description {
         color: rgb(252 165 165);
       }

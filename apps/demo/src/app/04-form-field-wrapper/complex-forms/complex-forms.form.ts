@@ -135,7 +135,7 @@ function createInitialComplexFormModel(): ComplexFormModel {
       line-height: 1;
     }
 
-    @media (prefers-color-scheme: dark) {
+    :host-context(.dark) {
       .add-array-button {
         border-color: color-mix(in srgb, #818cf8 60%, #475569);
         background: color-mix(in srgb, #312e81 24%, #0f172a);

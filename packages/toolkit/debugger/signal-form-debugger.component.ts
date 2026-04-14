@@ -39,7 +39,7 @@ type DebuggerError = {
  * - Live model values with JSON formatting
  * - Validation errors separated into blocking errors and warnings
  * - Collapsible sections for better organization
- * - Dark mode support via `prefers-color-scheme`
+ * - Dark mode support via class-based theme context (`.dark`)
  * - Automatic submission status tracking (via form provider)
  *
  * **Usage**:

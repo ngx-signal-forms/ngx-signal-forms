@@ -48,7 +48,7 @@ appear incorrect.
 - **Validation Errors**: Separated into blocking errors and warnings
 - **Error Visibility Strategy**: Shows which errors are hidden by current strategy
 - **Root vs Field Errors**: Distinguishes cross-field validation from field-level
-- **Dark Mode Support**: Automatic via `prefers-color-scheme`
+- **Dark Mode Support**: Automatic via class-based theme context (`.dark`)
 - **Collapsible Sections**: Clean organization of information
 
 ## API

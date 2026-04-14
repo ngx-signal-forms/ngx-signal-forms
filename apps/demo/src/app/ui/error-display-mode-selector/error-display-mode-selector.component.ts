@@ -99,7 +99,7 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
       padding: 0.9rem 0 0;
     }
 
-    @media (prefers-color-scheme: dark) {
+    :host-context(.dark) {
       .error-mode-summary--embedded {
         border-top-color: rgba(129, 140, 248, 0.28);
       }

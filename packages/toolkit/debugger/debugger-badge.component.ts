@@ -181,91 +181,71 @@ export class DebuggerBadgeIconDirective {}
     }
 
     /* ============================================ */
-    /* DARK MODE SUPPORT                            */
+    /* DARK MODE SUPPORT (class-based)              */
     /* ============================================ */
 
-    @media (prefers-color-scheme: dark) {
-      :host(.ngx-debugger-badge--solid.ngx-debugger-badge--neutral) {
-        background-color: var(--ngx-debugger-badge-neutral-bg-dark, #374151);
-        color: var(--ngx-debugger-badge-neutral-text-dark, #e5e7eb);
-      }
+    :host-context(.dark) {
+      --ngx-debugger-badge-neutral-bg: var(
+        --ngx-debugger-badge-neutral-bg-dark,
+        #374151
+      );
+      --ngx-debugger-badge-neutral-text: var(
+        --ngx-debugger-badge-neutral-text-dark,
+        #e5e7eb
+      );
+      --ngx-debugger-badge-info-bg: var(
+        --ngx-debugger-badge-info-bg-dark,
+        rgba(59, 130, 246, 0.2)
+      );
+      --ngx-debugger-badge-info-text: var(
+        --ngx-debugger-badge-info-text-dark,
+        #93c5fd
+      );
+      --ngx-debugger-badge-success-bg: var(
+        --ngx-debugger-badge-success-bg-dark,
+        rgba(34, 197, 94, 0.2)
+      );
+      --ngx-debugger-badge-success-text: var(
+        --ngx-debugger-badge-success-text-dark,
+        #86efac
+      );
+      --ngx-debugger-badge-warning-bg: var(
+        --ngx-debugger-badge-warning-bg-dark,
+        rgba(245, 158, 11, 0.2)
+      );
+      --ngx-debugger-badge-warning-text: var(
+        --ngx-debugger-badge-warning-text-dark,
+        #fcd34d
+      );
+      --ngx-debugger-badge-danger-bg: var(
+        --ngx-debugger-badge-danger-bg-dark,
+        rgba(239, 68, 68, 0.2)
+      );
+      --ngx-debugger-badge-danger-text: var(
+        --ngx-debugger-badge-danger-text-dark,
+        #fca5a5
+      );
 
-      :host(.ngx-debugger-badge--solid.ngx-debugger-badge--info) {
-        background-color: var(
-          --ngx-debugger-badge-info-bg-dark,
-          rgba(59, 130, 246, 0.2)
-        );
-        color: var(--ngx-debugger-badge-info-text-dark, #93c5fd);
-      }
-
-      :host(.ngx-debugger-badge--solid.ngx-debugger-badge--success) {
-        background-color: var(
-          --ngx-debugger-badge-success-bg-dark,
-          rgba(34, 197, 94, 0.2)
-        );
-        color: var(--ngx-debugger-badge-success-text-dark, #86efac);
-      }
-
-      :host(.ngx-debugger-badge--solid.ngx-debugger-badge--warning) {
-        background-color: var(
-          --ngx-debugger-badge-warning-bg-dark,
-          rgba(245, 158, 11, 0.2)
-        );
-        color: var(--ngx-debugger-badge-warning-text-dark, #fcd34d);
-      }
-
-      :host(.ngx-debugger-badge--solid.ngx-debugger-badge--danger) {
-        background-color: var(
-          --ngx-debugger-badge-danger-bg-dark,
-          rgba(239, 68, 68, 0.2)
-        );
-        color: var(--ngx-debugger-badge-danger-text-dark, #fca5a5);
-      }
-
-      :host(.ngx-debugger-badge--outline.ngx-debugger-badge--neutral) {
-        border-color: var(--ngx-debugger-badge-neutral-border-dark, #4b5563);
-        color: var(--ngx-debugger-badge-neutral-text-dark, #d1d5db);
-      }
-
-      :host(.ngx-debugger-badge--outline.ngx-debugger-badge--info) {
-        border-color: var(--ngx-debugger-badge-info-border-dark, #60a5fa);
-        color: var(--ngx-debugger-badge-info-text-dark, #93c5fd);
-      }
-
-      :host(.ngx-debugger-badge--outline.ngx-debugger-badge--success) {
-        border-color: var(--ngx-debugger-badge-success-border-dark, #4ade80);
-        color: var(--ngx-debugger-badge-success-text-dark, #86efac);
-      }
-
-      :host(.ngx-debugger-badge--outline.ngx-debugger-badge--warning) {
-        border-color: var(--ngx-debugger-badge-warning-border-dark, #fbbf24);
-        color: var(--ngx-debugger-badge-warning-text-dark, #fcd34d);
-      }
-
-      :host(.ngx-debugger-badge--outline.ngx-debugger-badge--danger) {
-        border-color: var(--ngx-debugger-badge-danger-border-dark, #f87171);
-        color: var(--ngx-debugger-badge-danger-text-dark, #fca5a5);
-      }
-
-      :host(.ngx-debugger-badge--ghost.ngx-debugger-badge--neutral) {
-        color: var(--ngx-debugger-badge-neutral-text-dark, #d1d5db);
-      }
-
-      :host(.ngx-debugger-badge--ghost.ngx-debugger-badge--info) {
-        color: var(--ngx-debugger-badge-info-text-dark, #93c5fd);
-      }
-
-      :host(.ngx-debugger-badge--ghost.ngx-debugger-badge--success) {
-        color: var(--ngx-debugger-badge-success-text-dark, #86efac);
-      }
-
-      :host(.ngx-debugger-badge--ghost.ngx-debugger-badge--warning) {
-        color: var(--ngx-debugger-badge-warning-text-dark, #fcd34d);
-      }
-
-      :host(.ngx-debugger-badge--ghost.ngx-debugger-badge--danger) {
-        color: var(--ngx-debugger-badge-danger-text-dark, #fca5a5);
-      }
+      --ngx-debugger-badge-neutral-border: var(
+        --ngx-debugger-badge-neutral-border-dark,
+        #4b5563
+      );
+      --ngx-debugger-badge-info-border: var(
+        --ngx-debugger-badge-info-border-dark,
+        #60a5fa
+      );
+      --ngx-debugger-badge-success-border: var(
+        --ngx-debugger-badge-success-border-dark,
+        #4ade80
+      );
+      --ngx-debugger-badge-warning-border: var(
+        --ngx-debugger-badge-warning-border-dark,
+        #fbbf24
+      );
+      --ngx-debugger-badge-danger-border: var(
+        --ngx-debugger-badge-danger-border-dark,
+        #f87171
+      );
     }
 
     /* Spinning animation for pending states */

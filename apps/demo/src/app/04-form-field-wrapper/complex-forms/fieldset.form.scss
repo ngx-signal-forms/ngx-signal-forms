@@ -138,7 +138,7 @@ fieldset + fieldset {
   font-size: 0.875rem;
 }
 
-@media (prefers-color-scheme: dark) {
+:host-context(.dark) {
   .playground-shell,
   .playground-shell--accent,
   .playground-preview-card,

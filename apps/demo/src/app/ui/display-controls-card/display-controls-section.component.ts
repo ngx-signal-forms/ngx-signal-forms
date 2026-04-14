@@ -27,7 +27,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       color: #5a6b84;
     }
 
-    @media (prefers-color-scheme: dark) {
+    :host-context(.dark) {
       :host + :host {
         border-top-color: rgba(148, 163, 184, 0.16);
       }

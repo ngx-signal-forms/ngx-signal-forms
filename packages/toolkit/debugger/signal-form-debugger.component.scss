@@ -73,30 +73,28 @@
 }
 
 /* ============================================ */
-/* DARK MODE                                     */
+/* DARK MODE (class-based)                      */
 /* ============================================ */
 
-@media (prefers-color-scheme: dark) {
-  :host {
-    --ngx-debugger-bg: #1f2937;
-    --ngx-debugger-bg-secondary: #374151;
-    --ngx-debugger-bg-tertiary: #4b5563;
-    --ngx-debugger-border-color: #374151;
-    --ngx-debugger-text-color: #f3f4f6;
-    --ngx-debugger-text-secondary: #d1d5db;
-    --ngx-debugger-text-muted: #9ca3af;
+:host-context(.dark) {
+  --ngx-debugger-bg: #1f2937;
+  --ngx-debugger-bg-secondary: #374151;
+  --ngx-debugger-bg-tertiary: #4b5563;
+  --ngx-debugger-border-color: #374151;
+  --ngx-debugger-text-color: #f3f4f6;
+  --ngx-debugger-text-secondary: #d1d5db;
+  --ngx-debugger-text-muted: #9ca3af;
 
-    --ngx-debugger-color-success-bg: rgba(34, 197, 94, 0.15);
-    --ngx-debugger-color-success-text: #86efac;
-    --ngx-debugger-color-warning-bg: rgba(245, 158, 11, 0.15);
-    --ngx-debugger-color-warning-text: #fcd34d;
-    --ngx-debugger-color-danger-bg: rgba(239, 68, 68, 0.15);
-    --ngx-debugger-color-danger-text: #fca5a5;
-    --ngx-debugger-color-info-bg: rgba(59, 130, 246, 0.15);
-    --ngx-debugger-color-info-text: #93c5fd;
-    --ngx-debugger-color-root-bg: rgba(168, 85, 247, 0.15);
-    --ngx-debugger-color-root-text: #c4b5fd;
-  }
+  --ngx-debugger-color-success-bg: rgba(34, 197, 94, 0.15);
+  --ngx-debugger-color-success-text: #86efac;
+  --ngx-debugger-color-warning-bg: rgba(245, 158, 11, 0.15);
+  --ngx-debugger-color-warning-text: #fcd34d;
+  --ngx-debugger-color-danger-bg: rgba(239, 68, 68, 0.15);
+  --ngx-debugger-color-danger-text: #fca5a5;
+  --ngx-debugger-color-info-bg: rgba(59, 130, 246, 0.15);
+  --ngx-debugger-color-info-text: #93c5fd;
+  --ngx-debugger-color-root-bg: rgba(168, 85, 247, 0.15);
+  --ngx-debugger-color-root-text: #c4b5fd;
 }
 
 /* ============================================ */

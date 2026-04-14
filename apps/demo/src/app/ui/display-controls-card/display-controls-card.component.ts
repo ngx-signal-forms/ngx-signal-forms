@@ -142,7 +142,7 @@ export type DisplayControlChip = {
       min-width: 0;
     }
 
-    @media (prefers-color-scheme: dark) {
+    :host-context(.dark) {
       .control-deck {
         border-color: rgba(129, 140, 248, 0.22);
         background:
