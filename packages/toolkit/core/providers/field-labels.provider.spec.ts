@@ -23,7 +23,7 @@ describe('Field Label Provider', () => {
       expect(resolver('address.postalCode')).toBe('Postcode');
     });
 
-    it('should fall back to raw path for unmapped fields', () => {
+    it('should fall back to humanizeFieldPath for unmapped fields', () => {
       TestBed.configureTestingModule({
         providers: [
           provideFieldLabels({
@@ -33,7 +33,22 @@ describe('Field Label Provider', () => {
       });
 
       const resolver = TestBed.inject(NGX_FIELD_LABEL_RESOLVER);
-      expect(resolver('address.street')).toBe('address.street');
+      expect(resolver('address.street')).toBe('Address / Street');
+      expect(resolver('address.postalCode')).toBe('Address / Postal code');
+      expect(resolver('ng.form0.email')).toBe('Email');
+    });
+
+    it('should prefer mapped labels over humanized fallback', () => {
+      TestBed.configureTestingModule({
+        providers: [
+          provideFieldLabels({
+            'address.postalCode': 'Postcode',
+          }),
+        ],
+      });
+
+      const resolver = TestBed.inject(NGX_FIELD_LABEL_RESOLVER);
+      expect(resolver('address.postalCode')).toBe('Postcode');
     });
   });
 

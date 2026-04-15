@@ -33,6 +33,10 @@ export {
 export * from './utilities/field-resolution';
 export type * from './utilities/field-state-types';
 export * from './utilities/focus-first-invalid';
+export {
+  humanizeFieldPath,
+  stripAngularFormPrefix,
+} from './utilities/humanize-field-path';
 export { updateAt, updateNested } from './utilities/immutable-array';
 export * from './utilities/inject-field-control';
 export * from './utilities/inject-form-context';
