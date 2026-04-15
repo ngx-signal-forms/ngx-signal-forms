@@ -10,7 +10,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 // = [FormRoot, NgxSignalFormDirective, NgxSignalFormAutoAriaDirective, NgxSignalFormControlSemanticsDirective]
 ```
 
-`NgxSignalFormToolkit` bundles Angular `FormRoot` plus the toolkit enhancer directives, including `NgxSignalFormControlSemanticsDirective`. Use it with `form[formRoot][ngxSignalForm]`.
+`NgxSignalFormToolkit` bundles Angular `FormRoot` plus the toolkit enhancer directives, including `NgxSignalFormControlSemanticsDirective`. Use it on `form[formRoot]`, and add `ngxSignalForm` when you need form context, `submittedStatus`, or `'on-submit'` strategy behavior.
 
 ### Directives
 
@@ -29,6 +29,8 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 **NgxSignalFormDirective exposed signals:**
 
 - `submittedStatus` — `Signal<'unsubmitted' | 'submitting' | 'submitted'>`
+
+This enhancer is optional for basic `'on-touch'` flows. Add it when the form needs shared toolkit context, form-level `errorStrategy`, or `submittedStatus` for `'on-submit'` behavior.
 
 **NgxSignalFormAutoAriaDirective:**
 

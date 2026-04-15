@@ -4,7 +4,7 @@ Repository paths in `apps/demo/src/app/` organized by the current live demo. Use
 
 ## 01 — Getting Started
 
-- `01-getting-started/your-first-form/` — Smallest recommended toolkit setup: `form[formRoot][ngxSignalForm]`, auto-ARIA, and inline errors
+- `01-getting-started/your-first-form/` — Intro demo for bundle import, `ngxSignalForm` form context, auto-ARIA, and inline errors
 
 ## 02 — Toolkit Core
 
@@ -41,6 +41,6 @@ Repository paths in `apps/demo/src/app/` organized by the current live demo. Use
 - `packages/toolkit/debugger/README.md` — Debugger docs
 - `docs/CSS_FRAMEWORK_INTEGRATION.md` — Bootstrap, Tailwind, Material setup
 - `docs/WARNINGS_SUPPORT.md` — Non-blocking validation
-- `docs/NESTED_FORM_ARRAYS_PATTERN.md` — Dynamic nested array patterns
+- `docs/archive/NESTED_FORM_ARRAYS_PATTERN.md` — Dynamic nested array patterns
 - `.github/instructions/angular-signal-forms.instructions.md` — Angular Signal Forms rules
 - `.github/instructions/ngx-signal-forms-toolkit.instructions.md` — Toolkit usage rules

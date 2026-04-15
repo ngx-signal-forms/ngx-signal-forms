@@ -1,6 +1,6 @@
 ---
 name: ngx-signal-forms
-description: Implements @ngx-signal-forms/toolkit for Angular Signal Forms. Use whenever working with any toolkit entry point — form[formRoot][ngxSignalForm], auto-ARIA, control semantics (ngxSignalFormControl directive, provideNgxSignalFormControlPresets), error strategies (on-touch/on-submit/immediate), error message registries, field-label resolution, form field wrappers (ngx-signal-form-field-wrapper), grouped fieldsets, error summaries, standalone assistive components (errors, hints, character count), renderless headless primitives, Vest validation integration, or development-time form debugging. Always invoke this skill when the user mentions @ngx-signal-forms/toolkit, an error strategy, an error summary, a form wrapper, field visibility, control semantics, or custom form controls, even if they don't use the skill name explicitly.
+description: Implements @ngx-signal-forms/toolkit for Angular Signal Forms. Use whenever working with any toolkit entry point — deciding whether plain form[formRoot] fallback is enough or the ngxSignalForm enhancer is needed, auto-ARIA, control semantics (ngxSignalFormControl directive, provideNgxSignalFormControlPresets), error strategies (on-touch/on-submit/immediate), submittedStatus/showErrors helpers, error message registries, field-label resolution, form field wrappers (ngx-signal-form-field-wrapper), grouped fieldsets, error summaries, standalone assistive components (errors, hints, character count), renderless headless primitives, Vest validation integration, or development-time form debugging. Always invoke this skill when the user mentions @ngx-signal-forms/toolkit, an error strategy, submitted status, an error summary, a form wrapper, field visibility, ARIA wiring, control semantics, or custom form controls, even if they don't use the skill name explicitly.
 ---
 
 # ngx-signal-forms Toolkit
@@ -11,7 +11,7 @@ An orchestrator skill for `@ngx-signal-forms/toolkit` — the enhancement layer 
 
 Use this skill when the task involves:
 
-- Setting up `form[formRoot][ngxSignalForm]`, error strategies, or auto-ARIA
+- Setting up `[formRoot]`, deciding whether to add `ngxSignalForm`, error strategies, or auto-ARIA
 - Declaring control semantics with `ngxSignalFormControl` or setting up control preset providers
 - Adding form-level error summaries or field-label resolution
 - Adding form field wrappers or grouped fieldsets
@@ -70,8 +70,9 @@ Adding a debug panel during development?                    → debugger
 
 1. `@angular/forms/signals` is always the source of truth — never replace `form()`, `[formField]`, or field state signals with toolkit abstractions.
 2. Always import from the correct secondary entry point. Do not import `NgxFormField` from the root package.
-3. Do not manually add `aria-invalid`, `aria-required`, or `aria-describedby` to controls managed by `NgxSignalFormAutoAriaDirective` unless `ngxSignalFormControlAria="manual"` is explicitly set on that control.
-4. Bound controls inside `ngx-signal-form-field-wrapper` must have a stable `id` — wrapper derives field identity from it.
-5. Declare control semantics explicitly with `ngxSignalFormControl` for controls outside the default native field families (switches, checkboxes, sliders, composites) — the wrapper and auto-ARIA use this to avoid brittle DOM heuristics. For switch controls also add `role="switch"` on the actual interactive element.
-6. Angular standalone imports are template-local — if a child custom control renders the real `[formField]` element, import toolkit auto-ARIA in that child component too.
-7. Do not use removed APIs: `manual` strategy, `computeShowErrors`, `canSubmit`, `isSubmitting`, `fieldNameResolver`, `strictFieldResolution`. Use `stacked` not `standard` for the default appearance.
+3. Basic toolkit flows can use `form[formRoot]` alone — wrappers, assistive components, and auto-ARIA fall back to default `'on-touch'` timing. Add `ngxSignalForm` when you need `'on-submit'`, `submittedStatus`, shared form context, or a form-level strategy override.
+4. Do not manually add `aria-invalid`, `aria-required`, or `aria-describedby` to controls managed by `NgxSignalFormAutoAriaDirective` unless `ngxSignalFormControlAria="manual"` is explicitly set on that control.
+5. Bound controls inside `ngx-signal-form-field-wrapper` need a stable `id` unless the wrapper gets an explicit `fieldName`.
+6. Declare control semantics explicitly with `ngxSignalFormControl` for controls outside the default native field families (switches, checkboxes, sliders, composites) — the wrapper and auto-ARIA use this to avoid brittle DOM heuristics. For switch controls also add `role="switch"` on the actual interactive element.
+7. Angular standalone imports are template-local — if a child custom control renders the real `[formField]` element, import toolkit auto-ARIA in that child component too.
+8. Do not use removed APIs: `manual` strategy, `computeShowErrors`, `createShowErrorsSignal`, `canSubmit`, `isSubmitting`, `fieldNameResolver`, `strictFieldResolution`, `injectFormConfig`. Use `stacked` not `standard` and `plain` not `bare`.

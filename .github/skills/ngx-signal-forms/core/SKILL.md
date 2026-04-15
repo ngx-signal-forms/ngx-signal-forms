@@ -1,6 +1,6 @@
 ---
 name: ngx-signal-forms-core
-description: Implements the core @ngx-signal-forms/toolkit entry point. Use when adding form[formRoot][ngxSignalForm], auto-ARIA, control semantics directive (ngxSignalFormControl), control preset providers (provideNgxSignalFormControlPresets), error visibility strategies, global config, error-message registries, warning helpers, submission helpers (focusFirstInvalid, submitWithWarnings), or immutable array utilities. Part of the ngx-signal-forms skill suite; read the hub SKILL.md first if unsure which sub-skill applies.
+description: Implements the core @ngx-signal-forms/toolkit entry point. Use when deciding whether plain form[formRoot] fallback is enough or ngxSignalForm form context is needed, adding auto-ARIA, control semantics (ngxSignalFormControl), control preset providers (provideNgxSignalFormControlPresets), error visibility strategies, submittedStatus/showErrors wiring, global config, error-message registries, warning helpers, submission helpers (focusFirstInvalid, submitWithWarnings), or immutable array utilities. Part of the ngx-signal-forms skill suite; read the hub SKILL.md first if unsure which sub-skill applies.
 ---
 
 # Toolkit Core
@@ -15,12 +15,13 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 
 ## Workflow
 
-1. **Use `form[formRoot][ngxSignalForm]` for toolkit-backed forms.** Angular `FormRoot` owns native form submission behavior, while `ngxSignalForm` activates toolkit form context, submitted-status tracking, and form-level error strategy behavior. Add `novalidate` manually only when opting out of Angular `[formRoot]` entirely.
+1. **Start with Angular `form[formRoot]`; add `ngxSignalForm` when you need toolkit form context.** Angular `FormRoot` owns native form submission behavior. Toolkit wrappers, assistive components, and auto-ARIA can already work with the default `'on-touch'` / `'unsubmitted'` fallback when `ngxSignalForm` is absent. Add `ngxSignalForm` when the form needs shared toolkit context, `submittedStatus`, or a form-level `errorStrategy`. Add `novalidate` manually only when opting out of Angular `[formRoot]` entirely.
 
 2. **Choose error strategy deliberately:**
-   - `'on-touch'` — show errors after user interaction (default, good for most forms)
-   - `'immediate'` — show errors from first load (useful for live guidance or sign-up flows)
-   - `'on-submit'` — show errors only after submission attempt. Inside `form[formRoot][ngxSignalForm]` the wrapper, auto-ARIA, and headless directives inherit `submittedStatus` automatically. **Standalone callers of `showErrors()` / `createShowErrorsComputed()` MUST pass `submittedStatus` explicitly when using `'on-submit'`** — otherwise the helper stays at `'unsubmitted'` and errors never surface (dev mode logs a one-shot `console.warn` to flag the silent failure).
+
+- `'on-touch'` — show errors after user interaction (default, good for most forms, and works with or without `ngxSignalForm`)
+- `'immediate'` — show errors from first load (useful for live guidance or sign-up flows)
+- `'on-submit'` — show errors only after submission attempt. Inside `form[formRoot][ngxSignalForm]` the wrapper, auto-ARIA, and headless directives inherit `submittedStatus` automatically. **Standalone callers of `showErrors()` / `createShowErrorsComputed()` MUST pass `submittedStatus` explicitly when using `'on-submit'`** — otherwise the helper stays at `'unsubmitted'` and errors never surface (dev mode logs a one-shot `console.warn` to flag the silent failure).
 
 3. **Let auto-ARIA manage ARIA attributes.** `NgxSignalFormAutoAriaDirective` (bundled in `NgxSignalFormToolkit`) handles `aria-invalid`, `aria-required`, and `aria-describedby` for native `<input>`, `<textarea>`, and `<select>` controls, custom hosts, and checkbox-based switches that opt in with `role="switch"`. Standard checkboxes and radios stay excluded. Never add those attributes manually.
 
@@ -153,7 +154,7 @@ patchState(store, (s) => ({
 
 ## Error Handling
 
-- If `'on-submit'` errors don't appear: verify the form uses `form[formRoot][ngxSignalForm]` — toolkit `submittedStatus` and form context require it.
+- If `'on-submit'` errors don't appear: verify the form uses `form[formRoot][ngxSignalForm]`, or pass `submittedStatus` explicitly to standalone `showErrors()` / `createShowErrorsComputed()` callers.
 - If `aria-describedby` links are missing: ensure bound controls have a stable `id` attribute; for nested or dynamically identified controls inside wrappers, prefer an explicit `fieldName` on the wrapper.
 - If a switch does not receive auto-ARIA: confirm the actual bound element is `input[type="checkbox"][role="switch"]` and that the component rendering it imported the toolkit in its own standalone `imports`.
 - If ARIA attributes are duplicated: check for manual additions alongside auto-ARIA; remove the manual ones, or use `ngxSignalFormControlAria="manual"` to suppress auto management.

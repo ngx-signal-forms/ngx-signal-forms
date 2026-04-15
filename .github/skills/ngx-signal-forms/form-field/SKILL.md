@@ -1,6 +1,6 @@
 ---
 name: ngx-signal-forms-form-field
-description: Implements @ngx-signal-forms/toolkit/form-field wrappers and fieldsets. Use when adding ngx-signal-form-field-wrapper, floating labels (outline appearance), grouped field summaries (NgxSignalFormFieldset), or custom controls that integrate with the wrapper layer. Part of the ngx-signal-forms skill suite.
+description: Implements @ngx-signal-forms/toolkit/form-field wrappers and fieldsets. Use when adding ngx-signal-form-field-wrapper, floating labels (outline appearance), grouped field summaries (NgxSignalFormFieldset), deciding whether wrappers can stay on default on-touch fallback or need ngxSignalForm form context, or integrating custom controls with the wrapper layer. Part of the ngx-signal-forms skill suite.
 ---
 
 # Toolkit Form Field
@@ -36,7 +36,7 @@ The form-field entry point provides a pre-styled field shell (label + control + 
    - Default: child wrapper errors + group-level errors each show separately. Set `includeNestedErrors` to show all child errors in the group summary.
    - Use `fields` input to restrict which fields count toward the group summary.
 
-6. **Use `form[formRoot][ngxSignalForm]` for toolkit-backed forms.** The wrapper and fieldset components work best when they can inherit toolkit form context and submitted-status behavior from `ngxSignalForm`.
+6. **Use `form[formRoot]` for the baseline wrapper path; add `ngxSignalForm` when the form needs shared context.** Wrapper and fieldset components can render with the default `'on-touch'` fallback even without `ngxSignalForm`. Add `ngxSignalForm` when grouped sections, summaries, or custom wrapper integrations need inherited `'on-submit'`, `submittedStatus`, or injected form context.
 
 7. **Custom controls:** Implement `FormValueControl<T>`, `FormCheckboxControl`, or `FormUiControl` from `@angular/forms/signals`. Give the host a stable `id` so the wrapper links correctly.
 

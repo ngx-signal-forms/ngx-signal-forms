@@ -20,7 +20,7 @@ internal tokens, or removed beta APIs.
 - **Angular peer dependency:** `@angular/core` and `@angular/forms` `>=21.2.0`
 - **TypeScript:** `5.8+`
 - **Architecture:** standalone components, signals, `OnPush`, zoneless-compatible
-- **Forms API:** Angular Signal Forms with `[formField]` and toolkit `form[formRoot][ngxSignalForm]`
+- **Forms API:** Angular Signal Forms with `[formField]`, plus the optional `ngxSignalForm` enhancer on `form[formRoot]` when form-level context is needed
 
 ## Current Public Entry Points
 
@@ -95,9 +95,9 @@ Do **not** mention removed/internal config fields such as:
 - `strictFieldResolution`
 - `debug`
 
-## Recommended Core Pattern
+## Recommended Form Patterns
 
-Prefer `[formRoot]` + `ngxSignalForm` for toolkit-backed forms.
+For the smallest public path, use Angular `form[formRoot]` with toolkit wrappers, assistive components, or auto-ARIA. Those surfaces fall back to the default `'on-touch'` / `'unsubmitted'` behavior when `ngxSignalForm` is not present.
 
 ```typescript
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
@@ -110,7 +110,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form [formRoot]="userForm" ngxSignalForm>
+    <form [formRoot]="userForm">
       <ngx-signal-form-field-wrapper
         [formField]="userForm.email"
         appearance="outline"
@@ -131,7 +131,11 @@ export class ExampleComponent {
 }
 ```
 
-### Why `[formRoot]` + `ngxSignalForm` is the default
+Add `ngxSignalForm` to the same `<form>` when the form needs shared toolkit context, a form-level strategy override, or `submittedStatus` for `'on-submit'` flows.
+
+### When to add `[formRoot]` + `ngxSignalForm`
+
+Without `ngxSignalForm`, toolkit surfaces fall back to default `'on-touch'` timing and treat the form as `'unsubmitted'`, which is correct for many basic forms.
 
 `NgxSignalFormDirective` on `form[formRoot][ngxSignalForm]` enhances Angular's `FormRoot` and adds:
 
@@ -332,7 +336,7 @@ protected readonly showEmailErrors = showErrors(this.form.email, 'on-touch');
 ```
 
 - `submittedStatus` is optional for `'on-touch'`.
-- `'on-submit'` needs real submission state, usually provided by `ngxSignalForm` alongside `[formRoot]`.
+- `'on-submit'` needs real submission state, usually provided by `ngxSignalForm` alongside `[formRoot]` or by an explicit `submittedStatus` signal you pass yourself.
 - Use `combineShowErrors()` when aggregating multiple field visibility signals.
 - Use `shouldShowErrors()` only for lower-level imperative logic.
 
@@ -580,7 +584,7 @@ Avoid:
 ### Do
 
 - use bundle imports when appropriate
-- use `[formRoot]` + `ngxSignalForm` for toolkit-backed forms
+- use `form[formRoot]` for basic toolkit forms and add `ngxSignalForm` when you need `'on-submit'`, `submittedStatus`, or shared form context
 - use `appearance="outline"`, `appearance="stacked"`, or `appearance="plain"`
 - provide real bound-control `id`s
 - use explicit `fieldName` when wrapper context or `id` is unavailable
