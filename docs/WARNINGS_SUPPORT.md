@@ -71,35 +71,38 @@ const passwordForm = form(signal({ password: '' }), (path) => {
 });
 ```
 
-#### Alternative: Using `customError()` Directly
+#### Alternative: returning a plain validation error literal
+
+`warningError()` is the recommended helper, but it's just a thin wrapper around
+the `ValidationError` shape. You can return the literal yourself when you want
+to keep all validators in one import block:
 
 ```typescript
-import {
-  form,
-  required,
-  minLength,
-  validate,
-  customError,
-} from '@angular/forms/signals';
+import { form, required, minLength, validate } from '@angular/forms/signals';
 
 const passwordForm = form(signal({ password: '' }), (path) => {
   // Errors (block submission)
   required(path.password, { message: 'Password is required' });
   minLength(path.password, 8, { message: 'Minimum 8 characters required' });
 
-  // Warning using customError directly
+  // Warning using a plain ValidationError literal
   validate(path.password, (ctx) => {
     const value = ctx.value();
     if (value && value.length < 12) {
-      return customError({
+      return {
         kind: 'warn:short-password',
         message: 'For better security, consider using 12+ characters',
-      });
+      };
     }
     return null;
   });
 });
 ```
+
+> `@angular/forms/signals` does **not** export a `customError()` factory —
+> validators return plain object literals matching the `ValidationError` shape,
+> or typed helpers like `requiredError()`, `emailError()`, etc. The toolkit's
+> `warningError()` is just `{ kind: \`warn:${kind}\`, message }`.
 
 **Result** (both approaches):
 
@@ -158,13 +161,13 @@ const registrationForm = form(
       return null;
     });
 
-    // Confirm password error
+    // Confirm password error (cross-field: read sibling via ctx.valueOf)
     validate(path.confirmPassword, (ctx) => {
       if (ctx.value() !== ctx.valueOf(path.password)) {
-        return customError({
+        return {
           kind: 'password-mismatch',
           message: 'Passwords must match',
-        });
+        };
       }
       return null;
     });
@@ -419,15 +422,15 @@ headless, and custom submit flows can all share the same partitioning logic.
 
 > This section is migration context only. `@ngx-signal-forms/toolkit` does not depend on `ngx-vest-forms` at runtime.
 
-| Feature             | Vest.js (ngx-vest-forms)       | Signal Forms Toolkit                       |
-| ------------------- | ------------------------------ | ------------------------------------------ |
-| **Native Warnings** | ✅ Yes                         | ❌ No (convention-based)                   |
-| **API**             | `warn()` function              | `warningError()` helper or `customError()` |
-| **Separate Arrays** | ✅ `errors[]` and `warnings[]` | ❌ Single `errors[]` array                 |
-| **Type Safety**     | ✅ TypeScript discriminated    | ⚠️ Convention-based filtering              |
-| **Form Validity**   | Warnings don't affect validity | Warnings are filtered out                  |
-| **WCAG Compliance** | ✅ Same approach               | ✅ Same approach                           |
-| **Developer UX**    | Built-in `warn()` function     | `warningError()` helper function           |
+| Feature             | Vest.js (ngx-vest-forms)       | Signal Forms Toolkit                     |
+| ------------------- | ------------------------------ | ---------------------------------------- |
+| **Native Warnings** | ✅ Yes                         | ❌ No (convention-based)                 |
+| **API**             | `warn()` function              | `warningError()` helper or plain literal |
+| **Separate Arrays** | ✅ `errors[]` and `warnings[]` | ❌ Single `errors[]` array               |
+| **Type Safety**     | ✅ TypeScript discriminated    | ⚠️ Convention-based filtering            |
+| **Form Validity**   | Warnings don't affect validity | Warnings are filtered out                |
+| **WCAG Compliance** | ✅ Same approach               | ✅ Same approach                         |
+| **Developer UX**    | Built-in `warn()` function     | `warningError()` helper function         |
 
 ## Limitations
 
@@ -443,6 +446,142 @@ If Signal Forms adds native warning support in the future, the toolkit will:
 1. Maintain backward compatibility with the `'warn:'` convention
 2. Add support for native warning APIs
 3. Provide migration utilities to convert convention-based warnings to native warnings
+
+---
+
+## Advanced: error flow and message resolution
+
+Read this section when you need to understand _how_ errors and warnings flow
+through the toolkit — e.g. when writing custom headless consumers, custom
+submit flows, or when errors don't appear where you expect.
+
+### How errors flow
+
+```text
+signal({ email: '', name: '' })
+  │
+  ▼
+form(signal, schema)
+  │
+  ├─ email ──► errors(): ValidationError[]        (direct errors only)
+  │            errorSummary(): WithFieldTree[]     (includes nested)
+  │
+  └─ name  ──► errors(): ValidationError[]
+               errorSummary(): WithFieldTree[]
+  │
+  ▼
+form tree root
+  └─► errorSummary(): WithFieldTree[]              (ALL errors, all fields)
+```
+
+Angular Signal Forms validators produce `ValidationError` objects with a `kind`
+and optional `message`. When using `errorSummary()`, errors are enriched with a
+`fieldTree` reference and an optional `formField` directive pointer for focus
+handling.
+
+### `errors()` vs `errorSummary()`
+
+| Method           | Scope                            | Includes nested | Used by                 |
+| ---------------- | -------------------------------- | --------------- | ----------------------- |
+| `errors()`       | Direct field errors only         | No              | Headless error-state    |
+| `errorSummary()` | All errors including descendants | Yes             | Fieldset, error summary |
+
+The toolkit's `readErrors()` utility prefers `errorSummary()` when available and
+falls back to `errors()`, so headless consumers can point at either a
+`FieldTree` or a `FieldState`:
+
+```typescript
+// packages/toolkit/headless/src/lib/utilities.ts
+export function readErrors(state: unknown): ValidationError[] {
+  if (typeof state !== 'object' || state === null) return [];
+
+  const candidate = state as {
+    errorSummary?: () => ValidationError[];
+    errors?: () => ValidationError[];
+  };
+
+  if (typeof candidate.errorSummary === 'function') {
+    return candidate.errorSummary();
+  }
+
+  if (typeof candidate.errors === 'function') {
+    return candidate.errors();
+  }
+
+  return [];
+}
+```
+
+### Message resolution — 3-tier priority
+
+The toolkit resolves the visible error message through a 3-tier priority system:
+
+```text
+1. Validator message    → error.message (set in schema definition)
+2. Registry message     → NGX_ERROR_MESSAGES provider (app-wide defaults)
+3. Fallback             → "Invalid" (last resort)
+```
+
+**Validator-level messages** live next to the validation rule:
+
+```typescript
+const myForm = form(signal({ email: '' }), (path) => {
+  required(path.email, { message: 'Email is required' });
+  email(path.email, { message: 'Must be a valid email address' });
+});
+```
+
+**Registry-level messages** provide app-wide defaults so you don't repeat yourself.
+Keys are camelCase error kinds; the payload for parameterized kinds destructures
+the validator's own fields:
+
+```typescript
+import { provideErrorMessages } from '@ngx-signal-forms/toolkit';
+
+provideErrorMessages({
+  required: 'This field is required',
+  email: 'Please enter a valid email',
+  minLength: ({ minLength }) => `At least ${minLength} characters required`,
+  maxLength: ({ maxLength }) => `At most ${maxLength} characters allowed`,
+});
+```
+
+### Field label resolution
+
+Error summaries display a human-readable label next to each message. By default,
+`humanizeFieldPath` strips the Angular prefix, splits camelCase, and joins
+segments with `/`:
+
+```text
+ng.form0.address.postalCode → Address / Postal code
+contactEmail                → Contact email
+```
+
+Override globally via `provideFieldLabels()`:
+
+```typescript
+import { provideFieldLabels } from '@ngx-signal-forms/toolkit';
+
+provideFieldLabels({
+  contactEmail: 'E-mailadres',
+  'address.postalCode': 'Postcode',
+});
+```
+
+For dynamic i18n or a fully custom resolver, pass a factory:
+
+```typescript
+provideFieldLabels(() => {
+  const translate = inject(TranslateService);
+  return (path) =>
+    translate.instant(`fields.${path}`) || humanizeFieldPath(path);
+});
+```
+
+Import `humanizeFieldPath` from `@ngx-signal-forms/toolkit/headless` to compose
+it as a fallback inside custom resolvers.
+
+---
 
 ## References
 

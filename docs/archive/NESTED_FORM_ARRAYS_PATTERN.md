@@ -1,5 +1,20 @@
 # Nested Form Arrays with Angular Signal Forms & NgRx Signal Store
 
+> **📦 Archived — not part of the toolkit docs.**
+>
+> This document is an NgRx Signal Store architecture guide that happens to use
+> `@ngx-signal-forms/toolkit`. The toolkit-specific content fits in ~200 lines
+> and has been extracted to
+> [`docs/COMPLEX_NESTED_FORMS.md`](../COMPLEX_NESTED_FORMS.md) — start there if
+> you're looking for how the toolkit's fieldset, error summary, and strategy
+> inheritance work in nested forms.
+>
+> The content below is preserved as a reference for readers who want the full
+> state-management deep dive with NgRx Signal Store (`withMutations`,
+> `withEntityResources`, `linkedSignal`, multi-step wizard store composition,
+> Zod + StandardSchema, auto-save). It is **not** maintained as part of the
+> toolkit's public documentation.
+
 ## Table of Contents
 
 - [Problem Statement](#problem-statement)

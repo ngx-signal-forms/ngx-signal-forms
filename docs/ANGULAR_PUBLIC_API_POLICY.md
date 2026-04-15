@@ -107,6 +107,7 @@ The root `@ngx-signal-forms/toolkit` entry point enumerates its public re-export
 
 ## Related
 
+- [Angular vs Toolkit](./ANGULAR_VS_TOOLKIT.md) — User-level overview of what the toolkit adds
 - [Package Architecture](./PACKAGE_ARCHITECTURE.md) — Entry point structure and dependency hierarchy
 - [Custom Controls](./CUSTOM_CONTROLS.md) — How custom controls interact with the toolkit
-- [Parse Errors and Warnings](./PARSE_ERRORS_AND_WARNINGS.md) — Error flow and warning convention
+- [Warnings Support](./WARNINGS_SUPPORT.md) — Warning convention plus error flow and message resolution (advanced section)
