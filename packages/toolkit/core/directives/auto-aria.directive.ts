@@ -114,7 +114,7 @@ export class NgxSignalFormAutoAriaDirective {
     return this.#visibilityByStrategy();
   }
 
-  readonly #element = inject(ElementRef<HTMLElement>);
+  readonly #element: ElementRef<HTMLElement> = inject(ElementRef);
   readonly #injector = inject(Injector);
   readonly #context = inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true });
   readonly #ariaModeSignal = inject(NGX_SIGNAL_FORM_ARIA_MODE, {

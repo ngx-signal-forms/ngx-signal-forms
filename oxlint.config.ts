@@ -137,6 +137,18 @@ export default defineConfig({
     // These are load-bearing in Angular/Vitest and can't be rewritten.
     'import/no-unassigned-import': 'off',
 
+    // Pedantic-category jsdoc rules that demand `@param`/`@returns` tags on
+    // every function. This codebase intentionally uses narrative JSDoc
+    // (description-first, no tags); the `check-*` rules below still validate
+    // any tags that *are* present. Disabling the `require-*` family keeps
+    // pedantic: warn usable without flooding the signal with tag demands.
+    'jsdoc/require-param': 'off',
+    'jsdoc/require-param-type': 'off',
+    'jsdoc/require-param-description': 'off',
+    'jsdoc/require-returns': 'off',
+    'jsdoc/require-returns-type': 'off',
+    'jsdoc/require-returns-description': 'off',
+
     // Rules auto-enabled via category and therefore NOT listed here:
     //   - `prefer-readonly-parameter-types`, `strict-void-return` → via `pedantic: warn`
     //   - `no-unnecessary-condition`, `prefer-optional-chain` → via `nursery: warn`
@@ -151,6 +163,16 @@ export default defineConfig({
         '**/*.spec.js',
         '**/*.test.js',
       ],
+      globals: {
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        vi: 'readonly',
+      },
       rules: {
         'unicorn/consistent-function-scoping': 'off',
         '@typescript-eslint/prefer-readonly-parameter-types': 'off',
