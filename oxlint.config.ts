@@ -42,6 +42,18 @@ export default defineConfig({
     node: true,
     es2024: true,
   },
+  settings: {
+    jsdoc: {
+      // TSDoc standard tags that oxlint's JSDoc plugin doesn't recognize
+      // out of the box. Self-mapping tells `jsdoc/check-tag-names` to treat
+      // them as known, so we can keep using TSDoc conventions in public
+      // API comments without the rule complaining.
+      tagNamePreference: {
+        remarks: 'remarks',
+        packageDocumentation: 'packageDocumentation',
+      },
+    },
+  },
   globals: {
     ngDevMode: 'readonly',
   },

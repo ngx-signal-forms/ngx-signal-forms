@@ -23,7 +23,9 @@ export type SignalLike<T> = Signal<T> | (() => T);
 /**
  * Accepts reactive (Signal/function) or static values.
  *
- * @internal Used internally by toolkit utilities. Not part of the public API.
+ * Used internally by toolkit utilities. Not part of the public API.
+ *
+ * @internal
  * @template T The type of value when unwrapped
  */
 export type ReactiveOrStatic<T> = SignalLike<T> | T;

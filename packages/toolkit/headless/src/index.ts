@@ -1,5 +1,5 @@
 /**
- * @ngx-signal-forms/toolkit/headless
+ * `@ngx-signal-forms/toolkit/headless`
  *
  * Headless (renderless) primitives for Angular Signal Forms.
  *

@@ -1,5 +1,5 @@
 /**
- * @fileoverview Styled assistive components for form fields.
+ * @file Styled assistive components for form fields.
  *
  * These components provide visual feedback and supplementary information
  * for form fields, including hints, character counts, errors, warnings,

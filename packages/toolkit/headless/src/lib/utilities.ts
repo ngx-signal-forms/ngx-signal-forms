@@ -254,7 +254,9 @@ interface HeadlessErrorStateCore {
  * `NgxHeadlessErrorStateDirective` to derive the error/warning split,
  * presence flags, and ARIA region IDs.
  *
- * @internal Exposed to `error-state.directive.ts` via a named export only.
+ * Exposed to `error-state.directive.ts` via a named export only.
+ *
+ * @internal
  */
 export function buildHeadlessErrorState(
   fieldState: ReadSignal<unknown>,

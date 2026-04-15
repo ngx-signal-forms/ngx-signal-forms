@@ -1,5 +1,5 @@
 /**
- * @ngx-signal-forms/toolkit/vest
+ * `@ngx-signal-forms/toolkit/vest`
  *
  * Optional convenience helpers for using Vest with Angular Signal Forms.
  *

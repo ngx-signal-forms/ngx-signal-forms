@@ -1,5 +1,5 @@
 /**
- * @ngx-signal-forms/toolkit/debugger
+ * `@ngx-signal-forms/toolkit/debugger`
  *
  * Development debugging tools for Angular Signal Forms.
  * Provides a visual debugger panel that displays form state, validation errors,
