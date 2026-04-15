@@ -18,19 +18,17 @@
 npm install @ngx-signal-forms/toolkit
 ```
 
-Using Vest for business-policy validation? See the
-[`@ngx-signal-forms/toolkit/vest`](#ngx-signal-formstoolkitvest) entry point
-below for install and usage details — Vest is an optional peer dependency and
-is only needed when you import that entry point.
+**N.B.**
+Using [Vestjs](https://vestjs.dev/) for business-policy validation? See the [`@ngx-signal-forms/toolkit/vest`](#ngx-signal-formstoolkitvest) entry point below for install and usage details
+_Vest is an optional peer dependency and is only needed when you import that entry point._
 
 ## Release & Support
 
 - Compatibility matrix: [`COMPATIBILITY.md`](./COMPATIBILITY.md)
 
 > `@ngx-signal-forms/toolkit` aims to keep its own public API stable, but it
-> currently builds on Angular Signal Forms, which Angular still marks as
-> experimental. See the compatibility guidance before adopting a stable major in
-> production.
+> currently builds on Angular Signal Forms, which Angular still marks as **experimental**.
+> See the compatibility guidance before adopting a stable major in production.
 
 ---
 
