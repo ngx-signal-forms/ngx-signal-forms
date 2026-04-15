@@ -1,53 +1,55 @@
 # Async Validation
 
-## Overview
+## Intent
 
-Validating against a server (e.g., "Is this username taken?") introduces complexity: race conditions, debouncing typeahead, and loading indicators.
+Validating against a server ("is this username taken?") is notoriously tricky: race conditions, debouncing, loading indicators, and canceling stale requests. This demo shows how Angular Signal Forms' `validateHttp` and the toolkit's wrapper handle the lifecycle declaratively.
 
-This demo highlights how Angular Signal Forms handles this elegantly via **Async Validators**.
+## Toolkit features showcased
 
-## Feature Spotlight: `validateHttp` & Debouncing
+- `validateHttp(path, { request, onSuccess, onError })` — built-in async validator with automatic cancellation on value change.
+- `pending()` / `status()` signals — exposed per-field so you can show spinners or "Checking…" text with `@if`.
+- `NgxFormField` wrapper — picks up pending state and renders consistent feedback.
+- Suffix projection (`<span suffix>`) inside the wrapper — pattern for loading indicators next to the input.
+- `createOnInvalidHandler()` — focus-first-invalid on submit.
+- Declarative `submission` wiring — submit stays disabled while validation is `pending()`.
 
-### Handling Race Conditions
+## Form model
 
-When a user types quickly ("u" -> "us" -> "use" -> "user"), you don't want 4 concurrent requests. Signal Forms automatically cancels pending validations when the value changes.
+- Signal model: `signal<Registration>({ username: '' })`.
+- Schema: `form(model, registrationSchema, { submission })`.
 
-### Configurable Debounce
+## Validation rules
 
-You can control _when_ the request fires.
+### Errors
 
-```typescript
-validateHttp(
-  path.username,
-  async (val) => {
-    return api.checkUsername(val);
-  },
-  { debounce: 300 },
-);
-```
+- Username — required.
+- Username — `validateHttp` hits `fake-api/check-user/:value`; if `response.available === false`, emits `usernameTaken` with a dynamic message.
 
-### The `pending` State
+### Warnings
 
-While validation is in flight:
+- None.
 
-- `form.username.status()` becomes `'pending'`.
-- `form.username.pending()` signal becomes `true`.
-- You can show a spinner easily:
+## Strong suites
 
-  ```html
-  @if (form.username.pending()) { <spinner /> }
-  ```
+- Canonical async validation reference: no manual `switchMap`, no manual cancellation, no manual pending flag.
+- Integrates cleanly with submission — button is disabled while `pending()` is true so you cannot submit an unresolved check.
+- Shows the suffix projection pattern for loading indicators inside the wrapper.
 
-## Feature Spotlight: Wrapper Integration
+## Key files
 
-The `NgxFormField` wrapper notices this pending state. If you inspect the `async-validation.form.html`, you might see it automatically provides feedback or styles (depending on configuration) without extra template logic.
+- [async-validation.form.ts](async-validation.form.ts) — `validateHttp` setup, submission wiring, state debugger.
+- [async-validation.page.ts](async-validation.page.ts) — page wrapper.
 
-## Key Files
+## How to test
 
-- [async-validation.form.ts](async-validation.form.ts): The validator definition.
+1. Run the demo and navigate to `/advanced-scenarios/async-validation`.
+2. Type `admin` quickly — confirm only one request fires at the end (stale requests cancelled).
+3. Watch the "Checking…" suffix appear while the simulated request is in flight.
+4. Leave the value as `admin` and wait — confirm the `usernameTaken` error renders once the response arrives.
+5. Change to a different value and confirm the error clears as the new validation succeeds.
+6. Click submit while validation is still pending — confirm the button stays disabled.
 
-## How to Test
+## Related
 
-1. **Type Fast**: Type "admin" quickly. Notice only one request fires at the end.
-2. **Observe**: See the "Checking..." indicator (or visual state change) while the request simulates network latency.
-3. **Taken Username**: Enter "admin". Wait for the simulated API to report the username as unavailable. See the error message appear.
+- [Cross-Field Validation](../cross-field-validation/README.md) — synchronous validators that read sibling fields.
+- [Submission Patterns](../submission-patterns/README.md) — declarative submission paired with async rules.

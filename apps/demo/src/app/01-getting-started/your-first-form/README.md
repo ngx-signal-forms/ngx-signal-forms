@@ -1,49 +1,54 @@
-# Your First Form (Toolkit Intro)
+# Your First Form
 
-## Overview
+## Intent
 
-This demo is your introduction to **@ngx-signal-forms/toolkit**. It takes a standard contact form and enhances it with the toolkit's core directives to solve the accessibility boilerplate you would otherwise hand-wire in plain Signal Forms templates.
+Your introduction to `@ngx-signal-forms/toolkit`. Takes a plain contact form and shows how the toolkit's core directives remove the accessibility boilerplate you would otherwise hand-wire in bare Angular Signal Forms templates.
 
-## Feature Spotlight: `NgxSignalFormToolkit`
+## Toolkit features showcased
 
-### What is it?
+- `NgxSignalFormToolkit` — root directive that provides auto-ARIA (`aria-invalid`, `aria-describedby`, `aria-required`) and the shared form/error context.
+- `NgxFormFieldErrorComponent` — strategy-aware error rendering with `role="alert"` and automatic message resolution.
+- `errorStrategy` binding — switch between `on-touch`, `on-submit`, and `immediate` from a single input.
+- `createOnInvalidHandler()` — declarative focus-first-invalid behavior on failed submit.
 
-The `NgxSignalFormToolkit` is a directive applied to the `<form>` element. It acts as the "brain" for your form's template logic.
+## Form model
 
-### Key Powers
+- Signal model: `signal<ContactFormModel>({ name, email, message })`.
+- Schema: `form(model, contactFormSchema, { submission })`.
 
-1. **Auto-ARIA**: automatically syncs `aria-invalid` and `aria-describedby` on your inputs by matching them to their computed signal state.
-2. **Validation Context**: Provides a registry for error messages so child components (like `NgxFormFieldError`) know what to display without you passing strings down.
-3. **Form Context**: Shares form-level state such as error strategy and submitted status with child toolkit components, so error rendering stays consistent without prop drilling.
+## Validation rules
 
-### Usage
+### Errors
 
-```html
-<!-- Just add the directive and bind the form signal -->
-<form [formRoot]="contactForm" ngxSignalForm>
-  <!-- Clean inputs, no manual aria bindings needed! -->
-  <input [formField]="contactForm.name" />
+- Name — required; min length 2.
+- Email — required; email format.
+- Message — required; min length 10.
 
-  <!-- Reusable error component -->
-  <ngx-form-field-error [formField]="contactForm.name" />
-</form>
-```
+### Warnings
 
-## Feature Spotlight: `NgxFormFieldError`
+- None.
 
-Instead of writing `at @if (touched && invalid)` blocks, use this component. It:
+## Strong suites
 
-- Automatically detects the error strategy (default: "on touch").
-- Finds the correct error message (Validator -> Registry -> Default).
-- Renders with `role="alert"`.
+- Simplest possible toolkit onboarding: one directive, one error component, zero manual ARIA wiring.
+- Shows the `errorStrategy` knob without pulling in wrappers, headless utilities, or external validators.
+- Good baseline to fork when building a new form from scratch.
 
-## Key Files
+## Key files
 
-- [your-first-form.form.ts](your-first-form.form.ts): Basic setup.
-- [your-first-form.page.ts](your-first-form.page.ts): Shows the `ErrorDisplayModeSelectorComponent`.
+- [your-first-form.form.ts](your-first-form.form.ts) — component, model, toolkit directives.
+- [your-first-form.validations.ts](your-first-form.validations.ts) — schema definition.
+- [your-first-form.page.ts](your-first-form.page.ts) — page wrapper and error-strategy selector.
 
-## How to Test
+## How to test
 
-1. **Auto-ARIA**: Inspect the inputs. Notice `aria-required="true"` and `aria-invalid` appear automatically.
-2. **Error Strategies**: Use the dropdown at the top to switch between "On Touch", "On Submit", and "Immediate". Notice how `NgxFormFieldError` respects this global setting instantly without code changes.
-3. **Deterministic field linking**: Confirm each control has a stable `id`, and toolkit-managed errors/hints stay connected through `aria-describedby`.
+1. Run the demo and navigate to `/getting-started/your-first-form`.
+2. Inspect any input in devtools — confirm `aria-required`, `aria-invalid`, and `aria-describedby` appear automatically.
+3. Switch the error strategy dropdown between "On Touch", "On Submit", and "Immediate" and observe how errors surface without code changes.
+4. Submit an empty form to see focus move to the first invalid field.
+5. Fix one field at a time and confirm each error clears as rules pass.
+
+## Related
+
+- [Error Display Modes](../../02-toolkit-core/error-display-modes/README.md) — deeper dive into strategies.
+- [Complex Forms](../../04-form-field-wrapper/complex-forms/README.md) — next step with the wrapper component.

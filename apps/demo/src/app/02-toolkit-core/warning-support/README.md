@@ -1,54 +1,58 @@
-# Warning Support (Non-Blocking Validation)
+# Warning Support
 
-## Overview
+## Intent
 
-Standard validation is binary: valid or invalid. But real-world forms often need **Warnings**—suggestions that alert the user (e.g., "Password is weak") but **do not block submission**.
+Real-world forms often need _non-blocking_ feedback — "weak password", "disposable email domain" — that guides users without preventing submission. This demo shows the toolkit's `warn:*` convention, warning-aware styling, and warning-tolerant submission.
 
-This demo highlights the toolkit's native support for "Soft Validation".
+## Toolkit features showcased
 
-## Feature Spotlight: Warnings in Schema
+- `warn:*` error kinds — any `ValidationError` whose `kind` starts with `warn:` is treated as advisory.
+- `NgxFormFieldErrorComponent` — renders blocking errors with `role="alert"` and warnings with `role="status"` / `aria-live="polite"`, plus distinct styling.
+- `submitWithWarnings()` — warning-tolerant submit helper used with `<form novalidate>` instead of Angular's native `submit()` (which treats every validation result as blocking).
+- Separation of blocking errors from warnings at the form-state level.
 
-### Defining Warnings
+## Form model
 
-You define warnings in your schema just like errors, but you wrap them or use specific warning utilities. (Note: In strict schema definitions, this often involves specific return types or metadata).
+- Signal model: `signal<PasswordFormModel>({ username, email, password })`.
+- Schema: `form(model, passwordFormSchema)` plus manual submit wiring.
 
-### The "Warnings present" State
+## Validation rules
 
-Angular Signal Forms still treats validation results as errors at the form-state level.
-This demo shows the toolkit's warning convention on top of that baseline:
+### Errors
 
-- Warnings are identified by `kind` values prefixed with `warn:`.
-- The UI renders warnings separately from blocking errors.
-- Submission is allowed when you opt into the toolkit's warning-aware submission helper.
+- Username — required; min length 3.
+- Email — required; email format.
+- Password — required; min length 8.
 
-## Feature Spotlight: Warning-Aware Submission
+### Warnings
 
-The toolkit provides helpers to handle submission UX when warnings are present:
+- `warn:short-username` — username between 3 and 5 characters.
+- `warn:disposable-email` — email from a disposable provider (`tempmail.com`, `throwaway.email`, `10minutemail.com`).
+- `warn:weak-password` — password between 8 and 11 characters.
+- `warn:simple-password` — password missing 3 of 4 character classes (upper/lower/digit/symbol).
 
-```typescript
-await submitWithWarnings(this.form, async () => {
-  // Continue with submission even when only warn:* messages are present.
-});
-```
+## Strong suites
 
-This demo keeps submission manual on purpose. Angular's native `submit()` still
-treats all validation results as blocking, so the warning-aware path is shown
-with a plain `<form novalidate>` plus `submitWithWarnings(...)`.
+- Clearest example of the `warn:*` convention and the visual/ARIA split between errors and warnings.
+- Shows the _manual_ submission path: when you can't (or don't want to) use declarative `submission`, `submitWithWarnings` is the supported escape hatch.
+- Good reference for policy-style guidance where blocking would be user-hostile.
 
-## Toolkit Visualization
+## Key files
 
-The `NgxFormFieldError` component (and the Wrapper) automatically handles styling differentiation:
+- [warning-support.validations.ts](warning-support.validations.ts) — blocking rules and `warn:*` advisories.
+- [warning-support.form.ts](warning-support.form.ts) — `submitWithWarnings` wiring.
+- [warning-support.page.ts](warning-support.page.ts) — page wrapper and debugger.
 
-- **Errors**: Render in **Red** with `role="alert"`.
-- **Warnings**: Render in **Yellow/Orange** (often with a different icon).
+## How to test
 
-## Key Files
+1. Run the demo and navigate to `/toolkit-core/warning-support`.
+2. Enter username `abcd` — submission stays enabled; the amber "short username" warning appears.
+3. Enter email `me@tempmail.com` — disposable email warning appears.
+4. Enter password `password123` — weak + simple warnings appear (still submittable).
+5. Clear each required field to see blocking errors render in red with `role="alert"`.
+6. Submit with only warnings present — confirm the action runs; submit with a blocking error — confirm it is rejected.
 
-- [warning-support.validations.ts](warning-support.validations.ts): Look for the warning rule definitions.
-- [warning-support.form.ts](warning-support.form.ts): Handling the submission flow.
+## Related
 
-## How to Test
-
-1. **Trigger Warning**: Enter a password like "password123". It's valid length, but might trigger a "Weak password" warning.
-2. **Submit**: Notice the button is **not disabled** by warnings alone.
-3. **UI Feedback**: Observe the visual distinction between the "Required" error (Red) and the "Weak Password" warning (Orange).
+- [Vest-Only Validation](../../05-advanced/vest-validation/README.md) — warnings coming from a Vest suite.
+- [Zod + Vest Validation](../../05-advanced/zod-vest-validation/README.md) — layered errors + warnings.

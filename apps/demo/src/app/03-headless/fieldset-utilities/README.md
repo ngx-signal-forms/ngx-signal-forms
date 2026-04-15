@@ -1,54 +1,60 @@
 # Headless Fieldset + Utilities
 
-## Overview
+## Intent
 
-Demonstrates headless fieldset grouping plus the `createErrorState`,
-`createCharacterCount`, and `createFieldStateFlags` utilities for fully
-custom UI layouts.
+Shows the headless bundle for teams that want full control over markup and styling. Uses renderless directives for fieldset grouping and form summaries, plus composable utilities (`createErrorState`, `createCharacterCount`, `createFieldStateFlags`) to build custom UI sections without bringing in the wrapper component.
+
+## Toolkit features showcased
+
+- `NgxHeadlessToolkit` — barrel import for the headless directive bundle.
+- `ngxSignalFormHeadlessErrorSummary` — clickable, strategy-aware form-level summary.
+- `ngxSignalFormHeadlessFieldset` — grouped state and aggregated errors.
+- `ngxSignalFormHeadlessErrorState` — per-field error visibility driven by the active strategy.
+- `ngxSignalFormHeadlessFieldName` — resolves humanized field names.
+- `createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()` — composable factories for custom UI.
+- `provideFieldLabels()` — customize summary labels (e.g. for i18n).
 
 ## Form model
 
-- Signal model via `signal<HeadlessDeliveryModel>()`.
-- Form instance created with `form(model, deliverySchema)`.
+- Signal model: `signal<HeadlessDeliveryModel>()`.
+- Schema: `form(model, deliverySchema)`.
 
-## Validation overview
+## Validation rules
 
 ### Errors
 
-- Contact email: required + email format.
-- Address: street, city, postal code required; minimum lengths for street and city.
-- Delivery notes: maximum length 200.
+- Contact email — required; email format.
+- Address street — required; min length.
+- Address city — required; min length.
+- Address postal code — required.
+- Delivery notes — max length 200.
 
 ### Warnings
 
-- Postal code: format suggestion (ZIP pattern).
-- Delivery notes: short note length (less than 20 characters).
+- `warn:postal-format` — postal code does not match ZIP pattern.
+- `warn:short-notes` — delivery notes shorter than 20 characters.
 
-## Toolkit usage
+## Strong suites
 
-- `NgxHeadlessToolkit` bundle for headless directives.
-- `ngxSignalFormHeadlessErrorSummary` for a clickable form-level summary.
-- `ngxSignalFormHeadlessFieldset` for group state and aggregated errors.
-- `ngxSignalFormHeadlessErrorState` for per-field error state.
-- `ngxSignalFormHeadlessFieldName` for field-name resolution.
-- `createErrorState()`, `createCharacterCount()`, and
-  `createFieldStateFlags()` utilities for custom sections.
-- `provideFieldLabels()` to customize field names shown in the summary
-  (e.g. for i18n).
-
-## Other tools
-
-- None.
+- The go-to reference for design systems that cannot adopt the `NgxFormField` wrapper and need to own every DOM node.
+- Utilities demonstrate that error/character/flag state are available as plain functions — no component needed.
+- Shows how to keep aggregated fieldset errors and a clickable error summary working without the assistive components.
 
 ## Key files
 
-- `fieldset-utilities.form.ts` — headless directives and utility usage.
-- `fieldset-utilities.page.ts` — demo wrapper and debugger.
+- [fieldset-utilities.form.ts](fieldset-utilities.form.ts) — headless directives and utility composition.
+- [fieldset-utilities.page.ts](fieldset-utilities.page.ts) — page wrapper and debugger.
 
 ## How to test
 
-1. Run the demo app.
-2. Navigate to `/headless/fieldset-utilities`.
-3. Trigger postal code and delivery note warnings.
-4. Submit to see the custom form summary and aggregated fieldset errors.
-5. Interact with the notes field to watch the utility-derived state flags.
+1. Run the demo and navigate to `/headless/fieldset-utilities`.
+2. Submit an empty form — observe the clickable summary aggregate every error; click an entry to focus its control.
+3. Type `1234` in postal code to trigger the format warning without blocking submission.
+4. Type fewer than 20 characters in delivery notes to trigger the short-notes warning.
+5. Watch the character count section update live via `createCharacterCount()`.
+6. Inspect aggregated fieldset errors in the address group.
+
+## Related
+
+- [Complex Forms](../../04-form-field-wrapper/complex-forms/README.md) — the wrapper-based equivalent.
+- [Submission Patterns](../../05-advanced/submission-patterns/README.md) — shares the error-summary idea with assistive components.

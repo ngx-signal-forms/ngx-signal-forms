@@ -1,60 +1,61 @@
-# Custom Controls integration
+# Custom Controls Integration
 
-## Overview
+## Intent
 
-Angular Signal Forms changes how we handle custom inputs. We no longer use `ControlValueAccessor`. Instead, we rely on standard **Signals** and **Inputs/Outputs** (or Models).
+Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with plain signals and `FormValueControl`. This demo shows how to build custom inputs (star rating, native switch, slider) that integrate seamlessly with the toolkit's auto-ARIA, wrapper layout, and explicit control-semantics system.
 
-This demo shows how to build a custom "Star Rating" component that integrates seamlessly with `@ngx-signal-forms/toolkit`.
+## Toolkit features showcased
 
-## Feature Spotlight: `FormValueControl` Interface
+- `FormValueControl` interface — lightweight contract exposing value/touched signals in place of CVA.
+- `NgxFormField` wrapper — automatic label/error/hint linkage for custom components.
+- `ngxSignalFormControl="switch"` — native checkbox switch semantics (inline row layout).
+- `ngxSignalFormControl="checkbox"` — opt-in checkbox semantics for a standard checkbox.
+- `ngxSignalFormControl="slider"` — custom slider with `layout: 'custom'` and `ariaMode: 'manual'` so the control owns its own `aria-describedby` chain.
+- Component-scoped control presets inherited via `provideNgxSignalFormControlPresets()`.
 
-To make a custom component play nicely with the toolkit's auto-ARIA and wrapper features, it typically implements a lightweight contract (often just exposing the right signals).
+## Form model
 
-### No More `writeValue` / `registerOnChange`
+- Signal model: `signal<CustomControlsModel>({ productName, rating, serviceRating, emailUpdates, shareReviewPublicly, accessibilityAudit })`.
+- Schema: `form(model, customControlsSchema)`.
 
-The legacy forms API required complex boilerplate. With Signal Forms, your custom control simply needs:
+## Validation rules
 
-1. An Input for the value (or Model).
-2. A way to notify changes (updating the model).
-3. Optional: handling of "blur" for touched state.
+### Errors
 
-```typescript
-// Simplified Concept
-@Component(...)
-export class RatingControl {
-  // The form field signal passed from parent
-  readonly formField = input.required<FormField<number>>();
+- Product name — required.
+- Rating — required; min 1.
+- Service rating — required; min 1.
+- Email updates switch — required (must be toggled on).
+- Share-review checkbox — required.
+- Accessibility audit slider — required; min 1.
 
-  // Update value directly through the signal API
-  setRating(val: number) {
-    this.formField().controls.setValue(val);
-  }
-}
-```
+### Warnings
 
-## Feature Spotlight: Auto-Discovery
+- None.
 
-When wrapped in `ngx-signal-form-field-wrapper`, the toolkit attempts to automatically link labels and error messages to your custom control, provided it uses standard identifiers or `[formField]` bindings correctly.
+## Strong suites
 
-## Feature Spotlight: Explicit control semantics
+- The only demo that exercises all three control-semantics options (`switch`, `checkbox`, `slider`) side by side.
+- Shows that custom controls need no CVA glue — just a signal contract and the `ngxSignalFormControl` hint.
+- Proves that a custom component can own its own ARIA wiring (`ariaMode: 'manual'`) while still rendering wrapper errors.
 
-This demo now shows three distinct semantics paths side by side:
+## Key files
 
-1. a native checkbox switch that declares `ngxSignalFormControl="switch"`
-2. a standard checkbox that opts into toolkit checkbox handling with `ngxSignalFormControl="checkbox"`
-3. a slider-style custom control that declares `ngxSignalFormControl="slider"` and inherits component-scoped slider presets for `layout: 'custom'` and `ariaMode: 'manual'`
+- [custom-controls.form.ts](custom-controls.form.ts) — consuming form and wrapper bindings.
+- [custom-controls.html](custom-controls.html) — template with the three control semantics paths.
+- [custom-controls.validations.ts](custom-controls.validations.ts) — schema rules.
+- `apps/demo/src/app/shared/controls/rating-control` — reusable star rating implementation.
 
-That combination demonstrates both one-off explicit semantics and provider-scoped defaults without changing Angular Signal Forms' underlying control contracts.
+## How to test
 
-## Key Files
+1. Run the demo and navigate to `/form-field-wrapper/custom-controls`.
+2. Click stars to set a rating; watch the debug panel update instantly.
+3. Tab into the rating control, use arrow keys, and blur — confirm "touched" state updates and errors render below.
+4. Blur the share-review checkbox without checking it and verify the wrapper error appears via explicit checkbox semantics.
+5. Blur the accessibility-audit slider empty and confirm it keeps its own `aria-describedby` chain while still rendering wrapper errors.
+6. Toggle the email-updates switch to observe the inline-row preset applied at the app level.
 
-- [custom-controls.form.ts](custom-controls.form.ts): The consuming form.
-- `apps/demo/src/app/shared/controls/rating-control`: The implementation of the reusable component.
+## Related
 
-## How to Test
-
-1. **Interaction**: Click the stars to set a value. Watch the debug panel update instantly.
-2. **Keyboard**: Tab into the rating control. Use arrow keys. Notice the "touched" state updates on blur/exit.
-3. **Validation**: Clear the rating (if allowed). See the standard `NgxFormFieldError` render below the custom component.
-4. **Checkbox opt-in**: Blur the public-review checkbox without checking it and verify the wrapper/error linkage comes from explicit checkbox semantics.
-5. **Manual ARIA slider**: Blur the accessibility-audit slider empty and verify it keeps its own `aria-describedby` chain while still rendering wrapper errors.
+- [Complex Forms](../complex-forms/README.md) — wrapper usage for nested/array-heavy forms.
+- [Global Configuration](../../05-advanced/global-configuration/README.md) — where the app-level presets are registered.

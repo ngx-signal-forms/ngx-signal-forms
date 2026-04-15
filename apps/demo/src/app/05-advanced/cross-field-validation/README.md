@@ -1,40 +1,56 @@
 # Cross-Field Validation
 
-## Overview
+## Intent
 
-Validating a single field is easy. Validating relationships _between_ fields (e.g., "End Date must be after Start Date") is harder because it depends on multiple signals.
+Validating a single field is easy; validating _relationships_ between fields ("check-out must be after check-in", "this promo only applies when guest count is small") depends on multiple signals. This demo shows how to use `validate()` with `ctx.valueOf(path.*)` to reach sibling values cleanly.
 
-This demo shows how to use the **Validation Context** to access sibling values.
+## Toolkit features showcased
 
-## Feature Spotlight: `validate` with Context
+- `validate(path, (ctx) => …)` — schema-level cross-field validator.
+- `ctx.valueOf(path.sibling)` — the supported way to read another field's value from inside a validator.
+- Custom `kind` strings (`dateRange`, `invalidPromo`) — routed to the matching error messages by the toolkit.
+- `NgxFormField` wrapper + `NgxFormFieldHint` — hint text that explains the cross-field rule in-line.
+- `createOnInvalidHandler()` — focus-first-invalid on submit.
 
-In standard validators, you just get the value. In cross-field validators, you get a **context object**.
+## Form model
 
-### Accessing Sibling Values
+- Signal model: `signal<Booking>({ checkIn, checkOut, guests, promoCode })`.
+- Schema: `form(model, bookingSchema, { submission })`.
 
-Use `ctx.value` for the current field, and `ctx.parent.value()` (or similar transversal) to reach others. Or, better yet, rely on the signal model state if accessible, but strict schema validation often prefers the context.
+## Validation rules
 
-```typescript
-validate(path.confirmPassword, (value) => {
-  const password = model().password; // Accessing the signal directly
-  return value === password ? null : { mismatch: true };
-});
-```
+### Errors
 
-_Note: The exact API depends on whether you use the functional `validate` or schema-based rules._
+- Check-in — required.
+- Check-out — required; must be strictly after check-in (`dateRange`).
+- Guests — required; min 1; max 10.
+- Promo code — `STARTER100` / `SMALLGROUP` only valid when guests ≤ 4 (`invalidPromo`).
 
-## Feature Spotlight: Where to Attach the Error?
+### Warnings
 
-This is a common design decision:
+- None.
 
-1.  **On the Field**: Attach "Mismatch" error to the `confirmPassword` field. (Shown in this demo).
-2.  **On the Group**: Attach "Invalid Date Range" to the parent group.
+## Strong suites
 
-## Key Files
+- Cleanest reference for reading sibling values from a validator without touching the signal model directly.
+- Shows the design decision point ("attach error to field vs. group") in practice — errors land on the secondary field (`checkOut`, `promoCode`), not the parent group.
+- Validators fire reactively when either side of the relationship changes.
 
-- [cross-field-validation.form.ts](cross-field-validation.form.ts): The cross-field logic.
+## Key files
 
-## How to Test
+- [cross-field-validation.form.ts](cross-field-validation.form.ts) — schema, cross-field validators, wrapper wiring.
+- [cross-field-validation.page.ts](cross-field-validation.page.ts) — page wrapper.
 
-1.  **Date Range**: Pick a Check-Out date _before_ the Check-In date. See the error appear.
-2.  **Promo Code**: The promo code "SMALLGROUP" is only valid if guests < 5. Change guest count to 6 and watch the promo field invalidating immediately.
+## How to test
+
+1. Run the demo and navigate to `/advanced-scenarios/cross-field-validation`.
+2. Pick a check-out date _before_ the check-in date — confirm the `dateRange` error appears on check-out.
+3. Change the check-in date so the range becomes valid — confirm the error clears without touching check-out.
+4. Enter promo code `SMALLGROUP` with guests ≤ 4 — no error.
+5. Bump the guests count to 6 — confirm the promo field invalidates immediately (validator runs on sibling change).
+6. Submit an invalid form and confirm focus lands on the first invalid cross-field error.
+
+## Related
+
+- [Async Validation](../async-validation/README.md) — server-backed validators.
+- [Advanced Wizard](../advanced-wizard/README.md) — cross-step (not just cross-field) validation.

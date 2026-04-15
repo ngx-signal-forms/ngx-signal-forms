@@ -1,79 +1,59 @@
 # Submission Patterns
 
-## Overview
+## Intent
 
-Handling form submission manually requires juggling state: disabling buttons, showing loading spinners, catching errors, resetting flags.
+Manual submission plumbing — disabling buttons, tracking loading, catching errors, focusing the first invalid field — is boilerplate you should not rewrite per form. This demo showcases declarative submission via `form(..., { submission })` + `[formRoot]`, paired with the GOV.UK-style error summary for accessible failure recovery.
 
-This demo showcases **declarative submission via `form(..., { submission })` + `[formRoot]`** and best practices for server integration.
+## Toolkit features showcased
 
-## Feature Spotlight: Declarative Submission with `[formRoot]`
+- `form(model, schema, { submission })` — declarative `action` + `onInvalid` lifecycle.
+- `[formRoot]` directive — orchestrates `preventDefault`, `novalidate`, submitting state, and invalid-submit handling.
+- `createOnInvalidHandler()` — focuses the first invalid field on failed submit.
+- `<ngx-form-field-error-summary>` — strategy-aware, aggregated, clickable error summary (`role="alert"`, `aria-live="assertive"`).
+- `focusBoundControl()` — click-to-focus from the summary into the control.
+- `humanizeFieldPath` + `provideFieldLabels()` — readable field names in the summary.
+- `submitting()` signal — drives the submit button's disabled/loading UI.
+- `[submittedStatus]` public binding — shows passing submitted state explicitly while still reading from toolkit context.
 
-The form is configured with a `submission` action in `form(...)`, and the `<form [formRoot]="...">` directive orchestrates submit behavior.
+## Form model
 
-### What it handles for you
+- Signal model: `signal<RegistrationModel>()`.
+- Schema: `form(model, registrationSchema, { submission })`.
 
-1. **`event.preventDefault()`**: No manual submit plumbing needed.
-2. **Loading State**: Automatically sets a `submitting` signal while async action runs.
-3. **Invalid Submit Handling**: `onInvalid` can focus the first invalid field and mark visibility state.
-4. **Consistent UX**: Submission lifecycle is centralized in one place.
+## Validation rules
 
-### Usage Example
+### Errors
 
-```typescript
-readonly myForm = form(this.#model, schema, {
-  submission: {
-    action: async (data) => {
-      await this.apiService.save(data().value());
-      return null;
-    },
-    onInvalid: createOnInvalidHandler(),
-  },
-});
-```
+- Username — required; min length 3; `invalid-username` when value contains anything outside `[a-zA-Z0-9_]`.
+- Password — required; min length 8.
+- Confirm password — required.
+- Password / confirm password — root-level cross-field validator emits `password-mismatch` when the two values differ.
 
-## Feature Spotlight: Error Summary (GOV.UK Pattern)
+### Warnings
 
-This demo includes a `<ngx-form-field-error-summary>` at the top of the form. It aggregates all field errors into a clickable list — each entry focuses the associated control when clicked.
+- None.
 
-- **Strategy-aware**: Inherits `errorStrategy` from the form context (works with `on-touch`, `on-submit`, `immediate`)
-- **Explicit public API showcase**: Passes `[submittedStatus]` explicitly while still reading the value from toolkit form context
-- **Click-to-focus**: Uses Angular's `focusBoundControl()` under the hood
-- **Deduplicated**: Same error shown only once even if multiple fields produce it
-- **WCAG 2.2**: Uses `role="alert"` with `aria-live="assertive"` for screen readers
+## Strong suites
 
-```html
-<ngx-form-field-error-summary
-  [formTree]="registrationForm"
-  [submittedStatus]="explicitSubmittedStatus()"
-  summaryLabel="Please fix the following errors before submitting:"
-/>
-```
+- The reference implementation for production-grade submission UX: no manual `preventDefault`, no manual submitting flags, no per-field focus juggling.
+- Error summary pattern is ready-to-copy for any page with a large number of fields.
+- Plays well with every error strategy — switch to `on-submit` to see "quiet until save" behavior.
 
-Field names shown in the summary (e.g. `Username`, `Password`) are resolved
-via `humanizeFieldPath` by default. Use `provideFieldLabels()` to customize
-them for i18n or project-specific labels — see the
-[toolkit README](../../../../../packages/toolkit/README.md#field-label-customization).
+## Key files
 
-## Feature Spotlight: "On Submit" Error Strategy
+- [submission-patterns.form.ts](submission-patterns.form.ts) — declarative submission and `onInvalid` handler.
+- [submission-patterns.page.ts](submission-patterns.page.ts) — page wrapper, error-strategy selector, and server-error toggle.
 
-Some forms shouldn't show inline errors immediately (while typing) or even on blur. They should stay quiet until the user hits "Save".
+## How to test
 
-This demo binds the strategy as `[errorStrategy]="errorDisplayMode()"` (defaults to `on-touch`, can be switched from the page control):
+1. Run the demo and navigate to `/advanced-scenarios/submission-patterns`.
+2. Submit an empty form and observe the error summary at the top with one entry per invalid field.
+3. Click any summary entry and confirm focus jumps to the matching control.
+4. Check "Simulate Server Error" and submit a valid form — observe the submit button disable, the loading text appear, and the server error banner render.
+5. Switch the error-strategy selector to `on-submit` and confirm errors stay hidden until the first submit attempt.
+6. Fix errors one at a time and confirm the summary shrinks and clears.
 
-- **Before Submit**: Behavior follows the currently selected strategy.
-- **After Failed Submit**: Invalid fields appear according to that strategy.
+## Related
 
-## Key Files
-
-- [submission-patterns.form.ts](submission-patterns.form.ts): Declarative submission and invalid handling.
-- [submission-patterns.page.ts](submission-patterns.page.ts): Demo wrapper.
-
-## How to Test
-
-1. **Toggle Server Error**: Check the "Simulate Server Error" box.
-2. **Click Submit**:
-   - Observe the button become disabled while `submitting()` is true.
-   - Observe the loading state text.
-   - See the server error banner when the simulated request fails.
-3. **Validation Check**: Clear a required field and submit. Errors are shown according to the selected error display strategy.
-4. **Error Summary**: With errors present, observe the error summary at the top of the form. Click any entry to jump to the corresponding field.
+- [Error Display Modes](../../02-toolkit-core/error-display-modes/README.md) — strategy primer.
+- [Headless Fieldset + Utilities](../../03-headless/fieldset-utilities/README.md) — headless equivalent of the error summary.
