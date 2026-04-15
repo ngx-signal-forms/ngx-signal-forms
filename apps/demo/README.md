@@ -30,7 +30,7 @@ Start here for the recommended first toolkit example.
 - ✅ Deterministic control `id` guidance for field linking
 - ✅ Strategy toggle so you can compare timing behavior immediately
 
-**Example:** `your-first-form` — contact form onboarding
+**Example:** [`your-first-form`](./src/app/01-getting-started/your-first-form/README.md) — contact form onboarding
 
 ### Level 2: Toolkit Core
 
@@ -38,10 +38,10 @@ Start here for the recommended first toolkit example.
 
 Focus on the two core behaviors most teams need first.
 
-| Example                 | Focus                   | What You Learn                                  |
-| ----------------------- | ----------------------- | ----------------------------------------------- |
-| **error-display-modes** | Error strategies        | `immediate`, `on-touch`, `on-submit`            |
-| **warning-support**     | Non-blocking validation | Warnings vs errors and accessible announcements |
+| Example                                                                            | Focus                   | What You Learn                                  |
+| ---------------------------------------------------------------------------------- | ----------------------- | ----------------------------------------------- |
+| **[error-display-modes](./src/app/02-toolkit-core/error-display-modes/README.md)** | Error strategies        | `immediate`, `on-touch`, `on-submit`            |
+| **[warning-support](./src/app/02-toolkit-core/warning-support/README.md)**         | Non-blocking validation | Warnings vs errors and accessible announcements |
 
 ### Level 3: Headless
 
@@ -54,7 +54,7 @@ Renderless primitives for custom UI systems.
 - ✅ Character count + utility helpers
 - ✅ Explicit field naming and custom markup ownership
 
-**Example:** `fieldset-utilities`
+**Example:** [`fieldset-utilities`](./src/app/03-headless/fieldset-utilities/README.md)
 
 ### Level 4: Form Field Wrapper
 
@@ -62,10 +62,10 @@ Renderless primitives for custom UI systems.
 
 The batteries-included path for reusable field UI.
 
-| Example             | Focus                     | What You Learn                                      |
-| ------------------- | ------------------------- | --------------------------------------------------- |
-| **complex-forms**   | Nested objects + arrays   | Wrapper composition, grouped sections, long-form UX |
-| **custom-controls** | FormValueControl patterns | Custom control integration with wrapper + auto-ARIA |
+| Example                                                                          | Focus                     | What You Learn                                      |
+| -------------------------------------------------------------------------------- | ------------------------- | --------------------------------------------------- |
+| **[complex-forms](./src/app/04-form-field-wrapper/complex-forms/README.md)**     | Nested objects + arrays   | Wrapper composition, grouped sections, long-form UX |
+| **[custom-controls](./src/app/04-form-field-wrapper/custom-controls/README.md)** | FormValueControl patterns | Custom control integration with wrapper + auto-ARIA |
 
 ### Level 5: Advanced Scenarios
 
@@ -73,31 +73,31 @@ The batteries-included path for reusable field UI.
 
 Production-ready patterns for real applications.
 
-| Example                    | Focus                    | What You Learn                                 |
-| -------------------------- | ------------------------ | ---------------------------------------------- |
-| **global-configuration**   | App-level defaults       | `provideNgxSignalFormsConfig`, local overrides |
-| **submission-patterns**    | Async submission UX      | Loading, server errors, error summary patterns |
-| **advanced-wizard**        | Multi-step orchestration | Wizard flow with NgRx Signal Store + Zod       |
-| **async-validation**       | Remote checks            | Pending states and async validation            |
-| **cross-field-validation** | Dependent rules          | Sibling-aware validation logic                 |
-| **vest-validation**        | Business rules via Vest  | Standard Schema + toolkit wrapper integration  |
-| **zod-vest-validation**    | Layered validation       | Contract validation + business policy together |
+| Example                                                                              | Focus                    | What You Learn                                 |
+| ------------------------------------------------------------------------------------ | ------------------------ | ---------------------------------------------- |
+| **[global-configuration](./src/app/05-advanced/global-configuration/README.md)**     | App-level defaults       | `provideNgxSignalFormsConfig`, local overrides |
+| **[submission-patterns](./src/app/05-advanced/submission-patterns/README.md)**       | Async submission UX      | Loading, server errors, error summary patterns |
+| **[advanced-wizard](./src/app/05-advanced/advanced-wizard/README.md)**               | Multi-step orchestration | Wizard flow with NgRx Signal Store + Zod       |
+| **[async-validation](./src/app/05-advanced/async-validation/README.md)**             | Remote checks            | Pending states and async validation            |
+| **[cross-field-validation](./src/app/05-advanced/cross-field-validation/README.md)** | Dependent rules          | Sibling-aware validation logic                 |
+| **[vest-validation](./src/app/05-advanced/vest-validation/README.md)**               | Business rules via Vest  | Standard Schema + toolkit wrapper integration  |
+| **[zod-vest-validation](./src/app/05-advanced/zod-vest-validation/README.md)**       | Layered validation       | Contract validation + business policy together |
 
 ## Feature-to-Example Matrix
 
-- **Toolkit onboarding** → `getting-started/your-first-form` — smallest recommended setup
-- **Error strategy modes** → `toolkit-core/error-display-modes` — compare timing behavior directly
-- **Warning support** → `toolkit-core/warning-support` — non-blocking validation semantics
-- **Headless grouped state** → `headless/fieldset-utilities` — summary, fieldset aggregation, utility helpers
-- **Wrapper long-form composition** → `form-field-wrapper/complex-forms` — consolidated wrapper basics, grouped sections, nested arrays
-- **Custom control integration** → `form-field-wrapper/custom-controls` — wrapper + custom value controls
-- **Global toolkit defaults** → `advanced-scenarios/global-configuration` — app-level provider composition and per-form overrides
-- **Async submit + server error UX** → `advanced-scenarios/submission-patterns` — submission lifecycle and recovery
-- **Async remote validation** → `advanced-scenarios/async-validation` — pending + remote validation
-- **Cross-field constraints** → `advanced-scenarios/cross-field-validation` — dependent field rules
-- **Business validation with Vest** → `advanced-scenarios/vest-validation` — blocking + warning policy rules
-- **Contract + policy layering** → `advanced-scenarios/zod-vest-validation` — Zod + Vest without duplicate UI plumbing
-- **Advanced multi-step orchestration** → `advanced-scenarios/advanced-wizard` — canonical wizard example
+- **Toolkit onboarding** → [`your-first-form`](./src/app/01-getting-started/your-first-form/README.md) — smallest recommended setup
+- **Error strategy modes** → [`error-display-modes`](./src/app/02-toolkit-core/error-display-modes/README.md) — compare timing behavior directly
+- **Warning support** → [`warning-support`](./src/app/02-toolkit-core/warning-support/README.md) — non-blocking validation semantics
+- **Headless grouped state** → [`fieldset-utilities`](./src/app/03-headless/fieldset-utilities/README.md) — summary, fieldset aggregation, utility helpers
+- **Wrapper long-form composition** → [`complex-forms`](./src/app/04-form-field-wrapper/complex-forms/README.md) — consolidated wrapper basics, grouped sections, nested arrays
+- **Custom control integration** → [`custom-controls`](./src/app/04-form-field-wrapper/custom-controls/README.md) — wrapper + custom value controls
+- **Global toolkit defaults** → [`global-configuration`](./src/app/05-advanced/global-configuration/README.md) — app-level provider composition and per-form overrides
+- **Async submit + server error UX** → [`submission-patterns`](./src/app/05-advanced/submission-patterns/README.md) — submission lifecycle and recovery
+- **Async remote validation** → [`async-validation`](./src/app/05-advanced/async-validation/README.md) — pending + remote validation
+- **Cross-field constraints** → [`cross-field-validation`](./src/app/05-advanced/cross-field-validation/README.md) — dependent field rules
+- **Business validation with Vest** → [`vest-validation`](./src/app/05-advanced/vest-validation/README.md) — blocking + warning policy rules
+- **Contract + policy layering** → [`zod-vest-validation`](./src/app/05-advanced/zod-vest-validation/README.md) — Zod + Vest without duplicate UI plumbing
+- **Advanced multi-step orchestration** → [`advanced-wizard`](./src/app/05-advanced/advanced-wizard/README.md) — canonical wizard example
 
 ## Quick Start
 
@@ -247,4 +247,4 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 - Check `id` attribute is set on input elements
 - Verify toolkit directives are imported
 
-**Next:** Start with `01-getting-started/your-first-form` and then move through the consolidated sections! 🚀
+**Next:** Start with [`01-getting-started/your-first-form`](./src/app/01-getting-started/your-first-form/README.md) and then move through the consolidated sections! 🚀

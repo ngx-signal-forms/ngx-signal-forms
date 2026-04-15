@@ -17,7 +17,7 @@ This section demonstrates **production-ready patterns** for real-world applicati
 
 ## 📂 Examples
 
-### global-configuration
+### [global-configuration](./global-configuration/README.md)
 
 **Focus:** Application-wide toolkit configuration
 
@@ -37,7 +37,7 @@ This section demonstrates **production-ready patterns** for real-world applicati
 
 ---
 
-### submission-patterns
+### [submission-patterns](./submission-patterns/README.md)
 
 **Focus:** Async form submission with error handling
 
@@ -59,7 +59,7 @@ This section demonstrates **production-ready patterns** for real-world applicati
 
 ---
 
-### advanced-wizard
+### [advanced-wizard](./advanced-wizard/README.md)
 
 **Focus:** Canonical multi-step production wizard
 
@@ -80,7 +80,7 @@ This section demonstrates **production-ready patterns** for real-world applicati
 
 ---
 
-### vest-validation
+### [vest-validation](./vest-validation/README.md)
 
 **Focus:** Pure Vest business validation through Angular Signal Forms
 
@@ -99,7 +99,7 @@ This section demonstrates **production-ready patterns** for real-world applicati
 
 ---
 
-### zod-vest-validation
+### [zod-vest-validation](./zod-vest-validation/README.md)
 
 **Focus:** Layer contract validation and business policy without duplication
 
@@ -115,6 +115,42 @@ This section demonstrates **production-ready patterns** for real-world applicati
 - Zod Standard Schema validation
 - Vest business suites
 - Angular Signal Forms layered validation callbacks
+
+---
+
+### [async-validation](./async-validation/README.md)
+
+**Focus:** Remote validation with pending state and automatic cancellation
+
+**What you'll learn:**
+
+- `validateHttp(path, …)` for server-backed validators
+- `pending()` / `status()` signals driving loading indicators
+- Automatic cancellation of in-flight validations when the value changes
+- Gating submission while validation is pending
+
+**Technologies:**
+
+- Angular Signal Forms `validateHttp`
+- `@ngx-signal-forms/toolkit/form-field` wrapper + suffix projection
+
+---
+
+### [cross-field-validation](./cross-field-validation/README.md)
+
+**Focus:** Validators that depend on sibling field values
+
+**What you'll learn:**
+
+- `validate(path, (ctx) => …)` with `ctx.valueOf(path.sibling)`
+- When to attach an error to the field vs. the parent group
+- Reactive re-validation when either side of the relationship changes
+- Custom `kind` strings for cross-field errors
+
+**Technologies:**
+
+- Angular Signal Forms `validate` + schema context
+- Toolkit form-field wrapper for consistent error rendering
 
 ---
 

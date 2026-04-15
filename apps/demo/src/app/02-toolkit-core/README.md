@@ -13,7 +13,7 @@ Concepts that used to live in standalone comparison/state pages are now taught t
 
 ## 📂 Active Examples
 
-### error-display-modes
+### [error-display-modes](./error-display-modes/README.md)
 
 **Focus:** Error visibility strategies in action
 
@@ -28,7 +28,7 @@ Concepts that used to live in standalone comparison/state pages are now taught t
 
 ---
 
-### warning-support
+### [warning-support](./warning-support/README.md)
 
 **Focus:** Non-blocking validation patterns
 

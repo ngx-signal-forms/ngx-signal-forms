@@ -15,7 +15,7 @@ Instead of splitting wrapper basics, grouped fieldsets, and long-form behavior a
 
 ## 📂 Active Examples
 
-### complex-forms
+### [complex-forms](./complex-forms/README.md)
 
 **Focus:** Wrapper composition in realistic long forms
 
@@ -28,7 +28,7 @@ Instead of splitting wrapper basics, grouped fieldsets, and long-form behavior a
 - Switch, checkbox, and radio-group semantics inside one long form
 - Long-form readability and wrapper consistency
 
-### custom-controls
+### [custom-controls](./custom-controls/README.md)
 
 **Focus:** Integrating custom controls with wrapper semantics
 

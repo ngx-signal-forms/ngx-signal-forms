@@ -535,11 +535,6 @@ in context.
 
 - [Angular public API policy](./docs/ANGULAR_PUBLIC_API_POLICY.md) — ownership boundary between Angular and the toolkit (contributor/auditor level)
 
-**Advanced demo READMEs**
-
-- [Vest-only validation](./apps/demo/src/app/05-advanced/vest-validation/README.md)
-- [Zod + Vest validation](./apps/demo/src/app/05-advanced/zod-vest-validation/README.md)
-
 **AI skill**
 
 ```bash
