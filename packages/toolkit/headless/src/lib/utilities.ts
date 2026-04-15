@@ -21,9 +21,9 @@ import {
   type FieldLabelResolver,
 } from '@ngx-signal-forms/toolkit/core';
 
-export { humanizeFieldPath } from '@ngx-signal-forms/toolkit/core';
-
 import type { CharacterCountLimitState } from './character-count.directive';
+
+export { humanizeFieldPath };
 import {
   DEFAULT_DANGER_THRESHOLD,
   DEFAULT_WARNING_THRESHOLD,

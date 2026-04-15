@@ -14,6 +14,9 @@ const ANGULAR_FORM_NAME_PREFIX = /^ng\.form\d+\./u;
  * humanizeFieldPath('ng.form0.email');     // 'Email'
  * ```
  *
+ * @param fieldName - Raw field path, optionally prefixed with `ng.form{n}.`
+ * @returns Human-readable label; nested segments are joined with ` / `
+ *
  * @public
  */
 export function humanizeFieldPath(fieldName: string): string {
@@ -48,6 +51,9 @@ export function humanizeFieldPath(fieldName: string): string {
  * Strips the Angular internal form prefix from a raw field name.
  *
  * Resolver functions receive the stripped path, not the raw `ng.form0.*` name.
+ *
+ * @param rawName - Raw field name that may include Angular's `ng.form{n}.` prefix
+ * @returns Field name with the Angular internal form prefix removed
  *
  * @internal
  */
