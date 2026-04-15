@@ -153,6 +153,7 @@ describe('unwrapValue', () => {
 
     it('should call function returning undefined', () => {
       const fn = () => undefined;
+      // oxlint-disable-next-line @typescript-eslint/no-confusing-void-expression -- test intentionally exercises an undefined-returning function; the void-shaped result is the assertion target
       const result = unwrapValue(fn);
       expect(result).toBeUndefined();
     });
