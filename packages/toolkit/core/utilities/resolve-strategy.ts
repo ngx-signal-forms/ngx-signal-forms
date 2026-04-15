@@ -7,27 +7,23 @@ import type { NgxSignalFormContext } from '../directives/ngx-signal-form.directi
 
 type StrategyInput = ErrorDisplayStrategy | null | undefined;
 
-// `!= null` (intentional loose equality) is the idiomatic "neither null nor
-// undefined" nullish check. Rewriting to explicit `!== null && !== undefined`
-// bloats a hot path for zero semantic change. The three oxlint-disable lines
-// below freeze this check for v1; behavior must not change.
+const isSet = <T>(value: T | null | undefined): value is T =>
+  value !== null && value !== undefined;
+
 export function resolveErrorDisplayStrategy(
   inputStrategy: StrategyInput,
   contextStrategy?: ResolvedErrorDisplayStrategy | null,
   configDefault?: ResolvedErrorDisplayStrategy | null,
 ): ResolvedErrorDisplayStrategy {
-  // oxlint-disable-next-line eqeqeq -- intentional nullish check, see comment above
-  if (inputStrategy != null && inputStrategy !== 'inherit') {
+  if (isSet(inputStrategy) && inputStrategy !== 'inherit') {
     return inputStrategy;
   }
 
-  // oxlint-disable-next-line eqeqeq -- intentional nullish check, see comment above
-  if (contextStrategy != null) {
+  if (isSet(contextStrategy)) {
     return contextStrategy;
   }
 
-  // oxlint-disable-next-line eqeqeq -- intentional nullish check, see comment above
-  if (configDefault != null) {
+  if (isSet(configDefault)) {
     return configDefault;
   }
 

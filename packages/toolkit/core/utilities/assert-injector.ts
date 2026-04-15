@@ -43,7 +43,7 @@ export function assertInjector<Runner extends () => unknown>(
   // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- `Function` is an object type; see alias comment at top of file
   fn: InjectionContextDebugFn,
   // Angular's Injector is inherently mutable; Readonly<Injector> is not practical here.
-  // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
+  // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- Angular's Injector is mutable by design
   injector: Injector | undefined | null,
   runner: Runner,
 ): ReturnType<Runner>;
@@ -75,7 +75,7 @@ export function assertInjector(
   // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- `Function` is an object type; see alias comment at top of file
   fn: InjectionContextDebugFn,
   // Angular's Injector is inherently mutable; Readonly<Injector> is not practical here.
-  // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
+  // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- Angular's Injector is mutable by design
   injector: Injector | undefined | null,
 ): Injector;
 
@@ -84,7 +84,7 @@ export function assertInjector(
   // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- `Function` is an object type; see alias comment at top of file
   fn: InjectionContextDebugFn,
   // Angular's Injector is inherently mutable; Readonly<Injector> is not practical here.
-  // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
+  // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- Angular's Injector is mutable by design
   injector: Injector | undefined | null,
   runner?: () => unknown,
 ) {

@@ -28,6 +28,19 @@ type DebuggerError = {
 };
 
 /**
+ * Tag a validation error payload with a `visible` flag without mutating the
+ * original. Centralises the object-spread pattern so the debugger's several
+ * error pipelines can enrich errors via `.map(withVisibility(flag))` instead
+ * of inlining `({ ...e, visible })` at every call site.
+ */
+const withVisibility =
+  (visible: boolean) =>
+  (error: { kind: string; message?: string }): DebuggerError => ({
+    ...error,
+    visible,
+  });
+
+/**
  * Signal Form Debugger Component
  *
  * A development-time debugging panel for Angular Signal Forms that displays
@@ -96,11 +109,9 @@ export class SignalFormDebuggerComponent {
     if (typeof fn === 'function') {
       const result = fn();
       return Array.isArray(result)
-        ? // oxlint-disable-next-line no-map-spread -- object spread is intentional for error payload enrichment
-          (result as Array<{ kind: string; message?: string }>).map((e) => ({
-            ...e,
-            visible,
-          }))
+        ? (result as Array<{ kind: string; message?: string }>).map(
+            withVisibility(visible),
+          )
         : [];
     }
     return [];
@@ -263,9 +274,7 @@ export class SignalFormDebuggerComponent {
                 kind: string;
                 message?: string;
               }>
-            )
-              // oxlint-disable-next-line no-map-spread -- object spread is intentional for error payload enrichment
-              .map((e) => ({ ...e, visible })),
+            ).map(withVisibility(visible)),
           );
         },
       );
@@ -280,9 +289,7 @@ export class SignalFormDebuggerComponent {
             kind: string;
             message?: string;
           }>
-        )
-          // oxlint-disable-next-line no-map-spread -- object spread is intentional for error payload enrichment
-          .map((e) => ({ ...e, visible: rootVisible }));
+        ).map(withVisibility(rootVisible));
   });
 
   /** Field-level errors (exclude root-level ones from the summary) */
@@ -309,12 +316,9 @@ export class SignalFormDebuggerComponent {
       this.errorStrategy(),
       this.submittedStatus(),
     );
-    return (
-      this.rootErrors()
-        .filter((e) => isBlockingError(e))
-        // oxlint-disable-next-line no-map-spread -- object spread is intentional for error payload enrichment
-        .map((e) => ({ ...e, visible: rootVisible }))
-    );
+    return this.rootErrors()
+      .filter((e) => isBlockingError(e))
+      .map(withVisibility(rootVisible));
   });
 
   /** Root-level warnings */
@@ -326,12 +330,9 @@ export class SignalFormDebuggerComponent {
       this.errorStrategy(),
       this.submittedStatus(),
     );
-    return (
-      this.rootErrors()
-        .filter((e) => isWarningError(e))
-        // oxlint-disable-next-line no-map-spread -- object spread is intentional for error payload enrichment
-        .map((e) => ({ ...e, visible: rootVisible }))
-    );
+    return this.rootErrors()
+      .filter((e) => isWarningError(e))
+      .map(withVisibility(rootVisible));
   });
 
   /** Field-level blocking errors */
