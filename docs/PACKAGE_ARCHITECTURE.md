@@ -18,7 +18,7 @@ single publishable package with multiple entry points:
 
 ```bash
 packages/toolkit/
-├── core/                               # Core implementation (public entry)
+├── core/                               # Core implementation (internal — not a public entry point)
 │   ├── directives/
 │   │   ├── auto-aria.directive.ts
 │   │   ├── control-semantics.directive.ts
@@ -35,8 +35,7 @@ packages/toolkit/
 │   │   ├── error-messages.provider.ts
 │   │   └── field-labels.provider.ts
 │   ├── tokens.ts
-│   ├── types.ts
-│   └── public_api.ts
+│   └── types.ts
 ├── assistive/                           # Styled assistive components entry
 │   ├── assistive-row.component.ts
 │   ├── character-count.component.ts
@@ -50,14 +49,16 @@ packages/toolkit/
 │   └── public_api.ts
 ├── headless/                            # Headless primitives entry
 │   ├── src/
+│   │   ├── index.ts
 │   │   └── lib/
 │   │       ├── error-state.directive.ts
+│   │       ├── error-summary.directive.ts
 │   │       ├── character-count.directive.ts
 │   │       ├── fieldset.directive.ts
 │   │       ├── field-name.directive.ts
 │   │       └── utilities.ts            # Shared utility functions
-│   ├── index.ts
-│   └── public_api.ts
+│   ├── ng-package.json
+│   └── README.md
 ├── vest/                                # Optional Vest integration entry
 │   ├── src/
 │   │   ├── index.ts
@@ -65,7 +66,8 @@ packages/toolkit/
 │   ├── ng-package.json
 │   └── README.md
 ├── debugger/                            # Development-time debugging tools
-│   ├── debugger.component.ts
+│   ├── signal-form-debugger.component.ts
+│   ├── debugger-badge.component.ts
 │   ├── index.ts
 │   └── ng-package.json
 ├── index.ts                             # Primary entry (providers/types)
@@ -97,10 +99,11 @@ npm install @ngx-signal-forms/toolkit
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 ```
 
-### Core Entry (Directives/Utilities)
+### Root Entry (Directives/Utilities)
 
 ```typescript
 import {
+  NgxSignalFormToolkit,
   NgxSignalFormAutoAriaDirective,
   NgxSignalFormDirective,
 } from '@ngx-signal-forms/toolkit';
@@ -128,16 +131,18 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 ```typescript
 import {
+  NgxHeadlessToolkit,
   NgxHeadlessErrorStateDirective,
+  NgxHeadlessErrorSummaryDirective,
   NgxHeadlessCharacterCountDirective,
   NgxHeadlessFieldsetDirective,
   NgxHeadlessFieldNameDirective,
   createErrorState,
   createCharacterCount,
+  createFieldStateFlags,
   readFieldFlag,
   readErrors,
   dedupeValidationErrors,
-  createUniqueId,
 } from '@ngx-signal-forms/toolkit/headless';
 ```
 
@@ -155,8 +160,8 @@ import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 vest ^6.0.0 (optional peer) ← Only when using /vest (v6+ required for Standard Schema)
         ↓
 @ngx-signal-forms/toolkit (main package)
-├── Primary: Providers/types
-├── /core (directives, utilities)
+├── Primary: Providers/types + directives + utilities (all via root entry)
+│                 /core is internal — stripped from the published exports map
 ├── /assistive (optional secondary entry - styled feedback)
 ├── /form-field (optional secondary entry)
 ├── /headless (optional secondary entry - renderless primitives)
@@ -183,7 +188,7 @@ vest ^6.0.0 (optional peer) ← Only when using /vest (v6+ required for Standard
 ### Why Headless is a Secondary Entry
 
 1. **Renderless Primitives**: State-only directives without UI rendering
-2. **Shared Utilities**: Common functions (`readFieldFlag`, `readErrors`, `dedupeValidationErrors`, `createUniqueId`) used by both form-field and custom components
+2. **Shared Utilities**: Common functions (`readFieldFlag`, `readErrors`, `dedupeValidationErrors`, `humanizeFieldPath`) used by both form-field and custom components
 3. **Design System Integration**: Perfect for custom component libraries
 4. **Host Directive Composition**: Works with Angular's Directive Composition API
 5. **Minimal Bundle**: Include only what you need
