@@ -38,6 +38,7 @@ async function enableMocking(): Promise<void> {
 }
 
 // Wrap in async IIFE to support top-level await in all build targets
+// oxlint-disable-next-line unicorn/prefer-top-level-await -- async IIFE is intentional: broad build-target compatibility (see comment above)
 void (async () => {
   // Ensure JIT compiler is available in dev server (Angular Vite builder) for components
   // that rely on templateUrl/styleUrls during E2E and local dev.

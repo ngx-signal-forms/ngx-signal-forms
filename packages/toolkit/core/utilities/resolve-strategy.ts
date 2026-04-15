@@ -7,20 +7,23 @@ import type { NgxSignalFormContext } from '../directives/ngx-signal-form.directi
 
 type StrategyInput = ErrorDisplayStrategy | null | undefined;
 
+const isSet = <T>(value: T | null | undefined): value is T =>
+  value !== null && value !== undefined;
+
 export function resolveErrorDisplayStrategy(
   inputStrategy: StrategyInput,
   contextStrategy?: ResolvedErrorDisplayStrategy | null,
   configDefault?: ResolvedErrorDisplayStrategy | null,
 ): ResolvedErrorDisplayStrategy {
-  if (inputStrategy != null && inputStrategy !== 'inherit') {
+  if (isSet(inputStrategy) && inputStrategy !== 'inherit') {
     return inputStrategy;
   }
 
-  if (contextStrategy != null) {
+  if (isSet(contextStrategy)) {
     return contextStrategy;
   }
 
-  if (configDefault != null) {
+  if (isSet(configDefault)) {
     return configDefault;
   }
 

@@ -130,7 +130,7 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
                   name="errorDisplayMode"
                   [value]="modeConfig.mode"
                   [checked]="selectedMode() === modeConfig.mode"
-                  (change)="selectedMode.set($any($event.target).value)"
+                  (change)="selectedMode.set(modeConfig.mode)"
                   class="form-radio h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
                 />
                 <span

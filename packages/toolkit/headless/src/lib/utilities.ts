@@ -378,7 +378,7 @@ export function createErrorState<TValue = unknown>(
     if (submittedStatus !== undefined) {
       return unwrapValue(submittedStatus);
     }
-    return;
+    return undefined;
   });
 
   const showErrorsSignal = showErrors(

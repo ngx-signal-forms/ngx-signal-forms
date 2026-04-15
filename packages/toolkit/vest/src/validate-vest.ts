@@ -208,6 +208,7 @@ function resolveVestWarningFieldTree(
       return fieldTree;
     }
 
+    // oxlint-disable-next-line unicorn/new-for-builtins -- Object() coercion is intentional runtime wrap for Reflect.get
     const next = Reflect.get(Object(current), segment);
     if (next === undefined) {
       return fieldTree;
@@ -443,7 +444,7 @@ function registerVestValidation<TValue>(
       const entry = getOrCreateVestRun(suite, fieldTree, value());
 
       if (!entry.initialResult?.isPending()) {
-        return;
+        return undefined;
       }
 
       return {
@@ -460,7 +461,7 @@ function registerVestValidation<TValue>(
         loader: async ({ params }) => {
           const result = await params.runResult;
           if (!isVestResultLike(result)) {
-            return;
+            return undefined;
           }
 
           return {

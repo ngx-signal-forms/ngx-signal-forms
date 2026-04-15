@@ -54,31 +54,38 @@ test.describe('Error Display Modes', () => {
 
       await formPage.submit();
 
-      // Nudge Angular change detection by blurring a field after submit,
-      // which helps environments where aria-invalid updates land on blur.
+      // After submit, the submission-error alert appears via computed signal.
+      // Playwright's auto-retrying assertion handles change detection timing
+      // directly - no blur nudge needed.
+      await expect(formPage.page.locator('#submission-error')).toBeVisible();
+    });
+  });
+
+  test('"on-submit" toggles error visibility synchronously on submit', async () => {
+    await test.step('Errors stay hidden until submit, then flip in one tick', async () => {
+      await formPage.selectErrorMode('onSubmit');
+
+      // Touch name + email with invalid values. On-submit must keep errors
+      // suppressed and helpers must report "no visible errors".
       await formPage.nameInput.focus();
       await formPage.nameInput.blur();
+      await formPage.emailInput.fill('not-an-email');
+      await formPage.emailInput.blur();
 
-      /// After submit, verify errors are displayed via accessible means
-      /// Check that at least one error feedback mechanism is present
-      await expect(async () => {
-        const hasErrorAlerts = (await formPage.errorAlerts.count()) > 0;
-        const nameHasAriaInvalid =
-          (await formPage.nameInput.getAttribute('aria-invalid')) === 'true';
-        const emailHasAriaInvalid =
-          (await formPage.emailInput.getAttribute('aria-invalid')) === 'true';
-        const hasSubmissionError = await formPage.page
-          .locator('#submission-error')
-          .isVisible();
+      const helpers = formPage.page.locator('ngx-error-display-helpers');
+      await expect(helpers).toContainText('Name errors visible: no');
+      await expect(helpers).toContainText('Email errors visible: no');
+      await expect(formPage.errorAlerts).toHaveCount(0);
 
-        const hasAccessibleErrors =
-          hasErrorAlerts ||
-          nameHasAriaInvalid ||
-          emailHasAriaInvalid ||
-          hasSubmissionError;
+      await formPage.submit();
 
-        expect(hasAccessibleErrors).toBe(true);
-      }).toPass({ timeout: 5000 });
+      // Single-tick flip: helpers report visible errors AND the submission
+      // alert appears without any extra focus/blur nudge.
+      await expect(helpers).toContainText('Name errors visible: yes');
+      await expect(helpers).toContainText('Email errors visible: yes');
+      await expect(formPage.page.locator('#submission-error')).toBeVisible();
+      await expect(formPage.nameInput).toHaveAttribute('aria-invalid', 'true');
+      await expect(formPage.emailInput).toHaveAttribute('aria-invalid', 'true');
     });
   });
 

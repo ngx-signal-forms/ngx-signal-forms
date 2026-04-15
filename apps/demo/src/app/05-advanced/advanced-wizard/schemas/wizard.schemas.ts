@@ -5,14 +5,14 @@ import { z } from 'zod';
 // ══════════════════════════════════════════════════════════════════════════════
 
 export const RequirementSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   type: z.enum(['visa', 'vaccination', 'insurance', 'document', 'other']),
   description: z.string().min(3, 'Description required'),
   completed: z.boolean().default(false),
 });
 
 export const ActivitySchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().min(2, 'Activity name required'),
   date: z.string().min(1, 'Date required'),
   duration: z.number().nonnegative('Duration must be non-negative').default(0),
@@ -41,7 +41,7 @@ function isPassportNotExpired(dateStr: string): boolean {
 
 export const DestinationSchema = z
   .object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     country: z.string().min(2, 'Country required'),
     city: z.string().min(2, 'City required'),
     arrivalDate: z.string().min(1, 'Arrival date required'),
@@ -62,10 +62,10 @@ export const DestinationSchema = z
 
 export const TravelerSchema = z
   .object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     firstName: z.string().min(1, 'First name required'),
     lastName: z.string().min(1, 'Last name required'),
-    email: z.string().email('Valid email required'),
+    email: z.email('Valid email required'),
     phone: z.string().optional(),
     dateOfBirth: z.string().optional(),
     passportNumber: z.string().min(6, 'Passport number required'),

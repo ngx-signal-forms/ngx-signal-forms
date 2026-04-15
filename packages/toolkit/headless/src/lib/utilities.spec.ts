@@ -469,10 +469,10 @@ describe('Headless Utilities', () => {
       });
 
       it('should handle many duplicates', () => {
-        const errors: ValidationError[] = Array(10).fill({
+        const errors: ValidationError[] = Array.from({ length: 10 }, () => ({
           kind: 'required',
           message: 'Required',
-        });
+        }));
 
         const result = dedupeValidationErrors(errors);
 

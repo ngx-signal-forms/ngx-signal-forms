@@ -93,6 +93,7 @@ describe('assertInjector', () => {
           return inject(Injector);
         });
         // Angular's runtime injector may not be a direct instance of Injector, but must have .get()
+        // oxlint-disable-next-line @typescript-eslint/no-deprecated -- test uses legacy Injector.get overload for coverage of fallback path
         expect(typeof result.get).toBe('function');
       });
     });

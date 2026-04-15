@@ -67,7 +67,11 @@ export function shouldShowErrors(
     case 'on-submit':
       return isInvalid && hasSubmitted;
 
+    case 'inherit':
+      return isInvalid && isTouched;
+
     default:
+      strategy satisfies never;
       return isInvalid && isTouched;
   }
 }

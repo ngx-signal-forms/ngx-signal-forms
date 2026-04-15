@@ -13,6 +13,7 @@ test.describe('Warning Support Demo', () => {
   test('should NOT show errors on initial load (CRITICAL BUG CHECK)', async ({
     page: playwrightPage,
   }) => {
+    // oxlint-disable-next-line @typescript-eslint/no-confusing-void-expression -- sentinel assertion; fixture throws on failure
     const result = await verifyNoErrorsOnInitialLoad(playwrightPage, {
       visibleFieldSelectors: [
         'input#username',

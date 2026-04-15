@@ -406,5 +406,12 @@ describe('error-strategies', () => {
         false,
       );
     });
+
+    it('should fall back to on-touch behavior for inherit strategy', () => {
+      expect(shouldShowErrors(true, true, 'inherit', 'unsubmitted')).toBe(true);
+      expect(shouldShowErrors(true, false, 'inherit', 'unsubmitted')).toBe(
+        false,
+      );
+    });
   });
 });
