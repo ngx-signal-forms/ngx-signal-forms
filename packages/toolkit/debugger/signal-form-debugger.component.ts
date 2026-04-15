@@ -426,6 +426,7 @@ export class SignalFormDebuggerComponent {
         break;
 
       case 'on-touch':
+      case 'inherit':
         errorsVisible = hasTouchedFields || submittedStatus !== 'unsubmitted';
         visibilityReason = hasTouchedFields
           ? 'Errors shown because fields were touched (blurred)'
@@ -440,10 +441,6 @@ export class SignalFormDebuggerComponent {
           submittedStatus !== 'unsubmitted'
             ? 'Errors shown because form was submitted'
             : 'Errors hidden until form submission';
-        break;
-
-      case 'inherit':
-        // Initial values preserved: errorsVisible=false, visibilityReason=''
         break;
 
       default:
