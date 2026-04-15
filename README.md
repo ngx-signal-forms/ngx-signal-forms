@@ -24,10 +24,25 @@ themable field wrapper. It is an **enhancement**, not a replacement — your `fo
 
 <table border="1" frame="void" rules="cols" cellspacing="0" cellpadding="0">
 <tr>
-  <th align="left">Plain Angular Signal Forms</th>
   <th align="left">With the toolkit</th>
+  <th align="left">Plain Angular Signal Forms</th>
 </tr>
 <tr>
+
+<td valign="top">
+
+```html
+<form [formRoot]="userForm">
+  <ngx-signal-form-field-wrapper [formField]="userForm.email">
+    <label for="email">Email</label>
+    <input id="email" type="email" [formField]="userForm.email" />
+  </ngx-signal-form-field-wrapper>
+</form>
+```
+
+The wrapper handles ARIA, error timing, `role="alert"` vs `role="status"`, hint projection, and character counts automatically.
+
+</td>
 <td valign="top">
 
 ```html
@@ -55,20 +70,6 @@ themable field wrapper. It is an **enhancement**, not a replacement — your `fo
   }
 </form>
 ```
-
-</td>
-<td valign="top">
-
-```html
-<form [formRoot]="userForm">
-  <ngx-signal-form-field-wrapper [formField]="userForm.email">
-    <label for="email">Email</label>
-    <input id="email" type="email" [formField]="userForm.email" />
-  </ngx-signal-form-field-wrapper>
-</form>
-```
-
-The wrapper handles ARIA, error timing, `role="alert"` vs `role="status"`, hint projection, and character counts automatically.
 
 </td>
 </tr>
@@ -253,9 +254,11 @@ Pull in these entry points only when you need what they add.
 Form-level context, strategy-aware error visibility, submission helpers, and warning
 utilities. Always imported; all other entry points sit on top of it.
 
-Key exports: `NgxSignalFormToolkit`, `showErrors()`, `focusFirstInvalid()`,
+Key exports: `NgxSignalFormToolkit`, `showErrors()`, `combineShowErrors()`, `focusFirstInvalid()`,
 `createOnInvalidHandler()`, `hasSubmitted()`, `warningError()`, `splitByKind()`,
-`provideFieldLabels()`, `provideNgxSignalFormsConfig()`.
+`provideFieldLabels()`, `provideErrorMessages()`, `provideNgxSignalFormsConfig()`,
+`provideNgxSignalFormsConfigForComponent()`, `provideNgxSignalFormControlPresets()`,
+`provideNgxSignalFormControlPresetsForComponent()`, `buildAriaDescribedBy()`.
 
 **[→ Core docs](./packages/toolkit/README.md)** ·
 **Demos:**
@@ -283,9 +286,10 @@ Renderless directives and utility functions that give you toolkit-managed state 
 error visibility, aggregation, focus behavior, character counts — while you control
 every bit of markup and styling.
 
-Key exports: `NgxHeadlessErrorStateDirective`, `NgxHeadlessErrorSummaryDirective`,
-`NgxHeadlessCharacterCountDirective`, `NgxHeadlessFieldsetDirective`,
-`createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()`.
+Key exports: `NgxHeadlessToolkit`, `NgxHeadlessErrorStateDirective`, `NgxHeadlessErrorSummaryDirective`,
+`NgxHeadlessCharacterCountDirective`, `NgxHeadlessFieldsetDirective`, `NgxHeadlessFieldNameDirective`,
+`createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()`,
+`readErrors()`, `dedupeValidationErrors()`.
 
 **[→ Headless docs](./packages/toolkit/headless/README.md)** ·
 **Demo:** [`fieldset-utilities` (code)](./apps/demo/src/app/03-headless/fieldset-utilities) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/headless/fieldset-utilities/)
@@ -310,6 +314,8 @@ npm install @ngx-signal-forms/toolkit vest@6.2.7
 
 Pass the form tree to inspect field state, visibility rules, and resolved errors
 during development.
+
+Key exports: `NgxSignalFormDebugger` (bundle), `SignalFormDebuggerComponent`.
 
 ```html
 <ngx-signal-form-debugger [formTree]="form" />
@@ -523,7 +529,7 @@ in context.
 - [Warnings support](./docs/WARNINGS_SUPPORT.md) — warning convention, error flow, message resolution
 - [CSS framework integration](./docs/CSS_FRAMEWORK_INTEGRATION.md) — Tailwind, Bootstrap, Material
 - [Migrating from `ngx-vest-forms`](./docs/MIGRATING_FROM_NGX_VEST_FORMS.md)
-- [Migrating RC → v1](./docs/MIGRATING_RC_TO_V1.md)
+- [Migrating beta → v1](./docs/MIGRATING_BETA_TO_V1.md)
 
 **Reference**
 
