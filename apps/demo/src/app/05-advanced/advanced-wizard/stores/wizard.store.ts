@@ -78,6 +78,7 @@ export const WizardStore = signalStore(
 
   withState({
     error: null as string | null,
+    bookingConfirmation: null as BookingResponse | null,
   }),
 
   // Compose features (order matters - navigation first, then data features)
@@ -146,6 +147,7 @@ export const WizardStore = signalStore(
       isDestinationsValid(store.destinations()),
 
     hasDestinations: () => store.destinationsDraft().length > 0,
+    hasConfirmedBooking: () => store.bookingConfirmation() !== null,
   })),
 
   // Mutations for API calls (ngrx-toolkit)
@@ -186,7 +188,7 @@ export const WizardStore = signalStore(
         // Set committed state; withLinkedState auto-updates drafts
         store.setTraveler(data.traveler);
         store.setDestinations(data.destinations);
-        patchState(store, { error: null });
+        patchState(store, { error: null, bookingConfirmation: null });
       },
       onError: (error) => {
         patchState(store, { error: 'Failed to load draft' });
@@ -205,11 +207,17 @@ export const WizardStore = signalStore(
       }),
       parse: (response) => response as BookingResponse,
       onSuccess: (response) => {
-        patchState(store, { error: null });
+        patchState(store, {
+          error: null,
+          bookingConfirmation: response,
+        });
         console.log('Booking confirmed:', response.confirmationNumber);
       },
       onError: (error) => {
-        patchState(store, { error: 'Booking submission failed' });
+        patchState(store, {
+          error: 'Booking submission failed',
+          bookingConfirmation: null,
+        });
         console.error('Booking failed:', error);
       },
     }),
@@ -244,6 +252,10 @@ export const WizardStore = signalStore(
        * Submit the booking using committed data.
        */
       submit(): void {
+        if (store.hasConfirmedBooking()) {
+          return;
+        }
+
         if (!store.isReadyToSubmit()) {
           patchState(store, { error: 'Please complete all required fields' });
           return;
@@ -258,7 +270,10 @@ export const WizardStore = signalStore(
         store.resetTraveler();
         store.setDestinations([createEmptyDestination()]);
         store.goToStep('traveler');
-        patchState(store, { error: null });
+        patchState(store, {
+          error: null,
+          bookingConfirmation: null,
+        });
       },
 
       /**
