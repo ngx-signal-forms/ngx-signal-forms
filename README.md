@@ -8,268 +8,27 @@
 [![Downloads](https://badgen.net/npm/dt/%40ngx-signal-forms%2Ftoolkit?label=Downloads)](https://www.npmjs.com/package/@ngx-signal-forms/toolkit)
 [![License](https://badgen.net/npm/license/%40ngx-signal-forms%2Ftoolkit)](https://opensource.org/licenses/MIT)
 
-> **Accessibility-first UX primitives for Angular Signal Forms**
+> **Ship accessible, themed Angular Signal Forms without writing ARIA or error-display code.**
 
-`@ngx-signal-forms/toolkit` builds on Angular Signal Forms without changing the underlying API. Angular still owns form creation, validation, and submission; the toolkit adds the missing UX layer: automatic ARIA wiring, strategy-based error display, warnings, and reusable field primitives.
+Angular Signal Forms gives you the form model, validation, and submission lifecycle.
+`@ngx-signal-forms/toolkit` adds everything Angular intentionally leaves to you:
+automatic ARIA wiring, strategy-based error timing, non-blocking warnings, and a
+themable field wrapper. It is an **enhancement**, not a replacement — your `form()`,
+`[formRoot]`, and `[formField]` code stays exactly the same.
 
-## Installation
-
-```bash
-npm install @ngx-signal-forms/toolkit
-```
-
-**N.B.**
-Using [Vestjs](https://vestjs.dev/) for business-policy validation? See the [`@ngx-signal-forms/toolkit/vest`](#ngx-signal-formstoolkitvest) entry point below for install and usage details
-_Vest is an optional peer dependency and is only needed when you import that entry point._
-
-## Release & Support
-
-- Compatibility matrix: [`COMPATIBILITY.md`](./COMPATIBILITY.md)
-
-> `@ngx-signal-forms/toolkit` aims to keep its own public API stable, but it
-> currently builds on Angular Signal Forms, which Angular still marks as **experimental**.
-> See the compatibility guidance before adopting a stable major in production.
+**[🚀 Live demo](https://ngx-signal-forms.github.io/ngx-signal-forms/)** · **[📦 npm](https://www.npmjs.com/package/@ngx-signal-forms/toolkit)** · **[📖 Package docs](./packages/toolkit/README.md)**
 
 ---
 
-## Why use it?
-
-Angular Signal Forms already gives you form creation, validation, field state, and submission.
-
-The toolkit adds the pieces Angular intentionally leaves to app and library authors:
-
-- **Progressive error display** via `immediate`, `on-touch`, and `on-submit`
-- **Automatic ARIA wiring** for invalid/required/described-by states
-- **Warnings** as non-blocking validation feedback
-- **Reusable field UI** for common layouts
-- **Headless primitives** when you want custom markup without rewriting state logic
-
----
-
-## What you get
-
-### Core: `@ngx-signal-forms/toolkit`
-
-- **`ngxSignalForm` enhancer** — adds toolkit context alongside Angular's `FormRoot` (see below)
-- automatic ARIA attributes for supported controls
-- strategy-aware error visibility helpers
-- submission helpers such as `focusFirstInvalid()` and `createOnInvalidHandler()`
-- warning utilities including `warningError()` and `splitByKind()`
-
-#### `[formRoot]` + `ngxSignalForm`: additive enhancement
-
-Angular's native `FormRoot` handles `novalidate`, `event.preventDefault()`, and calling `submit()`.
-The toolkit's `NgxSignalFormDirective` (selector: `form[formRoot][ngxSignalForm]`) is an **additive enhancer** — it activates on `<form>` elements that already have `[formRoot]` when you also add the `ngxSignalForm` attribute. It adds:
-
-1. **DI context** — child toolkit components (error display, field wrappers, headless directives) access form state through `NGX_SIGNAL_FORM_CONTEXT` without prop drilling
-2. **Submitted status tracking** — derives `'unsubmitted' → 'submitting' → 'submitted'` from Angular's native `submitting()` signal, which Angular does not expose as a status
-3. **Error display strategy** — the `[errorStrategy]` input controls when validation feedback becomes visible (`'immediate'`, `'on-touch'`, or `'on-submit'`)
-
-**`NgxSignalFormToolkit` bundles `FormRoot` + `NgxSignalFormDirective` + `NgxSignalFormAutoAriaDirective` + `NgxSignalFormControlSemanticsDirective`** — import it instead of `FormRoot` separately.
-
-> **Most forms do not need explicit control semantics.** Native text inputs,
-> textareas, selects, and ordinary wrapper usage work with the toolkit defaults.
-> Reach for `ngxSignalFormControl`, `ngxSignalFormControlAria="manual"`, or
-> control preset providers mainly for custom controls, switch-style toggles,
-> slider/composite widgets, or third-party components where the toolkit cannot
-> safely infer the desired wrapper/layout/ARIA behavior.
->
-> `ngxSignalFormControlAria="manual"` does **not** disable wrapper behavior.
-> It only means the control host owns `aria-describedby`, `aria-invalid`, and
-> `aria-required` itself, while the wrapper can still provide labels, hints,
-> errors, and field context.
-
-```typescript
-imports: [FormField, NgxSignalFormToolkit];
-```
-
-```html
-<form [formRoot]="myForm" ngxSignalForm errorStrategy="on-touch"></form>
-```
-
-### Assistive: `@ngx-signal-forms/toolkit/assistive`
-
-- `<ngx-form-field-error>` for accessible error and warning output
-- `<ngx-form-field-error-summary>` for form-level error summaries
-- `<ngx-signal-form-field-hint>`
-- `<ngx-signal-form-field-character-count>`
-
-### Form field: `@ngx-signal-forms/toolkit/form-field`
-
-- `<ngx-signal-form-field-wrapper>` with `appearance="outline"` support
-- `<ngx-signal-form-fieldset>`
-
-Most wrapper use cases need no extra control metadata. Explicit control
-semantics are primarily for controls outside the default native field families (`<input>`, `<textarea>`, `<select>`), such as
-switches, sliders, composites, and third-party widgets.
-
-For those controls, `appearance="plain"` is often the right wrapper mode: the
-wrapper still provides semantic structure and feedback, but it does not force
-the default field chrome around a widget that already has its own visual UI.
-
-### Quick FAQ: switches and custom controls
-
-**Do I need `ngxSignalFormControl="switch"` for a native checkbox styled as a switch?**
-
-No. A native `input[type="checkbox"][role="switch"]` with `[formField]` works out
-of the box — the toolkit recognizes it as a switch and applies the switch-specific
-wrapper and auto-ARIA behavior without any extra directives.
-
-```html
-<input type="checkbox" role="switch" [formField]="form.enabled" />
-```
-
-**When should I reach for `ngxSignalFormControl`, then?**
-
-Use explicit control semantics when you need one of the advanced paths:
-
-- the bound host is a custom component or third-party widget
-- you want explicit semantics instead of relying on DOM heuristics
-- you want manual ARIA ownership (`ngxSignalFormControlAria="manual"`)
-- you want preset-driven defaults for a control family (sliders, composites, etc.)
-
-See [`docs/CUSTOM_CONTROLS.md`](./docs/CUSTOM_CONTROLS.md) for concrete
-examples and [`docs/decisions/0001-control-semantics-architecture.md`](./docs/decisions/0001-control-semantics-architecture.md)
-for the design rationale behind the directive + presets split.
-
-### Headless: `@ngx-signal-forms/toolkit/headless`
-
-- renderless directives for custom design systems
-- `NgxHeadlessErrorSummaryDirective` for fully custom form-level error summaries
-- utility functions such as `createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()`, and `readErrors()`
-
-Use the headless summary directive when you want toolkit-managed aggregation,
-focus behavior, and strategy-aware visibility while keeping your own summary
-markup.
-
-### Debugger: `@ngx-signal-forms/toolkit/debugger`
-
-- a development-only form state inspector
-
-### Vest: `@ngx-signal-forms/toolkit/vest`
-
-- optional convenience helpers for using [Vest](https://vestjs.dev) with Angular Signal Forms
-- `validateVest(...)` as a thin wrapper around Angular Standard Schema support
-- `validateVestWarnings(...)` when only the warning bridge is needed
-- guidance for mapping Vest `warn()` output to toolkit-native warning UX
-
----
-
-## Angular vs toolkit
-
-| Concern                                  | Angular Signal Forms                              | Toolkit                                              |
-| ---------------------------------------- | ------------------------------------------------- | ---------------------------------------------------- |
-| Form model, validation, submit lifecycle | ✅ Native                                         | ➖ Builds on top                                     |
-| `[formRoot]` form context                | ✅ `novalidate`, `preventDefault`, `submit()`     | ✅ Adds DI context, submitted status, error strategy |
-| Progressive error timing                 | ❌ Manual                                         | ✅ Built in via `errorStrategy`                      |
-| Submitted status tracking                | ❌ Only `submitting()` signal                     | ✅ `unsubmitted → submitting → submitted`            |
-| Warning semantics                        | ❌ Manual convention needed                       | ✅ Built in via `warningError()`                     |
-| Automatic ARIA linking                   | ❌ Manual                                         | ✅ Built in                                          |
-| Reusable field UI                        | ❌ App-specific                                   | ✅ Assistive + form-field entry points               |
-| CSS status classes                       | ✅ Native `provideSignalFormsConfig({ classes })` | ➖ Use Angular’s native API alongside toolkit        |
-
----
-
-## Choosing a validation strategy
-
-For most projects, the real choice is not just **Angular vs toolkit** — it is also:
-
-- when to use Angular Signal Forms validators directly
-- when to reuse a Standard Schema validator such as Zod / generated OpenAPI schemas
-- when to use Vest for higher-order business rules
-
-These options are **complementary, not mutually exclusive**.
-In practice, it is often easiest to combine all three in the same form and let each layer handle the rules it expresses best.
-
-### Decision table
-
-| Option                                     | Best for                                                 | Strengths                                                                                                                                                                                                                                                                         | Tradeoffs                                                                                                             |
-| ------------------------------------------ | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **Angular Signal Forms schema validation** | field-local validation, async checks, and UI constraints | built into Angular; smallest dependency surface; covers `required`, `email`, `min`, `max`, `minLength`, `maxLength`, `pattern`; custom rules via `validate()` / `validateAsync()` / `validateHttp()`; conditional logic via `applyWhenValue()`; `debounce()` for expensive checks | can get verbose when many business-policy rules accumulate; less ergonomic for large grouped rule sets                |
-| **Zod / OpenAPI / Standard Schema**        | reusable contract and structural validation              | ideal when schemas already exist or are generated; keeps backend/frontend contract rules in one place; strong for shape, enums, bounds, and format rules; works through `validateStandardSchema(...)`                                                                             | not the best place for complex business policy; easy to over-centralize rules that really belong in application logic |
-| **Vest**                                   | business-policy validation                               | expressive for conditional, cross-field, and multi-rule logic; good fit for async business checks and advisory `warn()` guidance; keeps policy rules readable and grouped                                                                                                         | adds an extra validation abstraction; heavier than Angular built-ins for very simple rules                            |
-
-### Quick rule of thumb
-
-- **Angular validators** for field constraints, custom checks, and async validation
-- **Zod / OpenAPI Standard Schema** for reusable contract validation
-- **Vest** for business-policy rules and non-trivial conditional logic
-
-You do **not** need to pick only one.
-Angular Signal Forms lets you register small local validators, Standard Schema validation, and Vest rules side by side in the same schema callback.
-
-### Recommended layering
-
-For many real-world forms, the cleanest stack is:
-
-1. **Angular Signal Forms validators** for small local rules
-2. **Zod / OpenAPI Standard Schema** for contract-level validation
-3. **Vest** for higher-order business rules and `warn()` guidance
-
-Examples:
-
-- `email is required` → Angular validator
-- `country must be one of the API enum values` → Zod / OpenAPI Standard Schema
-- `VAT number is required only for business accounts in DE, NL, or BE` → Vest
-- `username is unique unless the account is in migration mode` → Vest
-
-### Combining Angular validators, Zod, and Vest
-
-This is a normal and recommended setup when a form has a mix of local UI rules, shared contract rules, and business policy.
-
-```typescript
-import { signal } from '@angular/core';
-import {
-  debounce,
-  email,
-  form,
-  minLength,
-  required,
-  validateStandardSchema,
-} from '@angular/forms/signals';
-import { validateVest } from '@ngx-signal-forms/toolkit/vest';
-
-const model = signal({
-  email: '',
-  password: '',
-  accountType: 'personal' as 'personal' | 'business',
-  vatNumber: '',
-});
-
-const signupForm = form(model, (path) => {
-  // Small field-local UI rules
-  required(path.email, { message: 'Email is required' });
-  email(path.email, { message: 'Enter a valid email address' });
-  debounce(path.email, 300);
-  minLength(path.password, 12, { message: 'Use at least 12 characters' });
-
-  // Shared contract rules from Zod / OpenAPI / Standard Schema
-  validateStandardSchema(path, SignupSchema);
-
-  // Rich business rules and advisory warnings
-  validateVest(path, signupBusinessSuite, { includeWarnings: true });
-});
-```
-
-The practical split is:
-
-- keep **small local rules** in Angular validators
-- keep **shared shape and contract rules** in Zod / OpenAPI Standard Schema
-- keep **conditional business policy** in Vest
-
-If you want the deeper decision guide for Vest specifically, see:
-
-- [`./packages/toolkit/vest/README.md`](./packages/toolkit/vest/README.md)
-
----
-
-## Code Comparison
-
-### Without toolkit (Angular's `FormRoot`)
-
-```typescript
-// imports: [FormRoot, FormField]
-```
+## See the difference
+
+<table border="1" frame="void" rules="cols" cellspacing="0" cellpadding="0">
+<tr>
+  <th align="left">Plain Angular Signal Forms</th>
+  <th align="left">With the toolkit</th>
+</tr>
+<tr>
+<td valign="top">
 
 ```html
 <form [formRoot]="userForm">
@@ -277,44 +36,59 @@ If you want the deeper decision guide for Vest specifically, see:
   <input
     id="email"
     [formField]="userForm.email"
-    [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null"
-    [attr.aria-describedby]="userForm.email().invalid() && (userForm.email().touched() || userForm().touched()) ? 'email-error' : null"
+    [attr.aria-invalid]="
+      userForm.email().invalid() ? 'true' : null
+    "
+    [attr.aria-describedby]="
+      userForm.email().invalid() &&
+      (userForm.email().touched() ||
+        userForm().touched())
+        ? 'email-error'
+        : null
+    "
   />
-  @if (userForm.email().invalid() && (userForm.email().touched() ||
-  userForm().touched())) {
+  @if ( userForm.email().invalid() && (userForm.email().touched() ||
+  userForm().touched()) ) {
   <span id="email-error" role="alert">
     {{ userForm.email().errors()[0].message }}
   </span>
   }
-  <button type="submit">Submit</button>
 </form>
 ```
 
-### With toolkit (`NgxSignalFormToolkit` enhances `FormRoot`)
-
-```typescript
-// imports: [NgxSignalFormToolkit, FormField, NgxFormField]
-```
+</td>
+<td valign="top">
 
 ```html
-<form [formRoot]="userForm" ngxSignalForm>
+<form [formRoot]="userForm">
   <ngx-signal-form-field-wrapper [formField]="userForm.email">
     <label for="email">Email</label>
-    <input id="email" [formField]="userForm.email" />
+    <input id="email" type="email" [formField]="userForm.email" />
   </ngx-signal-form-field-wrapper>
-  <button type="submit">Send</button>
 </form>
 ```
 
-**Result:** `[formRoot]` binds the form as usual; `ngxSignalForm` adds DI context, submitted status, and error strategy — so child components like `<ngx-signal-form-field-wrapper>` handle ARIA and error visibility automatically.
+The wrapper handles ARIA, error timing, `role="alert"` vs `role="status"`, hint projection, and character counts automatically.
+
+</td>
+</tr>
+</table>
 
 ---
 
-## Quick Start
+## Install
 
-The toolkit works with Angular Signal Forms as-is. Import `NgxSignalFormToolkit` (which bundles `FormRoot`) and add `ngxSignalForm` to your `<form>` element.
+```bash
+npm install @ngx-signal-forms/toolkit
+```
 
-> **Note:** The `schema()` wrapper is optional. You can pass the validation callback directly to `form()` as the second argument. `schema()` is useful when you want to define reusable validation schemas in separate files.
+Requirements: Angular 21.2+ (Signal Forms API), TypeScript 5.9+, modern browsers.
+
+> Angular Signal Forms is still marked **experimental** upstream. The toolkit's own public API aims to stay stable — see [`COMPATIBILITY.md`](./COMPATIBILITY.md) before adopting a stable major in production.
+
+---
+
+## 30-second quick start
 
 ```typescript
 import { Component, signal } from '@angular/core';
@@ -323,23 +97,22 @@ import {
   schema,
   required,
   email,
-  FormField, // Angular's [formField] — unchanged
+  FormField,
 } from '@angular/forms/signals';
 import {
-  NgxSignalFormToolkit, // Bundles FormRoot + NgxSignalFormDirective + AutoARIA + control semantics
+  NgxSignalFormToolkit,
   createOnInvalidHandler,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
   selector: 'app-contact',
-  // NgxSignalFormToolkit includes FormRoot — no separate FormRoot import needed
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <form [formRoot]="contactForm" ngxSignalForm>
+    <form [formRoot]="contactForm">
       <ngx-signal-form-field-wrapper [formField]="contactForm.email">
         <label for="email">Email</label>
-        <input id="email" [formField]="contactForm.email" type="email" />
+        <input id="email" type="email" [formField]="contactForm.email" />
       </ngx-signal-form-field-wrapper>
       <button type="submit">Send</button>
     </form>
@@ -356,9 +129,7 @@ export class ContactComponent {
     }),
     {
       submission: {
-        action: async () => {
-          console.log('Submit:', this.model());
-        },
+        action: async () => console.log('Submit:', this.model()),
         onInvalid: createOnInvalidHandler(),
       },
     },
@@ -366,221 +137,212 @@ export class ContactComponent {
 }
 ```
 
-### What the toolkit adds here
+**What you get for free:**
 
-Because `ngxSignalForm` provides DI context alongside `[formRoot]`, the field wrapper and error components work automatically:
+- ✅ `aria-invalid`, `aria-required`, `aria-describedby` wired automatically
+- ✅ Errors appear after blur or submit (default `on-touch` strategy), with `role="alert"`
+- ✅ Warnings render as `role="status"` when present
+- ✅ Hints and character counts project below the input with proper ARIA association
+- ✅ First invalid field focused on failed submit (`createOnInvalidHandler()`)
 
-- ✅ Submitted status tracking (`unsubmitted → submitting → submitted`) for strategy-aware display
-- ✅ `aria-invalid`, `aria-required`, and `aria-describedby` wired by the auto-ARIA directive
-- ✅ **Errors** display after blur OR submit (default `'on-touch'` strategy) with `role="alert"`
-- ✅ **Warnings** (non-blocking) display with `role="status"` when no errors present
-- ✅ **Hints** render below the input with proper ARIA association
-- ✅ Consistent layout with label, input, feedback messages in semantic structure
-
-> **Note:** Angular still owns `form()`, `submit()`, `submitting()`, field state, and validation. The toolkit layers accessibility, error timing, and display behavior on top.
-
----
-
-## Choose an entry point
-
-### @ngx-signal-forms/toolkit (Core)
-
-**Use this first** for form-level context, ARIA wiring, error strategies, and shared helpers.
-
-**Key exports**:
-
-- `NgxSignalFormToolkit` — Bundle import for all core directives
-- `showErrors()` — Reactive helper for strategy-aware error visibility
-- `focusFirstInvalid()` — Convenience wrapper for Angular's `focusBoundControl()` via `errorSummary()`
-- `createOnInvalidHandler()` — Factory for `onInvalid` callbacks (auto-focuses first invalid control)
-- `hasSubmitted()` — Convenience signal for completed submissions
-- `warningError()` — Create non-blocking validation messages
-- `splitByKind()` — Partition validation messages into blocking errors and warnings
-- `provideFieldLabels()` — Customize field names in error summaries (i18n, custom labels)
-
-```typescript
-import {
-  NgxSignalFormToolkit,
-  focusFirstInvalid,
-  createOnInvalidHandler,
-  hasSubmitted,
-} from '@ngx-signal-forms/toolkit';
-```
-
-**[📖 Full Documentation →](./packages/toolkit/README.md)**
+> Angular still owns `form()`, validation, `submit()`, and field state.
+> The toolkit only layers accessibility, error timing, and display on top.
+> No `ngxSignalForm` directive needed — the default `'on-touch'` strategy works out of the box.
+> See [Adding `ngxSignalForm`](#adding-form-level-context-with-ngxsignalform) for when you need more.
 
 ---
 
-### `@ngx-signal-forms/toolkit/assistive`
+## Which part of the toolkit do I need?
 
-Use this when you want feedback components without adopting the full field wrapper.
+Most projects only need the **form-field wrapper**. The other entry points exist for
+advanced and specialized cases — pull them in when you hit that specific need.
 
-**Key exports**:
+| I want to…                          | Use                                                              | Demo                                                                                                                                                       |
+| ----------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Add accessible, themed fields fast  | [`/form-field`](./packages/toolkit/form-field/README.md) wrapper | [`your-first-form`](./apps/demo/src/app/01-getting-started/your-first-form)                                                                                |
+| Control when errors appear          | Core + `errorStrategy`                                           | [`error-display-modes`](./apps/demo/src/app/02-toolkit-core/error-display-modes)                                                                           |
+| Show non-blocking warnings          | `warningError()` + wrapper                                       | [`warning-support`](./apps/demo/src/app/02-toolkit-core/warning-support)                                                                                   |
+| Build complex multi-section forms   | `/form-field` + `<ngx-signal-form-fieldset>`                     | [`complex-forms`](./apps/demo/src/app/04-form-field-wrapper/complex-forms)                                                                                 |
+| Wrap custom / third-party controls  | `/form-field` + `ngxSignalFormControl`                           | [`custom-controls`](./apps/demo/src/app/04-form-field-wrapper/custom-controls)                                                                             |
+| Bring my own markup / design system | [`/headless`](./packages/toolkit/headless/README.md) primitives  | [`fieldset-utilities`](./apps/demo/src/app/03-headless/fieldset-utilities)                                                                                 |
+| Validate with Vest business rules   | [`/vest`](./packages/toolkit/vest/README.md) entry point         | [`vest-validation`](./apps/demo/src/app/05-advanced/vest-validation)                                                                                       |
+| Combine Zod + Vest                  | `/vest` + `validateStandardSchema`                               | [`zod-vest-validation`](./apps/demo/src/app/05-advanced/zod-vest-validation)                                                                               |
+| Async / cross-field validation      | Angular validators + core helpers                                | [`async-validation`](./apps/demo/src/app/05-advanced/async-validation), [`cross-field-validation`](./apps/demo/src/app/05-advanced/cross-field-validation) |
+| Multi-step / wizard forms           | Core + `NgxSignalFormFieldset`                                   | [`advanced-wizard`](./apps/demo/src/app/05-advanced/advanced-wizard)                                                                                       |
+| Customize submission handling       | `createOnInvalidHandler`, `focusFirstInvalid`                    | [`submission-patterns`](./apps/demo/src/app/05-advanced/submission-patterns)                                                                               |
+| Set app-wide defaults               | `provideNgxSignalFormsConfig`                                    | [`global-configuration`](./apps/demo/src/app/05-advanced/global-configuration)                                                                             |
+| Debug form state during development | [`/debugger`](./packages/toolkit/debugger/README.md)             | —                                                                                                                                                          |
 
-- `NgxFormFieldErrorComponent` — Error/warning display with ARIA roles
-- `NgxFormFieldErrorSummaryComponent` — Form-level summary for blocking errors
-- `NgxFormFieldHintComponent` — Helper text below inputs
-- `NgxFormFieldCharacterCountComponent` — Character counter with maxLength detection
-- `NgxFormFieldAssistiveRowComponent` — Layout row for hints and counters
-- `warningError()`, `isWarningError()`, `isBlockingError()` — Warning utilities
+---
 
-```typescript
-import {
-  NgxFormFieldErrorComponent,
-  NgxFormFieldHintComponent,
-  warningError,
-} from '@ngx-signal-forms/toolkit/assistive';
-```
+## The main path: the form-field wrapper
+
+The wrapper is the biggest single win — one component gives you layout, labels, hints,
+errors, warnings, character counts, outlined appearance, and full ARIA. Most apps can stop reading here.
 
 ```html
-<label for="email">Email</label>
-<input id="email" [formField]="form.email" />
-<ngx-form-field-error [formField]="form.email" fieldName="email" />
-<ngx-signal-form-field-hint
-  >We'll never share your email</ngx-signal-form-field-hint
->
-```
-
-**[📖 Full Documentation →](./packages/toolkit/assistive/README.md)**
-
----
-
-### `@ngx-signal-forms/toolkit/form-field`
-
-Use this when you want a batteries-included field wrapper and consistent layout primitives.
-
-**Key exports**:
-
-- `NgxFormField` — Bundle import for form field wrapper, outlined layout, hints, and character count
-- `NgxSignalFormFieldset` — Group related fields with aggregated errors (use `includeNestedErrors` to control aggregation)
-
-```html
-<ngx-signal-form-field-wrapper [formField]="form.bio" appearance="outline">
-  <label for="bio">Bio</label>
-  <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-hint
-    >Tell us about yourself</ngx-signal-form-field-hint
+<form [formRoot]="userForm">
+  <ngx-signal-form-field-wrapper
+    [formField]="userForm.bio"
+    appearance="outline"
   >
-  <ngx-signal-form-field-character-count [formField]="form.bio" />
-</ngx-signal-form-field-wrapper>
-```
-
-When you omit `fieldName`, the wrapper derives field identity from the projected
-control's `id`. Standalone assistive or headless APIs still use explicit
-`fieldName` inputs.
-
-**[📖 Full Documentation →](./packages/toolkit/form-field/README.md)** | **[🎨 Theming Guide →](./packages/toolkit/form-field/THEMING.md)**
-
----
-
-### `@ngx-signal-forms/toolkit/headless`
-
-Use this when you need full control over markup and styling but do not want to rewrite error and character-count state logic.
-
-**Key exports**:
-
-- `NgxHeadlessErrorStateDirective` — Error/warning state as signals
-- `NgxHeadlessCharacterCountDirective` — Character count and limit states
-- `NgxHeadlessFieldsetDirective` — Aggregated validation for field groups
-- `createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()` — Programmatic utilities
-
-Headless APIs keep `fieldName` explicit because they do not own the rendered
-input structure for you.
-
-```html
-<div
-  ngxSignalFormHeadlessErrorState
-  #errorState="errorState"
-  [field]="form.email"
-  fieldName="email"
->
-  <input [formField]="form.email" />
-  @if (errorState.showErrors() && errorState.hasErrors()) {
-  <div class="my-custom-error">
-    @for (error of errorState.resolvedErrors(); track error.kind) {
-    <span>{{ error.message }}</span>
-    }
-  </div>
-  }
-</div>
-```
-
-**[📖 Full Documentation →](./packages/toolkit/headless/README.md)**
-
----
-
-### `@ngx-signal-forms/toolkit/debugger`
-
-Use this during development to inspect field state, visibility rules, and resolved errors.
-
-**Key exports**:
-
-- `NgxSignalFormDebugger` — Bundle import
-- `SignalFormDebuggerComponent` — Standalone component
-
-```html
-<form [formRoot]="form" ngxSignalForm>
-  <!-- ... fields ... -->
-  <ngx-signal-form-debugger [formTree]="form" />
+    <label for="bio">Bio</label>
+    <textarea id="bio" [formField]="userForm.bio"></textarea>
+    <ngx-signal-form-field-hint>
+      Tell us about yourself
+    </ngx-signal-form-field-hint>
+    <ngx-signal-form-field-character-count [formField]="userForm.bio" />
+  </ngx-signal-form-field-wrapper>
 </form>
 ```
 
-**Note:** Pass the FieldTree function (e.g. `form`), not the root state (`form()`).
-The debugger supports `FieldState`, but it cannot traverse child fields, so visibility may look wrong.
+- `appearance` supports `"stacked"`, `"outline"`, and `"plain"` out of the box
+- theming hooks via CSS custom properties cover everything from tokens to dark mode.
+- When you omit `fieldName`, the wrapper derives field identity from the projected control's `id`.
 
-**[📖 Full Documentation →](./packages/toolkit/debugger/README.md)**
+**Read more:** [form-field docs](./packages/toolkit/form-field/README.md) · [theming guide](./packages/toolkit/form-field/THEMING.md)
 
 ---
 
-### `@ngx-signal-forms/toolkit/vest`
+## Adding form-level context with `ngxSignalForm`
 
-Use this when your validation is mostly business policy and you want an optional,
-toolkit-branded Vest integration without making Vest part of every project.
+The examples above use the default `'on-touch'` strategy: errors appear after the
+user blurs a field or submits the form. This works because Angular's `submit()` calls
+`markAllAsTouched()` internally, so `touched()` becomes true for all fields.
 
-> **Requires Vest v6+** — Standard Schema support was introduced in Vest 6.
+When you need more control, add `ngxSignalForm` alongside `[formRoot]`:
 
-**Install** (only needed when you import this entry point):
+```html
+<form [formRoot]="userForm" ngxSignalForm errorStrategy="on-submit">
+  <ngx-signal-form-field-wrapper [formField]="userForm.email">
+    <label for="email">Email</label>
+    <input id="email" type="email" [formField]="userForm.email" />
+  </ngx-signal-form-field-wrapper>
+  <button type="submit">Send</button>
+</form>
+```
+
+**What `ngxSignalForm` adds on top of Angular's `[formRoot]`:**
+
+| Feature            | Without             | With `ngxSignalForm`                                                                                             |
+| ------------------ | ------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Error strategy     | Always `'on-touch'` | Configurable via `errorStrategy` input (`'on-touch'`, `'on-submit'`, `'immediate'`)                              |
+| Submitted status   | Not tracked         | `submittedStatus` signal (`'unsubmitted' → 'submitting' → 'submitted'`)                                          |
+| Form-level context | None                | Shared strategy + status propagated via DI so wrappers, auto-ARIA, assistive, and headless features stay in sync |
+
+**Reach for `ngxSignalForm` when:**
+
+- You want errors to stay hidden until the first submit attempt (`'on-submit'` strategy)
+- You need submit-lifecycle UI (`unsubmitted/submitting/submitted`), e.g. post-submit banners or submit-state messaging
+- You want one form-level strategy + status propagated to wrappers/assistive/headless/auto-ARIA without passing inputs around
+
+Without it, every toolkit component falls back to `'on-touch'` and treats the form as
+unsubmitted — which is the right default for most forms.
+
+Auto-ARIA works **with or without** `ngxSignalForm`. Without `ngxSignalForm`, it still manages `aria-invalid`, `aria-required`, and `aria-describedby` on supported controls using fallback timing (`'on-touch'`, `'unsubmitted'`).
+With `ngxSignalForm`, auto-ARIA inherits the same form-level `errorStrategy` and `submittedStatus` as the wrapper.
+
+---
+
+## Going further
+
+Pull in these entry points only when you need what they add.
+
+### `@ngx-signal-forms/toolkit` — core helpers
+
+Form-level context, strategy-aware error visibility, submission helpers, and warning
+utilities. Always imported; all other entry points sit on top of it.
+
+Key exports: `NgxSignalFormToolkit`, `showErrors()`, `focusFirstInvalid()`,
+`createOnInvalidHandler()`, `hasSubmitted()`, `warningError()`, `splitByKind()`,
+`provideFieldLabels()`, `provideNgxSignalFormsConfig()`.
+
+**[→ Core docs](./packages/toolkit/README.md)** ·
+**Demos:**
+[`error-display-modes` (code)](./apps/demo/src/app/02-toolkit-core/error-display-modes) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/toolkit-core/error-display-modes/),
+[`warning-support` (code)](./apps/demo/src/app/02-toolkit-core/warning-support) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/toolkit-core/warning-support/),
+[`submission-patterns` (code)](./apps/demo/src/app/05-advanced/submission-patterns) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/advanced-scenarios/submission-patterns/),
+[`global-configuration` (code)](./apps/demo/src/app/05-advanced/global-configuration) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/advanced-scenarios/global-configuration/)
+
+### `@ngx-signal-forms/toolkit/assistive` — standalone feedback
+
+Use this when you want error, hint, and counter components _without_ adopting the full
+field wrapper — e.g. you already have a layout system but want the toolkit's error
+timing and ARIA.
+
+Key exports: `NgxFormFieldErrorComponent`, `NgxFormFieldErrorSummaryComponent`,
+`NgxFormFieldHintComponent`, `NgxFormFieldCharacterCountComponent`,
+`NgxFormFieldAssistiveRowComponent`.
+
+**[→ Assistive docs](./packages/toolkit/assistive/README.md)** ·
+**Demo:** [`your-first-form` (code)](./apps/demo/src/app/01-getting-started/your-first-form) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/getting-started/your-first-form/)
+
+### `@ngx-signal-forms/toolkit/headless` — bring your own markup
+
+Renderless directives and utility functions that give you toolkit-managed state —
+error visibility, aggregation, focus behavior, character counts — while you control
+every bit of markup and styling.
+
+Key exports: `NgxHeadlessErrorStateDirective`, `NgxHeadlessErrorSummaryDirective`,
+`NgxHeadlessCharacterCountDirective`, `NgxHeadlessFieldsetDirective`,
+`createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()`.
+
+**[→ Headless docs](./packages/toolkit/headless/README.md)** ·
+**Demo:** [`fieldset-utilities` (code)](./apps/demo/src/app/03-headless/fieldset-utilities) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/headless/fieldset-utilities/)
+
+### `@ngx-signal-forms/toolkit/vest` — business-policy validation
+
+Optional [Vestjs](https://vestjs.dev) adapter for higher-order business rules and advisory `warn()` guidance.
+Peer-dependent on Vest 6+; only loaded when you import this entry point.
+
+Key exports: `validateVest()`, `validateVestWarnings()`.
 
 ```bash
 npm install @ngx-signal-forms/toolkit vest@6.2.7
 ```
 
-`vest` is declared as an optional peer dependency
-(`>=6.0.0 <6.3.0 || >=6.3.1`). `vest@6.3.0` is excluded because of an upstream
-packaging issue in the published build (as of April 2025) — use `6.2.7` or a
-newer fixed release.
+**[→ Vest docs](./packages/toolkit/vest/README.md)** · **Demos:**
+[`vest-validation` (code)](./apps/demo/src/app/05-advanced/vest-validation) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/advanced-scenarios/vest-validation/),
+[`zod-vest-validation` (code)](./apps/demo/src/app/05-advanced/zod-vest-validation) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/advanced-scenarios/zod-vest-validation/) ·
+**[Migrating from `ngx-vest-forms`](./docs/MIGRATING_FROM_NGX_VEST_FORMS.md)**
 
-If you are migrating from `ngx-vest-forms`, upgrade to **Vest 6.x first**.
-The optional `@ngx-signal-forms/toolkit/vest` entry point does **not** support Vest 5.x.
-Start with the short overview in
-[`docs/MIGRATING_FROM_NGX_VEST_FORMS.md`](./docs/MIGRATING_FROM_NGX_VEST_FORMS.md).
+### `@ngx-signal-forms/toolkit/debugger` — dev-only inspector
 
-**Key exports**:
+Pass the form tree to inspect field state, visibility rules, and resolved errors
+during development.
 
-- `validateVest()` — Register a Vest suite through the toolkit's first-class Angular adapter
-- `validateVestWarnings()` — Register only the warning bridge
+```html
+<ngx-signal-form-debugger [formTree]="form" />
+```
+
+**[→ Debugger docs](./packages/toolkit/debugger/README.md)** ·
+**Demos:** [`your-first-form` (code)](./apps/demo/src/app/01-getting-started/your-first-form) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/getting-started/your-first-form/),
+[`complex-forms` (code)](./apps/demo/src/app/04-form-field-wrapper/complex-forms) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/form-field-wrapper/complex-forms/)
+
+---
+
+## Validation strategies
+
+Angular validators, Zod/OpenAPI Standard Schema, and Vest are **complementary, not
+mutually exclusive**. For most real-world forms the cleanest stack layers all three:
+
+- **Angular validators** for small local rules (`required`, `email`, `minLength`)
+- **Zod / OpenAPI Standard Schema** for shared contract and shape rules
+- **Vest** for conditional business policy and `warn()` guidance
 
 ```typescript
-import { form } from '@angular/forms/signals';
-import { validateVest } from '@ngx-signal-forms/toolkit/vest';
-
-const accountForm = form(accountModel, (path) => {
-  validateVest(path, accountBusinessSuite, { includeWarnings: true });
+form(model, (path) => {
+  required(path.email); // Angular
+  validateStandardSchema(path, SignupSchema); // Zod / OpenAPI
+  validateVest(path, businessSuite, { includeWarnings: true }); // Vest
 });
 ```
 
-Use Vest `warn()` for advisory guidance only. With `{ includeWarnings: true }`, the
-toolkit renders those messages through `ngx-signal-form-field-wrapper` or
-`ngx-form-field-error` as `role="status"` warnings, while blocking Vest failures
-continue to render as `role="alert"` errors.
-
-**[📖 Full Documentation →](./packages/toolkit/vest/README.md)**
+**[→ Full validation strategy guide](./docs/VALIDATION_STRATEGY.md)**
 
 ---
 
 ## Configuration
-
-For global defaults, add providers to `app.config.ts`:
 
 ```typescript
 import { provideSignalFormsConfig } from '@angular/forms/signals';
@@ -593,75 +355,192 @@ export const appConfig: ApplicationConfig = {
       defaultErrorStrategy: 'on-touch',
       defaultFormFieldAppearance: 'outline',
     }),
-    // CSS status classes come from Angular, not the toolkit.
     provideSignalFormsConfig({
-      classes: NG_STATUS_CLASSES, // Adds ng-valid, ng-invalid, ng-touched, etc.
+      classes: NG_STATUS_CLASSES, // ng-valid, ng-invalid, ng-touched, …
     }),
   ],
 };
 ```
 
-**[📖 Configuration Reference →](./packages/toolkit/README.md#configuration)** | **[🎨 CSS Frameworks →](./docs/CSS_FRAMEWORK_INTEGRATION.md)**
+**[→ Configuration reference](./packages/toolkit/README.md#configuration)** · **[→ CSS framework integration](./docs/CSS_FRAMEWORK_INTEGRATION.md)**
 
 ---
 
-## Demo and docs
+## FAQ
 
-Live demo: [https://ngx-signal-forms.github.io/ngx-signal-forms/](https://ngx-signal-forms.github.io/ngx-signal-forms/)
+<details>
+<summary><strong>Does this replace Angular Signal Forms?</strong></summary>
 
-Current demo learning path:
+No. The toolkit is additive. Angular still owns `form()`, validation, `submit()`,
+field state, and `[formField]`. The toolkit only adds DI context, ARIA wiring, error
+timing, warnings, and field UI. See [Angular vs toolkit](./docs/ANGULAR_VS_TOOLKIT.md).
 
-- **Getting Started** — `your-first-form` for the smallest toolkit-first setup
-- **Toolkit Core** — `error-display-modes` and `warning-support`
-- **Headless** — `fieldset-utilities` for custom markup and grouped state
-- **Form Field Wrapper** — `complex-forms` and `custom-controls`
-- **Advanced Scenarios** — global config, submission patterns, async/cross-field validation, Vest, and the wizard
+</details>
 
-Start here:
+<details>
+<summary><strong>Is Signal Forms experimental — is the toolkit safe to use?</strong></summary>
 
-- [Toolkit API reference](./packages/toolkit/README.md)
-- [Vest integration guide](./packages/toolkit/vest/README.md)
-- [GitHub Releases](https://github.com/ngx-signal-forms/ngx-signal-forms/releases)
-- [Assistive components](./packages/toolkit/assistive/README.md)
-- [Form field components](./packages/toolkit/form-field/README.md)
-- [Headless primitives](./packages/toolkit/headless/README.md)
-- [Debugger](./packages/toolkit/debugger/README.md)
-- [CSS framework integration](./docs/CSS_FRAMEWORK_INTEGRATION.md)
-- [Warnings support](./docs/WARNINGS_SUPPORT.md)
+Angular Signal Forms is still marked experimental upstream, so the API may shift. The
+toolkit's own public API aims to stay stable across minor versions. If you're adopting
+in production, read [`COMPATIBILITY.md`](./COMPATIBILITY.md) first.
+
+</details>
+
+<details>
+<summary><strong>Do I need the toolkit for simple forms?</strong></summary>
+
+You don't _need_ it — plain Signal Forms works. You'll want it the moment you write
+the same ARIA + error-timing boilerplate twice, or need warnings, or want consistent
+field layout and theming across an app.
+
+</details>
+
+<details>
+<summary><strong>Does the wrapper work with my native checkbox styled as a switch?</strong></summary>
+
+Yes, automatically. A native `input[type="checkbox"][role="switch"]` with `[formField]`
+is recognized as a switch — the wrapper and auto-ARIA handle it without any extra
+directives.
+
+```html
+<input type="checkbox" role="switch" [formField]="form.enabled" />
+```
+
+</details>
+
+<details>
+<summary><strong>When do I need <code>ngxSignalForm</code>?</strong></summary>
+
+Not always — and the examples on this page don't use it. Every toolkit component
+injects `NGX_SIGNAL_FORM_CONTEXT` as **optional** and falls back to `'on-touch'`:
+
+| Scenario                                                  | `ngxSignalForm` needed?                        |
+| --------------------------------------------------------- | ---------------------------------------------- |
+| Default `'on-touch'` error timing                         | No — that's the fallback                       |
+| `'on-submit'` error strategy                              | **Yes** — the directive tracks submit attempts |
+| Submitted status tracking (`submittedStatus`)             | **Yes** — provided by the directive            |
+| Using `createOnInvalidHandler()` / `focusFirstInvalid()`  | No — these are pure utilities                  |
+| Wrapper, auto-ARIA, assistive, headless with `'on-touch'` | No — all fall back to defaults                 |
+| Form-level strategy shared to all children                | **Yes** — propagated via DI context            |
+
+See [Adding `ngxSignalForm`](#adding-form-level-context-with-ngxsignalform) for the
+full explanation and example.
+
+</details>
+
+<details>
+<summary><strong>When do I need <code>ngxSignalFormControl</code>?</strong></summary>
+
+Only for advanced cases: custom components, third-party widgets, manual ARIA
+ownership (`ngxSignalFormControlAria="manual"`), or preset-driven defaults for control
+families (sliders, composites). Native `<input>`, `<textarea>`, and `<select>` do not
+need it. See [`docs/CUSTOM_CONTROLS.md`](./docs/CUSTOM_CONTROLS.md) and
+[ADR-0001](./docs/decisions/0001-control-semantics-architecture.md).
+
+</details>
+
+<details>
+<summary><strong>Does the wrapper work with Tailwind / Bootstrap / Material?</strong></summary>
+
+Yes — the wrapper is unopinionated about CSS. See
+[`docs/CSS_FRAMEWORK_INTEGRATION.md`](./docs/CSS_FRAMEWORK_INTEGRATION.md) and the
+[theming guide](./packages/toolkit/form-field/THEMING.md) for framework-specific
+patterns.
+
+</details>
+
+<details>
+<summary><strong>Can I fully customize the look and feel to match my design system?</strong></summary>
+
+Yes. You can start with the wrapper and tailor it to your UI using:
+
+- `appearance="stacked" | "outline" | "plain"`
+- CSS custom properties (tokens, spacing, borders, colors, dark mode)
+- Your own utility/framework classes (Tailwind, Bootstrap, Material, etc.)
+
+If you want total markup and styling control, use the
+[`/headless`](./packages/toolkit/headless/README.md) entry point and keep only
+the toolkit's state/behavior primitives.
+
+See [form-field theming](./packages/toolkit/form-field/THEMING.md) and
+[`docs/CSS_FRAMEWORK_INTEGRATION.md`](./docs/CSS_FRAMEWORK_INTEGRATION.md).
+
+</details>
+
+<details>
+<summary><strong>How do I combine this with Vest or Zod?</strong></summary>
+
+Layer them — Angular validators for local rules, Standard Schema for contracts, Vest
+for business policy. See [`docs/VALIDATION_STRATEGY.md`](./docs/VALIDATION_STRATEGY.md)
+for the full guide and a worked example.
+
+</details>
+
+<details>
+<summary><strong>Where do I find a demo for X?</strong></summary>
+
+Every row in the "[Which part do I need?](#which-part-of-the-toolkit-do-i-need)" table
+links to a runnable demo. Browse them all at
+[ngx-signal-forms.github.io/ngx-signal-forms](https://ngx-signal-forms.github.io/ngx-signal-forms/).
+
+</details>
+
+---
+
+## Accessibility
+
+The toolkit is designed around WCAG 2.2 AA form patterns: automatic `aria-invalid`,
+`aria-required`, and `aria-describedby`; `role="alert"` for blocking errors and
+`role="status"` for warnings; `on-touch` error timing to avoid premature noise; and
+focus helpers for invalid submissions. As always, review and test your final forms
+in context.
+
+---
+
+## Resources
+
+**Getting started**
+
+- [Live demo](https://ngx-signal-forms.github.io/ngx-signal-forms/)
+- [Compatibility matrix](./COMPATIBILITY.md)
 - [Package architecture](./docs/PACKAGE_ARCHITECTURE.md)
-- [Advanced demo: Vest-only validation](./apps/demo/src/app/05-advanced/vest-validation/README.md)
-- [Advanced demo: Zod + Vest validation](./apps/demo/src/app/05-advanced/zod-vest-validation/README.md)
 
-## Developer Resources
+**Package docs**
 
-### AI skill
+- [Core toolkit](./packages/toolkit/README.md)
+- [Form field wrapper](./packages/toolkit/form-field/README.md) · [theming](./packages/toolkit/form-field/THEMING.md)
+- [Assistive components](./packages/toolkit/assistive/README.md)
+- [Headless primitives](./packages/toolkit/headless/README.md)
+- [Vest integration](./packages/toolkit/vest/README.md)
+- [Debugger](./packages/toolkit/debugger/README.md)
 
-Install the `ngx-signal-forms` skill for AI-assisted toolkit development:
+**Guides**
+
+- [Angular vs toolkit](./docs/ANGULAR_VS_TOOLKIT.md) — what the toolkit adds, with a before/after example
+- [Validation strategies](./docs/VALIDATION_STRATEGY.md) — when to use Angular validators, Zod, or Vest
+- [Custom controls](./docs/CUSTOM_CONTROLS.md) — wrapping custom and third-party widgets
+- [Complex and nested forms](./docs/COMPLEX_NESTED_FORMS.md) — fieldset aggregation, error summary, strategy inheritance
+- [Warnings support](./docs/WARNINGS_SUPPORT.md) — warning convention, error flow, message resolution
+- [CSS framework integration](./docs/CSS_FRAMEWORK_INTEGRATION.md) — Tailwind, Bootstrap, Material
+- [Migrating from `ngx-vest-forms`](./docs/MIGRATING_FROM_NGX_VEST_FORMS.md)
+- [Migrating RC → v1](./docs/MIGRATING_RC_TO_V1.md)
+
+**Reference**
+
+- [Angular public API policy](./docs/ANGULAR_PUBLIC_API_POLICY.md) — ownership boundary between Angular and the toolkit (contributor/auditor level)
+
+**Advanced demo READMEs**
+
+- [Vest-only validation](./apps/demo/src/app/05-advanced/vest-validation/README.md)
+- [Zod + Vest validation](./apps/demo/src/app/05-advanced/zod-vest-validation/README.md)
+
+**AI skill**
 
 ```bash
 npx skills add https://github.com/ngx-signal-forms/ngx-signal-forms --skill ngx-signal-forms
 ```
 
-The skill covers the full toolkit — entry points, patterns, ARIA automation, and demo references.
-
-## Browser Support
-
-- Angular 21.2+ (Signal Forms API)
-- All modern browsers with ES2022+ support
-- TypeScript 5.9+
-
-## Accessibility
-
-The toolkit is designed with WCAG 2.2 AA form patterns in mind:
-
-- automatic `aria-invalid`, `aria-required`, and `aria-describedby` wiring for supported controls
-- custom on/off controls should expose real switch semantics on the bound control (prefer a native checkbox styled as a switch, or a library component that already exposes `role="switch"` semantics); use `ngxSignalFormControl="switch"` when the toolkit should also apply stable wrapper/layout behavior, and use `ngxSignalFormControlAria="manual"` only when the control already owns its ARIA state; this is mainly an edge-case/custom-control integration path rather than something regular text/select/textarea fields need; see [`docs/CUSTOM_CONTROLS.md`](./docs/CUSTOM_CONTROLS.md) and [MDN switch role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/switch_role)
-- `ngxSignalFormControlAria="manual"` is about **ARIA ownership on the control host**, not about disabling the wrapper; labels, hints, errors, and field context can still come from the toolkit wrapper in manual mode
-- `role="alert"` for blocking errors and `role="status"` for warnings
-- default `on-touch` error timing to avoid premature error noise
-- focus helpers for invalid submissions
-
-As always, review and test your final forms in context.
+Covers the full toolkit — entry points, patterns, ARIA automation, and demo references.
 
 ---
 
