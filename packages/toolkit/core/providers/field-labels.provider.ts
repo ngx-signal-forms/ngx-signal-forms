@@ -1,5 +1,7 @@
 import { InjectionToken, type Provider } from '@angular/core';
 
+import { humanizeFieldPath } from '../utilities/humanize-field-path';
+
 /**
  * A function that resolves a raw field path (e.g. `'address.postalCode'`)
  * into a human-readable display label (e.g. `'Postcode'`).
@@ -100,5 +102,5 @@ export function provideFieldLabels(
 }
 
 function createMapResolver(map: FieldLabelMap): FieldLabelResolver {
-  return (fieldPath) => map[fieldPath] ?? fieldPath;
+  return (fieldPath) => map[fieldPath] ?? humanizeFieldPath(fieldPath);
 }
