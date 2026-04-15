@@ -132,6 +132,11 @@ export class WizardContainerComponent {
    * Validates before allowing forward navigation.
    */
   protected async onStepChange(event: WizardNavigationEvent): Promise<void> {
+    if (this.store.hasConfirmedBooking()) {
+      event.preventDefault();
+      return;
+    }
+
     const isForwardNavigation = event.toIndex > event.fromIndex;
 
     if (isForwardNavigation) {
@@ -147,6 +152,10 @@ export class WizardContainerComponent {
   }
 
   protected previousStep(): void {
+    if (this.store.hasConfirmedBooking()) {
+      return;
+    }
+
     this.#commitCurrentStep();
     if (this.store.goToPreviousStep()) {
       this.#pendingFocus.set(true);
@@ -154,6 +163,10 @@ export class WizardContainerComponent {
   }
 
   protected async nextStep(): Promise<void> {
+    if (this.store.hasConfirmedBooking()) {
+      return;
+    }
+
     const isValid = await this.#validateCurrentStep();
     if (!isValid) {
       return;
@@ -174,6 +187,10 @@ export class WizardContainerComponent {
   }
 
   protected async submit(): Promise<void> {
+    if (this.store.hasConfirmedBooking()) {
+      return;
+    }
+
     const isValid = await this.#validateCurrentStep();
     if (!isValid) {
       return;
@@ -185,6 +202,11 @@ export class WizardContainerComponent {
     this.store.submit();
     // The store's submitBooking mutation will handle success/error state
     // UI will update reactively via isSubmitting and error signals
+  }
+
+  protected startNewBooking(): void {
+    this.store.reset();
+    this.#pendingFocus.set(true);
   }
 
   async #validateCurrentStep(): Promise<boolean> {

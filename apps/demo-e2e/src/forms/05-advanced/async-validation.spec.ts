@@ -101,6 +101,47 @@ test.describe('Advanced Scenarios - Async Validation', () => {
     });
   });
 
+  test('should reset field state after Reset button click', async ({
+    page,
+  }) => {
+    // Deterministic: "admin" always reports unavailable.
+    await page.route('**/fake-api/check-user/admin', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ username: 'admin', available: false }),
+      });
+    });
+
+    const usernameInput = page.getByRole('textbox', { name: /username/i });
+    const resetButton = page.getByRole('button', { name: /^Reset$/ });
+
+    // Seed the field with a value that fails async validation.
+    await usernameInput.fill('admin');
+    await usernameInput.blur();
+
+    const errorAlert = page.locator('[role="alert"]', {
+      hasText: /already taken/i,
+    });
+    await expect(errorAlert).toBeVisible();
+    await expect(usernameInput).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.getByText('Valid: false')).toBeVisible();
+
+    // Reset clears the model and the field tree state.
+    await resetButton.click();
+
+    // Field is empty, no lingering async error alert, not marked invalid
+    // (untouched field under on-touch strategy), and the async pipeline is
+    // idle. The sync `required` validator will still populate errors() with
+    // a required entry, so we assert the async-specific state specifically:
+    // the `usernameTaken` kind is gone.
+    await expect(usernameInput).toHaveValue('');
+    await expect(errorAlert).toHaveCount(0);
+    await expect(usernameInput).not.toHaveAttribute('aria-invalid', 'true');
+    await expect(page.getByText('Pending: false')).toBeVisible();
+    await expect(page.getByText(/usernameTaken/)).toHaveCount(0);
+  });
+
   test('should allow form submission after async validation passes', async ({
     page,
   }) => {

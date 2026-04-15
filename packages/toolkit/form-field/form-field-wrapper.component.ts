@@ -442,13 +442,17 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
       return false;
     }
 
-    switch (this.appearance()) {
+    const appearance = this.appearance();
+    switch (appearance) {
       case 'outline':
         return true;
       case 'stacked':
       case 'plain':
         return false;
+      case 'inherit':
+        return this.#config.defaultFormFieldAppearance === 'outline';
       default:
+        appearance satisfies never;
         return this.#config.defaultFormFieldAppearance === 'outline';
     }
   });
@@ -729,6 +733,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
         // inside the same template branch without a re-render is an
         // author-error edge case this cache does not catch.
         const cached = this.#boundControlElement();
+        // oxlint-disable-next-line @typescript-eslint/prefer-optional-chain -- rewriting to `cached?.isConnected` trades one lint rule for another (strict-boolean-expressions on the resulting nullable boolean)
         const cacheHit =
           cached &&
           cached.isConnected &&

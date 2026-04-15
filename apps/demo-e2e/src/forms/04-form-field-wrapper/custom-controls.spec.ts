@@ -520,11 +520,11 @@ test.describe('Custom Signal Forms Controls', () => {
           expect(initialBorderColor).toBeDefined();
 
           await expect
-            .poll(async () => {
-              return content.evaluate(
+            .poll(() =>
+              content.evaluate(
                 (element) => window.getComputedStyle(element).borderColor,
-              );
-            })
+              ),
+            )
             .not.toBe(initialBorderColor);
         }
       });
@@ -543,11 +543,11 @@ test.describe('Custom Signal Forms Controls', () => {
           expect(initialBorderColor).toBeDefined();
 
           await expect
-            .poll(async () => {
-              return content.evaluate(
+            .poll(() =>
+              content.evaluate(
                 (element) => window.getComputedStyle(element).borderColor,
-              );
-            })
+              ),
+            )
             .toBe(initialBorderColor);
         }
       });
@@ -566,11 +566,11 @@ test.describe('Custom Signal Forms Controls', () => {
           expect(initialBorderColor).toBeDefined();
 
           await expect
-            .poll(async () => {
-              return content.evaluate(
+            .poll(() =>
+              content.evaluate(
                 (element) => window.getComputedStyle(element).borderColor,
-              );
-            })
+              ),
+            )
             .toBe(initialBorderColor);
         }
       });

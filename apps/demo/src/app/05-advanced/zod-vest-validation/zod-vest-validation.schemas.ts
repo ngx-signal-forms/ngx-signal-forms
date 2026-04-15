@@ -20,7 +20,7 @@ export interface ZodVestValidationModel {
 export const zodVestAccountSchema = z.object({
   firstName: z.string().trim().min(1, 'First name is required'),
   lastName: z.string().trim().min(1, 'Last name is required'),
-  email: z.string().trim().email('Enter a valid email address'),
+  email: z.string().trim().pipe(z.email('Enter a valid email address')),
   password: z.string().min(12, 'Password must be at least 12 characters'),
   accountType: z
     .string()

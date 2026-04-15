@@ -394,8 +394,11 @@ export class NgxFormFieldCharacterCountComponent {
           `Character limit exceeded by ${over} characters.`,
         );
         break;
-      default:
+      case 'ok':
         this.announcementText.set('');
+        break;
+      default:
+        state satisfies never;
         break;
     }
   });

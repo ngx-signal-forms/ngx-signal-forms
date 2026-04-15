@@ -142,14 +142,14 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
   /**
    * Count visible form field wrappers
    */
-  async countFormFields(): Promise<number> {
+  countFormFields(): Promise<number> {
     return this.formFields.count();
   }
 
   /**
    * Count visible fieldset components
    */
-  async countFieldsets(): Promise<number> {
+  countFieldsets(): Promise<number> {
     return this.fieldsets.count();
   }
 

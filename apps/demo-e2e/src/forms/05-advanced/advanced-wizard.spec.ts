@@ -1,4 +1,51 @@
+import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
+
+async function fillTravelerStep(
+  page: Page,
+  overrides: Partial<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    passport: string;
+    expiry: string;
+    nationality: string;
+  }> = {},
+): Promise<void> {
+  const data = {
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'john.doe@example.com',
+    passport: 'A1234567',
+    expiry: '2030-01-01',
+    nationality: 'Dutch',
+    ...overrides,
+  };
+
+  await page.getByLabel('First Name').fill(data.firstName);
+  await page.getByLabel('Last Name').fill(data.lastName);
+  await page.getByLabel('Email').fill(data.email);
+  await page.getByLabel('Passport Number').fill(data.passport);
+  await page.getByLabel(/Expiry Date/i).fill(data.expiry);
+  await page.getByLabel('Nationality').fill(data.nationality);
+}
+
+async function fillTripStepMinimal(page: Page): Promise<void> {
+  const dest1 = page.getByRole('group', { name: 'Destination 1' });
+  await dest1.getByLabel(/Country/i).fill('Japan');
+  await dest1.getByLabel(/City/i).fill('Tokyo');
+  await dest1.getByLabel(/Arrival Date/i).fill('2026-08-01');
+  await dest1.getByLabel(/Departure Date/i).fill('2026-08-10');
+
+  const activity1 = dest1
+    .locator('.activity-card')
+    .filter({ hasText: 'Activity 1' });
+  await activity1.getByLabel('Activity Name').fill('Sushi Making');
+  await activity1.getByLabel('Date', { exact: true }).fill('2026-08-02');
+  await activity1.getByLabel('Date', { exact: true }).blur();
+  await activity1.getByPlaceholder('Description').fill('Empty Stomach');
+  await activity1.getByPlaceholder('Description').blur();
+}
 
 test.describe('Advanced Wizard Demo', () => {
   test.beforeEach(async ({ page }) => {
@@ -148,11 +195,16 @@ test.describe('Advanced Wizard Demo', () => {
       // Submit
       await page.getByRole('button', { name: 'Confirm Booking' }).click();
 
-      // Assuming success message or navigation?
-      // Since it's a demo, we might look for a success alert or console log.
-      // Based on the prompt code, it might not redirect but show success state.
-      // Let's assume the button goes into "Submitting..." state or similar if API is mocked/slow.
-      // Or simply check no error is shown.
+      const successMessage = page.getByRole('status').filter({
+        hasText: 'Booking confirmed',
+      });
+
+      await expect(successMessage).toBeVisible({ timeout: 5000 });
+      await expect(successMessage).toContainText('Confirmation number');
+      await expect(successMessage).toContainText('Booking ID');
+      await expect(
+        page.getByRole('button', { name: 'Start New Booking' }),
+      ).toBeVisible();
     });
   });
 
@@ -256,5 +308,168 @@ test.describe('Advanced Wizard Demo', () => {
         page.getByText('Arrival date cannot be in the past'),
       ).toBeHidden();
     });
+  });
+
+  test('autosave surfaces a "Last saved" timestamp after debounce', async ({
+    page,
+  }) => {
+    const statusRow = page.locator('.status-row');
+
+    // Pristine wizard has no persisted timestamp yet.
+    await expect(statusRow).not.toContainText('Last saved:');
+
+    // Initial autosave: the store seeds one empty destination on init, which
+    // flows through the 2s debounced rxMethod and issues a POST to
+    // /api/wizard/draft. We wait on the full network round-trip so the
+    // assertion covers the actual pipeline (effect → debounce → mutation →
+    // MSW handler), not just a client-side timer.
+    const initialSave = await page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/api/wizard/draft') &&
+        response.request().method() === 'POST' &&
+        response.status() === 200,
+      { timeout: 15000 },
+    );
+    const initialPayload = (await initialSave.json()) as {
+      draftId: string;
+      savedAt: string;
+    };
+    expect(initialPayload.draftId).toBeTruthy();
+    expect(Number.isNaN(Date.parse(initialPayload.savedAt))).toBe(false);
+
+    // Once onSuccess fires, store.lastSavedAt drives the DatePipe output in
+    // the status row. Format is `Last saved: h:mm a` (e.g., "Last saved: 6:34 PM").
+    await expect(statusRow).toContainText(/Last saved: \d{1,2}:\d{2}/);
+
+    // Second autosave: fill the traveler form and navigate. Next commits the
+    // form's local linkedSignal to the store via setTraveler(), which
+    // re-triggers the autosave effect and produces a PUT with the draftId
+    // returned by the initial POST.
+    await fillTravelerStep(page);
+
+    const secondSave = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/wizard/draft/') &&
+        response.request().method() === 'PUT' &&
+        response.status() === 200,
+      { timeout: 15000 },
+    );
+    await page.getByRole('button', { name: 'Next' }).click();
+    const putResponse = await secondSave;
+    const putPayload = (await putResponse.json()) as { draftId: string };
+    expect(putPayload.draftId).toBe(initialPayload.draftId);
+
+    // Timestamp remains visible after the second save round-trip.
+    await expect(statusRow).toContainText(/Last saved: \d{1,2}:\d{2}/);
+  });
+
+  test('review step shows all entered details', async ({ page }) => {
+    await fillTravelerStep(page, {
+      firstName: 'Alice',
+      lastName: 'Smith',
+      email: 'alice.smith@example.com',
+      nationality: 'British',
+    });
+    await page.getByRole('button', { name: 'Next' }).click();
+
+    await fillTripStepMinimal(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+
+    const reviewHeading = page.getByRole('heading', {
+      name: 'Review Your Booking',
+    });
+    await expect(reviewHeading).toBeVisible();
+    await expect(reviewHeading).toBeFocused();
+
+    // Traveler summary
+    const travelerSection = page.locator('.review-section', {
+      has: page.getByRole('heading', { name: /Traveler Information/ }),
+    });
+    await expect(travelerSection).toContainText('Alice Smith');
+    await expect(travelerSection).toContainText('alice.smith@example.com');
+    await expect(travelerSection.getByText('✓ Valid')).toBeVisible();
+
+    // Trip overview summary: 1 destination, ≥1 activity, ≥1 requirement
+    const tripSection = page.locator('.review-section', {
+      has: page.getByRole('heading', { name: /Trip Overview/ }),
+    });
+    await expect(tripSection).toContainText(/1 destinations/);
+    await expect(tripSection).toContainText(/1 activities/);
+    await expect(tripSection).toContainText(/1 requirements/);
+
+    // Destinations detail
+    const destinationsSection = page.locator('.review-section', {
+      has: page.getByRole('heading', { name: /^Destinations$/ }),
+    });
+    await expect(destinationsSection).toContainText(/Japan|Tokyo/);
+    await expect(destinationsSection).toContainText('Sushi Making');
+    await expect(destinationsSection.locator('.badge')).toContainText(
+      /1 activities/,
+    );
+  });
+
+  test('final submission posts booking and clears submitting state', async ({
+    page,
+  }) => {
+    await fillTravelerStep(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await fillTripStepMinimal(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+
+    await expect(
+      page.getByRole('heading', { name: 'Review Your Booking' }),
+    ).toBeVisible();
+
+    const bookingRequest = page.waitForRequest(
+      (request) =>
+        request.url().endsWith('/api/wizard/booking') &&
+        request.method() === 'POST',
+    );
+    const bookingResponse = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/api/wizard/booking') &&
+        response.request().method() === 'POST',
+    );
+
+    const confirmBtn = page.getByRole('button', { name: 'Confirm Booking' });
+    await expect(confirmBtn).toBeEnabled();
+    await confirmBtn.click();
+
+    // Button flips to the submitting state synchronously.
+    await expect(
+      page.getByRole('button', { name: 'Submitting...' }),
+    ).toBeVisible();
+
+    // Request body must contain the committed tripData from the store.
+    const request = await bookingRequest;
+    const body = request.postDataJSON() as {
+      traveler: { firstName: string };
+      destinations: { city: string }[];
+    };
+    expect(body.traveler.firstName).toBe('John');
+    expect(body.destinations[0]?.city).toBe('Tokyo');
+
+    const response = await bookingResponse;
+    expect(response.status()).toBe(200);
+    const payload = (await response.json()) as {
+      bookingId: string;
+      status: string;
+    };
+    expect(payload.status).toBe('confirmed');
+    expect(payload.bookingId).toBeTruthy();
+
+    // After the mutation resolves, the wizard exposes visible booking
+    // confirmation details and swaps the submit CTA for a reset path.
+    const successMessage = page.getByRole('status').filter({
+      hasText: 'Booking confirmed',
+    });
+
+    await expect(successMessage).toBeVisible();
+    await expect(successMessage).toContainText('Confirmation number');
+    await expect(successMessage).toContainText(payload.bookingId);
+    await expect(
+      page.getByRole('button', { name: 'Start New Booking' }),
+    ).toBeVisible();
+    await expect(page.locator('.error-message')).toHaveCount(0);
   });
 });

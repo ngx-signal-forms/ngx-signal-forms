@@ -128,12 +128,15 @@ export class NgxFormFieldHintComponent {
   /**
    * Stable DOM id used by `aria-describedby`. Public so wrappers can forward
    * it to auto-ARIA via the hint registry without reading the DOM.
+   * An empty-string explicit id or fieldName is treated as "not set" and falls through to the generated id.
    */
   readonly resolvedId = computed(() => {
     const explicit = this.#explicitId();
+    // oxlint-disable-next-line @typescript-eslint/strict-boolean-expressions -- empty-string id/fieldName is intentionally treated as "not set"; freezing semantic for v1
     if (explicit) return explicit;
 
     const fieldName = this.resolvedFieldName();
+    // oxlint-disable-next-line @typescript-eslint/strict-boolean-expressions -- empty-string id/fieldName is intentionally treated as "not set"; freezing semantic for v1
     if (fieldName) return `${fieldName}-hint`;
 
     return createUniqueId('hint');

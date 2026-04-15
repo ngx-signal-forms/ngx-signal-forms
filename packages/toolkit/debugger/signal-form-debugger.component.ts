@@ -28,6 +28,19 @@ type DebuggerError = {
 };
 
 /**
+ * Tag a validation error payload with a `visible` flag without mutating the
+ * original. Centralises the object-spread pattern so the debugger's several
+ * error pipelines can enrich errors via `.map(withVisibility(flag))` instead
+ * of inlining `({ ...e, visible })` at every call site.
+ */
+const withVisibility =
+  (visible: boolean) =>
+  (error: { kind: string; message?: string }): DebuggerError => ({
+    ...error,
+    visible,
+  });
+
+/**
  * Signal Form Debugger Component
  *
  * A development-time debugging panel for Angular Signal Forms that displays
@@ -96,10 +109,9 @@ export class SignalFormDebuggerComponent {
     if (typeof fn === 'function') {
       const result = fn();
       return Array.isArray(result)
-        ? (result as Array<{ kind: string; message?: string }>).map((e) => ({
-            ...e,
-            visible,
-          }))
+        ? (result as Array<{ kind: string; message?: string }>).map(
+            withVisibility(visible),
+          )
         : [];
     }
     return [];
@@ -197,7 +209,10 @@ export class SignalFormDebuggerComponent {
         return 'Submitting';
       case 'submitted':
         return 'Submitted';
+      case 'unsubmitted':
+        return 'Idle';
       default:
+        status satisfies never;
         return 'Idle';
     }
   });
@@ -259,7 +274,7 @@ export class SignalFormDebuggerComponent {
                 kind: string;
                 message?: string;
               }>
-            ).map((e) => ({ ...e, visible })),
+            ).map(withVisibility(visible)),
           );
         },
       );
@@ -274,7 +289,7 @@ export class SignalFormDebuggerComponent {
             kind: string;
             message?: string;
           }>
-        ).map((e) => ({ ...e, visible: rootVisible }));
+        ).map(withVisibility(rootVisible));
   });
 
   /** Field-level errors (exclude root-level ones from the summary) */
@@ -302,8 +317,8 @@ export class SignalFormDebuggerComponent {
       this.submittedStatus(),
     );
     return this.rootErrors()
-      .filter(isBlockingError)
-      .map((e) => ({ ...e, visible: rootVisible }));
+      .filter((e) => isBlockingError(e))
+      .map(withVisibility(rootVisible));
   });
 
   /** Root-level warnings */
@@ -316,28 +331,28 @@ export class SignalFormDebuggerComponent {
       this.submittedStatus(),
     );
     return this.rootErrors()
-      .filter(isWarningError)
-      .map((e) => ({ ...e, visible: rootVisible }));
+      .filter((e) => isWarningError(e))
+      .map(withVisibility(rootVisible));
   });
 
   /** Field-level blocking errors */
   protected readonly fieldBlockingErrors = computed(() =>
-    this.fieldErrors().filter(isBlockingError),
+    this.fieldErrors().filter((e) => isBlockingError(e)),
   );
 
   /** Field-level warnings */
   protected readonly fieldWarningErrors = computed(() =>
-    this.fieldErrors().filter(isWarningError),
+    this.fieldErrors().filter((e) => isWarningError(e)),
   );
 
   /** All blocking errors (root + field) */
   protected readonly blockingErrors = computed(() =>
-    this.allErrors().filter(isBlockingError),
+    this.allErrors().filter((e) => isBlockingError(e)),
   );
 
   /** All warning errors (root + field) */
   protected readonly warningErrors = computed(() =>
-    this.allErrors().filter(isWarningError),
+    this.allErrors().filter((e) => isWarningError(e)),
   );
 
   /** Visible blocking error count */
@@ -412,6 +427,7 @@ export class SignalFormDebuggerComponent {
         break;
 
       case 'on-touch':
+      case 'inherit':
         errorsVisible = hasTouchedFields || submittedStatus !== 'unsubmitted';
         visibilityReason = hasTouchedFields
           ? 'Errors shown because fields were touched (blurred)'
@@ -426,6 +442,10 @@ export class SignalFormDebuggerComponent {
           submittedStatus !== 'unsubmitted'
             ? 'Errors shown because form was submitted'
             : 'Errors hidden until form submission';
+        break;
+
+      default:
+        strategy satisfies never;
         break;
     }
 

@@ -38,41 +38,75 @@
     </ng-template>
   </ngx-wizard>
 
+  @if (store.bookingConfirmation(); as confirmation) {
+    <div
+      class="success-message mt-6"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <h3 class="success-message__title">Booking confirmed</h3>
+      <p class="success-message__body">
+        Your trip has been booked successfully.
+      </p>
+      <dl class="success-message__details">
+        <div>
+          <dt>Confirmation number</dt>
+          <dd>{{ confirmation.confirmationNumber }}</dd>
+        </div>
+        <div>
+          <dt>Booking ID</dt>
+          <dd>{{ confirmation.bookingId }}</dd>
+        </div>
+      </dl>
+    </div>
+  }
+
   <!-- Custom Navigation Buttons -->
   <div class="wizard-navigation mt-6 flex justify-between">
-    <button
-      type="button"
-      class="btn btn-secondary"
-      [disabled]="
-        store.isFirstStep() || store.isLoading() || store.isSubmitting()
-      "
-      (click)="previousStep()"
-    >
-      Previous
-    </button>
-
-    @if (!store.isLastStep()) {
+    @if (store.hasConfirmedBooking()) {
       <button
         type="button"
-        class="btn btn-primary"
-        [disabled]="store.isLoading() || store.isSubmitting()"
-        (click)="nextStep()"
+        class="btn btn-secondary"
+        (click)="startNewBooking()"
       >
-        Next
+        Start New Booking
       </button>
     } @else {
       <button
         type="button"
-        class="btn btn-success"
-        [disabled]="store.isLoading() || store.isSubmitting()"
-        (click)="submit()"
+        class="btn btn-secondary"
+        [disabled]="
+          store.isFirstStep() || store.isLoading() || store.isSubmitting()
+        "
+        (click)="previousStep()"
       >
-        @if (store.isSubmitting()) {
-          Submitting...
-        } @else {
-          Confirm Booking
-        }
+        Previous
       </button>
+
+      @if (!store.isLastStep()) {
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="store.isLoading() || store.isSubmitting()"
+          (click)="nextStep()"
+        >
+          Next
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="btn btn-success"
+          [disabled]="store.isLoading() || store.isSubmitting()"
+          (click)="submit()"
+        >
+          @if (store.isSubmitting()) {
+            Submitting...
+          } @else {
+            Confirm Booking
+          }
+        </button>
+      }
     }
   </div>
 
