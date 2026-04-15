@@ -314,9 +314,11 @@ export class NgxSignalFormAutoAriaDirective {
       return preserved.length > 0 ? preserved.join(' ') : null;
     }
 
-    const generatedIds = new Set(this.#managedDescribedByIds());
-    generatedIds.add(generateErrorId(fieldName));
-    generatedIds.add(generateWarningId(fieldName));
+    const generatedIds = new Set([
+      ...this.#managedDescribedByIds(),
+      generateErrorId(fieldName),
+      generateWarningId(fieldName),
+    ]);
 
     const preserved = parts.filter((part: string) => !generatedIds.has(part));
 

@@ -96,7 +96,8 @@ export class SignalFormDebuggerComponent {
     if (typeof fn === 'function') {
       const result = fn();
       return Array.isArray(result)
-        ? (result as Array<{ kind: string; message?: string }>).map((e) => ({
+        ? // oxlint-disable-next-line no-map-spread -- object spread is intentional for error payload enrichment
+          (result as Array<{ kind: string; message?: string }>).map((e) => ({
             ...e,
             visible,
           }))
@@ -197,7 +198,10 @@ export class SignalFormDebuggerComponent {
         return 'Submitting';
       case 'submitted':
         return 'Submitted';
+      case 'unsubmitted':
+        return 'Idle';
       default:
+        status satisfies never;
         return 'Idle';
     }
   });
@@ -259,7 +263,9 @@ export class SignalFormDebuggerComponent {
                 kind: string;
                 message?: string;
               }>
-            ).map((e) => ({ ...e, visible })),
+            )
+              // oxlint-disable-next-line no-map-spread -- object spread is intentional for error payload enrichment
+              .map((e) => ({ ...e, visible })),
           );
         },
       );
@@ -274,7 +280,9 @@ export class SignalFormDebuggerComponent {
             kind: string;
             message?: string;
           }>
-        ).map((e) => ({ ...e, visible: rootVisible }));
+        )
+          // oxlint-disable-next-line no-map-spread -- object spread is intentional for error payload enrichment
+          .map((e) => ({ ...e, visible: rootVisible }));
   });
 
   /** Field-level errors (exclude root-level ones from the summary) */
@@ -301,9 +309,12 @@ export class SignalFormDebuggerComponent {
       this.errorStrategy(),
       this.submittedStatus(),
     );
-    return this.rootErrors()
-      .filter(isBlockingError)
-      .map((e) => ({ ...e, visible: rootVisible }));
+    return (
+      this.rootErrors()
+        .filter((e) => isBlockingError(e))
+        // oxlint-disable-next-line no-map-spread -- object spread is intentional for error payload enrichment
+        .map((e) => ({ ...e, visible: rootVisible }))
+    );
   });
 
   /** Root-level warnings */
@@ -315,29 +326,32 @@ export class SignalFormDebuggerComponent {
       this.errorStrategy(),
       this.submittedStatus(),
     );
-    return this.rootErrors()
-      .filter(isWarningError)
-      .map((e) => ({ ...e, visible: rootVisible }));
+    return (
+      this.rootErrors()
+        .filter((e) => isWarningError(e))
+        // oxlint-disable-next-line no-map-spread -- object spread is intentional for error payload enrichment
+        .map((e) => ({ ...e, visible: rootVisible }))
+    );
   });
 
   /** Field-level blocking errors */
   protected readonly fieldBlockingErrors = computed(() =>
-    this.fieldErrors().filter(isBlockingError),
+    this.fieldErrors().filter((e) => isBlockingError(e)),
   );
 
   /** Field-level warnings */
   protected readonly fieldWarningErrors = computed(() =>
-    this.fieldErrors().filter(isWarningError),
+    this.fieldErrors().filter((e) => isWarningError(e)),
   );
 
   /** All blocking errors (root + field) */
   protected readonly blockingErrors = computed(() =>
-    this.allErrors().filter(isBlockingError),
+    this.allErrors().filter((e) => isBlockingError(e)),
   );
 
   /** All warning errors (root + field) */
   protected readonly warningErrors = computed(() =>
-    this.allErrors().filter(isWarningError),
+    this.allErrors().filter((e) => isWarningError(e)),
   );
 
   /** Visible blocking error count */
@@ -426,6 +440,14 @@ export class SignalFormDebuggerComponent {
           submittedStatus !== 'unsubmitted'
             ? 'Errors shown because form was submitted'
             : 'Errors hidden until form submission';
+        break;
+
+      case 'inherit':
+        // Initial values preserved: errorsVisible=false, visibilityReason=''
+        break;
+
+      default:
+        strategy satisfies never;
         break;
     }
 

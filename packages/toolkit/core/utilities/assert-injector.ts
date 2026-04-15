@@ -40,6 +40,7 @@ type InjectionContextDebugFn = Function;
  */
 export function assertInjector<Runner extends () => unknown>(
   // Passed through to Angular's assertInInjectionContext for diagnostics only.
+  // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- `Function` is an object type; see alias comment at top of file
   fn: InjectionContextDebugFn,
   // Angular's Injector is inherently mutable; Readonly<Injector> is not practical here.
   // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
@@ -71,6 +72,7 @@ export function assertInjector<Runner extends () => unknown>(
  */
 export function assertInjector(
   // Passed through to Angular's assertInInjectionContext for diagnostics only.
+  // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- `Function` is an object type; see alias comment at top of file
   fn: InjectionContextDebugFn,
   // Angular's Injector is inherently mutable; Readonly<Injector> is not practical here.
   // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
@@ -79,6 +81,7 @@ export function assertInjector(
 
 export function assertInjector(
   // Passed through to Angular's assertInInjectionContext for diagnostics only.
+  // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- `Function` is an object type; see alias comment at top of file
   fn: InjectionContextDebugFn,
   // Angular's Injector is inherently mutable; Readonly<Injector> is not practical here.
   // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types

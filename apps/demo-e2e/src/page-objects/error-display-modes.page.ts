@@ -14,7 +14,10 @@ export class ErrorDisplayModesPage extends ErrorStrategyFormPage {
         return 'immediate';
       case 'onSubmit':
         return 'on-submit';
+      case 'onTouch':
+        return 'on-touch';
       default:
+        mode satisfies never;
         return 'on-touch';
     }
   }

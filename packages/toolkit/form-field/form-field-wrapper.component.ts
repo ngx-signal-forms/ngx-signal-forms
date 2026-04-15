@@ -733,6 +733,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
         // inside the same template branch without a re-render is an
         // author-error edge case this cache does not catch.
         const cached = this.#boundControlElement();
+        // oxlint-disable-next-line @typescript-eslint/prefer-optional-chain -- rewriting to `cached?.isConnected` trades one lint rule for another (strict-boolean-expressions on the resulting nullable boolean)
         const cacheHit =
           cached &&
           cached.isConnected &&

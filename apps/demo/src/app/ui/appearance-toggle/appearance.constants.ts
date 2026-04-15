@@ -25,7 +25,10 @@ export function getAppearanceLabel(
     case 'outline':
     case 'plain':
       return APPEARANCE_LABELS[appearance];
+    case 'inherit':
+      return APPEARANCE_LABELS.stacked;
     default:
+      appearance satisfies never;
       return APPEARANCE_LABELS.stacked;
   }
 }
