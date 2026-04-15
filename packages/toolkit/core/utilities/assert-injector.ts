@@ -5,6 +5,14 @@ import {
   runInInjectionContext,
 } from '@angular/core';
 
+// `Function` is intentional here: `assertInjector` forwards `fn` to Angular's
+// `assertInInjectionContext`, which only uses it as a named reference for
+// diagnostic output (it is never invoked with typed arguments). Tightening
+// this alias to e.g. `(...args: readonly unknown[]) => unknown` or
+// `(...args: never[]) => unknown` breaks downstream callers like
+// `injectFormContext` / `injectFieldControl`, whose parameter types are not
+// assignable to a stricter callable. We accept the two oxlint warnings here.
+// oxlint-disable-next-line @typescript-eslint/no-unsafe-function-type, @typescript-eslint/ban-types -- see comment above
 type InjectionContextDebugFn = Function;
 
 /**
@@ -32,7 +40,6 @@ type InjectionContextDebugFn = Function;
  */
 export function assertInjector<Runner extends () => unknown>(
   // Passed through to Angular's assertInInjectionContext for diagnostics only.
-  // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
   fn: InjectionContextDebugFn,
   // Angular's Injector is inherently mutable; Readonly<Injector> is not practical here.
   // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
@@ -64,7 +71,6 @@ export function assertInjector<Runner extends () => unknown>(
  */
 export function assertInjector(
   // Passed through to Angular's assertInInjectionContext for diagnostics only.
-  // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
   fn: InjectionContextDebugFn,
   // Angular's Injector is inherently mutable; Readonly<Injector> is not practical here.
   // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
@@ -73,7 +79,6 @@ export function assertInjector(
 
 export function assertInjector(
   // Passed through to Angular's assertInInjectionContext for diagnostics only.
-  // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types
   fn: InjectionContextDebugFn,
   // Angular's Injector is inherently mutable; Readonly<Injector> is not practical here.
   // eslint-disable-next-line typescript-eslint/prefer-readonly-parameter-types

@@ -5,11 +5,14 @@
  * Standalone error/headless APIs require an explicit `fieldName` input;
  * wrappers may infer from the control's `id`.
  *
+ * An empty-string `id` attribute is treated as absent and returns `null`.
+ *
  * @param element - The HTML element to resolve the field name from
  * @returns The element's `id` attribute value, or `null` if absent
  */
 export function resolveFieldName(element: HTMLElement): string | null {
   const id = element.getAttribute('id');
+  // oxlint-disable-next-line @typescript-eslint/strict-boolean-expressions -- empty id="" is intentionally treated as "no id"; freezing semantic for v1
   return id || null;
 }
 

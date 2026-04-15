@@ -442,13 +442,17 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
       return false;
     }
 
-    switch (this.appearance()) {
+    const appearance = this.appearance();
+    switch (appearance) {
       case 'outline':
         return true;
       case 'stacked':
       case 'plain':
         return false;
+      case 'inherit':
+        return this.#config.defaultFormFieldAppearance === 'outline';
       default:
+        appearance satisfies never;
         return this.#config.defaultFormFieldAppearance === 'outline';
     }
   });
