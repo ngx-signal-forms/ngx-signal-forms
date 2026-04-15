@@ -404,6 +404,15 @@ When building custom controls that work with the toolkit:
 ## Example: Complete Custom Select
 
 ```typescript
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  input,
+  viewChild,
+} from '@angular/core';
+import type { FormValueControl } from '@angular/forms/signals';
+
 @Component({
   selector: 'app-custom-select',
   changeDetection: ChangeDetectionStrategy.OnPush,
