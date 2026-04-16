@@ -259,6 +259,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
             #addressFieldset="fieldset"
             [fieldsetField]="deliveryForm.address"
             fieldsetId="address"
+            [includeNestedErrors]="true"
             class="space-y-4"
             [attr.aria-describedby]="
               addressFieldset.shouldShowErrors() ||

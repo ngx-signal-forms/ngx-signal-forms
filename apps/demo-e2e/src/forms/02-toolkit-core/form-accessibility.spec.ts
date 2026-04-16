@@ -63,11 +63,12 @@ test.describe('Accessibility - Form Accessibility', () => {
       await nameInput.focus();
       await nameInput.blur();
 
-      /// Error area should appear with aria-live assertive
+      // `role="alert"` implies `aria-live="assertive"` + `aria-atomic="true"`
+      // per the ARIA spec — asserting the role alone is sufficient for SR
+      // announcement and avoids double-announce bugs on NVDA+Firefox that
+      // setting the explicit attributes would trigger.
       const errorArea = form.locator('[role="alert"]').first();
-      await expect(errorArea).toHaveAttribute('aria-live', 'assertive', {
-        timeout: 3000,
-      });
+      await expect(errorArea).toBeVisible({ timeout: 3000 });
     });
   });
 });
