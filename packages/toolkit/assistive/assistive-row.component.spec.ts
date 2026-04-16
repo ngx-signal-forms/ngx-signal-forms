@@ -123,9 +123,7 @@ describe('NgxFormFieldAssistiveRowComponent', () => {
     // host lets us verify the custom property flip without needing an
     // actual rendered layout.
     const { container } = await render(TestWrapperComponent);
-    const host = container.querySelector(
-      'ngx-signal-form-field-assistive-row',
-    );
+    const host = container.querySelector('ngx-signal-form-field-assistive-row');
     if (!(host instanceof HTMLElement)) {
       throw new Error('expected host element');
     }

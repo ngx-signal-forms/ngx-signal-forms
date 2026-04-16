@@ -24,7 +24,11 @@ import {
  * `null` / `undefined` are treated as length `0`. Any other value type
  * logs a dev-mode warning via `createCharacterCount` and renders `0`.
  */
-export type NgxCharacterCountValue = string | readonly string[] | null | undefined;
+export type NgxCharacterCountValue =
+  | string
+  | readonly string[]
+  | null
+  | undefined;
 
 /**
  * Form field character count component with progressive color states.
@@ -380,7 +384,11 @@ export class NgxFormFieldCharacterCountComponent {
    * its maxLength (the source-based computation re-seeds to `null`).
    */
   readonly #lastAnnouncedState = linkedSignal<
-    { liveAnnounce: boolean; max: number; state: CharacterCountLimitState | 'disabled' },
+    {
+      liveAnnounce: boolean;
+      max: number;
+      state: CharacterCountLimitState | 'disabled';
+    },
     CharacterCountLimitState | 'disabled' | null
   >({
     source: () => ({
