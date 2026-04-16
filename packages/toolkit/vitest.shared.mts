@@ -28,7 +28,7 @@ export const toolkitEntryAliases = [
   },
   {
     find: /^@ngx-signal-forms\/toolkit\/form-field$/,
-    replacement: resolve(__dirname, 'form-field/public_api.ts'),
+    replacement: resolve(__dirname, 'form-field/index.ts'),
   },
   {
     find: /^@ngx-signal-forms\/toolkit\/headless$/,
