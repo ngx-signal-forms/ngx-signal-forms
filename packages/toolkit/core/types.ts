@@ -51,22 +51,15 @@ export type ResolvedErrorDisplayStrategy =
 export type ErrorDisplayStrategy = ResolvedErrorDisplayStrategy | 'inherit';
 
 /**
- * Normalized form field appearance values used by the toolkit internally.
- *
- * - `'stacked'`: Label above input (default)
- * - `'outline'`: Material-inspired outlined appearance with floating label
- * - `'plain'`: Minimal wrapper chrome for custom or visually lightweight fields
- */
-export type ResolvedFormFieldAppearance = 'stacked' | 'outline' | 'plain';
-
-/**
- * Public form field appearance values accepted from consumers.
+ * Form field appearance values accepted from consumers and used internally.
  *
  * - `'stacked'`: Label above input (default)
  * - `'outline'`: Material-inspired outlined appearance with floating label
  * - `'plain'`: Minimal wrapper chrome while keeping wrapper semantics
+ *
+ * @public
  */
-export type FormFieldAppearance = ResolvedFormFieldAppearance;
+export type FormFieldAppearance = 'stacked' | 'outline' | 'plain';
 
 /**
  * Form field appearance input for component-level control.
@@ -220,7 +213,7 @@ export interface NgxSignalFormsConfig {
    * Default appearance for form fields.
    * @default 'stacked'
    */
-  defaultFormFieldAppearance: ResolvedFormFieldAppearance;
+  defaultFormFieldAppearance: FormFieldAppearance;
 
   /**
    * Whether to show the required marker for outlined fields.

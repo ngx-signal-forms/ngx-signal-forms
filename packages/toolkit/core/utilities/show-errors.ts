@@ -2,6 +2,7 @@ import { computed, type Signal } from '@angular/core';
 import type {
   ErrorDisplayStrategy,
   ReactiveOrStatic,
+  ResolvedErrorDisplayStrategy,
   SubmittedStatus,
 } from '../types';
 import { shouldShowErrors } from './error-strategies';
@@ -241,6 +242,17 @@ function computeShowErrorsInternal(
     const resolvedStatus =
       submittedStatus === undefined ? undefined : unwrapValue(submittedStatus);
 
+    // `'inherit'` is only meaningful at the user-facing boundary: it signals
+    // "use the form-context / global-config default". By the time we reach
+    // here we have no further context to consult, so fall back to
+    // `'on-touch'` — that matches the historical behavior of the
+    // now-removed `'inherit'` branch in `shouldShowErrors`. Call sites that
+    // own a context should resolve `'inherit'` themselves via
+    // `resolveErrorDisplayStrategy` / `resolveStrategyFromContext` before
+    // passing the value in.
+    const resolvedStrategy: ResolvedErrorDisplayStrategy =
+      strategyValue === 'inherit' ? 'on-touch' : strategyValue;
+
     // `on-submit` requires an explicit submission status to fire. Previously
     // the helper fell back to `touched → 'submitted'`, which silently
     // defeated the strategy for standalone `showErrors()` / `createErrorState()`
@@ -250,7 +262,7 @@ function computeShowErrorsInternal(
     // the miswiring obvious.
     if (
       (typeof ngDevMode === 'undefined' || ngDevMode) &&
-      strategyValue === 'on-submit' &&
+      resolvedStrategy === 'on-submit' &&
       resolvedStatus === undefined &&
       !warnedMissingStatus
     ) {
@@ -267,7 +279,7 @@ function computeShowErrorsInternal(
     return shouldShowErrors(
       isInvalid,
       isTouched,
-      strategyValue,
+      resolvedStrategy,
       fallbackStatus,
     );
   });

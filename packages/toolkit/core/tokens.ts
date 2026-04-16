@@ -17,51 +17,60 @@ export interface NgxSignalFormFieldContext {
 
 /**
  * Default configuration applied when no explicit providers override values.
+ *
+ * Uses `as const` + `satisfies` so each literal property type is preserved
+ * (enabling discriminated-union checks at call sites) while the object is
+ * still verified against `NgxSignalFormsConfig` at declaration time.
+ *
  * @internal
  */
-export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: NgxSignalFormsConfig = {
+export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG = {
   autoAria: true,
   defaultErrorStrategy: 'on-touch',
   defaultFormFieldAppearance: 'stacked',
   showRequiredMarker: true,
   requiredMarker: ' *',
-} as const;
+} as const satisfies NgxSignalFormsConfig;
 
 /**
  * Default semantic presets applied when consumers opt into explicit control
  * semantics.
+ *
+ * Uses `as const` + `satisfies` so each preset keeps its literal `layout`
+ * and `ariaMode` types while still being verified against the registry shape.
+ *
+ * @public
  */
-export const DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS: NgxSignalFormControlPresetRegistry =
-  {
-    'input-like': {
-      layout: 'stacked',
-      ariaMode: 'auto',
-    },
-    'standalone-field-like': {
-      layout: 'stacked',
-      ariaMode: 'auto',
-    },
-    switch: {
-      layout: 'inline-control',
-      ariaMode: 'auto',
-    },
-    checkbox: {
-      layout: 'group',
-      ariaMode: 'auto',
-    },
-    'radio-group': {
-      layout: 'group',
-      ariaMode: 'auto',
-    },
-    slider: {
-      layout: 'stacked',
-      ariaMode: 'auto',
-    },
-    composite: {
-      layout: 'custom',
-      ariaMode: 'auto',
-    },
-  } as const;
+export const DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS = {
+  'input-like': {
+    layout: 'stacked',
+    ariaMode: 'auto',
+  },
+  'standalone-field-like': {
+    layout: 'stacked',
+    ariaMode: 'auto',
+  },
+  switch: {
+    layout: 'inline-control',
+    ariaMode: 'auto',
+  },
+  checkbox: {
+    layout: 'group',
+    ariaMode: 'auto',
+  },
+  'radio-group': {
+    layout: 'group',
+    ariaMode: 'auto',
+  },
+  slider: {
+    layout: 'stacked',
+    ariaMode: 'auto',
+  },
+  composite: {
+    layout: 'custom',
+    ariaMode: 'auto',
+  },
+} as const satisfies NgxSignalFormControlPresetRegistry;
 
 /**
  * Injection token for the global ngx-signal-forms configuration.

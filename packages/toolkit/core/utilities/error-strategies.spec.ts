@@ -407,11 +407,23 @@ describe('error-strategies', () => {
       );
     });
 
-    it('should fall back to on-touch behavior for inherit strategy', () => {
-      expect(shouldShowErrors(true, true, 'inherit', 'unsubmitted')).toBe(true);
-      expect(shouldShowErrors(true, false, 'inherit', 'unsubmitted')).toBe(
-        false,
-      );
+    it('maps inherit at the showErrors boundary to on-touch semantics', () => {
+      // shouldShowErrors now accepts only ResolvedErrorDisplayStrategy.
+      // `'inherit'` is resolved upstream by showErrors() /
+      // resolveErrorDisplayStrategy(). Exercise that contract through the
+      // public reactive entry point rather than casting.
+      const touched = signal({
+        invalid: () => true,
+        touched: () => true,
+      });
+      const untouched = signal({
+        invalid: () => true,
+        touched: () => false,
+      });
+      const status = signal<SubmittedStatus>('unsubmitted');
+
+      expect(showErrors(touched, 'inherit', status)()).toBe(true);
+      expect(showErrors(untouched, 'inherit', status)()).toBe(false);
     });
   });
 });
