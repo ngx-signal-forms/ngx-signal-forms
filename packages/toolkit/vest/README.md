@@ -17,7 +17,10 @@ pnpm add @ngx-signal-forms/toolkit vest@6.2.7
 ```
 
 > **Vest v6+ required.** Standard Schema support was introduced in Vest 6.
-> `vest@6.3.0` is excluded because of an upstream packaging issue — use `6.2.x` or `>=6.3.1`.
+> `vest@6.3.0` is excluded because that release ships a broken `package.json`
+> `exports` map that prevents Angular's build tooling from resolving the
+> library. Use any `6.2.x` release or upgrade to `>=6.3.1`, where the
+> regression was fixed.
 
 If you are migrating from `ngx-vest-forms`, see [`docs/MIGRATING_FROM_NGX_VEST_FORMS.md`](../../docs/MIGRATING_FROM_NGX_VEST_FORMS.md) and the official [Vest 6 upgrade guide](https://vestjs.dev/docs/upgrade_guide).
 
@@ -108,9 +111,34 @@ First-class adapter for Vest suites. Reads `suite.run()` results and maps blocki
 ```typescript
 validateVest(path, suite); // blocking errors only
 validateVest(path, suite, { includeWarnings: true }); // + warn() as toolkit warnings
+validateVest(path, suite, { resetOnDestroy: true }); // clear suite state on teardown
+validateVest(path, suite, { only: (ctx) => ctx.value().focusedField });
 ```
 
 Blocking errors and warnings are read from the same Vest run — enabling warnings does not require a second suite pass.
+
+#### Options
+
+| Option            | Default | Description                                                                                                                                                                                    |
+| ----------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `includeWarnings` | `false` | Surface `warn()` results as toolkit warnings (`kind` prefixed with `warn:vest:`).                                                                                                              |
+| `resetOnDestroy`  | `false` | Call `suite.reset()` via `DestroyRef.onDestroy()` when the hosting injection context tears down. Strongly recommended for module-scope suites (see [Suite lifecycle](#suite-lifecycle) below). |
+| `only`            | _none_  | Selector `(ctx) => string \| string[] \| undefined` that threads a field name into `suite.run(value, fieldName)` (or `suite.only(field).run(value)` where the suite exposes that shorthand).   |
+
+### Exported constants
+
+The `kind` values the adapter generates are stable. Use the exported prefixes
+when building custom error strategies, debugger filters, or tests:
+
+```typescript
+import {
+  VEST_ERROR_KIND_PREFIX, // 'vest:'
+  VEST_WARNING_KIND_PREFIX, // 'warn:vest:'
+} from '@ngx-signal-forms/toolkit/vest';
+
+const isVestWarning = (kind: string) =>
+  kind.startsWith(VEST_WARNING_KIND_PREFIX);
+```
 
 ### validateVestWarnings()
 
@@ -160,6 +188,74 @@ const checkoutForm = form(model, (path) => {
 ```
 
 Keep each layer focused. Don't duplicate the same rule in multiple layers.
+
+## Suite lifecycle
+
+Vest suites created with `create()` retain state across runs: the last result,
+any pending async tests, and per-test memoization. The recommended Vest
+pattern is to declare suites at **module scope** so they can be imported from
+anywhere:
+
+```typescript
+// signup.suite.ts — module scope, reused by every form mount
+export const signupSuite = create((data: SignupModel) => {
+  /* ... */
+});
+```
+
+That's a great choice for performance but it means that without a teardown
+hook, suite state bleeds across component mounts. A second mount can see
+stale errors from a previous session, or async tests from an unmounted form
+can continue resolving and leak errors into the new one.
+
+Enable `resetOnDestroy: true` to wire `suite.reset()` into `DestroyRef`:
+
+```typescript
+validateVest(path, signupSuite, { resetOnDestroy: true });
+```
+
+The adapter calls `suite.reset()` (and drops its internal run cache) when the
+injection context that registered the validator is destroyed.
+
+### Async caveats
+
+- `suite.run(data)` returns a synchronous `SuiteResult` that is _also_ a
+  thenable. The adapter surfaces sync errors immediately, then awaits the
+  thenable when `result.isPending()` is `true`.
+- If a consumer-wrapped suite returns a `Promise<SuiteResult>` directly from
+  `run()` (no sync result), the adapter drives validation straight from the
+  promise. This keeps bridge suites that wrap a remote policy check working
+  end-to-end.
+- Only the **latest** run's result surfaces to Signal Forms. Rapid value
+  changes cancel pending work via Angular's async validator contract; stale
+  results never reach the field's `errors()` signal.
+
+### Focused `only()` runs
+
+When a suite callback uses `only(fieldName)` (or `suite.only(field).run(...)`),
+pass an `only` selector so the adapter threads the changed field through:
+
+```typescript
+import { create, enforce, only, test } from 'vest';
+
+const suite = create((data: Model, field?: string) => {
+  only(field);
+  test('email', 'Email is required', () => {
+    enforce(data.email).isNotBlank();
+  });
+  test('username', 'Username is required', () => {
+    enforce(data.username).isNotBlank();
+  });
+});
+
+validateVest(path, suite, {
+  only: (ctx) => ctx.value().lastTouched, // or any state-driven field name
+});
+```
+
+The default behavior (no `only` option) runs the whole suite on every change,
+which stays correct but re-executes every test body. Use `only` for large
+suites where per-field isolation matters.
 
 ## Using Angular `submit()` with warnings
 
