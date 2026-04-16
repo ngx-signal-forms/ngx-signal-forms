@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   Directive,
   input,
 } from '@angular/core';
@@ -50,7 +49,6 @@ export class DebuggerBadgeIconDirective {}
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'ngx-debugger-badge',
-    '[class]': 'hostClasses()',
     '[attr.data-variant]': 'variant()',
     '[attr.data-appearance]': 'appearance()',
   },
@@ -93,27 +91,27 @@ export class DebuggerBadgeIconDirective {}
     /* SOLID VARIANT                                */
     /* ============================================ */
 
-    :host(.ngx-debugger-badge--solid.ngx-debugger-badge--neutral) {
+    :host([data-variant='solid'][data-appearance='neutral']) {
       background-color: var(--ngx-debugger-badge-neutral-bg, #f3f4f6);
       color: var(--ngx-debugger-badge-neutral-text, #374151);
     }
 
-    :host(.ngx-debugger-badge--solid.ngx-debugger-badge--info) {
+    :host([data-variant='solid'][data-appearance='info']) {
       background-color: var(--ngx-debugger-badge-info-bg, #dbeafe);
       color: var(--ngx-debugger-badge-info-text, #1e40af);
     }
 
-    :host(.ngx-debugger-badge--solid.ngx-debugger-badge--success) {
+    :host([data-variant='solid'][data-appearance='success']) {
       background-color: var(--ngx-debugger-badge-success-bg, #dcfce7);
       color: var(--ngx-debugger-badge-success-text, #166534);
     }
 
-    :host(.ngx-debugger-badge--solid.ngx-debugger-badge--warning) {
+    :host([data-variant='solid'][data-appearance='warning']) {
       background-color: var(--ngx-debugger-badge-warning-bg, #fef3c7);
       color: var(--ngx-debugger-badge-warning-text, #92400e);
     }
 
-    :host(.ngx-debugger-badge--solid.ngx-debugger-badge--danger) {
+    :host([data-variant='solid'][data-appearance='danger']) {
       background-color: var(--ngx-debugger-badge-danger-bg, #fee2e2);
       color: var(--ngx-debugger-badge-danger-text, #991b1b);
     }
@@ -122,31 +120,31 @@ export class DebuggerBadgeIconDirective {}
     /* OUTLINE VARIANT                              */
     /* ============================================ */
 
-    :host(.ngx-debugger-badge--outline) {
+    :host([data-variant='outline']) {
       background-color: transparent;
     }
 
-    :host(.ngx-debugger-badge--outline.ngx-debugger-badge--neutral) {
+    :host([data-variant='outline'][data-appearance='neutral']) {
       border-color: var(--ngx-debugger-badge-neutral-border, #d1d5db);
       color: var(--ngx-debugger-badge-neutral-text, #374151);
     }
 
-    :host(.ngx-debugger-badge--outline.ngx-debugger-badge--info) {
+    :host([data-variant='outline'][data-appearance='info']) {
       border-color: var(--ngx-debugger-badge-info-border, #3b82f6);
       color: var(--ngx-debugger-badge-info-text, #1e40af);
     }
 
-    :host(.ngx-debugger-badge--outline.ngx-debugger-badge--success) {
+    :host([data-variant='outline'][data-appearance='success']) {
       border-color: var(--ngx-debugger-badge-success-border, #22c55e);
       color: var(--ngx-debugger-badge-success-text, #166534);
     }
 
-    :host(.ngx-debugger-badge--outline.ngx-debugger-badge--warning) {
+    :host([data-variant='outline'][data-appearance='warning']) {
       border-color: var(--ngx-debugger-badge-warning-border, #f59e0b);
       color: var(--ngx-debugger-badge-warning-text, #92400e);
     }
 
-    :host(.ngx-debugger-badge--outline.ngx-debugger-badge--danger) {
+    :host([data-variant='outline'][data-appearance='danger']) {
       border-color: var(--ngx-debugger-badge-danger-border, #ef4444);
       color: var(--ngx-debugger-badge-danger-text, #991b1b);
     }
@@ -155,28 +153,28 @@ export class DebuggerBadgeIconDirective {}
     /* GHOST VARIANT                                */
     /* ============================================ */
 
-    :host(.ngx-debugger-badge--ghost) {
+    :host([data-variant='ghost']) {
       background-color: transparent;
       border-color: transparent;
     }
 
-    :host(.ngx-debugger-badge--ghost.ngx-debugger-badge--neutral) {
+    :host([data-variant='ghost'][data-appearance='neutral']) {
       color: var(--ngx-debugger-badge-neutral-text, #374151);
     }
 
-    :host(.ngx-debugger-badge--ghost.ngx-debugger-badge--info) {
+    :host([data-variant='ghost'][data-appearance='info']) {
       color: var(--ngx-debugger-badge-info-text, #1e40af);
     }
 
-    :host(.ngx-debugger-badge--ghost.ngx-debugger-badge--success) {
+    :host([data-variant='ghost'][data-appearance='success']) {
       color: var(--ngx-debugger-badge-success-text, #166534);
     }
 
-    :host(.ngx-debugger-badge--ghost.ngx-debugger-badge--warning) {
+    :host([data-variant='ghost'][data-appearance='warning']) {
       color: var(--ngx-debugger-badge-warning-text, #92400e);
     }
 
-    :host(.ngx-debugger-badge--ghost.ngx-debugger-badge--danger) {
+    :host([data-variant='ghost'][data-appearance='danger']) {
       color: var(--ngx-debugger-badge-danger-text, #991b1b);
     }
 
@@ -249,7 +247,7 @@ export class DebuggerBadgeIconDirective {}
     }
 
     /* Spinning animation for pending states */
-    :host .ngx-debugger-badge__icon.animate-spin {
+    :host .ngx-debugger-badge__icon.ngx-debugger-badge__icon--spin {
       animation: ngx-debugger-spin 1s linear infinite;
     }
 
@@ -266,10 +264,4 @@ export class DebuggerBadgeIconDirective {}
 export class DebuggerBadgeComponent {
   readonly variant = input<DebuggerBadgeVariant>('solid');
   readonly appearance = input<DebuggerBadgeAppearance>('neutral');
-
-  protected readonly hostClasses = computed(() => {
-    const v = this.variant();
-    const a = this.appearance();
-    return `ngx-debugger-badge--${v} ngx-debugger-badge--${a}`;
-  });
 }
