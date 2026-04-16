@@ -17,13 +17,35 @@ export type DebuggerBadgeAppearance =
  * Icon directive for debugger badges.
  * Apply to SVG elements to style them correctly within badges.
  *
- * @example
+ * ## Spinner variant
+ *
+ * Add the `ngx-debugger-badge__icon--spin` modifier class to run the
+ * shared `ngx-debugger-spin` keyframe animation (1s linear infinite).
+ * This is how the debugger renders the pending-validation indicator.
+ *
+ * @example Plain icon
  * ```html
  * <ngx-signal-form-debugger-badge>
  *   <svg ngxSignalFormDebuggerBadgeIcon fill="none" stroke="currentColor" viewBox="0 0 16 16">
  *     <circle cx="8" cy="8" r="5.5" />
  *   </svg>
  *   Status
+ * </ngx-signal-form-debugger-badge>
+ * ```
+ *
+ * @example Animated spinner
+ * ```html
+ * <ngx-signal-form-debugger-badge appearance="info">
+ *   <svg
+ *     ngxSignalFormDebuggerBadgeIcon
+ *     class="ngx-debugger-badge__icon--spin"
+ *     fill="none"
+ *     stroke="currentColor"
+ *     viewBox="0 0 16 16"
+ *   >
+ *     <circle cx="8" cy="8" r="5.5" stroke-dasharray="20 12" />
+ *   </svg>
+ *   Pending
  * </ngx-signal-form-debugger-badge>
  * ```
  */

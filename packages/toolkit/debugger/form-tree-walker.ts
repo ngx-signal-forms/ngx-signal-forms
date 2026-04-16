@@ -1,3 +1,5 @@
+import { isDevMode, untracked } from '@angular/core';
+
 type WalkableFormTree = Record<string | number, unknown>;
 
 /**
@@ -39,11 +41,17 @@ function isFieldFunction(value: unknown): value is () => unknown {
  * Used both as a public check (e.g. from the component) and as a safety net
  * inside the walker so that malformed inputs (a plain `() => 42`) never
  * propagate into `for…in`/`for…of` loops below.
+ *
+ * Invoking a `FieldTree` reads reactive `FieldState` signals, so calling
+ * this from inside a `computed`/`effect` would silently subscribe the
+ * caller to every field the sniff touches. We wrap the call in
+ * `untracked(...)` so the guard stays a pure shape-check regardless of the
+ * surrounding reactive context.
  */
 export function isFieldStateLike(value: unknown): value is () => unknown {
   if (typeof value !== 'function') return false;
   try {
-    const result = (value as () => unknown)();
+    const result = untracked(() => (value as () => unknown)());
     if (result === null || typeof result !== 'object') return false;
     const state = result as {
       errors?: unknown;
@@ -106,7 +114,12 @@ function walkFormTreeInternal(
     for (const key of Object.keys(model)) {
       const child = tree[key];
       if (!isFieldFunction(child)) continue;
-      if (!isFieldStateLike(child)) continue;
+      // The root was already shape-validated at `walkFormTree` entry and
+      // Angular's `FieldTree` typing guarantees nested children share the
+      // shape. The `isFieldStateLike` call doubles field invocations, so
+      // keep it as a dev-only defensive net against malformed inputs and
+      // skip it in prod.
+      if (isDevMode() && !isFieldStateLike(child)) continue;
 
       const nextModel = model[key];
       const childPath = pathPrefix === '' ? key : `${pathPrefix}.${key}`;
@@ -131,7 +144,8 @@ function walkFormTreeInternal(
   for (let i = 0; i < model.length; i++) {
     const child = tree[i];
     if (!isFieldFunction(child)) continue;
-    if (!isFieldStateLike(child)) continue;
+    // Dev-only defensive guard — see matching comment in the object branch.
+    if (isDevMode() && !isFieldStateLike(child)) continue;
 
     const nextModel = model[i];
     const childPath = pathPrefix === '' ? String(i) : `${pathPrefix}.${i}`;

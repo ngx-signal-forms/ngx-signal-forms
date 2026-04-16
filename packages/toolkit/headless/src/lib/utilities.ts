@@ -1,4 +1,4 @@
-import { computed } from '@angular/core';
+import { computed, isDevMode } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createUniqueId,
@@ -12,6 +12,7 @@ import {
   unwrapValue,
   type ErrorDisplayStrategy,
   type ErrorReadableState,
+  type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -378,7 +379,7 @@ export function createErrorState<TValue = unknown>(
 
   const resolvedFieldName = computed(() => unwrapValue(fieldName));
 
-  const resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
+  const resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() => {
     if (strategy !== undefined) {
       const resolved = unwrapValue(strategy);
       if (resolved !== 'inherit') {
@@ -498,11 +499,30 @@ export function createCharacterCount(
 
   const fieldState = computed(() => field());
 
+  // One-shot guard so the dev warning for an unsupported `value()` type fires
+  // at most once per `createCharacterCount` invocation instead of on every
+  // re-computation. `null`/`undefined` are treated as "empty" and do not warn.
+  let warnedUnsupportedValue = false;
+
   const currentLength = computed(() => {
     const state = fieldState();
     const value = state.value();
     if (typeof value === 'string') return value.length;
     if (Array.isArray(value)) return value.length;
+    if (
+      isDevMode() &&
+      !warnedUnsupportedValue &&
+      value !== null &&
+      value !== undefined
+    ) {
+      warnedUnsupportedValue = true;
+      // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+      console.warn(
+        '[ngx-signal-forms] createCharacterCount: unsupported value type — expected `string` or `readonly string[]`, got',
+        value,
+        '— rendering length as 0.',
+      );
+    }
     return 0;
   });
 

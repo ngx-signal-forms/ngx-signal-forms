@@ -10,10 +10,15 @@ import type { FieldTree } from '@angular/forms/signals';
 import {
   createCharacterCount,
   type CharacterCountLimitState,
+  type CharacterCountValue,
 } from '@ngx-signal-forms/toolkit/headless';
 
 /**
  * Supported value shape for the character-count `formField` input.
+ *
+ * Re-exports {@link CharacterCountValue} from the headless entry so the
+ * styled component's input type cannot drift from what the underlying
+ * `createCharacterCount()` utility actually supports.
  *
  * The component counts length of either:
  * - A `string` value (e.g. `<input>`, `<textarea>`)
@@ -24,11 +29,7 @@ import {
  * `null` / `undefined` are treated as length `0`. Any other value type
  * logs a dev-mode warning via `createCharacterCount` and renders `0`.
  */
-export type NgxCharacterCountValue =
-  | string
-  | readonly string[]
-  | null
-  | undefined;
+export type NgxCharacterCountValue = CharacterCountValue;
 
 /**
  * Form field character count component with progressive color states.

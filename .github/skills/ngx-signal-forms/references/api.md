@@ -88,7 +88,7 @@ interface ErrorMessageRegistry {
 
 type FieldLabelMap = Record<string, string>;
 interface NgxSignalFormFieldContext {
-  readonly fieldName: Signal<string>;
+  readonly fieldName: Signal<string | null>;
 }
 interface NgxSignalFormControlPreset {
   readonly layout: NgxSignalFormControlLayout;
@@ -142,8 +142,7 @@ Migration note for `defaultFormFieldAppearance`:
 type SignalLike<T> = Signal<T> | (() => T);
 type ResolvedErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit';
 type ErrorDisplayStrategy = ResolvedErrorDisplayStrategy | 'inherit';
-type ResolvedFormFieldAppearance = 'stacked' | 'outline' | 'plain';
-type FormFieldAppearance = ResolvedFormFieldAppearance;
+type FormFieldAppearance = 'stacked' | 'outline' | 'plain';
 type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
 type SubmittedStatus = 'unsubmitted' | 'submitting' | 'submitted';
 type ErrorVisibilityState = Pick<FieldState<unknown>, 'invalid' | 'touched'>;

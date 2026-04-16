@@ -190,7 +190,13 @@ describe('validateVest', () => {
     ).toHaveLength(1);
   });
 
-  it('surfaces only the latest Vest result when the value changes rapidly', async () => {
+  // Synchronous `model.set(...)` calls are collapsed by Angular's signal
+  // scheduler before any effect runs, so this test does NOT exercise
+  // in-flight cancellation — it only verifies that the surfaced errors
+  // reflect the model's final value after a burst of updates. Coverage for
+  // true "stale async runs never reach errors()" cancellation belongs in a
+  // Promise-based async suite; tracked for a follow-up.
+  it("surfaces the latest value's result after a burst of synchronous updates", async () => {
     const baseSuite = create((data: { username: string }) => {
       test('username', 'Username must be at least 3 characters', () => {
         enforce(data.username.length >= 3).isTruthy();

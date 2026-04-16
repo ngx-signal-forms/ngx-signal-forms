@@ -1,6 +1,4 @@
-import { Component, signal } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
+import { signal } from '@angular/core';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it, vi } from 'vitest';
 import { NgxHeadlessFieldNameDirective } from './field-name.directive';
@@ -52,34 +50,53 @@ describe('NgxHeadlessFieldNameDirective', () => {
     expect(screen.getByTestId('resolved')).toHaveTextContent('fallback-id');
   });
 
-  it('returns null and logs dev-mode error when no input and no host id exist', async () => {
-    @Component({
-      imports: [NgxHeadlessFieldNameDirective],
-      template: ` <div ngxSignalFormHeadlessFieldName></div> `,
-    })
-    class TestHostComponent {}
-
+  it('returns null signals and logs dev-mode error at most once when no input and no host id exist', async () => {
     const consoleErrorSpy = vi
       .spyOn(console, 'error')
       .mockImplementation(() => undefined);
 
-    const fixture = TestBed.createComponent(TestHostComponent);
-    fixture.detectChanges();
+    // Bind through a signal so we can force the `resolvedFieldName`
+    // computed to re-run with another unresolvable value and verify the
+    // one-shot guard actually suppresses a duplicate console.error.
+    // Re-reading the computed wouldn't cover that: without a dependency
+    // change Angular returns the cached result and the body never runs
+    // again.
+    const fieldNameInput = signal<string | undefined>(undefined);
+    const { fixture } = await render(
+      `
+      <div
+        ngxSignalFormHeadlessFieldName
+        #fieldName="fieldName"
+        [fieldName]="fieldNameInput()"
+      >
+        <span data-testid="resolved">{{ fieldName.resolvedFieldName() }}</span>
+        <span data-testid="error-id">{{ fieldName.errorId() }}</span>
+        <span data-testid="warning-id">{{ fieldName.warningId() }}</span>
+      </div>
+      `,
+      {
+        imports: [NgxHeadlessFieldNameDirective],
+        componentProperties: { fieldNameInput },
+      },
+    );
 
-    const directive = fixture.debugElement
-      .query(By.directive(NgxHeadlessFieldNameDirective))
-      .injector.get(NgxHeadlessFieldNameDirective);
-
-    expect(directive.resolvedFieldName()).toBeNull();
-    expect(directive.errorId()).toBeNull();
-    expect(directive.warningId()).toBeNull();
+    // Angular interpolates `null` as empty text, so absence in the DOM
+    // maps to absence of a resolvable identity.
+    expect(screen.getByTestId('resolved').textContent).toBe('');
+    expect(screen.getByTestId('error-id').textContent).toBe('');
+    expect(screen.getByTestId('warning-id').textContent).toBe('');
     expect(consoleErrorSpy).toHaveBeenCalledOnce();
     expect(consoleErrorSpy.mock.calls[0]?.[0]).toMatch(
       /requires either a non-empty `fieldName` input or a host element `id`/u,
     );
 
-    // Subsequent reads should not re-emit the error.
-    directive.resolvedFieldName();
+    // Swap the bound input to another unresolvable value (whitespace-only).
+    // The computed re-runs but still yields null; the one-shot guard must
+    // keep the error count at one.
+    fieldNameInput.set('   ');
+    fixture.detectChanges();
+
+    expect(screen.getByTestId('resolved').textContent).toBe('');
     expect(consoleErrorSpy).toHaveBeenCalledOnce();
 
     consoleErrorSpy.mockRestore();

@@ -115,4 +115,25 @@ describe('provideNgxSignalFormsConfigForComponent', () => {
     expect(resolved.autoAria).toBe(false);
     expect(resolved.requiredMarker).toBe(' (required)');
   });
+
+  it('preserves empty-string requiredMarker override against parent value', () => {
+    // Guards the `??`-based merge in `createConfigFactory`: with `||` an
+    // explicit `requiredMarker: ''` would silently fall through to the
+    // parent's marker. `??` must short-circuit on empty string and drop the
+    // visible marker in the child scope.
+    const parentEnv = createInjectorFromEnvProviders([
+      provideNgxSignalFormsConfig({ requiredMarker: ' *' }),
+    ]);
+
+    const childProviders = provideNgxSignalFormsConfigForComponent({
+      requiredMarker: '',
+    });
+    const childInjector = createInjectorFromEnvProviders(
+      childProviders,
+      parentEnv,
+    );
+
+    const resolved = childInjector.get(NGX_SIGNAL_FORMS_CONFIG);
+    expect(resolved.requiredMarker).toBe('');
+  });
 });

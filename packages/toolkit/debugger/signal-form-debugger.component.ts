@@ -315,7 +315,7 @@ export class SignalFormDebuggerComponent {
       );
       const errors = fieldState.errors() ?? [];
       for (const error of errors) {
-        const key = `${error.kind}|${error.message ?? ''}`;
+        const key = `${path}|${error.kind}|${error.message ?? ''}`;
         if (seen.has(key)) continue;
         seen.add(key);
         fieldErrors.push(withDebuggerMeta(visible, path)(error));
@@ -344,13 +344,16 @@ export class SignalFormDebuggerComponent {
   protected readonly rootErrors = computed(() => this.rootState().errors());
 
   /**
-   * Root-error "identity" keys (`kind|message`) used to filter out root
-   * entries from `fieldErrors` in O(N) rather than O(N·M).
+   * Root-error "identity" keys (`path|kind|message`, with `path === ''`
+   * for root entries) used to filter out root entries from `fieldErrors`
+   * in O(N) rather than O(N·M). Format mirrors the key `#treeSnapshot`
+   * uses so a descendant that happens to share kind/message with a root
+   * entry is not incorrectly filtered out.
    */
   readonly #rootErrorKeys = computed(() => {
     const set = new Set<string>();
     for (const error of this.rootErrors()) {
-      set.add(`${error.kind}|${error.message ?? ''}`);
+      set.add(`|${error.kind}|${error.message ?? ''}`);
     }
     return set;
   });
@@ -376,7 +379,7 @@ export class SignalFormDebuggerComponent {
   protected readonly fieldErrors = computed(() => {
     const rootKeys = this.#rootErrorKeys();
     return this.allErrors().filter(
-      (e) => !rootKeys.has(`${e.kind}|${e.message ?? ''}`),
+      (e) => !rootKeys.has(`${e.path}|${e.kind}|${e.message ?? ''}`),
     );
   });
 
@@ -508,24 +511,27 @@ export class SignalFormDebuggerComponent {
   readonly #warnedTrees = new WeakSet();
 
   // Named Angular effect field is intentionally unread — Angular owns the
-  // lifecycle. Keeping the name documents the side-effect.
+  // lifecycle. Keeping the name documents the side-effect. The `effect()`
+  // registration is skipped in production: the dev-only warning never needs
+  // to run there, so there is no reason to schedule an effect or retain its
+  // closure in prod bundles.
   // oxlint-disable-next-line no-unused-private-class-members -- EffectRef retained as a named field to document the side effect.
-  readonly #fieldTreeWarningEffect = effect(() => {
-    if (!isDevMode()) return;
+  readonly #fieldTreeWarningEffect = isDevMode()
+    ? effect(() => {
+        const value = this.formTree() as unknown;
+        if (!value || typeof value !== 'object' || this.#isFieldTree(value)) {
+          return;
+        }
+        if (this.#warnedTrees.has(value)) return;
 
-    const value = this.formTree() as unknown;
-    if (!value || typeof value !== 'object' || this.#isFieldTree(value)) {
-      return;
-    }
-    if (this.#warnedTrees.has(value)) return;
-
-    this.#warnedTrees.add(value);
-    console.warn(
-      '[NgxSignalFormDebugger] Pass the FieldTree function (e.g. form) to formTree. ' +
-        'A FieldState (e.g. form()) is supported, but it cannot traverse child fields ' +
-        'and may show errors as visible immediately.',
-    );
-  });
+        this.#warnedTrees.add(value);
+        console.warn(
+          '[NgxSignalFormDebugger] Pass the FieldTree function (e.g. form) to formTree. ' +
+            'A FieldState (e.g. form()) is supported, but it cannot traverse child fields ' +
+            'and may show errors as visible immediately.',
+        );
+      })
+    : undefined;
 
   // ============================================================================
   // Private helpers

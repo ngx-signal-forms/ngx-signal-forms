@@ -684,6 +684,13 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     // Single afterEveryRender with proper phased callbacks:
     // - earlyRead: read projected control metadata from the DOM before writes
     // - write: update signals only when values changed, then write data-signal-field
+    //
+    // `afterEveryRender` (not `afterNextRender`) is deliberate: the projected
+    // `[formField]` control can be swapped at any render — `@if` branch flips,
+    // `@for` reorder, or a dynamic component swap — and we need to re-resolve
+    // it each time. The `cacheHit` check at the top of `earlyRead` keeps the
+    // steady-state cost to a handful of DOM attribute reads when nothing has
+    // changed; only a real swap falls through to `findBoundControl`.
     afterEveryRender({
       earlyRead: () => {
         const hostEl = requireHostElement(this.#elementRef);

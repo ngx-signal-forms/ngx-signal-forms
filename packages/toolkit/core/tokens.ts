@@ -9,10 +9,15 @@ import type {
 /**
  * Context provided by form field wrapper components.
  * Allows child components (like error display) to inherit field name.
+ *
+ * `fieldName` may emit `null` when the wrapper cannot resolve a field name
+ * (no `[formField]`, no explicit `[fieldName]` input, no projected control).
+ * Consumers should treat `null` as "field name not yet known" — usually by
+ * skipping id/aria linking and (in dev mode) surfacing the misconfiguration.
  */
 export interface NgxSignalFormFieldContext {
-  /** Resolved field name signal */
-  readonly fieldName: Signal<string>;
+  /** Resolved field name signal, or `null` when the wrapper cannot resolve one. */
+  readonly fieldName: Signal<string | null>;
 }
 
 /**

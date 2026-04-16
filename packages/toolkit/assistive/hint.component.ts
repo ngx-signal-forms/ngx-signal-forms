@@ -1,4 +1,3 @@
-import { isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -6,7 +5,6 @@ import {
   ElementRef,
   inject,
   input,
-  PLATFORM_ID,
   signal,
 } from '@angular/core';
 import {
@@ -108,7 +106,6 @@ export class NgxFormFieldHintComponent {
   readonly #fieldContext = inject(NGX_SIGNAL_FORM_FIELD_CONTEXT, {
     optional: true,
   });
-  readonly #platformId = inject(PLATFORM_ID);
 
   readonly #explicitId = signal<string | null>(null);
 
@@ -148,16 +145,14 @@ export class NgxFormFieldHintComponent {
   constructor() {
     // Read the host `id` attribute at construction time so downstream
     // consumers (auto-aria directive, hint registry) see the explicit
-    // id synchronously during their own initialisation. Gated on
-    // `isPlatformBrowser` to keep SSR builds from touching the DOM at
-    // construction — on platform-server we fall back to the
-    // `resolvedFieldName()` / `createUniqueId()` branches, which still
-    // render a stable id for the client hydration to pick up.
-    if (isPlatformBrowser(this.#platformId)) {
-      const existingId = this.#elementRef.nativeElement.getAttribute('id');
-      if (existingId !== null && existingId.length > 0) {
-        this.#explicitId.set(existingId);
-      }
+    // id synchronously during their own initialisation. Runs on both
+    // platforms: Angular's server DOM supports `getAttribute`, and we
+    // want the server-rendered `id` to match what the client picks up
+    // on hydration (otherwise author-supplied ids would hydrate as a
+    // different generated value and the DOM would mismatch).
+    const existingId = this.#elementRef.nativeElement.getAttribute('id');
+    if (existingId !== null && existingId.length > 0) {
+      this.#explicitId.set(existingId);
     }
   }
 }

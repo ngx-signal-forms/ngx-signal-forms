@@ -20,6 +20,7 @@ import {
   resolveValidationErrorMessage,
   splitByKind,
   type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import { NGX_ERROR_MESSAGES } from '@ngx-signal-forms/toolkit/core';
@@ -176,6 +177,15 @@ export class NgxFormFieldErrorComponent {
   });
 
   /**
+   * One-shot guard so the "missing field name" dev error fires at most once
+   * per component instance. Without this, the `#resolvedFieldName` computed
+   * would re-emit on every dependency tick — spamming the console on signal
+   * changes upstream. Matches the `#warnedMissingName` pattern used by
+   * `NgxHeadlessFieldNameDirective`.
+   */
+  #warnedMissingName = false;
+
+  /**
    * Try to inject error messages registry (optional - may not be provided).
    *
    * Used for 3-tier message priority:
@@ -264,11 +274,12 @@ export class NgxFormFieldErrorComponent {
     }
 
     const contextFieldName = this.#fieldContext?.fieldName();
-    if (contextFieldName !== undefined) {
+    if (contextFieldName !== undefined && contextFieldName !== null) {
       return contextFieldName;
     }
 
-    if (isDevMode()) {
+    if (isDevMode() && !this.#warnedMissingName) {
+      this.#warnedMissingName = true;
       // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
       console.error(
         '[ngx-signal-forms] ngx-form-field-error requires an explicit `fieldName` input or a parent ngx-signal-form-field-wrapper context. The component will render without id/aria-describedby linking until one is provided.',
@@ -336,7 +347,7 @@ export class NgxFormFieldErrorComponent {
     return fieldName === null ? null : generateWarningId(fieldName);
   });
 
-  readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() =>
+  readonly #resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() =>
     resolveStrategyFromContext(this.strategy(), this.#injectedContext),
   );
 
@@ -345,13 +356,15 @@ export class NgxFormFieldErrorComponent {
    * warnings stay visible after errors are dismissed, which matches the
    * usual UX for non-blocking guidance.
    */
-  readonly #resolvedWarningStrategy = computed<ErrorDisplayStrategy>(() => {
-    const explicit = this.warningStrategy();
-    if (explicit !== undefined) {
-      return resolveStrategyFromContext(explicit, this.#injectedContext);
-    }
-    return 'immediate';
-  });
+  readonly #resolvedWarningStrategy = computed<ResolvedErrorDisplayStrategy>(
+    () => {
+      const explicit = this.warningStrategy();
+      if (explicit !== undefined) {
+        return resolveStrategyFromContext(explicit, this.#injectedContext);
+      }
+      return 'immediate';
+    },
+  );
 
   readonly #resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(
     () =>

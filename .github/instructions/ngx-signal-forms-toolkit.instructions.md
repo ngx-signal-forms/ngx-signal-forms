@@ -68,8 +68,7 @@ type ErrorDisplayStrategy = ResolvedErrorDisplayStrategy | 'inherit';
 ### Form field appearance
 
 ```typescript
-type ResolvedFormFieldAppearance = 'stacked' | 'outline' | 'plain';
-type FormFieldAppearance = ResolvedFormFieldAppearance;
+type FormFieldAppearance = 'stacked' | 'outline' | 'plain';
 type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
 ```
 

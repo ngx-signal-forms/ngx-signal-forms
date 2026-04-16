@@ -7,6 +7,7 @@ import {
   resolveValidationErrorMessage,
   showErrors,
   type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import { NGX_ERROR_MESSAGES } from '@ngx-signal-forms/toolkit/core';
@@ -130,7 +131,7 @@ export class NgxHeadlessErrorStateDirective<
    */
   readonly submittedStatus = input<SubmittedStatus | undefined>();
 
-  readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() =>
+  readonly #resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() =>
     resolveStrategyFromContext(this.strategy(), this.#injectedContext),
   );
 

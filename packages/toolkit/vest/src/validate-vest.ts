@@ -341,10 +341,13 @@ function getVestSuiteRunCache(suite: object): VestRunCache {
 }
 
 /**
- * Executes `suite.run()` using the appropriate `only` targeting (if any).
- * Prefers the canonical `suite.run(value, fieldName)` form which works with
- * suite callbacks that invoke `only(fieldName)` internally. Falls back to the
- * `suite.only(field).run(value)` shorthand if the suite only exposes that API.
+ * Executes `suite.run()` using the appropriate focused-run targeting.
+ *
+ * Prefers the Vest 6 canonical `suite.only(field).run(value)` form — that
+ * matches the upgrade-guide idiom where focus logic is kept out of the suite
+ * body. Falls back to the legacy `suite.run(value, fieldName)` form only when
+ * the suite does not expose `only` (e.g. consumer-wrapped suites that
+ * surface a `run`-only adapter).
  */
 function executeVestRun<TValue>(
   suite: Pick<VestRunnableSuite<TValue>, 'run' | 'only'>,

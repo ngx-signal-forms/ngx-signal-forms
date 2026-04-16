@@ -15,6 +15,7 @@ import {
   showErrors,
   splitByKind,
   type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 
@@ -41,8 +42,12 @@ export interface FieldsetStateSignals {
   readonly shouldShowErrors: () => boolean;
   /** Whether to show warnings based on strategy */
   readonly shouldShowWarnings: () => boolean;
-  /** Resolved error display strategy */
-  readonly resolvedStrategy: () => ErrorDisplayStrategy;
+  /**
+   * Resolved error display strategy. Always a concrete strategy
+   * (`'immediate'`, `'on-touch'`, or `'on-submit'`) — `'inherit'` is
+   * resolved against the form context / config default before exposure.
+   */
+  readonly resolvedStrategy: () => ResolvedErrorDisplayStrategy;
   /** Resolved submitted status (from input override, form context, or default) */
   readonly resolvedSubmittedStatus: () => SubmittedStatus;
   /** Fieldset validation state flags */
@@ -164,7 +169,7 @@ export class NgxHeadlessFieldsetDirective<
   /**
    * Resolved error display strategy.
    */
-  readonly resolvedStrategy = computed<ErrorDisplayStrategy>(() =>
+  readonly resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() =>
     resolveStrategyFromContext(
       this.strategy(),
       this.#formContext,
