@@ -1,5 +1,6 @@
 {
   "name": "debugger",
+  "sideEffects": false,
   "peerDependencies": {
     "@angular/core": ">=21.2.0",
     "@angular/forms": ">=21.2.0"

@@ -413,7 +413,15 @@
                     >
                       <div class="ngx-debugger__error-header">
                         <h6 class="ngx-debugger__error-kind">
-                          🔗 {{ error.kind }}
+                          <span
+                            class="ngx-debugger__error-kind-icon"
+                            aria-hidden="true"
+                            >🔗</span
+                          >
+                          <span class="ngx-debugger__error-kind-label"
+                            >Root-level error:</span
+                          >
+                          {{ error.kind }}
                         </h6>
                         @if (!error.visible) {
                           <ngx-signal-form-debugger-badge
@@ -568,7 +576,15 @@
                     >
                       <div class="ngx-debugger__error-header">
                         <h6 class="ngx-debugger__error-kind">
-                          🔗 {{ warning.kind }}
+                          <span
+                            class="ngx-debugger__error-kind-icon"
+                            aria-hidden="true"
+                            >🔗</span
+                          >
+                          <span class="ngx-debugger__error-kind-label"
+                            >Root-level warning:</span
+                          >
+                          {{ warning.kind }}
                         </h6>
                         @if (!warning.visible) {
                           <ngx-signal-form-debugger-badge

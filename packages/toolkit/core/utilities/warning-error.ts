@@ -76,24 +76,41 @@ export function splitByKind(errors: readonly ValidationError[]): SplitErrors {
 }
 
 /**
- * Creates a warning validation error using the 'warn:' kind convention.
+ * Creates a warning validation error using the `warn:` kind convention.
  *
  * **What are warnings?**
  * Warnings are non-blocking validation messages that provide guidance to users
  * without preventing form submission. They use the same `ValidationError` structure
- * as errors, but with a `kind` that starts with `'warn:'`.
+ * as errors, but with a `kind` that starts with `warn:`.
  *
  * **Convention:**
- * - Errors (blocking): `kind` does NOT start with `'warn:'`
- * - Warnings (non-blocking): `kind` starts with `'warn:'`
+ * - Errors (blocking): `kind` does NOT start with `warn:`
+ * - Warnings (non-blocking): `kind` starts with `warn:`
  *
  * **ARIA Behavior:**
  * - Errors: `role="alert"` with `aria-live="assertive"` (immediate announcement)
  * - Warnings: `role="status"` with `aria-live="polite"` (non-intrusive)
  *
- * @param kind - The warning type (will be prefixed with 'warn:')
- * @param message - Optional warning message to display
- * @returns A CustomValidationError with kind prefixed by 'warn:'
+ * @remarks
+ * **Pass the bare kind, not the prefixed form.** Call
+ * `warningError('weak-password')`, NOT `warningError('warn:weak-password')`.
+ * The function adds the `warn:` prefix for you. Passing an already-prefixed
+ * kind is tolerated (deduplicated to avoid `warn:warn:*`) but is not the
+ * intended call form.
+ *
+ * **Stability**: the `warn:` prefix scheme is part of the toolkit's public
+ * v1 contract. Helpers that key off it (`isWarningError`, `splitByKind`,
+ * `hasOnlyWarnings`, `getBlockingErrors`, `canSubmitWithWarnings`,
+ * `submitWithWarnings`) and ARIA timing in the wrapper, assistive, and
+ * headless entry points all depend on it. Changing the prefix is a major
+ * version bump.
+ *
+ * @param kind - The warning type, without the `warn:` prefix (the prefix is
+ *   prepended by this function).
+ * @param message - Optional warning message to display.
+ * @returns A `ValidationError` with `kind` prefixed by `warn:`.
+ *
+ * @since 1.0.0
  *
  * @example Basic warning
  * ```typescript

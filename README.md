@@ -495,11 +495,18 @@ links to a runnable demo. Browse them all at
 
 ## Accessibility
 
-The toolkit is designed around WCAG 2.2 AA form patterns: automatic `aria-invalid`,
-`aria-required`, and `aria-describedby`; `role="alert"` for blocking errors and
-`role="status"` for warnings; `on-touch` error timing to avoid premature noise; and
-focus helpers for invalid submissions. As always, review and test your final forms
-in context.
+The toolkit is designed around the WCAG 2.2 AA form patterns it can automate:
+
+- automatic `aria-invalid`, `aria-required`, and `aria-describedby` on supported controls
+- `role="alert"` for blocking errors and `role="status"` for warnings
+- `on-touch` error timing by default to avoid premature noise
+- focus helpers (`focusFirstInvalid`, `createOnInvalidHandler`) for invalid submissions
+
+These cover the mechanics, not the content. WCAG conformance is a property of
+your finished page — the toolkit cannot guarantee accessible labels, color
+contrast, copy, keyboard order, or context that lives outside the form. Treat
+the automation as a head start, then run an end-to-end audit on the deployed
+form (axe, Lighthouse, screen-reader testing) before claiming conformance.
 
 ---
 

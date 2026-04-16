@@ -2,6 +2,13 @@ type WalkableFormTree = Record<string | number, unknown>;
 
 type FormTreeVisitor = (childField: () => unknown, childModel: unknown) => void;
 
+/**
+ * Default recursion depth limit for `walkFormTree`. Real Signal Forms trees
+ * are shallow (rarely past ~5 levels), so 100 is a wide safety margin that
+ * still catches accidental cycles without truncating legitimate forms.
+ */
+const DEFAULT_MAX_DEPTH = 100;
+
 function isObjectModel(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
@@ -21,12 +28,32 @@ function isFieldFunction(value: unknown): value is () => unknown {
  * Signal Forms' `Field<T>` is both callable and indexable, so the recursive
  * call treats each child function as a subtree via a load-bearing cast — the
  * only `unknown`-widening step that the type system can't verify on its own.
+ *
+ * @param tree The form tree node to walk.
+ * @param model The model value paired with `tree`.
+ * @param visitor Called for each child field/model pair before recursing.
+ * @param maxDepth Defensive recursion limit. The walker stops descending past
+ *   `maxDepth` levels, which guards against pathological cyclic structures
+ *   without affecting realistic forms (default: 100).
  */
 export function walkFormTree(
   tree: WalkableFormTree,
   model: unknown,
   visitor: FormTreeVisitor,
+  maxDepth: number = DEFAULT_MAX_DEPTH,
 ): void {
+  walkFormTreeInternal(tree, model, visitor, maxDepth, 0);
+}
+
+function walkFormTreeInternal(
+  tree: WalkableFormTree,
+  model: unknown,
+  visitor: FormTreeVisitor,
+  maxDepth: number,
+  depth: number,
+): void {
+  if (depth >= maxDepth) return;
+
   if (isObjectModel(model)) {
     for (const key of Object.keys(model)) {
       const child = tree[key];
@@ -34,7 +61,13 @@ export function walkFormTree(
 
       const nextModel = model[key];
       visitor(child, nextModel);
-      walkFormTree(child as unknown as WalkableFormTree, nextModel, visitor);
+      walkFormTreeInternal(
+        child as unknown as WalkableFormTree,
+        nextModel,
+        visitor,
+        maxDepth,
+        depth + 1,
+      );
     }
 
     return;
@@ -50,6 +83,12 @@ export function walkFormTree(
 
     const nextModel = model[i];
     visitor(child, nextModel);
-    walkFormTree(child as unknown as WalkableFormTree, nextModel, visitor);
+    walkFormTreeInternal(
+      child as unknown as WalkableFormTree,
+      nextModel,
+      visitor,
+      maxDepth,
+      depth + 1,
+    );
   }
 }

@@ -18,8 +18,6 @@ export interface FieldNameStateSignals {
   readonly errorId: Signal<string>;
   /** Generated warning region ID */
   readonly warningId: Signal<string>;
-  /** Whether the field has a non-empty name */
-  readonly hasFieldName: Signal<boolean>;
 }
 
 /**
@@ -27,6 +25,14 @@ export interface FieldNameStateSignals {
  *
  * Provides signals for resolving field names and generating accessible
  * IDs for error/warning description regions.
+ *
+ * ## Required input
+ *
+ * One of the following must be provided, otherwise `resolvedFieldName()`,
+ * `errorId()`, and `warningId()` throw the next time they are read:
+ *
+ * - A non-empty `fieldName` input, or
+ * - A non-empty `id` attribute on the host element.
  *
  * ## Features
  *
@@ -83,6 +89,11 @@ export class NgxHeadlessFieldNameDirective implements FieldNameStateSignals {
 
   /**
    * Resolved field name.
+   *
+   * @throws {Error} when neither a non-empty `fieldName` input nor a
+   *   non-empty host `id` is available. The throw is intentional — silently
+   *   returning an empty string would generate ARIA references like
+   *   `id="-error"` that are unstable across instances.
    */
   readonly resolvedFieldName = computed(() => {
     const inputValue = this.fieldName();
@@ -102,13 +113,6 @@ export class NgxHeadlessFieldNameDirective implements FieldNameStateSignals {
       '[ngx-signal-forms] ngxSignalFormHeadlessFieldName requires either a non-empty `fieldName` input or a host element `id`.',
     );
   });
-
-  /**
-   * Whether the field has a non-empty name.
-   */
-  readonly hasFieldName = computed(
-    () => this.resolvedFieldName().trim().length > 0,
-  );
 
   /**
    * Generated error region ID.

@@ -44,16 +44,17 @@ The Vest adapter is optional and only required when importing
 
 ## Runtime and tooling baseline
 
+The toolkit's `engines.node` matches Angular 21's supported range:
+`^20.19.0 || ^22.12.0 || >=24.0.0`. Consumers should use an active LTS Node
+version compatible with Angular 21 and their package manager/tooling stack.
+
 The repository currently validates and publishes with the following Node
 versions:
 
 | Use case         | Version used in automation |
 | ---------------- | -------------------------- |
-| CI workflow      | Node 22                    |
-| Publish workflow | Node 24                    |
-
-Consumers should use an active LTS Node version that is compatible with Angular
-21 and their package manager/tooling stack.
+| CI workflow      | Node 22 (maintenance LTS)  |
+| Publish workflow | Node 24 (active LTS)       |
 
 ## Browser expectations
 

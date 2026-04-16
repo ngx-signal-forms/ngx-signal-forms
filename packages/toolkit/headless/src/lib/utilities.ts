@@ -343,6 +343,11 @@ export interface ErrorStateResult {
  * ```
  *
  * @remarks
+ * **Injection context required.** This factory creates `computed()` signals
+ * internally, so it must be called inside an injection context (constructor,
+ * field initializer, or `runInInjectionContext`). Calling it outside throws.
+ *
+ * @remarks
  * **Why `showWarnings` aliases `showErrors`:** toolkit warnings are
  * `ValidationError`s with `kind: 'warn:*'` produced by the same validator
  * pipeline as blocking errors. Angular Signal Forms sees them as regular
@@ -438,6 +443,10 @@ export interface CharacterCountResult {
  *
  * This utility provides the same state management as NgxHeadlessCharacterCountDirective
  * but as standalone signals for programmatic use.
+ *
+ * @remarks Must be called in an injection context (constructor, field
+ * initializer, or `runInInjectionContext`) because it creates `computed()`
+ * signals internally.
  *
  * ## Usage
  *

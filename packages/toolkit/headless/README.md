@@ -158,9 +158,9 @@ Signals: `isValid()`, `isInvalid()`, `isTouched()`, `isDirty()`, `isPending()`, 
 
 Selector: `[ngxSignalFormHeadlessFieldName]` · Export: `fieldName`
 
-Resolves field names and generates stable IDs for ARIA linking. Falls back to the host element `id` when `fieldName` is omitted.
+Resolves field names and generates stable IDs for ARIA linking. Falls back to the host element `id` when `fieldName` is omitted. **Requires** either a non-empty `fieldName` input or a non-empty host `id` — the signals throw if neither is provided.
 
-Signals: `resolvedFieldName()`, `hasFieldName()`, `errorId()`, `warningId()`.
+Signals: `resolvedFieldName()`, `errorId()`, `warningId()`.
 
 ## Utility functions
 

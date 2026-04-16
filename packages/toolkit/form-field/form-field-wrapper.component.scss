@@ -541,7 +541,10 @@
 // conditional padding shims when prefix/suffix exist. Removing the blocks
 // above reduces CSS without changing behavior.
 
-// Prefix/suffix content styling
+// Prefix/suffix content styling.
+// `::ng-deep` is required: prefix/suffix are projected via `<ng-content>` from
+// the consumer template, so view encapsulation hides them from this
+// component's scoped styles. Removing `::ng-deep` would break the slot styling.
 :host ::ng-deep :where([prefix], [suffix]) {
   display: flex;
   align-items: center;
@@ -595,7 +598,10 @@
 }
 
 // Input, textarea, select (inside main content wrapper)
-// No label styling here - label is in its own class above
+// No label styling here - label is in its own class above.
+// `::ng-deep` reaches into projected form controls (also `<ng-content>`); the
+// consumer's `<input>`/`<textarea>`/`<select>` are scoped to their template,
+// not ours.
 :host:not(.ngx-signal-form-field-wrapper--switch)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
