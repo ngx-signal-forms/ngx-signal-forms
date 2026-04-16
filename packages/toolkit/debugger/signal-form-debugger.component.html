@@ -1,3 +1,98 @@
+<!-- ============================================================ -->
+<!-- Reusable inline SVG icons                                    -->
+<!-- Kept here as templates to eliminate duplication. The badge   -->
+<!-- icon directive styles them via .ngx-debugger-badge__icon.    -->
+<!-- ============================================================ -->
+<ng-template #iconCheckSm>
+  <svg
+    ngxSignalFormDebuggerBadgeIcon
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    viewBox="0 0 16 16"
+  >
+    <circle cx="8" cy="8" r="5.5" />
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M5.5 8l1.5 1.5 3.5-3.5"
+    />
+  </svg>
+</ng-template>
+
+<ng-template #iconXSm>
+  <svg
+    ngxSignalFormDebuggerBadgeIcon
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    viewBox="0 0 16 16"
+  >
+    <circle cx="8" cy="8" r="5.5" />
+    <path stroke-linecap="round" d="M5.5 5.5l5 5M10.5 5.5l-5 5" />
+  </svg>
+</ng-template>
+
+<ng-template #iconSpinnerSm>
+  <svg
+    ngxSignalFormDebuggerBadgeIcon
+    class="ngx-debugger-badge__icon animate-spin"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    viewBox="0 0 16 16"
+  >
+    <path
+      stroke-linecap="round"
+      d="M8 2v2M8 12v2M14 8h-2M4 8H2M12.5 3.5l-1.4 1.4M4.9 10.1l-1.4 1.4M12.5 12.5l-1.4-1.4M4.9 5.9L3.5 4.5"
+    />
+  </svg>
+</ng-template>
+
+<ng-template #iconCheckLg>
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+    ></path>
+  </svg>
+</ng-template>
+
+<ng-template #iconInfoLg>
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    ></path>
+  </svg>
+</ng-template>
+
+<ng-template #iconChevron>
+  <svg
+    class="ngx-debugger__chevron"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M9 5l7 7-7 7"
+    ></path>
+  </svg>
+</ng-template>
+
+<ng-template #hiddenByStrategyBadge>
+  <ngx-signal-form-debugger-badge variant="outline" appearance="warning">
+    Hidden by strategy
+  </ngx-signal-form-debugger-badge>
+</ng-template>
+
 <div class="ngx-debugger">
   <!-- Header Section -->
   <div class="ngx-debugger__header">
@@ -27,51 +122,17 @@
       <div>
         @if (valid() && !pending()) {
           <ngx-signal-form-debugger-badge variant="solid" appearance="success">
-            <svg
-              ngxSignalFormDebuggerBadgeIcon
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 16 16"
-            >
-              <circle cx="8" cy="8" r="5.5" />
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M5.5 8l1.5 1.5 3.5-3.5"
-              />
-            </svg>
+            <ng-container *ngTemplateOutlet="iconCheckSm" />
             Valid
           </ngx-signal-form-debugger-badge>
         } @else if (pending()) {
           <ngx-signal-form-debugger-badge variant="solid" appearance="warning">
-            <svg
-              ngxSignalFormDebuggerBadgeIcon
-              class="ngx-debugger-badge__icon animate-spin"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 16 16"
-            >
-              <path
-                stroke-linecap="round"
-                d="M8 2v2M8 12v2M14 8h-2M4 8H2M12.5 3.5l-1.4 1.4M4.9 10.1l-1.4 1.4M12.5 12.5l-1.4-1.4M4.9 5.9L3.5 4.5"
-              />
-            </svg>
+            <ng-container *ngTemplateOutlet="iconSpinnerSm" />
             Validating
           </ngx-signal-form-debugger-badge>
         } @else if (invalid()) {
           <ngx-signal-form-debugger-badge variant="solid" appearance="danger">
-            <svg
-              ngxSignalFormDebuggerBadgeIcon
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 16 16"
-            >
-              <circle cx="8" cy="8" r="5.5" />
-              <path stroke-linecap="round" d="M5.5 5.5l5 5M10.5 5.5l-5 5" />
-            </svg>
+            <ng-container *ngTemplateOutlet="iconXSm" />
             Invalid
           </ngx-signal-form-debugger-badge>
         } @else {
@@ -102,31 +163,9 @@
         [appearance]="valid() ? 'success' : 'neutral'"
       >
         @if (valid()) {
-          <svg
-            ngxSignalFormDebuggerBadgeIcon
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 16 16"
-          >
-            <circle cx="8" cy="8" r="5.5" />
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M5.5 8l1.5 1.5 3.5-3.5"
-            />
-          </svg>
+          <ng-container *ngTemplateOutlet="iconCheckSm" />
         } @else {
-          <svg
-            ngxSignalFormDebuggerBadgeIcon
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 16 16"
-          >
-            <circle cx="8" cy="8" r="5.5" />
-            <path stroke-linecap="round" d="M5.5 5.5l5 5M10.5 5.5l-5 5" />
-          </svg>
+          <ng-container *ngTemplateOutlet="iconXSm" />
         }
         Valid
       </ngx-signal-form-debugger-badge>
@@ -135,16 +174,7 @@
         [appearance]="invalid() ? 'danger' : 'neutral'"
       >
         @if (invalid()) {
-          <svg
-            ngxSignalFormDebuggerBadgeIcon
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 16 16"
-          >
-            <circle cx="8" cy="8" r="5.5" />
-            <path stroke-linecap="round" d="M5.5 5.5l5 5M10.5 5.5l-5 5" />
-          </svg>
+          <ng-container *ngTemplateOutlet="iconXSm" />
         }
         Invalid
       </ngx-signal-form-debugger-badge>
@@ -171,19 +201,7 @@
       </ngx-signal-form-debugger-badge>
       <ngx-signal-form-debugger-badge variant="outline" appearance="info">
         @if (pending()) {
-          <svg
-            ngxSignalFormDebuggerBadgeIcon
-            class="ngx-debugger-badge__icon animate-spin"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 16 16"
-          >
-            <path
-              stroke-linecap="round"
-              d="M8 2v2M8 12v2M14 8h-2M4 8H2M12.5 3.5l-1.4 1.4M4.9 10.1l-1.4 1.4M12.5 12.5l-1.4-1.4M4.9 5.9L3.5 4.5"
-            />
-          </svg>
+          <ng-container *ngTemplateOutlet="iconSpinnerSm" />
         }
         Pending
       </ngx-signal-form-debugger-badge>
@@ -198,34 +216,9 @@
         "
       >
         @if (submittedStatus() === 'submitting') {
-          <svg
-            ngxSignalFormDebuggerBadgeIcon
-            class="ngx-debugger-badge__icon animate-spin"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 16 16"
-          >
-            <path
-              stroke-linecap="round"
-              d="M8 2v2M8 12v2M14 8h-2M4 8H2M12.5 3.5l-1.4 1.4M4.9 10.1l-1.4 1.4M12.5 12.5l-1.4-1.4M4.9 5.9L3.5 4.5"
-            />
-          </svg>
+          <ng-container *ngTemplateOutlet="iconSpinnerSm" />
         } @else if (submittedStatus() === 'submitted') {
-          <svg
-            ngxSignalFormDebuggerBadgeIcon
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 16 16"
-          >
-            <circle cx="8" cy="8" r="5.5" />
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M5.5 8l1.5 1.5 3.5-3.5"
-            />
-          </svg>
+          <ng-container *ngTemplateOutlet="iconCheckSm" />
         }
         Status: {{ submittedStatusDisplay() }}
       </ngx-signal-form-debugger-badge>
@@ -245,23 +238,9 @@
     <div class="ngx-debugger__strategy-content">
       <div class="ngx-debugger__strategy-icon">
         @if (errorVisibilityInfo().errorsVisible) {
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-            ></path>
-          </svg>
+          <ng-container *ngTemplateOutlet="iconCheckLg" />
         } @else {
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            ></path>
-          </svg>
+          <ng-container *ngTemplateOutlet="iconInfoLg" />
         }
       </div>
       <div class="ngx-debugger__strategy-text">
@@ -288,19 +267,7 @@
     <!-- Form Model Section -->
     <details class="ngx-debugger__section">
       <summary class="ngx-debugger__section-header">
-        <svg
-          class="ngx-debugger__chevron"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 5l7 7-7 7"
-          ></path>
-        </svg>
+        <ng-container *ngTemplateOutlet="iconChevron" />
         <svg
           class="ngx-debugger__section-icon"
           fill="none"
@@ -329,19 +296,7 @@
       [attr.open]="hasBlockingErrors() ? true : null"
     >
       <summary class="ngx-debugger__section-header">
-        <svg
-          class="ngx-debugger__chevron"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 5l7 7-7 7"
-          ></path>
-        </svg>
+        <ng-container *ngTemplateOutlet="iconChevron" />
         <svg
           class="ngx-debugger__section-icon"
           fill="none"
@@ -362,20 +317,7 @@
           </ngx-signal-form-debugger-badge>
         } @else if (showValidAfterTouch()) {
           <ngx-signal-form-debugger-badge variant="solid" appearance="success">
-            <svg
-              ngxSignalFormDebuggerBadgeIcon
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 16 16"
-            >
-              <circle cx="8" cy="8" r="5.5" />
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M5.5 8l1.5 1.5 3.5-3.5"
-              />
-            </svg>
+            <ng-container *ngTemplateOutlet="iconCheckSm" />
             0/0
           </ngx-signal-form-debugger-badge>
         }
@@ -389,14 +331,7 @@
                 <div
                   class="ngx-debugger__info-box ngx-debugger__info-box--root"
                 >
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
+                  <ng-container *ngTemplateOutlet="iconInfoLg" />
                   <span
                     ><strong>Root-Level Errors:</strong> These errors apply to
                     the entire form (e.g., cross-field validation like
@@ -424,12 +359,9 @@
                           {{ error.kind }}
                         </h6>
                         @if (!error.visible) {
-                          <ngx-signal-form-debugger-badge
-                            variant="outline"
-                            appearance="warning"
-                          >
-                            Hidden by strategy
-                          </ngx-signal-form-debugger-badge>
+                          <ng-container
+                            *ngTemplateOutlet="hiddenByStrategyBadge"
+                          />
                         }
                       </div>
                       <p class="ngx-debugger__error-message">
@@ -447,14 +379,7 @@
                 <div
                   class="ngx-debugger__info-box ngx-debugger__info-box--field"
                 >
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
+                  <ng-container *ngTemplateOutlet="iconInfoLg" />
                   <span
                     ><strong>Field-Level Errors:</strong> These errors apply to
                     specific form fields (e.g., "email is required", "min 8
@@ -474,12 +399,9 @@
                           {{ error.kind }}
                         </h6>
                         @if (!error.visible) {
-                          <ngx-signal-form-debugger-badge
-                            variant="outline"
-                            appearance="warning"
-                          >
-                            Hidden by strategy
-                          </ngx-signal-form-debugger-badge>
+                          <ng-container
+                            *ngTemplateOutlet="hiddenByStrategyBadge"
+                          />
                         }
                       </div>
                       <p class="ngx-debugger__error-message">
@@ -494,14 +416,7 @@
         } @else {
           <div class="ngx-debugger__empty-state">
             <div class="ngx-debugger__empty-icon">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
+              <ng-container *ngTemplateOutlet="iconCheckLg" />
             </div>
             <p>No validation errors</p>
           </div>
@@ -515,19 +430,7 @@
       [attr.open]="hasWarnings() ? true : null"
     >
       <summary class="ngx-debugger__section-header">
-        <svg
-          class="ngx-debugger__chevron"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 5l7 7-7 7"
-          ></path>
-        </svg>
+        <ng-container *ngTemplateOutlet="iconChevron" />
         <svg
           class="ngx-debugger__section-icon"
           fill="none"
@@ -587,12 +490,9 @@
                           {{ warning.kind }}
                         </h6>
                         @if (!warning.visible) {
-                          <ngx-signal-form-debugger-badge
-                            variant="outline"
-                            appearance="warning"
-                          >
-                            Hidden by strategy
-                          </ngx-signal-form-debugger-badge>
+                          <ng-container
+                            *ngTemplateOutlet="hiddenByStrategyBadge"
+                          />
                         }
                       </div>
                       <p class="ngx-debugger__error-message">
@@ -627,12 +527,9 @@
                           {{ warning.kind }}
                         </h6>
                         @if (!warning.visible) {
-                          <ngx-signal-form-debugger-badge
-                            variant="outline"
-                            appearance="warning"
-                          >
-                            Hidden by strategy
-                          </ngx-signal-form-debugger-badge>
+                          <ng-container
+                            *ngTemplateOutlet="hiddenByStrategyBadge"
+                          />
                         }
                       </div>
                       <p class="ngx-debugger__error-message">
@@ -649,14 +546,7 @@
             class="ngx-debugger__empty-state ngx-debugger__empty-state--warning"
           >
             <div class="ngx-debugger__empty-icon">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
+              <ng-container *ngTemplateOutlet="iconInfoLg" />
             </div>
             <p>No active warnings</p>
           </div>

@@ -1,10 +1,10 @@
-import { JsonPipe } from '@angular/common';
+import { JsonPipe, NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
   effect,
-  input as signalInput,
+  input,
   isDevMode,
 } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
@@ -12,6 +12,7 @@ import {
   injectFormContext,
   isBlockingError,
   isWarningError,
+  resolveStrategyFromContext,
   shouldShowErrors,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
@@ -26,6 +27,15 @@ type DebuggerError = {
   message?: string;
   visible: boolean;
 };
+
+type TreeSnapshot = {
+  /** Leaf-level errors collected while walking the tree, tagged with per-field visibility. */
+  readonly fieldErrors: readonly DebuggerError[];
+  /** `true` if any descendant field has been touched. */
+  readonly anyTouched: boolean;
+};
+
+const EMPTY_SNAPSHOT: TreeSnapshot = { fieldErrors: [], anyTouched: false };
 
 /**
  * Tag a validation error payload with a `visible` flag without mutating the
@@ -56,12 +66,14 @@ const withVisibility =
  * - Automatic submission status tracking (via form provider)
  *
  * **Usage**:
- * - Can be used with or without `[formRoot]` directive
- * - For `'on-submit'` strategy, requires form context
- * - For `'on-touch'` (default), works standalone
+ * - Can be used with or without the `ngxSignalForm` directive
+ * - When `ngxSignalForm` is present, `errorStrategy` and `submittedStatus`
+ *   are read from the form context automatically
  *
  * **Theming**:
- * Override CSS custom properties to customize appearance:
+ * Override CSS custom properties to customize appearance. Styling hooks use
+ * the shorter `--ngx-debugger-*` prefix (the selector prefix
+ * `ngx-signal-form-debugger-*` is reserved for element/directive names):
  * ```css
  * ngx-signal-form-debugger {
  *   --ngx-debugger-bg: #ffffff;
@@ -78,15 +90,17 @@ const withVisibility =
  * </form>
  * ```
  *
- * @example With form context
+ * @example With form context (recommended)
  * ```html
- * <form [formRoot]="userForm" (submit)="save($event)">
+ * <form [formRoot]="userForm" ngxSignalForm errorStrategy="on-submit"
+ *       (submit)="save($event)">
  *   <input [formField]="userForm.email" />
+ *   <!-- debugger inherits errorStrategy from the form directive -->
  *   <ngx-signal-form-debugger [formTree]="userForm" />
  * </form>
  * ```
  *
- * @example Custom title and strategy
+ * @example Custom title / explicit strategy override
  * ```html
  * <ngx-signal-form-debugger
  *   [formTree]="userForm"
@@ -98,110 +112,68 @@ const withVisibility =
 @Component({
   selector: 'ngx-signal-form-debugger',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [JsonPipe, DebuggerBadgeComponent, DebuggerBadgeIconDirective],
+  imports: [
+    JsonPipe,
+    NgTemplateOutlet,
+    DebuggerBadgeComponent,
+    DebuggerBadgeIconDirective,
+  ],
   templateUrl: './signal-form-debugger.component.html',
   styleUrl: './signal-form-debugger.component.scss',
 })
 export class SignalFormDebuggerComponent {
-  /** Safely read errorSummary() from a state-like object if available */
-  #errorSummaryOf(v: unknown, visible: boolean): Array<DebuggerError> {
-    const fn = (v as { errorSummary?: () => unknown }).errorSummary;
-    if (typeof fn === 'function') {
-      const result = fn();
-      return Array.isArray(result)
-        ? (result as Array<{ kind: string; message?: string }>).map(
-            withVisibility(visible),
-          )
-        : [];
-    }
-    return [];
-  }
-
-  /** Inject form context (provides submittedStatus automatically) */
-  readonly #formContext = injectFormContext();
+  // ============================================================================
+  // Inputs
+  // ============================================================================
 
   /**
-   * The Signal Form to display.
-   * Accepts either the FieldTree function (preferred) or the FieldState root.
+   * The Signal Form to display. Pass the `FieldTree` function (preferred) to
+   * enable per-descendant traversal. A `FieldState` is also accepted but the
+   * debugger cannot walk children and will emit a dev-mode warning.
    */
-  readonly formTree = signalInput.required<
+  readonly formTree = input.required<
     FieldTree<unknown> | FieldState<unknown>
   >();
 
   /**
-   * The error display strategy currently in effect.
-   * Used to show which errors are hidden vs visible.
+   * Optional error-display-strategy override. When omitted, the debugger
+   * inherits the strategy from the surrounding `ngxSignalForm` context (or
+   * falls back to `'on-touch'` when no context is available).
    */
-  readonly errorStrategy = signalInput<ErrorDisplayStrategy>('on-touch');
+  readonly errorStrategy = input<ErrorDisplayStrategy | undefined>(undefined);
 
-  /** Type guard: FieldTree function (callable + indexable) */
-  readonly #isFieldTree = (
-    v: unknown,
-  ): v is { (): FieldState<unknown> } & Record<string, unknown> =>
-    typeof v === 'function';
+  /** Title shown in the debugger header. */
+  readonly title = input('Form State & Validation');
 
-  #warned = false;
-
-  // Named Angular effect fields are intentionally unread.
-  // Angular registers and destroys the effect for the component lifecycle.
-  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
-  readonly #fieldTreeWarningEffect = effect(() => {
-    if (!isDevMode()) return;
-
-    const input = this.formTree();
-    if (!input || this.#isFieldTree(input) || this.#warned) return;
-
-    this.#warned = true;
-    console.warn(
-      '[NgxSignalFormDebugger] Pass the FieldTree function (e.g. form) to formTree. ' +
-        'A FieldState (e.g. form()) is supported, but it cannot traverse child fields ' +
-        'and may show errors as visible immediately.',
-    );
-  });
-
-  /** Normalize to root FieldState regardless of input shape */
-  protected readonly rootState = computed<FieldState<unknown>>(() => {
-    const v = this.formTree() as unknown;
-    if (this.#isFieldTree(v)) {
-      return (v as () => FieldState<unknown>)();
-    }
-    return v as FieldState<unknown>;
-  });
-
-  /** Title for the debugger display */
-  readonly title = signalInput('Form State & Validation');
-
-  /** Subtitle for context */
-  readonly subtitle = signalInput('Live debugging information');
+  /** Subtitle shown below the header title. */
+  readonly subtitle = input('Live debugging information');
 
   // ============================================================================
-  // Form State Computed Values
+  // Form context (DI)
   // ============================================================================
 
-  /** Current form model (data values) */
-  protected readonly model = computed(() => this.rootState().value());
+  readonly #formContext = injectFormContext();
 
-  /** Is the form valid? */
-  protected readonly valid = computed(() => this.rootState().valid());
-
-  /** Is the form invalid? */
-  protected readonly invalid = computed(() => this.rootState().invalid());
-
-  /** Is the form dirty? */
-  protected readonly dirty = computed(() => this.rootState().dirty());
-
-  /** Is the form pending async validation? */
-  protected readonly pending = computed(() => this.rootState().pending());
+  // ============================================================================
+  // Resolved configuration
+  // ============================================================================
 
   /**
-   * Submission status from Angular Signal Forms.
-   * Automatically injected from form provider if available.
+   * The effective strategy after merging the `errorStrategy` input with any
+   * ambient `ngxSignalForm` context. This matches the resolution rules used
+   * by the rest of the toolkit (error component, error summary, headless
+   * directives) so the debugger reflects what consumers will actually see.
    */
-  protected readonly submittedStatus = computed(() => {
-    return this.#formContext?.submittedStatus() ?? 'unsubmitted';
-  });
+  protected readonly resolvedStrategy = computed(() =>
+    resolveStrategyFromContext(this.errorStrategy(), this.#formContext),
+  );
 
-  /** Submission status display text */
+  /** Submission status from the ambient form context (or `'unsubmitted'`). */
+  protected readonly submittedStatus = computed(
+    () => this.#formContext?.submittedStatus() ?? 'unsubmitted',
+  );
+
+  /** Human-readable label for the current submitted status. */
   protected readonly submittedStatusDisplay = computed(() => {
     const status = this.submittedStatus();
     switch (status) {
@@ -218,216 +190,211 @@ export class SignalFormDebuggerComponent {
   });
 
   // ============================================================================
-  // Error Handling
+  // Normalized root state
+  // ============================================================================
+
+  /** Normalize to root `FieldState` regardless of input shape. */
+  protected readonly rootState = computed<FieldState<unknown>>(() => {
+    const v = this.formTree() as unknown;
+    if (this.#isFieldTree(v)) {
+      return (v as () => FieldState<unknown>)();
+    }
+    return v as FieldState<unknown>;
+  });
+
+  /** Root-level visibility — factored out so every root-error pipeline reuses it. */
+  protected readonly rootVisible = computed(() => {
+    const s = this.rootState();
+    return shouldShowErrors(
+      s.invalid(),
+      s.touched(),
+      this.resolvedStrategy(),
+      this.submittedStatus(),
+    );
+  });
+
+  // ============================================================================
+  // Form State shortcuts
+  // ============================================================================
+
+  protected readonly model = computed(() => this.rootState().value());
+  protected readonly valid = computed(() => this.rootState().valid());
+  protected readonly invalid = computed(() => this.rootState().invalid());
+  protected readonly dirty = computed(() => this.rootState().dirty());
+  protected readonly pending = computed(() => this.rootState().pending());
+
+  // ============================================================================
+  // Tree snapshot — single walk per change, reused by every consumer
   // ============================================================================
 
   /**
-   * Root-level errors (cross-field validation)
-   * These are errors on the form itself, not on individual fields
+   * Walk the form tree at most once per signal-change and collect both the
+   * leaf-level errors (with visibility) and a `anyTouched` flag. Feeding
+   * `allErrors` and `#hasAnyTouchedFields` from the same pass avoids the
+   * double traversal the old implementation performed.
    */
+  readonly #treeSnapshot = computed<TreeSnapshot>(() => {
+    const tree = this.formTree();
+    if (!this.#isFieldTree(tree)) {
+      return EMPTY_SNAPSHOT;
+    }
+
+    const strategy = this.resolvedStrategy();
+    const submitted = this.submittedStatus();
+    const rootState = (tree as () => FieldState<unknown>)();
+    const value = rootState.value();
+    const fieldErrors: DebuggerError[] = [];
+    let anyTouched = rootState.touched();
+
+    walkFormTree(
+      tree as unknown as Record<string | number, unknown>,
+      value,
+      (childField, nextModel) => {
+        const childState = (childField as () => FieldState<unknown>)();
+        if (childState.touched()) anyTouched = true;
+
+        // Only collect leaf errors — interior-node errors surface via their
+        // descendants during traversal.
+        const isLeaf = !nextModel || typeof nextModel !== 'object';
+        if (!isLeaf) return;
+
+        const visible = shouldShowErrors(
+          childState.invalid(),
+          childState.touched(),
+          strategy,
+          submitted,
+        );
+        fieldErrors.push(
+          ...(
+            (childState.errors() ?? []) as Array<{
+              kind: string;
+              message?: string;
+            }>
+          ).map(withVisibility(visible)),
+        );
+      },
+    );
+    return { fieldErrors, anyTouched };
+  });
+
+  // ============================================================================
+  // Errors
+  // ============================================================================
+
+  /** Root-level errors (cross-field validation, errors on the form itself). */
   protected readonly rootErrors = computed(() => this.rootState().errors());
 
   /**
    * All errors including descendants.
-   * Strategy:
-   * - If a FieldTree function is provided: traverse children and collect errors
-   * - Otherwise (FieldState): fallback to errorSummary() on the root state
+   * - `FieldTree`: collected from the single `#treeSnapshot` walk.
+   * - `FieldState`: falls back to `errorSummary()` on the root state, which
+   *   is less accurate (it cannot reflect per-field visibility).
    */
   protected readonly allErrors = computed<DebuggerError[]>(() => {
-    const input = this.formTree();
-    const strategy = this.errorStrategy();
-    const submitted = this.submittedStatus();
-
-    const rootState = this.rootState();
-    const rootVisible = shouldShowErrors(
-      rootState.invalid(),
-      rootState.touched(),
-      strategy,
-      submitted,
-    );
-
-    if (this.#isFieldTree(input)) {
-      const state = (input as () => FieldState<unknown>)();
-      const value = state.value();
-      const collected: DebuggerError[] = [];
-
-      walkFormTree(
-        input as unknown as Record<string | number, unknown>,
-        value,
-        (childField, nextModel) => {
-          const childState = (childField as () => FieldState<unknown>)();
-          const visible = shouldShowErrors(
-            childState.invalid(),
-            childState.touched(),
-            strategy,
-            submitted,
-          );
-          const isLeaf = !nextModel || typeof nextModel !== 'object';
-
-          if (!isLeaf) {
-            return;
-          }
-
-          collected.push(
-            ...(
-              (childState.errors() ?? []) as Array<{
-                kind: string;
-                message?: string;
-              }>
-            ).map(withVisibility(visible)),
-          );
-        },
-      );
-      return collected;
+    const tree = this.formTree();
+    if (this.#isFieldTree(tree)) {
+      return this.#treeSnapshot().fieldErrors.slice();
     }
 
-    const summary = this.#errorSummaryOf(rootState, rootVisible);
+    const rootState = this.rootState();
+    const visible = this.rootVisible();
+    const summary = this.#errorSummaryOf(rootState, visible);
     return summary.length > 0
       ? summary
-      : (
-          (rootState.errors?.() ?? []) as Array<{
-            kind: string;
-            message?: string;
-          }>
-        ).map(withVisibility(rootVisible));
+      : (rootState.errors() as Array<{ kind: string; message?: string }>).map(
+          withVisibility(visible),
+        );
   });
 
-  /** Field-level errors (exclude root-level ones from the summary) */
+  /** Field-level errors (exclude root-level ones from the summary). */
   protected readonly fieldErrors = computed(() => {
     const root = this.rootErrors();
-    const all = this.allErrors();
-    return all.filter(
-      (e): e is DebuggerError =>
+    return this.allErrors().filter(
+      (e) =>
         !root.some(
           (r) =>
-            r &&
             (r as { kind: string }).kind === e.kind &&
             (r as { message?: string }).message === e.message,
         ),
     );
   });
 
-  /** Root-level blocking errors */
   protected readonly rootBlockingErrors = computed(() => {
-    const state = this.rootState();
-    const rootVisible = shouldShowErrors(
-      state.invalid(),
-      state.touched(),
-      this.errorStrategy(),
-      this.submittedStatus(),
-    );
+    const visible = this.rootVisible();
     return this.rootErrors()
       .filter((e) => isBlockingError(e))
-      .map(withVisibility(rootVisible));
+      .map(withVisibility(visible));
   });
 
-  /** Root-level warnings */
   protected readonly rootWarningErrors = computed(() => {
-    const state = this.rootState();
-    const rootVisible = shouldShowErrors(
-      state.invalid(),
-      state.touched(),
-      this.errorStrategy(),
-      this.submittedStatus(),
-    );
+    const visible = this.rootVisible();
     return this.rootErrors()
       .filter((e) => isWarningError(e))
-      .map(withVisibility(rootVisible));
+      .map(withVisibility(visible));
   });
 
-  /** Field-level blocking errors */
   protected readonly fieldBlockingErrors = computed(() =>
     this.fieldErrors().filter((e) => isBlockingError(e)),
   );
 
-  /** Field-level warnings */
   protected readonly fieldWarningErrors = computed(() =>
     this.fieldErrors().filter((e) => isWarningError(e)),
   );
 
-  /** All blocking errors (root + field) */
   protected readonly blockingErrors = computed(() =>
     this.allErrors().filter((e) => isBlockingError(e)),
   );
 
-  /** All warning errors (root + field) */
   protected readonly warningErrors = computed(() =>
     this.allErrors().filter((e) => isWarningError(e)),
   );
 
-  /** Visible blocking error count */
   protected readonly visibleBlockingCount = computed(
-    () => this.blockingErrors().filter((error) => error.visible).length,
+    () => this.blockingErrors().filter((e) => e.visible).length,
   );
 
-  /** Total blocking error count */
   protected readonly totalBlockingCount = computed(
     () => this.blockingErrors().length,
   );
 
-  /** Visible warning count */
   protected readonly visibleWarningCount = computed(
-    () => this.warningErrors().filter((error) => error.visible).length,
+    () => this.warningErrors().filter((e) => e.visible).length,
   );
 
-  /** Total warning count */
   protected readonly totalWarningCount = computed(
     () => this.warningErrors().length,
   );
 
-  /** Does the form have any blocking errors? */
-  protected readonly hasBlockingErrors = computed(() => {
-    const count = this.blockingErrors().length;
-    if (count > 0) return true;
-    return this.invalid();
-  });
-
-  /** Does the form have any root-level errors? */
-  protected readonly hasRootErrors = computed(
-    () => this.rootErrors().length > 0,
+  protected readonly hasBlockingErrors = computed(
+    () => this.blockingErrors().length > 0 || this.invalid(),
   );
 
-  /** Does the form have any field-level errors? */
-  protected readonly hasFieldErrors = computed(
-    () => this.fieldErrors().length > 0,
-  );
-
-  /** Does the form have any warnings? */
   protected readonly hasWarnings = computed(
     () => this.warningErrors().length > 0,
   );
 
-  /** Total error count (blocking + warnings) */
-  protected readonly totalErrorCount = computed(
-    () => this.blockingErrors().length + this.warningErrors().length,
-  );
-
   // ============================================================================
-  // Error Visibility Strategy Analysis
+  // Error visibility strategy analysis
   // ============================================================================
 
   /**
-   * Determines if errors would be visible based on the current error display strategy.
-   * This is for DEBUGGING purposes - shows developers which errors are hidden by the strategy.
+   * Explains whether errors would be visible under the current strategy.
+   * Drives the "Error Display Strategy" banner in the template.
    */
   protected readonly errorVisibilityInfo = computed(() => {
-    const strategy = this.errorStrategy();
+    const strategy = this.resolvedStrategy();
     const submittedStatus = this.submittedStatus();
-    const rootState = this.rootState();
+    const hasTouchedFields = this.#hasAnyTouchedFields();
 
-    const hasTouchedFields = this.#hasAnyTouchedFields(rootState);
-
-    let visibilityReason = '';
     let errorsVisible = false;
+    let visibilityReason = '';
 
     switch (strategy) {
       case 'immediate':
         errorsVisible = true;
         visibilityReason = 'Errors shown immediately as you type';
         break;
-
       case 'on-touch':
-      case 'inherit':
         errorsVisible = hasTouchedFields || submittedStatus !== 'unsubmitted';
         visibilityReason = hasTouchedFields
           ? 'Errors shown because fields were touched (blurred)'
@@ -435,7 +402,6 @@ export class SignalFormDebuggerComponent {
             ? 'Errors shown because form was submitted'
             : 'Errors hidden until you touch (blur) fields';
         break;
-
       case 'on-submit':
         errorsVisible = submittedStatus !== 'unsubmitted';
         visibilityReason =
@@ -443,7 +409,6 @@ export class SignalFormDebuggerComponent {
             ? 'Errors shown because form was submitted'
             : 'Errors hidden until form submission';
         break;
-
       default:
         strategy satisfies never;
         break;
@@ -458,54 +423,64 @@ export class SignalFormDebuggerComponent {
     };
   });
 
-  /** Show a success badge when the form is valid after any touch interaction. */
-  protected readonly showValidAfterTouch = computed(() => {
-    return (
+  /** Success badge when the form is valid after any touch interaction. */
+  protected readonly showValidAfterTouch = computed(
+    () =>
       this.errorVisibilityInfo().hasTouchedFields &&
       this.valid() &&
-      !this.pending()
+      !this.pending(),
+  );
+
+  // ============================================================================
+  // Dev-mode diagnostics
+  // ============================================================================
+
+  #warned = false;
+
+  // Named Angular effect field is intentionally unread — Angular owns the
+  // lifecycle. Keeping the name documents the side-effect.
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef retained as a named field to document the side effect.
+  readonly #fieldTreeWarningEffect = effect(() => {
+    if (!isDevMode()) return;
+
+    const value = this.formTree();
+    if (!value || this.#isFieldTree(value) || this.#warned) return;
+
+    this.#warned = true;
+    console.warn(
+      '[NgxSignalFormDebugger] Pass the FieldTree function (e.g. form) to formTree. ' +
+        'A FieldState (e.g. form()) is supported, but it cannot traverse child fields ' +
+        'and may show errors as visible immediately.',
     );
   });
 
+  // ============================================================================
+  // Private helpers
+  // ============================================================================
+
+  /** Type guard: `FieldTree` is both callable and indexable. */
+  readonly #isFieldTree = (
+    v: unknown,
+  ): v is { (): FieldState<unknown> } & Record<string, unknown> =>
+    typeof v === 'function';
+
   /**
-   * Recursively check if any fields in the form tree have been touched.
+   * Any field in the tree touched? Pulls from the shared snapshot so the
+   * visibility pipeline doesn't re-walk the tree for this flag.
    */
-  #hasAnyTouchedFields(state: FieldState<unknown>): boolean {
-    if (
-      typeof state.touched === 'function' &&
-      (state.touched as () => boolean)()
-    ) {
-      return true;
-    }
-
-    const input = this.formTree();
-    if (this.#isFieldTree(input)) {
-      const value = state.value();
-      let touched = false;
-
-      walkFormTree(
-        input as unknown as Record<string | number, unknown>,
-        value,
-        (childField) => {
-          if (touched) {
-            return;
-          }
-
-          const childState = (childField as () => FieldState<unknown>)();
-          if (
-            typeof childState.touched === 'function' &&
-            childState.touched()
-          ) {
-            touched = true;
-          }
-        },
-      );
-
-      return touched;
-    }
-
-    return false;
+  #hasAnyTouchedFields(): boolean {
+    return this.#treeSnapshot().anyTouched;
   }
-  /** Expose Object for template use */
-  protected readonly Object = Object;
+
+  /** Safely read `errorSummary()` from a state-like object if available. */
+  #errorSummaryOf(v: unknown, visible: boolean): Array<DebuggerError> {
+    const fn = (v as { errorSummary?: () => unknown }).errorSummary;
+    if (typeof fn !== 'function') return [];
+    const result = fn();
+    return Array.isArray(result)
+      ? (result as Array<{ kind: string; message?: string }>).map(
+          withVisibility(visible),
+        )
+      : [];
+  }
 }

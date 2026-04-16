@@ -56,12 +56,12 @@ Pass the `FieldTree` function (e.g. `userForm`), not the called state (`userForm
 
 Selector: `ngx-signal-form-debugger`
 
-| Input           | Type                   | Default                        | Description              |
-| --------------- | ---------------------- | ------------------------------ | ------------------------ |
-| `formTree`      | `unknown` (required)   | —                              | The form tree to inspect |
-| `errorStrategy` | `ErrorDisplayStrategy` | `'on-touch'`                   | Error display strategy   |
-| `title`         | `string`               | `'Form State & Validation'`    | Panel header title       |
-| `subtitle`      | `string`               | `'Live debugging information'` | Panel header subtitle    |
+| Input           | Type                                | Default                        | Description                                                                                                   |
+| --------------- | ----------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `formTree`      | `unknown` (required)                | —                              | The form tree to inspect                                                                                      |
+| `errorStrategy` | `ErrorDisplayStrategy \| undefined` | `undefined`                    | Optional override. When omitted, the debugger inherits the strategy from the ambient `ngxSignalForm` context. |
+| `title`         | `string`                            | `'Form State & Validation'`    | Panel header title                                                                                            |
+| `subtitle`      | `string`                            | `'Live debugging information'` | Panel header subtitle                                                                                         |
 
 ### NgxSignalFormDebugger
 
@@ -78,6 +78,10 @@ Bundle containing `SignalFormDebuggerComponent` and internal badge components.
 - Collapsible sections
 
 ### Theming
+
+Theming hooks use the shorter `--ngx-debugger-*` prefix. (The selector prefix
+`ngx-signal-form-debugger-*` is reserved for element and directive names and is
+not used for CSS custom properties or class hooks.)
 
 ```css
 ngx-signal-form-debugger {

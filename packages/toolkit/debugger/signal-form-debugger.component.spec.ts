@@ -1,7 +1,10 @@
 import { ComponentRef, type WritableSignal, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { form, required, schema, validate } from '@angular/forms/signals';
-import { NGX_SIGNAL_FORM_CONTEXT } from '@ngx-signal-forms/toolkit';
+import {
+  NGX_SIGNAL_FORM_CONTEXT,
+  type ResolvedErrorDisplayStrategy,
+} from '@ngx-signal-forms/toolkit';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SignalFormDebuggerComponent } from './signal-form-debugger.component';
 
@@ -21,6 +24,7 @@ describe('SignalFormDebuggerComponent', () => {
   let submittedStatus: WritableSignal<
     'unsubmitted' | 'submitting' | 'submitted'
   >;
+  let contextErrorStrategy: WritableSignal<ResolvedErrorDisplayStrategy>;
 
   beforeEach(async () => {
     // Reset model for each test
@@ -28,13 +32,17 @@ describe('SignalFormDebuggerComponent', () => {
     submittedStatus = signal<'unsubmitted' | 'submitting' | 'submitted'>(
       'unsubmitted',
     );
+    contextErrorStrategy = signal<ResolvedErrorDisplayStrategy>('on-touch');
 
     await TestBed.configureTestingModule({
       imports: [SignalFormDebuggerComponent],
       providers: [
         {
           provide: NGX_SIGNAL_FORM_CONTEXT,
-          useValue: { submittedStatus },
+          useValue: {
+            submittedStatus,
+            errorStrategy: contextErrorStrategy,
+          },
         },
       ],
     }).compileComponents();
@@ -207,6 +215,51 @@ describe('SignalFormDebuggerComponent', () => {
       submittedStatus.set('submitted');
       fixture.detectChanges();
       expect(readReason()).toContain('because form was submitted');
+    });
+  });
+
+  describe('Strategy inheritance from form context', () => {
+    it('should inherit the strategy from the form context when the input is not set', () => {
+      const localFixture = TestBed.createComponent(SignalFormDebuggerComponent);
+      const localEl: HTMLElement = localFixture.nativeElement;
+      localFixture.componentRef.setInput('formTree', testForm);
+      // Intentionally do NOT set `errorStrategy` — context provides 'on-touch'
+      // above, so behaviour should match the default on-touch test.
+      localFixture.detectChanges();
+
+      const reason = localEl
+        .querySelector('.ngx-debugger__strategy-reason')
+        ?.textContent?.trim();
+      expect(reason).toContain('hidden until you touch');
+    });
+
+    it('should react to context strategy changes when the input is not set', () => {
+      const localFixture = TestBed.createComponent(SignalFormDebuggerComponent);
+      const localEl: HTMLElement = localFixture.nativeElement;
+      localFixture.componentRef.setInput('formTree', testForm);
+      localFixture.detectChanges();
+
+      contextErrorStrategy.set('on-submit');
+      localFixture.detectChanges();
+
+      const reason = localEl
+        .querySelector('.ngx-debugger__strategy-reason')
+        ?.textContent?.trim();
+      expect(reason).toContain('hidden until form submission');
+    });
+
+    it('should let an explicit input override the context strategy', () => {
+      const localFixture = TestBed.createComponent(SignalFormDebuggerComponent);
+      const localEl: HTMLElement = localFixture.nativeElement;
+      localFixture.componentRef.setInput('formTree', testForm);
+      localFixture.componentRef.setInput('errorStrategy', 'immediate');
+      contextErrorStrategy.set('on-submit');
+      localFixture.detectChanges();
+
+      const reason = localEl
+        .querySelector('.ngx-debugger__strategy-reason')
+        ?.textContent?.trim();
+      expect(reason).toContain('shown immediately');
     });
   });
 

@@ -20,12 +20,12 @@ export type DebuggerBadgeAppearance =
  *
  * @example
  * ```html
- * <ngx-debugger-badge>
- *   <svg ngxDebuggerBadgeIcon fill="none" stroke="currentColor" viewBox="0 0 16 16">
+ * <ngx-signal-form-debugger-badge>
+ *   <svg ngxSignalFormDebuggerBadgeIcon fill="none" stroke="currentColor" viewBox="0 0 16 16">
  *     <circle cx="8" cy="8" r="5.5" />
  *   </svg>
  *   Status
- * </ngx-debugger-badge>
+ * </ngx-signal-form-debugger-badge>
  * ```
  */
 @Directive({
