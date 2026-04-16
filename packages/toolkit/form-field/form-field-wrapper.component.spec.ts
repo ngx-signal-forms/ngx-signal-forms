@@ -97,18 +97,26 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(errorContainer).toBeTruthy();
     });
 
-    it('should throw when neither fieldName nor bound control id is provided', async () => {
+    it('should return null and log a dev-mode error when neither fieldName nor bound control id is provided', async () => {
       const invalidField = signal({
         invalid: () => true,
         touched: () => true,
         errors: () => [{ kind: 'required', message: 'Required' }],
       });
 
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => undefined);
+
       const component = createWrapperComponent(invalidField);
 
-      expect(() => component.resolvedFieldName()).toThrow(
+      expect(component.resolvedFieldName()).toBeNull();
+      expect(consoleErrorSpy).toHaveBeenCalled();
+      expect(consoleErrorSpy.mock.calls[0]?.[0]).toMatch(
         /Could not resolve a deterministic field name/u,
       );
+
+      consoleErrorSpy.mockRestore();
     });
 
     it('should generate different unique IDs for multiple components without explicit fieldName', async () => {
@@ -193,18 +201,23 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(container.querySelector('[id="password-error"]')).toBeTruthy();
     });
 
-    it('should handle empty string fieldName', async () => {
+    it('should handle empty string fieldName by returning null and logging in dev mode', async () => {
       const invalidField = signal({
         invalid: () => true,
         touched: () => true,
         errors: () => [{ kind: 'required', message: 'Required' }],
       });
 
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => undefined);
+
       const component = createWrapperComponent(invalidField, '');
 
-      expect(() => component.resolvedFieldName()).toThrow(
-        /Could not resolve a deterministic field name/u,
-      );
+      expect(component.resolvedFieldName()).toBeNull();
+      expect(consoleErrorSpy).toHaveBeenCalled();
+
+      consoleErrorSpy.mockRestore();
     });
 
     it('should pass derived control id to error component for ARIA attribute generation', async () => {
@@ -2202,18 +2215,23 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(customError).toBeFalsy();
     });
 
-    it('should throw when custom control has no id', async () => {
+    it('should return null and log a dev-mode error when custom control has no id', async () => {
       const invalidField = signal({
         invalid: () => true,
         touched: () => true,
         errors: () => [{ kind: 'required', message: 'Required' }],
       });
 
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => undefined);
+
       const component = createWrapperComponent(invalidField);
 
-      expect(() => component.resolvedFieldName()).toThrow(
-        /Could not resolve a deterministic field name/u,
-      );
+      expect(component.resolvedFieldName()).toBeNull();
+      expect(consoleErrorSpy).toHaveBeenCalled();
+
+      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -2306,18 +2324,23 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(container.querySelector('[id="first-error"]')).toBeTruthy();
     });
 
-    it('should throw when no input has id attribute and no fieldName is provided', async () => {
+    it('should return null and log a dev-mode error when no input has id attribute and no fieldName is provided', async () => {
       const invalidField = signal({
         invalid: () => true,
         touched: () => true,
         errors: () => [{ kind: 'required', message: 'Required' }],
       });
 
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => undefined);
+
       const component = createWrapperComponent(invalidField);
 
-      expect(() => component.resolvedFieldName()).toThrow(
-        /Could not resolve a deterministic field name/u,
-      );
+      expect(component.resolvedFieldName()).toBeNull();
+      expect(consoleErrorSpy).toHaveBeenCalled();
+
+      consoleErrorSpy.mockRestore();
     });
 
     it('should provide context signal that updates with resolvedFieldName', async () => {

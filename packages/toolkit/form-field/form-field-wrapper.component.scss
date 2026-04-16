@@ -1040,22 +1040,30 @@
   padding-inline: 0;
 }
 
-:host.ngx-signal-form-field-wrapper--invalid.ngx-signal-form-field-wrapper--checkbox
+:host(
+    .ngx-signal-form-field-wrapper--invalid.ngx-signal-form-field-wrapper--checkbox
+  )
   .ngx-signal-form-field-wrapper__label,
-:host.ngx-signal-form-field-wrapper--invalid.ngx-signal-form-field-wrapper--checkbox
+:host(
+    .ngx-signal-form-field-wrapper--invalid.ngx-signal-form-field-wrapper--checkbox
+  )
   .ngx-signal-form-field-wrapper__label
   label {
   color: var(--_invalid-color);
 }
 
-:host.ngx-signal-form-field-wrapper--messages-top.ngx-signal-form-field-wrapper--checkbox {
+:host(
+  .ngx-signal-form-field-wrapper--messages-top.ngx-signal-form-field-wrapper--checkbox
+) {
   grid-template-areas:
     'messages messages'
     'control label'
     'assistive assistive';
 }
 
-:host.ngx-signal-form-field-wrapper--messages-top.ngx-signal-form-field-wrapper--checkbox
+:host(
+    .ngx-signal-form-field-wrapper--messages-top.ngx-signal-form-field-wrapper--checkbox
+  )
   .ngx-signal-form-field-wrapper__messages {
   grid-area: messages;
 }
@@ -1156,14 +1164,18 @@
   padding-inline: 0;
 }
 
-:host.ngx-signal-form-field-wrapper--invalid.ngx-signal-form-field-wrapper--switch {
+:host(
+  .ngx-signal-form-field-wrapper--invalid.ngx-signal-form-field-wrapper--switch
+) {
   .ngx-signal-form-field-wrapper__label,
   .ngx-signal-form-field-wrapper__label label {
     color: var(--_invalid-color);
   }
 }
 
-:host.ngx-signal-form-field-wrapper--messages-top.ngx-signal-form-field-wrapper--switch {
+:host(
+  .ngx-signal-form-field-wrapper--messages-top.ngx-signal-form-field-wrapper--switch
+) {
   grid-template-areas:
     'messages messages'
     'label control'
