@@ -1,62 +1,40 @@
 # @ngx-signal-forms/toolkit/headless
 
-> Renderless (headless) primitives for Angular Signal Forms - state-only directives that expose signals without rendering any UI.
+> Renderless directives and utility functions that expose toolkit state as signals — you control every bit of markup and styling.
 
-## Why Headless?
+## Why this entry point exists
 
-Traditional form components couple **state management** with **visual presentation**. Headless directives separate these concerns:
+The form-field wrapper (`/form-field`) gives you layout, errors, and ARIA automatically. But when you have your own design system or need full control over markup, you want the toolkit's state logic without its UI. That's what headless provides.
 
-| Approach                | State Logic | UI Rendering | Styling Control            |
-| ----------------------- | ----------- | ------------ | -------------------------- |
-| **Styled Components**   | ✅ Built-in | ✅ Built-in  | ⚠️ Limited (CSS overrides) |
-| **Headless Directives** | ✅ Built-in | ❌ None      | ✅ Full control            |
+Headless primitives handle error timing, message resolution, character counting, fieldset aggregation, and ID generation. You write the template and styling.
 
-**Use headless when you need:**
-
-- 🎨 **Design system integration** - Build form components that match your exact design tokens
-- 🔧 **Framework agnostic styling** - Works with Tailwind, Bootstrap, Material, or custom CSS
-- 📦 **Minimal bundle size** - No UI code, just signals
-- 🧩 **Composable architecture** - Combine primitives into custom components
-- 🎯 **Host directive composition** - Use as `hostDirectives` in your own components
-
-## Why not just Angular Signal Forms?
-
-Headless primitives remove repetitive template logic while keeping Signal Forms as the source of truth.
-
-**What you still do with plain Signal Forms:**
-
-- Re-implement error timing checks (`touched`, `submitted`, `strategy`)
-- Rebuild error message mapping in every component
-- Manually wire ARIA IDs and `aria-describedby` for custom UIs
-
-**What headless gives you:**
-
-- Shared, strategy-aware visibility (`showErrors()`)
-- Ready-to-render, resolved messages (`resolvedErrors()`)
-- Stable IDs for ARIA (`errorId()`, `warningId()`)
-
-You keep full control over markup and styling while avoiding boilerplate.
-
-## Installation
-
-Included with `@ngx-signal-forms/toolkit`:
+## Import
 
 ```typescript
+// Bundle import
+import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
+
+// Individual imports
 import {
   NgxHeadlessErrorStateDirective,
   NgxHeadlessErrorSummaryDirective,
   NgxHeadlessCharacterCountDirective,
   NgxHeadlessFieldsetDirective,
   NgxHeadlessFieldNameDirective,
-  NgxHeadlessToolkit,
+  createErrorState,
+  createCharacterCount,
+  createFieldStateFlags,
+  readErrors,
+  readFieldFlag,
+  dedupeValidationErrors,
+  humanizeFieldPath,
+  createUniqueId,
 } from '@ngx-signal-forms/toolkit/headless';
 ```
 
-## Quick Start
+## Quick start
 
-### Basic Usage (Template Binding)
-
-Apply a headless directive and use `exportAs` to access signals in your template:
+Apply a headless directive, export it via `exportAs`, and bind to its signals:
 
 ```html
 <div
@@ -65,10 +43,18 @@ Apply a headless directive and use `exportAs` to access signals in your template
   [field]="form.email"
   fieldName="email"
 >
-  <input [formField]="form.email" />
+  <label for="email">Email</label>
+  <input
+    id="email"
+    [formField]="form.email"
+    [attr.aria-invalid]="errorState.hasErrors() ? 'true' : null"
+    [attr.aria-describedby]="
+      errorState.showErrors() ? errorState.errorId() : null
+    "
+  />
 
   @if (errorState.showErrors() && errorState.hasErrors()) {
-  <div class="my-custom-error">
+  <div [id]="errorState.errorId()" role="alert" class="my-error">
     @for (error of errorState.resolvedErrors(); track error.kind) {
     <span>{{ error.message }}</span>
     }
@@ -77,80 +63,11 @@ Apply a headless directive and use `exportAs` to access signals in your template
 </div>
 ```
 
-**More complete example (with validation and ARIA):**
+### Host directive composition
 
-This example uses manual submit handling, so `novalidate` is set explicitly instead of relying on toolkit core `[formRoot]`.
-
-```typescript
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { form, required, email, schema } from '@angular/forms/signals';
-
-interface LoginModel {
-  email: string;
-}
-
-@Component({
-  selector: 'app-login',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <form novalidate (submit)="onSubmit($event)">
-      <div
-        ngxSignalFormHeadlessErrorState
-        #errorState="errorState"
-        [field]="loginForm.email"
-        fieldName="email"
-        strategy="on-touch"
-      >
-        <label for="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          [formField]="loginForm.email"
-          [attr.aria-invalid]="errorState.hasErrors() ? 'true' : null"
-          [attr.aria-describedby]="
-            errorState.showErrors() ? errorState.errorId() : null
-          "
-        />
-
-        @if (errorState.showErrors() && errorState.hasErrors()) {
-          <div [id]="errorState.errorId()" role="alert" class="my-custom-error">
-            @for (error of errorState.resolvedErrors(); track error.kind) {
-              <span>{{ error.message }}</span>
-            }
-          </div>
-        }
-      </div>
-
-      <button type="submit" [disabled]="loginForm().invalid()">Submit</button>
-    </form>
-  `,
-})
-export class LoginComponent {
-  readonly #model = signal<LoginModel>({ email: '' });
-  protected readonly loginForm = form(
-    this.#model,
-    schema((path) => {
-      required(path.email, { message: 'Email is required' });
-      email(path.email, { message: 'Email must be valid' });
-    }),
-  );
-
-  protected onSubmit(event: Event): void {
-    event.preventDefault();
-    if (this.loginForm.valid()) {
-      console.log(this.#model());
-    }
-  }
-}
-```
-
-### Using as Host Directives (Composition API)
-
-Headless directives are designed to work with Angular's [Directive Composition API](https://angular.dev/guide/directives/directive-composition-api):
+Headless directives work as Angular [host directives](https://angular.dev/guide/directives/directive-composition-api) for building custom form-field components:
 
 ```typescript
-import { NgxHeadlessErrorStateDirective } from '@ngx-signal-forms/toolkit/headless';
-
 @Component({
   selector: 'my-form-field',
   hostDirectives: [
@@ -160,7 +77,7 @@ import { NgxHeadlessErrorStateDirective } from '@ngx-signal-forms/toolkit/headle
     },
   ],
   template: `
-    <ng-content></ng-content>
+    <ng-content />
     @if (errorState.showErrors()) {
       <div class="error-container">
         @for (error of errorState.resolvedErrors(); track error.kind) {
@@ -171,661 +88,114 @@ import { NgxHeadlessErrorStateDirective } from '@ngx-signal-forms/toolkit/headle
   `,
 })
 export class MyFormFieldComponent {
-  // Inject the host directive to access its signals
   protected readonly errorState = inject(NgxHeadlessErrorStateDirective);
 }
 ```
-
-**Usage with `my-form-field`:**
-
-This composition example also uses manual submit handling, so `novalidate` is declared explicitly on the form.
-
-```typescript
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { form, required, schema } from '@angular/forms/signals';
-import { MyFormFieldComponent } from './my-form-field.component';
-
-interface ProfileModel {
-  name: string;
-}
-
-@Component({
-  selector: 'app-profile',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MyFormFieldComponent],
-  template: `
-    <form novalidate (submit)="onSubmit($event)">
-      <my-form-field [field]="profileForm.name" fieldName="name">
-        <label for="name">Name</label>
-        <input id="name" [formField]="profileForm.name" />
-      </my-form-field>
-
-      <button type="submit" [disabled]="profileForm().invalid()">Save</button>
-    </form>
-  `,
-})
-export class ProfileComponent {
-  readonly #model = signal<ProfileModel>({ name: '' });
-  protected readonly profileForm = form(
-    this.#model,
-    schema((path) => {
-      required(path.name, { message: 'Name is required' });
-    }),
-  );
-
-  protected onSubmit(event: Event): void {
-    event.preventDefault();
-    if (this.profileForm.valid()) {
-      console.log(this.#model());
-    }
-  }
-}
-```
-
-**Key benefits of host directive composition:**
-
-- ✅ Cleaner component API - inputs exposed on your component
-- ✅ Encapsulated logic - state management handled by the directive
-- ✅ DI-based access - inject the directive to read signals
-- ✅ Lifecycle ordering - directive initializes before your component
 
 ## Directives
 
 ### NgxHeadlessErrorStateDirective
 
-Exposes error state signals for custom error display implementations.
+Selector: `[ngxSignalFormHeadlessErrorState]` · Export: `errorState`
 
-| Selector  | `[ngxSignalFormHeadlessErrorState]` |
-| --------- | ----------------------------------- |
-| Export As | `errorState`                        |
+Exposes error state signals for custom error display.
 
-**Inputs:**
+| Input             | Type                   | Description                         |
+| ----------------- | ---------------------- | ----------------------------------- |
+| `field`           | `FieldTree` (required) | The field to track                  |
+| `fieldName`       | `string` (required)    | Field name for ID generation        |
+| `strategy`        | `ErrorDisplayStrategy` | Override (inherits from context)    |
+| `submittedStatus` | `SubmittedStatus`      | Override for `'on-submit'` strategy |
 
-| Input             | Type                   | Description                                           |
-| ----------------- | ---------------------- | ----------------------------------------------------- |
-| `field`           | `FieldTree<T>`         | The Signal Forms field to track                       |
-| `fieldName`       | `string`               | Field name for ID generation                          |
-| `strategy`        | `ErrorDisplayStrategy` | When to show errors (optional, inherits from context) |
-| `submittedStatus` | `SubmittedStatus`      | Submission state for 'on-submit' strategy (optional)  |
-
-**Signals (via `exportAs` or `inject()`):**
-
-| Signal             | Type                        | Description                                 |
-| ------------------ | --------------------------- | ------------------------------------------- |
-| `showErrors`       | `Signal<boolean>`           | Whether to display errors based on strategy |
-| `showWarnings`     | `Signal<boolean>`           | Whether to display warnings                 |
-| `errors`           | `Signal<ValidationError[]>` | Raw blocking errors                         |
-| `warnings`         | `Signal<ValidationError[]>` | Raw warning errors                          |
-| `resolvedErrors`   | `Signal<ResolvedError[]>`   | Errors with resolved messages               |
-| `resolvedWarnings` | `Signal<ResolvedError[]>`   | Warnings with resolved messages             |
-| `hasErrors`        | `Signal<boolean>`           | Has any blocking errors                     |
-| `hasWarnings`      | `Signal<boolean>`           | Has any warnings                            |
-| `errorId`          | `Signal<string>`            | Generated ID for `aria-describedby`         |
-| `warningId`        | `Signal<string>`            | Generated warning region ID                 |
-
-**Example:**
-
-```html
-<div
-  ngxSignalFormHeadlessErrorState
-  #errorState="errorState"
-  [field]="form.email"
-  fieldName="email"
-  strategy="immediate"
->
-  <label for="email">Email</label>
-  <input
-    id="email"
-    [formField]="form.email"
-    [attr.aria-invalid]="errorState.hasErrors() ? 'true' : null"
-    [attr.aria-describedby]="errorState.showErrors() ? errorState.errorId() : null"
-  />
-
-  @if (errorState.showErrors() && errorState.hasErrors()) {
-  <ul [id]="errorState.errorId()" role="alert" class="error-list">
-    @for (error of errorState.resolvedErrors(); track error.kind) {
-    <li>{{ error.message }}</li>
-    }
-  </ul>
-  }
-</div>
-```
-
----
+Signals: `showErrors()`, `showWarnings()`, `hasErrors()`, `hasWarnings()`, `errors()`, `warnings()`, `resolvedErrors()`, `resolvedWarnings()`, `errorId`, `warningId`.
 
 ### NgxHeadlessErrorSummaryDirective
 
-Aggregates all errors from a form tree into a clickable summary list. Uses Angular's `errorSummary()` API to traverse the full field tree and `focusBoundControl()` to focus controls on click.
+Selector: `[ngxSignalFormHeadlessErrorSummary]` · Export: `errorSummary`
 
-| Selector  | `[ngxSignalFormHeadlessErrorSummary]` |
-| --------- | ------------------------------------- |
-| Export As | `errorSummary`                        |
+Aggregates all errors from a form tree. Each entry has a `focus()` method that calls Angular's `focusBoundControl()`.
 
-**Inputs:**
+| Input             | Type                   | Description                         |
+| ----------------- | ---------------------- | ----------------------------------- |
+| `formTree`        | `FieldTree` (required) | Root form to aggregate              |
+| `strategy`        | `ErrorDisplayStrategy` | Override (inherits from context)    |
+| `submittedStatus` | `SubmittedStatus`      | Override for `'on-submit'` strategy |
 
-| Input             | Type                   | Description                                           |
-| ----------------- | ---------------------- | ----------------------------------------------------- |
-| `formTree`        | `FieldTree<unknown>`   | The root form field tree to aggregate errors from     |
-| `strategy`        | `ErrorDisplayStrategy` | When to show errors (optional, inherits from context) |
-| `submittedStatus` | `SubmittedStatus`      | Submission state for 'on-submit' strategy (optional)  |
-
-**Signals (via `exportAs` or `inject()`):**
-
-| Signal           | Type                          | Description                                      |
-| ---------------- | ----------------------------- | ------------------------------------------------ |
-| `entries`        | `Signal<ErrorSummaryEntry[]>` | Resolved error entries with messages and focus() |
-| `warningEntries` | `Signal<ErrorSummaryEntry[]>` | Resolved warning entries                         |
-| `hasErrors`      | `Signal<boolean>`             | Whether any blocking errors exist                |
-| `hasWarnings`    | `Signal<boolean>`             | Whether any warnings exist                       |
-| `shouldShow`     | `Signal<boolean>`             | Whether to show (strategy-aware + has errors)    |
-| `focusFirst`     | `() => void`                  | Focus the first invalid control                  |
-
-**ErrorSummaryEntry:**
-
-```typescript
-interface ErrorSummaryEntry {
-  readonly kind: string;
-  readonly message: string;
-  readonly fieldName: string;
-  readonly focus: () => void; // Calls Angular's focusBoundControl()
-}
-```
-
-**Example:**
-
-```html
-<form [formRoot]="myForm" ngxSignalForm errorStrategy="on-submit">
-  <!-- ...fields... -->
-
-  <div
-    ngxSignalFormHeadlessErrorSummary
-    #summary="errorSummary"
-    [formTree]="myForm"
-  >
-    @if (summary.shouldShow()) {
-    <div role="alert" aria-live="assertive" class="my-error-summary">
-      <p>Please fix the following errors:</p>
-      <ul>
-        @for (entry of summary.entries(); track entry.kind + entry.fieldName) {
-        <li>
-          <button type="button" (click)="entry.focus()">
-            {{ entry.fieldName }}: {{ entry.message }}
-          </button>
-        </li>
-        }
-      </ul>
-    </div>
-    }
-  </div>
-
-  <button type="submit">Submit</button>
-</form>
-```
-
----
+Signals: `entries()`, `warningEntries()`, `hasErrors()`, `hasWarnings()`, `shouldShow()`, `focusFirst()`.
 
 ### NgxHeadlessCharacterCountDirective
 
+Selector: `[ngxSignalFormHeadlessCharacterCount]` · Export: `characterCount`
+
 Provides character count signals with progressive limit states.
 
-| Selector  | `[ngxSignalFormHeadlessCharacterCount]` |
-| --------- | --------------------------------------- |
-| Export As | `characterCount`                        |
+| Input              | Type                | Default  | Description     |
+| ------------------ | ------------------- | -------- | --------------- |
+| `field`            | `FieldTree<string>` | required | String field    |
+| `maxLength`        | `number`            | required | Character limit |
+| `warningThreshold` | `number`            | `0.8`    | Warning at 80%  |
+| `dangerThreshold`  | `number`            | `0.95`   | Danger at 95%   |
 
-**Inputs:**
-
-| Input              | Type                | Default  | Description                       |
-| ------------------ | ------------------- | -------- | --------------------------------- |
-| `field`            | `FieldTree<string>` | required | The string field to track         |
-| `maxLength`        | `number`            | required | Maximum character limit           |
-| `warningThreshold` | `number`            | `0.8`    | Threshold for warning state (80%) |
-| `dangerThreshold`  | `number`            | `0.95`   | Threshold for danger state (95%)  |
-
-**Signals:**
-
-| Signal              | Type                     | Description                                   |
-| ------------------- | ------------------------ | --------------------------------------------- |
-| `currentLength`     | `Signal<number>`         | Current value length                          |
-| `resolvedMaxLength` | `Signal<number \| null>` | Maximum length                                |
-| `remaining`         | `Signal<number \| null>` | Characters remaining (negative if exceeded)   |
-| `limitState`        | `Signal<LimitState>`     | `'ok' \| 'warning' \| 'danger' \| 'exceeded'` |
-| `hasLimit`          | `Signal<boolean>`        | Whether a limit is configured                 |
-| `isExceeded`        | `Signal<boolean>`        | Whether limit was exceeded                    |
-| `percentUsed`       | `Signal<number \| null>` | Percentage of limit used (0-100+)             |
-
-**Limit States:**
-
-| State        | Condition       | Typical Styling |
-| ------------ | --------------- | --------------- |
-| `'ok'`       | < 80% of limit  | Default/neutral |
-| `'warning'`  | 80-94% of limit | Yellow/amber    |
-| `'danger'`   | 95-99% of limit | Orange/red      |
-| `'exceeded'` | ≥ 100% of limit | Red/error       |
-
-**Example:**
-
-```html
-<div
-  ngxSignalFormHeadlessCharacterCount
-  #charCount="characterCount"
-  [field]="form.bio"
-  [maxLength]="500"
->
-  <textarea [formField]="form.bio"></textarea>
-
-  @if (charCount.hasLimit()) {
-  <span
-    class="char-count"
-    [class.warning]="charCount.limitState() === 'warning'"
-    [class.danger]="charCount.limitState() === 'danger'"
-    [class.exceeded]="charCount.limitState() === 'exceeded'"
-  >
-    {{ charCount.currentLength() }} / {{ charCount.resolvedMaxLength() }} @if
-    (charCount.isExceeded()) {
-    <span class="over-limit">({{ charCount.remaining() }} over limit)</span>
-    }
-  </span>
-  }
-</div>
-```
-
----
+Signals: `currentLength()`, `resolvedMaxLength()`, `remaining()`, `limitState()` (`'ok' | 'warning' | 'danger' | 'exceeded'`), `hasLimit()`, `isExceeded()`, `percentUsed()`.
 
 ### NgxHeadlessFieldsetDirective
 
-Aggregates error state across multiple fields for group validation display.
+Selector: `[ngxSignalFormHeadlessFieldset]` · Export: `fieldset`
 
-| Selector  | `[ngxSignalFormHeadlessFieldset]` |
-| --------- | --------------------------------- |
-| Export As | `fieldset`                        |
+Aggregates error state across multiple fields for group validation.
 
-**Inputs:**
+| Input                 | Type                   | Description                             |
+| --------------------- | ---------------------- | --------------------------------------- |
+| `fieldsetField`       | `FieldTree` (required) | Primary field group                     |
+| `fields`              | `FieldTree[]`          | Optional explicit field list            |
+| `fieldsetId`          | `string`               | For ARIA linking                        |
+| `strategy`            | `ErrorDisplayStrategy` | Override strategy                       |
+| `includeNestedErrors` | `boolean`              | Include child errors (default: `false`) |
 
-| Input           | Type                   | Description                                   |
-| --------------- | ---------------------- | --------------------------------------------- |
-| `fieldsetField` | `FieldTree<T>`         | Primary field group (uses `errorSummary()`)   |
-| `fields`        | `FieldTree[]`          | Optional explicit list of fields to aggregate |
-| `fieldsetId`    | `string`               | Optional ID for the fieldset                  |
-| `strategy`      | `ErrorDisplayStrategy` | Error display strategy override               |
-
-**Signals:**
-
-| Signal                  | Type                        | Description                         |
-| ----------------------- | --------------------------- | ----------------------------------- |
-| `aggregatedErrors`      | `Signal<ValidationError[]>` | Deduplicated errors from all fields |
-| `aggregatedWarnings`    | `Signal<ValidationError[]>` | Deduplicated warnings               |
-| `hasErrors`             | `Signal<boolean>`           | Any field has errors                |
-| `hasWarnings`           | `Signal<boolean>`           | Any field has warnings              |
-| `shouldShowErrors`      | `Signal<boolean>`           | Show errors based on strategy       |
-| `shouldShowWarnings`    | `Signal<boolean>`           | Show warnings (when no errors)      |
-| `isInvalid` / `isValid` | `Signal<boolean>`           | Validation state                    |
-| `isTouched` / `isDirty` | `Signal<boolean>`           | Interaction state                   |
-| `isPending`             | `Signal<boolean>`           | Async validation pending            |
-| `resolvedFieldsetId`    | `Signal<string>`            | Generated or provided ID            |
-
-**Example:**
-
-```html
-<fieldset
-  ngxSignalFormHeadlessFieldset
-  #fieldset="fieldset"
-  [fieldsetField]="form.address"
-  fieldsetId="address"
-  [class.has-errors]="fieldset.hasErrors()"
->
-  <legend>Address</legend>
-
-  <input [formField]="form.address.street" placeholder="Street" />
-  <input [formField]="form.address.city" placeholder="City" />
-  <input [formField]="form.address.zip" placeholder="ZIP" />
-
-  @if (fieldset.shouldShowErrors()) {
-  <div class="fieldset-errors" role="alert">
-    @for (error of fieldset.aggregatedErrors(); track error.kind) {
-    <span>{{ error.message }}</span>
-    }
-  </div>
-  }
-</fieldset>
-```
-
----
+Signals: `isValid()`, `isInvalid()`, `isTouched()`, `isDirty()`, `isPending()`, `aggregatedErrors()`, `aggregatedWarnings()`, `shouldShowErrors()`, `shouldShowWarnings()`.
 
 ### NgxHeadlessFieldNameDirective
 
-Resolves field names and generates accessible IDs.
+Selector: `[ngxSignalFormHeadlessFieldName]` · Export: `fieldName`
 
-If `fieldName` is omitted, the directive uses the host element `id`. If no `id` is present, provide an explicit `fieldName`.
+Resolves field names and generates stable IDs for ARIA linking. Falls back to the host element `id` when `fieldName` is omitted.
 
-| Selector  | `[ngxSignalFormHeadlessFieldName]` |
-| --------- | ---------------------------------- |
-| Export As | `fieldName`                        |
+Signals: `resolvedFieldName()`, `hasFieldName()`, `errorId()`, `warningId()`.
 
-**Inputs:**
-
-| Input       | Type                       | Description                                                      |
-| ----------- | -------------------------- | ---------------------------------------------------------------- |
-| `fieldName` | `string \| Signal<string>` | Optional field name (falls back to host `id` or generated value) |
-
-**Signals:**
-
-| Signal              | Type              | Description                 |
-| ------------------- | ----------------- | --------------------------- |
-| `resolvedFieldName` | `Signal<string>`  | Resolved field name         |
-| `hasFieldName`      | `Signal<boolean>` | Has non-empty name          |
-| `errorId`           | `Signal<string>`  | Generated error region ID   |
-| `warningId`         | `Signal<string>`  | Generated warning region ID |
-
-**Example:**
-
-```html
-<div
-  ngxSignalFormHeadlessFieldName
-  #fieldName="fieldName"
-  [fieldName]="dynamicName()"
->
-  <label [for]="fieldName.resolvedFieldName()">{{ labelText }}</label>
-  <input
-    [id]="fieldName.resolvedFieldName()"
-    [formField]="form.field"
-    [attr.aria-describedby]="fieldName.errorId()"
-  />
-  <div [id]="fieldName.errorId()" role="alert">
-    <!-- Error display -->
-  </div>
-</div>
-```
-
----
-
-## Utility Functions
+## Utility functions
 
 For programmatic use without directives:
 
-### createErrorState()
-
 ```typescript
-import { createErrorState } from '@ngx-signal-forms/toolkit/headless';
+// Error state without a directive
+const state = createErrorState({ field: form.email, fieldName: 'email' });
 
-const errorState = createErrorState({
-  field: form.email,
-  fieldName: 'email',
-});
+// Character count without a directive
+const count = createCharacterCount({ field: form.bio, maxLength: 500 });
 
-// Access signals
-effect(() => {
-  if (errorState.showErrors() && errorState.hasErrors()) {
-    console.log('Errors:', errorState.errors());
-  }
-});
-```
+// Common field-state flags in one object
+const flags = createFieldStateFlags(form.email);
+// flags.isTouched(), flags.isDirty(), flags.isValid(), flags.isInvalid(), flags.isPending()
 
-### createCharacterCount()
+// Safe field state reading
+readFieldFlag(field(), 'invalid'); // boolean, null-safe
+readErrors(field()); // uses errorSummary() or errors()
+dedupeValidationErrors(errors); // remove duplicates by kind+message
 
-```typescript
-import { createCharacterCount } from '@ngx-signal-forms/toolkit/headless';
-
-const charCount = createCharacterCount({
-  field: form.bio,
-  maxLength: 500,
-  warningThreshold: 0.8,
-  dangerThreshold: 0.95,
-});
-
-// Access signals
-effect(() => {
-  console.log(
-    `${charCount.currentLength()} / ${charCount.resolvedMaxLength()}`,
-  );
-  console.log(`State: ${charCount.limitState()}`);
-});
-```
-
-### createFieldStateFlags()
-
-Returns reusable signal readers for the common field-state flags without having
-to wire each one with separate `readFieldFlag(...)` calls.
-
-```typescript
-import { createFieldStateFlags } from '@ngx-signal-forms/toolkit/headless';
-
-const flags = createFieldStateFlags(form.deliveryNotes);
-
-effect(() => {
-  console.log({
-    touched: flags.isTouched(),
-    dirty: flags.isDirty(),
-    valid: flags.isValid(),
-    invalid: flags.isInvalid(),
-    pending: flags.isPending(),
-  });
-});
-```
-
-Use it when a custom section, debug panel, or utility display needs several
-field-state badges at once.
-
-### readFieldFlag()
-
-Safely reads boolean state flags from a FieldTree or FieldState-like object. Handles null/undefined gracefully.
-
-```typescript
-import { readFieldFlag } from '@ngx-signal-forms/toolkit/headless';
-
-// Read state flags from any FieldTree or FieldState
-const isInvalid = readFieldFlag(form.email(), 'invalid');
-const isTouched = readFieldFlag(form.email(), 'touched');
-const isDirty = readFieldFlag(form.email(), 'dirty');
-const isPending = readFieldFlag(form.email(), 'pending');
-
-// Safe with null/undefined - returns false
-const safeRead = readFieldFlag(null, 'invalid'); // false
-```
-
-**Supported keys:** `'invalid'`, `'valid'`, `'touched'`, `'dirty'`, `'pending'`
-
-### readErrors()
-
-Reads validation errors from a FieldTree, preferring `errorSummary()` (aggregated errors) over `errors()` (single-field errors).
-
-```typescript
-import { readErrors } from '@ngx-signal-forms/toolkit/headless';
-
-// For fieldsets/groups - uses errorSummary() for aggregated errors
-const fieldsetErrors = readErrors(form.address());
-
-// For single fields - falls back to errors()
-const fieldErrors = readErrors(form.email());
-
-// Safe with null - returns []
-const safeRead = readErrors(null); // []
-```
-
-### dedupeValidationErrors()
-
-Removes duplicate validation errors based on `kind` + `message` combination.
-
-```typescript
-import { dedupeValidationErrors } from '@ngx-signal-forms/toolkit/headless';
-
-const errors = [
-  { kind: 'required', message: 'Field required' },
-  { kind: 'email', message: 'Invalid email' },
-  { kind: 'required', message: 'Field required' }, // duplicate
-];
-
-const unique = dedupeValidationErrors(errors);
-// Result: [{ kind: 'required', message: 'Field required' }, { kind: 'email', message: 'Invalid email' }]
-```
-
-### createUniqueId()
-
-Generates sequential unique IDs with a prefix. Useful for ARIA attributes.
-
-```typescript
-import { createUniqueId } from '@ngx-signal-forms/toolkit/headless';
-
-const fieldId = createUniqueId('field'); // 'field-1'
-const errorId = createUniqueId('error'); // 'error-2'
-const anotherField = createUniqueId('field'); // 'field-3'
-```
-
-**Note:** Counter is global across all prefixes to guarantee uniqueness
-
-### humanizeFieldPath()
-
-Default field-label resolver that converts internal field paths into
-human-readable display names. Strips Angular prefixes, splits camelCase,
-and joins nested segments with `/`.
-
-```typescript
-import { humanizeFieldPath } from '@ngx-signal-forms/toolkit/headless';
-
+// Human-readable field paths
 humanizeFieldPath('address.postalCode'); // 'Address / Postal code'
-humanizeFieldPath('ng.form0.contactEmail'); // 'Contact email'
-humanizeFieldPath('first_name'); // 'First name'
+
+// Unique ID generation
+createUniqueId('field'); // 'field-1', 'field-2', ...
 ```
 
-Use `humanizeFieldPath` as a fallback inside custom label resolvers:
+## Related documentation
 
-```typescript
-import { provideFieldLabels } from '@ngx-signal-forms/toolkit';
-import { humanizeFieldPath } from '@ngx-signal-forms/toolkit/headless';
+- [Toolkit core](../README.md) — error strategies, ARIA, configuration
+- [Form field wrapper](../form-field/README.md) — pre-styled wrapper component
+- [Assistive components](../assistive/README.md) — styled error, hint, and count components
+- [Theming guide](../form-field/THEMING.md) — CSS custom properties for styled components
 
-provideFieldLabels({
-  contactEmail: 'E-mailadres',
-  'address.postalCode': 'Postcode',
-});
-// Unmapped paths fall back to the raw path. To humanize unmapped paths,
-// use a factory resolver:
-provideFieldLabels(() => {
-  const labels: Record<string, string> = {
-    contactEmail: 'E-mailadres',
-    'address.postalCode': 'Postcode',
-  };
-  return (path) => labels[path] ?? humanizeFieldPath(path);
-});
-```
+## License
 
----
-
-## Bundle Import
-
-Import all directives at once:
-
-```typescript
-import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
-
-@Component({
-  imports: [NgxHeadlessToolkit],
-  template: `...`,
-})
-export class MyComponent {}
-```
-
----
-
-## Host Directive Composition Patterns
-
-### Pattern 1: Wrap with Exposed Inputs
-
-Expose the directive's inputs on your component:
-
-```typescript
-@Component({
-  selector: 'my-text-field',
-  hostDirectives: [
-    {
-      directive: NgxHeadlessErrorStateDirective,
-      inputs: ['field', 'fieldName', 'strategy'],
-    },
-    {
-      directive: NgxHeadlessCharacterCountDirective,
-      inputs: ['field:charField', 'maxLength'], // Alias to avoid conflict
-    },
-  ],
-})
-export class MyTextFieldComponent {
-  errorState = inject(NgxHeadlessErrorStateDirective);
-  charCount = inject(NgxHeadlessCharacterCountDirective);
-}
-```
-
-### Pattern 2: Internal Configuration
-
-Configure the directive internally, not exposing inputs:
-
-```typescript
-@Component({
-  selector: 'my-email-field',
-  hostDirectives: [NgxHeadlessErrorStateDirective],
-})
-export class MyEmailFieldComponent implements OnInit {
-  errorState = inject(NgxHeadlessErrorStateDirective);
-
-  readonly field = input.required<FieldTree<string>>();
-
-  ngOnInit() {
-    // Note: For required inputs, consider component-level inputs
-    // that you forward to the directive
-  }
-}
-```
-
-### Pattern 3: Combining Multiple Directives
-
-Compose multiple headless behaviors:
-
-```typescript
-@Directive({
-  selector: '[formFieldBehavior]',
-  hostDirectives: [
-    {
-      directive: NgxHeadlessErrorStateDirective,
-      inputs: ['field', 'fieldName'],
-    },
-    { directive: NgxHeadlessFieldNameDirective, inputs: ['fieldName'] },
-  ],
-})
-export class FormFieldBehaviorDirective {
-  errorState = inject(NgxHeadlessErrorStateDirective);
-  fieldNameDir = inject(NgxHeadlessFieldNameDirective);
-
-  // Expose combined state
-  readonly showErrors = this.errorState.showErrors;
-  readonly errorId = this.fieldNameDir.errorId;
-}
-```
-
----
-
-## Comparison: Headless vs Styled
-
-| Feature            | Headless              | Styled (`form-field`) |
-| ------------------ | --------------------- | --------------------- |
-| Bundle size        | Minimal               | Larger (includes CSS) |
-| Styling control    | Full                  | CSS custom properties |
-| Setup effort       | Higher                | Lower                 |
-| Design consistency | Manual                | Built-in              |
-| Use case           | Custom design systems | Quick prototyping     |
-
-**Choose headless when:**
-
-- You have a design system with specific requirements
-- You need complete styling control
-- You want to minimize bundle size
-- You're building a component library
-
-**Choose styled when:**
-
-- You want quick, accessible forms out of the box
-- The default styling works for your project
-- You prefer convention over configuration
-
----
-
-## Related Documentation
-
-- **[Toolkit Core](../README.md)** - Error strategies, ARIA, submission helpers
-- **[Form Field Components](../form-field/README.md)** - Pre-styled form field wrappers
-- **[Theming Guide](../form-field/THEMING.md)** - CSS custom properties for styled components
+MIT © [ngx-signal-forms](https://github.com/ngx-signal-forms/ngx-signal-forms)

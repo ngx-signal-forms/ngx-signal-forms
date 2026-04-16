@@ -1,21 +1,30 @@
 # @ngx-signal-forms/toolkit/debugger
 
-Development debugging tools for Angular Signal Forms. Provides a visual debugger panel that displays form state, validation errors, and warnings in real-time.
+> Development-time visual inspector for Angular Signal Forms state and validation.
 
-## Installation
+## Why this entry point exists
 
-This is a secondary entry point of `@ngx-signal-forms/toolkit`. If you already have the toolkit installed, no additional installation is needed.
+When building forms, you need to see field state, validation errors, and submission status in real-time. The debugger panel shows all of this without sprinkling `console.log` calls or manually reading signals.
 
-```bash
-npm install @ngx-signal-forms/toolkit
-```
+It is a development-only tool — gate it behind `isDevMode()` so production builds skip it entirely.
 
-## Usage
+## Import
 
 ```typescript
+// Bundle import (recommended)
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+
+// Individual import
+import { SignalFormDebuggerComponent } from '@ngx-signal-forms/toolkit/debugger';
+```
+
+## Quick start
+
+```typescript
+import { Component, isDevMode, signal } from '@angular/core';
+import { form, FormField, required } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
-import { form, FormField, required } from '@angular/forms/signals';
 
 @Component({
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormDebugger],
@@ -25,11 +34,13 @@ import { form, FormField, required } from '@angular/forms/signals';
       <button type="submit">Submit</button>
     </form>
 
-    <!-- Debugger panel -->
-    <ngx-signal-form-debugger [formTree]="userForm" />
+    @if (isDevMode) {
+      <ngx-signal-form-debugger [formTree]="userForm" />
+    }
   `,
 })
 export class UserFormComponent {
+  protected readonly isDevMode = isDevMode();
   readonly #data = signal({ email: '' });
   protected readonly userForm = form(this.#data, (path) => {
     required(path.email, { message: 'Email required' });
@@ -37,122 +48,54 @@ export class UserFormComponent {
 }
 ```
 
-**Important:** Pass the FieldTree function (e.g. `userForm`), not the root state (`userForm()`).
-The debugger can accept a `FieldState`, but it cannot traverse child fields, so visibility can
-appear incorrect.
-
-## Features
-
-- **Form State Display**: Valid, Invalid, Dirty, Pending, Submitted status
-- **Live Model Values**: JSON representation of form data
-- **Validation Errors**: Separated into blocking errors and warnings
-- **Error Visibility Strategy**: Shows which errors are hidden by current strategy
-- **Root vs Field Errors**: Distinguishes cross-field validation from field-level
-- **Dark Mode Support**: Automatic via class-based theme context (`.dark`)
-- **Collapsible Sections**: Clean organization of information
+Pass the `FieldTree` function (e.g. `userForm`), not the called state (`userForm()`). The debugger needs the function to traverse child fields.
 
 ## API
 
-### Inputs
+### SignalFormDebuggerComponent
 
-| Input           | Type                   | Default                        | Description                                                                                 |
-| --------------- | ---------------------- | ------------------------------ | ------------------------------------------------------------------------------------------- |
-| `formTree`      | `unknown` (required)   | -                              | The Signal Form to display. Prefer the FieldTree function for correct per-field visibility. |
-| `errorStrategy` | `ErrorDisplayStrategy` | `'on-touch'`                   | Current error display strategy                                                              |
-| `title`         | `string`               | `'Form State & Validation'`    | Header title                                                                                |
-| `subtitle`      | `string`               | `'Live debugging information'` | Header subtitle                                                                             |
+Selector: `ngx-signal-form-debugger`
+
+| Input           | Type                   | Default                        | Description              |
+| --------------- | ---------------------- | ------------------------------ | ------------------------ |
+| `formTree`      | `unknown` (required)   | —                              | The form tree to inspect |
+| `errorStrategy` | `ErrorDisplayStrategy` | `'on-touch'`                   | Error display strategy   |
+| `title`         | `string`               | `'Form State & Validation'`    | Panel header title       |
+| `subtitle`      | `string`               | `'Live debugging information'` | Panel header subtitle    |
+
+### NgxSignalFormDebugger
+
+Bundle containing `SignalFormDebuggerComponent` and internal badge components.
+
+### What it shows
+
+- Field state: valid, invalid, dirty, touched, pending, submitted
+- Live model values as JSON
+- Validation errors separated into blocking errors and warnings
+- Error visibility based on the current strategy
+- Root-level vs field-level error distinction
+- Dark mode support via `.dark` class context
+- Collapsible sections
 
 ### Theming
 
-Override CSS custom properties to customize appearance:
-
 ```css
 ngx-signal-form-debugger {
-  /* Base colors */
   --ngx-debugger-bg: #ffffff;
-  --ngx-debugger-bg-secondary: #f9fafb;
   --ngx-debugger-border-color: #e5e7eb;
   --ngx-debugger-text-color: #111827;
-  --ngx-debugger-text-secondary: #6b7280;
-
-  /* Semantic colors */
   --ngx-debugger-color-success: #22c55e;
   --ngx-debugger-color-warning: #f59e0b;
   --ngx-debugger-color-danger: #ef4444;
-  --ngx-debugger-color-info: #3b82f6;
-
-  /* Typography */
-  --ngx-debugger-font-family: system-ui, sans-serif;
   --ngx-debugger-font-size-base: 0.875rem;
-
-  /* Spacing & Borders */
   --ngx-debugger-border-radius: 0.5rem;
-  --ngx-debugger-spacing-lg: 1rem;
 }
 ```
 
-### Badge Theming
+## Related documentation
 
-The internal badge component also uses CSS custom properties:
+- [Toolkit core](../README.md) — error strategies, ARIA, submission helpers
 
-```css
-ngx-signal-form-debugger {
-  /* Badge colors by appearance */
-  --ngx-debugger-badge-success-bg: #dcfce7;
-  --ngx-debugger-badge-success-text: #166534;
-  --ngx-debugger-badge-warning-bg: #fef3c7;
-  --ngx-debugger-badge-warning-text: #92400e;
-  --ngx-debugger-badge-danger-bg: #fee2e2;
-  --ngx-debugger-badge-danger-text: #991b1b;
-}
-```
+## License
 
-## With Form Context
-
-For `'on-submit'` error strategy, add `ngxSignalForm` alongside `[formRoot]` so the debugger and assistive components can inherit toolkit form context:
-
-```typescript
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { SignalFormDebuggerComponent } from '@ngx-signal-forms/toolkit/debugger';
-
-@Component({
-  imports: [FormField, NgxSignalFormToolkit, SignalFormDebuggerComponent],
-  template: `
-    <form [formRoot]="userForm" ngxSignalForm errorStrategy="on-submit">
-      <input [formField]="userForm.email" />
-      <button type="submit">Submit</button>
-    </form>
-
-    <ngx-signal-form-debugger [formTree]="userForm" errorStrategy="on-submit" />
-  `,
-})
-```
-
-## Development Only
-
-This component is intended for development and debugging purposes. The
-debugger itself uses Angular's `isDevMode()` to guard its dev-time warnings,
-so production builds (served by `ng build --configuration=production`) skip
-the noisy tree-walk paths automatically. If you want to skip rendering it
-entirely in production, gate it on `isDevMode()` the same way:
-
-```typescript
-import { Component, isDevMode } from '@angular/core';
-import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
-
-@Component({
-  imports: [NgxSignalFormDebugger],
-  template: `
-    @if (isDevMode) {
-      <ngx-signal-form-debugger [formTree]="form" />
-    }
-  `,
-})
-export class MyFormComponent {
-  protected readonly isDevMode = isDevMode();
-}
-```
-
-`isDevMode()` reads Angular's own production flag, which is the same flag
-flipped by the Angular CLI's `production` build configuration. Prefer it
-over project-specific `environment.production` imports.
+MIT © [ngx-signal-forms](https://github.com/ngx-signal-forms/ngx-signal-forms)

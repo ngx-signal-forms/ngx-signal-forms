@@ -1,1187 +1,29 @@
 # @ngx-signal-forms/toolkit/form-field
 
-Form field components and directives for enhanced form layouts and accessibility.
+> Pre-styled form field wrapper and fieldset components — layout, labels, hints, errors, warnings, character counts, and ARIA in a single component.
 
-## ✨ Features
+## Why this entry point exists
 
-- ✅ **WCAG 2.2 Level AA Compliant** - All color combinations meet 4.5:1+ contrast ratios
-- ✅ **Outlined Material Design Layout** - Floating labels with native HTML/CSS (no JavaScript)
-- ✅ **Progressive Character Count** - Visual feedback with color states (ok → warning → danger → exceeded)
-- ✅ **Fieldset Grouping** - Group related fields with aggregated error/warning display
-- ✅ **Automatic Error Display** - Integrated with toolkit's error strategies
-- ✅ **Flexible Theming** - 20+ CSS custom properties for complete customization
-- ✅ **System/App Theme Harmony** - Handles conflicts between OS preference and app theme selection
+Most Angular Signal Forms projects need the same things around each field: a label, error messages that appear at the right time, hints, character counts, and proper ARIA linking. The form-field wrapper handles all of this in one component.
 
-> **Note**: For technical details on WCAG compliance and theme override patterns, see [THEMING.md](./THEMING.md#handling-system-preference-vs-app-theme-conflicts).
+If you need full control over markup, use [`/headless`](../headless/README.md) instead. If you only need the error/hint components without the wrapper layout, use [`/assistive`](../assistive/README.md).
 
-## 🎨 Theming
-
-All components in this entry point (`ngx-signal-form-field-wrapper`, `ngx-signal-form-fieldset`) and their dependencies (`ngx-form-field-error`) share a unified theming system based on CSS Custom Properties.
-
-**[📖 Read the Complete Theming Guide →](./THEMING.md)**
-
-### Supported Components
-
-- **`ngx-signal-form-field-wrapper`**: Outlined layout, borders, colors, spacing.
-- **`ngx-signal-form-fieldset`**: Grouping gap and indentation.
-- **`ngx-form-field-error`**: Shared feedback typography and colors.
-- **`ngx-signal-form-field-hint`**: Helper text colors and spacing.
-- **`ngx-signal-form-field-character-count`**: Progressive color states.
-
-### Quick Customization
-
-Override these root variables to affect all components at once:
-
-```css
-:root {
-  /* Scale the entire system */
-  --ngx-signal-form-feedback-font-size: 0.875rem;
-
-  /* Brand Colors */
-  --ngx-form-field-color-primary: #007bc7; /* Focus rings & active borders */
-  --ngx-form-field-color-error: #db1818; /* Error state */
-}
-```
-
-For a full list of all 20+ variables including layout, typography, and dark mode support, see the [Theming Guide](./THEMING.md).
-
----
-
-## 📦 Convenience Export Bundle
-
-### NgxFormField
-
-A single bundle that includes all form field components. The floating label directive is included, so outline works without extra imports.
-
-**Import:**
+## Import
 
 ```typescript
-import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-```
-
-**Includes:**
-
-- Form field wrapper component (`ngx-signal-form-field-wrapper`)
-- `NgxFormFieldHintComponent` - Helper text
-- `NgxFormFieldCharacterCountComponent` - Character counter
-- `NgxFormFieldAssistiveRowComponent` - Assistive content row
-- `NgxFormFieldErrorComponent` - Error and warning display
-- `NgxSignalFormFieldset` - Grouped field validation
-
-**Usage:**
-
-```typescript
-import { FormField } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+// Bundle import (recommended)
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
-@Component({
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
-  template: `
-    <form [formRoot]="contactForm" ngxSignalForm>
-      <ngx-signal-form-field-wrapper
-        [formField]="contactForm.email"
-        appearance="outline"
-      >
-        <label for="email">Email</label>
-        <input id="email" [formField]="contactForm.email" />
-```
-
-**Benefits:**
-
-- ✅ Single import instead of multiple separate imports
-- ✅ Type-safe readonly tuple
-- ✅ Cleaner component metadata
-- ✅ Better developer experience
-
----
-
-## Components & Directives
-
-### Form Field Wrapper Component
-
-Reusable form field wrapper with automatic error display and consistent layout.
-
-For custom controls, the wrapper also exposes stable host metadata via
-`data-ngx-signal-form-control-kind`, `data-ngx-signal-form-control-layout`,
-and `data-ngx-signal-form-control-aria-mode`. Prefer driving wrapper-specific
-styling from those attributes instead of DOM-shape selectors when you need
-control-specific layouts.
-
-**Usage:**
-
-```typescript
-import { FormField } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-
-@Component({
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
-  template: `
-    <form [formRoot]="contactForm" ngxSignalForm>
-      <ngx-signal-form-field-wrapper [formField]="contactForm.email" appearance="outline">
-        <label for="email">Email</label>
-        <input id="email" [formField]="contactForm.email" />
-        <ngx-signal-form-field-hint>We'll never share your email</ngx-signal-form-field-hint>
-      </ngx-signal-form-field-wrapper>
-    </form>
-  `,
-})
-```
-
-```html
-<ngx-signal-form-field-wrapper [formField]="form.bio">
-  <!-- Labels and inputs are projected -->
-  <label for="bio">Bio</label>
-  <textarea id="bio" [formField]="form.bio"></textarea>
-
-  <!-- Hints and character counts are projected in a separate slot -->
-  <ngx-signal-form-field-hint>Max 500 characters</ngx-signal-form-field-hint>
-  <ngx-signal-form-field-character-count
-    [formField]="form.bio"
-    [maxLength]="500"
-  />
-</ngx-signal-form-field-wrapper>
-```
-
-#### How the wrapper resolves and caches the bound control
-
-After each render the wrapper inspects its projected content to find the
-bound control host:
-
-1. First it looks for a native `<input>`, `<textarea>`, `<select>`, or
-   `<button type="button">` that carries an `id`.
-2. If none is found, it falls back to any `[id]` element that also has
-   `[formField]` (or an equivalent `data-ngx-signal-form-control` marker).
-
-The resolved element is **cached** between renders. The cache is a hot-path
-optimization for forms with many wrappers: without it every change-detection
-cycle would re-run a `querySelector` chain per wrapper. The cache is
-invalidated when the previously-bound element is removed from the host
-subtree or loses its `id` attribute — the common `@if` branch-swap and "drop
-the `id`" cases are both covered. Moving `[formField]` to a sibling element
-inside the same template branch without a re-render is **not** handled; if
-you need that, re-key the branch so Angular tears the wrapper down.
-
-**Strict field-name resolution.** If neither an explicit `fieldName` input
-nor a bound-control `id` is available, the wrapper **throws**. This keeps
-`aria-describedby` linking deterministic and prevents silently inventing
-field names that would then drift from the real control.
-
-#### Hidden field handling
-
-The wrapper reflects Angular Signal Forms' `hidden()` signal onto its host
-via `[attr.hidden]`. When the field's `hidden()` returns `true`:
-
-- the host element carries `hidden=""` so screen readers and AT skip it
-- error and warning rendering short-circuits before reaching the strategy
-  helper
-- wrapper state classes (`--invalid`, `--warning`) are not applied
-
-Angular documents that hiding a field is the consumer's job (`@if`), but
-leaving a hidden field mounted is not a fatal mistake — the wrapper stays
-safe either way.
-
-Note the deliberate asymmetry with `disabled()`: disabled fields are still
-**visually present**, so tagging the wrapper `[attr.hidden]` would be wrong.
-Disabled fields are excluded from Angular's validation entirely, so their
-error lists are already empty and `shouldShowErrors()` short-circuits
-naturally. `focusFirstInvalid()` and the error summary still check both
-`hidden()` and `disabled()`, because they can aggregate across subtrees.
-
-#### Explicit Control Semantics
-
-When a custom control should be treated differently from a plain text input,
-declare that on the actual `[formField]` host element.
-
-```typescript
-import { FormField } from '@angular/forms/signals';
+// Individual imports
 import {
-  NgxSignalFormAutoAriaDirective,
-  NgxSignalFormControlSemanticsDirective,
-} from '@ngx-signal-forms/toolkit';
-
-@Component({
-  imports: [
-    FormField,
-    NgxSignalFormAutoAriaDirective,
-    NgxSignalFormControlSemanticsDirective,
-  ],
-  template: `
-    <ngx-signal-form-field-wrapper [formField]="form.productRating">
-      <label for="productRating">Product rating</label>
-      <app-star-rating
-        id="productRating"
-        role="slider"
-        [formField]="form.productRating"
-        ngxSignalFormControl="slider"
-        ngxSignalFormControlAria="manual"
-      />
-    </ngx-signal-form-field-wrapper>
-  `,
-})
-export class ExampleComponent {}
+  NgxSignalFormFieldWrapperComponent,
+  NgxSignalFormFieldset,
+} from '@ngx-signal-forms/toolkit/form-field';
 ```
 
-This is a stronger showcase than `switch`: checkbox-based switches already map
-well to native semantics, while slider and composite widgets are where explicit
-control semantics add the most value.
+`NgxFormField` bundles the wrapper, fieldset, and all assistive components (error, hint, character count, assistive row).
 
-For these controls, `appearance="plain"` is often the right wrapper mode:
-the wrapper still provides labels, hints, errors, and field identity, but it
-does not force the default field chrome around a widget that already has its own
-visual treatment.
-
-Use `ngxSignalFormControlAria="manual"` when the control or a third-party
-widget already owns its ARIA attributes and the toolkit should leave them
-alone. Use `buildAriaDescribedBy` to assemble the described-by chain without
-duplicating the toolkit's ID conventions:
-
-- **auto** (default) for standard native field hosts and simple custom hosts
-- **manual** when the control already owns `aria-describedby`, `aria-invalid`, and `aria-required`
-
-Manual ARIA ownership is about who writes the `aria-*` attributes on the
-control host. It does **not** mean the wrapper stops contributing labels,
-hints, errors, or validation context.
-
-#### FAQ: does this add boilerplate for normal switches?
-
-**Does a native `input[type="checkbox"][role="switch"]` still work out of the box?**
-
-Yes.
-
-If the actual bound host is still a native checkbox with `role="switch"`, the
-wrapper can still infer switch semantics automatically. You do **not** need to
-add `ngxSignalFormControl="switch"` just to keep the default native switch path
-working.
-
-**When should I add `ngxSignalFormControl="switch"` anyway?**
-
-Use it when you want explicit semantics instead of inference, or when the bound
-host is not the native checkbox itself — for example a custom control host or a
-third-party component wrapper.
-
-**Is manual ARIA ownership required for default switches?**
-
-No. Keep the default auto-ARIA mode for ordinary native switches. Switch to
-`ngxSignalFormControlAria="manual"` only when the control already owns its own
-ARIA contract and the toolkit should preserve that instead of writing the
-attributes itself.
-
-To fully disable toolkit ARIA participation, use the `ngxSignalFormAutoAriaDisabled`
-attribute on the control element instead of an `ariaMode` value.
-
-```typescript
-import { buildAriaDescribedBy, shouldShowErrors } from '@ngx-signal-forms/toolkit';
-
-protected readonly describedBy = computed(() =>
-  buildAriaDescribedBy('accessibilityAudit', {
-    baseIds: ['accessibilityAudit-hint'],
-    showErrors: shouldShowErrors(
-      fieldState.invalid(), fieldState.touched(), strategy, submittedStatus,
-    ),
-  }),
-);
-```
-
-If you want that behavior to be the default for a whole control family, prefer
-the semantics preset providers over adding another top-level toolkit config.
-
-```typescript
-import {
-  provideNgxSignalFormControlPresets,
-  provideNgxSignalFormControlPresetsForComponent,
-} from '@ngx-signal-forms/toolkit';
-
-// App or feature-level default
-provideNgxSignalFormControlPresets({
-  slider: {
-    layout: 'custom',
-    ariaMode: 'manual',
-  },
-});
-
-// Component-scoped override
-@Component({
-  providers: [
-    ...provideNgxSignalFormControlPresetsForComponent({
-      composite: {
-        layout: 'custom',
-        ariaMode: 'manual',
-      },
-    }),
-  ],
-})
-export class ExampleShell {}
-```
-
-Use the provider when the default should apply to many controls. Use
-`ngxSignalFormControlAria`, `ngxSignalFormControlLayout`, or
-`[ngxSignalFormControl]` when a single control needs an explicit override.
-
-Keep `switch` in your own code when that is the real control family. It is
-still supported; it is just no longer the clearest primary docs example.
-
-#### What if my control doesn't fit any kind?
-
-`NgxSignalFormControlKind` is an intentionally closed union — you cannot add a
-new value from user code, and the toolkit will not grow the set for every
-possible third-party widget. This is a design choice: wrapper chrome decisions
-depend on an internal capability table, and a consumer-supplied kind couldn't
-be classified safely.
-
-**The escape hatch is `composite`.** It is the designated kind for widgets
-that don't map onto a native field family and need the wrapper to stay out of
-their visual chrome and ARIA contract:
-
-```typescript
-@Component({
-  imports: [
-    NgxSignalFormFieldWrapperComponent,
-    NgxSignalFormControlSemanticsDirective,
-  ],
-  template: `
-    <ngx-signal-form-field-wrapper
-      [formField]="form.travelDates"
-      appearance="plain"
-    >
-      <label for="travelDates">Travel dates</label>
-      <third-party-date-range-picker
-        id="travelDates"
-        [formField]="form.travelDates"
-        ngxSignalFormControl="composite"
-        ngxSignalFormControlAria="manual"
-      />
-    </ngx-signal-form-field-wrapper>
-  `,
-})
-export class ExampleComponent {}
-```
-
-What this combination gives you:
-
-- `ngxSignalFormControl="composite"` — wrapper treats the host as a widget
-  that owns its own layout, skips textual chrome, and applies the
-  padded-content class so the wrapper's padding still frames the control.
-- `appearance="plain"` — removes the bordered field container; the widget's
-  own visual treatment is the source of truth.
-- `ngxSignalFormControlAria="manual"` — tells the auto-ARIA directive to
-  leave `aria-invalid`, `aria-describedby`, and `aria-required` alone. The
-  widget keeps whatever ARIA contract it already implements.
-
-The wrapper still contributes the label, hints, the error summary row, field
-identity (`data-signal-field`), and the `id` correlation for assistive tech.
-Use `buildAriaDescribedBy()` inside your widget if you want to assemble an
-`aria-describedby` string that includes the toolkit's standard hint / error /
-warning IDs without duplicating the ID conventions.
-
-If the escape hatch is not enough for your case — for example you need a
-genuinely new wrapper layout family — that is a toolkit feature request.
-Opening an issue with a concrete use case is the right path; the
-extensibility ceiling is intentional and the maintainers prefer growing the
-`NgxSignalFormControlKind` union deliberately over ad-hoc per-app kinds.
-
-#### Message Placement
-
-The wrapper also supports `errorPlacement`, but treat it as the secondary,
-single-field version of the API. The main design target is grouped summary
-placement on `ngx-signal-form-fieldset`.
-
-For the wrapper, `errorPlacement` controls where automatic field-level errors
-and warnings render:
-
-- `bottom` (default) — render in the assistive row beneath the field
-- `top` — render between the label and the control
-
-```html
-<!-- Default bottom placement -->
-<ngx-signal-form-field-wrapper [formField]="form.email">
-  <label for="email">Email</label>
-  <input id="email" [formField]="form.email" />
-</ngx-signal-form-field-wrapper>
-
-<!-- Move messages above the control -->
-<ngx-signal-form-field-wrapper [formField]="form.email" errorPlacement="top">
-  <label for="email-top">Email</label>
-  <input id="email-top" [formField]="form.email" />
-</ngx-signal-form-field-wrapper>
-```
-
-#### Prefix/Suffix Slots
-
-Add icons, text, or interactive elements before or after the input using `prefix` and `suffix` attributes.
-
-**Search icon prefix:**
-
-```html
-<ngx-signal-form-field-wrapper [formField]="form.search">
-  <span prefix aria-hidden="true">🔍</span>
-  <label for="search">Search</label>
-  <input id="search" [formField]="form.search" />
-</ngx-signal-form-field-wrapper>
-```
-
-**Show/hide password button suffix:**
-
-```html
-<ngx-signal-form-field-wrapper [formField]="form.password">
-  <label for="password">Password</label>
-  <input
-    id="password"
-    [type]="showPassword() ? 'text' : 'password'"
-    [formField]="form.password"
-  />
-  <button suffix type="button" (click)="togglePassword()">
-    {{ showPassword() ? 'Hide' : 'Show' }}
-  </button>
-</ngx-signal-form-field-wrapper>
-```
-
-**Currency symbols (both prefix and suffix):**
-
-```html
-<ngx-signal-form-field-wrapper [formField]="form.amount">
-  <span prefix aria-hidden="true">$</span>
-  <label for="amount">Amount</label>
-  <input id="amount" type="number" [formField]="form.amount" step="0.01" />
-  <span suffix aria-hidden="true">.00</span>
-</ngx-signal-form-field-wrapper>
-```
-
-**Clear button with outlined layout:**
-
-```html
-<ngx-signal-form-field-wrapper [formField]="form.query" appearance="outline">
-  <span prefix aria-hidden="true">🔍</span>
-  <label for="query">Search</label>
-  <input id="query" [formField]="form.query" />
-  @if (form.query().value()) {
-  <button
-    suffix
-    type="button"
-    (click)="clearSearch()"
-    aria-label="Clear search"
-  >
-    ✕
-  </button>
-  }
-</ngx-signal-form-field-wrapper>
-```
-
-**Accessibility Notes:**
-
-- Decorative prefix/suffix icons should use `aria-hidden="true"`
-- Interactive suffix buttons need descriptive `aria-label` or visible text
-- Suffix buttons should use `type="button"` to prevent form submission
-- Prefix/suffix elements should not be focusable unless interactive
-
-#### Wrapper Inputs
-
-| Input                | Type                                             | Default      | Description                                                            |
-| -------------------- | ------------------------------------------------ | ------------ | ---------------------------------------------------------------------- |
-| `formField`          | `FieldTree<TValue>`                              | _required_   | Signal Forms field tree bound to the wrapper                           |
-| `fieldName`          | `string \| undefined`                            | Derived      | Explicit error ID prefix, otherwise resolved from the bound control ID |
-| `strategy`           | `ErrorDisplayStrategy \| null`                   | Inherited    | Error display strategy override                                        |
-| `appearance`         | `'stacked' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'`  | Wrapper appearance variant                                             |
-| `errorPlacement`     | `'top' \| 'bottom'`                              | `'bottom'`   | Render automatic messages above or below the control                   |
-| `showRequiredMarker` | `unknown`                                        | Config value | Toggle the outlined required marker                                    |
-| `requiredMarker`     | `string \| undefined`                            | Config value | Custom outlined required marker text                                   |
-
-#### Warning Support
-
-The form field component supports non-blocking warnings in addition to blocking errors. Warnings are displayed when:
-
-1. The field has warnings (validation errors with `kind` starting with `'warn:'`)
-2. The field has NO blocking errors (errors take visual priority)
-
-**Warning convention:** Use the `'warn:'` prefix on the error `kind` to indicate a warning:
-
-```typescript
-// Error (blocks submission)
-{ kind: 'required', message: 'Email is required' }
-
-// Warning (does not block submission)
-{ kind: 'warn:weak-password', message: 'Consider a stronger password' }
-```
-
-**Visual behavior:**
-
-- **Errors present:** Error styling (red border), warnings hidden
-- **Only warnings:** Warning styling (amber border), warnings shown
-- **Neither:** Default styling
-
-**Note:** If you don't want warnings, simply don't define validators that produce them. The validator controls what feedback is displayed.
-
-#### Outlined CSS Custom Properties
-
-**Stacked layout**:
-
-```css
-:root {
-  /* Layout */
-  --ngx-form-field-gap: 0.125rem;
-
-  /* Label */
-  --ngx-form-field-label-size: 0.75rem;
-  --ngx-form-field-label-line-height: 1rem;
-  --ngx-form-field-label-weight: 400;
-  --ngx-form-field-label-color: rgba(50, 65, 85, 0.75);
-  --ngx-form-field-label-padding-start: 0.125rem;
-
-  /* Input */
-  --ngx-form-field-input-size: 0.875rem;
-  --ngx-form-field-input-line-height: 1.25rem;
-  --ngx-form-field-input-weight: 400;
-  --ngx-form-field-input-padding: 0.25rem 0.5rem;
-
-  /* Colors */
-  --ngx-form-field-color-border: rgba(50, 65, 85, 0.25);
-  --ngx-form-field-color-border-hover: #324155;
-  --ngx-form-field-focus-color: #007bc7;
-  --ngx-form-field-focus-box-shadow: 0 0 0 4px rgba(0, 123, 199, 0.25);
-  --ngx-form-field-invalid-color: #db1818;
-  --ngx-form-field-warning-color: #f59e0b;
-}
-```
-
----
-
-### Outlined Appearance
-
-Use `appearance="outline"` for Material Design outlined input patterns with floating labels.
-
-```html
-<ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
-  <label for="email">Email Address</label>
-  <input
-    id="email"
-    type="email"
-    [formField]="form.email"
-    required
-    placeholder="you@example.com"
-  />
-</ngx-signal-form-field-wrapper>
-```
-
-**Override global config:**
-
-```html
-<!-- Force stacked appearance even if global config sets outline -->
-<ngx-signal-form-field-wrapper [formField]="form.notes" appearance="stacked">
-  <label for="notes">Notes</label>
-  <textarea id="notes" [formField]="form.notes"></textarea>
-</ngx-signal-form-field-wrapper>
-```
-
-#### Wrapper inputs (appearance)
-
-| Input        | Type                                             | Default     | Description                                      |
-| ------------ | ------------------------------------------------ | ----------- | ------------------------------------------------ |
-| `appearance` | `'stacked' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style: stacked, outline, plain, or config |
-| `outline`    | `boolean`                                        | `false`     | Legacy: Forces outline (use appearance)          |
-
-**Migration note:** `appearance="standard"` was renamed to
-`appearance="stacked"`. Use `stacked` everywhere going forward.
-
-#### Wrapper inputs (outlined-specific)
-
-| Input                | Type      | Default | Description                                             |
-| -------------------- | --------- | ------- | ------------------------------------------------------- |
-| `showRequiredMarker` | `boolean` | `true`  | Whether to show the required marker for required fields |
-| `requiredMarker`     | `string`  | `' *'`  | Custom character(s) to display for required fields      |
-
-#### Required Field Indicator
-
-By default, the required marker (`*`) is automatically shown when the input has the `required` attribute or `aria-required="true"`.
-You can set defaults in `provideNgxSignalFormsConfig`, then override per field with `showRequiredMarker` or `requiredMarker` inputs.
-
-**Global defaults (app-level):**
-
-```typescript
-import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideNgxSignalFormsConfig({
-      defaultFormFieldAppearance: 'outline',
-      showRequiredMarker: true,
-      requiredMarker: ' *',
-    }),
-  ],
-};
-```
-
-**Component-level override:**
-
-```typescript
-import { provideNgxSignalFormsConfigForComponent } from '@ngx-signal-forms/toolkit';
-
-@Component({
-  providers: [
-    provideNgxSignalFormsConfigForComponent({
-      showRequiredMarker: false,
-      requiredMarker: '(required)',
-    }),
-  ],
-})
-export class OutlineSectionComponent {}
-```
-
-**Hide required marker:**
-
-```html
-<ngx-signal-form-field-wrapper
-  [formField]="form.email"
-  appearance="outline"
-  [showRequiredMarker]="false"
->
-  <label for="email">Email</label>
-  <input id="email" [formField]="form.email" required />
-</ngx-signal-form-field-wrapper>
-```
-
-**Custom required marker - "(required)":**
-
-```html
-<ngx-signal-form-field-wrapper
-  [formField]="form.email"
-  appearance="outline"
-  requiredMarker="(required)"
->
-  <label for="email">Email</label>
-  <input id="email" [formField]="form.email" required />
-</ngx-signal-form-field-wrapper>
-<!-- Result: "Email(required)" -->
-```
-
-**Custom required marker - dagger (†):**
-
-```html
-<ngx-signal-form-field-wrapper
-  [formField]="form.email"
-  appearance="outline"
-  requiredMarker=" †"
->
-  <label for="email">Email</label>
-  <input id="email" [formField]="form.email" required />
-</ngx-signal-form-field-wrapper>
-<!-- Result: "Email †" -->
-```
-
-#### CSS Custom Properties
-
-**Outlined layout** (`appearance="outline"`):
-
-```css
-:root {
-  /* Label */
-  --ngx-form-field-outline-label-size: 0.75rem;
-  --ngx-form-field-outline-label-line-height: 1rem;
-  --ngx-form-field-outline-label-weight: 400;
-  --ngx-form-field-outline-label-color: rgba(50, 65, 85, 0.75);
-  --ngx-form-field-outline-label-gap: 0rem;
-
-  /* Input */
-  --ngx-form-field-outline-input-size: 0.875rem;
-  --ngx-form-field-outline-input-line-height: 1.25rem;
-  --ngx-form-field-outline-input-weight: 400;
-  --ngx-form-field-outline-input-color: #324155;
-
-  /* Required marker */
-  --ngx-form-field-required-marker-color: #db1818;
-  --ngx-form-field-required-marker-weight: 600;
-
-  /* Container + states */
-  --ngx-form-field-color-surface: #ffffff;
-  --ngx-form-field-color-border: rgba(50, 65, 85, 0.25);
-  --ngx-form-field-color-border-hover: #324155;
-  --ngx-form-field-focus-color: #007bc7;
-  --ngx-form-field-focus-box-shadow: 0 0 0 4px rgba(0, 123, 199, 0.25);
-}
-```
-
-**Example - Custom theme:**
-
-```css
-/* Brand colors for outlined layout */
-:root {
-  --ngx-form-field-focus-color: #10b981; /* Green */
-  --ngx-form-field-focus-box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.25);
-  --ngx-form-field-required-marker-color: #ef4444; /* Red */
-}
-
-/* Dark mode for outlined layout */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ngx-form-field-color-surface: #111827; /* Dark input background */
-    --ngx-form-field-color-border: rgba(
-      249,
-      250,
-      251,
-      0.25
-    ); /* Subtle border */
-    --ngx-form-field-outline-label-color: rgba(249, 250, 251, 0.75);
-    --ngx-form-field-outline-input-color: #f9fafb; /* Almost white text */
-    --ngx-form-field-focus-color: #60a5fa; /* Lighter blue for focus */
-    --ngx-form-field-focus-box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.25);
-  }
-}
-```
-
-#### Browser Support
-
-Requires CSS `:has()` selector:
-
-- Chrome 105+
-- Firefox 121+
-- Safari 15.4+
-- Edge 105+
-
-**Coverage:** 95%+ global browser support as of 2025.
-
-#### Wrapper Accessibility
-
-- Focus state applied to container meets WCAG 2.2 Level AA
-- Input outline removed safely (container provides visible focus indicator)
-- Required fields automatically detected via CSS `:has()` selector
-- ARIA attributes on the bound control are handled by the toolkit auto-ARIA layer; the wrapper exposes layout metadata and message placement
-
-#### Error/Warning Alignment
-
-The form field component automatically aligns error and warning messages with the input text for a polished, professional appearance.
-
-**Stacked layout:**
-
-- Errors have 8px horizontal padding (`0.5rem`) for breathing room on both sides
-
-**Outlined layout:**
-
-- Errors inherit the same 8px horizontal padding to align perfectly with the outlined container's horizontal padding
-- Ensures visual consistency and professional polish
-
-**Automatic behavior:**
-
-- No configuration needed - alignment is built-in via CSS custom property override
-- Works seamlessly with `ngx-form-field-error` component
-- Responsive to both stacked and outlined form field layouts
-- No `::ng-deep` required - uses CSS custom properties for clean encapsulation
-
-**Implementation details:**
-
-The form-field component sets the `--ngx-signal-form-error-padding-horizontal` CSS custom property, which the form-error component consumes:
-
-```scss
-/* Form field component sets the custom property */
-:host {
-  --ngx-signal-form-error-padding-horizontal: 0.5rem; /* 8px */
-}
-
-/* Form error component consumes it */
-.ngx-form-field-error {
-  padding-left: var(--ngx-signal-form-error-padding-horizontal);
-  padding-right: var(--ngx-signal-form-error-padding-horizontal);
-}
-```
-
-**To customize:** Override `--ngx-signal-form-error-padding-horizontal` in your component styles.
-
----
-
-### NgxFormFieldHintComponent
-
-Displays helper text for form fields.
-
-**Import:**
-
-```typescript
-import { NgxFormFieldHintComponent } from '@ngx-signal-forms/toolkit/form-field';
-```
-
-**Usage:**
-
-```html
-<ngx-signal-form-field-wrapper [formField]="form.phone" outline>
-  <label for="phone">Phone Number</label>
-  <input id="phone" [formField]="form.phone" />
-  <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
-</ngx-signal-form-field-wrapper>
-```
-
-When used inside `ngx-signal-form-field-wrapper`, hints are automatically linked
-to the input via `aria-describedby`.
-
-**Smart Positioning:**
-
-- **Default:** Aligns to the **right** side of the footer.
-- **With Character Count:** Automatically flips to the **left** to avoid collision.
-- **Manual Override:** Force specific alignment using `position="left"` or `position="right"`.
-
-```html
-<!-- Default: Aligns right -->
-<ngx-signal-form-field-hint>Optional</ngx-signal-form-field-hint>
-
-<!-- Auto-flip: Aligns left because char count takes right spot -->
-<ngx-signal-form-field-hint>Max 500 chars</ngx-signal-form-field-hint>
-<ngx-signal-form-field-character-count
-  [formField]="form.bio"
-  [maxLength]="500"
-/>
-
-<!-- Manual override: Force left alignment -->
-<ngx-signal-form-field-hint position="left">
-  Start on the left
-</ngx-signal-form-field-hint>
-```
-
-#### Hint CSS Custom Properties
-
-```css
-:root {
-  /* Inherits from shared feedback layer by default */
-  --ngx-form-field-hint-font-size: var(
-    --ngx-signal-form-feedback-font-size,
-    0.75rem
-  );
-  --ngx-form-field-hint-color: #6b7280;
-  --ngx-form-field-hint-align: right;
-  --ngx-form-field-hint-padding-horizontal: 0.5rem;
-}
-```
-
----
-
-### NgxFormFieldCharacterCountComponent
-
-Displays character count with progressive color states.
-
-**Import:**
-
-```typescript
-import { NgxFormFieldCharacterCountComponent } from '@ngx-signal-forms/toolkit/form-field';
-```
-
-**Usage:**
-
-```html
-<ngx-signal-form-field-wrapper [formField]="form.bio" outline>
-  <label for="bio">Bio</label>
-  <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-character-count
-    [formField]="form.bio"
-    [maxLength]="500"
-  />
-</ngx-signal-form-field-wrapper>
-```
-
-#### Inputs
-
-| Input             | Type                                  | Default                       | Description                                    |
-| ----------------- | ------------------------------------- | ----------------------------- | ---------------------------------------------- |
-| `field`           | `FieldTree<TValue>`                   | _required_                    | The Signal Forms field to count characters for |
-| `maxLength`       | `number`                              | Derived when possible         | Maximum character limit                        |
-| `showLimitColors` | `boolean`                             | `true`                        | Whether to use progressive color states        |
-| `colorThresholds` | `{ warning: number; danger: number }` | `{ warning: 80, danger: 95 }` | Percentage thresholds for color changes        |
-| `liveAnnounce`    | `boolean`                             | `false`                       | Enable polite live announcements               |
-
-When a matching validator is present on the bound field, the component can derive `maxLength` automatically. Pass `maxLength` explicitly when the limit comes from external rules or non-validator business logic.
-
-#### Color States
-
-The component automatically changes color based on character count:
-
-| State        | Percentage | Default Color            | Description       |
-| ------------ | ---------- | ------------------------ | ----------------- |
-| **ok**       | 0-80%      | Gray (#6b7280)           | Normal state      |
-| **warning**  | 80-95%     | Amber (#f59e0b)          | Approaching limit |
-| **danger**   | 95-100%    | Red (#dc2626)            | Near limit        |
-| **exceeded** | >100%      | Dark red (#991b1b), bold | Over limit        |
-
-**Disable color progression:**
-
-```html
-<ngx-signal-form-field-character-count
-  [formField]="form.bio"
-  [maxLength]="500"
-  [showLimitColors]="false"
-/>
-```
-
-**Custom thresholds:**
-
-```html
-<ngx-signal-form-field-character-count
-  [formField]="form.tweet"
-  [maxLength]="280"
-  [colorThresholds]="{ warning: 90, danger: 98 }"
-/>
-```
-
-#### Character Count CSS Custom Properties
-
-```css
-:root {
-  /* Inherits from shared feedback layer by default */
-  --ngx-form-field-char-count-font-size: var(
-    --ngx-signal-form-feedback-font-size,
-    0.75rem
-  );
-  --ngx-form-field-char-count-color-ok: #6b7280;
-  --ngx-form-field-char-count-color-warning: #f59e0b;
-  --ngx-form-field-char-count-color-danger: #dc2626;
-  --ngx-form-field-char-count-color-exceeded: #991b1b;
-}
-```
-
----
-
-### NgxSignalFormFieldset
-
-Groups related form fields with aggregated error/warning display. Similar to HTML `<fieldset>`, but with validation message aggregation and deduplication.
-
-**Import:**
-
-```typescript
-import { NgxSignalFormFieldset } from '@ngx-signal-forms/toolkit/form-field';
-```
-
-**Basic Usage:**
-
-```html
-<ngx-signal-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
-  <legend class="fieldset-legend">Shipping Address</legend>
-
-  <ngx-signal-form-field-wrapper [formField]="form.address.street" outline>
-    <label for="street">Street</label>
-    <input id="street" [formField]="form.address.street" />
-  </ngx-signal-form-field-wrapper>
-
-  <ngx-signal-form-field-wrapper [formField]="form.address.city" outline>
-    <label for="city">City</label>
-    <input id="city" [formField]="form.address.city" />
-  </ngx-signal-form-field-wrapper>
-
-  <!-- Aggregated errors appear above the fields by default -->
-</ngx-signal-form-fieldset>
-```
-
-**Bottom Placement:**
-
-```html
-<ngx-signal-form-fieldset
-  [fieldsetField]="form.delivery"
-  fieldsetId="delivery"
-  errorPlacement="bottom"
->
-  <legend class="fieldset-legend">Delivery method</legend>
-  <!-- Aggregated errors appear below the fields -->
-</ngx-signal-form-fieldset>
-```
-
-**Attribute Selector Usage (recommended for semantic fieldsets):**
-
-```html
-<fieldset
-  ngxSignalFormFieldset
-  [fieldsetField]="form.address"
-  fieldsetId="address"
->
-  <legend class="fieldset-legend">Shipping Address</legend>
-  <!-- Fields content -->
-</fieldset>
-```
-
-**Non-fieldset Wrapper Usage (when fieldset semantics do not apply):**
-
-```html
-<div ngxSignalFormFieldset [fieldsetField]="form.address" fieldsetId="address">
-  <!-- Fields content -->
-</div>
-```
-
-**Custom Field Collection:**
-
-```html
-<!-- Override which fields to aggregate errors from -->
-<ngx-signal-form-fieldset
-  [fieldsetField]="form"
-  [fields]="[form.password, form.confirmPassword]"
-  fieldsetId="passwords"
->
-  <legend class="fieldset-legend">Password</legend>
-  <!-- Fields content -->
-</ngx-signal-form-fieldset>
-```
-
-#### Features
-
-- ✅ **Group-Only Mode** (default): Shows only group-level errors to avoid duplication
-- ✅ **Aggregated Mode**: Optionally collects errors from all nested fields via `errorSummary()`
-- ✅ **Deduplication**: Same error message shown only once even if multiple fields have it
-- ✅ **Warning Support**: Non-blocking warnings (with `warn:` prefix) shown when no errors exist
-- ✅ **WCAG 2.2 Compliant**: Errors use `role="alert"`, warnings use `role="status"`
-- ✅ **Strategy Aware**: Respects `ErrorDisplayStrategy` from form context or input
-- ✅ **Configurable Placement**: Render grouped messages above or below field content via `errorPlacement`
-
-#### Fieldset Message Placement
-
-`ngx-signal-form-fieldset#errorPlacement` is the primary placement API. It
-controls where the grouped message block is rendered:
-
-- `top` (default) — matches the design library layout and shows grouped messages before the field content
-- `bottom` — keeps grouped messages after the field content
-
-```html
-<!-- Default: grouped messages before field content -->
-<ngx-signal-form-fieldset [fieldsetField]="form.address">
-  <legend class="fieldset-legend">Shipping Address</legend>
-  <!-- fields -->
-</ngx-signal-form-fieldset>
-
-<!-- Optional: grouped messages after field content -->
-<ngx-signal-form-fieldset
-  [fieldsetField]="form.delivery"
-  errorPlacement="bottom"
->
-  <legend class="fieldset-legend">Delivery method</legend>
-  <!-- fields -->
-</ngx-signal-form-fieldset>
-```
-
-#### Error Display Modes
-
-The `includeNestedErrors` input controls which errors are shown:
-
-**Group-Only Mode** (`includeNestedErrors="false"`, default):
-Shows ONLY group-level errors via `errors()`. Use when nested fields display their own errors via `ngx-signal-form-field-wrapper` to avoid duplicate error messages.
-
-```html
-<ngx-signal-form-fieldset [fieldsetField]="form.passwords">
-  <ngx-signal-form-field-wrapper [formField]="form.passwords.password" outline>
-    <!-- This field shows its own "required" error -->
-  </ngx-signal-form-field-wrapper>
-  <ngx-signal-form-field-wrapper [formField]="form.passwords.confirm" outline>
-    <!-- This field shows its own errors -->
-  </ngx-signal-form-field-wrapper>
-  <!-- Fieldset shows ONLY cross-field error: "Passwords must match" -->
-</ngx-signal-form-fieldset>
-```
-
-**Aggregated Mode** (`includeNestedErrors`):
-Shows ALL errors including nested field errors via `errorSummary()`. Use when nested fields do NOT display their own errors (e.g., plain inputs without `ngx-signal-form-field-wrapper`).
-
-```html
-<fieldset
-  ngxSignalFormFieldset
-  [fieldsetField]="form.address"
-  includeNestedErrors
->
-  <legend>Shipping Address</legend>
-  <!-- Plain inputs without error display -->
-  <input [formField]="form.address.street" />
-  <input [formField]="form.address.city" />
-  <!-- Fieldset shows ALL errors: "Street required", "City required", etc. -->
-</fieldset>
-```
-
-#### Fieldset Inputs
-
-| Input                 | Type                           | Default             | Description                                                               |
-| --------------------- | ------------------------------ | ------------------- | ------------------------------------------------------------------------- |
-| `fieldsetField`       | `FieldTree<TFieldset>`         | _required_          | The Signal Forms field tree to aggregate from                             |
-| `fields`              | `FieldTree<unknown>[] \| null` | `null`              | Explicit list of fields for custom groupings                              |
-| `fieldsetId`          | `string \| undefined`          | Auto-generated      | Unique identifier for generating error/warning IDs                        |
-| `strategy`            | `ErrorDisplayStrategy \| null` | Inherited from form | Error display strategy                                                    |
-| `showErrors`          | `boolean`                      | `true`              | Whether to display aggregated error messages                              |
-| `includeNestedErrors` | `boolean`                      | `false`             | Include nested field errors (`true`) or only group-level errors (`false`) |
-| `errorPlacement`      | `'top' \| 'bottom'`            | `'top'`             | Render grouped messages before or after the field content                 |
-
-#### Host CSS Classes
-
-- `.ngx-signal-form-fieldset` - Always applied
-- `.ngx-signal-form-fieldset--invalid` - Applied when showing errors
-- `.ngx-signal-form-fieldset--warning` - Applied when showing warnings (no errors)
-
-#### Fieldset CSS Custom Properties
-
-```css
-ngx-signal-form-fieldset {
-  /* Layout */
-  --ngx-signal-form-fieldset-gap: 1rem;
-  --ngx-signal-form-fieldset-padding: 1rem;
-  --ngx-signal-form-fieldset-border-radius: 0.75rem;
-  --ngx-signal-form-fieldset-surface-border-radius: 0.75rem;
-
-  /* Base layers */
-  --ngx-signal-form-fieldset-bg: transparent;
-  --ngx-signal-form-fieldset-surface-bg: transparent;
-  --ngx-signal-form-fieldset-legend-color: var(--ngx-form-field-color-text);
-  --ngx-signal-form-fieldset-legend-bg: transparent;
-
-  /* State surfaces */
-  --ngx-signal-form-fieldset-invalid-bg: rgba(220, 38, 38, 0.05);
-  --ngx-signal-form-fieldset-warning-bg: rgba(245, 158, 11, 0.05);
-  --ngx-signal-form-fieldset-invalid-surface-bg: rgba(220, 38, 38, 0.05);
-  --ngx-signal-form-fieldset-warning-surface-bg: rgba(245, 158, 11, 0.05);
-
-  /* Border */
-  --ngx-signal-form-fieldset-invalid-border-color: #dc2626;
-  --ngx-signal-form-fieldset-warning-border-color: #f59e0b;
-
-  /* State legend styling */
-  --ngx-signal-form-fieldset-invalid-legend-color: #dc2626;
-  --ngx-signal-form-fieldset-warning-legend-color: #f59e0b;
-  --ngx-signal-form-fieldset-invalid-legend-bg: transparent;
-  --ngx-signal-form-fieldset-warning-legend-bg: transparent;
-}
-```
-
-The grouped fieldset intentionally separates the legend from the surfaced content area.
-By default, error and warning tinting only applies to the inner content surface, not the legend row.
-
-That means you can keep the legend visually clean:
-
-```css
-ngx-signal-form-fieldset {
-  --ngx-signal-form-fieldset-invalid-surface-bg: color-mix(
-    in srgb,
-    #dc2626 6%,
-    white
-  );
-  --ngx-signal-form-fieldset-invalid-legend-color: #dc2626;
-}
-```
-
-Or intentionally give the legend its own state chip treatment:
-
-```css
-ngx-signal-form-fieldset {
-  --ngx-signal-form-fieldset-invalid-legend-bg: color-mix(
-    in srgb,
-    #dc2626 10%,
-    white
-  );
-  --ngx-signal-form-fieldset-legend-border-radius: 999px;
-}
-```
-
-#### Why use fieldsets over individual field errors?
-
-- **Group validation**: Errors like "password must match confirm password" apply to multiple fields
-- **Reduced visual noise**: Same validation rule message shown only once
-- **Better UX for complex forms**: Related field groups (addresses, passwords, etc.) are clearly organized
-- **Better placement semantics**: `errorPlacement` usually makes the most sense at the group level, where one summary can move as a unit
-
-#### Fieldset Accessibility
-
-- Uses `NgxFormFieldErrorComponent` internally for consistent ARIA attributes
-- Errors use `role="alert"` with `aria-live="assertive"` for immediate screen reader announcement
-- Warnings use `role="status"` with `aria-live="polite"`
-- `aria-busy="true"` is set when the fieldset has pending validation
-- `<legend>` is recommended but optional; when omitted, provide a programmatic group label via `aria-labelledby` or include the group name in the first label.
-
----
-
-## Complete Example
+## Quick start
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
@@ -1196,54 +38,33 @@ import {
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
-interface ContactForm {
-  email: string;
-  message: string;
-}
-
-const contactSchema = schema<ContactForm>((path) => {
-  required(path.email, { message: 'Email is required' });
-  email(path.email, { message: 'Invalid email format' });
-  required(path.message, { message: 'Message is required' });
-  maxLength(path.message, 500, { message: 'Max 500 characters' });
-});
-
 @Component({
-  selector: 'app-contact-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="contactForm" ngxSignalForm>
-      <!-- Outlined email field with custom required marker -->
       <ngx-signal-form-field-wrapper
         [formField]="contactForm.email"
         appearance="outline"
-        requiredMarker=" (required)"
       >
-        <label for="email">Email Address</label>
+        <label for="email">Email</label>
         <input
           id="email"
           type="email"
           [formField]="contactForm.email"
           required
-          placeholder="you@example.com"
         />
         <ngx-signal-form-field-hint>
           We'll never share your email
         </ngx-signal-form-field-hint>
       </ngx-signal-form-field-wrapper>
 
-      <!-- Outlined message field with character count -->
-      <ngx-signal-form-field-wrapper
-        [formField]="contactForm.message"
-        appearance="outline"
-      >
+      <ngx-signal-form-field-wrapper [formField]="contactForm.message">
         <label for="message">Message</label>
         <textarea
           id="message"
           [formField]="contactForm.message"
           required
-          rows="4"
         ></textarea>
         <ngx-signal-form-field-character-count
           [formField]="contactForm.message"
@@ -1251,36 +72,166 @@ const contactSchema = schema<ContactForm>((path) => {
         />
       </ngx-signal-form-field-wrapper>
 
-      <button type="submit" [disabled]="contactForm().invalid()">
-        Send Message
-      </button>
+      <button type="submit">Send</button>
     </form>
-  `,
-  styles: `
-    /* Custom theme for outlined fields */
-    :host {
-      --ngx-form-field-focus-color: #10b981;
-      --ngx-form-field-focus-box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.25);
-      --ngx-form-field-required-marker-color: #ef4444;
-    }
   `,
 })
 export class ContactFormComponent {
-  readonly #model = signal<ContactForm>({ email: '', message: '' });
-  protected readonly contactForm = form(this.#model, contactSchema);
+  readonly #model = signal({ email: '', message: '' });
+  protected readonly contactForm = form(
+    this.#model,
+    schema((path) => {
+      required(path.email, { message: 'Email is required' });
+      email(path.email, { message: 'Invalid email format' });
+      required(path.message, { message: 'Message is required' });
+      maxLength(path.message, 500, { message: 'Max 500 characters' });
+    }),
+  );
 }
 ```
 
----
+## Wrapper component
 
-## API Summary
+`ngx-signal-form-field-wrapper` — wraps a form field with automatic error display, labels, hints, prefix/suffix slots, and ARIA.
 
-### Public Exports
+| Input                | Type                                             | Default     | Description                                    |
+| -------------------- | ------------------------------------------------ | ----------- | ---------------------------------------------- |
+| `formField`          | `FieldTree` (required)                           | —           | The form field to wrap                         |
+| `fieldName`          | `string`                                         | From `id`   | Explicit field name; derived from control `id` |
+| `appearance`         | `'stacked' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style variant                           |
+| `strategy`           | `ErrorDisplayStrategy`                           | Inherited   | Override error display strategy                |
+| `errorPlacement`     | `'top' \| 'bottom'`                              | `'bottom'`  | Render errors above or below the control       |
+| `showRequiredMarker` | `boolean`                                        | Config      | Toggle the outlined required marker            |
+| `requiredMarker`     | `string`                                         | Config      | Custom required marker text                    |
 
-- `NgxFormField`
-- `NgxSignalFormFieldWrapperComponent`
-- `NgxSignalFormFieldset`
-- Re-exported assistive components from `@ngx-signal-forms/toolkit/assistive`
+### Appearances
+
+- **`stacked`** — label above input, simple vertical layout
+- **`outline`** — Material Design floating label with bordered container (requires CSS `:has()` — Chrome 105+, Firefox 121+, Safari 15.4+)
+- **`plain`** — no field chrome; the wrapper still provides labels, errors, and field identity. Good for custom controls with their own visual treatment.
+- **`inherit`** (default) — uses the value from `provideNgxSignalFormsConfig()`
+
+### Prefix and suffix slots
+
+```html
+<ngx-signal-form-field-wrapper [formField]="form.amount">
+  <span prefix aria-hidden="true">$</span>
+  <label for="amount">Amount</label>
+  <input id="amount" type="number" [formField]="form.amount" />
+  <button suffix type="button" (click)="clear()" aria-label="Clear">✕</button>
+</ngx-signal-form-field-wrapper>
+```
+
+Decorative prefix/suffix icons should use `aria-hidden="true"`. Interactive suffix buttons need `type="button"` and a descriptive `aria-label`.
+
+### Field name resolution
+
+The wrapper needs a field name for ARIA linking. It resolves from the `fieldName` input first, then from the projected control's `id`. If neither is available, it throws.
+
+### Custom controls
+
+For non-native controls (sliders, date pickers, composites), declare control semantics on the `[formField]` host:
+
+```html
+<ngx-signal-form-field-wrapper [formField]="form.rating" appearance="plain">
+  <label for="rating">Rating</label>
+  <app-star-rating
+    id="rating"
+    role="slider"
+    [formField]="form.rating"
+    ngxSignalFormControl="slider"
+    ngxSignalFormControlAria="manual"
+  />
+</ngx-signal-form-field-wrapper>
+```
+
+A native `input[type="checkbox"][role="switch"]` is recognized as a switch automatically — no extra directives needed. See [Custom Controls](../../docs/CUSTOM_CONTROLS.md) for detailed guidance.
+
+### Warning support
+
+Warnings (errors with `kind` starting with `warn:`) display automatically:
+
+- When blocking errors are present: error styling (red border), warnings hidden
+- When only warnings are present: warning styling (amber border), warnings shown
+- Errors use `role="alert"`, warnings use `role="status"`
+
+## Fieldset component
+
+`ngx-signal-form-fieldset` — groups related fields with aggregated error display.
+
+```html
+<ngx-signal-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
+  <legend>Shipping Address</legend>
+
+  <ngx-signal-form-field-wrapper
+    [formField]="form.address.street"
+    appearance="outline"
+  >
+    <label for="street">Street</label>
+    <input id="street" [formField]="form.address.street" />
+  </ngx-signal-form-field-wrapper>
+
+  <ngx-signal-form-field-wrapper
+    [formField]="form.address.city"
+    appearance="outline"
+  >
+    <label for="city">City</label>
+    <input id="city" [formField]="form.address.city" />
+  </ngx-signal-form-field-wrapper>
+</ngx-signal-form-fieldset>
+```
+
+| Input                 | Type                   | Default   | Description                                     |
+| --------------------- | ---------------------- | --------- | ----------------------------------------------- |
+| `fieldsetField`       | `FieldTree` (required) | —         | Field tree to aggregate                         |
+| `fields`              | `FieldTree[]`          | `null`    | Explicit field list (overrides tree traversal)  |
+| `fieldsetId`          | `string`               | Generated | ID for ARIA linking                             |
+| `strategy`            | `ErrorDisplayStrategy` | Inherited | Error display strategy                          |
+| `showErrors`          | `boolean`              | `true`    | Toggle error display                            |
+| `includeNestedErrors` | `boolean`              | `false`   | Include child field errors via `errorSummary()` |
+| `errorPlacement`      | `'top' \| 'bottom'`    | `'top'`   | Render grouped messages before or after content |
+
+### Error display modes
+
+- **Group-only** (default) — shows only group-level errors. Use when nested fields display their own errors via wrappers.
+- **Aggregated** (`includeNestedErrors`) — collects all nested errors. Use when fields don't have individual error display.
+
+Can also be used as an attribute selector on native `<fieldset>` or `<div>`:
+
+```html
+<fieldset
+  ngxSignalFormFieldset
+  [fieldsetField]="form.address"
+  fieldsetId="address"
+>
+  <legend>Address</legend>
+  <!-- ... -->
+</fieldset>
+```
+
+## Theming
+
+All components share a CSS custom properties system. See the [Theming Guide](./THEMING.md) for the full reference (20+ variables covering layout, typography, colors, and dark mode).
+
+Quick example:
+
+```css
+:root {
+  --ngx-form-field-focus-color: #007bc7;
+  --ngx-form-field-color-border: rgba(50, 65, 85, 0.25);
+  --ngx-signal-form-error-color: #db1818;
+  --ngx-signal-form-feedback-font-size: 0.75rem;
+}
+```
+
+## Related documentation
+
+- [Theming guide](./THEMING.md) — complete CSS custom properties reference
+- [Toolkit core](../README.md) — error strategies, ARIA, configuration
+- [Assistive components](../assistive/README.md) — standalone error, hint, and count components
+- [Headless primitives](../headless/README.md) — renderless directives for full custom UI
+- [Custom controls](../../docs/CUSTOM_CONTROLS.md) — wrapping sliders, date pickers, and third-party widgets
+- [CSS framework integration](../../docs/CSS_FRAMEWORK_INTEGRATION.md) — Tailwind, Bootstrap, Material
 
 ## License
 
