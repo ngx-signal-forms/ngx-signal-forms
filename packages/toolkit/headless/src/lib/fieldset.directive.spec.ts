@@ -7,11 +7,13 @@ import {
 import { TestBed } from '@angular/core/testing';
 import {
   form,
+  FormRoot,
   required,
   schema,
   validate,
   type FieldTree,
 } from '@angular/forms/signals';
+import { NgxSignalFormDirective } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxHeadlessFieldsetDirective } from './fieldset.directive';
@@ -249,6 +251,115 @@ describe('NgxHeadlessFieldsetDirective', () => {
     await render(TestComponent);
 
     expect(screen.getByTestId('fieldset-id')).toHaveTextContent('address');
+  });
+
+  it('inherits the error-display strategy from the enclosing form context', async () => {
+    @Component({
+      selector: 'ngx-test-fieldset-inherit-strategy',
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      imports: [FormRoot, NgxSignalFormDirective, NgxHeadlessFieldsetDirective],
+      template: `
+        <form [formRoot]="addressForm" ngxSignalForm errorStrategy="immediate">
+          <fieldset
+            ngxSignalFormHeadlessFieldset
+            #fieldset="fieldset"
+            [fieldsetField]="addressForm.address"
+            includeNestedErrors
+          >
+            <span data-testid="resolved-strategy">
+              {{ fieldset.resolvedStrategy() }}
+            </span>
+            <span data-testid="show-errors">
+              {{ fieldset.shouldShowErrors() }}
+            </span>
+          </fieldset>
+        </form>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ address: { street: '', city: '' } });
+      readonly addressForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.address.street, { message: 'Required' });
+        }),
+      );
+    }
+
+    await render(TestComponent);
+
+    // Form-level 'immediate' strategy should cascade through the context
+    expect(screen.getByTestId('resolved-strategy')).toHaveTextContent(
+      'immediate',
+    );
+    // With 'immediate' strategy, errors surface even without markAsTouched.
+    expect(screen.getByTestId('show-errors')).toHaveTextContent('true');
+  });
+
+  it('honours an explicit submittedStatus override regardless of form context', async () => {
+    @Component({
+      selector: 'ngx-test-fieldset-submitted-status',
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      imports: [NgxHeadlessFieldsetDirective],
+      template: `
+        <fieldset
+          ngxSignalFormHeadlessFieldset
+          #fieldset="fieldset"
+          [fieldsetField]="addressForm.address"
+          submittedStatus="submitted"
+        >
+          <span data-testid="resolved-submitted-status">
+            {{ fieldset.resolvedSubmittedStatus() }}
+          </span>
+        </fieldset>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ address: { street: '', city: '' } });
+      readonly addressForm = form(this.#model);
+    }
+
+    await render(TestComponent);
+
+    expect(screen.getByTestId('resolved-submitted-status')).toHaveTextContent(
+      'submitted',
+    );
+  });
+
+  it('attaches to non-<fieldset> hosts via the attribute selector', async () => {
+    @Component({
+      selector: 'ngx-test-fieldset-attr-selector',
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      imports: [NgxHeadlessFieldsetDirective],
+      template: `
+        <div
+          data-testid="fieldset-host"
+          ngxSignalFormHeadlessFieldset
+          #fieldset="fieldset"
+          [fieldsetField]="addressForm.address"
+          fieldsetId="address"
+        >
+          <span data-testid="fieldset-id">
+            {{ fieldset.resolvedFieldsetId() }}
+          </span>
+          <span data-testid="is-invalid">{{ fieldset.isInvalid() }}</span>
+          <span data-testid="is-pending">{{ fieldset.isPending() }}</span>
+        </div>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ address: { street: '', city: '' } });
+      readonly addressForm = form(this.#model);
+    }
+
+    await render(TestComponent);
+
+    // Directive must work on a <div>, not just <fieldset>. Selector is
+    // attribute-only, so the tag doesn't matter.
+    expect(screen.getByTestId('fieldset-host').tagName).toBe('DIV');
+    expect(screen.getByTestId('fieldset-id')).toHaveTextContent('address');
+    expect(screen.getByTestId('is-invalid')).toHaveTextContent('false');
+    expect(screen.getByTestId('is-pending')).toHaveTextContent('false');
   });
 
   it('generates a fieldset id when none is provided', async () => {
