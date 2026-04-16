@@ -1,11 +1,3 @@
-// Re-export assistive components from the assistive directory
-export {
-  NgxFormFieldAssistiveRowComponent,
-  NgxFormFieldCharacterCountComponent,
-  NgxFormFieldHintComponent,
-  NgxFormFieldErrorComponent,
-} from '@ngx-signal-forms/toolkit/assistive';
-
 // Core form field components
 export * from './form-field-wrapper.component';
 export * from './form-fieldset.component';

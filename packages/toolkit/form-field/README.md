@@ -19,9 +19,13 @@ import {
   NgxSignalFormFieldWrapperComponent,
   NgxSignalFormFieldset,
 } from '@ngx-signal-forms/toolkit/form-field';
+
+// Assistive components are NOT re-exported from this entry point.
+// Import them directly when used standalone:
+// import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
-`NgxFormField` bundles the wrapper, fieldset, and all assistive components (error, hint, character count, assistive row).
+`NgxFormField` bundles the wrapper, fieldset, and all assistive components (error, hint, character count, assistive row) for convenience. Individual assistive components should be imported from `@ngx-signal-forms/toolkit/assistive`.
 
 ## Quick start
 
