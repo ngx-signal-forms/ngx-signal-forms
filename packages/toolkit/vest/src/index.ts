@@ -11,7 +11,10 @@
  */
 
 export {
+  VEST_ERROR_KIND_PREFIX,
+  VEST_WARNING_KIND_PREFIX,
   validateVest,
   validateVestWarnings,
   type ValidateVestOptions,
+  type VestOnlyFieldSelector,
 } from './validate-vest';

@@ -1,6 +1,8 @@
-import { resource } from '@angular/core';
+import { DestroyRef, inject, resource } from '@angular/core';
 import {
+  type FieldContext,
   type FieldTree,
+  type PathKind,
   type SchemaPath,
   type SchemaPathTree,
   type ValidationError,
@@ -11,7 +13,32 @@ import type { SuiteResult } from 'vest';
 
 /* oxlint-disable @typescript-eslint/prefer-readonly-parameter-types -- Angular Signal Forms validator callbacks and lightweight path parsing helpers operate on framework/runtime types that are not modeled as readonly. */
 
-export interface ValidateVestOptions {
+/**
+ * Public constant kind prefix used for Vest `warn()` messages surfaced through
+ * the toolkit. Exported so downstream code (error strategies, tests, debug
+ * tooling) can filter warning-mode validation errors without re-deriving the
+ * string literal.
+ */
+export const VEST_WARNING_KIND_PREFIX = 'warn:vest:';
+
+/**
+ * Public constant kind prefix used for blocking Vest errors surfaced through
+ * the toolkit. Mirrors {@link VEST_WARNING_KIND_PREFIX} so consumers can match
+ * both shapes with a single source of truth.
+ */
+export const VEST_ERROR_KIND_PREFIX = 'vest:';
+
+/**
+ * Field name selector used when `only: true` is enabled. Receives the Angular
+ * Signal Forms field context and returns the Vest field name (or list of
+ * names) to focus on for the current run. Returning `undefined` falls back to
+ * a whole-suite run.
+ */
+export type VestOnlyFieldSelector<TValue> = (
+  ctx: FieldContext<TValue>,
+) => string | readonly string[] | undefined;
+
+export interface ValidateVestOptions<TValue = unknown> {
   /**
    * Include Vest warn-only tests as toolkit warnings.
    *
@@ -22,6 +49,35 @@ export interface ValidateVestOptions {
    * @default false
    */
   includeWarnings?: boolean;
+
+  /**
+   * Call `suite.reset()` when the injection context that registered the
+   * validator is destroyed.
+   *
+   * Vest suites created with `create()` retain state across runs (last result,
+   * pending async tests, test memoization). When consumers declare suites at
+   * module scope (the recommended pattern), state can leak across component
+   * mounts. Enabling this option registers a `DestroyRef.onDestroy()` hook
+   * that clears suite state when the hosting component tears down.
+   *
+   * @default false
+   */
+  resetOnDestroy?: boolean;
+
+  /**
+   * Enable per-field focused runs by passing a field name as the second
+   * argument to `suite.run(value, fieldName)`. When provided as a function,
+   * the callback receives the field context for the current validation pass
+   * and should return the Vest field name(s) to focus, or `undefined` for a
+   * whole-suite run.
+   *
+   * Works with suite callbacks that use `only(fieldName)` or with the
+   * `suite.only(field).run(...)` shorthand. Default behavior remains a full
+   * suite run for backward compatibility.
+   *
+   * @default undefined (full-suite run)
+   */
+  only?: VestOnlyFieldSelector<TValue>;
 }
 
 type VestFieldPath<TValue> = SchemaPath<TValue> & SchemaPathTree<TValue>;
@@ -84,7 +140,14 @@ interface VestResultLike extends Pick<SuiteResult, 'isPending'> {
  * the full generic `Suite` surface in consumers.
  */
 interface VestRunnableSuite<TValue> {
-  run(value: TValue): VestResultLike | PromiseLike<VestResultLike>;
+  run(
+    value: TValue,
+    fieldName?: string | readonly string[],
+  ): VestResultLike | PromiseLike<VestResultLike>;
+  reset?: () => void;
+  only?: (
+    field: string | readonly string[],
+  ) => Pick<VestRunnableSuite<TValue>, 'run'>;
 }
 
 /**
@@ -93,6 +156,7 @@ interface VestRunnableSuite<TValue> {
  */
 interface VestRunCacheEntry<TValue> {
   readonly value: TValue;
+  readonly focus: string | undefined;
   readonly runResult: VestResultLike | PromiseLike<VestResultLike>;
   readonly initialResult: VestResultLike | undefined;
 }
@@ -101,9 +165,10 @@ interface VestRunCacheEntry<TValue> {
  * Internal registration flags that decide whether blocking errors, warnings, or
  * both should be mapped into Angular Signal Forms.
  */
-interface VestValidationRegistrationOptions {
+interface VestValidationRegistrationOptions<TValue> {
   readonly includeErrors: boolean;
   readonly includeWarnings: boolean;
+  readonly only?: VestOnlyFieldSelector<TValue>;
 }
 
 /**
@@ -129,6 +194,7 @@ interface ResolvedVestValidationPayload {
 type VestRunCache = WeakMap<FieldTree<unknown>, VestRunCacheEntry<unknown>>;
 
 const VEST_PATH_SEGMENT = /[^.[\]]+/g;
+const VEST_KIND_SEGMENT_MAX_LEN = 48;
 const vestRunCache = new WeakMap<object, VestRunCache>();
 
 /**
@@ -144,20 +210,52 @@ function isVestResultLike(value: unknown): value is VestResultLike {
   );
 }
 
+function isThenable(value: unknown): value is PromiseLike<unknown> {
+  return (
+    value !== null &&
+    (typeof value === 'object' || typeof value === 'function') &&
+    typeof Reflect.get(value, 'then') === 'function'
+  );
+}
+
 function isFieldTree(value: unknown): value is FieldTree<unknown> {
   return typeof value === 'function';
 }
 
 /**
+ * Compact FNV-1a hash returning a 4-character lowercase hex digest. Used as a
+ * collision-safe suffix when the raw kind segment exceeds
+ * {@link VEST_KIND_SEGMENT_MAX_LEN}.
+ */
+function fnv1a4Hex(value: string): string {
+  let hash = 0x8_11c_9dc5;
+  for (let index = 0; index < value.length; index++) {
+    hash ^= value.codePointAt(index);
+    hash = Math.imul(hash, 0x01_00_01_93);
+  }
+
+  return (hash >>> 16).toString(16).padStart(4, '0');
+}
+
+/**
  * Sanitizes arbitrary Vest field/message fragments so generated validation
  * kinds remain stable and CSS/DOM-friendly.
+ *
+ * When the sanitized value exceeds {@link VEST_KIND_SEGMENT_MAX_LEN}, a short
+ * FNV-1a hash suffix of the *original* value is appended to guarantee that
+ * two long, otherwise-identical prefixes do not collide.
  */
 function normalizeWarningKindSegment(value: string): string {
-  return value
+  const normalized = value
     .toLowerCase()
     .replaceAll(/[^a-z0-9]+/g, '-')
-    .replaceAll(/^-+|-+$/g, '')
-    .slice(0, 48);
+    .replaceAll(/^-+|-+$/g, '');
+
+  if (normalized.length <= VEST_KIND_SEGMENT_MAX_LEN) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, VEST_KIND_SEGMENT_MAX_LEN)}-${fnv1a4Hex(value)}`;
 }
 
 /**
@@ -174,10 +272,10 @@ function createVestValidationKind(
   const normalizedMessage = normalizeWarningKindSegment(message) || 'warning';
 
   if (mode === 'warning') {
-    return `warn:vest:${normalizedField}:${normalizedMessage}:${occurrence}`;
+    return `${VEST_WARNING_KIND_PREFIX}${normalizedField}:${normalizedMessage}:${occurrence}`;
   }
 
-  return `vest:${normalizedField}:${normalizedMessage}:${occurrence}`;
+  return `${VEST_ERROR_KIND_PREFIX}${normalizedField}:${normalizedMessage}:${occurrence}`;
 }
 
 /**
@@ -193,6 +291,10 @@ function parseVestFieldPath(fieldPath: string): Array<string | number> {
 /**
  * Resolves a Vest warning path to the matching Angular field tree. When the
  * target path is missing, the current field tree is used as a safe fallback.
+ *
+ * Traversal uses an own-property guard (`Object.hasOwn`) before reading via
+ * `Reflect.get` so prototype-chain entries (e.g. `toString`, `constructor`)
+ * cannot accidentally be resolved as field tree nodes.
  */
 function resolveVestWarningFieldTree(
   fieldTree: FieldTree<unknown>,
@@ -208,8 +310,14 @@ function resolveVestWarningFieldTree(
       return fieldTree;
     }
 
-    // oxlint-disable-next-line unicorn/new-for-builtins -- Object() coercion is intentional runtime wrap for Reflect.get
-    const next = Reflect.get(Object(current), segment);
+    // oxlint-disable-next-line unicorn/new-for-builtins -- Object() coercion is intentional runtime wrap for own-property probing on callable field trees.
+    const container = Object(current) as object;
+    const segmentKey = typeof segment === 'number' ? String(segment) : segment;
+    if (!Object.hasOwn(container, segmentKey)) {
+      return fieldTree;
+    }
+
+    const next = Reflect.get(container, segmentKey);
     if (next === undefined) {
       return fieldTree;
     }
@@ -235,30 +343,71 @@ function getVestSuiteRunCache(suite: object): VestRunCache {
 }
 
 /**
- * Reuses an existing Vest run for the same suite, Angular field tree, and model
- * reference, or executes the suite once and caches the result.
+ * Executes `suite.run()` using the appropriate `only` targeting (if any).
+ * Prefers the canonical `suite.run(value, fieldName)` form which works with
+ * suite callbacks that invoke `only(fieldName)` internally. Falls back to the
+ * `suite.only(field).run(value)` shorthand if the suite only exposes that API.
+ */
+function executeVestRun<TValue>(
+  suite: Pick<VestRunnableSuite<TValue>, 'run' | 'only'>,
+  value: TValue,
+  focus: string | readonly string[] | undefined,
+): VestResultLike | PromiseLike<VestResultLike> {
+  if (focus === undefined) {
+    return suite.run(value);
+  }
+
+  if (typeof suite.only === 'function') {
+    const focused = suite.only(focus);
+    return focused.run(value);
+  }
+
+  return suite.run(value, focus);
+}
+
+/**
+ * Reuses an existing Vest run for the same suite, Angular field tree, model
+ * reference, and focus key; or executes the suite once and caches the result.
+ *
+ * When `suite.run()` returns a thenable directly (rather than the documented
+ * synchronous `SuiteResult`), we capture `initialResult` as `undefined` and
+ * rely on the async branch to drive completion from the promise. This guards
+ * against consumer-wrapped suites that coerce `run()` into a Promise.
  */
 function getOrCreateVestRun<TValue>(
-  suite: Pick<VestRunnableSuite<TValue>, 'run'>,
+  suite: Pick<VestRunnableSuite<TValue>, 'run' | 'only'>,
   fieldTree: FieldTree<TValue>,
   value: TValue,
+  focus: string | readonly string[] | undefined,
 ): VestRunCacheEntry<TValue> {
   const suiteCache = getVestSuiteRunCache(suite as object);
   const cachedEntry = suiteCache.get(fieldTree as FieldTree<unknown>);
+  const focusKey = Array.isArray(focus)
+    ? focus.join('\u0000')
+    : (focus as string | undefined);
 
-  if (cachedEntry && Object.is(cachedEntry.value, value)) {
+  if (
+    cachedEntry &&
+    Object.is(cachedEntry.value, value) &&
+    cachedEntry.focus === focusKey
+  ) {
     return {
       value,
+      focus: focusKey,
       runResult: cachedEntry.runResult,
       initialResult: cachedEntry.initialResult,
     };
   }
 
-  const runResult = suite.run(value);
+  const runResult = executeVestRun(suite, value, focus);
   const nextEntry: VestRunCacheEntry<TValue> = {
     value,
+    focus: focusKey,
     runResult,
-    initialResult: isVestResultLike(runResult) ? runResult : undefined,
+    initialResult:
+      !isThenable(runResult) && isVestResultLike(runResult)
+        ? runResult
+        : undefined,
   };
 
   suiteCache.set(fieldTree as FieldTree<unknown>, nextEntry);
@@ -373,7 +522,7 @@ function toVestValidationErrors(
  */
 function createVestValidationSnapshot(
   result: VestResultLike,
-  options: VestValidationRegistrationOptions,
+  options: VestValidationRegistrationOptions<unknown>,
 ): VestValidationSnapshot {
   return {
     errors: options.includeErrors
@@ -392,7 +541,7 @@ function createVestValidationSnapshot(
 function mapVestValidationResult(
   result: VestResultLike,
   fieldTree: FieldTree<unknown>,
-  options: VestValidationRegistrationOptions,
+  options: VestValidationRegistrationOptions<unknown>,
   baseline?: VestValidationSnapshot,
 ): readonly ValidationError.WithFieldTree[] {
   const errors = options.includeErrors
@@ -426,24 +575,60 @@ function mapVestValidationResult(
  */
 function registerVestValidation<TValue>(
   path: VestFieldPath<TValue>,
-  suite: Pick<VestRunnableSuite<TValue>, 'run'>,
-  options: VestValidationRegistrationOptions,
+  suite: VestRunnableSuite<TValue>,
+  options: VestValidationRegistrationOptions<TValue>,
 ): void {
-  validateTree(path, ({ fieldTree, value }) => {
-    const entry = getOrCreateVestRun(suite, fieldTree, value());
+  const resolveFocus = (
+    ctx: FieldContext<TValue>,
+  ): string | readonly string[] | undefined => {
+    return options.only ? options.only(ctx) : undefined;
+  };
+
+  validateTree(path, (ctx) => {
+    const { fieldTree, value } = ctx;
+    const entry = getOrCreateVestRun(
+      suite,
+      fieldTree,
+      value(),
+      resolveFocus(ctx),
+    );
 
     if (!entry.initialResult) {
       return [];
     }
 
-    return mapVestValidationResult(entry.initialResult, fieldTree, options);
+    return mapVestValidationResult(
+      entry.initialResult,
+      fieldTree,
+      options as VestValidationRegistrationOptions<unknown>,
+    );
   });
 
   validateAsync(path, {
-    params: ({ fieldTree, value }) => {
-      const entry = getOrCreateVestRun(suite, fieldTree, value());
+    params: (ctx) => {
+      const { fieldTree, value } = ctx;
+      const entry = getOrCreateVestRun(
+        suite,
+        fieldTree,
+        value(),
+        resolveFocus(ctx),
+      );
 
-      if (!entry.initialResult?.isPending()) {
+      // When `run()` returned a raw Promise (no sync SuiteResult), drive the
+      // async pipeline directly from the thenable. Otherwise require the sync
+      // result to report pending tests before scheduling async work.
+      if (!entry.initialResult) {
+        if (!isThenable(entry.runResult)) {
+          return undefined;
+        }
+
+        return {
+          runResult: entry.runResult,
+          initialSnapshot: { errors: [], warnings: [] },
+        } satisfies PendingVestValidationPayload;
+      }
+
+      if (!entry.initialResult.isPending()) {
         return undefined;
       }
 
@@ -451,7 +636,7 @@ function registerVestValidation<TValue>(
         runResult: entry.runResult,
         initialSnapshot: createVestValidationSnapshot(
           entry.initialResult,
-          options,
+          options as VestValidationRegistrationOptions<unknown>,
         ),
       } satisfies PendingVestValidationPayload;
     },
@@ -475,7 +660,7 @@ function registerVestValidation<TValue>(
       return mapVestValidationResult(
         pendingResult.result,
         fieldTree,
-        options,
+        options as VestValidationRegistrationOptions<unknown>,
         pendingResult.initialSnapshot,
       );
     },
@@ -491,11 +676,14 @@ function registerVestValidation<TValue>(
  */
 export function validateVestWarnings<TValue>(
   path: VestFieldPath<TValue>,
-  suite: Pick<VestRunnableSuite<TValue>, 'run'>,
+  suite: VestRunnableSuite<TValue>,
+  options: Pick<ValidateVestOptions<TValue>, 'resetOnDestroy' | 'only'> = {},
 ): void {
+  maybeRegisterResetOnDestroy(suite, options.resetOnDestroy);
   registerVestValidation(path, suite, {
     includeErrors: false,
     includeWarnings: true,
+    only: options.only,
   });
 }
 
@@ -511,17 +699,28 @@ export function validateVestWarnings<TValue>(
  * `ngx-signal-form-field-wrapper`, and related components can render them as
  * polite, non-blocking guidance.
  *
+ * Pass `{ resetOnDestroy: true }` to call `suite.reset()` when the hosting
+ * injection context is destroyed. This is strongly recommended for suites
+ * declared at module scope (the documented Vest pattern) because suite state
+ * otherwise bleeds across component mounts.
+ *
+ * Pass `{ only: (ctx) => fieldName }` to enable per-field focused runs. The
+ * adapter then invokes `suite.run(value, fieldName)` (or
+ * `suite.only(fieldName).run(value)` where supported) rather than a full-suite
+ * run. Works with suite callbacks that use `only(fieldName)` internally.
+ *
  * @example
  * ```typescript
  * import { form } from '@angular/forms/signals';
- * import { create, enforce, test } from 'vest';
+ * import { create, enforce, only, test } from 'vest';
  * import { validateVest } from '@ngx-signal-forms/toolkit/vest';
  *
  * interface LoginModel {
  *   email: string;
  * }
  *
- * const loginSuite = create((data: LoginModel) => {
+ * const loginSuite = create((data: LoginModel, field?: string) => {
+ *   only(field);
  *   test('email', 'Email is required', () => {
  *     enforce(data.email).isNotBlank();
  *   });
@@ -529,18 +728,46 @@ export function validateVestWarnings<TValue>(
  *
  * const loginModel = signal<LoginModel>({ email: '' });
  * const loginForm = form(loginModel, (path) => {
- *   validateVest(path, loginSuite, { includeWarnings: true });
+ *   validateVest(path, loginSuite, { resetOnDestroy: true });
  * });
  * ```
  */
 export function validateVest<TValue>(
   path: VestFieldPath<TValue>,
-  suite: Pick<VestRunnableSuite<TValue>, 'run'>,
-  options: ValidateVestOptions = {},
+  suite: VestRunnableSuite<TValue>,
+  options: ValidateVestOptions<TValue> = {},
 ): void {
+  maybeRegisterResetOnDestroy(suite, options.resetOnDestroy);
   registerVestValidation(path, suite, {
     includeErrors: true,
     includeWarnings: options.includeWarnings ?? false,
+    only: options.only,
+  });
+}
+
+/**
+ * Registers a `DestroyRef.onDestroy()` hook that calls `suite.reset()` when the
+ * current injection context is torn down. No-op when `resetOnDestroy` is false
+ * or when the suite does not expose a `reset` callable.
+ */
+function maybeRegisterResetOnDestroy<TValue>(
+  suite: VestRunnableSuite<TValue>,
+  resetOnDestroy: boolean | undefined,
+): void {
+  if (!resetOnDestroy) {
+    return;
+  }
+
+  const reset = (suite as { reset?: unknown }).reset;
+  if (typeof reset !== 'function') {
+    return;
+  }
+
+  inject(DestroyRef).onDestroy(() => {
+    // Also clear the per-suite run cache so a subsequent mount re-executes
+    // `run()` even when the field tree reference happens to be reused.
+    vestRunCache.delete(suite as object);
+    (suite as { reset: () => void }).reset();
   });
 }
 
