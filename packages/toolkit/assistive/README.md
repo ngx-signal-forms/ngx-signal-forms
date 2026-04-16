@@ -33,13 +33,13 @@ import {
 
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="contactForm.bio"></textarea>
-  <ngx-form-field-assistive-row>
+  <ngx-signal-form-field-assistive-row>
     <ngx-signal-form-field-hint>Max 500 characters</ngx-signal-form-field-hint>
     <ngx-signal-form-field-character-count
       [formField]="contactForm.bio"
       [maxLength]="500"
     />
-  </ngx-form-field-assistive-row>
+  </ngx-signal-form-field-assistive-row>
 </form>
 ```
 
@@ -111,13 +111,13 @@ When a matching max-length validator is present, `maxLength` can be omitted and 
 Layout container for hint and character count side by side.
 
 ```html
-<ngx-form-field-assistive-row>
+<ngx-signal-form-field-assistive-row>
   <ngx-signal-form-field-hint>Enter your bio</ngx-signal-form-field-hint>
   <ngx-signal-form-field-character-count
     [formField]="form.bio"
     [maxLength]="500"
   />
-</ngx-form-field-assistive-row>
+</ngx-signal-form-field-assistive-row>
 ```
 
 ## Warning utilities

@@ -4,6 +4,7 @@ import {
   computed,
   inject,
   input,
+  isDevMode,
   type Signal,
 } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
@@ -49,8 +50,6 @@ export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
  * - **Errors** (blocking): `kind` does NOT start with `'warn:'`
  * - **Warnings** (non-blocking): `kind` starts with `'warn:'`
  *
- * @template TValue The type of the field value (defaults to unknown)
- *
  * @example Simplest Usage (no NgxSignalFormToolkit needed!)
  * ```html
  * <form (submit)="save($event)" novalidate>
@@ -83,9 +82,10 @@ export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
  * ```
  *
  * Features:
- * - **Errors**: `role="alert"` with `aria-live="assertive"` for immediate announcement
- * - **Warnings**: `role="status"` with `aria-live="polite"` for non-intrusive guidance
- * - Strategy-aware error/warning display
+ * - **Errors**: `role="alert"` (implies `aria-live="assertive"` + `aria-atomic="true"`)
+ * - **Warnings**: `role="status"` (implies `aria-live="polite"` + `aria-atomic="true"`)
+ * - Strategy-aware error/warning display — warnings default to `'immediate'`
+ *   so informational feedback stays visible; override via `warningStrategy`
  * - Structured rendering from Signal Forms
  * - Auto-generated IDs for aria-describedby linking
  */
@@ -93,14 +93,16 @@ export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
   selector: 'ngx-form-field-error',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <!-- Blocking Errors (ARIA role="alert" for assertive announcement) -->
+    <!--
+      Blocking Errors: role="alert" already implies aria-live="assertive"
+      and aria-atomic="true". Setting them explicitly causes duplicate
+      announcements on NVDA+Firefox, so we rely on the implicit semantics.
+    -->
     @if (showErrors() && hasErrors()) {
       <div
         [id]="errorId()"
         class="ngx-form-field-error ngx-form-field-error--error"
         role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
       >
         @if (usesBulletList()) {
           <ul class="ngx-form-field-error__list" role="list">
@@ -124,14 +126,16 @@ export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
       </div>
     }
 
-    <!-- Non-blocking Warnings (ARIA role="status" for polite announcement) -->
+    <!--
+      Non-blocking Warnings: role="status" implies aria-live="polite" and
+      aria-atomic="true"; the explicit attributes are intentionally omitted
+      to avoid duplicate AT announcements.
+    -->
     @if (showWarnings() && hasWarnings()) {
       <div
         [id]="warningId()"
         class="ngx-form-field-error ngx-form-field-error--warning"
         role="status"
-        aria-live="polite"
-        aria-atomic="true"
       >
         @if (usesBulletList()) {
           <ul class="ngx-form-field-error__list" role="list">
@@ -157,7 +161,7 @@ export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
   `,
   styleUrl: './form-field-error.component.scss',
 })
-export class NgxFormFieldErrorComponent<TValue = unknown> {
+export class NgxFormFieldErrorComponent {
   /**
    * Try to inject form context (optional - may not be available).
    */
@@ -193,7 +197,7 @@ export class NgxFormFieldErrorComponent<TValue = unknown> {
    * **Use `errors` input for aggregated/custom errors:**
    * Pass a pre-filtered ValidationError[] signal directly (e.g., from fieldsets).
    */
-  readonly formField = input<FieldTree<TValue>>();
+  readonly formField = input<FieldTree<unknown>>();
 
   /**
    * Direct errors input for pre-aggregated/custom error arrays.
@@ -244,9 +248,13 @@ export class NgxFormFieldErrorComponent<TValue = unknown> {
    * Priority:
    * 1. Explicit `fieldName` input
    * 2. Field context from parent wrapper (via NGX_SIGNAL_FORM_FIELD_CONTEXT)
-   * 3. Throws when neither is available
+   * 3. Returns `null` when neither is available — emits a dev-mode
+   *    `console.error` so the misconfiguration is visible, but the template
+   *    renders without crashing (error/warning ids are suppressed, and
+   *    `aria-describedby` linking is skipped until a field name becomes
+   *    available).
    */
-  readonly #resolvedFieldName = computed(() => {
+  readonly #resolvedFieldName = computed<string | null>(() => {
     const explicit = this.fieldName();
     if (explicit !== undefined) {
       const trimmed = explicit.trim();
@@ -260,9 +268,13 @@ export class NgxFormFieldErrorComponent<TValue = unknown> {
       return contextFieldName;
     }
 
-    throw new Error(
-      '[ngx-signal-forms] ngx-form-field-error requires an explicit `fieldName` input or a parent ngx-signal-form-field-wrapper context.',
-    );
+    if (isDevMode()) {
+      // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+      console.error(
+        '[ngx-signal-forms] ngx-form-field-error requires an explicit `fieldName` input or a parent ngx-signal-form-field-wrapper context. The component will render without id/aria-describedby linking until one is provided.',
+      );
+    }
+    return null;
   });
 
   /**
@@ -274,6 +286,19 @@ export class NgxFormFieldErrorComponent<TValue = unknown> {
    * @default undefined (inherits from form or 'on-touch')
    */
   readonly strategy = input<ErrorDisplayStrategy | undefined>();
+
+  /**
+   * Warning display strategy for this specific field.
+   *
+   * Warnings are non-blocking and informational, so they surface
+   * immediately by default even when the error `strategy` is `'on-touch'`
+   * or `'on-submit'`. Provide an explicit value to align warnings with
+   * errors (e.g. `strategy` and `warningStrategy` both `'on-touch'`) or
+   * to inherit from the form-level provider via `'inherit'`.
+   *
+   * @default `'immediate'`
+   */
+  readonly warningStrategy = input<ErrorDisplayStrategy | undefined>();
 
   /**
    * Visual layout for rendered validation messages.
@@ -293,22 +318,40 @@ export class NgxFormFieldErrorComponent<TValue = unknown> {
   readonly submittedStatus = input<SubmittedStatus | undefined>();
 
   /**
-   * Computed error ID for aria-describedby linking.
+   * Computed error ID for aria-describedby linking. Returns `null` when no
+   * field name can be resolved, which keeps the rendered `[id]` binding
+   * absent instead of producing a broken id like `"-error"`.
    */
-  protected readonly errorId = computed(() =>
-    generateErrorId(this.#resolvedFieldName()),
-  );
+  protected readonly errorId = computed<string | null>(() => {
+    const fieldName = this.#resolvedFieldName();
+    return fieldName === null ? null : generateErrorId(fieldName);
+  });
 
   /**
-   * Computed warning ID for aria-describedby linking.
+   * Computed warning ID for aria-describedby linking. Returns `null` when no
+   * field name can be resolved.
    */
-  protected readonly warningId = computed(() =>
-    generateWarningId(this.#resolvedFieldName()),
-  );
+  protected readonly warningId = computed<string | null>(() => {
+    const fieldName = this.#resolvedFieldName();
+    return fieldName === null ? null : generateWarningId(fieldName);
+  });
 
   readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() =>
     resolveStrategyFromContext(this.strategy(), this.#injectedContext),
   );
+
+  /**
+   * Warning-display strategy resolution. Falls back to `'immediate'` so
+   * warnings stay visible after errors are dismissed, which matches the
+   * usual UX for non-blocking guidance.
+   */
+  readonly #resolvedWarningStrategy = computed<ErrorDisplayStrategy>(() => {
+    const explicit = this.warningStrategy();
+    if (explicit !== undefined) {
+      return resolveStrategyFromContext(explicit, this.#injectedContext);
+    }
+    return 'immediate';
+  });
 
   readonly #resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(
     () =>
@@ -342,6 +385,12 @@ export class NgxFormFieldErrorComponent<TValue = unknown> {
     this.#resolvedSubmittedStatus,
   );
 
+  readonly #showWarningsByStrategy = createShowErrorsComputed(
+    this.#fieldState,
+    this.#resolvedWarningStrategy,
+    this.#resolvedSubmittedStatus,
+  );
+
   /**
    * Computed signal for error visibility based on strategy.
    *
@@ -359,9 +408,18 @@ export class NgxFormFieldErrorComponent<TValue = unknown> {
 
   /**
    * Computed signal for warning visibility.
-   * Warnings are shown using the same strategy as errors.
+   *
+   * Warnings use their own strategy (defaulting to `'immediate'`) so
+   * non-blocking guidance can stay visible independent of error timing.
+   * Opt into error-coupled timing by passing `warningStrategy="on-touch"`
+   * (or any other strategy) explicitly.
    */
-  protected readonly showWarnings = this.showErrors;
+  protected readonly showWarnings = computed(() => {
+    if (!this.#fieldState()) {
+      return true;
+    }
+    return this.#showWarningsByStrategy();
+  });
 
   protected readonly usesBulletList = computed(() => {
     return this.listStyle() === 'bullets';

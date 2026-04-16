@@ -1,4 +1,5 @@
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -29,24 +30,24 @@ import {
  * <ngx-signal-form-field-wrapper [formField]="form.phone">
  *   <label for="phone">Phone Number</label>
  *   <input id="phone" [formField]="form.phone" />
- *   <ngx-form-field-hint>
+ *   <ngx-signal-form-field-hint>
  *     Format: 123-456-7890
- *   </ngx-form-field-hint>
+ *   </ngx-signal-form-field-hint>
  * </ngx-signal-form-field-wrapper>
  * ```
  *
  * @example With position control
  * ```html
- * <ngx-form-field-hint position="left">
+ * <ngx-signal-form-field-hint position="left">
  *   Use at least 8 characters
- * </ngx-form-field-hint>
+ * </ngx-signal-form-field-hint>
  * ```
  *
  * @example Rich content
  * ```html
- * <ngx-form-field-hint>
+ * <ngx-signal-form-field-hint>
  *   <strong>Tip:</strong> Use keywords that describe your product
- * </ngx-form-field-hint>
+ * </ngx-signal-form-field-hint>
  * ```
  *
  * Customization:
@@ -143,9 +144,16 @@ export class NgxFormFieldHintComponent {
   });
 
   constructor() {
-    const existingId = this.#elementRef.nativeElement.getAttribute('id');
-    if (existingId) {
-      this.#explicitId.set(existingId);
-    }
+    // Read the host `id` attribute in a browser-only render hook so SSR
+    // renders do not touch the DOM at construction time. `afterNextRender`
+    // runs only on the client, which is exactly what we need here: if a
+    // consumer set `<ngx-signal-form-field-hint id="my-hint">` manually, we
+    // lift that value into `#explicitId` so `resolvedId()` honours it.
+    afterNextRender(() => {
+      const existingId = this.#elementRef.nativeElement.getAttribute('id');
+      if (existingId !== null && existingId.length > 0) {
+        this.#explicitId.set(existingId);
+      }
+    });
   }
 }

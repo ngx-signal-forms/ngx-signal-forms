@@ -21,25 +21,25 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  *
  * @example Basic usage with hint and character count
  * ```html
- * <ngx-form-field-assistive-row>
- *   <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
- *   <ngx-form-field-character-count [formField]="form.phone" [maxLength]="14" />
- * </ngx-form-field-assistive-row>
+ * <ngx-signal-form-field-assistive-row>
+ *   <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
+ *   <ngx-signal-form-field-character-count [formField]="form.phone" [maxLength]="14" />
+ * </ngx-signal-form-field-assistive-row>
  * ```
  *
  * @example With error component
  * ```html
- * <ngx-form-field-assistive-row>
+ * <ngx-signal-form-field-assistive-row>
  *   <ngx-form-field-error [formField]="form.email" />
- *   <ngx-form-field-character-count [formField]="form.email" [maxLength]="100" />
- * </ngx-form-field-assistive-row>
+ *   <ngx-signal-form-field-character-count [formField]="form.email" [maxLength]="100" />
+ * </ngx-signal-form-field-assistive-row>
  * ```
  *
  * @example Hint only (no character count)
  * ```html
- * <ngx-form-field-assistive-row>
- *   <ngx-form-field-hint>Enter your full legal name</ngx-form-field-hint>
- * </ngx-form-field-assistive-row>
+ * <ngx-signal-form-field-assistive-row>
+ *   <ngx-signal-form-field-hint>Enter your full legal name</ngx-signal-form-field-hint>
+ * </ngx-signal-form-field-assistive-row>
  * ```
  *
  * Customization:
@@ -56,7 +56,8 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  * Accessibility notes:
  * - Content within this row should be linked to the input via aria-describedby
  * - Ensure sufficient color contrast for all text content
- * - Error messages should have aria-live="polite" for screen reader announcements
+ * - Errors render with `role="alert"` automatically (screen readers will
+ *   announce them without any additional wiring on this container)
  */
 @Component({
   selector: 'ngx-signal-form-field-assistive-row',

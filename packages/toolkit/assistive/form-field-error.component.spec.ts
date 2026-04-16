@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
 import {
   email,
   form,
@@ -11,7 +10,7 @@ import type { SubmittedStatus } from '@ngx-signal-forms/toolkit';
 import { NGX_SIGNAL_FORM_FIELD_CONTEXT } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { NgxFormFieldErrorComponent } from './form-field-error.component';
 
 describe('NgxFormFieldErrorComponent', () => {
@@ -558,7 +557,12 @@ describe('NgxFormFieldErrorComponent', () => {
       expect(alert.getAttribute('role')).toBe('alert');
     });
 
-    it('should have aria-live="assertive" for errors (immediate announcement)', async () => {
+    it('should rely on role="alert" implicit semantics (no redundant aria-live/aria-atomic)', async () => {
+      /**
+       * `role="alert"` already implies `aria-live="assertive"` and
+       * `aria-atomic="true"`. Setting them explicitly triggers duplicate
+       * announcements on NVDA + Firefox, so v1 exposes only the role.
+       */
       @Component({
         selector: 'ngx-test-aria-live',
         imports: [FormField, NgxFormFieldErrorComponent],
@@ -587,7 +591,9 @@ describe('NgxFormFieldErrorComponent', () => {
       await render(TestComponent);
 
       const alert = screen.getByRole('alert');
-      expect(alert.getAttribute('aria-live')).toBe('assertive');
+      expect(alert.getAttribute('role')).toBe('alert');
+      expect(alert.hasAttribute('aria-live')).toBe(false);
+      expect(alert.hasAttribute('aria-atomic')).toBe(false);
     });
 
     it('should have correct error ID for aria-describedby linking', async () => {
@@ -825,10 +831,13 @@ describe('NgxFormFieldErrorComponent', () => {
       expect(contextError).toBeFalsy();
     });
 
-    it('should throw when no context and no input are available', async () => {
+    it('should render without crashing and log a dev-mode console.error when no context and no input are available', async () => {
       /**
-       * Standalone usage must provide fieldName explicitly unless the component
-       * can inherit field context from the wrapper.
+       * Previously the component threw from `#resolvedFieldName`, which crashed
+       * the entire view. v1 behaviour: log a dev-mode `console.error`, return
+       * `null` from `errorId()` / `warningId()`, and still render the alert
+       * container (without an `id` — aria-describedby wiring is skipped until
+       * a field name becomes available).
        */
       @Component({
         selector: 'ngx-test-fallback',
@@ -852,13 +861,25 @@ describe('NgxFormFieldErrorComponent', () => {
         );
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
+      const errorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => undefined);
 
-      expect(() => {
-        fixture.detectChanges();
-      }).toThrow(
-        /requires an explicit `fieldName` input or a parent ngx-signal-form-field-wrapper context/u,
-      );
+      try {
+        await render(TestComponent);
+
+        const alert = screen.getByRole('alert');
+        expect(alert).toBeTruthy();
+        // No id is bound because we can't generate one without a field name.
+        expect(alert.hasAttribute('id')).toBe(false);
+        expect(alert.textContent).toContain('Email is required');
+
+        expect(errorSpy).toHaveBeenCalled();
+        const message = String(errorSpy.mock.calls[0]?.[0] ?? '');
+        expect(message).toMatch(/requires an explicit `fieldName` input/u);
+      } finally {
+        errorSpy.mockRestore();
+      }
     });
 
     it('should react to context signal changes', async () => {
