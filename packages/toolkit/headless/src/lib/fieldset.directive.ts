@@ -1,16 +1,23 @@
-import { computed, Directive, inject, input } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
+import {
+  booleanAttribute,
+  computed,
+  Directive,
+  inject,
+  input,
+} from '@angular/core';
+import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   injectFormContext,
   NGX_SIGNAL_FORMS_CONFIG,
-  resolveErrorDisplayStrategy,
+  readDirectErrors,
+  resolveStrategyFromContext,
+  resolveSubmittedStatusFromContext,
   showErrors,
   splitByKind,
   type ErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 
-import type { ValidationError } from '@angular/forms/signals';
 import {
   createFieldStateFlags,
   createUniqueId,
@@ -36,8 +43,8 @@ export interface FieldsetStateSignals {
   readonly shouldShowWarnings: () => boolean;
   /** Resolved error display strategy */
   readonly resolvedStrategy: () => ErrorDisplayStrategy;
-  /** Resolved submitted status */
-  readonly submittedStatus: () => SubmittedStatus;
+  /** Resolved submitted status (from input override, form context, or default) */
+  readonly resolvedSubmittedStatus: () => SubmittedStatus;
   /** Fieldset validation state flags */
   readonly isInvalid: () => boolean;
   readonly isValid: () => boolean;
@@ -61,12 +68,13 @@ export interface FieldsetStateSignals {
  * - **Warning Support**: Non-blocking warnings (with `warn:` prefix)
  * - **Strategy Aware**: Respects error display strategy from form context
  * - **State Flags**: Exposes invalid, valid, touched, dirty, pending states
+ * - **Nested Control**: `includeNestedErrors` toggles between aggregated and direct errors
  *
  * ## Usage
  *
  * ```html
  * <fieldset
- *   ngxHeadlessFieldset
+ *   ngxSignalFormHeadlessFieldset
  *   #fieldset="fieldset"
  *   [fieldsetField]="form.address"
  *   fieldsetId="address"
@@ -116,8 +124,28 @@ export class NgxHeadlessFieldsetDirective<
 
   /**
    * Error display strategy override.
+   * If undefined, inherits from form context or defaults to 'on-touch'.
    */
-  readonly strategy = input<ErrorDisplayStrategy | null>(null);
+  readonly strategy = input<ErrorDisplayStrategy | undefined>();
+
+  /**
+   * Form submission status override.
+   * If not provided, inherits from form context.
+   */
+  readonly submittedStatus = input<SubmittedStatus | undefined>();
+
+  /**
+   * Whether to include nested field errors in the aggregated display.
+   *
+   * - `true` (default): Aggregate all errors via `errorSummary()` — matches
+   *   the directive's historical behavior of surfacing every nested field
+   *   error from the fieldset root.
+   * - `false`: Only surface direct group-level errors via `errors()`. Use
+   *   this when nested fields display their own errors to avoid duplication.
+   *
+   * @default true
+   */
+  readonly includeNestedErrors = input(true, { transform: booleanAttribute });
 
   /**
    * Resolved fieldset ID.
@@ -134,21 +162,23 @@ export class NgxHeadlessFieldsetDirective<
   /**
    * Resolved error display strategy.
    */
-  readonly resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
-    const contextStrategy = this.#formContext?.errorStrategy();
-
-    return resolveErrorDisplayStrategy(
+  readonly resolvedStrategy = computed<ErrorDisplayStrategy>(() =>
+    resolveStrategyFromContext(
       this.strategy(),
-      contextStrategy,
+      this.#formContext,
       this.#config?.defaultErrorStrategy ?? 'on-touch',
-    );
-  });
+    ),
+  );
 
   /**
    * Resolved submitted status.
    */
-  readonly submittedStatus = computed<SubmittedStatus>(
-    () => this.#formContext?.submittedStatus() ?? 'unsubmitted',
+  readonly resolvedSubmittedStatus = computed<SubmittedStatus>(
+    () =>
+      resolveSubmittedStatusFromContext(
+        this.submittedStatus(),
+        this.#formContext,
+      ) ?? 'unsubmitted',
   );
 
   /**
@@ -157,7 +187,7 @@ export class NgxHeadlessFieldsetDirective<
   readonly #showErrorsSignal = showErrors(
     this.#fieldsetState,
     this.resolvedStrategy,
-    this.submittedStatus,
+    this.resolvedSubmittedStatus,
   );
 
   /**
@@ -166,13 +196,14 @@ export class NgxHeadlessFieldsetDirective<
    */
   readonly #allMessages = computed(() => {
     const override = this.fields();
+    const readFn = this.includeNestedErrors() ? readErrors : readDirectErrors;
 
     if (override && override.length > 0) {
-      const messages = override.flatMap((field) => readErrors(field()));
+      const messages = override.flatMap((field) => readFn(field()));
       return dedupeValidationErrors(messages);
     }
 
-    return dedupeValidationErrors(readErrors(this.#fieldsetState()));
+    return dedupeValidationErrors(readFn(this.#fieldsetState()));
   });
 
   readonly #split = computed(() => splitByKind(this.#allMessages()));

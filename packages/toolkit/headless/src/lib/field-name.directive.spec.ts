@@ -2,7 +2,7 @@ import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { render, screen } from '@testing-library/angular';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { NgxHeadlessFieldNameDirective } from './field-name.directive';
 
 describe('NgxHeadlessFieldNameDirective', () => {
@@ -52,12 +52,16 @@ describe('NgxHeadlessFieldNameDirective', () => {
     expect(screen.getByTestId('resolved')).toHaveTextContent('fallback-id');
   });
 
-  it('throws when no input and no host id exist', async () => {
+  it('returns null and logs dev-mode error when no input and no host id exist', async () => {
     @Component({
       imports: [NgxHeadlessFieldNameDirective],
       template: ` <div ngxSignalFormHeadlessFieldName></div> `,
     })
     class TestHostComponent {}
+
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
 
     const fixture = TestBed.createComponent(TestHostComponent);
     fixture.detectChanges();
@@ -66,9 +70,19 @@ describe('NgxHeadlessFieldNameDirective', () => {
       .query(By.directive(NgxHeadlessFieldNameDirective))
       .injector.get(NgxHeadlessFieldNameDirective);
 
-    expect(() => directive.resolvedFieldName()).toThrow(
+    expect(directive.resolvedFieldName()).toBeNull();
+    expect(directive.errorId()).toBeNull();
+    expect(directive.warningId()).toBeNull();
+    expect(consoleErrorSpy).toHaveBeenCalledOnce();
+    expect(consoleErrorSpy.mock.calls[0]?.[0]).toMatch(
       /requires either a non-empty `fieldName` input or a host element `id`/u,
     );
+
+    // Subsequent reads should not re-emit the error.
+    directive.resolvedFieldName();
+    expect(consoleErrorSpy).toHaveBeenCalledOnce();
+
+    consoleErrorSpy.mockRestore();
   });
 
   it('updates resolved ids when bound field name changes', async () => {
