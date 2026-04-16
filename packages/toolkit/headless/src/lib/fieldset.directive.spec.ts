@@ -17,7 +17,7 @@ import { describe, expect, it } from 'vitest';
 import { NgxHeadlessFieldsetDirective } from './fieldset.directive';
 
 describe('NgxHeadlessFieldsetDirective', () => {
-  it('aggregates and deduplicates field errors from nested fields', async () => {
+  it('aggregates and deduplicates field errors from nested fields when includeNestedErrors is true', async () => {
     @Component({
       selector: 'ngx-test-fieldset-dedupe',
       changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,6 +27,7 @@ describe('NgxHeadlessFieldsetDirective', () => {
           ngxSignalFormHeadlessFieldset
           #fieldset="fieldset"
           [fieldsetField]="addressForm.address"
+          includeNestedErrors
         >
           <span data-testid="error-count">
             {{ fieldset.aggregatedErrors().length }}
@@ -54,6 +55,41 @@ describe('NgxHeadlessFieldsetDirective', () => {
 
     expect(screen.getByTestId('error-count')).toHaveTextContent('1');
     expect(screen.getByTestId('error-message')).toHaveTextContent('Required');
+  });
+
+  it('defaults to direct errors only (includeNestedErrors=false)', async () => {
+    @Component({
+      selector: 'ngx-test-fieldset-direct-default',
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      imports: [NgxHeadlessFieldsetDirective],
+      template: `
+        <fieldset
+          ngxSignalFormHeadlessFieldset
+          #fieldset="fieldset"
+          [fieldsetField]="addressForm.address"
+        >
+          <span data-testid="error-count">
+            {{ fieldset.aggregatedErrors().length }}
+          </span>
+        </fieldset>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ address: { street: '', city: '' } });
+      // Nested-only errors — the fieldset root has no direct errors.
+      readonly addressForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.address.street, { message: 'Required' });
+        }),
+      );
+    }
+
+    await render(TestComponent);
+
+    // Default includeNestedErrors=false → readDirectErrors on the root
+    // → no direct errors, count stays at 0.
+    expect(screen.getByTestId('error-count')).toHaveTextContent('0');
   });
 
   it('prefers explicit fields override for aggregation', async () => {
@@ -102,6 +138,7 @@ describe('NgxHeadlessFieldsetDirective', () => {
           ngxSignalFormHeadlessFieldset
           #fieldset="fieldset"
           [fieldsetField]="addressForm.address"
+          includeNestedErrors
         >
           <span data-testid="show-errors">
             {{ fieldset.shouldShowErrors() }}
@@ -140,6 +177,7 @@ describe('NgxHeadlessFieldsetDirective', () => {
           ngxSignalFormHeadlessFieldset
           #fieldset="fieldset"
           [fieldsetField]="addressForm.address"
+          includeNestedErrors
         >
           <span data-testid="show-warnings">
             {{ fieldset.shouldShowWarnings() }}

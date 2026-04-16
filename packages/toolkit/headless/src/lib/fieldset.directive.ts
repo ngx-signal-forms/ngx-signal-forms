@@ -137,15 +137,17 @@ export class NgxHeadlessFieldsetDirective<
   /**
    * Whether to include nested field errors in the aggregated display.
    *
-   * - `true` (default): Aggregate all errors via `errorSummary()` — matches
-   *   the directive's historical behavior of surfacing every nested field
-   *   error from the fieldset root.
-   * - `false`: Only surface direct group-level errors via `errors()`. Use
-   *   this when nested fields display their own errors to avoid duplication.
+   * - `false` (default): Surface direct group-level errors via `errors()`.
+   *   Matches the styled `NgxSignalFormFieldset` default so composing the
+   *   directive via `hostDirectives` keeps behavior identical. Use this
+   *   when nested fields display their own errors (avoids duplication).
+   * - `true`: Aggregate all errors via `errorSummary()`, including nested
+   *   field errors. Use this when nested fields do not display their own
+   *   errors (plain `<input>` without a wrapper).
    *
-   * @default true
+   * @default false
    */
-  readonly includeNestedErrors = input(true, { transform: booleanAttribute });
+  readonly includeNestedErrors = input(false, { transform: booleanAttribute });
 
   /**
    * Resolved fieldset ID.
