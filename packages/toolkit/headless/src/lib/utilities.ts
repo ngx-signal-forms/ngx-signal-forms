@@ -407,11 +407,23 @@ export function createErrorState<TValue = unknown>(
 }
 
 /**
+ * Value types supported by the character-count utilities.
+ *
+ * - `string` — character length
+ * - `readonly string[]` — array length (e.g. token inputs where each entry is
+ *   one token; reported as "X of N tokens" rather than combined string length)
+ * - `null` / `undefined` — treated as length `0`
+ *
+ * Any other value type is treated as length `0`.
+ */
+export type CharacterCountValue = string | readonly string[] | null | undefined;
+
+/**
  * Options for creating character count signals.
  */
 export interface CreateCharacterCountOptions {
-  /** Form field for string value */
-  readonly field: FieldTree<string | null | undefined>;
+  /** Form field producing a {@link CharacterCountValue}. */
+  readonly field: FieldTree<CharacterCountValue>;
   /** Maximum length for the character count */
   readonly maxLength: ReactiveOrStatic<number>;
   /** Warning threshold (0-1), default 0.8 */
@@ -483,7 +495,9 @@ export function createCharacterCount(
   const currentLength = computed(() => {
     const state = fieldState();
     const value = state.value();
-    return typeof value === 'string' ? value.length : 0;
+    if (typeof value === 'string') return value.length;
+    if (Array.isArray(value)) return value.length;
+    return 0;
   });
 
   const resolvedMaxLength = computed(() => unwrapValue(maxLength));

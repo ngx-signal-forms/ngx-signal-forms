@@ -230,7 +230,7 @@ function isFieldTree(value: unknown): value is FieldTree<unknown> {
 function fnv1a4Hex(value: string): string {
   let hash = 0x8_11c_9dc5;
   for (let index = 0; index < value.length; index++) {
-    hash ^= value.codePointAt(index);
+    hash ^= value.codePointAt(index) ?? 0;
     hash = Math.imul(hash, 0x01_00_01_93);
   }
 

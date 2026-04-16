@@ -1,5 +1,6 @@
 import { computed, Directive, input, type Signal } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
+import type { CharacterCountValue } from './utilities';
 
 /**
  * Character count limit state.
@@ -100,7 +101,7 @@ export class NgxHeadlessCharacterCountDirective implements CharacterCountStateSi
   /**
    * The form field to track character count.
    */
-  readonly field = input.required<FieldTree<string | null | undefined>>();
+  readonly field = input.required<FieldTree<CharacterCountValue>>();
 
   /**
    * Maximum length for the character count.
@@ -128,7 +129,9 @@ export class NgxHeadlessCharacterCountDirective implements CharacterCountStateSi
   readonly currentLength = computed(() => {
     const state = this.#fieldState();
     const value = state.value();
-    return typeof value === 'string' ? value.length : 0;
+    if (typeof value === 'string') return value.length;
+    if (Array.isArray(value)) return value.length;
+    return 0;
   });
 
   /**
