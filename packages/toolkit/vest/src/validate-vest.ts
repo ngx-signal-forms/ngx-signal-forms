@@ -142,12 +142,10 @@ interface VestResultLike extends Pick<SuiteResult, 'isPending'> {
 interface VestRunnableSuite<TValue> {
   run(
     value: TValue,
-    fieldName?: string | readonly string[],
+    fieldName?: string | string[],
   ): VestResultLike | PromiseLike<VestResultLike>;
   reset?: () => void;
-  only?: (
-    field: string | readonly string[],
-  ) => Pick<VestRunnableSuite<TValue>, 'run'>;
+  only?: (field: string | string[]) => Pick<VestRunnableSuite<TValue>, 'run'>;
 }
 
 /**
@@ -357,12 +355,17 @@ function executeVestRun<TValue>(
     return suite.run(value);
   }
 
+  // Vest's `only`/`run` field selectors require a mutable string[]. We clone
+  // readonly inputs so toolkit consumers can pass `readonly string[]` through
+  // without widening their own types.
+  const focusArg = Array.isArray(focus) ? [...focus] : (focus as string);
+
   if (typeof suite.only === 'function') {
-    const focused = suite.only(focus);
+    const focused = suite.only(focusArg);
     return focused.run(value);
   }
 
-  return suite.run(value, focus);
+  return suite.run(value, focusArg);
 }
 
 /**

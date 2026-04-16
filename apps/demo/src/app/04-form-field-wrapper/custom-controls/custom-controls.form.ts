@@ -117,13 +117,15 @@ export class CustomControlsFormComponent {
 
   protected readonly accessibilityAuditDescribedBy = computed(() => {
     const fieldState = this.reviewForm.accessibilityAudit();
+    const mode = this.errorDisplayMode();
+    const resolvedMode = mode === 'inherit' ? 'on-touch' : mode;
 
     return buildAriaDescribedBy('accessibilityAudit', {
       baseIds: ['accessibilityAudit-hint'],
       showErrors: shouldShowErrors(
         fieldState.invalid(),
         fieldState.touched(),
-        this.errorDisplayMode(),
+        resolvedMode,
         this.submittedStatus(),
       ),
     });

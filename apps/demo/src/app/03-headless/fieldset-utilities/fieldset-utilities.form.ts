@@ -643,12 +643,14 @@ export class HeadlessFieldsetUtilitiesComponent {
   protected readonly notesDescribedBy = computed(() => {
     const ids = [this.notesCounterId];
     if (this.notesError.showErrors() && this.notesError.hasErrors()) {
-      ids.push(this.notesError.errorId());
+      const id = this.notesError.errorId();
+      if (id !== null) ids.push(id);
     } else if (
       this.notesError.showWarnings() &&
       this.notesError.hasWarnings()
     ) {
-      ids.push(this.notesError.warningId());
+      const id = this.notesError.warningId();
+      if (id !== null) ids.push(id);
     }
     return ids.join(' ');
   });

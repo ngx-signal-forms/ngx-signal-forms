@@ -249,8 +249,8 @@ interface HeadlessErrorStateCore {
   readonly warnings: ReadSignal<ValidationError[]>;
   readonly hasErrors: ReadSignal<boolean>;
   readonly hasWarnings: ReadSignal<boolean>;
-  readonly errorId: ReadSignal<string>;
-  readonly warningId: ReadSignal<string>;
+  readonly errorId: ReadSignal<string | null>;
+  readonly warningId: ReadSignal<string | null>;
 }
 
 /**
@@ -264,7 +264,7 @@ interface HeadlessErrorStateCore {
  */
 export function buildHeadlessErrorState(
   fieldState: ReadSignal<unknown>,
-  fieldName: ReadSignal<string>,
+  fieldName: ReadSignal<string | null>,
 ): HeadlessErrorStateCore {
   const split = computed(() => splitByKind(readDirectErrors(fieldState())));
 
@@ -273,8 +273,14 @@ export function buildHeadlessErrorState(
     warnings: computed(() => split().warnings),
     hasErrors: computed(() => split().blocking.length > 0),
     hasWarnings: computed(() => split().warnings.length > 0),
-    errorId: computed(() => generateErrorId(fieldName())),
-    warningId: computed(() => generateWarningId(fieldName())),
+    errorId: computed(() => {
+      const name = fieldName();
+      return name === null ? null : generateErrorId(name);
+    }),
+    warningId: computed(() => {
+      const name = fieldName();
+      return name === null ? null : generateWarningId(name);
+    }),
   };
 }
 
@@ -284,8 +290,8 @@ export function buildHeadlessErrorState(
 export interface CreateErrorStateOptions<TValue = unknown> {
   /** Form field FieldTree */
   readonly field: FieldTree<TValue>;
-  /** Field name for ID generation */
-  readonly fieldName: ReactiveOrStatic<string>;
+  /** Field name for ID generation. `null` disables ID generation. */
+  readonly fieldName: ReactiveOrStatic<string | null>;
   /** Error display strategy (defaults to 'on-touch') */
   readonly strategy?: ReactiveOrStatic<ErrorDisplayStrategy>;
   /** Submitted status signal (optional) */
@@ -308,12 +314,12 @@ export interface ErrorStateResult {
   readonly hasErrors: ReadSignal<boolean>;
   /** Whether there are warnings */
   readonly hasWarnings: ReadSignal<boolean>;
-  /** Generated error region ID */
-  readonly errorId: ReadSignal<string>;
-  /** Generated warning region ID */
-  readonly warningId: ReadSignal<string>;
+  /** Generated error region ID, or `null` when no fieldName is resolvable */
+  readonly errorId: ReadSignal<string | null>;
+  /** Generated warning region ID, or `null` when no fieldName is resolvable */
+  readonly warningId: ReadSignal<string | null>;
   /** Resolved field name */
-  readonly fieldName: ReadSignal<string>;
+  readonly fieldName: ReadSignal<string | null>;
 }
 
 /**

@@ -43,10 +43,10 @@ export interface ErrorStateSignals {
   readonly hasErrors: () => boolean;
   /** Whether the field has warnings */
   readonly hasWarnings: () => boolean;
-  /** Generated error ID for aria-describedby */
-  readonly errorId: () => string;
-  /** Generated warning ID for aria-describedby */
-  readonly warningId: () => string;
+  /** Generated error ID for aria-describedby, or `null` when no fieldName is resolvable */
+  readonly errorId: () => string | null;
+  /** Generated warning ID for aria-describedby, or `null` when no fieldName is resolvable */
+  readonly warningId: () => string | null;
 }
 
 /**
@@ -113,8 +113,10 @@ export class NgxHeadlessErrorStateDirective<
 
   /**
    * The field name for generating error/warning IDs.
+   * Pass `null` to disable ID generation (e.g. when the field name cannot be
+   * resolved yet from a companion `ngxSignalFormHeadlessFieldName` directive).
    */
-  readonly fieldName = input.required<string>();
+  readonly fieldName = input.required<string | null>();
 
   /**
    * Error display strategy override.
