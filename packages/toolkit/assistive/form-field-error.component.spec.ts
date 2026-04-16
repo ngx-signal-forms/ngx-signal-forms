@@ -870,8 +870,12 @@ describe('NgxFormFieldErrorComponent', () => {
 
         const alert = screen.getByRole('alert');
         expect(alert).toBeTruthy();
-        // No id is bound because we can't generate one without a field name.
-        expect(alert.hasAttribute('id')).toBe(false);
+        // No usable id is bound because we can't generate one without
+        // a field name. Angular may emit either no `id` attribute or an
+        // empty string depending on the host-binding path; either
+        // outcome keeps the alert off any broken aria-describedby chain.
+        const idAttr = alert.getAttribute('id');
+        expect(idAttr === null || idAttr === '').toBe(true);
         expect(alert.textContent).toContain('Email is required');
 
         expect(errorSpy).toHaveBeenCalled();

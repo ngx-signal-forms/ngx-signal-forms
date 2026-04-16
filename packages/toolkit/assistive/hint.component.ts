@@ -1,11 +1,12 @@
+import { isPlatformBrowser } from '@angular/common';
 import {
-  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
   inject,
   input,
+  PLATFORM_ID,
   signal,
 } from '@angular/core';
 import {
@@ -107,6 +108,7 @@ export class NgxFormFieldHintComponent {
   readonly #fieldContext = inject(NGX_SIGNAL_FORM_FIELD_CONTEXT, {
     optional: true,
   });
+  readonly #platformId = inject(PLATFORM_ID);
 
   readonly #explicitId = signal<string | null>(null);
 
@@ -144,16 +146,18 @@ export class NgxFormFieldHintComponent {
   });
 
   constructor() {
-    // Read the host `id` attribute in a browser-only render hook so SSR
-    // renders do not touch the DOM at construction time. `afterNextRender`
-    // runs only on the client, which is exactly what we need here: if a
-    // consumer set `<ngx-signal-form-field-hint id="my-hint">` manually, we
-    // lift that value into `#explicitId` so `resolvedId()` honours it.
-    afterNextRender(() => {
+    // Read the host `id` attribute at construction time so downstream
+    // consumers (auto-aria directive, hint registry) see the explicit
+    // id synchronously during their own initialisation. Gated on
+    // `isPlatformBrowser` to keep SSR builds from touching the DOM at
+    // construction — on platform-server we fall back to the
+    // `resolvedFieldName()` / `createUniqueId()` branches, which still
+    // render a stable id for the client hydration to pick up.
+    if (isPlatformBrowser(this.#platformId)) {
       const existingId = this.#elementRef.nativeElement.getAttribute('id');
       if (existingId !== null && existingId.length > 0) {
         this.#explicitId.set(existingId);
       }
-    });
+    }
   }
 }
