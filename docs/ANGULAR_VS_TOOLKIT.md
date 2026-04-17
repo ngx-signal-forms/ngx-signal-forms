@@ -7,16 +7,17 @@ warning semantics, and reusable field UI.
 
 ## Feature matrix
 
-| Concern                                  | Angular Signal Forms                              | Toolkit                                              |
-| ---------------------------------------- | ------------------------------------------------- | ---------------------------------------------------- |
-| Form model, validation, submit lifecycle | ✅ Native                                         | ➖ Builds on top                                     |
-| `[formRoot]` form context                | ✅ `novalidate`, `preventDefault`, `submit()`     | ✅ Adds DI context, submitted status, error strategy |
-| Progressive error timing                 | ❌ Manual                                         | ✅ Built in via `errorStrategy`                      |
-| Submitted status tracking                | ❌ Only `submitting()` signal                     | ✅ `unsubmitted → submitting → submitted`            |
-| Warning semantics                        | ❌ Manual convention needed                       | ✅ Built in via `warningError()`                     |
-| Automatic ARIA linking                   | ❌ Manual                                         | ✅ Built in                                          |
-| Reusable field UI                        | ❌ App-specific                                   | ✅ Assistive + form-field entry points               |
-| CSS status classes                       | ✅ Native `provideSignalFormsConfig({ classes })` | ➖ Use Angular's native API alongside toolkit        |
+| Concern                                  | Angular Signal Forms                              | Toolkit                                                                                                                                             |
+| ---------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Form model, validation, submit lifecycle | ✅ Native                                         | ➖ Builds on top                                                                                                                                    |
+| `[formRoot]` form context                | ✅ `novalidate`, `preventDefault`, `submit()`     | ✅ Adds DI context, submitted status, error strategy                                                                                                |
+| Progressive error timing                 | ❌ Manual                                         | ✅ Built in via `errorStrategy`                                                                                                                     |
+| Submitted status tracking                | ❌ Only `submitting()` signal                     | ✅ `unsubmitted → submitting → submitted`                                                                                                           |
+| Warning semantics                        | ❌ Manual convention needed                       | ✅ Built in via `warningError()`                                                                                                                    |
+| Warning display timing                   | ❌ Manual                                         | ✅ Independent `warningStrategy` (default `'immediate'`) — see [`WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy) |
+| Automatic ARIA linking                   | ❌ Manual                                         | ✅ Built in                                                                                                                                         |
+| Reusable field UI                        | ❌ App-specific                                   | ✅ Assistive + form-field entry points                                                                                                              |
+| CSS status classes                       | ✅ Native `provideSignalFormsConfig({ classes })` | ➖ Use Angular's native API alongside toolkit                                                                                                       |
 
 ## Why `ngxSignalForm` is additive, not a replacement
 

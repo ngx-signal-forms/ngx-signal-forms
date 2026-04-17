@@ -12,10 +12,15 @@
 
 The toolkit treats validation messages differently based on their `kind` field:
 
-| Message Type        | Convention                           | Blocks Submission | ARIA Role | ARIA Live   |
-| ------------------- | ------------------------------------ | ----------------- | --------- | ----------- |
-| **Error** (default) | `kind` does NOT start with `'warn:'` | ✅ Yes            | `alert`   | `assertive` |
-| **Warning**         | `kind` starts with `'warn:'`         | ❌ No             | `status`  | `polite`    |
+| Message Type        | Convention                           | Blocks Submission | ARIA Role | Implicit ARIA live mode |
+| ------------------- | ------------------------------------ | ----------------- | --------- | ----------------------- |
+| **Error** (default) | `kind` does NOT start with `'warn:'` | ✅ Yes            | `alert`   | assertive               |
+| **Warning**         | `kind` starts with `'warn:'`         | ❌ No             | `status`  | polite                  |
+
+> The toolkit relies on the **implicit live-region semantics** of `role="alert"`
+> and `role="status"`. It does **not** add explicit `aria-live` / `aria-atomic`
+> attributes — some AT + browser combinations (notably NVDA + Firefox) duplicate
+> announcements when both the role and the explicit attribute are present.
 
 ### Benefits
 
@@ -42,7 +47,7 @@ const userForm = form(signal({ email: '' }), (path) => {
 
 - `kind: 'required'` and `kind: 'email'`
 - Treated as **errors** (block submission)
-- Displayed with `role="alert"` and `aria-live="assertive"`
+- Rendered with `role="alert"` (implicit assertive live region)
 
 ### Warning (Does Not Block Submission)
 
@@ -108,7 +113,7 @@ const passwordForm = form(signal({ password: '' }), (path) => {
 
 - `kind: 'warn:short-password'` is treated as a **warning**
 - Does NOT block form submission
-- Displayed with `role="status"` and `aria-live="polite"`
+- Rendered with `role="status"` (implicit polite live region)
 
 ### Complex Validation with Multiple Warnings
 
@@ -199,8 +204,6 @@ The component automatically separates errors and warnings:
   id="email-error"
   class="ngx-form-field-error ngx-form-field-error--error"
   role="alert"
-  aria-live="assertive"
-  aria-atomic="true"
 >
   <p class="ngx-form-field-error__message ngx-form-field-error__message--error">
     Invalid email format
@@ -212,8 +215,6 @@ The component automatically separates errors and warnings:
   id="email-warning"
   class="ngx-form-field-error ngx-form-field-error--warning"
   role="status"
-  aria-live="polite"
-  aria-atomic="true"
 >
   <p
     class="ngx-form-field-error__message ngx-form-field-error__message--warning"
@@ -234,6 +235,83 @@ The form field wrapper automatically handles both:
   <!-- Errors and warnings displayed automatically -->
 </ngx-signal-form-field-wrapper>
 ```
+
+## When warnings appear — `warningStrategy`
+
+Warnings are advisory, not blocking. Hiding them behind the same gate as errors
+(`'on-touch'` or `'on-submit'`) defeats their purpose: a user only benefits from
+guidance like _"consider 12+ characters"_ or _"disposable email may not receive
+notifications"_ **while** they are typing, not after they've already moved past
+the field.
+
+To reflect that, `NgxFormFieldErrorComponent` (and the wrapper / assistive bundle
+that projects it) exposes a dedicated `warningStrategy` input. It decouples
+warning visibility from error visibility while keeping both rendered by the same
+component.
+
+### Input reference
+
+| Input             | Type                   | Default       | Purpose                                                      |
+| ----------------- | ---------------------- | ------------- | ------------------------------------------------------------ |
+| `strategy`        | `ErrorDisplayStrategy` | _(inherited)_ | When **errors** may become visible                           |
+| `warningStrategy` | `ErrorDisplayStrategy` | `'immediate'` | When **warnings** may become visible (independent of errors) |
+
+Accepted values for `ErrorDisplayStrategy` (both inputs):
+
+| Value         | Semantics                                                                                                      |
+| ------------- | -------------------------------------------------------------------------------------------------------------- |
+| `'immediate'` | Show as soon as the validator reports them, regardless of touched / submitted state                            |
+| `'on-touch'`  | Show only after the field (or form) is touched                                                                 |
+| `'on-submit'` | Show only after a submit has been attempted (requires `ngxSignalForm` so `submittedStatus` is tracked)         |
+| `'inherit'`   | Defer to the form-level strategy resolved from `NGX_SIGNAL_FORM_CONTEXT`; falls back to `'on-touch'` otherwise |
+
+### Why the default is `'immediate'`
+
+Defaulting `warningStrategy` to `'immediate'` keeps advisory messaging visible
+from the first keystroke. The alternative — inheriting the error strategy —
+would effectively suppress warnings on forms configured with `'on-touch'` or
+`'on-submit'` error timing, which is the majority of real-world forms. Users
+would only see guidance after they have already committed a password or picked
+a disposable email provider.
+
+If you explicitly want warnings gated with errors (e.g. to keep the field UI
+quiet until first submit), set `warningStrategy="inherit"` or match the error
+strategy explicitly.
+
+### Example: errors on submit, warnings immediately
+
+```html
+<form [formRoot]="passwordForm" ngxSignalForm errorStrategy="on-submit">
+  <ngx-signal-form-field-wrapper [formField]="passwordForm.password">
+    <label for="password">Password</label>
+    <input id="password" type="password" [formField]="passwordForm.password" />
+    <!--
+      The projected <ngx-form-field-error> inherits errorStrategy='on-submit'
+      from the form, but warnings stay on the default 'immediate' timing, so
+      "Consider 12+ characters" shows while the user is still typing.
+    -->
+  </ngx-signal-form-field-wrapper>
+</form>
+```
+
+### Example: override when standalone
+
+When projecting `NgxFormFieldErrorComponent` directly (without the wrapper),
+pass the inputs explicitly:
+
+```html
+<ngx-form-field-error
+  [formField]="passwordForm.password"
+  fieldName="password"
+  strategy="on-submit"
+  warningStrategy="immediate"
+/>
+```
+
+`'immediate'` is already the default, so you only need to spell it out when you
+want to **override** an inherited form-level strategy that would otherwise
+apply. To gate warnings alongside errors, use `warningStrategy="inherit"` (or
+match `strategy` explicitly).
 
 ## Styling
 
@@ -308,14 +386,19 @@ The form field wrapper automatically handles both:
 
 ### WCAG 2.2 Compliance
 
-| Aspect              | Errors                               | Warnings                       |
-| ------------------- | ------------------------------------ | ------------------------------ |
-| **ARIA Role**       | `role="alert"`                       | `role="status"`                |
-| **ARIA Live**       | `aria-live="assertive"`              | `aria-live="polite"`           |
-| **ARIA Atomic**     | `aria-atomic="true"`                 | `aria-atomic="true"`           |
-| **Announcement**    | Immediate (interrupts screen reader) | Polite (waits for pause)       |
-| **Visual Severity** | High (red color, required action)    | Medium (amber color, advisory) |
-| **Form Submission** | Blocks submission                    | Does NOT block submission      |
+| Aspect               | Errors                               | Warnings                          |
+| -------------------- | ------------------------------------ | --------------------------------- |
+| **ARIA Role**        | `role="alert"`                       | `role="status"`                   |
+| **Live-region mode** | Implicit assertive (from role)       | Implicit polite (from role)       |
+| **Announcement**     | Immediate (interrupts screen reader) | Polite (waits for pause)          |
+| **Visual Severity**  | High (red color, required action)    | Medium (amber color, advisory)    |
+| **Form Submission**  | Blocks submission                    | Does NOT block submission         |
+| **Default timing**   | `errorStrategy` (`'on-touch'`)       | `warningStrategy` (`'immediate'`) |
+
+> The toolkit intentionally does not stamp `aria-live`/`aria-atomic` on error
+> or warning containers. The ARIA 1.2 specification defines these as implicit
+> on `role="alert"` and `role="status"`, and stamping them explicitly causes
+> double-announcements on NVDA + Firefox.
 
 ### ARIA Techniques
 

@@ -154,6 +154,11 @@ provideNgxSignalFormsConfig({
 ```
 
 For component-scoped overrides: `provideNgxSignalFormsConfigForComponent()`.
+This provider merges with parent configuration property-by-property via
+`skipSelf` DI — child values win for keys they set, and every other key is
+inherited from the nearest ancestor `provideNgxSignalFormsConfig` call. The
+same inheritance contract applies to
+`provideNgxSignalFormControlPresetsForComponent()`.
 
 ### Error messages
 
@@ -240,6 +245,13 @@ provideFieldLabels(() => {
 | `getBlockingErrors(errors)`          | Filters out warning-only messages             |
 | `canSubmitWithWarnings(form)`        | Allows submission when only warnings remain   |
 | `submitWithWarnings(form, callback)` | Submit helper that blocks only on real errors |
+
+> Warning **display timing** is controlled separately from error timing via the
+> `warningStrategy` input on `NgxFormFieldErrorComponent` (default:
+> `'immediate'`). See
+> [`WARNINGS_SUPPORT.md`](../../docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy)
+> and the [assistive README](./assistive/README.md#ngxformfielderrorcomponent)
+> for usage.
 
 ### Field interactivity
 

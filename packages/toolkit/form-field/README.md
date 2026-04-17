@@ -157,7 +157,14 @@ Warnings (errors with `kind` starting with `warn:`) display automatically:
 
 - When blocking errors are present: error styling (red border), warnings hidden
 - When only warnings are present: warning styling (amber border), warnings shown
-- Errors use `role="alert"`, warnings use `role="status"`
+- Errors use `role="alert"`, warnings use `role="status"` (relying on the
+  implicit live-region semantics of those roles — no explicit `aria-live`)
+
+Warning **display timing** is independent from error timing. The projected
+`NgxFormFieldErrorComponent` accepts a `warningStrategy` input (default
+`'immediate'`) so advisory messages stay visible even when errors are gated
+by `'on-touch'` or `'on-submit'`. See
+[`WARNINGS_SUPPORT.md`](../../docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy).
 
 ## Fieldset component
 

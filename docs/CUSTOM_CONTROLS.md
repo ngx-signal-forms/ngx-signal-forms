@@ -389,6 +389,43 @@ Or with headless primitives:
 </div>
 ```
 
+## Field identity: `id` and `fieldName`
+
+The toolkit's auto-ARIA wiring builds stable `"<field>-error"` and
+`"<field>-warning"` IDs from either the wrapper's `fieldName` input or the
+projected control's `id` attribute. For custom and third-party controls,
+**one of these must resolve to a non-empty string** for `aria-describedby`
+linkage to work.
+
+From v1 RC onward, missing identity is handled **gracefully rather than
+fatally**:
+
+- `resolvedFieldName()`, `errorId()`, and `warningId()` return `null`.
+- The wrapper, error component, and headless directives skip their
+  `aria-describedby` / ID wiring for that field — no unstable `"-error"`
+  fragments, no runtime exceptions.
+- In development mode, the headless field-name directive emits a one-shot
+  `console.error` naming the missing input so the misconfiguration is
+  easy to spot.
+
+This is a resilience fallback, not a supported mode. Production accessibility
+still depends on a stable field identity — always provide either `[fieldName]`
+on the wrapper or an `id` on the bound control:
+
+```html
+<!-- Recommended for custom controls: give the host a stable id -->
+<ngx-signal-form-field-wrapper [formField]="form.country">
+  <label for="country">Country</label>
+  <app-custom-select id="country" [formField]="form.country" />
+</ngx-signal-form-field-wrapper>
+
+<!-- Or: name the wrapper explicitly when the control can't expose an id -->
+<ngx-signal-form-field-wrapper [formField]="form.country" fieldName="country">
+  <label>Country</label>
+  <app-custom-select [formField]="form.country" />
+</ngx-signal-form-field-wrapper>
+```
+
 ## Custom Control Checklist
 
 When building custom controls that work with the toolkit:
@@ -400,6 +437,7 @@ When building custom controls that work with the toolkit:
 - [ ] Accept `disabled` and `invalid` signal inputs for state reflection
 - [ ] Use `[formField]` directive binding (not manual wiring)
 - [ ] Test that `focusFirstInvalid()` reaches your control
+- [ ] Expose a stable `id` on the host (or set `fieldName` on the wrapper) so ARIA IDs resolve
 
 ## Example: Complete Custom Select
 
