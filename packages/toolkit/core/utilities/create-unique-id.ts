@@ -1,4 +1,10 @@
-import { inject, Injectable, InjectionToken, isDevMode } from '@angular/core';
+import {
+  assertInInjectionContext,
+  inject,
+  Injectable,
+  InjectionToken,
+  isDevMode,
+} from '@angular/core';
 
 /**
  * Per-injector counter used by {@link createUniqueId} to mint stable,
@@ -103,25 +109,14 @@ let warnedFallback = false;
  * @public
  */
 export function createUniqueId(prefix: string): string {
-  // The try/catch is narrowed to the `inject()` calls only: those are the
-  // only operations that throw specifically because we are outside an
-  // injection context (the intended fallback trigger). Running the resolved
-  // strategy — whether a user-provided `NGX_SIGNAL_FORM_ID_STRATEGY` or the
-  // service's `next()` — must stay outside the catch so a genuine error
-  // from either surfaces to the caller instead of being silently masked as
-  // "missing injection context" and folded into the module-scoped counter.
-  let strategy: (p: string) => string;
+  // Probe the injection context *before* calling `inject()`. This isolates
+  // the "not in injection context" branch (the intended fallback trigger)
+  // from every other throw path: a DI-graph misconfiguration or a broken
+  // `NGX_SIGNAL_FORM_ID_STRATEGY` factory now surfaces to the caller
+  // instead of being silently folded into the module-scoped counter.
   try {
-    const override = inject(NGX_SIGNAL_FORM_ID_STRATEGY, { optional: true });
-    if (override) {
-      strategy = override;
-    } else {
-      const counter = inject(NgxSignalFormIdCounter);
-      strategy = (p) => counter.next(p);
-    }
+    assertInInjectionContext(createUniqueId);
   } catch {
-    // Outside an injection context — fall back to a module-scoped counter.
-    // This is NOT SSR-safe; warn once in dev to flag non-component usage.
     if (isDevMode() && !warnedFallback) {
       warnedFallback = true;
       // oxlint-disable-next-line no-console -- dev-only diagnostic
@@ -134,5 +129,10 @@ export function createUniqueId(prefix: string): string {
     fallbackCounter += 1;
     return `${prefix}-${fallbackCounter}`;
   }
-  return strategy(prefix);
+
+  const override = inject(NGX_SIGNAL_FORM_ID_STRATEGY, { optional: true });
+  if (override) {
+    return override(prefix);
+  }
+  return inject(NgxSignalFormIdCounter).next(prefix);
 }

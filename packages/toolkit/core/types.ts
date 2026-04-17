@@ -230,11 +230,22 @@ export interface NgxSignalFormsConfig {
 
 /**
  * User-provided configuration (all properties optional).
+ *
+ * @remarks
+ * Nested `provideNgxSignalFormsConfig` / `provideNgxSignalFormsConfigForComponent`
+ * calls merge with `??`, so every property — including `requiredMarker` —
+ * preserves falsy overrides. Passing `requiredMarker: ''` explicitly clears
+ * the inherited marker (for themes that render the required hint entirely
+ * via CSS); omitting the key inherits the parent value instead.
  */
 export interface NgxSignalFormsUserConfig {
   autoAria?: boolean;
   defaultErrorStrategy?: ResolvedErrorDisplayStrategy;
   defaultFormFieldAppearance?: FormFieldAppearance;
   showRequiredMarker?: boolean;
+  /**
+   * Custom character(s) rendered as the required marker. Pass `''` to
+   * clear an inherited marker without disabling `showRequiredMarker`.
+   */
   requiredMarker?: string;
 }

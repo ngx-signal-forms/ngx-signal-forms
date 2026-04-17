@@ -3,6 +3,15 @@ import { isDevMode, untracked } from '@angular/core';
 type WalkableFormTree = Record<string | number, unknown>;
 
 /**
+ * Per-reference dev warning guards. Populated on first encounter so a
+ * single malformed subtree doesn't spam the console on every render.
+ * Keyed by the callable so the same function invocation is deduped
+ * across successive walker passes within a session.
+ */
+const warnedSniffThrows = new WeakSet<() => unknown>();
+const warnedMalformedChildren = new WeakSet<() => unknown>();
+
+/**
  * Visitor invoked for every visited field in the form tree (including the
  * root). Each call receives the field function, the paired model value, and
  * the joined dotted path (e.g. `users.0.name`, or `''` for the root).
@@ -50,8 +59,9 @@ function isFieldFunction(value: unknown): value is () => unknown {
  */
 export function isFieldStateLike(value: unknown): value is () => unknown {
   if (typeof value !== 'function') return false;
+  const candidate = value as () => unknown;
   try {
-    const result = untracked(() => (value as () => unknown)());
+    const result = untracked(() => candidate());
     if (result === null || typeof result !== 'object') return false;
     const state = result as {
       errors?: unknown;
@@ -63,7 +73,15 @@ export function isFieldStateLike(value: unknown): value is () => unknown {
       typeof state.value === 'function' ||
       typeof state.touched === 'function'
     );
-  } catch {
+  } catch (err) {
+    if (isDevMode() && !warnedSniffThrows.has(candidate)) {
+      warnedSniffThrows.add(candidate);
+      // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+      console.warn(
+        '[ngx-signal-forms/debugger] walker: candidate FieldTree threw when invoked; treating as non-field and skipping subtree.',
+        err,
+      );
+    }
     return false;
   }
 }
@@ -119,7 +137,10 @@ function walkFormTreeInternal(
       // shape. The `isFieldStateLike` call doubles field invocations, so
       // keep it as a dev-only defensive net against malformed inputs and
       // skip it in prod.
-      if (isDevMode() && !isFieldStateLike(child)) continue;
+      if (isDevMode() && !isFieldStateLike(child)) {
+        warnMalformedChild(child);
+        continue;
+      }
 
       const nextModel = model[key];
       const childPath = pathPrefix === '' ? key : `${pathPrefix}.${key}`;
@@ -145,7 +166,10 @@ function walkFormTreeInternal(
     const child = tree[i];
     if (!isFieldFunction(child)) continue;
     // Dev-only defensive guard — see matching comment in the object branch.
-    if (isDevMode() && !isFieldStateLike(child)) continue;
+    if (isDevMode() && !isFieldStateLike(child)) {
+      warnMalformedChild(child);
+      continue;
+    }
 
     const nextModel = model[i];
     const childPath = pathPrefix === '' ? String(i) : `${pathPrefix}.${i}`;
@@ -159,4 +183,14 @@ function walkFormTreeInternal(
       childPath,
     );
   }
+}
+
+function warnMalformedChild(child: () => unknown): void {
+  if (warnedMalformedChildren.has(child)) return;
+  warnedMalformedChildren.add(child);
+  // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+  console.warn(
+    '[ngx-signal-forms/debugger] walker: encountered a child callable that does not resolve to a `FieldState`-shaped value. ' +
+      'The walker skipped it. This usually means the tree was hand-rolled or the Angular Signal Forms surface changed shape.',
+  );
 }

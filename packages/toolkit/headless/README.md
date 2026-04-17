@@ -100,14 +100,14 @@ Selector: `[ngxSignalFormHeadlessErrorState]` · Export: `errorState`
 
 Exposes error state signals for custom error display.
 
-| Input             | Type                   | Description                         |
-| ----------------- | ---------------------- | ----------------------------------- |
-| `field`           | `FieldTree` (required) | The field to track                  |
-| `fieldName`       | `string` (required)    | Field name for ID generation        |
-| `strategy`        | `ErrorDisplayStrategy` | Override (inherits from context)    |
-| `submittedStatus` | `SubmittedStatus`      | Override for `'on-submit'` strategy |
+| Input             | Type                        | Description                                                                              |
+| ----------------- | --------------------------- | ---------------------------------------------------------------------------------------- |
+| `field`           | `FieldTree` (required)      | The field to track                                                                       |
+| `fieldName`       | `string \| null` (required) | Field name for ID generation. Pass `null` to disable id generation until a name resolves |
+| `strategy`        | `ErrorDisplayStrategy`      | Override (inherits from context)                                                         |
+| `submittedStatus` | `SubmittedStatus`           | Override for `'on-submit'` strategy                                                      |
 
-Signals: `showErrors()`, `showWarnings()`, `hasErrors()`, `hasWarnings()`, `errors()`, `warnings()`, `resolvedErrors()`, `resolvedWarnings()`, `errorId`, `warningId`.
+Signals: `showErrors()`, `showWarnings()`, `hasErrors()`, `hasWarnings()`, `errors()`, `warnings()`, `resolvedErrors()`, `resolvedWarnings()`, `errorId` (nullable), `warningId` (nullable).
 
 ### NgxHeadlessErrorSummaryDirective
 

@@ -5,6 +5,7 @@ import {
   computed,
   input,
   linkedSignal,
+  untracked,
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import {
@@ -289,23 +290,28 @@ export class NgxFormFieldCharacterCountComponent {
    * Resolved maximum length.
    *
    * Priority:
-   * 1. Explicit `maxLength` input (clamped to `>= 0`)
+   * 1. Explicit `maxLength` input when it is a positive number
    * 2. `fieldState.maxLength()` when present AND numeric AND > 0
-   * 3. `0` — treated as "no explicit limit". Display falls back to a
-   *    plain count (no `/max`) and color progression is disabled.
+   * 3. `null` — no limit detected. Display falls back to a plain count
+   *    (no `/max`) and color progression is disabled.
+   *
+   * `null` is the single sentinel for "no limit." `0`, negatives, and
+   * non-numeric values all fall through to `null` so downstream computeds
+   * never need to differentiate "zero-limit" from "unknown-limit" — the
+   * styled wrapper treats both as the plain-count display.
    */
-  readonly #resolvedMaxLength = computed(() => {
+  readonly #resolvedMaxLength = computed<number | null>(() => {
     const manualMax = this.maxLength();
 
-    if (manualMax !== undefined) {
-      return Math.max(0, manualMax);
+    if (typeof manualMax === 'number' && manualMax > 0) {
+      return manualMax;
     }
 
     const fieldState = this.formField()();
     if (this.#hasMaxLengthSignal(fieldState)) {
       const validatorMax = fieldState.maxLength();
       // Structural narrowing only guarantees the call succeeds; the
-      // returned value must still be a number we can use.
+      // returned value must still be a positive number we can use.
       if (typeof validatorMax === 'number' && validatorMax > 0) {
         return validatorMax;
       }
@@ -313,7 +319,7 @@ export class NgxFormFieldCharacterCountComponent {
       // treated as "no limit declared" — do not silently coerce to 0.
     }
 
-    return 0;
+    return null;
   });
 
   /**
@@ -322,7 +328,7 @@ export class NgxFormFieldCharacterCountComponent {
    */
   readonly #charCountState = computed(() => {
     const max = this.#resolvedMaxLength();
-    if (max === 0) return null;
+    if (max === null) return null;
 
     const thresholds = this.colorThresholds();
     return createCharacterCount({
@@ -350,7 +356,7 @@ export class NgxFormFieldCharacterCountComponent {
     const current = this.currentLength();
     const max = this.#resolvedMaxLength();
 
-    if (max === 0) return `${current}`;
+    if (max === null) return `${current}`;
     return `${current}/${max}`;
   });
 
@@ -387,7 +393,7 @@ export class NgxFormFieldCharacterCountComponent {
   readonly #lastAnnouncedState = linkedSignal<
     {
       liveAnnounce: boolean;
-      max: number;
+      max: number | null;
       state: CharacterCountLimitState | 'disabled';
     },
     CharacterCountLimitState | 'disabled' | null
@@ -399,7 +405,7 @@ export class NgxFormFieldCharacterCountComponent {
     }),
     computation: (source, previous) => {
       if (!source.liveAnnounce) return null;
-      if (source.max === 0 || source.state === 'disabled') return null;
+      if (source.max === null || source.state === 'disabled') return null;
 
       const prev = previous?.value ?? null;
       // When the state hasn't changed we keep the prior memory so
@@ -418,12 +424,18 @@ export class NgxFormFieldCharacterCountComponent {
     if (!this.liveAnnounce()) return '';
 
     const max = this.#resolvedMaxLength();
-    if (max === 0) return '';
+    if (max === null) return '';
 
     const state = this.#lastAnnouncedState();
     if (state === null || state === 'disabled' || state === 'ok') return '';
 
-    const current = this.currentLength();
+    // Snapshot the current length *without* subscribing. `#lastAnnouncedState`
+    // is reference-stable inside a bucket (see `linkedSignal.computation`
+    // above), so this computed only re-runs on state transitions. Reading
+    // `currentLength()` reactively would instead re-fire the aria-live region
+    // on every keystroke — screen readers would re-announce the new remaining
+    // count each character, defeating the "announce on transition" UX.
+    const current = untracked(() => this.currentLength());
     const remaining = Math.max(0, max - current);
     const over = Math.max(0, current - max);
 

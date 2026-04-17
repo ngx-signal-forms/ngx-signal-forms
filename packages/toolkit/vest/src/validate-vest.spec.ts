@@ -9,7 +9,7 @@ import { TestBed } from '@angular/core/testing';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { create, enforce, group, only, test, warn } from 'vest';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   VEST_ERROR_KIND_PREFIX,
   VEST_WARNING_KIND_PREFIX,
@@ -140,7 +140,16 @@ describe('validateVest', () => {
     expect(runCount).toBe(1);
   });
 
-  it('silently suppresses warning-only failures when the warning run rejects', async () => {
+  it('does not synthesize errors when a warning-only suite rejects', async () => {
+    // A crashed warning suite logs a dev-mode error (spied here so the
+    // assertion stays tight) but must not flip the field into an error
+    // state — warnings are best-effort guidance and a broken warning
+    // bridge should not block form submission while blocking validation
+    // elsewhere is healthy.
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
     const blockingSuite = create((data: { amount: string }) => {
       test('amount', 'Amount is required', () => {
         enforce(data.amount).isNotBlank();
@@ -188,6 +197,75 @@ describe('validateVest', () => {
     expect(
       fixture.componentInstance.paymentForm.amount().errors(),
     ).toHaveLength(1);
+    expect(consoleErrorSpy).toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('surfaces a synthetic blocking error when the blocking suite rejects', async () => {
+    // Regression guard: previously `onError: () => []` silently swallowed
+    // every async crash, so a thrown `enforce`, a broken async predicate,
+    // or a rejected Promise caused the field to report valid with no
+    // diagnostic. `validateVest` now maps crashes to a synthetic
+    // `vest:internal-error` so the form stays invalid and tooling can
+    // surface the failure.
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    const crashingSuite = {
+      ...create((_data: { email: string }) => {
+        test('email', 'never reached', () => {
+          /* no-op — the sync pass is pending, the async run rejects */
+        });
+      }),
+      run: () => {
+        const rejected = Promise.reject(new Error('Async validator blew up'));
+        // Prevent unhandled-rejection noise in the test runner.
+        void rejected.catch(() => {});
+        return rejected;
+      },
+    };
+
+    @Component({
+      selector: 'ngx-test-vest-blocking-crash',
+      imports: [FormField],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `
+        <form novalidate>
+          <label for="crash-email">Email</label>
+          <input id="crash-email" [formField]="f.email" />
+        </form>
+      `,
+    })
+    class TestComponent {
+      readonly model = signal({ email: '' });
+      readonly f = form(this.model, (path) => {
+        validateVest(path, crashingSuite);
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('textbox', { name: 'Email' }));
+    await user.type(screen.getByRole('textbox', { name: 'Email' }), 'x');
+    await user.tab();
+    await TestBed.inject(ApplicationRef).whenStable();
+    // Allow the rejected async resource to flush onError into the field tree.
+    await Promise.resolve();
+    await Promise.resolve();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    // The synthetic error is emitted at the validator's root fieldTree.
+    // Aggregate from the root to cover either attribution.
+    const rootErrors = fixture.componentInstance.f().errors();
+    const emailErrors = fixture.componentInstance.f.email().errors();
+    const allErrors = [...rootErrors, ...emailErrors];
+    expect(allErrors.some((e) => e.kind === 'vest:internal-error')).toBe(true);
+    expect(consoleErrorSpy).toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
   });
 
   // Synchronous `model.set(...)` calls are collapsed by Angular's signal
@@ -594,20 +672,21 @@ describe('validateVest', () => {
     });
 
     let onlyCalls = 0;
-    let runCalls = 0;
+    let onlyRunCalls = 0;
+    let fallbackRunCalls = 0;
     const suite = {
       ...baseSuite,
       only(field: string | readonly string[] | false) {
         onlyCalls += 1;
         return {
           run: (value: { email: string }) => {
-            runCalls += 1;
+            onlyRunCalls += 1;
             return baseSuite.only(field).run(value);
           },
         };
       },
       run(value: { email: string }) {
-        runCalls += 1;
+        fallbackRunCalls += 1;
         return baseSuite.run(value);
       },
     };
@@ -629,7 +708,11 @@ describe('validateVest', () => {
     await TestBed.inject(ApplicationRef).whenStable();
 
     expect(onlyCalls).toBeGreaterThan(0);
-    expect(runCalls).toBeGreaterThan(0);
+    expect(onlyRunCalls).toBeGreaterThan(0);
+    // The shorthand path must be preferred over the full-suite fallback.
+    // A regression in executeVestRun that always calls `suite.run(value,
+    // fieldName)` would still pass without this assertion.
+    expect(fallbackRunCalls).toBe(0);
   });
 
   it('produces distinct kinds for two messages sharing the first 48 chars', async () => {

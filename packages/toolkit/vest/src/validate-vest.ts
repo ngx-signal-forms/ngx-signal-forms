@@ -1,8 +1,7 @@
-import { DestroyRef, inject, resource } from '@angular/core';
+import { DestroyRef, inject, isDevMode, resource } from '@angular/core';
 import {
   type FieldContext,
   type FieldTree,
-  type PathKind,
   type SchemaPath,
   type SchemaPathTree,
   type ValidationError,
@@ -652,6 +651,14 @@ function registerVestValidation<TValue>(
         loader: async ({ params }) => {
           const result = await params.runResult;
           if (!isVestResultLike(result)) {
+            if (isDevMode()) {
+              // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+              console.error(
+                '[ngx-signal-forms] Vest async run resolved with a payload that does not match the expected result shape. ' +
+                  'The validator is skipping this update. Check that the suite returns a Vest `SuiteResult` (the default `run()` return value).',
+                result,
+              );
+            }
             return undefined;
           }
 
@@ -670,7 +677,40 @@ function registerVestValidation<TValue>(
         pendingResult.initialSnapshot,
       );
     },
-    onError: () => [],
+    // Surface async crashes instead of silently reporting "no errors".
+    // A thrown `enforce`, a broken async predicate, or a rejected Promise
+    // from the suite would otherwise cause the field to report valid with
+    // no diagnostic. Policy:
+    //   - blocking validator (`validateVest`, `includeErrors: true`):
+    //     synthesize a `vest:internal-error` so the form stays invalid
+    //     and the misconfiguration is visible to tooling.
+    //   - warning-only bridge (`validateVestWarnings`): log in dev but do
+    //     not synthesize — warnings are best-effort guidance, and a
+    //     broken warning suite should not flip a field into an error
+    //     state when blocking validation elsewhere is healthy.
+    onError: (error, { fieldTree }) => {
+      if (isDevMode()) {
+        // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+        console.error(
+          '[ngx-signal-forms] Vest async validation failed. Check the suite implementation for thrown errors, misconfigured `enforce`, or rejected async predicates.',
+          error,
+        );
+      }
+      if (!options.includeErrors) {
+        return [];
+      }
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Vest async validation crashed.';
+      return [
+        {
+          kind: `${VEST_ERROR_KIND_PREFIX}internal-error`,
+          message,
+          fieldTree,
+        } satisfies ValidationError.WithFieldTree,
+      ];
+    },
   });
 }
 
