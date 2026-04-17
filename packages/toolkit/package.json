@@ -24,8 +24,8 @@
     "provenance": true
   },
   "peerDependencies": {
-    "@angular/core": ">=21.2.0 <23.0.0",
-    "@angular/forms": ">=21.2.0 <23.0.0",
+    "@angular/core": ">=21.2.0 <22.0.0",
+    "@angular/forms": ">=21.2.0 <22.0.0",
     "vest": ">=6.0.0 <6.3.0 || >=6.3.1"
   },
   "peerDependenciesMeta": {
