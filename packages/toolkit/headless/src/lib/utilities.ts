@@ -1,4 +1,4 @@
-import { computed } from '@angular/core';
+import { computed, isDevMode } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createUniqueId,
@@ -12,6 +12,7 @@ import {
   unwrapValue,
   type ErrorDisplayStrategy,
   type ErrorReadableState,
+  type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -249,8 +250,8 @@ interface HeadlessErrorStateCore {
   readonly warnings: ReadSignal<ValidationError[]>;
   readonly hasErrors: ReadSignal<boolean>;
   readonly hasWarnings: ReadSignal<boolean>;
-  readonly errorId: ReadSignal<string>;
-  readonly warningId: ReadSignal<string>;
+  readonly errorId: ReadSignal<string | null>;
+  readonly warningId: ReadSignal<string | null>;
 }
 
 /**
@@ -264,7 +265,7 @@ interface HeadlessErrorStateCore {
  */
 export function buildHeadlessErrorState(
   fieldState: ReadSignal<unknown>,
-  fieldName: ReadSignal<string>,
+  fieldName: ReadSignal<string | null>,
 ): HeadlessErrorStateCore {
   const split = computed(() => splitByKind(readDirectErrors(fieldState())));
 
@@ -273,8 +274,14 @@ export function buildHeadlessErrorState(
     warnings: computed(() => split().warnings),
     hasErrors: computed(() => split().blocking.length > 0),
     hasWarnings: computed(() => split().warnings.length > 0),
-    errorId: computed(() => generateErrorId(fieldName())),
-    warningId: computed(() => generateWarningId(fieldName())),
+    errorId: computed(() => {
+      const name = fieldName();
+      return name === null ? null : generateErrorId(name);
+    }),
+    warningId: computed(() => {
+      const name = fieldName();
+      return name === null ? null : generateWarningId(name);
+    }),
   };
 }
 
@@ -284,8 +291,8 @@ export function buildHeadlessErrorState(
 export interface CreateErrorStateOptions<TValue = unknown> {
   /** Form field FieldTree */
   readonly field: FieldTree<TValue>;
-  /** Field name for ID generation */
-  readonly fieldName: ReactiveOrStatic<string>;
+  /** Field name for ID generation. `null` disables ID generation. */
+  readonly fieldName: ReactiveOrStatic<string | null>;
   /** Error display strategy (defaults to 'on-touch') */
   readonly strategy?: ReactiveOrStatic<ErrorDisplayStrategy>;
   /** Submitted status signal (optional) */
@@ -308,12 +315,12 @@ export interface ErrorStateResult {
   readonly hasErrors: ReadSignal<boolean>;
   /** Whether there are warnings */
   readonly hasWarnings: ReadSignal<boolean>;
-  /** Generated error region ID */
-  readonly errorId: ReadSignal<string>;
-  /** Generated warning region ID */
-  readonly warningId: ReadSignal<string>;
+  /** Generated error region ID, or `null` when no fieldName is resolvable */
+  readonly errorId: ReadSignal<string | null>;
+  /** Generated warning region ID, or `null` when no fieldName is resolvable */
+  readonly warningId: ReadSignal<string | null>;
   /** Resolved field name */
-  readonly fieldName: ReadSignal<string>;
+  readonly fieldName: ReadSignal<string | null>;
 }
 
 /**
@@ -372,7 +379,7 @@ export function createErrorState<TValue = unknown>(
 
   const resolvedFieldName = computed(() => unwrapValue(fieldName));
 
-  const resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
+  const resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() => {
     if (strategy !== undefined) {
       const resolved = unwrapValue(strategy);
       if (resolved !== 'inherit') {
@@ -407,11 +414,23 @@ export function createErrorState<TValue = unknown>(
 }
 
 /**
+ * Value types supported by the character-count utilities.
+ *
+ * - `string` — character length
+ * - `readonly string[]` — array length (e.g. token inputs where each entry is
+ *   one token; reported as "X of N tokens" rather than combined string length)
+ * - `null` / `undefined` — treated as length `0`
+ *
+ * Any other value type is treated as length `0`.
+ */
+export type CharacterCountValue = string | readonly string[] | null | undefined;
+
+/**
  * Options for creating character count signals.
  */
 export interface CreateCharacterCountOptions {
-  /** Form field for string value */
-  readonly field: FieldTree<string | null | undefined>;
+  /** Form field producing a {@link CharacterCountValue}. */
+  readonly field: FieldTree<CharacterCountValue>;
   /** Maximum length for the character count */
   readonly maxLength: ReactiveOrStatic<number>;
   /** Warning threshold (0-1), default 0.8 */
@@ -480,10 +499,31 @@ export function createCharacterCount(
 
   const fieldState = computed(() => field());
 
+  // One-shot guard so the dev warning for an unsupported `value()` type fires
+  // at most once per `createCharacterCount` invocation instead of on every
+  // re-computation. `null`/`undefined` are treated as "empty" and do not warn.
+  let warnedUnsupportedValue = false;
+
   const currentLength = computed(() => {
     const state = fieldState();
     const value = state.value();
-    return typeof value === 'string' ? value.length : 0;
+    if (typeof value === 'string') return value.length;
+    if (Array.isArray(value)) return value.length;
+    if (
+      isDevMode() &&
+      !warnedUnsupportedValue &&
+      value !== null &&
+      value !== undefined
+    ) {
+      warnedUnsupportedValue = true;
+      // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+      console.warn(
+        '[ngx-signal-forms] createCharacterCount: unsupported value type — expected `string` or `readonly string[]`, got',
+        value,
+        '— rendering length as 0.',
+      );
+    }
+    return 0;
   });
 
   const resolvedMaxLength = computed(() => unwrapValue(maxLength));

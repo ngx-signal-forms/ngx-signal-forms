@@ -75,4 +75,65 @@ describe('provideNgxSignalFormsConfigForComponent', () => {
       DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy,
     );
   });
+
+  it('inherits non-overridden values from the parent injector', () => {
+    // Parent scope sets defaultErrorStrategy=immediate.
+    const parentEnv = createInjectorFromEnvProviders([
+      provideNgxSignalFormsConfig({ defaultErrorStrategy: 'immediate' }),
+    ]);
+
+    // Component-level override only changes autoAria. The parent
+    // `defaultErrorStrategy` MUST bubble down — matches the factory+skipSelf
+    // pattern in `provideNgxSignalFormControlPresetsForComponent`.
+    const childProviders = provideNgxSignalFormsConfigForComponent({
+      autoAria: false,
+    });
+    const childInjector = createInjectorFromEnvProviders(
+      childProviders,
+      parentEnv,
+    );
+
+    const resolved = childInjector.get(NGX_SIGNAL_FORMS_CONFIG);
+    expect(resolved.autoAria).toBe(false);
+    expect(resolved.defaultErrorStrategy).toBe('immediate');
+    expect(resolved.defaultFormFieldAppearance).toBe(
+      DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultFormFieldAppearance,
+    );
+  });
+
+  it('env-level provider also inherits from parent env', () => {
+    const parentEnv = createInjectorFromEnvProviders([
+      provideNgxSignalFormsConfig({ requiredMarker: ' (required)' }),
+    ]);
+
+    const childEnv = createInjectorFromEnvProviders(
+      [provideNgxSignalFormsConfig({ autoAria: false })],
+      parentEnv,
+    );
+
+    const resolved = childEnv.get(NGX_SIGNAL_FORMS_CONFIG);
+    expect(resolved.autoAria).toBe(false);
+    expect(resolved.requiredMarker).toBe(' (required)');
+  });
+
+  it('preserves empty-string requiredMarker override against parent value', () => {
+    // Guards the `??`-based merge in `createConfigFactory`: with `||` an
+    // explicit `requiredMarker: ''` would silently fall through to the
+    // parent's marker. `??` must short-circuit on empty string and drop the
+    // visible marker in the child scope.
+    const parentEnv = createInjectorFromEnvProviders([
+      provideNgxSignalFormsConfig({ requiredMarker: ' *' }),
+    ]);
+
+    const childProviders = provideNgxSignalFormsConfigForComponent({
+      requiredMarker: '',
+    });
+    const childInjector = createInjectorFromEnvProviders(
+      childProviders,
+      parentEnv,
+    );
+
+    const resolved = childInjector.get(NGX_SIGNAL_FORMS_CONFIG);
+    expect(resolved.requiredMarker).toBe('');
+  });
 });

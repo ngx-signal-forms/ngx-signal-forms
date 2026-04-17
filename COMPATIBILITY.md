@@ -7,15 +7,21 @@ This document describes the compatibility contract for
 
 - Package: `@ngx-signal-forms/toolkit`
 - Current peer dependencies:
-  - `@angular/core >=21.2.0`
-  - `@angular/forms >=21.2.0`
+  - `@angular/core >=21.2.0 <22.0.0`
+  - `@angular/forms >=21.2.0 <22.0.0`
   - `vest >=6.0.0 <6.3.0 || >=6.3.1` (optional)
 
 ## Angular compatibility
 
-| Toolkit line | Angular range | Status    | Notes                         |
-| ------------ | ------------- | --------- | ----------------------------- |
-| `1.x`        | `>=21.2.0`    | Supported | Current peer dependency range |
+| Toolkit line | Angular range      | Status    | Notes                                                          |
+| ------------ | ------------------ | --------- | -------------------------------------------------------------- |
+| `1.x`        | `>=21.2.0 <22.0.0` | Supported | Current peer dependency range; Angular 22 support ships in 2.x |
+
+The `<22.0.0` ceiling is intentional. Angular Signal Forms is still experimental
+upstream, so major Angular releases may change the API in ways the toolkit must
+validate before republishing. Angular 22 compatibility will ship in a future
+toolkit line once validated, rather than being silently allowed via an open peer
+range.
 
 ## Angular Signal Forms status
 

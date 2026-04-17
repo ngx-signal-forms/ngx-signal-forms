@@ -299,6 +299,56 @@ describe('NgxSignalFormFieldset', () => {
     expect(errorList?.querySelectorAll('li')).toHaveLength(2);
   });
 
+  it('marks the host aria-busy while the composed headless directive is pending', async () => {
+    const fieldset = createFieldsetState({
+      pending: () => true,
+      errors: () => [],
+      errorSummary: () => [],
+    });
+
+    const { container } = await render(
+      `<ngx-signal-form-fieldset [fieldsetField]="fieldset">
+        <div>Content</div>
+      </ngx-signal-form-fieldset>`,
+      {
+        imports: [NgxSignalFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-signal-form-fieldset');
+    // `[attr.aria-busy]` bound to `fieldset.isPending()` from the composed
+    // host directive — this asserts the compose wiring works end-to-end.
+    expect(host).toHaveAttribute('aria-busy', 'true');
+  });
+
+  it('forwards includeNestedErrors through the composed host directive', async () => {
+    const fieldset = createFieldsetState({
+      errors: () => [],
+      errorSummary: () => [{ kind: 'required', message: 'Nested error' }],
+    });
+
+    const { container } = await render(
+      `<ngx-signal-form-fieldset
+        [fieldsetField]="fieldset"
+        [includeNestedErrors]="true"
+      >
+        <div>Content</div>
+      </ngx-signal-form-fieldset>`,
+      {
+        imports: [NgxSignalFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    // Default is `false` (direct errors only). Because the mock's direct
+    // `errors()` is empty but `errorSummary()` has an entry, a working
+    // input forward of `includeNestedErrors=true` must surface it.
+    const errors = container.querySelectorAll('[role="alert"]');
+    expect(errors.length).toBe(1);
+    expect(errors[0]?.textContent).toContain('Nested error');
+  });
+
   it('renders aggregated messages below content when errorPlacement is bottom', async () => {
     const fieldset = createFieldsetState({
       errors: () => [{ kind: 'required', message: 'Required' }],

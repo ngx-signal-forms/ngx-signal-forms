@@ -1,5 +1,5 @@
 import type { EnvironmentProviders, Provider } from '@angular/core';
-import { inject, makeEnvironmentProviders } from '@angular/core';
+import { inject, isDevMode, makeEnvironmentProviders } from '@angular/core';
 import {
   DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS,
   NGX_SIGNAL_FORM_CONTROL_PRESETS,
@@ -23,7 +23,7 @@ function mergeNgxSignalFormControlPresets(
 
   for (const [rawKind, override] of Object.entries(presets)) {
     if (!isNgxSignalFormControlKind(rawKind)) {
-      if (typeof ngDevMode === 'undefined' || ngDevMode) {
+      if (isDevMode()) {
         console.warn(
           `[ngx-signal-forms] Ignoring unknown control kind "${rawKind}" in preset overrides. ` +
             `Valid kinds: ${NGX_SIGNAL_FORM_CONTROL_KIND_VALUES.join(', ')}.`,

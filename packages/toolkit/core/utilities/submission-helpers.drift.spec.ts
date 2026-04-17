@@ -1,6 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
+  applyEach,
   form,
   required,
   schema,
@@ -117,6 +118,65 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
 
     // Both should still have marked the form touched.
     expect(toolkitForm().touched()).toBe(nativeForm().touched());
+  });
+
+  it('marks nested-object and array subtrees as touched before reading errorSummary()', async () => {
+    // Contract for `markAllFieldsAsTouched()` (see submission-helpers.ts:353):
+    // every leaf in the form tree — including children under nested objects
+    // AND each element of an array — MUST be touched before the helper
+    // filters `errorSummary()`. If Angular changes how `FieldTree` exposes
+    // children (e.g. non-enumerable array indices), this test fails and
+    // signals the walk needs to be re-investigated.
+    interface Address {
+      street: string;
+      city: string;
+    }
+    interface OrderModel {
+      address: Address;
+      items: readonly string[];
+    }
+
+    const model = signal<OrderModel>({
+      address: { street: '', city: '' },
+      items: ['', ''],
+    });
+
+    const orderForm: FieldTree<OrderModel> = TestBed.runInInjectionContext(() =>
+      form(
+        model,
+        schema<OrderModel>((path) => {
+          required(path.address.street, { message: 'street' });
+          required(path.address.city, { message: 'city' });
+          applyEach(path.items, (itemPath) => {
+            required(itemPath, { message: 'item' });
+          });
+        }),
+      ),
+    );
+
+    // Before submit: nothing is touched.
+    expect(orderForm().touched()).toBe(false);
+    expect(orderForm.address.street().touched()).toBe(false);
+    expect(orderForm.address.city().touched()).toBe(false);
+    expect(orderForm.items[0]().touched()).toBe(false);
+    expect(orderForm.items[1]().touched()).toBe(false);
+
+    const action = vi.fn(async () => {});
+    await submitWithWarnings(orderForm, action);
+
+    // Nested object leaves MUST be touched.
+    expect(orderForm.address.street().touched()).toBe(true);
+    expect(orderForm.address.city().touched()).toBe(true);
+
+    // Array element leaves MUST be touched.
+    expect(orderForm.items[0]().touched()).toBe(true);
+    expect(orderForm.items[1]().touched()).toBe(true);
+
+    // Root aggregates the touched state.
+    expect(orderForm().touched()).toBe(true);
+
+    // Blocking errors remain → action is not invoked.
+    expect(action).not.toHaveBeenCalled();
   });
 
   it('matches Angular submit() when the form is valid', async () => {

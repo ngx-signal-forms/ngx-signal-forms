@@ -6,23 +6,8 @@ import {
   inject,
   input,
 } from '@angular/core';
-import type { FieldState, FieldTree } from '@angular/forms/signals';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
-import {
-  injectFormContext,
-  NGX_SIGNAL_FORMS_CONFIG,
-  resolveErrorDisplayStrategy,
-  showErrors,
-  splitByKind,
-} from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
-import {
-  createFieldStateFlags,
-  createUniqueId,
-  dedupeValidationErrors,
-  readDirectErrors,
-  readErrors,
-} from '@ngx-signal-forms/toolkit/headless';
+import { NgxHeadlessFieldsetDirective } from '@ngx-signal-forms/toolkit/headless';
 
 export type FieldsetErrorPlacement = 'top' | 'bottom';
 
@@ -32,6 +17,14 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
  * Similar to HTML `<fieldset>`, this component groups form fields and displays
  * aggregated validation messages for all contained fields. It uses
  * `NgxFormFieldErrorComponent` internally for consistent error/warning styling.
+ *
+ * ## Composition
+ *
+ * The styled fieldset composes `NgxHeadlessFieldsetDirective` via
+ * `hostDirectives`. All field-aggregation state — errors, warnings,
+ * strategy resolution, submitted status, deduplication — lives in the
+ * headless directive; this component only contributes UI-layer
+ * concerns (`showErrors` toggle, `errorPlacement`, `describedByIds`).
  *
  * ## Features
  *
@@ -75,18 +68,32 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
 @Component({
   selector: 'ngx-signal-form-fieldset, [ngxSignalFormFieldset]',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  hostDirectives: [
+    {
+      directive: NgxHeadlessFieldsetDirective,
+      inputs: [
+        'fieldsetField',
+        'fields',
+        'fieldsetId',
+        'strategy',
+        'submittedStatus',
+        'includeNestedErrors',
+      ],
+    },
+  ],
   imports: [NgxFormFieldErrorComponent],
   styleUrl: './form-fieldset.component.scss',
   exportAs: 'ngxSignalFormFieldset',
   host: {
     class: 'ngx-signal-form-fieldset',
-    '[class.ngx-signal-form-fieldset--invalid]': 'shouldShowErrors()',
-    '[class.ngx-signal-form-fieldset--warning]': 'shouldShowWarnings()',
+    '[class.ngx-signal-form-fieldset--invalid]': 'fieldset.shouldShowErrors()',
+    '[class.ngx-signal-form-fieldset--warning]':
+      'fieldset.shouldShowWarnings()',
     '[class.ngx-signal-form-fieldset--messages-top]': 'isTopPlacement()',
     '[class.ngx-signal-form-fieldset--messages-bottom]': '!isTopPlacement()',
     '[attr.aria-describedby]': 'describedByIds()',
     '[attr.data-error-placement]': 'errorPlacement()',
-    '[attr.aria-busy]': 'isPending() ? "true" : null',
+    '[attr.aria-busy]': 'fieldset.isPending() ? "true" : null',
   },
   template: `
     <ng-content select="legend" />
@@ -96,9 +103,9 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
         <div class="ngx-signal-form-fieldset__messages">
           <ngx-form-field-error
             [errors]="filteredErrorsSignal"
-            [fieldName]="resolvedFieldsetId()"
-            [strategy]="resolvedStrategy()"
-            [submittedStatus]="submittedStatus()"
+            [fieldName]="fieldset.resolvedFieldsetId()"
+            [strategy]="fieldset.resolvedStrategy()"
+            [submittedStatus]="fieldset.resolvedSubmittedStatus()"
             listStyle="bullets"
           />
         </div>
@@ -112,9 +119,9 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
         <div class="ngx-signal-form-fieldset__messages">
           <ngx-form-field-error
             [errors]="filteredErrorsSignal"
-            [fieldName]="resolvedFieldsetId()"
-            [strategy]="resolvedStrategy()"
-            [submittedStatus]="submittedStatus()"
+            [fieldName]="fieldset.resolvedFieldsetId()"
+            [strategy]="fieldset.resolvedStrategy()"
+            [submittedStatus]="fieldset.resolvedSubmittedStatus()"
             listStyle="bullets"
           />
         </div>
@@ -122,39 +129,14 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
     </div>
   `,
 })
-export class NgxSignalFormFieldset<TFieldset = unknown> {
-  readonly #formContext = injectFormContext();
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
-
+export class NgxSignalFormFieldset {
   /**
-   * The primary fieldset field from Signal Forms.
-   *
-   * Required. This is the group root used to aggregate validation state and
-   * errors via `errorSummary()` when `fields` is not provided.
+   * The composed headless fieldset directive that owns all aggregated
+   * validation state. Exposed to the template so bindings stay short
+   * (`fieldset.isPending()` rather than `this.#fieldset.isPending()`),
+   * and protected so it doesn't leak into the component's public API.
    */
-  readonly fieldsetField = input.required<FieldTree<TFieldset>>();
-
-  /**
-   * Optional explicit list of fields to aggregate errors from.
-   * When provided, overrides the default `errorSummary()` from fieldsetField.
-   * Useful for custom field groupings that don't match form structure.
-   */
-  readonly fields = input<FieldTree<unknown>[] | null>(null);
-
-  /**
-   * Unique identifier used to generate stable error/warning IDs.
-   *
-   * Optional. When omitted, an auto-generated ID is used. This is useful for
-   * deterministic `aria-describedby` references or tests, but does not affect
-   * validation logic.
-   */
-  readonly fieldsetId = input<string | undefined>();
-
-  /**
-   * Error display strategy for this fieldset.
-   * Inherits from form context if not specified.
-   */
-  readonly strategy = input<ErrorDisplayStrategy | null>(null);
+  protected readonly fieldset = inject(NgxHeadlessFieldsetDirective);
 
   /**
    * Whether to show the automatic error/warning display.
@@ -174,103 +156,6 @@ export class NgxSignalFormFieldset<TFieldset = unknown> {
    */
   readonly errorPlacement = input<FieldsetErrorPlacement>('top');
 
-  /**
-   * Whether to include nested field errors in the aggregated display.
-   *
-   * - `false` (default): Shows ONLY group-level errors via `errors()`.
-   *   Use when nested fields DO display their own errors (avoids duplication).
-   * - `true`: Shows ALL errors from nested fields via `errorSummary()`.
-   *   Use when nested fields do NOT display their own errors.
-   *
-   * @default false
-   *
-   * @example Show all nested field errors (when fields don't show their own)
-   * ```html
-   * <ngx-signal-form-fieldset
-   *   [fieldsetField]="form.address"
-   *   [includeNestedErrors]="true"
-   * >
-   *   <!-- Plain inputs without NgxSignalFormField wrapper -->
-   *   <input [formField]="form.address.street" />
-   *   <input [formField]="form.address.city" />
-   *   <!-- Fieldset shows all errors from nested fields -->
-   * </ngx-signal-form-fieldset>
-   * ```
-   */
-  readonly includeNestedErrors = input(false, { transform: booleanAttribute });
-
-  readonly #generatedFieldsetId = createUniqueId('fieldset');
-
-  readonly resolvedFieldsetId = computed(() => {
-    return this.fieldsetId() ?? this.#generatedFieldsetId;
-  });
-
-  readonly #fieldsetState = computed(() => this.fieldsetField()());
-
-  readonly resolvedStrategy = computed<ErrorDisplayStrategy>(() => {
-    const formContext = this.#formContext;
-
-    return resolveErrorDisplayStrategy(
-      this.strategy(),
-      formContext ? formContext.errorStrategy() : undefined,
-      this.#config?.defaultErrorStrategy ?? 'on-touch',
-    );
-  });
-
-  readonly submittedStatus = computed(() => {
-    const formContext = this.#formContext;
-
-    return formContext ? formContext.submittedStatus() : 'unsubmitted';
-  });
-
-  readonly #showErrorsSignal = showErrors(
-    this.#fieldsetState as () => FieldState<TFieldset>,
-    this.resolvedStrategy,
-    this.submittedStatus,
-  );
-
-  /**
-   * Aggregated and deduplicated validation messages.
-   * Uses headless utilities for reading and deduplication.
-   */
-  readonly #allMessages = computed(() => {
-    const override = this.fields();
-    const includeNested = this.includeNestedErrors();
-
-    const readFn = includeNested ? readErrors : readDirectErrors;
-
-    if (override && override.length > 0) {
-      const messages = override.flatMap((field) => readFn(field()));
-      return dedupeValidationErrors(messages);
-    }
-
-    return dedupeValidationErrors(readFn(this.#fieldsetState()));
-  });
-
-  readonly #split = computed(() => splitByKind(this.#allMessages()));
-
-  readonly blockingErrors = computed(() => this.#split().blocking);
-  readonly warningErrors = computed(() => this.#split().warnings);
-
-  readonly #flags = createFieldStateFlags(this.#fieldsetState);
-
-  readonly isInvalid = this.#flags.isInvalid;
-  readonly isValid = this.#flags.isValid;
-  readonly isTouched = this.#flags.isTouched;
-  readonly isDirty = this.#flags.isDirty;
-  readonly isPending = this.#flags.isPending;
-
-  readonly shouldShowErrors = computed(() => {
-    return this.#showErrorsSignal() && this.blockingErrors().length > 0;
-  });
-
-  readonly shouldShowWarnings = computed(() => {
-    if (this.shouldShowErrors()) {
-      return false;
-    }
-    return this.#showErrorsSignal() && this.warningErrors().length > 0;
-  });
-
   protected readonly isTopPlacement = computed(() => {
     return this.errorPlacement() !== 'bottom';
   });
@@ -278,7 +163,7 @@ export class NgxSignalFormFieldset<TFieldset = unknown> {
   protected readonly showMessages = computed(() => {
     return (
       this.showErrors() &&
-      (this.shouldShowErrors() || this.shouldShowWarnings())
+      (this.fieldset.shouldShowErrors() || this.fieldset.shouldShowWarnings())
     );
   });
 
@@ -289,20 +174,19 @@ export class NgxSignalFormFieldset<TFieldset = unknown> {
    * Warnings are suppressed when errors exist (UX best practice).
    */
   protected readonly filteredErrorsSignal = computed(() => {
-    return this.blockingErrors().length > 0
-      ? this.blockingErrors()
-      : this.warningErrors();
+    const blocking = this.fieldset.aggregatedErrors();
+    return blocking.length > 0 ? blocking : this.fieldset.aggregatedWarnings();
   });
 
   readonly describedByIds = computed(() => {
     const ids: string[] = [];
-    const fieldsetId = this.resolvedFieldsetId();
+    const fieldsetId = this.fieldset.resolvedFieldsetId();
 
-    if (this.shouldShowErrors()) {
+    if (this.fieldset.shouldShowErrors()) {
       ids.push(`${fieldsetId}-error`);
     }
 
-    if (this.shouldShowWarnings()) {
+    if (this.fieldset.shouldShowWarnings()) {
       ids.push(`${fieldsetId}-warning`);
     }
 

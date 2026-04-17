@@ -1,3 +1,4 @@
+import { isDevMode } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import { isFieldStateInteractive } from './field-interactivity';
 
@@ -73,7 +74,7 @@ export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
   // means a custom control forgot to call `registerAsBinding()`, so the user
   // sees the error message but focus is stranded wherever the submit button
   // was. Warn in dev mode so the wiring mistake is obvious.
-  if (typeof ngDevMode === 'undefined' || ngDevMode) {
+  if (isDevMode()) {
     console.warn(
       '[ngx-signal-forms] focusFirstInvalid() found validation errors but ' +
         'could not focus any of them. Typical cause: a custom control is ' +

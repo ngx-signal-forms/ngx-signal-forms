@@ -1,5 +1,6 @@
 import { computed, Directive, input, type Signal } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
+import type { CharacterCountValue } from './utilities';
 
 /**
  * Character count limit state.
@@ -8,14 +9,18 @@ export type CharacterCountLimitState = 'ok' | 'warning' | 'danger' | 'exceeded';
 
 /**
  * Character count state signals exposed by the headless directive.
+ *
+ * The directive requires a `maxLength` input, so the resolved numeric
+ * signals are always non-nullable. `hasLimit` is retained for template
+ * ergonomics and future extensibility.
  */
 export interface CharacterCountStateSignals {
   /** Current value length */
   readonly currentLength: Signal<number>;
   /** Resolved maximum length */
-  readonly resolvedMaxLength: Signal<number | null>;
+  readonly resolvedMaxLength: Signal<number>;
   /** Remaining characters until limit */
-  readonly remaining: Signal<number | null>;
+  readonly remaining: Signal<number>;
   /** Current limit state */
   readonly limitState: Signal<CharacterCountLimitState>;
   /** Whether a limit is configured */
@@ -23,7 +28,7 @@ export interface CharacterCountStateSignals {
   /** Whether the limit has been exceeded */
   readonly isExceeded: Signal<boolean>;
   /** Percentage of limit used (0-100+) */
-  readonly percentUsed: Signal<number | null>;
+  readonly percentUsed: Signal<number>;
 }
 
 /**
@@ -96,7 +101,7 @@ export class NgxHeadlessCharacterCountDirective implements CharacterCountStateSi
   /**
    * The form field to track character count.
    */
-  readonly field = input.required<FieldTree<string | null | undefined>>();
+  readonly field = input.required<FieldTree<CharacterCountValue>>();
 
   /**
    * Maximum length for the character count.
@@ -124,46 +129,51 @@ export class NgxHeadlessCharacterCountDirective implements CharacterCountStateSi
   readonly currentLength = computed(() => {
     const state = this.#fieldState();
     const value = state.value();
-    return typeof value === 'string' ? value.length : 0;
+    if (typeof value === 'string') return value.length;
+    if (Array.isArray(value)) return value.length;
+    return 0;
   });
 
   /**
    * Resolved maximum length.
    */
-  readonly resolvedMaxLength = computed<number | null>(() => {
-    return this.maxLength();
-  });
+  readonly resolvedMaxLength = computed<number>(() => this.maxLength());
 
   /**
    * Whether a limit is configured.
+   *
+   * The directive requires a `maxLength` input, so this is always `true`.
+   * Retained as a signal for API symmetry with `createCharacterCount()` and
+   * for consumer templates that may swap directive/factory wiring.
    */
-  readonly hasLimit = computed(() => this.resolvedMaxLength() !== null);
+  readonly hasLimit = computed(() => true);
 
   /**
    * Remaining characters until limit.
    */
-  readonly remaining = computed(() => {
-    const max = this.resolvedMaxLength();
-    if (max === null) return null;
-    return max - this.currentLength();
-  });
+  readonly remaining = computed(
+    () => this.resolvedMaxLength() - this.currentLength(),
+  );
 
   /**
    * Percentage of limit used (0-100+).
+   *
+   * When `maxLength` is `0` (or negative), returns `100` if any content is
+   * present and `0` otherwise. This keeps the signal non-negative and aligned
+   * with `limitState` / `isExceeded` (which both treat a non-positive limit as
+   * "no characters allowed"), so consumer templates binding to
+   * `aria-valuenow` / progress bars never see nonsensical values.
    */
   readonly percentUsed = computed(() => {
     const max = this.resolvedMaxLength();
-    if (max === null || max === 0) return null;
+    if (max <= 0) return this.currentLength() > 0 ? 100 : 0;
     return (this.currentLength() / max) * 100;
   });
 
   /**
    * Whether the limit has been exceeded.
    */
-  readonly isExceeded = computed(() => {
-    const remaining = this.remaining();
-    return remaining !== null && remaining < 0;
-  });
+  readonly isExceeded = computed(() => this.remaining() < 0);
 
   /**
    * Current limit state based on thresholds.
@@ -173,12 +183,19 @@ export class NgxHeadlessCharacterCountDirective implements CharacterCountStateSi
    * - `warning`: At/above warning, below danger (default 80-94%)
    * - `danger`: At/above danger, up to 100% (default 95-100%)
    * - `exceeded`: Over 100% of limit
+   *
+   * When `maxLength` is `0` (or negative), any content counts as exceeded
+   * to stay consistent with `isExceeded` and `remaining`, which both treat
+   * a 0 limit as "no characters allowed".
    */
   readonly limitState = computed<CharacterCountLimitState>(() => {
     const max = this.resolvedMaxLength();
-    if (max === null) return 'ok';
-
     const current = this.currentLength();
+
+    if (max <= 0) {
+      return current > 0 ? 'exceeded' : 'ok';
+    }
+
     const ratio = current / max;
 
     if (ratio > 1) return 'exceeded';

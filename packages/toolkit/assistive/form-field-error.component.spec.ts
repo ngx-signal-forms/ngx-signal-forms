@@ -1,17 +1,20 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
 import {
   email,
   form,
   FormField,
   required,
   schema,
+  validate,
 } from '@angular/forms/signals';
-import type { SubmittedStatus } from '@ngx-signal-forms/toolkit';
+import type {
+  ErrorDisplayStrategy,
+  SubmittedStatus,
+} from '@ngx-signal-forms/toolkit';
 import { NGX_SIGNAL_FORM_FIELD_CONTEXT } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { NgxFormFieldErrorComponent } from './form-field-error.component';
 
 describe('NgxFormFieldErrorComponent', () => {
@@ -558,7 +561,12 @@ describe('NgxFormFieldErrorComponent', () => {
       expect(alert.getAttribute('role')).toBe('alert');
     });
 
-    it('should have aria-live="assertive" for errors (immediate announcement)', async () => {
+    it('should rely on role="alert" implicit semantics (no redundant aria-live/aria-atomic)', async () => {
+      /**
+       * `role="alert"` already implies `aria-live="assertive"` and
+       * `aria-atomic="true"`. Setting them explicitly triggers duplicate
+       * announcements on NVDA + Firefox, so v1 exposes only the role.
+       */
       @Component({
         selector: 'ngx-test-aria-live',
         imports: [FormField, NgxFormFieldErrorComponent],
@@ -587,7 +595,9 @@ describe('NgxFormFieldErrorComponent', () => {
       await render(TestComponent);
 
       const alert = screen.getByRole('alert');
-      expect(alert.getAttribute('aria-live')).toBe('assertive');
+      expect(alert.getAttribute('role')).toBe('alert');
+      expect(alert.hasAttribute('aria-live')).toBe(false);
+      expect(alert.hasAttribute('aria-atomic')).toBe(false);
     });
 
     it('should have correct error ID for aria-describedby linking', async () => {
@@ -825,10 +835,13 @@ describe('NgxFormFieldErrorComponent', () => {
       expect(contextError).toBeFalsy();
     });
 
-    it('should throw when no context and no input are available', async () => {
+    it('should render without crashing and log a dev-mode console.error when no context and no input are available', async () => {
       /**
-       * Standalone usage must provide fieldName explicitly unless the component
-       * can inherit field context from the wrapper.
+       * Previously the component threw from `#resolvedFieldName`, which crashed
+       * the entire view. v1 behaviour: log a dev-mode `console.error`, return
+       * `null` from `errorId()` / `warningId()`, and still render the alert
+       * container (without an `id` — aria-describedby wiring is skipped until
+       * a field name becomes available).
        */
       @Component({
         selector: 'ngx-test-fallback',
@@ -852,13 +865,32 @@ describe('NgxFormFieldErrorComponent', () => {
         );
       }
 
-      const fixture = TestBed.createComponent(TestComponent);
+      const errorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => undefined);
 
-      expect(() => {
-        fixture.detectChanges();
-      }).toThrow(
-        /requires an explicit `fieldName` input or a parent ngx-signal-form-field-wrapper context/u,
-      );
+      try {
+        await render(TestComponent);
+
+        const alert = screen.getByRole('alert');
+        expect(alert).toBeTruthy();
+        // Without a field name the auto-generated id would look like
+        // `-error` / `-warning`, which is a broken aria-describedby
+        // target. The v1 contract is simply: no resolvable field name →
+        // no id chain exposed. We accept any "empty-ish" id value here
+        // (null, "", or literally "null" which some JSDOM pathways emit
+        // when binding null) — the important assertion is that no
+        // `*-error` id leaks into the DOM.
+        const idAttr = alert.getAttribute('id');
+        expect(idAttr?.endsWith('-error') ?? false).toBe(false);
+        expect(alert.textContent).toContain('Email is required');
+
+        expect(errorSpy).toHaveBeenCalled();
+        const message = String(errorSpy.mock.calls[0]?.[0] ?? '');
+        expect(message).toMatch(/requires an explicit `fieldName` input/u);
+      } finally {
+        errorSpy.mockRestore();
+      }
     });
 
     it('should react to context signal changes', async () => {
@@ -909,6 +941,122 @@ describe('NgxFormFieldErrorComponent', () => {
 
       // Error ID should update
       expect(container.querySelector('[id="updated-name-error"]')).toBeTruthy();
+    });
+  });
+
+  describe('warningStrategy', () => {
+    /**
+     * The PR #17 v1 audit introduced `warningStrategy` as a dedicated input
+     * that decouples warning-visibility timing from error-visibility timing.
+     * Default is `'immediate'` so informational guidance stays visible even
+     * while errors are still gated by `'on-touch'` / `'on-submit'`.
+     *
+     * These tests lock that contract: errors and warnings resolve their
+     * visibility through independent strategy inputs and share only the
+     * submitted-status signal when `on-submit` is involved.
+     */
+    @Component({
+      selector: 'ngx-test-warning-strategy',
+      imports: [FormField, NgxFormFieldErrorComponent],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `
+        <input id="password" [formField]="contactForm.password" />
+        <ngx-form-field-error
+          [formField]="contactForm.password"
+          fieldName="password"
+          [strategy]="strategy()"
+          [warningStrategy]="warningStrategy()"
+          [submittedStatus]="submittedStatus()"
+        />
+      `,
+    })
+    class WarningStrategyHost {
+      readonly #model = signal({ password: 'weak' });
+      readonly contactForm = form(
+        this.#model,
+        schema((path) => {
+          validate(path.password, (ctx) => {
+            const value = ctx.value();
+            if (value.length > 0 && value.length < 8) {
+              return {
+                kind: 'warn:weak-password',
+                message: 'Consider 8+ characters',
+              };
+            }
+            return null;
+          });
+        }),
+      );
+      readonly strategy = signal<ErrorDisplayStrategy | undefined>('on-touch');
+      readonly warningStrategy = signal<ErrorDisplayStrategy | undefined>(
+        undefined,
+      );
+      readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
+    }
+
+    it('surfaces warnings immediately by default even when error strategy gates errors', async () => {
+      // Default warningStrategy is 'immediate'. With strategy='on-touch' and
+      // an untouched field, errors are hidden — but the warning must still
+      // surface. This is the whole point of decoupling.
+      await render(WarningStrategyHost);
+
+      const status = screen.getByRole('status');
+      expect(status).toBeTruthy();
+      expect(status.textContent).toContain('Consider 8+ characters');
+
+      // Errors stay hidden — only the warning is visible.
+      expect(screen.queryByRole('alert')).toBeFalsy();
+    });
+
+    it('gates warnings behind touch when warningStrategy is on-touch', async () => {
+      const { fixture } = await render(WarningStrategyHost);
+      fixture.componentInstance.warningStrategy.set('on-touch');
+      fixture.detectChanges();
+
+      // Untouched: warning hidden.
+      expect(screen.queryByRole('status')).toBeFalsy();
+
+      // Touching the field surfaces the warning.
+      fixture.componentInstance.contactForm.password().markAsTouched();
+      fixture.detectChanges();
+
+      const status = await screen.findByRole('status');
+      expect(status.textContent).toContain('Consider 8+ characters');
+    });
+
+    it('gates warnings behind submit when warningStrategy is on-submit', async () => {
+      const { fixture } = await render(WarningStrategyHost);
+      fixture.componentInstance.warningStrategy.set('on-submit');
+      fixture.detectChanges();
+
+      // Unsubmitted: warning hidden even when touched.
+      fixture.componentInstance.contactForm.password().markAsTouched();
+      fixture.detectChanges();
+      expect(screen.queryByRole('status')).toBeFalsy();
+
+      // After submit, warning surfaces.
+      fixture.componentInstance.submittedStatus.set('submitted');
+      fixture.detectChanges();
+
+      const status = await screen.findByRole('status');
+      expect(status.textContent).toContain('Consider 8+ characters');
+    });
+
+    it('keeps warnings visible while errors stay hidden under on-submit', async () => {
+      // The practical use case: error strategy is `on-submit` (strict form),
+      // but warnings should still guide the user immediately. With default
+      // `warningStrategy`, this should work transparently.
+      const { fixture } = await render(WarningStrategyHost);
+      fixture.componentInstance.strategy.set('on-submit');
+      fixture.componentInstance.warningStrategy.set(undefined);
+      fixture.detectChanges();
+
+      // Warning visible even before submit.
+      const status = screen.getByRole('status');
+      expect(status.textContent).toContain('Consider 8+ characters');
+
+      // Errors still gated by submit.
+      expect(screen.queryByRole('alert')).toBeFalsy();
     });
   });
 });

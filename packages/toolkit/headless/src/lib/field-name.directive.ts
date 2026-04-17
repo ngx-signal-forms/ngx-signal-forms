@@ -4,6 +4,7 @@ import {
   ElementRef,
   inject,
   input,
+  isDevMode,
   type Signal,
 } from '@angular/core';
 import { generateErrorId, generateWarningId } from '@ngx-signal-forms/toolkit';
@@ -12,12 +13,12 @@ import { generateErrorId, generateWarningId } from '@ngx-signal-forms/toolkit';
  * Field name state signals exposed by the headless directive.
  */
 export interface FieldNameStateSignals {
-  /** Resolved field name from input or override */
-  readonly resolvedFieldName: Signal<string>;
-  /** Generated error region ID */
-  readonly errorId: Signal<string>;
-  /** Generated warning region ID */
-  readonly warningId: Signal<string>;
+  /** Resolved field name from input or override; `null` when no name is resolvable. */
+  readonly resolvedFieldName: Signal<string | null>;
+  /** Generated error region ID; `null` when no field name is resolvable. */
+  readonly errorId: Signal<string | null>;
+  /** Generated warning region ID; `null` when no field name is resolvable. */
+  readonly warningId: Signal<string | null>;
 }
 
 /**
@@ -28,11 +29,16 @@ export interface FieldNameStateSignals {
  *
  * ## Required input
  *
- * One of the following must be provided, otherwise `resolvedFieldName()`,
- * `errorId()`, and `warningId()` throw the next time they are read:
+ * One of the following must be provided; otherwise `resolvedFieldName()`,
+ * `errorId()`, and `warningId()` return `null` and the directive logs a
+ * dev-mode `console.error` explaining the misconfiguration:
  *
  * - A non-empty `fieldName` input, or
  * - A non-empty `id` attribute on the host element.
+ *
+ * Downstream ARIA wiring is expected to handle `null` by skipping the
+ * `aria-describedby` reference rather than producing unstable IDs like
+ * `"-error"`.
  *
  * ## Features
  *
@@ -80,6 +86,7 @@ export interface FieldNameStateSignals {
 })
 export class NgxHeadlessFieldNameDirective implements FieldNameStateSignals {
   readonly #elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
+  #warnedMissingName = false;
 
   /**
    * The field name to use for ID generation.
@@ -90,12 +97,13 @@ export class NgxHeadlessFieldNameDirective implements FieldNameStateSignals {
   /**
    * Resolved field name.
    *
-   * @throws {Error} when neither a non-empty `fieldName` input nor a
-   *   non-empty host `id` is available. The throw is intentional — silently
-   *   returning an empty string would generate ARIA references like
-   *   `id="-error"` that are unstable across instances.
+   * Returns `null` when neither a non-empty `fieldName` input nor a
+   * non-empty host `id` is available. A `console.error` is emitted in
+   * dev mode (once) to flag the misconfiguration — consumers should
+   * gate ARIA wiring on a non-null value rather than producing unstable
+   * IDs like `"-error"`.
    */
-  readonly resolvedFieldName = computed(() => {
+  readonly resolvedFieldName = computed<string | null>(() => {
     const inputValue = this.fieldName();
     if (inputValue !== undefined) {
       const resolved = inputValue.trim();
@@ -109,22 +117,31 @@ export class NgxHeadlessFieldNameDirective implements FieldNameStateSignals {
       return hostId;
     }
 
-    throw new Error(
-      '[ngx-signal-forms] ngxSignalFormHeadlessFieldName requires either a non-empty `fieldName` input or a host element `id`.',
-    );
+    if (isDevMode() && !this.#warnedMissingName) {
+      this.#warnedMissingName = true;
+      console.error(
+        '[ngx-signal-forms] ngxSignalFormHeadlessFieldName requires either a non-empty `fieldName` input or a host element `id`. ARIA wiring will be skipped.',
+      );
+    }
+
+    return null;
   });
 
   /**
-   * Generated error region ID.
+   * Generated error region ID, or `null` when no field name is resolvable.
    */
-  readonly errorId = computed(() => generateErrorId(this.resolvedFieldName()));
+  readonly errorId = computed<string | null>(() => {
+    const name = this.resolvedFieldName();
+    return name === null ? null : generateErrorId(name);
+  });
 
   /**
-   * Generated warning region ID.
+   * Generated warning region ID, or `null` when no field name is resolvable.
    */
-  readonly warningId = computed(() =>
-    generateWarningId(this.resolvedFieldName()),
-  );
+  readonly warningId = computed<string | null>(() => {
+    const name = this.resolvedFieldName();
+    return name === null ? null : generateWarningId(name);
+  });
 
   #readHostId(): string | null {
     const nativeElement = this.#elementRef.nativeElement;

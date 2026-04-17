@@ -20,7 +20,7 @@
         "../../dist/packages/toolkit/debugger"
       ],
       "@ngx-signal-forms/toolkit/form-field": [
-        "../../packages/toolkit/form-field/public_api.ts",
+        "../../packages/toolkit/form-field/index.ts",
         "../../dist/packages/toolkit/form-field"
       ],
       "@ngx-signal-forms/toolkit/headless": [

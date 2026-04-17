@@ -29,24 +29,24 @@ import {
  * <ngx-signal-form-field-wrapper [formField]="form.phone">
  *   <label for="phone">Phone Number</label>
  *   <input id="phone" [formField]="form.phone" />
- *   <ngx-form-field-hint>
+ *   <ngx-signal-form-field-hint>
  *     Format: 123-456-7890
- *   </ngx-form-field-hint>
+ *   </ngx-signal-form-field-hint>
  * </ngx-signal-form-field-wrapper>
  * ```
  *
  * @example With position control
  * ```html
- * <ngx-form-field-hint position="left">
+ * <ngx-signal-form-field-hint position="left">
  *   Use at least 8 characters
- * </ngx-form-field-hint>
+ * </ngx-signal-form-field-hint>
  * ```
  *
  * @example Rich content
  * ```html
- * <ngx-form-field-hint>
+ * <ngx-signal-form-field-hint>
  *   <strong>Tip:</strong> Use keywords that describe your product
- * </ngx-form-field-hint>
+ * </ngx-signal-form-field-hint>
  * ```
  *
  * Customization:
@@ -143,8 +143,15 @@ export class NgxFormFieldHintComponent {
   });
 
   constructor() {
+    // Read the host `id` attribute at construction time so downstream
+    // consumers (auto-aria directive, hint registry) see the explicit
+    // id synchronously during their own initialisation. Runs on both
+    // platforms: Angular's server DOM supports `getAttribute`, and we
+    // want the server-rendered `id` to match what the client picks up
+    // on hydration (otherwise author-supplied ids would hydrate as a
+    // different generated value and the DOM would mismatch).
     const existingId = this.#elementRef.nativeElement.getAttribute('id');
-    if (existingId) {
+    if (existingId !== null && existingId.length > 0) {
       this.#explicitId.set(existingId);
     }
   }

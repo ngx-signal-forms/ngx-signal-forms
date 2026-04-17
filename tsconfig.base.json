@@ -31,7 +31,7 @@
         "./packages/toolkit/debugger/index.ts"
       ],
       "@ngx-signal-forms/toolkit/form-field": [
-        "./packages/toolkit/form-field/public_api.ts"
+        "./packages/toolkit/form-field/index.ts"
       ],
       "@ngx-signal-forms/toolkit/vest": [
         "./packages/toolkit/vest/src/index.ts"

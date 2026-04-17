@@ -1,7 +1,8 @@
-import { computed, type Signal } from '@angular/core';
+import { computed, isDevMode, type Signal } from '@angular/core';
 import type {
   ErrorDisplayStrategy,
   ReactiveOrStatic,
+  ResolvedErrorDisplayStrategy,
   SubmittedStatus,
 } from '../types';
 import { shouldShowErrors } from './error-strategies';
@@ -119,8 +120,8 @@ export function showErrors(
  * @param submittedStatus Reactive or static submission status. **Required**
  *   for `'on-submit'` strategy — without it the helper defaults to
  *   `'unsubmitted'` and errors will never surface. A one-shot
- *   `console.warn` is emitted in dev mode (`ngDevMode`) when the miswiring
- *   is detected.
+ *   `console.warn` is emitted in dev mode (`isDevMode()`) when the
+ *   miswiring is detected.
  * @returns A computed `Signal<boolean>` that is `true` when the strategy
  *   says errors should be visible.
  *
@@ -241,6 +242,17 @@ function computeShowErrorsInternal(
     const resolvedStatus =
       submittedStatus === undefined ? undefined : unwrapValue(submittedStatus);
 
+    // `'inherit'` is only meaningful at the user-facing boundary: it signals
+    // "use the form-context / global-config default". By the time we reach
+    // here we have no further context to consult, so fall back to
+    // `'on-touch'` — that matches the historical behavior of the
+    // now-removed `'inherit'` branch in `shouldShowErrors`. Call sites that
+    // own a context should resolve `'inherit'` themselves via
+    // `resolveErrorDisplayStrategy` / `resolveStrategyFromContext` before
+    // passing the value in.
+    const resolvedStrategy: ResolvedErrorDisplayStrategy =
+      strategyValue === 'inherit' ? 'on-touch' : strategyValue;
+
     // `on-submit` requires an explicit submission status to fire. Previously
     // the helper fell back to `touched → 'submitted'`, which silently
     // defeated the strategy for standalone `showErrors()` / `createErrorState()`
@@ -249,8 +261,8 @@ function computeShowErrorsInternal(
     // supplied, and in dev mode we emit a one-shot console warning to make
     // the miswiring obvious.
     if (
-      (typeof ngDevMode === 'undefined' || ngDevMode) &&
-      strategyValue === 'on-submit' &&
+      isDevMode() &&
+      resolvedStrategy === 'on-submit' &&
       resolvedStatus === undefined &&
       !warnedMissingStatus
     ) {
@@ -267,7 +279,7 @@ function computeShowErrorsInternal(
     return shouldShowErrors(
       isInvalid,
       isTouched,
-      strategyValue,
+      resolvedStrategy,
       fallbackStatus,
     );
   });

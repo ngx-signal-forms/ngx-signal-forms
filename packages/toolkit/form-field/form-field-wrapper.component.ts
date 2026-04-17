@@ -8,6 +8,7 @@ import {
   ElementRef,
   inject,
   input,
+  isDevMode,
   type Signal,
   signal,
 } from '@angular/core';
@@ -40,9 +41,11 @@ import {
   NgxFormFieldHintComponent,
 } from '@ngx-signal-forms/toolkit/assistive';
 import {
+  findBoundControl,
   hasPaddedControlContent,
   isSelectionGroupKind,
   isTextualControlKind,
+  requireHostElement,
   supportsOutlinedAppearance,
   type FormFieldControlKind,
 } from './form-field.utils';
@@ -252,55 +255,6 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
   `,
 })
 export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
-  #getHostElement(): HTMLElement {
-    const hostEl = this.#elementRef.nativeElement;
-
-    if (!(hostEl instanceof HTMLElement)) {
-      throw new TypeError(
-        'NgxSignalFormFieldWrapperComponent requires an HTMLElement host.',
-      );
-    }
-
-    return hostEl;
-  }
-
-  /* oxlint-disable @typescript-eslint/prefer-readonly-parameter-types -- ParentNode is a DOM API surface, not an immutable data structure. */
-  #queryHostElement(hostEl: ParentNode, selector: string): HTMLElement | null {
-    const element = hostEl.querySelector(selector);
-
-    return element instanceof HTMLElement ? element : null;
-  }
-  /* oxlint-enable @typescript-eslint/prefer-readonly-parameter-types */
-
-  // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- DOM query APIs operate on mutable HTMLElement instances.
-  #findBoundControl(hostEl: HTMLElement): HTMLElement | null {
-    const nativeControl = this.#queryHostElement(
-      hostEl,
-      'input[id], textarea[id], select[id], button[type="button"][id]',
-    );
-
-    if (nativeControl) {
-      return nativeControl;
-    }
-
-    // Custom-control discovery order:
-    // 1. `[id][formField]` — the canonical Signal Forms binding, works in
-    //    both dev and prod builds.
-    // 2. `[id][ng-reflect-form-field]` — Angular's dev-mode reflection
-    //    attribute, populated only in dev builds and only for inputs whose
-    //    value serializes to a string. Lets dev tooling discover custom
-    //    controls that haven't yet settled their `formField` host binding
-    //    on the first render. Safe to ignore in production.
-    // 3. `[id][data-ngx-signal-form-control]` — the stable attribute
-    //    written by `NgxSignalFormControlSemanticsDirective`. This is the
-    //    recommended fallback for custom control hosts that do not carry
-    //    a native `[formField]` binding themselves.
-    return this.#queryHostElement(
-      hostEl,
-      '[id][formField], [id][ng-reflect-form-field], [id][data-ngx-signal-form-control]',
-    );
-  }
-
   /**
    * The Signal Forms field to display.
    * Accepts a FieldTree from Angular Signal Forms.
@@ -326,8 +280,10 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
    * or when the input element doesn't have an `id` attribute.
    *
    * **Strict identity:**
-   * If neither `fieldName` nor a bound control `id` is available, the wrapper throws.
-   * This keeps ARIA linking deterministic and avoids silently inventing field names.
+   * If neither `fieldName` nor a bound control `id` is available, the
+   * wrapper emits a dev-mode `console.error` and skips ARIA wiring. This
+   * keeps ARIA linking deterministic (no inventing names that drift between
+   * instances) without blowing up production rendering.
    *
    * @example Automatic (native input) - derives "email" from input's id attribute
    * ```html
@@ -523,21 +479,24 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     return this.#controlSemantics().ariaMode;
   });
 
+  #warnedUnresolvedFieldName = false;
+
   /**
    * Resolved field name computed from two sources (in priority order):
    * 1. Explicit `fieldName` input (highest priority)
    * 2. Input element's `id` attribute (automatic, recommended)
    *
-   * Throws when neither is available.
-   *
-   * This ensures ARIA attributes (`aria-describedby`) correctly link to error messages
-   * even when the developer doesn't provide an explicit `fieldName`.
+   * Returns `null` when neither source is available. A dev-mode
+   * `console.error` is emitted once per instance so the misconfiguration
+   * is surfaced loudly without crashing the render tree. Downstream
+   * consumers (auto-ARIA, hint registry, projected error component)
+   * handle `null` by skipping the `aria-describedby` wiring.
    *
    * @remarks
    * This signal is public to allow child components to access the resolved field name
    * via the `NGX_SIGNAL_FORM_FIELD_CONTEXT` injection token.
    */
-  readonly resolvedFieldName = computed(() => {
+  readonly resolvedFieldName = computed<string | null>(() => {
     // Priority 1: Explicit fieldName input
     const explicit = this.fieldName();
     if (explicit !== undefined) {
@@ -547,22 +506,27 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
       }
     }
 
-    // Priority 2: Derive from input element's id attribute (signal updated by afterNextRender)
+    // Priority 2: Derive from input element's id attribute (signal updated by afterEveryRender)
     const idFromInput = this.#inputElementId();
     if (idFromInput) {
       return idFromInput;
     }
 
-    const controlId = this.#findBoundControl(
-      this.#getHostElement(),
-    )?.getAttribute('id');
-    if (controlId) {
+    const controlId = findBoundControl(
+      requireHostElement(this.#elementRef),
+    )?.id;
+    if (controlId !== undefined && controlId.length > 0) {
       return controlId;
     }
 
-    throw new Error(
-      '[ngx-signal-forms] Could not resolve a deterministic field name for ngx-signal-form-field-wrapper. Add an explicit `fieldName` input or an `id` attribute to the bound control.',
-    );
+    if (isDevMode() && !this.#warnedUnresolvedFieldName) {
+      this.#warnedUnresolvedFieldName = true;
+      console.error(
+        '[ngx-signal-forms] Could not resolve a deterministic field name for ngx-signal-form-field-wrapper. Add an explicit `fieldName` input or an `id` attribute to the bound control. ARIA wiring will be skipped until a name is available.',
+      );
+    }
+
+    return null;
   });
 
   /**
@@ -720,13 +684,20 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
     // Single afterEveryRender with proper phased callbacks:
     // - earlyRead: read projected control metadata from the DOM before writes
     // - write: update signals only when values changed, then write data-signal-field
+    //
+    // `afterEveryRender` (not `afterNextRender`) is deliberate: the projected
+    // `[formField]` control can be swapped at any render — `@if` branch flips,
+    // `@for` reorder, or a dynamic component swap — and we need to re-resolve
+    // it each time. The `cacheHit` check at the top of `earlyRead` keeps the
+    // steady-state cost to a handful of DOM attribute reads when nothing has
+    // changed; only a real swap falls through to `findBoundControl`.
     afterEveryRender({
       earlyRead: () => {
-        const hostEl = this.#getHostElement();
+        const hostEl = requireHostElement(this.#elementRef);
 
         // DOM-query cache: reuse the previously bound control when it is
         // still mounted inside this host AND still carries an `id` (without
-        // the id it no longer satisfies the `#findBoundControl` selector).
+        // the id it no longer satisfies the `findBoundControl` selector).
         // The `isConnected` + `hostEl.contains` guard covers the common
         // `@if`-branch-swap case where Angular detaches the old node from
         // its parent on branch change. Moving `[formField]` to a sibling
@@ -739,11 +710,11 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
           cached.isConnected &&
           hostEl.contains(cached) &&
           cached.hasAttribute('id');
-        const inputEl = cacheHit ? cached : this.#findBoundControl(hostEl);
+        const inputEl = cacheHit ? cached : findBoundControl(hostEl);
 
         return {
           inputEl,
-          inputId: inputEl?.getAttribute('id') ?? null,
+          inputId: inputEl && inputEl.id.length > 0 ? inputEl.id : null,
           semantics: resolveNgxSignalFormControlSemantics(
             inputEl,
             this.#controlPresets,
@@ -782,7 +753,7 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
           inputEl &&
           semantics.kind === null &&
           !this.#warnedUnresolvedKind &&
-          (typeof ngDevMode === 'undefined' || ngDevMode)
+          isDevMode()
         ) {
           this.#warnedUnresolvedKind = true;
           console.warn(
@@ -798,9 +769,16 @@ export class NgxSignalFormFieldWrapperComponent<TValue = unknown> {
         // `data-signal-field` is a stable runtime contract keyed off by
         // custom controls (as a `:host([data-signal-field]:focus-visible)`
         // selector), test discovery, and the assistive hint component for
-        // screen-reader correlation.
+        // screen-reader correlation. Skip the write when no field name can
+        // be resolved — the attribute would otherwise hold the string
+        // `"null"` and mislead downstream DOM queries.
         if (inputEl) {
-          inputEl.setAttribute('data-signal-field', this.resolvedFieldName());
+          const fieldName = this.resolvedFieldName();
+          if (fieldName !== null) {
+            inputEl.setAttribute('data-signal-field', fieldName);
+          } else {
+            inputEl.removeAttribute('data-signal-field');
+          }
         }
       },
     });

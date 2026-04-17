@@ -100,14 +100,14 @@ Selector: `[ngxSignalFormHeadlessErrorState]` · Export: `errorState`
 
 Exposes error state signals for custom error display.
 
-| Input             | Type                   | Description                         |
-| ----------------- | ---------------------- | ----------------------------------- |
-| `field`           | `FieldTree` (required) | The field to track                  |
-| `fieldName`       | `string` (required)    | Field name for ID generation        |
-| `strategy`        | `ErrorDisplayStrategy` | Override (inherits from context)    |
-| `submittedStatus` | `SubmittedStatus`      | Override for `'on-submit'` strategy |
+| Input             | Type                        | Description                                                                              |
+| ----------------- | --------------------------- | ---------------------------------------------------------------------------------------- |
+| `field`           | `FieldTree` (required)      | The field to track                                                                       |
+| `fieldName`       | `string \| null` (required) | Field name for ID generation. Pass `null` to disable id generation until a name resolves |
+| `strategy`        | `ErrorDisplayStrategy`      | Override (inherits from context)                                                         |
+| `submittedStatus` | `SubmittedStatus`           | Override for `'on-submit'` strategy                                                      |
 
-Signals: `showErrors()`, `showWarnings()`, `hasErrors()`, `hasWarnings()`, `errors()`, `warnings()`, `resolvedErrors()`, `resolvedWarnings()`, `errorId`, `warningId`.
+Signals: `showErrors()`, `showWarnings()`, `hasErrors()`, `hasWarnings()`, `errors()`, `warnings()`, `resolvedErrors()`, `resolvedWarnings()`, `errorId` (nullable), `warningId` (nullable).
 
 ### NgxHeadlessErrorSummaryDirective
 
@@ -150,17 +150,18 @@ Aggregates error state across multiple fields for group validation.
 | `fields`              | `FieldTree[]`          | Optional explicit field list            |
 | `fieldsetId`          | `string`               | For ARIA linking                        |
 | `strategy`            | `ErrorDisplayStrategy` | Override strategy                       |
+| `submittedStatus`     | `SubmittedStatus`      | Override for `'on-submit'` strategy     |
 | `includeNestedErrors` | `boolean`              | Include child errors (default: `false`) |
 
-Signals: `isValid()`, `isInvalid()`, `isTouched()`, `isDirty()`, `isPending()`, `aggregatedErrors()`, `aggregatedWarnings()`, `shouldShowErrors()`, `shouldShowWarnings()`.
+Signals: `isValid()`, `isInvalid()`, `isTouched()`, `isDirty()`, `isPending()`, `aggregatedErrors()`, `aggregatedWarnings()`, `hasErrors()`, `hasWarnings()`, `shouldShowErrors()`, `shouldShowWarnings()`, `resolvedStrategy()`, `resolvedSubmittedStatus()`, `resolvedFieldsetId()`.
 
 ### NgxHeadlessFieldNameDirective
 
 Selector: `[ngxSignalFormHeadlessFieldName]` · Export: `fieldName`
 
-Resolves field names and generates stable IDs for ARIA linking. Falls back to the host element `id` when `fieldName` is omitted. **Requires** either a non-empty `fieldName` input or a non-empty host `id` — the signals throw if neither is provided.
+Resolves field names and generates stable IDs for ARIA linking. Falls back to the host element `id` when `fieldName` is omitted. When neither a non-empty `fieldName` input nor a non-empty host `id` is provided, `resolvedFieldName()`, `errorId()`, and `warningId()` return `null` and the directive emits a one-shot `console.error` in dev mode. Downstream ARIA wiring should gate on a non-null value rather than produce unstable `"-error"` IDs.
 
-Signals: `resolvedFieldName()`, `errorId()`, `warningId()`.
+Signals: `resolvedFieldName()` (nullable), `errorId()` (nullable), `warningId()` (nullable).
 
 ## Utility functions
 

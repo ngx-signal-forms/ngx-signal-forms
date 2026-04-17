@@ -17,7 +17,10 @@ import { NgxHeadlessErrorSummaryDirective } from '@ngx-signal-forms/toolkit/head
  *
  * ## Accessibility
  *
- * - `role="alert"` with `aria-live="assertive"` for immediate screen reader announcement
+ * - `role="alert"` (implicit `aria-live="assertive"` + `aria-atomic="true"`)
+ *   for immediate screen reader announcement — the explicit live/atomic
+ *   attributes are intentionally omitted to avoid duplicate announcements
+ *   on NVDA+Firefox.
  * - Error links are focusable buttons for keyboard navigation
  * - Each entry identifies the field and the error message
  *
@@ -51,12 +54,7 @@ import { NgxHeadlessErrorSummaryDirective } from '@ngx-signal-forms/toolkit/head
   ],
   template: `
     @if (summary.shouldShow() && summary.hasErrors()) {
-      <div
-        class="ngx-form-field-error-summary"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-      >
+      <div class="ngx-form-field-error-summary" role="alert">
         @if (summaryLabel()) {
           <p class="ngx-form-field-error-summary__label">
             {{ summaryLabel() }}

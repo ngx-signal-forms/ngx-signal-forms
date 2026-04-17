@@ -13,7 +13,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 import { NgxSignalFormAutoAriaDirective } from './auto-aria.directive';
 import { NgxSignalFormControlSemanticsDirective } from './control-semantics.directive';
-import { NgxFormField } from '../../form-field/public_api';
+import { NgxFormField } from '../../form-field';
 
 @Directive({
   selector: '[formField]',

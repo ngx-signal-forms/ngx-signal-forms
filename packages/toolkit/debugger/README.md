@@ -56,12 +56,21 @@ Pass the `FieldTree` function (e.g. `userForm`), not the called state (`userForm
 
 Selector: `ngx-signal-form-debugger`
 
-| Input           | Type                   | Default                        | Description              |
-| --------------- | ---------------------- | ------------------------------ | ------------------------ |
-| `formTree`      | `unknown` (required)   | —                              | The form tree to inspect |
-| `errorStrategy` | `ErrorDisplayStrategy` | `'on-touch'`                   | Error display strategy   |
-| `title`         | `string`               | `'Form State & Validation'`    | Panel header title       |
-| `subtitle`      | `string`               | `'Live debugging information'` | Panel header subtitle    |
+| Input           | Type                                                   | Default                        | Description                                                                                                   |
+| --------------- | ------------------------------------------------------ | ------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `formTree`      | `FieldTree<unknown> \| FieldState<unknown>` (required) | —                              | The form tree to inspect. Pass the `FieldTree` function (preferred) to enable per-descendant traversal.       |
+| `errorStrategy` | `ErrorDisplayStrategy \| undefined`                    | `undefined`                    | Optional override. When omitted, the debugger inherits the strategy from the ambient `ngxSignalForm` context. |
+| `title`         | `string`                                               | `'Form State & Validation'`    | Panel header title                                                                                            |
+| `subtitle`      | `string`                                               | `'Live debugging information'` | Panel header subtitle                                                                                         |
+
+### Production tree-shaking
+
+The component self-guards rendering with `isDevMode()`, so a production build
+still ships zero DOM when the element is placed unconditionally. **For true
+bundle tree-shaking** (dropping the ~13 KB JS + ~15 KB SCSS at build time),
+consumers MUST wrap the element in an `@if (isDevMode())` block as shown in
+the Quick start — otherwise the compiled bundle keeps the debugger code path
+even though the UI is hidden at runtime.
 
 ### NgxSignalFormDebugger
 
@@ -78,6 +87,10 @@ Bundle containing `SignalFormDebuggerComponent` and internal badge components.
 - Collapsible sections
 
 ### Theming
+
+Theming hooks use the shorter `--ngx-debugger-*` prefix. (The selector prefix
+`ngx-signal-form-debugger-*` is reserved for element and directive names and is
+not used for CSS custom properties or class hooks.)
 
 ```css
 ngx-signal-form-debugger {

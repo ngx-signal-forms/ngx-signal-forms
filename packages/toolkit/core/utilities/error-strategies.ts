@@ -1,4 +1,4 @@
-import type { ErrorDisplayStrategy, SubmittedStatus } from '../types';
+import type { ResolvedErrorDisplayStrategy, SubmittedStatus } from '../types';
 
 /**
  * Determines if errors should be shown immediately without creating a reactive signal.
@@ -17,6 +17,16 @@ import type { ErrorDisplayStrategy, SubmittedStatus } from '../types';
  *
  * **Use {@link showErrors} instead when you need reactive updates.**
  *
+ * ## Strategy contract
+ * This helper accepts a {@link ResolvedErrorDisplayStrategy} — the `'inherit'`
+ * value from `ErrorDisplayStrategy` is a user-facing input that must be
+ * resolved to a concrete strategy (`'immediate' | 'on-touch' | 'on-submit'`)
+ * before calling this function. Route user input through
+ * {@link resolveErrorDisplayStrategy} or {@link resolveStrategyFromContext}
+ * first. Reactive surfaces should use {@link showErrors} /
+ * {@link createShowErrorsComputed}, which accept the wider
+ * `ErrorDisplayStrategy` and resolve `'inherit'` internally.
+ *
  * ## How does it work?
  * 1. Accepts unwrapped (static) field state, strategy, and submission status
  * 2. Converts `submittedStatus` to boolean (`!== 'unsubmitted'`)
@@ -25,7 +35,7 @@ import type { ErrorDisplayStrategy, SubmittedStatus } from '../types';
  *
  * @param isInvalid - Whether the field is currently invalid
  * @param isTouched - Whether the field has been touched (blurred)
- * @param strategy - The error display strategy
+ * @param strategy - The resolved error display strategy (no `'inherit'`)
  * @param submittedStatus - Angular's submission status
  * @returns `true` if errors should be displayed
  *
@@ -47,12 +57,15 @@ import type { ErrorDisplayStrategy, SubmittedStatus } from '../types';
  * ```
  *
  * @see {@link showErrors} For reactive version that creates a computed signal
- * @see {@link ErrorDisplayStrategy} For available strategies
+ * @see {@link ResolvedErrorDisplayStrategy} For the resolved strategy union
+ * @see {@link resolveErrorDisplayStrategy} To resolve `'inherit'` before calling this
+ *
+ * @public
  */
 export function shouldShowErrors(
   isInvalid: boolean,
   isTouched: boolean,
-  strategy: ErrorDisplayStrategy,
+  strategy: ResolvedErrorDisplayStrategy,
   submittedStatus: SubmittedStatus,
 ): boolean {
   const hasSubmitted = submittedStatus !== 'unsubmitted';
@@ -66,9 +79,6 @@ export function shouldShowErrors(
 
     case 'on-submit':
       return isInvalid && hasSubmitted;
-
-    case 'inherit':
-      return isInvalid && isTouched;
 
     default:
       strategy satisfies never;

@@ -33,13 +33,13 @@ import {
 
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="contactForm.bio"></textarea>
-  <ngx-form-field-assistive-row>
+  <ngx-signal-form-field-assistive-row>
     <ngx-signal-form-field-hint>Max 500 characters</ngx-signal-form-field-hint>
     <ngx-signal-form-field-character-count
       [formField]="contactForm.bio"
       [maxLength]="500"
     />
-  </ngx-form-field-assistive-row>
+  </ngx-signal-form-field-assistive-row>
 </form>
 ```
 
@@ -53,11 +53,15 @@ Displays validation errors and warnings with appropriate ARIA roles.
 <ngx-form-field-error [formField]="form.email" fieldName="email" />
 ```
 
-| Input       | Type                   | Description                                        |
-| ----------- | ---------------------- | -------------------------------------------------- |
-| `formField` | `FieldTree` (required) | The field to show errors for                       |
-| `fieldName` | `string`               | Required when standalone; inherited inside wrapper |
-| `strategy`  | `ErrorDisplayStrategy` | Override error display strategy                    |
+| Input             | Type                        | Description                                                                 |
+| ----------------- | --------------------------- | --------------------------------------------------------------------------- |
+| `formField`       | `FieldTree`                 | The field to show errors for. One of `formField` or `errors` must be given. |
+| `errors`          | `Signal<ValidationError[]>` | Pre-aggregated error signal (e.g. from fieldsets). Takes priority.          |
+| `fieldName`       | `string`                    | Required when standalone; inherited inside wrapper                          |
+| `strategy`        | `ErrorDisplayStrategy`      | Override error display strategy                                             |
+| `warningStrategy` | `ErrorDisplayStrategy`      | Override warning display strategy (defaults to `'immediate'`)               |
+| `listStyle`       | `'plain' \| 'bullets'`      | Visual layout for rendered messages (`'plain'` by default)                  |
+| `submittedStatus` | `SubmittedStatus`           | Manual override for `'on-submit'` strategy                                  |
 
 - Blocking errors render with `role="alert"` (assertive)
 - Warnings render with `role="status"` (polite)
@@ -111,13 +115,13 @@ When a matching max-length validator is present, `maxLength` can be omitted and 
 Layout container for hint and character count side by side.
 
 ```html
-<ngx-form-field-assistive-row>
+<ngx-signal-form-field-assistive-row>
   <ngx-signal-form-field-hint>Enter your bio</ngx-signal-form-field-hint>
   <ngx-signal-form-field-character-count
     [formField]="form.bio"
     [maxLength]="500"
   />
-</ngx-form-field-assistive-row>
+</ngx-signal-form-field-assistive-row>
 ```
 
 ## Warning utilities

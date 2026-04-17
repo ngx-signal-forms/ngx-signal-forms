@@ -1,7 +1,17 @@
 import { ComponentRef, type WritableSignal, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { form, required, schema, validate } from '@angular/forms/signals';
-import { NGX_SIGNAL_FORM_CONTEXT } from '@ngx-signal-forms/toolkit';
+import {
+  applyEach,
+  form,
+  minLength,
+  required,
+  schema,
+  validate,
+} from '@angular/forms/signals';
+import {
+  NGX_SIGNAL_FORM_CONTEXT,
+  type ResolvedErrorDisplayStrategy,
+} from '@ngx-signal-forms/toolkit';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SignalFormDebuggerComponent } from './signal-form-debugger.component';
 
@@ -21,6 +31,7 @@ describe('SignalFormDebuggerComponent', () => {
   let submittedStatus: WritableSignal<
     'unsubmitted' | 'submitting' | 'submitted'
   >;
+  let contextErrorStrategy: WritableSignal<ResolvedErrorDisplayStrategy>;
 
   beforeEach(async () => {
     // Reset model for each test
@@ -28,13 +39,17 @@ describe('SignalFormDebuggerComponent', () => {
     submittedStatus = signal<'unsubmitted' | 'submitting' | 'submitted'>(
       'unsubmitted',
     );
+    contextErrorStrategy = signal<ResolvedErrorDisplayStrategy>('on-touch');
 
     await TestBed.configureTestingModule({
       imports: [SignalFormDebuggerComponent],
       providers: [
         {
           provide: NGX_SIGNAL_FORM_CONTEXT,
-          useValue: { submittedStatus },
+          useValue: {
+            submittedStatus,
+            errorStrategy: contextErrorStrategy,
+          },
         },
       ],
     }).compileComponents();
@@ -210,6 +225,51 @@ describe('SignalFormDebuggerComponent', () => {
     });
   });
 
+  describe('Strategy inheritance from form context', () => {
+    it('should inherit the strategy from the form context when the input is not set', () => {
+      const localFixture = TestBed.createComponent(SignalFormDebuggerComponent);
+      const localEl: HTMLElement = localFixture.nativeElement;
+      localFixture.componentRef.setInput('formTree', testForm);
+      // Intentionally do NOT set `errorStrategy` — context provides 'on-touch'
+      // above, so behaviour should match the default on-touch test.
+      localFixture.detectChanges();
+
+      const reason = localEl
+        .querySelector('.ngx-debugger__strategy-reason')
+        ?.textContent?.trim();
+      expect(reason).toContain('hidden until you touch');
+    });
+
+    it('should react to context strategy changes when the input is not set', () => {
+      const localFixture = TestBed.createComponent(SignalFormDebuggerComponent);
+      const localEl: HTMLElement = localFixture.nativeElement;
+      localFixture.componentRef.setInput('formTree', testForm);
+      localFixture.detectChanges();
+
+      contextErrorStrategy.set('on-submit');
+      localFixture.detectChanges();
+
+      const reason = localEl
+        .querySelector('.ngx-debugger__strategy-reason')
+        ?.textContent?.trim();
+      expect(reason).toContain('hidden until form submission');
+    });
+
+    it('should let an explicit input override the context strategy', () => {
+      const localFixture = TestBed.createComponent(SignalFormDebuggerComponent);
+      const localEl: HTMLElement = localFixture.nativeElement;
+      localFixture.componentRef.setInput('formTree', testForm);
+      localFixture.componentRef.setInput('errorStrategy', 'immediate');
+      contextErrorStrategy.set('on-submit');
+      localFixture.detectChanges();
+
+      const reason = localEl
+        .querySelector('.ngx-debugger__strategy-reason')
+        ?.textContent?.trim();
+      expect(reason).toContain('shown immediately');
+    });
+  });
+
   describe('Warnings display', () => {
     interface WarnData {
       password: string;
@@ -308,6 +368,148 @@ describe('SignalFormDebuggerComponent', () => {
       // (the FieldTree function), so the warning effect should never have
       // fired for the currently-mounted component.
       expect(debuggerWarnings()).toHaveLength(0);
+    });
+
+    it('should re-warn after the formTree input is swapped to a new state', () => {
+      const localFixture = TestBed.createComponent(SignalFormDebuggerComponent);
+      const first = testForm();
+      localFixture.componentRef.setInput('formTree', first);
+      localFixture.detectChanges();
+      expect(debuggerWarnings()).toHaveLength(1);
+
+      // Same reference: the WeakSet must suppress an additional warning.
+      localFixture.componentRef.setInput('formTree', first);
+      localFixture.detectChanges();
+      expect(debuggerWarnings()).toHaveLength(1);
+
+      // Build a genuinely separate form, then swap to its FieldState to
+      // exercise the re-warn path. The WeakSet is keyed on identity, so a
+      // new reference must produce a fresh warning.
+      const secondForm = TestBed.runInInjectionContext(() =>
+        form(
+          signal({ name: '', email: '' }),
+          schema<TestData>((path) => {
+            required(path.name, { message: 'Name is required' });
+            required(path.email, { message: 'Email is required' });
+          }),
+        ),
+      );
+      localFixture.componentRef.setInput('formTree', secondForm());
+      localFixture.detectChanges();
+      expect(debuggerWarnings().length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe('Errors on object/array nodes (non-leaf)', () => {
+    interface UsersData {
+      users: Array<{ name: string }>;
+    }
+
+    it('collects errors from a validator attached to an array element (object node)', () => {
+      const usersModel = signal({ users: [{ name: '' }] });
+      const usersForm = TestBed.runInInjectionContext(() =>
+        form(
+          usersModel,
+          schema<UsersData>((path) => {
+            // Validate each user element directly. The validator is attached
+            // to the object node at `users[<n>]` — a *non-leaf* node. The
+            // old `isLeaf` guard dropped these entirely; the fix ensures they
+            // surface in the debugger.
+            applyEach(path.users, (userPath) => {
+              validate(userPath, (ctx) => {
+                const value = ctx.value();
+                if (!value?.name) {
+                  return {
+                    kind: 'first-user-missing-name',
+                    message: 'First user must have a name',
+                  };
+                }
+                return null;
+              });
+            });
+          }),
+        ),
+      );
+
+      const localFixture = TestBed.createComponent(SignalFormDebuggerComponent);
+      const localEl: HTMLElement = localFixture.nativeElement;
+      localFixture.componentRef.setInput('formTree', usersForm);
+      localFixture.componentRef.setInput('errorStrategy', 'immediate');
+      localFixture.detectChanges();
+
+      // The error may surface under the root-level or field-level group
+      // depending on whether Angular also bubbles it to the root state.
+      // Either way it MUST appear somewhere in the rendered debugger and
+      // MUST NOT be silently dropped like the pre-fix `isLeaf` guard did.
+      const fullText = localEl.textContent ?? '';
+      expect(fullText).toContain('first-user-missing-name');
+      expect(fullText).toContain('First user must have a name');
+    });
+
+    it('collects errors from a validator attached to the array itself', () => {
+      const usersModel = signal<UsersData>({ users: [] });
+      const usersForm = TestBed.runInInjectionContext(() =>
+        form(
+          usersModel,
+          schema<UsersData>((path) => {
+            minLength(path.users, 1, {
+              message: 'At least one user is required',
+            });
+          }),
+        ),
+      );
+
+      const localFixture = TestBed.createComponent(SignalFormDebuggerComponent);
+      const localEl: HTMLElement = localFixture.nativeElement;
+      localFixture.componentRef.setInput('formTree', usersForm);
+      localFixture.componentRef.setInput('errorStrategy', 'immediate');
+      localFixture.detectChanges();
+
+      const errorList = localEl.querySelector('.ngx-debugger__error-list');
+      expect(errorList?.textContent).toContain('At least one user is required');
+    });
+  });
+
+  describe('Production render gate', () => {
+    it('renders no debugger DOM when renderEnabled is false', () => {
+      const localFixture = TestBed.createComponent(SignalFormDebuggerComponent);
+      const localEl: HTMLElement = localFixture.nativeElement;
+      localFixture.componentRef.setInput('formTree', testForm);
+
+      // Simulate a production bundle: flip the render gate off. This mirrors
+      // the behaviour of `isDevMode() === false` — the template wraps every
+      // branch in `@if (renderEnabled && inputUsable())`.
+      //
+      // Note: the ideal approach here would be `vi.spyOn(ngCore, 'isDevMode')`,
+      // but `@angular/core`'s ESM namespace is non-configurable
+      // (`TypeError: Cannot redefine property: isDevMode`). A hoisted
+      // `vi.mock('@angular/core', ...)` would leak into every other test in
+      // this file — including the component's own `#fieldTreeWarningEffect`
+      // initializer — so we opt for the minimal, explicit intrusion here.
+      (
+        localFixture.componentInstance as unknown as {
+          renderEnabled: boolean;
+        }
+      ).renderEnabled = false;
+      localFixture.detectChanges();
+
+      expect(localEl.querySelector('.ngx-debugger')).toBeNull();
+    });
+  });
+
+  describe('Malformed formTree inputs', () => {
+    it('treats a non-state-like function as unusable and renders nothing', () => {
+      const localFixture = TestBed.createComponent(SignalFormDebuggerComponent);
+      const localEl: HTMLElement = localFixture.nativeElement;
+      // A plain `() => 42` is callable but does NOT return a FieldState-shaped
+      // object, so it must be rejected by the runtime guard.
+      const malformed = (() => 42) as unknown as ReturnType<
+        typeof form<TestData>
+      >;
+      localFixture.componentRef.setInput('formTree', malformed);
+      localFixture.detectChanges();
+
+      expect(localEl.querySelector('.ngx-debugger')).toBeNull();
     });
   });
 });

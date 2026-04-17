@@ -11,21 +11,29 @@ releases will not include any of the renames below.
 
 ## At a glance
 
-| Category                  | What changed                                                                  | Lands in  |
-| ------------------------- | ----------------------------------------------------------------------------- | --------- |
-| `[formRoot]` selector     | Directive is now an additive enhancer: add `ngxSignalForm`                    | `rc.0`    |
-| Public API surface        | `/core` is hidden; `@internal` plumbing no longer published                   | `rc.3`    |
-| Removed helpers           | `computeShowErrors`, `canSubmit`, `injectFormConfig`, …                       | beta → rc |
-| Removed directive         | `NgxFloatingLabelDirective` (use `appearance="outline"`)                      | `rc.2`    |
-| Renamed components        | `NgxSignalFormError*` → `NgxFormFieldError*`                                  | `rc.3`    |
-| Renamed appearances       | `standard` / `bare` → `stacked` / `plain`                                     | `rc.1`    |
-| Renamed control kinds     | `text-like` / `textarea-select-like` → `input-like` / `standalone-field-like` | `rc.3`    |
-| Config typing             | `NgxSignalFormsUserConfig` is `Partial`, not `DeepPartial`                    | `rc.2`    |
-| Behavior fix              | `on-submit` strategy now requires an explicit `submittedStatus`               | `rc.3`    |
-| New: control semantics    | `ngxSignalFormControl="…"` contract for layout + auto-ARIA                    | `rc.1`    |
-| New: error summary        | `NgxFormFieldErrorSummaryComponent` + headless directive                      | `rc.1`    |
-| New: field labels         | `provideFieldLabels()` + warning/error split utilities                        | `rc.1`    |
-| New: debugger entry point | `@ngx-signal-forms/toolkit/debugger`                                          | beta → rc |
+| Category                   | What changed                                                                   | Lands in  |
+| -------------------------- | ------------------------------------------------------------------------------ | --------- |
+| `[formRoot]` selector      | Directive is now an additive enhancer: add `ngxSignalForm`                     | `rc.0`    |
+| Public API surface         | `/core` is hidden; `@internal` plumbing no longer published                    | `rc.3`    |
+| Removed helpers            | `computeShowErrors`, `canSubmit`, `injectFormConfig`, …                        | beta → rc |
+| Removed directive          | `NgxFloatingLabelDirective` (use `appearance="outline"`)                       | `rc.2`    |
+| Renamed components         | `NgxSignalFormError*` → `NgxFormFieldError*`                                   | `rc.3`    |
+| Renamed appearances        | `standard` / `bare` → `stacked` / `plain`                                      | `rc.1`    |
+| Renamed control kinds      | `text-like` / `textarea-select-like` → `input-like` / `standalone-field-like`  | `rc.3`    |
+| Config typing              | `NgxSignalFormsUserConfig` is `Partial`, not `DeepPartial`                     | `rc.2`    |
+| Behavior fix               | `on-submit` strategy now requires an explicit `submittedStatus`                | `rc.3`    |
+| New: control semantics     | `ngxSignalFormControl="…"` contract for layout + auto-ARIA                     | `rc.1`    |
+| New: error summary         | `NgxFormFieldErrorSummaryComponent` + headless directive                       | `rc.1`    |
+| New: field labels          | `provideFieldLabels()` + warning/error split utilities                         | `rc.1`    |
+| New: debugger entry point  | `@ngx-signal-forms/toolkit/debugger`                                           | beta → rc |
+| New: `warningStrategy`     | Decouple warning visibility from error timing; default `'immediate'`           | v1 RC     |
+| New: `NgxFormField` bundle | Convenience import array of wrapper + assistive parts + auto-ARIA directive    | v1 RC     |
+| New: fieldset toggle       | `includeNestedErrors` on fieldset; `submittedStatus` override input            | v1 RC     |
+| New: error component APIs  | `errors`, `listStyle`, `submittedStatus` inputs on `NgxFormFieldError`         | v1 RC     |
+| New: Vest options          | `only` selector, `resetOnDestroy`, `VEST_*_KIND_PREFIX` exports                | v1 RC     |
+| A11y                       | Removed explicit `aria-live` / `aria-atomic`; role semantics now authoritative | v1 RC     |
+| Behavior                   | Missing `fieldName` / `id` now logs (dev mode) instead of throwing             | v1 RC     |
+| Compatibility              | Angular peer-dep tightened to `>=21.2.0 <22.0.0`                               | v1 RC     |
 
 ---
 
@@ -377,7 +385,104 @@ import { SignalFormDebuggerComponent } from '@ngx-signal-forms/toolkit/debugger'
 
 ---
 
-## 7. Migration checklist
+## 7. Additions in v1 RC
+
+The following additions landed during the late release-candidate cycle. They are
+non-breaking (except where noted) but are worth calling out because they change
+what the defaults cover and what you may want to adopt before going stable.
+
+### `warningStrategy` input — independent warning timing
+
+`NgxFormFieldErrorComponent` (and by extension the wrapper / assistive bundle)
+now accepts a `warningStrategy` input that is independent from the error
+`strategy`. It defaults to `'immediate'` so advisory messages such as
+"consider 12+ characters" appear as the user types, even when errors are gated
+with `'on-touch'` or `'on-submit'`.
+
+See [`WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy)
+for the full input table and worked example. No migration action is required
+unless you previously relied on warnings sharing the error timing, in which
+case set `warningStrategy="inherit"` (or match `strategy` explicitly).
+
+### `NgxFormFieldErrorComponent` — new inputs
+
+| Input             | Type                        | Purpose                                                             |
+| ----------------- | --------------------------- | ------------------------------------------------------------------- |
+| `errors`          | `Signal<ValidationError[]>` | Render pre-aggregated errors (e.g. fieldset-level). Takes priority. |
+| `warningStrategy` | `ErrorDisplayStrategy`      | See above                                                           |
+| `listStyle`       | `'plain' \| 'bullets'`      | Visual rendering of the message list                                |
+| `submittedStatus` | `SubmittedStatus`           | Manual override for `'on-submit'` timing                            |
+
+### Fieldset (component + headless directive)
+
+- New `includeNestedErrors` input (default `false`): when `true`, aggregates
+  descendant-field errors instead of only direct group-level errors.
+- New `submittedStatus` input on the headless fieldset directive to support
+  `'on-submit'` strategy without a form-level `ngxSignalForm`.
+- **Headless output rename (breaking for direct consumers):** the directive's
+  `submittedStatus` output is now `resolvedSubmittedStatus`, and `strategy` is
+  surfaced as `resolvedStrategy`. If you were reading either output from a
+  template reference or through Angular's output API, update the binding name.
+
+### `NgxFormField` convenience bundle
+
+`@ngx-signal-forms/toolkit/form-field` now exports a `NgxFormField` const array
+containing the wrapper, fieldset, hint, error, character-count, assistive-row,
+and auto-ARIA directive. Drop it into `imports` instead of listing each piece:
+
+```ts
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
+
+@Component({
+  imports: [FormField, NgxFormField],
+  // …
+})
+```
+
+### Vest adapter additions
+
+- `resetOnDestroy: true` — wires `suite.reset()` into `DestroyRef` so
+  module-scope suites don't leak state across component mounts.
+- `only: (ctx) => string | string[] | undefined` — threads a focused field name
+  into `suite.run(value, fieldName)` (or `suite.only(field).run(...)`), enabling
+  per-field Vest runs for large suites.
+- Exported kind prefixes `VEST_ERROR_KIND_PREFIX` (`'vest:'`) and
+  `VEST_WARNING_KIND_PREFIX` (`'warn:vest:'`) for stable consumer checks.
+
+See [`packages/toolkit/vest/README.md`](../packages/toolkit/vest/README.md#suite-lifecycle)
+for the full suite-lifecycle discussion.
+
+### Null-safe field-name resolution
+
+The wrapper, error, and headless field-name directives previously threw when
+neither a `fieldName` input nor a non-empty host `id` was provided. In v1 RC
+they return `null` from the affected signals (`resolvedFieldName`, `errorId`,
+`warningId`) and skip ARIA wiring. In development mode a one-shot
+`console.error` surfaces the misconfiguration.
+
+**Action:** Continue to provide an `id` (or explicit `fieldName`) for
+production A11y — the fallback exists to keep render trees intact, not to
+replace correct configuration. Any custom ARIA wiring you built should gate on
+a non-null value rather than produce unstable `"-error"` IDs.
+
+### Accessibility — removed explicit `aria-live` / `aria-atomic`
+
+Error (`role="alert"`) and warning (`role="status"`) containers no longer stamp
+explicit `aria-live` / `aria-atomic` attributes. The ARIA 1.2 specification
+defines these as implicit on both roles; duplicating them caused NVDA + Firefox
+to double-announce messages. No action is required unless you explicitly
+queried the attributes in tests — switch tests to assert `role` instead.
+
+### Angular peer-dependency ceiling
+
+Peer dependencies now constrain `@angular/core` and `@angular/forms` to
+`>=21.2.0 <22.0.0`. Angular 22 compatibility will ship in a future toolkit
+line. See [`COMPATIBILITY.md`](../COMPATIBILITY.md) for the reasoning. No
+action is required on Angular 21.x.
+
+---
+
+## 8. Migration checklist
 
 1. **Add `ngxSignalForm`** next to every `[formRoot]` that uses toolkit
    features.

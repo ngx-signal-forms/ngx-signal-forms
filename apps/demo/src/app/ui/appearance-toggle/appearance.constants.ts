@@ -1,21 +1,21 @@
 import type {
+  FormFieldAppearance,
   FormFieldAppearanceInput,
-  ResolvedFormFieldAppearance,
 } from '@ngx-signal-forms/toolkit';
 
 export const APPEARANCE_OPTIONS = [
   'stacked',
   'outline',
   'plain',
-] as const satisfies readonly ResolvedFormFieldAppearance[];
+] as const satisfies readonly FormFieldAppearance[];
 
 export const APPEARANCE_LABELS = {
   stacked: 'Stacked',
   outline: 'Outline',
   plain: 'Plain',
-} as const satisfies Record<ResolvedFormFieldAppearance, string>;
+} as const satisfies Record<FormFieldAppearance, string>;
 
-type AppearanceLabel = (typeof APPEARANCE_LABELS)[ResolvedFormFieldAppearance];
+type AppearanceLabel = (typeof APPEARANCE_LABELS)[FormFieldAppearance];
 
 export function getAppearanceLabel(
   appearance: FormFieldAppearanceInput,

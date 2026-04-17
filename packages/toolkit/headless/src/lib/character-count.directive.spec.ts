@@ -188,6 +188,46 @@ describe('NgxHeadlessCharacterCountDirective', () => {
 
       expect(screen.getByTestId('percent-used').textContent).toBe('10');
     });
+
+    it('should clamp percentUsed to 0 or 100 when maxLength is negative', async () => {
+      // Regression guard: a negative `maxLength` must never yield a negative
+      // `percentUsed` — consumers bind this to progress bars / `aria-valuenow`
+      // and negative values would render nonsense.
+      @Component({
+        selector: 'ngx-test-negative-percent',
+        imports: [FormField, NgxHeadlessCharacterCountDirective],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <div>
+            <input id="title" [formField]="form.title" />
+            <div
+              ngxSignalFormHeadlessCharacterCount
+              #charCount="characterCount"
+              [field]="form.title"
+              [maxLength]="-5"
+            >
+              <span data-testid="percent-used">{{
+                charCount.percentUsed()
+              }}</span>
+            </div>
+          </div>
+        `,
+      })
+      class TestComponent {
+        readonly model = signal({ title: 'anything' });
+        readonly form = form(this.model);
+      }
+
+      const { fixture } = await render(TestComponent);
+
+      expect(screen.getByTestId('percent-used').textContent).toBe('100');
+
+      fixture.componentInstance.model.set({ title: '' });
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(screen.getByTestId('percent-used').textContent).toBe('0');
+    });
   });
 
   describe('limit state transitions', () => {
@@ -321,6 +361,54 @@ describe('NgxHeadlessCharacterCountDirective', () => {
       await render(TestComponent);
 
       expect(screen.getByTestId('limit-state').textContent).toBe('exceeded');
+    });
+
+    it('should align limitState with isExceeded and remaining when maxLength is 0', async () => {
+      // Regression guard: when `maxLength` is `0`, `remaining` reports a
+      // negative value and `isExceeded` reports `true`, so `limitState`
+      // must not cheerfully report `'ok'` for non-empty content.
+      @Component({
+        selector: 'ngx-test-zero-limit',
+        imports: [FormField, NgxHeadlessCharacterCountDirective],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <div>
+            <input id="title" [formField]="form.title" />
+            <div
+              ngxSignalFormHeadlessCharacterCount
+              #charCount="characterCount"
+              [field]="form.title"
+              [maxLength]="0"
+            >
+              <span data-testid="limit-state">{{
+                charCount.limitState()
+              }}</span>
+              <span data-testid="is-exceeded">{{
+                charCount.isExceeded()
+              }}</span>
+              <span data-testid="remaining">{{ charCount.remaining() }}</span>
+            </div>
+          </div>
+        `,
+      })
+      class TestComponent {
+        readonly model = signal({ title: 'anything' });
+        readonly form = form(this.model);
+      }
+
+      const { fixture } = await render(TestComponent);
+
+      expect(screen.getByTestId('limit-state').textContent).toBe('exceeded');
+      expect(screen.getByTestId('is-exceeded').textContent).toBe('true');
+      expect(screen.getByTestId('remaining').textContent).toBe('-8');
+
+      fixture.componentInstance.model.set({ title: '' });
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(screen.getByTestId('limit-state').textContent).toBe('ok');
+      expect(screen.getByTestId('is-exceeded').textContent).toBe('false');
+      expect(screen.getByTestId('remaining').textContent).toBe('0');
     });
   });
 

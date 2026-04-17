@@ -63,6 +63,7 @@ export {
   toErrorSummaryEntry,
   type BooleanStateKey,
   type CharacterCountResult,
+  type CharacterCountValue,
   type CreateCharacterCountOptions,
   type CreateErrorStateOptions,
   type ErrorStateResult,

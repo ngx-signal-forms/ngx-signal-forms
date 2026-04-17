@@ -83,7 +83,7 @@ The wrapper handles ARIA, error timing, `role="alert"` vs `role="status"`, hint 
 npm install @ngx-signal-forms/toolkit
 ```
 
-Requirements: Angular 21.2+ (Signal Forms API), TypeScript 5.9+, modern browsers.
+Requirements: Angular `>=21.2.0 <22.0.0` (Signal Forms API), TypeScript 5.9+, modern browsers. Angular 22 support ships in a future toolkit line — see [`COMPATIBILITY.md`](./COMPATIBILITY.md).
 
 > Angular Signal Forms is still marked **experimental** upstream. The toolkit's own public API aims to stay stable — see [`COMPATIBILITY.md`](./COMPATIBILITY.md) before adopting a stable major in production.
 
@@ -498,8 +498,8 @@ links to a runnable demo. Browse them all at
 The toolkit is designed around the WCAG 2.2 AA form patterns it can automate:
 
 - automatic `aria-invalid`, `aria-required`, and `aria-describedby` on supported controls
-- `role="alert"` for blocking errors and `role="status"` for warnings
-- `on-touch` error timing by default to avoid premature noise
+- `role="alert"` for blocking errors and `role="status"` for warnings, relying on the roles' implicit live-region semantics (no redundant `aria-live`/`aria-atomic` that some AT + browser combinations double-announce)
+- `on-touch` error timing by default to avoid premature noise; warnings default to `'immediate'` and can be tuned independently via `warningStrategy` — see [warnings support](./docs/WARNINGS_SUPPORT.md)
 - focus helpers (`focusFirstInvalid`, `createOnInvalidHandler`) for invalid submissions
 
 These cover the mechanics, not the content. WCAG conformance is a property of

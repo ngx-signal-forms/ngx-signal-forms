@@ -11,8 +11,10 @@ import {
   buildAriaDescribedBy,
   createOnInvalidHandler,
   createSubmittedStatusTracker,
+  injectFormContext,
   NgxSignalFormToolkit,
   provideNgxSignalFormControlPresetsForComponent,
+  resolveStrategyFromContext,
   shouldShowErrors,
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
@@ -72,6 +74,14 @@ export class CustomControlsFormComponent {
 
   readonly #handleInvalidSubmission = createOnInvalidHandler();
 
+  /**
+   * Injected ngx form context. `undefined` when this component is the
+   * outermost form (the normal case for this demo). Kept so the
+   * `'inherit'` branch of `errorDisplayMode` resolves through the toolkit
+   * if the demo is ever nested under another `[ngxSignalForm]`.
+   */
+  readonly #formContext = injectFormContext();
+
   readonly sliderSemantics = {
     kind: 'slider',
     layout: 'stacked',
@@ -117,13 +127,17 @@ export class CustomControlsFormComponent {
 
   protected readonly accessibilityAuditDescribedBy = computed(() => {
     const fieldState = this.reviewForm.accessibilityAudit();
+    const resolvedMode = resolveStrategyFromContext(
+      this.errorDisplayMode(),
+      this.#formContext,
+    );
 
     return buildAriaDescribedBy('accessibilityAudit', {
       baseIds: ['accessibilityAudit-hint'],
       showErrors: shouldShowErrors(
         fieldState.invalid(),
         fieldState.touched(),
-        this.errorDisplayMode(),
+        resolvedMode,
         this.submittedStatus(),
       ),
     });

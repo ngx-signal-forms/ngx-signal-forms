@@ -30,10 +30,10 @@ describe('DebuggerBadgeComponent', () => {
   it('should have default solid/neutral styling', () => {
     expect(badgeEl.getAttribute('data-variant')).toBe('solid');
     expect(badgeEl.getAttribute('data-appearance')).toBe('neutral');
-    expect(badgeEl.classList.contains('ngx-debugger-badge--solid')).toBe(true);
-    expect(badgeEl.classList.contains('ngx-debugger-badge--neutral')).toBe(
-      true,
-    );
+    // The host retains the base `ngx-debugger-badge` class but no longer emits
+    // the per-variant/appearance class couplets — selectors target the
+    // `data-*` attributes instead.
+    expect(badgeEl.classList.contains('ngx-debugger-badge')).toBe(true);
   });
 
   describe('Variants', () => {
@@ -41,9 +41,6 @@ describe('DebuggerBadgeComponent', () => {
       componentRef.setInput('variant', 'outline');
       fixture.detectChanges();
       expect(badgeEl.getAttribute('data-variant')).toBe('outline');
-      expect(badgeEl.classList.contains('ngx-debugger-badge--outline')).toBe(
-        true,
-      );
     });
 
     it('should update to ghost variant', () => {
@@ -61,9 +58,6 @@ describe('DebuggerBadgeComponent', () => {
         componentRef.setInput('appearance', appearance);
         fixture.detectChanges();
         expect(badgeEl.getAttribute('data-appearance')).toBe(appearance);
-        expect(
-          badgeEl.classList.contains(`ngx-debugger-badge--${appearance}`),
-        ).toBe(true);
       });
     });
   });

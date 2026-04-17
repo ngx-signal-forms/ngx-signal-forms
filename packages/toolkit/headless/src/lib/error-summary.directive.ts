@@ -7,6 +7,7 @@ import {
   showErrors,
   splitByKind,
   type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -116,7 +117,7 @@ export class NgxHeadlessErrorSummaryDirective implements ErrorSummarySignals {
 
   readonly #fieldState = computed(() => this.formTree()());
 
-  readonly #resolvedStrategy = computed<ErrorDisplayStrategy>(() =>
+  readonly #resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() =>
     resolveStrategyFromContext(this.strategy(), this.#formContext),
   );
 

@@ -93,7 +93,6 @@ export type {
   OnInvalidHandlerOptions,
   ReactiveOrStatic,
   ResolvedErrorDisplayStrategy,
-  ResolvedFormFieldAppearance,
   ResolvedNgxSignalFormControlSemantics,
   SignalLike,
   SplitErrors,
