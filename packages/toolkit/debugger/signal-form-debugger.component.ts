@@ -96,10 +96,20 @@ const withDebuggerMeta =
  * The component self-guards rendering with `isDevMode()`, so production
  * builds see an empty template. For true *bundle* tree-shaking (skipping
  * the ~13 KB JS + ~15 KB SCSS entirely), consumers should still wrap the
- * element with `@if (isDevMode())`:
+ * element with `@if (isDevMode())`. Expose the `isDevMode` function on the
+ * hosting component so the template can invoke it:
+ *
+ * ```typescript
+ * import { Component, isDevMode } from '@angular/core';
+ *
+ * @Component({ ... })
+ * export class MyFormComponent {
+ *   protected readonly isDevMode = isDevMode;
+ * }
+ * ```
  *
  * ```html
- * @if (isDevMode) {
+ * @if (isDevMode()) {
  *   <ngx-signal-form-debugger [formTree]="userForm" />
  * }
  * ```

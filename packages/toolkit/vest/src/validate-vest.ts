@@ -28,10 +28,10 @@ export const VEST_WARNING_KIND_PREFIX = 'warn:vest:';
 export const VEST_ERROR_KIND_PREFIX = 'vest:';
 
 /**
- * Field name selector used when `only: true` is enabled. Receives the Angular
- * Signal Forms field context and returns the Vest field name (or list of
- * names) to focus on for the current run. Returning `undefined` falls back to
- * a whole-suite run.
+ * Callback supplied via {@link ValidateVestOptions.only} to enable per-field
+ * focused runs. Receives the Angular Signal Forms field context and returns
+ * the Vest field name (or list of names) to focus on for the current run.
+ * Returning `undefined` falls back to a whole-suite run.
  */
 export type VestOnlyFieldSelector<TValue> = (
   ctx: FieldContext<TValue>,
@@ -409,10 +409,13 @@ function getOrCreateVestRun<TValue>(
     value,
     focus: focusKey,
     runResult,
-    initialResult:
-      !isThenable(runResult) && isVestResultLike(runResult)
-        ? runResult
-        : undefined,
+    // Vest 6's `suite.run(...)` returns a dual-shaped object that is *both*
+    // a synchronous `SuiteResult` (with `getErrors`/`isPending`) and a
+    // thenable. Previously we gated `initialResult` with `!isThenable(...)`,
+    // which would always be false for Vest 6 suites and forced every
+    // validation run through the async pipeline — hiding sync errors until
+    // the next microtask. Check the sync surface directly instead.
+    initialResult: isVestResultLike(runResult) ? runResult : undefined,
   };
 
   suiteCache.set(fieldTree as FieldTree<unknown>, nextEntry);

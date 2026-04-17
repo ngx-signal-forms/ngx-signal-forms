@@ -178,7 +178,15 @@ export class NgxHeadlessFieldsetDirective<
   );
 
   /**
-   * Resolved submitted status.
+   * Resolved submitted status, exposed as a concrete {@link SubmittedStatus}
+   * on the public API. Falls back to `'unsubmitted'` when no explicit input
+   * is provided and no form context is available — this keeps standalone
+   * fieldsets (outside an `ngxSignalForm`) from surfacing errors under the
+   * `'on-submit'` strategy until the consumer wires submission explicitly.
+   *
+   * Note: `NgxHeadlessErrorSummaryDirective` preserves `undefined` in its
+   * internal computation; this directive narrows the surface to a concrete
+   * value because consumer templates typically bind the result directly.
    */
   readonly resolvedSubmittedStatus = computed<SubmittedStatus>(
     () =>

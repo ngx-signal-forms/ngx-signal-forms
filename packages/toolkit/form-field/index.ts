@@ -23,6 +23,7 @@ import { NgxSignalFormFieldset } from './form-fieldset.component';
  *
  * @example
  * ```typescript
+ * import { FormField } from '@angular/forms/signals';
  * import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
  *
  * @Component({
@@ -31,7 +32,9 @@ import { NgxSignalFormFieldset } from './form-fieldset.component';
  *     <ngx-signal-form-field-wrapper [formField]="form.email">
  *       <label for="email">Email</label>
  *       <input id="email" [formField]="form.email" />
- *       <ngx-form-field-hint>Enter your email address</ngx-form-field-hint>
+ *       <ngx-signal-form-field-hint>
+ *         Enter your email address
+ *       </ngx-signal-form-field-hint>
  *     </ngx-signal-form-field-wrapper>
  *   `
  * })

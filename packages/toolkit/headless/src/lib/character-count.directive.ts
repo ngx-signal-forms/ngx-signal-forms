@@ -180,12 +180,19 @@ export class NgxHeadlessCharacterCountDirective implements CharacterCountStateSi
    * - `warning`: At/above warning, below danger (default 80-94%)
    * - `danger`: At/above danger, up to 100% (default 95-100%)
    * - `exceeded`: Over 100% of limit
+   *
+   * When `maxLength` is `0` (or negative), any content counts as exceeded
+   * to stay consistent with `isExceeded` and `remaining`, which both treat
+   * a 0 limit as "no characters allowed".
    */
   readonly limitState = computed<CharacterCountLimitState>(() => {
     const max = this.resolvedMaxLength();
-    if (max === 0) return 'ok';
-
     const current = this.currentLength();
+
+    if (max <= 0) {
+      return current > 0 ? 'exceeded' : 'ok';
+    }
+
     const ratio = current / max;
 
     if (ratio > 1) return 'exceeded';

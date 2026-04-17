@@ -144,44 +144,44 @@ describe('validateVest', () => {
     // A crashed warning suite logs a dev-mode error (spied here so the
     // assertion stays tight) but must not flip the field into an error
     // state — warnings are best-effort guidance and a broken warning
-    // bridge should not block form submission while blocking validation
-    // elsewhere is healthy.
+    // bridge should not block form submission.
+    //
+    // Uses a valid initial value so the field has no sync errors from other
+    // validators; Angular Signal Forms skips async validators when another
+    // validator on the same path already produces sync errors, so the
+    // rejected-warning-run path only fires when the field is otherwise clean.
     const consoleErrorSpy = vi
       .spyOn(console, 'error')
       .mockImplementation(() => {});
 
-    const blockingSuite = create((data: { amount: string }) => {
-      test('amount', 'Amount is required', () => {
-        enforce(data.amount).isNotBlank();
-      });
-    });
-
     const rejectedRun = Promise.reject(new Error('Suite crashed'));
     void rejectedRun.catch(() => {});
 
+    const warningSuiteShape = create((data: { amount: string }) => {
+      test('amount', 'Looks suspicious', () => {
+        warn();
+        enforce(data.amount).isNotBlank();
+      });
+    });
     const failingWarningSuite = {
-      ...blockingSuite,
+      ...warningSuiteShape,
       run: () => rejectedRun,
     };
 
     @Component({
-      selector: 'ngx-test-vest-run-error',
+      selector: 'ngx-test-vest-warning-error',
       imports: [FormField],
       changeDetection: ChangeDetectionStrategy.OnPush,
       template: `
         <form novalidate>
           <label for="amount">Amount</label>
           <input id="amount" [formField]="paymentForm.amount" />
-          @if (paymentForm.amount().touched() && paymentForm.amount().invalid()) {
-            <p role="alert">{{ paymentForm.amount().errors()[0].message }}</p>
-          }
         </form>
       `,
     })
     class TestComponent {
-      readonly #model = signal({ amount: '' });
+      readonly #model = signal({ amount: 'ok-value' });
       readonly paymentForm = form(this.#model, (path) => {
-        validateVest(path, blockingSuite);
         validateVestWarnings(path, failingWarningSuite);
       });
     }
@@ -193,11 +193,15 @@ describe('validateVest', () => {
     await user.tab();
     await TestBed.inject(ApplicationRef).whenStable();
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Amount is required');
     expect(
       fixture.componentInstance.paymentForm.amount().errors(),
-    ).toHaveLength(1);
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    ).toHaveLength(0);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '[ngx-signal-forms] Vest async validation failed',
+      ),
+      expect.any(Error),
+    );
 
     consoleErrorSpy.mockRestore();
   });
@@ -593,6 +597,40 @@ describe('validateVest', () => {
     const { fixture } = await render(TestComponent);
     await TestBed.inject(ApplicationRef).whenStable();
 
+    const errors = fixture.componentInstance.signupForm.email().errors();
+    expect(errors).toHaveLength(1);
+    expect(errors[0]?.message).toBe('Email is required');
+  });
+
+  it('surfaces synchronous errors on the initial read without awaiting whenStable()', async () => {
+    // Guards against a regression where the cache entry gated `initialResult`
+    // on `!isThenable(runResult)`. Vest 6's `suite.run()` returns a
+    // dual-shaped object (sync `SuiteResult` *and* thenable), so that guard
+    // always skipped the sync path and forced every run through `validateAsync`.
+    const suite = create((data: { email: string }) => {
+      test('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-vest-sync-initial',
+      imports: [FormField],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `<input [formField]="signupForm.email" />`,
+    })
+    class TestComponent {
+      readonly model = signal({ email: '' });
+      readonly signupForm = form(this.model, (path) => {
+        validateVest(path, suite);
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+
+    // No `await whenStable()` — sync Vest results must surface immediately
+    // via the `validateTree` pass; deferring to the async pipeline would
+    // yield an empty `errors()` list on this read.
     const errors = fixture.componentInstance.signupForm.email().errors();
     expect(errors).toHaveLength(1);
     expect(errors[0]?.message).toBe('Email is required');
