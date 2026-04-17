@@ -158,12 +158,15 @@ export class NgxHeadlessCharacterCountDirective implements CharacterCountStateSi
   /**
    * Percentage of limit used (0-100+).
    *
-   * Returns `0` when `maxLength` is `0` to avoid division-by-zero while
-   * keeping the signal non-nullable.
+   * When `maxLength` is `0` (or negative), returns `100` if any content is
+   * present and `0` otherwise. This keeps the signal non-negative and aligned
+   * with `limitState` / `isExceeded` (which both treat a non-positive limit as
+   * "no characters allowed"), so consumer templates binding to
+   * `aria-valuenow` / progress bars never see nonsensical values.
    */
   readonly percentUsed = computed(() => {
     const max = this.resolvedMaxLength();
-    if (max === 0) return 0;
+    if (max <= 0) return this.currentLength() > 0 ? 100 : 0;
     return (this.currentLength() / max) * 100;
   });
 

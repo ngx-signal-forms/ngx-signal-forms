@@ -188,6 +188,46 @@ describe('NgxHeadlessCharacterCountDirective', () => {
 
       expect(screen.getByTestId('percent-used').textContent).toBe('10');
     });
+
+    it('should clamp percentUsed to 0 or 100 when maxLength is negative', async () => {
+      // Regression guard: a negative `maxLength` must never yield a negative
+      // `percentUsed` — consumers bind this to progress bars / `aria-valuenow`
+      // and negative values would render nonsense.
+      @Component({
+        selector: 'ngx-test-negative-percent',
+        imports: [FormField, NgxHeadlessCharacterCountDirective],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <div>
+            <input id="title" [formField]="form.title" />
+            <div
+              ngxSignalFormHeadlessCharacterCount
+              #charCount="characterCount"
+              [field]="form.title"
+              [maxLength]="-5"
+            >
+              <span data-testid="percent-used">{{
+                charCount.percentUsed()
+              }}</span>
+            </div>
+          </div>
+        `,
+      })
+      class TestComponent {
+        readonly model = signal({ title: 'anything' });
+        readonly form = form(this.model);
+      }
+
+      const { fixture } = await render(TestComponent);
+
+      expect(screen.getByTestId('percent-used').textContent).toBe('100');
+
+      fixture.componentInstance.model.set({ title: '' });
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(screen.getByTestId('percent-used').textContent).toBe('0');
+    });
   });
 
   describe('limit state transitions', () => {
