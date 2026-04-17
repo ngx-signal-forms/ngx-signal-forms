@@ -5,8 +5,12 @@ import {
   FormField,
   required,
   schema,
+  validate,
 } from '@angular/forms/signals';
-import type { SubmittedStatus } from '@ngx-signal-forms/toolkit';
+import type {
+  ErrorDisplayStrategy,
+  SubmittedStatus,
+} from '@ngx-signal-forms/toolkit';
 import { NGX_SIGNAL_FORM_FIELD_CONTEXT } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
@@ -937,6 +941,122 @@ describe('NgxFormFieldErrorComponent', () => {
 
       // Error ID should update
       expect(container.querySelector('[id="updated-name-error"]')).toBeTruthy();
+    });
+  });
+
+  describe('warningStrategy', () => {
+    /**
+     * The PR #17 v1 audit introduced `warningStrategy` as a dedicated input
+     * that decouples warning-visibility timing from error-visibility timing.
+     * Default is `'immediate'` so informational guidance stays visible even
+     * while errors are still gated by `'on-touch'` / `'on-submit'`.
+     *
+     * These tests lock that contract: errors and warnings resolve their
+     * visibility through independent strategy inputs and share only the
+     * submitted-status signal when `on-submit` is involved.
+     */
+    @Component({
+      selector: 'ngx-test-warning-strategy',
+      imports: [FormField, NgxFormFieldErrorComponent],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `
+        <input id="password" [formField]="contactForm.password" />
+        <ngx-form-field-error
+          [formField]="contactForm.password"
+          fieldName="password"
+          [strategy]="strategy()"
+          [warningStrategy]="warningStrategy()"
+          [submittedStatus]="submittedStatus()"
+        />
+      `,
+    })
+    class WarningStrategyHost {
+      readonly #model = signal({ password: 'weak' });
+      readonly contactForm = form(
+        this.#model,
+        schema((path) => {
+          validate(path.password, (ctx) => {
+            const value = ctx.value();
+            if (value.length > 0 && value.length < 8) {
+              return {
+                kind: 'warn:weak-password',
+                message: 'Consider 8+ characters',
+              };
+            }
+            return null;
+          });
+        }),
+      );
+      readonly strategy = signal<ErrorDisplayStrategy | undefined>('on-touch');
+      readonly warningStrategy = signal<ErrorDisplayStrategy | undefined>(
+        undefined,
+      );
+      readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
+    }
+
+    it('surfaces warnings immediately by default even when error strategy gates errors', async () => {
+      // Default warningStrategy is 'immediate'. With strategy='on-touch' and
+      // an untouched field, errors are hidden — but the warning must still
+      // surface. This is the whole point of decoupling.
+      await render(WarningStrategyHost);
+
+      const status = screen.getByRole('status');
+      expect(status).toBeTruthy();
+      expect(status.textContent).toContain('Consider 8+ characters');
+
+      // Errors stay hidden — only the warning is visible.
+      expect(screen.queryByRole('alert')).toBeFalsy();
+    });
+
+    it('gates warnings behind touch when warningStrategy is on-touch', async () => {
+      const { fixture } = await render(WarningStrategyHost);
+      fixture.componentInstance.warningStrategy.set('on-touch');
+      fixture.detectChanges();
+
+      // Untouched: warning hidden.
+      expect(screen.queryByRole('status')).toBeFalsy();
+
+      // Touching the field surfaces the warning.
+      fixture.componentInstance.contactForm.password().markAsTouched();
+      fixture.detectChanges();
+
+      const status = await screen.findByRole('status');
+      expect(status.textContent).toContain('Consider 8+ characters');
+    });
+
+    it('gates warnings behind submit when warningStrategy is on-submit', async () => {
+      const { fixture } = await render(WarningStrategyHost);
+      fixture.componentInstance.warningStrategy.set('on-submit');
+      fixture.detectChanges();
+
+      // Unsubmitted: warning hidden even when touched.
+      fixture.componentInstance.contactForm.password().markAsTouched();
+      fixture.detectChanges();
+      expect(screen.queryByRole('status')).toBeFalsy();
+
+      // After submit, warning surfaces.
+      fixture.componentInstance.submittedStatus.set('submitted');
+      fixture.detectChanges();
+
+      const status = await screen.findByRole('status');
+      expect(status.textContent).toContain('Consider 8+ characters');
+    });
+
+    it('keeps warnings visible while errors stay hidden under on-submit', async () => {
+      // The practical use case: error strategy is `on-submit` (strict form),
+      // but warnings should still guide the user immediately. With default
+      // `warningStrategy`, this should work transparently.
+      const { fixture } = await render(WarningStrategyHost);
+      fixture.componentInstance.strategy.set('on-submit');
+      fixture.componentInstance.warningStrategy.set(undefined);
+      fixture.detectChanges();
+
+      // Warning visible even before submit.
+      const status = screen.getByRole('status');
+      expect(status.textContent).toContain('Consider 8+ characters');
+
+      // Errors still gated by submit.
+      expect(screen.queryByRole('alert')).toBeFalsy();
     });
   });
 });
