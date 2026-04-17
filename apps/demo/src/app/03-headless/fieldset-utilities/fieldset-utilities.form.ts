@@ -243,7 +243,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
                 >
                   @for (
                     error of emailState.resolvedErrors();
-                    track error.kind
+                    track error.kind + ':' + error.message + ':' + $index
                   ) {
                     <div>{{ error.message }}</div>
                   }
@@ -291,7 +291,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
               >
                 @for (
                   error of addressFieldset.aggregatedErrors();
-                  track error.kind
+                  track error.kind + ':' + error.message + ':' + $index
                 ) {
                   <div>{{ error.message }}</div>
                 }
@@ -305,7 +305,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
               >
                 @for (
                   warning of addressFieldset.aggregatedWarnings();
-                  track warning.kind
+                  track warning.kind + ':' + warning.message + ':' + $index
                 ) {
                   <div>{{ warning.message }}</div>
                 }
@@ -359,7 +359,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
                     >
                       @for (
                         error of streetState.resolvedErrors();
-                        track error.kind
+                        track error.kind + ':' + error.message + ':' + $index
                       ) {
                         <div>{{ error.message }}</div>
                       }
@@ -375,7 +375,11 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
                     >
                       @for (
                         warning of streetState.resolvedWarnings();
-                        track warning.kind
+                        track warning.kind +
+                          ':' +
+                          warning.message +
+                          ':' +
+                          $index
                       ) {
                         <div>{{ warning.message }}</div>
                       }
@@ -427,7 +431,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
                     >
                       @for (
                         error of cityState.resolvedErrors();
-                        track error.kind
+                        track error.kind + ':' + error.message + ':' + $index
                       ) {
                         <div>{{ error.message }}</div>
                       }
@@ -482,7 +486,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
                     >
                       @for (
                         error of postalState.resolvedErrors();
-                        track error.kind
+                        track error.kind + ':' + error.message + ':' + $index
                       ) {
                         <div>{{ error.message }}</div>
                       }
@@ -498,7 +502,11 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
                     >
                       @for (
                         warning of postalState.resolvedWarnings();
-                        track warning.kind
+                        track warning.kind +
+                          ':' +
+                          warning.message +
+                          ':' +
+                          $index
                       ) {
                         <div>{{ warning.message }}</div>
                       }
@@ -562,7 +570,10 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
                 role="alert"
                 class="headless-alert-error text-xs"
               >
-                @for (error of notesError.errors(); track error.kind) {
+                @for (
+                  error of notesError.errors();
+                  track error.kind + ':' + error.message + ':' + $index
+                ) {
                   <div>{{ error.message }}</div>
                 }
               </div>
@@ -573,7 +584,10 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
                 aria-live="polite"
                 class="headless-alert-warning text-xs"
               >
-                @for (warning of notesError.warnings(); track warning.kind) {
+                @for (
+                  warning of notesError.warnings();
+                  track warning.kind + ':' + warning.message + ':' + $index
+                ) {
                   <div>{{ warning.message }}</div>
                 }
               </div>

@@ -107,7 +107,10 @@ export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
       >
         @if (usesBulletList()) {
           <ul class="ngx-form-field-error__list" role="list">
-            @for (error of resolvedErrors(); track error.kind) {
+            @for (
+              error of resolvedErrors();
+              track error.kind + ':' + error.message + ':' + $index
+            ) {
               <li
                 class="ngx-form-field-error__message ngx-form-field-error__message--error"
               >
@@ -116,7 +119,10 @@ export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
             }
           </ul>
         } @else {
-          @for (error of resolvedErrors(); track error.kind) {
+          @for (
+            error of resolvedErrors();
+            track error.kind + ':' + error.message + ':' + $index
+          ) {
             <p
               class="ngx-form-field-error__message ngx-form-field-error__message--error"
             >
@@ -140,7 +146,10 @@ export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
       >
         @if (usesBulletList()) {
           <ul class="ngx-form-field-error__list" role="list">
-            @for (warning of resolvedWarnings(); track warning.kind) {
+            @for (
+              warning of resolvedWarnings();
+              track warning.kind + ':' + warning.message + ':' + $index
+            ) {
               <li
                 class="ngx-form-field-error__message ngx-form-field-error__message--warning"
               >
@@ -149,7 +158,10 @@ export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
             }
           </ul>
         } @else {
-          @for (warning of resolvedWarnings(); track warning.kind) {
+          @for (
+            warning of resolvedWarnings();
+            track warning.kind + ':' + warning.message + ':' + $index
+          ) {
             <p
               class="ngx-form-field-error__message ngx-form-field-error__message--warning"
             >
