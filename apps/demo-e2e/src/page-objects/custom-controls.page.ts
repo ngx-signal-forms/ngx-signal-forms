@@ -11,6 +11,8 @@ export class CustomControlsPage extends BaseFormPage {
 
   readonly stackedAppearanceButton: Locator;
   readonly outlineAppearanceButton: Locator;
+  readonly verticalOrientationButton: Locator;
+  readonly horizontalOrientationButton: Locator;
 
   // Form wrapper locators
   readonly formFieldWrappers: Locator;
@@ -35,6 +37,12 @@ export class CustomControlsPage extends BaseFormPage {
     });
     this.outlineAppearanceButton = this.page.getByRole('button', {
       name: 'Outline',
+    });
+    this.verticalOrientationButton = this.page.getByRole('button', {
+      name: 'Vertical',
+    });
+    this.horizontalOrientationButton = this.page.getByRole('button', {
+      name: 'Horizontal',
     });
 
     // Form field wrappers
@@ -107,6 +115,27 @@ export class CustomControlsPage extends BaseFormPage {
    */
   async showOutlineAppearance(): Promise<void> {
     await this.outlineAppearanceButton.click();
+  }
+
+  /**
+   * Switch the demo to stacked appearance.
+   */
+  async showStackedAppearance(): Promise<void> {
+    await this.stackedAppearanceButton.click();
+  }
+
+  /**
+   * Switch the demo to horizontal orientation.
+   */
+  async showHorizontalOrientation(): Promise<void> {
+    await this.horizontalOrientationButton.click();
+  }
+
+  /**
+   * Switch the demo to vertical orientation.
+   */
+  async showVerticalOrientation(): Promise<void> {
+    await this.verticalOrientationButton.click();
   }
 
   /**

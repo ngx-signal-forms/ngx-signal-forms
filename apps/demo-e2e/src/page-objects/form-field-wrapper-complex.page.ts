@@ -9,19 +9,31 @@ import { BaseFormPage } from './base-form.page';
  */
 export class FormFieldWrapperComplexPage extends BaseFormPage {
   readonly addSkillButton: Locator;
+  readonly horizontalOrientationButton: Locator;
+  readonly outlineAppearanceButton: Locator;
   readonly resetButton: Locator;
   readonly submitButton: Locator;
+  readonly verticalOrientationButton: Locator;
 
   constructor(page: Page) {
     super(page);
     this.addSkillButton = this.form.getByRole('button', {
       name: /Add Skill/i,
     });
+    this.horizontalOrientationButton = this.page.getByRole('button', {
+      name: 'Horizontal',
+    });
+    this.outlineAppearanceButton = this.page.getByRole('button', {
+      name: 'Outline',
+    });
     this.resetButton = this.form.getByRole('button', {
       name: /^Reset$/i,
     });
     this.submitButton = this.form.getByRole('button', {
       name: /Submit Application|Submitting/i,
+    });
+    this.verticalOrientationButton = this.page.getByRole('button', {
+      name: 'Vertical',
     });
   }
 
@@ -158,5 +170,28 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
    */
   getFieldsetErrorsByLegend(legendText: string | RegExp): Locator {
     return this.getFieldsetByLegend(legendText).locator('[role="alert"]');
+  }
+
+  /**
+   * Get the wrapper containing a specific control.
+   */
+  getWrapperByControlId(controlId: string): Locator {
+    return this.form.locator(
+      `ngx-signal-form-field-wrapper:has(#${controlId})`,
+    );
+  }
+
+  /**
+   * Switch the demo to outline appearance.
+   */
+  async showOutlineAppearance(): Promise<void> {
+    await this.outlineAppearanceButton.click();
+  }
+
+  /**
+   * Switch the demo to horizontal orientation.
+   */
+  async showHorizontalOrientation(): Promise<void> {
+    await this.horizontalOrientationButton.click();
   }
 }
