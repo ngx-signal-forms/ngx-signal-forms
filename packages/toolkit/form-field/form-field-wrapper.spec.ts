@@ -784,7 +784,11 @@ describe('NgxSignalFormWrapperComponent', () => {
 
       const formField = container.querySelector('ngx-form-field-wrapper');
       expect(formField).toHaveAttribute('data-show-required', 'true');
-      expect(formField).toHaveAttribute('data-required-marker', ' *');
+      const marker = formField?.querySelector(
+        '.ngx-signal-form-field-wrapper__required-marker',
+      );
+      expect(marker).toBeTruthy();
+      expect(marker?.textContent).toBe(' *');
     });
 
     it('should hide required marker when showRequiredMarker is false', async () => {
@@ -806,7 +810,11 @@ describe('NgxSignalFormWrapperComponent', () => {
 
       const formField = container.querySelector('ngx-form-field-wrapper');
       expect(formField).not.toHaveAttribute('data-show-required', 'true');
-      expect(formField).not.toHaveAttribute('data-required-marker');
+      expect(
+        formField?.querySelector(
+          '.ngx-signal-form-field-wrapper__required-marker',
+        ),
+      ).toBeNull();
     });
 
     it('should use custom required marker when provided', async () => {
@@ -828,7 +836,11 @@ describe('NgxSignalFormWrapperComponent', () => {
 
       const formField = container.querySelector('ngx-form-field-wrapper');
       expect(formField).toHaveAttribute('data-show-required', 'true');
-      expect(formField).toHaveAttribute('data-required-marker', '(required)');
+      const marker = formField?.querySelector(
+        '.ngx-signal-form-field-wrapper__required-marker',
+      );
+      expect(marker).toBeTruthy();
+      expect(marker?.textContent).toBe('(required)');
     });
 
     it('should not set marker when outline is disabled', async () => {
@@ -847,7 +859,36 @@ describe('NgxSignalFormWrapperComponent', () => {
 
       const formField = container.querySelector('ngx-form-field-wrapper');
       expect(formField).not.toHaveAttribute('data-show-required', 'true');
-      expect(formField).not.toHaveAttribute('data-required-marker');
+      expect(
+        formField?.querySelector(
+          '.ngx-signal-form-field-wrapper__required-marker',
+        ),
+      ).toBeNull();
+    });
+
+    it('should mark the required marker as aria-hidden so screen readers do not double-announce required state', async () => {
+      // Auto-aria already writes `aria-required="true"` to the bound control,
+      // and screen readers announce that. The visual asterisk MUST be hidden
+      // from the accessibility tree (WCAG 1.3.1, 4.1.2) — otherwise NVDA /
+      // VoiceOver read both, e.g. "Email star, required edit".
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" appearance="outline">
+          <label for="email">Email</label>
+          <input id="email" type="email" required />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const marker = container.querySelector(
+        '.ngx-signal-form-field-wrapper__required-marker',
+      );
+      expect(marker).toBeTruthy();
+      expect(marker).toHaveAttribute('aria-hidden', 'true');
     });
   });
 
@@ -950,7 +991,11 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(switchControl).toBeTruthy();
       expect(errorElement).toBeTruthy();
       expect(assistiveRow?.querySelector('ngx-form-field-error')).toBeTruthy();
-      expect(wrapper).toHaveAttribute('aria-invalid', 'true');
+      // `aria-invalid` belongs on the form control itself, not on the wrapper
+      // host (the auto-aria directive writes it to the bound control). The
+      // visual `--invalid` class is correct, but a host-level ARIA state would
+      // either be ignored by AT or cause double announcements (WCAG 4.1.2).
+      expect(wrapper).not.toHaveAttribute('aria-invalid');
       expect(
         wrapper?.classList.contains('ngx-signal-form-field-wrapper--invalid'),
       ).toBe(true);
@@ -1182,7 +1227,10 @@ describe('NgxSignalFormWrapperComponent', () => {
       );
 
       const wrapper = container.querySelector('ngx-form-field-wrapper');
-      expect(wrapper).toHaveAttribute('aria-invalid', 'true');
+      // Host MUST NOT carry `aria-invalid` — only the form control should
+      // (auto-aria handles that). The visual `--invalid` class still drives
+      // border colour, which is the correct wrapper-level concern.
+      expect(wrapper).not.toHaveAttribute('aria-invalid');
       expect(
         wrapper?.classList.contains('ngx-signal-form-field-wrapper--invalid'),
       ).toBe(true);
@@ -1209,7 +1257,9 @@ describe('NgxSignalFormWrapperComponent', () => {
       );
 
       const wrapper = container.querySelector('ngx-form-field-wrapper');
-      expect(wrapper).toHaveAttribute('aria-invalid', 'false');
+      // Wrapper never publishes `aria-invalid` — confirm the absence holds in
+      // the negative case too, not just when errors are visible.
+      expect(wrapper).not.toHaveAttribute('aria-invalid');
       expect(
         wrapper?.classList.contains('ngx-signal-form-field-wrapper--invalid'),
       ).toBe(false);
@@ -2099,7 +2149,9 @@ describe('NgxSignalFormWrapperComponent', () => {
       );
 
       const wrapper = container.querySelector('ngx-form-field-wrapper');
-      expect(wrapper).toHaveAttribute('aria-invalid', 'true');
+      // Same rule as native controls: the wrapper never publishes
+      // `aria-invalid`. Custom-control hosts get it via auto-aria directly.
+      expect(wrapper).not.toHaveAttribute('aria-invalid');
       expect(
         wrapper?.classList.contains('ngx-signal-form-field-wrapper--invalid'),
       ).toBe(true);
@@ -2621,7 +2673,11 @@ describe('NgxSignalFormWrapperComponent', () => {
 
         const formField = container.querySelector('ngx-form-field-wrapper');
         expect(formField).toHaveAttribute('data-show-required', 'true');
-        expect(formField).toHaveAttribute('data-required-marker', ' *');
+        const marker = formField?.querySelector(
+          '.ngx-signal-form-field-wrapper__required-marker',
+        );
+        expect(marker).toBeTruthy();
+        expect(marker?.textContent).toBe(' *');
       });
 
       it('should not show required marker with standard appearance', async () => {
@@ -2640,7 +2696,11 @@ describe('NgxSignalFormWrapperComponent', () => {
 
         const formField = container.querySelector('ngx-form-field-wrapper');
         expect(formField).not.toHaveAttribute('data-show-required', 'true');
-        expect(formField).not.toHaveAttribute('data-required-marker');
+        expect(
+          formField?.querySelector(
+            '.ngx-signal-form-field-wrapper__required-marker',
+          ),
+        ).toBeNull();
       });
 
       it('should use plain appearance when explicitly set', async () => {
@@ -3265,6 +3325,40 @@ describe('NgxSignalFormWrapperComponent', () => {
       await rerender({ componentProperties: { field } });
 
       expect(getClassificationWarnings(warnSpy)).toHaveLength(1);
+    });
+  });
+
+  describe('Theming defaults (a11y)', () => {
+    it('should resolve the warning color custom property to an AA-compliant value on white', async () => {
+      // The previous default of #f59e0b (Tailwind amber-500) only achieves
+      // ~2.16:1 contrast on white — fine for borders/icons, but the same
+      // token also drives warning *text*, which fails WCAG 2.2 AA (4.5:1).
+      // Locking in the darker default protects consumers who do not override
+      // `--ngx-form-field-color-warning` themselves.
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      expect(wrapper).toBeTruthy();
+
+      // `getComputedStyle` walks `:host` declarations the same way it would in
+      // an app, so this verifies what consumers actually see in the browser.
+      const computed = getComputedStyle(wrapper as HTMLElement);
+      const warningToken = computed
+        .getPropertyValue('--_field-clr-warning')
+        .trim()
+        .toLowerCase();
+      expect(warningToken).toBe('#a16207');
     });
   });
 });

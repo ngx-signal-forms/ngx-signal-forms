@@ -84,9 +84,22 @@
 }
 
 .ngx-form-field-error--warning {
-  color: var(--ngx-signal-form-warning-color, #f59e0b);
+  /* WCAG 1.4.3 (AA): #f59e0b on white = 2.16:1, fails normal-text contrast.
+   * Tailwind amber-700 (#a16207) gives ~5.17:1 on white and remains
+   * recognisably "amber" so the design intent is preserved. The custom
+   * property override is intentionally untouched — consumers that pin a
+   * brand-specific amber are responsible for keeping it ≥ 4.5:1. */
+  color: var(--ngx-signal-form-warning-color, #a16207);
   background-color: var(--ngx-signal-form-warning-bg, transparent);
   border-color: var(--ngx-signal-form-warning-border, transparent);
+}
+
+/* Empty live-region shell: the role="alert" / role="status" containers stay
+ * mounted so AT picks up the live region on first insertion (WCAG 4.1.3).
+ * When empty we suppress the slide-in animation — there is nothing to
+ * animate and the keyframe would otherwise still run on every render. */
+.ngx-form-field-error--empty {
+  animation: none;
 }
 
 .ngx-form-field-error__message {

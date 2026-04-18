@@ -3,7 +3,7 @@ import {
   computed,
   effect,
   isSignal,
-  signal,
+  linkedSignal,
   type Signal,
   type WritableSignal,
 } from '@angular/core';
@@ -60,31 +60,105 @@ export function createSubmittedStatusTracker(
     );
   };
 
-  const submitted = signal(false);
-  const prevSubmitting = signal(false);
-  const prevTouched = signal(false);
+  // Validate eagerly so callers learn about a wiring bug at construction
+  // time rather than asynchronously when the warm-effect runs. Signal-typed
+  // inputs are deferred (`input.required()` may not yet have produced the
+  // tree) — for those we delegate to the lazy `resolve()` path.
+  if (!isSignal(formTree)) {
+    resolve();
+  }
 
-  effect(() => {
-    const state = resolve()();
-    const nowSubmitting = state.submitting();
-    const nowTouched = state.touched();
+  // Angular 21 idiom: derive submitted-history via `linkedSignal` so the
+  // transition detection (true → false on `submitting`, true → false on
+  // `touched`) is expressed declaratively against `prev` instead of through
+  // a multi-write `effect()` that the previous implementation used.
+  //
+  // The previous shape wrote to THREE signals from one effect
+  // (`submitted`, `prevSubmitting`, `prevTouched`) — the canonical
+  // "effect writes to signals" antipattern that re-runs in the same tick
+  // and makes change-detection ordering load-bearing. This rewrite captures
+  // the previous source snapshot via `linkedSignal`'s `prev.source` so we
+  // need no manually-managed mirror signals.
+  //
+  // Important: `linkedSignal` is lazy — its source is evaluated only on
+  // read. Transition detection requires every source snapshot to be
+  // observed, so a small `effect()` keeps the linkedSignal warm by reading
+  // it on every reactive change. This is intentional and is the only
+  // remaining side effect (a SINGLE-write effect, the safe shape).
+  const submittedHistory = linkedSignal<
+    { submitting: boolean; touched: boolean; pending: boolean },
+    boolean
+  >({
+    source: () => {
+      const state = resolve()();
+      return {
+        submitting: state.submitting(),
+        touched: state.touched(),
+        pending: state.pending?.() ?? false,
+      };
+    },
+    computation: (curr, prev) => {
+      const previousValue = prev?.value ?? false;
 
-    if (prevSubmitting() && !nowSubmitting) {
-      submitted.set(true);
-    }
-    if (prevTouched() && !nowTouched && !nowSubmitting) {
-      submitted.set(false);
-      submitAttempted?.set(false);
-    }
+      // Reset on touched: true → false (form.reset()) when not currently
+      // submitting. Mirrors the original effect's reset condition.
+      if (
+        prev !== undefined &&
+        prev.source.touched &&
+        !curr.touched &&
+        !curr.submitting
+      ) {
+        return false;
+      }
 
-    prevSubmitting.set(nowSubmitting);
-    prevTouched.set(nowTouched);
+      // Transition: submitting true → false marks a completed submission.
+      if (prev !== undefined && prev.source.submitting && !curr.submitting) {
+        return true;
+      }
+
+      return previousValue;
+    },
   });
+
+  // Keep the linkedSignal warm so transient transitions are not lost
+  // between consumer reads. Single-statement effect, single read — does
+  // NOT write to any signal, so it cannot loop.
+  effect(() => {
+    submittedHistory();
+  });
+
+  // Side effect (single, isolated): clear the external submit-attempt
+  // signal when the form is reset. Detect the reset by tracking the
+  // touched: true → false transition (same trigger the linkedSignal uses
+  // to roll `submittedHistory` back to false). Kept out of the
+  // linkedSignal computation because computations must be pure.
+  //
+  // This is a single-write effect — the only signal it writes is the
+  // external `submitAttempted`, which is owned by the caller.
+  if (submitAttempted !== undefined) {
+    let prevTouched = false;
+    effect(() => {
+      const state = resolve()();
+      const nowTouched = state.touched();
+      const nowSubmitting = state.submitting();
+      const wasTouched = prevTouched;
+      prevTouched = nowTouched;
+
+      // Reset transition only — never on initial steady-state reads.
+      if (wasTouched && !nowTouched && !nowSubmitting) {
+        if (submitAttempted()) {
+          submitAttempted.set(false);
+        }
+      }
+    });
+  }
 
   return computed(() => {
     const state = resolve()();
     if (state.submitting()) return 'submitting';
-    return submitted() || submitAttempted?.() ? 'submitted' : 'unsubmitted';
+    return submittedHistory() || submitAttempted?.()
+      ? 'submitted'
+      : 'unsubmitted';
   });
 }
 /* oxlint-enable @typescript-eslint/prefer-readonly-parameter-types */

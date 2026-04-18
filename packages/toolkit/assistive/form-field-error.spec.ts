@@ -561,6 +561,68 @@ describe('NgxFormFieldError', () => {
       expect(alert.getAttribute('role')).toBe('alert');
     });
 
+    it('should keep an empty role="alert" live region mounted before any errors appear (WCAG 4.1.3)', async () => {
+      /**
+       * WCAG 4.1.3 (Status Messages): role="alert" only fires reliably on
+       * NVDA + Chrome when content is inserted into a *pre-existing* live
+       * region. If the alert container itself is added to the DOM at the
+       * same moment as the first error, the very first announcement can be
+       * silently dropped. v1 keeps the role="alert" container always
+       * mounted (and aria-hidden="true" while empty) so that timing
+       * edge case never trips screen readers.
+       */
+      @Component({
+        selector: 'ngx-test-empty-live-region',
+        imports: [FormField, NgxFormFieldErrorComponent],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <input id="email" [formField]="contactForm.email" />
+          <ngx-form-field-error
+            [formField]="contactForm.email"
+            fieldName="email"
+            strategy="on-touch"
+            [submittedStatus]="submittedStatus()"
+          />
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'Email is required' });
+          }),
+        );
+        readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
+      }
+
+      const { container } = await render(TestComponent);
+
+      // Untouched + on-touch ⇒ no error is *announced* (nothing to read)
+      // but the live-region container itself MUST already be in the DOM
+      // with role="alert" so a future insertion fires the announcement.
+      const alertContainer = container.querySelector('[role="alert"]');
+      expect(alertContainer).toBeTruthy();
+      expect(alertContainer?.getAttribute('aria-hidden')).toBe('true');
+      // hidden attribute keeps the empty shell out of layout/visual flow.
+      expect(alertContainer?.hasAttribute('hidden')).toBe(true);
+      // No id leaks while empty — aria-describedby targets must not point
+      // at an element with no message text. Angular renders `null`
+      // bindings as either a missing attribute or the literal string
+      // "null" depending on the jsdom path; what matters here is that
+      // the auto-generated `*-error` id is not exposed.
+      const idAttr = alertContainer?.getAttribute('id') ?? null;
+      expect(idAttr === null || idAttr === '' || idAttr === 'null').toBe(true);
+      // No error text either.
+      expect(alertContainer?.textContent?.trim()).toBe('');
+
+      // The same applies to the warning role="status" sibling.
+      const statusContainer = container.querySelector('[role="status"]');
+      expect(statusContainer).toBeTruthy();
+      expect(statusContainer?.getAttribute('aria-hidden')).toBe('true');
+      expect(statusContainer?.hasAttribute('hidden')).toBe(true);
+    });
+
     it('should rely on role="alert" implicit semantics (no redundant aria-live/aria-atomic)', async () => {
       /**
        * `role="alert"` already implies `aria-live="assertive"` and

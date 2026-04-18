@@ -112,8 +112,15 @@ Starting in v1, the published `package.json` no longer exposes the
   that are re-exported from the root barrel.
 - `packages/toolkit/index.ts` is the authoritative list of the stable
   public surface (54 values and 26 types, enumerated by hand).
-- CSS custom properties (`--ngx-signal-form-*`) are unchanged — theme
-  overrides continue to work untouched.
+- CSS custom properties are unchanged — theme overrides continue
+  to work untouched. Two prefix families exist and stay stable:
+  `--ngx-signal-form-*` for shared feedback tokens
+  (e.g. `--ngx-signal-form-feedback-font-size`,
+  `--ngx-signal-form-error-color`, `--ngx-signal-form-fieldset-*`) and
+  `--ngx-form-field-*` for component-scoped tokens
+  (e.g. `--ngx-form-field-color-primary`, `--ngx-form-field-focus-color`).
+  See [`packages/toolkit/form-field/THEMING.md`](../packages/toolkit/form-field/THEMING.md#architecture-semantic-layering)
+  for the full layering.
 
 If you were reaching into `/core` for something that is **not**
 re-exported from root, it was `@internal` and is not part of the v1

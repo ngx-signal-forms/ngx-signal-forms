@@ -239,6 +239,106 @@ describe('NgxFormFieldErrorSummary', () => {
     expect(document.activeElement).toBe(screen.getByTestId('email-input'));
   });
 
+  it('moves focus to the summary host the first time entries appear (WCAG 2.4.3 + 3.3.1)', async () => {
+    /**
+     * GOV.UK / WAI error-summary pattern: when the summary surfaces, focus
+     * should move to it programmatically so screen reader users hear the
+     * announcement and arrive at the summary instead of being stranded
+     * wherever they were before submit. Subsequent entry-list mutations
+     * must NOT steal focus a second time.
+     */
+    @Component({
+      selector: 'ngx-test-error-summary-autofocus',
+      imports: [FormField, NgxFormFieldErrorSummaryComponent],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `
+        <input id="email" [formField]="contactForm.email" />
+        <ngx-form-field-error-summary
+          [formTree]="contactForm"
+          strategy="on-submit"
+          [submittedStatus]="submittedStatus()"
+        />
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ email: '' });
+      readonly contactForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.email, { message: 'Email is required' });
+        }),
+      );
+      readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
+    }
+
+    const { fixture } = await render(TestComponent);
+
+    // Before submit there are no entries, so the summary is hidden and
+    // focus is wherever the test framework left it (typically <body>).
+    expect(screen.queryByRole('alert')).toBeFalsy();
+
+    // Submit triggers the on-submit strategy → entries appear → host
+    // should receive focus on the next render pass.
+    fixture.componentInstance.submittedStatus.set('submitted');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const summaryHost = await screen.findByRole('alert');
+    // The role="alert" lives on a child div inside the focus-target host.
+    // Walk up to the ngx-form-field-error-summary element — that is what
+    // carries `tabindex="-1"` and receives the programmatic focus call.
+    const focusTarget = summaryHost.closest('ngx-form-field-error-summary');
+    expect(focusTarget).toBeInstanceOf(HTMLElement);
+    expect(focusTarget?.getAttribute('tabindex')).toBe('-1');
+    expect(document.activeElement).toBe(focusTarget);
+  });
+
+  it('does not focus the summary when [autoFocus]="false"', async () => {
+    @Component({
+      selector: 'ngx-test-error-summary-no-autofocus',
+      imports: [FormField, NgxFormFieldErrorSummaryComponent],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `
+        <input
+          id="email"
+          data-testid="email-input"
+          [formField]="contactForm.email"
+        />
+        <ngx-form-field-error-summary
+          [formTree]="contactForm"
+          strategy="on-submit"
+          [autoFocus]="false"
+          [submittedStatus]="submittedStatus()"
+        />
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ email: '' });
+      readonly contactForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.email, { message: 'Email is required' });
+        }),
+      );
+      readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
+    }
+
+    const { fixture } = await render(TestComponent);
+
+    // Move focus to a known, non-summary element so we can detect theft.
+    const input = screen.getByTestId('email-input');
+    input.focus();
+    expect(document.activeElement).toBe(input);
+
+    fixture.componentInstance.submittedStatus.set('submitted');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    // Summary is visible but focus must remain on the input.
+    expect(await screen.findByRole('alert')).toBeTruthy();
+    expect(document.activeElement).toBe(input);
+  });
+
   it('exposes role="alert" without redundant aria-live/aria-atomic', async () => {
     @Component({
       selector: 'ngx-test-error-summary-aria',

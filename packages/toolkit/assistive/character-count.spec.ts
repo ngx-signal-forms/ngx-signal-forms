@@ -454,6 +454,39 @@ describe('NgxFormFieldCharacterCount', () => {
     });
   });
 
+  describe('Default token contrast (WCAG 1.4.3)', () => {
+    it('exposes an AA-compliant default warning color (≥ 4.5:1 on white)', async () => {
+      /**
+       * Smoke test for the design-token contract. The previous default
+       * `#f59e0b` (~2.16:1 on white) failed WCAG 1.4.3 AA for normal-text
+       * color contrast; v1 ships `#a16207` (Tailwind amber-700, ~5.17:1)
+       * as the default. This guard catches regressions if a future
+       * theming refactor reverts the token.
+       *
+       * We render the component and read its style sheets from the
+       * adoptedStyleSheets pipeline (or via the head <style> Angular
+       * injects in jsdom) so the test pins behaviour from the consumer's
+       * perspective, not via the private `ɵcmp` metadata API.
+       */
+      await render(TestWrapperComponent, {
+        componentInputs: { textModel: 'a'.repeat(85), maxLength: 100 },
+      });
+
+      // Combine every <style> Angular has injected for component styles.
+      const styleText = Array.from(document.querySelectorAll('style'))
+        .map((s) => s.textContent ?? '')
+        .join('\n');
+
+      expect(styleText).toContain('--ngx-form-field-char-count-color-warning');
+      // New AA-compliant default fallback must be present.
+      expect(styleText).toContain('#a16207');
+      // The failing-contrast value must be gone from the defaults.
+      expect(styleText).not.toMatch(
+        /--ngx-form-field-char-count-color-warning,\s*#f59e0b/u,
+      );
+    });
+  });
+
   describe('Component structure', () => {
     it('should have correct element tag', async () => {
       const { container } = await render(TestWrapperComponent, {

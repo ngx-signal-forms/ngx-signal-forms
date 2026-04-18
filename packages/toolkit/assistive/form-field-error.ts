@@ -98,13 +98,25 @@ export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
       Blocking Errors: role="alert" already implies aria-live="assertive"
       and aria-atomic="true". Setting them explicitly causes duplicate
       announcements on NVDA+Firefox, so we rely on the implicit semantics.
+
+      The container is rendered UNCONDITIONALLY (even when empty) so that
+      role="alert" — which only fires reliably on content insertion into a
+      pre-existing live region — works the very first time an error appears.
+      This satisfies WCAG 4.1.3 (Status Messages) and avoids the NVDA + Chrome
+      timing edge case where a freshly-inserted live region misses its first
+      announcement. We mark the container as aria-hidden="true" while empty
+      so it is invisible to AT and contributes no whitespace text to the
+      accessibility tree, but never toggle the role attribute itself.
     -->
-    @if (showErrors() && hasErrors()) {
-      <div
-        [id]="errorId()"
-        class="ngx-form-field-error ngx-form-field-error--error"
-        role="alert"
-      >
+    <div
+      [id]="errorContainerVisible() ? errorId() : null"
+      class="ngx-form-field-error ngx-form-field-error--error"
+      [class.ngx-form-field-error--empty]="!errorContainerVisible()"
+      role="alert"
+      [attr.aria-hidden]="errorContainerVisible() ? null : 'true'"
+      [hidden]="!errorContainerVisible()"
+    >
+      @if (errorContainerVisible()) {
         @if (usesBulletList()) {
           <ul class="ngx-form-field-error__list" role="list">
             @for (
@@ -130,20 +142,24 @@ export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
             </p>
           }
         }
-      </div>
-    }
+      }
+    </div>
 
     <!--
       Non-blocking Warnings: role="status" implies aria-live="polite" and
       aria-atomic="true"; the explicit attributes are intentionally omitted
-      to avoid duplicate AT announcements.
+      to avoid duplicate AT announcements. Same empty-live-region pattern as
+      the alert container above.
     -->
-    @if (showWarnings() && hasWarnings()) {
-      <div
-        [id]="warningId()"
-        class="ngx-form-field-error ngx-form-field-error--warning"
-        role="status"
-      >
+    <div
+      [id]="warningContainerVisible() ? warningId() : null"
+      class="ngx-form-field-error ngx-form-field-error--warning"
+      [class.ngx-form-field-error--empty]="!warningContainerVisible()"
+      role="status"
+      [attr.aria-hidden]="warningContainerVisible() ? null : 'true'"
+      [hidden]="!warningContainerVisible()"
+    >
+      @if (warningContainerVisible()) {
         @if (usesBulletList()) {
           <ul class="ngx-form-field-error__list" role="list">
             @for (
@@ -169,8 +185,8 @@ export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
             </p>
           }
         }
-      </div>
-    }
+      }
+    </div>
   `,
   styleUrl: './form-field-error.scss',
 })
@@ -482,6 +498,25 @@ export class NgxFormFieldError {
 
   protected readonly hasWarnings = computed(
     () => this.#split().warnings.length > 0,
+  );
+
+  /**
+   * True when the role="alert" container should expose its content (id,
+   * aria-describedby target, visible children) — i.e. visibility timing
+   * agrees AND there are blocking errors to announce. The container itself
+   * always exists in the DOM so the live-region announces correctly on
+   * first content insertion (WCAG 4.1.3); when this is `false` the host
+   * collapses to an empty, `aria-hidden="true"`, `[hidden]` shell.
+   */
+  protected readonly errorContainerVisible = computed(
+    () => this.showErrors() && this.hasErrors(),
+  );
+
+  /**
+   * Same as `errorContainerVisible` but for the warnings live region.
+   */
+  protected readonly warningContainerVisible = computed(
+    () => this.showWarnings() && this.hasWarnings(),
   );
 
   protected readonly resolvedErrors = computed(() =>

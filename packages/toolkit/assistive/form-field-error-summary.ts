@@ -1,8 +1,11 @@
 import {
+  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   inject,
   input,
+  untracked,
 } from '@angular/core';
 import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
 
@@ -23,6 +26,11 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
  *   on NVDA+Firefox.
  * - Error links are focusable buttons for keyboard navigation
  * - Each entry identifies the field and the error message
+ * - The summary host has `tabindex="-1"` and is **programmatically focused**
+ *   the first time it appears with non-zero entries (GOV.UK / WAI tutorial
+ *   pattern for WCAG 2.4.3 + 3.3.1). This guarantees screen reader users
+ *   land on the summary after submit instead of being left where they were.
+ *   Opt out with `[autoFocus]="false"`.
  *
  * ## Usage
  *
@@ -46,6 +54,12 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
 @Component({
   selector: 'ngx-form-field-error-summary',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    // `tabindex="-1"` makes the host programmatically focusable without
+    // injecting it into the natural Tab order. The `:focus-visible` outline
+    // on individual error buttons is intentionally untouched.
+    tabindex: '-1',
+  },
   hostDirectives: [
     {
       directive: NgxHeadlessErrorSummary,
@@ -132,10 +146,66 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
 })
 export class NgxFormFieldErrorSummary {
   protected readonly summary = inject(NgxHeadlessErrorSummary);
+  readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /**
    * Label displayed above the error list.
    * @default 'Please fix the following errors:'
    */
   readonly summaryLabel = input('Please fix the following errors:');
+
+  /**
+   * Whether to programmatically focus the summary host the first time it
+   * appears with non-zero entries.
+   *
+   * The default (`true`) follows the GOV.UK / WAI error-summary pattern so
+   * screen-reader users hear the announcement and arrive at the summary
+   * after a failed submit. Set to `false` if your flow already moves focus
+   * elsewhere (e.g. straight to the first invalid field) or if focus
+   * theft is undesirable in your design.
+   *
+   * @default true
+   */
+  readonly autoFocus = input(true);
+
+  constructor() {
+    /**
+     * Track whether we have already moved focus into the summary so that
+     * subsequent entry-list mutations (a new error appearing while the
+     * summary is visible, the user editing a field, etc.) do not steal
+     * focus from wherever the user currently is. We re-arm the latch when
+     * the summary disappears so the next "0 → N" transition focuses again.
+     */
+    let hasFocused = false;
+
+    afterRenderEffect({
+      // `read` phase: we only need to inspect signals + (optionally) call
+      // `.focus()` on the host. No DOM writes that would invalidate other
+      // components' layouts.
+      read: () => {
+        const visible = this.summary.shouldShow() && this.summary.hasErrors();
+
+        if (!visible) {
+          hasFocused = false;
+          return;
+        }
+
+        // `untracked` so reading these once-per-mount signals does not
+        // cause the effect to retrigger every time the entry list, label,
+        // or focus flag changes after the initial focus has happened.
+        untracked(() => {
+          if (hasFocused) return;
+          if (!this.autoFocus()) return;
+
+          const host = this.#host.nativeElement;
+          // Defensive: in jsdom-based test environments `focus()` is
+          // present but a missing element should never crash production.
+          if (typeof host.focus === 'function') {
+            host.focus();
+          }
+          hasFocused = true;
+        });
+      },
+    });
+  }
 }
