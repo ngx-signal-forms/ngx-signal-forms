@@ -57,11 +57,8 @@ import { WizardContainerComponent } from './components/wizard-container';
           description="Carry one wrapper treatment across multiple steps to confirm that toolkit field presentation stays consistent even when the form is split across a wizard flow."
           [chips]="currentControlChips()"
         >
-          <div display-controls-primary>
+          <div display-controls-primary class="grid gap-4">
             <ngx-appearance-toggle [(value)]="selectedAppearance" />
-          </div>
-
-          <div class="mt-4">
             <ngx-orientation-toggle
               [(value)]="selectedOrientation"
               [appearance]="selectedAppearance()"
