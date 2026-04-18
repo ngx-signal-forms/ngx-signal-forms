@@ -1,4 +1,9 @@
 import { expect, test } from '@playwright/test';
+
+import {
+  ROLE_ALERT_SELECTOR,
+  ROLE_STATUS_SELECTOR,
+} from '../../fixtures/aria-selectors';
 import { verifyNoErrorsOnInitialLoad } from '../../fixtures/form-validation.fixture';
 import { WarningSupportPage } from '../../page-objects/warning-support.page';
 
@@ -53,7 +58,7 @@ test.describe('Warning Support Demo', () => {
       await page.passwordInput.blur();
 
       // Should have warning status element (role="status" for warnings)
-      const warningStatus = page.page.locator('[role="status"]');
+      const warningStatus = page.page.locator(ROLE_STATUS_SELECTOR);
       await expect(warningStatus.first()).toBeVisible();
       await expect(warningStatus.first()).toContainText(
         /12\+ characters for better security/i,
@@ -68,7 +73,7 @@ test.describe('Warning Support Demo', () => {
       await page.passwordInput.blur();
 
       // Should show warning about character mixing
-      const warningStatus = page.page.locator('[role="status"]');
+      const warningStatus = page.page.locator(ROLE_STATUS_SELECTOR);
       await expect(warningStatus).toContainText(
         /mixing uppercase, lowercase, numbers/i,
       );
@@ -79,7 +84,7 @@ test.describe('Warning Support Demo', () => {
       await page.usernameInput.fill('user'); // 4 chars
       await page.usernameInput.blur();
 
-      const warningStatus = page.page.locator('[role="status"]');
+      const warningStatus = page.page.locator(ROLE_STATUS_SELECTOR);
       await expect(warningStatus.first()).toBeVisible();
       await expect(warningStatus.first()).toContainText(
         /6\+ characters for better security/i,
@@ -90,7 +95,7 @@ test.describe('Warning Support Demo', () => {
       await page.fillWithWarnings();
 
       // Warnings should be visible
-      const warningStatus = page.page.locator('[role="status"]');
+      const warningStatus = page.page.locator(ROLE_STATUS_SELECTOR);
       await expect(warningStatus.first()).toBeVisible();
 
       // Submit should work even with warnings (INTENDED BEHAVIOR)
@@ -111,11 +116,11 @@ test.describe('Warning Support Demo', () => {
       await page.emailInput.blur();
 
       // Should show warning for username (role="status")
-      const warnings = page.page.locator('[role="status"]');
+      const warnings = page.page.locator(ROLE_STATUS_SELECTOR);
       await expect(warnings.first()).toBeVisible();
 
       // Should show error for email (role="alert")
-      const errors = page.page.locator('[role="alert"]');
+      const errors = page.page.locator(ROLE_ALERT_SELECTOR);
       await expect(errors.first()).toBeVisible();
       await expect(errors.first()).toContainText(/required/i);
     });
@@ -127,11 +132,11 @@ test.describe('Warning Support Demo', () => {
       await page.passwordInput.blur();
 
       // Errors use role="alert" (assertive)
-      const alerts = page.page.locator('[role="alert"]');
+      const alerts = page.page.locator(ROLE_ALERT_SELECTOR);
       await expect(alerts.first()).toBeVisible();
 
       // Warnings use role="status" (polite)
-      const statuses = page.page.locator('[role="status"]');
+      const statuses = page.page.locator(ROLE_STATUS_SELECTOR);
       await expect(statuses.first()).toBeVisible();
     });
 
@@ -174,7 +179,7 @@ test.describe('Warning Support Demo', () => {
       });
 
       await test.step('Verify errors are visible for required fields', async () => {
-        const alerts = page.page.locator('[role="alert"]');
+        const alerts = page.page.locator(ROLE_ALERT_SELECTOR);
         await expect(alerts.first()).toBeVisible();
       });
 

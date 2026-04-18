@@ -325,7 +325,7 @@ match `strategy` explicitly).
   --ngx-signal-form-error-border: transparent;
 
   /* Warning styles (amber) */
-  --ngx-signal-form-warning-color: #f59e0b;
+  --ngx-signal-form-warning-color: #a16207;
   --ngx-signal-form-warning-bg: transparent;
   --ngx-signal-form-warning-border: transparent;
 

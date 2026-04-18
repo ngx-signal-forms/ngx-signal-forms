@@ -1,4 +1,4 @@
-import { computed, isDevMode } from '@angular/core';
+import { computed, isDevMode, type Signal } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createUniqueId,
@@ -99,11 +99,11 @@ export function readFieldFlag(state: unknown, key: BooleanStateKey): boolean {
  * Computed boolean state flags from a reactive field state signal.
  */
 export interface FieldStateFlags {
-  readonly isInvalid: () => boolean;
-  readonly isValid: () => boolean;
-  readonly isTouched: () => boolean;
-  readonly isDirty: () => boolean;
-  readonly isPending: () => boolean;
+  readonly isInvalid: Signal<boolean>;
+  readonly isValid: Signal<boolean>;
+  readonly isTouched: Signal<boolean>;
+  readonly isDirty: Signal<boolean>;
+  readonly isPending: Signal<boolean>;
 }
 
 /**
@@ -246,12 +246,12 @@ export { createUniqueId, readDirectErrors };
  * @internal
  */
 interface HeadlessErrorStateCore {
-  readonly errors: ReadSignal<ValidationError[]>;
-  readonly warnings: ReadSignal<ValidationError[]>;
-  readonly hasErrors: ReadSignal<boolean>;
-  readonly hasWarnings: ReadSignal<boolean>;
-  readonly errorId: ReadSignal<string | null>;
-  readonly warningId: ReadSignal<string | null>;
+  readonly errors: Signal<readonly ValidationError[]>;
+  readonly warnings: Signal<readonly ValidationError[]>;
+  readonly hasErrors: Signal<boolean>;
+  readonly hasWarnings: Signal<boolean>;
+  readonly errorId: Signal<string | null>;
+  readonly warningId: Signal<string | null>;
 }
 
 /**
@@ -304,23 +304,23 @@ export interface CreateErrorStateOptions<TValue = unknown> {
  */
 export interface ErrorStateResult {
   /** Whether to show errors */
-  readonly showErrors: ReadSignal<boolean>;
+  readonly showErrors: Signal<boolean>;
   /** Whether to show warnings */
-  readonly showWarnings: ReadSignal<boolean>;
+  readonly showWarnings: Signal<boolean>;
   /** Raw blocking errors */
-  readonly errors: ReadSignal<ValidationError[]>;
+  readonly errors: Signal<readonly ValidationError[]>;
   /** Raw warning errors */
-  readonly warnings: ReadSignal<ValidationError[]>;
+  readonly warnings: Signal<readonly ValidationError[]>;
   /** Whether there are blocking errors */
-  readonly hasErrors: ReadSignal<boolean>;
+  readonly hasErrors: Signal<boolean>;
   /** Whether there are warnings */
-  readonly hasWarnings: ReadSignal<boolean>;
+  readonly hasWarnings: Signal<boolean>;
   /** Generated error region ID, or `null` when no fieldName is resolvable */
-  readonly errorId: ReadSignal<string | null>;
+  readonly errorId: Signal<string | null>;
   /** Generated warning region ID, or `null` when no fieldName is resolvable */
-  readonly warningId: ReadSignal<string | null>;
+  readonly warningId: Signal<string | null>;
   /** Resolved field name */
-  readonly fieldName: ReadSignal<string | null>;
+  readonly fieldName: Signal<string | null>;
 }
 
 /**

@@ -5,6 +5,7 @@ import {
   ElementRef,
   inject,
   input,
+  isDevMode,
   untracked,
 } from '@angular/core';
 import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
@@ -149,6 +150,15 @@ export class NgxFormFieldErrorSummary {
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /**
+   * One-shot guard for the dev-mode focus-failure diagnostic. Without this,
+   * a host that is detached / `display: none` / covered by a modal would
+   * trigger the warning on every render pass while the latch is held. We
+   * mirror the `#warnedMissingName` pattern used in
+   * `form-field-error.component.ts` and `NgxHeadlessFieldNameDirective`.
+   */
+  #warnedFocusFailure = false;
+
+  /**
    * Label displayed above the error list.
    * @default 'Please fix the following errors:'
    */
@@ -204,6 +214,30 @@ export class NgxFormFieldErrorSummary {
             host.focus();
           }
           hasFocused = true;
+
+          // Dev-mode diagnostic: `focus()` is silent — if the host is
+          // detached, `display: none`, covered by a modal/inert ancestor,
+          // or otherwise unfocusable, we no-op without telling anyone and
+          // the WCAG 2.4.3 + 3.3.1 contract silently breaks. Once-per-
+          // instance warning so we don't spam the console.
+          if (
+            isDevMode() &&
+            !this.#warnedFocusFailure &&
+            typeof document !== 'undefined' &&
+            document.activeElement !== host
+          ) {
+            this.#warnedFocusFailure = true;
+            // oxlint-disable-next-line no-console -- dev-mode a11y signal
+            console.warn(
+              '[ngx-signal-forms] NgxFormFieldErrorSummary: ' +
+                'host.focus() did not move focus (likely detached, ' +
+                'display:none, covered by a modal, or has tabindex ' +
+                'blocked). The WCAG 2.4.3 contract requires focus to ' +
+                'land on the summary on first appearance. Set ' +
+                '`[autoFocus]="false"` to opt out, or ensure the summary ' +
+                'host is visible and focusable.',
+            );
+          }
         });
       },
     });

@@ -601,10 +601,16 @@ describe('NgxFormFieldError', () => {
       // Untouched + on-touch ⇒ no error is *announced* (nothing to read)
       // but the live-region container itself MUST already be in the DOM
       // with role="alert" so a future insertion fires the announcement.
+      // The container carries the `--empty` marker class so CSS can
+      // collapse it visually; `aria-hidden="true"` keeps AT silent until
+      // content arrives, and `[hidden]` removes the empty shell from
+      // layout flow.
       const alertContainer = container.querySelector('[role="alert"]');
       expect(alertContainer).toBeTruthy();
+      expect(
+        alertContainer?.classList.contains('ngx-form-field-error--empty'),
+      ).toBe(true);
       expect(alertContainer?.getAttribute('aria-hidden')).toBe('true');
-      // hidden attribute keeps the empty shell out of layout/visual flow.
       expect(alertContainer?.hasAttribute('hidden')).toBe(true);
       // No id leaks while empty — aria-describedby targets must not point
       // at an element with no message text. Angular renders `null`
@@ -619,6 +625,9 @@ describe('NgxFormFieldError', () => {
       // The same applies to the warning role="status" sibling.
       const statusContainer = container.querySelector('[role="status"]');
       expect(statusContainer).toBeTruthy();
+      expect(
+        statusContainer?.classList.contains('ngx-form-field-error--empty'),
+      ).toBe(true);
       expect(statusContainer?.getAttribute('aria-hidden')).toBe('true');
       expect(statusContainer?.hasAttribute('hidden')).toBe(true);
     });

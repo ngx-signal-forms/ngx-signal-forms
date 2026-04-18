@@ -137,6 +137,41 @@ describe('createSubmittedStatusTracker', () => {
     expect(submitAttempted()).toBe(false);
   });
 
+  it("should not reset to 'unsubmitted' when touched flips false during in-flight submission", async () => {
+    // Pins the WCAG-equivalent invariant: the `!curr.submitting` guard at
+    // submission-helpers.ts protects against mid-submit rollback so users
+    // never see the form's submitted-status flicker back while a request
+    // is still in flight.
+    const submittingState = signal(false);
+    const touchedState = signal(false);
+    const mockForm = makeMockForm(
+      () => submittingState(),
+      () => touchedState(),
+    );
+
+    const status = TestBed.runInInjectionContext(() =>
+      createSubmittedStatusTracker(mockForm),
+    );
+
+    // Submit fired: native `submitting()` flips true and the form is touched.
+    submittingState.set(true);
+    touchedState.set(true);
+    await flush();
+    expect(status()).toBe('submitting');
+
+    // Mid-flight: a touched true → false transition arrives while
+    // `submitting()` is STILL true. The guard must hold the status at
+    // 'submitting' and refuse to roll back to 'unsubmitted'.
+    touchedState.set(false);
+    await flush();
+    expect(status()).toBe('submitting');
+
+    // Submit settles: `submitting()` returns to false → 'submitted'.
+    submittingState.set(false);
+    await flush();
+    expect(status()).toBe('submitted');
+  });
+
   it('throws synchronously when given neither a FieldTree nor a Signal<FieldTree>', () => {
     // Negative: passing a value that fails the `isFieldTree` guard must
     // surface a clear error rather than silently producing 'unsubmitted'.

@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+
+import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
 import { verifyNoErrorsOnInitialLoad } from '../../fixtures/form-validation.fixture';
 import { CustomControlsPage } from '../../page-objects/custom-controls.page';
 
@@ -412,7 +414,7 @@ test.describe('Custom Signal Forms Controls', () => {
 
       await test.step('Verify form is valid', async () => {
         // Check that no errors are visible
-        const errors = page.form.locator('[role="alert"]');
+        const errors = page.form.locator(ROLE_ALERT_SELECTOR);
         await expect(errors).toHaveCount(0);
       });
 
@@ -421,7 +423,7 @@ test.describe('Custom Signal Forms Controls', () => {
       });
 
       await test.step('Verify no errors after submission', async () => {
-        const errors = page.form.locator('[role="alert"]');
+        const errors = page.form.locator(ROLE_ALERT_SELECTOR);
         await expect(errors).toHaveCount(0);
       });
     });

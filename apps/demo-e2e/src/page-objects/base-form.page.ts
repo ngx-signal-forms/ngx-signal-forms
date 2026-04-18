@@ -1,5 +1,10 @@
 import { expect, Locator, Page } from '@playwright/test';
 
+import {
+  ROLE_ALERT_SELECTOR,
+  ROLE_STATUS_SELECTOR,
+} from '../fixtures/aria-selectors';
+
 /**
  * Base Page Object for all forms in the demo app
  * Provides common functionality and patterns
@@ -41,17 +46,20 @@ export abstract class BaseFormPage {
   }
 
   /**
-   * Get all error alert elements
+   * Get all error alert elements that have actually-rendered content.
+   * Empty `role="alert"` live-region shells are excluded — see
+   * `ROLE_ALERT_SELECTOR` for the rationale.
    */
   get errorAlerts(): Locator {
-    return this.page.locator('[role="alert"]');
+    return this.page.locator(ROLE_ALERT_SELECTOR);
   }
 
   /**
-   * Get all warning status elements
+   * Get all warning status elements that have actually-rendered content.
+   * Same empty-shell handling as `errorAlerts` above.
    */
   get warningStatuses(): Locator {
-    return this.page.locator('[role="status"]');
+    return this.page.locator(ROLE_STATUS_SELECTOR);
   }
 
   /**

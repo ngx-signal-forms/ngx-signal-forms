@@ -1,4 +1,4 @@
-import { computed, Directive, inject, input } from '@angular/core';
+import { computed, Directive, inject, input, type Signal } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   injectFormContext,
@@ -35,15 +35,15 @@ export type ErrorSummaryEntry = ErrorSummaryEntryData;
  */
 export interface ErrorSummarySignals {
   /** Resolved blocking error entries ready for rendering */
-  readonly entries: () => ErrorSummaryEntry[];
+  readonly entries: Signal<readonly ErrorSummaryEntry[]>;
   /** Resolved warning entries */
-  readonly warningEntries: () => ErrorSummaryEntry[];
+  readonly warningEntries: Signal<readonly ErrorSummaryEntry[]>;
   /** Whether there are any blocking errors */
-  readonly hasErrors: () => boolean;
+  readonly hasErrors: Signal<boolean>;
   /** Whether there are any warnings */
-  readonly hasWarnings: () => boolean;
+  readonly hasWarnings: Signal<boolean>;
   /** Whether the summary should be visible based on strategy */
-  readonly shouldShow: () => boolean;
+  readonly shouldShow: Signal<boolean>;
   /** Focus the control for the first error entry */
   readonly focusFirst: () => void;
 }

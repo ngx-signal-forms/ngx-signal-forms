@@ -256,7 +256,7 @@ export class NgxFormFieldError {
    * />
    * ```
    */
-  readonly errors = input<Signal<ValidationError[]>>();
+  readonly errors = input<Signal<readonly ValidationError[]>>();
 
   /**
    * The field name used for generating error/warning IDs.

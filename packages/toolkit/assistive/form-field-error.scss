@@ -95,10 +95,17 @@
 }
 
 /* Empty live-region shell: the role="alert" / role="status" containers stay
- * mounted so AT picks up the live region on first insertion (WCAG 4.1.3).
- * When empty we suppress the slide-in animation — there is nothing to
- * animate and the keyframe would otherwise still run on every render. */
+ * mounted (with `aria-hidden="true"` and `[hidden]`) so AT picks up the
+ * live region on first content insertion (WCAG 4.1.3). The element is
+ * already removed from layout flow by `[hidden]`, but we also clear
+ * padding/border/margin defensively in case a consumer overrides the
+ * default `display:none` styling (e.g. with `display: contents` for a
+ * flex/grid layout) — the empty shell must contribute zero visual
+ * footprint regardless of how it is reflowed. */
 .ngx-form-field-error--empty {
+  padding: 0;
+  border-width: 0;
+  margin: 0;
   animation: none;
 }
 

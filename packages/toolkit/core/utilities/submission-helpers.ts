@@ -84,7 +84,8 @@ export function createSubmittedStatusTracker(
   // read. Transition detection requires every source snapshot to be
   // observed, so a small `effect()` keeps the linkedSignal warm by reading
   // it on every reactive change. This is intentional and is the only
-  // remaining side effect (a SINGLE-write effect, the safe shape).
+  // remaining side effect (a ZERO-write effect — single read, no writes,
+  // so it cannot loop).
   const submittedHistory = linkedSignal<
     { submitting: boolean; touched: boolean; pending: boolean },
     boolean
@@ -94,7 +95,7 @@ export function createSubmittedStatusTracker(
       return {
         submitting: state.submitting(),
         touched: state.touched(),
-        pending: state.pending?.() ?? false,
+        pending: state.pending() ?? false,
       };
     },
     computation: (curr, prev) => {

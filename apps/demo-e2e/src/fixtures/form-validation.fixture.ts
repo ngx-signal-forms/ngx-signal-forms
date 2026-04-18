@@ -1,5 +1,7 @@
 import { Page, expect } from '@playwright/test';
 
+import { ROLE_ALERT_SELECTOR } from './aria-selectors';
+
 /**
  * Reusable form validation test patterns
  */
@@ -36,7 +38,7 @@ export async function verifyNoErrorsOnInitialLoad(
   }
 
   /// Verify NO error messages are visible (allow brief stabilization window)
-  const alerts = page.locator('[role="alert"]');
+  const alerts = page.locator(ROLE_ALERT_SELECTOR);
   await expect(alerts).toHaveCount(0, { timeout: 2000 });
 }
 
@@ -57,7 +59,7 @@ export async function verifyErrorsAfterBlur(
   await field.focus();
   await field.blur();
 
-  const alerts = page.locator('[role="alert"]');
+  const alerts = page.locator(ROLE_ALERT_SELECTOR);
   await expect(alerts.first()).toBeVisible();
 
   if (expectedErrorPattern) {
@@ -139,6 +141,6 @@ export async function preventInvalidSubmission(
   await submitButton.click();
 
   /// Errors should be visible after submit attempt
-  const alerts = page.locator('[role="alert"]');
+  const alerts = page.locator(ROLE_ALERT_SELECTOR);
   await expect(alerts.first()).toBeVisible();
 }

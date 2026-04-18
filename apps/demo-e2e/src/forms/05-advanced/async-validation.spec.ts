@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+
+import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
 /**
  * Async Validation - E2E Tests
  * Route: /advanced-scenarios/async-validation
@@ -163,7 +165,7 @@ test.describe('Advanced Scenarios - Async Validation', () => {
       await expect(submitButton).toBeEnabled();
       await submitButton.click();
 
-      await expect(page.locator('[role="alert"]')).toHaveCount(0);
+      await expect(page.locator(ROLE_ALERT_SELECTOR)).toHaveCount(0);
       await expect(page.getByText('Valid: true')).toBeVisible();
     });
   });

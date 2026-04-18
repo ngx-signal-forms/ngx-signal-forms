@@ -75,7 +75,10 @@ import type { ReactiveOrStatic } from '../types';
  * the type IS a function. The single-signature `unwrapValue<T>(v: Signal<T> |
  * (() => T) | T): T` form would route those values through the function
  * branch and silently invoke them, losing the wrapper. The overloads below
- * disambiguate by call site:
+ * make the call-site route explicit (the developer can see they are invoking
+ * the `() => T` branch), but they do not prevent a `FieldTree` from
+ * accidentally being passed where a static value was intended — the runtime
+ * guard always invokes any `typeof === 'function'` value.
  *
  * - {@link unwrapValue} `(value: Signal<T>)` — the signal branch
  * - {@link unwrapValue} `(value: () => T)` — the zero-arg-function branch.
@@ -90,6 +93,12 @@ import type { ReactiveOrStatic } from '../types';
  */
 export function unwrapValue<T>(value: Signal<T>): T;
 export function unwrapValue<T>(value: () => T): T;
+// `ReactiveOrStatic<T>` is `Signal<T> | (() => T) | T`. Without this
+// overload, callers passing a value typed as the full union fall through
+// to the `(value: T)` overload — which infers `T` as the entire union
+// and returns it untouched, defeating the unwrap. Keep this overload to
+// preserve the unwrapping return type at union-typed call sites (e.g.
+// `show-errors.ts` passes a `ReactiveOrStatic<Partial<…>>`).
 export function unwrapValue<T>(value: ReactiveOrStatic<T>): T;
 export function unwrapValue<T>(value: T): T;
 export function unwrapValue<T>(value: ReactiveOrStatic<T>): T {

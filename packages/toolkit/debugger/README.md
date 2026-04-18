@@ -100,7 +100,7 @@ ngx-signal-form-debugger {
   --ngx-debugger-border-color: #e5e7eb;
   --ngx-debugger-text-color: #111827;
   --ngx-debugger-color-success: #22c55e;
-  --ngx-debugger-color-warning: #f59e0b;
+  --ngx-debugger-color-warning: #a16207;
   --ngx-debugger-color-danger: #ef4444;
   --ngx-debugger-font-size-base: 0.875rem;
   --ngx-debugger-border-radius: 0.5rem;

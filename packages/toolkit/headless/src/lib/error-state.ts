@@ -150,20 +150,12 @@ export class NgxHeadlessErrorState<
 
   readonly #core = buildHeadlessErrorState(this.#fieldState, this.fieldName);
 
-  // The runtime values are real `computed()` signals; the shared
-  // `buildHeadlessErrorState` helper exposes them via a `() => T` shape for
-  // legacy reasons. Cast through `unknown` so the public surface matches the
-  // documented `Signal<T>` contract on `ErrorStateSignals`.
-  readonly errorId = this.#core.errorId as unknown as Signal<string | null>;
-  readonly warningId = this.#core.warningId as unknown as Signal<string | null>;
-  readonly errors = this.#core.errors as unknown as Signal<
-    readonly ValidationError[]
-  >;
-  readonly warnings = this.#core.warnings as unknown as Signal<
-    readonly ValidationError[]
-  >;
-  readonly hasErrors = this.#core.hasErrors as unknown as Signal<boolean>;
-  readonly hasWarnings = this.#core.hasWarnings as unknown as Signal<boolean>;
+  readonly errorId = this.#core.errorId;
+  readonly warningId = this.#core.warningId;
+  readonly errors = this.#core.errors;
+  readonly warnings = this.#core.warnings;
+  readonly hasErrors = this.#core.hasErrors;
+  readonly hasWarnings = this.#core.hasWarnings;
 
   /**
    * Whether errors should be shown based on strategy.

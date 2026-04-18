@@ -14,23 +14,15 @@ import { NgxSignalFormToolkit } from './index';
  * surfacing as a runtime "directive not declared" failure in consumer apps.
  */
 describe('NgxSignalFormToolkit bundle', () => {
-  it('contains the four toolkit-core directives in their documented order', () => {
-    expect(NgxSignalFormToolkit).toEqual([
-      FormRoot,
-      NgxSignalFormDirective,
-      NgxSignalFormAutoAriaDirective,
-      NgxSignalFormControlSemanticsDirective,
-    ]);
-  });
-
   it('contains exactly four members (guards against accidental additions)', () => {
     expect(NgxSignalFormToolkit).toHaveLength(4);
   });
 
-  it('exposes NgxSignalFormDirective, NgxSignalFormAutoAriaDirective, and NgxSignalFormControlSemanticsDirective', () => {
-    // Negative-lookup form: confirm each expected directive is present
-    // regardless of order. If any sibling agent removes one, this fails
-    // independently of the order assertion above.
+  it('exposes FormRoot and the three toolkit-core directives (order-independent)', () => {
+    // Order-independent presence check. Angular's `imports` array is
+    // order-insensitive, so we don't pin order here — adding/removing a
+    // member is a breaking change, but reordering for readability is not.
+    expect(NgxSignalFormToolkit).toContain(FormRoot);
     expect(NgxSignalFormToolkit).toContain(NgxSignalFormDirective);
     expect(NgxSignalFormToolkit).toContain(NgxSignalFormAutoAriaDirective);
     expect(NgxSignalFormToolkit).toContain(

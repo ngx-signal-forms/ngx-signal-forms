@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
+
 /**
  * Headless Fieldset + Utilities - E2E Tests
  * Route: /headless/fieldset-utilities
@@ -177,7 +179,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
 
       await test.step('Verify aggregated errors in fieldset', async () => {
         const fieldset = page.getByRole('group', { name: 'Shipping address' });
-        const aggregatedAlert = fieldset.locator('[role="alert"]').first();
+        const aggregatedAlert = fieldset.locator(ROLE_ALERT_SELECTOR).first();
         await expect(aggregatedAlert).toBeVisible();
         await expect(aggregatedAlert).toContainText('Street is required');
         await expect(aggregatedAlert).toContainText('City is required');
@@ -265,7 +267,9 @@ test.describe('Headless - Fieldset + Utilities', () => {
 
       await test.step('Submit to trigger errors', async () => {
         await page.getByRole('button', { name: 'Submit request' }).click();
-        await expect(fieldset.locator('[role="alert"]').first()).toBeVisible();
+        await expect(
+          fieldset.locator(ROLE_ALERT_SELECTOR).first(),
+        ).toBeVisible();
       });
 
       await test.step('Fill all address fields', async () => {
@@ -275,7 +279,9 @@ test.describe('Headless - Fieldset + Utilities', () => {
       });
 
       await test.step('Verify aggregated errors cleared', async () => {
-        await expect(fieldset.locator('[role="alert"]').first()).toBeHidden();
+        await expect(
+          fieldset.locator(ROLE_ALERT_SELECTOR).first(),
+        ).toBeHidden();
       });
     });
   });
@@ -348,7 +354,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
         await expect(
           page
             .getByRole('group', { name: 'Shipping address' })
-            .locator('[role="alert"]')
+            .locator(ROLE_ALERT_SELECTOR)
             .first(),
         ).toBeVisible();
       });
