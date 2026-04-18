@@ -13,10 +13,10 @@ Accepted
 The toolkit wraps Angular Signal Forms with an accessibility-first UX layer.
 Three surfaces need to agree on how a given control should be treated:
 
-1. **Wrapper layout** (`NgxSignalFormFieldWrapperComponent`) — should this
+1. **Wrapper layout** (`NgxSignalFormFieldWrapper`) — should this
    field use stacked chrome, inline controls, a group layout, or no chrome at
    all?
-2. **Auto-ARIA** (`NgxSignalFormAutoAriaDirective`) — does the toolkit own
+2. **Auto-ARIA** (`NgxSignalFormAutoAria`) — does the toolkit own
    `aria-invalid`, `aria-required`, and `aria-describedby` on this host, or
    does the control author own them?
 3. **Error surfacing** — `isErrorOnInteractiveField`, `focusFirstInvalid`,
@@ -48,7 +48,7 @@ without any directive, provider, or preset.
 Split the control-semantics contract into four cooperating pieces, each with
 a narrow purpose:
 
-### 1. `NgxSignalFormControlSemanticsDirective`
+### 1. `NgxSignalFormControlSemantics`
 
 A directive authors apply directly to a control host when they want explicit
 semantics instead of DOM inference:
@@ -216,7 +216,7 @@ the right answer.
 - `packages/toolkit/core/tokens.ts` — token definitions and default presets
 - `packages/toolkit/core/providers/control-semantics.provider.ts` — preset
   provider implementation
-- `packages/toolkit/core/directives/control-semantics.directive.ts` —
+- `packages/toolkit/core/directives/control-semantics.ts` —
   directive implementation
-- `packages/toolkit/core/directives/auto-aria.directive.ts` — consumer of
+- `packages/toolkit/core/directives/auto-aria.ts` — consumer of
   `NGX_SIGNAL_FORM_ARIA_MODE` and `NGX_SIGNAL_FORM_HINT_REGISTRY`

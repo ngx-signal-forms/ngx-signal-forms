@@ -10,7 +10,7 @@ import {
   createOnInvalidHandler,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
-import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 import { contactFormSchema } from './your-first-form.validations';
 
 /**
@@ -22,7 +22,7 @@ import { contactFormSchema } from './your-first-form.validations';
 @Component({
   selector: 'ngx-your-first-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxFormFieldErrorComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
   template: `
     <form
       [formRoot]="contactForm"

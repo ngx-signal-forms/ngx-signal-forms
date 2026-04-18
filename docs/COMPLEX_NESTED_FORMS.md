@@ -131,7 +131,7 @@ field's errors surface at the root. The summary:
 - Deduplicates identical `kind` + `message` pairs across fields
 
 For fully custom markup, the headless equivalent
-(`NgxHeadlessErrorSummaryDirective`) exposes the same managed state as signals
+(`NgxHeadlessErrorSummary`) exposes the same managed state as signals
 while you own every element.
 
 ---

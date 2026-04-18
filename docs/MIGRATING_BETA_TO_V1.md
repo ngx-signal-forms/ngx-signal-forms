@@ -23,7 +23,7 @@ releases will not include any of the renames below.
 | Config typing              | `NgxSignalFormsUserConfig` is `Partial`, not `DeepPartial`                     | `rc.2`    |
 | Behavior fix               | `on-submit` strategy now requires an explicit `submittedStatus`                | `rc.3`    |
 | New: control semantics     | `ngxSignalFormControl="…"` contract for layout + auto-ARIA                     | `rc.1`    |
-| New: error summary         | `NgxFormFieldErrorSummaryComponent` + headless directive                       | `rc.1`    |
+| New: error summary         | `NgxFormFieldErrorSummary` + headless directive                                | `rc.1`    |
 | New: field labels          | `provideFieldLabels()` + warning/error split utilities                         | `rc.1`    |
 | New: debugger entry point  | `@ngx-signal-forms/toolkit/debugger`                                           | beta → rc |
 | New: `warningStrategy`     | Decouple warning visibility from error timing; default `'immediate'`           | v1 RC     |
@@ -37,7 +37,7 @@ releases will not include any of the renames below.
 
 ---
 
-## 1. `NgxSignalFormDirective` is now an additive enhancer
+## 1. `NgxSignalForm` is now an additive enhancer
 
 **Lands in:** `rc.0`
 
@@ -180,14 +180,14 @@ unless you were explicitly typing a partial config by hand.
 **Lands in:** `rc.3`
 
 Every other field-scoped component used the `NgxFormField*` prefix
-(`NgxFormFieldHintComponent`, `NgxFormFieldCharacterCountComponent`,
-`NgxFormFieldAssistiveRowComponent`), but the error display and error
+(`NgxFormFieldHint`, `NgxFormFieldCharacterCount`,
+`NgxFormFieldAssistiveRow`), but the error display and error
 summary components used `NgxSignalFormError*`. That mismatch is fixed.
 
 | Before                                     | After                                     |
 | ------------------------------------------ | ----------------------------------------- |
-| `NgxSignalFormErrorComponent`              | `NgxFormFieldErrorComponent`              |
-| `NgxSignalFormErrorSummaryComponent`       | `NgxFormFieldErrorSummaryComponent`       |
+| `NgxSignalFormErrorComponent`              | `NgxFormFieldError`                       |
+| `NgxSignalFormErrorSummaryComponent`       | `NgxFormFieldErrorSummary`                |
 | `NgxSignalFormErrorListStyle`              | `NgxFormFieldErrorListStyle`              |
 | selector `<ngx-signal-form-error>`         | selector `<ngx-form-field-error>`         |
 | selector `<ngx-signal-form-error-summary>` | selector `<ngx-form-field-error-summary>` |
@@ -201,8 +201,8 @@ import {
 
 // after
 import {
-  NgxFormFieldErrorComponent,
-  NgxFormFieldErrorSummaryComponent,
+  NgxFormFieldError,
+  NgxFormFieldErrorSummary,
 } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
@@ -345,9 +345,9 @@ Custom widgets can opt out of toolkit ARIA management entirely with
 First-class error-summary feature split across headless and assistive
 entry points:
 
-- `NgxHeadlessErrorSummaryDirective` — strategy-aware visibility,
+- `NgxHeadlessErrorSummary` — strategy-aware visibility,
   deduplicated entries, `focusBoundControl()` support.
-- `NgxFormFieldErrorSummaryComponent` — WCAG 2.2-compliant clickable
+- `NgxFormFieldErrorSummary` — WCAG 2.2-compliant clickable
   error list with `role="alert"` and themable CSS custom properties.
 
 See [`docs/COMPLEX_NESTED_FORMS.md`](./COMPLEX_NESTED_FORMS.md) for
@@ -371,10 +371,10 @@ component that replaces the old `debug: true` config flag. Gate it with
 `isDevMode()` and drop it anywhere in the form template:
 
 ```ts
-import { SignalFormDebuggerComponent } from '@ngx-signal-forms/toolkit/debugger';
+import { SignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 
 @Component({
-  imports: [SignalFormDebuggerComponent /* … */],
+  imports: [SignalFormDebugger /* … */],
   template: `
     @if (isDev()) {
       <ngx-signal-form-debugger [formTree]="form" />
@@ -393,7 +393,7 @@ what the defaults cover and what you may want to adopt before going stable.
 
 ### `warningStrategy` input — independent warning timing
 
-`NgxFormFieldErrorComponent` (and by extension the wrapper / assistive bundle)
+`NgxFormFieldError` (and by extension the wrapper / assistive bundle)
 now accepts a `warningStrategy` input that is independent from the error
 `strategy`. It defaults to `'immediate'` so advisory messages such as
 "consider 12+ characters" appear as the user types, even when errors are gated
@@ -404,7 +404,7 @@ for the full input table and worked example. No migration action is required
 unless you previously relied on warnings sharing the error timing, in which
 case set `warningStrategy="inherit"` (or match `strategy` explicitly).
 
-### `NgxFormFieldErrorComponent` — new inputs
+### `NgxFormFieldError` — new inputs
 
 | Input             | Type                        | Purpose                                                             |
 | ----------------- | --------------------------- | ------------------------------------------------------------------- |

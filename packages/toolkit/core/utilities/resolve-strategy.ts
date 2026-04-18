@@ -3,7 +3,7 @@ import type {
   ResolvedErrorDisplayStrategy,
   SubmittedStatus,
 } from '../types';
-import type { NgxSignalFormContext } from '../directives/ngx-signal-form.directive';
+import type { NgxSignalFormContext } from '../directives/ngx-signal-form';
 
 type StrategyInput = ErrorDisplayStrategy | null | undefined;
 

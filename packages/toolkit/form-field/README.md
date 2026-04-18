@@ -16,13 +16,13 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 // Individual imports
 import {
-  NgxSignalFormFieldWrapperComponent,
+  NgxSignalFormFieldWrapper,
   NgxSignalFormFieldset,
 } from '@ngx-signal-forms/toolkit/form-field';
 
 // Assistive components are NOT re-exported from this entry point.
 // Import them directly when used standalone:
-// import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+// import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
 `NgxFormField` bundles the wrapper, fieldset, and all assistive components (error, hint, character count, assistive row) for convenience. Individual assistive components should be imported from `@ngx-signal-forms/toolkit/assistive`.
@@ -161,7 +161,7 @@ Warnings (errors with `kind` starting with `warn:`) display automatically:
   implicit live-region semantics of those roles — no explicit `aria-live`)
 
 Warning **display timing** is independent from error timing. The projected
-`NgxFormFieldErrorComponent` accepts a `warningStrategy` input (default
+`NgxFormFieldError` accepts a `warningStrategy` input (default
 `'immediate'`) so advisory messages stay visible even when errors are gated
 by `'on-touch'` or `'on-submit'`. See
 [`WARNINGS_SUPPORT.md`](../../docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy).

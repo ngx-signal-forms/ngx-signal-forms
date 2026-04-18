@@ -1,21 +1,21 @@
 // Core form field components
-export * from './form-field-wrapper.component';
-export * from './form-fieldset.component';
+export * from './form-field-wrapper';
+export * from './form-fieldset';
 
-import { NgxSignalFormAutoAriaDirective } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormAutoAria } from '@ngx-signal-forms/toolkit';
 import {
-  NgxFormFieldAssistiveRowComponent,
-  NgxFormFieldCharacterCountComponent,
-  NgxFormFieldErrorComponent,
-  NgxFormFieldHintComponent,
+  NgxFormFieldAssistiveRow,
+  NgxFormFieldCharacterCount,
+  NgxFormFieldError,
+  NgxFormFieldHint,
 } from '@ngx-signal-forms/toolkit/assistive';
-import { NgxSignalFormFieldWrapperComponent } from './form-field-wrapper.component';
-import { NgxSignalFormFieldset } from './form-fieldset.component';
+import { NgxSignalFormFieldWrapper } from './form-field-wrapper';
+import { NgxSignalFormFieldset } from './form-fieldset';
 
 /**
  * Convenience bundle for the basic form field wrapper.
  *
- * Includes `NgxSignalFormAutoAriaDirective` so projected hints, errors, and
+ * Includes `NgxSignalFormAutoAria` so projected hints, errors, and
  * character counts are automatically linked to the input via
  * `aria-describedby` even when consumers don't separately import
  * `NgxSignalFormToolkit`. The directive is idempotent — importing it twice
@@ -41,11 +41,11 @@ import { NgxSignalFormFieldset } from './form-fieldset.component';
  * ```
  */
 export const NgxFormField = [
-  NgxSignalFormAutoAriaDirective,
-  NgxSignalFormFieldWrapperComponent,
-  NgxFormFieldHintComponent,
-  NgxFormFieldCharacterCountComponent,
-  NgxFormFieldAssistiveRowComponent,
-  NgxFormFieldErrorComponent,
+  NgxSignalFormAutoAria,
+  NgxSignalFormFieldWrapper,
+  NgxFormFieldHint,
+  NgxFormFieldCharacterCount,
+  NgxFormFieldAssistiveRow,
+  NgxFormFieldError,
   NgxSignalFormFieldset,
 ] as const;

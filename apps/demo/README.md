@@ -243,7 +243,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 **Issue:** ARIA attributes not appearing
 
-- Auto-ARIA requires `NgxSignalFormAutoAriaDirective` (included in bundle)
+- Auto-ARIA requires `NgxSignalFormAutoAria` (included in bundle)
 - Check `id` attribute is set on input elements
 - Verify toolkit directives are imported
 

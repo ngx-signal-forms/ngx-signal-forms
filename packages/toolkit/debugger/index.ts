@@ -22,22 +22,19 @@
  * ```
  */
 
-import {
-  DebuggerBadgeComponent,
-  DebuggerBadgeIconDirective,
-} from './debugger-badge.component';
-import { SignalFormDebuggerComponent } from './signal-form-debugger.component';
+import { DebuggerBadge, DebuggerBadgeIcon } from './debugger-badge';
+import { SignalFormDebugger } from './signal-form-debugger';
 
 // Main debugger component
-export { SignalFormDebuggerComponent } from './signal-form-debugger.component';
+export { SignalFormDebugger } from './signal-form-debugger';
 
 // Internal badge components (exposed for advanced customization)
 export {
-  DebuggerBadgeComponent,
-  DebuggerBadgeIconDirective,
+  DebuggerBadge,
+  DebuggerBadgeIcon,
   type DebuggerBadgeAppearance,
   type DebuggerBadgeVariant,
-} from './debugger-badge.component';
+} from './debugger-badge';
 
 /**
  * Convenience bundle for the signal form debugger.
@@ -53,7 +50,7 @@ export {
  * ```
  */
 export const NgxSignalFormDebugger = [
-  SignalFormDebuggerComponent,
-  DebuggerBadgeComponent,
-  DebuggerBadgeIconDirective,
+  SignalFormDebugger,
+  DebuggerBadge,
+  DebuggerBadgeIcon,
 ] as const;

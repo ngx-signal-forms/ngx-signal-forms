@@ -1,2 +1,2 @@
-export { RatingControlComponent } from './rating-control.component';
-export { SwitchControlComponent } from './switch-control.component';
+export { RatingControlComponent } from './rating-control';
+export { SwitchControlComponent } from './switch-control';

@@ -91,6 +91,28 @@ export type FormFieldAppearance = 'stacked' | 'outline' | 'plain';
 export type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
 
 /**
+ * Form field orientation controls whether the label is positioned
+ * above the input (vertical) or to the left of it (horizontal).
+ *
+ * `outline` appearance always resolves to vertical because the floating-label
+ * treatment depends on the label staying inside the field chrome.
+ *
+ * @public
+ */
+export type FormFieldOrientation = 'vertical' | 'horizontal';
+
+/**
+ * Form field orientation input for component-level control.
+ *
+ * - `'vertical'`: Label above input (default)
+ * - `'horizontal'`: Label to the left of the input
+ * - `'inherit'`: Use the global config default (component-level only)
+ *
+ * @public
+ */
+export type FormFieldOrientationInput = FormFieldOrientation | 'inherit';
+
+/**
  * Semantic control families understood by the toolkit wrapper layer.
  *
  * Kept intentionally small so consumers can opt into stable wrapper behavior
@@ -216,6 +238,12 @@ export interface NgxSignalFormsConfig {
   defaultFormFieldAppearance: FormFieldAppearance;
 
   /**
+   * Default orientation for form fields.
+   * @default 'vertical'
+   */
+  defaultFormFieldOrientation: FormFieldOrientation;
+
+  /**
    * Whether to show the required marker for outlined fields.
    * @default true
    */
@@ -242,6 +270,7 @@ export interface NgxSignalFormsUserConfig {
   autoAria?: boolean;
   defaultErrorStrategy?: ResolvedErrorDisplayStrategy;
   defaultFormFieldAppearance?: FormFieldAppearance;
+  defaultFormFieldOrientation?: FormFieldOrientation;
   showRequiredMarker?: boolean;
   /**
    * Custom character(s) rendered as the required marker. Pass `''` to

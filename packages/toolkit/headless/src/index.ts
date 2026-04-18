@@ -10,42 +10,39 @@
  */
 
 // Import directives for bundle
-import { NgxHeadlessCharacterCountDirective } from './lib/character-count.directive';
-import { NgxHeadlessErrorStateDirective } from './lib/error-state.directive';
-import { NgxHeadlessErrorSummaryDirective } from './lib/error-summary.directive';
-import { NgxHeadlessFieldNameDirective } from './lib/field-name.directive';
-import { NgxHeadlessFieldsetDirective } from './lib/fieldset.directive';
+import { NgxHeadlessCharacterCount } from './lib/character-count';
+import { NgxHeadlessErrorState } from './lib/error-state';
+import { NgxHeadlessErrorSummary } from './lib/error-summary';
+import { NgxHeadlessFieldName } from './lib/field-name';
+import { NgxHeadlessFieldset } from './lib/fieldset';
 
 // Directives
 export {
-  NgxHeadlessErrorStateDirective,
+  NgxHeadlessErrorState,
   type ErrorStateSignals,
   type ResolvedError,
-} from './lib/error-state.directive';
+} from './lib/error-state';
 
-export {
-  NgxHeadlessFieldsetDirective,
-  type FieldsetStateSignals,
-} from './lib/fieldset.directive';
+export { NgxHeadlessFieldset, type FieldsetStateSignals } from './lib/fieldset';
 
 export {
   DEFAULT_DANGER_THRESHOLD,
   DEFAULT_WARNING_THRESHOLD,
-  NgxHeadlessCharacterCountDirective,
+  NgxHeadlessCharacterCount,
   type CharacterCountLimitState,
   type CharacterCountStateSignals,
-} from './lib/character-count.directive';
+} from './lib/character-count';
 
 export {
-  NgxHeadlessErrorSummaryDirective,
+  NgxHeadlessErrorSummary,
   type ErrorSummaryEntry,
   type ErrorSummarySignals,
-} from './lib/error-summary.directive';
+} from './lib/error-summary';
 
 export {
-  NgxHeadlessFieldNameDirective,
+  NgxHeadlessFieldName,
   type FieldNameStateSignals,
-} from './lib/field-name.directive';
+} from './lib/field-name';
 
 // Utility functions
 export {
@@ -87,9 +84,9 @@ export {
  * ```
  */
 export const NgxHeadlessToolkit = [
-  NgxHeadlessErrorStateDirective,
-  NgxHeadlessErrorSummaryDirective,
-  NgxHeadlessFieldsetDirective,
-  NgxHeadlessCharacterCountDirective,
-  NgxHeadlessFieldNameDirective,
+  NgxHeadlessErrorState,
+  NgxHeadlessErrorSummary,
+  NgxHeadlessFieldset,
+  NgxHeadlessCharacterCount,
+  NgxHeadlessFieldName,
 ] as const;

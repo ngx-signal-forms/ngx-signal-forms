@@ -168,7 +168,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
                 <code
                   class="rounded bg-gray-100 px-1.5 py-0.5 text-xs dark:bg-gray-900"
                 >
-                  NgxHeadlessErrorSummaryDirective
+                  NgxHeadlessErrorSummary
                 </code>
                 with library-aligned styling and fully custom markup.
               </p>

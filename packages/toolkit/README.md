@@ -34,15 +34,15 @@ You always import the core entry point. The other entry points add UI components
 ## Import
 
 ```typescript
-// Bundle import (recommended) — includes FormRoot, NgxSignalFormDirective,
-// NgxSignalFormAutoAriaDirective, NgxSignalFormControlSemanticsDirective
+// Bundle import (recommended) — includes FormRoot, NgxSignalForm,
+// NgxSignalFormAutoAria, NgxSignalFormControlSemantics
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 // Individual imports when needed
 import {
-  NgxSignalFormDirective,
-  NgxSignalFormAutoAriaDirective,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalForm,
+  NgxSignalFormAutoAria,
+  NgxSignalFormControlSemantics,
   provideNgxSignalFormsConfig,
   provideErrorMessages,
   showErrors,
@@ -92,7 +92,7 @@ export class ContactComponent {
 
 ## Core directives
 
-### NgxSignalFormDirective
+### NgxSignalForm
 
 Selector: `form[formRoot][ngxSignalForm]`
 
@@ -110,7 +110,7 @@ Angular's `FormRoot` remains the owner of `novalidate`, `event.preventDefault()`
 </form>
 ```
 
-### NgxSignalFormAutoAriaDirective
+### NgxSignalFormAutoAria
 
 Auto-applies to supported `[formField]` controls:
 
@@ -123,7 +123,7 @@ Covers native `<input>`, `<textarea>`, `<select>`, and custom `[formField]` host
 - Disable per control with `ngxSignalFormAutoAriaDisabled`
 - Use `ngxSignalFormControlAria="manual"` when a control already owns its ARIA attributes
 
-### NgxSignalFormControlSemanticsDirective
+### NgxSignalFormControlSemantics
 
 Declares a control's family for wrapper layout and auto-ARIA classification:
 
@@ -247,7 +247,7 @@ provideFieldLabels(() => {
 | `submitWithWarnings(form, callback)` | Submit helper that blocks only on real errors |
 
 > Warning **display timing** is controlled separately from error timing via the
-> `warningStrategy` input on `NgxFormFieldErrorComponent` (default:
+> `warningStrategy` input on `NgxFormFieldError` (default:
 > `'immediate'`). See
 > [`WARNINGS_SUPPORT.md`](../../docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy)
 > and the [assistive README](./assistive/README.md#ngxformfielderrorcomponent)

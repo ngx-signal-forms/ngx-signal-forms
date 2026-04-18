@@ -15,7 +15,7 @@ import {
 import {
   ERROR_DISPLAY_MODE_LABELS,
   ErrorDisplayModeSelectorComponent,
-} from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
+} from '../../ui/error-display-mode-selector/error-display-mode-selector';
 import { ERROR_DISPLAY_MODES_CONTENT } from './error-display-modes.content';
 import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
 

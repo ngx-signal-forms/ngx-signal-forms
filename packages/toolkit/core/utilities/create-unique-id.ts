@@ -101,7 +101,7 @@ let warnedFallback = false;
  * @example Inside a component (SSR-safe)
  * ```typescript
  * @Component({ ... })
- * export class NgxFormFieldHintComponent {
+ * export class NgxFormFieldHint {
  *   readonly #generatedId = createUniqueId('hint');
  * }
  * ```

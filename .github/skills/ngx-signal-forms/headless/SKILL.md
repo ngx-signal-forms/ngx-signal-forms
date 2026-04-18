@@ -38,11 +38,11 @@ For ready-to-render components with built-in markup, use `assistive/SKILL.md` or
    [attr.aria-describedby]="errorState.showErrors() ? errorState.errorId : null"
    ```
 
-5. **Use `NgxHeadlessFieldsetDirective`** for aggregated group state — validity, errors, and warnings across a field tree without rebuilding the traversal.
+5. **Use `NgxHeadlessFieldset`** for aggregated group state — validity, errors, and warnings across a field tree without rebuilding the traversal.
 
 ## Error Summary Directive Pattern
 
-Use `ngxSignalFormHeadlessErrorSummary` when you need a form-level summary with full DOM control, want warning entries, or need a design that differs from the styled `NgxFormFieldErrorSummaryComponent`.
+Use `ngxSignalFormHeadlessErrorSummary` when you need a form-level summary with full DOM control, want warning entries, or need a design that differs from the styled `NgxFormFieldErrorSummary`.
 
 ```html
 <div
@@ -73,7 +73,7 @@ Use `ngxSignalFormHeadlessErrorSummary` when you need a form-level summary with 
 </div>
 ```
 
-For a styled out-of-the-box error summary without warnings, use `NgxFormFieldErrorSummaryComponent` from `@ngx-signal-forms/toolkit/assistive` instead.
+For a styled out-of-the-box error summary without warnings, use `NgxFormFieldErrorSummary` from `@ngx-signal-forms/toolkit/assistive` instead.
 
 ## Template Directive Pattern
 
@@ -106,14 +106,14 @@ For a styled out-of-the-box error summary without warnings, use `NgxFormFieldErr
 
 ```typescript
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { NgxHeadlessErrorStateDirective } from '@ngx-signal-forms/toolkit/headless';
+import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
 
 @Component({
   selector: 'ds-form-field',
   changeDetection: ChangeDetectionStrategy.OnPush,
   hostDirectives: [
     {
-      directive: NgxHeadlessErrorStateDirective,
+      directive: NgxHeadlessErrorState,
       inputs: ['field', 'fieldName', 'strategy'],
     },
   ],
@@ -128,7 +128,7 @@ import { NgxHeadlessErrorStateDirective } from '@ngx-signal-forms/toolkit/headle
   `,
 })
 export class DsFormFieldComponent {
-  protected readonly errorState = inject(NgxHeadlessErrorStateDirective);
+  protected readonly errorState = inject(NgxHeadlessErrorState);
 }
 ```
 

@@ -59,13 +59,13 @@ The toolkit adds the pieces Angular intentionally leaves to app and library auth
 #### `[formRoot]` + `ngxSignalForm`: additive enhancement
 
 Angular's native `FormRoot` handles `novalidate`, `event.preventDefault()`, and calling `submit()`.
-The toolkit's `NgxSignalFormDirective` (selector: `form[formRoot][ngxSignalForm]`) is an **additive enhancer** — it activates on `<form>` elements that already have `[formRoot]` when you also add the `ngxSignalForm` attribute. It adds:
+The toolkit's `NgxSignalForm` (selector: `form[formRoot][ngxSignalForm]`) is an **additive enhancer** — it activates on `<form>` elements that already have `[formRoot]` when you also add the `ngxSignalForm` attribute. It adds:
 
 1. **DI context** — child toolkit components (error display, field wrappers, headless directives) access form state through `NGX_SIGNAL_FORM_CONTEXT` without prop drilling
 2. **Submitted status tracking** — derives `'unsubmitted' → 'submitting' → 'submitted'` from Angular's native `submitting()` signal, which Angular does not expose as a status
 3. **Error display strategy** — the `[errorStrategy]` input controls when validation feedback becomes visible (`'immediate'`, `'on-touch'`, or `'on-submit'`)
 
-**`NgxSignalFormToolkit` bundles `FormRoot` + `NgxSignalFormDirective` + `NgxSignalFormAutoAriaDirective` + `NgxSignalFormControlSemanticsDirective`** — import it instead of `FormRoot` separately.
+**`NgxSignalFormToolkit` bundles `FormRoot` + `NgxSignalForm` + `NgxSignalFormAutoAria` + `NgxSignalFormControlSemantics`** — import it instead of `FormRoot` separately.
 
 > **Most forms do not need explicit control semantics.** Native text inputs,
 > textareas, selects, and ordinary wrapper usage work with the toolkit defaults.
@@ -135,7 +135,7 @@ for the design rationale behind the directive + presets split.
 ### Headless: `@ngx-signal-forms/toolkit/headless`
 
 - renderless directives for custom design systems
-- `NgxHeadlessErrorSummaryDirective` for fully custom form-level error summaries
+- `NgxHeadlessErrorSummary` for fully custom form-level error summaries
 - utility functions such as `createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()`, and `readErrors()`
 
 Use the headless summary directive when you want toolkit-managed aggregation,
@@ -326,7 +326,7 @@ import {
   FormField, // Angular's [formField] — unchanged
 } from '@angular/forms/signals';
 import {
-  NgxSignalFormToolkit, // Bundles FormRoot + NgxSignalFormDirective + AutoARIA + control semantics
+  NgxSignalFormToolkit, // Bundles FormRoot + NgxSignalForm + AutoARIA + control semantics
   createOnInvalidHandler,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
@@ -417,17 +417,17 @@ Use this when you want feedback components without adopting the full field wrapp
 
 **Key exports**:
 
-- `NgxFormFieldErrorComponent` — Error/warning display with ARIA roles
-- `NgxFormFieldErrorSummaryComponent` — Form-level summary for blocking errors
-- `NgxFormFieldHintComponent` — Helper text below inputs
-- `NgxFormFieldCharacterCountComponent` — Character counter with maxLength detection
-- `NgxFormFieldAssistiveRowComponent` — Layout row for hints and counters
+- `NgxFormFieldError` — Error/warning display with ARIA roles
+- `NgxFormFieldErrorSummary` — Form-level summary for blocking errors
+- `NgxFormFieldHint` — Helper text below inputs
+- `NgxFormFieldCharacterCount` — Character counter with maxLength detection
+- `NgxFormFieldAssistiveRow` — Layout row for hints and counters
 - `warningError()`, `isWarningError()`, `isBlockingError()` — Warning utilities
 
 ```typescript
 import {
-  NgxFormFieldErrorComponent,
-  NgxFormFieldHintComponent,
+  NgxFormFieldError,
+  NgxFormFieldHint,
   warningError,
 } from '@ngx-signal-forms/toolkit/assistive';
 ```
@@ -479,9 +479,9 @@ Use this when you need full control over markup and styling but do not want to r
 
 **Key exports**:
 
-- `NgxHeadlessErrorStateDirective` — Error/warning state as signals
-- `NgxHeadlessCharacterCountDirective` — Character count and limit states
-- `NgxHeadlessFieldsetDirective` — Aggregated validation for field groups
+- `NgxHeadlessErrorState` — Error/warning state as signals
+- `NgxHeadlessCharacterCount` — Character count and limit states
+- `NgxHeadlessFieldset` — Aggregated validation for field groups
 - `createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()` — Programmatic utilities
 
 Headless APIs keep `fieldName` explicit because they do not own the rendered
@@ -516,7 +516,7 @@ Use this during development to inspect field state, visibility rules, and resolv
 **Key exports**:
 
 - `NgxSignalFormDebugger` — Bundle import
-- `SignalFormDebuggerComponent` — Standalone component
+- `SignalFormDebugger` — Standalone component
 
 ```html
 <form [formRoot]="form" ngxSignalForm>

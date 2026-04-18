@@ -24,7 +24,7 @@ Repository paths in `apps/demo/src/app/` organized by the current live demo. Use
 ## 05 — Advanced
 
 - `05-advanced/global-configuration/` — App-level defaults with `provideNgxSignalFormsConfig()`
-- `05-advanced/submission-patterns/` — Submission lifecycle, invalid handling, `focusFirstInvalid`, and `NgxFormFieldErrorSummaryComponent`
+- `05-advanced/submission-patterns/` — Submission lifecycle, invalid handling, `focusFirstInvalid`, and `NgxFormFieldErrorSummary`
 - `05-advanced/advanced-wizard/` — Multi-step flow with NgRx Signals + Zod
 - `05-advanced/async-validation/` — Remote/pending validation flows
 - `05-advanced/cross-field-validation/` — Dependent sibling validation rules

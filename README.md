@@ -273,9 +273,9 @@ Use this when you want error, hint, and counter components _without_ adopting th
 field wrapper — e.g. you already have a layout system but want the toolkit's error
 timing and ARIA.
 
-Key exports: `NgxFormFieldErrorComponent`, `NgxFormFieldErrorSummaryComponent`,
-`NgxFormFieldHintComponent`, `NgxFormFieldCharacterCountComponent`,
-`NgxFormFieldAssistiveRowComponent`.
+Key exports: `NgxFormFieldError`, `NgxFormFieldErrorSummary`,
+`NgxFormFieldHint`, `NgxFormFieldCharacterCount`,
+`NgxFormFieldAssistiveRow`.
 
 **[→ Assistive docs](./packages/toolkit/assistive/README.md)** ·
 **Demo:** [`your-first-form` (code)](./apps/demo/src/app/01-getting-started/your-first-form) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/getting-started/your-first-form/)
@@ -286,8 +286,8 @@ Renderless directives and utility functions that give you toolkit-managed state 
 error visibility, aggregation, focus behavior, character counts — while you control
 every bit of markup and styling.
 
-Key exports: `NgxHeadlessToolkit`, `NgxHeadlessErrorStateDirective`, `NgxHeadlessErrorSummaryDirective`,
-`NgxHeadlessCharacterCountDirective`, `NgxHeadlessFieldsetDirective`, `NgxHeadlessFieldNameDirective`,
+Key exports: `NgxHeadlessToolkit`, `NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`,
+`NgxHeadlessCharacterCount`, `NgxHeadlessFieldset`, `NgxHeadlessFieldName`,
 `createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()`,
 `readErrors()`, `dedupeValidationErrors()`.
 
@@ -315,7 +315,7 @@ npm install @ngx-signal-forms/toolkit vest@6.2.7
 Pass the form tree to inspect field state, visibility rules, and resolved errors
 during development.
 
-Key exports: `NgxSignalFormDebugger` (bundle), `SignalFormDebuggerComponent`.
+Key exports: `NgxSignalFormDebugger` (bundle), `SignalFormDebugger`.
 
 ```html
 <ngx-signal-form-debugger [formTree]="form" />

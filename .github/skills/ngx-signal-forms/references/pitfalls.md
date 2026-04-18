@@ -71,7 +71,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit';
 
 // Correct
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import { validateVest } from '@ngx-signal-forms/toolkit/vest';
@@ -83,7 +83,7 @@ import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 <!-- Wrong — toolkit auto-ARIA already manages these -->
 <input [formField]="form.email" aria-invalid="true" aria-required="true" />
 
-<!-- Correct — let NgxSignalFormAutoAriaDirective handle it -->
+<!-- Correct — let NgxSignalFormAutoAria handle it -->
 <input id="email" [formField]="form.email" />
 ```
 
@@ -199,7 +199,7 @@ semantics directive as well:
 ```typescript
 // Wrong mental model
 // Importing NgxSignalFormToolkit in the parent component does NOT make
-// NgxSignalFormAutoAriaDirective available inside a child custom control template.
+// NgxSignalFormAutoAria available inside a child custom control template.
 
 // Correct
 @Component({

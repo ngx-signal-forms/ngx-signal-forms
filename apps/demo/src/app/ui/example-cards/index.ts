@@ -1,1 +1,1 @@
-export { ExampleCardsComponent } from './example-cards.component';
+export { ExampleCardsComponent } from './example-cards';

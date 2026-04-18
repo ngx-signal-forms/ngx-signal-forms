@@ -7,7 +7,7 @@ Real-world forms often need _non-blocking_ feedback — "weak password", "dispos
 ## Toolkit features showcased
 
 - `warn:*` error kinds — any `ValidationError` whose `kind` starts with `warn:` is treated as advisory.
-- `NgxFormFieldErrorComponent` — renders blocking errors with `role="alert"` and warnings with `role="status"` / `aria-live="polite"`, plus distinct styling.
+- `NgxFormFieldError` — renders blocking errors with `role="alert"` and warnings with `role="status"` / `aria-live="polite"`, plus distinct styling.
 - `submitWithWarnings()` — warning-tolerant submit helper used with `<form novalidate>` instead of Angular's native `submit()` (which treats every validation result as blocking).
 - Separation of blocking errors from warnings at the form-state level.
 

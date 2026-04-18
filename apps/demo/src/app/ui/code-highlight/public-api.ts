@@ -1,4 +1,4 @@
-export { ShikiHighlightDirective } from './shiki-highlight.directive';
+export { ShikiHighlightDirective } from './shiki-highlight';
 export {
   ShikiHighlightService,
   type SupportedLanguage,

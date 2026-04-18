@@ -324,7 +324,7 @@ to the `<input [formField]>` declared inside `SwitchControlComponent`.
 Use whichever import fits your component best:
 
 - `NgxSignalFormToolkit` when you want the bundle import
-- `NgxSignalFormAutoAriaDirective` when you only need auto-ARIA on the leaf
+- `NgxSignalFormAutoAria` when you only need auto-ARIA on the leaf
   control
 
 ### focusBoundControl() and Focus

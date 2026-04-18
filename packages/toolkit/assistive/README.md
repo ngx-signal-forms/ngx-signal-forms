@@ -12,11 +12,11 @@ It sits between `/headless` (signals only, no UI) and `/form-field` (complete wr
 
 ```typescript
 import {
-  NgxFormFieldErrorComponent,
-  NgxFormFieldErrorSummaryComponent,
-  NgxFormFieldHintComponent,
-  NgxFormFieldCharacterCountComponent,
-  NgxFormFieldAssistiveRowComponent,
+  NgxFormFieldError,
+  NgxFormFieldErrorSummary,
+  NgxFormFieldHint,
+  NgxFormFieldCharacterCount,
+  NgxFormFieldAssistiveRow,
   warningError,
   isWarningError,
   isBlockingError,
@@ -45,7 +45,7 @@ import {
 
 ## Components
 
-### NgxFormFieldErrorComponent
+### NgxFormFieldError
 
 Displays validation errors and warnings with appropriate ARIA roles.
 
@@ -69,7 +69,7 @@ Displays validation errors and warnings with appropriate ARIA roles.
 
 Use `ngxSignalForm` alongside `[formRoot]` when relying on the `'on-submit'` strategy so assistive components can inherit submission state automatically.
 
-### NgxFormFieldErrorSummaryComponent
+### NgxFormFieldErrorSummary
 
 Form-level error summary with clickable entries that focus the invalid control.
 
@@ -89,7 +89,7 @@ Form-level error summary with clickable entries that focus the invalid control.
 
 Override field names with `provideFieldLabels()` from `@ngx-signal-forms/toolkit`.
 
-### NgxFormFieldHintComponent
+### NgxFormFieldHint
 
 Helper text below inputs. Automatically linked to the input via `aria-describedby` when used inside the form-field wrapper.
 
@@ -97,7 +97,7 @@ Helper text below inputs. Automatically linked to the input via `aria-describedb
 <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
 ```
 
-### NgxFormFieldCharacterCountComponent
+### NgxFormFieldCharacterCount
 
 Character counter with progressive color states (ok → warning → danger → exceeded).
 
@@ -110,7 +110,7 @@ Character counter with progressive color states (ok → warning → danger → e
 
 When a matching max-length validator is present, `maxLength` can be omitted and detected automatically. Add `liveAnnounce` for polite screen reader announcements.
 
-### NgxFormFieldAssistiveRowComponent
+### NgxFormFieldAssistiveRow
 
 Layout container for hint and character count side by side.
 

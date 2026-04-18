@@ -22,13 +22,13 @@ import {
   type FieldLabelResolver,
 } from '@ngx-signal-forms/toolkit/core';
 
-import type { CharacterCountLimitState } from './character-count.directive';
+import type { CharacterCountLimitState } from './character-count';
 
 export { humanizeFieldPath };
 import {
   DEFAULT_DANGER_THRESHOLD,
   DEFAULT_WARNING_THRESHOLD,
-} from './character-count.directive';
+} from './character-count';
 
 type ReadSignal<T> = () => T;
 type ReactiveOrStatic<T> = T | ReadSignal<T>;
@@ -238,7 +238,7 @@ export { createUniqueId, readDirectErrors };
 
 /**
  * Core error-state signals shared between `createErrorState()` (the
- * standalone factory) and `NgxHeadlessErrorStateDirective` (the directive
+ * standalone factory) and `NgxHeadlessErrorState` (the directive
  * variant). The split on `readDirectErrors()` is intentionally the safer
  * path: it handles a field state whose `errors()` is missing or not an
  * array, which matters for tests and for custom control adapters.
@@ -256,10 +256,10 @@ interface HeadlessErrorStateCore {
 
 /**
  * Shared builder used by both `createErrorState()` and
- * `NgxHeadlessErrorStateDirective` to derive the error/warning split,
+ * `NgxHeadlessErrorState` to derive the error/warning split,
  * presence flags, and ARIA region IDs.
  *
- * Exposed to `error-state.directive.ts` via a named export only.
+ * Exposed to `error-state.ts` via a named export only.
  *
  * @internal
  */
@@ -326,7 +326,7 @@ export interface ErrorStateResult {
 /**
  * Creates error state signals for a form field.
  *
- * This utility provides the same state management as NgxHeadlessErrorStateDirective
+ * This utility provides the same state management as NgxHeadlessErrorState
  * but as standalone signals for programmatic use. Defaults to the 'on-touch'
  * strategy when no strategy is provided.
  *
@@ -460,7 +460,7 @@ export interface CharacterCountResult {
 /**
  * Creates character count signals for a form field.
  *
- * This utility provides the same state management as NgxHeadlessCharacterCountDirective
+ * This utility provides the same state management as NgxHeadlessCharacterCount
  * but as standalone signals for programmatic use.
  *
  * @remarks Must be called in an injection context (constructor, field

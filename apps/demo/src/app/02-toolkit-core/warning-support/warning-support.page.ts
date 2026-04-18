@@ -16,7 +16,7 @@ import {
 import {
   ERROR_DISPLAY_MODE_LABELS,
   ErrorDisplayModeSelectorComponent,
-} from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
+} from '../../ui/error-display-mode-selector/error-display-mode-selector';
 import { WARNING_SUPPORT_CONTENT } from './warning-support.content';
 import { WarningsSupportFormComponent } from './warning-support.form';
 

@@ -21,12 +21,12 @@
  * ```
  */
 
-export { NgxFormFieldAssistiveRowComponent } from './assistive-row.component';
-export { NgxFormFieldCharacterCountComponent } from './character-count.component';
+export { NgxFormFieldAssistiveRow } from './assistive-row';
+export { NgxFormFieldCharacterCount } from './character-count';
 export {
-  NgxFormFieldErrorComponent,
+  NgxFormFieldError,
   type NgxFormFieldErrorListStyle,
-} from './form-field-error.component';
-export { NgxFormFieldErrorSummaryComponent } from './form-field-error-summary.component';
-export { NgxFormFieldHintComponent } from './hint.component';
+} from './form-field-error';
+export { NgxFormFieldErrorSummary } from './form-field-error-summary';
+export { NgxFormFieldHint } from './hint';
 export { isBlockingError, isWarningError, warningError } from './warning-error';

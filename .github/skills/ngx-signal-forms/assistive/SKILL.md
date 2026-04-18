@@ -17,26 +17,26 @@ The assistive entry point provides accessible feedback rendering that sits betwe
 
 1. Import from `@ngx-signal-forms/toolkit/assistive` — these components are also re-exported by `NgxFormField` for convenience when a form-field wrapper is present.
 
-2. **`NgxFormFieldErrorComponent`** — displays validation errors (and optionally warnings) for a single field or a pre-aggregated error list:
+2. **`NgxFormFieldError`** — displays validation errors (and optionally warnings) for a single field or a pre-aggregated error list:
    - Always provide `[formField]` for single-field usage.
    - Always provide `fieldName` when used standalone (not inside `ngx-signal-form-field-wrapper`).
    - Inside a wrapper, `fieldName` is inherited automatically.
    - Use `listStyle="bullets"` for grouped summaries; default `'plain'` for inline single-field output.
 
-3. **`NgxFormFieldHintComponent`** — static helper text that participates in `aria-describedby` linkage. Place before or after the input; the wrapper handles ordering automatically.
+3. **`NgxFormFieldHint`** — static helper text that participates in `aria-describedby` linkage. Place before or after the input; the wrapper handles ordering automatically.
 
-4. **`NgxFormFieldCharacterCountComponent`** — live character count with progressive color states:
+4. **`NgxFormFieldCharacterCount`** — live character count with progressive color states:
    - Provide `[formField]` for the bound field.
    - Omit `maxLength` when a `maxLength` validator on the field provides it.
    - Use `colorThresholds` to customize warning/danger thresholds (default: 80% warning, 95% danger).
 
-5. **`NgxFormFieldAssistiveRowComponent`** — groups hint text and character count into a single stable row when both appear below the same input.
+5. **`NgxFormFieldAssistiveRow`** — groups hint text and character count into a single stable row when both appear below the same input.
 
-6. **`NgxFormFieldErrorSummaryComponent`** — form-level error summary (GOV.UK pattern):
+6. **`NgxFormFieldErrorSummary`** — form-level error summary (GOV.UK pattern):
    - Place at the top of the form, between any server status banners and the first field.
    - Always provide `[formTree]` — pass the form tree directly (e.g., `[formTree]="myForm"`), not `myForm()`.
    - `summaryLabel` defaults to `'Please fix the following errors:'`. Override with a meaningful label.
-   - Renders blocking errors only (no warnings). For warnings, use `NgxHeadlessErrorSummaryDirective` instead.
+   - Renders blocking errors only (no warnings). For warnings, use `NgxHeadlessErrorSummary` instead.
    - Inherits `errorStrategy` and `submittedStatus` from `ngxSignalForm` context automatically — no extra wiring needed when used inside `form[formRoot][ngxSignalForm]`.
    - Each entry is a focusable button that calls `focusBoundControl()` on click.
    - Uses `role="alert"` + `aria-live="assertive"` for screen readers.
@@ -49,12 +49,12 @@ The assistive entry point provides accessible feedback rendering that sits betwe
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxFormFieldErrorSummaryComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldErrorSummary } from '@ngx-signal-forms/toolkit/assistive';
 
 @Component({
   selector: 'app-registration-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxFormFieldErrorSummaryComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormFieldErrorSummary],
   template: `
     <form [formRoot]="registrationForm" ngxSignalForm errorStrategy="on-submit">
       <!-- Error summary at top of form — inherits strategy from ngxSignalForm context -->
@@ -84,10 +84,10 @@ export class RegistrationFormComponent {
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { form, FormField, required, maxLength } from '@angular/forms/signals';
 import {
-  NgxFormFieldErrorComponent,
-  NgxFormFieldHintComponent,
-  NgxFormFieldCharacterCountComponent,
-  NgxFormFieldAssistiveRowComponent,
+  NgxFormFieldError,
+  NgxFormFieldHint,
+  NgxFormFieldCharacterCount,
+  NgxFormFieldAssistiveRow,
 } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
@@ -97,10 +97,10 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
   imports: [
     FormField,
     NgxSignalFormToolkit,
-    NgxFormFieldErrorComponent,
-    NgxFormFieldHintComponent,
-    NgxFormFieldCharacterCountComponent,
-    NgxFormFieldAssistiveRowComponent,
+    NgxFormFieldError,
+    NgxFormFieldHint,
+    NgxFormFieldCharacterCount,
+    NgxFormFieldAssistiveRow,
   ],
   template: `
     <form [formRoot]="profileForm" ngxSignalForm>
@@ -134,14 +134,14 @@ import {
 } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
-`NgxFormFieldErrorComponent` automatically renders warnings with `role="status"` — no manual ARIA needed.
+`NgxFormFieldError` automatically renders warnings with `role="status"` — no manual ARIA needed.
 
 ## Error Handling
 
 - If errors don't display: check that `fieldName` is provided when the component is used standalone.
 - If character count doesn't update: verify the field value is a string and `[formField]` is bound.
-- If hints don't appear in `aria-describedby`: confirm the component is inside a `ngx-signal-form-field-wrapper` or use `NgxHeadlessFieldNameDirective` to wire it manually.
+- If hints don't appear in `aria-describedby`: confirm the component is inside a `ngx-signal-form-field-wrapper` or use `NgxHeadlessFieldName` to wire it manually.
 - For grouped summaries or fieldset-level output, switch to `form-field/SKILL.md` (`NgxSignalFormFieldset`).
 - If error summary does not show: verify `ngxSignalForm` is applied to the `<form>` element so context is active, or provide `strategy` and `submittedStatus` explicitly.
 - If error summary entries don't focus controls on click: ensure the bound `<input>` / `<textarea>` / `<select>` has a stable `id` attribute — `focusBoundControl()` requires it.
-- For warning entries in the summary, use `NgxHeadlessErrorSummaryDirective` from `@ngx-signal-forms/toolkit/headless` instead.
+- For warning entries in the summary, use `NgxHeadlessErrorSummary` from `@ngx-signal-forms/toolkit/headless` instead.

@@ -48,7 +48,7 @@ Use the correct entry point for the thing you need.
 ```typescript
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
 ## Stable Public Types
@@ -136,7 +136,7 @@ Add `ngxSignalForm` to the same `<form>` when the form needs shared toolkit cont
 
 Without `ngxSignalForm`, toolkit surfaces fall back to default `'on-touch'` timing and treat the form as `'unsubmitted'`, which is correct for many basic forms.
 
-`NgxSignalFormDirective` on `form[formRoot][ngxSignalForm]` enhances Angular's `FormRoot` and adds:
+`NgxSignalForm` on `form[formRoot][ngxSignalForm]` enhances Angular's `FormRoot` and adds:
 
 - form context for child toolkit components
 - derived `submittedStatus`
@@ -157,9 +157,9 @@ Current public exports, grouped by category:
 
 **Directives & bundles:**
 
-- `NgxSignalFormDirective` — form enhancer on `form[formRoot][ngxSignalForm]`
-- `NgxSignalFormAutoAriaDirective` — automatic ARIA wiring
-- `NgxSignalFormControlSemanticsDirective` — declares control kind/layout/aria for wrapper and auto-ARIA
+- `NgxSignalForm` — form enhancer on `form[formRoot][ngxSignalForm]`
+- `NgxSignalFormAutoAria` — automatic ARIA wiring
+- `NgxSignalFormControlSemantics` — declares control kind/layout/aria for wrapper and auto-ARIA
 - `NgxSignalFormToolkit` — bundle of all above
 
 **Providers:**
@@ -248,7 +248,7 @@ Toolkit UI that needs ARIA linkage must have either:
 
 ## Control Semantics
 
-`NgxSignalFormControlSemanticsDirective` (part of `NgxSignalFormToolkit`) declares stable control behavior for the wrapper and auto-ARIA layers.
+`NgxSignalFormControlSemantics` (part of `NgxSignalFormToolkit`) declares stable control behavior for the wrapper and auto-ARIA layers.
 
 Use it for controls outside the default native field families:
 
@@ -275,7 +275,7 @@ Override defaults globally with `provideNgxSignalFormControlPresets()` or per-co
 
 ## Automatic ARIA
 
-`NgxSignalFormAutoAriaDirective` is part of `NgxSignalFormToolkit`.
+`NgxSignalFormAutoAria` is part of `NgxSignalFormToolkit`.
 
 It currently auto-applies to:
 
@@ -370,7 +370,7 @@ provideErrorMessages({
 ### Use `@ngx-signal-forms/toolkit/form-field` for:
 
 - `NgxFormField`
-- `NgxSignalFormFieldWrapperComponent`
+- `NgxSignalFormFieldWrapper`
 - `NgxSignalFormFieldset`
 
 ### Wrapper component
@@ -460,13 +460,13 @@ Use `includeNestedErrors` only when the group itself must surface all nested err
 
 ### Use `@ngx-signal-forms/toolkit/assistive` for:
 
-- `NgxFormFieldErrorComponent`
-- `NgxFormFieldErrorSummaryComponent`
-- `NgxFormFieldHintComponent`
-- `NgxFormFieldCharacterCountComponent`
-- `NgxFormFieldAssistiveRowComponent`
+- `NgxFormFieldError`
+- `NgxFormFieldErrorSummary`
+- `NgxFormFieldHint`
+- `NgxFormFieldCharacterCount`
+- `NgxFormFieldAssistiveRow`
 
-### `NgxFormFieldErrorComponent`
+### `NgxFormFieldError`
 
 Important inputs:
 
@@ -479,7 +479,7 @@ Important inputs:
 
 Use `listStyle="bullets"` for grouped summaries, not for normal inline single-field feedback.
 
-### `NgxFormFieldErrorSummaryComponent`
+### `NgxFormFieldErrorSummary`
 
 Form-level error summary (GOV.UK pattern). Aggregates all blocking errors into a focusable list.
 
@@ -490,14 +490,14 @@ Important inputs:
 - `strategy`
 - `submittedStatus`
 
-Uses `role="alert"` + `aria-live="assertive"`. Inherits strategy and submitted status from `ngxSignalForm` context automatically. For full DOM control or warning entries, use `NgxHeadlessErrorSummaryDirective` instead.
+Uses `role="alert"` + `aria-live="assertive"`. Inherits strategy and submitted status from `ngxSignalForm` context automatically. For full DOM control or warning entries, use `NgxHeadlessErrorSummary` instead.
 
-### `NgxFormFieldHintComponent`
+### `NgxFormFieldHint`
 
 - helper text component
 - automatically participates in wrapper assistive layout and described-by linkage
 
-### `NgxFormFieldCharacterCountComponent`
+### `NgxFormFieldCharacterCount`
 
 Use current public inputs:
 
@@ -520,11 +520,11 @@ Public directives and helpers include:
 **Directives:**
 
 - `NgxHeadlessToolkit` — bundle of all headless directives
-- `NgxHeadlessErrorStateDirective`
-- `NgxHeadlessErrorSummaryDirective` — renderless form-level error summary (supports warnings)
-- `NgxHeadlessFieldsetDirective`
-- `NgxHeadlessCharacterCountDirective`
-- `NgxHeadlessFieldNameDirective`
+- `NgxHeadlessErrorState`
+- `NgxHeadlessErrorSummary` — renderless form-level error summary (supports warnings)
+- `NgxHeadlessFieldset`
+- `NgxHeadlessCharacterCount`
+- `NgxHeadlessFieldName`
 
 **Factory functions:**
 
@@ -545,8 +545,8 @@ Use `@ngx-signal-forms/toolkit/debugger` for development-only debugging.
 Current public debugger exports include:
 
 - `NgxSignalFormDebugger` — bundle of all debugger components
-- `SignalFormDebuggerComponent`
-- `DebuggerBadgeComponent` / `DebuggerBadgeIconDirective`
+- `SignalFormDebugger`
+- `DebuggerBadge` / `DebuggerBadgeIcon`
 - Types: `DebuggerBadgeAppearance`, `DebuggerBadgeVariant`
 
 Pass the **field tree** (for example `userForm`), not the root field state (`userForm()`).

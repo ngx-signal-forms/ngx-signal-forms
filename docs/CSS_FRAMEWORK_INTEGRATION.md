@@ -121,7 +121,7 @@ export const appConfig: ApplicationConfig = {
 For better accessibility, use the toolkit's error component instead of Bootstrap's `.invalid-feedback`:
 
 ```typescript
-import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
 ```html

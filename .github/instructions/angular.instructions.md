@@ -318,7 +318,7 @@ protected readonly items = computed(() =>
 <img ngSrc="hero.jpg" width="400" height="300" priority />
 
 // Lazy routes
-{ path: 'admin', loadComponent: () => import('./admin.component') }
+{ path: 'admin', loadComponent: () => import('./admin') }
 ```
 
 5. **SSR + Hydration**
@@ -357,7 +357,7 @@ test('should display', async ({ page }) => {
 
 ### File Naming (kebab-case)
 
-- Components: `user-profile.component.ts`
+- Components: `user-profile.ts`
 - Services: `user.service.ts`
 - Guards: `auth.guard.ts` (functional)
 - Routes: `user.routes.ts`
@@ -373,7 +373,7 @@ src/app/
 │       ├── components/
 │       ├── services/
 │       └── users.routes.ts
-├── app.component.ts
+├── app.ts
 ├── app.config.ts
 └── app.routes.ts
 ```

@@ -21,7 +21,7 @@ warning semantics, and reusable field UI.
 
 ## Why `ngxSignalForm` is additive, not a replacement
 
-`NgxSignalFormDirective` (selector: `form[formRoot][ngxSignalForm]`) is an **enhancer**.
+`NgxSignalForm` (selector: `form[formRoot][ngxSignalForm]`) is an **enhancer**.
 It activates on `<form>` elements that already have `[formRoot]` when you also add the
 `ngxSignalForm` attribute. It adds:
 
@@ -33,8 +33,8 @@ It activates on `<form>` elements that already have `[formRoot]` when you also a
    feedback becomes visible (`'immediate'`, `'on-touch'`, or `'on-submit'`).
 
 `NgxSignalFormToolkit` is a convenience bundle that combines `FormRoot` +
-`NgxSignalFormDirective` + `NgxSignalFormAutoAriaDirective` +
-`NgxSignalFormControlSemanticsDirective`. Import it instead of `FormRoot` separately.
+`NgxSignalForm` + `NgxSignalFormAutoAria` +
+`NgxSignalFormControlSemantics`. Import it instead of `FormRoot` separately.
 
 ```typescript
 imports: [FormField, NgxSignalFormToolkit];

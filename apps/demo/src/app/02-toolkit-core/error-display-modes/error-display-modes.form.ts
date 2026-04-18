@@ -15,7 +15,7 @@ import {
   showErrors,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
-import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 
 import {
   productFeedbackSchema,
@@ -140,7 +140,7 @@ export class ErrorDisplayHelpersComponent {
     ErrorDisplayHelpersComponent,
     FormField,
     NgxSignalFormToolkit,
-    NgxFormFieldErrorComponent,
+    NgxFormFieldError,
   ],
   template: `
     <!-- Product Feedback Form -->

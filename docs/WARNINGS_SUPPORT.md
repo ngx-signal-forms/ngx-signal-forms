@@ -182,7 +182,7 @@ const registrationForm = form(
 
 ## Template Integration
 
-### Using NgxFormFieldErrorComponent
+### Using NgxFormFieldError
 
 The component automatically separates errors and warnings:
 
@@ -244,7 +244,7 @@ guidance like _"consider 12+ characters"_ or _"disposable email may not receive
 notifications"_ **while** they are typing, not after they've already moved past
 the field.
 
-To reflect that, `NgxFormFieldErrorComponent` (and the wrapper / assistive bundle
+To reflect that, `NgxFormFieldError` (and the wrapper / assistive bundle
 that projects it) exposes a dedicated `warningStrategy` input. It decouples
 warning visibility from error visibility while keeping both rendered by the same
 component.
@@ -296,7 +296,7 @@ strategy explicitly.
 
 ### Example: override when standalone
 
-When projecting `NgxFormFieldErrorComponent` directly (without the wrapper),
+When projecting `NgxFormFieldError` directly (without the wrapper),
 pass the inputs explicitly:
 
 ```html

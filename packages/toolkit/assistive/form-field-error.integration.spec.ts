@@ -1,21 +1,21 @@
 import { Component, signal } from '@angular/core';
 import { FormField, form, required, schema } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxSignalFormFieldWrapper } from '@ngx-signal-forms/toolkit/form-field';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
-import { NgxFormFieldErrorComponent } from './form-field-error.component';
+import { NgxFormFieldError } from './form-field-error';
 
 /**
- * Integration test: render NgxFormFieldErrorComponent with a real Signal Form
+ * Integration test: render NgxFormFieldError with a real Signal Form
  * and assert that errors are NOT shown initially when using 'on-touch' strategy.
  */
-describe('NgxFormFieldErrorComponent (integration)', () => {
+describe('NgxFormFieldError (integration)', () => {
   it('does not show errors on initial render with on-touch strategy', async () => {
     // Define a test component to ensure DI context for Signal Forms
     @Component({
       selector: 'test-form-error',
-      imports: [FormField, NgxSignalFormToolkit, NgxFormFieldErrorComponent],
+      imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
       template: `
         <form
           [formRoot]="contactForm"
@@ -61,11 +61,7 @@ describe('NgxFormFieldErrorComponent (integration)', () => {
   it('inherits fieldName from parent ngx-signal-form-field-wrapper without explicit fieldName input', async () => {
     @Component({
       selector: 'test-wrapper-context',
-      imports: [
-        FormField,
-        NgxSignalFormToolkit,
-        NgxSignalFormFieldWrapperComponent,
-      ],
+      imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldWrapper],
       template: `
         <form [formRoot]="contactForm" ngxSignalForm errorStrategy="immediate">
           <ngx-signal-form-field-wrapper [formField]="contactForm.email">
