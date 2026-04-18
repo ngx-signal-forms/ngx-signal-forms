@@ -18,6 +18,7 @@ import {
   shouldShowErrors,
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
+  type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import {
@@ -97,6 +98,8 @@ export class CustomControlsFormComponent {
    * Form field appearance input
    */
   readonly appearance = input<FormFieldAppearance>('stacked');
+
+  readonly orientation = input<FormFieldOrientation>('vertical');
 
   /**
    * Form model signal with default values.

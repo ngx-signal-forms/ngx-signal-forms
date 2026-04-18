@@ -2,19 +2,28 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   signal,
 } from '@angular/core';
-import { type FormFieldAppearance } from '@ngx-signal-forms/toolkit';
+import {
+  type FormFieldAppearance,
+  type FormFieldOrientation,
+} from '@ngx-signal-forms/toolkit';
 
 import {
   AppearanceToggleComponent,
   DisplayControlsCardComponent,
   ExampleCardsComponent,
+  OrientationToggleComponent,
 } from '../../ui';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
+import {
+  getOrientationLabel,
+  isOrientationDisabledForAppearance,
+} from '../../ui/orientation-toggle';
 
 import { ADVANCED_WIZARD_CONTENT } from './advanced-wizard.content';
-import { WizardContainerComponent } from './components/wizard-container.component';
+import { WizardContainerComponent } from './components/wizard-container';
 
 @Component({
   selector: 'ngx-advanced-wizard-page',
@@ -22,6 +31,7 @@ import { WizardContainerComponent } from './components/wizard-container.componen
   imports: [
     WizardContainerComponent,
     AppearanceToggleComponent,
+    OrientationToggleComponent,
     DisplayControlsCardComponent,
     ExampleCardsComponent,
   ],
@@ -50,9 +60,19 @@ import { WizardContainerComponent } from './components/wizard-container.componen
           <div display-controls-primary>
             <ngx-appearance-toggle [(value)]="selectedAppearance" />
           </div>
+
+          <div class="mt-4">
+            <ngx-orientation-toggle
+              [(value)]="selectedOrientation"
+              [appearance]="selectedAppearance()"
+            />
+          </div>
         </ngx-display-controls-card>
 
-        <ngx-wizard-container [appearance]="selectedAppearance()" />
+        <ngx-wizard-container
+          [appearance]="selectedAppearance()"
+          [orientation]="selectedOrientation()"
+        />
 
         <footer class="page-footer mt-8 border-t pt-4">
           <details class="text-sm text-gray-500">
@@ -85,6 +105,8 @@ import { WizardContainerComponent } from './components/wizard-container.componen
 export default class AdvancedWizardPage {
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
+  protected readonly selectedOrientation =
+    signal<FormFieldOrientation>('vertical');
   protected readonly demonstratedContent = ADVANCED_WIZARD_CONTENT.demonstrated;
   protected readonly learningContent = ADVANCED_WIZARD_CONTENT.learning;
   protected readonly currentControlChips = computed(() => [
@@ -92,5 +114,22 @@ export default class AdvancedWizardPage {
       label: 'Appearance',
       value: APPEARANCE_LABELS[this.selectedAppearance()],
     },
+    {
+      label: 'Orientation',
+      value: getOrientationLabel(this.selectedOrientation()),
+    },
   ]);
+
+  constructor() {
+    effect(() => {
+      if (
+        isOrientationDisabledForAppearance(
+          this.selectedAppearance(),
+          this.selectedOrientation(),
+        )
+      ) {
+        this.selectedOrientation.set('vertical');
+      }
+    });
+  }
 }

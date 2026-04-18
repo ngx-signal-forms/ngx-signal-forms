@@ -2,12 +2,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   signal,
   viewChild,
 } from '@angular/core';
 import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
+  type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
@@ -15,14 +17,19 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
+  getOrientationLabel,
+  isOrientationDisabledForAppearance,
+} from '../../ui/orientation-toggle';
+import {
   ERROR_DISPLAY_MODE_LABELS,
   ErrorDisplayModeSelectorComponent,
-} from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
+} from '../../ui/error-display-mode-selector/error-display-mode-selector';
 import { GLOBAL_CONFIG_CONTENT } from './global-configuration.content';
 import { GlobalConfigurationComponent } from './global-configuration.form';
 
@@ -49,6 +56,7 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,
     AppearanceToggleComponent,
+    OrientationToggleComponent,
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
     PageHeaderComponent,
@@ -85,11 +93,22 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
       >
         <ngx-appearance-toggle [(value)]="selectedAppearance" />
       </ngx-display-controls-section>
+
+      <ngx-display-controls-section
+        title="↔️ Label orientation"
+        description="Override the global layout locally so you can compare a vertical form against a horizontal label column without touching the app bootstrap config."
+      >
+        <ngx-orientation-toggle
+          [(value)]="selectedOrientation"
+          [appearance]="selectedAppearance()"
+        />
+      </ngx-display-controls-section>
     </ngx-display-controls-card>
     <ngx-split-layout>
       <ngx-global-configuration
         [errorDisplayMode]="errorDisplayMode()"
         [appearance]="selectedAppearance()"
+        [orientation]="selectedOrientation()"
         left
       />
 
@@ -106,6 +125,8 @@ export class GlobalConfigurationPage {
     signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
+  protected readonly selectedOrientation =
+    signal<FormFieldOrientation>('vertical');
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -115,7 +136,24 @@ export class GlobalConfigurationPage {
       label: 'Appearance',
       value: APPEARANCE_LABELS[this.selectedAppearance()],
     },
+    {
+      label: 'Orientation',
+      value: getOrientationLabel(this.selectedOrientation()),
+    },
   ]);
   protected readonly content = GLOBAL_CONFIG_CONTENT;
   protected readonly formRef = viewChild(GlobalConfigurationComponent);
+
+  constructor() {
+    effect(() => {
+      if (
+        isOrientationDisabledForAppearance(
+          this.selectedAppearance(),
+          this.selectedOrientation(),
+        )
+      ) {
+        this.selectedOrientation.set('vertical');
+      }
+    });
+  }
 }

@@ -348,6 +348,7 @@
     <div class="grid gap-4 sm:grid-cols-2">
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.shippingAddress.street"
         class="sm:col-span-2"
       >
@@ -362,6 +363,7 @@
 
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.shippingAddress.city"
       >
         <label for="shippingCity">City *</label>
@@ -375,6 +377,7 @@
 
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.shippingAddress.zipCode"
       >
         <label for="shippingZipCode">ZIP Code *</label>
@@ -388,6 +391,7 @@
 
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.shippingAddress.country"
         class="sm:col-span-2"
       >
@@ -434,6 +438,7 @@
     <div class="grid gap-4 sm:grid-cols-2">
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.billingAddress.street"
         class="sm:col-span-2"
       >
@@ -448,6 +453,7 @@
 
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.billingAddress.city"
       >
         <label for="billingCity">City *</label>
@@ -461,6 +467,7 @@
 
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.billingAddress.zipCode"
       >
         <label for="billingZipCode">ZIP Code *</label>
@@ -474,6 +481,7 @@
 
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.billingAddress.country"
         class="sm:col-span-2"
       >
@@ -563,6 +571,7 @@
     <div class="grid gap-4 sm:grid-cols-2">
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.credentials.password"
       >
         <label for="password">Password *</label>
@@ -577,6 +586,7 @@
 
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.credentials.confirmPassword"
       >
         <label for="confirmPassword">Confirm Password *</label>

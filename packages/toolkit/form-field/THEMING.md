@@ -341,6 +341,49 @@ If the semantic colors aren't enough, you can override specific parts of the com
 | `--ngx-form-field-disabled-bg`        | `var(--ngx-form-field-color-disabled)`                                | Disabled background  |
 | `--ngx-form-field-disabled-opacity`   | `0.6`                                                                 | Disabled opacity     |
 
+### Horizontal Layout
+
+Set `orientation="horizontal"` on `ngx-signal-form-field-wrapper` (or configure
+`defaultFormFieldOrientation: 'horizontal'` globally) to place the label
+their inline layout.
+to the **left** of the input.
+
+This mode applies to **stacked** and **plain** wrappers. `appearance="outline"`
+always resolves back to vertical because its floating-label treatment depends on
+the label staying inside the outlined container. Selection controls (checkbox,
+switch, radio-group) are also excluded and keep their inline layout.
+
+| Property                                   | Default | Description                                                       |
+| :----------------------------------------- | :------ | :---------------------------------------------------------------- |
+| `--ngx-form-field-horizontal-gap`          | `1rem`  | Gap between label column and input column                         |
+| `--ngx-form-field-label-width`             | `auto`  | Width of the label column (set a fixed value for alignment)       |
+| `--ngx-form-field-horizontal-label-align`  | `end`   | Horizontal text alignment of the label (`start`, `center`, `end`) |
+| `--ngx-form-field-horizontal-label-valign` | `start` | Vertical alignment of the label (`start`, `center`, `end`)        |
+
+A `data-orientation` attribute (`vertical` | `horizontal`) is also exposed for
+custom CSS hooks.
+
+**Example: Aligned label column**
+
+```css
+ngx-signal-form-field-wrapper {
+  --ngx-form-field-label-width: 10rem;
+  --ngx-form-field-horizontal-gap: 1.5rem;
+}
+```
+
+### Fieldset Direction
+
+Set `--ngx-signal-form-fieldset-direction` to `row` on a fieldset to lay out its
+children side by side (e.g. for inline radio-button groups or short related
+fields).
+
+```css
+ngx-signal-form-fieldset {
+  --ngx-signal-form-fieldset-direction: row;
+}
+```
+
 ---
 
 ## 4. Recipes & Common Scenarios
@@ -382,7 +425,7 @@ The components support `prefers-color-scheme: dark` out of the box.
 If your app has a manual toggle (e.g. adding a `.dark` class), use this pattern to ensure it wins over system preferences:
 
 ```scss
-/* app.component.scss or global styles */
+/* app.scss or global styles */
 
 /* 1. Define Dark Mode overrides */
 @media (prefers-color-scheme: dark) {

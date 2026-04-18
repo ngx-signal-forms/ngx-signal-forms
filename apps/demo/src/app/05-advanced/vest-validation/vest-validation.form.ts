@@ -13,6 +13,7 @@ import {
 import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
+  type FormFieldOrientation,
   createOnInvalidHandler,
   hasOnlyWarnings,
   NgxSignalFormToolkit,
@@ -58,6 +59,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
           <ngx-signal-form-field-wrapper
             [formField]="accountForm.accountType"
             [appearance]="appearance()"
+            [orientation]="orientation()"
           >
             <label for="vest-account-type">Account type</label>
             <select
@@ -73,6 +75,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
           <ngx-signal-form-field-wrapper
             [formField]="accountForm.country"
             [appearance]="appearance()"
+            [orientation]="orientation()"
           >
             <label for="vest-country">Billing country</label>
             <select id="vest-country" [formField]="accountForm.country">
@@ -89,6 +92,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
           <ngx-signal-form-field-wrapper
             [formField]="accountForm.companyName"
             [appearance]="appearance()"
+            [orientation]="orientation()"
           >
             <label for="vest-company-name">Company name</label>
             <input
@@ -104,6 +108,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
           <ngx-signal-form-field-wrapper
             [formField]="accountForm.vatNumber"
             [appearance]="appearance()"
+            [orientation]="orientation()"
           >
             <label for="vest-vat-number">VAT number</label>
             <input
@@ -122,6 +127,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
           <ngx-signal-form-field-wrapper
             [formField]="accountForm.workEmail"
             [appearance]="appearance()"
+            [orientation]="orientation()"
           >
             <label for="vest-work-email">Work email</label>
             <input
@@ -135,6 +141,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
           <ngx-signal-form-field-wrapper
             [formField]="accountForm.teamSize"
             [appearance]="appearance()"
+            [orientation]="orientation()"
           >
             <label for="vest-team-size">Team size</label>
             <input
@@ -153,6 +160,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
         <ngx-signal-form-field-wrapper
           [formField]="accountForm.referralCode"
           [appearance]="appearance()"
+          [orientation]="orientation()"
         >
           <label for="vest-referral-code">Referral code</label>
           <input
@@ -229,6 +237,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
 export class VestValidationComponent {
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
+  readonly orientation = input<FormFieldOrientation>('vertical');
   readonly #onInvalid = createOnInvalidHandler();
 
   readonly #model = signal(createVestValidationModel());

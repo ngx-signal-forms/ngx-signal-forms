@@ -8,6 +8,7 @@ import { form, FormField } from '@angular/forms/signals';
 import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
+  type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import {
   createOnInvalidHandler,
@@ -73,6 +74,7 @@ import { globalConfigSchema } from './global-configuration.validations';
         <ngx-signal-form-field-wrapper
           [formField]="configForm.userEmail"
           [appearance]="appearance()"
+          [orientation]="orientation()"
         >
           <label for="userEmail">Email Address *</label>
           <input
@@ -87,6 +89,7 @@ import { globalConfigSchema } from './global-configuration.validations';
         <ngx-signal-form-field-wrapper
           [formField]="configForm.userPhone"
           [appearance]="appearance()"
+          [orientation]="orientation()"
         >
           <label for="userPhone">Phone Number *</label>
           <input
@@ -104,6 +107,7 @@ import { globalConfigSchema } from './global-configuration.validations';
         <ngx-signal-form-field-wrapper
           [formField]="configForm.userWebsite"
           [appearance]="appearance()"
+          [orientation]="orientation()"
         >
           <label for="userWebsite">Website</label>
           <input
@@ -121,6 +125,7 @@ import { globalConfigSchema } from './global-configuration.validations';
         <ngx-signal-form-field-wrapper
           [formField]="configForm.acceptTerms"
           [appearance]="appearance()"
+          [orientation]="orientation()"
         >
           <label for="acceptTerms">Accept terms of service *</label>
           <input
@@ -197,6 +202,7 @@ import { globalConfigSchema } from './global-configuration.validations';
 export class GlobalConfigurationComponent {
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
+  readonly orientation = input<FormFieldOrientation>('vertical');
 
   readonly #model = signal({
     userEmail: '',

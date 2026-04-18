@@ -2,12 +2,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   signal,
   viewChild,
 } from '@angular/core';
 import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
+  type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
@@ -15,14 +17,19 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
+  getOrientationLabel,
+  isOrientationDisabledForAppearance,
+} from '../../ui/orientation-toggle';
+import {
   ERROR_DISPLAY_MODE_LABELS,
   ErrorDisplayModeSelectorComponent,
-} from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
+} from '../../ui/error-display-mode-selector/error-display-mode-selector';
 import { ASYNC_VALIDATION_CONTENT } from './async-validation.content';
 import { AsyncValidationComponent } from './async-validation.form';
 
@@ -41,6 +48,7 @@ import { AsyncValidationComponent } from './async-validation.form';
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,
     AppearanceToggleComponent,
+    OrientationToggleComponent,
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
     PageHeaderComponent,
@@ -77,12 +85,23 @@ import { AsyncValidationComponent } from './async-validation.form';
       >
         <ngx-appearance-toggle [(value)]="selectedAppearance" />
       </ngx-display-controls-section>
+
+      <ngx-display-controls-section
+        title="↔️ Label orientation"
+        description="Check whether async loading and unavailable feedback still reads clearly when labels move into a horizontal column. Outline stays vertical."
+      >
+        <ngx-orientation-toggle
+          [(value)]="selectedOrientation"
+          [appearance]="selectedAppearance()"
+        />
+      </ngx-display-controls-section>
     </ngx-display-controls-card>
 
     <ngx-split-layout>
       <ngx-async-validation
         [errorDisplayMode]="errorDisplayMode()"
         [appearance]="selectedAppearance()"
+        [orientation]="selectedOrientation()"
         left
       />
 
@@ -99,6 +118,8 @@ export class AsyncValidationPageComponent {
     signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
+  protected readonly selectedOrientation =
+    signal<FormFieldOrientation>('vertical');
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -108,7 +129,24 @@ export class AsyncValidationPageComponent {
       label: 'Appearance',
       value: APPEARANCE_LABELS[this.selectedAppearance()],
     },
+    {
+      label: 'Orientation',
+      value: getOrientationLabel(this.selectedOrientation()),
+    },
   ]);
   protected readonly content = ASYNC_VALIDATION_CONTENT;
   protected readonly formRef = viewChild(AsyncValidationComponent);
+
+  constructor() {
+    effect(() => {
+      if (
+        isOrientationDisabledForAppearance(
+          this.selectedAppearance(),
+          this.selectedOrientation(),
+        )
+      ) {
+        this.selectedOrientation.set('vertical');
+      }
+    });
+  }
 }

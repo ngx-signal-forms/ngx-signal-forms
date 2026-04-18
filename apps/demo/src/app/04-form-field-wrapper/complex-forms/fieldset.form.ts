@@ -16,6 +16,7 @@ import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
+  type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import {
   type FieldsetErrorPlacement,
@@ -110,6 +111,7 @@ export class FieldsetFormComponent {
    */
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('stacked');
+  readonly orientation = input<FormFieldOrientation>('vertical');
   readonly errorPlacement = input<FieldsetErrorPlacement>('top');
 
   readonly #placementPreviewModel = signal(createPlacementPreviewValue());

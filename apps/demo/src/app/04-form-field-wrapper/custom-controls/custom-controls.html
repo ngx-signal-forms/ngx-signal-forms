@@ -15,6 +15,7 @@
     <!-- Product Name - Stacked input for comparison -->
     <ngx-signal-form-field-wrapper
       [appearance]="appearance()"
+      [orientation]="orientation()"
       [formField]="reviewForm.productName"
     >
       <label for="productName">Product Name *</label>
@@ -29,6 +30,7 @@
     <!-- Product Rating - Custom RatingControl with auto-derived fieldName -->
     <ngx-signal-form-field-wrapper
       appearance="plain"
+      [orientation]="orientation()"
       [formField]="reviewForm.rating"
     >
       <label id="rating-label" for="rating">Product Rating *</label>
@@ -47,6 +49,7 @@
     <!-- Service Rating - Custom RatingControl -->
     <ngx-signal-form-field-wrapper
       appearance="plain"
+      [orientation]="orientation()"
       [formField]="reviewForm.serviceRating"
     >
       <label id="serviceRating-label" for="serviceRating"
@@ -64,6 +67,7 @@
     <!-- Would Recommend - Custom RatingControl as thumbs up/down (2 stars) -->
     <ngx-signal-form-field-wrapper
       appearance="plain"
+      [orientation]="orientation()"
       [formField]="reviewForm.wouldRecommend"
     >
       <label id="wouldRecommend-label" for="wouldRecommend"
@@ -83,6 +87,7 @@
 
     <ngx-signal-form-field-wrapper
       [appearance]="appearance()"
+      [orientation]="orientation()"
       fieldName="emailUpdates"
       [formField]="reviewForm.emailUpdates"
     >
@@ -98,6 +103,7 @@
 
     <ngx-signal-form-field-wrapper
       [appearance]="appearance()"
+      [orientation]="orientation()"
       [formField]="reviewForm.shareReviewPublicly"
     >
       <label for="shareReviewPublicly">Share this review publicly *</label>
@@ -114,6 +120,7 @@
 
     <ngx-signal-form-field-wrapper
       appearance="plain"
+      [orientation]="orientation()"
       [formField]="reviewForm.accessibilityAudit"
       errorPlacement="top"
     >
@@ -136,6 +143,7 @@
     <!-- Feedback - Stacked textarea for comparison -->
     <ngx-signal-form-field-wrapper
       [appearance]="appearance()"
+      [orientation]="orientation()"
       [formField]="reviewForm.feedback"
     >
       <label for="feedback">Additional Feedback (optional)</label>

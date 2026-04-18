@@ -16,6 +16,7 @@
     <div class="grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2">
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.personalInfo.firstName"
       >
         <label for="firstName">First Name *</label>
@@ -28,6 +29,7 @@
 
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.personalInfo.lastName"
       >
         <label for="lastName">Last Name *</label>
@@ -40,6 +42,7 @@
 
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.personalInfo.email"
       >
         <svg
@@ -67,6 +70,7 @@
 
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.personalInfo.age"
       >
         <label for="age">Age *</label>
@@ -97,6 +101,7 @@
     <div class="grid grid-cols-1 gap-y-4">
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.addressInfo.street"
       >
         <svg
@@ -130,6 +135,7 @@
       <div class="grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2">
         <ngx-signal-form-field-wrapper
           [appearance]="appearance()"
+          [orientation]="orientation()"
           [formField]="complexForm.addressInfo.city"
         >
           <label for="city">City *</label>
@@ -142,6 +148,7 @@
 
         <ngx-signal-form-field-wrapper
           [appearance]="appearance()"
+          [orientation]="orientation()"
           [formField]="complexForm.addressInfo.zipCode"
         >
           <label for="zipCode">Zip Code *</label>
@@ -156,6 +163,7 @@
 
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.addressInfo.country"
       >
         <label for="country">Country *</label>
@@ -187,6 +195,7 @@
     >
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.skills[i].name"
         [fieldName]="'skill-' + i + '-name'"
       >
@@ -209,6 +218,7 @@
 
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.skills[i].level"
         [fieldName]="'skill-' + i + '-level'"
       >
@@ -246,6 +256,7 @@
     >
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.contacts[i].type"
         [fieldName]="'contact-' + i + '-type'"
       >
@@ -262,6 +273,7 @@
 
       <ngx-signal-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.contacts[i].value"
         [fieldName]="'contact-' + i + '-value'"
       >
@@ -343,6 +355,7 @@
         fieldName="newsletter"
         [formField]="complexForm.preferences.newsletter"
         [appearance]="appearance()"
+        [orientation]="orientation()"
       >
         <label for="newsletter">Subscribe to newsletter</label>
         <ngx-switch-control
@@ -355,6 +368,7 @@
       <ngx-signal-form-field-wrapper
         [formField]="complexForm.preferences.notifications"
         [appearance]="appearance()"
+        [orientation]="orientation()"
       >
         <label for="notifications">Enable email notifications</label>
         <input
