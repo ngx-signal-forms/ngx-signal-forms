@@ -38,6 +38,17 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
   selector: 'ngx-vest-validation',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
+  styles: `
+    @media (min-width: 48rem) {
+      .vest-validation-form__pair-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .vest-validation-form--single-column .vest-validation-form__pair-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  `,
   template: `
     <div class="px-6 pt-0 pb-6">
       <h2 class="mb-4 text-2xl font-bold">Vest-Only Validation Demo</h2>
@@ -54,8 +65,9 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
         ngxSignalForm
         [errorStrategy]="errorDisplayMode()"
         class="max-w-3xl space-y-6"
+        [class.vest-validation-form--single-column]="useSingleColumnFieldRows()"
       >
-        <div class="grid gap-4 md:grid-cols-2">
+        <div class="vest-validation-form__pair-grid grid gap-4 md:grid-cols-2">
           <ngx-signal-form-field-wrapper
             [formField]="accountForm.accountType"
             [appearance]="appearance()"
@@ -88,7 +100,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
           </ngx-signal-form-field-wrapper>
         </div>
 
-        <div class="grid gap-4 md:grid-cols-2">
+        <div class="vest-validation-form__pair-grid grid gap-4 md:grid-cols-2">
           <ngx-signal-form-field-wrapper
             [formField]="accountForm.companyName"
             [appearance]="appearance()"
@@ -123,7 +135,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
           </ngx-signal-form-field-wrapper>
         </div>
 
-        <div class="grid gap-4 md:grid-cols-2">
+        <div class="vest-validation-form__pair-grid grid gap-4 md:grid-cols-2">
           <ngx-signal-form-field-wrapper
             [formField]="accountForm.workEmail"
             [appearance]="appearance()"
@@ -267,6 +279,12 @@ export class VestValidationComponent {
       },
     },
   });
+
+  protected useSingleColumnFieldRows(): boolean {
+    return (
+      this.appearance() === 'standard' && this.orientation() === 'horizontal'
+    );
+  }
 
   protected resetForm(): void {
     this.accountForm().reset();

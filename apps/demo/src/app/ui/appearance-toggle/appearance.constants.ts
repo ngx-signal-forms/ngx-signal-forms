@@ -4,13 +4,13 @@ import type {
 } from '@ngx-signal-forms/toolkit';
 
 export const APPEARANCE_OPTIONS = [
-  'stacked',
+  'standard',
   'outline',
   'plain',
 ] as const satisfies readonly FormFieldAppearance[];
 
 export const APPEARANCE_LABELS = {
-  stacked: 'Stacked',
+  standard: 'Standard',
   outline: 'Outline',
   plain: 'Plain',
 } as const satisfies Record<FormFieldAppearance, string>;
@@ -21,14 +21,14 @@ export function getAppearanceLabel(
   appearance: FormFieldAppearanceInput,
 ): AppearanceLabel {
   switch (appearance) {
-    case 'stacked':
+    case 'standard':
     case 'outline':
     case 'plain':
       return APPEARANCE_LABELS[appearance];
     case 'inherit':
-      return APPEARANCE_LABELS.stacked;
+      return APPEARANCE_LABELS.standard;
     default:
       appearance satisfies never;
-      return APPEARANCE_LABELS.stacked;
+      return APPEARANCE_LABELS.standard;
   }
 }

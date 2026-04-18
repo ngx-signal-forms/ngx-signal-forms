@@ -124,7 +124,7 @@ export class CustomControlsPage {
 
   protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
-    signal<FormFieldAppearance>('stacked');
+    signal<FormFieldAppearance>('standard');
   protected readonly selectedOrientation =
     signal<FormFieldOrientation>('vertical');
   protected readonly currentControlChips = computed(() => [

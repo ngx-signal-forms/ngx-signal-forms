@@ -46,7 +46,7 @@ export class OrientationToggleComponent {
   protected readonly orientationLabels = ORIENTATION_LABELS;
   protected readonly orientationOptions = ORIENTATION_OPTIONS;
 
-  readonly appearance = input<FormFieldAppearance>('stacked');
+  readonly appearance = input<FormFieldAppearance>('standard');
   readonly value = model.required<FormFieldOrientation>();
 
   protected isDisabled(orientation: FormFieldOrientation): boolean {

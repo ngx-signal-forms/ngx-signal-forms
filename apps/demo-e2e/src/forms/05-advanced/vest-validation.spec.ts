@@ -172,4 +172,44 @@ test.describe('Advanced Scenarios - Vest-Only Validation', () => {
       );
     });
   });
+
+  test('Vest-Only Validation - uses single-column field rows for standard horizontal mode', async ({
+    page,
+  }) => {
+    const form = page.locator('form.max-w-3xl.space-y-6');
+    const pairGrids = form.locator('.vest-validation-form__pair-grid');
+
+    await test.step('Switch the demo to standard and horizontal', async () => {
+      await page.getByRole('button', { name: 'Standard' }).click();
+      await page.getByRole('button', { name: 'Horizontal' }).click();
+
+      await expect(form).toHaveClass(/vest-validation-form--single-column/);
+    });
+
+    await test.step('Verify each pair grid resolves to a single column', async () => {
+      const gridCount = await pairGrids.count();
+
+      for (let index = 0; index < gridCount; index += 1) {
+        await expect
+          .poll(async () =>
+            pairGrids
+              .nth(index)
+              .evaluate(
+                (element) =>
+                  window
+                    .getComputedStyle(element)
+                    .gridTemplateColumns.split(/\s+/)
+                    .filter(Boolean).length,
+              ),
+          )
+          .toBe(1);
+      }
+    });
+
+    await test.step('Capture the standard horizontal demo baseline', async () => {
+      await expect(form).toHaveScreenshot(
+        'vest-validation-standard-horizontal-single-column.png',
+      );
+    });
+  });
 });

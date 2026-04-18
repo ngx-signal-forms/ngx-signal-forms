@@ -110,7 +110,7 @@ export class FieldsetFormComponent {
    * Error display mode input - controls when errors are shown
    */
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
-  readonly appearance = input<FormFieldAppearance>('stacked');
+  readonly appearance = input<FormFieldAppearance>('standard');
   readonly orientation = input<FormFieldOrientation>('vertical');
   readonly errorPlacement = input<FieldsetErrorPlacement>('top');
 

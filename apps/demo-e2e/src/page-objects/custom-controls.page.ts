@@ -9,8 +9,9 @@ import { BaseFormPage } from './base-form.page';
 export class CustomControlsPage extends BaseFormPage {
   readonly route = DEMO_PATHS.customControls;
 
-  readonly stackedAppearanceButton: Locator;
+  readonly standardAppearanceButton: Locator;
   readonly outlineAppearanceButton: Locator;
+  readonly plainAppearanceButton: Locator;
   readonly verticalOrientationButton: Locator;
   readonly horizontalOrientationButton: Locator;
 
@@ -32,11 +33,14 @@ export class CustomControlsPage extends BaseFormPage {
   constructor(page: Page) {
     super(page);
 
-    this.stackedAppearanceButton = this.page.getByRole('button', {
-      name: 'Stacked',
+    this.standardAppearanceButton = this.page.getByRole('button', {
+      name: 'Standard',
     });
     this.outlineAppearanceButton = this.page.getByRole('button', {
       name: 'Outline',
+    });
+    this.plainAppearanceButton = this.page.getByRole('button', {
+      name: 'Plain',
     });
     this.verticalOrientationButton = this.page.getByRole('button', {
       name: 'Vertical',
@@ -118,10 +122,17 @@ export class CustomControlsPage extends BaseFormPage {
   }
 
   /**
-   * Switch the demo to stacked appearance.
+   * Switch the demo to standard appearance.
    */
-  async showStackedAppearance(): Promise<void> {
-    await this.stackedAppearanceButton.click();
+  async showStandardAppearance(): Promise<void> {
+    await this.standardAppearanceButton.click();
+  }
+
+  /**
+   * Switch the demo to plain appearance.
+   */
+  async showPlainAppearance(): Promise<void> {
+    await this.plainAppearanceButton.click();
   }
 
   /**

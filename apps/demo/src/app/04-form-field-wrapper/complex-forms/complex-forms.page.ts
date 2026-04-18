@@ -92,14 +92,14 @@ import { ComplexFormsComponent } from './complex-forms.form';
 
         <ngx-display-controls-section
           title="🎨 Long-form styling"
-          description="Compare whether the stacked or outline wrapper does a better job of keeping long sections and array rows scannable."
+          description="Compare whether the standard or outline wrapper does a better job of keeping long sections and array rows scannable."
         >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
         </ngx-display-controls-section>
 
         <ngx-display-controls-section
           title="↔️ Label orientation"
-          description="Switch between stacked vertical labels and horizontal label columns for the non-outline wrappers. Outline remains vertical by design."
+          description="Switch between standard vertical labels and horizontal label columns for the non-outline wrappers. Outline remains vertical by design."
         >
           <ngx-orientation-toggle
             [(value)]="selectedOrientation"

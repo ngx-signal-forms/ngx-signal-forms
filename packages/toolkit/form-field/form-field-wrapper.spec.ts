@@ -2375,8 +2375,8 @@ describe('NgxSignalFormWrapperComponent', () => {
   });
 
   describe('Appearance input', () => {
-    describe('Stacked appearance', () => {
-      it('should use stacked appearance by default (inherit from config default)', async () => {
+    describe('Standard appearance', () => {
+      it('should use standard appearance by default (inherit from config default)', async () => {
         const { container } = await render(
           `<ngx-signal-form-field-wrapper [formField]="field">
             <label for="email">Email</label>
@@ -2393,14 +2393,14 @@ describe('NgxSignalFormWrapperComponent', () => {
         const formField = container.querySelector(
           'ngx-signal-form-field-wrapper',
         );
-        // Default config is 'stacked', so should NOT have outline class
+        // Default config is 'standard', so should NOT have outline class
         expect(formField).not.toHaveClass('ngx-signal-forms-outline');
         expect(formField).not.toHaveAttribute('outline');
       });
 
-      it('should use stacked appearance when explicitly set', async () => {
+      it('should use standard appearance when explicitly set', async () => {
         const { container } = await render(
-          `<ngx-signal-form-field-wrapper [formField]="field" appearance="stacked">
+          `<ngx-signal-form-field-wrapper [formField]="field" appearance="standard">
             <label for="email">Email</label>
             <input id="email" type="email" />
           </ngx-signal-form-field-wrapper>`,
@@ -2418,9 +2418,9 @@ describe('NgxSignalFormWrapperComponent', () => {
         expect(formField).not.toHaveClass('ngx-signal-forms-outline');
       });
 
-      it('should override global outline config with stacked appearance', async () => {
+      it('should override global outline config with standard appearance', async () => {
         const { container } = await render(
-          `<ngx-signal-form-field-wrapper [formField]="field" appearance="stacked">
+          `<ngx-signal-form-field-wrapper [formField]="field" appearance="standard">
             <label for="email">Email</label>
             <input id="email" type="email" />
           </ngx-signal-form-field-wrapper>`,
@@ -2444,7 +2444,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         const formField = container.querySelector(
           'ngx-signal-form-field-wrapper',
         );
-        // Should be stacked despite global config
+        // Should be standard despite global config
         expect(formField).not.toHaveClass('ngx-signal-forms-outline');
       });
     });
@@ -2471,7 +2471,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         expect(formField).toHaveAttribute('outline', '');
       });
 
-      it('should override global stacked config with outline appearance', async () => {
+      it('should override global standard config with outline appearance', async () => {
         const { container } = await render(
           `<ngx-signal-form-field-wrapper [formField]="field" appearance="outline">
             <label for="email">Email</label>
@@ -2484,7 +2484,7 @@ describe('NgxSignalFormWrapperComponent', () => {
                 provide: NGX_SIGNAL_FORMS_CONFIG,
                 useValue: {
                   ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-                  defaultFormFieldAppearance: 'stacked',
+                  defaultFormFieldAppearance: 'standard',
                 },
               },
             ],
@@ -2574,7 +2574,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         expect(formField).toHaveClass('ngx-signal-forms-outline');
       });
 
-      it('should inherit stacked from global config', async () => {
+      it('should inherit standard from global config', async () => {
         const { container } = await render(
           `<ngx-signal-form-field-wrapper [formField]="field" appearance="inherit">
             <label for="email">Email</label>
@@ -2587,7 +2587,7 @@ describe('NgxSignalFormWrapperComponent', () => {
                 provide: NGX_SIGNAL_FORMS_CONFIG,
                 useValue: {
                   ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-                  defaultFormFieldAppearance: 'stacked',
+                  defaultFormFieldAppearance: 'standard',
                 },
               },
             ],
@@ -2686,9 +2686,9 @@ describe('NgxSignalFormWrapperComponent', () => {
         expect(formField).toHaveAttribute('data-required-marker', ' *');
       });
 
-      it('should not show required marker with stacked appearance', async () => {
+      it('should not show required marker with standard appearance', async () => {
         const { container } = await render(
-          `<ngx-signal-form-field-wrapper [formField]="field" appearance="stacked">
+          `<ngx-signal-form-field-wrapper [formField]="field" appearance="standard">
             <label for="email">Email</label>
             <input id="email" type="email" required />
           </ngx-signal-form-field-wrapper>`,

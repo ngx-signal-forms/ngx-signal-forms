@@ -171,7 +171,10 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
       },
     },
   ],
-  styleUrl: './form-field-wrapper.scss',
+  styleUrls: [
+    './form-field-wrapper.scss',
+    './form-field-wrapper.selection.scss',
+  ],
   host: {
     '[attr.outline]': 'isOutline() ? "" : null',
     '[attr.aria-invalid]': 'showInvalidState() ? "true" : "false"',
@@ -203,7 +206,7 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
       'isOutline() && resolvedShowRequiredMarker() ? resolvedRequiredMarker() : null',
   },
   template: `
-    <!-- Label slot (outside bordered container for stacked layout, visually inside for outline via CSS) -->
+    <!-- Label slot (outside bordered container for standard layout, visually inside for outline via CSS) -->
     <div class="ngx-signal-form-field-wrapper__label">
       <ng-content select="label" />
     </div>
@@ -331,7 +334,7 @@ export class NgxSignalFormFieldWrapper<TValue = unknown> {
   /**
    * Form field appearance variant.
    *
-   * - `'stacked'`: Label above input (default)
+   * - `'standard'`: Label above input (default)
    * - `'outline'`: Material-inspired outlined appearance with floating label
    * - `'plain'`: Minimal wrapper chrome while keeping labels, hints, and errors
    * - `'inherit'`: Use the global config default

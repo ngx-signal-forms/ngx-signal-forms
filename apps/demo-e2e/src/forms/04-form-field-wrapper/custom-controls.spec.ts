@@ -428,9 +428,9 @@ test.describe('Custom Signal Forms Controls', () => {
   });
 
   test.describe('Outline appearance integration', () => {
-    test('should apply horizontal orientation only to eligible wrappers in stacked mode', async () => {
+    test('should apply horizontal orientation only to eligible wrappers in standard mode', async () => {
       await test.step('Switch the demo to horizontal orientation', async () => {
-        await page.showStackedAppearance();
+        await page.showStandardAppearance();
         await page.showHorizontalOrientation();
 
         await expect(page.horizontalOrientationButton).toHaveAttribute(
@@ -474,7 +474,7 @@ test.describe('Custom Signal Forms Controls', () => {
 
     test('should disable horizontal orientation when the page switches to outline mode', async () => {
       await test.step('Switch to horizontal first so the page has to resolve back to vertical', async () => {
-        await page.showStackedAppearance();
+        await page.showStandardAppearance();
         await page.showHorizontalOrientation();
         await expect(page.horizontalOrientationButton).toHaveAttribute(
           'aria-pressed',
@@ -723,6 +723,59 @@ test.describe('Custom Signal Forms Controls', () => {
 
           expect(geometry.offsetFromParentLeft).toBe(0);
         }
+      });
+    });
+  });
+
+  test.describe('Visual regression', () => {
+    test('should match the standard vertical wrapper baseline', async () => {
+      await test.step('Show the standard vertical state', async () => {
+        await page.showStandardAppearance();
+        await page.showVerticalOrientation();
+      });
+
+      await test.step('Capture the wrapper form baseline', async () => {
+        await expect(page.form).toHaveScreenshot(
+          'custom-controls-standard-vertical.png',
+        );
+      });
+    });
+
+    test('should match the standard horizontal wrapper baseline', async () => {
+      await test.step('Show the standard horizontal state', async () => {
+        await page.showStandardAppearance();
+        await page.showHorizontalOrientation();
+      });
+
+      await test.step('Capture the wrapper form baseline', async () => {
+        await expect(page.form).toHaveScreenshot(
+          'custom-controls-standard-horizontal.png',
+        );
+      });
+    });
+
+    test('should match the outline vertical wrapper baseline', async () => {
+      await test.step('Show the outline state', async () => {
+        await page.showOutlineAppearance();
+      });
+
+      await test.step('Capture the wrapper form baseline', async () => {
+        await expect(page.form).toHaveScreenshot(
+          'custom-controls-outline-vertical.png',
+        );
+      });
+    });
+
+    test('should match the plain horizontal wrapper baseline', async () => {
+      await test.step('Show the plain horizontal state', async () => {
+        await page.showPlainAppearance();
+        await page.showHorizontalOrientation();
+      });
+
+      await test.step('Capture the wrapper form baseline', async () => {
+        await expect(page.form).toHaveScreenshot(
+          'custom-controls-plain-horizontal.png',
+        );
       });
     });
   });

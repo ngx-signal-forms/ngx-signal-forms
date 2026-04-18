@@ -53,26 +53,26 @@ export type ErrorDisplayStrategy = ResolvedErrorDisplayStrategy | 'inherit';
 /**
  * Form field appearance values accepted from consumers and used internally.
  *
- * - `'stacked'`: Label above input (default)
+ * - `'standard'`: Label above input (default)
  * - `'outline'`: Material-inspired outlined appearance with floating label
  * - `'plain'`: Minimal wrapper chrome while keeping wrapper semantics
  *
  * @public
  */
-export type FormFieldAppearance = 'stacked' | 'outline' | 'plain';
+export type FormFieldAppearance = 'standard' | 'outline' | 'plain';
 
 /**
  * Form field appearance input for component-level control.
  *
- * - `'stacked'`: Default appearance with label above input
+ * - `'standard'`: Default appearance with label above input
  * - `'outline'`: Material-inspired outlined appearance with floating label
  * - `'plain'`: No border or background chrome while keeping labels, hints, and errors
  * - `'inherit'`: Use the global config default (component-level only)
  *
  * @example Component-level override
  * ```html
- * <!-- Override global config to use stacked for a specific field -->
- * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="stacked">
+ * <!-- Override global config to use standard for a specific field -->
+ * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="standard">
  *   <label for="email">Email</label>
  *   <input id="email" [formField]="form.email" />
  * </ngx-signal-form-field-wrapper>
@@ -107,6 +107,10 @@ export type FormFieldOrientation = 'vertical' | 'horizontal';
  * - `'vertical'`: Label above input (default)
  * - `'horizontal'`: Label to the left of the input
  * - `'inherit'`: Use the global config default (component-level only)
+ *
+ * Orientation only affects an individual field wrapper. Parent form grids stay
+ * under consumer control, which allows pages to keep multi-column layouts or
+ * intentionally collapse to one field row per line in horizontal mode.
  *
  * @public
  */
@@ -233,7 +237,7 @@ export interface NgxSignalFormsConfig {
 
   /**
    * Default appearance for form fields.
-   * @default 'stacked'
+   * @default 'standard'
    */
   defaultFormFieldAppearance: FormFieldAppearance;
 

@@ -147,7 +147,8 @@ See [Custom Controls](../../docs/CUSTOM_CONTROLS.md) for detailed guidance.
 provideNgxSignalFormsConfig({
   autoAria: true, // default
   defaultErrorStrategy: 'on-touch', // 'immediate' | 'on-touch' | 'on-submit'
-  defaultFormFieldAppearance: 'stacked', // 'stacked' | 'outline' | 'plain'
+  defaultFormFieldAppearance: 'standard', // 'standard' | 'outline' | 'plain'
+  defaultFormFieldOrientation: 'vertical', // 'vertical' | 'horizontal'
   showRequiredMarker: false, // outlined required field indicator
   requiredMarker: '*', // marker character
 });

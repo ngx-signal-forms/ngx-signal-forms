@@ -17,7 +17,7 @@ describe('orientation.constants', () => {
     expect(isOrientationDisabledForAppearance('outline', 'horizontal')).toBe(
       true,
     );
-    expect(isOrientationDisabledForAppearance('stacked', 'horizontal')).toBe(
+    expect(isOrientationDisabledForAppearance('standard', 'horizontal')).toBe(
       false,
     );
     expect(isOrientationDisabledForAppearance('plain', 'horizontal')).toBe(

@@ -98,22 +98,37 @@ export class ContactFormComponent {
 
 `ngx-signal-form-field-wrapper` — wraps a form field with automatic error display, labels, hints, prefix/suffix slots, and ARIA.
 
-| Input                | Type                                             | Default     | Description                                    |
-| -------------------- | ------------------------------------------------ | ----------- | ---------------------------------------------- |
-| `formField`          | `FieldTree` (required)                           | —           | The form field to wrap                         |
-| `fieldName`          | `string`                                         | From `id`   | Explicit field name; derived from control `id` |
-| `appearance`         | `'stacked' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style variant                           |
-| `strategy`           | `ErrorDisplayStrategy`                           | Inherited   | Override error display strategy                |
-| `errorPlacement`     | `'top' \| 'bottom'`                              | `'bottom'`  | Render errors above or below the control       |
-| `showRequiredMarker` | `boolean`                                        | Config      | Toggle the outlined required marker            |
-| `requiredMarker`     | `string`                                         | Config      | Custom required marker text                    |
+| Input                | Type                                              | Default     | Description                                    |
+| -------------------- | ------------------------------------------------- | ----------- | ---------------------------------------------- |
+| `formField`          | `FieldTree` (required)                            | —           | The form field to wrap                         |
+| `fieldName`          | `string`                                          | From `id`   | Explicit field name; derived from control `id` |
+| `appearance`         | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style variant                           |
+| `strategy`           | `ErrorDisplayStrategy`                            | Inherited   | Override error display strategy                |
+| `errorPlacement`     | `'top' \| 'bottom'`                               | `'bottom'`  | Render errors above or below the control       |
+| `showRequiredMarker` | `boolean`                                         | Config      | Toggle the outlined required marker            |
+| `requiredMarker`     | `string`                                          | Config      | Custom required marker text                    |
 
 ### Appearances
 
-- **`stacked`** — label above input, simple vertical layout
+- **`standard`** — label above input, simple vertical layout
 - **`outline`** — Material Design floating label with bordered container (requires CSS `:has()` — Chrome 105+, Firefox 121+, Safari 15.4+)
 - **`plain`** — no field chrome; the wrapper still provides labels, errors, and field identity. Good for custom controls with their own visual treatment.
 - **`inherit`** (default) — uses the value from `provideNgxSignalFormsConfig()`
+
+### Orientation
+
+- **`vertical`** — label above input (default)
+- **`horizontal`** — label in a shared column to the left of the field control
+- **`inherit`** (default input value) — uses the value from `provideNgxSignalFormsConfig()`
+
+`appearance="outline"` always resolves to vertical because the floating-label
+treatment depends on the label staying inside the field chrome. Selection rows
+such as checkbox, switch, and radio-group controls keep their own inline
+layouts even when `orientation="horizontal"` is requested.
+
+Orientation changes a single wrapper, not the parent form grid. If you want one
+field row per line in `standard + horizontal`, collapse the surrounding layout
+in the page or feature container.
 
 ### Prefix and suffix slots
 

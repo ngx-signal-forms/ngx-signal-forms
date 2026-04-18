@@ -180,14 +180,14 @@ That keeps radio-group and checkbox-group labels readable while still giving the
 
 This component wraps your `label` and `input` to provide layout, borders, and states.
 
-### Layout Modes: Stacked, Outline, and Plain
+### Layout Modes: Standard, Outline, and Plain
 
 The form field wrapper supports three appearance modes via the `appearance` input:
 
-**Stacked Layout** (`appearance="stacked"` or default)
+### Standard layout (`appearance="standard"` or default)
 
 - Label positioned above the input
-- Traditional stacked form field design
+- Traditional label-above-field form field design
 - Uses `--ngx-form-field-label-*` properties
 - Uses `--ngx-form-field-input-*` properties
 
@@ -206,8 +206,8 @@ The form field wrapper supports three appearance modes via the `appearance` inpu
 - Best for custom controls that draw their own focus or visual treatment
 
 ```html
-<!-- Stacked (default) -->
-<ngx-signal-form-field-wrapper [formField]="form.email" appearance="stacked">
+<!-- Standard (default) -->
+<ngx-signal-form-field-wrapper [formField]="form.email" appearance="standard">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
 </ngx-signal-form-field-wrapper>
@@ -241,11 +241,11 @@ The form field wrapper supports three appearance modes via the `appearance` inpu
 
 If the semantic colors aren't enough, you can override specific parts of the component.
 
-> **Layout-Specific Properties:** Properties prefixed with `--ngx-form-field-outline-*` only apply when `appearance="outline"`. Stacked layout uses the non-prefixed variants (e.g., `--ngx-form-field-label-*` vs `--ngx-form-field-outline-label-*`).
+> **Layout-Specific Properties:** Properties prefixed with `--ngx-form-field-outline-*` only apply when `appearance="outline"`. Standard layout uses the non-prefixed variants (e.g., `--ngx-form-field-label-*` vs `--ngx-form-field-outline-label-*`).
 
 #### Layout & Spacing
 
-**Applies to both stacked and outline layouts.**
+**Applies to both standard and outline layouts.**
 
 | Property                              | Default                                                                           | Description                          |
 | :------------------------------------ | :-------------------------------------------------------------------------------- | :----------------------------------- |
@@ -259,7 +259,7 @@ If the semantic colors aren't enough, you can override specific parts of the com
 
 #### Prefix & Suffix
 
-**Applies to both stacked and outline layouts.**
+**Applies to both standard and outline layouts.**
 
 | Property                        | Default                                      | Description               |
 | :------------------------------ | :------------------------------------------- | :------------------------ |
@@ -268,9 +268,9 @@ If the semantic colors aren't enough, you can override specific parts of the com
 | `--ngx-form-field-prefix-color` | `var(--ngx-form-field-color-text-secondary)` | Prefix color              |
 | `--ngx-form-field-suffix-color` | `var(--ngx-form-field-color-text-secondary)` | Suffix color              |
 
-#### Labels (Stacked Layout)
+#### Labels (Standard Layout)
 
-**Only applies when `appearance="stacked"` (default).**
+**Only applies when `appearance="standard"` (default).**
 
 | Property                               | Default                                      | Description         |
 | :------------------------------------- | :------------------------------------------- | :------------------ |
@@ -301,9 +301,9 @@ If the semantic colors aren't enough, you can override specific parts of the com
 | `--ngx-form-field-required-marker-color`  | `var(--ngx-form-field-color-error)` | Required marker color  |
 | `--ngx-form-field-required-marker-weight` | `600`                               | Required marker weight |
 
-#### Input (Stacked Layout)
+#### Input (Standard Layout)
 
-**Only applies when `appearance="stacked"` (default).**
+**Only applies when `appearance="standard"` (default).**
 
 | Property                             | Default                                      | Description        |
 | :----------------------------------- | :------------------------------------------- | :----------------- |
@@ -328,7 +328,7 @@ If the semantic colors aren't enough, you can override specific parts of the com
 
 #### States & Focus
 
-**Applies to both stacked and outline layouts.**
+**Applies to both standard and outline layouts.**
 
 | Property                              | Default                                                               | Description          |
 | :------------------------------------ | :-------------------------------------------------------------------- | :------------------- |
@@ -345,25 +345,32 @@ If the semantic colors aren't enough, you can override specific parts of the com
 
 Set `orientation="horizontal"` on `ngx-signal-form-field-wrapper` (or configure
 `defaultFormFieldOrientation: 'horizontal'` globally) to place the label
-their inline layout.
 to the **left** of the input.
 
-This mode applies to **stacked** and **plain** wrappers. `appearance="outline"`
+This mode applies to **standard** and **plain** wrappers. `appearance="outline"`
 always resolves back to vertical because its floating-label treatment depends on
 the label staying inside the outlined container. Selection controls (checkbox,
 switch, radio-group) are also excluded and keep their inline layout.
 
-| Property                                   | Default | Description                                                       |
-| :----------------------------------------- | :------ | :---------------------------------------------------------------- |
-| `--ngx-form-field-horizontal-gap`          | `1rem`  | Gap between label column and input column                         |
-| `--ngx-form-field-label-width`             | `auto`  | Width of the label column (set a fixed value for alignment)       |
-| `--ngx-form-field-horizontal-label-align`  | `end`   | Horizontal text alignment of the label (`start`, `center`, `end`) |
-| `--ngx-form-field-horizontal-label-valign` | `start` | Vertical alignment of the label (`start`, `center`, `end`)        |
+| Property                                   | Default   | Description                                                       |
+| :----------------------------------------- | :-------- | :---------------------------------------------------------------- |
+| `--ngx-form-field-horizontal-gap`          | `0.75rem` | Gap between label column and input column                         |
+| `--ngx-form-field-label-width`             | `8rem`    | Shared width of the label column in horizontal layouts            |
+| `--ngx-form-field-horizontal-label-align`  | `start`   | Horizontal text alignment of the label (`start`, `center`, `end`) |
+| `--ngx-form-field-horizontal-label-valign` | `center`  | Vertical alignment of the label (`start`, `center`, `end`)        |
 
 A `data-orientation` attribute (`vertical` | `horizontal`) is also exposed for
 custom CSS hooks.
 
-**Example: Aligned label column**
+Horizontal wrappers now default to a compact shared label column so the field
+controls line up out of the box without wasting horizontal space. Override the
+width when a tighter or wider column fits your form better.
+
+Orientation changes a single field wrapper only. Parent form layouts stay under
+consumer control, so multi-column grids can stay as-is or collapse to one field
+row per line when a page wants the extra horizontal breathing room.
+
+### Wider aligned label column example
 
 ```css
 ngx-signal-form-field-wrapper {

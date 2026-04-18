@@ -11,29 +11,28 @@ releases will not include any of the renames below.
 
 ## At a glance
 
-| Category                   | What changed                                                                   | Lands in  |
-| -------------------------- | ------------------------------------------------------------------------------ | --------- |
-| `[formRoot]` selector      | Directive is now an additive enhancer: add `ngxSignalForm`                     | `rc.0`    |
-| Public API surface         | `/core` is hidden; `@internal` plumbing no longer published                    | `rc.3`    |
-| Removed helpers            | `computeShowErrors`, `canSubmit`, `injectFormConfig`, …                        | beta → rc |
-| Removed directive          | `NgxFloatingLabelDirective` (use `appearance="outline"`)                       | `rc.2`    |
-| Renamed components         | `NgxSignalFormError*` → `NgxFormFieldError*`                                   | `rc.3`    |
-| Renamed appearances        | `standard` / `bare` → `stacked` / `plain`                                      | `rc.1`    |
-| Renamed control kinds      | `text-like` / `textarea-select-like` → `input-like` / `standalone-field-like`  | `rc.3`    |
-| Config typing              | `NgxSignalFormsUserConfig` is `Partial`, not `DeepPartial`                     | `rc.2`    |
-| Behavior fix               | `on-submit` strategy now requires an explicit `submittedStatus`                | `rc.3`    |
-| New: control semantics     | `ngxSignalFormControl="…"` contract for layout + auto-ARIA                     | `rc.1`    |
-| New: error summary         | `NgxFormFieldErrorSummary` + headless directive                                | `rc.1`    |
-| New: field labels          | `provideFieldLabels()` + warning/error split utilities                         | `rc.1`    |
-| New: debugger entry point  | `@ngx-signal-forms/toolkit/debugger`                                           | beta → rc |
-| New: `warningStrategy`     | Decouple warning visibility from error timing; default `'immediate'`           | v1 RC     |
-| New: `NgxFormField` bundle | Convenience import array of wrapper + assistive parts + auto-ARIA directive    | v1 RC     |
-| New: fieldset toggle       | `includeNestedErrors` on fieldset; `submittedStatus` override input            | v1 RC     |
-| New: error component APIs  | `errors`, `listStyle`, `submittedStatus` inputs on `NgxFormFieldError`         | v1 RC     |
-| New: Vest options          | `only` selector, `resetOnDestroy`, `VEST_*_KIND_PREFIX` exports                | v1 RC     |
-| A11y                       | Removed explicit `aria-live` / `aria-atomic`; role semantics now authoritative | v1 RC     |
-| Behavior                   | Missing `fieldName` / `id` now logs (dev mode) instead of throwing             | v1 RC     |
-| Compatibility              | Angular peer-dep tightened to `>=21.2.0 <22.0.0`                               | v1 RC     |
+- **`[formRoot]` selector** — Directive is now an additive enhancer: add `ngxSignalForm` (`rc.0`)
+- **Public API surface** — `/core` is hidden; `@internal` plumbing no longer published (`rc.3`)
+- **Removed helpers** — `computeShowErrors`, `canSubmit`, `injectFormConfig`, … (beta → rc)
+- **Removed directive** — `NgxFloatingLabelDirective` (use `appearance="outline"`) (`rc.2`)
+- **Renamed components** — `NgxSignalFormError*` → `NgxFormFieldError*` (`rc.3`)
+- **Renamed appearances** — final appearance set is `standard` / `outline` / `plain` (`v1 rc`)
+- **Orientation API** — `vertical` / `horizontal` is now a documented field-wrapper contract (`v1 rc`)
+- **Renamed control kinds** — `text-like` / `textarea-select-like` → `input-like` / `standalone-field-like` (`rc.3`)
+- **Config typing** — `NgxSignalFormsUserConfig` is `Partial`, not `DeepPartial` (`rc.2`)
+- **Behavior fix** — `on-submit` strategy now requires an explicit `submittedStatus` (`rc.3`)
+- **New: control semantics** — `ngxSignalFormControl="…"` contract for layout + auto-ARIA (`rc.1`)
+- **New: error summary** — `NgxFormFieldErrorSummary` + headless directive (`rc.1`)
+- **New: field labels** — `provideFieldLabels()` + warning/error split utilities (`rc.1`)
+- **New: debugger entry point** — `@ngx-signal-forms/toolkit/debugger` (beta → rc)
+- **New: `warningStrategy`** — decouples warning visibility from error timing; default `'immediate'` (v1 RC)
+- **New: `NgxFormField` bundle** — convenience import array of wrapper + assistive parts + auto-ARIA directive (v1 RC)
+- **New: fieldset toggle** — `includeNestedErrors` on fieldset; `submittedStatus` override input (v1 RC)
+- **New: error component APIs** — `errors`, `listStyle`, `submittedStatus` inputs on `NgxFormFieldError` (v1 RC)
+- **New: Vest options** — `only` selector, `resetOnDestroy`, `VEST_*_KIND_PREFIX` exports (v1 RC)
+- **A11y** — removed explicit `aria-live` / `aria-atomic`; role semantics now authoritative (v1 RC)
+- **Behavior** — missing `fieldName` / `id` now logs (dev mode) instead of throwing (v1 RC)
+- **Compatibility** — Angular peer-dep tightened to `>=21.2.0 <22.0.0` (v1 RC)
 
 ---
 
@@ -222,15 +221,32 @@ keep working.
 
 ### 4b. Appearances renamed
 
-**Lands in:** `rc.1`
+**Lands in:** `v1 rc`
 
-| Before                  | After                  |
-| ----------------------- | ---------------------- |
-| `appearance="standard"` | `appearance="stacked"` |
-| `appearance="bare"`     | `appearance="plain"`   |
+| Before                  | After                   |
+| ----------------------- | ----------------------- |
+| `appearance="standard"` | `appearance="standard"` |
+| `appearance="stacked"`  | `appearance="standard"` |
+| `appearance="bare"`     | `appearance="plain"`    |
 
 `outline` and `inherit` are unchanged. The default appearance is now
-`"stacked"`.
+`"standard"`.
+
+### 4d. Orientation is part of the public wrapper contract
+
+**Lands in:** `v1 rc`
+
+`ngx-signal-form-field-wrapper` now documents `orientation="vertical" | "horizontal"`
+as part of the stable public API.
+
+- `vertical` keeps the label above the field (default)
+- `horizontal` moves the label into a shared column to the left of the field
+- `outline` always resolves back to vertical
+- checkbox, switch, and radio-group rows keep their own inline layouts
+
+`orientation` changes an individual wrapper, not the parent form layout. If you
+want one field row per line for `standard + horizontal`, collapse the container
+grid in your page/component rather than expecting the wrapper to rewrite it.
 
 ### 4c. Native control kinds renamed
 
@@ -489,10 +505,11 @@ action is required on Angular 21.x.
 2. **Rename exports and selectors** in templates and imports:
    - `NgxSignalFormError*` → `NgxFormFieldError*`
    - `<ngx-signal-form-error*>` → `<ngx-form-field-error*>`
-   - `appearance="standard"` → `appearance="stacked"`
+   - `appearance="stacked"` → `appearance="standard"`
    - `appearance="bare"` → `appearance="plain"`
    - `'text-like'` → `'input-like'`
    - `'textarea-select-like'` → `'standalone-field-like'`
+
 3. **Replace `@ngx-signal-forms/toolkit/core` imports** with
    `@ngx-signal-forms/toolkit`. If a symbol is missing from the root
    barrel, it was `@internal` — file an issue if you need it exposed.

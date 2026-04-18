@@ -20,7 +20,7 @@ This section demonstrates the batteries-included path: one component (`ngx-signa
 ## 🧠 Core concepts
 
 - **The wrapper** — `ngx-signal-form-field-wrapper` projects label, control, hints, and errors into a consistent layout. API reference in [form-field README](../../../../../packages/toolkit/form-field/README.md).
-- **Appearances** — `stacked` / `outline` / `plain` via the `appearance` input. Theme with CSS custom properties; see [theming guide](../../../../../packages/toolkit/form-field/THEMING.md).
+- **Appearances** — `standard` / `outline` / `plain` via the `appearance` input. Theme with CSS custom properties; see [theming guide](../../../../../packages/toolkit/form-field/THEMING.md).
 - **Control semantics** — `ngxSignalFormControl="switch|checkbox|slider"` makes projection explicit instead of guessed. Background in [ADR-0001](../../../../../docs/decisions/0001-control-semantics-architecture.md) and [docs/CUSTOM_CONTROLS.md](../../../../../docs/CUSTOM_CONTROLS.md).
 - **Fieldset grouping** — `<ngx-signal-form-fieldset>` aggregates descendant errors for grouped layouts. See [docs/COMPLEX_NESTED_FORMS.md](../../../../../docs/COMPLEX_NESTED_FORMS.md).
 

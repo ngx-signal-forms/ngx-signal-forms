@@ -79,6 +79,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
   test.describe('Horizontal orientation integration', () => {
     test('should apply horizontal orientation to nested field wrappers while leaving selection rows vertical', async () => {
       await test.step('Switch the demo to horizontal orientation', async () => {
+        await page.showStandardAppearance();
         await page.showHorizontalOrientation();
 
         await expect(page.horizontalOrientationButton).toHaveAttribute(
@@ -115,6 +116,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
 
     test('should disable horizontal orientation when outline appearance is active', async () => {
       await test.step('Switch to horizontal orientation before selecting outline', async () => {
+        await page.showStandardAppearance();
         await page.showHorizontalOrientation();
         await expect(page.horizontalOrientationButton).toHaveAttribute(
           'aria-pressed',
@@ -145,6 +147,19 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
             /ngx-signal-form-field-wrapper--horizontal/,
           );
         }
+      });
+    });
+
+    test('should match the standard horizontal personal-information baseline', async () => {
+      await test.step('Show the standard horizontal nested layout', async () => {
+        await page.showStandardAppearance();
+        await page.showHorizontalOrientation();
+      });
+
+      await test.step('Capture a focused fieldset baseline', async () => {
+        await expect(page.personalInfoFieldset).toHaveScreenshot(
+          'complex-forms-standard-horizontal-personal-info.png',
+        );
       });
     });
   });

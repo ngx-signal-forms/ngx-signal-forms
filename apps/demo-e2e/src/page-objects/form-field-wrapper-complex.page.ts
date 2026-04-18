@@ -11,7 +11,9 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
   readonly addSkillButton: Locator;
   readonly horizontalOrientationButton: Locator;
   readonly outlineAppearanceButton: Locator;
+  readonly plainAppearanceButton: Locator;
   readonly resetButton: Locator;
+  readonly standardAppearanceButton: Locator;
   readonly submitButton: Locator;
   readonly verticalOrientationButton: Locator;
 
@@ -26,8 +28,14 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
     this.outlineAppearanceButton = this.page.getByRole('button', {
       name: 'Outline',
     });
+    this.plainAppearanceButton = this.page.getByRole('button', {
+      name: 'Plain',
+    });
     this.resetButton = this.form.getByRole('button', {
       name: /^Reset$/i,
+    });
+    this.standardAppearanceButton = this.page.getByRole('button', {
+      name: 'Standard',
     });
     this.submitButton = this.form.getByRole('button', {
       name: /Submit Application|Submitting/i,
@@ -186,6 +194,20 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
    */
   async showOutlineAppearance(): Promise<void> {
     await this.outlineAppearanceButton.click();
+  }
+
+  /**
+   * Switch the demo to standard appearance.
+   */
+  async showStandardAppearance(): Promise<void> {
+    await this.standardAppearanceButton.click();
+  }
+
+  /**
+   * Switch the demo to plain appearance.
+   */
+  async showPlainAppearance(): Promise<void> {
+    await this.plainAppearanceButton.click();
   }
 
   /**
