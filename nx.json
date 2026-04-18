@@ -74,17 +74,14 @@
   },
   "release": {
     "projects": ["toolkit"],
-    "git": {
-      "commit": true,
-      "commitMessage": "chore(release): publish {version}",
-      "tag": true,
-      "tagMessage": "Release {version}",
-      "push": true
-    },
     "changelog": {
+      "git": {
+        "commit": false
+      },
       "workspaceChangelog": false,
       "projectChangelogs": {
         "createRelease": "github",
+        "renderer": "{workspaceRoot}/tools/release/project-changelog-renderer.ts",
         "file": false,
         "renderOptions": {
           "authors": true,
@@ -92,6 +89,19 @@
           "versionTitleDate": true
         }
       }
+    },
+    "version": {
+      "git": {
+        "commit": true,
+        "commitMessage": "chore(release): publish {version}",
+        "tag": true,
+        "tagMessage": "Release {version}",
+        "push": true
+      }
+    },
+    "releaseTag": {
+      "pattern": "v{version}",
+      "strictPreid": true
     },
     "conventionalCommits": {
       "types": {
@@ -142,8 +152,7 @@
           "changelog": false
         }
       }
-    },
-    "releaseTagPattern": "v{version}"
+    }
   },
   "analytics": false
 }
