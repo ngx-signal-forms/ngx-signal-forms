@@ -35,6 +35,14 @@ export default defineConfig({
       animations: 'disabled',
       caret: 'hide',
       scale: 'css',
+      // Tolerance for cross-platform rendering drift. Baselines are
+      // generated on macOS and replayed on Linux CI; Chromium's font
+      // metrics and subpixel rendering can shift element height by ~1px
+      // between OSes (a single height-row delta typically lands in the
+      // 3-4% range for a form-shaped image). 5% is a tight upper bound
+      // that still catches real layout regressions — anything above this
+      // is a structural change, not a rendering artifact.
+      maxDiffPixelRatio: 0.05,
       pathTemplate:
         '{testDir}/__screenshots__{/projectName}/{testFilePath}/{arg}{ext}',
     },
