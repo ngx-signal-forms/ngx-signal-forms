@@ -154,7 +154,7 @@ export class NgxFormFieldErrorSummary {
    * a host that is detached / `display: none` / covered by a modal would
    * trigger the warning on every render pass while the latch is held. We
    * mirror the `#warnedMissingName` pattern used in
-   * `form-field-error.component.ts` and `NgxHeadlessFieldNameDirective`.
+   * `form-field-error.ts` and `NgxHeadlessFieldName`.
    */
   #warnedFocusFailure = false;
 

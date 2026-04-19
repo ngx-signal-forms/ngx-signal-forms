@@ -1,8 +1,8 @@
 import { FormRoot } from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
-import { NgxSignalFormAutoAriaDirective } from './directives/auto-aria.directive';
-import { NgxSignalFormControlSemanticsDirective } from './directives/control-semantics.directive';
-import { NgxSignalFormDirective } from './directives/ngx-signal-form.directive';
+import { NgxSignalFormAutoAria } from './directives/auto-aria';
+import { NgxSignalFormControlSemanticsDirective } from './directives/control-semantics';
+import { NgxSignalForm } from './directives/ngx-signal-form';
 import { NgxSignalFormToolkit } from './index';
 
 /**
@@ -23,8 +23,8 @@ describe('NgxSignalFormToolkit bundle', () => {
     // order-insensitive, so we don't pin order here — adding/removing a
     // member is a breaking change, but reordering for readability is not.
     expect(NgxSignalFormToolkit).toContain(FormRoot);
-    expect(NgxSignalFormToolkit).toContain(NgxSignalFormDirective);
-    expect(NgxSignalFormToolkit).toContain(NgxSignalFormAutoAriaDirective);
+    expect(NgxSignalFormToolkit).toContain(NgxSignalForm);
+    expect(NgxSignalFormToolkit).toContain(NgxSignalFormAutoAria);
     expect(NgxSignalFormToolkit).toContain(
       NgxSignalFormControlSemanticsDirective,
     );

@@ -218,13 +218,13 @@ describe('NgxHeadlessErrorState', () => {
     it('should expose state members as real `Signal<T>` instances (preserves Angular brand)', async () => {
       @Component({
         selector: 'ngx-test-signal-brand',
-        imports: [FormField, NgxHeadlessErrorStateDirective],
+        imports: [FormField, NgxHeadlessErrorState],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
             <div
-              ngxSignalFormHeadlessErrorState
+              ngxHeadlessErrorState
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
@@ -241,7 +241,7 @@ describe('NgxHeadlessErrorState', () => {
             required(path.email, { message: 'Email is required' });
           }),
         );
-        readonly state = viewChild.required(NgxHeadlessErrorStateDirective);
+        readonly state = viewChild.required(NgxHeadlessErrorState);
       }
 
       const { fixture } = await render(TestComponent);

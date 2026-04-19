@@ -573,7 +573,7 @@ describe('NgxFormFieldError', () => {
        */
       @Component({
         selector: 'ngx-test-empty-live-region',
-        imports: [FormField, NgxFormFieldErrorComponent],
+        imports: [FormField, NgxFormFieldError],
         changeDetection: ChangeDetectionStrategy.OnPush,
         template: `
           <input id="email" [formField]="contactForm.email" />
