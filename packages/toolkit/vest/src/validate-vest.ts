@@ -654,15 +654,17 @@ function registerVestValidation<TValue>(
         loader: async ({ params }) => {
           const result = await params.runResult;
           if (!isVestResultLike(result)) {
-            if (isDevMode()) {
-              // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-              console.error(
-                '[ngx-signal-forms] Vest async run resolved with a payload that does not match the expected result shape. ' +
-                  'The validator is skipping this update. Check that the suite returns a Vest `SuiteResult` (the default `run()` return value).',
-                result,
-              );
-            }
-            return undefined;
+            // Throw so this lands in the validator's `onError` handler below,
+            // which already encodes the right policy: blocking validators
+            // synthesize `vest:internal-error`, warning-only ones log and
+            // skip. Returning `undefined` here used to silently report
+            // valid (no result -> no errors), which was the worst outcome:
+            // the form would submit with broken validation and zero signal.
+            throw new Error(
+              '[ngx-signal-forms] Vest async run resolved with a payload that does ' +
+                'not match the expected result shape. Check that the suite returns ' +
+                'a Vest `SuiteResult` (the default `run()` return value).',
+            );
           }
 
           return {

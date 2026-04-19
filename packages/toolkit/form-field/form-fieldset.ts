@@ -84,8 +84,12 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
   imports: [NgxFormFieldError],
   styleUrl: './form-fieldset.scss',
   exportAs: 'ngxFormFieldset',
+  // BEM classnames keep the legacy `ngx-signal-form-fieldset--*` prefix for
+  // theming back-compat. The host's element selector uses the new short
+  // prefix (`ngx-form-fieldset`); only the CSS surface stayed on the long
+  // form so consumer overrides like `.ngx-signal-form-fieldset--invalid {…}`
+  // keep working without rewriting their stylesheets.
   host: {
-    class: 'ngx-form-fieldset',
     '[class.ngx-signal-form-fieldset--invalid]': 'fieldset.shouldShowErrors()',
     '[class.ngx-signal-form-fieldset--warning]':
       'fieldset.shouldShowWarnings()',

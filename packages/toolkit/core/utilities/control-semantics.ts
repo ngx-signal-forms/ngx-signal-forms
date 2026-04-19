@@ -1,3 +1,4 @@
+import { DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS } from '../tokens';
 import type {
   NgxSignalFormControlAriaMode,
   NgxSignalFormControlKind,
@@ -31,20 +32,23 @@ const TEXT_LIKE_INPUT_TYPE_VALUES = [
 const TEXT_LIKE_INPUT_TYPES = new Set<string>(TEXT_LIKE_INPUT_TYPE_VALUES);
 
 /**
- * Canonical list of supported control kinds. Exposed so dev-mode diagnostics
- * (e.g. the preset-provider warning) can stay in sync with the type.
+ * Canonical list of supported control kinds, derived from the default preset
+ * registry's keys. Deriving (rather than re-listing) closes the historical
+ * "advisory `satisfies`" gap: TypeScript's `Record<NgxSignalFormControlKind,
+ * NgxSignalFormControlPreset>` already enforces exhaustiveness on the registry
+ * itself, so any kind missing from the registry is a compile error — and this
+ * derived list inherits that guarantee. Adding a new kind now requires only
+ * three coupled updates (the union, the registry, and the wrapper capability
+ * table) instead of four.
+ *
+ * Used by dev-mode diagnostics (e.g. the preset-provider warning) so the
+ * runtime list never drifts from the type.
  *
  * @internal
  */
-export const NGX_SIGNAL_FORM_CONTROL_KIND_VALUES = [
-  'input-like',
-  'standalone-field-like',
-  'switch',
-  'checkbox',
-  'radio-group',
-  'slider',
-  'composite',
-] as const satisfies readonly NgxSignalFormControlKind[];
+export const NGX_SIGNAL_FORM_CONTROL_KIND_VALUES = Object.keys(
+  DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS,
+) as readonly NgxSignalFormControlKind[];
 
 const CONTROL_KINDS = new Set<string>(NGX_SIGNAL_FORM_CONTROL_KIND_VALUES);
 

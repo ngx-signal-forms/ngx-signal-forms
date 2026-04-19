@@ -230,7 +230,17 @@ export class NgxSignalFormDebugger {
     () => this.#formContext?.submittedStatus() ?? 'unsubmitted',
   );
 
-  /** Human-readable label for the current submitted status. */
+  #warnedUnknownStatus = false;
+
+  /**
+   * Human-readable label for the current submitted status.
+   *
+   * If a future `SubmittedStatus` value lands without a matching branch here,
+   * the debugger surfaces an explicit `Unknown (raw)` label and dev-warns
+   * once instead of misreporting `Idle`. The whole point of the debugger is
+   * to surface state — silently mapping an unknown status to a familiar one
+   * defeats the tool.
+   */
   protected readonly submittedStatusDisplay = computed(() => {
     const status = this.submittedStatus();
     switch (status) {
@@ -242,7 +252,15 @@ export class NgxSignalFormDebugger {
         return 'Idle';
       default:
         status satisfies never;
-        return 'Idle';
+        if (isDevMode() && !this.#warnedUnknownStatus) {
+          this.#warnedUnknownStatus = true;
+          // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+          console.warn(
+            `[ngx-signal-forms] NgxSignalFormDebugger: unknown SubmittedStatus "${status as string}". ` +
+              'Update the debugger label switch to cover this value.',
+          );
+        }
+        return `Unknown (${status as string})`;
     }
   });
 

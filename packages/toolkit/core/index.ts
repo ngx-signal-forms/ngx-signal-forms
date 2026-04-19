@@ -25,6 +25,7 @@ export {
 // Utilities
 export * from './utilities/create-unique-id';
 export * from './utilities/control-semantics';
+export * from './utilities/form-field-input';
 export { shouldShowErrors } from './utilities/error-strategies';
 export {
   isFieldStateHidden,

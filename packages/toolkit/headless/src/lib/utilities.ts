@@ -530,17 +530,27 @@ export function createCharacterCount(
 
   const remaining = computed(() => resolvedMaxLength() - currentLength());
 
+  const isExceeded = computed(() => remaining() < 0);
+
+  // A non-positive limit ("no characters allowed") is handled identically here
+  // to NgxHeadlessCharacterCount so the factory and directive return the same
+  // values for the same inputs. Without this guard, percentUsed would go
+  // negative (when max < 0) or NaN (when max === 0), and limitState would
+  // disagree with isExceeded — both visible bugs in consumer UIs.
   const percentUsed = computed(() => {
     const max = resolvedMaxLength();
-    if (max === 0) return 0;
+    if (max <= 0) return currentLength() > 0 ? 100 : 0;
     return (currentLength() / max) * 100;
   });
-
-  const isExceeded = computed(() => remaining() < 0);
 
   const limitState = computed<CharacterCountLimitState>(() => {
     const max = resolvedMaxLength();
     const current = currentLength();
+
+    if (max <= 0) {
+      return current > 0 ? 'exceeded' : 'ok';
+    }
+
     const ratio = current / max;
 
     if (ratio > 1) return 'exceeded';

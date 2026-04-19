@@ -2750,6 +2750,217 @@ describe('NgxSignalFormWrapperComponent', () => {
     });
   });
 
+  describe('Orientation input', () => {
+    // The wrapper's resolvedOrientation/isHorizontal computeds carry an
+    // invariant the rest of the toolkit and consumer themes depend on:
+    // outline appearance and selection-control kinds force vertical, while
+    // textual controls honor the requested orientation. End-to-end e2e
+    // catches CSS regressions, but only unit tests pin the resolution
+    // branches so a refactor to the wrapper class can't silently flip the
+    // contract without test failure.
+
+    it('should apply horizontal modifier class + data attribute on textual control', async () => {
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" orientation="horizontal">
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field: createMockFieldState() },
+        },
+      );
+
+      const formField = container.querySelector('ngx-form-field-wrapper');
+      expect(formField).toHaveClass(
+        'ngx-signal-form-field-wrapper--horizontal',
+      );
+      expect(formField).toHaveAttribute('data-orientation', 'horizontal');
+    });
+
+    it('should force vertical when outline appearance is requested with horizontal', async () => {
+      const { container } = await render(
+        `<ngx-form-field-wrapper
+          [formField]="field"
+          appearance="outline"
+          orientation="horizontal"
+        >
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field: createMockFieldState() },
+        },
+      );
+
+      const formField = container.querySelector('ngx-form-field-wrapper');
+      expect(formField).not.toHaveClass(
+        'ngx-signal-form-field-wrapper--horizontal',
+      );
+      expect(formField).toHaveAttribute('data-orientation', 'vertical');
+    });
+
+    it('should force vertical for switch control kind even when horizontal is requested', async () => {
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" orientation="horizontal">
+          <label for="emailUpdates">Email updates</label>
+          <input
+            id="emailUpdates"
+            type="checkbox"
+            role="switch"
+            ngxSignalFormControl="switch"
+          />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [
+            NgxSignalFormWrapperComponent,
+            NgxSignalFormControlSemanticsDirective,
+          ],
+          componentProperties: { field: createMockFieldState() },
+        },
+      );
+
+      const formField = container.querySelector('ngx-form-field-wrapper');
+      expect(formField).not.toHaveClass(
+        'ngx-signal-form-field-wrapper--horizontal',
+      );
+      expect(formField).toHaveAttribute('data-orientation', 'vertical');
+    });
+
+    it('should force vertical for checkbox control kind', async () => {
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" orientation="horizontal">
+          <label for="agree">Agree</label>
+          <input
+            id="agree"
+            type="checkbox"
+            ngxSignalFormControl="checkbox"
+          />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [
+            NgxSignalFormWrapperComponent,
+            NgxSignalFormControlSemanticsDirective,
+          ],
+          componentProperties: { field: createMockFieldState() },
+        },
+      );
+
+      const formField = container.querySelector('ngx-form-field-wrapper');
+      expect(formField).toHaveAttribute('data-orientation', 'vertical');
+    });
+
+    it('should resolve inherit to global default when set to vertical (default)', async () => {
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" orientation="inherit">
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field: createMockFieldState() },
+        },
+      );
+
+      const formField = container.querySelector('ngx-form-field-wrapper');
+      expect(formField).toHaveAttribute('data-orientation', 'vertical');
+      expect(formField).not.toHaveClass(
+        'ngx-signal-form-field-wrapper--horizontal',
+      );
+    });
+
+    it('should resolve inherit to global default when set to horizontal', async () => {
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" orientation="inherit">
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORMS_CONFIG,
+              useValue: {
+                ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+                defaultFormFieldOrientation: 'horizontal',
+              },
+            },
+          ],
+          componentProperties: { field: createMockFieldState() },
+        },
+      );
+
+      const formField = container.querySelector('ngx-form-field-wrapper');
+      expect(formField).toHaveAttribute('data-orientation', 'horizontal');
+      expect(formField).toHaveClass(
+        'ngx-signal-form-field-wrapper--horizontal',
+      );
+    });
+
+    it('should fall back to config default and dev-warn when orientation is invalid', async () => {
+      // Cast to any to bypass TS — the whole point of the runtime guard is
+      // that dynamic bindings (template attribute strings, JIT templates,
+      // non-TS callers) can feed unknown values past the type check.
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => undefined);
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" [orientation]="invalid">
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+            invalid: 'horizonal' as never,
+          },
+        },
+      );
+
+      const formField = container.querySelector('ngx-form-field-wrapper');
+      // Falls back to the global default (vertical).
+      expect(formField).toHaveAttribute('data-orientation', 'vertical');
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('unknown orientation'),
+      );
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should fall back to config default and dev-warn for legacy "stacked" appearance with migration hint', async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => undefined);
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" [appearance]="legacy">
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+            legacy: 'stacked' as never,
+          },
+        },
+      );
+
+      const formField = container.querySelector('ngx-form-field-wrapper');
+      // Falls back to the global default (standard).
+      expect(formField).not.toHaveClass('ngx-signal-forms-outline');
+      expect(formField).not.toHaveClass('ngx-signal-forms-plain');
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining("'stacked'"),
+      );
+
+      consoleErrorSpy.mockRestore();
+    });
+  });
+
   describe('Preset overrides via provideNgxSignalFormControlPresets', () => {
     // The headline "dynamic wrapper extensibility" feature: consumers override
     // preset defaults through DI, and the wrapper must reflect that override

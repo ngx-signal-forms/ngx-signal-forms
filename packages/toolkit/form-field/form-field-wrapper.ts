@@ -15,7 +15,9 @@ import {
 import type { FieldTree } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
+  FormFieldAppearance,
   FormFieldAppearanceInput,
+  FormFieldOrientation,
   FormFieldOrientationInput,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -26,6 +28,8 @@ import {
   injectFormContext,
   isBlockingError,
   isFieldStateHidden,
+  isFormFieldAppearance,
+  isFormFieldOrientation,
   isWarningError,
   readDirectErrors,
   type ResolvedNgxSignalFormControlSemantics,
@@ -407,12 +411,48 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     () => this.#controlSemantics().kind,
   );
 
-  protected readonly resolvedAppearance = computed(() => {
+  #warnedInvalidAppearance = false;
+
+  protected readonly resolvedAppearance = computed<FormFieldAppearance>(() => {
     const appearance = this.appearance();
 
-    return appearance === 'inherit'
-      ? this.#config.defaultFormFieldAppearance
-      : appearance;
+    if (appearance === 'inherit') {
+      return this.#config.defaultFormFieldAppearance;
+    }
+
+    if (isFormFieldAppearance(appearance)) {
+      // Exhaustiveness pin: switch on the resolved literal so any future
+      // `FormFieldAppearance` value forces a TypeScript error here until the
+      // matching wrapper branch (chrome, ARIA hooks) is added.
+      switch (appearance) {
+        case 'standard':
+        case 'outline':
+        case 'plain':
+          return appearance;
+        default:
+          appearance satisfies never;
+          return this.#config.defaultFormFieldAppearance;
+      }
+    }
+
+    if (isDevMode() && !this.#warnedInvalidAppearance) {
+      this.#warnedInvalidAppearance = true;
+      const raw = appearance as string;
+      const hint =
+        raw === 'stacked'
+          ? " The 'stacked' appearance was renamed to 'standard' in v1 rc.5."
+          : raw === 'bare'
+            ? " The 'bare' appearance was renamed to 'plain' in v1 rc.1."
+            : '';
+      // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+      console.error(
+        `[ngx-signal-forms] NgxFormFieldWrapper: unknown appearance "${raw}". ` +
+          `Expected 'standard' | 'outline' | 'plain' | 'inherit'. ` +
+          `Falling back to the global default.${hint}`,
+      );
+    }
+
+    return this.#config.defaultFormFieldAppearance;
   });
 
   /**
@@ -441,25 +481,57 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    *
    * Outline appearance and selection-control rows force vertical layout.
    */
-  protected readonly resolvedOrientation = computed(() => {
-    const orientation = this.orientation();
-    const requestedOrientation =
-      orientation === 'inherit'
-        ? this.#config.defaultFormFieldOrientation
-        : orientation;
-    const controlKind = this.#controlKind();
+  #warnedInvalidOrientation = false;
 
-    if (
-      this.resolvedAppearance() === 'outline' ||
-      controlKind === 'checkbox' ||
-      controlKind === 'switch' ||
-      controlKind === 'radio-group'
-    ) {
-      return 'vertical';
+  protected readonly resolvedOrientation = computed<FormFieldOrientation>(
+    () => {
+      const orientation = this.orientation();
+      const requestedOrientation = this.#resolveOrientationInput(orientation);
+      const controlKind = this.#controlKind();
+
+      if (
+        this.resolvedAppearance() === 'outline' ||
+        controlKind === 'checkbox' ||
+        controlKind === 'switch' ||
+        controlKind === 'radio-group'
+      ) {
+        return 'vertical';
+      }
+
+      return requestedOrientation;
+    },
+  );
+
+  #resolveOrientationInput(
+    orientation: FormFieldOrientationInput,
+  ): FormFieldOrientation {
+    if (orientation === 'inherit') {
+      return this.#config.defaultFormFieldOrientation;
     }
 
-    return requestedOrientation;
-  });
+    if (isFormFieldOrientation(orientation)) {
+      switch (orientation) {
+        case 'vertical':
+        case 'horizontal':
+          return orientation;
+        default:
+          orientation satisfies never;
+          return this.#config.defaultFormFieldOrientation;
+      }
+    }
+
+    if (isDevMode() && !this.#warnedInvalidOrientation) {
+      this.#warnedInvalidOrientation = true;
+      // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+      console.error(
+        `[ngx-signal-forms] NgxFormFieldWrapper: unknown orientation ` +
+          `"${orientation as string}". Expected 'vertical' | 'horizontal' | ` +
+          `'inherit'. Falling back to the global default.`,
+      );
+    }
+
+    return this.#config.defaultFormFieldOrientation;
+  }
 
   /**
    * Whether horizontal layout should be applied.

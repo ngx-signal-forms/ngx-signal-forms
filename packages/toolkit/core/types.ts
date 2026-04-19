@@ -140,26 +140,27 @@ export type FormFieldOrientationInput = FormFieldOrientation | 'inherit';
  * ## Toolkit-internal: adding a new kind
  *
  * Adding a value to this union is a breaking change and requires updating
- * four coupled locations; TypeScript will fail the build until all are in
+ * three coupled locations; TypeScript will fail the build until all are in
  * sync:
  *
  * 1. This union type.
- * 2. `NGX_SIGNAL_FORM_CONTROL_KIND_VALUES` in
- *    `packages/toolkit/core/utilities/control-semantics.ts` — the runtime
- *    list used by DOM validation and dev diagnostics.
- * 3. `DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS` in
+ * 2. `DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS` in
  *    `packages/toolkit/core/tokens.ts` — the default `layout` + `ariaMode`
- *    for the new kind.
- * 4. `CONTROL_KIND_CAPABILITIES` in
+ *    for the new kind. The runtime
+ *    `NGX_SIGNAL_FORM_CONTROL_KIND_VALUES` list is derived from this
+ *    registry's keys, so updating the registry automatically keeps the
+ *    runtime list in sync.
+ * 3. `CONTROL_KIND_CAPABILITIES` in
  *    `packages/toolkit/form-field/form-field.utils.ts` — the
  *    wrapper-layout capability flags (`textual`, `supportsOutline`,
  *    `selectionGroup`, `paddedContent`).
  *
- * The `satisfies` clauses on (2) and (4) enforce exhaustiveness at compile
- * time, so the TS error from adding only (1) tells you exactly what's
- * missing. Heuristic inference in
- * `inferNgxSignalFormControlKind` (same file as (2)) is optional and only
- * needed if the new kind has a reliable DOM fingerprint.
+ * The `Record<NgxSignalFormControlKind, ...>` types on (2) and the
+ * `satisfies` clause on (3) enforce exhaustiveness at compile time, so the
+ * TS error from adding only (1) tells you exactly what's missing.
+ * Heuristic inference in `inferNgxSignalFormControlKind`
+ * (`packages/toolkit/core/utilities/control-semantics.ts`) is optional and
+ * only needed if the new kind has a reliable DOM fingerprint.
  */
 export type NgxSignalFormControlKind =
   | 'input-like'

@@ -43,6 +43,8 @@ export {
   isBlockingError,
   isFieldStateHidden,
   isFieldStateInteractive,
+  isFormFieldAppearance,
+  isFormFieldOrientation,
   isNgxSignalFormControlAriaMode,
   isNgxSignalFormControlKind,
   isNgxSignalFormControlLayout,
