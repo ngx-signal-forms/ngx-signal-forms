@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { verifyNoErrorsOnInitialLoad } from '../../fixtures/form-validation.fixture';
+import { matchesVisualBaseline } from '../../fixtures/visual-baseline.fixture';
 import { CustomControlsPage } from '../../page-objects/custom-controls.page';
 
 /**
@@ -735,8 +736,10 @@ test.describe('Custom Signal Forms Controls', () => {
       });
 
       await test.step('Capture the wrapper form baseline', async () => {
-        await expect(page.form).toHaveScreenshot(
+        await matchesVisualBaseline(
+          page.form,
           'custom-controls-standard-vertical.png',
+          { width: 432, height: 791 },
         );
       });
     });
@@ -748,8 +751,10 @@ test.describe('Custom Signal Forms Controls', () => {
       });
 
       await test.step('Capture the wrapper form baseline', async () => {
-        await expect(page.form).toHaveScreenshot(
+        await matchesVisualBaseline(
+          page.form,
           'custom-controls-standard-horizontal.png',
+          { width: 432, height: 697 },
         );
       });
     });
@@ -760,8 +765,10 @@ test.describe('Custom Signal Forms Controls', () => {
       });
 
       await test.step('Capture the wrapper form baseline', async () => {
-        await expect(page.form).toHaveScreenshot(
+        await matchesVisualBaseline(
+          page.form,
           'custom-controls-outline-vertical.png',
+          { width: 432, height: 778 },
         );
       });
     });
@@ -773,8 +780,10 @@ test.describe('Custom Signal Forms Controls', () => {
       });
 
       await test.step('Capture the wrapper form baseline', async () => {
-        await expect(page.form).toHaveScreenshot(
+        await matchesVisualBaseline(
+          page.form,
           'custom-controls-plain-horizontal.png',
+          { width: 432, height: 677 },
         );
       });
     });
