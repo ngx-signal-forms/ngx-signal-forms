@@ -548,18 +548,56 @@ Public directives and helpers include:
 - `humanizeFieldPath()` / `resolveFieldNameFromError()`
 - `focusBoundControlFromError()` / `toErrorSummaryEntry()`
 
+## Vest Entry Point
+
+Use `@ngx-signal-forms/toolkit/vest` when validation logic reads more like business policy than field rules — eligibility, conditional rules, async server-backed checks, or reusable rule sets outside Angular forms.
+
+Requires `vest` `>=6.0.0 <6.3.0 || >=6.3.1` as an **optional** peer dependency. Prefer `vest@6.2.7` or `>=6.3.1`; `6.3.0` is excluded because of an upstream packaging break.
+
+Current public exports:
+
+- `validateVest(path, suite, options?)` — adapter for Vest suites; maps blocking failures to Angular `ValidationError`s and optionally maps `warn()` to toolkit warnings
+- `validateVestWarnings(path, suite)` — warning-only bridge when blocking validation lives elsewhere (Angular validators, Zod)
+- `VEST_ERROR_KIND_PREFIX` (`'vest:'`) / `VEST_WARNING_KIND_PREFIX` (`'warn:vest:'`) — stable `kind` prefixes for custom strategies, debugger filters, and tests
+- Types: `ValidateVestOptions<TValue>`, `VestOnlyFieldSelector<TValue>`
+
+`ValidateVestOptions` fields:
+
+- `includeWarnings` (default `false`) — surface `warn()` results as toolkit warnings
+- `resetOnDestroy` (default `false`) — call `suite.reset()` via `DestroyRef.onDestroy()`; **strongly recommended for module-scope suites** to prevent state bleed across component mounts
+- `only` — `VestOnlyFieldSelector` selector for per-field focused runs; threads a field name into `suite.run(value, fieldName)`
+
+```typescript
+import { validateVest } from '@ngx-signal-forms/toolkit/vest';
+
+const signupForm = form(signupModel, (path) => {
+  validateVest(path, signupSuite, {
+    includeWarnings: true,
+    resetOnDestroy: true,
+  });
+});
+```
+
+### Rules
+
+- Do **not** re-derive the `'vest:'` / `'warn:vest:'` prefix string literals — import the constants.
+- Do **not** declare suites at module scope without `resetOnDestroy: true` unless you can accept stale state across mounts.
+- Use `validateVest(path, suite, { includeWarnings: true })` when the same suite provides both blocking errors and warnings; use `validateVestWarnings()` only when Vest is advisory-only alongside another validation source.
+
 ## Debugger Entry Point
 
 Use `@ngx-signal-forms/toolkit/debugger` for development-only debugging.
 
 Current public debugger exports include:
 
-- `NgxSignalFormDebugger` — bundle of all debugger components
-- `NgxSignalFormDebugger`
-- `NgxSignalFormDebuggerBadge` / `NgxSignalFormDebuggerBadgeIcon`
+- `NgxSignalFormDebuggerToolkit` — bundle of the panel plus the standalone badge directives
+- `NgxSignalFormDebugger` — the panel component
+- `NgxSignalFormDebuggerBadge` / `NgxSignalFormDebuggerBadgeIcon` — standalone status chips
 - Types: `NgxSignalFormDebuggerBadgeAppearance`, `NgxSignalFormDebuggerBadgeVariant`
 
 Pass the **field tree** (for example `userForm`), not the root field state (`userForm()`).
+
+Wrap debugger usage in `@if (isDevMode())` so the compiler can tree-shake the code path in production builds — the component self-guards rendering, but the bundle still carries ~13 KB JS + ~15 KB SCSS without the `@if` guard.
 
 ## Theming and Styling
 
@@ -613,9 +651,26 @@ Avoid:
 
 ## Resources
 
+### Package READMEs
+
 - `packages/toolkit/README.md`
 - `packages/toolkit/form-field/README.md`
 - `packages/toolkit/form-field/THEMING.md`
-- `docs/CSS_FRAMEWORK_INTEGRATION.md`
-- `docs/WARNINGS_SUPPORT.md`
+- `packages/toolkit/assistive/README.md`
+- `packages/toolkit/headless/README.md`
+- `packages/toolkit/vest/README.md`
+- `packages/toolkit/debugger/README.md`
+
+### Cross-cutting docs
+
+- `docs/ANGULAR_VS_TOOLKIT.md` — where Angular Signal Forms ends and the toolkit begins
+- `docs/VALIDATION_STRATEGY.md` — picking between Angular validators, Zod, and Vest
+- `docs/CUSTOM_CONTROLS.md` — `FormValueControl` / `FormCheckboxControl` / `FormUiControl`
+- `docs/CSS_FRAMEWORK_INTEGRATION.md` — Bootstrap, Tailwind, Material
+- `docs/WARNINGS_SUPPORT.md` — non-blocking validation end-to-end
+- `docs/MIGRATING_BETA_TO_V1.md` — beta → 1.0 migration
+- `docs/MIGRATING_FROM_NGX_VEST_FORMS.md` — migration from `ngx-vest-forms`
+
+### Instructions
+
 - `.github/instructions/angular-signal-forms.instructions.md`
