@@ -218,6 +218,14 @@ generateErrorId(fieldName: string): string
 generateWarningId(fieldName: string): string
 buildAriaDescribedBy(fieldName, options: AriaDescribedByChainOptions): string | null
 resolveNgxSignalFormControlSemantics(element, presets): ResolvedNgxSignalFormControlSemantics
+readNgxSignalFormControlSemantics(element): NgxSignalFormControlSemantics | null
+// Reads the declared semantics for a control host without merging preset
+// defaults. Useful in tooling / tests that need to know what the consumer
+// wrote on the element itself.
+inferNgxSignalFormControlKind(element): NgxSignalFormControlKind | null
+// Resolves the toolkit control kind from DOM heuristics (tag, type, role).
+// This is the fallback path the wrapper and auto-ARIA use when no explicit
+// `ngxSignalFormControl` directive or preset applies.
 
 // Type guard utilities
 isNgxSignalFormControlKind(value): value is NgxSignalFormControlKind
@@ -486,15 +494,66 @@ toErrorSummaryEntry(error, registry?, options?, labelResolver?): ErrorSummaryEnt
 ### Headless utility/result types
 
 ```typescript
-type BooleanStateKey = 'invalid' | 'valid' | 'touched' | 'dirty' | 'pending'
-type CharacterCountLimitState = 'ok' | 'warning' | 'danger' | 'exceeded'
-type FieldStateLike = { ... }
-interface FieldStateFlags { ... }
-interface CreateErrorStateOptions<TValue = unknown> { ... }
-interface ErrorStateResult { ... }
-interface CreateCharacterCountOptions { ... }
-interface CharacterCountResult { ... }
-interface ErrorSummaryEntryData { ... }
+type BooleanStateKey = 'invalid' | 'valid' | 'touched' | 'dirty' | 'pending';
+type CharacterCountLimitState = 'ok' | 'warning' | 'danger' | 'exceeded';
+type CharacterCountValue = string | readonly unknown[] | null | undefined;
+
+// Minimal shape consumed by field-state helpers (duck-typed — any object that
+// exposes these signals works, so tests and adapters don't need to construct
+// a full FieldState).
+interface FieldStateLike {
+  readonly valid: Signal<boolean>;
+  readonly invalid: Signal<boolean>;
+  readonly touched: Signal<boolean>;
+  readonly dirty: Signal<boolean>;
+  readonly pending: Signal<boolean>;
+}
+
+interface FieldStateFlags {
+  readonly isValid: Signal<boolean>;
+  readonly isInvalid: Signal<boolean>;
+  readonly isTouched: Signal<boolean>;
+  readonly isDirty: Signal<boolean>;
+  readonly isPending: Signal<boolean>;
+}
+
+interface CreateErrorStateOptions<TValue = unknown> {
+  readonly field: FieldTree<TValue>;
+  readonly fieldName?: string;
+  readonly strategy?: ErrorDisplayStrategy;
+  readonly submittedStatus?: SignalLike<SubmittedStatus>;
+}
+
+interface ErrorStateResult {
+  readonly showErrors: Signal<boolean>;
+  readonly hasErrors: Signal<boolean>;
+  readonly hasWarnings: Signal<boolean>;
+  readonly resolvedErrors: Signal<readonly ResolvedError[]>;
+  readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
+  readonly errorId: Signal<string | null>;
+  readonly warningId: Signal<string | null>;
+}
+
+interface CreateCharacterCountOptions {
+  readonly field: FieldTree<CharacterCountValue>;
+  readonly maxLength?: SignalLike<number | null | undefined>;
+}
+
+interface CharacterCountResult {
+  readonly currentLength: Signal<number>;
+  readonly resolvedMaxLength: Signal<number | null>;
+  readonly remaining: Signal<number | null>;
+  readonly limitState: Signal<CharacterCountLimitState>;
+  readonly hasLimit: Signal<boolean>;
+  readonly isExceeded: Signal<boolean>;
+  readonly percentUsed: Signal<number>;
+}
+
+interface ErrorSummaryEntryData {
+  readonly kind: string;
+  readonly message: string;
+  readonly fieldName: string;
+}
 ```
 
 ---
@@ -503,15 +562,37 @@ interface ErrorSummaryEntryData { ... }
 
 ```typescript
 import {
+  VEST_ERROR_KIND_PREFIX, // 'vest:'
+  VEST_WARNING_KIND_PREFIX, // 'warn:vest:'
   validateVest,
   validateVestWarnings,
   type ValidateVestOptions,
+  type VestOnlyFieldSelector,
 } from '@ngx-signal-forms/toolkit/vest';
 
-interface ValidateVestOptions {
-  includeWarnings?: boolean; // default: false
+interface ValidateVestOptions<TValue = unknown> {
+  includeWarnings?: boolean; // default: false — surface warn() as toolkit warnings
+  resetOnDestroy?: boolean; // default: false — call suite.reset() on DestroyRef teardown
+  only?: VestOnlyFieldSelector<TValue>; // default: undefined — focus the run on a field
 }
+
+type VestOnlyFieldSelector<TValue> = (
+  ctx: FieldContext<TValue>,
+) => string | readonly string[] | undefined;
 ```
+
+The blocking and warning `kind` prefixes are public so custom error strategies,
+debugger filters, and tests can detect Vest-origin errors without re-deriving
+the string literal:
+
+```typescript
+const isVestWarning = (kind: string) =>
+  kind.startsWith(VEST_WARNING_KIND_PREFIX);
+```
+
+See `packages/toolkit/vest/README.md` for the full suite-lifecycle rationale
+(why `resetOnDestroy` matters for module-scope suites, async thenable handling,
+`only()` selector patterns).
 
 ---
 
@@ -540,6 +621,48 @@ import {
 | `errorStrategy` | ErrorDisplayStrategy | Highlight a specific strategy        |
 | `title`         | string               | Panel title                          |
 | `subtitle`      | string               | Panel subtitle                       |
+
+### NgxSignalFormDebuggerBadge / NgxSignalFormDebuggerBadgeIcon
+
+Exposed for advanced customization (the debugger panel composes them
+internally). Use the standalone badge directive when you want a compact status
+chip inline with your form — e.g., next to a submit button — without the full
+panel.
+
+```typescript
+type NgxSignalFormDebuggerBadgeAppearance = 'solid' | 'outline';
+type NgxSignalFormDebuggerBadgeVariant =
+  | 'neutral'
+  | 'success'
+  | 'warning'
+  | 'danger';
+```
+
+### Production tree-shaking
+
+The debugger component self-guards rendering with `isDevMode()`, so a
+production build ships zero DOM even if the element is unconditionally placed.
+**For true bundle tree-shaking** (dropping the ~13 KB JS + ~15 KB SCSS at
+build time), wrap the element in an `@if (isDevMode())` block so the compiler
+can drop the code path entirely.
+
+### Theming
+
+CSS hooks use the shorter `--ngx-debugger-*` prefix. The selector prefix
+`ngx-signal-form-debugger-*` is reserved for element and directive names.
+
+```css
+ngx-signal-form-debugger {
+  --ngx-debugger-bg: #ffffff;
+  --ngx-debugger-border-color: #e5e7eb;
+  --ngx-debugger-text-color: #111827;
+  --ngx-debugger-color-success: #22c55e;
+  --ngx-debugger-color-warning: #f59e0b;
+  --ngx-debugger-color-danger: #ef4444;
+  --ngx-debugger-font-size-base: 0.875rem;
+  --ngx-debugger-border-radius: 0.5rem;
+}
+```
 
 ---
 

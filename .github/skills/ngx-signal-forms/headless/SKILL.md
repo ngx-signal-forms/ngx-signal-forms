@@ -1,6 +1,5 @@
 ---
-name: ngx-signal-forms-headless
-description: Implements @ngx-signal-forms/toolkit/headless renderless primitives. Use when building custom design-system components with full DOM control — headless error state, error summaries, character count, fieldset aggregation, or field-name resolution — via directives or programmatic utilities. Part of the ngx-signal-forms skill suite.
+description: Sub-skill of ngx-signal-forms for the @ngx-signal-forms/toolkit/headless entry point — renderless primitives for custom design-system components with full DOM control: headless error state, error summaries, character count, fieldset aggregation, field-name resolution, and programmatic utilities. Not independently invocable; the hub SKILL.md routes here.
 ---
 
 # Toolkit Headless
@@ -23,7 +22,7 @@ For ready-to-render components with built-in markup, use `assistive/SKILL.md` or
 
 ## Workflow
 
-1. Import via `NgxHeadlessToolkit` bundle or individual directive exports from `@ngx-signal-forms/toolkit/headless`.
+1. Import via `NgxHeadlessToolkit` bundle or individual directive exports from `@ngx-signal-forms/toolkit/headless`. Bundle contents: `NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`, `NgxHeadlessFieldset`, `NgxHeadlessCharacterCount`, `NgxHeadlessFieldName`.
 
 2. **Provide deterministic identity.** Headless directives need either an explicit `fieldName` input or a stable `id` on the host element. Generate predictable IDs with `createUniqueId()`.
 
@@ -128,12 +127,32 @@ export class DsFormFieldComponent {
 }
 ```
 
+## Field-Name Directive
+
+`NgxHeadlessFieldName` exposes the resolved field name plus the canonical
+`errorId` / `warningId` for a control — without any error-state logic. Reach
+for it when a custom component owns its own error rendering but still needs
+the toolkit's ID conventions (so `aria-describedby` chains stay consistent
+with `NgxFormFieldError`, the wrapper, and other toolkit consumers). Prefer
+`NgxHeadlessErrorState` when you also want `showErrors()`/`hasErrors()`.
+
+```html
+<div ngxHeadlessFieldName #fieldName="fieldName" [field]="form.email">
+  <input
+    id="email"
+    [formField]="form.email"
+    [attr.aria-describedby]="fieldName.errorId()"
+  />
+</div>
+```
+
 ## Programmatic State
 
 ```typescript
 import {
   createErrorState,
   createCharacterCount,
+  createFieldStateFlags,
 } from '@ngx-signal-forms/toolkit/headless';
 
 // Outside a directive context
@@ -143,6 +162,7 @@ const state = createErrorState({
   strategy: 'on-touch',
 });
 const count = createCharacterCount({ field: form.bio }); // maxLength auto-detected from validator
+const flags = createFieldStateFlags(() => form.email()); // boolean signal flags
 ```
 
 ## Utility Functions

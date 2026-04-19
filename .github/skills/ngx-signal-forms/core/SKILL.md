@@ -1,6 +1,5 @@
 ---
-name: ngx-signal-forms-core
-description: Implements the core @ngx-signal-forms/toolkit entry point. Use when deciding whether plain form[formRoot] fallback is enough or ngxSignalForm form context is needed, adding auto-ARIA, control semantics (ngxSignalFormControl), control preset providers (provideNgxSignalFormControlPresets), error visibility strategies, submittedStatus/showErrors wiring, global config, error-message registries, warning helpers, submission helpers (focusFirstInvalid, submitWithWarnings), or immutable array utilities. Part of the ngx-signal-forms skill suite; read the hub SKILL.md first if unsure which sub-skill applies.
+description: Sub-skill of ngx-signal-forms for the core @ngx-signal-forms/toolkit entry point — form[formRoot] vs ngxSignalForm decision, auto-ARIA, control semantics, preset providers, error visibility strategies, submittedStatus/showErrors wiring, global config, error-message registries, warning helpers, submission helpers, and immutable array utilities. Not independently invocable; the hub SKILL.md routes here.
 ---
 
 # Toolkit Core
@@ -45,6 +44,13 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
    ```
 
    Explicit `ngxSignalFormControl` directive inputs still override preset defaults.
+
+   For tooling and tests, two low-level helpers expose the same lookup:
+   `readNgxSignalFormControlSemantics(element)` returns exactly what the
+   consumer declared on the host (or `null`), and `inferNgxSignalFormControlKind(element)`
+   runs the DOM-heuristic fallback that the wrapper and auto-ARIA use when no
+   explicit semantics are present. Prefer `resolveNgxSignalFormControlSemantics`
+   for merged results that include preset defaults.
 
 7. **Use `provideErrorMessages()` for centralized validation copy.** Message priority: validator-provided `error.message` → registry → toolkit default.
 

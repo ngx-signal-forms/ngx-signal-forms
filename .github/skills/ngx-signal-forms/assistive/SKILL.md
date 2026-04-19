@@ -1,6 +1,5 @@
 ---
-name: ngx-signal-forms-assistive
-description: Implements @ngx-signal-forms/toolkit/assistive standalone feedback components. Use when adding inline error display, form-level error summaries, helper hint text, character counters, or assistive layout rows without a full field wrapper. Part of the ngx-signal-forms skill suite.
+description: Sub-skill of ngx-signal-forms for the @ngx-signal-forms/toolkit/assistive entry point — inline error display, form-level error summaries, helper hint text, character counters, and assistive layout rows used without a full field wrapper. Not independently invocable; the hub SKILL.md routes here.
 ---
 
 # Toolkit Assistive

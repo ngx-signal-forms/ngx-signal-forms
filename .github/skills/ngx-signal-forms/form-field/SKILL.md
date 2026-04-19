@@ -1,6 +1,5 @@
 ---
-name: ngx-signal-forms-form-field
-description: Implements @ngx-signal-forms/toolkit/form-field wrappers and fieldsets. Use when adding ngx-form-field-wrapper, floating labels (outline appearance), grouped field summaries (NgxFormFieldset), deciding whether wrappers can stay on default on-touch fallback or need ngxSignalForm form context, or integrating custom controls with the wrapper layer. Part of the ngx-signal-forms skill suite.
+description: Sub-skill of ngx-signal-forms for the @ngx-signal-forms/toolkit/form-field entry point — ngx-form-field-wrapper, floating labels (outline appearance), grouped field summaries (NgxFormFieldset), fallback vs ngxSignalForm form context, and custom-control integration with the wrapper layer. Not independently invocable; the hub SKILL.md routes here.
 ---
 
 # Toolkit Form Field
