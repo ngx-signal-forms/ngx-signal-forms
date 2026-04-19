@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 function fieldWrapper(page: Page, label: string) {
-  return page.locator('ngx-signal-form-field-wrapper', {
+  return page.locator('ngx-form-field-wrapper', {
     has: page.getByLabel(label, { exact: true }),
   });
 }

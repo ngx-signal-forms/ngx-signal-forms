@@ -12,10 +12,10 @@
  *
  * @example
  * ```html
- * <ngx-signal-form-field-assistive-row>
- *   <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
- *   <ngx-signal-form-field-character-count [formField]="form.phone" [maxLength]="14" />
- * </ngx-signal-form-field-assistive-row>
+ * <ngx-form-field-assistive-row>
+ *   <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
+ *   <ngx-form-field-character-count [formField]="form.phone" [maxLength]="14" />
+ * </ngx-form-field-assistive-row>
  *
  * <ngx-form-field-error [formField]="form.email" fieldName="email" />
  * ```

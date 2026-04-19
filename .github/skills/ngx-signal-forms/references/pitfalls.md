@@ -96,16 +96,16 @@ toolkit preserves your existing ARIA attributes instead of generating them.
 
 ```html
 <!-- Wrong — wrapper can't derive field identity -->
-<ngx-signal-form-field-wrapper [formField]="form.email">
+<ngx-form-field-wrapper [formField]="form.email">
   <label>Email</label>
   <input [formField]="form.email" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 
 <!-- Correct — id enables automatic error/label linkage -->
-<ngx-signal-form-field-wrapper [formField]="form.email">
+<ngx-form-field-wrapper [formField]="form.email">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 ```
 
 ## Removed / Non-Public APIs — Never Use
@@ -147,14 +147,10 @@ Required only for `appearance="outline"` (floating label behavior).
 
 ```html
 <!-- Wrong — Angular parses this as an expression, not a string literal -->
-<ngx-signal-form-field-wrapper [strategy]="on-submit"
-  >...</ngx-signal-form-field-wrapper
->
+<ngx-form-field-wrapper [strategy]="on-submit">...</ngx-form-field-wrapper>
 
 <!-- Correct — use a plain attribute for literal values -->
-<ngx-signal-form-field-wrapper strategy="on-submit"
-  >...</ngx-signal-form-field-wrapper
->
+<ngx-form-field-wrapper strategy="on-submit">...</ngx-form-field-wrapper>
 ```
 
 For literal string inputs, prefer the plain attribute form because it is shorter
@@ -215,20 +211,20 @@ Without `ngxSignalFormControl`, the wrapper must infer the control kind from DOM
 
 ```html
 <!-- Wrong — wrapper guesses control kind from DOM, may get layout wrong -->
-<ngx-signal-form-field-wrapper appearance="plain" [formField]="form.rating">
+<ngx-form-field-wrapper appearance="plain" [formField]="form.rating">
   <label for="rating">Rating</label>
   <ngx-rating-control id="rating" [formField]="form.rating" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 
 <!-- Correct — explicit semantics give the wrapper stable contract -->
-<ngx-signal-form-field-wrapper appearance="plain" [formField]="form.rating">
+<ngx-form-field-wrapper appearance="plain" [formField]="form.rating">
   <label for="rating">Rating</label>
   <ngx-rating-control
     id="rating"
     [ngxSignalFormControl]="{ kind: 'slider', layout: 'stacked' }"
     [formField]="form.rating"
   />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 ```
 
 When multiple controls in a component use the same semantics, use `provideNgxSignalFormControlPresetsForComponent()` to set defaults once instead of repeating the object on every control.
@@ -244,19 +240,19 @@ directive in the component that renders the actual control host.
 
 ```html
 <!-- Fragile — wrapper relies on discovering identity from nested markup timing -->
-<ngx-signal-form-field-wrapper [formField]="form.emailUpdates">
+<ngx-form-field-wrapper [formField]="form.emailUpdates">
   <label for="emailUpdates">Email updates</label>
   <app-switch-control inputId="emailUpdates" [field]="form.emailUpdates" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 
 <!-- Safer for nested/dynamic controls -->
-<ngx-signal-form-field-wrapper
+<ngx-form-field-wrapper
   [formField]="form.emailUpdates"
   fieldName="emailUpdates"
 >
   <label for="emailUpdates">Email updates</label>
   <app-switch-control inputId="emailUpdates" [field]="form.emailUpdates" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 ```
 
 When the actual bound control is nested inside a custom component or its `id` is
@@ -268,8 +264,8 @@ IDs and described-by wiring deterministic.
 ```html
 <!-- Wrong — no submitted status source, errors never show -->
 <form (submit)="save($event)" novalidate>
-  <ngx-signal-form-field-wrapper [formField]="form.email" strategy="on-submit"
-    >...</ngx-signal-form-field-wrapper
+  <ngx-form-field-wrapper [formField]="form.email" strategy="on-submit"
+    >...</ngx-form-field-wrapper
   >
 </form>
 

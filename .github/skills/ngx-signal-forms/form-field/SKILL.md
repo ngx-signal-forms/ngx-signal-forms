@@ -1,6 +1,6 @@
 ---
 name: ngx-signal-forms-form-field
-description: Implements @ngx-signal-forms/toolkit/form-field wrappers and fieldsets. Use when adding ngx-signal-form-field-wrapper, floating labels (outline appearance), grouped field summaries (NgxSignalFormFieldset), deciding whether wrappers can stay on default on-touch fallback or need ngxSignalForm form context, or integrating custom controls with the wrapper layer. Part of the ngx-signal-forms skill suite.
+description: Implements @ngx-signal-forms/toolkit/form-field wrappers and fieldsets. Use when adding ngx-form-field-wrapper, floating labels (outline appearance), grouped field summaries (NgxFormFieldset), deciding whether wrappers can stay on default on-touch fallback or need ngxSignalForm form context, or integrating custom controls with the wrapper layer. Part of the ngx-signal-forms skill suite.
 ---
 
 # Toolkit Form Field
@@ -17,7 +17,7 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 
 1. **Import using `NgxFormField` bundle** from `@ngx-signal-forms/toolkit/form-field`. Don't import from the root package.
 
-2. **Wrap controls in `ngx-signal-form-field-wrapper`:**
+2. **Wrap controls in `ngx-form-field-wrapper`:**
 
 - Bound control must have a stable `id` — the wrapper derives field identity from it.
 - For nested custom controls or dynamically identified inner controls, pass explicit `fieldName` on the wrapper instead of relying on implicit id discovery.
@@ -31,7 +31,7 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 
 4. **Required marker:** Use `showRequiredMarker` on the wrapper or configure it globally via `provideNgxSignalFormsConfig({ showRequiredMarker: true })`.
 
-5. **Use `NgxSignalFormFieldset` for grouped sections:**
+5. **Use `NgxFormFieldset` for grouped sections:**
    - Pass the **parent field tree** to `[fieldsetField]`.
    - Default: child wrapper errors + group-level errors each show separately. Set `includeNestedErrors` to show all child errors in the group summary.
    - Use `fields` input to restrict which fields count toward the group summary.
@@ -112,7 +112,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="profileForm" ngxSignalForm errorStrategy="on-submit">
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [formField]="profileForm.email"
         appearance="outline"
       >
@@ -123,16 +123,16 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
           [formField]="profileForm.email"
           placeholder=" "
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [formField]="profileForm.name"
         appearance="outline"
       >
         <label for="name">Full name</label>
         <input id="name" [formField]="profileForm.name" placeholder=" " />
         <ngx-form-field-hint>As it appears on your ID</ngx-form-field-hint>
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
       <button type="submit">Save</button>
     </form>
@@ -152,25 +152,22 @@ export class ProfileFormComponent {
 
 ```html
 <!-- Group-level error summary at the top (fieldset default) -->
-<ngx-signal-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
+<ngx-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
   <legend>Address</legend>
 
-  <ngx-signal-form-field-wrapper
+  <ngx-form-field-wrapper
     [formField]="form.address.street"
     appearance="outline"
   >
     <label for="street">Street</label>
     <input id="street" [formField]="form.address.street" placeholder=" " />
-  </ngx-signal-form-field-wrapper>
+  </ngx-form-field-wrapper>
 
-  <ngx-signal-form-field-wrapper
-    [formField]="form.address.city"
-    appearance="outline"
-  >
+  <ngx-form-field-wrapper [formField]="form.address.city" appearance="outline">
     <label for="city">City</label>
     <input id="city" [formField]="form.address.city" placeholder=" " />
-  </ngx-signal-form-field-wrapper>
-</ngx-signal-form-fieldset>
+  </ngx-form-field-wrapper>
+</ngx-form-fieldset>
 ```
 
 Use `includeNestedErrors` on the fieldset only when the overall summary must aggregate all child field errors into one list, e.g., for an accessibility-focused error summary at the top of the form.

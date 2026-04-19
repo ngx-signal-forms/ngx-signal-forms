@@ -32,7 +32,7 @@ import { customControlsSchema } from './custom-controls.validations';
  * Custom Controls Demo Form
  *
  * Demonstrates custom FormValueControl components (RatingControl) working
- * seamlessly with ngx-signal-form-field-wrapper.
+ * seamlessly with ngx-form-field-wrapper.
  *
  * Key features:
  * - Custom RatingControl implementing FormValueControl<number>

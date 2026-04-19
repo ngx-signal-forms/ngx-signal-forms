@@ -33,13 +33,13 @@ import {
 
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="contactForm.bio"></textarea>
-  <ngx-signal-form-field-assistive-row>
-    <ngx-signal-form-field-hint>Max 500 characters</ngx-signal-form-field-hint>
-    <ngx-signal-form-field-character-count
+  <ngx-form-field-assistive-row>
+    <ngx-form-field-hint>Max 500 characters</ngx-form-field-hint>
+    <ngx-form-field-character-count
       [formField]="contactForm.bio"
       [maxLength]="500"
     />
-  </ngx-signal-form-field-assistive-row>
+  </ngx-form-field-assistive-row>
 </form>
 ```
 
@@ -94,7 +94,7 @@ Override field names with `provideFieldLabels()` from `@ngx-signal-forms/toolkit
 Helper text below inputs. Automatically linked to the input via `aria-describedby` when used inside the form-field wrapper.
 
 ```html
-<ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
+<ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
 ```
 
 ### NgxFormFieldCharacterCount
@@ -102,10 +102,7 @@ Helper text below inputs. Automatically linked to the input via `aria-describedb
 Character counter with progressive color states (ok → warning → danger → exceeded).
 
 ```html
-<ngx-signal-form-field-character-count
-  [formField]="form.bio"
-  [maxLength]="500"
-/>
+<ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 ```
 
 When a matching max-length validator is present, `maxLength` can be omitted and detected automatically. Add `liveAnnounce` for polite screen reader announcements.
@@ -115,13 +112,10 @@ When a matching max-length validator is present, `maxLength` can be omitted and 
 Layout container for hint and character count side by side.
 
 ```html
-<ngx-signal-form-field-assistive-row>
-  <ngx-signal-form-field-hint>Enter your bio</ngx-signal-form-field-hint>
-  <ngx-signal-form-field-character-count
-    [formField]="form.bio"
-    [maxLength]="500"
-  />
-</ngx-signal-form-field-assistive-row>
+<ngx-form-field-assistive-row>
+  <ngx-form-field-hint>Enter your bio</ngx-form-field-hint>
+  <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+</ngx-form-field-assistive-row>
 ```
 
 ## Warning utilities

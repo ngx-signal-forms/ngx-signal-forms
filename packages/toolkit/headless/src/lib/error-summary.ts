@@ -67,7 +67,7 @@ export interface ErrorSummarySignals {
  *
  * ```html
  * <div
- *   ngxSignalFormHeadlessErrorSummary
+ *   ngxHeadlessErrorSummary
  *   #summary="errorSummary"
  *   [formTree]="myForm"
  * >
@@ -86,7 +86,7 @@ export interface ErrorSummarySignals {
  * ```
  */
 @Directive({
-  selector: '[ngxSignalFormHeadlessErrorSummary]',
+  selector: '[ngxHeadlessErrorSummary]',
   exportAs: 'errorSummary',
 })
 export class NgxHeadlessErrorSummary implements ErrorSummarySignals {

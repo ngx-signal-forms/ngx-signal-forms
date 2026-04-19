@@ -25,7 +25,7 @@ import { NgxSignalFormAutoAria } from './auto-aria';
  * pulling the form-field package into core tests.
  */
 @Component({
-  selector: 'ngx-signal-form-field-wrapper',
+  selector: 'ngx-form-field-wrapper',
   template: '<ng-content />',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
@@ -496,12 +496,12 @@ describe('NgxSignalFormAutoAria', () => {
     it('should include hint ID when hint is present', async () => {
       @Component({
         template: `
-          <ngx-signal-form-field-wrapper>
+          <ngx-form-field-wrapper>
             <input id="email" [formField]="emailControl()" />
-            <ngx-signal-form-field-hint id="email-hint">
+            <ngx-form-field-hint id="email-hint">
               Help text
-            </ngx-signal-form-field-hint>
-          </ngx-signal-form-field-wrapper>
+            </ngx-form-field-hint>
+          </ngx-form-field-wrapper>
         `,
         imports: [
           MockFormFieldDirective,
@@ -525,12 +525,12 @@ describe('NgxSignalFormAutoAria', () => {
     it('should combine hint and error IDs when invalid', async () => {
       @Component({
         template: `
-          <ngx-signal-form-field-wrapper>
+          <ngx-form-field-wrapper>
             <input id="email" [formField]="emailControl()" />
-            <ngx-signal-form-field-hint id="email-hint">
+            <ngx-form-field-hint id="email-hint">
               Help text
-            </ngx-signal-form-field-hint>
-          </ngx-signal-form-field-wrapper>
+            </ngx-form-field-hint>
+          </ngx-form-field-wrapper>
         `,
         imports: [
           MockFormFieldDirective,

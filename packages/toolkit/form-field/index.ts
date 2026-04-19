@@ -9,8 +9,8 @@ import {
   NgxFormFieldError,
   NgxFormFieldHint,
 } from '@ngx-signal-forms/toolkit/assistive';
-import { NgxSignalFormFieldWrapper } from './form-field-wrapper';
-import { NgxSignalFormFieldset } from './form-fieldset';
+import { NgxFormFieldWrapper } from './form-field-wrapper';
+import { NgxFormFieldset } from './form-fieldset';
 
 /**
  * Convenience bundle for the basic form field wrapper.
@@ -29,23 +29,23 @@ import { NgxSignalFormFieldset } from './form-fieldset';
  * @Component({
  *   imports: [FormField, NgxFormField],
  *   template: `
- *     <ngx-signal-form-field-wrapper [formField]="form.email">
+ *     <ngx-form-field-wrapper [formField]="form.email">
  *       <label for="email">Email</label>
  *       <input id="email" [formField]="form.email" />
- *       <ngx-signal-form-field-hint>
+ *       <ngx-form-field-hint>
  *         Enter your email address
- *       </ngx-signal-form-field-hint>
- *     </ngx-signal-form-field-wrapper>
+ *       </ngx-form-field-hint>
+ *     </ngx-form-field-wrapper>
  *   `
  * })
  * ```
  */
 export const NgxFormField = [
   NgxSignalFormAutoAria,
-  NgxSignalFormFieldWrapper,
+  NgxFormFieldWrapper,
   NgxFormFieldHint,
   NgxFormFieldCharacterCount,
   NgxFormFieldAssistiveRow,
   NgxFormFieldError,
-  NgxSignalFormFieldset,
+  NgxFormFieldset,
 ] as const;

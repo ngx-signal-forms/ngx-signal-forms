@@ -107,7 +107,7 @@ Expose these as Tailwind arbitrary-value classes (`bg-[--demo-surface-2]`) or as
 
 **Change.** Add a global "Inspector" toggle button in the demo header. The debugger becomes a floating right rail that can be opened/closed on any page. It still binds to the currently-rendered form via the existing context.
 
-This is a **demo-app change**, not a library change. The `SignalFormDebugger` component itself keeps its current signature; the demo decides where to mount it.
+This is a **demo-app change**, not a library change. The `NgxSignalFormDebugger` component itself keeps its current signature; the demo decides where to mount it.
 
 **Files touched.**
 
@@ -140,7 +140,7 @@ This is a **demo-app change**, not a library change. The `SignalFormDebugger` co
 
 1. **`/toolkit-core/error-summary-and-anchors`** — renders a `NgxFormFieldErrorSummary` above a form with six fields, clicking a summary item scrolls + focuses the offending field via the existing focus-first-invalid machinery. Explicitly demonstrates the WCAG 2.2 error-identification payoff.
 2. **`/toolkit-core/character-count-and-hints`** — a textarea with the character-count component, showing `aria-describedby` wiring in the Inspector tree. Second example uses the headless directive to recreate the counter from scratch in ≤30 lines.
-3. **`/form-field-wrapper/before-and-after`** — tabbed view comparing the raw toolkit-context template against the `NgxSignalFormFieldWrapper` version of the same form. Auto-generated line count and LOC diff at the top.
+3. **`/form-field-wrapper/before-and-after`** — tabbed view comparing the raw toolkit-context template against the `NgxFormFieldWrapper` version of the same form. Auto-generated line count and LOC diff at the top.
 
 Also consolidate:
 

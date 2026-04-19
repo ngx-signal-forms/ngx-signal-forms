@@ -21,10 +21,10 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
  *
  * @example With form field wrapper (auto-derives fieldName from id)
  * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.rating">
+ * <ngx-form-field-wrapper [formField]="form.rating">
  *   <label for="rating">Product Rating</label>
  *   <app-rating-control id="rating" [formField]="form.rating" />
- * </ngx-signal-form-field-wrapper>
+ * </ngx-form-field-wrapper>
  * ```
  */
 @Component({

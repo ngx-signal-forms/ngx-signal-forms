@@ -740,7 +740,7 @@ describe('NgxFormFieldError', () => {
     it('should resolve fieldName from NGX_SIGNAL_FORM_FIELD_CONTEXT when not provided', async () => {
       /**
        * Test that error component can resolve fieldName from parent context
-       * when used inside ngx-signal-form-field-wrapper.
+       * when used inside ngx-form-field-wrapper.
        *
        * The context provides { fieldName: Signal<string> } which error component
        * uses when its own fieldName input is undefined.

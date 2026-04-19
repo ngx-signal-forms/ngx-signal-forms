@@ -1,19 +1,22 @@
 import { ComponentRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DebuggerBadge, DebuggerBadgeIcon } from './debugger-badge';
+import {
+  NgxSignalFormDebuggerBadge,
+  NgxSignalFormDebuggerBadgeIcon,
+} from './debugger-badge';
 
-describe('DebuggerBadge', () => {
-  let fixture: ComponentFixture<DebuggerBadge>;
-  let component: DebuggerBadge;
-  let componentRef: ComponentRef<DebuggerBadge>;
+describe('NgxSignalFormDebuggerBadge', () => {
+  let fixture: ComponentFixture<NgxSignalFormDebuggerBadge>;
+  let component: NgxSignalFormDebuggerBadge;
+  let componentRef: ComponentRef<NgxSignalFormDebuggerBadge>;
   let badgeEl: HTMLElement;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DebuggerBadge, DebuggerBadgeIcon],
+      imports: [NgxSignalFormDebuggerBadge, NgxSignalFormDebuggerBadgeIcon],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(DebuggerBadge);
+    fixture = TestBed.createComponent(NgxSignalFormDebuggerBadge);
     component = fixture.componentInstance;
     componentRef = fixture.componentRef;
     badgeEl = fixture.nativeElement;

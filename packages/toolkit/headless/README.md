@@ -38,7 +38,7 @@ Apply a headless directive, export it via `exportAs`, and bind to its signals:
 
 ```html
 <div
-  ngxSignalFormHeadlessErrorState
+  ngxHeadlessErrorState
   #errorState="errorState"
   [field]="form.email"
   fieldName="email"
@@ -96,7 +96,7 @@ export class MyFormFieldComponent {
 
 ### NgxHeadlessErrorState
 
-Selector: `[ngxSignalFormHeadlessErrorState]` · Export: `errorState`
+Selector: `[ngxHeadlessErrorState]` · Export: `errorState`
 
 Exposes error state signals for custom error display.
 
@@ -111,7 +111,7 @@ Signals: `showErrors()`, `showWarnings()`, `hasErrors()`, `hasWarnings()`, `erro
 
 ### NgxHeadlessErrorSummary
 
-Selector: `[ngxSignalFormHeadlessErrorSummary]` · Export: `errorSummary`
+Selector: `[ngxHeadlessErrorSummary]` · Export: `errorSummary`
 
 Aggregates all errors from a form tree. Each entry has a `focus()` method that calls Angular's `focusBoundControl()`.
 
@@ -125,7 +125,7 @@ Signals: `entries()`, `warningEntries()`, `hasErrors()`, `hasWarnings()`, `shoul
 
 ### NgxHeadlessCharacterCount
 
-Selector: `[ngxSignalFormHeadlessCharacterCount]` · Export: `characterCount`
+Selector: `[ngxHeadlessCharacterCount]` · Export: `characterCount`
 
 Provides character count signals with progressive limit states.
 
@@ -140,7 +140,7 @@ Signals: `currentLength()`, `resolvedMaxLength()`, `remaining()`, `limitState()`
 
 ### NgxHeadlessFieldset
 
-Selector: `[ngxSignalFormHeadlessFieldset]` · Export: `fieldset`
+Selector: `[ngxHeadlessFieldset]` · Export: `fieldset`
 
 Aggregates error state across multiple fields for group validation.
 
@@ -157,7 +157,7 @@ Signals: `isValid()`, `isInvalid()`, `isTouched()`, `isDirty()`, `isPending()`, 
 
 ### NgxHeadlessFieldName
 
-Selector: `[ngxSignalFormHeadlessFieldName]` · Export: `fieldName`
+Selector: `[ngxHeadlessFieldName]` · Export: `fieldName`
 
 Resolves field names and generates stable IDs for ARIA linking. Falls back to the host element `id` when `fieldName` is omitted. When neither a non-empty `fieldName` input nor a non-empty host `id` is provided, `resolvedFieldName()`, `errorId()`, and `warningId()` return `null` and the directive emits a one-shot `console.error` in dev mode. Downstream ARIA wiring should gate on a non-null value rather than produce unstable `"-error"` IDs.
 

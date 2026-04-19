@@ -68,7 +68,7 @@ export interface ErrorStateSignals {
  *
  * ```html
  * <div
- *   ngxSignalFormHeadlessErrorState
+ *   ngxHeadlessErrorState
  *   #errorState="errorState"
  *   [field]="form.email"
  *   fieldName="email"
@@ -83,7 +83,7 @@ export interface ErrorStateSignals {
  *
  * ```html
  * <form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">
- *   <div ngxSignalFormHeadlessErrorState #errorState="errorState" [field]="form.email" fieldName="email">
+ *   <div ngxHeadlessErrorState #errorState="errorState" [field]="form.email" fieldName="email">
  *     @if (errorState.showErrors()) {
  *       @for (error of errorState.resolvedErrors(); track error.kind) {
  *         <span class="error">{{ error.message }}</span>
@@ -96,7 +96,7 @@ export interface ErrorStateSignals {
  * @template TValue The type of the field value
  */
 @Directive({
-  selector: '[ngxSignalFormHeadlessErrorState]',
+  selector: '[ngxHeadlessErrorState]',
   exportAs: 'errorState',
 })
 export class NgxHeadlessErrorState<
@@ -115,7 +115,7 @@ export class NgxHeadlessErrorState<
   /**
    * The field name for generating error/warning IDs.
    * Pass `null` to disable ID generation (e.g. when the field name cannot be
-   * resolved yet from a companion `ngxSignalFormHeadlessFieldName` directive).
+   * resolved yet from a companion `ngxHeadlessFieldName` directive).
    */
   readonly fieldName = input.required<string | null>();
 

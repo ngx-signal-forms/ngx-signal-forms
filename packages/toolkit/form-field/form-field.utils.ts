@@ -38,9 +38,7 @@ export function requireHostElement(
   const hostEl = elementRef.nativeElement;
 
   if (!(hostEl instanceof HTMLElement)) {
-    throw new TypeError(
-      'NgxSignalFormFieldWrapper requires an HTMLElement host.',
-    );
+    throw new TypeError('NgxFormFieldWrapper requires an HTMLElement host.');
   }
 
   return hostEl;

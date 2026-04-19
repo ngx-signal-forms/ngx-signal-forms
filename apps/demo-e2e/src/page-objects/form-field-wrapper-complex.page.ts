@@ -54,16 +54,14 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
    * Get all form field wrapper components
    */
   get formFields(): Locator {
-    return this.form.locator('ngx-signal-form-field-wrapper');
+    return this.form.locator('ngx-form-field-wrapper');
   }
 
   /**
    * Get all fieldset grouping components (both element and attribute usage)
    */
   get fieldsets(): Locator {
-    return this.form.locator(
-      'ngx-signal-form-fieldset, fieldset[ngxSignalFormFieldset]',
-    );
+    return this.form.locator('ngx-form-fieldset, fieldset[ngxFormFieldset]');
   }
 
   /**
@@ -184,9 +182,7 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
    * Get the wrapper containing a specific control.
    */
   getWrapperByControlId(controlId: string): Locator {
-    return this.form.locator(
-      `ngx-signal-form-field-wrapper:has(#${controlId})`,
-    );
+    return this.form.locator(`ngx-form-field-wrapper:has(#${controlId})`);
   }
 
   /**

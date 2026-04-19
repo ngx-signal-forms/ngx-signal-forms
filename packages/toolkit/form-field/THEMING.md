@@ -16,7 +16,7 @@ A theming system based entirely on **CSS Custom Properties (Variables)**. It exp
 
 ### Control-aware styling hooks
 
-`ngx-signal-form-field-wrapper` exposes stable data attributes that you can use
+`ngx-form-field-wrapper` exposes stable data attributes that you can use
 for custom-control styling without coupling your CSS to internal markup:
 
 - `data-ngx-signal-form-control-kind`
@@ -142,7 +142,7 @@ Layout container for hint/error and character count alignment.
 
 ### Fieldset
 
-**Component:** `ngx-signal-form-fieldset`
+**Component:** `ngx-form-fieldset`
 
 Groups related fields with consistent spacing.
 
@@ -176,7 +176,7 @@ That keeps radio-group and checkbox-group labels readable while still giving the
 
 ## 3. Form Field Component
 
-**Component:** `ngx-signal-form-field-wrapper`
+**Component:** `ngx-form-field-wrapper`
 
 This component wraps your `label` and `input` to provide layout, borders, and states.
 
@@ -207,16 +207,16 @@ The form field wrapper supports three appearance modes via the `appearance` inpu
 
 ```html
 <!-- Standard (default) -->
-<ngx-signal-form-field-wrapper [formField]="form.email" appearance="standard">
+<ngx-form-field-wrapper [formField]="form.email" appearance="standard">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 
 <!-- Outline -->
-<ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
+<ngx-form-field-wrapper [formField]="form.email" appearance="outline">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 ```
 
 > **Note:** The semantic colors below apply to both layouts. Layout-specific properties (labels, input styling) are documented in separate sections.
@@ -343,7 +343,7 @@ If the semantic colors aren't enough, you can override specific parts of the com
 
 ### Horizontal Layout
 
-Set `orientation="horizontal"` on `ngx-signal-form-field-wrapper` (or configure
+Set `orientation="horizontal"` on `ngx-form-field-wrapper` (or configure
 `defaultFormFieldOrientation: 'horizontal'` globally) to place the label
 to the **left** of the input.
 
@@ -373,7 +373,7 @@ row per line when a page wants the extra horizontal breathing room.
 ### Wider aligned label column example
 
 ```css
-ngx-signal-form-field-wrapper {
+ngx-form-field-wrapper {
   --ngx-form-field-label-width: 10rem;
   --ngx-form-field-horizontal-gap: 1.5rem;
 }
@@ -386,7 +386,7 @@ children side by side (e.g. for inline radio-button groups or short related
 fields).
 
 ```css
-ngx-signal-form-fieldset {
+ngx-form-fieldset {
   --ngx-signal-form-fieldset-direction: row;
 }
 ```
@@ -401,7 +401,7 @@ Redefine the semantic colors in your global styles or component.
 
 ```css
 /* Apply to all fields */
-ngx-signal-form-field-wrapper {
+ngx-form-field-wrapper {
   --ngx-form-field-color-primary: #6da305; /* My Brand Green */
   --ngx-form-field-color-error: #d93025; /* My Error Red */
 }
@@ -414,7 +414,7 @@ Map your framework's variables to the toolkit's semantic layer.
 **Bootstrap Example:**
 
 ```css
-ngx-signal-form-field-wrapper {
+ngx-form-field-wrapper {
   --ngx-form-field-color-primary: var(--bs-primary, #0d6efd);
   --ngx-form-field-color-border: var(--bs-border-color, #dee2e6);
   --ngx-form-field-color-text: var(--bs-body-color, #212529);
@@ -436,7 +436,7 @@ If your app has a manual toggle (e.g. adding a `.dark` class), use this pattern 
 
 /* 1. Define Dark Mode overrides */
 @media (prefers-color-scheme: dark) {
-  ngx-signal-form-field-wrapper {
+  ngx-form-field-wrapper {
     --ngx-form-field-color-surface: #1f2937;
     --ngx-form-field-color-text: #f9fafb;
     /* ... other dark tokens */
@@ -444,7 +444,7 @@ If your app has a manual toggle (e.g. adding a `.dark` class), use this pattern 
 }
 
 /* 2. Fix: Force Light Mode if user explicitly chose it (even if system is Dark) */
-:root:not(.dark) ngx-signal-form-field-wrapper {
+:root:not(.dark) ngx-form-field-wrapper {
   --ngx-form-field-color-surface: #ffffff;
   --ngx-form-field-color-text: #324155;
   /* ... reset to light tokens */

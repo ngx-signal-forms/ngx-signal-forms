@@ -15,7 +15,7 @@ The headless entry point exposes toolkit state signals without rendering any mar
 
 Choose headless when:
 
-- The design system mandates a specific markup structure incompatible with `ngx-signal-form-field-wrapper`.
+- The design system mandates a specific markup structure incompatible with `ngx-form-field-wrapper`.
 - You're building reusable components via `hostDirectives`.
 - You need programmatic state (e.g., outside a template).
 
@@ -28,7 +28,7 @@ For ready-to-render components with built-in markup, use `assistive/SKILL.md` or
 2. **Provide deterministic identity.** Headless directives need either an explicit `fieldName` input or a stable `id` on the host element. Generate predictable IDs with `createUniqueId()`.
 
 3. **Choose the lightest abstraction:**
-   - Template directives (`ngxSignalFormHeadlessErrorState`, etc.) for page-level custom markup.
+   - Template directives (`ngxHeadlessErrorState`, etc.) for page-level custom markup.
    - `hostDirectives` composition for reusable design-system components.
    - `createErrorState()` / `createCharacterCount()` for programmatic use outside template directives.
 
@@ -42,14 +42,10 @@ For ready-to-render components with built-in markup, use `assistive/SKILL.md` or
 
 ## Error Summary Directive Pattern
 
-Use `ngxSignalFormHeadlessErrorSummary` when you need a form-level summary with full DOM control, want warning entries, or need a design that differs from the styled `NgxFormFieldErrorSummary`.
+Use `ngxHeadlessErrorSummary` when you need a form-level summary with full DOM control, want warning entries, or need a design that differs from the styled `NgxFormFieldErrorSummary`.
 
 ```html
-<div
-  ngxSignalFormHeadlessErrorSummary
-  #summary="errorSummary"
-  [formTree]="myForm"
->
+<div ngxHeadlessErrorSummary #summary="errorSummary" [formTree]="myForm">
   @if (summary.shouldShow() && summary.hasErrors()) {
   <div role="alert" aria-live="assertive" aria-atomic="true">
     <p>Please fix the following errors:</p>
@@ -79,7 +75,7 @@ For a styled out-of-the-box error summary without warnings, use `NgxFormFieldErr
 
 ```html
 <div
-  ngxSignalFormHeadlessErrorState
+  ngxHeadlessErrorState
   #errorState="errorState"
   [field]="form.email"
   fieldName="email"

@@ -16,14 +16,14 @@ import { NgxFormFieldCharacterCount } from './character-count';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgxFormFieldAssistiveRow, NgxFormFieldCharacterCount],
   template: `
-    <ngx-signal-form-field-assistive-row [align]="alignment()">
+    <ngx-form-field-assistive-row [align]="alignment()">
       <span data-testid="assistive-text">Helpful hint</span>
-      <ngx-signal-form-field-character-count
+      <ngx-form-field-character-count
         characterCount
         [formField]="testForm.text"
         [maxLength]="maxLength()"
       />
-    </ngx-signal-form-field-assistive-row>
+    </ngx-form-field-assistive-row>
   `,
 })
 class TestWrapperComponent {
@@ -55,9 +55,7 @@ describe('NgxFormFieldAssistiveRow', () => {
 
     expect(within(left).getByTestId('assistive-text')).toBeInTheDocument();
 
-    const rightHost = right?.querySelector(
-      'ngx-signal-form-field-character-count',
-    );
+    const rightHost = right?.querySelector('ngx-form-field-character-count');
     expect(rightHost).toBeTruthy();
     expect(screen.getByText('0/10')).toBeInTheDocument();
   });
@@ -65,7 +63,7 @@ describe('NgxFormFieldAssistiveRow', () => {
   it('defaults align attribute to start', async () => {
     const { container } = await render(TestWrapperComponent);
 
-    const host = container.querySelector('ngx-signal-form-field-assistive-row');
+    const host = container.querySelector('ngx-form-field-assistive-row');
     expect(host).toHaveAttribute('align', 'start');
   });
 
@@ -75,7 +73,7 @@ describe('NgxFormFieldAssistiveRow', () => {
       bindings: [inputBinding('alignment', alignment)],
     });
 
-    const host = container.querySelector('ngx-signal-form-field-assistive-row');
+    const host = container.querySelector('ngx-form-field-assistive-row');
     expect(host).toHaveAttribute('align', 'center');
 
     alignment.set('end');
@@ -90,10 +88,10 @@ describe('NgxFormFieldAssistiveRow', () => {
       changeDetection: ChangeDetectionStrategy.OnPush,
       imports: [NgxFormFieldAssistiveRow],
       template: `
-        <ngx-signal-form-field-assistive-row>
+        <ngx-form-field-assistive-row>
           <span data-testid="left-text">Helpful hint</span>
           <span characterCount data-testid="right-custom">3 / 10</span>
-        </ngx-signal-form-field-assistive-row>
+        </ngx-form-field-assistive-row>
       `,
     })
     class AttributeSlotHost {}
@@ -120,7 +118,7 @@ describe('NgxFormFieldAssistiveRow', () => {
     // host lets us verify the custom property flip without needing an
     // actual rendered layout.
     const { container } = await render(TestWrapperComponent);
-    const host = container.querySelector('ngx-signal-form-field-assistive-row');
+    const host = container.querySelector('ngx-form-field-assistive-row');
     if (!(host instanceof HTMLElement)) {
       throw new Error('expected host element');
     }
@@ -137,9 +135,9 @@ describe('NgxFormFieldAssistiveRow', () => {
       changeDetection: ChangeDetectionStrategy.OnPush,
       imports: [NgxFormFieldAssistiveRow],
       template: `
-        <ngx-signal-form-field-assistive-row>
+        <ngx-form-field-assistive-row>
           <span data-testid="left-text">Only a hint</span>
-        </ngx-signal-form-field-assistive-row>
+        </ngx-form-field-assistive-row>
       `,
     })
     class HintOnlyHost {}

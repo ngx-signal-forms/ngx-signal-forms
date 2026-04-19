@@ -15,7 +15,7 @@ It is a development-only tool — gate it behind `isDevMode()` so production bui
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 
 // Individual import
-import { SignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 ```
 
 ## Quick start
@@ -52,7 +52,7 @@ Pass the `FieldTree` function (e.g. `userForm`), not the called state (`userForm
 
 ## API
 
-### SignalFormDebugger
+### NgxSignalFormDebugger
 
 Selector: `ngx-signal-form-debugger`
 
@@ -74,7 +74,7 @@ even though the UI is hidden at runtime.
 
 ### NgxSignalFormDebugger
 
-Bundle containing `SignalFormDebugger` and internal badge components.
+Bundle containing `NgxSignalFormDebugger` and internal badge components.
 
 ### What it shows
 

@@ -46,27 +46,27 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
  *
  * @example Group-Only Mode (when nested fields show their own errors)
  * ```html
- * <ngx-signal-form-fieldset
+ * <ngx-form-fieldset
  *   [fieldsetField]="form.passwords"
  *   [includeNestedErrors]="false"
  * >
- *   <ngx-signal-form-field-wrapper [formField]="form.passwords.password">...</ngx-signal-form-field-wrapper>
- *   <ngx-signal-form-field-wrapper [formField]="form.passwords.confirm">...</ngx-signal-form-field-wrapper>
+ *   <ngx-form-field-wrapper [formField]="form.passwords.password">...</ngx-form-field-wrapper>
+ *   <ngx-form-field-wrapper [formField]="form.passwords.confirm">...</ngx-form-field-wrapper>
  *   <!-- Fieldset shows only "Passwords must match" cross-field error -->
- * </ngx-signal-form-fieldset>
+ * </ngx-form-fieldset>
  * ```
  *
  * @example Aggregated Mode (when nested fields don't show errors)
  * ```html
- * <ngx-signal-form-fieldset [fieldsetField]="form.address">
+ * <ngx-form-fieldset [fieldsetField]="form.address">
  *   <input [formField]="form.address.street" />
  *   <input [formField]="form.address.city" />
  *   <!-- Fieldset shows all nested field errors -->
- * </ngx-signal-form-fieldset>
+ * </ngx-form-fieldset>
  * ```
  */
 @Component({
-  selector: 'ngx-signal-form-fieldset, [ngxSignalFormFieldset]',
+  selector: 'ngx-form-fieldset, [ngxFormFieldset]',
   changeDetection: ChangeDetectionStrategy.OnPush,
   hostDirectives: [
     {
@@ -83,9 +83,9 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
   ],
   imports: [NgxFormFieldError],
   styleUrl: './form-fieldset.scss',
-  exportAs: 'ngxSignalFormFieldset',
+  exportAs: 'ngxFormFieldset',
   host: {
-    class: 'ngx-signal-form-fieldset',
+    class: 'ngx-form-fieldset',
     '[class.ngx-signal-form-fieldset--invalid]': 'fieldset.shouldShowErrors()',
     '[class.ngx-signal-form-fieldset--warning]':
       'fieldset.shouldShowWarnings()',
@@ -129,7 +129,7 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
     </div>
   `,
 })
-export class NgxSignalFormFieldset {
+export class NgxFormFieldset {
   /**
    * The composed headless fieldset directive that owns all aggregated
    * validation state. Exposed to the template so bindings stay short

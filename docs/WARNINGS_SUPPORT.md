@@ -229,11 +229,11 @@ The component automatically separates errors and warnings:
 The form field wrapper automatically handles both:
 
 ```html
-<ngx-signal-form-field-wrapper [formField]="form.password">
+<ngx-form-field-wrapper [formField]="form.password">
   <label for="password">Password *</label>
   <input id="password" type="password" [formField]="form.password" />
   <!-- Errors and warnings displayed automatically -->
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 ```
 
 ## When warnings appear — `warningStrategy`
@@ -282,7 +282,7 @@ strategy explicitly.
 
 ```html
 <form [formRoot]="passwordForm" ngxSignalForm errorStrategy="on-submit">
-  <ngx-signal-form-field-wrapper [formField]="passwordForm.password">
+  <ngx-form-field-wrapper [formField]="passwordForm.password">
     <label for="password">Password</label>
     <input id="password" type="password" [formField]="passwordForm.password" />
     <!--
@@ -290,7 +290,7 @@ strategy explicitly.
       from the form, but warnings stay on the default 'immediate' timing, so
       "Consider 12+ characters" shows while the user is still typing.
     -->
-  </ngx-signal-form-field-wrapper>
+  </ngx-form-field-wrapper>
 </form>
 ```
 

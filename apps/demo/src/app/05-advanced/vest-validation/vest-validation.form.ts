@@ -68,7 +68,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
         [class.vest-validation-form--single-column]="useSingleColumnFieldRows()"
       >
         <div class="vest-validation-form__pair-grid grid gap-4 md:grid-cols-2">
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.accountType"
             [appearance]="appearance()"
             [orientation]="orientation()"
@@ -82,9 +82,9 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
               <option value="personal">Personal</option>
               <option value="business">Business</option>
             </select>
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
 
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.country"
             [appearance]="appearance()"
             [orientation]="orientation()"
@@ -97,11 +97,11 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
               <option value="NL">Netherlands</option>
               <option value="BE">Belgium</option>
             </select>
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
         </div>
 
         <div class="vest-validation-form__pair-grid grid gap-4 md:grid-cols-2">
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.companyName"
             [appearance]="appearance()"
             [orientation]="orientation()"
@@ -112,12 +112,12 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
               type="text"
               [formField]="accountForm.companyName"
             />
-            <ngx-signal-form-field-hint>
+            <ngx-form-field-hint>
               Required for business accounts.
-            </ngx-signal-form-field-hint>
-          </ngx-signal-form-field-wrapper>
+            </ngx-form-field-hint>
+          </ngx-form-field-wrapper>
 
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.vatNumber"
             [appearance]="appearance()"
             [orientation]="orientation()"
@@ -129,14 +129,14 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
               [formField]="accountForm.vatNumber"
               class="uppercase"
             />
-            <ngx-signal-form-field-hint>
+            <ngx-form-field-hint>
               Required for business accounts in DE, NL, or BE.
-            </ngx-signal-form-field-hint>
-          </ngx-signal-form-field-wrapper>
+            </ngx-form-field-hint>
+          </ngx-form-field-wrapper>
         </div>
 
         <div class="vest-validation-form__pair-grid grid gap-4 md:grid-cols-2">
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.workEmail"
             [appearance]="appearance()"
             [orientation]="orientation()"
@@ -148,9 +148,9 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
               [formField]="accountForm.workEmail"
               placeholder="team@example.com"
             />
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
 
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.teamSize"
             [appearance]="appearance()"
             [orientation]="orientation()"
@@ -163,13 +163,13 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
               [formField]="accountForm.teamSize"
               placeholder="1-200"
             />
-            <ngx-signal-form-field-hint>
+            <ngx-form-field-hint>
               Personal plans support up to 10 seats.
-            </ngx-signal-form-field-hint>
-          </ngx-signal-form-field-wrapper>
+            </ngx-form-field-hint>
+          </ngx-form-field-wrapper>
         </div>
 
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="accountForm.referralCode"
           [appearance]="appearance()"
           [orientation]="orientation()"
@@ -182,10 +182,10 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
             placeholder="Try STARTER100"
             class="uppercase"
           />
-          <ngx-signal-form-field-hint>
+          <ngx-form-field-hint>
             STARTER100 is valid only for personal accounts with up to 3 seats.
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field-wrapper>
+          </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
 
         <div
           class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-100"
@@ -213,7 +213,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
             </li>
             <li>
               These messages render below the field through
-              <code>ngx-signal-form-field-wrapper</code>, which uses
+              <code>ngx-form-field-wrapper</code>, which uses
               <code>ngx-form-field-error</code> for both alerts and warning
               status messages.
             </li>

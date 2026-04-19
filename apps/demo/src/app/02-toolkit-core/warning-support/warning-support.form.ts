@@ -32,7 +32,7 @@ import { createPasswordForm } from './warning-support.validations';
     }
 
     <form class="form-container" novalidate (submit)="handleSubmit($event)">
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [formField]="passwordForm.username"
         [strategy]="errorDisplayMode()"
       >
@@ -44,9 +44,9 @@ import { createPasswordForm } from './warning-support.validations';
           autocomplete="username"
           placeholder="Choose a username"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [formField]="passwordForm.email"
         [strategy]="errorDisplayMode()"
       >
@@ -58,9 +58,9 @@ import { createPasswordForm } from './warning-support.validations';
           autocomplete="email"
           placeholder="your.email@example.com"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [formField]="passwordForm.password"
         [strategy]="errorDisplayMode()"
       >
@@ -72,7 +72,7 @@ import { createPasswordForm } from './warning-support.validations';
           autocomplete="new-password"
           placeholder="Enter a secure password"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
       <div class="form-actions">
         <button type="button" (click)="reset()">Reset</button>

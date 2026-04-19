@@ -7,10 +7,10 @@
  *
  * @example
  * ```typescript
- * import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+ * import { NgxSignalFormDebuggerToolkit } from '@ngx-signal-forms/toolkit/debugger';
  *
  * @Component({
- *   imports: [NgxSignalFormDebugger],
+ *   imports: [NgxSignalFormDebuggerToolkit],
  *   template: `
  *     <form (submit)="save($event)">
  *       <input [formField]="form.email" />
@@ -22,18 +22,21 @@
  * ```
  */
 
-import { DebuggerBadge, DebuggerBadgeIcon } from './debugger-badge';
-import { SignalFormDebugger } from './signal-form-debugger';
+import {
+  NgxSignalFormDebuggerBadge,
+  NgxSignalFormDebuggerBadgeIcon,
+} from './debugger-badge';
+import { NgxSignalFormDebugger } from './signal-form-debugger';
 
 // Main debugger component
-export { SignalFormDebugger } from './signal-form-debugger';
+export { NgxSignalFormDebugger } from './signal-form-debugger';
 
 // Internal badge components (exposed for advanced customization)
 export {
-  DebuggerBadge,
-  DebuggerBadgeIcon,
-  type DebuggerBadgeAppearance,
-  type DebuggerBadgeVariant,
+  NgxSignalFormDebuggerBadge,
+  NgxSignalFormDebuggerBadgeIcon,
+  type NgxSignalFormDebuggerBadgeAppearance,
+  type NgxSignalFormDebuggerBadgeVariant,
 } from './debugger-badge';
 
 /**
@@ -41,16 +44,16 @@ export {
  *
  * @example
  * ```typescript
- * import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+ * import { NgxSignalFormDebuggerToolkit } from '@ngx-signal-forms/toolkit/debugger';
  *
  * @Component({
- *   imports: [NgxSignalFormDebugger],
+ *   imports: [NgxSignalFormDebuggerToolkit],
  *   // ...
  * })
  * ```
  */
-export const NgxSignalFormDebugger = [
-  SignalFormDebugger,
-  DebuggerBadge,
-  DebuggerBadgeIcon,
+export const NgxSignalFormDebuggerToolkit = [
+  NgxSignalFormDebugger,
+  NgxSignalFormDebuggerBadge,
+  NgxSignalFormDebuggerBadgeIcon,
 ] as const;

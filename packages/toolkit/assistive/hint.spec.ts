@@ -19,7 +19,7 @@ describe('NgxFormFieldHint', () => {
   describe('Content projection', () => {
     it('should project simple text content', async () => {
       await render(
-        `<ngx-signal-form-field-hint>Enter your email address</ngx-signal-form-field-hint>`,
+        `<ngx-form-field-hint>Enter your email address</ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
@@ -30,9 +30,9 @@ describe('NgxFormFieldHint', () => {
 
     it('should project HTML content', async () => {
       await render(
-        `<ngx-signal-form-field-hint>
+        `<ngx-form-field-hint>
           <strong>Important:</strong> Use a valid email format
-        </ngx-signal-form-field-hint>`,
+        </ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
@@ -44,13 +44,13 @@ describe('NgxFormFieldHint', () => {
 
     it('should project complex nested HTML', async () => {
       await render(
-        `<ngx-signal-form-field-hint>
+        `<ngx-form-field-hint>
           <ul>
             <li>At least 8 characters</li>
             <li>Include uppercase and lowercase</li>
             <li>Include numbers</li>
           </ul>
-        </ngx-signal-form-field-hint>`,
+        </ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
@@ -65,26 +65,26 @@ describe('NgxFormFieldHint', () => {
 
     it('should handle empty content', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-hint></ngx-signal-form-field-hint>`,
+        `<ngx-form-field-hint></ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
       );
 
-      const hint = container.querySelector('ngx-signal-form-field-hint');
+      const hint = container.querySelector('ngx-form-field-hint');
       expect(hint).toBeInTheDocument();
       expect(hint?.textContent?.trim()).toBe('');
     });
 
     it('should project whitespace-only content', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-hint>   </ngx-signal-form-field-hint>`,
+        `<ngx-form-field-hint>   </ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
       );
 
-      const hint = container.querySelector('ngx-signal-form-field-hint');
+      const hint = container.querySelector('ngx-form-field-hint');
       expect(hint).toBeInTheDocument();
     });
   });
@@ -92,19 +92,19 @@ describe('NgxFormFieldHint', () => {
   describe('Position attribute', () => {
     it('should not have position attribute when position is null (default)', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-hint>Hint text</ngx-signal-form-field-hint>`,
+        `<ngx-form-field-hint>Hint text</ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
       );
 
-      const hint = container.querySelector('ngx-signal-form-field-hint');
+      const hint = container.querySelector('ngx-form-field-hint');
       expect(hint).not.toHaveAttribute('position');
     });
 
     it('should set position attribute to "left"', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-hint [position]="position">Left hint</ngx-signal-form-field-hint>`,
+        `<ngx-form-field-hint [position]="position">Left hint</ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
           componentProperties: {
@@ -113,13 +113,13 @@ describe('NgxFormFieldHint', () => {
         },
       );
 
-      const hint = container.querySelector('ngx-signal-form-field-hint');
+      const hint = container.querySelector('ngx-form-field-hint');
       expect(hint).toHaveAttribute('position', 'left');
     });
 
     it('should set position attribute to "right"', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-hint [position]="position">Right hint</ngx-signal-form-field-hint>`,
+        `<ngx-form-field-hint [position]="position">Right hint</ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
           componentProperties: {
@@ -128,13 +128,13 @@ describe('NgxFormFieldHint', () => {
         },
       );
 
-      const hint = container.querySelector('ngx-signal-form-field-hint');
+      const hint = container.querySelector('ngx-form-field-hint');
       expect(hint).toHaveAttribute('position', 'right');
     });
 
     it('should not have position attribute when explicitly set to null', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-hint [position]="position">Null position</ngx-signal-form-field-hint>`,
+        `<ngx-form-field-hint [position]="position">Null position</ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
           componentProperties: {
@@ -143,7 +143,7 @@ describe('NgxFormFieldHint', () => {
         },
       );
 
-      const hint = container.querySelector('ngx-signal-form-field-hint');
+      const hint = container.querySelector('ngx-form-field-hint');
       expect(hint).not.toHaveAttribute('position');
     });
   });
@@ -151,7 +151,7 @@ describe('NgxFormFieldHint', () => {
   describe('Dynamic position updates', () => {
     it('should update position attribute when input changes', async () => {
       const { container, rerender } = await render(
-        `<ngx-signal-form-field-hint [position]="position">Hint</ngx-signal-form-field-hint>`,
+        `<ngx-form-field-hint [position]="position">Hint</ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
           componentProperties: {
@@ -160,7 +160,7 @@ describe('NgxFormFieldHint', () => {
         },
       );
 
-      const hint = container.querySelector('ngx-signal-form-field-hint');
+      const hint = container.querySelector('ngx-form-field-hint');
       expect(hint).toHaveAttribute('position', 'left');
 
       // Change to right
@@ -184,7 +184,7 @@ describe('NgxFormFieldHint', () => {
 
     it('should transition from null to positioned', async () => {
       const { container, rerender } = await render(
-        `<ngx-signal-form-field-hint [position]="position">Hint</ngx-signal-form-field-hint>`,
+        `<ngx-form-field-hint [position]="position">Hint</ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
           componentProperties: {
@@ -193,7 +193,7 @@ describe('NgxFormFieldHint', () => {
         },
       );
 
-      const hint = container.querySelector('ngx-signal-form-field-hint');
+      const hint = container.querySelector('ngx-form-field-hint');
       expect(hint).not.toHaveAttribute('position');
 
       // Add position
@@ -208,7 +208,7 @@ describe('NgxFormFieldHint', () => {
 
     it('should transition from positioned to null', async () => {
       const { container, rerender } = await render(
-        `<ngx-signal-form-field-hint [position]="position">Hint</ngx-signal-form-field-hint>`,
+        `<ngx-form-field-hint [position]="position">Hint</ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
           componentProperties: {
@@ -217,7 +217,7 @@ describe('NgxFormFieldHint', () => {
         },
       );
 
-      const hint = container.querySelector('ngx-signal-form-field-hint');
+      const hint = container.querySelector('ngx-form-field-hint');
       expect(hint).toHaveAttribute('position', 'right');
 
       // Remove position
@@ -235,16 +235,16 @@ describe('NgxFormFieldHint', () => {
     it('should render multiple hints with different positions', async () => {
       const { container } = await render(
         `<div>
-          <ngx-signal-form-field-hint position="left">Left hint</ngx-signal-form-field-hint>
-          <ngx-signal-form-field-hint position="right">Right hint</ngx-signal-form-field-hint>
-          <ngx-signal-form-field-hint>No position</ngx-signal-form-field-hint>
+          <ngx-form-field-hint position="left">Left hint</ngx-form-field-hint>
+          <ngx-form-field-hint position="right">Right hint</ngx-form-field-hint>
+          <ngx-form-field-hint>No position</ngx-form-field-hint>
         </div>`,
         {
           imports: [NgxFormFieldHint],
         },
       );
 
-      const hints = container.querySelectorAll('ngx-signal-form-field-hint');
+      const hints = container.querySelectorAll('ngx-form-field-hint');
       expect(hints).toHaveLength(3);
 
       expect(hints[0]).toHaveAttribute('position', 'left');
@@ -255,9 +255,9 @@ describe('NgxFormFieldHint', () => {
     it('should independently manage content for multiple hints', async () => {
       await render(
         `<div>
-          <ngx-signal-form-field-hint>First hint</ngx-signal-form-field-hint>
-          <ngx-signal-form-field-hint>Second hint</ngx-signal-form-field-hint>
-          <ngx-signal-form-field-hint>Third hint</ngx-signal-form-field-hint>
+          <ngx-form-field-hint>First hint</ngx-form-field-hint>
+          <ngx-form-field-hint>Second hint</ngx-form-field-hint>
+          <ngx-form-field-hint>Third hint</ngx-form-field-hint>
         </div>`,
         {
           imports: [NgxFormFieldHint],
@@ -273,44 +273,44 @@ describe('NgxFormFieldHint', () => {
   describe('Component structure', () => {
     it('should have correct component tag name', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-hint>Hint</ngx-signal-form-field-hint>`,
+        `<ngx-form-field-hint>Hint</ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
       );
 
-      const hint = container.querySelector('ngx-signal-form-field-hint');
-      expect(hint?.tagName.toLowerCase()).toBe('ngx-signal-form-field-hint');
+      const hint = container.querySelector('ngx-form-field-hint');
+      expect(hint?.tagName.toLowerCase()).toBe('ngx-form-field-hint');
     });
 
     it('should render as block element by default', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-hint>Hint</ngx-signal-form-field-hint>`,
+        `<ngx-form-field-hint>Hint</ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
       );
 
-      const hint = container.querySelector('ngx-signal-form-field-hint');
+      const hint = container.querySelector('ngx-form-field-hint');
       expect(hint).toBeInTheDocument();
     });
 
     it('should preserve explicit id attribute', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-hint id="email-hint">Hint</ngx-signal-form-field-hint>`,
+        `<ngx-form-field-hint id="email-hint">Hint</ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
       );
 
-      const hint = container.querySelector('ngx-signal-form-field-hint');
+      const hint = container.querySelector('ngx-form-field-hint');
       expect(hint).toHaveAttribute('id', 'email-hint');
       expect(hint).toHaveAttribute('data-ngx-signal-form-hint', 'true');
     });
 
     it('should derive id from field context when provided', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-hint>Hint</ngx-signal-form-field-hint>`,
+        `<ngx-form-field-hint>Hint</ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
           providers: [
@@ -322,7 +322,7 @@ describe('NgxFormFieldHint', () => {
         },
       );
 
-      const hint = container.querySelector('ngx-signal-form-field-hint');
+      const hint = container.querySelector('ngx-form-field-hint');
       expect(hint).toHaveAttribute('id', 'email-hint');
       expect(hint).toHaveAttribute('data-signal-field', 'email');
     });
@@ -331,9 +331,9 @@ describe('NgxFormFieldHint', () => {
   describe('Accessibility', () => {
     it('should preserve text content for screen readers', async () => {
       await render(
-        `<ngx-signal-form-field-hint>
+        `<ngx-form-field-hint>
           Your password must be at least 8 characters long
-        </ngx-signal-form-field-hint>`,
+        </ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
@@ -347,9 +347,9 @@ describe('NgxFormFieldHint', () => {
 
     it('should allow semantic HTML for better accessibility', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-hint>
+        `<ngx-form-field-hint>
           <span aria-label="Required format">Format: 123-456-7890</span>
-        </ngx-signal-form-field-hint>`,
+        </ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
@@ -364,9 +364,9 @@ describe('NgxFormFieldHint', () => {
 
     it('should support links in hint content', async () => {
       await render(
-        `<ngx-signal-form-field-hint>
+        `<ngx-form-field-hint>
           Need help? <a href="/support">Contact support</a>
-        </ngx-signal-form-field-hint>`,
+        </ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
@@ -381,7 +381,7 @@ describe('NgxFormFieldHint', () => {
   describe('Real-world use cases', () => {
     it('should work with form field format examples', async () => {
       await render(
-        `<ngx-signal-form-field-hint>Format: MM/DD/YYYY</ngx-signal-form-field-hint>`,
+        `<ngx-form-field-hint>Format: MM/DD/YYYY</ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
@@ -392,9 +392,9 @@ describe('NgxFormFieldHint', () => {
 
     it('should work with validation requirements', async () => {
       await render(
-        `<ngx-signal-form-field-hint>
+        `<ngx-form-field-hint>
           Must contain at least one uppercase letter, one number, and one special character
-        </ngx-signal-form-field-hint>`,
+        </ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
@@ -407,9 +407,9 @@ describe('NgxFormFieldHint', () => {
 
     it('should work with character count guidance', async () => {
       await render(
-        `<ngx-signal-form-field-hint position="left">
+        `<ngx-form-field-hint position="left">
           Recommended: 150-300 characters
-        </ngx-signal-form-field-hint>`,
+        </ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
@@ -422,9 +422,9 @@ describe('NgxFormFieldHint', () => {
 
     it('should work with security suggestions', async () => {
       await render(
-        `<ngx-signal-form-field-hint>
+        `<ngx-form-field-hint>
           <em>Tip:</em> Use a password manager for better security
-        </ngx-signal-form-field-hint>`,
+        </ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
@@ -438,9 +438,9 @@ describe('NgxFormFieldHint', () => {
 
     it('should work with input examples', async () => {
       await render(
-        `<ngx-signal-form-field-hint>
+        `<ngx-form-field-hint>
           Example: <code>user@example.com</code>
-        </ngx-signal-form-field-hint>`,
+        </ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
@@ -454,21 +454,18 @@ describe('NgxFormFieldHint', () => {
   describe('Edge cases', () => {
     it('should handle very long hint text', async () => {
       const longHint = 'a'.repeat(500);
-      await render(
-        `<ngx-signal-form-field-hint>${longHint}</ngx-signal-form-field-hint>`,
-        {
-          imports: [NgxFormFieldHint],
-        },
-      );
+      await render(`<ngx-form-field-hint>${longHint}</ngx-form-field-hint>`, {
+        imports: [NgxFormFieldHint],
+      });
 
       expect(screen.getByText(longHint)).toBeInTheDocument();
     });
 
     it('should handle special characters in content', async () => {
       await render(
-        `<ngx-signal-form-field-hint>
+        `<ngx-form-field-hint>
           Special chars: &lt;, &gt;, &amp;, &quot;, &#39;
-        </ngx-signal-form-field-hint>`,
+        </ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
@@ -479,9 +476,9 @@ describe('NgxFormFieldHint', () => {
 
     it('should handle emoji in content', async () => {
       await render(
-        `<ngx-signal-form-field-hint>
+        `<ngx-form-field-hint>
           ✅ Valid format ❌ Invalid format
-        </ngx-signal-form-field-hint>`,
+        </ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
@@ -494,11 +491,11 @@ describe('NgxFormFieldHint', () => {
 
     it('should handle multiline content with line breaks', async () => {
       await render(
-        `<ngx-signal-form-field-hint>
+        `<ngx-form-field-hint>
           Line 1<br>
           Line 2<br>
           Line 3
-        </ngx-signal-form-field-hint>`,
+        </ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },
@@ -511,9 +508,9 @@ describe('NgxFormFieldHint', () => {
 
     it('should handle content with inline styles', async () => {
       const { container } = await render(
-        `<ngx-signal-form-field-hint>
+        `<ngx-form-field-hint>
           <span style="color: red;">Important note</span>
-        </ngx-signal-form-field-hint>`,
+        </ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
         },

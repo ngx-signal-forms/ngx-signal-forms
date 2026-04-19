@@ -13,17 +13,17 @@ import {
   type ResolvedErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { SignalFormDebugger } from './signal-form-debugger';
+import { NgxSignalFormDebugger } from './signal-form-debugger';
 
-describe('SignalFormDebugger', () => {
+describe('NgxSignalFormDebugger', () => {
   interface TestData {
     name: string;
     email: string;
   }
 
-  let fixture: ComponentFixture<SignalFormDebugger>;
-  let component: SignalFormDebugger;
-  let componentRef: ComponentRef<SignalFormDebugger>;
+  let fixture: ComponentFixture<NgxSignalFormDebugger>;
+  let component: NgxSignalFormDebugger;
+  let componentRef: ComponentRef<NgxSignalFormDebugger>;
   let debuggerEl: HTMLElement;
 
   const model = signal({ name: '', email: '' });
@@ -42,7 +42,7 @@ describe('SignalFormDebugger', () => {
     contextErrorStrategy = signal<ResolvedErrorDisplayStrategy>('on-touch');
 
     await TestBed.configureTestingModule({
-      imports: [SignalFormDebugger],
+      imports: [NgxSignalFormDebugger],
       providers: [
         {
           provide: NGX_SIGNAL_FORM_CONTEXT,
@@ -64,7 +64,7 @@ describe('SignalFormDebugger', () => {
       ),
     );
 
-    fixture = TestBed.createComponent(SignalFormDebugger);
+    fixture = TestBed.createComponent(NgxSignalFormDebugger);
     component = fixture.componentInstance;
     componentRef = fixture.componentRef;
     debuggerEl = fixture.nativeElement;
@@ -227,7 +227,7 @@ describe('SignalFormDebugger', () => {
 
   describe('Strategy inheritance from form context', () => {
     it('should inherit the strategy from the form context when the input is not set', () => {
-      const localFixture = TestBed.createComponent(SignalFormDebugger);
+      const localFixture = TestBed.createComponent(NgxSignalFormDebugger);
       const localEl: HTMLElement = localFixture.nativeElement;
       localFixture.componentRef.setInput('formTree', testForm);
       // Intentionally do NOT set `errorStrategy` — context provides 'on-touch'
@@ -241,7 +241,7 @@ describe('SignalFormDebugger', () => {
     });
 
     it('should react to context strategy changes when the input is not set', () => {
-      const localFixture = TestBed.createComponent(SignalFormDebugger);
+      const localFixture = TestBed.createComponent(NgxSignalFormDebugger);
       const localEl: HTMLElement = localFixture.nativeElement;
       localFixture.componentRef.setInput('formTree', testForm);
       localFixture.detectChanges();
@@ -256,7 +256,7 @@ describe('SignalFormDebugger', () => {
     });
 
     it('should let an explicit input override the context strategy', () => {
-      const localFixture = TestBed.createComponent(SignalFormDebugger);
+      const localFixture = TestBed.createComponent(NgxSignalFormDebugger);
       const localEl: HTMLElement = localFixture.nativeElement;
       localFixture.componentRef.setInput('formTree', testForm);
       localFixture.componentRef.setInput('errorStrategy', 'immediate');
@@ -277,7 +277,7 @@ describe('SignalFormDebugger', () => {
 
     let warnModel: WritableSignal<WarnData>;
     let warnForm: ReturnType<typeof form<WarnData>>;
-    let warnFixture: ComponentFixture<SignalFormDebugger>;
+    let warnFixture: ComponentFixture<NgxSignalFormDebugger>;
     let warnEl: HTMLElement;
 
     beforeEach(() => {
@@ -301,7 +301,7 @@ describe('SignalFormDebugger', () => {
         ),
       );
 
-      warnFixture = TestBed.createComponent(SignalFormDebugger);
+      warnFixture = TestBed.createComponent(NgxSignalFormDebugger);
       warnEl = warnFixture.nativeElement;
       warnFixture.componentRef.setInput('formTree', warnForm);
       warnFixture.componentRef.setInput('errorStrategy', 'immediate');
@@ -350,7 +350,7 @@ describe('SignalFormDebugger', () => {
     });
 
     it('should warn once when a FieldState is passed instead of a FieldTree', () => {
-      const localFixture = TestBed.createComponent(SignalFormDebugger);
+      const localFixture = TestBed.createComponent(NgxSignalFormDebugger);
       // Passing the resolved FieldState (testForm() call result) instead of
       // the FieldTree function is the misuse the dev warning exists for —
       // the debugger can still show root-level state but cannot traverse
@@ -371,7 +371,7 @@ describe('SignalFormDebugger', () => {
     });
 
     it('should re-warn after the formTree input is swapped to a new state', () => {
-      const localFixture = TestBed.createComponent(SignalFormDebugger);
+      const localFixture = TestBed.createComponent(NgxSignalFormDebugger);
       const first = testForm();
       localFixture.componentRef.setInput('formTree', first);
       localFixture.detectChanges();
@@ -431,7 +431,7 @@ describe('SignalFormDebugger', () => {
         ),
       );
 
-      const localFixture = TestBed.createComponent(SignalFormDebugger);
+      const localFixture = TestBed.createComponent(NgxSignalFormDebugger);
       const localEl: HTMLElement = localFixture.nativeElement;
       localFixture.componentRef.setInput('formTree', usersForm);
       localFixture.componentRef.setInput('errorStrategy', 'immediate');
@@ -459,7 +459,7 @@ describe('SignalFormDebugger', () => {
         ),
       );
 
-      const localFixture = TestBed.createComponent(SignalFormDebugger);
+      const localFixture = TestBed.createComponent(NgxSignalFormDebugger);
       const localEl: HTMLElement = localFixture.nativeElement;
       localFixture.componentRef.setInput('formTree', usersForm);
       localFixture.componentRef.setInput('errorStrategy', 'immediate');
@@ -472,7 +472,7 @@ describe('SignalFormDebugger', () => {
 
   describe('Production render gate', () => {
     it('renders no debugger DOM when renderEnabled is false', () => {
-      const localFixture = TestBed.createComponent(SignalFormDebugger);
+      const localFixture = TestBed.createComponent(NgxSignalFormDebugger);
       const localEl: HTMLElement = localFixture.nativeElement;
       localFixture.componentRef.setInput('formTree', testForm);
 
@@ -499,7 +499,7 @@ describe('SignalFormDebugger', () => {
 
   describe('Malformed formTree inputs', () => {
     it('treats a non-state-like function as unusable and renders nothing', () => {
-      const localFixture = TestBed.createComponent(SignalFormDebugger);
+      const localFixture = TestBed.createComponent(NgxSignalFormDebugger);
       const localEl: HTMLElement = localFixture.nativeElement;
       // A plain `() => 42` is callable but does NOT return a FieldState-shaped
       // object, so it must be rejected by the runtime guard.

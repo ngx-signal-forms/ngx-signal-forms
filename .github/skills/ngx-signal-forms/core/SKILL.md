@@ -72,10 +72,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="userForm" ngxSignalForm errorStrategy="on-submit">
-      <ngx-signal-form-field-wrapper
-        [formField]="userForm.email"
-        appearance="outline"
-      >
+      <ngx-form-field-wrapper [formField]="userForm.email" appearance="outline">
         <label for="email">Email</label>
         <input
           id="email"
@@ -83,7 +80,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
           [formField]="userForm.email"
           placeholder=" "
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
       <button type="submit">Submit</button>
     </form>
   `,

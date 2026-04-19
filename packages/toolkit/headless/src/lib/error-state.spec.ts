@@ -17,7 +17,7 @@ describe('NgxHeadlessErrorState', () => {
           <div>
             <input id="email" [formField]="contactForm.email" />
             <div
-              ngxSignalFormHeadlessErrorState
+              ngxHeadlessErrorState
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
@@ -55,7 +55,7 @@ describe('NgxHeadlessErrorState', () => {
           <div>
             <input id="email" [formField]="contactForm.email" />
             <div
-              ngxSignalFormHeadlessErrorState
+              ngxHeadlessErrorState
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
@@ -93,7 +93,7 @@ describe('NgxHeadlessErrorState', () => {
           <div>
             <input id="email" [formField]="contactForm.email" />
             <div
-              ngxSignalFormHeadlessErrorState
+              ngxHeadlessErrorState
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
@@ -140,7 +140,7 @@ describe('NgxHeadlessErrorState', () => {
           <div>
             <input id="email" [formField]="contactForm.email" />
             <div
-              ngxSignalFormHeadlessErrorState
+              ngxHeadlessErrorState
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
@@ -180,7 +180,7 @@ describe('NgxHeadlessErrorState', () => {
           <div>
             <input id="email" [formField]="contactForm.email" />
             <div
-              ngxSignalFormHeadlessErrorState
+              ngxHeadlessErrorState
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
@@ -218,7 +218,7 @@ describe('NgxHeadlessErrorState', () => {
           <div>
             <input id="email" [formField]="contactForm.email" />
             <div
-              ngxSignalFormHeadlessErrorState
+              ngxHeadlessErrorState
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
@@ -254,7 +254,7 @@ describe('NgxHeadlessErrorState', () => {
           <div>
             <input id="email" [formField]="contactForm.email" />
             <div
-              ngxSignalFormHeadlessErrorState
+              ngxHeadlessErrorState
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
@@ -292,7 +292,7 @@ describe('NgxHeadlessErrorState', () => {
           <div>
             <input id="email" [formField]="contactForm.email" />
             <div
-              ngxSignalFormHeadlessErrorState
+              ngxHeadlessErrorState
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
@@ -342,7 +342,7 @@ describe('NgxHeadlessErrorState', () => {
           <div>
             <input id="email" [formField]="contactForm.email" />
             <div
-              ngxSignalFormHeadlessErrorState
+              ngxHeadlessErrorState
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"
@@ -398,7 +398,7 @@ describe('NgxHeadlessErrorState', () => {
           <div>
             <input id="email" [formField]="contactForm.email" />
             <div
-              ngxSignalFormHeadlessErrorState
+              ngxHeadlessErrorState
               #errorState="errorState"
               [field]="contactForm.email"
               fieldName="email"

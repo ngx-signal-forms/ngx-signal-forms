@@ -47,7 +47,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
 
       <form [formRoot]="travelerForm" class="space-y-4">
         <!-- First Name -->
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="travelerForm.firstName"
           [appearance]="appearance()"
           [orientation]="orientation()"
@@ -60,13 +60,13 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
             type="text"
             [formField]="travelerForm.firstName"
           />
-          <ngx-signal-form-field-hint position="left">
+          <ngx-form-field-hint position="left">
             Enter your legal first name as shown on passport
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field-wrapper>
+          </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
 
         <!-- Last Name -->
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="travelerForm.lastName"
           [appearance]="appearance()"
           [orientation]="orientation()"
@@ -79,23 +79,23 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
             type="text"
             [formField]="travelerForm.lastName"
           />
-        </ngx-signal-form-field-wrapper>
+        </ngx-form-field-wrapper>
 
         <!-- Email -->
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="travelerForm.email"
           [appearance]="appearance()"
           [orientation]="orientation()"
         >
           <label for="email"> Email <span class="text-red-500">*</span> </label>
           <input id="email" type="email" [formField]="travelerForm.email" />
-          <ngx-signal-form-field-hint position="left">
+          <ngx-form-field-hint position="left">
             We'll send booking confirmation to this address
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field-wrapper>
+          </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
 
         <!-- Nationality -->
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="travelerForm.nationality"
           [appearance]="appearance()"
           [orientation]="orientation()"
@@ -108,14 +108,14 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
             type="text"
             [formField]="travelerForm.nationality"
           />
-        </ngx-signal-form-field-wrapper>
+        </ngx-form-field-wrapper>
 
         <div class="mt-4 border-t pt-4">
           <h3 class="mb-3 text-lg font-medium">Passport Information</h3>
 
           <div class="grid grid-cols-2 gap-4">
             <!-- Passport Number -->
-            <ngx-signal-form-field-wrapper
+            <ngx-form-field-wrapper
               [formField]="travelerForm.passportNumber"
               [appearance]="appearance()"
               [orientation]="orientation()"
@@ -128,10 +128,10 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
                 type="text"
                 [formField]="travelerForm.passportNumber"
               />
-            </ngx-signal-form-field-wrapper>
+            </ngx-form-field-wrapper>
 
             <!-- Passport Expiry with cross-field validation -->
-            <ngx-signal-form-field-wrapper
+            <ngx-form-field-wrapper
               [formField]="travelerForm.passportExpiry"
               [appearance]="appearance()"
               [orientation]="orientation()"
@@ -144,10 +144,10 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
                 type="date"
                 [formField]="travelerForm.passportExpiry"
               />
-              <ngx-signal-form-field-hint position="left">
+              <ngx-form-field-hint position="left">
                 Must be valid 6 months after trip ends
-              </ngx-signal-form-field-hint>
-            </ngx-signal-form-field-wrapper>
+              </ngx-form-field-hint>
+            </ngx-form-field-wrapper>
           </div>
         </div>
       </form>

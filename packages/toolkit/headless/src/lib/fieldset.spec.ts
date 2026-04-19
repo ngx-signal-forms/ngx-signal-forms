@@ -26,7 +26,7 @@ describe('NgxHeadlessFieldset', () => {
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
-          ngxSignalFormHeadlessFieldset
+          ngxHeadlessFieldset
           #fieldset="fieldset"
           [fieldsetField]="addressForm.address"
           includeNestedErrors
@@ -66,7 +66,7 @@ describe('NgxHeadlessFieldset', () => {
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
-          ngxSignalFormHeadlessFieldset
+          ngxHeadlessFieldset
           #fieldset="fieldset"
           [fieldsetField]="addressForm.address"
         >
@@ -101,7 +101,7 @@ describe('NgxHeadlessFieldset', () => {
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
-          ngxSignalFormHeadlessFieldset
+          ngxHeadlessFieldset
           #fieldset="fieldset"
           [fieldsetField]="addressForm.address"
           [fields]="fields"
@@ -137,7 +137,7 @@ describe('NgxHeadlessFieldset', () => {
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
-          ngxSignalFormHeadlessFieldset
+          ngxHeadlessFieldset
           #fieldset="fieldset"
           [fieldsetField]="addressForm.address"
           includeNestedErrors
@@ -176,7 +176,7 @@ describe('NgxHeadlessFieldset', () => {
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
-          ngxSignalFormHeadlessFieldset
+          ngxHeadlessFieldset
           #fieldset="fieldset"
           [fieldsetField]="addressForm.address"
           includeNestedErrors
@@ -232,7 +232,7 @@ describe('NgxHeadlessFieldset', () => {
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
-          ngxSignalFormHeadlessFieldset
+          ngxHeadlessFieldset
           #fieldset="fieldset"
           [fieldsetField]="addressForm.address"
           fieldsetId="address"
@@ -261,7 +261,7 @@ describe('NgxHeadlessFieldset', () => {
       template: `
         <form [formRoot]="addressForm" ngxSignalForm errorStrategy="immediate">
           <fieldset
-            ngxSignalFormHeadlessFieldset
+            ngxHeadlessFieldset
             #fieldset="fieldset"
             [fieldsetField]="addressForm.address"
             includeNestedErrors
@@ -303,7 +303,7 @@ describe('NgxHeadlessFieldset', () => {
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
-          ngxSignalFormHeadlessFieldset
+          ngxHeadlessFieldset
           #fieldset="fieldset"
           [fieldsetField]="addressForm.address"
           submittedStatus="submitted"
@@ -334,7 +334,7 @@ describe('NgxHeadlessFieldset', () => {
       template: `
         <div
           data-testid="fieldset-host"
-          ngxSignalFormHeadlessFieldset
+          ngxHeadlessFieldset
           #fieldset="fieldset"
           [fieldsetField]="addressForm.address"
           fieldsetId="address"
@@ -369,7 +369,7 @@ describe('NgxHeadlessFieldset', () => {
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
-          ngxSignalFormHeadlessFieldset
+          ngxHeadlessFieldset
           #fieldset="fieldset"
           [fieldsetField]="addressForm.address"
         >

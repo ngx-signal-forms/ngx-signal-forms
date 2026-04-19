@@ -7,7 +7,7 @@ import { CustomControlsPage } from '../../page-objects/custom-controls.page';
  * Route: /form-field-wrapper/custom-controls
  *
  * Verifies that custom FormValueControl components (RatingControl) work
- * correctly with ngx-signal-form-field-wrapper, including:
+ * correctly with ngx-form-field-wrapper, including:
  * - Auto-derivation of fieldName from custom control's id attribute
  * - ARIA attributes for accessibility
  * - Error display integration

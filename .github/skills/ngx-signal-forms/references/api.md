@@ -336,18 +336,18 @@ For full DOM control over the error summary (incl. warning entries), use `NgxHea
 
 ```typescript
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-// Bundle: [NgxSignalFormFieldWrapper,
+// Bundle: [NgxFormFieldWrapper,
 //          NgxFormFieldHint, NgxFormFieldCharacterCount,
 //          NgxFormFieldAssistiveRow, NgxFormFieldError,
-//          NgxSignalFormFieldset]
+//          NgxFormFieldset]
 
 import {
-  NgxSignalFormFieldWrapper,
-  NgxSignalFormFieldset,
+  NgxFormFieldWrapper,
+  NgxFormFieldset,
 } from '@ngx-signal-forms/toolkit/form-field';
 ```
 
-### NgxSignalFormFieldWrapper inputs
+### NgxFormFieldWrapper inputs
 
 | Input                | Type                                             | Default                                                                                         |
 | -------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
@@ -359,7 +359,7 @@ import {
 | `showRequiredMarker` | boolean                                          | From config                                                                                     |
 | `requiredMarker`     | string                                           | `' *'`                                                                                          |
 
-### NgxSignalFormFieldset inputs
+### NgxFormFieldset inputs
 
 | Input                 | Type                 | Default                   |
 | --------------------- | -------------------- | ------------------------- |
@@ -395,7 +395,7 @@ Directive-level types and constants also available from this entry point:
 
 ### NgxHeadlessErrorState
 
-Selector: `[ngxSignalFormHeadlessErrorState]` | Export: `#errorState="errorState"`
+Selector: `[ngxHeadlessErrorState]` | Export: `#errorState="errorState"`
 
 Inputs: `field` (required), `fieldName` (required), `strategy`
 
@@ -408,7 +408,7 @@ Signals:
 
 ### NgxHeadlessErrorSummary
 
-Selector: `[ngxSignalFormHeadlessErrorSummary]` | Export: `#summary="errorSummary"`
+Selector: `[ngxHeadlessErrorSummary]` | Export: `#summary="errorSummary"`
 
 Inputs: `formTree` (required), `strategy`, `submittedStatus`
 
@@ -435,7 +435,7 @@ Use this directive instead of `NgxFormFieldErrorSummary` when you need full DOM 
 
 ### NgxHeadlessCharacterCount
 
-Selector: `[ngxSignalFormHeadlessCharacterCount]` | Export: `#charCount="charCount"`
+Selector: `[ngxHeadlessCharacterCount]` | Export: `#charCount="charCount"`
 
 Inputs: `field` (required), `maxLength`
 
@@ -443,7 +443,7 @@ Signals: `currentLength()`, `maxLength()`, `remaining()`, `percentage()`, `limit
 
 ### NgxHeadlessFieldset
 
-Selector: `[ngxSignalFormHeadlessFieldset]` | Export: `#fieldset="fieldset"`
+Selector: `[ngxHeadlessFieldset]` | Export: `#fieldset="fieldset"`
 
 Inputs: `fieldsetField` (required), `fields`, `strategy`, `includeNestedErrors`
 
@@ -451,7 +451,7 @@ Signals: `isValid()`, `isInvalid()`, `isTouched()`, `isDirty()`, `aggregatedErro
 
 ### NgxHeadlessFieldName
 
-Selector: `[ngxSignalFormHeadlessFieldName]` | Export: `#fieldName="fieldName"`
+Selector: `[ngxHeadlessFieldName]` | Export: `#fieldName="fieldName"`
 
 Inputs: `field` (required), `fieldName`
 
@@ -510,18 +510,18 @@ interface ValidateVestOptions {
 
 ```typescript
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
-// Bundle: [SignalFormDebugger, DebuggerBadge, DebuggerBadgeIcon]
+// Bundle: [NgxSignalFormDebugger, NgxSignalFormDebuggerBadge, NgxSignalFormDebuggerBadgeIcon]
 
 import {
-  SignalFormDebugger,
-  DebuggerBadge,
-  DebuggerBadgeIcon,
-  type DebuggerBadgeAppearance,
-  type DebuggerBadgeVariant,
+  NgxSignalFormDebugger,
+  NgxSignalFormDebuggerBadge,
+  NgxSignalFormDebuggerBadgeIcon,
+  type NgxSignalFormDebuggerBadgeAppearance,
+  type NgxSignalFormDebuggerBadgeVariant,
 } from '@ngx-signal-forms/toolkit/debugger';
 ```
 
-### SignalFormDebugger inputs
+### NgxSignalFormDebugger inputs
 
 | Input           | Type                 | Notes                                |
 | --------------- | -------------------- | ------------------------------------ |

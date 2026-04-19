@@ -8,7 +8,7 @@ describe('NgxHeadlessFieldName', () => {
     await render(
       `
       <div
-        ngxSignalFormHeadlessFieldName
+        ngxHeadlessFieldName
         #fieldName="fieldName"
         id="host-id"
         [fieldName]="fieldNameInput"
@@ -33,7 +33,7 @@ describe('NgxHeadlessFieldName', () => {
     await render(
       `
       <div
-        ngxSignalFormHeadlessFieldName
+        ngxHeadlessFieldName
         #fieldName="fieldName"
         id="fallback-id"
         [fieldName]="fieldNameInput"
@@ -65,7 +65,7 @@ describe('NgxHeadlessFieldName', () => {
     const { fixture } = await render(
       `
       <div
-        ngxSignalFormHeadlessFieldName
+        ngxHeadlessFieldName
         #fieldName="fieldName"
         [fieldName]="fieldNameInput()"
       >
@@ -107,7 +107,7 @@ describe('NgxHeadlessFieldName', () => {
     const { fixture } = await render(
       `
       <div
-        ngxSignalFormHeadlessFieldName
+        ngxHeadlessFieldName
         #fieldName="fieldName"
         [fieldName]="fieldNameInput()"
       >

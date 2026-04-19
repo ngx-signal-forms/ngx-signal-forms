@@ -5,8 +5,8 @@ import {
   input,
 } from '@angular/core';
 
-export type DebuggerBadgeVariant = 'solid' | 'outline' | 'ghost';
-export type DebuggerBadgeAppearance =
+export type NgxSignalFormDebuggerBadgeVariant = 'solid' | 'outline' | 'ghost';
+export type NgxSignalFormDebuggerBadgeAppearance =
   | 'neutral'
   | 'info'
   | 'success'
@@ -55,7 +55,7 @@ export type DebuggerBadgeAppearance =
     class: 'ngx-debugger-badge__icon',
   },
 })
-export class DebuggerBadgeIcon {}
+export class NgxSignalFormDebuggerBadgeIcon {}
 
 /**
  * Internal badge component for the Signal Forms Debugger.
@@ -283,7 +283,7 @@ export class DebuggerBadgeIcon {}
     }
   `,
 })
-export class DebuggerBadge {
-  readonly variant = input<DebuggerBadgeVariant>('solid');
-  readonly appearance = input<DebuggerBadgeAppearance>('neutral');
+export class NgxSignalFormDebuggerBadge {
+  readonly variant = input<NgxSignalFormDebuggerBadgeVariant>('solid');
+  readonly appearance = input<NgxSignalFormDebuggerBadgeAppearance>('neutral');
 }

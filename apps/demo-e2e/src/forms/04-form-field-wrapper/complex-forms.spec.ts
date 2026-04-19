@@ -205,7 +205,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
 
     test('should wrap switch and checkbox in form field wrappers', async () => {
       const newsletterWrapper = page.preferencesFieldset.locator(
-        'ngx-signal-form-field-wrapper',
+        'ngx-form-field-wrapper',
       );
       await expect(newsletterWrapper.first()).toBeVisible();
       const count = await newsletterWrapper.count();

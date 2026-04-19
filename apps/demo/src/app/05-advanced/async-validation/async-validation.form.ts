@@ -67,7 +67,7 @@ const registrationSchema = schema<Registration>((path) => {
         [errorStrategy]="errorDisplayMode()"
         class="max-w-md space-y-6"
       >
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="regForm.username"
           [appearance]="appearance()"
           [orientation]="orientation()"
@@ -87,10 +87,10 @@ const registrationSchema = schema<Registration>((path) => {
             </span>
           }
 
-          <ngx-signal-form-field-hint>
+          <ngx-form-field-hint>
             Availability is checked automatically
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field-wrapper>
+          </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
 
         <div class="flex gap-4">
           <button

@@ -49,7 +49,7 @@ export interface FieldNameStateSignals {
  * ## Usage
  *
  * ```html
- * <div ngxSignalFormHeadlessFieldName #fieldName="fieldName" fieldName="email">
+ * <div ngxHeadlessFieldName #fieldName="fieldName" fieldName="email">
  *   <label [for]="fieldName.resolvedFieldName()">Email</label>
  *   <input
  *     [id]="fieldName.resolvedFieldName()"
@@ -65,7 +65,7 @@ export interface FieldNameStateSignals {
  * @example Override field name with signal
  * ```html
  * <div
- *   ngxSignalFormHeadlessFieldName
+ *   ngxHeadlessFieldName
  *   #fieldName="fieldName"
  *   [fieldName]="dynamicFieldName"
  * >
@@ -75,13 +75,13 @@ export interface FieldNameStateSignals {
  *
  * @example Auto-resolve from host element id
  * ```html
- * <div ngxSignalFormHeadlessFieldName #fieldName="fieldName" id="email">
+ * <div ngxHeadlessFieldName #fieldName="fieldName" id="email">
  *   <label [for]="fieldName.resolvedFieldName()">Email</label>
  * </div>
  * ```
  */
 @Directive({
-  selector: '[ngxSignalFormHeadlessFieldName]',
+  selector: '[ngxHeadlessFieldName]',
   exportAs: 'fieldName',
 })
 export class NgxHeadlessFieldName implements FieldNameStateSignals {
@@ -120,7 +120,7 @@ export class NgxHeadlessFieldName implements FieldNameStateSignals {
     if (isDevMode() && !this.#warnedMissingName) {
       this.#warnedMissingName = true;
       console.error(
-        '[ngx-signal-forms] ngxSignalFormHeadlessFieldName requires either a non-empty `fieldName` input or a host element `id`. ARIA wiring will be skipped.',
+        '[ngx-signal-forms] ngxHeadlessFieldName requires either a non-empty `fieldName` input or a host element `id`. ARIA wiring will be skipped.',
       );
     }
 

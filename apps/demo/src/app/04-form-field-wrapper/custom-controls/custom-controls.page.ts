@@ -37,7 +37,7 @@ import { CustomControlsFormComponent } from './custom-controls.form';
  * Custom Controls Demo Page
  *
  * Demonstrates how custom Angular Signal Forms controls (FormValueControl)
- * work seamlessly with ngx-signal-form-field-wrapper.
+ * work seamlessly with ngx-form-field-wrapper.
  *
  * Key features:
  * - Custom RatingControl implementing FormValueControl<number>

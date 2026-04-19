@@ -57,7 +57,7 @@ export const DEFAULT_DANGER_THRESHOLD = 0.95;
  *
  * ```html
  * <div
- *   ngxSignalFormHeadlessCharacterCount
+ *   ngxHeadlessCharacterCount
  *   #charCount="characterCount"
  *   [field]="form.bio"
  *   [maxLength]="500"
@@ -82,7 +82,7 @@ export const DEFAULT_DANGER_THRESHOLD = 0.95;
  * @example Custom thresholds
  * ```html
  * <div
- *   ngxSignalFormHeadlessCharacterCount
+ *   ngxHeadlessCharacterCount
  *   #charCount="characterCount"
  *   [field]="form.title"
  *   [maxLength]="100"
@@ -94,7 +94,7 @@ export const DEFAULT_DANGER_THRESHOLD = 0.95;
  * ```
  */
 @Directive({
-  selector: '[ngxSignalFormHeadlessCharacterCount]',
+  selector: '[ngxHeadlessCharacterCount]',
   exportAs: 'characterCount',
 })
 export class NgxHeadlessCharacterCount implements CharacterCountStateSignals {

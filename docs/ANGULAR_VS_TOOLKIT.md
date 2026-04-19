@@ -76,10 +76,10 @@ imports: [FormField, NgxSignalFormToolkit];
 
 ```html
 <form [formRoot]="userForm" ngxSignalForm>
-  <ngx-signal-form-field-wrapper [formField]="userForm.email">
+  <ngx-form-field-wrapper [formField]="userForm.email">
     <label for="email">Email</label>
     <input id="email" [formField]="userForm.email" type="email" />
-  </ngx-signal-form-field-wrapper>
+  </ngx-form-field-wrapper>
   <button type="submit">Send</button>
 </form>
 ```

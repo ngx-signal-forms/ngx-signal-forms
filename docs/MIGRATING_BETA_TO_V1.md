@@ -139,7 +139,7 @@ removed. Replace them with the v1 equivalents.
 | `strictFieldResolution` config              | Removed — strict by default                            | beta       |
 | `debug` config field                        | Removed — use the `/debugger` entry point instead      | beta       |
 | `injectFormConfig()`                        | `inject(NGX_SIGNAL_FORMS_CONFIG)`                      | `rc.3`     |
-| `NgxFloatingLabelDirective`                 | `<ngx-signal-form-field-wrapper appearance="outline">` | `rc.2`     |
+| `NgxFloatingLabelDirective`                 | `<ngx-form-field-wrapper appearance="outline">`        | `rc.2`     |
 | `NgxSignalFormsUserConfig` as `DeepPartial` | `Partial<NgxSignalFormsConfig>` (top-level only)       | `rc.2`     |
 
 ### `NgxFloatingLabelDirective` → `appearance="outline"`
@@ -152,10 +152,10 @@ removed. Replace them with the v1 equivalents.
 </div>
 
 <!-- after -->
-<ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
+<ngx-form-field-wrapper [formField]="form.email" appearance="outline">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 ```
 
 The wrapper now owns floating-label behavior via the `appearance`
@@ -236,7 +236,7 @@ keep working.
 
 **Lands in:** `v1 rc`
 
-`ngx-signal-form-field-wrapper` now documents `orientation="vertical" | "horizontal"`
+`ngx-form-field-wrapper` now documents `orientation="vertical" | "horizontal"`
 as part of the stable public API.
 
 - `vertical` keeps the label above the field (default)
@@ -387,10 +387,10 @@ component that replaces the old `debug: true` config flag. Gate it with
 `isDevMode()` and drop it anywhere in the form template:
 
 ```ts
-import { SignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 
 @Component({
-  imports: [SignalFormDebugger /* … */],
+  imports: [NgxSignalFormDebugger /* … */],
   template: `
     @if (isDev()) {
       <ngx-signal-form-debugger [formTree]="form" />
@@ -514,7 +514,7 @@ action is required on Angular 21.x.
    `@ngx-signal-forms/toolkit`. If a symbol is missing from the root
    barrel, it was `@internal` — file an issue if you need it exposed.
 4. **Remove `NgxFloatingLabelDirective`** usages and migrate to
-   `<ngx-signal-form-field-wrapper appearance="outline">`.
+   `<ngx-form-field-wrapper appearance="outline">`.
 5. **Replace `injectFormConfig()`** with
    `inject(NGX_SIGNAL_FORMS_CONFIG)`.
 6. **Grep for the other removed APIs** (`computeShowErrors`,

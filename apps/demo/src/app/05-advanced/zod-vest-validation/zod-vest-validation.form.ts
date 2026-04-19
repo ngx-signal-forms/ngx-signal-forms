@@ -96,7 +96,7 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
         class="max-w-3xl space-y-6"
       >
         <div class="grid gap-4 md:grid-cols-2">
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.firstName"
             [appearance]="appearance()"
             [orientation]="orientation()"
@@ -107,9 +107,9 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               type="text"
               [formField]="accountForm.firstName"
             />
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
 
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.lastName"
             [appearance]="appearance()"
             [orientation]="orientation()"
@@ -120,11 +120,11 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               type="text"
               [formField]="accountForm.lastName"
             />
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
         </div>
 
         <div class="grid gap-4 md:grid-cols-2">
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.email"
             [appearance]="appearance()"
             [orientation]="orientation()"
@@ -136,9 +136,9 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               [formField]="accountForm.email"
               placeholder="name@company.com"
             />
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
 
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.password"
             [appearance]="appearance()"
             [orientation]="orientation()"
@@ -149,14 +149,12 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               type="password"
               [formField]="accountForm.password"
             />
-            <ngx-signal-form-field-hint>
-              At least 12 characters.
-            </ngx-signal-form-field-hint>
-          </ngx-signal-form-field-wrapper>
+            <ngx-form-field-hint> At least 12 characters. </ngx-form-field-hint>
+          </ngx-form-field-wrapper>
         </div>
 
         <div class="grid gap-4 md:grid-cols-2">
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.accountType"
             [appearance]="appearance()"
             [orientation]="orientation()"
@@ -170,9 +168,9 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               <option value="personal">Personal</option>
               <option value="business">Business</option>
             </select>
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
 
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.country"
             [appearance]="appearance()"
             [orientation]="orientation()"
@@ -185,11 +183,11 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               <option value="NL">Netherlands</option>
               <option value="BE">Belgium</option>
             </select>
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
         </div>
 
         <div class="grid gap-4 md:grid-cols-2">
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.companyName"
             [appearance]="appearance()"
             [orientation]="orientation()"
@@ -200,12 +198,12 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               type="text"
               [formField]="accountForm.companyName"
             />
-            <ngx-signal-form-field-hint>
+            <ngx-form-field-hint>
               Required for business accounts.
-            </ngx-signal-form-field-hint>
-          </ngx-signal-form-field-wrapper>
+            </ngx-form-field-hint>
+          </ngx-form-field-wrapper>
 
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.vatNumber"
             [appearance]="appearance()"
             [orientation]="orientation()"
@@ -217,10 +215,10 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               [formField]="accountForm.vatNumber"
               class="uppercase"
             />
-            <ngx-signal-form-field-hint>
+            <ngx-form-field-hint>
               Required for business accounts in DE, NL, or BE.
-            </ngx-signal-form-field-hint>
-          </ngx-signal-form-field-wrapper>
+            </ngx-form-field-hint>
+          </ngx-form-field-wrapper>
         </div>
 
         <div

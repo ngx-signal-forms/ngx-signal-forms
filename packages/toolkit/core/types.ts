@@ -72,18 +72,18 @@ export type FormFieldAppearance = 'standard' | 'outline' | 'plain';
  * @example Component-level override
  * ```html
  * <!-- Override global config to use standard for a specific field -->
- * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="standard">
+ * <ngx-form-field-wrapper [formField]="form.email" appearance="standard">
  *   <label for="email">Email</label>
  *   <input id="email" [formField]="form.email" />
- * </ngx-signal-form-field-wrapper>
+ * </ngx-form-field-wrapper>
  * ```
  *
  * @example Plain appearance for custom controls
  * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.rating" appearance="plain">
+ * <ngx-form-field-wrapper [formField]="form.rating" appearance="plain">
  *   <label for="rating">Rating</label>
  *   <app-rating-control id="rating" [formField]="form.rating" />
- * </ngx-signal-form-field-wrapper>
+ * </ngx-form-field-wrapper>
  * ```
  *
  * @see https://material.angular.dev/components/form-field/overview#form-field-appearance-variants

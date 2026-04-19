@@ -70,76 +70,76 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
  *
  * @example Basic Usage
  * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.email" fieldName="email">
+ * <ngx-form-field-wrapper [formField]="form.email" fieldName="email">
  *   <label for="email">Email</label>
  *   <input id="email" [formField]="form.email" />
- * </ngx-signal-form-field-wrapper>
+ * </ngx-form-field-wrapper>
  * ```
  *
  * @example With Custom Error Strategy
  * ```html
- * <ngx-signal-form-field-wrapper
+ * <ngx-form-field-wrapper
  *   [formField]="form.password"
  *   fieldName="password"
  *   strategy="on-submit"
  * >
  *   <label for="password">Password</label>
  *   <input id="password" type="password" [formField]="form.password" />
- * </ngx-signal-form-field-wrapper>
+ * </ngx-form-field-wrapper>
  * ```
  *
  * @example Outlined Layout
  * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
+ * <ngx-form-field-wrapper [formField]="form.email" appearance="outline">
  *   <label for="email">Email Address</label>
  *   <input id="email" type="email" [formField]="form.email" required placeholder="you@example.com" />
- * </ngx-signal-form-field-wrapper>
+ * </ngx-form-field-wrapper>
  * ```
  *
  * @example With Character Count
  * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.bio" appearance="outline">
+ * <ngx-form-field-wrapper [formField]="form.bio" appearance="outline">
  *   <label for="bio">Bio</label>
  *   <textarea id="bio" [formField]="form.bio"></textarea>
  *   <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
- * </ngx-signal-form-field-wrapper>
+ * </ngx-form-field-wrapper>
  * ```
  *
  * @example With Hint Text
  * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.phone">
+ * <ngx-form-field-wrapper [formField]="form.phone">
  *   <label for="phone">Phone Number</label>
  *   <input id="phone" [formField]="form.phone" />
  *   <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
- * </ngx-signal-form-field-wrapper>
+ * </ngx-form-field-wrapper>
  * ```
  *
  * @example With Prefix Icon
  * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.search">
+ * <ngx-form-field-wrapper [formField]="form.search">
  *   <span prefix aria-hidden="true">🔍</span>
  *   <label for="search">Search</label>
  *   <input id="search" [formField]="form.search" />
- * </ngx-signal-form-field-wrapper>
+ * </ngx-form-field-wrapper>
  * ```
  *
  * @example With Suffix Button
  * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.password">
+ * <ngx-form-field-wrapper [formField]="form.password">
  *   <label for="password">Password</label>
  *   <input id="password" type="password" [formField]="form.password" />
  *   <button suffix type="button" (click)="togglePassword()">Show</button>
- * </ngx-signal-form-field-wrapper>
+ * </ngx-form-field-wrapper>
  * ```
  *
  * @example With Both Prefix and Suffix
  * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.amount">
+ * <ngx-form-field-wrapper [formField]="form.amount">
  *   <span prefix aria-hidden="true">$</span>
  *   <label for="amount">Amount</label>
  *   <input id="amount" type="number" [formField]="form.amount" />
  *   <span suffix aria-hidden="true">.00</span>
- * </ngx-signal-form-field-wrapper>
+ * </ngx-form-field-wrapper>
  * ```
  *
  * @example Type Inference
@@ -150,14 +150,14 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
  * ```
  */
 @Component({
-  selector: 'ngx-signal-form-field-wrapper',
+  selector: 'ngx-form-field-wrapper',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgxFormFieldError, NgxFormFieldAssistiveRow],
   providers: [
     {
       provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
       useFactory: () => {
-        const component = inject(NgxSignalFormFieldWrapper);
+        const component = inject(NgxFormFieldWrapper);
         return {
           fieldName: component.resolvedFieldName,
         };
@@ -166,7 +166,7 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
     {
       provide: NGX_SIGNAL_FORM_HINT_REGISTRY,
       useFactory: () => {
-        const component = inject(NgxSignalFormFieldWrapper);
+        const component = inject(NgxFormFieldWrapper);
         return { hints: component.hintDescriptors };
       },
     },
@@ -240,7 +240,7 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
     </div>
 
     <!-- Assistive row: fixed-height container prevents layout shift -->
-    <ngx-signal-form-field-assistive-row
+    <ngx-form-field-assistive-row
       class="ngx-signal-form-field-wrapper__assistive"
     >
       <!-- Left side: hint (hidden when errors shown) or errors -->
@@ -252,15 +252,15 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
         />
       }
       <div [style.display]="shouldShowErrors() ? 'none' : 'contents'">
-        <ng-content select="ngx-signal-form-field-hint" />
+        <ng-content select="ngx-form-field-hint" />
       </div>
 
       <!-- Right side: character count -->
-      <ng-content select="ngx-signal-form-field-character-count" />
-    </ngx-signal-form-field-assistive-row>
+      <ng-content select="ngx-form-field-character-count" />
+    </ngx-form-field-assistive-row>
   `,
 })
-export class NgxSignalFormFieldWrapper<TValue = unknown> {
+export class NgxFormFieldWrapper<TValue = unknown> {
   /**
    * The Signal Forms field to display.
    * Accepts a FieldTree from Angular Signal Forms.
@@ -293,26 +293,26 @@ export class NgxSignalFormFieldWrapper<TValue = unknown> {
    *
    * @example Automatic (native input) - derives "email" from input's id attribute
    * ```html
-   * <ngx-signal-form-field-wrapper [formField]="form.email">
+   * <ngx-form-field-wrapper [formField]="form.email">
    *   <label for="email">Email</label>
    *   <input id="email" [formField]="form.email" />
-   * </ngx-signal-form-field-wrapper>
+   * </ngx-form-field-wrapper>
    * ```
    *
    * @example Custom control (FormValueControl) - derives "rating" from component's id
    * ```html
-   * <ngx-signal-form-field-wrapper [formField]="form.rating">
+   * <ngx-form-field-wrapper [formField]="form.rating">
    *   <label for="rating">Rating</label>
    *   <app-rating-control id="rating" [formField]="form.rating" />
-   * </ngx-signal-form-field-wrapper>
+   * </ngx-form-field-wrapper>
    * ```
    *
    * @example Explicit override
    * ```html
-   * <ngx-signal-form-field-wrapper [formField]="form.email" fieldName="user-email">
+   * <ngx-form-field-wrapper [formField]="form.email" fieldName="user-email">
    *   <label for="user-email">Email</label>
    *   <input id="user-email" [formField]="form.email" />
-   * </ngx-signal-form-field-wrapper>
+   * </ngx-form-field-wrapper>
    * ```
    */
   readonly fieldName = input<string>();
@@ -567,7 +567,7 @@ export class NgxSignalFormFieldWrapper<TValue = unknown> {
     if (isDevMode() && !this.#warnedUnresolvedFieldName) {
       this.#warnedUnresolvedFieldName = true;
       console.error(
-        '[ngx-signal-forms] Could not resolve a deterministic field name for ngx-signal-form-field-wrapper. Add an explicit `fieldName` input or an `id` attribute to the bound control. ARIA wiring will be skipped until a name is available.',
+        '[ngx-signal-forms] Could not resolve a deterministic field name for ngx-form-field-wrapper. Add an explicit `fieldName` input or an `id` attribute to the bound control. ARIA wiring will be skipped until a name is available.',
       );
     }
 

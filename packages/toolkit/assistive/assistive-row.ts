@@ -21,25 +21,25 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  *
  * @example Basic usage with hint and character count
  * ```html
- * <ngx-signal-form-field-assistive-row>
- *   <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
- *   <ngx-signal-form-field-character-count [formField]="form.phone" [maxLength]="14" />
- * </ngx-signal-form-field-assistive-row>
+ * <ngx-form-field-assistive-row>
+ *   <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
+ *   <ngx-form-field-character-count [formField]="form.phone" [maxLength]="14" />
+ * </ngx-form-field-assistive-row>
  * ```
  *
  * @example With error component
  * ```html
- * <ngx-signal-form-field-assistive-row>
+ * <ngx-form-field-assistive-row>
  *   <ngx-form-field-error [formField]="form.email" />
- *   <ngx-signal-form-field-character-count [formField]="form.email" [maxLength]="100" />
- * </ngx-signal-form-field-assistive-row>
+ *   <ngx-form-field-character-count [formField]="form.email" [maxLength]="100" />
+ * </ngx-form-field-assistive-row>
  * ```
  *
  * @example Hint only (no character count)
  * ```html
- * <ngx-signal-form-field-assistive-row>
- *   <ngx-signal-form-field-hint>Enter your full legal name</ngx-signal-form-field-hint>
- * </ngx-signal-form-field-assistive-row>
+ * <ngx-form-field-assistive-row>
+ *   <ngx-form-field-hint>Enter your full legal name</ngx-form-field-hint>
+ * </ngx-form-field-assistive-row>
  * ```
  *
  * Customization:
@@ -60,14 +60,12 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  *   announce them without any additional wiring on this container)
  */
 @Component({
-  selector: 'ngx-signal-form-field-assistive-row',
+  selector: 'ngx-form-field-assistive-row',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="ngx-form-field-assistive-row__left"><ng-content /></div>
     <div class="ngx-form-field-assistive-row__right">
-      <ng-content
-        select="ngx-signal-form-field-character-count, [characterCount]"
-      />
+      <ng-content select="ngx-form-field-character-count, [characterCount]" />
     </div>
   `,
   styles: `

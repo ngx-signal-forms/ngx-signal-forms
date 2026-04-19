@@ -23,7 +23,7 @@ describe('NgxHeadlessErrorSummary', () => {
           <div>
             <input id="email" [formField]="contactForm.email" />
             <div
-              ngxSignalFormHeadlessErrorSummary
+              ngxHeadlessErrorSummary
               #summary="errorSummary"
               [formTree]="contactForm"
               strategy="immediate"
@@ -59,7 +59,7 @@ describe('NgxHeadlessErrorSummary', () => {
           <div>
             <input id="email" [formField]="contactForm.email" />
             <div
-              ngxSignalFormHeadlessErrorSummary
+              ngxHeadlessErrorSummary
               #summary="errorSummary"
               [formTree]="contactForm"
               strategy="immediate"
@@ -98,7 +98,7 @@ describe('NgxHeadlessErrorSummary', () => {
             <input id="email" [formField]="contactForm.email" />
             <input id="name" [formField]="contactForm.name" />
             <div
-              ngxSignalFormHeadlessErrorSummary
+              ngxHeadlessErrorSummary
               #summary="errorSummary"
               [formTree]="contactForm"
               strategy="immediate"
@@ -146,7 +146,7 @@ describe('NgxHeadlessErrorSummary', () => {
           <div>
             <input id="email" [formField]="contactForm.email" />
             <div
-              ngxSignalFormHeadlessErrorSummary
+              ngxHeadlessErrorSummary
               #summary="errorSummary"
               [formTree]="contactForm"
               strategy="on-touch"
@@ -188,7 +188,7 @@ describe('NgxHeadlessErrorSummary', () => {
               [formField]="contactForm.email"
             />
             <div
-              ngxSignalFormHeadlessErrorSummary
+              ngxHeadlessErrorSummary
               #summary="errorSummary"
               [formTree]="contactForm"
               strategy="on-touch"
@@ -237,7 +237,7 @@ describe('NgxHeadlessErrorSummary', () => {
               [formField]="contactForm.email"
             />
             <div
-              ngxSignalFormHeadlessErrorSummary
+              ngxHeadlessErrorSummary
               #summary="errorSummary"
               [formTree]="contactForm"
               strategy="immediate"
@@ -290,7 +290,7 @@ describe('NgxHeadlessErrorSummary', () => {
             <input id="email" [formField]="contactForm.email" />
             <input id="secret" [formField]="contactForm.secret" />
             <div
-              ngxSignalFormHeadlessErrorSummary
+              ngxHeadlessErrorSummary
               #summary="errorSummary"
               [formTree]="contactForm"
               strategy="immediate"
@@ -335,7 +335,7 @@ describe('NgxHeadlessErrorSummary', () => {
             <input id="email" [formField]="contactForm.email" />
             <input id="token" [formField]="contactForm.token" />
             <div
-              ngxSignalFormHeadlessErrorSummary
+              ngxHeadlessErrorSummary
               #summary="errorSummary"
               [formTree]="contactForm"
               strategy="immediate"

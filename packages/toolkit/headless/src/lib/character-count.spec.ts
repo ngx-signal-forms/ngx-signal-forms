@@ -16,7 +16,7 @@ describe('NgxHeadlessCharacterCount', () => {
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
             <div
-              ngxSignalFormHeadlessCharacterCount
+              ngxHeadlessCharacterCount
               #charCount="characterCount"
               [field]="contactForm.bio"
               [maxLength]="100"
@@ -47,7 +47,7 @@ describe('NgxHeadlessCharacterCount', () => {
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
             <div
-              ngxSignalFormHeadlessCharacterCount
+              ngxHeadlessCharacterCount
               #charCount="characterCount"
               [field]="contactForm.bio"
               [maxLength]="200"
@@ -78,7 +78,7 @@ describe('NgxHeadlessCharacterCount', () => {
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
             <div
-              ngxSignalFormHeadlessCharacterCount
+              ngxHeadlessCharacterCount
               #charCount="characterCount"
               [field]="contactForm.bio"
               [maxLength]="100"
@@ -107,7 +107,7 @@ describe('NgxHeadlessCharacterCount', () => {
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
             <div
-              ngxSignalFormHeadlessCharacterCount
+              ngxHeadlessCharacterCount
               #charCount="characterCount"
               [field]="contactForm.bio"
               [maxLength]="5"
@@ -138,7 +138,7 @@ describe('NgxHeadlessCharacterCount', () => {
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
             <div
-              ngxSignalFormHeadlessCharacterCount
+              ngxHeadlessCharacterCount
               #charCount="characterCount"
               [field]="contactForm.bio"
               [maxLength]="100"
@@ -167,7 +167,7 @@ describe('NgxHeadlessCharacterCount', () => {
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
             <div
-              ngxSignalFormHeadlessCharacterCount
+              ngxHeadlessCharacterCount
               #charCount="characterCount"
               [field]="contactForm.bio"
               [maxLength]="100"
@@ -201,7 +201,7 @@ describe('NgxHeadlessCharacterCount', () => {
           <div>
             <input id="title" [formField]="form.title" />
             <div
-              ngxSignalFormHeadlessCharacterCount
+              ngxHeadlessCharacterCount
               #charCount="characterCount"
               [field]="form.title"
               [maxLength]="-5"
@@ -240,7 +240,7 @@ describe('NgxHeadlessCharacterCount', () => {
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
             <div
-              ngxSignalFormHeadlessCharacterCount
+              ngxHeadlessCharacterCount
               #charCount="characterCount"
               [field]="contactForm.bio"
               [maxLength]="100"
@@ -271,7 +271,7 @@ describe('NgxHeadlessCharacterCount', () => {
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
             <div
-              ngxSignalFormHeadlessCharacterCount
+              ngxHeadlessCharacterCount
               #charCount="characterCount"
               [field]="contactForm.bio"
               [maxLength]="100"
@@ -306,7 +306,7 @@ describe('NgxHeadlessCharacterCount', () => {
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
             <div
-              ngxSignalFormHeadlessCharacterCount
+              ngxHeadlessCharacterCount
               #charCount="characterCount"
               [field]="contactForm.bio"
               [maxLength]="100"
@@ -341,7 +341,7 @@ describe('NgxHeadlessCharacterCount', () => {
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
             <div
-              ngxSignalFormHeadlessCharacterCount
+              ngxHeadlessCharacterCount
               #charCount="characterCount"
               [field]="contactForm.bio"
               [maxLength]="10"
@@ -375,7 +375,7 @@ describe('NgxHeadlessCharacterCount', () => {
           <div>
             <input id="title" [formField]="form.title" />
             <div
-              ngxSignalFormHeadlessCharacterCount
+              ngxHeadlessCharacterCount
               #charCount="characterCount"
               [field]="form.title"
               [maxLength]="0"
@@ -422,7 +422,7 @@ describe('NgxHeadlessCharacterCount', () => {
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
             <div
-              ngxSignalFormHeadlessCharacterCount
+              ngxHeadlessCharacterCount
               #charCount="characterCount"
               [field]="contactForm.bio"
               [maxLength]="100"
@@ -457,7 +457,7 @@ describe('NgxHeadlessCharacterCount', () => {
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
             <div
-              ngxSignalFormHeadlessCharacterCount
+              ngxHeadlessCharacterCount
               #charCount="characterCount"
               [field]="contactForm.bio"
               [maxLength]="100"
@@ -495,7 +495,7 @@ describe('NgxHeadlessCharacterCount', () => {
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
             <div
-              ngxSignalFormHeadlessCharacterCount
+              ngxHeadlessCharacterCount
               #charCount="characterCount"
               [field]="contactForm.bio"
               [maxLength]="100"
@@ -535,7 +535,7 @@ describe('NgxHeadlessCharacterCount', () => {
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
             <div
-              ngxSignalFormHeadlessCharacterCount
+              ngxHeadlessCharacterCount
               #charCount="characterCount"
               [field]="contactForm.bio"
               [maxLength]="20"

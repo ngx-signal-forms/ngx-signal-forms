@@ -40,7 +40,7 @@ import { NgxFormFieldCharacterCount } from './character-count';
   imports: [NgxFormFieldCharacterCount],
   template: `
     @if (colorThresholds(); as thresholds) {
-      <ngx-signal-form-field-character-count
+      <ngx-form-field-character-count
         [formField]="testForm.text"
         [maxLength]="maxLength()"
         [position]="position()"
@@ -49,7 +49,7 @@ import { NgxFormFieldCharacterCount } from './character-count';
         [colorThresholds]="thresholds"
       />
     } @else {
-      <ngx-signal-form-field-character-count
+      <ngx-form-field-character-count
         [formField]="testForm.text"
         [maxLength]="maxLength()"
         [position]="position()"
@@ -84,9 +84,7 @@ class TestWrapperComponent {
   selector: 'ngx-test-wrapper-auto-max-length',
   standalone: true,
   imports: [NgxFormFieldCharacterCount],
-  template: `
-    <ngx-signal-form-field-character-count [formField]="testForm.text" />
-  `,
+  template: ` <ngx-form-field-character-count [formField]="testForm.text" /> `,
 })
 class AutoDetectMaxLengthWrapperComponent {
   readonly textModel = input('');
@@ -134,9 +132,7 @@ describe('NgxFormFieldCharacterCount', () => {
         componentInputs: { textModel: 'a'.repeat(45) },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(screen.getByText('45/50')).toBeInTheDocument();
       expect(host).toHaveAttribute('data-limit-state', 'warning');
     });
@@ -148,9 +144,7 @@ describe('NgxFormFieldCharacterCount', () => {
         componentInputs: { textModel: '' },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('position', 'right');
     });
 
@@ -159,9 +153,7 @@ describe('NgxFormFieldCharacterCount', () => {
         componentInputs: { textModel: '', position: 'left' as const },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('position', 'left');
     });
 
@@ -170,9 +162,7 @@ describe('NgxFormFieldCharacterCount', () => {
         componentInputs: { textModel: '', position: 'right' as const },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('position', 'right');
     });
   });
@@ -183,9 +173,7 @@ describe('NgxFormFieldCharacterCount', () => {
         componentInputs: { textModel: 'a'.repeat(79), maxLength: 100 },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('data-limit-state', 'ok');
       expect(screen.getByText('79/100')).toBeInTheDocument();
     });
@@ -195,9 +183,7 @@ describe('NgxFormFieldCharacterCount', () => {
         componentInputs: { textModel: 'a'.repeat(80), maxLength: 100 },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('data-limit-state', 'warning');
       expect(screen.getByText('80/100')).toBeInTheDocument();
     });
@@ -207,9 +193,7 @@ describe('NgxFormFieldCharacterCount', () => {
         componentInputs: { textModel: 'a'.repeat(90), maxLength: 100 },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('data-limit-state', 'warning');
       expect(screen.getByText('90/100')).toBeInTheDocument();
     });
@@ -219,9 +203,7 @@ describe('NgxFormFieldCharacterCount', () => {
         componentInputs: { textModel: 'a'.repeat(95), maxLength: 100 },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('data-limit-state', 'danger');
       expect(screen.getByText('95/100')).toBeInTheDocument();
     });
@@ -231,9 +213,7 @@ describe('NgxFormFieldCharacterCount', () => {
         componentInputs: { textModel: 'a'.repeat(99), maxLength: 100 },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('data-limit-state', 'danger');
       expect(screen.getByText('99/100')).toBeInTheDocument();
     });
@@ -243,9 +223,7 @@ describe('NgxFormFieldCharacterCount', () => {
         componentInputs: { textModel: 'a'.repeat(100), maxLength: 100 },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('data-limit-state', 'danger');
       expect(screen.getByText('100/100')).toBeInTheDocument();
     });
@@ -255,9 +233,7 @@ describe('NgxFormFieldCharacterCount', () => {
         componentInputs: { textModel: 'a'.repeat(101), maxLength: 100 },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('data-limit-state', 'exceeded');
       expect(screen.getByText('101/100')).toBeInTheDocument();
     });
@@ -267,9 +243,7 @@ describe('NgxFormFieldCharacterCount', () => {
         componentInputs: { textModel: 'a'.repeat(150), maxLength: 100 },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('data-limit-state', 'exceeded');
       expect(screen.getByText('150/100')).toBeInTheDocument();
     });
@@ -285,9 +259,7 @@ describe('NgxFormFieldCharacterCount', () => {
         },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('data-limit-state', 'warning');
       expect(screen.getByText('85/100')).toBeInTheDocument();
     });
@@ -301,9 +273,7 @@ describe('NgxFormFieldCharacterCount', () => {
         },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('data-limit-state', 'danger');
       expect(screen.getByText('98/100')).toBeInTheDocument();
     });
@@ -317,9 +287,7 @@ describe('NgxFormFieldCharacterCount', () => {
         },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       // When thresholds are clamped to 100, 50% is below the warning threshold
       expect(host).toHaveAttribute('data-limit-state', 'ok');
       expect(screen.getByText('50/100')).toBeInTheDocument();
@@ -332,9 +300,7 @@ describe('NgxFormFieldCharacterCount', () => {
         componentInputs: { textModel: 'a'.repeat(90), maxLength: 100 },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('data-limit-state', 'warning');
       expect(screen.getByText('90/100')).toBeInTheDocument();
     });
@@ -348,9 +314,7 @@ describe('NgxFormFieldCharacterCount', () => {
         },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('data-limit-state', 'disabled');
       expect(screen.getByText('90/100')).toBeInTheDocument();
     });
@@ -364,9 +328,7 @@ describe('NgxFormFieldCharacterCount', () => {
         },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('data-limit-state', 'disabled');
       expect(screen.getByText('110/100')).toBeInTheDocument();
     });
@@ -378,9 +340,7 @@ describe('NgxFormFieldCharacterCount', () => {
         componentInputs: { textModel: 'test', maxLength: 0 },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       // maxLength of 0 means "no limit", so state is 'disabled'
       expect(host).toHaveAttribute('data-limit-state', 'disabled');
       // Display shows current count only (no /0)
@@ -402,9 +362,7 @@ describe('NgxFormFieldCharacterCount', () => {
       });
 
       expect(screen.getByText('10000/100')).toBeInTheDocument();
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toHaveAttribute('data-limit-state', 'exceeded');
     });
 
@@ -502,9 +460,7 @@ describe('NgxFormFieldCharacterCount', () => {
         componentInputs: { textModel: '' },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toBeTruthy();
       expect(screen.getByText('0/100')).toBeInTheDocument();
     });
@@ -514,9 +470,7 @@ describe('NgxFormFieldCharacterCount', () => {
         componentInputs: { textModel: '', maxLength: 100 },
       });
 
-      const host = container.querySelector(
-        'ngx-signal-form-field-character-count',
-      );
+      const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toBeTruthy();
       expect(host?.textContent).toContain('0/100');
     });

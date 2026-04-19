@@ -83,16 +83,16 @@ const bookingSchema = schema<Booking>((path) => {
         class="max-w-md space-y-6"
       >
         <div class="grid grid-cols-2 gap-4">
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="bookingForm.checkIn"
             [appearance]="appearance()"
             [orientation]="orientation()"
           >
             <label for="checkIn">Check-In</label>
             <input id="checkIn" type="date" [formField]="bookingForm.checkIn" />
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
 
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="bookingForm.checkOut"
             [appearance]="appearance()"
             [orientation]="orientation()"
@@ -103,19 +103,19 @@ const bookingSchema = schema<Booking>((path) => {
               type="date"
               [formField]="bookingForm.checkOut"
             />
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
         </div>
 
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="bookingForm.guests"
           [appearance]="appearance()"
           [orientation]="orientation()"
         >
           <label for="guests">Guests</label>
           <input id="guests" type="number" [formField]="bookingForm.guests" />
-        </ngx-signal-form-field-wrapper>
+        </ngx-form-field-wrapper>
 
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="bookingForm.promoCode"
           [appearance]="appearance()"
           [orientation]="orientation()"
@@ -128,10 +128,8 @@ const bookingSchema = schema<Booking>((path) => {
             placeholder="Try 'SMALLGROUP'"
             class="uppercase"
           />
-          <ngx-signal-form-field-hint>
-            Valid only for ≤ 4 guests
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field-wrapper>
+          <ngx-form-field-hint> Valid only for ≤ 4 guests </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
 
         <div class="flex gap-4">
           <button

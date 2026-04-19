@@ -50,7 +50,7 @@ export class CustomControlsPage extends BaseFormPage {
     });
 
     // Form field wrappers
-    this.formFieldWrappers = this.form.locator('ngx-signal-form-field-wrapper');
+    this.formFieldWrappers = this.form.locator('ngx-form-field-wrapper');
 
     // Native inputs
     this.productNameInput = this.form.locator('#productName');
@@ -153,9 +153,7 @@ export class CustomControlsPage extends BaseFormPage {
    * Get the wrapper containing a specific control.
    */
   getWrapperByControlId(controlId: string): Locator {
-    return this.form.locator(
-      `ngx-signal-form-field-wrapper:has(#${controlId})`,
-    );
+    return this.form.locator(`ngx-form-field-wrapper:has(#${controlId})`);
   }
 
   /**

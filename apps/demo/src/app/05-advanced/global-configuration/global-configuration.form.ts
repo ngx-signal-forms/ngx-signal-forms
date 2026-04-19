@@ -71,7 +71,7 @@ import { globalConfigSchema } from './global-configuration.validations';
       <!-- Form fields -->
       <div class="space-y-6">
         <!-- Email field with standard id -->
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="configForm.userEmail"
           [appearance]="appearance()"
           [orientation]="orientation()"
@@ -83,10 +83,10 @@ import { globalConfigSchema } from './global-configuration.validations';
             [formField]="configForm.userEmail"
             placeholder="user@example.com"
           />
-        </ngx-signal-form-field-wrapper>
+        </ngx-form-field-wrapper>
 
         <!-- Phone field with custom data attribute -->
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="configForm.userPhone"
           [appearance]="appearance()"
           [orientation]="orientation()"
@@ -98,13 +98,11 @@ import { globalConfigSchema } from './global-configuration.validations';
             [formField]="configForm.userPhone"
             placeholder="123-456-7890"
           />
-          <ngx-signal-form-field-hint>
-            Format: 123-456-7890
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field-wrapper>
+          <ngx-form-field-hint> Format: 123-456-7890 </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
 
         <!-- Website field (optional) -->
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="configForm.userWebsite"
           [appearance]="appearance()"
           [orientation]="orientation()"
@@ -116,13 +114,13 @@ import { globalConfigSchema } from './global-configuration.validations';
             [formField]="configForm.userWebsite"
             placeholder="https://example.com"
           />
-          <ngx-signal-form-field-hint>
+          <ngx-form-field-hint>
             Optional - Must be a valid URL if provided
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field-wrapper>
+          </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
 
         <!-- Accept terms switch (demonstrates app-level preset via provideNgxSignalFormControlPresets) -->
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="configForm.acceptTerms"
           [appearance]="appearance()"
           [orientation]="orientation()"
@@ -135,7 +133,7 @@ import { globalConfigSchema } from './global-configuration.validations';
             ngxSignalFormControl="switch"
             [formField]="configForm.acceptTerms"
           />
-        </ngx-signal-form-field-wrapper>
+        </ngx-form-field-wrapper>
       </div>
 
       <!-- Form actions -->

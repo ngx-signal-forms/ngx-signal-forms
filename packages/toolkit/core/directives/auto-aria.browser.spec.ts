@@ -50,13 +50,11 @@ describe('NgxSignalFormAutoAria browser mode', () => {
       imports: [MockFormFieldDirective, NgxSignalFormAutoAria, NgxFormField],
       changeDetection: ChangeDetectionStrategy.OnPush,
       template: `
-        <ngx-signal-form-field-wrapper [formField]="emailControl">
+        <ngx-form-field-wrapper [formField]="emailControl">
           <label for="email">Email</label>
           <input id="email" [formField]="emailControl()" />
-          <ngx-signal-form-field-hint id="email-hint">
-            Help text
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field-wrapper>
+          <ngx-form-field-hint id="email-hint"> Help text </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
       `,
     })
     class TestComponent {

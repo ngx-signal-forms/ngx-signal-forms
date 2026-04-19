@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
-import { NgxSignalFormFieldset } from './form-fieldset';
+import { NgxFormFieldset } from './form-fieldset';
 
 type MockState = {
   invalid: () => boolean;
@@ -25,16 +25,16 @@ const createFieldsetState = (overrides: Partial<MockState> = {}) =>
     ...overrides,
   });
 
-describe('NgxSignalFormFieldset', () => {
+describe('NgxFormFieldset', () => {
   it('renders projected content', async () => {
     const fieldset = createFieldsetState();
 
     const { container } = await render(
-      `<ngx-signal-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [fieldsetField]="fieldset">
         <div class="content">Projected</div>
-      </ngx-signal-form-fieldset>`,
+      </ngx-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldset],
+        imports: [NgxFormFieldset],
         componentProperties: {
           fieldset,
         },
@@ -48,12 +48,12 @@ describe('NgxSignalFormFieldset', () => {
     const fieldset = createFieldsetState();
 
     const { container } = await render(
-      `<fieldset ngxSignalFormFieldset [fieldsetField]="fieldset">
+      `<fieldset ngxFormFieldset [fieldsetField]="fieldset">
         <legend>Shipping Address</legend>
         <div class="content">Projected</div>
       </fieldset>`,
       {
-        imports: [NgxSignalFormFieldset],
+        imports: [NgxFormFieldset],
         componentProperties: { fieldset },
       },
     );
@@ -70,18 +70,18 @@ describe('NgxSignalFormFieldset', () => {
     const fieldset = createFieldsetState();
 
     const { container } = await render(
-      `<ngx-signal-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [fieldsetField]="fieldset">
         <div class="content">Projected</div>
-      </ngx-signal-form-fieldset>`,
+      </ngx-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldset],
+        imports: [NgxFormFieldset],
         componentProperties: {
           fieldset,
         },
       },
     );
 
-    const host = container.querySelector('ngx-signal-form-fieldset');
+    const host = container.querySelector('ngx-form-fieldset');
     const surface = host?.querySelector('.ngx-signal-form-fieldset__surface');
     const content = surface?.querySelector(
       '.ngx-signal-form-fieldset__content',
@@ -101,11 +101,11 @@ describe('NgxSignalFormFieldset', () => {
     });
 
     await render(
-      `<ngx-signal-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [fieldsetField]="fieldset">
         <div>Content without nested form field</div>
-      </ngx-signal-form-fieldset>`,
+      </ngx-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldset],
+        imports: [NgxFormFieldset],
         componentProperties: { fieldset },
       },
     );
@@ -130,11 +130,11 @@ describe('NgxSignalFormFieldset', () => {
     });
 
     await render(
-      `<ngx-signal-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [fieldsetField]="fieldset">
         <div>Content without nested form field</div>
-      </ngx-signal-form-fieldset>`,
+      </ngx-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldset],
+        imports: [NgxFormFieldset],
         componentProperties: { fieldset },
       },
     );
@@ -158,11 +158,11 @@ describe('NgxSignalFormFieldset', () => {
     });
 
     await render(
-      `<ngx-signal-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [fieldsetField]="fieldset">
         <div>Content without nested form field</div>
-      </ngx-signal-form-fieldset>`,
+      </ngx-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldset],
+        imports: [NgxFormFieldset],
         componentProperties: { fieldset },
       },
     );
@@ -184,11 +184,11 @@ describe('NgxSignalFormFieldset', () => {
     });
 
     await render(
-      `<ngx-signal-form-fieldset [fieldsetField]="fieldset" [fields]="fields">
+      `<ngx-form-fieldset [fieldsetField]="fieldset" [fields]="fields">
         <div>Content without nested form field</div>
-      </ngx-signal-form-fieldset>`,
+      </ngx-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldset],
+        imports: [NgxFormFieldset],
         componentProperties: { fieldset, fields: [field] },
       },
     );
@@ -205,16 +205,16 @@ describe('NgxSignalFormFieldset', () => {
     });
 
     const { container } = await render(
-      `<ngx-signal-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [fieldsetField]="fieldset">
         <div>Content</div>
-      </ngx-signal-form-fieldset>`,
+      </ngx-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldset],
+        imports: [NgxFormFieldset],
         componentProperties: { fieldset },
       },
     );
 
-    const host = container.querySelector('ngx-signal-form-fieldset');
+    const host = container.querySelector('ngx-form-fieldset');
     expect(host?.classList.contains('ngx-signal-form-fieldset--invalid')).toBe(
       true,
     );
@@ -227,11 +227,11 @@ describe('NgxSignalFormFieldset', () => {
     });
 
     const { container } = await render(
-      `<ngx-signal-form-fieldset [fieldsetField]="fieldset" fieldsetId="address">
+      `<ngx-form-fieldset [fieldsetField]="fieldset" fieldsetId="address">
         <div>Content</div>
-      </ngx-signal-form-fieldset>`,
+      </ngx-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldset],
+        imports: [NgxFormFieldset],
         componentProperties: { fieldset },
       },
     );
@@ -239,7 +239,7 @@ describe('NgxSignalFormFieldset', () => {
     const errorElement = container.querySelector('#address-error');
     expect(errorElement).not.toBeNull();
 
-    const host = container.querySelector('ngx-signal-form-fieldset');
+    const host = container.querySelector('ngx-form-fieldset');
     expect(host).toHaveAttribute('aria-describedby', 'address-error');
   });
 
@@ -250,16 +250,16 @@ describe('NgxSignalFormFieldset', () => {
     });
 
     const { container } = await render(
-      `<ngx-signal-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [fieldsetField]="fieldset">
         <div class="content">Content</div>
-      </ngx-signal-form-fieldset>`,
+      </ngx-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldset],
+        imports: [NgxFormFieldset],
         componentProperties: { fieldset },
       },
     );
 
-    const host = container.querySelector('ngx-signal-form-fieldset');
+    const host = container.querySelector('ngx-form-fieldset');
     const message = host?.querySelector('.ngx-signal-form-fieldset__messages');
     const content = host?.querySelector('.ngx-signal-form-fieldset__content');
 
@@ -285,11 +285,11 @@ describe('NgxSignalFormFieldset', () => {
     });
 
     const { container } = await render(
-      `<ngx-signal-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [fieldsetField]="fieldset">
         <div>Content</div>
-      </ngx-signal-form-fieldset>`,
+      </ngx-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldset],
+        imports: [NgxFormFieldset],
         componentProperties: { fieldset },
       },
     );
@@ -307,16 +307,16 @@ describe('NgxSignalFormFieldset', () => {
     });
 
     const { container } = await render(
-      `<ngx-signal-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [fieldsetField]="fieldset">
         <div>Content</div>
-      </ngx-signal-form-fieldset>`,
+      </ngx-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldset],
+        imports: [NgxFormFieldset],
         componentProperties: { fieldset },
       },
     );
 
-    const host = container.querySelector('ngx-signal-form-fieldset');
+    const host = container.querySelector('ngx-form-fieldset');
     // `[attr.aria-busy]` bound to `fieldset.isPending()` from the composed
     // host directive — this asserts the compose wiring works end-to-end.
     expect(host).toHaveAttribute('aria-busy', 'true');
@@ -329,14 +329,14 @@ describe('NgxSignalFormFieldset', () => {
     });
 
     const { container } = await render(
-      `<ngx-signal-form-fieldset
+      `<ngx-form-fieldset
         [fieldsetField]="fieldset"
         [includeNestedErrors]="true"
       >
         <div>Content</div>
-      </ngx-signal-form-fieldset>`,
+      </ngx-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldset],
+        imports: [NgxFormFieldset],
         componentProperties: { fieldset },
       },
     );
@@ -356,16 +356,16 @@ describe('NgxSignalFormFieldset', () => {
     });
 
     const { container } = await render(
-      `<ngx-signal-form-fieldset [fieldsetField]="fieldset" errorPlacement="bottom">
+      `<ngx-form-fieldset [fieldsetField]="fieldset" errorPlacement="bottom">
         <div class="content">Content</div>
-      </ngx-signal-form-fieldset>`,
+      </ngx-form-fieldset>`,
       {
-        imports: [NgxSignalFormFieldset],
+        imports: [NgxFormFieldset],
         componentProperties: { fieldset },
       },
     );
 
-    const host = container.querySelector('ngx-signal-form-fieldset');
+    const host = container.querySelector('ngx-form-fieldset');
     const message = host?.querySelector('.ngx-signal-form-fieldset__messages');
     const content = host?.querySelector('.ngx-signal-form-fieldset__content');
 

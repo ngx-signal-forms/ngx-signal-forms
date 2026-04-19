@@ -19,7 +19,7 @@ The assistive entry point provides accessible feedback rendering that sits betwe
 
 2. **`NgxFormFieldError`** — displays validation errors (and optionally warnings) for a single field or a pre-aggregated error list:
    - Always provide `[formField]` for single-field usage.
-   - Always provide `fieldName` when used standalone (not inside `ngx-signal-form-field-wrapper`).
+   - Always provide `fieldName` when used standalone (not inside `ngx-form-field-wrapper`).
    - Inside a wrapper, `fieldName` is inherited automatically.
    - Use `listStyle="bullets"` for grouped summaries; default `'plain'` for inline single-field output.
 
@@ -140,8 +140,8 @@ import {
 
 - If errors don't display: check that `fieldName` is provided when the component is used standalone.
 - If character count doesn't update: verify the field value is a string and `[formField]` is bound.
-- If hints don't appear in `aria-describedby`: confirm the component is inside a `ngx-signal-form-field-wrapper` or use `NgxHeadlessFieldName` to wire it manually.
-- For grouped summaries or fieldset-level output, switch to `form-field/SKILL.md` (`NgxSignalFormFieldset`).
+- If hints don't appear in `aria-describedby`: confirm the component is inside a `ngx-form-field-wrapper` or use `NgxHeadlessFieldName` to wire it manually.
+- For grouped summaries or fieldset-level output, switch to `form-field/SKILL.md` (`NgxFormFieldset`).
 - If error summary does not show: verify `ngxSignalForm` is applied to the `<form>` element so context is active, or provide `strategy` and `submittedStatus` explicitly.
 - If error summary entries don't focus controls on click: ensure the bound `<input>` / `<textarea>` / `<select>` has a stable `id` attribute — `focusBoundControl()` requires it.
 - For warning entries in the summary, use `NgxHeadlessErrorSummary` from `@ngx-signal-forms/toolkit/headless` instead.

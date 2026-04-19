@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { FormField, form, required, schema } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormFieldWrapper } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormFieldWrapper } from '@ngx-signal-forms/toolkit/form-field';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldError } from './form-field-error';
@@ -58,16 +58,16 @@ describe('NgxFormFieldError (integration)', () => {
    * for these core runtime symbols. Secondary entry points consume that root module so packaged
    * builds share the same token instances instead of duplicating them behind `./core`.
    */
-  it('inherits fieldName from parent ngx-signal-form-field-wrapper without explicit fieldName input', async () => {
+  it('inherits fieldName from parent ngx-form-field-wrapper without explicit fieldName input', async () => {
     @Component({
       selector: 'test-wrapper-context',
-      imports: [FormField, NgxSignalFormToolkit, NgxSignalFormFieldWrapper],
+      imports: [FormField, NgxSignalFormToolkit, NgxFormFieldWrapper],
       template: `
         <form [formRoot]="contactForm" ngxSignalForm errorStrategy="immediate">
-          <ngx-signal-form-field-wrapper [formField]="contactForm.email">
+          <ngx-form-field-wrapper [formField]="contactForm.email">
             <label for="email">Email</label>
             <input id="email" [formField]="contactForm.email" />
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
         </form>
       `,
     })

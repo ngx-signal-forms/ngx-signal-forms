@@ -147,7 +147,7 @@ import { submissionSchema } from './submission-patterns.validations';
       <!-- Form fields -->
       <div class="space-y-6">
         <!-- Username field -->
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="registrationForm.username"
           [appearance]="appearance()"
           [orientation]="orientation()"
@@ -159,13 +159,13 @@ import { submissionSchema } from './submission-patterns.validations';
             [formField]="registrationForm.username"
             placeholder="Enter username"
           />
-          <ngx-signal-form-field-hint>
+          <ngx-form-field-hint>
             Letters, numbers, and underscores only
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field-wrapper>
+          </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
 
         <!-- Password field -->
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="registrationForm.password"
           [appearance]="appearance()"
           [orientation]="orientation()"
@@ -177,13 +177,11 @@ import { submissionSchema } from './submission-patterns.validations';
             [formField]="registrationForm.password"
             placeholder="Enter password"
           />
-          <ngx-signal-form-field-hint>
-            At least 8 characters
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field-wrapper>
+          <ngx-form-field-hint> At least 8 characters </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
 
         <!-- Confirm Password field -->
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="registrationForm.confirmPassword"
           [appearance]="appearance()"
           [orientation]="orientation()"
@@ -195,7 +193,7 @@ import { submissionSchema } from './submission-patterns.validations';
             [formField]="registrationForm.confirmPassword"
             placeholder="Re-enter password"
           />
-        </ngx-signal-form-field-wrapper>
+        </ngx-form-field-wrapper>
       </div>
 
       <!-- Submission state info with helper values -->

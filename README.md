@@ -33,10 +33,10 @@ themable field wrapper. It is an **enhancement**, not a replacement — your `fo
 
 ```html
 <form [formRoot]="userForm">
-  <ngx-signal-form-field-wrapper [formField]="userForm.email">
+  <ngx-form-field-wrapper [formField]="userForm.email">
     <label for="email">Email</label>
     <input id="email" type="email" [formField]="userForm.email" />
-  </ngx-signal-form-field-wrapper>
+  </ngx-form-field-wrapper>
 </form>
 ```
 
@@ -111,10 +111,10 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="contactForm">
-      <ngx-signal-form-field-wrapper [formField]="contactForm.email">
+      <ngx-form-field-wrapper [formField]="contactForm.email">
         <label for="email">Email</label>
         <input id="email" type="email" [formField]="contactForm.email" />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
       <button type="submit">Send</button>
     </form>
   `,
@@ -163,13 +163,13 @@ advanced and specialized cases — pull them in when you hit that specific need.
 | Add accessible, themed fields fast  | [`/form-field`](./packages/toolkit/form-field/README.md) wrapper | [`your-first-form`](./apps/demo/src/app/01-getting-started/your-first-form)                                                                                |
 | Control when errors appear          | Core + `errorStrategy`                                           | [`error-display-modes`](./apps/demo/src/app/02-toolkit-core/error-display-modes)                                                                           |
 | Show non-blocking warnings          | `warningError()` + wrapper                                       | [`warning-support`](./apps/demo/src/app/02-toolkit-core/warning-support)                                                                                   |
-| Build complex multi-section forms   | `/form-field` + `<ngx-signal-form-fieldset>`                     | [`complex-forms`](./apps/demo/src/app/04-form-field-wrapper/complex-forms)                                                                                 |
+| Build complex multi-section forms   | `/form-field` + `<ngx-form-fieldset>`                            | [`complex-forms`](./apps/demo/src/app/04-form-field-wrapper/complex-forms)                                                                                 |
 | Wrap custom / third-party controls  | `/form-field` + `ngxSignalFormControl`                           | [`custom-controls`](./apps/demo/src/app/04-form-field-wrapper/custom-controls)                                                                             |
 | Bring my own markup / design system | [`/headless`](./packages/toolkit/headless/README.md) primitives  | [`fieldset-utilities`](./apps/demo/src/app/03-headless/fieldset-utilities)                                                                                 |
 | Validate with Vest business rules   | [`/vest`](./packages/toolkit/vest/README.md) entry point         | [`vest-validation`](./apps/demo/src/app/05-advanced/vest-validation)                                                                                       |
 | Combine Zod + Vest                  | `/vest` + `validateStandardSchema`                               | [`zod-vest-validation`](./apps/demo/src/app/05-advanced/zod-vest-validation)                                                                               |
 | Async / cross-field validation      | Angular validators + core helpers                                | [`async-validation`](./apps/demo/src/app/05-advanced/async-validation), [`cross-field-validation`](./apps/demo/src/app/05-advanced/cross-field-validation) |
-| Multi-step / wizard forms           | Core + `NgxSignalFormFieldset`                                   | [`advanced-wizard`](./apps/demo/src/app/05-advanced/advanced-wizard)                                                                                       |
+| Multi-step / wizard forms           | Core + `NgxFormFieldset`                                         | [`advanced-wizard`](./apps/demo/src/app/05-advanced/advanced-wizard)                                                                                       |
 | Customize submission handling       | `createOnInvalidHandler`, `focusFirstInvalid`                    | [`submission-patterns`](./apps/demo/src/app/05-advanced/submission-patterns)                                                                               |
 | Set app-wide defaults               | `provideNgxSignalFormsConfig`                                    | [`global-configuration`](./apps/demo/src/app/05-advanced/global-configuration)                                                                             |
 | Debug form state during development | [`/debugger`](./packages/toolkit/debugger/README.md)             | —                                                                                                                                                          |
@@ -183,17 +183,12 @@ errors, warnings, character counts, outlined appearance, and full ARIA. Most app
 
 ```html
 <form [formRoot]="userForm">
-  <ngx-signal-form-field-wrapper
-    [formField]="userForm.bio"
-    appearance="outline"
-  >
+  <ngx-form-field-wrapper [formField]="userForm.bio" appearance="outline">
     <label for="bio">Bio</label>
     <textarea id="bio" [formField]="userForm.bio"></textarea>
-    <ngx-signal-form-field-hint>
-      Tell us about yourself
-    </ngx-signal-form-field-hint>
-    <ngx-signal-form-field-character-count [formField]="userForm.bio" />
-  </ngx-signal-form-field-wrapper>
+    <ngx-form-field-hint> Tell us about yourself </ngx-form-field-hint>
+    <ngx-form-field-character-count [formField]="userForm.bio" />
+  </ngx-form-field-wrapper>
 </form>
 ```
 
@@ -215,10 +210,10 @@ When you need more control, add `ngxSignalForm` alongside `[formRoot]`:
 
 ```html
 <form [formRoot]="userForm" ngxSignalForm errorStrategy="on-submit">
-  <ngx-signal-form-field-wrapper [formField]="userForm.email">
+  <ngx-form-field-wrapper [formField]="userForm.email">
     <label for="email">Email</label>
     <input id="email" type="email" [formField]="userForm.email" />
-  </ngx-signal-form-field-wrapper>
+  </ngx-form-field-wrapper>
   <button type="submit">Send</button>
 </form>
 ```
@@ -315,7 +310,7 @@ npm install @ngx-signal-forms/toolkit vest@6.2.7
 Pass the form tree to inspect field state, visibility rules, and resolved errors
 during development.
 
-Key exports: `NgxSignalFormDebugger` (bundle), `SignalFormDebugger`.
+Key exports: `NgxSignalFormDebugger` (bundle), `NgxSignalFormDebugger`.
 
 ```html
 <ngx-signal-form-debugger [formTree]="form" />

@@ -745,7 +745,7 @@ export function validateVestWarnings<TValue>(
  *
  * Pass `{ includeWarnings: true }` to also surface Vest `warn()` results through
  * the toolkit's `warn:*` convention so `ngx-form-field-error`,
- * `ngx-signal-form-field-wrapper`, and related components can render them as
+ * `ngx-form-field-wrapper`, and related components can render them as
  * polite, non-blocking guidance.
  *
  * Pass `{ resetOnDestroy: true }` to call `suite.reset()` when the hosting

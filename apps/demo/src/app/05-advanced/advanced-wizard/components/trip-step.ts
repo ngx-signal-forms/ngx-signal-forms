@@ -70,7 +70,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
 
           <div class="mb-4 grid grid-cols-2 gap-4">
             <!-- Country -->
-            <ngx-signal-form-field-wrapper
+            <ngx-form-field-wrapper
               [formField]="tripForm.destinations[destIdx].country"
               [appearance]="appearance()"
               [orientation]="orientation()"
@@ -83,10 +83,10 @@ import { WizardStepInterface } from '../wizard-step.interface';
                 type="text"
                 [formField]="tripForm.destinations[destIdx].country"
               />
-            </ngx-signal-form-field-wrapper>
+            </ngx-form-field-wrapper>
 
             <!-- City -->
-            <ngx-signal-form-field-wrapper
+            <ngx-form-field-wrapper
               [formField]="tripForm.destinations[destIdx].city"
               [appearance]="appearance()"
               [orientation]="orientation()"
@@ -99,12 +99,12 @@ import { WizardStepInterface } from '../wizard-step.interface';
                 type="text"
                 [formField]="tripForm.destinations[destIdx].city"
               />
-            </ngx-signal-form-field-wrapper>
+            </ngx-form-field-wrapper>
           </div>
 
           <div class="mb-4 grid grid-cols-2 gap-4">
             <!-- Arrival Date -->
-            <ngx-signal-form-field-wrapper
+            <ngx-form-field-wrapper
               [formField]="tripForm.destinations[destIdx].arrivalDate"
               [appearance]="appearance()"
               [orientation]="orientation()"
@@ -117,10 +117,10 @@ import { WizardStepInterface } from '../wizard-step.interface';
                 type="date"
                 [formField]="tripForm.destinations[destIdx].arrivalDate"
               />
-            </ngx-signal-form-field-wrapper>
+            </ngx-form-field-wrapper>
 
             <!-- Departure Date -->
-            <ngx-signal-form-field-wrapper
+            <ngx-form-field-wrapper
               [formField]="tripForm.destinations[destIdx].departureDate"
               [appearance]="appearance()"
               [orientation]="orientation()"
@@ -133,14 +133,14 @@ import { WizardStepInterface } from '../wizard-step.interface';
                 type="date"
                 [formField]="tripForm.destinations[destIdx].departureDate"
               />
-              <ngx-signal-form-field-hint position="left">
+              <ngx-form-field-hint position="left">
                 Must be after arrival date
-              </ngx-signal-form-field-hint>
-            </ngx-signal-form-field-wrapper>
+              </ngx-form-field-hint>
+            </ngx-form-field-wrapper>
           </div>
 
           <!-- Accommodation -->
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="tripForm.destinations[destIdx].accommodation"
             [appearance]="appearance()"
             [orientation]="orientation()"
@@ -152,10 +152,10 @@ import { WizardStepInterface } from '../wizard-step.interface';
               type="text"
               [formField]="tripForm.destinations[destIdx].accommodation"
             />
-            <ngx-signal-form-field-hint position="left">
+            <ngx-form-field-hint position="left">
               Hotel name, Airbnb address, etc.
-            </ngx-signal-form-field-hint>
-          </ngx-signal-form-field-wrapper>
+            </ngx-form-field-hint>
+          </ngx-form-field-wrapper>
 
           <!-- Activities Section -->
           <div class="activities-section mt-4 border-l-2 border-gray-200 pl-4">
@@ -197,7 +197,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
 
                 <div class="mb-2 grid grid-cols-3 gap-2">
                   <!-- Activity Name -->
-                  <ngx-signal-form-field-wrapper
+                  <ngx-form-field-wrapper
                     [formField]="
                       tripForm.destinations[destIdx].activities[actIdx].name
                     "
@@ -217,10 +217,10 @@ import { WizardStepInterface } from '../wizard-step.interface';
                         tripForm.destinations[destIdx].activities[actIdx].name
                       "
                     />
-                  </ngx-signal-form-field-wrapper>
+                  </ngx-form-field-wrapper>
 
                   <!-- Activity Date -->
-                  <ngx-signal-form-field-wrapper
+                  <ngx-form-field-wrapper
                     [formField]="
                       tripForm.destinations[destIdx].activities[actIdx].date
                     "
@@ -240,10 +240,10 @@ import { WizardStepInterface } from '../wizard-step.interface';
                         tripForm.destinations[destIdx].activities[actIdx].date
                       "
                     />
-                  </ngx-signal-form-field-wrapper>
+                  </ngx-form-field-wrapper>
 
                   <!-- Activity Duration -->
-                  <ngx-signal-form-field-wrapper
+                  <ngx-form-field-wrapper
                     [formField]="
                       tripForm.destinations[destIdx].activities[actIdx].duration
                     "
@@ -264,7 +264,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
                           .duration
                       "
                     />
-                  </ngx-signal-form-field-wrapper>
+                  </ngx-form-field-wrapper>
                 </div>
 
                 <!-- Requirements Section -->

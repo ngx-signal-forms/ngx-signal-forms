@@ -79,7 +79,7 @@ export interface FieldsetStateSignals {
  *
  * ```html
  * <fieldset
- *   ngxSignalFormHeadlessFieldset
+ *   ngxHeadlessFieldset
  *   #fieldset="fieldset"
  *   [fieldsetField]="form.address"
  *   fieldsetId="address"
@@ -102,7 +102,7 @@ export interface FieldsetStateSignals {
  * @template TFieldset The type of the fieldset field value
  */
 @Directive({
-  selector: '[ngxSignalFormHeadlessFieldset]',
+  selector: '[ngxHeadlessFieldset]',
   exportAs: 'fieldset',
 })
 export class NgxHeadlessFieldset<
@@ -143,7 +143,7 @@ export class NgxHeadlessFieldset<
    * Whether to include nested field errors in the aggregated display.
    *
    * - `false` (default): Surface direct group-level errors via `errors()`.
-   *   Matches the styled `NgxSignalFormFieldset` default so composing the
+   *   Matches the styled `NgxFormFieldset` default so composing the
    *   directive via `hostDirectives` keeps behavior identical. Use this
    *   when nested fields display their own errors (avoids duplication).
    * - `true`: Aggregate all errors via `errorSummary()`, including nested

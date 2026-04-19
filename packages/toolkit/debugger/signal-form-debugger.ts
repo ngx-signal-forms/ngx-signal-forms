@@ -20,7 +20,10 @@ import {
   shouldShowErrors,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
-import { DebuggerBadge, DebuggerBadgeIcon } from './debugger-badge';
+import {
+  NgxSignalFormDebuggerBadge,
+  NgxSignalFormDebuggerBadgeIcon,
+} from './debugger-badge';
 import { isFieldStateLike, walkFormTree } from './form-tree-walker';
 
 /**
@@ -153,11 +156,16 @@ const withDebuggerMeta =
 @Component({
   selector: 'ngx-signal-form-debugger',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [JsonPipe, NgTemplateOutlet, DebuggerBadge, DebuggerBadgeIcon],
+  imports: [
+    JsonPipe,
+    NgTemplateOutlet,
+    NgxSignalFormDebuggerBadge,
+    NgxSignalFormDebuggerBadgeIcon,
+  ],
   templateUrl: './signal-form-debugger.html',
   styleUrl: './signal-form-debugger.scss',
 })
-export class SignalFormDebugger {
+export class NgxSignalFormDebugger {
   // ============================================================================
   // Inputs
   // ============================================================================

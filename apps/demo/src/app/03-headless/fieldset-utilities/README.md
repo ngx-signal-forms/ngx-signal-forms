@@ -7,10 +7,10 @@ Shows the headless bundle for teams that want full control over markup and styli
 ## Toolkit features showcased
 
 - `NgxHeadlessToolkit` — barrel import for the headless directive bundle.
-- `ngxSignalFormHeadlessErrorSummary` — clickable, strategy-aware form-level summary.
-- `ngxSignalFormHeadlessFieldset` — grouped state and aggregated errors.
-- `ngxSignalFormHeadlessErrorState` — per-field error visibility driven by the active strategy.
-- `ngxSignalFormHeadlessFieldName` — resolves humanized field names.
+- `ngxHeadlessErrorSummary` — clickable, strategy-aware form-level summary.
+- `ngxHeadlessFieldset` — grouped state and aggregated errors.
+- `ngxHeadlessErrorState` — per-field error visibility driven by the active strategy.
+- `ngxHeadlessFieldName` — resolves humanized field names.
 - `createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()` — composable factories for custom UI.
 - `provideFieldLabels()` — customize summary labels (e.g. for i18n).
 

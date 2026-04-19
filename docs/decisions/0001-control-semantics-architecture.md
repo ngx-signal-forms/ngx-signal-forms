@@ -13,7 +13,7 @@ Accepted
 The toolkit wraps Angular Signal Forms with an accessibility-first UX layer.
 Three surfaces need to agree on how a given control should be treated:
 
-1. **Wrapper layout** (`NgxSignalFormFieldWrapper`) — should this
+1. **Wrapper layout** (`NgxFormFieldWrapper`) — should this
    field use stacked chrome, inline controls, a group layout, or no chrome at
    all?
 2. **Auto-ARIA** (`NgxSignalFormAutoAria`) — does the toolkit own

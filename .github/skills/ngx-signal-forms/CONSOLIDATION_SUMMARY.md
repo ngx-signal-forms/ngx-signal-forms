@@ -80,7 +80,7 @@ All content reflects the current public API:
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | **core**       | `form[formRoot][ngxSignalForm]`, error strategies, auto-ARIA, submission helpers, warning semantics, global config, message registry |
 | **assistive**  | `NgxFormFieldError`, hints, character count, assistive rows (standalone components)                                                  |
-| **form-field** | `NgxSignalFormFieldWrapper`, `NgxSignalFormFieldset`, floating labels, grouped fieldsets                                             |
+| **form-field** | `NgxFormFieldWrapper`, `NgxFormFieldset`, floating labels, grouped fieldsets                                                         |
 | **headless**   | Renderless directives (`NgxHeadlessErrorState`, fieldset, char count), template/host-directive patterns, utility functions           |
 | **vest**       | Vest v6+ integration, blocking vs warning validation, submission gating                                                              |
 | **debugger**   | Dev-time form inspection, field state visualization, strategy highlighting                                                           |

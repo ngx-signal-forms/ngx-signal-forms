@@ -26,27 +26,27 @@ import {
  *
  * @example Basic hint text
  * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.phone">
+ * <ngx-form-field-wrapper [formField]="form.phone">
  *   <label for="phone">Phone Number</label>
  *   <input id="phone" [formField]="form.phone" />
- *   <ngx-signal-form-field-hint>
+ *   <ngx-form-field-hint>
  *     Format: 123-456-7890
- *   </ngx-signal-form-field-hint>
- * </ngx-signal-form-field-wrapper>
+ *   </ngx-form-field-hint>
+ * </ngx-form-field-wrapper>
  * ```
  *
  * @example With position control
  * ```html
- * <ngx-signal-form-field-hint position="left">
+ * <ngx-form-field-hint position="left">
  *   Use at least 8 characters
- * </ngx-signal-form-field-hint>
+ * </ngx-form-field-hint>
  * ```
  *
  * @example Rich content
  * ```html
- * <ngx-signal-form-field-hint>
+ * <ngx-form-field-hint>
  *   <strong>Tip:</strong> Use keywords that describe your product
- * </ngx-signal-form-field-hint>
+ * </ngx-form-field-hint>
  * ```
  *
  * Customization:
@@ -66,7 +66,7 @@ import {
  * - Consider using aria-describedby to link hint to input (handled by parent component)
  */
 @Component({
-  selector: 'ngx-signal-form-field-hint',
+  selector: 'ngx-form-field-hint',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: ` <ng-content /> `,
   styles: `

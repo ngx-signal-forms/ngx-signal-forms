@@ -110,13 +110,10 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="userForm">
-      <ngx-signal-form-field-wrapper
-        [formField]="userForm.email"
-        appearance="outline"
-      >
+      <ngx-form-field-wrapper [formField]="userForm.email" appearance="outline">
         <label for="email">Email</label>
         <input id="email" type="email" [formField]="userForm.email" />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
       <button type="submit">Submit</button>
     </form>
@@ -232,16 +229,16 @@ Toolkit UI that needs ARIA linkage must have either:
 
 ### Guidance
 
-- For `ngx-signal-form-field-wrapper`, prefer giving the bound control an `id`.
+- For `ngx-form-field-wrapper`, prefer giving the bound control an `id`.
 - For standalone `ngx-form-field-error`, pass `fieldName` unless wrapper context provides it.
 - For grouped fieldsets, use `fieldsetId` when you need deterministic test or ARIA references.
 - Do **not** invent fake field names in examples.
 
 ```html
-<ngx-signal-form-field-wrapper [formField]="form.email">
+<ngx-form-field-wrapper [formField]="form.email">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 
 <ngx-form-field-error [formField]="form.email" fieldName="email" />
 ```
@@ -370,12 +367,12 @@ provideErrorMessages({
 ### Use `@ngx-signal-forms/toolkit/form-field` for:
 
 - `NgxFormField`
-- `NgxSignalFormFieldWrapper`
-- `NgxSignalFormFieldset`
+- `NgxFormFieldWrapper`
+- `NgxFormFieldset`
 
 ### Wrapper component
 
-`ngx-signal-form-field-wrapper` is the standard styled field wrapper.
+`ngx-form-field-wrapper` is the standard styled field wrapper.
 
 Important inputs:
 
@@ -390,19 +387,19 @@ Important inputs:
 Use `appearance="outline"` in new examples. Prefer that over legacy `outline` patterns.
 
 ```html
-<ngx-signal-form-field-wrapper
+<ngx-form-field-wrapper
   [formField]="form.email"
   appearance="outline"
   errorPlacement="top"
 >
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" placeholder=" " />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 ```
 
 ### Grouped fieldsets
 
-`NgxSignalFormFieldset` is the primary grouped-summary API.
+`NgxFormFieldset` is the primary grouped-summary API.
 
 Important inputs:
 
@@ -423,14 +420,14 @@ Use `includeNestedErrors="false"` by default when nested wrapped fields show the
 Use `includeNestedErrors` only when the group itself must surface all nested errors.
 
 ```html
-<ngx-signal-form-fieldset
+<ngx-form-fieldset
   [fieldsetField]="form.passwords"
   fieldsetId="passwords"
   errorPlacement="top"
 >
   <legend>Passwords</legend>
 
-  <ngx-signal-form-field-wrapper
+  <ngx-form-field-wrapper
     [formField]="form.passwords.password"
     appearance="outline"
   >
@@ -440,9 +437,9 @@ Use `includeNestedErrors` only when the group itself must surface all nested err
       type="password"
       [formField]="form.passwords.password"
     />
-  </ngx-signal-form-field-wrapper>
+  </ngx-form-field-wrapper>
 
-  <ngx-signal-form-field-wrapper
+  <ngx-form-field-wrapper
     [formField]="form.passwords.confirm"
     appearance="outline"
   >
@@ -452,8 +449,8 @@ Use `includeNestedErrors` only when the group itself must surface all nested err
       type="password"
       [formField]="form.passwords.confirm"
     />
-  </ngx-signal-form-field-wrapper>
-</ngx-signal-form-fieldset>
+  </ngx-form-field-wrapper>
+</ngx-form-fieldset>
 ```
 
 ## Assistive Entry Point
@@ -545,9 +542,9 @@ Use `@ngx-signal-forms/toolkit/debugger` for development-only debugging.
 Current public debugger exports include:
 
 - `NgxSignalFormDebugger` — bundle of all debugger components
-- `SignalFormDebugger`
-- `DebuggerBadge` / `DebuggerBadgeIcon`
-- Types: `DebuggerBadgeAppearance`, `DebuggerBadgeVariant`
+- `NgxSignalFormDebugger`
+- `NgxSignalFormDebuggerBadge` / `NgxSignalFormDebuggerBadgeIcon`
+- Types: `NgxSignalFormDebuggerBadgeAppearance`, `NgxSignalFormDebuggerBadgeVariant`
 
 Pass the **field tree** (for example `userForm`), not the root field state (`userForm()`).
 
@@ -566,7 +563,7 @@ Key current themes/features to reflect in examples:
 Do:
 
 ```css
-ngx-signal-form-field-wrapper {
+ngx-form-field-wrapper {
   --ngx-form-field-color-primary: #3b82f6;
   --ngx-signal-form-feedback-font-size: 0.875rem;
 }

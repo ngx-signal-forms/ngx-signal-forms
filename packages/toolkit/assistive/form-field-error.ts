@@ -246,16 +246,16 @@ export class NgxFormFieldError {
    * The field name used for generating error/warning IDs.
    * This should match the field name used in aria-describedby.
    *
-   * **Automatic resolution (when used inside `ngx-signal-form-field-wrapper`):**
+   * **Automatic resolution (when used inside `ngx-form-field-wrapper`):**
    * When omitted, the field name is automatically inherited from the parent
    * wrapper component via dependency injection. This allows simplified usage:
    *
    * ```html
-   * <ngx-signal-form-field-wrapper [formField]="form.email">
+   * <ngx-form-field-wrapper [formField]="form.email">
    *   <label for="email">Email</label>
    *   <input id="email" [formField]="form.email" />
    *   <!-- fieldName is automatically resolved from wrapper -->
-   * </ngx-signal-form-field-wrapper>
+   * </ngx-form-field-wrapper>
    * ```
    *
    * **Explicit override:**
@@ -294,7 +294,7 @@ export class NgxFormFieldError {
       this.#warnedMissingName = true;
       // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
       console.error(
-        '[ngx-signal-forms] ngx-form-field-error requires an explicit `fieldName` input or a parent ngx-signal-form-field-wrapper context. The component will render without id/aria-describedby linking until one is provided.',
+        '[ngx-signal-forms] ngx-form-field-error requires an explicit `fieldName` input or a parent ngx-form-field-wrapper context. The component will render without id/aria-describedby linking until one is provided.',
       );
     }
     return null;
