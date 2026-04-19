@@ -19,6 +19,7 @@ releases will not include any of the renames below.
 - **Renamed appearances** — final appearance set is `standard` / `outline` / `plain` (`v1 rc`)
 - **Orientation API** — `vertical` / `horizontal` is now a documented field-wrapper contract (`v1 rc`)
 - **Renamed control kinds** — `text-like` / `textarea-select-like` → `input-like` / `standalone-field-like` (`rc.3`)
+- **Hybrid v1 naming** — drop `Component`/`Directive` suffixes; short prefixes per layer (`v1 rc.5`)
 - **Config typing** — `NgxSignalFormsUserConfig` is `Partial`, not `DeepPartial` (`rc.2`)
 - **Behavior fix** — `on-submit` strategy now requires an explicit `submittedStatus` (`rc.3`)
 - **New: control semantics** — `ngxSignalFormControl="…"` contract for layout + auto-ARIA (`rc.1`)
@@ -223,30 +224,21 @@ keep working.
 
 **Lands in:** `v1 rc`
 
-| Before                  | After                   |
-| ----------------------- | ----------------------- |
-| `appearance="standard"` | `appearance="standard"` |
-| `appearance="stacked"`  | `appearance="standard"` |
-| `appearance="bare"`     | `appearance="plain"`    |
+| Before                 | After                   |
+| ---------------------- | ----------------------- |
+| `appearance="stacked"` | `appearance="standard"` |
+| `appearance="bare"`    | `appearance="plain"`    |
 
 `outline` and `inherit` are unchanged. The default appearance is now
 `"standard"`.
 
-### 4d. Orientation is part of the public wrapper contract
-
-**Lands in:** `v1 rc`
-
-`ngx-form-field-wrapper` now documents `orientation="vertical" | "horizontal"`
-as part of the stable public API.
-
-- `vertical` keeps the label above the field (default)
-- `horizontal` moves the label into a shared column to the left of the field
-- `outline` always resolves back to vertical
-- checkbox, switch, and radio-group rows keep their own inline layouts
-
-`orientation` changes an individual wrapper, not the parent form layout. If you
-want one field row per line for `standard + horizontal`, collapse the container
-grid in your page/component rather than expecting the wrapper to rewrite it.
+> **rc.1 → rc.5 reshuffle.** `rc.1` briefly renamed the default appearance from
+> `"standard"` to `"stacked"` (alongside the `bare` → `plain` rename). `rc.5`
+> reverts that single name back to `"standard"`. Consumers who skipped `rc.1`
+> through `rc.4` only need the `bare` → `plain` migration. Consumers who
+> already moved to `"stacked"` during the RC cycle must move back to
+> `"standard"`. (Yes, this is awkward — the value bounced once. Future renames
+> will not.)
 
 ### 4c. Native control kinds renamed
 
@@ -285,6 +277,107 @@ provideNgxSignalFormControlPresets({
 
 The other kinds (`checkbox`, `switch`, `slider`, `composite`,
 `standalone`) are unchanged.
+
+### 4d. Orientation is part of the public wrapper contract
+
+**Lands in:** `v1 rc`
+
+`ngx-form-field-wrapper` now documents `orientation="vertical" | "horizontal"`
+as part of the stable public API.
+
+- `vertical` keeps the label above the field (default)
+- `horizontal` moves the label into a shared column to the left of the field
+- `outline` always resolves back to vertical
+- checkbox, switch, and radio-group rows keep their own inline layouts
+
+`orientation` changes an individual wrapper, not the parent form layout. If you
+want one field row per line for `standard + horizontal`, collapse the container
+grid in your page/component rather than expecting the wrapper to rewrite it.
+
+### 4e. Hybrid v1 naming — drop `Component`/`Directive` suffixes, shorten prefixes
+
+**Lands in:** `v1 rc.5`
+
+To align with Angular v20+ style guidance and reduce noise at import sites, the
+toolkit drops the `Component` / `Directive` suffix from public class names. A
+short prefix is applied per conceptual layer:
+
+- **Form-level** → `NgxSignalForm*`
+- **Field-level UI** → `NgxFormField*` (short prefix)
+- **Headless** → `NgxHeadless*` (with shortened `[ngxHeadless*]` attribute selectors)
+- **Debugger** → `NgxSignalFormDebugger*`
+
+The single exception is `NgxSignalFormControlSemanticsDirective`, which keeps
+its `Directive` suffix because the `NgxSignalFormControlSemantics` interface
+already exists in `core/types.ts`. The directive class still ships under that
+name.
+
+#### Class names
+
+| Before                                   | After                            |
+| ---------------------------------------- | -------------------------------- |
+| `NgxSignalFormDirective`                 | `NgxSignalForm`                  |
+| `NgxSignalFormAutoAriaDirective`         | `NgxSignalFormAutoAria`          |
+| `NgxSignalFormControlSemanticsDirective` | _(unchanged — exception)_        |
+| `NgxSignalFormFieldWrapperComponent`     | `NgxFormFieldWrapper`            |
+| `NgxSignalFormFieldsetComponent`         | `NgxFormFieldset`                |
+| `NgxFormFieldErrorComponent`             | `NgxFormFieldError`              |
+| `NgxFormFieldErrorSummaryComponent`      | `NgxFormFieldErrorSummary`       |
+| `NgxFormFieldHintComponent`              | `NgxFormFieldHint`               |
+| `NgxFormFieldCharacterCountComponent`    | `NgxFormFieldCharacterCount`     |
+| `NgxFormFieldAssistiveRowComponent`      | `NgxFormFieldAssistiveRow`       |
+| `NgxHeadlessErrorStateDirective`         | `NgxHeadlessErrorState`          |
+| `NgxHeadlessErrorSummaryDirective`       | `NgxHeadlessErrorSummary`        |
+| `NgxHeadlessCharacterCountDirective`     | `NgxHeadlessCharacterCount`      |
+| `NgxHeadlessFieldsetDirective`           | `NgxHeadlessFieldset`            |
+| `NgxHeadlessFieldNameDirective`          | `NgxHeadlessFieldName`           |
+| `SignalFormDebuggerComponent`            | `NgxSignalFormDebugger`          |
+| `DebuggerBadgeComponent`                 | `NgxSignalFormDebuggerBadge`     |
+| `DebuggerBadgeIconComponent`             | `NgxSignalFormDebuggerBadgeIcon` |
+
+The debugger bundle const is `NgxSignalFormDebuggerToolkit` (mirrors
+`NgxSignalFormToolkit`).
+
+#### Element selectors
+
+| Before                                    | After                              |
+| ----------------------------------------- | ---------------------------------- |
+| `<ngx-signal-form-field-wrapper>`         | `<ngx-form-field-wrapper>`         |
+| `<ngx-signal-form-fieldset>`              | `<ngx-form-fieldset>`              |
+| `<ngx-signal-form-field-hint>`            | `<ngx-form-field-hint>`            |
+| `<ngx-signal-form-field-character-count>` | `<ngx-form-field-character-count>` |
+| `<ngx-signal-form-field-assistive-row>`   | `<ngx-form-field-assistive-row>`   |
+
+The `<ngx-form-field-error*>` and `<ngx-signal-form-debugger>` selectors
+already use the new pattern (introduced in `rc.3`).
+
+#### Attribute selectors (headless)
+
+| Before                                  | After                         |
+| --------------------------------------- | ----------------------------- |
+| `[ngxSignalFormHeadlessErrorState]`     | `[ngxHeadlessErrorState]`     |
+| `[ngxSignalFormHeadlessErrorSummary]`   | `[ngxHeadlessErrorSummary]`   |
+| `[ngxSignalFormHeadlessCharacterCount]` | `[ngxHeadlessCharacterCount]` |
+| `[ngxSignalFormHeadlessFieldset]`       | `[ngxHeadlessFieldset]`       |
+| `[ngxSignalFormHeadlessFieldName]`      | `[ngxHeadlessFieldName]`      |
+
+#### What is _not_ renamed
+
+- BEM class names on the wrapper / fieldset hosts
+  (`.ngx-signal-form-field-wrapper__*`, `.ngx-signal-form-fieldset--*`) keep
+  the long prefix — they are a public theming contract, and renaming would
+  break every consumer's CSS overrides.
+- CSS custom properties (`--ngx-signal-form-*`, `--ngx-form-field-*`,
+  `--ngx-debugger-*`) are unchanged.
+- The `NgxSignalFormControlSemantics` interface in `core/types.ts` is unchanged
+  (the directive that consumed the class name was kept distinct via the
+  `Directive` suffix).
+
+#### Mechanical migration
+
+Most consumers can complete this with a project-wide search-and-replace on
+class names (TypeScript surface) plus the element / attribute selector tables
+above (template surface). The Angular compiler will surface any miss.
 
 ---
 
@@ -503,12 +596,16 @@ action is required on Angular 21.x.
 1. **Add `ngxSignalForm`** next to every `[formRoot]` that uses toolkit
    features.
 2. **Rename exports and selectors** in templates and imports:
-   - `NgxSignalFormError*` → `NgxFormFieldError*`
-   - `<ngx-signal-form-error*>` → `<ngx-form-field-error*>`
-   - `appearance="stacked"` → `appearance="standard"`
+   - `NgxSignalFormError*` → `NgxFormFieldError*` (`rc.3`)
+   - `<ngx-signal-form-error*>` → `<ngx-form-field-error*>` (`rc.3`)
+   - `appearance="stacked"` → `appearance="standard"` (`rc.5`)
    - `appearance="bare"` → `appearance="plain"`
    - `'text-like'` → `'input-like'`
    - `'textarea-select-like'` → `'standalone-field-like'`
+   - **Drop `Component` / `Directive` suffix** from every public class import
+     and rename the legacy `<ngx-signal-form-*>` element selectors and
+     `[ngxSignalFormHeadless*]` attribute selectors per §4e (`rc.5`). The
+     compiler will surface any missed reference.
 
 3. **Replace `@ngx-signal-forms/toolkit/core` imports** with
    `@ngx-signal-forms/toolkit`. If a symbol is missing from the root

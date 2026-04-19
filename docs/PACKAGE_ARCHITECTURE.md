@@ -46,7 +46,7 @@ packages/toolkit/
 ├── form-field/                          # Optional form-field entry
 │   ├── form-field-wrapper.ts
 │   ├── form-fieldset.ts
-│   └── public_api.ts
+│   └── index.ts
 ├── headless/                            # Headless primitives entry
 │   ├── src/
 │   │   ├── index.ts

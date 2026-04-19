@@ -145,7 +145,7 @@ Decorative prefix/suffix icons should use `aria-hidden="true"`. Interactive suff
 
 ### Field name resolution
 
-The wrapper needs a field name for ARIA linking. It resolves from the `fieldName` input first, then from the projected control's `id`. If neither is available, it throws.
+The wrapper needs a field name for ARIA linking. It resolves from the `fieldName` input first, then from the projected control's `id`. If neither is available the wrapper logs a one-shot `console.error` in dev mode, returns `null` from the affected signals, and skips ARIA wiring — render trees stay intact, but the field will not announce errors to assistive tech. Always provide an `id` (or explicit `fieldName`) for production accessibility.
 
 ### Custom controls
 

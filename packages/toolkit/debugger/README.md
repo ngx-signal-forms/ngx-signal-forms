@@ -11,10 +11,10 @@ It is a development-only tool — gate it behind `isDevMode()` so production bui
 ## Import
 
 ```typescript
-// Bundle import (recommended)
-import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+// Bundle import (recommended) — includes the debugger panel + badge directives
+import { NgxSignalFormDebuggerToolkit } from '@ngx-signal-forms/toolkit/debugger';
 
-// Individual import
+// Individual import — just the panel component
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 ```
 
@@ -72,9 +72,11 @@ consumers MUST wrap the element in an `@if (isDevMode())` block as shown in
 the Quick start — otherwise the compiled bundle keeps the debugger code path
 even though the UI is hidden at runtime.
 
-### NgxSignalFormDebugger
+### NgxSignalFormDebuggerToolkit
 
-Bundle containing `NgxSignalFormDebugger` and internal badge components.
+Bundle array (`as const`) containing `NgxSignalFormDebugger`,
+`NgxSignalFormDebuggerBadge`, and `NgxSignalFormDebuggerBadgeIcon`. Drop it into
+a component's `imports` to get the full debugger surface in one go.
 
 ### What it shows
 

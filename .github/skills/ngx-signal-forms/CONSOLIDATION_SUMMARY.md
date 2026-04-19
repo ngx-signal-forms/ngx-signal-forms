@@ -106,12 +106,20 @@ Tools and agents referencing the old skill names will see the new unified skill 
 
 ## Quality Assurance
 
-- ✅ All public APIs documented (checked against `packages/toolkit/*/public_api.ts` and `packages/toolkit/README.md`)
+- ✅ All public APIs documented (checked against `packages/toolkit/*/index.ts` and `packages/toolkit/README.md`)
 - ✅ Removed APIs explicitly flagged (`manual`, `computeShowErrors`, `canSubmit`, `isSubmitting`)
 - ✅ Latest Angular 21.2+ standards reflected (signal calls, `OnPush`, `@if/@for`, helper functions)
 - ✅ Vest v6+ and debugger entry points included (were missing from old skills)
 - ✅ Common pitfalls documented with before/after examples
 - ✅ Repository demo paths updated and organized by feature
+
+> **v1 rc.5 naming refresh** — references and instructions in this skill bundle
+> reflect the hybrid v1 naming (drop `Component`/`Directive` suffix; short
+> prefixes per layer; element selectors rebased on `ngx-form-field-*` and
+> `ngx-form-fieldset`; headless attribute selectors shortened to
+> `[ngxHeadless*]`). The single intentional exception is
+> `NgxSignalFormControlSemanticsDirective`, which keeps its `Directive` suffix
+> to avoid a name collision with the `NgxSignalFormControlSemantics` interface.
 
 ## Next Steps
 

@@ -21,7 +21,7 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 
 - Bound control must have a stable `id` — the wrapper derives field identity from it.
 - For nested custom controls or dynamically identified inner controls, pass explicit `fieldName` on the wrapper instead of relying on implicit id discovery.
-- Set `appearance="outline"` for modern outlined inputs; `appearance="stacked"` for label-above layout; `appearance="plain"` for minimal chrome; `appearance="inherit"` to follow parent config.
+- Set `appearance="outline"` for modern outlined inputs; `appearance="standard"` for label-above layout; `appearance="plain"` for minimal chrome; `appearance="inherit"` to follow parent config.
 - Add `placeholder=" "` (a single space) alongside `appearance="outline"` when you want the floating label animation.
 
 3. **Error placement:**
@@ -40,7 +40,7 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 
 7. **Custom controls:** Implement `FormValueControl<T>`, `FormCheckboxControl`, or `FormUiControl` from `@angular/forms/signals`. Give the host a stable `id` so the wrapper links correctly.
 
-- Use `appearance="plain"` for widget-style controls (sliders, star-rating, switch rows) where outlined or stacked default field chrome would look wrong.
+- Use `appearance="plain"` for widget-style controls (sliders, star-rating, switch rows) where outlined or standard default field chrome would look wrong.
 - Declare control semantics explicitly with `ngxSignalFormControl` on the bound host. Without it, the wrapper falls back to DOM heuristics that can produce the wrong layout or ARIA behavior:
 
   ```html
@@ -62,7 +62,9 @@ The form-field entry point provides a pre-styled field shell (label + control + 
   />
 
   <!-- Custom component: declare kind + layout; opt out of auto-ARIA when the
-       component manages its own describedby/invalid attributes -->
+       component manages its own describedby/invalid attributes.
+       NOTE: 'stacked' here is a CONTROL LAYOUT (NgxSignalFormControlLayout,
+       still valid). It is NOT the renamed 'standard' appearance. -->
   <ngx-rating-control
     id="rating"
     [ngxSignalFormControl]="{ kind: 'slider', layout: 'stacked', ariaMode: 'manual' }"

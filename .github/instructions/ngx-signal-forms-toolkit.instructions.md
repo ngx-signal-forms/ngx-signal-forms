@@ -41,7 +41,7 @@ Use the correct entry point for the thing you need.
   - `NgxSignalFormToolkit`
   - `NgxFormField`
   - `NgxHeadlessToolkit`
-  - `NgxSignalFormDebugger`
+  - `NgxSignalFormDebuggerToolkit`
 - Import assistive, form-field, headless, and debugger APIs from their own secondary entry points.
 - Do **not** pretend the root entry point exports everything.
 
@@ -68,12 +68,23 @@ type ErrorDisplayStrategy = ResolvedErrorDisplayStrategy | 'inherit';
 ### Form field appearance
 
 ```typescript
-type FormFieldAppearance = 'stacked' | 'outline' | 'plain';
+type FormFieldAppearance = 'standard' | 'outline' | 'plain';
 type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
 ```
 
-- Global config supports only `'stacked' | 'outline' | 'plain'`.
+- Global config supports only `'standard' | 'outline' | 'plain'`.
 - Component inputs may also use `'inherit'`.
+
+### Form field orientation
+
+```typescript
+type FormFieldOrientation = 'vertical' | 'horizontal';
+type FormFieldOrientationInput = FormFieldOrientation | 'inherit';
+```
+
+- `outline` appearance always resolves to vertical regardless of orientation.
+- Selection rows (`switch`, `checkbox`, `radio-group`) keep their inline layout
+  even when `'horizontal'` is requested.
 
 ### Current public config surface
 
@@ -81,7 +92,8 @@ type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
 interface NgxSignalFormsConfig {
   autoAria: boolean;
   defaultErrorStrategy: 'immediate' | 'on-touch' | 'on-submit';
-  defaultFormFieldAppearance: 'stacked' | 'outline' | 'plain';
+  defaultFormFieldAppearance: 'standard' | 'outline' | 'plain';
+  defaultFormFieldOrientation: 'vertical' | 'horizontal';
   showRequiredMarker: boolean;
   requiredMarker: string;
 }
@@ -156,7 +168,7 @@ Current public exports, grouped by category:
 
 - `NgxSignalForm` — form enhancer on `form[formRoot][ngxSignalForm]`
 - `NgxSignalFormAutoAria` — automatic ARIA wiring
-- `NgxSignalFormControlSemantics` — declares control kind/layout/aria for wrapper and auto-ARIA
+- `NgxSignalFormControlSemanticsDirective` — declares control kind/layout/aria for wrapper and auto-ARIA (directive class kept the `Directive` suffix to avoid colliding with the `NgxSignalFormControlSemantics` interface)
 - `NgxSignalFormToolkit` — bundle of all above
 
 **Providers:**
@@ -245,7 +257,7 @@ Toolkit UI that needs ARIA linkage must have either:
 
 ## Control Semantics
 
-`NgxSignalFormControlSemantics` (part of `NgxSignalFormToolkit`) declares stable control behavior for the wrapper and auto-ARIA layers.
+`NgxSignalFormControlSemanticsDirective` (part of `NgxSignalFormToolkit`) declares stable control behavior for the wrapper and auto-ARIA layers. The directive class keeps its `Directive` suffix because the suffix-less `NgxSignalFormControlSemantics` name is occupied by the matching public interface in `core/types.ts`.
 
 Use it for controls outside the default native field families:
 
@@ -379,7 +391,8 @@ Important inputs:
 - `formField` — required
 - `fieldName` — optional explicit override, otherwise derived from bound control `id`
 - `strategy`
-- `appearance` — `'stacked' | 'outline' | 'plain' | 'inherit'`
+- `appearance` — `'standard' | 'outline' | 'plain' | 'inherit'`
+- `orientation` — `'vertical' | 'horizontal' | 'inherit'`
 - `errorPlacement` — `'top' | 'bottom'` (default: `'bottom'`)
 - `showRequiredMarker`
 - `requiredMarker`
@@ -581,7 +594,7 @@ Avoid:
 
 - use bundle imports when appropriate
 - use `form[formRoot]` for basic toolkit forms and add `ngxSignalForm` when you need `'on-submit'`, `submittedStatus`, or shared form context
-- use `appearance="outline"`, `appearance="stacked"`, or `appearance="plain"`
+- use `appearance="outline"`, `appearance="standard"`, or `appearance="plain"`
 - provide real bound-control `id`s
 - use explicit `fieldName` when wrapper context or `id` is unavailable
 - use `warningError()` for non-blocking guidance

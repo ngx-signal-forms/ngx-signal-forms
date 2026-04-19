@@ -192,7 +192,7 @@ errors, warnings, character counts, outlined appearance, and full ARIA. Most app
 </form>
 ```
 
-- `appearance` supports `"stacked"`, `"outline"`, and `"plain"` out of the box
+- `appearance` supports `"standard"`, `"outline"`, and `"plain"` out of the box
 - theming hooks via CSS custom properties cover everything from tokens to dark mode.
 - When you omit `fieldName`, the wrapper derives field identity from the projected control's `id`.
 
@@ -310,7 +310,7 @@ npm install @ngx-signal-forms/toolkit vest@6.2.7
 Pass the form tree to inspect field state, visibility rules, and resolved errors
 during development.
 
-Key exports: `NgxSignalFormDebugger` (bundle), `NgxSignalFormDebugger`.
+Key exports: `NgxSignalFormDebuggerToolkit` (bundle), `NgxSignalFormDebugger` (panel component).
 
 ```html
 <ngx-signal-form-debugger [formTree]="form" />
@@ -455,7 +455,7 @@ patterns.
 
 Yes. You can start with the wrapper and tailor it to your UI using:
 
-- `appearance="stacked" | "outline" | "plain"`
+- `appearance="standard" | "outline" | "plain"`
 - CSS custom properties (tokens, spacing, borders, colors, dark mode)
 - Your own utility/framework classes (Tailwind, Bootstrap, Material, etc.)
 

@@ -35,14 +35,14 @@ You always import the core entry point. The other entry points add UI components
 
 ```typescript
 // Bundle import (recommended) — includes FormRoot, NgxSignalForm,
-// NgxSignalFormAutoAria, NgxSignalFormControlSemantics
+// NgxSignalFormAutoAria, NgxSignalFormControlSemanticsDirective
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 // Individual imports when needed
 import {
   NgxSignalForm,
   NgxSignalFormAutoAria,
-  NgxSignalFormControlSemantics,
+  NgxSignalFormControlSemanticsDirective,
   provideNgxSignalFormsConfig,
   provideErrorMessages,
   showErrors,
@@ -52,6 +52,11 @@ import {
   splitByKind,
 } from '@ngx-signal-forms/toolkit';
 ```
+
+> The directive class is `NgxSignalFormControlSemanticsDirective` — the only
+> public class in v1 that keeps its `Directive` suffix, because the
+> `NgxSignalFormControlSemantics` interface (in `core/types.ts`) already
+> occupies the suffix-less name.
 
 ## Quick start
 
@@ -123,9 +128,11 @@ Covers native `<input>`, `<textarea>`, `<select>`, and custom `[formField]` host
 - Disable per control with `ngxSignalFormAutoAriaDisabled`
 - Use `ngxSignalFormControlAria="manual"` when a control already owns its ARIA attributes
 
-### NgxSignalFormControlSemantics
+### NgxSignalFormControlSemanticsDirective
 
-Declares a control's family for wrapper layout and auto-ARIA classification:
+Declares a control's family for wrapper layout and auto-ARIA classification.
+The directive class keeps its `Directive` suffix to avoid colliding with the
+`NgxSignalFormControlSemantics` interface in `core/types.ts`.
 
 ```html
 <app-star-rating

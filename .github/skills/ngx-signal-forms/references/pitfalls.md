@@ -126,10 +126,15 @@ These were removed or are not public:
 
 These still exist under a new name:
 
-| Old                     | New                    |
-| ----------------------- | ---------------------- |
-| `appearance="standard"` | `appearance="stacked"` |
-| `appearance="bare"`     | `appearance="plain"`   |
+| Old                    | New                     |
+| ---------------------- | ----------------------- |
+| `appearance="stacked"` | `appearance="standard"` |
+| `appearance="bare"`    | `appearance="plain"`    |
+
+> A brief RC cycle (rc.1 – rc.4) shipped `appearance="stacked"` as the new name
+> for the default. `rc.5` reverts that single literal back to `"standard"`. The
+> control _layout_ value `'stacked'` (in `NgxSignalFormControlLayout`) is
+> unrelated and remains unchanged.
 
 ## Floating Labels Require a Placeholder Space
 
@@ -216,7 +221,9 @@ Without `ngxSignalFormControl`, the wrapper must infer the control kind from DOM
   <ngx-rating-control id="rating" [formField]="form.rating" />
 </ngx-form-field-wrapper>
 
-<!-- Correct — explicit semantics give the wrapper stable contract -->
+<!-- Correct — explicit semantics give the wrapper stable contract.
+     'stacked' here is the control LAYOUT (NgxSignalFormControlLayout),
+     not the renamed 'standard' appearance. -->
 <ngx-form-field-wrapper appearance="plain" [formField]="form.rating">
   <label for="rating">Rating</label>
   <ngx-rating-control

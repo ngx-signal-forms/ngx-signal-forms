@@ -876,7 +876,7 @@
 // Ensures error/warning messages align properly with form field inputs.
 // Uses CSS custom properties to avoid ::ng-deep.
 
-// Stacked layout - 8px horizontal padding for breathing room
+// Standard layout - 8px horizontal padding for breathing room
 :host {
   // Use feedback layer variable if available, otherwise fallback to internal token
   --_feedback-padding-horizontal: var(
@@ -890,7 +890,7 @@
 
 // Outlined layout - maintains same 8px padding to align with input text
 // Outlined containers have padding: 0.25rem 0.5rem (4px vertical, 8px horizontal).
-// The 8px horizontal padding positions the input text/placeholder.out
+// The 8px horizontal padding positions the input text/placeholder.
 // Errors inherit the same 8px padding to align perfectly with input text.
 :host(.ngx-signal-forms-outline) {
   --ngx-signal-form-error-padding-horizontal: var(
