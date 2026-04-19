@@ -12,21 +12,21 @@
  *
  * @example
  * ```html
- * <ngx-signal-form-field-assistive-row>
- *   <ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
- *   <ngx-signal-form-field-character-count [formField]="form.phone" [maxLength]="14" />
- * </ngx-signal-form-field-assistive-row>
+ * <ngx-form-field-assistive-row>
+ *   <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
+ *   <ngx-form-field-character-count [formField]="form.phone" [maxLength]="14" />
+ * </ngx-form-field-assistive-row>
  *
  * <ngx-form-field-error [formField]="form.email" fieldName="email" />
  * ```
  */
 
-export { NgxFormFieldAssistiveRowComponent } from './assistive-row.component';
-export { NgxFormFieldCharacterCountComponent } from './character-count.component';
+export { NgxFormFieldAssistiveRow } from './assistive-row';
+export { NgxFormFieldCharacterCount } from './character-count';
 export {
-  NgxFormFieldErrorComponent,
+  NgxFormFieldError,
   type NgxFormFieldErrorListStyle,
-} from './form-field-error.component';
-export { NgxFormFieldErrorSummaryComponent } from './form-field-error-summary.component';
-export { NgxFormFieldHintComponent } from './hint.component';
+} from './form-field-error';
+export { NgxFormFieldErrorSummary } from './form-field-error-summary';
+export { NgxFormFieldHint } from './hint';
 export { isBlockingError, isWarningError, warningError } from './warning-error';

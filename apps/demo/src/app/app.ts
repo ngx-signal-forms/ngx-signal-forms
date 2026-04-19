@@ -1,0 +1,128 @@
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  ElementRef,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { Title } from '@angular/platform-browser';
+import {
+  NavigationEnd,
+  Router,
+  RouterModule,
+  RouterOutlet,
+} from '@angular/router';
+import { DEMO_CATEGORIES, getRouteTitle } from '@ngx-signal-forms/demo-shared';
+import { filter, map } from 'rxjs';
+import { NgxThemeSwitcherComponent } from './ui/theme-switcher/theme-switcher';
+
+@Component({
+  selector: 'ngx-root',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NgxThemeSwitcherComponent, RouterOutlet, RouterModule],
+  templateUrl: './app.html',
+})
+export class AppComponent implements AfterViewInit {
+  private readonly router = inject(Router);
+  private readonly title = inject(Title);
+  private readonly destroyRef = inject(DestroyRef);
+
+  private readonly mainScroll =
+    viewChild<ElementRef<HTMLDivElement>>('mainScroll');
+  protected readonly scrolled = signal(false);
+
+  protected readonly pageTitle = toSignal(
+    this.router.events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      map(() => this.#currentRouteTitle()),
+    ),
+    { initialValue: this.#currentRouteTitle() },
+  );
+
+  #currentRouteTitle(): string {
+    const url = this.router.routerState.snapshot.url.split('?')[0];
+    return getRouteTitle(url);
+  }
+
+  // Keep the browser tab title in sync with the current route title.
+  // Named Angular effect fields are intentionally unread because Angular owns their lifecycle.
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
+  readonly #syncTitle = effect(() => {
+    const t = this.pageTitle();
+    if (t) this.title.setTitle(t);
+  });
+
+  // Category + link metadata (single source of truth for sidebar + top nav labels)
+  // Organized to show progression: baseline → getting started → toolkit features → advanced
+  private readonly categories = DEMO_CATEGORIES;
+
+  protected readonly categoriesList = this.categories;
+
+  protected readonly currentPath = toSignal(
+    this.router.events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      map(() => this.router.url.split('?')[0]),
+    ),
+    { initialValue: this.router.url.split('?')[0] },
+  );
+
+  protected readonly currentCategory = computed(() => {
+    const path = this.currentPath();
+    return (
+      this.categories.find((c) => c.pattern.test(path)) ?? this.categories[0]
+    );
+  });
+
+  protected readonly currentCategoryLinks = computed(
+    () => this.currentCategory().links,
+  );
+
+  ngAfterViewInit(): void {
+    const element = this.mainScroll()?.nativeElement;
+    if (!element) return;
+
+    let ticking = false;
+    const update = () => {
+      const run = () => {
+        const isScrolled = element.scrollTop > 4;
+        if (this.scrolled() !== isScrolled) this.scrolled.set(isScrolled);
+        ticking = false;
+      };
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(run);
+      }
+    };
+
+    // Initial state
+    update();
+
+    // Scroll listener (passive for perf)
+    element.addEventListener('scroll', update, { passive: true });
+
+    // Clean up
+    this.destroyRef.onDestroy(() => {
+      element.removeEventListener('scroll', update);
+    });
+  }
+
+  // Reset scroll position on navigation after the view is initialized.
+  // Named Angular effect fields are intentionally unread because Angular owns their lifecycle.
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
+  readonly #resetScrollEffect = effect(() => {
+    this.currentPath();
+    queueMicrotask(() => {
+      const element = this.mainScroll()?.nativeElement;
+      if (element) element.scrollTo({ top: 0 });
+      // Also reset scrolled state
+      if (this.scrolled()) this.scrolled.set(false);
+    });
+  });
+  // ngOnDestroy not required: DestroyRef handles listener cleanup.
+}

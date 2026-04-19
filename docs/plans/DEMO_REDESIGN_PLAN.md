@@ -12,7 +12,7 @@ A design review of the running demo (`http://localhost:4200`) in both themes aga
 
 These small wins are merged under the v1.1 polish pass (see commit history for exact refs):
 
-- **Skip link focus ring** — `apps/demo/src/app/app.component.html`. Added `focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-purple-400 dark:focus:ring-offset-gray-950` so the skip-to-main link is visibly focused in both themes.
+- **Skip link focus ring** — `apps/demo/src/app/app.html`. Added `focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-purple-400 dark:focus:ring-offset-gray-950` so the skip-to-main link is visibly focused in both themes.
 - **Sidebar external-link icons** — standardized the mixed `📘 / GH / TK / 🜁` set to uniform monospace monograms `NG GH TK BS` with `aria-label` preserved for screen readers. Avoids depending on an icon library for v1.1.
 - **Debugger footer removed** — deleted the duplicated `Angular Signal Forms Debugger · Live updating` strip from `packages/toolkit/debugger/signal-form-debugger.component.{html,scss}`. Also removed the now-unused `ngx-debugger-pulse` keyframe and the four `__footer*` / `__live-*` class blocks. All 710 toolkit tests continue to pass.
 
@@ -60,7 +60,7 @@ Expose these as Tailwind arbitrary-value classes (`bg-[--demo-surface-2]`) or as
 
 - `apps/demo/src/styles.scss` — token definitions.
 - `apps/demo/src/app/**/*.page.html` (or inline templates) — search-and-replace stock Tailwind grays with token classes.
-- `packages/toolkit/debugger/signal-form-debugger.component.scss` — the debugger already consumes its own `--ngx-debugger-*` vars, so it needs its light/dark overrides retuned to use the three-tier system, not more gray.
+- `packages/toolkit/debugger/signal-form-debugger.scss` — the debugger already consumes its own `--ngx-debugger-*` vars, so it needs its light/dark overrides retuned to use the three-tier system, not more gray.
 
 **Success criteria.**
 
@@ -85,8 +85,8 @@ Expose these as Tailwind arbitrary-value classes (`bg-[--demo-surface-2]`) or as
 
 **Files touched.**
 
-- New: `apps/demo/src/app/ui/demo-page/demo-page.component.ts` + template + styles.
-- New: `apps/demo/src/app/ui/segmented-control/segmented-control.component.ts`.
+- New: `apps/demo/src/app/ui/demo-page/demo-page.ts` + template + styles.
+- New: `apps/demo/src/app/ui/segmented-control/segmented-control.ts`.
 - Refactor each `*.page.ts` to consume `<demo-page>` and pass content via slots or a typed `content` input. The existing `*.content.ts` files already carry the structured copy — extend the shape with per-tab keys rather than the current flat list.
 
 **Success criteria.**
@@ -107,12 +107,12 @@ Expose these as Tailwind arbitrary-value classes (`bg-[--demo-surface-2]`) or as
 
 **Change.** Add a global "Inspector" toggle button in the demo header. The debugger becomes a floating right rail that can be opened/closed on any page. It still binds to the currently-rendered form via the existing context.
 
-This is a **demo-app change**, not a library change. The `SignalFormDebugger` component itself keeps its current signature; the demo decides where to mount it.
+This is a **demo-app change**, not a library change. The `NgxSignalFormDebugger` component itself keeps its current signature; the demo decides where to mount it.
 
 **Files touched.**
 
 - `apps/demo/src/app/ui/inspector-panel/` (new) — wraps `ngx-signal-form-debugger` in a slide-in panel with an open/close state persisted in `localStorage`.
-- `apps/demo/src/app/app.component.html` — header button + panel slot.
+- `apps/demo/src/app/app.html` — header button + panel slot.
 - Every demo page template — remove the inline `<ngx-signal-form-debugger>` placement (if still present after M2 moved it to the Inspector rail).
 
 **Success criteria.**
@@ -130,17 +130,17 @@ This is a **demo-app change**, not a library change. The `SignalFormDebugger` co
 
 **Problem.** The following exported APIs have no dedicated page today, so visitors scanning the nav cannot find them:
 
-| Toolkit entry                          | Missing showcase                                                                                           |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `@ngx-signal-forms/toolkit/assistive`  | `NgxFormFieldErrorSummaryComponent`, `NgxFormFieldCharacterCountComponent`                                 |
-| `@ngx-signal-forms/toolkit/headless`   | `NgxHeadlessErrorStateDirective`, `NgxHeadlessCharacterCountDirective`, `NgxHeadlessErrorSummaryDirective` |
-| `@ngx-signal-forms/toolkit/form-field` | Side-by-side "before the wrapper / after the wrapper" template diff                                        |
+| Toolkit entry                          | Missing showcase                                                                |
+| -------------------------------------- | ------------------------------------------------------------------------------- |
+| `@ngx-signal-forms/toolkit/assistive`  | `NgxFormFieldErrorSummary`, `NgxFormFieldCharacterCount`                        |
+| `@ngx-signal-forms/toolkit/headless`   | `NgxHeadlessErrorState`, `NgxHeadlessCharacterCount`, `NgxHeadlessErrorSummary` |
+| `@ngx-signal-forms/toolkit/form-field` | Side-by-side "before the wrapper / after the wrapper" template diff             |
 
 **Change.** Add three new demo pages, each behind an existing category:
 
-1. **`/toolkit-core/error-summary-and-anchors`** — renders a `NgxFormFieldErrorSummaryComponent` above a form with six fields, clicking a summary item scrolls + focuses the offending field via the existing focus-first-invalid machinery. Explicitly demonstrates the WCAG 2.2 error-identification payoff.
+1. **`/toolkit-core/error-summary-and-anchors`** — renders a `NgxFormFieldErrorSummary` above a form with six fields, clicking a summary item scrolls + focuses the offending field via the existing focus-first-invalid machinery. Explicitly demonstrates the WCAG 2.2 error-identification payoff.
 2. **`/toolkit-core/character-count-and-hints`** — a textarea with the character-count component, showing `aria-describedby` wiring in the Inspector tree. Second example uses the headless directive to recreate the counter from scratch in ≤30 lines.
-3. **`/form-field-wrapper/before-and-after`** — tabbed view comparing the raw toolkit-context template against the `NgxSignalFormFieldWrapperComponent` version of the same form. Auto-generated line count and LOC diff at the top.
+3. **`/form-field-wrapper/before-and-after`** — tabbed view comparing the raw toolkit-context template against the `NgxFormFieldWrapper` version of the same form. Auto-generated line count and LOC diff at the top.
 
 Also consolidate:
 
@@ -177,7 +177,7 @@ Also consolidate:
 
 **Files touched.**
 
-- `apps/demo/src/app/ui/try-it-tab/try-it-tab.component.ts` (new).
+- `apps/demo/src/app/ui/try-it-tab/try-it-tab.ts` (new).
 - Per-page content files gain a `tryIt: { test: string; stackblitzSeed: string; debugNotes: DebugNote[] }` field.
 - `apps/demo/src/assets/inspector-annotations/` (new) — one annotated PNG per page, or render annotations as CSS overlays on the live inspector tree.
 
@@ -218,7 +218,7 @@ Also consolidate:
 
 - `apps/demo/src/styles.scss` — font-face declarations, CSS-var overrides.
 - `apps/demo/public/fonts/` (new) — subset WOFF2 files with a license manifest.
-- `apps/demo/src/app/app.component.html` — drop the `brand-gradient` utility in favor of a single accent.
+- `apps/demo/src/app/app.html` — drop the `brand-gradient` utility in favor of a single accent.
 - All `*.content.ts` emoji icons — either replace with lucide glyphs (Option A) or with bracketed tag labels (Option B).
 
 **Success criteria.**
@@ -266,6 +266,6 @@ A low-risk path that delivers visible wins quickly:
 
 ## Appendix: files landed as part of small-win pass
 
-- `apps/demo/src/app/app.component.html` — skip-link focus ring + sidebar monograms.
-- `packages/toolkit/debugger/signal-form-debugger.component.html` — footer removed.
-- `packages/toolkit/debugger/signal-form-debugger.component.scss` — footer classes and `ngx-debugger-pulse` keyframe removed.
+- `apps/demo/src/app/app.html` — skip-link focus ring + sidebar monograms.
+- `packages/toolkit/debugger/signal-form-debugger.html` — footer removed.
+- `packages/toolkit/debugger/signal-form-debugger.scss` — footer classes and `ngx-debugger-pulse` keyframe removed.

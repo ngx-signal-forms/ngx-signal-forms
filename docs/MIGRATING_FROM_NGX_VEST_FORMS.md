@@ -120,7 +120,7 @@ That is why upgrading to Vest 6 is not just a recommendation here — it is a ha
 | `[ngModel]` + `name="email"`                | `[formField]="myForm.email"`                              | No `name`/`ngModel` wiring needed for normal fields                   |
 | `(formValueChange)="formValue.set($event)"` | model `signal(...)` passed into `form(...)`               | The model signal is the source of truth                               |
 | `NgxDeepPartial<T>` model building          | explicit Signal Forms model type                          | Prefer stable initial values over incremental partial objects         |
-| `<ngx-control-wrapper>`                     | `<ngx-signal-form-field-wrapper>`                         | Wrapper now layers on top of Signal Forms field state                 |
+| `<ngx-control-wrapper>`                     | `<ngx-form-field-wrapper>`                                | Wrapper now layers on top of Signal Forms field state                 |
 | `errorsChange` or wrapper-export state      | `form.email().errors()` / toolkit wrappers                | Field state comes from Angular Signal Forms                           |
 | `warn()` warnings in separate warning state | `warn()` + `validateVest(..., { includeWarnings: true })` | Toolkit maps warnings to `warn:*` validation errors                   |
 | `validationConfig`                          | no direct equivalent in the current quick path            | Re-check complex cross-field timing per form                          |
@@ -207,10 +207,10 @@ const signupSuite = create((data: SignupModel) => {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formRoot]="signupForm" ngxSignalForm>
-      <ngx-signal-form-field-wrapper [formField]="signupForm.email">
+      <ngx-form-field-wrapper [formField]="signupForm.email">
         <label for="email">Email</label>
         <input id="email" [formField]="signupForm.email" />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
       <button type="submit">Create account</button>
     </form>

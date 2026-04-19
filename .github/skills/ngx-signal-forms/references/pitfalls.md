@@ -71,7 +71,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit';
 
 // Correct
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import { validateVest } from '@ngx-signal-forms/toolkit/vest';
@@ -83,7 +83,7 @@ import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 <!-- Wrong — toolkit auto-ARIA already manages these -->
 <input [formField]="form.email" aria-invalid="true" aria-required="true" />
 
-<!-- Correct — let NgxSignalFormAutoAriaDirective handle it -->
+<!-- Correct — let NgxSignalFormAutoAria handle it -->
 <input id="email" [formField]="form.email" />
 ```
 
@@ -96,16 +96,16 @@ toolkit preserves your existing ARIA attributes instead of generating them.
 
 ```html
 <!-- Wrong — wrapper can't derive field identity -->
-<ngx-signal-form-field-wrapper [formField]="form.email">
+<ngx-form-field-wrapper [formField]="form.email">
   <label>Email</label>
   <input [formField]="form.email" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 
 <!-- Correct — id enables automatic error/label linkage -->
-<ngx-signal-form-field-wrapper [formField]="form.email">
+<ngx-form-field-wrapper [formField]="form.email">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 ```
 
 ## Removed / Non-Public APIs — Never Use
@@ -126,10 +126,15 @@ These were removed or are not public:
 
 These still exist under a new name:
 
-| Old                     | New                    |
-| ----------------------- | ---------------------- |
-| `appearance="standard"` | `appearance="stacked"` |
-| `appearance="bare"`     | `appearance="plain"`   |
+| Old                    | New                     |
+| ---------------------- | ----------------------- |
+| `appearance="stacked"` | `appearance="standard"` |
+| `appearance="bare"`    | `appearance="plain"`    |
+
+> A brief RC cycle (rc.1 – rc.4) shipped `appearance="stacked"` as the new name
+> for the default. `rc.5` reverts that single literal back to `"standard"`. The
+> control _layout_ value `'stacked'` (in `NgxSignalFormControlLayout`) is
+> unrelated and remains unchanged.
 
 ## Floating Labels Require a Placeholder Space
 
@@ -147,14 +152,10 @@ Required only for `appearance="outline"` (floating label behavior).
 
 ```html
 <!-- Wrong — Angular parses this as an expression, not a string literal -->
-<ngx-signal-form-field-wrapper [strategy]="on-submit"
-  >...</ngx-signal-form-field-wrapper
->
+<ngx-form-field-wrapper [strategy]="on-submit">...</ngx-form-field-wrapper>
 
 <!-- Correct — use a plain attribute for literal values -->
-<ngx-signal-form-field-wrapper strategy="on-submit"
-  >...</ngx-signal-form-field-wrapper
->
+<ngx-form-field-wrapper strategy="on-submit">...</ngx-form-field-wrapper>
 ```
 
 For literal string inputs, prefer the plain attribute form because it is shorter
@@ -199,7 +200,7 @@ semantics directive as well:
 ```typescript
 // Wrong mental model
 // Importing NgxSignalFormToolkit in the parent component does NOT make
-// NgxSignalFormAutoAriaDirective available inside a child custom control template.
+// NgxSignalFormAutoAria available inside a child custom control template.
 
 // Correct
 @Component({
@@ -215,20 +216,22 @@ Without `ngxSignalFormControl`, the wrapper must infer the control kind from DOM
 
 ```html
 <!-- Wrong — wrapper guesses control kind from DOM, may get layout wrong -->
-<ngx-signal-form-field-wrapper appearance="plain" [formField]="form.rating">
+<ngx-form-field-wrapper appearance="plain" [formField]="form.rating">
   <label for="rating">Rating</label>
   <ngx-rating-control id="rating" [formField]="form.rating" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 
-<!-- Correct — explicit semantics give the wrapper stable contract -->
-<ngx-signal-form-field-wrapper appearance="plain" [formField]="form.rating">
+<!-- Correct — explicit semantics give the wrapper stable contract.
+     'stacked' here is the control LAYOUT (NgxSignalFormControlLayout),
+     not the renamed 'standard' appearance. -->
+<ngx-form-field-wrapper appearance="plain" [formField]="form.rating">
   <label for="rating">Rating</label>
   <ngx-rating-control
     id="rating"
     [ngxSignalFormControl]="{ kind: 'slider', layout: 'stacked' }"
     [formField]="form.rating"
   />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 ```
 
 When multiple controls in a component use the same semantics, use `provideNgxSignalFormControlPresetsForComponent()` to set defaults once instead of repeating the object on every control.
@@ -244,19 +247,19 @@ directive in the component that renders the actual control host.
 
 ```html
 <!-- Fragile — wrapper relies on discovering identity from nested markup timing -->
-<ngx-signal-form-field-wrapper [formField]="form.emailUpdates">
+<ngx-form-field-wrapper [formField]="form.emailUpdates">
   <label for="emailUpdates">Email updates</label>
   <app-switch-control inputId="emailUpdates" [field]="form.emailUpdates" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 
 <!-- Safer for nested/dynamic controls -->
-<ngx-signal-form-field-wrapper
+<ngx-form-field-wrapper
   [formField]="form.emailUpdates"
   fieldName="emailUpdates"
 >
   <label for="emailUpdates">Email updates</label>
   <app-switch-control inputId="emailUpdates" [field]="form.emailUpdates" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 ```
 
 When the actual bound control is nested inside a custom component or its `id` is
@@ -268,8 +271,8 @@ IDs and described-by wiring deterministic.
 ```html
 <!-- Wrong — no submitted status source, errors never show -->
 <form (submit)="save($event)" novalidate>
-  <ngx-signal-form-field-wrapper [formField]="form.email" strategy="on-submit"
-    >...</ngx-signal-form-field-wrapper
+  <ngx-form-field-wrapper [formField]="form.email" strategy="on-submit"
+    >...</ngx-form-field-wrapper
   >
 </form>
 

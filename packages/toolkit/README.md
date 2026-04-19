@@ -34,14 +34,14 @@ You always import the core entry point. The other entry points add UI components
 ## Import
 
 ```typescript
-// Bundle import (recommended) — includes FormRoot, NgxSignalFormDirective,
-// NgxSignalFormAutoAriaDirective, NgxSignalFormControlSemanticsDirective
+// Bundle import (recommended) — includes FormRoot, NgxSignalForm,
+// NgxSignalFormAutoAria, NgxSignalFormControlSemanticsDirective
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 // Individual imports when needed
 import {
-  NgxSignalFormDirective,
-  NgxSignalFormAutoAriaDirective,
+  NgxSignalForm,
+  NgxSignalFormAutoAria,
   NgxSignalFormControlSemanticsDirective,
   provideNgxSignalFormsConfig,
   provideErrorMessages,
@@ -52,6 +52,11 @@ import {
   splitByKind,
 } from '@ngx-signal-forms/toolkit';
 ```
+
+> The directive class is `NgxSignalFormControlSemanticsDirective` — the only
+> public class in v1 that keeps its `Directive` suffix, because the
+> `NgxSignalFormControlSemantics` interface (in `core/types.ts`) already
+> occupies the suffix-less name.
 
 ## Quick start
 
@@ -92,7 +97,7 @@ export class ContactComponent {
 
 ## Core directives
 
-### NgxSignalFormDirective
+### NgxSignalForm
 
 Selector: `form[formRoot][ngxSignalForm]`
 
@@ -110,7 +115,7 @@ Angular's `FormRoot` remains the owner of `novalidate`, `event.preventDefault()`
 </form>
 ```
 
-### NgxSignalFormAutoAriaDirective
+### NgxSignalFormAutoAria
 
 Auto-applies to supported `[formField]` controls:
 
@@ -125,7 +130,9 @@ Covers native `<input>`, `<textarea>`, `<select>`, and custom `[formField]` host
 
 ### NgxSignalFormControlSemanticsDirective
 
-Declares a control's family for wrapper layout and auto-ARIA classification:
+Declares a control's family for wrapper layout and auto-ARIA classification.
+The directive class keeps its `Directive` suffix to avoid colliding with the
+`NgxSignalFormControlSemantics` interface in `core/types.ts`.
 
 ```html
 <app-star-rating
@@ -147,7 +154,8 @@ See [Custom Controls](../../docs/CUSTOM_CONTROLS.md) for detailed guidance.
 provideNgxSignalFormsConfig({
   autoAria: true, // default
   defaultErrorStrategy: 'on-touch', // 'immediate' | 'on-touch' | 'on-submit'
-  defaultFormFieldAppearance: 'stacked', // 'stacked' | 'outline' | 'plain'
+  defaultFormFieldAppearance: 'standard', // 'standard' | 'outline' | 'plain'
+  defaultFormFieldOrientation: 'vertical', // 'vertical' | 'horizontal'
   showRequiredMarker: false, // outlined required field indicator
   requiredMarker: '*', // marker character
 });
@@ -247,7 +255,7 @@ provideFieldLabels(() => {
 | `submitWithWarnings(form, callback)` | Submit helper that blocks only on real errors |
 
 > Warning **display timing** is controlled separately from error timing via the
-> `warningStrategy` input on `NgxFormFieldErrorComponent` (default:
+> `warningStrategy` input on `NgxFormFieldError` (default:
 > `'immediate'`). See
 > [`WARNINGS_SUPPORT.md`](../../docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy)
 > and the [assistive README](./assistive/README.md#ngxformfielderrorcomponent)

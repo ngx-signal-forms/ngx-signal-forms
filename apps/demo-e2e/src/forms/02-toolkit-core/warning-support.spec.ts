@@ -142,7 +142,7 @@ test.describe('Warning Support Demo', () => {
 
       // Password field (field with only warning, no error)
       const usernameFormField = page.page.locator(
-        'ngx-signal-form-field-wrapper:has(input#username)',
+        'ngx-form-field-wrapper:has(input#username)',
       );
 
       // Should have warning class applied
@@ -157,7 +157,7 @@ test.describe('Warning Support Demo', () => {
       await page.usernameInput.blur();
 
       const usernameFormField = page.page.locator(
-        'ngx-signal-form-field-wrapper:has(input#username)',
+        'ngx-form-field-wrapper:has(input#username)',
       );
 
       // Should NOT have warning class - errors take priority

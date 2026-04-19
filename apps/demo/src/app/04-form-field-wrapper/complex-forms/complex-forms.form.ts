@@ -8,6 +8,7 @@ import { FormField, form } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
   FormFieldAppearance,
+  FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import {
   createOnInvalidHandler,
@@ -161,7 +162,9 @@ export class ComplexFormsComponent {
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
 
   /** Form field appearance input */
-  readonly appearance = input<FormFieldAppearance>('stacked');
+  readonly appearance = input<FormFieldAppearance>('standard');
+
+  readonly orientation = input<FormFieldOrientation>('vertical');
 
   /** Form data model */
   readonly #model = signal(createInitialComplexFormModel());

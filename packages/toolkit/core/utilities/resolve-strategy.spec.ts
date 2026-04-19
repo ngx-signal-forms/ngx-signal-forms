@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 import type { ResolvedErrorDisplayStrategy, SubmittedStatus } from '../types';
-import type { NgxSignalFormContext } from '../directives/ngx-signal-form.directive';
+import type { NgxSignalFormContext } from '../directives/ngx-signal-form';
 import {
   resolveErrorDisplayStrategy,
   resolveStrategyFromContext,

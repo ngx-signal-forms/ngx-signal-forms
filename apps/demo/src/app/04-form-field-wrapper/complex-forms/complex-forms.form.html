@@ -4,7 +4,7 @@
   [errorStrategy]="errorDisplayMode()"
 >
   <!-- Personal Information Section -->
-  <ngx-signal-form-fieldset
+  <ngx-form-fieldset
     [fieldsetField]="complexForm.personalInfo"
     fieldsetId="personal-info"
     class="complex-form-fieldset"
@@ -14,8 +14,9 @@
     </legend>
 
     <div class="grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2">
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.personalInfo.firstName"
       >
         <label for="firstName">First Name *</label>
@@ -24,10 +25,11 @@
           type="text"
           [formField]="complexForm.personalInfo.firstName"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.personalInfo.lastName"
       >
         <label for="lastName">Last Name *</label>
@@ -36,10 +38,11 @@
           type="text"
           [formField]="complexForm.personalInfo.lastName"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.personalInfo.email"
       >
         <svg
@@ -63,10 +66,11 @@
           type="email"
           [formField]="complexForm.personalInfo.email"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.personalInfo.age"
       >
         <label for="age">Age *</label>
@@ -80,12 +84,12 @@
         <span suffix aria-hidden="true" class="text-sm text-gray-400"
           >years</span
         >
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
     </div>
-  </ngx-signal-form-fieldset>
+  </ngx-form-fieldset>
 
   <!-- Address Information Section -->
-  <ngx-signal-form-fieldset
+  <ngx-form-fieldset
     [fieldsetField]="complexForm.addressInfo"
     fieldsetId="address-info"
     class="complex-form-fieldset mb-8"
@@ -95,8 +99,9 @@
     </legend>
 
     <div class="grid grid-cols-1 gap-y-4">
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.addressInfo.street"
       >
         <svg
@@ -125,11 +130,12 @@
           type="text"
           [formField]="complexForm.addressInfo.street"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
       <div class="grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2">
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [appearance]="appearance()"
+          [orientation]="orientation()"
           [formField]="complexForm.addressInfo.city"
         >
           <label for="city">City *</label>
@@ -138,10 +144,11 @@
             type="text"
             [formField]="complexForm.addressInfo.city"
           />
-        </ngx-signal-form-field-wrapper>
+        </ngx-form-field-wrapper>
 
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [appearance]="appearance()"
+          [orientation]="orientation()"
           [formField]="complexForm.addressInfo.zipCode"
         >
           <label for="zipCode">Zip Code *</label>
@@ -151,11 +158,12 @@
             [formField]="complexForm.addressInfo.zipCode"
             placeholder="12345"
           />
-        </ngx-signal-form-field-wrapper>
+        </ngx-form-field-wrapper>
       </div>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.addressInfo.country"
       >
         <label for="country">Country *</label>
@@ -167,12 +175,12 @@
           <option value="DE">Germany</option>
           <option value="FR">France</option>
         </select>
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
     </div>
-  </ngx-signal-form-fieldset>
+  </ngx-form-fieldset>
 
   <!-- Skills Section (Dynamic Array) -->
-  <ngx-signal-form-fieldset
+  <ngx-form-fieldset
     [fieldsetField]="complexForm.skills"
     fieldsetId="skills"
     class="complex-form-fieldset complex-array-fieldset mb-8"
@@ -185,8 +193,9 @@
     <div
       class="array-entry-grid grid grid-cols-1 items-start gap-x-4 gap-y-4 md:grid-cols-[1fr,150px]"
     >
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.skills[i].name"
         [fieldName]="'skill-' + i + '-name'"
       >
@@ -205,10 +214,11 @@
         >
           ✕
         </button>
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.skills[i].level"
         [fieldName]="'skill-' + i + '-level'"
       >
@@ -220,7 +230,7 @@
           aria-valuemin="1"
           aria-valuemax="10"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
     </div>
     }
 
@@ -228,10 +238,10 @@
       <span class="add-array-button__icon" aria-hidden="true">+</span>
       <span>Add Skill</span>
     </button>
-  </ngx-signal-form-fieldset>
+  </ngx-form-fieldset>
 
   <!-- Contacts Section (Dynamic Array with Types) -->
-  <ngx-signal-form-fieldset
+  <ngx-form-fieldset
     [fieldsetField]="complexForm.contacts"
     fieldsetId="contacts"
     class="complex-form-fieldset complex-array-fieldset mb-8"
@@ -244,8 +254,9 @@
     <div
       class="array-entry-grid grid grid-cols-1 items-start gap-x-4 gap-y-4 md:grid-cols-[150px,1fr]"
     >
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.contacts[i].type"
         [fieldName]="'contact-' + i + '-type'"
       >
@@ -258,10 +269,11 @@
           <option value="email">Email</option>
           <option value="phone">Phone</option>
         </select>
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="complexForm.contacts[i].value"
         [fieldName]="'contact-' + i + '-value'"
       >
@@ -317,7 +329,7 @@
         >
           ✕
         </button>
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
     </div>
     }
 
@@ -325,10 +337,10 @@
       <span class="add-array-button__icon" aria-hidden="true">+</span>
       <span>Add Contact</span>
     </button>
-  </ngx-signal-form-fieldset>
+  </ngx-form-fieldset>
 
   <!-- Preferences Section -->
-  <ngx-signal-form-fieldset
+  <ngx-form-fieldset
     [fieldsetField]="complexForm.preferences"
     fieldsetId="preferences"
     class="complex-form-fieldset mb-8"
@@ -339,22 +351,24 @@
 
     <div class="preferences-stack">
       <!-- Switch semantics: newsletter toggle wrapped with explicit control kind -->
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         fieldName="newsletter"
         [formField]="complexForm.preferences.newsletter"
         [appearance]="appearance()"
+        [orientation]="orientation()"
       >
         <label for="newsletter">Subscribe to newsletter</label>
         <ngx-switch-control
           inputId="newsletter"
           [field]="complexForm.preferences.newsletter"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
       <!-- Checkbox semantics: notifications checkbox with explicit control kind -->
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [formField]="complexForm.preferences.notifications"
         [appearance]="appearance()"
+        [orientation]="orientation()"
       >
         <label for="notifications">Enable email notifications</label>
         <input
@@ -363,10 +377,10 @@
           ngxSignalFormControl="checkbox"
           [formField]="complexForm.preferences.notifications"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
       <fieldset
-        ngxSignalFormFieldset
+        ngxFormFieldset
         [fieldsetField]="complexForm.preferences.contactMethod"
         fieldsetId="contact-method"
         class="choice-group-fieldset"
@@ -408,7 +422,7 @@
         </div>
       </fieldset>
     </div>
-  </ngx-signal-form-fieldset>
+  </ngx-form-fieldset>
 
   <!-- Form Actions -->
   <div class="form-actions">

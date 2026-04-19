@@ -10,6 +10,7 @@ import { form, FormField } from '@angular/forms/signals';
 import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
+  type FormFieldOrientation,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -17,7 +18,7 @@ import {
   NGX_SIGNAL_FORM_CONTEXT,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
-import { NgxFormFieldErrorSummaryComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldErrorSummary } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import type { SubmissionModel } from './submission-patterns.model';
 import { submissionSchema } from './submission-patterns.validations';
@@ -39,7 +40,7 @@ import { submissionSchema } from './submission-patterns.validations';
     FormField,
     NgxSignalFormToolkit,
     NgxFormField,
-    NgxFormFieldErrorSummaryComponent,
+    NgxFormFieldErrorSummary,
   ],
   template: `
     <form
@@ -146,9 +147,10 @@ import { submissionSchema } from './submission-patterns.validations';
       <!-- Form fields -->
       <div class="space-y-6">
         <!-- Username field -->
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="registrationForm.username"
           [appearance]="appearance()"
+          [orientation]="orientation()"
         >
           <label for="username">Username *</label>
           <input
@@ -157,15 +159,16 @@ import { submissionSchema } from './submission-patterns.validations';
             [formField]="registrationForm.username"
             placeholder="Enter username"
           />
-          <ngx-signal-form-field-hint>
+          <ngx-form-field-hint>
             Letters, numbers, and underscores only
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field-wrapper>
+          </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
 
         <!-- Password field -->
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="registrationForm.password"
           [appearance]="appearance()"
+          [orientation]="orientation()"
         >
           <label for="password">Password *</label>
           <input
@@ -174,15 +177,14 @@ import { submissionSchema } from './submission-patterns.validations';
             [formField]="registrationForm.password"
             placeholder="Enter password"
           />
-          <ngx-signal-form-field-hint>
-            At least 8 characters
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field-wrapper>
+          <ngx-form-field-hint> At least 8 characters </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
 
         <!-- Confirm Password field -->
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="registrationForm.confirmPassword"
           [appearance]="appearance()"
+          [orientation]="orientation()"
         >
           <label for="confirmPassword">Confirm Password *</label>
           <input
@@ -191,7 +193,7 @@ import { submissionSchema } from './submission-patterns.validations';
             [formField]="registrationForm.confirmPassword"
             placeholder="Re-enter password"
           />
-        </ngx-signal-form-field-wrapper>
+        </ngx-form-field-wrapper>
       </div>
 
       <!-- Submission state info with helper values -->
@@ -279,6 +281,7 @@ import { submissionSchema } from './submission-patterns.validations';
 export class SubmissionPatternsComponent {
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
+  readonly orientation = input<FormFieldOrientation>('vertical');
 
   /// Form context - provides automatic submission tracking
   protected readonly formContext = inject(NGX_SIGNAL_FORM_CONTEXT, {

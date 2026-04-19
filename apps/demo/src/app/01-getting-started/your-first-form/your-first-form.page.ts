@@ -16,7 +16,7 @@ import {
 import {
   ERROR_DISPLAY_MODE_LABELS,
   ErrorDisplayModeSelectorComponent,
-} from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
+} from '../../ui/error-display-mode-selector/error-display-mode-selector';
 import { YOUR_FIRST_FORM_CONTENT } from './your-first-form.content';
 import { YourFirstFormComponent } from './your-first-form.form';
 
@@ -29,7 +29,7 @@ import { YourFirstFormComponent } from './your-first-form.form';
  * Shows:
  * - [formRoot] directive for context and submission tracking
  * - Automatic ARIA attributes
- * - NgxFormFieldErrorComponent for reusable error display
+ * - NgxFormFieldError for reusable error display
  * - Error display strategies
  * - Manual HTML layout (you control structure)
  */

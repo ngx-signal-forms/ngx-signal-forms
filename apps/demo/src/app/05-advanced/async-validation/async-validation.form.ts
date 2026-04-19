@@ -15,6 +15,7 @@ import {
 import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
+  type FormFieldOrientation,
   createOnInvalidHandler,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
@@ -66,9 +67,10 @@ const registrationSchema = schema<Registration>((path) => {
         [errorStrategy]="errorDisplayMode()"
         class="max-w-md space-y-6"
       >
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           [formField]="regForm.username"
           [appearance]="appearance()"
+          [orientation]="orientation()"
         >
           <label for="username">Username</label>
           <input
@@ -85,10 +87,10 @@ const registrationSchema = schema<Registration>((path) => {
             </span>
           }
 
-          <ngx-signal-form-field-hint>
+          <ngx-form-field-hint>
             Availability is checked automatically
-          </ngx-signal-form-field-hint>
-        </ngx-signal-form-field-wrapper>
+          </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
 
         <div class="flex gap-4">
           <button
@@ -125,6 +127,7 @@ const registrationSchema = schema<Registration>((path) => {
 export class AsyncValidationComponent {
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
+  readonly orientation = input<FormFieldOrientation>('vertical');
 
   readonly #model = signal({ username: '' });
   readonly regForm = form(this.#model, registrationSchema, {

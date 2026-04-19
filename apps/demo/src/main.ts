@@ -15,7 +15,7 @@ import {
   provideNgxSignalFormControlPresets,
   provideNgxSignalFormsConfig,
 } from '@ngx-signal-forms/toolkit';
-import { AppComponent } from './app/app.component';
+import { AppComponent } from './app/app';
 import { appRoutes } from './app/app.routes';
 
 // Enable MSW mocking in development

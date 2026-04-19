@@ -9,19 +9,39 @@ import { BaseFormPage } from './base-form.page';
  */
 export class FormFieldWrapperComplexPage extends BaseFormPage {
   readonly addSkillButton: Locator;
+  readonly horizontalOrientationButton: Locator;
+  readonly outlineAppearanceButton: Locator;
+  readonly plainAppearanceButton: Locator;
   readonly resetButton: Locator;
+  readonly standardAppearanceButton: Locator;
   readonly submitButton: Locator;
+  readonly verticalOrientationButton: Locator;
 
   constructor(page: Page) {
     super(page);
     this.addSkillButton = this.form.getByRole('button', {
       name: /Add Skill/i,
     });
+    this.horizontalOrientationButton = this.page.getByRole('button', {
+      name: 'Horizontal',
+    });
+    this.outlineAppearanceButton = this.page.getByRole('button', {
+      name: 'Outline',
+    });
+    this.plainAppearanceButton = this.page.getByRole('button', {
+      name: 'Plain',
+    });
     this.resetButton = this.form.getByRole('button', {
       name: /^Reset$/i,
     });
+    this.standardAppearanceButton = this.page.getByRole('button', {
+      name: 'Standard',
+    });
     this.submitButton = this.form.getByRole('button', {
       name: /Submit Application|Submitting/i,
+    });
+    this.verticalOrientationButton = this.page.getByRole('button', {
+      name: 'Vertical',
     });
   }
 
@@ -34,16 +54,14 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
    * Get all form field wrapper components
    */
   get formFields(): Locator {
-    return this.form.locator('ngx-signal-form-field-wrapper');
+    return this.form.locator('ngx-form-field-wrapper');
   }
 
   /**
    * Get all fieldset grouping components (both element and attribute usage)
    */
   get fieldsets(): Locator {
-    return this.form.locator(
-      'ngx-signal-form-fieldset, fieldset[ngxSignalFormFieldset]',
-    );
+    return this.form.locator('ngx-form-fieldset, fieldset[ngxFormFieldset]');
   }
 
   /**
@@ -158,5 +176,40 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
    */
   getFieldsetErrorsByLegend(legendText: string | RegExp): Locator {
     return this.getFieldsetByLegend(legendText).locator('[role="alert"]');
+  }
+
+  /**
+   * Get the wrapper containing a specific control.
+   */
+  getWrapperByControlId(controlId: string): Locator {
+    return this.form.locator(`ngx-form-field-wrapper:has(#${controlId})`);
+  }
+
+  /**
+   * Switch the demo to outline appearance.
+   */
+  async showOutlineAppearance(): Promise<void> {
+    await this.outlineAppearanceButton.click();
+  }
+
+  /**
+   * Switch the demo to standard appearance.
+   */
+  async showStandardAppearance(): Promise<void> {
+    await this.standardAppearanceButton.click();
+  }
+
+  /**
+   * Switch the demo to plain appearance.
+   */
+  async showPlainAppearance(): Promise<void> {
+    await this.plainAppearanceButton.click();
+  }
+
+  /**
+   * Switch the demo to horizontal orientation.
+   */
+  async showHorizontalOrientation(): Promise<void> {
+    await this.horizontalOrientationButton.click();
   }
 }

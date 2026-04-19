@@ -324,7 +324,7 @@ to the `<input [formField]>` declared inside `SwitchControlComponent`.
 Use whichever import fits your component best:
 
 - `NgxSignalFormToolkit` when you want the bundle import
-- `NgxSignalFormAutoAriaDirective` when you only need auto-ARIA on the leaf
+- `NgxSignalFormAutoAria` when you only need auto-ARIA on the leaf
   control
 
 ### focusBoundControl() and Focus
@@ -372,7 +372,7 @@ Or with headless primitives:
 
 ```html
 <div
-  ngxSignalFormHeadlessErrorState
+  ngxHeadlessErrorState
   #errorState="errorState"
   [field]="form.password"
   fieldName="password"
@@ -414,16 +414,16 @@ on the wrapper or an `id` on the bound control:
 
 ```html
 <!-- Recommended for custom controls: give the host a stable id -->
-<ngx-signal-form-field-wrapper [formField]="form.country">
+<ngx-form-field-wrapper [formField]="form.country">
   <label for="country">Country</label>
   <app-custom-select id="country" [formField]="form.country" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 
 <!-- Or: name the wrapper explicitly when the control can't expose an id -->
-<ngx-signal-form-field-wrapper [formField]="form.country" fieldName="country">
+<ngx-form-field-wrapper [formField]="form.country" fieldName="country">
   <label>Country</label>
   <app-custom-select [formField]="form.country" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 ```
 
 ## Custom Control Checklist
@@ -496,14 +496,14 @@ Usage with toolkit:
 
 ```html
 <form [formRoot]="myForm" ngxSignalForm errorStrategy="on-touch">
-  <ngx-signal-form-field-wrapper [formField]="myForm.country">
+  <ngx-form-field-wrapper [formField]="myForm.country">
     <label for="country-select">Country</label>
     <app-custom-select
       [selectId]="'country-select'"
       [formField]="myForm.country"
       [options]="countries"
     />
-  </ngx-signal-form-field-wrapper>
+  </ngx-form-field-wrapper>
 </form>
 ```
 

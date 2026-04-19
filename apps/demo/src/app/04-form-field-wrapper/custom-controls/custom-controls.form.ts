@@ -18,6 +18,7 @@ import {
   shouldShowErrors,
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
+  type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import {
@@ -31,7 +32,7 @@ import { customControlsSchema } from './custom-controls.validations';
  * Custom Controls Demo Form
  *
  * Demonstrates custom FormValueControl components (RatingControl) working
- * seamlessly with ngx-signal-form-field-wrapper.
+ * seamlessly with ngx-form-field-wrapper.
  *
  * Key features:
  * - Custom RatingControl implementing FormValueControl<number>
@@ -96,7 +97,9 @@ export class CustomControlsFormComponent {
   /**
    * Form field appearance input
    */
-  readonly appearance = input<FormFieldAppearance>('stacked');
+  readonly appearance = input<FormFieldAppearance>('standard');
+
+  readonly orientation = input<FormFieldOrientation>('vertical');
 
   /**
    * Form model signal with default values.

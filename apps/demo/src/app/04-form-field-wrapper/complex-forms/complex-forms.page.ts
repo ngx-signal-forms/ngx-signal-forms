@@ -2,12 +2,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   signal,
   viewChild,
 } from '@angular/core';
 import type {
   ErrorDisplayStrategy,
   FormFieldAppearance,
+  FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
@@ -15,14 +17,19 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import {
   ERROR_DISPLAY_MODE_LABELS,
   ErrorDisplayModeSelectorComponent,
-} from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
+} from '../../ui/error-display-mode-selector/error-display-mode-selector';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
+import {
+  getOrientationLabel,
+  isOrientationDisabledForAppearance,
+} from '../../ui/orientation-toggle';
 import { COMPLEX_FORMS_CONTENT } from './complex-forms.content';
 import { ComplexFormsComponent } from './complex-forms.form';
 
@@ -56,6 +63,7 @@ import { ComplexFormsComponent } from './complex-forms.form';
     SplitLayoutComponent,
     NgxSignalFormDebugger,
     AppearanceToggleComponent,
+    OrientationToggleComponent,
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
   ],
@@ -84,9 +92,19 @@ import { ComplexFormsComponent } from './complex-forms.form';
 
         <ngx-display-controls-section
           title="🎨 Long-form styling"
-          description="Compare whether the stacked or outline wrapper does a better job of keeping long sections and array rows scannable."
+          description="Compare whether the standard or outline wrapper does a better job of keeping long sections and array rows scannable."
         >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
+        </ngx-display-controls-section>
+
+        <ngx-display-controls-section
+          title="↔️ Label orientation"
+          description="Switch between standard vertical labels and horizontal label columns for the non-outline wrappers. Outline remains vertical by design."
+        >
+          <ngx-orientation-toggle
+            [(value)]="selectedOrientation"
+            [appearance]="selectedAppearance()"
+          />
         </ngx-display-controls-section>
       </ngx-display-controls-card>
     </ngx-example-cards>
@@ -101,6 +119,7 @@ import { ComplexFormsComponent } from './complex-forms.form';
             #complexFormRef
             [errorDisplayMode]="errorDisplayMode()"
             [appearance]="selectedAppearance()"
+            [orientation]="selectedOrientation()"
           />
         </section>
       </div>
@@ -125,6 +144,8 @@ export class ComplexFormsPage {
     signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
+  protected readonly selectedOrientation =
+    signal<FormFieldOrientation>('vertical');
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -134,9 +155,26 @@ export class ComplexFormsPage {
       label: 'Appearance',
       value: APPEARANCE_LABELS[this.selectedAppearance()],
     },
+    {
+      label: 'Orientation',
+      value: getOrientationLabel(this.selectedOrientation()),
+    },
   ]);
 
   protected readonly content = COMPLEX_FORMS_CONTENT;
   protected readonly complexFormRef =
     viewChild<ComplexFormsComponent>('complexFormRef');
+
+  constructor() {
+    effect(() => {
+      if (
+        isOrientationDisabledForAppearance(
+          this.selectedAppearance(),
+          this.selectedOrientation(),
+        )
+      ) {
+        this.selectedOrientation.set('vertical');
+      }
+    });
+  }
 }

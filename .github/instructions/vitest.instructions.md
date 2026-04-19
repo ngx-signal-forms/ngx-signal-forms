@@ -310,7 +310,7 @@ await render(
     <input type="text" />
   </form>`,
   {
-    imports: [NgxSignalFormDirective],
+    imports: [NgxSignalForm],
     componentProperties: {
       form: createMockForm(),
       strategy: 'immediate' as ErrorDisplayStrategy,

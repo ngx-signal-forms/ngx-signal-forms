@@ -13,7 +13,7 @@ This section is the escape hatch for teams that cannot adopt the `NgxFormField` 
 ## 📂 Demos in this section
 
 - **[fieldset-utilities](./fieldset-utilities/README.md)** — headless fieldset grouping plus the `createErrorState` / `createCharacterCount` / `createFieldStateFlags` utilities applied to a delivery form.
-  - What you'll learn: `NgxHeadlessToolkit` bundle · `ngxSignalFormHeadlessErrorSummary` click-to-focus · `ngxSignalFormHeadlessFieldset` aggregation · composing custom UI from utility factories · `provideFieldLabels()` for custom summary labels.
+  - What you'll learn: `NgxHeadlessToolkit` bundle · `ngxHeadlessErrorSummary` click-to-focus · `ngxHeadlessFieldset` aggregation · composing custom UI from utility factories · `provideFieldLabels()` for custom summary labels.
 
 ## 🧠 Core concepts
 

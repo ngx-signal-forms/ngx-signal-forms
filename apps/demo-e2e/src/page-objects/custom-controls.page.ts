@@ -9,8 +9,11 @@ import { BaseFormPage } from './base-form.page';
 export class CustomControlsPage extends BaseFormPage {
   readonly route = DEMO_PATHS.customControls;
 
-  readonly stackedAppearanceButton: Locator;
+  readonly standardAppearanceButton: Locator;
   readonly outlineAppearanceButton: Locator;
+  readonly plainAppearanceButton: Locator;
+  readonly verticalOrientationButton: Locator;
+  readonly horizontalOrientationButton: Locator;
 
   // Form wrapper locators
   readonly formFieldWrappers: Locator;
@@ -30,15 +33,24 @@ export class CustomControlsPage extends BaseFormPage {
   constructor(page: Page) {
     super(page);
 
-    this.stackedAppearanceButton = this.page.getByRole('button', {
-      name: 'Stacked',
+    this.standardAppearanceButton = this.page.getByRole('button', {
+      name: 'Standard',
     });
     this.outlineAppearanceButton = this.page.getByRole('button', {
       name: 'Outline',
     });
+    this.plainAppearanceButton = this.page.getByRole('button', {
+      name: 'Plain',
+    });
+    this.verticalOrientationButton = this.page.getByRole('button', {
+      name: 'Vertical',
+    });
+    this.horizontalOrientationButton = this.page.getByRole('button', {
+      name: 'Horizontal',
+    });
 
     // Form field wrappers
-    this.formFieldWrappers = this.form.locator('ngx-signal-form-field-wrapper');
+    this.formFieldWrappers = this.form.locator('ngx-form-field-wrapper');
 
     // Native inputs
     this.productNameInput = this.form.locator('#productName');
@@ -110,12 +122,38 @@ export class CustomControlsPage extends BaseFormPage {
   }
 
   /**
+   * Switch the demo to standard appearance.
+   */
+  async showStandardAppearance(): Promise<void> {
+    await this.standardAppearanceButton.click();
+  }
+
+  /**
+   * Switch the demo to plain appearance.
+   */
+  async showPlainAppearance(): Promise<void> {
+    await this.plainAppearanceButton.click();
+  }
+
+  /**
+   * Switch the demo to horizontal orientation.
+   */
+  async showHorizontalOrientation(): Promise<void> {
+    await this.horizontalOrientationButton.click();
+  }
+
+  /**
+   * Switch the demo to vertical orientation.
+   */
+  async showVerticalOrientation(): Promise<void> {
+    await this.verticalOrientationButton.click();
+  }
+
+  /**
    * Get the wrapper containing a specific control.
    */
   getWrapperByControlId(controlId: string): Locator {
-    return this.form.locator(
-      `ngx-signal-form-field-wrapper:has(#${controlId})`,
-    );
+    return this.form.locator(`ngx-form-field-wrapper:has(#${controlId})`);
   }
 
   /**

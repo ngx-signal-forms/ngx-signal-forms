@@ -38,7 +38,7 @@
           date and select variants.
         </p>
 
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           appearance="outline"
           [formField]="placementDesignPreviewForm.appointmentDate"
         >
@@ -64,7 +64,7 @@
               />
             </svg>
           </span>
-        </ngx-signal-form-field-wrapper>
+        </ngx-form-field-wrapper>
       </section>
 
       <section class="playground-preview-card">
@@ -77,14 +77,14 @@
         </p>
 
         <fieldset
-          ngxSignalFormFieldset
+          ngxFormFieldset
           [fieldsetField]="placementDesignPreviewForm.address"
           class="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700"
           fieldsetId="placement-design-preview-address"
         >
           <legend class="fieldset-legend">Shipping Address</legend>
 
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             appearance="outline"
             [formField]="placementDesignPreviewForm.address.street"
           >
@@ -94,9 +94,9 @@
               type="text"
               [formField]="placementDesignPreviewForm.address.street"
             />
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
 
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             appearance="outline"
             [formField]="placementDesignPreviewForm.address.city"
           >
@@ -106,7 +106,7 @@
               type="text"
               [formField]="placementDesignPreviewForm.address.city"
             />
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
         </fieldset>
       </section>
 
@@ -120,7 +120,7 @@
         </p>
 
         <fieldset
-          ngxSignalFormFieldset
+          ngxFormFieldset
           [fieldsetField]="placementDesignPreviewForm.deliveryMethod"
           class="space-y-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700"
           fieldsetId="placement-design-preview-delivery"
@@ -189,7 +189,7 @@
 
     <p class="playground-note text-sm">
       The sandbox uses outline fields even if you toggle the larger page back to
-      stacked mode. That keeps the Figma comparison stable while still letting
+      standard mode. That keeps the Figma comparison stable while still letting
       the rest of the page demonstrate both appearances.
     </p>
 
@@ -204,7 +204,7 @@
         </p>
 
         <fieldset
-          ngxSignalFormFieldset
+          ngxFormFieldset
           [fieldsetField]="placementPreviewForm.address"
           [errorPlacement]="errorPlacement()"
           strategy="immediate"
@@ -214,7 +214,7 @@
         >
           <legend class="fieldset-legend">Shipping Address</legend>
 
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             appearance="outline"
             [formField]="placementPreviewForm.address.street"
           >
@@ -225,9 +225,9 @@
               [formField]="placementPreviewForm.address.street"
               placeholder="123 Main Street"
             />
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
 
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             appearance="outline"
             [formField]="placementPreviewForm.address.city"
           >
@@ -238,7 +238,7 @@
               [formField]="placementPreviewForm.address.city"
               placeholder="Amsterdam"
             />
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
         </fieldset>
       </section>
 
@@ -252,7 +252,7 @@
         </p>
 
         <fieldset
-          ngxSignalFormFieldset
+          ngxFormFieldset
           [fieldsetField]="placementPreviewForm.deliveryMethod"
           [errorPlacement]="errorPlacement()"
           strategy="immediate"
@@ -303,7 +303,7 @@
           placement.
         </p>
 
-        <ngx-signal-form-field-wrapper
+        <ngx-form-field-wrapper
           appearance="outline"
           [formField]="placementPreviewForm.email"
           [errorPlacement]="errorPlacement()"
@@ -317,7 +317,7 @@
             placeholder="name@example.com"
             autocomplete="email"
           />
-        </ngx-signal-form-field-wrapper>
+        </ngx-form-field-wrapper>
       </section>
     </div>
   </div>
@@ -331,7 +331,7 @@
 >
   <!-- Shipping Address Fieldset -->
   <fieldset
-    ngxSignalFormFieldset
+    ngxFormFieldset
     [fieldsetField]="fieldsetForm.shippingAddress"
     [errorPlacement]="errorPlacement()"
     fieldsetId="shipping-address"
@@ -346,8 +346,9 @@
     </p>
 
     <div class="grid gap-4 sm:grid-cols-2">
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.shippingAddress.street"
         class="sm:col-span-2"
       >
@@ -358,10 +359,11 @@
           [formField]="fieldsetForm.shippingAddress.street"
           placeholder="123 Main Street"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.shippingAddress.city"
       >
         <label for="shippingCity">City *</label>
@@ -371,10 +373,11 @@
           [formField]="fieldsetForm.shippingAddress.city"
           placeholder="New York"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.shippingAddress.zipCode"
       >
         <label for="shippingZipCode">ZIP Code *</label>
@@ -384,10 +387,11 @@
           [formField]="fieldsetForm.shippingAddress.zipCode"
           placeholder="10001"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.shippingAddress.country"
         class="sm:col-span-2"
       >
@@ -400,7 +404,7 @@
           <option [value]="country.value">{{ country.label }}</option>
           }
         </select>
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
     </div>
   </fieldset>
 
@@ -419,7 +423,7 @@
   <!-- Billing Address Fieldset - Shown when different from shipping -->
   @if (!fieldsetForm.billingSameAsShipping().value()) {
   <fieldset
-    ngxSignalFormFieldset
+    ngxFormFieldset
     [fieldsetField]="fieldsetForm.billingAddress"
     [errorPlacement]="errorPlacement()"
     fieldsetId="billing-address"
@@ -432,8 +436,9 @@
     </p>
 
     <div class="grid gap-4 sm:grid-cols-2">
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.billingAddress.street"
         class="sm:col-span-2"
       >
@@ -444,10 +449,11 @@
           [formField]="fieldsetForm.billingAddress.street"
           placeholder="456 Business Ave"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.billingAddress.city"
       >
         <label for="billingCity">City *</label>
@@ -457,10 +463,11 @@
           [formField]="fieldsetForm.billingAddress.city"
           placeholder="Los Angeles"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.billingAddress.zipCode"
       >
         <label for="billingZipCode">ZIP Code *</label>
@@ -470,10 +477,11 @@
           [formField]="fieldsetForm.billingAddress.zipCode"
           placeholder="90001"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.billingAddress.country"
         class="sm:col-span-2"
       >
@@ -486,14 +494,14 @@
           <option [value]="country.value">{{ country.label }}</option>
           }
         </select>
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
     </div>
   </fieldset>
   }
 
   <!-- Delivery Method Fieldset -->
   <fieldset
-    ngxSignalFormFieldset
+    ngxFormFieldset
     [fieldsetField]="fieldsetForm.delivery"
     [errorPlacement]="errorPlacement()"
     fieldsetId="delivery-method"
@@ -506,7 +514,7 @@
     </p>
 
     <fieldset
-      ngxSignalFormFieldset
+      ngxFormFieldset
       [fieldsetField]="fieldsetForm.delivery.method"
       fieldsetId="delivery-method-options"
       class="space-y-3"
@@ -548,7 +556,7 @@
 
   <!-- Credentials Fieldset -->
   <fieldset
-    ngxSignalFormFieldset
+    ngxFormFieldset
     [fieldsetField]="fieldsetForm.credentials"
     [errorPlacement]="errorPlacement()"
     fieldsetId="credentials"
@@ -561,8 +569,9 @@
     </p>
 
     <div class="grid gap-4 sm:grid-cols-2">
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.credentials.password"
       >
         <label for="password">Password *</label>
@@ -573,10 +582,11 @@
           placeholder="Enter password (min 8 chars)"
           autocomplete="new-password"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [appearance]="appearance()"
+        [orientation]="orientation()"
         [formField]="fieldsetForm.credentials.confirmPassword"
       >
         <label for="confirmPassword">Confirm Password *</label>
@@ -587,7 +597,7 @@
           placeholder="Confirm your password"
           autocomplete="new-password"
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
     </div>
   </fieldset>
 

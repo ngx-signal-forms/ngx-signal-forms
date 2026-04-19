@@ -53,42 +53,68 @@ export type ErrorDisplayStrategy = ResolvedErrorDisplayStrategy | 'inherit';
 /**
  * Form field appearance values accepted from consumers and used internally.
  *
- * - `'stacked'`: Label above input (default)
+ * - `'standard'`: Label above input (default)
  * - `'outline'`: Material-inspired outlined appearance with floating label
  * - `'plain'`: Minimal wrapper chrome while keeping wrapper semantics
  *
  * @public
  */
-export type FormFieldAppearance = 'stacked' | 'outline' | 'plain';
+export type FormFieldAppearance = 'standard' | 'outline' | 'plain';
 
 /**
  * Form field appearance input for component-level control.
  *
- * - `'stacked'`: Default appearance with label above input
+ * - `'standard'`: Default appearance with label above input
  * - `'outline'`: Material-inspired outlined appearance with floating label
  * - `'plain'`: No border or background chrome while keeping labels, hints, and errors
  * - `'inherit'`: Use the global config default (component-level only)
  *
  * @example Component-level override
  * ```html
- * <!-- Override global config to use stacked for a specific field -->
- * <ngx-signal-form-field-wrapper [formField]="form.email" appearance="stacked">
+ * <!-- Override global config to use standard for a specific field -->
+ * <ngx-form-field-wrapper [formField]="form.email" appearance="standard">
  *   <label for="email">Email</label>
  *   <input id="email" [formField]="form.email" />
- * </ngx-signal-form-field-wrapper>
+ * </ngx-form-field-wrapper>
  * ```
  *
  * @example Plain appearance for custom controls
  * ```html
- * <ngx-signal-form-field-wrapper [formField]="form.rating" appearance="plain">
+ * <ngx-form-field-wrapper [formField]="form.rating" appearance="plain">
  *   <label for="rating">Rating</label>
  *   <app-rating-control id="rating" [formField]="form.rating" />
- * </ngx-signal-form-field-wrapper>
+ * </ngx-form-field-wrapper>
  * ```
  *
  * @see https://material.angular.dev/components/form-field/overview#form-field-appearance-variants
  */
 export type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
+
+/**
+ * Form field orientation controls whether the label is positioned
+ * above the input (vertical) or to the left of it (horizontal).
+ *
+ * `outline` appearance always resolves to vertical because the floating-label
+ * treatment depends on the label staying inside the field chrome.
+ *
+ * @public
+ */
+export type FormFieldOrientation = 'vertical' | 'horizontal';
+
+/**
+ * Form field orientation input for component-level control.
+ *
+ * - `'vertical'`: Label above input (default)
+ * - `'horizontal'`: Label to the left of the input
+ * - `'inherit'`: Use the global config default (component-level only)
+ *
+ * Orientation only affects an individual field wrapper. Parent form grids stay
+ * under consumer control, which allows pages to keep multi-column layouts or
+ * intentionally collapse to one field row per line in horizontal mode.
+ *
+ * @public
+ */
+export type FormFieldOrientationInput = FormFieldOrientation | 'inherit';
 
 /**
  * Semantic control families understood by the toolkit wrapper layer.
@@ -114,26 +140,27 @@ export type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
  * ## Toolkit-internal: adding a new kind
  *
  * Adding a value to this union is a breaking change and requires updating
- * four coupled locations; TypeScript will fail the build until all are in
+ * three coupled locations; TypeScript will fail the build until all are in
  * sync:
  *
  * 1. This union type.
- * 2. `NGX_SIGNAL_FORM_CONTROL_KIND_VALUES` in
- *    `packages/toolkit/core/utilities/control-semantics.ts` — the runtime
- *    list used by DOM validation and dev diagnostics.
- * 3. `DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS` in
+ * 2. `DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS` in
  *    `packages/toolkit/core/tokens.ts` — the default `layout` + `ariaMode`
- *    for the new kind.
- * 4. `CONTROL_KIND_CAPABILITIES` in
+ *    for the new kind. The runtime
+ *    `NGX_SIGNAL_FORM_CONTROL_KIND_VALUES` list is derived from this
+ *    registry's keys, so updating the registry automatically keeps the
+ *    runtime list in sync.
+ * 3. `CONTROL_KIND_CAPABILITIES` in
  *    `packages/toolkit/form-field/form-field.utils.ts` — the
  *    wrapper-layout capability flags (`textual`, `supportsOutline`,
  *    `selectionGroup`, `paddedContent`).
  *
- * The `satisfies` clauses on (2) and (4) enforce exhaustiveness at compile
- * time, so the TS error from adding only (1) tells you exactly what's
- * missing. Heuristic inference in
- * `inferNgxSignalFormControlKind` (same file as (2)) is optional and only
- * needed if the new kind has a reliable DOM fingerprint.
+ * The `Record<NgxSignalFormControlKind, ...>` types on (2) and the
+ * `satisfies` clause on (3) enforce exhaustiveness at compile time, so the
+ * TS error from adding only (1) tells you exactly what's missing.
+ * Heuristic inference in `inferNgxSignalFormControlKind`
+ * (`packages/toolkit/core/utilities/control-semantics.ts`) is optional and
+ * only needed if the new kind has a reliable DOM fingerprint.
  */
 export type NgxSignalFormControlKind =
   | 'input-like'
@@ -211,9 +238,15 @@ export interface NgxSignalFormsConfig {
 
   /**
    * Default appearance for form fields.
-   * @default 'stacked'
+   * @default 'standard'
    */
   defaultFormFieldAppearance: FormFieldAppearance;
+
+  /**
+   * Default orientation for form fields.
+   * @default 'vertical'
+   */
+  defaultFormFieldOrientation: FormFieldOrientation;
 
   /**
    * Whether to show the required marker for outlined fields.
@@ -242,6 +275,7 @@ export interface NgxSignalFormsUserConfig {
   autoAria?: boolean;
   defaultErrorStrategy?: ResolvedErrorDisplayStrategy;
   defaultFormFieldAppearance?: FormFieldAppearance;
+  defaultFormFieldOrientation?: FormFieldOrientation;
   showRequiredMarker?: boolean;
   /**
    * Custom character(s) rendered as the required marker. Pass `''` to

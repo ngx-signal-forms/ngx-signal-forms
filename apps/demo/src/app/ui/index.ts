@@ -1,4 +1,5 @@
 export { AppearanceToggleComponent } from './appearance-toggle';
+export { OrientationToggleComponent } from './orientation-toggle';
 export {
   BadgeComponent,
   BadgeIconDirective,
@@ -15,9 +16,9 @@ export {
 export { ErrorDisplayModeSelectorComponent } from './error-display-mode-selector';
 export { ExampleCardsComponent } from './example-cards';
 export { PageHeaderComponent } from './page-header';
-export { SplitLayoutComponent } from './split-layout/split-layout.component';
+export { SplitLayoutComponent } from './split-layout/split-layout';
 
-export { NgxThemeSwitcherComponent } from './theme-switcher/theme-switcher.component';
+export { NgxThemeSwitcherComponent } from './theme-switcher/theme-switcher';
 
 // Code highlighting - consolidated service
 export {

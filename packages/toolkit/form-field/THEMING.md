@@ -16,7 +16,7 @@ A theming system based entirely on **CSS Custom Properties (Variables)**. It exp
 
 ### Control-aware styling hooks
 
-`ngx-signal-form-field-wrapper` exposes stable data attributes that you can use
+`ngx-form-field-wrapper` exposes stable data attributes that you can use
 for custom-control styling without coupling your CSS to internal markup:
 
 - `data-ngx-signal-form-control-kind`
@@ -142,7 +142,7 @@ Layout container for hint/error and character count alignment.
 
 ### Fieldset
 
-**Component:** `ngx-signal-form-fieldset`
+**Component:** `ngx-form-fieldset`
 
 Groups related fields with consistent spacing.
 
@@ -176,18 +176,18 @@ That keeps radio-group and checkbox-group labels readable while still giving the
 
 ## 3. Form Field Component
 
-**Component:** `ngx-signal-form-field-wrapper`
+**Component:** `ngx-form-field-wrapper`
 
 This component wraps your `label` and `input` to provide layout, borders, and states.
 
-### Layout Modes: Stacked, Outline, and Plain
+### Layout Modes: Standard, Outline, and Plain
 
 The form field wrapper supports three appearance modes via the `appearance` input:
 
-**Stacked Layout** (`appearance="stacked"` or default)
+### Standard layout (`appearance="standard"` or default)
 
 - Label positioned above the input
-- Traditional stacked form field design
+- Traditional label-above-field form field design
 - Uses `--ngx-form-field-label-*` properties
 - Uses `--ngx-form-field-input-*` properties
 
@@ -206,17 +206,17 @@ The form field wrapper supports three appearance modes via the `appearance` inpu
 - Best for custom controls that draw their own focus or visual treatment
 
 ```html
-<!-- Stacked (default) -->
-<ngx-signal-form-field-wrapper [formField]="form.email" appearance="stacked">
+<!-- Standard (default) -->
+<ngx-form-field-wrapper [formField]="form.email" appearance="standard">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 
 <!-- Outline -->
-<ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
+<ngx-form-field-wrapper [formField]="form.email" appearance="outline">
   <label for="email">Email</label>
   <input id="email" [formField]="form.email" />
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 ```
 
 > **Note:** The semantic colors below apply to both layouts. Layout-specific properties (labels, input styling) are documented in separate sections.
@@ -241,11 +241,11 @@ The form field wrapper supports three appearance modes via the `appearance` inpu
 
 If the semantic colors aren't enough, you can override specific parts of the component.
 
-> **Layout-Specific Properties:** Properties prefixed with `--ngx-form-field-outline-*` only apply when `appearance="outline"`. Stacked layout uses the non-prefixed variants (e.g., `--ngx-form-field-label-*` vs `--ngx-form-field-outline-label-*`).
+> **Layout-Specific Properties:** Properties prefixed with `--ngx-form-field-outline-*` only apply when `appearance="outline"`. Standard layout uses the non-prefixed variants (e.g., `--ngx-form-field-label-*` vs `--ngx-form-field-outline-label-*`).
 
 #### Layout & Spacing
 
-**Applies to both stacked and outline layouts.**
+**Applies to both standard and outline layouts.**
 
 | Property                              | Default                                                                           | Description                          |
 | :------------------------------------ | :-------------------------------------------------------------------------------- | :----------------------------------- |
@@ -259,7 +259,7 @@ If the semantic colors aren't enough, you can override specific parts of the com
 
 #### Prefix & Suffix
 
-**Applies to both stacked and outline layouts.**
+**Applies to both standard and outline layouts.**
 
 | Property                        | Default                                      | Description               |
 | :------------------------------ | :------------------------------------------- | :------------------------ |
@@ -268,9 +268,9 @@ If the semantic colors aren't enough, you can override specific parts of the com
 | `--ngx-form-field-prefix-color` | `var(--ngx-form-field-color-text-secondary)` | Prefix color              |
 | `--ngx-form-field-suffix-color` | `var(--ngx-form-field-color-text-secondary)` | Suffix color              |
 
-#### Labels (Stacked Layout)
+#### Labels (Standard Layout)
 
-**Only applies when `appearance="stacked"` (default).**
+**Only applies when `appearance="standard"` (default).**
 
 | Property                               | Default                                      | Description         |
 | :------------------------------------- | :------------------------------------------- | :------------------ |
@@ -301,9 +301,9 @@ If the semantic colors aren't enough, you can override specific parts of the com
 | `--ngx-form-field-required-marker-color`  | `var(--ngx-form-field-color-error)` | Required marker color  |
 | `--ngx-form-field-required-marker-weight` | `600`                               | Required marker weight |
 
-#### Input (Stacked Layout)
+#### Input (Standard Layout)
 
-**Only applies when `appearance="stacked"` (default).**
+**Only applies when `appearance="standard"` (default).**
 
 | Property                             | Default                                      | Description        |
 | :----------------------------------- | :------------------------------------------- | :----------------- |
@@ -328,7 +328,7 @@ If the semantic colors aren't enough, you can override specific parts of the com
 
 #### States & Focus
 
-**Applies to both stacked and outline layouts.**
+**Applies to both standard and outline layouts.**
 
 | Property                              | Default                                                               | Description          |
 | :------------------------------------ | :-------------------------------------------------------------------- | :------------------- |
@@ -341,6 +341,56 @@ If the semantic colors aren't enough, you can override specific parts of the com
 | `--ngx-form-field-disabled-bg`        | `var(--ngx-form-field-color-disabled)`                                | Disabled background  |
 | `--ngx-form-field-disabled-opacity`   | `0.6`                                                                 | Disabled opacity     |
 
+### Horizontal Layout
+
+Set `orientation="horizontal"` on `ngx-form-field-wrapper` (or configure
+`defaultFormFieldOrientation: 'horizontal'` globally) to place the label
+to the **left** of the input.
+
+This mode applies to **standard** and **plain** wrappers. `appearance="outline"`
+always resolves back to vertical because its floating-label treatment depends on
+the label staying inside the outlined container. Selection controls (checkbox,
+switch, radio-group) are also excluded and keep their inline layout.
+
+| Property                                   | Default   | Description                                                       |
+| :----------------------------------------- | :-------- | :---------------------------------------------------------------- |
+| `--ngx-form-field-horizontal-gap`          | `0.75rem` | Gap between label column and input column                         |
+| `--ngx-form-field-label-width`             | `8rem`    | Shared width of the label column in horizontal layouts            |
+| `--ngx-form-field-horizontal-label-align`  | `start`   | Horizontal text alignment of the label (`start`, `center`, `end`) |
+| `--ngx-form-field-horizontal-label-valign` | `center`  | Vertical alignment of the label (`start`, `center`, `end`)        |
+
+A `data-orientation` attribute (`vertical` | `horizontal`) is also exposed for
+custom CSS hooks.
+
+Horizontal wrappers now default to a compact shared label column so the field
+controls line up out of the box without wasting horizontal space. Override the
+width when a tighter or wider column fits your form better.
+
+Orientation changes a single field wrapper only. Parent form layouts stay under
+consumer control, so multi-column grids can stay as-is or collapse to one field
+row per line when a page wants the extra horizontal breathing room.
+
+### Wider aligned label column example
+
+```css
+ngx-form-field-wrapper {
+  --ngx-form-field-label-width: 10rem;
+  --ngx-form-field-horizontal-gap: 1.5rem;
+}
+```
+
+### Fieldset Direction
+
+Set `--ngx-signal-form-fieldset-direction` to `row` on a fieldset to lay out its
+children side by side (e.g. for inline radio-button groups or short related
+fields).
+
+```css
+ngx-form-fieldset {
+  --ngx-signal-form-fieldset-direction: row;
+}
+```
+
 ---
 
 ## 4. Recipes & Common Scenarios
@@ -351,7 +401,7 @@ Redefine the semantic colors in your global styles or component.
 
 ```css
 /* Apply to all fields */
-ngx-signal-form-field-wrapper {
+ngx-form-field-wrapper {
   --ngx-form-field-color-primary: #6da305; /* My Brand Green */
   --ngx-form-field-color-error: #d93025; /* My Error Red */
 }
@@ -364,7 +414,7 @@ Map your framework's variables to the toolkit's semantic layer.
 **Bootstrap Example:**
 
 ```css
-ngx-signal-form-field-wrapper {
+ngx-form-field-wrapper {
   --ngx-form-field-color-primary: var(--bs-primary, #0d6efd);
   --ngx-form-field-color-border: var(--bs-border-color, #dee2e6);
   --ngx-form-field-color-text: var(--bs-body-color, #212529);
@@ -382,11 +432,11 @@ The components support `prefers-color-scheme: dark` out of the box.
 If your app has a manual toggle (e.g. adding a `.dark` class), use this pattern to ensure it wins over system preferences:
 
 ```scss
-/* app.component.scss or global styles */
+/* app.scss or global styles */
 
 /* 1. Define Dark Mode overrides */
 @media (prefers-color-scheme: dark) {
-  ngx-signal-form-field-wrapper {
+  ngx-form-field-wrapper {
     --ngx-form-field-color-surface: #1f2937;
     --ngx-form-field-color-text: #f9fafb;
     /* ... other dark tokens */
@@ -394,7 +444,7 @@ If your app has a manual toggle (e.g. adding a `.dark` class), use this pattern 
 }
 
 /* 2. Fix: Force Light Mode if user explicitly chose it (even if system is Dark) */
-:root:not(.dark) ngx-signal-form-field-wrapper {
+:root:not(.dark) ngx-form-field-wrapper {
   --ngx-form-field-color-surface: #ffffff;
   --ngx-form-field-color-text: #324155;
   /* ... reset to light tokens */

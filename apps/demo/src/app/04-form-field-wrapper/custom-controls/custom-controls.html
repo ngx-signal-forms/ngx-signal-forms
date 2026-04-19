@@ -13,8 +13,9 @@
 >
   <div class="space-y-6">
     <!-- Product Name - Stacked input for comparison -->
-    <ngx-signal-form-field-wrapper
+    <ngx-form-field-wrapper
       [appearance]="appearance()"
+      [orientation]="orientation()"
       [formField]="reviewForm.productName"
     >
       <label for="productName">Product Name *</label>
@@ -24,11 +25,12 @@
         [formField]="reviewForm.productName"
         placeholder="Enter product name"
       />
-    </ngx-signal-form-field-wrapper>
+    </ngx-form-field-wrapper>
 
     <!-- Product Rating - Custom RatingControl with auto-derived fieldName -->
-    <ngx-signal-form-field-wrapper
+    <ngx-form-field-wrapper
       appearance="plain"
+      [orientation]="orientation()"
       [formField]="reviewForm.rating"
     >
       <label id="rating-label" for="rating">Product Rating *</label>
@@ -39,14 +41,15 @@
         [formField]="reviewForm.rating"
         [maxRating]="5"
       />
-      <ngx-signal-form-field-hint position="left">
+      <ngx-form-field-hint position="left">
         Use arrow keys or click to rate
-      </ngx-signal-form-field-hint>
-    </ngx-signal-form-field-wrapper>
+      </ngx-form-field-hint>
+    </ngx-form-field-wrapper>
 
     <!-- Service Rating - Custom RatingControl -->
-    <ngx-signal-form-field-wrapper
+    <ngx-form-field-wrapper
       appearance="plain"
+      [orientation]="orientation()"
       [formField]="reviewForm.serviceRating"
     >
       <label id="serviceRating-label" for="serviceRating"
@@ -59,11 +62,12 @@
         [formField]="reviewForm.serviceRating"
         [maxRating]="5"
       />
-    </ngx-signal-form-field-wrapper>
+    </ngx-form-field-wrapper>
 
     <!-- Would Recommend - Custom RatingControl as thumbs up/down (2 stars) -->
-    <ngx-signal-form-field-wrapper
+    <ngx-form-field-wrapper
       appearance="plain"
+      [orientation]="orientation()"
       [formField]="reviewForm.wouldRecommend"
     >
       <label id="wouldRecommend-label" for="wouldRecommend"
@@ -76,13 +80,14 @@
         [formField]="reviewForm.wouldRecommend"
         [maxRating]="2"
       />
-      <ngx-signal-form-field-hint position="left">
+      <ngx-form-field-hint position="left">
         ☆ = No, ★ = Maybe, ★★ = Definitely!
-      </ngx-signal-form-field-hint>
-    </ngx-signal-form-field-wrapper>
+      </ngx-form-field-hint>
+    </ngx-form-field-wrapper>
 
-    <ngx-signal-form-field-wrapper
+    <ngx-form-field-wrapper
       [appearance]="appearance()"
+      [orientation]="orientation()"
       fieldName="emailUpdates"
       [formField]="reviewForm.emailUpdates"
     >
@@ -91,13 +96,14 @@
         inputId="emailUpdates"
         [field]="reviewForm.emailUpdates"
       />
-      <ngx-signal-form-field-hint position="left">
+      <ngx-form-field-hint position="left">
         Stay in the loop with occasional product updates and release notes.
-      </ngx-signal-form-field-hint>
-    </ngx-signal-form-field-wrapper>
+      </ngx-form-field-hint>
+    </ngx-form-field-wrapper>
 
-    <ngx-signal-form-field-wrapper
+    <ngx-form-field-wrapper
       [appearance]="appearance()"
+      [orientation]="orientation()"
       [formField]="reviewForm.shareReviewPublicly"
     >
       <label for="shareReviewPublicly">Share this review publicly *</label>
@@ -107,13 +113,14 @@
         ngxSignalFormControl="checkbox"
         [formField]="reviewForm.shareReviewPublicly"
       />
-      <ngx-signal-form-field-hint position="left">
+      <ngx-form-field-hint position="left">
         Enable this to let us feature your review publicly.
-      </ngx-signal-form-field-hint>
-    </ngx-signal-form-field-wrapper>
+      </ngx-form-field-hint>
+    </ngx-form-field-wrapper>
 
-    <ngx-signal-form-field-wrapper
+    <ngx-form-field-wrapper
       appearance="plain"
+      [orientation]="orientation()"
       [formField]="reviewForm.accessibilityAudit"
       errorPlacement="top"
     >
@@ -128,14 +135,15 @@
         [formField]="reviewForm.accessibilityAudit"
         [maxRating]="5"
       />
-      <ngx-signal-form-field-hint id="accessibilityAudit-hint" position="left">
+      <ngx-form-field-hint id="accessibilityAudit-hint" position="left">
         Rate how accessible and easy to navigate this experience felt.
-      </ngx-signal-form-field-hint>
-    </ngx-signal-form-field-wrapper>
+      </ngx-form-field-hint>
+    </ngx-form-field-wrapper>
 
     <!-- Feedback - Stacked textarea for comparison -->
-    <ngx-signal-form-field-wrapper
+    <ngx-form-field-wrapper
       [appearance]="appearance()"
+      [orientation]="orientation()"
       [formField]="reviewForm.feedback"
     >
       <label for="feedback">Additional Feedback (optional)</label>
@@ -145,7 +153,7 @@
         placeholder="Tell us more about your experience..."
         rows="3"
       ></textarea>
-    </ngx-signal-form-field-wrapper>
+    </ngx-form-field-wrapper>
   </div>
 
   <!-- Form Actions -->

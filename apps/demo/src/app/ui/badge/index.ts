@@ -1,2 +1,2 @@
-export * from './badge-icon.directive';
-export * from './badge.component';
+export * from './badge-icon';
+export * from './badge';

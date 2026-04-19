@@ -78,7 +78,7 @@ test.describe('Advanced - Global Configuration', () => {
     }) => {
       const acceptTerms = playwrightPage.locator('#acceptTerms');
       const acceptTermsWrapper = playwrightPage
-        .locator('ngx-signal-form-field-wrapper')
+        .locator('ngx-form-field-wrapper')
         .filter({ has: acceptTerms });
 
       await expect(acceptTerms).toHaveAttribute('role', 'switch');
@@ -118,7 +118,7 @@ test.describe('Advanced - Global Configuration', () => {
       await acceptTerms.blur();
 
       const wrapper = acceptTerms.locator(
-        'xpath=ancestor::ngx-signal-form-field-wrapper',
+        'xpath=ancestor::ngx-form-field-wrapper',
       );
       const errors = wrapper.locator('[role="alert"]');
       await expect(errors.first()).toBeVisible({ timeout: 3000 });

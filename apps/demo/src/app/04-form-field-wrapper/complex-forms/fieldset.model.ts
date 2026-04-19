@@ -1,7 +1,7 @@
 /**
  * Fieldset Demo Model - Demonstrates grouped form fields with aggregated errors
  *
- * This model showcases the NgxSignalFormFieldset with:
+ * This model showcases the NgxFormFieldset with:
  * - Grouped address fields with shared validation display
  * - Password fields with cross-field validation
  * - Nested fieldsets within a larger form

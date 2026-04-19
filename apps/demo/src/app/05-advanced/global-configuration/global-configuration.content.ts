@@ -14,7 +14,7 @@ export const GLOBAL_CONFIG_CONTENT = {
         items: [
           '• <strong>provideNgxSignalFormsConfig():</strong> Configure toolkit defaults in <code class="code-inline">apps/demo/src/main.ts</code> for this demo app',
           '• <strong>defaultErrorStrategy:</strong> Set global error display mode (immediate, on-touch, on-submit)',
-          '• <strong>defaultFormFieldAppearance:</strong> Set default form field style (stacked, outline, or plain)',
+          '• <strong>defaultFormFieldAppearance:</strong> Set default form field style (standard, outline, or plain)',
           '• <strong>autoAria:</strong> Enable/disable automatic ARIA attributes globally',
           '• <strong>provideNgxSignalFormControlPresets():</strong> Define app-level control-family defaults such as the inline switch preset used on this page',
           '• <strong>Form-level override:</strong> Use <code class="code-inline">ngxSignalForm</code> with <code class="code-inline">[formRoot]</code>, then bind <code class="code-inline">[errorStrategy]</code> when a single form needs different timing',

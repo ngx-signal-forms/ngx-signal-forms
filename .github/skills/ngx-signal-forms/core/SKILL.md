@@ -1,6 +1,5 @@
 ---
-name: ngx-signal-forms-core
-description: Implements the core @ngx-signal-forms/toolkit entry point. Use when deciding whether plain form[formRoot] fallback is enough or ngxSignalForm form context is needed, adding auto-ARIA, control semantics (ngxSignalFormControl), control preset providers (provideNgxSignalFormControlPresets), error visibility strategies, submittedStatus/showErrors wiring, global config, error-message registries, warning helpers, submission helpers (focusFirstInvalid, submitWithWarnings), or immutable array utilities. Part of the ngx-signal-forms skill suite; read the hub SKILL.md first if unsure which sub-skill applies.
+description: Sub-skill of ngx-signal-forms for the core @ngx-signal-forms/toolkit entry point — form[formRoot] vs ngxSignalForm decision, auto-ARIA, control semantics, preset providers, error visibility strategies, submittedStatus/showErrors wiring, global config, error-message registries, warning helpers, submission helpers, and immutable array utilities. Not independently invocable; the hub SKILL.md routes here.
 ---
 
 # Toolkit Core
@@ -23,15 +22,15 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 - `'immediate'` — show errors from first load (useful for live guidance or sign-up flows)
 - `'on-submit'` — show errors only after submission attempt. Inside `form[formRoot][ngxSignalForm]` the wrapper, auto-ARIA, and headless directives inherit `submittedStatus` automatically. **Standalone callers of `showErrors()` / `createShowErrorsComputed()` MUST pass `submittedStatus` explicitly when using `'on-submit'`** — otherwise the helper stays at `'unsubmitted'` and errors never surface (dev mode logs a one-shot `console.warn` to flag the silent failure).
 
-3. **Let auto-ARIA manage ARIA attributes.** `NgxSignalFormAutoAriaDirective` (bundled in `NgxSignalFormToolkit`) handles `aria-invalid`, `aria-required`, and `aria-describedby` for native `<input>`, `<textarea>`, and `<select>` controls, custom hosts, and checkbox-based switches that opt in with `role="switch"`. Standard checkboxes and radios stay excluded. Never add those attributes manually.
+3. **Let auto-ARIA manage ARIA attributes.** `NgxSignalFormAutoAria` (bundled in `NgxSignalFormToolkit`) handles `aria-invalid`, `aria-required`, and `aria-describedby` for native `<input>`, `<textarea>`, and `<select>` controls, custom hosts, and checkbox-based switches that opt in with `role="switch"`. Standard checkboxes and radios stay excluded. Never add those attributes manually.
 
-4. **Remember that standalone imports are template-local.** Importing `NgxSignalFormToolkit` in a parent form component does not make `NgxSignalFormAutoAriaDirective` available inside a child component's template. If a custom control renders the actual `<input [formField]>` itself, import the toolkit bundle or the directive in that child component.
+4. **Remember that standalone imports are template-local.** Importing `NgxSignalFormToolkit` in a parent form component does not make `NgxSignalFormAutoAria` available inside a child component's template. If a custom control renders the actual `<input [formField]>` itself, import the toolkit bundle or the directive in that child component.
 
-5. **Declare control semantics for controls outside the default native field families.** `NgxSignalFormControlSemanticsDirective` (included in `NgxSignalFormToolkit`) writes stable `data-ngx-signal-form-control-*` attributes the wrapper and auto-ARIA use to pick correct layout and ARIA behavior instead of guessing from DOM heuristics.
+5. **Declare control semantics for controls outside the default native field families.** `NgxSignalFormControlSemanticsDirective` (the directive class — included in `NgxSignalFormToolkit`; the suffix-less `NgxSignalFormControlSemantics` name is the matching public _interface_ in `core/types.ts`) writes stable `data-ngx-signal-form-control-*` attributes the wrapper and auto-ARIA use to pick correct layout and ARIA behavior instead of guessing from DOM heuristics.
    - Use `ngxSignalFormControl="switch"` on a native `input[type="checkbox"][role="switch"]` to opt it into switch wrapper styling and ARIA.
    - Use `ngxSignalFormControl="checkbox"` on a plain `input[type="checkbox"]` when it should opt in to wrapper validation display.
    - Use `ngxSignalFormControl="slider"` or `ngxSignalFormControl="composite"` on a custom component host to declare layout and ARIA ownership.
-   - Pass an object for combined overrides: `[ngxSignalFormControl]="{ kind: 'slider', layout: 'stacked', ariaMode: 'manual' }"`.
+   - Pass an object for combined overrides: `[ngxSignalFormControl]="{ kind: 'slider', layout: 'stacked', ariaMode: 'manual' }"` (`'stacked'` here is a control layout, not an appearance).
    - Use `ngxSignalFormControlAria="manual"` alone when you only need to suppress auto-ARIA without declaring a kind.
 
 6. **Use the preset provider that matches the scope you need.** Use `provideNgxSignalFormControlPresets()` for app- or feature-level defaults, and `provideNgxSignalFormControlPresetsForComponent()` for component-scoped semantic defaults. When all sliders or all switches in a feature should share the same `layout`/`ariaMode`, avoid repeating the directive object on every element:
@@ -45,6 +44,13 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
    ```
 
    Explicit `ngxSignalFormControl` directive inputs still override preset defaults.
+
+   For tooling and tests, two low-level helpers expose the same lookup:
+   `readNgxSignalFormControlSemantics(element)` returns exactly what the
+   consumer declared on the host (or `null`), and `inferNgxSignalFormControlKind(element)`
+   runs the DOM-heuristic fallback that the wrapper and auto-ARIA use when no
+   explicit semantics are present. Prefer `resolveNgxSignalFormControlSemantics`
+   for merged results that include preset defaults.
 
 7. **Use `provideErrorMessages()` for centralized validation copy.** Message priority: validator-provided `error.message` → registry → toolkit default.
 
@@ -72,10 +78,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="userForm" ngxSignalForm errorStrategy="on-submit">
-      <ngx-signal-form-field-wrapper
-        [formField]="userForm.email"
-        appearance="outline"
-      >
+      <ngx-form-field-wrapper [formField]="userForm.email" appearance="outline">
         <label for="email">Email</label>
         <input
           id="email"
@@ -83,7 +86,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
           [formField]="userForm.email"
           placeholder=" "
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
       <button type="submit">Submit</button>
     </form>
   `,
@@ -110,7 +113,7 @@ export const appConfig = {
   providers: [
     provideNgxSignalFormsConfig({
       defaultErrorStrategy: 'on-submit', // 'immediate' | 'on-touch' | 'on-submit'
-      defaultFormFieldAppearance: 'outline', // 'stacked' | 'outline' | 'plain'
+      defaultFormFieldAppearance: 'outline', // 'standard' | 'outline' | 'plain'
       autoAria: true, // default: true
     }),
     provideErrorMessages({

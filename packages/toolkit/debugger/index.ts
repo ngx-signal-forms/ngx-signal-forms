@@ -7,10 +7,10 @@
  *
  * @example
  * ```typescript
- * import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+ * import { NgxSignalFormDebuggerToolkit } from '@ngx-signal-forms/toolkit/debugger';
  *
  * @Component({
- *   imports: [NgxSignalFormDebugger],
+ *   imports: [NgxSignalFormDebuggerToolkit],
  *   template: `
  *     <form (submit)="save($event)">
  *       <input [formField]="form.email" />
@@ -23,37 +23,37 @@
  */
 
 import {
-  DebuggerBadgeComponent,
-  DebuggerBadgeIconDirective,
-} from './debugger-badge.component';
-import { SignalFormDebuggerComponent } from './signal-form-debugger.component';
+  NgxSignalFormDebuggerBadge,
+  NgxSignalFormDebuggerBadgeIcon,
+} from './debugger-badge';
+import { NgxSignalFormDebugger } from './signal-form-debugger';
 
 // Main debugger component
-export { SignalFormDebuggerComponent } from './signal-form-debugger.component';
+export { NgxSignalFormDebugger } from './signal-form-debugger';
 
 // Internal badge components (exposed for advanced customization)
 export {
-  DebuggerBadgeComponent,
-  DebuggerBadgeIconDirective,
-  type DebuggerBadgeAppearance,
-  type DebuggerBadgeVariant,
-} from './debugger-badge.component';
+  NgxSignalFormDebuggerBadge,
+  NgxSignalFormDebuggerBadgeIcon,
+  type NgxSignalFormDebuggerBadgeAppearance,
+  type NgxSignalFormDebuggerBadgeVariant,
+} from './debugger-badge';
 
 /**
  * Convenience bundle for the signal form debugger.
  *
  * @example
  * ```typescript
- * import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+ * import { NgxSignalFormDebuggerToolkit } from '@ngx-signal-forms/toolkit/debugger';
  *
  * @Component({
- *   imports: [NgxSignalFormDebugger],
+ *   imports: [NgxSignalFormDebuggerToolkit],
  *   // ...
  * })
  * ```
  */
-export const NgxSignalFormDebugger = [
-  SignalFormDebuggerComponent,
-  DebuggerBadgeComponent,
-  DebuggerBadgeIconDirective,
+export const NgxSignalFormDebuggerToolkit = [
+  NgxSignalFormDebugger,
+  NgxSignalFormDebuggerBadge,
+  NgxSignalFormDebuggerBadgeIcon,
 ] as const;

@@ -20,9 +20,9 @@ single publishable package with multiple entry points:
 packages/toolkit/
 ├── core/                               # Core implementation (internal — not a public entry point)
 │   ├── directives/
-│   │   ├── auto-aria.directive.ts
-│   │   ├── control-semantics.directive.ts
-│   │   └── ngx-signal-form.directive.ts
+│   │   ├── auto-aria.ts
+│   │   ├── control-semantics.ts
+│   │   └── ngx-signal-form.ts
 │   ├── utilities/
 │   │   ├── control-semantics.ts
 │   │   ├── error-strategies.ts
@@ -37,25 +37,25 @@ packages/toolkit/
 │   ├── tokens.ts
 │   └── types.ts
 ├── assistive/                           # Styled assistive components entry
-│   ├── assistive-row.component.ts
-│   ├── character-count.component.ts
-│   ├── form-field-error.component.ts
-│   ├── hint.component.ts
+│   ├── assistive-row.ts
+│   ├── character-count.ts
+│   ├── form-field-error.ts
+│   ├── hint.ts
 │   ├── warning-error.ts
 │   └── index.ts
 ├── form-field/                          # Optional form-field entry
-│   ├── form-field-wrapper.component.ts
-│   ├── form-fieldset.component.ts
-│   └── public_api.ts
+│   ├── form-field-wrapper.ts
+│   ├── form-fieldset.ts
+│   └── index.ts
 ├── headless/                            # Headless primitives entry
 │   ├── src/
 │   │   ├── index.ts
 │   │   └── lib/
-│   │       ├── error-state.directive.ts
-│   │       ├── error-summary.directive.ts
-│   │       ├── character-count.directive.ts
-│   │       ├── fieldset.directive.ts
-│   │       ├── field-name.directive.ts
+│   │       ├── error-state.ts
+│   │       ├── error-summary.ts
+│   │       ├── character-count.ts
+│   │       ├── fieldset.ts
+│   │       ├── field-name.ts
 │   │       └── utilities.ts            # Shared utility functions
 │   ├── ng-package.json
 │   └── README.md
@@ -66,8 +66,8 @@ packages/toolkit/
 │   ├── ng-package.json
 │   └── README.md
 ├── debugger/                            # Development-time debugging tools
-│   ├── signal-form-debugger.component.ts
-│   ├── debugger-badge.component.ts
+│   ├── signal-form-debugger.ts
+│   ├── debugger-badge.ts
 │   ├── index.ts
 │   └── ng-package.json
 ├── index.ts                             # Primary entry (providers/types)
@@ -104,20 +104,20 @@ import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 ```typescript
 import {
   NgxSignalFormToolkit,
-  NgxSignalFormAutoAriaDirective,
-  NgxSignalFormDirective,
+  NgxSignalFormAutoAria,
+  NgxSignalForm,
 } from '@ngx-signal-forms/toolkit';
-import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
 ### Secondary Entry (Assistive Components - Optional)
 
 ```typescript
 import {
-  NgxFormFieldErrorComponent,
-  NgxFormFieldHintComponent,
-  NgxFormFieldCharacterCountComponent,
-  NgxFormFieldAssistiveRowComponent,
+  NgxFormFieldError,
+  NgxFormFieldHint,
+  NgxFormFieldCharacterCount,
+  NgxFormFieldAssistiveRow,
 } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
@@ -132,11 +132,11 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 ```typescript
 import {
   NgxHeadlessToolkit,
-  NgxHeadlessErrorStateDirective,
-  NgxHeadlessErrorSummaryDirective,
-  NgxHeadlessCharacterCountDirective,
-  NgxHeadlessFieldsetDirective,
-  NgxHeadlessFieldNameDirective,
+  NgxHeadlessErrorState,
+  NgxHeadlessErrorSummary,
+  NgxHeadlessCharacterCount,
+  NgxHeadlessFieldset,
+  NgxHeadlessFieldName,
   createErrorState,
   createCharacterCount,
   createFieldStateFlags,

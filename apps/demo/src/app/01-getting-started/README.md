@@ -13,13 +13,13 @@ This section is your entry point into the toolkit. It demonstrates the smallest 
 ## 📂 Demos in this section
 
 - **[your-first-form](./your-first-form/README.md)** — contact form onboarding (name / email / message).
-  - What you'll learn: using `NgxSignalFormToolkit` · auto-ARIA with no manual `aria-*` plumbing · `NgxFormFieldErrorComponent` with `role="alert"` · switching between `immediate` / `on-touch` / `on-submit` strategies.
+  - What you'll learn: using `NgxSignalFormToolkit` · auto-ARIA with no manual `aria-*` plumbing · `NgxFormFieldError` with `role="alert"` · switching between `immediate` / `on-touch` / `on-submit` strategies.
 
 ## 🧠 Core concepts
 
 - **Auto-ARIA** — the toolkit syncs `aria-invalid`, `aria-required`, and `aria-describedby` automatically once you apply `ngxSignalForm` or the wrapper. See [toolkit README](../../../../../packages/toolkit/README.md).
 - **Error strategy** — when errors become visible (`on-touch` by default). Deep dive in [error-display-modes](../02-toolkit-core/error-display-modes/README.md).
-- **Assistive components** — `NgxFormFieldErrorComponent` handles visibility, message resolution, and ARIA without per-field `@if` blocks. See [assistive README](../../../../../packages/toolkit/assistive/README.md).
+- **Assistive components** — `NgxFormFieldError` handles visibility, message resolution, and ARIA without per-field `@if` blocks. See [assistive README](../../../../../packages/toolkit/assistive/README.md).
 
 ## 🤔 When to use this section
 

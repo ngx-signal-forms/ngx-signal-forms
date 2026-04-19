@@ -1,6 +1,5 @@
 ---
-name: ngx-signal-forms-vest
-description: Implements @ngx-signal-forms/toolkit/vest Vest validation integration for Angular Signal Forms. Use when adding Vest v6+ suites for business-logic validation, cross-field rules, conditional checks, or async server-backed validation alongside Angular Signal Forms validators. Part of the ngx-signal-forms skill suite.
+description: Sub-skill of ngx-signal-forms for the @ngx-signal-forms/toolkit/vest entry point — Vest v6+ suite integration for business-logic validation, cross-field rules, conditional checks, async server-backed validation, suite lifecycle management (resetOnDestroy), and focused `only()` runs. Not independently invocable; the hub SKILL.md routes here.
 ---
 
 # Toolkit Vest
@@ -24,11 +23,18 @@ Requires `vest@^6.0.0`. Vest 5 and earlier are not supported. Prefer `vest@6.2.7
 
 ```typescript
 import {
+  VEST_ERROR_KIND_PREFIX, // 'vest:'
+  VEST_WARNING_KIND_PREFIX, // 'warn:vest:'
   validateVest,
   validateVestWarnings,
   type ValidateVestOptions,
+  type VestOnlyFieldSelector,
 } from '@ngx-signal-forms/toolkit/vest';
 ```
+
+Use the exported kind prefixes when you need to detect Vest-origin errors in
+custom strategies, debugger filters, or tests — don't re-derive the string
+literals.
 
 ### `validateVest(path, suite, options?)`
 
@@ -70,6 +76,60 @@ const signupForm = form(signupModel, (path) => {
   validateVest(path, signupSuite, { includeWarnings: true });
 });
 ```
+
+#### Options
+
+| Option            | Default | Purpose                                                                                                                                                                                          |
+| ----------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `includeWarnings` | `false` | Surface `warn()` results as toolkit warnings (`kind` prefixed with `warn:vest:`).                                                                                                                |
+| `resetOnDestroy`  | `false` | Call `suite.reset()` via `DestroyRef.onDestroy()` when the hosting injection context tears down. **Strongly recommended for module-scope suites** — see _Suite lifecycle_ below.                 |
+| `only`            | _none_  | `VestOnlyFieldSelector` — `(ctx) => string \| readonly string[] \| undefined`. Threads a field name into `suite.run(value, fieldName)` for per-field focused runs; default runs the whole suite. |
+
+### Suite lifecycle
+
+Vest suites created with `create()` retain state across runs (last result,
+pending async tests, test memoization). The recommended Vest pattern is to
+declare suites at **module scope**:
+
+```typescript
+// signup.suite.ts — reused by every mount
+export const signupSuite = create((data: SignupModel) => {
+  /* ... */
+});
+```
+
+Without a teardown hook, state bleeds across component mounts — a second mount
+can see stale errors from a previous session, or async tests from an unmounted
+form can resolve into the new one. Enable `resetOnDestroy: true` to wire
+`suite.reset()` into `DestroyRef`:
+
+```typescript
+validateVest(path, signupSuite, { resetOnDestroy: true });
+```
+
+### Focused runs with `only`
+
+When the suite callback uses `only(fieldName)` (or `suite.only(field).run(...)`),
+pass a selector so the adapter threads the changed field through:
+
+```typescript
+import { create, enforce, only, test } from 'vest';
+
+const suite = create((data: Model, field?: string) => {
+  only(field);
+  test('email', 'Email is required', () => enforce(data.email).isNotBlank());
+  test('username', 'Username is required', () =>
+    enforce(data.username).isNotBlank(),
+  );
+});
+
+validateVest(path, suite, {
+  only: (ctx) => ctx.value().lastTouched,
+});
+```
+
+Default behavior (no `only` option) re-runs every test body on each change —
+correct but wasteful for large suites.
 
 ### `validateVestWarnings(path, suite)`
 
@@ -127,3 +187,5 @@ For Angular 21.2 `submit()` with Vest warnings, pass `{ ignoreValidators: 'all' 
 - If Vest warnings appear as blocking errors: ensure `{ includeWarnings: true }` is passed to `validateVest()` and that the suite uses `warn()` before `enforce()`.
 - If Vest results don't update reactively: confirm the suite receives the reactive signal value — pass `signalModel()` not `signalModel`.
 - If Vest v5 is installed: upgrade to `vest@^6.0.0` — v6+ implements the Standard Schema interface required by this adapter.
+- If stale errors appear on a second mount of a form using a module-scope suite: set `resetOnDestroy: true` so suite state clears on component teardown.
+- If detecting Vest-origin errors in a custom strategy or test: import `VEST_ERROR_KIND_PREFIX` / `VEST_WARNING_KIND_PREFIX` and match against `error.kind` instead of hard-coding the string.

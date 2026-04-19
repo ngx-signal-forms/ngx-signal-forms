@@ -1,5 +1,5 @@
 import { InjectionToken, type Signal } from '@angular/core';
-import type { NgxSignalFormContext } from './directives/ngx-signal-form.directive';
+import type { NgxSignalFormContext } from './directives/ngx-signal-form';
 import type {
   NgxSignalFormControlAriaMode,
   NgxSignalFormControlPresetRegistry,
@@ -32,7 +32,8 @@ export interface NgxSignalFormFieldContext {
 export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG = {
   autoAria: true,
   defaultErrorStrategy: 'on-touch',
-  defaultFormFieldAppearance: 'stacked',
+  defaultFormFieldAppearance: 'standard',
+  defaultFormFieldOrientation: 'vertical',
   showRequiredMarker: true,
   requiredMarker: ' *',
 } as const satisfies NgxSignalFormsConfig;
@@ -104,7 +105,7 @@ export const NGX_SIGNAL_FORM_CONTROL_PRESETS =
   );
 
 /**
- * Injection token for the form context (provided by `NgxSignalFormDirective`
+ * Injection token for the form context (provided by `NgxSignalForm`
  * when `ngxSignalForm` is present alongside Angular's `[formRoot]`).
  *
  * @template TForm - The Signal Forms instance type
@@ -125,7 +126,7 @@ export const NGX_SIGNAL_FORM_FIELD_CONTEXT =
 /**
  * Injection token for the resolved ARIA ownership mode for a single control
  * host. Provided by `NgxSignalFormControlSemanticsDirective` at its own
- * directive level, and read by `NgxSignalFormAutoAriaDirective` via
+ * directive level, and read by `NgxSignalFormAutoAria` via
  * `{ optional: true, self: true }`.
  *
  * Decouples auto-ARIA from the control-semantics directive: auto-ARIA no
@@ -162,7 +163,7 @@ export interface NgxSignalFormHintDescriptor {
 
 /**
  * Registry of hints that live inside a form field wrapper (or any other
- * provider of `NGX_SIGNAL_FORM_HINT_REGISTRY`). `NgxSignalFormAutoAriaDirective`
+ * provider of `NGX_SIGNAL_FORM_HINT_REGISTRY`). `NgxSignalFormAutoAria`
  * reads this registry instead of querying the DOM for hint elements.
  *
  * @internal

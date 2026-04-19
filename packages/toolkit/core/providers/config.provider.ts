@@ -36,6 +36,9 @@ function createConfigFactory(
       defaultFormFieldAppearance:
         userConfig.defaultFormFieldAppearance ??
         parent.defaultFormFieldAppearance,
+      defaultFormFieldOrientation:
+        userConfig.defaultFormFieldOrientation ??
+        parent.defaultFormFieldOrientation,
       showRequiredMarker:
         userConfig.showRequiredMarker ?? parent.showRequiredMarker,
       requiredMarker: userConfig.requiredMarker ?? parent.requiredMarker,

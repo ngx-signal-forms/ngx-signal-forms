@@ -150,7 +150,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
 
       <form [formRoot]="deliveryForm" class="max-w-2xl space-y-6">
         <div
-          ngxSignalFormHeadlessErrorSummary
+          ngxHeadlessErrorSummary
           #formSummary="errorSummary"
           [formTree]="deliveryForm"
           data-testid="delivery-form-summary"
@@ -168,7 +168,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
                 <code
                   class="rounded bg-gray-100 px-1.5 py-0.5 text-xs dark:bg-gray-900"
                 >
-                  NgxHeadlessErrorSummaryDirective
+                  NgxHeadlessErrorSummary
                 </code>
                 with library-aligned styling and fully custom markup.
               </p>
@@ -200,13 +200,13 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
 
         <div class="headless-card">
           <div
-            ngxSignalFormHeadlessFieldName
+            ngxHeadlessFieldName
             fieldName="contactEmail"
             #emailName="fieldName"
             class="space-y-2"
           >
             <div
-              ngxSignalFormHeadlessErrorState
+              ngxHeadlessErrorState
               #emailState="errorState"
               [field]="deliveryForm.contactEmail"
               [fieldName]="emailName.resolvedFieldName()"
@@ -255,7 +255,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
 
         <div class="headless-card">
           <fieldset
-            ngxSignalFormHeadlessFieldset
+            ngxHeadlessFieldset
             #addressFieldset="fieldset"
             [fieldsetField]="deliveryForm.address"
             fieldsetId="address"
@@ -314,13 +314,13 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
 
             <div class="grid gap-4 sm:grid-cols-2">
               <div
-                ngxSignalFormHeadlessFieldName
+                ngxHeadlessFieldName
                 fieldName="street"
                 #streetName="fieldName"
                 class="space-y-2"
               >
                 <div
-                  ngxSignalFormHeadlessErrorState
+                  ngxHeadlessErrorState
                   #streetState="errorState"
                   [field]="deliveryForm.address.street"
                   [fieldName]="streetName.resolvedFieldName()"
@@ -389,13 +389,13 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
               </div>
 
               <div
-                ngxSignalFormHeadlessFieldName
+                ngxHeadlessFieldName
                 fieldName="city"
                 #cityName="fieldName"
                 class="space-y-2"
               >
                 <div
-                  ngxSignalFormHeadlessErrorState
+                  ngxHeadlessErrorState
                   #cityState="errorState"
                   [field]="deliveryForm.address.city"
                   [fieldName]="cityName.resolvedFieldName()"
@@ -441,13 +441,13 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
               </div>
 
               <div
-                ngxSignalFormHeadlessFieldName
+                ngxHeadlessFieldName
                 fieldName="postalCode"
                 #postalName="fieldName"
                 class="space-y-2"
               >
                 <div
-                  ngxSignalFormHeadlessErrorState
+                  ngxHeadlessErrorState
                   #postalState="errorState"
                   [field]="deliveryForm.address.postalCode"
                   [fieldName]="postalName.resolvedFieldName()"

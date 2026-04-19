@@ -76,6 +76,94 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
     });
   });
 
+  test.describe('Horizontal orientation integration', () => {
+    test('should apply horizontal orientation to nested field wrappers while leaving selection rows vertical', async () => {
+      await test.step('Switch the demo to horizontal orientation', async () => {
+        await page.showStandardAppearance();
+        await page.showHorizontalOrientation();
+
+        await expect(page.horizontalOrientationButton).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        );
+      });
+
+      await test.step('Verify textual nested wrappers resolve to horizontal', async () => {
+        for (const controlId of ['firstName', 'street']) {
+          const wrapper = page.getWrapperByControlId(controlId);
+
+          await expect(wrapper).toHaveAttribute(
+            'data-orientation',
+            'horizontal',
+          );
+          await expect(wrapper).toHaveClass(
+            /ngx-signal-form-field-wrapper--horizontal/,
+          );
+        }
+      });
+
+      await test.step('Verify switch and checkbox rows keep vertical semantics', async () => {
+        for (const controlId of ['newsletter', 'notifications']) {
+          const wrapper = page.getWrapperByControlId(controlId);
+
+          await expect(wrapper).toHaveAttribute('data-orientation', 'vertical');
+          await expect(wrapper).not.toHaveClass(
+            /ngx-signal-form-field-wrapper--horizontal/,
+          );
+        }
+      });
+    });
+
+    test('should disable horizontal orientation when outline appearance is active', async () => {
+      await test.step('Switch to horizontal orientation before selecting outline', async () => {
+        await page.showStandardAppearance();
+        await page.showHorizontalOrientation();
+        await expect(page.horizontalOrientationButton).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        );
+      });
+
+      await test.step('Enable outline appearance', async () => {
+        await page.showOutlineAppearance();
+
+        await expect(page.outlineAppearanceButton).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        );
+        await expect(page.horizontalOrientationButton).toBeDisabled();
+        await expect(page.verticalOrientationButton).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        );
+      });
+
+      await test.step('Verify previously horizontal wrappers resolve back to vertical', async () => {
+        for (const controlId of ['firstName', 'street']) {
+          const wrapper = page.getWrapperByControlId(controlId);
+
+          await expect(wrapper).toHaveAttribute('data-orientation', 'vertical');
+          await expect(wrapper).not.toHaveClass(
+            /ngx-signal-form-field-wrapper--horizontal/,
+          );
+        }
+      });
+    });
+
+    test('should match the standard horizontal personal-information baseline', async () => {
+      await test.step('Show the standard horizontal nested layout', async () => {
+        await page.showStandardAppearance();
+        await page.showHorizontalOrientation();
+      });
+
+      await test.step('Capture a focused fieldset baseline', async () => {
+        await expect(page.personalInfoFieldset).toHaveScreenshot(
+          'complex-forms-standard-horizontal-personal-info.png',
+        );
+      });
+    });
+  });
+
   test.describe('Auto Error Display', () => {
     test('should automatically display errors with field wrapper', async () => {
       const firstInput = page.allFormControls.first();
@@ -117,7 +205,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
 
     test('should wrap switch and checkbox in form field wrappers', async () => {
       const newsletterWrapper = page.preferencesFieldset.locator(
-        'ngx-signal-form-field-wrapper',
+        'ngx-form-field-wrapper',
       );
       await expect(newsletterWrapper.first()).toBeVisible();
       const count = await newsletterWrapper.count();

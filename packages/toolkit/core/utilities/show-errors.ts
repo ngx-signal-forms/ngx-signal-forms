@@ -14,8 +14,8 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * be shown to the user based on the error display strategy.
  *
  * This is the shared visibility-timing primitive: `createErrorState()`,
- * `NgxHeadlessErrorStateDirective`, `NgxHeadlessErrorSummaryDirective`,
- * `NgxSignalFormAutoAriaDirective`, `NgxFormFieldErrorComponent`, and the
+ * `NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`,
+ * `NgxSignalFormAutoAria`, `NgxFormFieldError`, and the
  * form-field wrapper all route their visibility decisions through
  * `shouldShowErrors()` (via this computed) so the when-to-show rule stays
  * identical across surfaces. Individual consumers may layer their own
@@ -101,8 +101,8 @@ export function showErrors(
  * Creates a reactive visibility-timing computed for a `FieldState`.
  *
  * This is the single extraction point behind `showErrors()`, the wrapper
- * component's `shouldShowErrors`, `NgxSignalFormAutoAriaDirective`, and
- * `NgxFormFieldErrorComponent`. Each of those used to build its own
+ * component's `shouldShowErrors`, `NgxSignalFormAutoAria`, and
+ * `NgxFormFieldError`. Each of those used to build its own
  * `computed(() => shouldShowErrors(field.invalid(), field.touched(), strategy, status))`
  * inline — consolidating here means visibility timing cannot drift between
  * them.
@@ -270,7 +270,7 @@ function computeShowErrorsInternal(
       // oxlint-disable-next-line no-console -- dev-only diagnostic
       console.warn(
         "[ngx-signal-forms] showErrors(): 'on-submit' strategy requires an explicit submittedStatus signal. " +
-          "Without it, errors will never surface. Wire the status from NgxSignalFormDirective ('ngxSignalForm') or pass submittedStatus explicitly.",
+          "Without it, errors will never surface. Wire the status from NgxSignalForm ('ngxSignalForm') or pass submittedStatus explicitly.",
       );
     }
 

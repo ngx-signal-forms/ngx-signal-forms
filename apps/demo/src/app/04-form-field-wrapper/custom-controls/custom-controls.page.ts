@@ -2,12 +2,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   signal,
   viewChild,
 } from '@angular/core';
 import type {
   ErrorDisplayStrategy,
   FormFieldAppearance,
+  FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
@@ -15,14 +17,19 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import {
   ERROR_DISPLAY_MODE_LABELS,
   ErrorDisplayModeSelectorComponent,
-} from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
+} from '../../ui/error-display-mode-selector/error-display-mode-selector';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
+import {
+  getOrientationLabel,
+  isOrientationDisabledForAppearance,
+} from '../../ui/orientation-toggle';
 import { CUSTOM_CONTROLS_CONTENT } from './custom-controls.content';
 import { CustomControlsFormComponent } from './custom-controls.form';
 
@@ -30,7 +37,7 @@ import { CustomControlsFormComponent } from './custom-controls.form';
  * Custom Controls Demo Page
  *
  * Demonstrates how custom Angular Signal Forms controls (FormValueControl)
- * work seamlessly with ngx-signal-form-field-wrapper.
+ * work seamlessly with ngx-form-field-wrapper.
  *
  * Key features:
  * - Custom RatingControl implementing FormValueControl<number>
@@ -48,6 +55,7 @@ import { CustomControlsFormComponent } from './custom-controls.form';
     SplitLayoutComponent,
     NgxSignalFormDebugger,
     AppearanceToggleComponent,
+    OrientationToggleComponent,
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
   ],
@@ -81,6 +89,16 @@ import { CustomControlsFormComponent } from './custom-controls.form';
         >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
         </ngx-display-controls-section>
+
+        <ngx-display-controls-section
+          title="↔️ Label orientation"
+          description="Compare vertical and horizontal labels for the non-outline wrappers. Outline stays vertical because its floating-label treatment depends on the label living inside the field chrome."
+        >
+          <ngx-orientation-toggle
+            [(value)]="selectedOrientation"
+            [appearance]="selectedAppearance()"
+          />
+        </ngx-display-controls-section>
       </ngx-display-controls-card>
 
       <ngx-split-layout>
@@ -88,6 +106,7 @@ import { CustomControlsFormComponent } from './custom-controls.form';
           #formComponent
           [errorDisplayMode]="selectedMode()"
           [appearance]="selectedAppearance()"
+          [orientation]="selectedOrientation()"
           left
         />
         @if (formComponent) {
@@ -105,7 +124,9 @@ export class CustomControlsPage {
 
   protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
-    signal<FormFieldAppearance>('stacked');
+    signal<FormFieldAppearance>('standard');
+  protected readonly selectedOrientation =
+    signal<FormFieldOrientation>('vertical');
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -115,8 +136,25 @@ export class CustomControlsPage {
       label: 'Appearance',
       value: APPEARANCE_LABELS[this.selectedAppearance()],
     },
+    {
+      label: 'Orientation',
+      value: getOrientationLabel(this.selectedOrientation()),
+    },
   ]);
 
   protected readonly demonstratedContent = CUSTOM_CONTROLS_CONTENT.demonstrated;
   protected readonly learningContent = CUSTOM_CONTROLS_CONTENT.learning;
+
+  constructor() {
+    effect(() => {
+      if (
+        isOrientationDisabledForAppearance(
+          this.selectedAppearance(),
+          this.selectedOrientation(),
+        )
+      ) {
+        this.selectedOrientation.set('vertical');
+      }
+    });
+  }
 }

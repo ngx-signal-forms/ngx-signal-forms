@@ -16,6 +16,7 @@ import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
+  type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import {
   type FieldsetErrorPlacement,
@@ -74,10 +75,10 @@ const placementDesignPreviewSchema = schema<PlacementDesignPreviewModel>(
 );
 
 /**
- * Fieldset Demo - Demonstrates NgxSignalFormFieldset
+ * Fieldset Demo - Demonstrates NgxFormFieldset
  *
  * This example showcases how to group related form fields and display
- * aggregated validation errors using the NgxSignalFormFieldset.
+ * aggregated validation errors using the NgxFormFieldset.
  *
  * 🎯 Key Features Demonstrated:
  * - Grouped address fields with shared validation display
@@ -87,7 +88,7 @@ const placementDesignPreviewSchema = schema<PlacementDesignPreviewModel>(
  * - Conditional fieldset visibility (billing same as shipping)
  * - WCAG 2.2 compliant accessibility
  *
- * 📚 When to use NgxSignalFormFieldset:
+ * 📚 When to use NgxFormFieldset:
  * - Grouping logically related fields (addresses, password groups)
  * - Showing aggregated errors at the group level
  * - Reducing visual clutter with many field-level errors
@@ -109,7 +110,8 @@ export class FieldsetFormComponent {
    * Error display mode input - controls when errors are shown
    */
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
-  readonly appearance = input<FormFieldAppearance>('stacked');
+  readonly appearance = input<FormFieldAppearance>('standard');
+  readonly orientation = input<FormFieldOrientation>('vertical');
   readonly errorPlacement = input<FieldsetErrorPlacement>('top');
 
   readonly #placementPreviewModel = signal(createPlacementPreviewValue());

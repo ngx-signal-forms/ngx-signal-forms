@@ -6,10 +6,10 @@ export const HEADLESS_FIELDSET_UTILITIES_CONTENT = {
       {
         title: 'Directives',
         items: [
-          '<strong>ngxSignalFormHeadlessErrorSummary:</strong> Form-level summary with custom markup',
-          '<strong>ngxSignalFormHeadlessFieldset:</strong> Aggregate group state and errors',
-          '<strong>ngxSignalFormHeadlessFieldName:</strong> Resolve IDs and names for ARIA',
-          '<strong>ngxSignalFormHeadlessErrorState:</strong> Custom error and warning UI',
+          '<strong>ngxHeadlessErrorSummary:</strong> Form-level summary with custom markup',
+          '<strong>ngxHeadlessFieldset:</strong> Aggregate group state and errors',
+          '<strong>ngxHeadlessFieldName:</strong> Resolve IDs and names for ARIA',
+          '<strong>ngxHeadlessErrorState:</strong> Custom error and warning UI',
         ],
       },
       {

@@ -11,11 +11,11 @@ It is a development-only tool — gate it behind `isDevMode()` so production bui
 ## Import
 
 ```typescript
-// Bundle import (recommended)
-import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+// Bundle import (recommended) — includes the debugger panel + badge directives
+import { NgxSignalFormDebuggerToolkit } from '@ngx-signal-forms/toolkit/debugger';
 
-// Individual import
-import { SignalFormDebuggerComponent } from '@ngx-signal-forms/toolkit/debugger';
+// Individual import — just the panel component
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 ```
 
 ## Quick start
@@ -52,7 +52,7 @@ Pass the `FieldTree` function (e.g. `userForm`), not the called state (`userForm
 
 ## API
 
-### SignalFormDebuggerComponent
+### NgxSignalFormDebugger
 
 Selector: `ngx-signal-form-debugger`
 
@@ -72,9 +72,11 @@ consumers MUST wrap the element in an `@if (isDevMode())` block as shown in
 the Quick start — otherwise the compiled bundle keeps the debugger code path
 even though the UI is hidden at runtime.
 
-### NgxSignalFormDebugger
+### NgxSignalFormDebuggerToolkit
 
-Bundle containing `SignalFormDebuggerComponent` and internal badge components.
+Bundle array (`as const`) containing `NgxSignalFormDebugger`,
+`NgxSignalFormDebuggerBadge`, and `NgxSignalFormDebuggerBadgeIcon`. Drop it into
+a component's `imports` to get the full debugger surface in one go.
 
 ### What it shows
 

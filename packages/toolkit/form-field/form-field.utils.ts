@@ -38,9 +38,7 @@ export function requireHostElement(
   const hostEl = elementRef.nativeElement;
 
   if (!(hostEl instanceof HTMLElement)) {
-    throw new TypeError(
-      'NgxSignalFormFieldWrapperComponent requires an HTMLElement host.',
-    );
+    throw new TypeError('NgxFormFieldWrapper requires an HTMLElement host.');
   }
 
   return hostEl;
@@ -122,7 +120,7 @@ interface ControlKindCapabilities {
  *
  * TypeScript will surface each missing edit in turn. Ship a test covering
  * the wrapper chrome for the new kind (see the existing slider/composite
- * tests in `form-field-wrapper.component.spec.ts` for the pattern).
+ * tests in `form-field-wrapper.spec.ts` for the pattern).
  *
  * ## Why consumers can't add kinds from user code
  *

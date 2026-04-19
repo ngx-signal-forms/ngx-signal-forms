@@ -57,8 +57,8 @@ The most complex demo in the app: a three-step travel-booking wizard built on a 
 - [forms/trip-step.form.ts](forms/trip-step.form.ts) — destinations, activities, and cross-field rules.
 - [schemas/wizard.schemas.ts](schemas/wizard.schemas.ts) — Zod schemas and factories.
 - [stores/wizard.store.ts](stores/wizard.store.ts) — store composition, draft state, and auto-save.
-- [components/wizard-container.component.ts](components/wizard-container.component.ts) — step navigation, commit flow, `@defer` coordination.
-- `components/*-step.component.ts` — individual step UI implementations.
+- [components/wizard-container.ts](components/wizard-container.ts) — step navigation, commit flow, `@defer` coordination.
+- `components/*-step.ts` — individual step UI implementations.
 
 ## Other tools
 

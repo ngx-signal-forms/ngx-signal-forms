@@ -8,7 +8,7 @@ A realistic, non-trivial form with nested objects, dynamic arrays, and mixed con
 
 - `NgxSignalFormToolkit` — root directive for auto-ARIA and form context.
 - `NgxFormField` wrapper — automatic label/error/hint layout for every field.
-- `NgxSignalFormFieldset` — realistic section structure with grouped state.
+- `NgxFormFieldset` — realistic section structure with grouped state.
 - Dynamic array mutations on signal models (add/remove skills and contacts).
 - Explicit `ngxSignalFormControl="switch|checkbox"` semantics so switch/checkbox rows land on the right wrapper layout without projection heuristics.
 

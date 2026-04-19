@@ -166,10 +166,10 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 @Component({
   imports: [FormField, NgxFormField],
   template: `
-    <ngx-signal-form-field-wrapper [formField]="myForm.email">
+    <ngx-form-field-wrapper [formField]="myForm.email">
       <label for="email">Email</label>
       <input id="email" [formField]="myForm.email" />
-    </ngx-signal-form-field-wrapper>
+    </ngx-form-field-wrapper>
   `,
 })
 ```
@@ -243,7 +243,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 **Issue:** ARIA attributes not appearing
 
-- Auto-ARIA requires `NgxSignalFormAutoAriaDirective` (included in bundle)
+- Auto-ARIA requires `NgxSignalFormAutoAria` (included in bundle)
 - Check `id` attribute is set on input elements
 - Verify toolkit directives are imported
 

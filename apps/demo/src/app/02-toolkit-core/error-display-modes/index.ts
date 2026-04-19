@@ -7,5 +7,5 @@ export type { ProductFeedbackModel } from './error-display-modes.validations';
 export {
   ERROR_DISPLAY_MODES,
   ErrorDisplayModeSelectorComponent,
-} from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
-export type { ErrorDisplayModeConfig } from '../../ui/error-display-mode-selector/error-display-mode-selector.component';
+} from '../../ui/error-display-mode-selector/error-display-mode-selector';
+export type { ErrorDisplayModeConfig } from '../../ui/error-display-mode-selector/error-display-mode-selector';

@@ -14,6 +14,7 @@ import {
 import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
+  type FormFieldOrientation,
   createOnInvalidHandler,
   hasOnlyWarnings,
   NgxSignalFormToolkit,
@@ -95,9 +96,10 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
         class="max-w-3xl space-y-6"
       >
         <div class="grid gap-4 md:grid-cols-2">
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.firstName"
             [appearance]="appearance()"
+            [orientation]="orientation()"
           >
             <label for="zod-vest-first-name">First name</label>
             <input
@@ -105,11 +107,12 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               type="text"
               [formField]="accountForm.firstName"
             />
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
 
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.lastName"
             [appearance]="appearance()"
+            [orientation]="orientation()"
           >
             <label for="zod-vest-last-name">Last name</label>
             <input
@@ -117,13 +120,14 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               type="text"
               [formField]="accountForm.lastName"
             />
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
         </div>
 
         <div class="grid gap-4 md:grid-cols-2">
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.email"
             [appearance]="appearance()"
+            [orientation]="orientation()"
           >
             <label for="zod-vest-email">Email</label>
             <input
@@ -132,11 +136,12 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               [formField]="accountForm.email"
               placeholder="name@company.com"
             />
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
 
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.password"
             [appearance]="appearance()"
+            [orientation]="orientation()"
           >
             <label for="zod-vest-password">Password</label>
             <input
@@ -144,16 +149,15 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               type="password"
               [formField]="accountForm.password"
             />
-            <ngx-signal-form-field-hint>
-              At least 12 characters.
-            </ngx-signal-form-field-hint>
-          </ngx-signal-form-field-wrapper>
+            <ngx-form-field-hint> At least 12 characters. </ngx-form-field-hint>
+          </ngx-form-field-wrapper>
         </div>
 
         <div class="grid gap-4 md:grid-cols-2">
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.accountType"
             [appearance]="appearance()"
+            [orientation]="orientation()"
           >
             <label for="zod-vest-account-type">Account type</label>
             <select
@@ -164,11 +168,12 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               <option value="personal">Personal</option>
               <option value="business">Business</option>
             </select>
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
 
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.country"
             [appearance]="appearance()"
+            [orientation]="orientation()"
           >
             <label for="zod-vest-country">Country</label>
             <select id="zod-vest-country" [formField]="accountForm.country">
@@ -178,13 +183,14 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               <option value="NL">Netherlands</option>
               <option value="BE">Belgium</option>
             </select>
-          </ngx-signal-form-field-wrapper>
+          </ngx-form-field-wrapper>
         </div>
 
         <div class="grid gap-4 md:grid-cols-2">
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.companyName"
             [appearance]="appearance()"
+            [orientation]="orientation()"
           >
             <label for="zod-vest-company-name">Company name</label>
             <input
@@ -192,14 +198,15 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               type="text"
               [formField]="accountForm.companyName"
             />
-            <ngx-signal-form-field-hint>
+            <ngx-form-field-hint>
               Required for business accounts.
-            </ngx-signal-form-field-hint>
-          </ngx-signal-form-field-wrapper>
+            </ngx-form-field-hint>
+          </ngx-form-field-wrapper>
 
-          <ngx-signal-form-field-wrapper
+          <ngx-form-field-wrapper
             [formField]="accountForm.vatNumber"
             [appearance]="appearance()"
+            [orientation]="orientation()"
           >
             <label for="zod-vest-vat-number">VAT number</label>
             <input
@@ -208,10 +215,10 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               [formField]="accountForm.vatNumber"
               class="uppercase"
             />
-            <ngx-signal-form-field-hint>
+            <ngx-form-field-hint>
               Required for business accounts in DE, NL, or BE.
-            </ngx-signal-form-field-hint>
-          </ngx-signal-form-field-wrapper>
+            </ngx-form-field-hint>
+          </ngx-form-field-wrapper>
         </div>
 
         <div
@@ -254,6 +261,7 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
 export class ZodVestValidationComponent {
   readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
+  readonly orientation = input<FormFieldOrientation>('vertical');
   readonly #onInvalid = createOnInvalidHandler();
 
   readonly #model = signal(createZodVestValidationModel());

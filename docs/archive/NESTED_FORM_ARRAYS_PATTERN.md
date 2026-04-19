@@ -907,7 +907,7 @@ export function createFactsStepForm(store: InstanceType<typeof WizardStore>): {
 ### Component: Commit Changes via Store Methods
 
 ```typescript
-// facts-step.component.ts
+// facts-step.ts
 @Component({
   selector: 'app-facts-step',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -1224,7 +1224,7 @@ export class ValidationErrorsComponent {
 | **Form ↔ Store sync**                    | `linkedSignal()` provides writable form model; no effect-based mirroring   |
 | **Auto-save**                            | `rxMethod` with `debounceTime` + `distinctUntilChanged`                    |
 | **Cross-field validation**               | `validate(path, ctx => ctx.valueOf(otherPath))` pattern                    |
-| **Toolkit integration**                  | `NgxSignalFormFieldWrapperComponent`, `showErrors()`, error strategies     |
+| **Toolkit integration**                  | `NgxFormFieldWrapper`, `showErrors()`, error strategies                    |
 
 **Key Insights:**
 
@@ -1243,7 +1243,7 @@ export class ValidationErrorsComponent {
    - `rxMethod`: Reactive auto-save with debounce
    - `validate()` + `valueOf()`: Cross-field validation referencing other paths
 
-6. **Toolkit benefits:** `@ngx-signal-forms/toolkit` provides `NgxSignalFormFieldWrapperComponent` for consistent field layout, automatic ARIA attributes via `NgxSignalFormAutoAriaDirective`, and `showErrors()` utility with strategies (`'on-touch'`, `'on-submit'`, `'immediate'`).
+6. **Toolkit benefits:** `@ngx-signal-forms/toolkit` provides `NgxFormFieldWrapper` for consistent field layout, automatic ARIA attributes via `NgxSignalFormAutoAria`, and `showErrors()` utility with strategies (`'on-touch'`, `'on-submit'`, `'immediate'`).
 
 ---
 
@@ -1704,14 +1704,10 @@ export class WizardShellComponent {
 @Component({
   selector: 'app-person-info-step',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    FormField,
-    NgxSignalFormToolkit,
-    NgxSignalFormFieldWrapperComponent,
-  ],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormFieldWrapper],
   template: `
     <form [formRoot]="personForm">
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [formField]="personForm.firstName"
         appearance="outline"
       >
@@ -1722,9 +1718,9 @@ export class WizardShellComponent {
           [formField]="personForm.firstName"
           required
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [formField]="personForm.lastName"
         appearance="outline"
       >
@@ -1735,9 +1731,9 @@ export class WizardShellComponent {
           [formField]="personForm.lastName"
           required
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [formField]="personForm.email"
         appearance="outline"
       >
@@ -1748,15 +1744,15 @@ export class WizardShellComponent {
           [formField]="personForm.email"
           required
         />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
 
-      <ngx-signal-form-field-wrapper
+      <ngx-form-field-wrapper
         [formField]="personForm.phone"
         appearance="outline"
       >
         <label for="phone">Phone (optional)</label>
         <input id="phone" type="tel" [formField]="personForm.phone" />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
     </form>
   `,
 })
@@ -2171,7 +2167,7 @@ export const WizardStore = signalStore(
 ### Using Auto-Save in Components
 
 ```typescript
-// facts-step.component.ts
+// facts-step.ts
 @Component({ ... })
 export class FactsStepComponent {
   protected readonly store = inject(WizardStore);
@@ -2198,19 +2194,19 @@ export class FactsStepComponent {
 
 ## Toolkit Integration Improvements
 
-### 1. Use NgxSignalFormFieldWrapperComponent
+### 1. Use NgxFormFieldWrapper
 
 Your toolkit provides excellent field wrapper functionality. Use it consistently:
 
 ```typescript
-import { NgxSignalFormFieldWrapperComponent } from '@ngx-signal-forms/toolkit/form-field';
+import { NgxFormFieldWrapper } from '@ngx-signal-forms/toolkit/form-field';
 
 // In template
-<ngx-signal-form-field-wrapper [formField]="form.email" appearance="outline">
+<ngx-form-field-wrapper [formField]="form.email" appearance="outline">
   <label for="email">Email</label>
   <input id="email" type="email" [formField]="form.email" required />
   <ngx-form-field-hint>Enter your work email</ngx-form-field-hint>
-</ngx-signal-form-field-wrapper>
+</ngx-form-field-wrapper>
 ```
 
 ### 2. Use showErrors and Error Strategies
@@ -2272,7 +2268,7 @@ For a production-scale end-to-end implementation, use the maintained demo and pa
 | **Nested CRUD**             | Store methods with immutable updates via `patchState`          |
 | **Form ↔ Store sync**       | `linkedSignal()` for writable model; no effect mirroring       |
 | **Validation**              | Zod for schema, Angular Signal Forms for field-level           |
-| **Toolkit integration**     | `NgxSignalFormFieldWrapperComponent` + error components        |
+| **Toolkit integration**     | `NgxFormFieldWrapper` + error components                       |
 | **Loading states**          | `isLoading` state + mutation pending signals                   |
 
 ---

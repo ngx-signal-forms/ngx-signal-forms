@@ -59,13 +59,13 @@ The toolkit adds the pieces Angular intentionally leaves to app and library auth
 #### `[formRoot]` + `ngxSignalForm`: additive enhancement
 
 Angular's native `FormRoot` handles `novalidate`, `event.preventDefault()`, and calling `submit()`.
-The toolkit's `NgxSignalFormDirective` (selector: `form[formRoot][ngxSignalForm]`) is an **additive enhancer** — it activates on `<form>` elements that already have `[formRoot]` when you also add the `ngxSignalForm` attribute. It adds:
+The toolkit's `NgxSignalForm` (selector: `form[formRoot][ngxSignalForm]`) is an **additive enhancer** — it activates on `<form>` elements that already have `[formRoot]` when you also add the `ngxSignalForm` attribute. It adds:
 
 1. **DI context** — child toolkit components (error display, field wrappers, headless directives) access form state through `NGX_SIGNAL_FORM_CONTEXT` without prop drilling
 2. **Submitted status tracking** — derives `'unsubmitted' → 'submitting' → 'submitted'` from Angular's native `submitting()` signal, which Angular does not expose as a status
 3. **Error display strategy** — the `[errorStrategy]` input controls when validation feedback becomes visible (`'immediate'`, `'on-touch'`, or `'on-submit'`)
 
-**`NgxSignalFormToolkit` bundles `FormRoot` + `NgxSignalFormDirective` + `NgxSignalFormAutoAriaDirective` + `NgxSignalFormControlSemanticsDirective`** — import it instead of `FormRoot` separately.
+**`NgxSignalFormToolkit` bundles `FormRoot` + `NgxSignalForm` + `NgxSignalFormAutoAria` + `NgxSignalFormControlSemantics`** — import it instead of `FormRoot` separately.
 
 > **Most forms do not need explicit control semantics.** Native text inputs,
 > textareas, selects, and ordinary wrapper usage work with the toolkit defaults.
@@ -91,13 +91,13 @@ imports: [FormField, NgxSignalFormToolkit];
 
 - `<ngx-form-field-error>` for accessible error and warning output
 - `<ngx-form-field-error-summary>` for form-level error summaries
-- `<ngx-signal-form-field-hint>`
-- `<ngx-signal-form-field-character-count>`
+- `<ngx-form-field-hint>`
+- `<ngx-form-field-character-count>`
 
 ### Form field: `@ngx-signal-forms/toolkit/form-field`
 
-- `<ngx-signal-form-field-wrapper>` with `appearance="outline"` support
-- `<ngx-signal-form-fieldset>`
+- `<ngx-form-field-wrapper>` with `appearance="outline"` support
+- `<ngx-form-fieldset>`
 
 Most wrapper use cases need no extra control metadata. Explicit control
 semantics are primarily for controls outside the default native field families (`<input>`, `<textarea>`, `<select>`), such as
@@ -135,7 +135,7 @@ for the design rationale behind the directive + presets split.
 ### Headless: `@ngx-signal-forms/toolkit/headless`
 
 - renderless directives for custom design systems
-- `NgxHeadlessErrorSummaryDirective` for fully custom form-level error summaries
+- `NgxHeadlessErrorSummary` for fully custom form-level error summaries
 - utility functions such as `createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()`, and `readErrors()`
 
 Use the headless summary directive when you want toolkit-managed aggregation,
@@ -298,15 +298,15 @@ If you want the deeper decision guide for Vest specifically, see:
 
 ```html
 <form [formRoot]="userForm" ngxSignalForm>
-  <ngx-signal-form-field-wrapper [formField]="userForm.email">
+  <ngx-form-field-wrapper [formField]="userForm.email">
     <label for="email">Email</label>
     <input id="email" [formField]="userForm.email" />
-  </ngx-signal-form-field-wrapper>
+  </ngx-form-field-wrapper>
   <button type="submit">Send</button>
 </form>
 ```
 
-**Result:** `[formRoot]` binds the form as usual; `ngxSignalForm` adds DI context, submitted status, and error strategy — so child components like `<ngx-signal-form-field-wrapper>` handle ARIA and error visibility automatically.
+**Result:** `[formRoot]` binds the form as usual; `ngxSignalForm` adds DI context, submitted status, and error strategy — so child components like `<ngx-form-field-wrapper>` handle ARIA and error visibility automatically.
 
 ---
 
@@ -326,7 +326,7 @@ import {
   FormField, // Angular's [formField] — unchanged
 } from '@angular/forms/signals';
 import {
-  NgxSignalFormToolkit, // Bundles FormRoot + NgxSignalFormDirective + AutoARIA + control semantics
+  NgxSignalFormToolkit, // Bundles FormRoot + NgxSignalForm + AutoARIA + control semantics
   createOnInvalidHandler,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
@@ -337,10 +337,10 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="contactForm" ngxSignalForm>
-      <ngx-signal-form-field-wrapper [formField]="contactForm.email">
+      <ngx-form-field-wrapper [formField]="contactForm.email">
         <label for="email">Email</label>
         <input id="email" [formField]="contactForm.email" type="email" />
-      </ngx-signal-form-field-wrapper>
+      </ngx-form-field-wrapper>
       <button type="submit">Send</button>
     </form>
   `,
@@ -417,17 +417,17 @@ Use this when you want feedback components without adopting the full field wrapp
 
 **Key exports**:
 
-- `NgxFormFieldErrorComponent` — Error/warning display with ARIA roles
-- `NgxFormFieldErrorSummaryComponent` — Form-level summary for blocking errors
-- `NgxFormFieldHintComponent` — Helper text below inputs
-- `NgxFormFieldCharacterCountComponent` — Character counter with maxLength detection
-- `NgxFormFieldAssistiveRowComponent` — Layout row for hints and counters
+- `NgxFormFieldError` — Error/warning display with ARIA roles
+- `NgxFormFieldErrorSummary` — Form-level summary for blocking errors
+- `NgxFormFieldHint` — Helper text below inputs
+- `NgxFormFieldCharacterCount` — Character counter with maxLength detection
+- `NgxFormFieldAssistiveRow` — Layout row for hints and counters
 - `warningError()`, `isWarningError()`, `isBlockingError()` — Warning utilities
 
 ```typescript
 import {
-  NgxFormFieldErrorComponent,
-  NgxFormFieldHintComponent,
+  NgxFormFieldError,
+  NgxFormFieldHint,
   warningError,
 } from '@ngx-signal-forms/toolkit/assistive';
 ```
@@ -436,9 +436,7 @@ import {
 <label for="email">Email</label>
 <input id="email" [formField]="form.email" />
 <ngx-form-field-error [formField]="form.email" fieldName="email" />
-<ngx-signal-form-field-hint
-  >We'll never share your email</ngx-signal-form-field-hint
->
+<ngx-form-field-hint>We'll never share your email</ngx-form-field-hint>
 ```
 
 **[📖 Full Documentation →](./packages/toolkit/assistive/README.md)**
@@ -452,17 +450,15 @@ Use this when you want a batteries-included field wrapper and consistent layout 
 **Key exports**:
 
 - `NgxFormField` — Bundle import for form field wrapper, outlined layout, hints, and character count
-- `NgxSignalFormFieldset` — Group related fields with aggregated errors (use `includeNestedErrors` to control aggregation)
+- `NgxFormFieldset` — Group related fields with aggregated errors (use `includeNestedErrors` to control aggregation)
 
 ```html
-<ngx-signal-form-field-wrapper [formField]="form.bio" appearance="outline">
+<ngx-form-field-wrapper [formField]="form.bio" appearance="outline">
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="form.bio"></textarea>
-  <ngx-signal-form-field-hint
-    >Tell us about yourself</ngx-signal-form-field-hint
-  >
-  <ngx-signal-form-field-character-count [formField]="form.bio" />
-</ngx-signal-form-field-wrapper>
+  <ngx-form-field-hint>Tell us about yourself</ngx-form-field-hint>
+  <ngx-form-field-character-count [formField]="form.bio" />
+</ngx-form-field-wrapper>
 ```
 
 When you omit `fieldName`, the wrapper derives field identity from the projected
@@ -479,9 +475,9 @@ Use this when you need full control over markup and styling but do not want to r
 
 **Key exports**:
 
-- `NgxHeadlessErrorStateDirective` — Error/warning state as signals
-- `NgxHeadlessCharacterCountDirective` — Character count and limit states
-- `NgxHeadlessFieldsetDirective` — Aggregated validation for field groups
+- `NgxHeadlessErrorState` — Error/warning state as signals
+- `NgxHeadlessCharacterCount` — Character count and limit states
+- `NgxHeadlessFieldset` — Aggregated validation for field groups
 - `createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()` — Programmatic utilities
 
 Headless APIs keep `fieldName` explicit because they do not own the rendered
@@ -489,7 +485,7 @@ input structure for you.
 
 ```html
 <div
-  ngxSignalFormHeadlessErrorState
+  ngxHeadlessErrorState
   #errorState="errorState"
   [field]="form.email"
   fieldName="email"
@@ -516,7 +512,7 @@ Use this during development to inspect field state, visibility rules, and resolv
 **Key exports**:
 
 - `NgxSignalFormDebugger` — Bundle import
-- `SignalFormDebuggerComponent` — Standalone component
+- `NgxSignalFormDebugger` — Standalone component
 
 ```html
 <form [formRoot]="form" ngxSignalForm>
@@ -570,7 +566,7 @@ const accountForm = form(accountModel, (path) => {
 ```
 
 Use Vest `warn()` for advisory guidance only. With `{ includeWarnings: true }`, the
-toolkit renders those messages through `ngx-signal-form-field-wrapper` or
+toolkit renders those messages through `ngx-form-field-wrapper` or
 `ngx-form-field-error` as `role="status"` warnings, while blocking Vest failures
 continue to render as `role="alert"` errors.
 

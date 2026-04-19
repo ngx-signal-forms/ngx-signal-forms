@@ -10,7 +10,7 @@ export const VEST_VALIDATION_CONTENT = {
           '• <strong>Conditional policies:</strong> Company, VAT, and referral requirements branch on multiple fields.',
           '• <strong>Toolkit compatibility:</strong> <code>validateVest(path, suite, { includeWarnings: true })</code> uses the toolkit&apos;s first-class Angular adapter without extra boilerplate.',
           '• <strong>Shared suite execution:</strong> Blocking errors and <code>warn()</code> guidance are mapped from the same Vest run.',
-          '• <strong>Warning rendering:</strong> <code>ngx-signal-form-field-wrapper</code> shows blocking alerts and polite warning messages through the same assistive component.',
+          '• <strong>Warning rendering:</strong> <code>ngx-form-field-wrapper</code> shows blocking alerts and polite warning messages through the same assistive component.',
         ],
       },
       {

@@ -8,7 +8,7 @@ When your form rules are mostly business policy (tier-specific limits, referral 
 
 - `validateVest(path, suite, { includeWarnings: true })` — first-class Vest adapter from `@ngx-signal-forms/toolkit/vest`.
 - Shared-run semantics — a single Vest suite invocation emits both errors and warnings, mapped to matching fields.
-- Warning rendering through `ngx-signal-form-field-wrapper` (shared with `ngx-form-field-error`).
+- Warning rendering through `ngx-form-field-wrapper` (shared with `ngx-form-field-error`).
 - Declarative submission with `ignoreValidators: 'all'` + `hasOnlyWarnings()` gating — warning-tolerant submission under Angular 21.2's native API.
 - `[formRoot]` directive — auto-applies `novalidate` and orchestrates submit.
 

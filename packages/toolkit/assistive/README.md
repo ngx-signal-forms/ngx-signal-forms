@@ -12,11 +12,11 @@ It sits between `/headless` (signals only, no UI) and `/form-field` (complete wr
 
 ```typescript
 import {
-  NgxFormFieldErrorComponent,
-  NgxFormFieldErrorSummaryComponent,
-  NgxFormFieldHintComponent,
-  NgxFormFieldCharacterCountComponent,
-  NgxFormFieldAssistiveRowComponent,
+  NgxFormFieldError,
+  NgxFormFieldErrorSummary,
+  NgxFormFieldHint,
+  NgxFormFieldCharacterCount,
+  NgxFormFieldAssistiveRow,
   warningError,
   isWarningError,
   isBlockingError,
@@ -33,19 +33,19 @@ import {
 
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="contactForm.bio"></textarea>
-  <ngx-signal-form-field-assistive-row>
-    <ngx-signal-form-field-hint>Max 500 characters</ngx-signal-form-field-hint>
-    <ngx-signal-form-field-character-count
+  <ngx-form-field-assistive-row>
+    <ngx-form-field-hint>Max 500 characters</ngx-form-field-hint>
+    <ngx-form-field-character-count
       [formField]="contactForm.bio"
       [maxLength]="500"
     />
-  </ngx-signal-form-field-assistive-row>
+  </ngx-form-field-assistive-row>
 </form>
 ```
 
 ## Components
 
-### NgxFormFieldErrorComponent
+### NgxFormFieldError
 
 Displays validation errors and warnings with appropriate ARIA roles.
 
@@ -69,7 +69,7 @@ Displays validation errors and warnings with appropriate ARIA roles.
 
 Use `ngxSignalForm` alongside `[formRoot]` when relying on the `'on-submit'` strategy so assistive components can inherit submission state automatically.
 
-### NgxFormFieldErrorSummaryComponent
+### NgxFormFieldErrorSummary
 
 Form-level error summary with clickable entries that focus the invalid control.
 
@@ -89,39 +89,33 @@ Form-level error summary with clickable entries that focus the invalid control.
 
 Override field names with `provideFieldLabels()` from `@ngx-signal-forms/toolkit`.
 
-### NgxFormFieldHintComponent
+### NgxFormFieldHint
 
 Helper text below inputs. Automatically linked to the input via `aria-describedby` when used inside the form-field wrapper.
 
 ```html
-<ngx-signal-form-field-hint>Format: 123-456-7890</ngx-signal-form-field-hint>
+<ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
 ```
 
-### NgxFormFieldCharacterCountComponent
+### NgxFormFieldCharacterCount
 
 Character counter with progressive color states (ok → warning → danger → exceeded).
 
 ```html
-<ngx-signal-form-field-character-count
-  [formField]="form.bio"
-  [maxLength]="500"
-/>
+<ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 ```
 
 When a matching max-length validator is present, `maxLength` can be omitted and detected automatically. Add `liveAnnounce` for polite screen reader announcements.
 
-### NgxFormFieldAssistiveRowComponent
+### NgxFormFieldAssistiveRow
 
 Layout container for hint and character count side by side.
 
 ```html
-<ngx-signal-form-field-assistive-row>
-  <ngx-signal-form-field-hint>Enter your bio</ngx-signal-form-field-hint>
-  <ngx-signal-form-field-character-count
-    [formField]="form.bio"
-    [maxLength]="500"
-  />
-</ngx-signal-form-field-assistive-row>
+<ngx-form-field-assistive-row>
+  <ngx-form-field-hint>Enter your bio</ngx-form-field-hint>
+  <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+</ngx-form-field-assistive-row>
 ```
 
 ## Warning utilities

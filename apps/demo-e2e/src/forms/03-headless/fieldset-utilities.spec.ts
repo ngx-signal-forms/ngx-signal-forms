@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test';
  * Headless Fieldset + Utilities - E2E Tests
  * Route: /headless/fieldset-utilities
  *
- * Tests NgxHeadlessFieldsetDirective, NgxHeadlessFieldNameDirective,
+ * Tests NgxHeadlessFieldset, NgxHeadlessFieldName,
  * createErrorState(), and createCharacterCount() utilities.
  */
 test.describe('Headless - Fieldset + Utilities', () => {
@@ -381,7 +381,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
       const emailInput = page.getByLabel('Contact email *');
 
       await test.step('Field starts with aria-invalid (required)', async () => {
-        // NgxHeadlessErrorStateDirective applies aria-invalid based on field state
+        // NgxHeadlessErrorState applies aria-invalid based on field state
         // Required fields may show as invalid immediately
         await expect(emailInput).toHaveAttribute('aria-invalid', 'true');
       });

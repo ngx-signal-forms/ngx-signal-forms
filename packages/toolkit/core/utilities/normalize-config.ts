@@ -25,6 +25,9 @@ export function normalizeSignalFormsConfig(
     defaultFormFieldAppearance:
       config.defaultFormFieldAppearance ??
       DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultFormFieldAppearance,
+    defaultFormFieldOrientation:
+      config.defaultFormFieldOrientation ??
+      DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultFormFieldOrientation,
     showRequiredMarker:
       config.showRequiredMarker ??
       DEFAULT_NGX_SIGNAL_FORMS_CONFIG.showRequiredMarker,

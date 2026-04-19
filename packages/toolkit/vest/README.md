@@ -44,7 +44,7 @@ import {
   hasOnlyWarnings,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
-import { NgxFormFieldErrorComponent } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 
 interface SignupModel {
@@ -64,7 +64,7 @@ const signupSuite = create((data: SignupModel) => {
 
 @Component({
   selector: 'ngx-signup-form',
-  imports: [FormField, NgxSignalFormToolkit, NgxFormFieldErrorComponent],
+  imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formRoot]="signupForm" ngxSignalForm>

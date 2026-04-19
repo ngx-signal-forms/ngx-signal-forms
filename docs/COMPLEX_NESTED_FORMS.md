@@ -27,7 +27,7 @@ alone is enough — come back here when you hit the first group of related field
 
 ## The two fieldset modes
 
-`<ngx-signal-form-fieldset>` aggregates errors from a subtree. The
+`<ngx-form-fieldset>` aggregates errors from a subtree. The
 `includeNestedErrors` input picks the mode.
 
 | Mode                       | `includeNestedErrors` | Shows                                 | Use when                                              |
@@ -40,21 +40,21 @@ alone is enough — come back here when you hit the first group of related field
 When each field wraps itself, the fieldset only needs to show cross-field errors.
 
 ```html
-<ngx-signal-form-fieldset [fieldsetField]="form.passwords">
+<ngx-form-fieldset [fieldsetField]="form.passwords">
   <legend>Passwords</legend>
 
-  <ngx-signal-form-field-wrapper [formField]="form.passwords.password">
+  <ngx-form-field-wrapper [formField]="form.passwords.password">
     <label for="pw">Password</label>
     <input id="pw" type="password" [formField]="form.passwords.password" />
-  </ngx-signal-form-field-wrapper>
+  </ngx-form-field-wrapper>
 
-  <ngx-signal-form-field-wrapper [formField]="form.passwords.confirm">
+  <ngx-form-field-wrapper [formField]="form.passwords.confirm">
     <label for="pw2">Confirm password</label>
     <input id="pw2" type="password" [formField]="form.passwords.confirm" />
-  </ngx-signal-form-field-wrapper>
+  </ngx-form-field-wrapper>
 
   <!-- The fieldset shows only the "Passwords must match" cross-field error -->
-</ngx-signal-form-fieldset>
+</ngx-form-fieldset>
 ```
 
 To attach a rule to the group itself — so the fieldset (not either child)
@@ -92,15 +92,12 @@ When you want a compact layout — e.g. a deep address group where individual
 fields stay plain — let the fieldset display every descendant error once.
 
 ```html
-<ngx-signal-form-fieldset
-  [fieldsetField]="form.address"
-  [includeNestedErrors]="true"
->
+<ngx-form-fieldset [fieldsetField]="form.address" [includeNestedErrors]="true">
   <legend>Address</legend>
   <input [formField]="form.address.street" />
   <input [formField]="form.address.city" />
   <input [formField]="form.address.postalCode" />
-</ngx-signal-form-fieldset>
+</ngx-form-fieldset>
 ```
 
 The fieldset deduplicates identical messages and inherits the error strategy
@@ -131,7 +128,7 @@ field's errors surface at the root. The summary:
 - Deduplicates identical `kind` + `message` pairs across fields
 
 For fully custom markup, the headless equivalent
-(`NgxHeadlessErrorSummaryDirective`) exposes the same managed state as signals
+(`NgxHeadlessErrorSummary`) exposes the same managed state as signals
 while you own every element.
 
 ---
@@ -145,15 +142,15 @@ picks up the same strategy via DI:
 
 ```html
 <form [formRoot]="wizardForm" ngxSignalForm errorStrategy="on-submit">
-  <ngx-signal-form-fieldset [fieldsetField]="wizardForm.personalInfo">
+  <ngx-form-fieldset [fieldsetField]="wizardForm.personalInfo">
     <legend>Personal</legend>
     <!-- wrappers inside inherit 'on-submit' automatically -->
-  </ngx-signal-form-fieldset>
+  </ngx-form-fieldset>
 
-  <ngx-signal-form-fieldset [fieldsetField]="wizardForm.billing">
+  <ngx-form-fieldset [fieldsetField]="wizardForm.billing">
     <legend>Billing</legend>
     <!-- same strategy, no extra wiring -->
-  </ngx-signal-form-fieldset>
+  </ngx-form-fieldset>
 </form>
 ```
 
@@ -215,24 +212,24 @@ own fieldset so errors aggregate per row:
 
 ```html
 @for (item of form.lineItems; track $index; let i = $index) {
-<ngx-signal-form-fieldset [fieldsetField]="form.lineItems[i]">
+<ngx-form-fieldset [fieldsetField]="form.lineItems[i]">
   <legend>Line {{ i + 1 }}</legend>
-  <ngx-signal-form-field-wrapper [formField]="form.lineItems[i].description">
+  <ngx-form-field-wrapper [formField]="form.lineItems[i].description">
     <label [for]="'line-' + i + '-desc'">Description</label>
     <input
       [id]="'line-' + i + '-desc'"
       [formField]="form.lineItems[i].description"
     />
-  </ngx-signal-form-field-wrapper>
-  <ngx-signal-form-field-wrapper [formField]="form.lineItems[i].quantity">
+  </ngx-form-field-wrapper>
+  <ngx-form-field-wrapper [formField]="form.lineItems[i].quantity">
     <label [for]="'line-' + i + '-qty'">Quantity</label>
     <input
       [id]="'line-' + i + '-qty'"
       type="number"
       [formField]="form.lineItems[i].quantity"
     />
-  </ngx-signal-form-field-wrapper>
-</ngx-signal-form-fieldset>
+  </ngx-form-field-wrapper>
+</ngx-form-fieldset>
 }
 ```
 

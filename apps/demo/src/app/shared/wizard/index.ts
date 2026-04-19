@@ -1,7 +1,4 @@
-export { WizardStepDirective } from './wizard-step.directive';
-export type { WizardStepContext } from './wizard-step.directive';
-export { WizardComponent } from './wizard.component';
-export type {
-  WizardNavigationEvent,
-  WizardSubmitEvent,
-} from './wizard.component';
+export { WizardStepDirective } from './wizard-step';
+export type { WizardStepContext } from './wizard-step';
+export { WizardComponent } from './wizard';
+export type { WizardNavigationEvent, WizardSubmitEvent } from './wizard';

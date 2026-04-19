@@ -7,7 +7,7 @@ import { CustomControlsPage } from '../../page-objects/custom-controls.page';
  * Route: /form-field-wrapper/custom-controls
  *
  * Verifies that custom FormValueControl components (RatingControl) work
- * correctly with ngx-signal-form-field-wrapper, including:
+ * correctly with ngx-form-field-wrapper, including:
  * - Auto-derivation of fieldName from custom control's id attribute
  * - ARIA attributes for accessibility
  * - Error display integration
@@ -428,6 +428,86 @@ test.describe('Custom Signal Forms Controls', () => {
   });
 
   test.describe('Outline appearance integration', () => {
+    test('should apply horizontal orientation only to eligible wrappers in standard mode', async () => {
+      await test.step('Switch the demo to horizontal orientation', async () => {
+        await page.showStandardAppearance();
+        await page.showHorizontalOrientation();
+
+        await expect(page.horizontalOrientationButton).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        );
+      });
+
+      await test.step('Verify textual and custom plain wrappers resolve to horizontal', async () => {
+        for (const controlId of [
+          'productName',
+          'feedback',
+          'rating',
+          'serviceRating',
+          'wouldRecommend',
+          'accessibilityAudit',
+        ]) {
+          const wrapper = page.getWrapperByControlId(controlId);
+
+          await expect(wrapper).toHaveAttribute(
+            'data-orientation',
+            'horizontal',
+          );
+          await expect(wrapper).toHaveClass(
+            /ngx-signal-form-field-wrapper--horizontal/,
+          );
+        }
+      });
+
+      await test.step('Verify selection rows keep their vertical layout semantics', async () => {
+        for (const controlId of ['emailUpdates', 'shareReviewPublicly']) {
+          const wrapper = page.getWrapperByControlId(controlId);
+
+          await expect(wrapper).toHaveAttribute('data-orientation', 'vertical');
+          await expect(wrapper).not.toHaveClass(
+            /ngx-signal-form-field-wrapper--horizontal/,
+          );
+        }
+      });
+    });
+
+    test('should disable horizontal orientation when the page switches to outline mode', async () => {
+      await test.step('Switch to horizontal first so the page has to resolve back to vertical', async () => {
+        await page.showStandardAppearance();
+        await page.showHorizontalOrientation();
+        await expect(page.horizontalOrientationButton).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        );
+      });
+
+      await test.step('Switch to outline mode', async () => {
+        await page.showOutlineAppearance();
+
+        await expect(page.outlineAppearanceButton).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        );
+        await expect(page.horizontalOrientationButton).toBeDisabled();
+        await expect(page.verticalOrientationButton).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        );
+      });
+
+      await test.step('Verify wrappers resolve back to vertical orientation', async () => {
+        for (const controlId of ['productName', 'feedback', 'rating']) {
+          const wrapper = page.getWrapperByControlId(controlId);
+
+          await expect(wrapper).toHaveAttribute('data-orientation', 'vertical');
+          await expect(wrapper).not.toHaveClass(
+            /ngx-signal-form-field-wrapper--horizontal/,
+          );
+        }
+      });
+    });
+
     test('should apply outline only to native textual wrappers while custom plain and selection rows keep their own layouts', async () => {
       await test.step('Switch the demo to outline mode', async () => {
         await page.showOutlineAppearance();
@@ -643,6 +723,59 @@ test.describe('Custom Signal Forms Controls', () => {
 
           expect(geometry.offsetFromParentLeft).toBe(0);
         }
+      });
+    });
+  });
+
+  test.describe('Visual regression', () => {
+    test('should match the standard vertical wrapper baseline', async () => {
+      await test.step('Show the standard vertical state', async () => {
+        await page.showStandardAppearance();
+        await page.showVerticalOrientation();
+      });
+
+      await test.step('Capture the wrapper form baseline', async () => {
+        await expect(page.form).toHaveScreenshot(
+          'custom-controls-standard-vertical.png',
+        );
+      });
+    });
+
+    test('should match the standard horizontal wrapper baseline', async () => {
+      await test.step('Show the standard horizontal state', async () => {
+        await page.showStandardAppearance();
+        await page.showHorizontalOrientation();
+      });
+
+      await test.step('Capture the wrapper form baseline', async () => {
+        await expect(page.form).toHaveScreenshot(
+          'custom-controls-standard-horizontal.png',
+        );
+      });
+    });
+
+    test('should match the outline vertical wrapper baseline', async () => {
+      await test.step('Show the outline state', async () => {
+        await page.showOutlineAppearance();
+      });
+
+      await test.step('Capture the wrapper form baseline', async () => {
+        await expect(page.form).toHaveScreenshot(
+          'custom-controls-outline-vertical.png',
+        );
+      });
+    });
+
+    test('should match the plain horizontal wrapper baseline', async () => {
+      await test.step('Show the plain horizontal state', async () => {
+        await page.showPlainAppearance();
+        await page.showHorizontalOrientation();
+      });
+
+      await test.step('Capture the wrapper form baseline', async () => {
+        await expect(page.form).toHaveScreenshot(
+          'custom-controls-plain-horizontal.png',
+        );
       });
     });
   });
