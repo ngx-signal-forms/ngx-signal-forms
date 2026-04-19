@@ -1,4 +1,4 @@
-import { isSignal } from '@angular/core';
+import { isSignal, type Signal } from '@angular/core';
 import type { ReactiveOrStatic } from '../types';
 
 /**
@@ -69,8 +69,38 @@ import type { ReactiveOrStatic } from '../types';
  * }
  * ```
  *
+ * @remarks
+ * **Callable `T` footgun.** Some toolkit types (e.g. `FieldTree<U>` /
+ * `FieldState<U>` from `@angular/forms/signals`) are themselves callable —
+ * the type IS a function. The single-signature `unwrapValue<T>(v: Signal<T> |
+ * (() => T) | T): T` form would route those values through the function
+ * branch and silently invoke them, losing the wrapper. The overloads below
+ * make the call-site route explicit (the developer can see they are invoking
+ * the `() => T` branch), but they do not prevent a `FieldTree` from
+ * accidentally being passed where a static value was intended — the runtime
+ * guard always invokes any `typeof === 'function'` value.
+ *
+ * - {@link unwrapValue} `(value: Signal<T>)` — the signal branch
+ * - {@link unwrapValue} `(value: () => T)` — the zero-arg-function branch.
+ *   `FieldTree`/`FieldState` are accepted here because they ARE callable, and
+ *   invoking them yields the snapshot, which is the documented semantic.
+ * - {@link unwrapValue} `(value: T)` — the static branch
+ *
+ * The runtime behavior (`isSignal()` then `typeof === 'function'`) is
+ * unchanged; only the public type signature gained overloads.
+ *
  * @see {@link ReactiveOrStatic} The type this function unwraps
  */
+export function unwrapValue<T>(value: Signal<T>): T;
+export function unwrapValue<T>(value: () => T): T;
+// `ReactiveOrStatic<T>` is `Signal<T> | (() => T) | T`. Without this
+// overload, callers passing a value typed as the full union fall through
+// to the `(value: T)` overload — which infers `T` as the entire union
+// and returns it untouched, defeating the unwrap. Keep this overload to
+// preserve the unwrapping return type at union-typed call sites (e.g.
+// `show-errors.ts` passes a `ReactiveOrStatic<Partial<…>>`).
+export function unwrapValue<T>(value: ReactiveOrStatic<T>): T;
+export function unwrapValue<T>(value: T): T;
 export function unwrapValue<T>(value: ReactiveOrStatic<T>): T {
   // SignalLike is Signal<T> | (() => T), so check both cases
   if (isSignal(value)) {

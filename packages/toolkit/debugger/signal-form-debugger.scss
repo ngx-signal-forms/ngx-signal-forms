@@ -31,7 +31,7 @@
   --ngx-debugger-color-success: #22c55e;
   --ngx-debugger-color-success-bg: #dcfce7;
   --ngx-debugger-color-success-text: #166534;
-  --ngx-debugger-color-warning: #f59e0b;
+  --ngx-debugger-color-warning: #a16207;
   --ngx-debugger-color-warning-bg: #fef3c7;
   --ngx-debugger-color-warning-text: #92400e;
   --ngx-debugger-color-danger: #ef4444;
@@ -285,12 +285,24 @@
   &:hover {
     background-color: var(--ngx-debugger-bg-secondary);
   }
+
+  /* WCAG 2.4.7: keyboard users land on the <summary> via Tab and need a
+   * visible focus indicator. Native marker is hidden above, so we own this. */
+  &:focus-visible {
+    outline: 2px solid var(--ngx-debugger-color-info, currentColor);
+    outline-offset: 2px;
+  }
 }
 
 .ngx-debugger__chevron {
   width: 1rem;
   height: 1rem;
   transition: transform 0.2s ease;
+
+  /* WCAG 2.3.3: respect `prefers-reduced-motion` for the rotate transition. */
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 }
 
 details[open] > .ngx-debugger__section-header .ngx-debugger__chevron {
@@ -389,6 +401,12 @@ details[open] > .ngx-debugger__section-header .ngx-debugger__chevron {
   padding: var(--ngx-debugger-spacing-md);
   border-radius: var(--ngx-debugger-border-radius-sm);
   animation: ngx-debugger-slide-in 0.2s ease-out;
+
+  /* WCAG 2.3.3: the slide-in uses `transform: translateY(...)` which can
+   * trigger vestibular discomfort. Disable when the user opts out. */
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
 
 .ngx-debugger__error-item--root {

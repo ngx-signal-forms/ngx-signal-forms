@@ -1,5 +1,5 @@
-import { computed, signal } from '@angular/core';
-import { describe, expect, it } from 'vitest';
+import { computed, signal, type Signal } from '@angular/core';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import { unwrapValue } from './unwrap-signal-or-value';
 
 describe('unwrapValue', () => {
@@ -277,6 +277,51 @@ describe('unwrapValue', () => {
         autoAria: true,
         debug: false,
       });
+    });
+  });
+
+  describe('Typed Overloads', () => {
+    // Pins the three-overload public type signature added to address the
+    // callable-T footgun (e.g. `FieldTree<U>` is a callable type, and the
+    // single-signature variant routed it through the function branch
+    // silently). Each overload exists for a reason; the runtime branches
+    // (isSignal then typeof === 'function') are unchanged.
+
+    it('signal overload — returns the signal value with the correct type', () => {
+      const sig: Signal<string> = signal('signal-value');
+      const result = unwrapValue(sig);
+      expect(result).toBe('signal-value');
+      expectTypeOf(result).toEqualTypeOf<string>();
+    });
+
+    it('function overload — invokes the zero-arg function and returns its result', () => {
+      const fn = (): number => 7;
+      const result = unwrapValue(fn);
+      expect(result).toBe(7);
+      expectTypeOf(result).toEqualTypeOf<number>();
+    });
+
+    it('function overload — accepts callable types like FieldTree by invoking them', () => {
+      // FieldTree<U> is a callable type: `(): FieldState<U>`. The function
+      // overload is the documented call site for it. We simulate the shape
+      // without depending on @angular/forms/signals to keep this unit-only.
+      interface FakeFieldState {
+        readonly value: () => string;
+      }
+      type FakeFieldTree = () => FakeFieldState;
+
+      const fakeTree: FakeFieldTree = () => ({ value: () => 'snapshot' });
+      const result = unwrapValue(fakeTree);
+
+      expect(result.value()).toBe('snapshot');
+      expectTypeOf(result).toEqualTypeOf<FakeFieldState>();
+    });
+
+    it('static overload — returns plain (non-callable) values unchanged', () => {
+      const obj = { id: 1, label: 'static' } as const;
+      const result = unwrapValue(obj);
+      expect(result).toBe(obj);
+      expectTypeOf(result).toEqualTypeOf<typeof obj>();
     });
   });
 });

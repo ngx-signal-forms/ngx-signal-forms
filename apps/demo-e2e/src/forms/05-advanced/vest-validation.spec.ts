@@ -1,5 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import {
+  ROLE_ALERT_SELECTOR,
+  ROLE_STATUS_SELECTOR,
+} from '../../fixtures/aria-selectors';
+
 function fieldWrapper(page: Page, label: string) {
   return page.locator('ngx-form-field-wrapper', {
     has: page.getByLabel(label, { exact: true }),
@@ -7,11 +12,11 @@ function fieldWrapper(page: Page, label: string) {
 }
 
 function fieldAlert(page: Page, label: string) {
-  return fieldWrapper(page, label).locator('[role="alert"]');
+  return fieldWrapper(page, label).locator(ROLE_ALERT_SELECTOR);
 }
 
 function fieldStatus(page: Page, label: string) {
-  return fieldWrapper(page, label).locator('[role="status"]');
+  return fieldWrapper(page, label).locator(ROLE_STATUS_SELECTOR);
 }
 
 test.describe('Advanced Scenarios - Vest-Only Validation', () => {

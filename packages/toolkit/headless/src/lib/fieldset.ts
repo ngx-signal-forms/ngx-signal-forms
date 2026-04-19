@@ -4,6 +4,7 @@ import {
   Directive,
   inject,
   input,
+  type Signal,
 } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
@@ -31,33 +32,33 @@ import {
  */
 export interface FieldsetStateSignals {
   /** Aggregated and deduplicated errors from all fields */
-  readonly aggregatedErrors: () => ValidationError[];
+  readonly aggregatedErrors: Signal<readonly ValidationError[]>;
   /** Aggregated and deduplicated warnings from all fields */
-  readonly aggregatedWarnings: () => ValidationError[];
+  readonly aggregatedWarnings: Signal<readonly ValidationError[]>;
   /** Whether the fieldset has blocking errors */
-  readonly hasErrors: () => boolean;
+  readonly hasErrors: Signal<boolean>;
   /** Whether the fieldset has warnings */
-  readonly hasWarnings: () => boolean;
+  readonly hasWarnings: Signal<boolean>;
   /** Whether to show errors based on strategy */
-  readonly shouldShowErrors: () => boolean;
+  readonly shouldShowErrors: Signal<boolean>;
   /** Whether to show warnings based on strategy */
-  readonly shouldShowWarnings: () => boolean;
+  readonly shouldShowWarnings: Signal<boolean>;
   /**
    * Resolved error display strategy. Always a concrete strategy
    * (`'immediate'`, `'on-touch'`, or `'on-submit'`) — `'inherit'` is
    * resolved against the form context / config default before exposure.
    */
-  readonly resolvedStrategy: () => ResolvedErrorDisplayStrategy;
+  readonly resolvedStrategy: Signal<ResolvedErrorDisplayStrategy>;
   /** Resolved submitted status (from input override, form context, or default) */
-  readonly resolvedSubmittedStatus: () => SubmittedStatus;
+  readonly resolvedSubmittedStatus: Signal<SubmittedStatus>;
   /** Fieldset validation state flags */
-  readonly isInvalid: () => boolean;
-  readonly isValid: () => boolean;
-  readonly isTouched: () => boolean;
-  readonly isDirty: () => boolean;
-  readonly isPending: () => boolean;
+  readonly isInvalid: Signal<boolean>;
+  readonly isValid: Signal<boolean>;
+  readonly isTouched: Signal<boolean>;
+  readonly isDirty: Signal<boolean>;
+  readonly isPending: Signal<boolean>;
   /** Resolved fieldset ID */
-  readonly resolvedFieldsetId: () => string;
+  readonly resolvedFieldsetId: Signal<string>;
 }
 
 /**

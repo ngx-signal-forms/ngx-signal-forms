@@ -65,7 +65,11 @@
   // Color tokens
   --_field-clr-primary: #007bc7; // Focus/interactive states
   --_field-clr-danger: #db1818; // Error/invalid states
-  --_field-clr-warning: #f59e0b; // Warning states (amber)
+  // Tailwind amber-700 (#a16207) — chosen over the previous #f59e0b (amber-500,
+  // 2.16:1 on white) so warning text meets WCAG 2.2 AA contrast (4.5:1 on
+  // white). Borders/icons would have been fine at the lighter shade, but this
+  // token also drives warning message text. ~5.17:1 on #ffffff.
+  --_field-clr-warning: #a16207; // Warning states (amber-700, AA contrast)
   --_field-clr-text: #324155; // Primary text color
   --_field-clr-text-secondary: rgba(
     50,
@@ -144,7 +148,8 @@
   :host-context(:root:not(.dark)) {
     --_field-clr-primary: #007bc7;
     --_field-clr-danger: #db1818;
-    --_field-clr-warning: #f59e0b;
+    // Mirror the light-mode :host default (amber-700) for AA-on-white contrast.
+    --_field-clr-warning: #a16207;
     --_field-clr-text: #324155;
     --_field-clr-text-secondary: rgba(50, 65, 85, 0.75);
     --_field-clr-surface: #ffffff;
@@ -775,30 +780,15 @@
   max-inline-size: 100%;
 }
 
-// Required marker (automatic via :has() selector)
-// Detects required inputs in __main and adds marker to label in __label
-:host(.ngx-signal-forms-outline[data-show-required='true'])
-  :is(
-    .ngx-signal-form-field-wrapper__content:has([required])
-      ~ .ngx-signal-form-field-wrapper__label,
-    .ngx-signal-form-field-wrapper__content:has([aria-required='true'])
-      ~ .ngx-signal-form-field-wrapper__label
-  )
-  label::after {
-  content: attr(data-required-marker);
-  color: var(--_required-marker-color);
-  font-weight: var(--_required-marker-weight);
-}
-
-// For grid layout where __label comes before __content in DOM,
-// also target direct descendant
-:host(.ngx-signal-forms-outline[data-show-required='true']):is(
-    :has(.ngx-signal-form-field-wrapper__content [required]),
-    :has(.ngx-signal-form-field-wrapper__content [aria-required='true'])
-  )
-  .ngx-signal-form-field-wrapper__label
-  label::after {
-  content: attr(data-required-marker);
+// Required marker
+//
+// Rendered as a real `<span aria-hidden="true">` in the template (see
+// `form-field-wrapper.ts`) instead of CSS `::after { content: ... }`.
+// Generated content is announced by NVDA/VoiceOver, so the previous approach
+// caused double-announcement alongside the control's own `aria-required`
+// attribute (WCAG 1.3.1, 4.1.2). Visual styling matches the prior asterisk
+// treatment exactly.
+.ngx-signal-form-field-wrapper__required-marker {
   color: var(--_required-marker-color);
   font-weight: var(--_required-marker-weight);
 }

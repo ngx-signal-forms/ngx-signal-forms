@@ -138,10 +138,21 @@ import { submissionSchema } from './submission-patterns.validations';
 
       <!-- Form-level error summary (GOV.UK pattern) -->
       <!-- Aggregates all field errors into a clickable list; each entry focuses the invalid control -->
+      <!--
+        [autoFocus]="false" opts this summary out of the default
+        focus-on-first-appearance behaviour. This page already wires up
+        createOnInvalidHandler() (onInvalid of the submission action),
+        which focuses the first invalid FIELD on submit — letting both
+        run creates a focus race (the summary host wins after the next
+        render and steals focus from the field). Pick one focus target
+        per page; here we keep the field-level focus the demo is
+        showcasing.
+      -->
       <ngx-form-field-error-summary
         [formTree]="registrationForm"
         [submittedStatus]="explicitSubmittedStatus()"
         summaryLabel="Please fix the following errors before submitting:"
+        [autoFocus]="false"
       />
 
       <!-- Form fields -->

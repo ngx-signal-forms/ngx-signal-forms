@@ -162,7 +162,7 @@ export class NgxSignalFormDebuggerBadgeIcon {}
     }
 
     :host([data-variant='outline'][data-appearance='warning']) {
-      border-color: var(--ngx-debugger-badge-warning-border, #f59e0b);
+      border-color: var(--ngx-debugger-badge-warning-border, #a16207);
       color: var(--ngx-debugger-badge-warning-text, #92400e);
     }
 

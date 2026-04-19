@@ -678,7 +678,7 @@ Set on a container element or `:root`:
 
 /* Semantic colors */
 --ngx-signal-form-error-color: #dc2626;
---ngx-signal-form-warning-color: #f59e0b;
+--ngx-signal-form-warning-color: #a16207;
 
 /* Form field */
 --ngx-form-field-color-primary: #3b82f6;

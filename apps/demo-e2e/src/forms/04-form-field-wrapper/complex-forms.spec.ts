@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+
+import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
 import { FormFieldWrapperComplexPage } from '../../page-objects/form-field-wrapper-complex.page';
 
 test.describe('Form Field Wrapper - Complex Forms', () => {
@@ -14,7 +16,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
   }) => {
     await playwrightPage.waitForLoadState('domcontentloaded');
     await page.form.locator('#firstName').waitFor({ state: 'visible' });
-    await expect(page.form.locator('[role="alert"]')).toHaveCount(0);
+    await expect(page.form.locator(ROLE_ALERT_SELECTOR)).toHaveCount(0);
   });
 
   test.describe('Component Structure', () => {

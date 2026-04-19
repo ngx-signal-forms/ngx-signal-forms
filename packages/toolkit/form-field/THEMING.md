@@ -78,12 +78,14 @@ These components inherit from the **Shared Feedback** layer but can be overridde
 
 controls the display of validation errors and warnings.
 
+> **Note:** The default `--ngx-signal-form-warning-color` was `#f59e0b` prior to v1.0; it was changed to `#a16207` (Tailwind amber-700) for WCAG 1.4.3 AA contrast compliance on white backgrounds.
+
 | Property                                       | Default                                                          | Description                              |
 | :--------------------------------------------- | :--------------------------------------------------------------- | :--------------------------------------- |
 | `--ngx-signal-form-error-color`                | `#db1818`                                                        | Text color for errors                    |
 | `--ngx-signal-form-error-bg`                   | `transparent`                                                    | Error background color                   |
 | `--ngx-signal-form-error-border`               | `transparent`                                                    | Error border color                       |
-| `--ngx-signal-form-warning-color`              | `#f59e0b`                                                        | Text color for warnings                  |
+| `--ngx-signal-form-warning-color`              | `#a16207`                                                        | Text color for warnings                  |
 | `--ngx-signal-form-warning-bg`                 | `transparent`                                                    | Warning background color                 |
 | `--ngx-signal-form-warning-border`             | `transparent`                                                    | Warning border color                     |
 | `--ngx-signal-form-error-font-size`            | `var(--...feedback...)`                                          | Text size                                |
@@ -123,7 +125,7 @@ Displays progress towards a character limit.
 | `--ngx-form-field-char-count-font-size`       | `var(--...feedback...)`  | Text size                 |
 | `--ngx-form-field-char-count-line-height`     | `1.25`                   | Line height               |
 | `--ngx-form-field-char-count-color-ok`        | `rgba(50, 65, 85, 0.75)` | Neutral state color       |
-| `--ngx-form-field-char-count-color-warning`   | `#f59e0b`                | Warning threshold color   |
+| `--ngx-form-field-char-count-color-warning`   | `#a16207`                | Warning threshold color   |
 | `--ngx-form-field-char-count-color-danger`    | `#db1818`                | Critical threshold color  |
 | `--ngx-form-field-char-count-color-exceeded`  | `#991b1b`                | Limit exceeded color      |
 | `--ngx-form-field-char-count-weight-exceeded` | `600`                    | Font weight when exceeded |
@@ -156,7 +158,7 @@ Groups related fields with consistent spacing.
 - `--ngx-signal-form-fieldset-legend-bg` — default `transparent`; legend background that stays separate from the surfaced content
 - `--ngx-signal-form-fieldset-legend-border-radius` — default `0.25rem`; legend background radius
 - `--ngx-signal-form-fieldset-invalid-border-color` — default `#db1818`; border color when errors are shown
-- `--ngx-signal-form-fieldset-warning-border-color` — default `#f59e0b`; border color when warnings are shown
+- `--ngx-signal-form-fieldset-warning-border-color` — default `#a16207`; border color when warnings are shown
 - `--ngx-signal-form-fieldset-invalid-surface-bg` — default `var(--...invalid-bg...)`; error-tinted background below the legend
 - `--ngx-signal-form-fieldset-warning-surface-bg` — default `var(--...warning-bg...)`; warning-tinted background below the legend
 - `--ngx-signal-form-fieldset-invalid-legend-color` — default `var(--...invalid-border...)`; legend color in error state
@@ -229,7 +231,7 @@ The form field wrapper supports three appearance modes via the `appearance` inpu
 | :-------------------------------------- | :----------------------- | :------------------------------- |
 | `--ngx-form-field-color-primary`        | `#007bc7`                | Focus states, active borders     |
 | `--ngx-form-field-color-error`          | `#db1818`                | Invalid states, required markers |
-| `--ngx-form-field-color-warning`        | `#f59e0b`                | Warning states                   |
+| `--ngx-form-field-color-warning`        | `#a16207`                | Warning states                   |
 | `--ngx-form-field-color-text`           | `#324155`                | Input text                       |
 | `--ngx-form-field-color-text-secondary` | `rgba(50, 65, 85, 0.75)` | Labels, placeholders, hints      |
 | `--ngx-form-field-color-surface`        | `#ffffff`                | Input background                 |

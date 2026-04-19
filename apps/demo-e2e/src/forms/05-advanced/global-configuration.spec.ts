@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+
+import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
 import { GlobalConfigurationPage } from '../../page-objects/global-configuration.page';
 
 test.describe('Advanced - Global Configuration', () => {
@@ -32,7 +34,7 @@ test.describe('Advanced - Global Configuration', () => {
       await input.focus();
       await input.blur();
 
-      const errors = playwrightPage.locator('[role="alert"]');
+      const errors = playwrightPage.locator(ROLE_ALERT_SELECTOR);
       await expect(errors.first()).toBeVisible({ timeout: 2000 });
     });
   });
@@ -120,7 +122,7 @@ test.describe('Advanced - Global Configuration', () => {
       const wrapper = acceptTerms.locator(
         'xpath=ancestor::ngx-form-field-wrapper',
       );
-      const errors = wrapper.locator('[role="alert"]');
+      const errors = wrapper.locator(ROLE_ALERT_SELECTOR);
       await expect(errors.first()).toBeVisible({ timeout: 3000 });
     });
   });

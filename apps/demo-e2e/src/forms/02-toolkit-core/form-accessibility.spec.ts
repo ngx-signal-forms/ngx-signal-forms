@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+
+import { ROLE_STATUS_SELECTOR } from '../../fixtures/aria-selectors';
 /**
  * Form Accessibility Tests
  * WCAG 2.2 Level AA - Forms
@@ -114,12 +116,12 @@ test.describe('Accessibility - Form Accessibility', () => {
       await passwordInput.fill('Short123');
       await passwordInput.blur();
 
-      const status = page.locator('[role="status"]').first();
+      const status = page.locator(ROLE_STATUS_SELECTOR).first();
       await expect(status).toBeVisible({ timeout: 3000 });
     });
 
     await test.step('Assert no redundant aria attrs', async () => {
-      const status = page.locator('[role="status"]').first();
+      const status = page.locator(ROLE_STATUS_SELECTOR).first();
       await expect(status).not.toHaveAttribute('aria-live', /.*/);
       await expect(status).not.toHaveAttribute('aria-atomic', /.*/);
     });
@@ -141,7 +143,7 @@ test.describe('Accessibility - Form Accessibility', () => {
       await passwordInput.fill('Short123');
       await passwordInput.blur();
 
-      await expect(page.locator('[role="status"]').first()).toBeVisible({
+      await expect(page.locator(ROLE_STATUS_SELECTOR).first()).toBeVisible({
         timeout: 3000,
       });
     });

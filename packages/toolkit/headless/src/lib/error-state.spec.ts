@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  isSignal,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { form, FormField, required, schema } from '@angular/forms/signals';
 import type { SubmittedStatus } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
@@ -207,6 +213,53 @@ describe('NgxHeadlessErrorState', () => {
 
       const error = screen.getByTestId('error-message');
       expect(error.textContent).toContain('Email is required');
+    });
+
+    it('should expose state members as real `Signal<T>` instances (preserves Angular brand)', async () => {
+      @Component({
+        selector: 'ngx-test-signal-brand',
+        imports: [FormField, NgxHeadlessErrorState],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <div>
+            <input id="email" [formField]="contactForm.email" />
+            <div
+              ngxHeadlessErrorState
+              #errorState="errorState"
+              [field]="contactForm.email"
+              fieldName="email"
+              strategy="immediate"
+            ></div>
+          </div>
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'Email is required' });
+          }),
+        );
+        readonly state = viewChild.required(NgxHeadlessErrorState);
+      }
+
+      const { fixture } = await render(TestComponent);
+      const state = fixture.componentInstance.state();
+
+      // Brand-level checks: each declared `Signal<T>` member must satisfy
+      // Angular's `isSignal()` reflection. A plain `() => T` function would
+      // fail this check and break consumers using `toObservable()` etc.
+      expect(isSignal(state.hasErrors)).toBe(true);
+      expect(isSignal(state.hasWarnings)).toBe(true);
+      expect(isSignal(state.errors)).toBe(true);
+      expect(isSignal(state.warnings)).toBe(true);
+      expect(isSignal(state.resolvedErrors)).toBe(true);
+      expect(isSignal(state.resolvedWarnings)).toBe(true);
+      expect(isSignal(state.showErrors)).toBe(true);
+      expect(isSignal(state.showWarnings)).toBe(true);
+      expect(isSignal(state.errorId)).toBe(true);
+      expect(isSignal(state.warningId)).toBe(true);
     });
 
     it('should generate correct errorId and warningId', async () => {

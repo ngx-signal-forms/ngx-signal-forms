@@ -133,13 +133,13 @@ For splitting a `ValidationError[]` into blocking and warnings in one pass, use 
 ```css
 :root {
   --ngx-signal-form-error-color: #db1818;
-  --ngx-signal-form-warning-color: #f59e0b;
+  --ngx-signal-form-warning-color: #a16207;
   --ngx-signal-form-feedback-font-size: 0.75rem;
   --ngx-signal-form-feedback-line-height: 1rem;
   --ngx-signal-form-feedback-margin-top: 0.125rem;
   --ngx-form-field-hint-color: rgba(50, 65, 85, 0.75);
   --ngx-form-field-char-count-color-ok: rgba(50, 65, 85, 0.75);
-  --ngx-form-field-char-count-color-warning: #f59e0b;
+  --ngx-form-field-char-count-color-warning: #a16207;
   --ngx-form-field-char-count-color-danger: #db1818;
 }
 ```

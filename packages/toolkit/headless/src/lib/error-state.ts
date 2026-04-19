@@ -1,4 +1,4 @@
-import { computed, Directive, inject, input } from '@angular/core';
+import { computed, Directive, inject, input, type Signal } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   injectFormContext,
@@ -29,25 +29,25 @@ export interface ResolvedError {
  */
 export interface ErrorStateSignals {
   /** Whether to show errors based on the current strategy */
-  readonly showErrors: () => boolean;
+  readonly showErrors: Signal<boolean>;
   /** Whether to show warnings based on the current strategy */
-  readonly showWarnings: () => boolean;
+  readonly showWarnings: Signal<boolean>;
   /** Raw blocking errors from the field */
-  readonly errors: () => ValidationError[];
+  readonly errors: Signal<readonly ValidationError[]>;
   /** Raw warning errors from the field */
-  readonly warnings: () => ValidationError[];
+  readonly warnings: Signal<readonly ValidationError[]>;
   /** Resolved errors with messages */
-  readonly resolvedErrors: () => ResolvedError[];
+  readonly resolvedErrors: Signal<readonly ResolvedError[]>;
   /** Resolved warnings with messages */
-  readonly resolvedWarnings: () => ResolvedError[];
+  readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
   /** Whether the field has blocking errors */
-  readonly hasErrors: () => boolean;
+  readonly hasErrors: Signal<boolean>;
   /** Whether the field has warnings */
-  readonly hasWarnings: () => boolean;
+  readonly hasWarnings: Signal<boolean>;
   /** Generated error ID for aria-describedby, or `null` when no fieldName is resolvable */
-  readonly errorId: () => string | null;
+  readonly errorId: Signal<string | null>;
   /** Generated warning ID for aria-describedby, or `null` when no fieldName is resolvable */
-  readonly warningId: () => string | null;
+  readonly warningId: Signal<string | null>;
 }
 
 /**
@@ -174,7 +174,7 @@ export class NgxHeadlessErrorState<
   /**
    * Resolved error messages using 3-tier priority.
    */
-  readonly resolvedErrors = computed(() =>
+  readonly resolvedErrors: Signal<readonly ResolvedError[]> = computed(() =>
     this.errors().map((error) => ({
       kind: error.kind,
       message: this.#resolveErrorMessage(error),
@@ -184,7 +184,7 @@ export class NgxHeadlessErrorState<
   /**
    * Resolved warning messages.
    */
-  readonly resolvedWarnings = computed(() =>
+  readonly resolvedWarnings: Signal<readonly ResolvedError[]> = computed(() =>
     this.warnings().map((warning) => ({
       kind: warning.kind,
       message: this.#resolveErrorMessage(warning),

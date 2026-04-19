@@ -181,7 +181,12 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
   ],
   host: {
     '[attr.outline]': 'isOutline() ? "" : null',
-    '[attr.aria-invalid]': 'showInvalidState() ? "true" : "false"',
+    // NOTE: `aria-invalid` is intentionally NOT bound on the host. ARIA
+    // `aria-invalid` only belongs on form controls (the projected `<input>`,
+    // `<textarea>`, `<select>`, or `FormValueControl` host) — not on a
+    // wrapper. Auto-aria writes `aria-invalid` directly to the bound control;
+    // duplicating it here would either be ignored by assistive tech or, worse,
+    // cause confusing double-announcements (WCAG 4.1.2).
     '[attr.hidden]': 'isFieldHidden() ? "" : null',
     '[attr.data-ngx-signal-form-control-aria-mode]':
       'resolvedControlAriaMode()',
@@ -204,15 +209,25 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
     '[class.ngx-signal-form-field-wrapper--horizontal]': 'isHorizontal()',
     '[attr.data-orientation]': 'resolvedOrientation()',
     '[attr.data-error-placement]': 'errorPlacement()',
-    '[attr.data-show-required]':
-      'isOutline() && resolvedShowRequiredMarker() ? "true" : null',
-    '[attr.data-required-marker]':
-      'isOutline() && resolvedShowRequiredMarker() ? resolvedRequiredMarker() : null',
+    '[attr.data-show-required]': 'showRequiredMarkerVisible() ? "true" : null',
   },
   template: `
     <!-- Label slot (outside bordered container for standard layout, visually inside for outline via CSS) -->
     <div class="ngx-signal-form-field-wrapper__label">
       <ng-content select="label" />
+      @if (showRequiredMarkerVisible()) {
+        <!--
+          Required marker rendered in the template (not via CSS ::after content)
+          so screen readers do not double-announce "required" alongside the
+          control's own \`aria-required\` attribute. \`aria-hidden="true"\` keeps
+          the asterisk purely visual (WCAG 1.3.1, 4.1.2).
+        -->
+        <span
+          class="ngx-signal-form-field-wrapper__required-marker"
+          aria-hidden="true"
+          >{{ resolvedRequiredMarker() }}</span
+        >
+      }
     </div>
 
     @if (isTopPlacement() && shouldShowErrors()) {
@@ -400,6 +415,14 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   readonly #inputElementId = signal<string | null>(null);
   readonly #boundControlElement = signal<HTMLElement | null>(null);
 
+  /**
+   * Tracks whether the bound control is required, mirroring what the previous
+   * `:has([required])` / `:has([aria-required='true'])` CSS selectors detected.
+   * Updated in the post-render `write` callback so the template-rendered
+   * required marker stays in sync with the projected control's attributes.
+   */
+  readonly #boundControlIsRequired = signal(false);
+
   readonly #controlSemantics = signal<ResolvedNgxSignalFormControlSemantics>({
     kind: null,
     layout: null,
@@ -562,6 +585,28 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     }
 
     return this.#config.requiredMarker;
+  });
+
+  /**
+   * Whether the visual required marker (`<span aria-hidden="true">`) should
+   * render in the template. Mirrors the previous CSS-driven contract:
+   *
+   * - outline appearance is active
+   * - `resolvedShowRequiredMarker()` is true (consumer/config opt-in)
+   * - the bound control declares required-ness via `[required]` or
+   *   `[aria-required="true"]`
+   *
+   * Encoded in TypeScript so the marker can live in the template — generated
+   * `::after` content was being read aloud by NVDA/VoiceOver in addition to
+   * the control's own `aria-required`, causing double announcement (WCAG
+   * 1.3.1, 4.1.2).
+   */
+  protected readonly showRequiredMarkerVisible = computed(() => {
+    return (
+      this.isOutline() &&
+      this.resolvedShowRequiredMarker() &&
+      this.#boundControlIsRequired()
+    );
   });
 
   protected readonly resolvedControlKind = computed(() => {
@@ -850,6 +895,18 @@ export class NgxFormFieldWrapper<TValue = unknown> {
 
         if (inputId !== this.#inputElementId()) {
           this.#inputElementId.set(inputId);
+        }
+
+        // Replaces the previous CSS `:has([required])` /
+        // `:has([aria-required='true'])` detection. Read each render so the
+        // marker reacts to dynamic schema changes (auto-aria toggles
+        // `aria-required` whenever the field's required state flips).
+        const isRequired =
+          inputEl !== null &&
+          (inputEl.hasAttribute('required') ||
+            inputEl.getAttribute('aria-required') === 'true');
+        if (isRequired !== this.#boundControlIsRequired()) {
+          this.#boundControlIsRequired.set(isRequired);
         }
 
         const current = this.#controlSemantics();
