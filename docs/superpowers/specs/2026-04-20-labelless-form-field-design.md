@@ -41,8 +41,8 @@ content query, no new host classes.
 Detection selector (scoped so a stray `<label>` nested in a prefix/suffix
 slot cannot match):
 
-```scss
-:host(...): not(: has(.ngx-signal-form-field-wrapper__label label));
+```
+:host(...):not(:has(.ngx-signal-form-field-wrapper__label label))
 ```
 
 ### Per-layout behavior
