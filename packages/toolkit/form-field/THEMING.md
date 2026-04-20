@@ -452,3 +452,36 @@ If your app has a manual toggle (e.g. adding a `.dark` class), use this pattern 
   /* ... reset to light tokens */
 }
 ```
+
+## Rendering without a label
+
+When no `<label>` is projected into `ngx-form-field-wrapper`, the reserved
+label space collapses automatically in all three textual appearances:
+
+- **Standard** — the label slot is removed (`display: none`); the flex gap
+  above the input also collapses.
+- **Outline** — the floating-label slot inside the bordered container is
+  dropped; `--_outline-min-height` shrinks to match the input's own
+  line-height plus vertical padding.
+- **Horizontal** — the grid collapses to a single content column; the
+  input is flush against the wrapper's left edge.
+
+Detection is pure CSS (`:has()`), so there is no opt-in. Selection
+controls (`checkbox`, `switch`, `radio-group`) keep their own layouts and
+still require a visible label for accessibility.
+
+### Why you might still want to render an empty label
+
+If you need rows of fields to align vertically in a grid regardless of
+whether each row has a visible label, project an explicit empty label:
+
+```html
+<ngx-form-field-wrapper [formField]="form.quantity">
+  <label for="quantity"></label>
+  <input id="quantity" type="number" [formField]="form.quantity" />
+</ngx-form-field-wrapper>
+```
+
+An empty `<label>` element still occupies the reserved space. For
+accessibility, prefer giving the `<input>` an `aria-label` or
+`aria-labelledby` so screen readers have a name to announce.
