@@ -630,9 +630,10 @@ chip inline with your form — e.g., next to a submit button — without the ful
 panel.
 
 ```typescript
-type NgxSignalFormDebuggerBadgeAppearance = 'solid' | 'outline';
-type NgxSignalFormDebuggerBadgeVariant =
+type NgxSignalFormDebuggerBadgeVariant = 'solid' | 'outline' | 'ghost';
+type NgxSignalFormDebuggerBadgeAppearance =
   | 'neutral'
+  | 'info'
   | 'success'
   | 'warning'
   | 'danger';
