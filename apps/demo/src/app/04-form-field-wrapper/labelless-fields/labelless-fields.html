@@ -1,0 +1,194 @@
+<form
+  [formRoot]="labellessForm"
+  ngxSignalForm
+  [errorStrategy]="errorDisplayMode()"
+  class="form-container"
+>
+  <!-- Section 1: Search input with icon prefix -->
+  <section class="labelless-section">
+    <h3>1. Search input (label replaced by placeholder + aria-label)</h3>
+    <ngx-form-field-wrapper
+      [appearance]="appearance()"
+      [orientation]="orientation()"
+      [formField]="labellessForm.searchQuery"
+    >
+      <svg
+        prefix
+        aria-hidden="true"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input
+        id="searchQuery"
+        type="search"
+        aria-label="Search"
+        placeholder="Search…"
+        [formField]="labellessForm.searchQuery"
+      />
+    </ngx-form-field-wrapper>
+  </section>
+
+  <!-- Section 2: Grouped fields under a shared heading -->
+  <section class="labelless-section">
+    <h3 id="phone-heading">
+      2. Phone number (shared heading, no per-field labels)
+    </h3>
+    <div class="phone-row" role="group" aria-labelledby="phone-heading">
+      <ngx-form-field-wrapper
+        [appearance]="appearance()"
+        [formField]="labellessForm.phoneCountry"
+      >
+        <input
+          id="phoneCountry"
+          type="text"
+          aria-label="Country code"
+          placeholder="+1"
+          [formField]="labellessForm.phoneCountry"
+        />
+      </ngx-form-field-wrapper>
+
+      <ngx-form-field-wrapper
+        [appearance]="appearance()"
+        [formField]="labellessForm.phoneNumber"
+      >
+        <input
+          id="phoneNumber"
+          type="tel"
+          aria-label="Phone number"
+          placeholder="555-0100"
+          [formField]="labellessForm.phoneNumber"
+        />
+      </ngx-form-field-wrapper>
+
+      <ngx-form-field-wrapper
+        [appearance]="appearance()"
+        [formField]="labellessForm.phoneExtension"
+      >
+        <input
+          id="phoneExtension"
+          type="text"
+          aria-label="Extension"
+          placeholder="ext"
+          [formField]="labellessForm.phoneExtension"
+        />
+      </ngx-form-field-wrapper>
+    </div>
+  </section>
+
+  <!-- Section 3: Amount input with currency suffix -->
+  <section class="labelless-section">
+    <h3>3. Amount (card heading provides the label)</h3>
+    <ngx-form-field-wrapper
+      appearance="outline"
+      [formField]="labellessForm.amount"
+    >
+      <span prefix aria-hidden="true">$</span>
+      <input
+        id="amount"
+        type="number"
+        aria-label="Amount"
+        [formField]="labellessForm.amount"
+      />
+      <span suffix aria-hidden="true">.00</span>
+    </ngx-form-field-wrapper>
+  </section>
+
+  <!-- Section 4: Side-by-side with/without label -->
+  <section class="labelless-section">
+    <h3>4. With vs without label (selected appearance)</h3>
+    <div class="comparison-grid">
+      <div>
+        <p>With label</p>
+        <ngx-form-field-wrapper
+          [appearance]="appearance()"
+          [orientation]="orientation()"
+          [formField]="labellessForm.comparison"
+        >
+          <label for="comparisonLabelled">Label</label>
+          <input
+            id="comparisonLabelled"
+            type="text"
+            [formField]="labellessForm.comparison"
+          />
+        </ngx-form-field-wrapper>
+      </div>
+      <div>
+        <p>Without label</p>
+        <ngx-form-field-wrapper
+          [appearance]="appearance()"
+          [orientation]="orientation()"
+          [formField]="labellessForm.comparison"
+        >
+          <input
+            id="comparisonLabelless"
+            type="text"
+            aria-label="Comparison value"
+            [formField]="labellessForm.comparison"
+          />
+        </ngx-form-field-wrapper>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Narrow inputs with wider error messages -->
+  <section class="labelless-section">
+    <h3>5. Narrow inputs (error text exceeds input width)</h3>
+
+    <div class="narrow-age">
+      <p>Age (must be 18–120):</p>
+      <ngx-form-field-wrapper
+        [appearance]="appearance()"
+        [formField]="labellessForm.age"
+      >
+        <input
+          id="age"
+          type="number"
+          aria-label="Age"
+          [formField]="labellessForm.age"
+        />
+      </ngx-form-field-wrapper>
+    </div>
+
+    <div class="narrow-zip">
+      <p>Zip code:</p>
+      <ngx-form-field-wrapper
+        [appearance]="appearance()"
+        [formField]="labellessForm.zipCode"
+      >
+        <input
+          id="zipCode"
+          type="text"
+          aria-label="Zip code"
+          placeholder="12345"
+          [formField]="labellessForm.zipCode"
+        />
+      </ngx-form-field-wrapper>
+    </div>
+
+    <div>
+      <p>One-time passcode:</p>
+      <ngx-form-field-wrapper
+        [appearance]="appearance()"
+        [formField]="labellessForm.otp"
+      >
+        <input
+          id="otp"
+          type="text"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          aria-label="One-time passcode"
+          [formField]="labellessForm.otp"
+        />
+      </ngx-form-field-wrapper>
+    </div>
+  </section>
+</form>
