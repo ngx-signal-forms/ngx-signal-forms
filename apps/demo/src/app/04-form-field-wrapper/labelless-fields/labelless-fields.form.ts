@@ -58,16 +58,21 @@ import { labellessFieldsSchema } from './labelless-fields.validations';
       align-items: start;
     }
 
+    /* Flat 2x2 grid: captions in row 1, wrappers in row 2, so both
+       inputs land on the same row baseline even though the left wrapper
+       reserves label space and the right one collapses it. */
     .comparison-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 1rem;
+      column-gap: 1rem;
+      row-gap: 0.25rem;
+      align-items: end;
     }
 
-    .comparison-grid > div > p {
+    .comparison-grid > p {
       font-size: 0.75rem;
       color: rgb(0 0 0 / 0.6);
-      margin: 0 0 0.25rem;
+      margin: 0;
     }
 
     .narrow-age input[id='age'] {

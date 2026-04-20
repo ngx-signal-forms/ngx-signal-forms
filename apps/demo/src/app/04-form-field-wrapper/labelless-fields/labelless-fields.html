@@ -106,36 +106,32 @@
   <section class="labelless-section" data-section="comparison">
     <h3>4. With vs without label (selected appearance)</h3>
     <div class="comparison-grid">
-      <div>
-        <p>With label</p>
-        <ngx-form-field-wrapper
-          [appearance]="appearance()"
-          [orientation]="orientation()"
+      <p>With label</p>
+      <p>Without label</p>
+      <ngx-form-field-wrapper
+        [appearance]="appearance()"
+        [orientation]="orientation()"
+        [formField]="labellessForm.comparison"
+      >
+        <label for="comparisonLabelled">Label</label>
+        <input
+          id="comparisonLabelled"
+          type="text"
           [formField]="labellessForm.comparison"
-        >
-          <label for="comparisonLabelled">Label</label>
-          <input
-            id="comparisonLabelled"
-            type="text"
-            [formField]="labellessForm.comparison"
-          />
-        </ngx-form-field-wrapper>
-      </div>
-      <div>
-        <p>Without label</p>
-        <ngx-form-field-wrapper
-          [appearance]="appearance()"
-          [orientation]="orientation()"
+        />
+      </ngx-form-field-wrapper>
+      <ngx-form-field-wrapper
+        [appearance]="appearance()"
+        [orientation]="orientation()"
+        [formField]="labellessForm.comparison"
+      >
+        <input
+          id="comparisonLabelless"
+          type="text"
+          aria-label="Comparison value"
           [formField]="labellessForm.comparison"
-        >
-          <input
-            id="comparisonLabelless"
-            type="text"
-            aria-label="Comparison value"
-            [formField]="labellessForm.comparison"
-          />
-        </ngx-form-field-wrapper>
-      </div>
+        />
+      </ngx-form-field-wrapper>
     </div>
   </section>
 
@@ -144,7 +140,6 @@
     <h3>5. Narrow inputs (error text exceeds input width)</h3>
 
     <div class="narrow-age">
-      <p>Age (must be 18–120):</p>
       <ngx-form-field-wrapper
         [appearance]="appearance()"
         [formField]="labellessForm.age"
@@ -152,14 +147,14 @@
         <input
           id="age"
           type="number"
-          aria-label="Age"
+          aria-label="Age (must be 18–120)"
+          placeholder="Age"
           [formField]="labellessForm.age"
         />
       </ngx-form-field-wrapper>
     </div>
 
     <div class="narrow-zip">
-      <p>Zip code:</p>
       <ngx-form-field-wrapper
         [appearance]="appearance()"
         [formField]="labellessForm.zipCode"
@@ -168,14 +163,13 @@
           id="zipCode"
           type="text"
           aria-label="Zip code"
-          placeholder="12345"
+          placeholder="Zip"
           [formField]="labellessForm.zipCode"
         />
       </ngx-form-field-wrapper>
     </div>
 
     <div>
-      <p>One-time passcode:</p>
       <ngx-form-field-wrapper
         [appearance]="appearance()"
         [formField]="labellessForm.otp"
@@ -186,6 +180,7 @@
           inputmode="numeric"
           autocomplete="one-time-code"
           aria-label="One-time passcode"
+          placeholder="One-time passcode"
           [formField]="labellessForm.otp"
         />
       </ngx-form-field-wrapper>
