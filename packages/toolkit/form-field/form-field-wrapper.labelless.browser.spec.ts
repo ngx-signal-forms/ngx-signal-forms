@@ -1,0 +1,92 @@
+import { signal } from '@angular/core';
+import { render } from '@testing-library/angular';
+import { describe, expect, it } from 'vitest';
+import { NgxFormFieldWrapper } from './form-field-wrapper';
+
+const mockField = () =>
+  signal({
+    invalid: () => false,
+    touched: () => false,
+    errors: () => [],
+  });
+
+describe('NgxFormFieldWrapper — without a label', () => {
+  it('hides the label div in the standard layout', async () => {
+    const { container } = await render(
+      `<ngx-form-field-wrapper [formField]="field">
+        <input id="anon" type="text" />
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: mockField() },
+      },
+    );
+
+    const labelDiv = container.querySelector<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__label',
+    );
+    expect(labelDiv).toBeTruthy();
+    expect(getComputedStyle(labelDiv!).display).toBe('none');
+  });
+
+  it('collapses top padding on the outline content container', async () => {
+    const { container } = await render(
+      `<ngx-form-field-wrapper [formField]="field" appearance="outline">
+        <input id="anon-outline" type="text" />
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: mockField() },
+      },
+    );
+
+    const content = container.querySelector<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__content',
+    );
+    expect(content).toBeTruthy();
+    const paddingTop = parseFloat(getComputedStyle(content!).paddingTop);
+    // With a label the stack is label-line-height (16px) + gap (0) +
+    // padding-vertical (4px) = 20px. Without a label we want only the
+    // 4px vertical padding. Assert well below the labelled value.
+    expect(paddingTop).toBeLessThan(10);
+  });
+
+  it('collapses the horizontal label column in the standard layout', async () => {
+    const { container } = await render(
+      `<ngx-form-field-wrapper [formField]="field" orientation="horizontal">
+        <input id="anon-h" type="text" />
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: mockField() },
+      },
+    );
+
+    const host = container.querySelector<HTMLElement>('ngx-form-field-wrapper');
+    const input = container.querySelector<HTMLInputElement>('#anon-h');
+    expect(host && input).toBeTruthy();
+    // With a reserved label column, the input would sit ~8rem (128px) to
+    // the right of the host. Without it, the input is flush left.
+    const hostLeft = host!.getBoundingClientRect().left;
+    const inputLeft = input!.getBoundingClientRect().left;
+    expect(inputLeft - hostLeft).toBeLessThan(24);
+  });
+
+  it('keeps existing label behavior when a label is projected', async () => {
+    const { container } = await render(
+      `<ngx-form-field-wrapper [formField]="field">
+        <label for="labelled">Labelled</label>
+        <input id="labelled" type="text" />
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: mockField() },
+      },
+    );
+
+    const labelDiv = container.querySelector<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__label',
+    );
+    expect(getComputedStyle(labelDiv!).display).not.toBe('none');
+  });
+});
