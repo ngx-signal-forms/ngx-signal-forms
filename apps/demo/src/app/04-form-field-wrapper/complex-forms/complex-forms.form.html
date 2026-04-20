@@ -189,7 +189,7 @@
       🎯 Skills
     </legend>
 
-    @for (skill of complexForm.skills; track $index; let i = $index) {
+    @for (skill of complexForm.skills; track skill; let i = $index) {
     <div
       class="array-entry-grid grid grid-cols-1 items-start gap-x-4 gap-y-4 md:grid-cols-[1fr,150px]"
     >
@@ -250,7 +250,7 @@
       📞 Contact Methods
     </legend>
 
-    @for (contact of complexForm.contacts; track $index; let i = $index) {
+    @for (contact of complexForm.contacts; track contact; let i = $index) {
     <div
       class="array-entry-grid grid grid-cols-1 items-start gap-x-4 gap-y-4 md:grid-cols-[150px,1fr]"
     >

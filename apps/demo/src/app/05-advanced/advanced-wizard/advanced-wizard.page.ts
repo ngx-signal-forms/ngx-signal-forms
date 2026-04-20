@@ -43,7 +43,7 @@ import { WizardContainerComponent } from './components/wizard-container';
         </h1>
         <p class="mt-2 text-gray-600">
           Plan your trip with our multi-step booking wizard. This demo showcases
-          Angular 21 Signal Forms with @ngrx/signals state management and
+          Angular 21.2 Signal Forms with @ngrx/signals state management and
           Zod-driven validation.
         </p>
       </header>

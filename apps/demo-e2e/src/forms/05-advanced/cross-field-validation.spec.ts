@@ -61,4 +61,33 @@ test.describe('Advanced Scenarios - Cross-Field Validation', () => {
       await expect(errorText).toHaveCount(0);
     });
   });
+
+  test('should show promo-code error when guest count exceeds the offer limit', async ({
+    page,
+  }) => {
+    await test.step('enter a promo code that depends on the guest field', async () => {
+      await page.getByLabel('Guests').fill('5');
+      await page.getByLabel('Promo Code').fill('SMALLGROUP');
+      await page.getByLabel('Promo Code').blur();
+    });
+
+    await test.step('verify the dependent promo-code validation message', async () => {
+      const errorText = page.locator('[role="alert"]', {
+        hasText: /promo valid only for small groups/i,
+      });
+
+      await expect(errorText).toBeVisible();
+    });
+
+    await test.step('reduce the group size and verify the error clears', async () => {
+      await page.getByLabel('Guests').fill('4');
+      await page.getByLabel('Guests').blur();
+
+      const errorText = page.locator('[role="alert"]', {
+        hasText: /promo valid only for small groups/i,
+      });
+
+      await expect(errorText).toHaveCount(0);
+    });
+  });
 });

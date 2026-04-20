@@ -312,5 +312,26 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
         );
       });
     });
+
+    test('should preserve the remaining skill value after removing the first repeated row', async () => {
+      await expect(page.getSkillNameInput(0)).toBeVisible();
+
+      await test.step('create two distinct skill rows', async () => {
+        await page.getSkillNameInput(0).fill('Angular');
+        await page.addSkillButton.click();
+        await expect(page.skillRows).toHaveCount(2);
+
+        await page.getSkillNameInput(1).fill('TypeScript');
+      });
+
+      await test.step('remove the first row', async () => {
+        await page.page.getByRole('button', { name: 'Remove skill 1' }).click();
+      });
+
+      await test.step('verify the remaining row keeps the second field value', async () => {
+        await expect(page.skillRows).toHaveCount(1);
+        await expect(page.getSkillNameInput(0)).toHaveValue('TypeScript');
+      });
+    });
   });
 });
