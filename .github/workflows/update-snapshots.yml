@@ -86,7 +86,7 @@ jobs:
 
       - name: Update Playwright snapshots
         if: ${{ inputs.scope == 'all' || inputs.scope == 'playwright' }}
-        run: pnpm exec playwright test apps/demo-e2e/src --config apps/demo-e2e/playwright.config.ts --project=chromium --update-snapshots
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx run demo-e2e:e2e-ci --updateSnapshots
 
       - name: Update Vitest browser screenshots
         if: ${{ inputs.scope == 'all' || inputs.scope == 'vitest' }}
