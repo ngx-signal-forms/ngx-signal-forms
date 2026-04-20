@@ -258,6 +258,7 @@
     --ngx-form-field-label-weight,
     var(--_field-weight-normal)
   );
+  --_label-font-family: var(--ngx-form-field-label-font-family, inherit);
   --_label-color: var(
     --ngx-form-field-label-color,
     var(--_color-text-secondary)
@@ -280,6 +281,10 @@
   --_label-outline-weight: var(
     --ngx-form-field-outline-label-weight,
     var(--_field-weight-normal)
+  );
+  --_label-outline-font-family: var(
+    --ngx-form-field-outline-label-font-family,
+    var(--_label-font-family)
   );
   --_label-outline-color: var(
     --ngx-form-field-outline-label-color,
@@ -306,6 +311,7 @@
     --ngx-form-field-input-padding,
     var(--_padding-vertical) var(--_padding-horizontal)
   );
+  --_input-font-family: var(--ngx-form-field-input-font-family, inherit);
   --_input-color: var(--ngx-form-field-input-color, var(--_color-text));
   --_input-bg: var(--ngx-form-field-input-bg, var(--_color-surface));
   --_input-border-color: var(
@@ -326,6 +332,10 @@
   --_input-outline-size: var(
     --ngx-form-field-outline-input-size,
     var(--ngx-form-field-outline-input-font-size, var(--_field-text-body))
+  );
+  --_input-outline-font-family: var(
+    --ngx-form-field-outline-input-font-family,
+    var(--_input-font-family)
   );
   --_input-outline-weight: var(
     --ngx-form-field-outline-input-weight,
@@ -476,6 +486,7 @@
 .ngx-signal-form-field-wrapper__label {
   font-size: var(--_label-size);
   font-weight: var(--_label-weight);
+  font-family: var(--_label-font-family);
   line-height: var(--_label-line-height);
   color: var(--_label-color);
   margin-bottom: 0;
@@ -624,6 +635,7 @@
   .ngx-signal-form-field-wrapper__main
   :is(input:not([role='switch']), textarea, select) {
   font-size: var(--_input-size);
+  font-family: var(--_input-font-family);
   color: var(--_input-color);
   padding: 0; // No padding - container handles it
   border: none; // No border - container handles it
@@ -682,6 +694,7 @@
       font-size: var(--_label-outline-size);
       line-height: var(--_label-outline-line-height);
       font-weight: var(--_label-outline-weight);
+      font-family: var(--_label-outline-font-family);
       color: var(--_label-outline-color);
       cursor: text;
       pointer-events: auto;
@@ -804,6 +817,7 @@
   margin: 0;
   inline-size: 100%;
   font-size: var(--_input-outline-size);
+  font-family: var(--_input-outline-font-family);
   line-height: var(--_input-outline-line-height);
   font-weight: var(--_input-outline-weight);
   color: var(--_input-outline-color);
