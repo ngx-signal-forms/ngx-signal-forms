@@ -899,7 +899,9 @@
 
 // Standard vertical: hide the empty label div. Flex gap only applies
 // between rendered children, so removing the div removes the gap too.
-:host(.ngx-signal-form-field-wrapper--textual):not(
+// Plain appearance is a non-goal (it already strips label chrome), so
+// exclude it explicitly to keep the spec and the CSS in sync.
+:host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain)):not(
     :has(.ngx-signal-form-field-wrapper__label label)
   )
   .ngx-signal-form-field-wrapper__label {
@@ -907,7 +909,9 @@
 }
 
 // Outline: hide the label div and drop the top-padding reservation that
-// accommodates the floating label.
+// accommodates the floating label. `.ngx-signal-forms-outline` and
+// `.ngx-signal-forms-plain` are mutually exclusive appearance classes, so
+// no extra exclusion is needed here.
 :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual):not(
   :has(.ngx-signal-form-field-wrapper__label label)
 ) {
@@ -931,10 +935,16 @@
   }
 }
 
-// Horizontal: collapse the grid to a single content column.
-:host(.ngx-signal-form-field-wrapper--horizontal):not(
-  :has(.ngx-signal-form-field-wrapper__label label)
-) {
+// Horizontal: collapse the grid to a single content column. Scope to
+// textual non-plain wrappers so this mirrors the standard/outline rules
+// and cannot rewrite the grid on any non-textual host that might carry
+// the `--horizontal` class (today selection controls force vertical, but
+// the CSS should not rely on that invariant).
+:host(
+  .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
+      .ngx-signal-forms-plain
+    )
+):not(:has(.ngx-signal-form-field-wrapper__label label)) {
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
     'content'
@@ -942,7 +952,9 @@
 }
 
 :host(
-  .ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top
+  .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
+      .ngx-signal-forms-plain
+    )
 ):not(:has(.ngx-signal-form-field-wrapper__label label)) {
   grid-template-areas:
     'messages'

@@ -88,11 +88,11 @@ test.describe('Labelless Form Fields', () => {
     await page.ageInput.fill('5');
     await page.ageInput.blur();
 
-    await expect(
-      page.form.locator('.labelless-section').nth(3),
-    ).toHaveScreenshot('labelless-comparison-grid.png');
-    await expect(
-      page.form.locator('.labelless-section').nth(4),
-    ).toHaveScreenshot('labelless-narrow-inputs.png');
+    await expect(page.comparisonSection).toHaveScreenshot(
+      'labelless-comparison-grid.png',
+    );
+    await expect(page.narrowInputsSection).toHaveScreenshot(
+      'labelless-narrow-inputs.png',
+    );
   });
 });

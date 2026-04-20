@@ -192,8 +192,12 @@ Add this block at the end of `packages/toolkit/form-field/form-field-wrapper.scs
 :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual):not(
   :has(.ngx-signal-form-field-wrapper__label label)
 ) {
-  --_outline-min-height: calc(
-    var(--_input-outline-line-height) + var(--_padding-vertical) * 2
+  --_outline-min-height: var(
+    --ngx-form-field-outline-min-height,
+    var(
+      --ngx-form-field-min-height,
+      calc(var(--_input-outline-line-height) + var(--_padding-vertical) * 2)
+    )
   );
 
   .ngx-signal-form-field-wrapper__label {
@@ -1261,12 +1265,12 @@ test.describe('Labelless Form Fields', () => {
     await page.ageInput.fill('5');
     await page.ageInput.blur();
 
-    await expect(
-      page.form.locator('.labelless-section').nth(3),
-    ).toHaveScreenshot('labelless-comparison-grid.png');
-    await expect(
-      page.form.locator('.labelless-section').nth(4),
-    ).toHaveScreenshot('labelless-narrow-inputs.png');
+    await expect(page.comparisonSection).toHaveScreenshot(
+      'labelless-comparison-grid.png',
+    );
+    await expect(page.narrowInputsSection).toHaveScreenshot(
+      'labelless-narrow-inputs.png',
+    );
   });
 });
 ```

@@ -113,6 +113,26 @@ describe('NgxFormFieldWrapper — without a label', () => {
     expect(paddingTop).toBeGreaterThan(12);
   });
 
+  it('does not collapse the label slot for the plain appearance', async () => {
+    const { container } = await render(
+      `<ngx-form-field-wrapper [formField]="field" appearance="plain">
+        <input id="anon-plain" type="text" />
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: mockField() },
+      },
+    );
+
+    const labelDiv = container.querySelector<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__label',
+    );
+    expect(labelDiv).toBeTruthy();
+    // Plain is a non-goal for the labelless collapse. If it regresses to
+    // `display: none`, the spec's stated scope has drifted from the CSS.
+    expect(getComputedStyle(labelDiv!).display).not.toBe('none');
+  });
+
   it('keeps the horizontal label column when a label is projected', async () => {
     const { container } = await render(
       `<ngx-form-field-wrapper [formField]="field" orientation="horizontal">

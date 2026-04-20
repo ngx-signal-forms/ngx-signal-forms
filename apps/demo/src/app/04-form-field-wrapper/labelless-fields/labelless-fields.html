@@ -5,7 +5,7 @@
   class="form-container"
 >
   <!-- Section 1: Search input with icon prefix -->
-  <section class="labelless-section">
+  <section class="labelless-section" data-section="search">
     <h3>1. Search input (label replaced by placeholder + aria-label)</h3>
     <ngx-form-field-wrapper
       [appearance]="appearance()"
@@ -38,7 +38,7 @@
   </section>
 
   <!-- Section 2: Grouped fields under a shared heading -->
-  <section class="labelless-section">
+  <section class="labelless-section" data-section="phone">
     <h3 id="phone-heading">
       2. Phone number (shared heading, no per-field labels)
     </h3>
@@ -85,7 +85,7 @@
   </section>
 
   <!-- Section 3: Amount input with currency suffix -->
-  <section class="labelless-section">
+  <section class="labelless-section" data-section="amount">
     <h3>3. Amount (card heading provides the label)</h3>
     <ngx-form-field-wrapper
       appearance="outline"
@@ -103,7 +103,7 @@
   </section>
 
   <!-- Section 4: Side-by-side with/without label -->
-  <section class="labelless-section">
+  <section class="labelless-section" data-section="comparison">
     <h3>4. With vs without label (selected appearance)</h3>
     <div class="comparison-grid">
       <div>
@@ -140,7 +140,7 @@
   </section>
 
   <!-- Section 5: Narrow inputs with wider error messages -->
-  <section class="labelless-section">
+  <section class="labelless-section" data-section="narrow-inputs">
     <h3>5. Narrow inputs (error text exceeds input width)</h3>
 
     <div class="narrow-age">

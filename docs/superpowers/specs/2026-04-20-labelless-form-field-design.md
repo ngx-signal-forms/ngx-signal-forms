@@ -91,7 +91,7 @@ slot cannot match):
 **Demo** — new page at
 `apps/demo/src/app/04-form-field-wrapper/labelless-fields/`
 
-Four sections, each wrapping the existing appearance/orientation toggles so
+Five sections, each wrapping the existing appearance/orientation toggles so
 every layout can be previewed:
 
 1. **Search input with icon prefix** — canonical pattern. Prefix SVG icon,

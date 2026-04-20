@@ -20,6 +20,9 @@ export class LabellessFieldsPage extends BaseFormPage {
   readonly comparisonLabellessWrapper: Locator;
   readonly labellessSearchWrapper: Locator;
 
+  readonly comparisonSection: Locator;
+  readonly narrowInputsSection: Locator;
+
   constructor(page: Page) {
     super(page);
 
@@ -45,6 +48,11 @@ export class LabellessFieldsPage extends BaseFormPage {
     this.labellessSearchWrapper = this.form
       .locator('ngx-form-field-wrapper')
       .filter({ has: this.page.locator('#searchQuery') });
+
+    this.comparisonSection = this.form.locator('[data-section="comparison"]');
+    this.narrowInputsSection = this.form.locator(
+      '[data-section="narrow-inputs"]',
+    );
   }
 
   async goto(): Promise<void> {

@@ -456,19 +456,23 @@ If your app has a manual toggle (e.g. adding a `.dark` class), use this pattern 
 ## Rendering without a label
 
 When no `<label>` is projected into `ngx-form-field-wrapper`, the reserved
-label space collapses automatically in all three textual appearances:
+label space collapses automatically for textual controls in the
+`standard` and `outline` appearances, across both vertical and horizontal
+orientations:
 
-- **Standard** — the label slot is removed (`display: none`); the flex gap
-  above the input also collapses.
+- **Standard (vertical)** — the label slot is removed (`display: none`);
+  the flex gap above the input also collapses.
 - **Outline** — the floating-label slot inside the bordered container is
   dropped; `--_outline-min-height` shrinks to match the input's own
   line-height plus vertical padding.
 - **Horizontal** — the grid collapses to a single content column; the
   input is flush against the wrapper's left edge.
 
-Detection is pure CSS (`:has()`), so there is no opt-in. Selection
-controls (`checkbox`, `switch`, `radio-group`) keep their own layouts and
-still require a visible label for accessibility.
+Detection is pure CSS (`:has()`), so there is no opt-in. The `plain`
+appearance is intentionally excluded because it already renders without
+label-specific chrome. Selection controls (`checkbox`, `switch`,
+`radio-group`) keep their own layouts and still require a visible label
+for accessibility.
 
 ### Why you might still want to render an empty label
 
