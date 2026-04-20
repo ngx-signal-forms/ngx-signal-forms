@@ -86,7 +86,9 @@ jobs:
 
       - name: Update Playwright snapshots
         if: ${{ inputs.scope == 'all' || inputs.scope == 'playwright' }}
-        run: pnpm exec playwright test apps/demo-e2e/src --config apps/demo-e2e/playwright.config.ts --project=chromium --update-snapshots
+        # --skip-nx-cache: e2e-ci is cacheable, but __screenshots__/ isn't in
+        # the target's outputs, so a cache hit would silently skip regeneration.
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx run demo-e2e:e2e-ci --updateSnapshots --skip-nx-cache
 
       - name: Update Vitest browser screenshots
         if: ${{ inputs.scope == 'all' || inputs.scope == 'vitest' }}
@@ -100,13 +102,25 @@ jobs:
         run: |
           # Stage only known snapshot directories so stray working-tree changes
           # (install artifacts, generated caches, etc.) can never ride along.
-          # -A handles add/modify/delete within the given pathspecs.
-          git add -A -- \
-            'apps/demo-e2e/src/__screenshots__' \
-            'apps/demo-e2e/src/__snapshots__' \
-            'apps/demo-e2e/src/**/*.spec.ts-snapshots' \
-            'packages/toolkit/**/__screenshots__' \
-            'packages/toolkit/**/__snapshots__'
+          # Each pathspec is staged independently so missing flavors (e.g. no
+          # vitest __snapshots__ yet) don't abort the whole step.
+          pathspecs=(
+            'apps/demo-e2e/src/__screenshots__'
+            'apps/demo-e2e/src/__snapshots__'
+            ':(glob)apps/demo-e2e/src/**/*.spec.ts-snapshots'
+            ':(glob)packages/toolkit/**/__screenshots__'
+            ':(glob)packages/toolkit/**/__snapshots__'
+          )
+          for pathspec in "${pathspecs[@]}"; do
+            if ! add_output=$(git add -A -- "$pathspec" 2>&1); then
+              if [[ "$add_output" == *"did not match any files"* ]]; then
+                echo "No match for pathspec: $pathspec (skipping)"
+              else
+                printf 'Failed to stage pathspec: %s\n%s\n' "$pathspec" "$add_output" >&2
+                exit 1
+              fi
+            fi
+          done
 
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
