@@ -86,7 +86,9 @@ jobs:
 
       - name: Update Playwright snapshots
         if: ${{ inputs.scope == 'all' || inputs.scope == 'playwright' }}
-        run: bash .github/scripts/nx-safe.sh pnpm exec nx run demo-e2e:e2e-ci --updateSnapshots
+        # --skip-nx-cache: e2e-ci is cacheable, but __screenshots__/ isn't in
+        # the target's outputs, so a cache hit would silently skip regeneration.
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx run demo-e2e:e2e-ci --updateSnapshots --skip-nx-cache
 
       - name: Update Vitest browser screenshots
         if: ${{ inputs.scope == 'all' || inputs.scope == 'vitest' }}
@@ -110,8 +112,13 @@ jobs:
             ':(glob)packages/toolkit/**/__snapshots__'
           )
           for pathspec in "${pathspecs[@]}"; do
-            if ! git add -A -- "$pathspec" 2>/dev/null; then
-              echo "No match for pathspec: $pathspec (skipping)"
+            if ! add_output=$(git add -A -- "$pathspec" 2>&1); then
+              if [[ "$add_output" == *"did not match any files"* ]]; then
+                echo "No match for pathspec: $pathspec (skipping)"
+              else
+                printf 'Failed to stage pathspec: %s\n%s\n' "$pathspec" "$add_output" >&2
+                exit 1
+              fi
             fi
           done
 
