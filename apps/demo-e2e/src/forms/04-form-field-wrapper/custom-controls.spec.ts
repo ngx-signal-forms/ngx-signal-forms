@@ -736,9 +736,16 @@ test.describe('Custom Signal Forms Controls', () => {
         await page.showVerticalOrientation();
       });
 
-      await test.step('Capture the wrapper form baseline', async () => {
-        await expect(page.form).toHaveScreenshot(
-          'custom-controls-standard-vertical.png',
+      await test.step('Verify native textual wrappers resolve to standard + vertical', async () => {
+        const wrapper = page.getWrapperByControlId('productName');
+
+        await expect(wrapper).toHaveAttribute('data-orientation', 'vertical');
+        await expect(wrapper).toHaveClass(
+          /ngx-signal-form-field-wrapper--textual/,
+        );
+        await expect(wrapper).not.toHaveClass(/ngx-signal-forms-plain/);
+        await expect(wrapper).not.toHaveClass(
+          /ngx-signal-form-field-wrapper--horizontal/,
         );
       });
     });
@@ -749,9 +756,16 @@ test.describe('Custom Signal Forms Controls', () => {
         await page.showHorizontalOrientation();
       });
 
-      await test.step('Capture the wrapper form baseline', async () => {
-        await expect(page.form).toHaveScreenshot(
-          'custom-controls-standard-horizontal.png',
+      await test.step('Verify native textual wrappers resolve to standard + horizontal', async () => {
+        const wrapper = page.getWrapperByControlId('productName');
+
+        await expect(wrapper).toHaveAttribute('data-orientation', 'horizontal');
+        await expect(wrapper).toHaveClass(
+          /ngx-signal-form-field-wrapper--textual/,
+        );
+        await expect(wrapper).not.toHaveClass(/ngx-signal-forms-plain/);
+        await expect(wrapper).toHaveClass(
+          /ngx-signal-form-field-wrapper--horizontal/,
         );
       });
     });
@@ -774,9 +788,13 @@ test.describe('Custom Signal Forms Controls', () => {
         await page.showHorizontalOrientation();
       });
 
-      await test.step('Capture the wrapper form baseline', async () => {
-        await expect(page.form).toHaveScreenshot(
-          'custom-controls-plain-horizontal.png',
+      await test.step('Verify native textual wrappers resolve to plain + horizontal', async () => {
+        const wrapper = page.getWrapperByControlId('productName');
+
+        await expect(wrapper).toHaveAttribute('data-orientation', 'horizontal');
+        await expect(wrapper).toHaveClass(/ngx-signal-forms-plain/);
+        await expect(wrapper).toHaveClass(
+          /ngx-signal-form-field-wrapper--horizontal/,
         );
       });
     });

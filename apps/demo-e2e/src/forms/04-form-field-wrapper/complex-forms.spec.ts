@@ -152,16 +152,48 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       });
     });
 
-    test('should match the standard horizontal personal-information baseline', async () => {
+    test('should render personal and address rows as single-column in standard horizontal mode', async () => {
       await test.step('Show the standard horizontal nested layout', async () => {
         await page.showStandardAppearance();
         await page.showHorizontalOrientation();
       });
 
-      await test.step('Capture a focused fieldset baseline', async () => {
-        await expect(page.personalInfoFieldset).toHaveScreenshot(
-          'complex-forms-standard-horizontal-personal-info.png',
-        );
+      await test.step('Verify Personal Information wrappers are stacked vertically', async () => {
+        const firstNameWrapper = page.getWrapperByControlId('firstName');
+        const lastNameWrapper = page.getWrapperByControlId('lastName');
+
+        await expect(firstNameWrapper).toBeVisible();
+        await expect(lastNameWrapper).toBeVisible();
+
+        const firstNameBox = await firstNameWrapper.boundingBox();
+        const lastNameBox = await lastNameWrapper.boundingBox();
+
+        expect(firstNameBox).not.toBeNull();
+        expect(lastNameBox).not.toBeNull();
+
+        if (firstNameBox && lastNameBox) {
+          expect(Math.abs(firstNameBox.x - lastNameBox.x)).toBeLessThan(2);
+          expect(lastNameBox.y).toBeGreaterThan(firstNameBox.y);
+        }
+      });
+
+      await test.step('Verify Address city/zip wrappers are stacked vertically', async () => {
+        const cityWrapper = page.getWrapperByControlId('city');
+        const zipWrapper = page.getWrapperByControlId('zipCode');
+
+        await expect(cityWrapper).toBeVisible();
+        await expect(zipWrapper).toBeVisible();
+
+        const cityBox = await cityWrapper.boundingBox();
+        const zipBox = await zipWrapper.boundingBox();
+
+        expect(cityBox).not.toBeNull();
+        expect(zipBox).not.toBeNull();
+
+        if (cityBox && zipBox) {
+          expect(Math.abs(cityBox.x - zipBox.x)).toBeLessThan(2);
+          expect(zipBox.y).toBeGreaterThan(cityBox.y);
+        }
       });
     });
   });

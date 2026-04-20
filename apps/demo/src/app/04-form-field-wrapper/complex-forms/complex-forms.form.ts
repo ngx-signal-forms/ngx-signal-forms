@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   input,
   signal,
 } from '@angular/core';
@@ -166,6 +167,18 @@ export class ComplexFormsComponent {
 
   readonly orientation = input<FormFieldOrientation>('vertical');
 
+  protected readonly personalInfoGridClass = computed(() =>
+    this.isStandardHorizontalLayout()
+      ? 'grid grid-cols-1 gap-x-4 gap-y-4'
+      : 'grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2',
+  );
+
+  protected readonly addressPairGridClass = computed(() =>
+    this.isStandardHorizontalLayout()
+      ? 'grid grid-cols-1 gap-x-4 gap-y-4'
+      : 'grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2',
+  );
+
   /** Form data model */
   readonly #model = signal(createInitialComplexFormModel());
 
@@ -182,6 +195,11 @@ export class ComplexFormsComponent {
       onInvalid: createOnInvalidHandler(),
     },
   });
+
+  protected readonly isStandardHorizontalLayout = computed(
+    () =>
+      this.appearance() === 'standard' && this.orientation() === 'horizontal',
+  );
 
   /**
    * Add new skill to the array
