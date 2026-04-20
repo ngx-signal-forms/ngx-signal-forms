@@ -100,13 +100,20 @@ jobs:
         run: |
           # Stage only known snapshot directories so stray working-tree changes
           # (install artifacts, generated caches, etc.) can never ride along.
-          # -A handles add/modify/delete within the given pathspecs.
-          git add -A -- \
-            'apps/demo-e2e/src/__screenshots__' \
-            'apps/demo-e2e/src/__snapshots__' \
-            'apps/demo-e2e/src/**/*.spec.ts-snapshots' \
-            'packages/toolkit/**/__screenshots__' \
-            'packages/toolkit/**/__snapshots__'
+          # Each pathspec is staged independently so missing flavors (e.g. no
+          # vitest __snapshots__ yet) don't abort the whole step.
+          pathspecs=(
+            'apps/demo-e2e/src/__screenshots__'
+            'apps/demo-e2e/src/__snapshots__'
+            ':(glob)apps/demo-e2e/src/**/*.spec.ts-snapshots'
+            ':(glob)packages/toolkit/**/__screenshots__'
+            ':(glob)packages/toolkit/**/__snapshots__'
+          )
+          for pathspec in "${pathspecs[@]}"; do
+            if ! git add -A -- "$pathspec" 2>/dev/null; then
+              echo "No match for pathspec: $pathspec (skipping)"
+            fi
+          done
 
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
