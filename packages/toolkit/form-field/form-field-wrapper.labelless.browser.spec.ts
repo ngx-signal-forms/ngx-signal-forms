@@ -89,4 +89,50 @@ describe('NgxFormFieldWrapper — without a label', () => {
     );
     expect(getComputedStyle(labelDiv!).display).not.toBe('none');
   });
+
+  it('keeps outline content padding when a label is projected', async () => {
+    const { container } = await render(
+      `<ngx-form-field-wrapper [formField]="field" appearance="outline">
+        <label for="labelled-outline">Labelled</label>
+        <input id="labelled-outline" type="text" />
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: mockField() },
+      },
+    );
+
+    const content = container.querySelector<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__content',
+    );
+    expect(content).toBeTruthy();
+    const paddingTop = parseFloat(getComputedStyle(content!).paddingTop);
+    // Labelled outline reserves label-line-height + padding-vertical.
+    // Assert well above the labelless threshold to guard against a
+    // future regression that collapses padding for labelled wrappers.
+    expect(paddingTop).toBeGreaterThan(12);
+  });
+
+  it('keeps the horizontal label column when a label is projected', async () => {
+    const { container } = await render(
+      `<ngx-form-field-wrapper [formField]="field" orientation="horizontal">
+        <label for="labelled-h">Labelled</label>
+        <input id="labelled-h" type="text" />
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: mockField() },
+      },
+    );
+
+    const host = container.querySelector<HTMLElement>('ngx-form-field-wrapper');
+    const input = container.querySelector<HTMLInputElement>('#labelled-h');
+    expect(host && input).toBeTruthy();
+    // With a label column (~8rem / 128px) reserved, the input sits well
+    // past the wrapper's left edge. Threshold comfortably above the
+    // labelless guard (24px) so either regression fails loudly.
+    const offset =
+      input!.getBoundingClientRect().left - host!.getBoundingClientRect().left;
+    expect(offset).toBeGreaterThan(64);
+  });
 });
