@@ -132,7 +132,7 @@ These still exist under a new name:
 | `appearance="bare"`    | `appearance="plain"`    |
 
 > A brief RC cycle (rc.1 – rc.4) shipped `appearance="stacked"` as the new name
-> for the default. `rc.5` reverts that single literal back to `"standard"`. The
+> for the default. The current release-candidate surface uses `"standard"` again. The
 > control _layout_ value `'stacked'` (in `NgxSignalFormControlLayout`) is
 > unrelated and remains unchanged.
 

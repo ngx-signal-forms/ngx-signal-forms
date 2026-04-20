@@ -38,7 +38,8 @@ The assistive entry point provides accessible feedback rendering that sits betwe
    - Renders blocking errors only (no warnings). For warnings, use `NgxHeadlessErrorSummary` instead.
    - Inherits `errorStrategy` and `submittedStatus` from `ngxSignalForm` context automatically — no extra wiring needed when used inside `form[formRoot][ngxSignalForm]`.
    - Each entry is a focusable button that calls `focusBoundControl()` on click.
-   - Uses `role="alert"` + `aria-live="assertive"` for screen readers.
+
+- Uses `role="alert"` and relies on the role's implicit live-region semantics (no explicit `aria-live` / `aria-atomic`).
 
 7. Keep warning and error semantics distinct. Errors use `role="alert"` (assertive); warnings use `role="status"` (polite). Do not homogenize them.
 

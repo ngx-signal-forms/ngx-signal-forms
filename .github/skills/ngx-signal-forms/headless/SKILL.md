@@ -46,7 +46,7 @@ Use `ngxHeadlessErrorSummary` when you need a form-level summary with full DOM c
 ```html
 <div ngxHeadlessErrorSummary #summary="errorSummary" [formTree]="myForm">
   @if (summary.shouldShow() && summary.hasErrors()) {
-  <div role="alert" aria-live="assertive" aria-atomic="true">
+  <div role="alert">
     <p>Please fix the following errors:</p>
     <ul>
       @for (entry of summary.entries(); track entry.kind + entry.fieldName) {

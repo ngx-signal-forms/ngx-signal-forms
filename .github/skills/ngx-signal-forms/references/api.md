@@ -139,7 +139,7 @@ interface NgxSignalFormsUserConfig {
 Migration note for `defaultFormFieldAppearance`:
 
 - `bare` was renamed to `plain` (minimal wrapper chrome)
-- `stacked` (briefly the new name during rc.1 – rc.4) was reverted to `standard` in `rc.5`
+- the current release-candidate surface uses `standard` for the default appearance
 - Recommended update: `stacked` → `standard`, `bare` → `plain`
 
 ### Types
@@ -188,7 +188,7 @@ const NGX_SIGNAL_FORM_CONTEXT: InjectionToken<NgxSignalFormContext>;
 const NGX_SIGNAL_FORM_FIELD_CONTEXT: InjectionToken<NgxSignalFormFieldContext>;
 ```
 
-> `NGX_ERROR_MESSAGES` and `NGX_FIELD_LABEL_RESOLVER` are internal tokens (used by sibling entry points via `@ngx-signal-forms/toolkit/core`). Use `provideErrorMessages()` and `provideFieldLabels()` instead.
+> `NGX_ERROR_MESSAGES` and `NGX_FIELD_LABEL_RESOLVER` are internal tokens used by sibling entry points inside the toolkit package. Use `provideErrorMessages()` and `provideFieldLabels()` instead.
 
 ### Utilities
 
@@ -316,14 +316,15 @@ import {
 
 Selector: `ngx-form-field-error-summary`
 
-| Input             | Type                 | Default                              | Notes                                   |
-| ----------------- | -------------------- | ------------------------------------ | --------------------------------------- |
-| `formTree`        | `FieldTree<unknown>` | required                             | Root form tree to aggregate errors from |
-| `summaryLabel`    | string               | `'Please fix the following errors:'` | Header text above the error list        |
-| `strategy`        | ErrorDisplayStrategy | Inherited from form context          | Override error display strategy         |
-| `submittedStatus` | SubmittedStatus      | Inherited from form context          | Manual submission status override       |
+| Input             | Type                 | Default                              | Notes                                            |
+| ----------------- | -------------------- | ------------------------------------ | ------------------------------------------------ |
+| `formTree`        | `FieldTree<unknown>` | required                             | Root form tree to aggregate errors from          |
+| `summaryLabel`    | string               | `'Please fix the following errors:'` | Header text above the error list                 |
+| `strategy`        | ErrorDisplayStrategy | Inherited from form context          | Override error display strategy                  |
+| `submittedStatus` | SubmittedStatus      | Inherited from form context          | Manual submission status override                |
+| `autoFocus`       | boolean              | `true`                               | Focus the summary host the first time it appears |
 
-Renders a styled GOV.UK-pattern list of blocking errors only (no warnings). Each entry is a focusable button that calls `focusBoundControl()` on click. Inherits `errorStrategy` and `submittedStatus` from `ngxSignalForm` context automatically. Uses `role="alert"` + `aria-live="assertive"`. Deduplicated — same error shown once even if multiple fields produce it.
+Renders a styled GOV.UK-pattern list of blocking errors only (no warnings). Each entry is a focusable button that calls `focusBoundControl()` on click. Inherits `errorStrategy` and `submittedStatus` from `ngxSignalForm` context automatically. Uses `role="alert"` and relies on the role's implicit live-region semantics — no explicit `aria-live` / `aria-atomic`. Deduplicated — same error shown once even if multiple fields produce it.
 
 **CSS custom properties for theming:**
 
@@ -353,6 +354,7 @@ For full DOM control over the error summary (incl. warning entries), use `NgxHea
 ```typescript
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 // Bundle: [NgxFormFieldWrapper,
+//          NgxSignalFormAutoAria,
 //          NgxFormFieldHint, NgxFormFieldCharacterCount,
 //          NgxFormFieldAssistiveRow, NgxFormFieldError,
 //          NgxFormFieldset]

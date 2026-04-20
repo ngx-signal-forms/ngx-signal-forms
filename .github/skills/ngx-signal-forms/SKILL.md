@@ -1,6 +1,6 @@
 ---
 name: ngx-signal-forms
-description: Implements @ngx-signal-forms/toolkit for Angular Signal Forms. Use whenever working with any toolkit entry point — deciding whether plain form[formRoot] fallback is enough or the ngxSignalForm enhancer is needed, auto-ARIA, control semantics (ngxSignalFormControl directive, provideNgxSignalFormControlPresets), error strategies (on-touch/on-submit/immediate), submittedStatus/showErrors helpers, error message registries, field-label resolution, form field wrappers (ngx-form-field-wrapper), grouped fieldsets, error summaries, standalone assistive components (errors, hints, character count), renderless headless primitives, Vest validation integration, or development-time form debugging. Always invoke this skill when the user mentions @ngx-signal-forms/toolkit, an error strategy, submitted status, an error summary, a form wrapper, field visibility, ARIA wiring, control semantics, or custom form controls, even if they don't use the skill name explicitly.
+description: Implements @ngx-signal-forms/toolkit for Angular Signal Forms. Use whenever working with any toolkit entry point — deciding whether plain form[formRoot] fallback is enough or the ngxSignalForm enhancer is needed, auto-ARIA, control semantics (ngxSignalFormControl directive, provideNgxSignalFormControlPresets), error strategies (on-touch/on-submit/immediate), submittedStatus/showErrors helpers, error message registries, field-label resolution, form field wrappers (ngx-form-field-wrapper), grouped fieldsets, error summaries, standalone assistive components (errors, hints, character count), renderless headless primitives, Vest validation integration, development-time form debugging, or migration from beta / older RC-era toolkit APIs to the current public surface. Always invoke this skill when the user mentions @ngx-signal-forms/toolkit, migration or upgrade questions, renamed/removed toolkit APIs, error strategies, submitted status, an error summary, a form wrapper, field visibility, ARIA wiring, control semantics, or custom form controls, even if they don't use the skill name explicitly.
 ---
 
 # ngx-signal-forms Toolkit
@@ -12,6 +12,7 @@ An orchestrator skill for `@ngx-signal-forms/toolkit` — the enhancement layer 
 Use this skill when the task involves:
 
 - Setting up `[formRoot]`, deciding whether to add `ngxSignalForm`, error strategies, or auto-ARIA
+- Upgrading from beta / older RC toolkit usage to the current public API (`standard` vs `stacked`, hidden `/core`, renamed classes, removed helpers)
 - Declaring control semantics with `ngxSignalFormControl` or setting up control preset providers
 - Adding form-level error summaries or field-label resolution
 - Adding form field wrappers or grouped fieldsets

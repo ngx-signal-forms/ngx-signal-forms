@@ -1,45 +1,48 @@
-# Migrating from beta → v1
+# Migrating from beta → current v1 API
 
 This guide covers every breaking change between the last beta
-(`1.0.0-beta.10`) and the stable `1.0.0` release (via `rc.0`, `rc.1`,
-`rc.2`, and `rc.3`). If you are already on one of the release-candidate
-builds you can skip straight to the section that matches your starting
-point — each section is annotated with the version the change lands in.
+(`1.0.0-beta.10`) and the current v1 release-candidate surface. It is
+intentionally written against the **latest state only**.
+
+That means this document does **not** walk through interim RC-to-RC
+waypoints. Every “before → after” example below shows the migration from
+beta-era usage to the API you should use **today**.
+
+If a later RC ships without new beta-to-v1 breaking changes, this guide
+remains the correct migration target without needing another RC-number bump.
 
 The toolkit follows semver strictly from `1.0.0` onward. Future 1.x
 releases will not include any of the renames below.
 
 ## At a glance
 
-- **`[formRoot]` selector** — Directive is now an additive enhancer: add `ngxSignalForm` (`rc.0`)
-- **Public API surface** — `/core` is hidden; `@internal` plumbing no longer published (`rc.3`)
-- **Removed helpers** — `computeShowErrors`, `canSubmit`, `injectFormConfig`, … (beta → rc)
-- **Removed directive** — `NgxFloatingLabelDirective` (use `appearance="outline"`) (`rc.2`)
-- **Renamed components** — `NgxSignalFormError*` → `NgxFormFieldError*` (`rc.3`)
-- **Renamed appearances** — final appearance set is `standard` / `outline` / `plain` (`v1 rc`)
-- **Orientation API** — `vertical` / `horizontal` is now a documented field-wrapper contract (`v1 rc`)
-- **Renamed control kinds** — `text-like` / `textarea-select-like` → `input-like` / `standalone-field-like` (`rc.3`)
-- **Hybrid v1 naming** — drop `Component`/`Directive` suffixes; short prefixes per layer (`v1 rc.5`)
-- **Config typing** — `NgxSignalFormsUserConfig` is `Partial`, not `DeepPartial` (`rc.2`)
-- **Behavior fix** — `on-submit` strategy now requires an explicit `submittedStatus` (`rc.3`)
-- **New: control semantics** — `ngxSignalFormControl="…"` contract for layout + auto-ARIA (`rc.1`)
-- **New: error summary** — `NgxFormFieldErrorSummary` + headless directive (`rc.1`)
-- **New: field labels** — `provideFieldLabels()` + warning/error split utilities (`rc.1`)
-- **New: debugger entry point** — `@ngx-signal-forms/toolkit/debugger` (beta → rc)
-- **New: `warningStrategy`** — decouples warning visibility from error timing; default `'immediate'` (v1 RC)
-- **New: `NgxFormField` bundle** — convenience import array of wrapper + assistive parts + auto-ARIA directive (v1 RC)
-- **New: fieldset toggle** — `includeNestedErrors` on fieldset; `submittedStatus` override input (v1 RC)
-- **New: error component APIs** — `errors`, `listStyle`, `submittedStatus` inputs on `NgxFormFieldError` (v1 RC)
-- **New: Vest options** — `only` selector, `resetOnDestroy`, `VEST_*_KIND_PREFIX` exports (v1 RC)
-- **A11y** — removed explicit `aria-live` / `aria-atomic`; role semantics now authoritative (v1 RC)
-- **Behavior** — missing `fieldName` / `id` now logs (dev mode) instead of throwing (v1 RC)
-- **Compatibility** — Angular peer-dep tightened to `>=21.2.0 <22.0.0` (v1 RC)
+- **`[formRoot]` selector** — Directive is now an additive enhancer: add `ngxSignalForm`
+- **Public API surface** — `/core` is hidden; `@internal` plumbing is no longer published
+- **Removed helpers** — `computeShowErrors`, `canSubmit`, `injectFormConfig`, …
+- **Removed directive** — `NgxFloatingLabelDirective` (use `appearance="outline"`)
+- **Renamed components** — `NgxSignalFormError*` → `NgxFormFieldError*`
+- **Renamed appearances** — final appearance set is `standard` / `outline` / `plain`
+- **Orientation API** — `vertical` / `horizontal` is a documented field-wrapper contract
+- **Renamed control kinds** — `text-like` / `textarea-select-like` → `input-like` / `standalone-field-like`
+- **Hybrid v1 naming** — drop `Component`/`Directive` suffixes; short prefixes per layer
+- **Config typing** — `NgxSignalFormsUserConfig` is `Partial`, not `DeepPartial`
+- **Behavior fix** — `on-submit` strategy now requires an explicit `submittedStatus`
+- **New: control semantics** — `ngxSignalFormControl="…"` contract for layout + auto-ARIA
+- **New: error summary** — `NgxFormFieldErrorSummary` + headless directive
+- **New: field labels** — `provideFieldLabels()` + warning/error split utilities
+- **New: debugger entry point** — `@ngx-signal-forms/toolkit/debugger`
+- **New: `warningStrategy`** — decouples warning visibility from error timing; default `'immediate'`
+- **New: `NgxFormField` bundle** — convenience import array of wrapper + assistive parts + auto-ARIA directive
+- **New: fieldset toggle** — `includeNestedErrors` on fieldset; `submittedStatus` override input
+- **New: error component APIs** — `errors`, `listStyle`, `submittedStatus` inputs on `NgxFormFieldError`
+- **New: Vest options** — `only` selector, `resetOnDestroy`, `VEST_*_KIND_PREFIX` exports
+- **A11y** — removed explicit `aria-live` / `aria-atomic`; role semantics now authoritative
+- **Behavior** — missing `fieldName` / `id` now logs (dev mode) instead of throwing
+- **Compatibility** — Angular peer-dep is `>=21.2.0 <22.0.0`
 
 ---
 
 ## 1. `NgxSignalForm` is now an additive enhancer
-
-**Lands in:** `rc.0`
 
 Earlier betas used `form[formRoot]` as the selector, which meant the
 toolkit was effectively taking over Angular's built-in `FormRoot`
@@ -47,7 +50,7 @@ directive (submission handling, `novalidate`, `preventDefault`). That
 was fragile and made our directive responsible for things Angular
 already owns.
 
-In v1, the toolkit directive is an **additive enhancer** layered on top
+In the current API, the toolkit directive is an **additive enhancer** layered on top
 of Angular's public `FormRoot`. You opt in to toolkit behavior per-form
 by adding the `ngxSignalForm` attribute alongside `[formRoot]`.
 
@@ -95,8 +98,6 @@ Notes:
 
 ## 2. `/core` is no longer a published entry point
 
-**Lands in:** `rc.3`
-
 In beta and the early RCs, `@ngx-signal-forms/toolkit/core` was
 importable from consumer code, which accidentally exposed a lot of
 `@internal` plumbing (`NGX_SIGNAL_FORM_HINT_REGISTRY`,
@@ -136,19 +137,19 @@ for the full policy.
 The following symbols existed in betas or early RCs and have been
 removed. Replace them with the v1 equivalents.
 
-| Removed API                                 | v1 replacement                                         | Removed in |
-| ------------------------------------------- | ------------------------------------------------------ | ---------- |
-| `computeShowErrors()`                       | `showErrors()`                                         | beta       |
-| `createShowErrorsSignal()`                  | `showErrors()`                                         | beta       |
-| `canSubmit()`                               | `canSubmitWithWarnings()`                              | beta       |
-| `isSubmitting()`                            | `submittedStatus()` from the `ngxSignalForm` directive | beta       |
-| `'manual'` error strategy                   | `showErrors()` + a manual `WritableSignal<boolean>`    | beta       |
-| `fieldNameResolver` config                  | Put an `id` on the bound control element               | beta       |
-| `strictFieldResolution` config              | Removed — strict by default                            | beta       |
-| `debug` config field                        | Removed — use the `/debugger` entry point instead      | beta       |
-| `injectFormConfig()`                        | `inject(NGX_SIGNAL_FORMS_CONFIG)`                      | `rc.3`     |
-| `NgxFloatingLabelDirective`                 | `<ngx-form-field-wrapper appearance="outline">`        | `rc.2`     |
-| `NgxSignalFormsUserConfig` as `DeepPartial` | `Partial<NgxSignalFormsConfig>` (top-level only)       | `rc.2`     |
+| Removed API                                 | Current replacement                                    |
+| ------------------------------------------- | ------------------------------------------------------ |
+| `computeShowErrors()`                       | `showErrors()`                                         |
+| `createShowErrorsSignal()`                  | `showErrors()`                                         |
+| `canSubmit()`                               | `canSubmitWithWarnings()`                              |
+| `isSubmitting()`                            | `submittedStatus()` from the `ngxSignalForm` directive |
+| `'manual'` error strategy                   | `showErrors()` + a manual `WritableSignal<boolean>`    |
+| `fieldNameResolver` config                  | Put an `id` on the bound control element               |
+| `strictFieldResolution` config              | Removed — strict by default                            |
+| `debug` config field                        | Removed — use the `/debugger` entry point instead      |
+| `injectFormConfig()`                        | `inject(NGX_SIGNAL_FORMS_CONFIG)`                      |
+| `NgxFloatingLabelDirective`                 | `<ngx-form-field-wrapper appearance="outline">`        |
+| `NgxSignalFormsUserConfig` as `DeepPartial` | `Partial<NgxSignalFormsConfig>` (top-level only)       |
 
 ### `NgxFloatingLabelDirective` → `appearance="outline"`
 
@@ -183,8 +184,6 @@ unless you were explicitly typing a partial config by hand.
 ## 4. Renames (same behavior, new names)
 
 ### 4a. Error components renamed for prefix consistency
-
-**Lands in:** `rc.3`
 
 Every other field-scoped component used the `NgxFormField*` prefix
 (`NgxFormFieldHint`, `NgxFormFieldCharacterCount`,
@@ -229,8 +228,6 @@ keep working.
 
 ### 4b. Appearances renamed
 
-**Lands in:** `v1 rc`
-
 | Before                 | After                   |
 | ---------------------- | ----------------------- |
 | `appearance="stacked"` | `appearance="standard"` |
@@ -239,17 +236,11 @@ keep working.
 `outline` and `inherit` are unchanged. The default appearance is now
 `"standard"`.
 
-> **rc.1 → rc.5 reshuffle.** `rc.1` briefly renamed the default appearance from
-> `"standard"` to `"stacked"` (alongside the `bare` → `plain` rename). `rc.5`
-> reverts that single name back to `"standard"`. Consumers who skipped `rc.1`
-> through `rc.4` only need the `bare` → `plain` migration. Consumers who
-> already moved to `"stacked"` during the RC cycle must move back to
-> `"standard"`. (Yes, this is awkward — the value bounced once. Future renames
-> will not.)
+If you adopted the temporary `stacked` name during the RC cycle, move it back
+to `standard`. The current public appearance set is `standard`, `outline`,
+`plain`, and `inherit`.
 
 ### 4c. Native control kinds renamed
-
-**Lands in:** `rc.3`
 
 The two public family names used by `ngxSignalFormControl` and by
 `provideNgxSignalFormControlPresets()` were renamed so they describe
@@ -287,8 +278,6 @@ The other kinds (`checkbox`, `switch`, `slider`, `composite`,
 
 ### 4d. Orientation is part of the public wrapper contract
 
-**Lands in:** `v1 rc`
-
 `ngx-form-field-wrapper` now documents `orientation="vertical" | "horizontal"`
 as part of the stable public API.
 
@@ -302,8 +291,6 @@ want one field row per line for `standard + horizontal`, collapse the container
 grid in your page/component rather than expecting the wrapper to rewrite it.
 
 ### 4e. Hybrid v1 naming — drop `Component`/`Directive` suffixes, shorten prefixes
-
-**Lands in:** `v1 rc.5`
 
 To align with Angular v20+ style guidance and reduce noise at import sites, the
 toolkit drops the `Component` / `Directive` suffix from public class names. A
@@ -356,7 +343,7 @@ The debugger bundle const is `NgxSignalFormDebuggerToolkit` (mirrors
 | `<ngx-signal-form-field-assistive-row>`   | `<ngx-form-field-assistive-row>`   |
 
 The `<ngx-form-field-error*>` and `<ngx-signal-form-debugger>` selectors
-already use the new pattern (introduced in `rc.3`).
+already use the current naming pattern.
 
 #### Attribute selectors (headless)
 
@@ -389,8 +376,6 @@ above (template surface). The Angular compiler will surface any miss.
 ---
 
 ## 5. Behavior fix: `on-submit` requires an explicit `submittedStatus`
-
-**Lands in:** `rc.3`
 
 In betas, `computeShowErrorsInternal` silently fell back to
 `touched ? 'submitted' : 'unsubmitted'` when no `submittedStatus` was
@@ -428,11 +413,9 @@ the `<form>` element, prefer `<ngx-form-field-error>`, the wrapper, or
 
 ---
 
-## 6. New in v1 (non-breaking, but worth adopting)
+## 6. Current features worth adopting
 
 ### Control semantics contract — `ngxSignalFormControl`
-
-**Lands in:** `rc.1`
 
 A small, directive-first API for telling the toolkit how a control
 should be laid out and wired for ARIA, without brittle DOM heuristics:
@@ -456,8 +439,6 @@ Custom widgets can opt out of toolkit ARIA management entirely with
 
 ### Error summary
 
-**Lands in:** `rc.1`
-
 First-class error-summary feature split across headless and assistive
 entry points:
 
@@ -470,8 +451,6 @@ See [`docs/COMPLEX_NESTED_FORMS.md`](./COMPLEX_NESTED_FORMS.md) for
 usage patterns.
 
 ### Field labels and warning/error split utilities
-
-**Lands in:** `rc.1`
 
 - `provideFieldLabels()` / `NGX_SIGNAL_FORM_FIELD_LABELS` for mapping
   field paths to human-readable labels (used by error summary).
@@ -501,9 +480,9 @@ import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 
 ---
 
-## 7. Additions in v1 RC
+## 7. Additional current APIs worth adopting
 
-The following additions landed during the late release-candidate cycle. They are
+The following additions are part of the current public surface. They are
 non-breaking (except where noted) but are worth calling out because they change
 what the defaults cover and what you may want to adopt before going stable.
 
@@ -600,36 +579,42 @@ action is required on Angular 21.x.
 
 ## 8. Migration checklist
 
-1. **Add `ngxSignalForm`** next to every `[formRoot]` that uses toolkit
-   features.
-2. **Rename exports and selectors** in templates and imports:
-   - `NgxSignalFormError*` → `NgxFormFieldError*` (`rc.3`)
-   - `<ngx-signal-form-error*>` → `<ngx-form-field-error*>` (`rc.3`)
-   - `appearance="stacked"` → `appearance="standard"` (`rc.5`)
-   - `appearance="bare"` → `appearance="plain"`
-   - `'text-like'` → `'input-like'`
-   - `'textarea-select-like'` → `'standalone-field-like'`
-   - **Drop `Component` / `Directive` suffix** from every public class import
-     and rename the legacy `<ngx-signal-form-*>` element selectors and
-     `[ngxSignalFormHeadless*]` attribute selectors per §4e (`rc.5`). The
-     compiler will surface any missed reference.
+- **Add `ngxSignalForm`** next to every `[formRoot]` that uses toolkit
+  features.
 
-3. **Replace `@ngx-signal-forms/toolkit/core` imports** with
-   `@ngx-signal-forms/toolkit`. If a symbol is missing from the root
-   barrel, it was `@internal` — file an issue if you need it exposed.
-4. **Remove `NgxFloatingLabelDirective`** usages and migrate to
-   `<ngx-form-field-wrapper appearance="outline">`.
-5. **Replace `injectFormConfig()`** with
-   `inject(NGX_SIGNAL_FORMS_CONFIG)`.
-6. **Grep for the other removed APIs** (`computeShowErrors`,
-   `createShowErrorsSignal`, `canSubmit`, `isSubmitting`, `'manual'`
-   strategy, `fieldNameResolver`, `strictFieldResolution`, `debug`
-   config) and swap for the replacements in §3.
-7. **If you call `showErrors(field, 'on-submit')` directly**, pass an
-   explicit `submittedStatus` — otherwise errors will stay hidden (this
-   is the fix, not a regression).
-8. **Run the build** (`pnpm nx run-many -t build`) to catch remaining
-   references at compile time, then run your tests.
+- **Rename exports and selectors** in templates and imports.
+  - `NgxSignalFormError*` → `NgxFormFieldError*`
+  - `<ngx-signal-form-error*>` → `<ngx-form-field-error*>`
+  - `appearance="stacked"` → `appearance="standard"`
+  - `appearance="bare"` → `appearance="plain"`
+  - `'text-like'` → `'input-like'`
+  - `'textarea-select-like'` → `'standalone-field-like'`
+  - **Drop `Component` / `Directive` suffix** from every public class import
+    and rename the legacy `<ngx-signal-form-*>` element selectors and
+    `[ngxSignalFormHeadless*]` attribute selectors per §4e. The compiler will
+    surface any missed reference.
+
+- **Replace `@ngx-signal-forms/toolkit/core` imports** with
+  `@ngx-signal-forms/toolkit`. If a symbol is missing from the root
+  barrel, it was `@internal` — file an issue if you need it exposed.
+
+- **Remove `NgxFloatingLabelDirective`** usages and migrate to
+  `<ngx-form-field-wrapper appearance="outline">`.
+
+- **Replace `injectFormConfig()`** with
+  `inject(NGX_SIGNAL_FORMS_CONFIG)`.
+
+- **Grep for the other removed APIs** (`computeShowErrors`,
+  `createShowErrorsSignal`, `canSubmit`, `isSubmitting`, `'manual'`
+  strategy, `fieldNameResolver`, `strictFieldResolution`, `debug`
+  config) and swap for the replacements in §3.
+
+- **If you call `showErrors(field, 'on-submit')` directly**, pass an
+  explicit `submittedStatus` — otherwise errors will stay hidden (this
+  is the fix, not a regression).
+
+- **Run the build** (`pnpm nx run-many -t build`) to catch remaining
+  references at compile time, then run your tests.
 
 ---
 
