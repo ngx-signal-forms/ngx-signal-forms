@@ -156,8 +156,9 @@ Tests:
   former are stable across browser quirks; the latter are flaky.
 - E2E tests use delta assertions where absolute numbers would tie the test
   to padding token values.
-- Snapshot coverage is limited to the one comparison-grid screenshot so the
-  intent of the feature is captured, not every permutation.
+- Snapshot coverage is limited to the comparison-grid and narrow-inputs
+  screenshots — the two surfaces that capture the feature's intent,
+  without screenshotting every permutation.
 
 ## Risks
 
