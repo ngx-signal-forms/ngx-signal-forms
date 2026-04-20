@@ -44,7 +44,7 @@ export class LabellessFieldsPage extends BaseFormPage {
       .filter({ has: this.page.locator('#comparisonLabelless') });
     this.labellessSearchWrapper = this.form
       .locator('ngx-form-field-wrapper')
-      .filter({ has: this.searchInput });
+      .filter({ has: this.page.locator('#searchQuery') });
   }
 
   async goto(): Promise<void> {
