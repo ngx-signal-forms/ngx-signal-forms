@@ -105,6 +105,14 @@ export const appRoutes: Routes = [
           ),
         title: getRouteTitle('/form-field-wrapper/custom-controls'),
       },
+      {
+        path: 'labelless-fields',
+        loadComponent: () =>
+          import('./04-form-field-wrapper/labelless-fields/labelless-fields.page').then(
+            (m) => m.LabellessFieldsPage,
+          ),
+        title: getRouteTitle('/form-field-wrapper/labelless-fields'),
+      },
     ],
   },
 

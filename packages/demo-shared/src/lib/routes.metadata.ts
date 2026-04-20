@@ -5,6 +5,7 @@ export const DEMO_PATHS = {
   fieldsetUtilities: '/headless/fieldset-utilities',
   complexForms: '/form-field-wrapper/complex-forms',
   customControls: '/form-field-wrapper/custom-controls',
+  labellessFields: '/form-field-wrapper/labelless-fields',
   globalConfiguration: '/advanced-scenarios/global-configuration',
   submissionPatterns: '/advanced-scenarios/submission-patterns',
   advancedWizard: '/advanced-scenarios/advanced-wizard',
@@ -64,6 +65,10 @@ export const DEMO_CATEGORIES = [
       {
         path: '/form-field-wrapper/custom-controls',
         label: 'Custom Controls',
+      },
+      {
+        path: '/form-field-wrapper/labelless-fields',
+        label: 'Labelless Fields',
       },
     ],
   },
