@@ -105,6 +105,26 @@ every layout can be previewed:
 4. **Side-by-side comparison grid** — same wrapper rendered with and
    without a label for each of the three layouts. The "at a glance"
    regression surface.
+5. **Narrow inputs with wide errors** — the companion "small input"
+   scenarios where a visible label would be disproportionate. All examples
+   constrain the `<input>` itself (via `max-width` or `inline-size:
+fit-content`), not the wrapper — the recommended pattern today. The
+   wrapper stays full-width so the error message has horizontal room to
+   render without clipping.
+   - **Age** (~5ch wide, `min: 18`, `max: 120`). Triggering "Must be 18 or
+     older" produces an error message visibly wider than the input.
+   - **OTP code** — six single-character inputs in a row, labelless,
+     sharing one wrapper-level error below the group.
+   - **Zip code** (~7ch wide) with a pattern validator whose message
+     ("Format: 12345 or 12345-6789") is intentionally longer than the
+     input to expose wrapping behavior.
+
+   Rendered across all three appearances. Purpose: validate that today's
+   "constrain the input, not the wrapper" pattern produces readable errors
+   with no layout changes. If the demo reveals cases where errors still
+   clip or overflow awkwardly, those become evidence for a follow-up
+   `compact` / `--ngx-form-field-inline-size` opt-in — explicitly out of
+   scope for this spec.
 
 Route registered in `04-form-field-wrapper`'s routes with a nav entry
 following the pattern of `complex-forms` and `custom-controls`.
@@ -114,7 +134,7 @@ following the pattern of `complex-forms` and `custom-controls`.
 with a companion page object at
 `apps/demo-e2e/src/page-objects/labelless-fields.page.ts`.
 
-Four tests:
+Tests:
 
 1. Standard variant: label div `getComputedStyle(...).display === 'none'`.
 2. Outline variant: `offsetHeight` of a labelless wrapper is materially
@@ -122,7 +142,13 @@ Four tests:
    pixel-exact).
 3. Horizontal variant: input's `getBoundingClientRect().left` is flush
    against the wrapper's left edge (no reserved label column).
-4. Playwright snapshot of the comparison grid.
+4. Narrow-input errors: for the Age/OTP/Zip section, trigger each
+   validator and assert the error element's `clientWidth >= scrollWidth`
+   (no horizontal overflow) AND the error's bounding-box width exceeds the
+   input's `offsetWidth` (the error is not constrained to the input's
+   narrow width).
+5. Playwright snapshot of the comparison grid AND the narrow-inputs
+   section.
 
 ## Testing strategy
 
@@ -149,3 +175,7 @@ Four tests:
 - Extending the behavior to selection controls.
 - Any change to the `plain` appearance.
 - Introducing a public input property.
+- A `compact` / `--ngx-form-field-inline-size` opt-in for narrow wrappers
+  with wide errors. The narrow-input demo (Section 5) documents today's
+  behavior so the decision can be made against real evidence in a
+  follow-up spec.
