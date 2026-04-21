@@ -456,3 +456,62 @@ If your app has a manual toggle (e.g. adding a `.dark` class), use this pattern 
   /* ... reset to light tokens */
 }
 ```
+
+## Rendering without a label
+
+When no `<label>` is projected into `ngx-form-field-wrapper`, the reserved
+label space collapses automatically for textual controls in the
+`standard` and `outline` appearances, across both vertical and horizontal
+orientations:
+
+- **Standard (vertical)** — the label slot is removed (`display: none`);
+  the flex gap above the input also collapses.
+- **Outline** — the floating-label slot inside the bordered container is
+  dropped; `--_outline-min-height` shrinks to match the input's own
+  line-height plus vertical padding.
+- **Horizontal** — the grid collapses to a single content column; the
+  input is flush against the wrapper's left edge.
+
+Detection is pure CSS (`:has()`), so there is no opt-in. The `plain`
+appearance is intentionally excluded because it already renders without
+label-specific chrome. Selection controls (`checkbox`, `switch`,
+`radio-group`) keep their own layouts and still require a visible label
+for accessibility.
+
+### Why you might still want to render an empty label
+
+If you need rows of fields to align vertically in a grid regardless of
+whether each row has a visible label, project an explicit empty label:
+
+```html
+<ngx-form-field-wrapper [formField]="form.quantity">
+  <label for="quantity"></label>
+  <input id="quantity" type="number" [formField]="form.quantity" />
+</ngx-form-field-wrapper>
+```
+
+An empty `<label>` element still occupies the reserved space. For
+accessibility, prefer giving the `<input>` an `aria-label` or
+`aria-labelledby` so screen readers have a name to announce.
+
+### Accessibility notes — placeholder is not a label
+
+Using only a `placeholder` as the visible hint (even with a matching
+`aria-label` for screen readers) is a well-known WCAG 3.3.2
+antipattern: the hint disappears as soon as the user types, so sighted
+users can lose the field's purpose mid-entry — especially with
+autofill, copy/paste, or when returning to a partially-filled form.
+Prefer one of the following when the labelless wrapper is appropriate
+but you still need a persistent visible hint:
+
+- a caption outside the wrapper (e.g. a shared heading for a group of
+  related fields) paired with `aria-label` / `aria-labelledby`;
+- an explicit `<label>` that sits above the input (non-labelless) when
+  the field is self-contained;
+- both a placeholder _and_ a label — the placeholder becomes a format
+  hint (`"MM/DD"`, `"12345"`) rather than the name of the field.
+
+The labelless collapse behavior itself is purely visual. It never
+changes what is announced to assistive technology, which is always
+driven by the `<label>`, `aria-label`, `aria-labelledby`, or
+`aria-describedby` on the control.

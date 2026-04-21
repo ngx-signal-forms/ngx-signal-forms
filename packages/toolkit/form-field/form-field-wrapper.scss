@@ -901,3 +901,77 @@
     --_feedback-padding-horizontal
   );
 }
+
+// ============================================================================
+// LABEL-LESS LAYOUT
+// ============================================================================
+// Collapse reserved label space when no <label> is projected.
+// Detection is scoped to the internal label slot so a stray <label> inside a
+// prefix/suffix projection does not trip the selector.
+// Selection controls (checkbox/switch/radio-group) require labels for
+// accessibility and intentionally keep their own layout.
+
+// Standard vertical: hide the empty label div. Flex gap only applies
+// between rendered children, so removing the div removes the gap too.
+// Plain appearance is a non-goal (it already strips label chrome), so
+// exclude it explicitly to keep the spec and the CSS in sync.
+:host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain)):not(
+    :has(.ngx-signal-form-field-wrapper__label label)
+  )
+  .ngx-signal-form-field-wrapper__label {
+  display: none;
+}
+
+// Outline: hide the label div and drop the top-padding reservation that
+// accommodates the floating label. `.ngx-signal-forms-outline` and
+// `.ngx-signal-forms-plain` are mutually exclusive appearance classes, so
+// no extra exclusion is needed here.
+:host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual):not(
+  :has(.ngx-signal-form-field-wrapper__label label)
+) {
+  // Mirror the labelled outline's public-API fallback chain so that a
+  // consumer's explicit --ngx-form-field-min-height override is still
+  // honored when no label is projected.
+  --_outline-min-height: var(
+    --ngx-form-field-outline-min-height,
+    var(
+      --ngx-form-field-min-height,
+      calc(var(--_input-outline-line-height) + var(--_padding-vertical) * 2)
+    )
+  );
+
+  .ngx-signal-form-field-wrapper__label {
+    display: none;
+  }
+
+  .ngx-signal-form-field-wrapper__content {
+    padding-top: var(--_padding-vertical);
+  }
+}
+
+// Horizontal: collapse the grid to a single content column. Scope to
+// textual non-plain wrappers so this mirrors the standard/outline rules
+// and cannot rewrite the grid on any non-textual host that might carry
+// the `--horizontal` class (today selection controls force vertical, but
+// the CSS should not rely on that invariant).
+:host(
+  .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
+      .ngx-signal-forms-plain
+    )
+):not(:has(.ngx-signal-form-field-wrapper__label label)) {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'content'
+    'assistive';
+}
+
+:host(
+  .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
+      .ngx-signal-forms-plain
+    )
+):not(:has(.ngx-signal-form-field-wrapper__label label)) {
+  grid-template-areas:
+    'messages'
+    'content'
+    'assistive';
+}
