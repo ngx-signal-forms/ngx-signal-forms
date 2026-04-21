@@ -74,10 +74,22 @@ import { labellessFieldsSchema } from './labelless-fields.validations';
       margin: 0;
     }
 
+    /* Shrink the bordered content box (not the wrapper) so error messages
+       below still render at the wrapper's full width on a single line. */
+    .narrow-age ::ng-deep .ngx-signal-form-field-wrapper__content {
+      width: fit-content;
+      align-self: flex-start;
+      justify-self: start;
+    }
     .narrow-age input[id='age'] {
       max-width: 5ch;
     }
 
+    .narrow-zip ::ng-deep .ngx-signal-form-field-wrapper__content {
+      width: fit-content;
+      align-self: flex-start;
+      justify-self: start;
+    }
     .narrow-zip input[id='zipCode'] {
       max-width: 9ch;
     }
