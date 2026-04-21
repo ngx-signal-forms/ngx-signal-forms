@@ -95,4 +95,20 @@ test.describe('Labelless Form Fields', () => {
       'labelless-narrow-inputs.png',
     );
   });
+
+  test('snapshot: comparison grid (outline appearance)', async () => {
+    await page.outlineAppearanceButton.click();
+
+    await expect(page.comparisonSection).toHaveScreenshot(
+      'labelless-comparison-grid-outline.png',
+    );
+  });
+
+  test('snapshot: comparison grid (horizontal orientation)', async () => {
+    await page.horizontalOrientationButton.click();
+
+    await expect(page.comparisonSection).toHaveScreenshot(
+      'labelless-comparison-grid-horizontal.png',
+    );
+  });
 });
