@@ -59,15 +59,15 @@ describe('provideErrorMessages', () => {
 
       const minLengthFn = registry['minLength'];
       expect(typeof minLengthFn).toBe('function');
-      if (typeof minLengthFn === 'function') {
-        expect(minLengthFn({ minLength: 5 })).toBe('At least 5 characters');
-      }
+      expect((minLengthFn as Function)({ minLength: 5 })).toBe(
+        'At least 5 characters',
+      );
 
       const maxLengthFn = registry['maxLength'];
       expect(typeof maxLengthFn).toBe('function');
-      if (typeof maxLengthFn === 'function') {
-        expect(maxLengthFn({ maxLength: 100 })).toBe('Maximum 100 characters');
-      }
+      expect((maxLengthFn as Function)({ maxLength: 100 })).toBe(
+        'Maximum 100 characters',
+      );
     });
 
     it('should support custom validators with string messages', () => {
@@ -108,14 +108,10 @@ describe('provideErrorMessages', () => {
       expect(registry['email']).toBe('Invalid email');
 
       const minLengthFn = registry['minLength'];
-      if (typeof minLengthFn === 'function') {
-        expect(minLengthFn({ minLength: 3 })).toBe('Min 3 chars');
-      }
+      expect((minLengthFn as Function)({ minLength: 3 })).toBe('Min 3 chars');
 
       const maxFn = registry['max'];
-      if (typeof maxFn === 'function') {
-        expect(maxFn({ max: 10 })).toBe('Cannot exceed 10');
-      }
+      expect((maxFn as Function)({ max: 10 })).toBe('Cannot exceed 10');
     });
   });
 
@@ -166,16 +162,12 @@ describe('provideErrorMessages', () => {
       const registry = TestBed.inject(NGX_ERROR_MESSAGES);
 
       const minLengthFn = registry['minLength'];
-      if (typeof minLengthFn === 'function') {
-        expect(minLengthFn({ minLength: 8 })).toBe(
-          'Minimum length is 8 characters',
-        );
-      }
+      expect((minLengthFn as Function)({ minLength: 8 })).toBe(
+        'Minimum length is 8 characters',
+      );
 
       const maxFn = registry['max'];
-      if (typeof maxFn === 'function') {
-        expect(maxFn({ max: 100 })).toBe('Maximum value is 100');
-      }
+      expect((maxFn as Function)({ max: 100 })).toBe('Maximum value is 100');
     });
 
     it('should support environment-based error messages', () => {
@@ -261,9 +253,7 @@ describe('provideErrorMessages', () => {
 
       expect(registry['required']).toBe('Required');
       const customFn = registry['custom'];
-      if (typeof customFn === 'function') {
-        expect(customFn({ value: 'test' })).toBe('Invalid: test');
-      }
+      expect((customFn as Function)({ value: 'test' })).toBe('Invalid: test');
     });
   });
 

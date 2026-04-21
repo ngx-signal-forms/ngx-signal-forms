@@ -41,7 +41,9 @@ const RELATIVE_DTS_SPECIFIER = './ngx-signal-forms-toolkit-core';
 const CORE_FESM_BASENAME = 'ngx-signal-forms-toolkit-core.mjs';
 const CORE_DTS_BASENAME = 'ngx-signal-forms-toolkit-core.d.ts';
 
+/** @type {string[]} */
 const rewrittenMjs = [];
+/** @type {string[]} */
 const rewrittenDts = [];
 
 const rewriteImportSpecifier = (
@@ -49,7 +51,7 @@ const rewriteImportSpecifier = (
   /** @type {string} */ skipBaseName,
   /** @type {string} */ extension,
   /** @type {string} */ newSpecifier,
-  /** @type {string[]} */ bucket,
+  /** @type {readonly string[]} */ bucket,
 ) => {
   for (const name of readdirSync(dir)) {
     if (!name.endsWith(extension)) continue;
@@ -81,9 +83,14 @@ rewriteImportSpecifier(
   rewrittenDts,
 );
 
+/** @type {any} */
 const pkg = JSON.parse(readFileSync(pkgJsonPath, 'utf8'));
 let exportsStripped = false;
-if (pkg.exports && './core' in pkg.exports) {
+if (
+  pkg?.exports &&
+  typeof pkg.exports === 'object' &&
+  './core' in pkg.exports
+) {
   delete pkg.exports['./core'];
   writeFileSync(pkgJsonPath, `${JSON.stringify(pkg, null, 2)}\n`);
   exportsStripped = true;

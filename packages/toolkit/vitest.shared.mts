@@ -69,8 +69,8 @@ export const toolkitSharedConfig = {
     ],
   },
   test: {
-    maxConcurrency: process.env.CI ? 2 : 5,
-    maxWorkers: process.env.CI ? 2 : undefined,
+    maxConcurrency: process.env.CI === 'true' ? 2 : 5,
+    maxWorkers: process.env.CI === 'true' ? 2 : undefined,
     ...sharedProjectTestConfig,
     coverage: {
       provider: 'v8',

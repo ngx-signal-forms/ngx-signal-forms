@@ -169,14 +169,14 @@ describe('assertInjector', () => {
       // This call is NOT in injection context and has no custom injector
       expect(() => {
         assertInjector(testFunction);
-      }).toThrow();
+      }).toThrow(/NG0202/);
     });
 
     it('should throw error when runner is provided outside injection context without injector', () => {
       // This call is NOT in injection context and has no custom injector
       expect(() => {
         assertInjector(testFunction, undefined, () => 'test');
-      }).toThrow();
+      }).toThrow(/NG0202/);
     });
   });
 

@@ -297,6 +297,8 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
         return 'Shared toolkit + demo changes';
       case 'other':
         return 'Other repository changes';
+      default:
+        return area satisfies never;
     }
   }
 
@@ -310,6 +312,8 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
         return 'Shared';
       case 'other':
         return 'Other';
+      default:
+        return area satisfies never;
     }
   }
 }
