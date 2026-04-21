@@ -3,12 +3,18 @@ import { render } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldWrapper } from './form-field-wrapper';
 
-const mockField = () =>
-  signal({
-    invalid: () => false,
-    touched: () => false,
-    errors: () => [],
-  });
+const mockField = () => {
+  const fieldState = {
+    invalid: signal(false),
+    touched: signal(false),
+    errors: signal([]),
+    valid: signal(true),
+    dirty: signal(false),
+    value: signal(''),
+    required: signal(false),
+  };
+  return signal(() => fieldState);
+};
 
 describe('NgxFormFieldWrapper — without a label', () => {
   it('hides the label div in the standard layout', async () => {

@@ -24,7 +24,7 @@ export const LABELLESS_FIELDS_CONTENT: ExampleCardConfig = {
       {
         title: 'Narrow inputs',
         items: [
-          'Constrain the <input> itself (via <code>max-width</code>), not the wrapper',
+          'Constrain the <code>&lt;input&gt;</code> itself (via <code>max-width</code>), not the wrapper',
           'Error messages render at the wrapper width, so long validation copy still reads cleanly',
         ],
       },
