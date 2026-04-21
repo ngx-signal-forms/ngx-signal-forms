@@ -26,6 +26,12 @@
         "command": "oxlint . --fix-dangerously"
       }
     },
+    "lint-github": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "oxlint . --format=github"
+      }
+    },
     "format": {
       "executor": "nx:run-commands",
       "options": {
