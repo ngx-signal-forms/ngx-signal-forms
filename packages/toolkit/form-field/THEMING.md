@@ -489,3 +489,25 @@ whether each row has a visible label, project an explicit empty label:
 An empty `<label>` element still occupies the reserved space. For
 accessibility, prefer giving the `<input>` an `aria-label` or
 `aria-labelledby` so screen readers have a name to announce.
+
+### Accessibility notes — placeholder is not a label
+
+Using only a `placeholder` as the visible hint (even with a matching
+`aria-label` for screen readers) is a well-known WCAG 3.3.2
+antipattern: the hint disappears as soon as the user types, so sighted
+users can lose the field's purpose mid-entry — especially with
+autofill, copy/paste, or when returning to a partially-filled form.
+Prefer one of the following when the labelless wrapper is appropriate
+but you still need a persistent visible hint:
+
+- a caption outside the wrapper (e.g. a shared heading for a group of
+  related fields) paired with `aria-label` / `aria-labelledby`;
+- an explicit `<label>` that sits above the input (non-labelless) when
+  the field is self-contained;
+- both a placeholder _and_ a label — the placeholder becomes a format
+  hint (`"MM/DD"`, `"12345"`) rather than the name of the field.
+
+The labelless collapse behavior itself is purely visual. It never
+changes what is announced to assistive technology, which is always
+driven by the `<label>`, `aria-label`, `aria-labelledby`, or
+`aria-describedby` on the control.
