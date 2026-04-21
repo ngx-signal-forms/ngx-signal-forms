@@ -100,7 +100,7 @@
     "tailwindcss": "catalog:tailwind",
     "tslib": "catalog:",
     "typescript": "catalog:",
-    "verdaccio": "^6.5.1",
+    "verdaccio": "^6.5.2",
     "vest": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:vitest"
@@ -124,7 +124,20 @@
       "@angular/platform-browser": "21.2.9",
       "lodash": "4.18.1",
       "@verdaccio/core>minimatch": "7.4.9"
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "@parcel/watcher",
+      "less",
+      "lmdb",
+      "msgpackr-extract"
+    ],
+    "onlyBuiltDependencies": [
+      "@swc/core",
+      "esbuild",
+      "msw",
+      "nx",
+      "simple-git-hooks"
+    ]
   },
   "nx": {
     "includedScripts": []
