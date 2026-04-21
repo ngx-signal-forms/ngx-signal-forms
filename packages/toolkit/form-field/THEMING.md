@@ -278,6 +278,7 @@ If the semantic colors aren't enough, you can override specific parts of the com
 | :------------------------------------- | :------------------------------------------- | :------------------ |
 | `--ngx-form-field-label-size`          | `0.75rem`                                    | Label font size     |
 | `--ngx-form-field-label-weight`        | `400`                                        | Label font weight   |
+| `--ngx-form-field-label-font-family`   | `inherit`                                    | Label font family   |
 | `--ngx-form-field-label-color`         | `var(--ngx-form-field-color-text-secondary)` | Label text color    |
 | `--ngx-form-field-label-line-height`   | `1rem`                                       | Label line height   |
 | `--ngx-form-field-label-padding-start` | `0.125rem`                                   | Label start padding |
@@ -291,6 +292,7 @@ If the semantic colors aren't enough, you can override specific parts of the com
 | `--ngx-form-field-outline-label-size`        | `0.75rem`                                    | Outlined label font size   |
 | `--ngx-form-field-outline-label-gap`         | `0rem`                                       | Gap under outlined label   |
 | `--ngx-form-field-outline-label-weight`      | `400`                                        | Outlined label font weight |
+| `--ngx-form-field-outline-label-font-family` | `inherit`                                    | Outlined label font family |
 | `--ngx-form-field-outline-label-color`       | `var(--ngx-form-field-color-text-secondary)` | Outlined label color       |
 | `--ngx-form-field-outline-label-line-height` | `1rem`                                       | Outlined label line height |
 
@@ -310,6 +312,7 @@ If the semantic colors aren't enough, you can override specific parts of the com
 | Property                             | Default                                      | Description        |
 | :----------------------------------- | :------------------------------------------- | :----------------- |
 | `--ngx-form-field-input-size`        | `0.875rem`                                   | Input font size    |
+| `--ngx-form-field-input-font-family` | `inherit`                                    | Input font family  |
 | `--ngx-form-field-input-line-height` | `1.25rem`                                    | Input line height  |
 | `--ngx-form-field-input-weight`      | `400`                                        | Input font weight  |
 | `--ngx-form-field-input-color`       | `var(--ngx-form-field-color-text)`           | Input text color   |
@@ -324,6 +327,7 @@ If the semantic colors aren't enough, you can override specific parts of the com
 | Property                                     | Default                            | Description                |
 | :------------------------------------------- | :--------------------------------- | :------------------------- |
 | `--ngx-form-field-outline-input-size`        | `0.875rem`                         | Outlined input font size   |
+| `--ngx-form-field-outline-input-font-family` | `inherit`                          | Outlined input font family |
 | `--ngx-form-field-outline-input-line-height` | `1.25rem`                          | Outlined input line height |
 | `--ngx-form-field-outline-input-weight`      | `400`                              | Outlined input font weight |
 | `--ngx-form-field-outline-input-color`       | `var(--ngx-form-field-color-text)` | Outlined input text color  |
