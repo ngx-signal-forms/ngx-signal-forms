@@ -7,7 +7,6 @@ import {
 import { FormField, form } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
-  createSubmittedStatusTracker,
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
@@ -104,9 +103,4 @@ export class LabellessFieldsFormComponent {
       },
     },
   });
-
-  protected readonly submittedStatus = createSubmittedStatusTracker(
-    this.labellessForm,
-    this.#submitAttempted,
-  );
 }

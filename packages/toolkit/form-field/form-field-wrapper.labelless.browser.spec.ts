@@ -133,6 +133,32 @@ describe('NgxFormFieldWrapper — without a label', () => {
     expect(getComputedStyle(labelDiv!).display).not.toBe('none');
   });
 
+  it('collapses the label column for horizontal + errorPlacement="top" without a label', async () => {
+    const { container } = await render(
+      `<ngx-form-field-wrapper [formField]="field" orientation="horizontal" errorPlacement="top">
+        <input id="anon-h-top" type="text" />
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: mockField() },
+      },
+    );
+
+    const host = container.querySelector<HTMLElement>('ngx-form-field-wrapper');
+    const input = container.querySelector<HTMLInputElement>('#anon-h-top');
+    expect(host && input).toBeTruthy();
+    // Without a reserved label column the input sits flush against the
+    // wrapper's left edge. Use the same 24px threshold as the bottom
+    // errorPlacement variant so both are consistent.
+    const hostLeft = host!.getBoundingClientRect().left;
+    const inputLeft = input!.getBoundingClientRect().left;
+    expect(inputLeft - hostLeft).toBeLessThan(24);
+    // The grid should carry the messages-top area so errors render above
+    // the content row rather than below.
+    const gridTemplateAreas = getComputedStyle(host!).gridTemplateAreas;
+    expect(gridTemplateAreas).toMatch(/messages/);
+  });
+
   it('keeps the horizontal label column when a label is projected', async () => {
     const { container } = await render(
       `<ngx-form-field-wrapper [formField]="field" orientation="horizontal">
