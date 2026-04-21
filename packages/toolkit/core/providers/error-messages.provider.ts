@@ -1,5 +1,12 @@
 import { InjectionToken, type Provider } from '@angular/core';
 
+type ErrorMessageFactory = (
+  params: Readonly<Record<string, unknown>>,
+) => string;
+
+type ErrorMessageRegistryInput = Readonly<ErrorMessageRegistry>;
+type ErrorMessageRegistryFactory = () => ErrorMessageRegistryInput;
+
 /**
  * Error message registry for customizing validation error display.
  *
@@ -157,10 +164,7 @@ export interface ErrorMessageRegistry {
    * ```
    */
   // Use index signature for extensibility (built-in + custom validators)
-  [errorKind: string]:
-    | string
-    | ((params: Record<string, unknown>) => string)
-    | undefined;
+  [errorKind: string]: string | ErrorMessageFactory | undefined;
 }
 
 /**
@@ -272,13 +276,13 @@ export const NGX_ERROR_MESSAGES = new InjectionToken<ErrorMessageRegistry>(
  * @see {@link NGX_ERROR_MESSAGES}
  */
 export function provideErrorMessages(
-  configOrFactory: ErrorMessageRegistry | (() => ErrorMessageRegistry),
+  configOrFactory: ErrorMessageRegistryInput | ErrorMessageRegistryFactory,
 ): Provider {
   return {
     provide: NGX_ERROR_MESSAGES,
     useFactory:
       typeof configOrFactory === 'function'
-        ? configOrFactory
-        : () => configOrFactory,
+        ? () => ({ ...configOrFactory() })
+        : () => ({ ...configOrFactory }),
   };
 }

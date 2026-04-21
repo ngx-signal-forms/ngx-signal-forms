@@ -7,6 +7,11 @@ import {
   type ErrorMessageRegistry,
 } from './error-messages.provider';
 
+type ErrorMessageFactory = Exclude<
+  ErrorMessageRegistry[string],
+  string | undefined
+>;
+
 const readNumericParam = (
   params: Readonly<Record<string, unknown>>,
   key: string,
@@ -22,6 +27,15 @@ const readStringParam = (
   const value = params[key];
   return typeof value === 'string' ? value : '';
 };
+
+function assertMessageFactory(
+  entry: ErrorMessageRegistry[string],
+): asserts entry is ErrorMessageFactory {
+  expect(typeof entry).toBe('function');
+  if (typeof entry !== 'function') {
+    throw new TypeError('Expected error message entry to be a function.');
+  }
+}
 
 describe('provideErrorMessages', () => {
   describe('Static Configuration', () => {
@@ -58,16 +72,12 @@ describe('provideErrorMessages', () => {
       const registry = TestBed.inject(NGX_ERROR_MESSAGES);
 
       const minLengthFn = registry['minLength'];
-      expect(typeof minLengthFn).toBe('function');
-      expect((minLengthFn as Function)({ minLength: 5 })).toBe(
-        'At least 5 characters',
-      );
+      assertMessageFactory(minLengthFn);
+      expect(minLengthFn({ minLength: 5 })).toBe('At least 5 characters');
 
       const maxLengthFn = registry['maxLength'];
-      expect(typeof maxLengthFn).toBe('function');
-      expect((maxLengthFn as Function)({ maxLength: 100 })).toBe(
-        'Maximum 100 characters',
-      );
+      assertMessageFactory(maxLengthFn);
+      expect(maxLengthFn({ maxLength: 100 })).toBe('Maximum 100 characters');
     });
 
     it('should support custom validators with string messages', () => {
@@ -108,10 +118,12 @@ describe('provideErrorMessages', () => {
       expect(registry['email']).toBe('Invalid email');
 
       const minLengthFn = registry['minLength'];
-      expect((minLengthFn as Function)({ minLength: 3 })).toBe('Min 3 chars');
+      assertMessageFactory(minLengthFn);
+      expect(minLengthFn({ minLength: 3 })).toBe('Min 3 chars');
 
       const maxFn = registry['max'];
-      expect((maxFn as Function)({ max: 10 })).toBe('Cannot exceed 10');
+      assertMessageFactory(maxFn);
+      expect(maxFn({ max: 10 })).toBe('Cannot exceed 10');
     });
   });
 
@@ -162,12 +174,14 @@ describe('provideErrorMessages', () => {
       const registry = TestBed.inject(NGX_ERROR_MESSAGES);
 
       const minLengthFn = registry['minLength'];
-      expect((minLengthFn as Function)({ minLength: 8 })).toBe(
+      assertMessageFactory(minLengthFn);
+      expect(minLengthFn({ minLength: 8 })).toBe(
         'Minimum length is 8 characters',
       );
 
       const maxFn = registry['max'];
-      expect((maxFn as Function)({ max: 100 })).toBe('Maximum value is 100');
+      assertMessageFactory(maxFn);
+      expect(maxFn({ max: 100 })).toBe('Maximum value is 100');
     });
 
     it('should support environment-based error messages', () => {
@@ -182,6 +196,7 @@ describe('provideErrorMessages', () => {
                 email: 'Invalid email',
               };
             }
+
             return {
               required: '[DEV] This field is required',
               email: '[DEV] Please enter a valid email address',
@@ -252,8 +267,10 @@ describe('provideErrorMessages', () => {
       const registry = TestBed.inject(NGX_ERROR_MESSAGES);
 
       expect(registry['required']).toBe('Required');
+
       const customFn = registry['custom'];
-      expect((customFn as Function)({ value: 'test' })).toBe('Invalid: test');
+      assertMessageFactory(customFn);
+      expect(customFn({ value: 'test' })).toBe('Invalid: test');
     });
   });
 
