@@ -15,7 +15,10 @@ import {
   createOnInvalidHandler,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
-import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
+import {
+  type FieldsetErrorPlacement,
+  NgxFormField,
+} from '@ngx-signal-forms/toolkit/form-field';
 import { SwitchControlComponent } from '../../shared/controls';
 import type { ComplexFormModel } from './complex-forms.model';
 import { complexFormSchema } from './complex-forms.validations';
@@ -36,6 +39,10 @@ function createInitialComplexFormModel(): ComplexFormModel {
     },
     skills: [{ name: '', level: 1 }],
     contacts: [{ type: 'email', value: '' }],
+    credentials: {
+      password: '',
+      confirmPassword: '',
+    },
     preferences: {
       newsletter: false,
       notifications: false,
@@ -75,6 +82,16 @@ function createInitialComplexFormModel(): ComplexFormModel {
 
     .complex-array-fieldset {
       --ngx-signal-form-fieldset-gap: 0;
+    }
+
+    .complex-form-fieldset--credentials-summary {
+      --ngx-signal-form-fieldset-content-offset: 0;
+      --ngx-signal-form-fieldset-message-inset-inline-start: 0.875rem;
+      --ngx-signal-form-fieldset-message-padding-inline-start: 0;
+      --ngx-signal-form-fieldset-message-padding-inline-end: 0;
+      --ngx-signal-form-fieldset-message-list-style-type: disc;
+      --ngx-signal-form-fieldset-message-list-style-position: inside;
+      --ngx-signal-form-fieldset-message-list-padding-inline-start: 0;
     }
 
     .preferences-stack {
@@ -166,6 +183,8 @@ export class ComplexFormsComponent {
   readonly appearance = input<FormFieldAppearance>('standard');
 
   readonly orientation = input<FormFieldOrientation>('vertical');
+
+  readonly errorPlacement = input<FieldsetErrorPlacement>('top');
 
   protected readonly personalInfoGridClass = computed(() =>
     this.isStandardHorizontalLayout()

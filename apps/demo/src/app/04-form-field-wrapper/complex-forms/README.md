@@ -25,6 +25,7 @@ A realistic, non-trivial form with nested objects, dynamic arrays, and mixed con
 - Address — street, city, zip, country required; ZIP pattern `12345` or `12345-6789`.
 - Skills — each entry requires name and level (1–10).
 - Contacts — type and value required; value min length 3.
+- Credentials — password required + min length 8; confirm password required; grouped fieldset shows `Passwords must match`.
 - Preferences — contact method required.
 
 ### Warnings
@@ -49,9 +50,10 @@ A realistic, non-trivial form with nested objects, dynamic arrays, and mixed con
 1. Run the demo and navigate to `/form-field-wrapper/complex-forms`.
 2. Add and remove entries in the skills and contacts arrays to exercise per-row validation.
 3. Enter an age outside 18–120 or a malformed ZIP to see field-level errors.
-4. Choose `SMS` as contact method to trigger the warning (submission still allowed).
-5. Toggle the newsletter switch and notification checkbox and confirm each renders with the correct wrapper layout and ARIA wiring.
-6. Submit with errors and confirm aggregated fieldset errors appear at the section level.
+4. Enter different values in password and confirm password to see the credentials fieldset surface the shared mismatch error.
+5. Choose `SMS` as contact method to trigger the warning (submission still allowed).
+6. Toggle the newsletter switch and notification checkbox and confirm each renders with the correct wrapper layout and ARIA wiring.
+7. Submit with errors and confirm aggregated fieldset errors appear at the section level.
 
 ## Related
 

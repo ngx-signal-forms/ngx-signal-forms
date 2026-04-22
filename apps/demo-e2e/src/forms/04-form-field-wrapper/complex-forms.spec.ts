@@ -3,6 +3,93 @@ import { expect, test } from '@playwright/test';
 import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
 import { FormFieldWrapperComplexPage } from '../../page-objects/form-field-wrapper-complex.page';
 
+const contactMethodFieldsetTopAriaSnapshot = `
+- group "Preferred contact method *":
+  - text: Preferred contact method *
+  - alert:
+    - list:
+      - listitem: Preferred contact method is required
+  - radio "Email"
+  - text: Email
+  - radio "SMS"
+  - text: SMS
+  - radio "Phone"
+  - text: Phone
+`;
+
+const contactMethodFieldsetBottomAriaSnapshot = `
+- group "Preferred contact method *":
+  - text: Preferred contact method *
+  - radio "Email"
+  - text: Email
+  - radio "SMS"
+  - text: SMS
+  - radio "Phone"
+  - text: Phone
+  - alert:
+    - list:
+      - listitem: Preferred contact method is required
+`;
+
+function requireValue<T>(value: T | null, label: string): T {
+  if (value === null) {
+    throw new Error(`Expected ${label} to be available.`);
+  }
+
+  return value;
+}
+
+function getMessagePlacement(
+  fieldset: ReturnType<FormFieldWrapperComplexPage['getFieldsetByLegend']>,
+): Promise<'top' | 'bottom' | 'missing'> {
+  return fieldset.evaluate((host) => {
+    const surface = host.querySelector('.ngx-signal-form-fieldset__surface');
+    const children = Array.from(surface?.children ?? []);
+    const contentIndex = children.findIndex((child) =>
+      child.classList.contains('ngx-signal-form-fieldset__content'),
+    );
+    const messageIndex = children.findIndex((child) =>
+      child.classList.contains('ngx-signal-form-fieldset__messages'),
+    );
+
+    if (contentIndex === -1 || messageIndex === -1) {
+      return 'missing';
+    }
+
+    return messageIndex < contentIndex ? 'top' : 'bottom';
+  });
+}
+
+function getGroupedFieldsets(page: FormFieldWrapperComplexPage) {
+  return [
+    page.personalInfoFieldset,
+    page.addressInfoFieldset,
+    page.skillsFieldset,
+    page.contactsFieldset,
+    page.credentialsFieldset,
+    page.preferencesFieldset,
+    page.contactMethodFieldset,
+  ];
+}
+
+async function triggerContactMethodFieldsetError(
+  page: FormFieldWrapperComplexPage,
+): Promise<void> {
+  await page.preferencesContactRadios.first().focus();
+  await page.preferencesContactRadios.first().blur();
+  await expect(page.contactMethodFieldsetError).toBeVisible();
+}
+
+async function triggerCredentialsFieldsetError(
+  page: FormFieldWrapperComplexPage,
+): Promise<void> {
+  await page.credentialsPasswordInput.fill('short');
+  await page.credentialsConfirmPasswordInput.fill('different1');
+  await page.credentialsConfirmPasswordInput.focus();
+  await page.credentialsConfirmPasswordInput.blur();
+  await expect(page.credentialsFieldsetError).toBeVisible();
+}
+
 test.describe('Form Field Wrapper - Complex Forms', () => {
   let page: FormFieldWrapperComplexPage;
 
@@ -44,17 +131,58 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       await expect(page.addressInfoFieldset).toBeVisible();
       await expect(page.skillsFieldset).toBeVisible();
       await expect(page.contactsFieldset).toBeVisible();
+      await expect(page.credentialsFieldset).toBeVisible();
       await expect(page.preferencesFieldset).toBeVisible();
     });
 
-    test('should have exactly 6 fieldsets', async () => {
+    test('should have exactly 7 fieldsets', async () => {
       await expect(page.fieldsets.first()).toBeVisible();
       const count = await page.countFieldsets();
-      expect(count).toBe(6);
+      expect(count).toBe(7);
     });
 
     test('should render contact method radio group in preferences', async () => {
       await expect(page.preferencesContactRadios).toHaveCount(3);
+    });
+
+    test('should keep grouped fieldset summaries at the top by default', async () => {
+      await expect(page.topFieldsetSummaryButton).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+
+      for (const fieldset of getGroupedFieldsets(page)) {
+        await expect(fieldset).toHaveAttribute('data-error-placement', 'top');
+      }
+
+      await triggerContactMethodFieldsetError(page);
+      expect(await getMessagePlacement(page.contactMethodFieldset)).toBe('top');
+    });
+
+    test('should let the demo move grouped fieldset summaries to the bottom', async () => {
+      await expect(page.topFieldsetSummaryButton).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+
+      await page.showBottomFieldsetSummaryPlacement();
+
+      await expect(page.bottomFieldsetSummaryButton).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+
+      for (const fieldset of getGroupedFieldsets(page)) {
+        await expect(fieldset).toHaveAttribute(
+          'data-error-placement',
+          'bottom',
+        );
+      }
+
+      await triggerContactMethodFieldsetError(page);
+      expect(await getMessagePlacement(page.contactMethodFieldset)).toBe(
+        'bottom',
+      );
     });
 
     test('should display aggregated errors in fieldset after submit', async () => {
@@ -75,6 +203,110 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       const legend = page.personalInfoFieldset.locator('legend');
       await expect(legend).toBeVisible();
       await expect(legend).toContainText('Personal Information');
+    });
+
+    test('should surface password mismatch at the credentials fieldset level', async () => {
+      await page.credentialsPasswordInput.fill('abc12345');
+      await page.credentialsConfirmPasswordInput.fill('different1');
+
+      await page.credentialsConfirmPasswordInput.focus();
+      await page.credentialsConfirmPasswordInput.blur();
+
+      await expect(
+        page.getFieldsetErrorsByLegend(/Account Credentials/i).first(),
+      ).toContainText('Passwords must match');
+    });
+
+    test('should render the credentials grouped summary as an aligned bulleted list', async () => {
+      await triggerCredentialsFieldsetError(page);
+
+      await expect(page.credentialsFieldsetErrorList).toBeVisible();
+      await expect(page.credentialsFieldsetErrorList.locator('li')).toHaveCount(
+        1,
+      );
+
+      const recipe = await page.credentialsFieldset.evaluate((host) => {
+        const style = getComputedStyle(host);
+
+        return {
+          contentOffset: style
+            .getPropertyValue('--ngx-signal-form-fieldset-content-offset')
+            .trim(),
+          insetInlineStart: style
+            .getPropertyValue(
+              '--ngx-signal-form-fieldset-message-inset-inline-start',
+            )
+            .trim(),
+          listStyleType: style
+            .getPropertyValue(
+              '--ngx-signal-form-fieldset-message-list-style-type',
+            )
+            .trim(),
+        };
+      });
+
+      expect(recipe.contentOffset).toBe('0');
+      expect(recipe.insetInlineStart).toBe('0.875rem');
+      expect(recipe.listStyleType).toBe('disc');
+
+      const listStyle = await page.credentialsFieldsetErrorList.evaluate(
+        (list) => {
+          const style = getComputedStyle(list);
+
+          return {
+            listStylePosition: style.listStylePosition,
+            listStyleType: style.listStyleType,
+            paddingInlineStart: style.paddingInlineStart,
+          };
+        },
+      );
+
+      expect(listStyle.listStyleType).toBe('disc');
+      expect(listStyle.listStylePosition).toBe('inside');
+      expect(listStyle.paddingInlineStart).toBe('0px');
+    });
+
+    test('should preserve the contact-method accessibility tree for top and bottom placement', async () => {
+      await triggerContactMethodFieldsetError(page);
+      await expect(page.contactMethodFieldset).toMatchAriaSnapshot(
+        contactMethodFieldsetTopAriaSnapshot,
+      );
+
+      await page.showBottomFieldsetSummaryPlacement();
+      await triggerContactMethodFieldsetError(page);
+      await expect(page.contactMethodFieldset).toMatchAriaSnapshot(
+        contactMethodFieldsetBottomAriaSnapshot,
+      );
+    });
+
+    test('snapshot: contact-method grouped error with top placement', async () => {
+      await page.showTopFieldsetSummaryPlacement();
+      await triggerContactMethodFieldsetError(page);
+      await page.contactMethodFieldset.scrollIntoViewIfNeeded();
+
+      await expect(page.contactMethodFieldset).toHaveScreenshot(
+        'complex-forms-contact-method-error-top.png',
+      );
+    });
+
+    test('snapshot: contact-method grouped error with bottom placement', async () => {
+      await page.showBottomFieldsetSummaryPlacement();
+      await triggerContactMethodFieldsetError(page);
+      await page.contactMethodFieldset.scrollIntoViewIfNeeded();
+
+      await expect(page.contactMethodFieldset).toHaveScreenshot(
+        'complex-forms-contact-method-error-bottom.png',
+      );
+    });
+
+    test('snapshot: credentials grouped error uses bullets and reduced gap', async () => {
+      await page.showTopFieldsetSummaryPlacement();
+      await triggerCredentialsFieldsetError(page);
+      await page.credentialsFieldset.scrollIntoViewIfNeeded();
+
+      await expect(page.credentialsFieldset).toHaveScreenshot(
+        'complex-forms-credentials-grouped-error-bullets.png',
+      );
     });
   });
 
@@ -171,10 +403,17 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
         expect(firstNameBox).not.toBeNull();
         expect(lastNameBox).not.toBeNull();
 
-        if (firstNameBox && lastNameBox) {
-          expect(Math.abs(firstNameBox.x - lastNameBox.x)).toBeLessThan(2);
-          expect(lastNameBox.y).toBeGreaterThan(firstNameBox.y);
-        }
+        const firstNameRect = requireValue(
+          firstNameBox,
+          'first name wrapper bounding box',
+        );
+        const lastNameRect = requireValue(
+          lastNameBox,
+          'last name wrapper bounding box',
+        );
+
+        expect(Math.abs(firstNameRect.x - lastNameRect.x)).toBeLessThan(2);
+        expect(lastNameRect.y).toBeGreaterThan(firstNameRect.y);
       });
 
       await test.step('Verify Address city/zip wrappers are stacked vertically', async () => {
@@ -190,10 +429,11 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
         expect(cityBox).not.toBeNull();
         expect(zipBox).not.toBeNull();
 
-        if (cityBox && zipBox) {
-          expect(Math.abs(cityBox.x - zipBox.x)).toBeLessThan(2);
-          expect(zipBox.y).toBeGreaterThan(cityBox.y);
-        }
+        const cityRect = requireValue(cityBox, 'city wrapper bounding box');
+        const zipRect = requireValue(zipBox, 'zip wrapper bounding box');
+
+        expect(Math.abs(cityRect.x - zipRect.x)).toBeLessThan(2);
+        expect(zipRect.y).toBeGreaterThan(cityRect.y);
       });
     });
   });
@@ -214,6 +454,29 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       await expect(
         page.getFieldsetErrorsByLegend(/Preferred contact method/i).first(),
       ).toBeVisible();
+    });
+
+    test('should keep error colors readable in explicit light mode even when the browser prefers dark', async ({
+      page: playwrightPage,
+    }) => {
+      await playwrightPage.emulateMedia({ colorScheme: 'dark' });
+      await playwrightPage.evaluate(() => {
+        localStorage.setItem('color-theme', 'light');
+      });
+
+      await page.goto();
+      await page.submit();
+
+      const firstError = page.errorAlerts.first();
+      const groupedError = page
+        .getFieldsetErrorsByLegend(/Preferred contact method/i)
+        .first();
+
+      await expect(firstError).toBeVisible();
+      await expect(groupedError).toBeVisible();
+      await expect(playwrightPage.locator('html')).not.toHaveClass(/dark/);
+      await expect(firstError).toHaveCSS('color', 'rgb(219, 24, 24)');
+      await expect(groupedError).toHaveCSS('color', 'rgb(219, 24, 24)');
     });
   });
 

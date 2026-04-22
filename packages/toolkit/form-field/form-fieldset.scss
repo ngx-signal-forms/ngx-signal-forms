@@ -2,6 +2,14 @@
   --_fieldset-gap: var(--ngx-signal-form-fieldset-gap, 1rem);
   --_fieldset-padding: var(--ngx-signal-form-fieldset-padding, 1rem);
   --_fieldset-content-offset: var(--ngx-signal-form-fieldset-content-offset, 0);
+  --_fieldset-message-inset-inline-start: var(
+    --ngx-signal-form-fieldset-message-inset-inline-start,
+    0
+  );
+  --_fieldset-message-inset-inline-end: var(
+    --ngx-signal-form-fieldset-message-inset-inline-end,
+    0
+  );
   --_fieldset-message-margin-top: var(
     --ngx-signal-form-fieldset-message-margin-top,
     var(--_fieldset-gap)
@@ -9,6 +17,53 @@
   --_fieldset-message-margin-bottom: var(
     --ngx-signal-form-fieldset-message-margin-bottom,
     var(--_fieldset-gap)
+  );
+  --_fieldset-message-padding: var(
+    --ngx-signal-form-fieldset-message-padding,
+    var(--ngx-signal-form-error-padding, 0)
+  );
+  --_fieldset-message-padding-horizontal: var(
+    --ngx-signal-form-fieldset-message-padding-horizontal,
+    var(--ngx-signal-form-error-padding-horizontal, 0.5rem)
+  );
+  --_fieldset-message-padding-inline-start: var(
+    --ngx-signal-form-fieldset-message-padding-inline-start,
+    var(--_fieldset-message-padding-horizontal)
+  );
+  --_fieldset-message-padding-inline-end: var(
+    --ngx-signal-form-fieldset-message-padding-inline-end,
+    var(--_fieldset-message-padding-horizontal)
+  );
+  --_fieldset-message-border-width: var(
+    --ngx-signal-form-fieldset-message-border-width,
+    var(--ngx-signal-form-error-border-width, 0)
+  );
+  --_fieldset-message-border-radius: var(
+    --ngx-signal-form-fieldset-message-border-radius,
+    var(--ngx-signal-form-error-border-radius, 0)
+  );
+  --_fieldset-message-spacing: var(
+    --ngx-signal-form-fieldset-message-spacing,
+    var(--ngx-signal-form-error-message-spacing, 0.25rem)
+  );
+  --_fieldset-message-list-style-type: var(
+    --ngx-signal-form-fieldset-message-list-style-type,
+    var(--ngx-signal-form-error-list-style-type, disc)
+  );
+  --_fieldset-message-list-style-position: var(
+    --ngx-signal-form-fieldset-message-list-style-position,
+    var(--ngx-signal-form-error-list-style-position, outside)
+  );
+  --_fieldset-message-list-padding-inline-start: var(
+    --ngx-signal-form-fieldset-message-list-padding-inline-start,
+    var(--ngx-signal-form-error-list-padding-inline-start, 1.25rem)
+  );
+  --_fieldset-message-animation: var(
+    --ngx-signal-form-fieldset-message-animation,
+    var(
+      --ngx-signal-form-error-animation,
+      ngxStatusSlideIn 300ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards
+    )
   );
   --_fieldset-radius: var(--ngx-signal-form-fieldset-border-radius, 0.75rem);
   --_fieldset-surface-radius: max(
@@ -111,6 +166,30 @@
     --ngx-signal-form-fieldset-warning-legend-bg,
     var(--_fieldset-legend-bg)
   );
+  --_fieldset-message-error-color: var(
+    --ngx-signal-form-fieldset-error-color,
+    var(--ngx-signal-form-error-color, #db1818)
+  );
+  --_fieldset-message-error-bg: var(
+    --ngx-signal-form-fieldset-error-bg,
+    var(--ngx-signal-form-error-bg, transparent)
+  );
+  --_fieldset-message-error-border: var(
+    --ngx-signal-form-fieldset-error-border,
+    var(--ngx-signal-form-error-border, transparent)
+  );
+  --_fieldset-message-warning-color: var(
+    --ngx-signal-form-fieldset-warning-color,
+    var(--ngx-signal-form-warning-color, #a16207)
+  );
+  --_fieldset-message-warning-bg: var(
+    --ngx-signal-form-fieldset-warning-bg,
+    var(--ngx-signal-form-warning-bg, transparent)
+  );
+  --_fieldset-message-warning-border: var(
+    --ngx-signal-form-fieldset-warning-border,
+    var(--ngx-signal-form-warning-border, transparent)
+  );
 
   --_fieldset-direction: var(--ngx-signal-form-fieldset-direction, column);
 
@@ -188,6 +267,36 @@
 
 .ngx-signal-form-fieldset__messages {
   margin-top: var(--_fieldset-message-margin-top);
+  margin-inline-start: var(--_fieldset-message-inset-inline-start);
+  margin-inline-end: var(--_fieldset-message-inset-inline-end);
+  min-inline-size: 0;
+
+  --ngx-signal-form-error-padding: var(--_fieldset-message-padding);
+  --ngx-signal-form-error-padding-inline-start: var(
+    --_fieldset-message-padding-inline-start
+  );
+  --ngx-signal-form-error-padding-inline-end: var(
+    --_fieldset-message-padding-inline-end
+  );
+  --ngx-signal-form-error-border-width: var(--_fieldset-message-border-width);
+  --ngx-signal-form-error-border-radius: var(--_fieldset-message-border-radius);
+  --ngx-signal-form-error-message-spacing: var(--_fieldset-message-spacing);
+  --ngx-signal-form-error-list-style-type: var(
+    --_fieldset-message-list-style-type
+  );
+  --ngx-signal-form-error-list-style-position: var(
+    --_fieldset-message-list-style-position
+  );
+  --ngx-signal-form-error-list-padding-inline-start: var(
+    --_fieldset-message-list-padding-inline-start
+  );
+  --ngx-signal-form-error-animation: var(--_fieldset-message-animation);
+  --ngx-signal-form-error-color: var(--_fieldset-message-error-color);
+  --ngx-signal-form-error-bg: var(--_fieldset-message-error-bg);
+  --ngx-signal-form-error-border: var(--_fieldset-message-error-border);
+  --ngx-signal-form-warning-color: var(--_fieldset-message-warning-color);
+  --ngx-signal-form-warning-bg: var(--_fieldset-message-warning-bg);
+  --ngx-signal-form-warning-border: var(--_fieldset-message-warning-border);
 }
 
 :host(.ngx-signal-form-fieldset--messages-top)

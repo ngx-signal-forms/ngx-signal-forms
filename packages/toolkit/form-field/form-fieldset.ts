@@ -18,6 +18,18 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
  * aggregated validation messages for all contained fields. It uses
  * `NgxFormFieldError` internally for consistent error/warning styling.
  *
+ * Reach for `NgxFormFieldset` when the validation story belongs to a group,
+ * not just an individual control:
+ *
+ * - a cross-field rule lives on the parent node (`password !== confirm`)
+ * - a nested subsection should own one shared summary
+ * - repeated rows or radio/checkbox groups need one grouped error surface
+ *
+ * When each control should fully own its own label, hint, and feedback, use
+ * `NgxFormFieldWrapper` on those leaf controls and keep the fieldset in its
+ * default group-only mode. When you need total markup control but still want
+ * the aggregation state, compose `NgxHeadlessFieldset` directly.
+ *
  * ## Composition
  *
  * The styled fieldset composes `NgxHeadlessFieldset` via
@@ -154,6 +166,12 @@ export class NgxFormFieldset {
    * This API is primarily intended for grouped fieldset summaries. The wrapper
    * component also supports message placement, but this fieldset placement is
    * the main design-alignment control for complex grouped forms.
+   *
+   * Use `top` when the summary should be announced immediately after the
+   * legend/description, which is usually the clearest choice for grouped
+   * validation such as address sections or radio groups. Use `bottom` when the
+   * user should scan the controls first and see the shared summary after the
+   * group, which can work better in dense review-style layouts.
    *
    * - `top` (default): display the summary directly below the legend/description
    * - `bottom`: display the summary after the projected field content

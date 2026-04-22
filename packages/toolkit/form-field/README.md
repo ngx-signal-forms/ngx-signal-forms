@@ -185,6 +185,14 @@ by `'on-touch'` or `'on-submit'`. See
 
 `ngx-form-fieldset` — groups related fields with aggregated error display.
 
+Use it when the validation belongs to the group as a whole — cross-field rules,
+radio/checkbox groups, repeated row sections, or dense subsections that should
+own a single summary. If each child control should render its own feedback,
+keep the fieldset in the default group-only mode and let the nested
+`ngx-form-field-wrapper`s stay responsible for leaf errors. If you want the
+aggregation signals without any prebuilt markup, drop down to
+[`/headless`](../headless/README.md).
+
 ```html
 <ngx-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
   <legend>Shipping Address</legend>
@@ -218,6 +226,75 @@ by `'on-touch'` or `'on-submit'`. See
 
 - **Group-only** (default) — shows only group-level errors. Use when nested fields display their own errors via wrappers.
 - **Aggregated** (`includeNestedErrors`) — collects all nested errors. Use when fields don't have individual error display.
+
+### Summary placement
+
+- **`top`** (default) — best for grouped summaries that should be read right
+  after the legend or supporting copy. This is the usual choice for addresses,
+  password groups, and radio/checkbox groups.
+- **`bottom`** — useful when the user should scan the controls first and see
+  the grouped summary after the section.
+
+```html
+<ngx-form-fieldset
+  [fieldsetField]="form.deliveryMethod"
+  errorPlacement="bottom"
+>
+  <legend>Delivery method</legend>
+  <!-- grouped controls -->
+</ngx-form-fieldset>
+```
+
+### Password group example
+
+This is the common “two normal fields plus one group-level rule” case. The
+wrappers keep ownership of leaf validation such as required/min-length, while
+the fieldset is reserved for the shared cross-field message.
+
+```html
+<ngx-form-fieldset [fieldsetField]="form.passwords" fieldsetId="passwords">
+  <legend>Passwords</legend>
+
+  <ngx-form-field-wrapper [formField]="form.passwords.password">
+    <label for="password">Password</label>
+    <input
+      id="password"
+      type="password"
+      [formField]="form.passwords.password"
+    />
+  </ngx-form-field-wrapper>
+
+  <ngx-form-field-wrapper [formField]="form.passwords.confirm">
+    <label for="confirm-password">Confirm password</label>
+    <input
+      id="confirm-password"
+      type="password"
+      [formField]="form.passwords.confirm"
+    />
+  </ngx-form-field-wrapper>
+
+  <!-- The fieldset shows only "Passwords must match" -->
+</ngx-form-fieldset>
+```
+
+```typescript
+import { form, required, validateTree } from '@angular/forms/signals';
+
+const signupForm = form(model, (path) => {
+  required(path.passwords.password, { message: 'Password is required' });
+  required(path.passwords.confirm, {
+    message: 'Please confirm your password',
+  });
+
+  validateTree(path.passwords, ({ value }) => {
+    const { password, confirm } = value();
+    if (password && confirm && password !== confirm) {
+      return { kind: 'mismatch', message: 'Passwords must match' };
+    }
+    return null;
+  });
+});
+```
 
 Can also be used as an attribute selector on native `<fieldset>` or `<div>`:
 

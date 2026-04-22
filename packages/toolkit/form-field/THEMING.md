@@ -100,6 +100,12 @@ controls the display of validation errors and warnings.
 | `--ngx-signal-form-error-padding-horizontal`   | `0.5rem`                                                         | Left/Right padding                       |
 | `--ngx-signal-form-error-animation`            | `ngxStatusSlideIn 300ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards` | Entry animation                          |
 
+Additional list-rendering properties for bulleted summaries:
+
+- `--ngx-signal-form-error-list-style-type` — default `disc`; marker style for bulleted summaries
+- `--ngx-signal-form-error-list-style-position` — default `outside`; marker placement (`inside` / `outside`)
+- `--ngx-signal-form-error-list-padding-inline-start` — default `1.25rem`; indent for bulleted summaries
+
 ### Hints
 
 **Component:** `ngx-form-field-hint`
@@ -150,6 +156,8 @@ Groups related fields with consistent spacing.
 
 - `--ngx-signal-form-fieldset-gap` — default `1rem`; spacing between grouped controls
 - `--ngx-signal-form-fieldset-padding` — default `1rem`; inner padding around the surfaced fieldset content
+- `--ngx-signal-form-fieldset-message-inset-inline-start` — default `0`; moves the grouped summary horizontally from the start edge
+- `--ngx-signal-form-fieldset-message-inset-inline-end` — default `0`; moves the grouped summary horizontally from the end edge
 - `--ngx-signal-form-fieldset-border-radius` — default `0.75rem`; outer fieldset border radius
 - `--ngx-signal-form-fieldset-surface-border-radius` — default `var(--...fieldset-radius...)`; optional override for the inner surfaced content radius
 - `--ngx-signal-form-fieldset-bg` — default `transparent`; base fieldset background token
@@ -165,6 +173,23 @@ Groups related fields with consistent spacing.
 - `--ngx-signal-form-fieldset-warning-legend-color` — default `var(--...warning-border...)`; legend color in warning state
 - `--ngx-signal-form-fieldset-invalid-legend-bg` — default `var(--...legend-bg...)`; optional legend background in error state
 - `--ngx-signal-form-fieldset-warning-legend-bg` — default `var(--...legend-bg...)`; optional legend background in warning state
+- `--ngx-signal-form-fieldset-message-padding` — default `var(--ngx-signal-form-error-padding)`; grouped summary container padding
+- `--ngx-signal-form-fieldset-message-padding-horizontal` — default `var(--ngx-signal-form-error-padding-horizontal)`; grouped summary inline padding shortcut
+- `--ngx-signal-form-fieldset-message-padding-inline-start` — default `var(--...message-padding-horizontal...)`; grouped summary start padding
+- `--ngx-signal-form-fieldset-message-padding-inline-end` — default `var(--...message-padding-horizontal...)`; grouped summary end padding
+- `--ngx-signal-form-fieldset-message-border-width` — default `var(--ngx-signal-form-error-border-width)`; grouped summary border width
+- `--ngx-signal-form-fieldset-message-border-radius` — default `var(--ngx-signal-form-error-border-radius)`; grouped summary border radius
+- `--ngx-signal-form-fieldset-message-spacing` — default `var(--ngx-signal-form-error-message-spacing)`; spacing between grouped summary messages
+- `--ngx-signal-form-fieldset-message-list-style-type` — default `var(--ngx-signal-form-error-list-style-type)`; grouped summary marker style (`disc`, `circle`, `none`, ...)
+- `--ngx-signal-form-fieldset-message-list-style-position` — default `var(--ngx-signal-form-error-list-style-position)`; grouped summary marker placement (`inside` / `outside`)
+- `--ngx-signal-form-fieldset-message-list-padding-inline-start` — default `var(--ngx-signal-form-error-list-padding-inline-start)`; grouped summary list indent
+- `--ngx-signal-form-fieldset-message-animation` — default `var(--ngx-signal-form-error-animation)`; grouped summary entry animation
+- `--ngx-signal-form-fieldset-error-color` — default `var(--ngx-signal-form-error-color)`; grouped error text color
+- `--ngx-signal-form-fieldset-error-bg` — default `var(--ngx-signal-form-error-bg)`; grouped error background
+- `--ngx-signal-form-fieldset-error-border` — default `var(--ngx-signal-form-error-border)`; grouped error border color
+- `--ngx-signal-form-fieldset-warning-color` — default `var(--ngx-signal-form-warning-color)`; grouped warning text color
+- `--ngx-signal-form-fieldset-warning-bg` — default `var(--ngx-signal-form-warning-bg)`; grouped warning background
+- `--ngx-signal-form-fieldset-warning-border` — default `var(--ngx-signal-form-warning-border)`; grouped warning border color
 
 The fieldset uses two visual layers by design:
 
@@ -173,6 +198,46 @@ The fieldset uses two visual layers by design:
 - the **legend** stays outside that tinted surface unless you explicitly theme it
 
 That keeps radio-group and checkbox-group labels readable while still giving the grouped controls a visible error or warning container.
+
+Grouped summaries intentionally inherit from the shared `ngx-form-field-error`
+tokens by default. The fieldset-specific variables above are aliases for the
+fieldset use case, so you can tune a grouped summary without changing every
+leaf-level error in the app.
+
+### Align a radio-group summary with option labels
+
+```css
+.shipping-method-fieldset {
+  --ngx-signal-form-fieldset-message-inset-inline-start: 1.5rem;
+  --ngx-signal-form-fieldset-message-padding-inline-start: 0;
+}
+```
+
+That pattern is useful when text-input groups should keep the default inset,
+but radio or checkbox groups need the summary to line up with option labels
+instead of the fieldset edge.
+
+### Distinguish grouped summaries from leaf-level errors
+
+```css
+.credentials-fieldset {
+  --ngx-signal-form-fieldset-content-offset: 0;
+  --ngx-signal-form-fieldset-message-inset-inline-start: 0.875rem;
+  --ngx-signal-form-fieldset-message-padding-inline-start: 0;
+  --ngx-signal-form-fieldset-message-padding-inline-end: 0;
+  --ngx-signal-form-fieldset-message-list-style-type: disc;
+  --ngx-signal-form-fieldset-message-list-style-position: inside;
+  --ngx-signal-form-fieldset-message-list-padding-inline-start: 0;
+}
+```
+
+That recipe does two things:
+
+- removes the extra gap between a top-positioned grouped summary and the first row of controls
+- makes the grouped summary visually distinct from leaf-level inline errors
+
+If you want the summary to read like plain text again, set
+`--ngx-signal-form-fieldset-message-list-style-type: none`.
 
 ---
 
@@ -434,8 +499,11 @@ ngx-form-field-wrapper {
 
 ### Scenario C: Dark Mode
 
-The components support `prefers-color-scheme: dark` out of the box.
-If your app has a manual toggle (e.g. adding a `.dark` class), use this pattern to ensure it wins over system preferences:
+The components use `prefers-color-scheme` as the default signal, and also
+support explicit class-based theming such as `html.dark`. Manual app theme
+selection should win over OS/browser preference.
+
+If your app has a manual toggle, use this pattern:
 
 ```scss
 /* app.scss or global styles */
