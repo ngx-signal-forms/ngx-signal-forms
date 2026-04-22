@@ -100,7 +100,7 @@ describe('NgxFormFieldset', () => {
       ],
     });
 
-    await render(
+    const { container } = await render(
       `<ngx-form-fieldset [fieldsetField]="fieldset">
         <div>Content without nested form field</div>
       </ngx-form-fieldset>`,
@@ -113,6 +113,7 @@ describe('NgxFormFieldset', () => {
     const errors = screen.getAllByRole('alert');
     expect(errors).toHaveLength(1);
     expect(errors[0]?.textContent).toContain('Street required');
+    expect(container.querySelector('ngx-form-field-notification')).toBeTruthy();
     expect(errors[0]?.querySelector('ul')).toBeTruthy();
     expect(errors[0]?.querySelectorAll('li')).toHaveLength(1);
   });
@@ -243,7 +244,7 @@ describe('NgxFormFieldset', () => {
     expect(host).toHaveAttribute('aria-describedby', 'address-error');
   });
 
-  it('renders aggregated messages above content by default', async () => {
+  it('renders aggregated messages below content by default', async () => {
     const fieldset = createFieldsetState({
       errors: () => [{ kind: 'required', message: 'Required' }],
       errorSummary: () => [{ kind: 'required', message: 'Required' }],
@@ -264,10 +265,10 @@ describe('NgxFormFieldset', () => {
     const content = host?.querySelector('.ngx-signal-form-fieldset__content');
 
     expect(
-      host?.classList.contains('ngx-signal-form-fieldset--messages-top'),
+      host?.classList.contains('ngx-signal-form-fieldset--messages-bottom'),
     ).toBe(true);
-    expect(content).toBeInstanceOf(Node);
-    expect(message?.compareDocumentPosition(content)).toBe(
+    expect(message).toBeInstanceOf(Node);
+    expect(content?.compareDocumentPosition(message)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
   });
@@ -294,9 +295,81 @@ describe('NgxFormFieldset', () => {
       },
     );
 
-    const errorList = container.querySelector('.ngx-form-field-error__list');
+    const errorList = container.querySelector(
+      '.ngx-form-field-notification__list',
+    );
     expect(errorList?.tagName).toBe('UL');
     expect(errorList?.querySelectorAll('li')).toHaveLength(2);
+  });
+
+  it('defaults regular grouped sections to notification feedback without tinting the surface', async () => {
+    const fieldset = createFieldsetState({
+      errors: () => [{ kind: 'required', message: 'Street required' }],
+      errorSummary: () => [{ kind: 'required', message: 'Street required' }],
+    });
+
+    const { container } = await render(
+      `<ngx-form-fieldset [fieldsetField]="fieldset" fieldsetId="address">
+        <div class="content">Projected</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-form-fieldset');
+
+    expect(host).toHaveAttribute('data-feedback-appearance', 'notification');
+    expect(
+      host?.classList.contains('ngx-signal-form-fieldset--surface-invalid'),
+    ).toBe(false);
+    expect(container.querySelector('ngx-form-field-notification')).toBeTruthy();
+    expect(container.querySelector('ngx-form-field-error')).toBeNull();
+
+    if (!(host instanceof HTMLElement)) {
+      throw new Error('expected fieldset host element');
+    }
+
+    expect(
+      getComputedStyle(host).getPropertyValue('--_fieldset-clr-danger').trim(),
+    ).toContain('#db1818');
+    expect(
+      getComputedStyle(host)
+        .getPropertyValue('--_fieldset-notification-error-color')
+        .trim(),
+    ).toContain('--_fieldset-clr-danger');
+  });
+
+  it('uses compact feedback and tints selection-only groups in auto mode', async () => {
+    const fieldset = createFieldsetState({
+      errors: () => [{ kind: 'required', message: 'Choose one option' }],
+      errorSummary: () => [{ kind: 'required', message: 'Choose one option' }],
+    });
+
+    const { container } = await render(
+      `<fieldset ngxFormFieldset [fieldsetField]="fieldset" fieldsetId="contact-method">
+        <legend>Preferred contact method</legend>
+        <label><input type="radio" name="contact" />Email</label>
+        <label><input type="radio" name="contact" />SMS</label>
+      </fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('fieldset');
+
+    expect(host).toHaveAttribute('data-feedback-appearance', 'plain');
+    expect(
+      host?.classList.contains('ngx-signal-form-fieldset--selection-group'),
+    ).toBe(true);
+    expect(
+      host?.classList.contains('ngx-signal-form-fieldset--surface-invalid'),
+    ).toBe(true);
+    expect(container.querySelector('ngx-form-field-notification')).toBeNull();
+    expect(container.querySelector('ngx-form-field-error')).toBeTruthy();
   });
 
   it('marks the host aria-busy while the composed headless directive is pending', async () => {
@@ -349,14 +422,14 @@ describe('NgxFormFieldset', () => {
     expect(errors[0]?.textContent).toContain('Nested error');
   });
 
-  it('renders aggregated messages below content when errorPlacement is bottom', async () => {
+  it('renders aggregated messages above content when errorPlacement is top', async () => {
     const fieldset = createFieldsetState({
       errors: () => [{ kind: 'required', message: 'Required' }],
       errorSummary: () => [{ kind: 'required', message: 'Required' }],
     });
 
     const { container } = await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset" errorPlacement="bottom">
+      `<ngx-form-fieldset [fieldsetField]="fieldset" errorPlacement="top">
         <div class="content">Content</div>
       </ngx-form-fieldset>`,
       {
@@ -369,12 +442,12 @@ describe('NgxFormFieldset', () => {
     const message = host?.querySelector('.ngx-signal-form-fieldset__messages');
     const content = host?.querySelector('.ngx-signal-form-fieldset__content');
 
-    expect(host).toHaveAttribute('data-error-placement', 'bottom');
+    expect(host).toHaveAttribute('data-error-placement', 'top');
     expect(
-      host?.classList.contains('ngx-signal-form-fieldset--messages-bottom'),
+      host?.classList.contains('ngx-signal-form-fieldset--messages-top'),
     ).toBe(true);
-    expect(message).toBeInstanceOf(Node);
-    expect(content?.compareDocumentPosition(message)).toBe(
+    expect(content).toBeInstanceOf(Node);
+    expect(message?.compareDocumentPosition(content)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
   });

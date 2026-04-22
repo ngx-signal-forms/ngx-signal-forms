@@ -201,7 +201,7 @@ export class ComplexFormsPage {
   protected readonly fieldsetErrorPlacementOptions =
     FIELDSET_ERROR_PLACEMENT_OPTIONS;
   protected readonly selectedFieldsetErrorPlacement =
-    signal<FieldsetErrorPlacement>('top');
+    signal<FieldsetErrorPlacement>('bottom');
   protected readonly selectedOrientation =
     signal<FormFieldOrientation>('vertical');
   protected readonly currentControlChips = computed(() => [

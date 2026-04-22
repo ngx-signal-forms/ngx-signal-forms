@@ -86,6 +86,43 @@ describe('NgxFormFieldError', () => {
   });
 
   describe('error rendering', () => {
+    it('exposes token-backed theme defaults through pseudo-private properties', async () => {
+      const errors = signal([
+        { kind: 'required', message: 'Email is required' },
+      ]);
+
+      const { container } = await render(
+        `<ngx-form-field-error fieldName="email" [errors]="errors" />`,
+        {
+          imports: [NgxFormFieldError],
+          componentProperties: { errors },
+        },
+      );
+
+      const errorHost = container.querySelector('ngx-form-field-error');
+
+      if (!(errorHost instanceof HTMLElement)) {
+        throw new Error('expected error host element');
+      }
+
+      expect(
+        getComputedStyle(errorHost)
+          .getPropertyValue('--_error-clr-danger')
+          .trim(),
+      ).toContain('#db1818');
+      expect(
+        getComputedStyle(errorHost).getPropertyValue('--_error-color').trim(),
+      ).toContain('--_error-clr-danger');
+      expect(
+        getComputedStyle(errorHost)
+          .getPropertyValue('--_error-clr-warning')
+          .trim(),
+      ).toContain('#a16207');
+      expect(
+        getComputedStyle(errorHost).getPropertyValue('--_warning-color').trim(),
+      ).toContain('--_error-clr-warning');
+    });
+
     it('should render errors when field is invalid and touched (on-touch strategy)', async () => {
       @Component({
         selector: 'ngx-test-touched-invalid',

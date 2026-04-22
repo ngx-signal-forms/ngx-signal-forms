@@ -1,22 +1,57 @@
 import {
+  afterEveryRender,
   booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   computed,
+  ElementRef,
   inject,
   input,
+  signal,
 } from '@angular/core';
-import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
+import {
+  NgxFormFieldError,
+  NgxFormFieldNotification,
+  type NgxFormFieldErrorListStyle,
+} from '@ngx-signal-forms/toolkit/assistive';
 import { NgxHeadlessFieldset } from '@ngx-signal-forms/toolkit/headless';
 
 export type FieldsetErrorPlacement = 'top' | 'bottom';
+export type FieldsetFeedbackAppearance = 'auto' | 'plain' | 'notification';
+export type FieldsetSurfaceTone =
+  | 'default'
+  | 'neutral'
+  | 'info'
+  | 'success'
+  | 'warning'
+  | 'danger';
+export type FieldsetValidationSurface = 'never' | 'auto' | 'always';
+
+const SELECTION_GROUP_SELECTOR = [
+  "input[type='radio']",
+  "input[type='checkbox']:not([role='switch'])",
+  "[data-ngx-signal-form-control-kind='checkbox']",
+  "[data-ngx-signal-form-control-kind='radio-group']",
+].join(', ');
+
+const NON_SELECTION_GROUP_SELECTOR = [
+  "input:not([type='radio']):not([type='checkbox'])",
+  'textarea',
+  'select',
+  "[data-ngx-signal-form-control-kind='input-like']",
+  "[data-ngx-signal-form-control-kind='standalone-field-like']",
+  "[data-ngx-signal-form-control-kind='switch']",
+  "[data-ngx-signal-form-control-kind='slider']",
+  "[data-ngx-signal-form-control-kind='composite']",
+].join(', ');
 
 /**
  * Form fieldset component for grouping related form fields with aggregated error/warning display.
  *
  * Similar to HTML `<fieldset>`, this component groups form fields and displays
- * aggregated validation messages for all contained fields. It uses
- * `NgxFormFieldError` internally for consistent error/warning styling.
+ * aggregated validation messages for all contained fields. It resolves between
+ * compact inline feedback and a surfaced notification pattern depending on the
+ * grouped content and the configured appearance.
  *
  * Reach for `NgxFormFieldset` when the validation story belongs to a group,
  * not just an individual control:
@@ -44,6 +79,8 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
  * - **Group-Only Mode**: Show only group-level errors when nested fields display their own
  * - **Deduplication**: Same error shown only once even if multiple fields have it
  * - **Warning Support**: Non-blocking warnings (with `warn:` prefix) shown when no errors
+ * - **Adaptive Feedback UI**: Notification cards for standard groups, compact text for selection-only groups
+ * - **Configurable Surface Tones**: Neutral, info, success, warning, or danger base surfaces
  * - **WCAG 2.2 Compliant**: Errors use `role="alert"`, warnings use `role="status"`
  * - **Strategy Aware**: Respects `ErrorDisplayStrategy` from form context or input
  * - **Configurable Placement**: Grouped messages can appear above or below the fieldset content
@@ -93,7 +130,7 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
       ],
     },
   ],
-  imports: [NgxFormFieldError],
+  imports: [NgxFormFieldError, NgxFormFieldNotification],
   styleUrl: './form-fieldset.scss',
   exportAs: 'ngxFormFieldset',
   // BEM classnames keep the legacy `ngx-signal-form-fieldset--*` prefix for
@@ -102,13 +139,20 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
   // form so consumer overrides like `.ngx-signal-form-fieldset--invalid {…}`
   // keep working without rewriting their stylesheets.
   host: {
+    '[class.ngx-signal-form-fieldset--selection-group]':
+      'isSelectionGroupFieldset()',
     '[class.ngx-signal-form-fieldset--invalid]': 'fieldset.shouldShowErrors()',
     '[class.ngx-signal-form-fieldset--warning]':
       'fieldset.shouldShowWarnings()',
+    '[class.ngx-signal-form-fieldset--surface-invalid]': 'showInvalidSurface()',
+    '[class.ngx-signal-form-fieldset--surface-warning]': 'showWarningSurface()',
     '[class.ngx-signal-form-fieldset--messages-top]': 'isTopPlacement()',
     '[class.ngx-signal-form-fieldset--messages-bottom]': '!isTopPlacement()',
     '[attr.aria-describedby]': 'describedByIds()',
     '[attr.data-error-placement]': 'errorPlacement()',
+    '[attr.data-feedback-appearance]': 'resolvedFeedbackAppearance()',
+    '[attr.data-surface-tone]': 'surfaceTone()',
+    '[attr.data-validation-surface]': 'validationSurface()',
     '[attr.aria-busy]': 'fieldset.isPending() ? "true" : null',
   },
   template: `
@@ -117,13 +161,22 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
     <div class="ngx-signal-form-fieldset__surface">
       @if (showMessages() && isTopPlacement()) {
         <div class="ngx-signal-form-fieldset__messages">
-          <ngx-form-field-error
-            [errors]="filteredErrorsSignal"
-            [fieldName]="fieldset.resolvedFieldsetId()"
-            [strategy]="fieldset.resolvedStrategy()"
-            [submittedStatus]="fieldset.resolvedSubmittedStatus()"
-            listStyle="bullets"
-          />
+          @if (usesNotificationFeedback()) {
+            <ngx-form-field-notification
+              [errors]="filteredErrorsSignal"
+              [fieldName]="fieldset.resolvedFieldsetId()"
+              [title]="notificationTitle()"
+              [listStyle]="resolvedListStyle()"
+            />
+          } @else {
+            <ngx-form-field-error
+              [errors]="filteredErrorsSignal"
+              [fieldName]="fieldset.resolvedFieldsetId()"
+              [strategy]="fieldset.resolvedStrategy()"
+              [submittedStatus]="fieldset.resolvedSubmittedStatus()"
+              [listStyle]="resolvedListStyle()"
+            />
+          }
         </div>
       }
 
@@ -133,13 +186,22 @@ export type FieldsetErrorPlacement = 'top' | 'bottom';
 
       @if (showMessages() && !isTopPlacement()) {
         <div class="ngx-signal-form-fieldset__messages">
-          <ngx-form-field-error
-            [errors]="filteredErrorsSignal"
-            [fieldName]="fieldset.resolvedFieldsetId()"
-            [strategy]="fieldset.resolvedStrategy()"
-            [submittedStatus]="fieldset.resolvedSubmittedStatus()"
-            listStyle="bullets"
-          />
+          @if (usesNotificationFeedback()) {
+            <ngx-form-field-notification
+              [errors]="filteredErrorsSignal"
+              [fieldName]="fieldset.resolvedFieldsetId()"
+              [title]="notificationTitle()"
+              [listStyle]="resolvedListStyle()"
+            />
+          } @else {
+            <ngx-form-field-error
+              [errors]="filteredErrorsSignal"
+              [fieldName]="fieldset.resolvedFieldsetId()"
+              [strategy]="fieldset.resolvedStrategy()"
+              [submittedStatus]="fieldset.resolvedSubmittedStatus()"
+              [listStyle]="resolvedListStyle()"
+            />
+          }
         </div>
       }
     </div>
@@ -153,6 +215,8 @@ export class NgxFormFieldset {
    * and protected so it doesn't leak into the component's public API.
    */
   protected readonly fieldset = inject(NgxHeadlessFieldset);
+  readonly #elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
+  readonly #isSelectionGroupFieldset = signal(false);
 
   /**
    * Whether to show the automatic error/warning display.
@@ -168,15 +232,49 @@ export class NgxFormFieldset {
    * the main design-alignment control for complex grouped forms.
    *
    * Use `top` when the summary should be announced immediately after the
-   * legend/description, which is usually the clearest choice for grouped
-   * validation such as address sections or radio groups. Use `bottom` when the
-   * user should scan the controls first and see the shared summary after the
-   * group, which can work better in dense review-style layouts.
+   * legend/description, which can work well for grouped validation such as
+   * address sections or radio groups. Use `bottom` when the user should scan
+   * the controls first and see the shared summary after the group, which is
+   * now the default and tends to work better in dense review-style layouts.
    *
-   * - `top` (default): display the summary directly below the legend/description
-   * - `bottom`: display the summary after the projected field content
+   * - `top`: display the summary directly below the legend/description
+   * - `bottom` (default): display the summary after the projected field content
    */
-  readonly errorPlacement = input<FieldsetErrorPlacement>('top');
+  readonly errorPlacement = input<FieldsetErrorPlacement>('bottom');
+
+  /**
+   * Presentation style for grouped feedback.
+   *
+   * - `auto` (default): surfaced notification for regular grouped sections,
+   *   compact inline feedback for selection-only groups (radio/checkbox)
+   * - `plain`: always use the compact `ngx-form-field-error` presentation
+   * - `notification`: always use the surfaced notification card
+   */
+  readonly feedbackAppearance = input<FieldsetFeedbackAppearance>('auto');
+
+  /**
+   * Optional title rendered inside the notification card.
+   */
+  readonly notificationTitle = input<string | null | undefined>();
+
+  /**
+   * Visual layout for grouped messages.
+   */
+  readonly listStyle = input<NgxFormFieldErrorListStyle>('bullets');
+
+  /**
+   * Base surface tint for the fieldset content area.
+   */
+  readonly surfaceTone = input<FieldsetSurfaceTone>('default');
+
+  /**
+   * Whether validation state should tint the fieldset surface.
+   *
+   * - `never`: keep the surface neutral and rely on the grouped message only
+   * - `auto` (default): tint only selection-only groups such as radio/checkbox sets
+   * - `always`: tint every invalid/warning fieldset surface
+   */
+  readonly validationSurface = input<FieldsetValidationSurface>('auto');
 
   protected readonly isTopPlacement = computed(() => {
     return this.errorPlacement() !== 'bottom';
@@ -189,6 +287,38 @@ export class NgxFormFieldset {
     );
   });
 
+  protected readonly resolvedFeedbackAppearance = computed<
+    Exclude<FieldsetFeedbackAppearance, 'auto'>
+  >(() => {
+    const appearance = this.feedbackAppearance();
+    if (appearance === 'plain' || appearance === 'notification') {
+      return appearance;
+    }
+
+    return this.#isSelectionGroupFieldset() ? 'plain' : 'notification';
+  });
+
+  protected readonly usesNotificationFeedback = computed(() => {
+    return this.resolvedFeedbackAppearance() === 'notification';
+  });
+
+  protected readonly isSelectionGroupFieldset = computed(() => {
+    return this.#isSelectionGroupFieldset();
+  });
+
+  protected readonly resolvedListStyle = computed<NgxFormFieldErrorListStyle>(
+    () => {
+      if (
+        this.feedbackAppearance() === 'auto' &&
+        this.#isSelectionGroupFieldset()
+      ) {
+        return 'plain';
+      }
+
+      return this.listStyle();
+    },
+  );
+
   /**
    * Filtered errors signal for NgxFormFieldError.
    *
@@ -198,6 +328,35 @@ export class NgxFormFieldset {
   protected readonly filteredErrorsSignal = computed(() => {
     const blocking = this.fieldset.aggregatedErrors();
     return blocking.length > 0 ? blocking : this.fieldset.aggregatedWarnings();
+  });
+
+  protected readonly showInvalidSurface = computed(() => {
+    if (!this.fieldset.shouldShowErrors()) {
+      return false;
+    }
+
+    const mode = this.validationSurface();
+    if (mode === 'never') {
+      return false;
+    }
+
+    return mode === 'always' || this.#isSelectionGroupFieldset();
+  });
+
+  protected readonly showWarningSurface = computed(() => {
+    if (
+      this.fieldset.shouldShowErrors() ||
+      !this.fieldset.shouldShowWarnings()
+    ) {
+      return false;
+    }
+
+    const mode = this.validationSurface();
+    if (mode === 'never') {
+      return false;
+    }
+
+    return mode === 'always' || this.#isSelectionGroupFieldset();
   });
 
   readonly describedByIds = computed(() => {
@@ -214,4 +373,30 @@ export class NgxFormFieldset {
 
     return ids.length > 0 ? ids.join(' ') : null;
   });
+
+  constructor() {
+    afterEveryRender({
+      earlyRead: () => {
+        const host = this.#elementRef.nativeElement;
+        const content = host.querySelector(
+          '.ngx-signal-form-fieldset__content',
+        );
+        const scope = content ?? host;
+
+        const hasSelectionControls = scope.querySelector(
+          SELECTION_GROUP_SELECTOR,
+        );
+        const hasNonSelectionControls = scope.querySelector(
+          NON_SELECTION_GROUP_SELECTOR,
+        );
+
+        return Boolean(hasSelectionControls) && !hasNonSelectionControls;
+      },
+      write: (isSelectionGroupFieldset) => {
+        if (isSelectionGroupFieldset !== this.#isSelectionGroupFieldset()) {
+          this.#isSelectionGroupFieldset.set(isSelectionGroupFieldset);
+        }
+      },
+    });
+  }
 }

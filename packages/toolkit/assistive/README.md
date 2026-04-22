@@ -1,6 +1,6 @@
 # @ngx-signal-forms/toolkit/assistive
 
-> Styled error, hint, character count, and error summary components for Angular Signal Forms.
+> Styled error, grouped notification, hint, character count, and error summary components for Angular Signal Forms.
 
 ## Why this entry point exists
 
@@ -13,6 +13,7 @@ It sits between `/headless` (signals only, no UI) and `/form-field` (complete wr
 ```typescript
 import {
   NgxFormFieldError,
+  NgxFormFieldNotification,
   NgxFormFieldErrorSummary,
   NgxFormFieldHint,
   NgxFormFieldCharacterCount,
@@ -68,6 +69,31 @@ Displays validation errors and warnings with appropriate ARIA roles.
 - 3-tier message resolution: validator `error.message` → registry → defaults
 
 Use `ngxSignalForm` alongside `[formRoot]` when relying on the `'on-submit'` strategy so assistive components can inherit submission state automatically.
+
+### NgxFormFieldNotification
+
+Grouped validation notification with an optional title.
+
+```html
+<ngx-form-field-notification
+  [errors]="groupedErrors"
+  fieldName="shipping-address"
+  title="Validation errors"
+  listStyle="bullets"
+/>
+```
+
+| Input       | Type                                             | Description                                       |
+| ----------- | ------------------------------------------------ | ------------------------------------------------- |
+| `errors`    | `ValidationError[] \| Signal<ValidationError[]>` | Grouped validation messages to present            |
+| `fieldName` | `string`                                         | Optional id base for `aria-describedby` linkage   |
+| `title`     | `string`                                         | Optional title above the grouped messages         |
+| `listStyle` | `'plain' \| 'bullets'`                           | Stacked paragraphs or bullet list                 |
+| `tone`      | `'auto' \| 'error' \| 'warning'`                 | Resolve the card as an error/warning notification |
+
+- `tone="auto"` treats an all-warning list as a polite status notification
+- Blocking errors keep `role="alert"`
+- Intended for grouped fieldset summaries or custom headless summary cards
 
 ### NgxFormFieldErrorSummary
 
@@ -130,10 +156,23 @@ For splitting a `ValidationError[]` into blocking and warnings in one pass, use 
 
 ## Theming
 
+The assistive components follow the same theming architecture as
+`/form-field`: internal design tokens feed resolved pseudo-private variables,
+while consumers override only the public `--ngx-*` properties.
+
 ```css
 :root {
   --ngx-signal-form-error-color: #db1818;
   --ngx-signal-form-warning-color: #a16207;
+  --ngx-signal-form-notification-error-color: #db1818;
+  --ngx-signal-form-notification-error-border-color: color-mix(
+    in srgb,
+    var(--ngx-signal-form-notification-error-color) 50%,
+    transparent
+  );
+  --ngx-signal-form-notification-error-bg: #fdebeb;
+  --ngx-signal-form-notification-border-radius: 0.5rem;
+  --ngx-signal-form-notification-padding: 1rem;
   --ngx-signal-form-feedback-font-size: 0.75rem;
   --ngx-signal-form-feedback-line-height: 1rem;
   --ngx-signal-form-feedback-margin-top: 0.125rem;
@@ -143,6 +182,14 @@ For splitting a `ValidationError[]` into blocking and warnings in one pass, use 
   --ngx-form-field-char-count-color-danger: #db1818;
 }
 ```
+
+`ngx-form-field-notification` is full-width by default. The card keeps internal
+padding for readability, while fieldset-level horizontal positioning should be
+controlled with the dedicated `--ngx-signal-form-fieldset-notification-inset-*`
+tokens when used inside `ngx-form-fieldset`.
+
+The default light-theme error surface now matches the Figma design token
+directly: `#fdebeb`.
 
 ## Related documentation
 

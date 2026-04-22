@@ -184,7 +184,7 @@ export class ComplexFormsComponent {
 
   readonly orientation = input<FormFieldOrientation>('vertical');
 
-  readonly errorPlacement = input<FieldsetErrorPlacement>('top');
+  readonly errorPlacement = input<FieldsetErrorPlacement>('bottom');
 
   protected readonly personalInfoGridClass = computed(() =>
     this.isStandardHorizontalLayout()

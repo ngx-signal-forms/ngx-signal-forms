@@ -7,8 +7,7 @@ const contactMethodFieldsetTopAriaSnapshot = `
 - group "Preferred contact method *":
   - text: Preferred contact method *
   - alert:
-    - list:
-      - listitem: Preferred contact method is required
+    - paragraph: Preferred contact method is required
   - radio "Email"
   - text: Email
   - radio "SMS"
@@ -27,8 +26,7 @@ const contactMethodFieldsetBottomAriaSnapshot = `
   - radio "Phone"
   - text: Phone
   - alert:
-    - list:
-      - listitem: Preferred contact method is required
+    - paragraph: Preferred contact method is required
 `;
 
 function requireValue<T>(value: T | null, label: string): T {
@@ -145,28 +143,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       await expect(page.preferencesContactRadios).toHaveCount(3);
     });
 
-    test('should keep grouped fieldset summaries at the top by default', async () => {
-      await expect(page.topFieldsetSummaryButton).toHaveAttribute(
-        'aria-pressed',
-        'true',
-      );
-
-      for (const fieldset of getGroupedFieldsets(page)) {
-        await expect(fieldset).toHaveAttribute('data-error-placement', 'top');
-      }
-
-      await triggerContactMethodFieldsetError(page);
-      expect(await getMessagePlacement(page.contactMethodFieldset)).toBe('top');
-    });
-
-    test('should let the demo move grouped fieldset summaries to the bottom', async () => {
-      await expect(page.topFieldsetSummaryButton).toHaveAttribute(
-        'aria-pressed',
-        'true',
-      );
-
-      await page.showBottomFieldsetSummaryPlacement();
-
+    test('should keep grouped fieldset summaries at the bottom by default', async () => {
       await expect(page.bottomFieldsetSummaryButton).toHaveAttribute(
         'aria-pressed',
         'true',
@@ -183,6 +160,27 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       expect(await getMessagePlacement(page.contactMethodFieldset)).toBe(
         'bottom',
       );
+    });
+
+    test('should let the demo move grouped fieldset summaries to the top', async () => {
+      await expect(page.bottomFieldsetSummaryButton).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+
+      await page.showTopFieldsetSummaryPlacement();
+
+      await expect(page.topFieldsetSummaryButton).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+
+      for (const fieldset of getGroupedFieldsets(page)) {
+        await expect(fieldset).toHaveAttribute('data-error-placement', 'top');
+      }
+
+      await triggerContactMethodFieldsetError(page);
+      expect(await getMessagePlacement(page.contactMethodFieldset)).toBe('top');
     });
 
     test('should display aggregated errors in fieldset after submit', async () => {
@@ -217,12 +215,130 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       ).toContainText('Passwords must match');
     });
 
+    test('should use the selection-group error surface recipe from the design system', async () => {
+      await triggerContactMethodFieldsetError(page);
+
+      const surface = page.contactMethodFieldset.locator(
+        '.ngx-signal-form-fieldset__surface',
+      );
+      const legend = page.contactMethodFieldset.locator('legend');
+      const options = page.contactMethodFieldset.locator(
+        '.choice-group-fieldset__options',
+      );
+      const messages = page.contactMethodFieldset.locator(
+        '.ngx-signal-form-fieldset__messages',
+      );
+      const alert = page.contactMethodFieldset.getByRole('alert');
+      const firstOption = page.contactMethodFieldset
+        .locator('.choice-group-option')
+        .first();
+
+      await expect(surface).toBeVisible();
+      await expect(legend).toBeVisible();
+      await expect(options).toBeVisible();
+      await expect(messages).toBeVisible();
+      await expect(alert).toBeVisible();
+      await expect(firstOption).toBeVisible();
+
+      const [
+        hostChrome,
+        surfaceStyles,
+        legendStyles,
+        optionsGap,
+        optionMinHeight,
+        messageMarginTop,
+        alertStyles,
+      ] = await Promise.all([
+        page.contactMethodFieldset.evaluate((host) => ({
+          hostBorderWidth: getComputedStyle(host).borderTopWidth,
+          hostRadius: getComputedStyle(host).borderTopLeftRadius,
+        })),
+        surface.evaluate((element) => ({
+          surfaceBg: getComputedStyle(element).backgroundColor,
+          surfacePadding: getComputedStyle(element).padding,
+        })),
+        legend.evaluate((element) => ({
+          legendColor: getComputedStyle(element).color,
+          legendFontSize: getComputedStyle(element).fontSize,
+          legendFontWeight: getComputedStyle(element).fontWeight,
+        })),
+        options.evaluate((element) => getComputedStyle(element).gap),
+        firstOption.evaluate((element) => getComputedStyle(element).minHeight),
+        messages.evaluate((element) => getComputedStyle(element).marginTop),
+        alert.evaluate((element) => ({
+          alertColor: getComputedStyle(element).color,
+          alertFontSize: getComputedStyle(element).fontSize,
+          alertLineHeight: getComputedStyle(element).lineHeight,
+        })),
+      ]);
+
+      const selectionRecipe = {
+        ...hostChrome,
+        ...surfaceStyles,
+        ...legendStyles,
+        optionsGap,
+        optionMinHeight,
+        messageMarginTop,
+        ...alertStyles,
+      };
+
+      expect(selectionRecipe.hostBorderWidth).toBe('0px');
+      expect(selectionRecipe.hostRadius).toBe('4px');
+      expect(selectionRecipe.surfaceBg).toBe('rgb(251, 221, 221)');
+      expect(selectionRecipe.surfacePadding).toBe('16px');
+      expect(selectionRecipe.legendColor).toBe('rgb(50, 65, 85)');
+      expect(selectionRecipe.legendFontSize).toBe('14px');
+      expect(selectionRecipe.legendFontWeight).toBe('500');
+      expect(selectionRecipe.optionsGap).toBe('8px');
+      expect(selectionRecipe.optionMinHeight).toBe('32px');
+      expect(selectionRecipe.messageMarginTop).toBe('8px');
+      expect(selectionRecipe.alertColor).toBe('rgb(219, 24, 24)');
+      expect(selectionRecipe.alertFontSize).toBe('12px');
+      expect(selectionRecipe.alertLineHeight).toBe('16px');
+    });
+
+    test('should use the same error message typography for notifications and inline errors', async () => {
+      await triggerCredentialsFieldsetError(page);
+
+      const [notificationMessageStyles, inlineErrorStyles] = await Promise.all([
+        page.credentialsFieldset
+          .locator('.ngx-form-field-notification__message')
+          .first()
+          .evaluate((message) => {
+            const style = getComputedStyle(message);
+            return {
+              fontSize: style.fontSize,
+              lineHeight: style.lineHeight,
+            };
+          }),
+        page.form
+          .locator('#credentialsPassword-error .ngx-form-field-error__message')
+          .first()
+          .evaluate((message) => {
+            const style = getComputedStyle(message);
+            return {
+              fontSize: style.fontSize,
+              lineHeight: style.lineHeight,
+            };
+          }),
+      ]);
+
+      expect(notificationMessageStyles).toEqual(inlineErrorStyles);
+    });
+
     test('should render the credentials grouped summary as an aligned bulleted list', async () => {
       await triggerCredentialsFieldsetError(page);
 
       await expect(page.credentialsFieldsetErrorList).toBeVisible();
       await expect(page.credentialsFieldsetErrorList.locator('li')).toHaveCount(
         1,
+      );
+
+      const messageSlot = page.credentialsFieldset.locator(
+        '.ngx-signal-form-fieldset__messages',
+      );
+      const notificationCard = page.credentialsFieldset.locator(
+        'ngx-form-field-notification .ngx-form-field-notification',
       );
 
       const recipe = await page.credentialsFieldset.evaluate((host) => {
@@ -249,6 +365,29 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       expect(recipe.insetInlineStart).toBe('0.875rem');
       expect(recipe.listStyleType).toBe('disc');
 
+      const [messageSlotBox, notificationCardBox] = await Promise.all([
+        messageSlot.boundingBox(),
+        notificationCard.boundingBox(),
+      ]);
+
+      const alignedMessageSlotBox = requireValue(
+        messageSlotBox,
+        'credentials notification slot bounding box',
+      );
+      const alignedNotificationCardBox = requireValue(
+        notificationCardBox,
+        'credentials notification card bounding box',
+      );
+
+      expect(
+        Math.abs(alignedNotificationCardBox.x - alignedMessageSlotBox.x),
+      ).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(
+          alignedNotificationCardBox.width - alignedMessageSlotBox.width,
+        ),
+      ).toBeLessThanOrEqual(1);
+
       const listStyle = await page.credentialsFieldsetErrorList.evaluate(
         (list) => {
           const style = getComputedStyle(list);
@@ -262,20 +401,22 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       );
 
       expect(listStyle.listStyleType).toBe('disc');
-      expect(listStyle.listStylePosition).toBe('inside');
-      expect(listStyle.paddingInlineStart).toBe('0px');
+      expect(listStyle.listStylePosition).toBe('outside');
+      expect(Number.parseFloat(listStyle.paddingInlineStart)).toBeGreaterThan(
+        0,
+      );
     });
 
     test('should preserve the contact-method accessibility tree for top and bottom placement', async () => {
       await triggerContactMethodFieldsetError(page);
       await expect(page.contactMethodFieldset).toMatchAriaSnapshot(
-        contactMethodFieldsetTopAriaSnapshot,
+        contactMethodFieldsetBottomAriaSnapshot,
       );
 
-      await page.showBottomFieldsetSummaryPlacement();
+      await page.showTopFieldsetSummaryPlacement();
       await triggerContactMethodFieldsetError(page);
       await expect(page.contactMethodFieldset).toMatchAriaSnapshot(
-        contactMethodFieldsetBottomAriaSnapshot,
+        contactMethodFieldsetTopAriaSnapshot,
       );
     });
 
