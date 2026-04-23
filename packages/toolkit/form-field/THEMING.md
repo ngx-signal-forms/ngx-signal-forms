@@ -312,20 +312,17 @@ The fieldset uses two visual layers by design:
 
 That keeps radio-group and checkbox-group labels readable while still giving the grouped controls a visible error or warning container.
 
-By default, selection-only groups now use their own design-system surface
-recipe instead of borrowing the notification card background directly. The
-invalid surface defaults to `#fbdddd`, while notification cards keep the
-lighter `#fdebeb` background.
+Fieldset-level grouped feedback is always surfaced through a notification card
+(or the compact `feedbackAppearance="plain"` variant) above or below the
+controls. Inline validation surfaces for radio/checkbox clusters live on
+`ngx-form-field-wrapper` instead — see the form-field wrapper README for the
+selection-cluster recipe.
 
-Validation tinting is mode-aware:
+Validation tinting on `ngx-form-fieldset` is opt-in:
 
-- `validationSurface="auto"` tints only selection-only groups (radio/checkbox)
-- `validationSurface="always"` tints every invalid/warning fieldset
-- `validationSurface="never"` leaves the surface neutral and relies on grouped feedback alone
-
-`validationSurface="auto"` now intentionally keeps grouped sections neutral by
-default. If you want validation tinting on a fieldset, opt in with
-`validationSurface="always"`.
+- `validationSurface="never"` (default) keeps the surface neutral and relies on
+  the grouped message alone
+- `validationSurface="always"` tints every invalid/warning fieldset surface
 
 Grouped summaries intentionally inherit from the shared `ngx-form-field-error`
 tokens by default. The fieldset-specific variables above are aliases for the

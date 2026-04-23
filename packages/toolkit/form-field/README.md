@@ -214,20 +214,20 @@ aggregation signals without any prebuilt markup, drop down to
 </ngx-form-fieldset>
 ```
 
-| Input                 | Type                                                                     | Default     | Description                                                                 |
-| --------------------- | ------------------------------------------------------------------------ | ----------- | --------------------------------------------------------------------------- |
-| `fieldsetField`       | `FieldTree` (required)                                                   | —           | Field tree to aggregate                                                     |
-| `fields`              | `FieldTree[]`                                                            | `null`      | Explicit field list (overrides tree traversal)                              |
-| `fieldsetId`          | `string`                                                                 | Generated   | ID for ARIA linking                                                         |
-| `strategy`            | `ErrorDisplayStrategy`                                                   | Inherited   | Error display strategy                                                      |
-| `showErrors`          | `boolean`                                                                | `true`      | Toggle error display                                                        |
-| `includeNestedErrors` | `boolean`                                                                | `false`     | Include child field errors via `errorSummary()`                             |
-| `errorPlacement`      | `'top' \| 'bottom'`                                                      | `'bottom'`  | Render grouped messages before or after content                             |
-| `feedbackAppearance`  | `'auto' \| 'plain' \| 'notification'`                                    | `'auto'`    | Choose compact grouped text or surfaced notification cards                  |
-| `notificationTitle`   | `string`                                                                 | —           | Optional title for notification-style grouped feedback                      |
-| `listStyle`           | `'plain' \| 'bullets'`                                                   | `'bullets'` | Grouped message layout (selection groups resolve to `'plain'` in auto mode) |
-| `surfaceTone`         | `'default' \| 'neutral' \| 'info' \| 'success' \| 'warning' \| 'danger'` | `'default'` | Base fieldset surface tint below the legend                                 |
-| `validationSurface`   | `'never' \| 'auto' \| 'always'`                                          | `'auto'`    | Whether invalid/warning state should tint the fieldset surface              |
+| Input                 | Type                                                                     | Default     | Description                                                    |
+| --------------------- | ------------------------------------------------------------------------ | ----------- | -------------------------------------------------------------- |
+| `fieldsetField`       | `FieldTree` (required)                                                   | —           | Field tree to aggregate                                        |
+| `fields`              | `FieldTree[]`                                                            | `null`      | Explicit field list (overrides tree traversal)                 |
+| `fieldsetId`          | `string`                                                                 | Generated   | ID for ARIA linking                                            |
+| `strategy`            | `ErrorDisplayStrategy`                                                   | Inherited   | Error display strategy                                         |
+| `showErrors`          | `boolean`                                                                | `true`      | Toggle error display                                           |
+| `includeNestedErrors` | `boolean`                                                                | `false`     | Include child field errors via `errorSummary()`                |
+| `errorPlacement`      | `'top' \| 'bottom'`                                                      | `'bottom'`  | Render grouped messages before or after content                |
+| `feedbackAppearance`  | `'auto' \| 'plain' \| 'notification'`                                    | `'auto'`    | Choose compact grouped text or surfaced notification cards     |
+| `notificationTitle`   | `string`                                                                 | —           | Optional title for notification-style grouped feedback         |
+| `listStyle`           | `'plain' \| 'bullets'`                                                   | `'bullets'` | Grouped message layout                                         |
+| `surfaceTone`         | `'default' \| 'neutral' \| 'info' \| 'success' \| 'warning' \| 'danger'` | `'default'` | Base fieldset surface tint below the legend                    |
+| `validationSurface`   | `'never' \| 'always'`                                                    | `'never'`   | Whether invalid/warning state should tint the fieldset surface |
 
 ### Error display modes
 
@@ -262,10 +262,10 @@ backgrounds now belong in `ngx-form-field-wrapper`, not `ngx-form-fieldset`.
 ### Fieldset surface behavior
 
 - **`surfaceTone`** controls the base fill of the fieldset surface.
-- **`validationSurface="auto"`** currently behaves like `never`; use it when
-  you want to follow the default grouped-section recipe without validation tint.
-- Set **`validationSurface="always"`** when every grouped section should tint
-  on validation state, or **`never`** to rely on the grouped message alone.
+- **`validationSurface="never"`** (default) keeps the surface neutral and relies
+  on the grouped message alone.
+- **`validationSurface="always"`** tints every grouped section on validation
+  state.
 
 ## Grouped radio/checkbox controls in the wrapper
 
@@ -320,7 +320,7 @@ setting.
 <ngx-form-fieldset
   [fieldsetField]="form.contactMethod"
   surfaceTone="neutral"
-  validationSurface="auto"
+  validationSurface="always"
 >
   <legend>Preferred contact method</legend>
   <!-- radio group -->

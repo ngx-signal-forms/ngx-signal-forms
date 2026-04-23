@@ -322,3 +322,47 @@
     transform: none;
   }
 }
+
+// High-contrast mode: soft background + color-mix border can drop below the
+// WCAG contrast threshold. Mirror the `form-field-error` treatment by solidifying
+// the border and bumping width.
+@media (prefers-contrast: more) {
+  .ngx-form-field-notification--error {
+    border-color: var(--_notification-error-color);
+    border-width: 2px;
+  }
+
+  .ngx-form-field-notification--warning {
+    border-color: var(--_notification-warning-color);
+    border-width: 2px;
+  }
+}
+
+// Windows High Contrast (`forced-colors: active`): the soft backgrounds and
+// translucent borders are replaced with system colors. Without this block the
+// notification would flatten to the default system surface and lose its
+// error/warning semantic.
+@media (forced-colors: active) {
+  .ngx-form-field-notification {
+    forced-color-adjust: none;
+    background: Canvas;
+    color: CanvasText;
+    border: 2px solid CanvasText;
+  }
+
+  .ngx-form-field-notification--error {
+    border-color: Mark;
+    color: MarkText;
+    background: Mark;
+  }
+
+  .ngx-form-field-notification--warning {
+    border-color: CanvasText;
+    color: CanvasText;
+    background: Canvas;
+  }
+
+  .ngx-form-field-notification--empty {
+    border-width: 0;
+  }
+}

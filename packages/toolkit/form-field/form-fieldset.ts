@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   afterEveryRender,
   booleanAttribute,
@@ -25,7 +26,7 @@ export type FieldsetSurfaceTone =
   | 'success'
   | 'warning'
   | 'danger';
-export type FieldsetValidationSurface = 'never' | 'auto' | 'always';
+export type FieldsetValidationSurface = 'never' | 'always';
 
 /**
  * Form fieldset component for grouping related form fields with aggregated error/warning display.
@@ -112,7 +113,7 @@ export type FieldsetValidationSurface = 'never' | 'auto' | 'always';
       ],
     },
   ],
-  imports: [NgxFormFieldError, NgxFormFieldNotification],
+  imports: [NgTemplateOutlet, NgxFormFieldError, NgxFormFieldNotification],
   styleUrl: './form-fieldset.scss',
   exportAs: 'ngxFormFieldset',
   // BEM classnames keep the legacy `ngx-signal-form-fieldset--*` prefix for
@@ -142,24 +143,7 @@ export type FieldsetValidationSurface = 'never' | 'auto' | 'always';
 
     <div class="ngx-signal-form-fieldset__surface">
       @if (isTopPlacement()) {
-        <div class="ngx-signal-form-fieldset__messages">
-          @if (usesNotificationFeedback()) {
-            <ngx-form-field-notification
-              [errors]="displayedMessagesSignal"
-              [fieldName]="fieldset.resolvedFieldsetId()"
-              [title]="notificationTitle()"
-              [listStyle]="resolvedListStyle()"
-            />
-          } @else {
-            <ngx-form-field-error
-              [errors]="displayedMessagesSignal"
-              [fieldName]="fieldset.resolvedFieldsetId()"
-              [strategy]="fieldset.resolvedStrategy()"
-              [submittedStatus]="fieldset.resolvedSubmittedStatus()"
-              [listStyle]="resolvedListStyle()"
-            />
-          }
-        </div>
+        <ng-container *ngTemplateOutlet="messages" />
       }
 
       <div class="ngx-signal-form-fieldset__content">
@@ -167,26 +151,30 @@ export type FieldsetValidationSurface = 'never' | 'auto' | 'always';
       </div>
 
       @if (!isTopPlacement()) {
-        <div class="ngx-signal-form-fieldset__messages">
-          @if (usesNotificationFeedback()) {
-            <ngx-form-field-notification
-              [errors]="displayedMessagesSignal"
-              [fieldName]="fieldset.resolvedFieldsetId()"
-              [title]="notificationTitle()"
-              [listStyle]="resolvedListStyle()"
-            />
-          } @else {
-            <ngx-form-field-error
-              [errors]="displayedMessagesSignal"
-              [fieldName]="fieldset.resolvedFieldsetId()"
-              [strategy]="fieldset.resolvedStrategy()"
-              [submittedStatus]="fieldset.resolvedSubmittedStatus()"
-              [listStyle]="resolvedListStyle()"
-            />
-          }
-        </div>
+        <ng-container *ngTemplateOutlet="messages" />
       }
     </div>
+
+    <ng-template #messages>
+      <div class="ngx-signal-form-fieldset__messages">
+        @if (usesNotificationFeedback()) {
+          <ngx-form-field-notification
+            [errors]="displayedMessagesSignal"
+            [fieldName]="fieldset.resolvedFieldsetId()"
+            [title]="notificationTitle()"
+            [listStyle]="listStyle()"
+          />
+        } @else {
+          <ngx-form-field-error
+            [errors]="displayedMessagesSignal"
+            [fieldName]="fieldset.resolvedFieldsetId()"
+            [strategy]="fieldset.resolvedStrategy()"
+            [submittedStatus]="fieldset.resolvedSubmittedStatus()"
+            [listStyle]="listStyle()"
+          />
+        }
+      </div>
+    </ng-template>
   `,
 })
 export class NgxFormFieldset {
@@ -257,11 +245,10 @@ export class NgxFormFieldset {
   /**
    * Whether validation state should tint the fieldset surface.
    *
-   * - `never`: keep the surface neutral and rely on the grouped message only
-   * - `auto` (default): same as `never`; reserved for future design-system defaults
+   * - `never` (default): keep the surface neutral and rely on the grouped message only
    * - `always`: tint every invalid/warning fieldset surface
    */
-  readonly validationSurface = input<FieldsetValidationSurface>('auto');
+  readonly validationSurface = input<FieldsetValidationSurface>('never');
 
   protected readonly isTopPlacement = computed(() => {
     return this.errorPlacement() !== 'bottom';
@@ -278,22 +265,12 @@ export class NgxFormFieldset {
     Exclude<FieldsetFeedbackAppearance, 'auto'>
   >(() => {
     const appearance = this.feedbackAppearance();
-    if (appearance === 'plain' || appearance === 'notification') {
-      return appearance;
-    }
-
-    return 'notification';
+    return appearance === 'plain' ? 'plain' : 'notification';
   });
 
   protected readonly usesNotificationFeedback = computed(() => {
     return this.resolvedFeedbackAppearance() === 'notification';
   });
-
-  protected readonly resolvedListStyle = computed<NgxFormFieldErrorListStyle>(
-    () => {
-      return this.listStyle();
-    },
-  );
 
   /**
    * Filtered errors signal for NgxFormFieldError.
@@ -311,32 +288,17 @@ export class NgxFormFieldset {
   });
 
   protected readonly showInvalidSurface = computed(() => {
-    if (!this.fieldset.shouldShowErrors()) {
-      return false;
-    }
-
-    const mode = this.validationSurface();
-    if (mode !== 'always') {
-      return false;
-    }
-
-    return true;
+    return (
+      this.validationSurface() === 'always' && this.fieldset.shouldShowErrors()
+    );
   });
 
   protected readonly showWarningSurface = computed(() => {
-    if (
-      this.fieldset.shouldShowErrors() ||
-      !this.fieldset.shouldShowWarnings()
-    ) {
-      return false;
-    }
-
-    const mode = this.validationSurface();
-    if (mode !== 'always') {
-      return false;
-    }
-
-    return true;
+    return (
+      this.validationSurface() === 'always' &&
+      !this.fieldset.shouldShowErrors() &&
+      this.fieldset.shouldShowWarnings()
+    );
   });
 
   protected readonly hostRole = computed<'group' | null>(() =>
@@ -353,11 +315,20 @@ export class NgxFormFieldset {
   });
 
   readonly describedByIds = computed(() => {
+    // The rendered notification/error component strips its `id` attribute
+    // whenever `displayedMessagesSignal` is empty, which happens when the user
+    // passes `showErrors="false"` even on an invalid fieldset. Mirror that
+    // gating here so `aria-describedby` never points to an element without a
+    // matching id in the DOM.
+    if (!this.showMessages()) {
+      return null;
+    }
+
     const fieldsetId = this.fieldset.resolvedFieldsetId();
 
     // Errors suppress warnings in the rendered notification (see
     // `filteredErrorsSignal`), so only reference the id that is actually in
-    // the DOM to avoid dangling aria-describedby targets.
+    // the DOM.
     if (this.fieldset.shouldShowErrors()) {
       return `${fieldsetId}-error`;
     }
