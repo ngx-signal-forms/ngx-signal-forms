@@ -442,35 +442,21 @@
     var(--_color-text-muted)
   );
 
-  // Legacy outline aliases (kept for backward compatibility with older demos/docs)
-  --_outline-bg: var(--ngx-form-field-outline-bg, var(--_input-bg));
-  --_outline-border: var(
-    --ngx-form-field-outline-border,
-    1px solid var(--_input-border-color)
-  );
-  --_outline-radius: var(
-    --ngx-form-field-outline-border-radius,
-    var(--_input-radius)
-  );
+  // Outline-layout pseudo-privates (derived from the core --_input-* and
+  // --_focus-* tokens above — no public outline-specific API).
+  --_outline-bg: var(--_input-bg);
+  --_outline-border: 1px solid var(--_input-border-color);
+  --_outline-radius: var(--_input-radius);
   --_outline-min-height: var(
-    --ngx-form-field-outline-min-height,
-    var(
-      --ngx-form-field-min-height,
-      calc(
-        var(--_label-outline-line-height) + var(--_label-outline-gap) +
-          var(--_input-outline-line-height) + var(--_padding-vertical) +
-          var(--_padding-vertical)
-      )
+    --ngx-form-field-min-height,
+    calc(
+      var(--_label-outline-line-height) + var(--_label-outline-gap) +
+        var(--_input-outline-line-height) + var(--_padding-vertical) +
+        var(--_padding-vertical)
     )
   );
-  --_outline-focus-color: var(
-    --ngx-form-field-outline-focus-border-color,
-    var(--_focus-color)
-  );
-  --_outline-focus-box-shadow: var(
-    --ngx-form-field-outline-focus-box-shadow,
-    var(--_focus-box-shadow)
-  );
+  --_outline-focus-color: var(--_focus-color);
+  --_outline-focus-box-shadow: var(--_focus-box-shadow);
 
   // Horizontal layout
   --_horizontal-gap: var(--ngx-form-field-horizontal-gap, 0.75rem);
@@ -909,26 +895,20 @@
 // Ensures error/warning messages align properly with form field inputs.
 // Uses CSS custom properties to avoid ::ng-deep.
 
-// Standard layout - 8px horizontal padding for breathing room
+// Standard layout - 8px horizontal padding for breathing room.
+// Override the wrapper's own fallback for the feedback-padding-horizontal
+// tier so projected error/hint/character-count children inherit the same
+// horizontal padding as the input itself.
 :host {
-  // Use feedback layer variable if available, otherwise fallback to internal token
-  --_feedback-padding-horizontal: var(
-    --ngx-signal-form-feedback-padding-horizontal,
-    var(--_field-space-md)
-  );
-  --ngx-signal-form-error-padding-horizontal: var(
-    --_feedback-padding-horizontal
-  );
+  --ngx-signal-form-feedback-padding-horizontal: var(--_field-space-md);
 }
 
-// Outlined layout - maintains same 8px padding to align with input text
+// Outlined layout - maintains same 8px padding to align with input text.
 // Outlined containers have padding: 0.25rem 0.5rem (4px vertical, 8px horizontal).
 // The 8px horizontal padding positions the input text/placeholder.
 // Errors inherit the same 8px padding to align perfectly with input text.
 :host(.ngx-signal-forms-outline) {
-  --ngx-signal-form-error-padding-horizontal: var(
-    --_feedback-padding-horizontal
-  );
+  --ngx-signal-form-feedback-padding-horizontal: var(--_field-space-md);
 }
 
 // ============================================================================

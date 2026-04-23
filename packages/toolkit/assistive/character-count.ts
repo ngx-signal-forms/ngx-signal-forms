@@ -135,16 +135,22 @@ export type NgxCharacterCountValue = CharacterCountValue;
     :host {
       display: block;
       position: relative;
-      font-size: var(--ngx-form-field-char-count-font-size, 0.75rem);
+      font-size: var(
+        --ngx-form-field-char-count-font-size,
+        var(--ngx-signal-form-feedback-font-size, 0.75rem)
+      );
       line-height: var(--ngx-form-field-char-count-line-height, 1.25);
       color: var(--ngx-form-field-char-count-color-ok, rgba(50, 65, 85, 0.75));
       transition:
         color 0.2s ease,
         font-weight 0.2s ease;
       white-space: nowrap;
-      padding-left: var(--ngx-form-field-char-count-padding-horizontal, 0);
-      padding-right: var(
-        --ngx-form-field-char-count-padding-horizontal,
+      padding-inline-start: var(
+        --ngx-form-field-char-count-padding-inline-start,
+        0
+      );
+      padding-inline-end: var(
+        --ngx-form-field-char-count-padding-inline-end,
         0.5rem
       );
     }

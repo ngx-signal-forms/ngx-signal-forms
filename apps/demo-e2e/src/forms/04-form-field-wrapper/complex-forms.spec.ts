@@ -387,17 +387,15 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
               '--ngx-signal-form-fieldset-message-inset-inline-start',
             )
             .trim(),
-          listStyleType: style
-            .getPropertyValue(
-              '--ngx-signal-form-fieldset-message-list-style-type',
-            )
+          listStyle: style
+            .getPropertyValue('--ngx-signal-form-fieldset-message-list-style')
             .trim(),
         };
       });
 
       expect(recipe.contentOffset).toBe('0');
       expect(recipe.insetInlineStart).toBe('0.875rem');
-      expect(recipe.listStyleType).toBe('disc');
+      expect(recipe.listStyle).toBe('disc inside');
 
       const [messageSlotBox, notificationCardBox] = await Promise.all([
         messageSlot.boundingBox(),

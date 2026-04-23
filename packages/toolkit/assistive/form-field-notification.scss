@@ -6,21 +6,23 @@
 ///
 /// Layering approach:
 /// 1. Design tokens (internal, --_notification-*)
-/// 2. Public API (--ngx-signal-form-notification-*)
-/// 3. Pseudo-private resolved variables (--_notification-*)
-/// 4. Implementation consumes only the resolved variables
+/// 2. Shared feedback tier (--_feedback-*, from form-field/_feedback-tokens)
+/// 3. Public API (--ngx-signal-form-notification-*)
+/// 4. Resolved pseudo-private variables (--_notification-*)
+/// 5. Implementation consumes only the resolved variables
+
+@use '../form-field/feedback-tokens' as feedback;
 
 :host {
-  // Internal design tokens
+  @include feedback.tokens;
+
+  // Internal design tokens (notification-specific)
   --_notification-space-0: 0;
   --_notification-space-2xs: 0.25rem;
   --_notification-space-sm: 0.5rem;
   --_notification-space-lg: 1rem;
-  --_notification-space-list-indent: 1.25rem;
 
-  --_notification-text-sm: 0.75rem;
   --_notification-text-base: 1rem;
-  --_notification-line-height-sm: 1rem;
   --_notification-line-height-base: 1.5rem;
   --_notification-weight-medium: 500;
 
@@ -31,8 +33,6 @@
 
   --_notification-token-current-color: currentColor;
   --_notification-token-transparent: transparent;
-  --_notification-list-style-type-default: disc;
-  --_notification-list-style-position-default: outside;
 
   --_notification-clr-danger: #db1818;
   --_notification-clr-warning: #a16207;
@@ -74,26 +74,11 @@
   );
   --_notification-font-size: var(
     --ngx-signal-form-notification-font-size,
-    var(
-      --ngx-signal-form-error-font-size,
-      var(
-        --ngx-signal-form-error-font-size-override,
-        var(--ngx-signal-form-feedback-font-size, var(--_notification-text-sm))
-      )
-    )
+    var(--_feedback-font-size)
   );
   --_notification-line-height: var(
     --ngx-signal-form-notification-line-height,
-    var(
-      --ngx-signal-form-error-line-height,
-      var(
-        --ngx-signal-form-error-line-height-override,
-        var(
-          --ngx-signal-form-feedback-line-height,
-          var(--_notification-line-height-sm)
-        )
-      )
-    )
+    var(--_feedback-line-height)
   );
   --_notification-title-color: var(
     --ngx-signal-form-notification-title-color,
@@ -129,15 +114,11 @@
   );
   --_notification-list-padding-inline-start: var(
     --ngx-signal-form-notification-list-padding-inline-start,
-    var(--_notification-space-list-indent)
+    var(--_feedback-list-indent)
   );
-  --_notification-list-style-type: var(
-    --ngx-signal-form-notification-list-style-type,
-    var(--_notification-list-style-type-default)
-  );
-  --_notification-list-style-position: var(
-    --ngx-signal-form-notification-list-style-position,
-    var(--_notification-list-style-position-default)
+  --_notification-list-style: var(
+    --ngx-signal-form-notification-list-style,
+    var(--_feedback-list-style)
   );
   --_notification-motion-duration: 180ms;
   --_notification-motion-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -157,10 +138,7 @@
   );
   --_notification-error-border-color: var(
     --ngx-signal-form-notification-error-border-color,
-    var(
-      --ngx-signal-form-notification-error-border,
-      color-mix(in srgb, var(--_notification-error-color) 50%, transparent)
-    )
+    color-mix(in srgb, var(--_notification-error-color) 50%, transparent)
   );
   --_notification-error-bg: var(
     --ngx-signal-form-notification-error-bg,
@@ -172,10 +150,7 @@
   );
   --_notification-warning-border-color: var(
     --ngx-signal-form-notification-warning-border-color,
-    var(
-      --ngx-signal-form-notification-warning-border,
-      color-mix(in srgb, var(--_notification-warning-color) 50%, transparent)
-    )
+    color-mix(in srgb, var(--_notification-warning-color) 50%, transparent)
   );
   --_notification-warning-bg: var(
     --ngx-signal-form-notification-warning-bg,
@@ -282,8 +257,7 @@
 .ngx-form-field-notification__list {
   margin: 0;
   padding-inline-start: var(--_notification-list-padding-inline-start);
-  list-style-type: var(--_notification-list-style-type);
-  list-style-position: var(--_notification-list-style-position);
+  list-style: var(--_notification-list-style);
 }
 
 @supports (interpolate-size: allow-keywords) {

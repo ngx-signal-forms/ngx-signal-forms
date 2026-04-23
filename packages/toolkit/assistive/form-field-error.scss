@@ -6,20 +6,19 @@
 ///
 /// Layering approach:
 /// 1. Design tokens (internal, --_error-*)
-/// 2. Public API (--ngx-signal-form-error-* / --ngx-signal-form-warning-*)
-/// 3. Pseudo-private resolved variables (--_error-* / --_warning-*)
-/// 4. Implementation consumes only the resolved variables
+/// 2. Shared feedback tier (--_feedback-*, from form-field/_feedback-tokens)
+/// 3. Public API (--ngx-signal-form-error-* / --ngx-signal-form-warning-*)
+/// 4. Resolved pseudo-private variables (--_error-* / --_warning-*)
+/// 5. Implementation consumes only the resolved variables
+
+@use '../form-field/feedback-tokens' as feedback;
 
 :host {
-  // Internal design tokens
-  --_error-space-0: 0;
-  --_error-space-3xs: 0.125rem;
-  --_error-space-2xs: 0.25rem;
-  --_error-space-sm: 0.5rem;
-  --_error-space-list-indent: 1.25rem;
+  @include feedback.tokens;
 
-  --_error-text-sm: 0.75rem;
-  --_error-line-height-sm: 1rem;
+  // Internal design tokens (error-specific, not covered by the feedback tier)
+  --_error-space-0: 0;
+  --_error-space-2xs: 0.25rem;
 
   // WCAG 1.4.3 (AA): #a16207 keeps warning text >= 4.5:1 on white.
   --_error-clr-danger: #db1818;
@@ -28,8 +27,6 @@
   --_error-clr-warning-dark: #fcd34d;
 
   --_error-token-transparent: transparent;
-  --_error-token-disc: disc;
-  --_error-token-outside: outside;
   --_error-border-width-default: 0;
   --_error-border-radius-default: 0;
   --_error-border-style-default: solid;
@@ -39,24 +36,20 @@
   // Resolved pseudo-private variables
   --_error-margin-top: var(
     --ngx-signal-form-error-margin-top,
-    var(--ngx-signal-form-feedback-margin-top, var(--_error-space-3xs))
+    var(--_feedback-margin-top)
   );
   --_error-spacing: var(
     --ngx-signal-form-error-message-spacing,
     var(--_error-space-2xs)
   );
   --_error-padding: var(--ngx-signal-form-error-padding, var(--_error-space-0));
-  --_error-padding-horizontal: var(
-    --ngx-signal-form-error-padding-horizontal,
-    var(--_error-space-sm)
-  );
   --_error-padding-inline-start: var(
     --ngx-signal-form-error-padding-inline-start,
-    var(--_error-padding-horizontal)
+    var(--_feedback-padding-horizontal)
   );
   --_error-padding-inline-end: var(
     --ngx-signal-form-error-padding-inline-end,
-    var(--_error-padding-horizontal)
+    var(--_feedback-padding-horizontal)
   );
   --_error-border-width: var(
     --ngx-signal-form-error-border-width,
@@ -68,17 +61,11 @@
   );
   --_error-font-size: var(
     --ngx-signal-form-error-font-size,
-    var(
-      --ngx-signal-form-error-font-size-override,
-      var(--ngx-signal-form-feedback-font-size, var(--_error-text-sm))
-    )
+    var(--_feedback-font-size)
   );
   --_error-line-height: var(
     --ngx-signal-form-error-line-height,
-    var(
-      --ngx-signal-form-error-line-height-override,
-      var(--ngx-signal-form-feedback-line-height, var(--_error-line-height-sm))
-    )
+    var(--_feedback-line-height)
   );
   --_error-animation: var(
     --ngx-signal-form-error-animation,
@@ -87,7 +74,7 @@
   --_error-color: var(--ngx-signal-form-error-color, var(--_error-clr-danger));
   --_error-bg: var(--ngx-signal-form-error-bg, var(--_error-token-transparent));
   --_error-border-color: var(
-    --ngx-signal-form-error-border,
+    --ngx-signal-form-error-border-color,
     var(--_error-token-transparent)
   );
   --_warning-color: var(
@@ -99,20 +86,16 @@
     var(--_error-token-transparent)
   );
   --_warning-border-color: var(
-    --ngx-signal-form-warning-border,
+    --ngx-signal-form-warning-border-color,
     var(--_error-token-transparent)
   );
   --_error-list-padding-inline-start: var(
     --ngx-signal-form-error-list-padding-inline-start,
-    var(--_error-space-list-indent)
+    var(--_feedback-list-indent)
   );
-  --_error-list-style-type: var(
-    --ngx-signal-form-error-list-style-type,
-    var(--_error-token-disc)
-  );
-  --_error-list-style-position: var(
-    --ngx-signal-form-error-list-style-position,
-    var(--_error-token-outside)
+  --_error-list-style: var(
+    --ngx-signal-form-error-list-style,
+    var(--_feedback-list-style)
   );
 
   display: block;
@@ -190,8 +173,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--_error-spacing);
-  list-style-type: var(--_error-list-style-type);
-  list-style-position: var(--_error-list-style-position);
+  list-style: var(--_error-list-style);
 }
 
 /* Reduced Motion Support */

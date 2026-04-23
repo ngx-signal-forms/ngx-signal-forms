@@ -531,7 +531,7 @@ form (axe, Lighthouse, screen-reader testing) before claiming conformance.
 - [Warnings support](./docs/WARNINGS_SUPPORT.md) — warning convention, error flow, message resolution
 - [CSS framework integration](./docs/CSS_FRAMEWORK_INTEGRATION.md) — Tailwind, Bootstrap, Material
 - [Migrating from `ngx-vest-forms`](./docs/MIGRATING_FROM_NGX_VEST_FORMS.md)
-- [Migrating beta → v1](./docs/MIGRATING_BETA_TO_V1.md)
+- [Migrating beta → v1](./docs/MIGRATING_BETA_TO_V1.md) · [CSS custom properties migration](./docs/MIGRATING_CSS_VARS.md)
 
 **Reference**
 

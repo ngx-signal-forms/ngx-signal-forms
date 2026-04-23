@@ -6,20 +6,24 @@
 ///
 /// Layering approach:
 /// 1. Design tokens (internal, --_fieldset-*) - Base values for colors, spacing, typography
-/// 2. Public API (--ngx-signal-form-fieldset-*) - Overridable by consumers
-/// 3. Pseudo-private (--_*) - Resolve public → fallback to tokens
-/// 4. Implementation - Uses only the resolved --_* variables
+/// 2. Shared feedback tier (--_feedback-*, from form-field/_feedback-tokens)
+/// 3. Public API (--ngx-signal-form-fieldset-*) - Overridable by consumers
+/// 4. Pseudo-private (--_fieldset-*) - Resolve public → feedback → internal defaults
+/// 5. Implementation - Uses only the resolved --_* variables
 ///
 /// This keeps the CSS API stable while avoiding repeated literal fallbacks.
 
+@use './feedback-tokens' as feedback;
+
 :host {
+  @include feedback.tokens;
+
   // Internal design tokens
   --_fieldset-space-0: 0;
   --_fieldset-space-2xs: 0.25rem;
   --_fieldset-space-xs: 0.375rem;
   --_fieldset-space-sm: 0.5rem;
   --_fieldset-space-lg: 1rem;
-  --_fieldset-space-list-indent: 1.25rem;
 
   --_fieldset-text-body: 0.875rem;
   --_fieldset-line-height-body: 1.25rem;
@@ -84,46 +88,35 @@
   );
   --_fieldset-message-padding: var(
     --ngx-signal-form-fieldset-message-padding,
-    var(--ngx-signal-form-error-padding, var(--_fieldset-space-0))
-  );
-  --_fieldset-message-padding-horizontal: var(
-    --ngx-signal-form-fieldset-message-padding-horizontal,
-    var(--ngx-signal-form-error-padding-horizontal, var(--_fieldset-space-sm))
+    var(--_fieldset-space-0)
   );
   --_fieldset-message-padding-inline-start: var(
     --ngx-signal-form-fieldset-message-padding-inline-start,
-    var(--_fieldset-message-padding-horizontal)
+    var(--_feedback-padding-horizontal)
   );
   --_fieldset-message-padding-inline-end: var(
     --ngx-signal-form-fieldset-message-padding-inline-end,
-    var(--_fieldset-message-padding-horizontal)
+    var(--_feedback-padding-horizontal)
   );
   --_fieldset-message-border-width: var(
     --ngx-signal-form-fieldset-message-border-width,
-    var(--ngx-signal-form-error-border-width, var(--_fieldset-space-0))
+    var(--_fieldset-space-0)
   );
   --_fieldset-message-border-radius: var(
     --ngx-signal-form-fieldset-message-border-radius,
-    var(--ngx-signal-form-error-border-radius, var(--_fieldset-space-0))
+    var(--_fieldset-space-0)
   );
   --_fieldset-message-spacing: var(
     --ngx-signal-form-fieldset-message-spacing,
-    var(--ngx-signal-form-error-message-spacing, var(--_fieldset-space-2xs))
+    var(--_fieldset-space-2xs)
   );
-  --_fieldset-message-list-style-type: var(
-    --ngx-signal-form-fieldset-message-list-style-type,
-    var(--ngx-signal-form-error-list-style-type, disc)
-  );
-  --_fieldset-message-list-style-position: var(
-    --ngx-signal-form-fieldset-message-list-style-position,
-    var(--ngx-signal-form-error-list-style-position, outside)
+  --_fieldset-message-list-style: var(
+    --ngx-signal-form-fieldset-message-list-style,
+    var(--_feedback-list-style)
   );
   --_fieldset-message-list-padding-inline-start: var(
     --ngx-signal-form-fieldset-message-list-padding-inline-start,
-    var(
-      --ngx-signal-form-error-list-padding-inline-start,
-      var(--_fieldset-space-list-indent)
-    )
+    var(--_feedback-list-indent)
   );
   --_fieldset-notification-inset-inline-start: var(
     --ngx-signal-form-fieldset-notification-inset-inline-start,
@@ -133,24 +126,17 @@
     --ngx-signal-form-fieldset-notification-inset-inline-end,
     var(--_fieldset-space-0)
   );
-  --_fieldset-notification-list-style-type: var(
-    --ngx-signal-form-fieldset-notification-list-style-type,
-    disc
-  );
-  --_fieldset-notification-list-style-position: var(
-    --ngx-signal-form-fieldset-notification-list-style-position,
-    outside
+  --_fieldset-notification-list-style: var(
+    --ngx-signal-form-fieldset-notification-list-style,
+    var(--_feedback-list-style)
   );
   --_fieldset-notification-list-padding-inline-start: var(
     --ngx-signal-form-fieldset-notification-list-padding-inline-start,
-    var(--_fieldset-space-list-indent)
+    var(--_feedback-list-indent)
   );
   --_fieldset-message-animation: var(
     --ngx-signal-form-fieldset-message-animation,
-    var(
-      --ngx-signal-form-error-animation,
-      var(--_fieldset-message-animation-default)
-    )
+    var(--_fieldset-message-animation-default)
   );
   --_fieldset-transition-duration: 180ms;
   --_fieldset-transition-easing: ease-in-out;
@@ -187,7 +173,7 @@
   );
   --_fieldset-border-color: var(
     --ngx-signal-form-fieldset-border-color,
-    var(--ngx-form-field-color-border, var(--_fieldset-clr-border))
+    var(--_fieldset-clr-border)
   );
   --_fieldset-bg: var(--ngx-signal-form-fieldset-bg, transparent);
   --_fieldset-surface-base-bg: var(
@@ -217,14 +203,11 @@
   );
   --_fieldset-color: var(
     --ngx-signal-form-fieldset-color,
-    var(--ngx-form-field-color-text, var(--_fieldset-clr-text))
+    var(--_fieldset-clr-text)
   );
   --_fieldset-muted-color: var(
     --ngx-signal-form-fieldset-muted-color,
-    var(
-      --ngx-form-field-color-text-secondary,
-      var(--_fieldset-clr-text-secondary)
-    )
+    var(--_fieldset-clr-text-secondary)
   );
   --_fieldset-legend-size: var(
     --ngx-signal-form-fieldset-legend-font-size,
@@ -257,11 +240,11 @@
   );
   --_fieldset-invalid-border: var(
     --ngx-signal-form-fieldset-invalid-border-color,
-    var(--ngx-form-field-invalid-color, var(--_fieldset-clr-danger))
+    var(--_fieldset-clr-danger)
   );
   --_fieldset-warning-border: var(
     --ngx-signal-form-fieldset-warning-border-color,
-    var(--ngx-form-field-warning-color, var(--_fieldset-clr-warning))
+    var(--_fieldset-clr-warning)
   );
   --_fieldset-invalid-bg: var(
     --ngx-signal-form-fieldset-invalid-bg,
@@ -304,8 +287,8 @@
     var(--ngx-signal-form-error-bg, transparent)
   );
   --_fieldset-message-error-border: var(
-    --ngx-signal-form-fieldset-error-border,
-    var(--ngx-signal-form-error-border, transparent)
+    --ngx-signal-form-fieldset-error-border-color,
+    var(--ngx-signal-form-error-border-color, transparent)
   );
   --_fieldset-message-warning-color: var(
     --ngx-signal-form-fieldset-warning-color,
@@ -316,8 +299,8 @@
     var(--ngx-signal-form-warning-bg, transparent)
   );
   --_fieldset-message-warning-border: var(
-    --ngx-signal-form-fieldset-warning-border,
-    var(--ngx-signal-form-warning-border, transparent)
+    --ngx-signal-form-fieldset-warning-border-color,
+    var(--ngx-signal-form-warning-border-color, transparent)
   );
   --_fieldset-notification-error-bg: var(
     --ngx-signal-form-fieldset-notification-error-bg,
@@ -327,9 +310,9 @@
     )
   );
   --_fieldset-notification-error-border: var(
-    --ngx-signal-form-fieldset-notification-error-border,
+    --ngx-signal-form-fieldset-notification-error-border-color,
     var(
-      --ngx-signal-form-notification-error-border,
+      --ngx-signal-form-notification-error-border-color,
       var(--_fieldset-border-danger-soft)
     )
   );
@@ -345,9 +328,9 @@
     )
   );
   --_fieldset-notification-warning-border: var(
-    --ngx-signal-form-fieldset-notification-warning-border,
+    --ngx-signal-form-fieldset-notification-warning-border-color,
     var(
-      --ngx-signal-form-notification-warning-border,
+      --ngx-signal-form-notification-warning-border-color,
       var(--_fieldset-border-warning-soft)
     )
   );
@@ -528,6 +511,7 @@
   overflow: clip;
   transition: var(--_fieldset-transition-spacing);
 
+  // Theme the nested error component with the fieldset's message tier.
   --ngx-signal-form-error-padding: var(--_fieldset-message-padding);
   --ngx-signal-form-error-padding-inline-start: var(
     --_fieldset-message-padding-inline-start
@@ -538,33 +522,29 @@
   --ngx-signal-form-error-border-width: var(--_fieldset-message-border-width);
   --ngx-signal-form-error-border-radius: var(--_fieldset-message-border-radius);
   --ngx-signal-form-error-message-spacing: var(--_fieldset-message-spacing);
-  --ngx-signal-form-error-list-style-type: var(
-    --_fieldset-message-list-style-type
-  );
-  --ngx-signal-form-error-list-style-position: var(
-    --_fieldset-message-list-style-position
-  );
+  --ngx-signal-form-error-list-style: var(--_fieldset-message-list-style);
   --ngx-signal-form-error-list-padding-inline-start: var(
     --_fieldset-message-list-padding-inline-start
   );
   --ngx-signal-form-error-animation: var(--_fieldset-message-animation);
   --ngx-signal-form-error-color: var(--_fieldset-message-error-color);
   --ngx-signal-form-error-bg: var(--_fieldset-message-error-bg);
-  --ngx-signal-form-error-border: var(--_fieldset-message-error-border);
+  --ngx-signal-form-error-border-color: var(--_fieldset-message-error-border);
   --ngx-signal-form-warning-color: var(--_fieldset-message-warning-color);
   --ngx-signal-form-warning-bg: var(--_fieldset-message-warning-bg);
-  --ngx-signal-form-warning-border: var(--_fieldset-message-warning-border);
+  --ngx-signal-form-warning-border-color: var(
+    --_fieldset-message-warning-border
+  );
+
+  // Theme the nested notification component with the fieldset's notification tier.
   --ngx-signal-form-notification-error-color: var(
     --_fieldset-notification-error-color
   );
   --ngx-signal-form-notification-message-spacing: var(
     --_fieldset-message-spacing
   );
-  --ngx-signal-form-notification-list-style-type: var(
-    --_fieldset-notification-list-style-type
-  );
-  --ngx-signal-form-notification-list-style-position: var(
-    --_fieldset-notification-list-style-position
+  --ngx-signal-form-notification-list-style: var(
+    --_fieldset-notification-list-style
   );
   --ngx-signal-form-notification-list-padding-inline-start: var(
     --_fieldset-notification-list-padding-inline-start
@@ -572,7 +552,7 @@
   --ngx-signal-form-notification-error-bg: var(
     --_fieldset-notification-error-bg
   );
-  --ngx-signal-form-notification-error-border: var(
+  --ngx-signal-form-notification-error-border-color: var(
     --_fieldset-notification-error-border
   );
   --ngx-signal-form-notification-warning-color: var(
@@ -581,7 +561,7 @@
   --ngx-signal-form-notification-warning-bg: var(
     --_fieldset-notification-warning-bg
   );
-  --ngx-signal-form-notification-warning-border: var(
+  --ngx-signal-form-notification-warning-border-color: var(
     --_fieldset-notification-warning-border
   );
 }

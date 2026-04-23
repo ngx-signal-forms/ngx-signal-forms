@@ -89,8 +89,7 @@ function createInitialComplexFormModel(): ComplexFormModel {
       --ngx-signal-form-fieldset-message-inset-inline-start: 0.875rem;
       --ngx-signal-form-fieldset-message-padding-inline-start: 0;
       --ngx-signal-form-fieldset-message-padding-inline-end: 0;
-      --ngx-signal-form-fieldset-message-list-style-type: disc;
-      --ngx-signal-form-fieldset-message-list-style-position: inside;
+      --ngx-signal-form-fieldset-message-list-style: disc inside;
       --ngx-signal-form-fieldset-message-list-padding-inline-start: 0;
     }
 

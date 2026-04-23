@@ -356,9 +356,7 @@
 :host(.ngx-signal-forms-plain) {
   // Remove horizontal padding in plain appearances
   // so they align perfectly with the flush-left content.
-  --ngx-form-field-hint-padding-horizontal: 0;
-  --ngx-signal-form-error-padding-horizontal: 0;
-  --ngx-form-field-hint-font-size: var(--_field-text-caption);
+  --ngx-signal-form-feedback-padding-horizontal: 0;
   --ngx-signal-form-feedback-font-size: var(--_field-text-caption);
   --ngx-form-field-hint-color: var(--_color-text-secondary);
 
@@ -381,8 +379,7 @@
 :host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--selection-group),
 :host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--padded-control),
 :host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--switch) {
-  --ngx-form-field-hint-padding-horizontal: var(--_padding-horizontal);
-  --ngx-signal-form-error-padding-horizontal: var(--_padding-horizontal);
+  --ngx-signal-form-feedback-padding-horizontal: var(--_padding-horizontal);
 }
 
 :host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--selection-group)

@@ -72,16 +72,22 @@ import {
   styles: `
     :host {
       display: block;
-      font-size: var(--ngx-form-field-hint-font-size, 0.75rem);
-      line-height: var(--ngx-form-field-hint-line-height, 1rem);
+      font-size: var(
+        --ngx-form-field-hint-font-size,
+        var(--ngx-signal-form-feedback-font-size, 0.75rem)
+      );
+      line-height: var(
+        --ngx-form-field-hint-line-height,
+        var(--ngx-signal-form-feedback-line-height, 1rem)
+      );
       color: var(--ngx-form-field-hint-color, rgba(50, 65, 85, 0.75));
       padding-inline-start: var(
         --ngx-form-field-hint-padding-inline-start,
-        var(--ngx-form-field-hint-padding-horizontal, 0.5rem)
+        var(--ngx-signal-form-feedback-padding-horizontal, 0.5rem)
       );
       padding-inline-end: var(
         --ngx-form-field-hint-padding-inline-end,
-        var(--ngx-form-field-hint-padding-horizontal, 0.5rem)
+        var(--ngx-signal-form-feedback-padding-horizontal, 0.5rem)
       );
       text-align: var(--ngx-form-field-hint-align, right);
     }
