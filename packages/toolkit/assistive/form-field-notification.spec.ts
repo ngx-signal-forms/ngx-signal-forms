@@ -83,7 +83,10 @@ describe('NgxFormFieldNotification', () => {
     expect(container.querySelector('#mixed-group-warning')).toBeNull();
   });
 
-  it('honors an explicit error tone even when every message is a warning', async () => {
+  it('downgrades an explicit error tone to warning when every message is a warning', async () => {
+    // Raising `role='alert'` over non-urgent warning text announces with
+    // greater urgency than the content warrants. Content wins over explicit
+    // tone only in this direction — see resolvedTone docs on the component.
     const warnings = signal([{ kind: 'warn:soft', message: 'Soft warning' }]);
 
     await render(
@@ -98,8 +101,8 @@ describe('NgxFormFieldNotification', () => {
       },
     );
 
-    expect(screen.getByRole('alert')).toBeTruthy();
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.getByRole('status')).toBeTruthy();
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 
   it('honors an explicit warning tone even when every message is blocking', async () => {
@@ -147,11 +150,11 @@ describe('NgxFormFieldNotification', () => {
     expect(container.querySelector('#switch-tone-error')).toBeNull();
   });
 
-  it('accepts a static readonly array of errors', async () => {
-    const staticErrors = [
+  it('accepts a signal wrapping a static readonly array of errors', async () => {
+    const staticErrors = signal<readonly { kind: string; message: string }[]>([
       { kind: 'required', message: 'Required' },
       { kind: 'min', message: 'Too short' },
-    ] as const;
+    ]);
 
     const { container } = await render(
       `<ngx-form-field-notification

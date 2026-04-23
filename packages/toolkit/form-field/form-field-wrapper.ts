@@ -55,7 +55,12 @@ import {
   type FormFieldControlKind,
 } from './form-field.utils';
 
-export type FormFieldErrorPlacement = 'top' | 'bottom';
+/**
+ * Placement of the validation summary relative to the control or fieldset
+ * content. Shared by both `NgxFormFieldWrapper` and `NgxFormFieldset` so a
+ * single value binds cleanly across both APIs.
+ */
+export type NgxFormFieldErrorPlacement = 'top' | 'bottom';
 
 /**
  * Form field wrapper component with automatic error/warning display.
@@ -371,7 +376,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * - `bottom` (default): render messages in the assistive row beneath the field
    * - `top`: render messages between the label and the field control
    */
-  readonly errorPlacement = input<FormFieldErrorPlacement>('bottom');
+  readonly errorPlacement = input<NgxFormFieldErrorPlacement>('bottom');
 
   /**
    * Form field appearance variant.
@@ -998,13 +1003,18 @@ export class NgxFormFieldWrapper<TValue = unknown> {
         if (label instanceof HTMLElement && isSelectionCluster) {
           const existingLabelId = label.id.trim();
           const resolvedFieldName = this.resolvedFieldName();
-          const nextLabelId =
-            existingLabelId ||
-            (resolvedFieldName === null
-              ? 'selection-group-label'
-              : `${resolvedFieldName}-label`);
+          // Two unnamed selection clusters on one page would otherwise
+          // collide on the same fallback id and misroute `aria-labelledby`
+          // to the wrong legend. Skip wiring instead — `resolvedFieldName`
+          // already emits a one-shot dev error pointing authors at the
+          // missing `fieldName` input.
+          const nextLabelId = existingLabelId
+            ? existingLabelId
+            : resolvedFieldName === null
+              ? null
+              : `${resolvedFieldName}-label`;
 
-          if (existingLabelId.length === 0) {
+          if (nextLabelId !== null && existingLabelId.length === 0) {
             label.id = nextLabelId;
           }
 

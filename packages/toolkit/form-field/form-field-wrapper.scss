@@ -942,11 +942,8 @@
   // consumer's explicit --ngx-form-field-min-height override is still
   // honored when no label is projected.
   --_outline-min-height: var(
-    --ngx-form-field-outline-min-height,
-    var(
-      --ngx-form-field-min-height,
-      calc(var(--_input-outline-line-height) + var(--_padding-vertical) * 2)
-    )
+    --ngx-form-field-min-height,
+    calc(var(--_input-outline-line-height) + var(--_padding-vertical) * 2)
   );
 
   .ngx-signal-form-field-wrapper__label {

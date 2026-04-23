@@ -149,9 +149,10 @@ them, switch to the underlying core token:
 ## 4. Sanity-check grep
 
 ```bash
-# Find every old name that was removed or renamed:
-rg --type css --type scss --type ts --type html -- \
-  '--ngx-signal-form-(error|warning|fieldset-(error|warning)|notification-(error|warning))-border:|-list-style-(type|position)|-padding-horizontal|font-size-override|line-height-override|--ngx-form-field-outline-'
+# Find every old name that was removed or renamed. Ripgrep's built-in `css`
+# type already covers `.scss`; globs pick up the rest.
+rg --type css --type ts --type html -g '*.scss' -- \
+  '--ngx-signal-form-(error|warning|fieldset-(error|warning)|notification-(error|warning))-border:|-list-style-(type|position)|--ngx-signal-form-(error|fieldset-message)-padding-horizontal|--ngx-form-field-(hint|char-count)-padding-horizontal|font-size-override|line-height-override|--ngx-form-field-outline-(bg|border|border-radius|min-height|focus-border-color|focus-box-shadow)'
 ```
 
 Any hits in consumer code need the corresponding rename above.

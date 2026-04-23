@@ -15,7 +15,15 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { NGX_ERROR_MESSAGES } from '@ngx-signal-forms/toolkit/core';
 
-export type NgxFormFieldNotificationListStyle = 'plain' | 'bullets';
+import type { NgxFormFieldListStyle } from './form-field-error';
+
+/**
+ * @deprecated Use {@link NgxFormFieldListStyle} — the same union is now
+ * exported under a shared name so callers can bind list-style values across
+ * error, notification, and fieldset components without duplicate imports.
+ */
+// oxlint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- alias kept as a deprecated named export for migration.
+export type NgxFormFieldNotificationListStyle = NgxFormFieldListStyle;
 export type NgxFormFieldNotificationTone = 'auto' | 'error' | 'warning';
 
 /**
@@ -87,12 +95,13 @@ export class NgxFormFieldNotification {
   /**
    * Grouped validation messages to present.
    *
-   * Accepts either a static array or a signal that resolves to an array so the
-   * component composes naturally with `computed()` fieldset aggregations.
+   * Accepts a signal so the component composes naturally with `computed()`
+   * fieldset aggregations. Callers holding a static array should wrap it in
+   * `signal([…])` or `computed(() => […])` — keeping a single signal-based
+   * shape keeps the reactive graph consistent with the rest of the toolkit
+   * (notably `NgxFormFieldError.errors`).
    */
-  readonly errors = input<
-    readonly ValidationError[] | Signal<readonly ValidationError[]> | undefined
-  >();
+  readonly errors = input<Signal<readonly ValidationError[]>>();
 
   /**
    * Optional field/group identifier used to produce deterministic ids for
@@ -108,7 +117,7 @@ export class NgxFormFieldNotification {
   /**
    * Present grouped messages as a bullet list or as stacked paragraphs.
    */
-  readonly listStyle = input<NgxFormFieldNotificationListStyle>('bullets');
+  readonly listStyle = input<NgxFormFieldListStyle>('bullets');
 
   /**
    * Visual and ARIA tone for the notification.
@@ -116,6 +125,12 @@ export class NgxFormFieldNotification {
    * `auto` inspects the provided errors and treats an all-warning list as a
    * warning notification. Mixed lists resolve to error, which mirrors the
    * toolkit rule that blocking errors win over warnings.
+   *
+   * Explicit `tone='error'` is ignored when every provided message is a
+   * warning — overriding content-driven semantics would raise `role='alert'`
+   * over non-urgent warning text, which screen readers announce with greater
+   * urgency than the content warrants. An explicit `tone='warning'` is always
+   * honored.
    */
   readonly tone = input<NgxFormFieldNotificationTone>('auto');
 
@@ -123,14 +138,9 @@ export class NgxFormFieldNotification {
     return this.listStyle() === 'bullets';
   });
 
-  readonly #resolvedErrors = computed(() => {
+  readonly #resolvedErrors = computed<readonly ValidationError[]>(() => {
     const provided = this.errors();
-
-    if (provided === undefined) {
-      return [] as readonly ValidationError[];
-    }
-
-    return typeof provided === 'function' ? provided() : provided;
+    return provided === undefined ? [] : provided();
   });
 
   protected readonly hasMessages = computed(() => {
@@ -139,13 +149,22 @@ export class NgxFormFieldNotification {
 
   protected readonly resolvedTone = computed<'error' | 'warning'>(() => {
     const explicit = this.tone();
-    if (explicit === 'error' || explicit === 'warning') {
-      return explicit;
+    const messages = this.#resolvedErrors();
+    const allWarnings = messages.length > 0 && messages.every(isWarningError);
+
+    if (explicit === 'warning') {
+      return 'warning';
     }
 
-    const messages = this.#resolvedErrors();
-    if (messages.length > 0 && messages.every(isWarningError)) {
+    // An explicit `tone='error'` on an all-warning message list would flip
+    // the live region to `role='alert'` over non-urgent warning text. Treat
+    // content as the source of truth for semantics in that case.
+    if (allWarnings) {
       return 'warning';
+    }
+
+    if (explicit === 'error') {
+      return 'error';
     }
 
     return 'error';

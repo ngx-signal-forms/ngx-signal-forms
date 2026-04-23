@@ -25,7 +25,19 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { NGX_ERROR_MESSAGES } from '@ngx-signal-forms/toolkit/core';
 
-export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
+/**
+ * Shared list-style discriminator for every toolkit feedback surface
+ * (`NgxFormFieldError`, `NgxFormFieldNotification`, and grouped fieldset
+ * summaries). Binds cleanly across components without a cast.
+ */
+export type NgxFormFieldListStyle = 'plain' | 'bullets';
+
+/**
+ * @deprecated Use {@link NgxFormFieldListStyle} — the same union is now
+ * exported under a shared name so callers can bind list-style values across
+ * error, notification, and fieldset components without duplicate imports.
+ */
+export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
 
 /**
  * Reusable error and warning display component with WCAG 2.2 compliance.
@@ -345,7 +357,7 @@ export class NgxFormFieldError {
    * - `plain` (default): stacked paragraph messages for inline field feedback
    * - `bullets`: unordered list for grouped summaries such as fieldsets
    */
-  readonly listStyle = input<NgxFormFieldErrorListStyle>('plain');
+  readonly listStyle = input<NgxFormFieldListStyle>('plain');
 
   /**
    * Form submission status (optional).

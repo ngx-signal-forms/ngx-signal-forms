@@ -11,7 +11,7 @@ import type {
   FormFieldAppearance,
   FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
-import type { FieldsetErrorPlacement } from '@ngx-signal-forms/toolkit/form-field';
+import type { NgxFormFieldErrorPlacement } from '@ngx-signal-forms/toolkit/form-field';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
   AppearanceToggleComponent,
@@ -34,16 +34,18 @@ import {
 import { COMPLEX_FORMS_CONTENT } from './complex-forms.content';
 import { ComplexFormsComponent } from './complex-forms.form';
 
-const FIELDSET_ERROR_PLACEMENT_OPTIONS: FieldsetErrorPlacement[] = [
+const FIELDSET_ERROR_PLACEMENT_OPTIONS: NgxFormFieldErrorPlacement[] = [
   'top',
   'bottom',
 ];
 
-const FIELDSET_ERROR_PLACEMENT_LABELS: Record<FieldsetErrorPlacement, string> =
-  {
-    top: 'Top',
-    bottom: 'Bottom',
-  };
+const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
+  NgxFormFieldErrorPlacement,
+  string
+> = {
+  top: 'Top',
+  bottom: 'Bottom',
+};
 
 /**
  * Complex Forms Page
@@ -201,7 +203,7 @@ export class ComplexFormsPage {
   protected readonly fieldsetErrorPlacementOptions =
     FIELDSET_ERROR_PLACEMENT_OPTIONS;
   protected readonly selectedFieldsetErrorPlacement =
-    signal<FieldsetErrorPlacement>('bottom');
+    signal<NgxFormFieldErrorPlacement>('bottom');
   protected readonly selectedOrientation =
     signal<FormFieldOrientation>('vertical');
   protected readonly currentControlChips = computed(() => [

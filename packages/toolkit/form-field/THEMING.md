@@ -290,12 +290,22 @@ fallbacks throughout the stylesheet.
 - `--ngx-signal-form-fieldset-message-list-style` — default `var(--...feedback-list-style...)`; grouped summary `list-style` shorthand (type + position)
 - `--ngx-signal-form-fieldset-message-list-padding-inline-start` — default `var(--...feedback-list-indent...)`; grouped summary list indent
 - `--ngx-signal-form-fieldset-message-animation` — default `ngxStatusSlideIn 300ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards`; grouped summary entry animation
-- `--ngx-signal-form-fieldset-error-color` — default `var(--ngx-signal-form-error-color)`; grouped error text color
-- `--ngx-signal-form-fieldset-error-bg` — default `var(--ngx-signal-form-error-bg)`; grouped error background
-- `--ngx-signal-form-fieldset-error-border-color` — default `var(--ngx-signal-form-error-border-color)`; grouped error border color
-- `--ngx-signal-form-fieldset-warning-color` — default `var(--ngx-signal-form-warning-color)`; grouped warning text color
-- `--ngx-signal-form-fieldset-warning-bg` — default `var(--ngx-signal-form-warning-bg)`; grouped warning background
-- `--ngx-signal-form-fieldset-warning-border-color` — default `var(--ngx-signal-form-warning-border-color)`; grouped warning border color
+- `--ngx-signal-form-fieldset-error-color` — default cascades through `--ngx-signal-form-error-color` before falling back to the internal danger tone; grouped error text color
+- `--ngx-signal-form-fieldset-error-bg` — default cascades through `--ngx-signal-form-error-bg` before falling back to `transparent`; grouped error background
+- `--ngx-signal-form-fieldset-error-border-color` — default cascades through `--ngx-signal-form-error-border-color` before falling back to `transparent`; grouped error border color
+- `--ngx-signal-form-fieldset-warning-color` — default cascades through `--ngx-signal-form-warning-color` before falling back to the internal warning tone; grouped warning text color
+- `--ngx-signal-form-fieldset-warning-bg` — when set, overrides both the host warning surface background and the grouped warning message background; otherwise each layer falls back to its own internal default
+- `--ngx-signal-form-fieldset-warning-border-color` — default cascades through `--ngx-signal-form-warning-border-color` before falling back to `transparent`; grouped warning border color
+- `--ngx-signal-form-fieldset-border-color` — default internal border tone; fieldset host border color
+- `--ngx-signal-form-fieldset-border-width` — default internal border width; fieldset host border width
+- `--ngx-signal-form-fieldset-color` — default internal text tone; primary fieldset text color
+- `--ngx-signal-form-fieldset-muted-color` — default internal muted text tone; secondary fieldset text color
+- `--ngx-signal-form-fieldset-legend-padding` — default internal spacing pair; padding applied to the projected `<legend>`
+- `--ngx-signal-form-fieldset-invalid-bg` — default `var(--_fieldset-notification-error-bg)`; error-tinted fill behind grouped content (pairs with `-invalid-surface-bg` when the invalid surface should differ)
+- `--ngx-signal-form-fieldset-message-margin-top` — default `var(--_fieldset-gap)`; top margin for the grouped message container
+- `--ngx-signal-form-fieldset-message-margin-bottom` — default `var(--_fieldset-gap)`; bottom margin for the grouped message container
+- `--ngx-signal-form-fieldset-content-offset` — default `0`; horizontal offset applied to the surface/content area relative to the fieldset edge
+- `--ngx-signal-form-fieldset-notification-list-padding-inline-start` — default `var(--_feedback-list-indent)`; notification card list indent
 - `--ngx-signal-form-fieldset-notification-error-bg` — grouped notification card background for errors
 - `--ngx-signal-form-fieldset-notification-error-border-color` — grouped notification card border color for errors
 - `--ngx-signal-form-fieldset-notification-error-color` — grouped notification card text color for errors

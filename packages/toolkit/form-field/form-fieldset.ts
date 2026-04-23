@@ -8,25 +8,27 @@ import {
   ElementRef,
   inject,
   input,
+  isDevMode,
   signal,
 } from '@angular/core';
 import {
   NgxFormFieldError,
   NgxFormFieldNotification,
-  type NgxFormFieldErrorListStyle,
+  type NgxFormFieldListStyle,
 } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxHeadlessFieldset } from '@ngx-signal-forms/toolkit/headless';
 
-export type FieldsetErrorPlacement = 'top' | 'bottom';
-export type FieldsetFeedbackAppearance = 'auto' | 'plain' | 'notification';
-export type FieldsetSurfaceTone =
+import type { NgxFormFieldErrorPlacement } from './form-field-wrapper';
+
+export type NgxFieldsetFeedbackAppearance = 'auto' | 'plain' | 'notification';
+export type NgxFieldsetSurfaceTone =
   | 'default'
   | 'neutral'
   | 'info'
   | 'success'
   | 'warning'
   | 'danger';
-export type FieldsetValidationSurface = 'never' | 'always';
+export type NgxFieldsetValidationSurface = 'never' | 'always';
 
 /**
  * Form fieldset component for grouping related form fields with aggregated error/warning display.
@@ -134,8 +136,8 @@ export type FieldsetValidationSurface = 'never' | 'always';
     '[attr.aria-describedby]': 'describedByIds()',
     '[attr.data-error-placement]': 'errorPlacement()',
     '[attr.data-feedback-appearance]': 'resolvedFeedbackAppearance()',
-    '[attr.data-surface-tone]': 'surfaceTone()',
-    '[attr.data-validation-surface]': 'validationSurface()',
+    '[attr.data-surface-tone]': 'resolvedSurfaceTone()',
+    '[attr.data-validation-surface]': 'resolvedValidationSurface()',
     '[attr.aria-busy]': 'fieldset.isPending() ? "true" : null',
   },
   template: `
@@ -216,7 +218,7 @@ export class NgxFormFieldset {
    * - `top`: display the summary directly below the legend/description
    * - `bottom` (default): display the summary after the projected field content
    */
-  readonly errorPlacement = input<FieldsetErrorPlacement>('bottom');
+  readonly errorPlacement = input<NgxFormFieldErrorPlacement>('bottom');
 
   /**
    * Presentation style for grouped feedback.
@@ -225,7 +227,7 @@ export class NgxFormFieldset {
    * - `plain`: always use the compact `ngx-form-field-error` presentation
    * - `notification`: always use the surfaced notification card
    */
-  readonly feedbackAppearance = input<FieldsetFeedbackAppearance>('auto');
+  readonly feedbackAppearance = input<NgxFieldsetFeedbackAppearance>('auto');
 
   /**
    * Optional title rendered inside the notification card.
@@ -235,12 +237,12 @@ export class NgxFormFieldset {
   /**
    * Visual layout for grouped messages.
    */
-  readonly listStyle = input<NgxFormFieldErrorListStyle>('bullets');
+  readonly listStyle = input<NgxFormFieldListStyle>('bullets');
 
   /**
    * Base surface tint for the fieldset content area.
    */
-  readonly surfaceTone = input<FieldsetSurfaceTone>('default');
+  readonly surfaceTone = input<NgxFieldsetSurfaceTone>('default');
 
   /**
    * Whether validation state should tint the fieldset surface.
@@ -248,7 +250,7 @@ export class NgxFormFieldset {
    * - `never` (default): keep the surface neutral and rely on the grouped message only
    * - `always`: tint every invalid/warning fieldset surface
    */
-  readonly validationSurface = input<FieldsetValidationSurface>('never');
+  readonly validationSurface = input<NgxFieldsetValidationSurface>('never');
 
   protected readonly isTopPlacement = computed(() => {
     return this.errorPlacement() !== 'bottom';
@@ -261,11 +263,46 @@ export class NgxFormFieldset {
     );
   });
 
+  #warnedInvalidFeedbackAppearance = false;
+  #warnedInvalidSurfaceTone = false;
+  #warnedInvalidValidationSurface = false;
+  #warnedTitleIgnoredOnPlain = false;
+
   protected readonly resolvedFeedbackAppearance = computed<
-    Exclude<FieldsetFeedbackAppearance, 'auto'>
+    Exclude<NgxFieldsetFeedbackAppearance, 'auto'>
   >(() => {
     const appearance = this.feedbackAppearance();
-    return appearance === 'plain' ? 'plain' : 'notification';
+
+    if (
+      appearance === 'auto' ||
+      appearance === 'plain' ||
+      appearance === 'notification'
+    ) {
+      if (
+        appearance === 'plain' &&
+        !this.#warnedTitleIgnoredOnPlain &&
+        this.notificationTitle() &&
+        isDevMode()
+      ) {
+        this.#warnedTitleIgnoredOnPlain = true;
+        // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+        console.warn(
+          `[ngx-signal-forms] NgxFormFieldset: notificationTitle is ignored when feedbackAppearance="plain"; ` +
+            `the title only renders inside the notification card. Remove the title input or switch to feedbackAppearance="notification".`,
+        );
+      }
+      return appearance === 'plain' ? 'plain' : 'notification';
+    }
+
+    if (isDevMode() && !this.#warnedInvalidFeedbackAppearance) {
+      this.#warnedInvalidFeedbackAppearance = true;
+      // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+      console.error(
+        `[ngx-signal-forms] NgxFormFieldset: unknown feedbackAppearance "${String(appearance)}". ` +
+          `Expected 'auto' | 'plain' | 'notification'. Falling back to 'notification'.`,
+      );
+    }
+    return 'notification';
   });
 
   protected readonly usesNotificationFeedback = computed(() => {
@@ -287,15 +324,58 @@ export class NgxFormFieldset {
     return this.showMessages() ? this.filteredErrorsSignal() : [];
   });
 
+  protected readonly resolvedValidationSurface =
+    computed<NgxFieldsetValidationSurface>(() => {
+      const value = this.validationSurface();
+      if (value === 'never' || value === 'always') {
+        return value;
+      }
+      if (isDevMode() && !this.#warnedInvalidValidationSurface) {
+        this.#warnedInvalidValidationSurface = true;
+        // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+        console.error(
+          `[ngx-signal-forms] NgxFormFieldset: unknown validationSurface "${String(value)}". ` +
+            `Expected 'never' | 'always'. Falling back to 'never'.`,
+        );
+      }
+      return 'never';
+    });
+
+  protected readonly resolvedSurfaceTone = computed<NgxFieldsetSurfaceTone>(
+    () => {
+      const value = this.surfaceTone();
+      if (
+        value === 'default' ||
+        value === 'neutral' ||
+        value === 'info' ||
+        value === 'success' ||
+        value === 'warning' ||
+        value === 'danger'
+      ) {
+        return value;
+      }
+      if (isDevMode() && !this.#warnedInvalidSurfaceTone) {
+        this.#warnedInvalidSurfaceTone = true;
+        // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+        console.error(
+          `[ngx-signal-forms] NgxFormFieldset: unknown surfaceTone "${String(value)}". ` +
+            `Expected 'default' | 'neutral' | 'info' | 'success' | 'warning' | 'danger'. Falling back to 'default'.`,
+        );
+      }
+      return 'default';
+    },
+  );
+
   protected readonly showInvalidSurface = computed(() => {
     return (
-      this.validationSurface() === 'always' && this.fieldset.shouldShowErrors()
+      this.resolvedValidationSurface() === 'always' &&
+      this.fieldset.shouldShowErrors()
     );
   });
 
   protected readonly showWarningSurface = computed(() => {
     return (
-      this.validationSurface() === 'always' &&
+      this.resolvedValidationSurface() === 'always' &&
       !this.fieldset.shouldShowErrors() &&
       this.fieldset.shouldShowWarnings()
     );
@@ -314,7 +394,7 @@ export class NgxFormFieldset {
     return this.#legendId();
   });
 
-  readonly describedByIds = computed(() => {
+  protected readonly describedByIds = computed(() => {
     // The rendered notification/error component strips its `id` attribute
     // whenever `displayedMessagesSignal` is empty, which happens when the user
     // passes `showErrors="false"` even on an invalid fieldset. Mirror that

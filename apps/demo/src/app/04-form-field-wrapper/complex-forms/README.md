@@ -15,7 +15,7 @@ A realistic, non-trivial form with nested objects, dynamic arrays, and mixed con
 
 ## Form model
 
-- Signal model: `signal<ComplexFormModel>()` with nested `personalInfo`, `address`, `skills[]`, `contacts[]`, `preferences`.
+- Signal model: `signal<ComplexFormModel>()` with nested `personalInfo`, `addressInfo`, `skills[]`, `contacts[]`, `preferences`.
 - Schema: `form(model, complexFormSchema)`.
 
 ## Validation rules
@@ -23,7 +23,7 @@ A realistic, non-trivial form with nested objects, dynamic arrays, and mixed con
 ### Errors
 
 - Personal info — first/last name required, min length 2; email required + email format; age required, min 18, max 120.
-- Address — street, city, zip, country required; ZIP pattern `12345` or `12345-6789`.
+- Address info — street, city, zip, country required; ZIP pattern `12345` or `12345-6789`.
 - Skills — each entry requires name and level (1–10).
 - Contacts — type and value required; value min length 3.
 - Credentials — password required + min length 8; confirm password required; grouped fieldset shows `Passwords must match`.
@@ -31,7 +31,7 @@ A realistic, non-trivial form with nested objects, dynamic arrays, and mixed con
 
 ### Warnings
 
-- `warn:sms-charges` — warns when the preferred contact method is SMS.
+- `warn:sms-rate` — warns when the preferred contact method is SMS (carrier rates may apply).
 
 ## Strong suites
 

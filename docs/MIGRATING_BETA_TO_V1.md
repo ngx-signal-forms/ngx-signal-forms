@@ -229,6 +229,27 @@ CSS custom properties are unchanged: overrides targeting
 `--ngx-signal-form-error-color`, `--ngx-signal-form-error-bg`, etc.
 keep working.
 
+### 4a-bis. Shared list-style and placement types
+
+Several list-style and placement unions used to be exported under
+component-specific names. V1 consolidates them so bindings compose without
+casts when passing values between the wrapper, fieldset, and notification
+components.
+
+| Before (rc)                         | After (v1)                                                            |
+| ----------------------------------- | --------------------------------------------------------------------- |
+| `FieldsetErrorPlacement`            | `NgxFormFieldErrorPlacement`                                          |
+| `FormFieldErrorPlacement`           | `NgxFormFieldErrorPlacement`                                          |
+| `FieldsetFeedbackAppearance`        | `NgxFieldsetFeedbackAppearance`                                       |
+| `FieldsetSurfaceTone`               | `NgxFieldsetSurfaceTone`                                              |
+| `FieldsetValidationSurface`         | `NgxFieldsetValidationSurface`                                        |
+| `NgxFormFieldNotificationListStyle` | `NgxFormFieldListStyle` _(shared)_                                    |
+| `NgxFormFieldErrorListStyle`        | `NgxFormFieldListStyle` _(shared, old name kept as deprecated alias)_ |
+
+The two deprecated list-style aliases still resolve to the same union, so
+existing imports keep compiling; switch to `NgxFormFieldListStyle` at your
+convenience.
+
 ### 4b. Appearances renamed
 
 | Before                 | After                   |

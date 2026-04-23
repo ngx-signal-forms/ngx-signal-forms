@@ -25,6 +25,7 @@ export { NgxFormFieldAssistiveRow } from './assistive-row';
 export { NgxFormFieldCharacterCount } from './character-count';
 export {
   NgxFormFieldError,
+  type NgxFormFieldListStyle,
   type NgxFormFieldErrorListStyle,
 } from './form-field-error';
 export {

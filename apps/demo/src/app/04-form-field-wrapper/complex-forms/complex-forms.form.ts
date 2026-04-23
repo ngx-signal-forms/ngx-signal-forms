@@ -16,7 +16,7 @@ import {
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
 import {
-  type FieldsetErrorPlacement,
+  type NgxFormFieldErrorPlacement,
   NgxFormField,
 } from '@ngx-signal-forms/toolkit/form-field';
 import { SwitchControlComponent } from '../../shared/controls';
@@ -183,7 +183,7 @@ export class ComplexFormsComponent {
 
   readonly orientation = input<FormFieldOrientation>('vertical');
 
-  readonly errorPlacement = input<FieldsetErrorPlacement>('bottom');
+  readonly errorPlacement = input<NgxFormFieldErrorPlacement>('bottom');
 
   protected readonly personalInfoGridClass = computed(() =>
     this.isStandardHorizontalLayout()

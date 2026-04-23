@@ -389,7 +389,7 @@ Can also be used as an attribute selector on native `<fieldset>` or `<div>`:
 
 ## Theming
 
-All components share a CSS custom properties system. See the [Theming Guide](./THEMING.md) for the full reference (20+ variables covering layout, typography, colors, and dark mode).
+All components share a CSS custom properties system. See the [Theming Guide](./THEMING.md) for the full reference (~120 CSS custom properties covering layout, typography, feedback surfaces, and dark mode).
 
 Quick example:
 
