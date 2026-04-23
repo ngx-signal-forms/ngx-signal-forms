@@ -420,6 +420,35 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       );
     });
 
+    test('should expose the custom-element personal-info fieldset as an a11y group with a labelled region', async () => {
+      await page.submit();
+
+      // The `group` accessible name comes from the projected <legend> via
+      // `aria-labelledby`, which is what makes the custom-element fieldset
+      // navigable as a landmark for AT. The inner `text:` lines below include
+      // the legend because it is also rendered visually inside the host —
+      // they are labels for sibling controls, not the group's own name.
+      await expect(page.personalInfoFieldset).toMatchAriaSnapshot(`
+        - group "👤 Personal Information":
+          - text: 👤 Personal Information First Name *
+          - textbox "First Name *"
+          - alert:
+            - paragraph: First name is required
+          - text: Last Name *
+          - textbox "Last Name *"
+          - alert:
+            - paragraph: Last name is required
+          - text: Email *
+          - textbox "Email *"
+          - alert:
+            - paragraph: Email is required
+          - text: Age *
+          - spinbutton "Age *": "0"
+          - alert:
+            - paragraph: Must be 18 or older
+      `);
+    });
+
     test('snapshot: contact-method grouped error with top placement', async () => {
       await page.showTopFieldsetSummaryPlacement();
       await triggerContactMethodFieldsetError(page);
@@ -447,6 +476,26 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
 
       await expect(page.credentialsFieldset).toHaveScreenshot(
         'complex-forms-credentials-grouped-error-bullets.png',
+      );
+    });
+
+    test('snapshot: credentials grouped error with top placement', async () => {
+      await page.showTopFieldsetSummaryPlacement();
+      await triggerCredentialsFieldsetError(page);
+      await page.credentialsFieldset.scrollIntoViewIfNeeded();
+
+      await expect(page.credentialsFieldset).toHaveScreenshot(
+        'complex-forms-credentials-error-top.png',
+      );
+    });
+
+    test('snapshot: credentials grouped error with bottom placement', async () => {
+      await page.showBottomFieldsetSummaryPlacement();
+      await triggerCredentialsFieldsetError(page);
+      await page.credentialsFieldset.scrollIntoViewIfNeeded();
+
+      await expect(page.credentialsFieldset).toHaveScreenshot(
+        'complex-forms-credentials-error-bottom.png',
       );
     });
   });

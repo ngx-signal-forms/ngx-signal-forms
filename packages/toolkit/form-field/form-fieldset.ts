@@ -148,6 +148,8 @@ const NON_SELECTION_GROUP_SELECTOR = [
     '[class.ngx-signal-form-fieldset--surface-warning]': 'showWarningSurface()',
     '[class.ngx-signal-form-fieldset--messages-top]': 'isTopPlacement()',
     '[class.ngx-signal-form-fieldset--messages-bottom]': '!isTopPlacement()',
+    '[attr.role]': 'hostRole()',
+    '[attr.aria-labelledby]': 'legendLabelId()',
     '[attr.aria-describedby]': 'describedByIds()',
     '[attr.data-error-placement]': 'errorPlacement()',
     '[attr.data-feedback-appearance]': 'resolvedFeedbackAppearance()',
@@ -217,6 +219,13 @@ export class NgxFormFieldset {
   protected readonly fieldset = inject(NgxHeadlessFieldset);
   readonly #elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #isSelectionGroupFieldset = signal(false);
+  readonly #legendId = signal<string | null>(null);
+  // `<fieldset>` natively implies role="group" and associates a child <legend>.
+  // Any other host tag (custom element `<ngx-form-fieldset>` or a bare
+  // `[ngxFormFieldset]` attribute target) needs an explicit group role so the
+  // projected legend can label the region.
+  readonly #isNativeFieldset =
+    this.#elementRef.nativeElement.tagName.toLowerCase() === 'fieldset';
 
   /**
    * Whether to show the automatic error/warning display.
@@ -359,19 +368,34 @@ export class NgxFormFieldset {
     return mode === 'always' || this.#isSelectionGroupFieldset();
   });
 
+  protected readonly hostRole = computed<'group' | null>(() =>
+    this.#isNativeFieldset ? null : 'group',
+  );
+
+  protected readonly legendLabelId = computed<string | null>(() => {
+    // Native `<fieldset>` auto-associates its first <legend>; explicit
+    // aria-labelledby would duplicate that relationship for AT.
+    if (this.#isNativeFieldset) {
+      return null;
+    }
+    return this.#legendId();
+  });
+
   readonly describedByIds = computed(() => {
-    const ids: string[] = [];
     const fieldsetId = this.fieldset.resolvedFieldsetId();
 
+    // Errors suppress warnings in the rendered notification (see
+    // `filteredErrorsSignal`), so only reference the id that is actually in
+    // the DOM to avoid dangling aria-describedby targets.
     if (this.fieldset.shouldShowErrors()) {
-      ids.push(`${fieldsetId}-error`);
+      return `${fieldsetId}-error`;
     }
 
     if (this.fieldset.shouldShowWarnings()) {
-      ids.push(`${fieldsetId}-warning`);
+      return `${fieldsetId}-warning`;
     }
 
-    return ids.length > 0 ? ids.join(' ') : null;
+    return null;
   });
 
   constructor() {
@@ -390,11 +414,28 @@ export class NgxFormFieldset {
           NON_SELECTION_GROUP_SELECTOR,
         );
 
-        return Boolean(hasSelectionControls) && !hasNonSelectionControls;
+        const legend = host.querySelector(':scope > legend');
+        const legendId =
+          legend instanceof HTMLElement ? legend.id || null : null;
+
+        return {
+          isSelectionGroupFieldset:
+            Boolean(hasSelectionControls) && !hasNonSelectionControls,
+          legend: legend instanceof HTMLElement ? legend : null,
+          legendId,
+        };
       },
-      write: (isSelectionGroupFieldset) => {
+      write: ({ isSelectionGroupFieldset, legend, legendId }) => {
         if (isSelectionGroupFieldset !== this.#isSelectionGroupFieldset()) {
           this.#isSelectionGroupFieldset.set(isSelectionGroupFieldset);
+        }
+
+        if (legend && !legendId) {
+          const assigned = `${this.fieldset.resolvedFieldsetId()}-legend`;
+          legend.id = assigned;
+          this.#legendId.set(assigned);
+        } else if (legendId !== this.#legendId()) {
+          this.#legendId.set(legendId);
         }
       },
     });

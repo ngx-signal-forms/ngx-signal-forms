@@ -422,6 +422,48 @@ describe('NgxFormFieldset', () => {
     expect(errors[0]?.textContent).toContain('Nested error');
   });
 
+  it('applies role="group" and aria-labelledby on custom-element hosts', async () => {
+    const fieldset = createFieldsetState();
+
+    const { container } = await render(
+      `<ngx-form-fieldset [fieldsetField]="fieldset" fieldsetId="personal-info">
+        <legend>Personal Information</legend>
+        <div class="content">Projected</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-form-fieldset');
+    const legend = container.querySelector('ngx-form-fieldset > legend');
+
+    expect(host).toHaveAttribute('role', 'group');
+    expect(legend?.id).toBe('personal-info-legend');
+    expect(host).toHaveAttribute('aria-labelledby', 'personal-info-legend');
+  });
+
+  it('leaves native <fieldset> hosts to use their intrinsic group semantics', async () => {
+    const fieldset = createFieldsetState();
+
+    const { container } = await render(
+      `<fieldset ngxFormFieldset [fieldsetField]="fieldset" fieldsetId="native">
+        <legend>Shipping Address</legend>
+        <div class="content">Projected</div>
+      </fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('fieldset');
+
+    expect(host).not.toHaveAttribute('role');
+    expect(host).not.toHaveAttribute('aria-labelledby');
+  });
+
   it('renders aggregated messages above content when errorPlacement is top', async () => {
     const fieldset = createFieldsetState({
       errors: () => [{ kind: 'required', message: 'Required' }],
