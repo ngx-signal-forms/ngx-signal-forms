@@ -1,4 +1,5 @@
 import {
+  booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   input,
@@ -18,7 +19,12 @@ import {
   type FormFieldAppearance,
   type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
+import type { NgxFormFieldListStyle } from '@ngx-signal-forms/toolkit/assistive';
 import {
+  type NgxFieldsetAppearance,
+  type NgxFieldsetFeedbackAppearance,
+  type NgxFieldsetSurfaceTone,
+  type NgxFieldsetValidationSurface,
   type NgxFormFieldErrorPlacement,
   NgxFormField,
 } from '@ngx-signal-forms/toolkit/form-field';
@@ -113,6 +119,15 @@ export class FieldsetFormComponent {
   readonly appearance = input<FormFieldAppearance>('standard');
   readonly orientation = input<FormFieldOrientation>('vertical');
   readonly errorPlacement = input<NgxFormFieldErrorPlacement>('bottom');
+  readonly fieldsetAppearance = input<NgxFieldsetAppearance>('outline');
+  readonly feedbackAppearance = input<NgxFieldsetFeedbackAppearance>('auto');
+  readonly listStyle = input<NgxFormFieldListStyle>('bullets');
+  readonly surfaceTone = input<NgxFieldsetSurfaceTone>('default');
+  readonly validationSurface = input<NgxFieldsetValidationSurface>('never');
+  readonly notificationTitle = input<string | null | undefined>(null);
+  readonly includeNestedErrors = input(false, {
+    transform: booleanAttribute,
+  });
 
   readonly #placementPreviewModel = signal(createPlacementPreviewValue());
   readonly #placementDesignPreviewModel = signal(

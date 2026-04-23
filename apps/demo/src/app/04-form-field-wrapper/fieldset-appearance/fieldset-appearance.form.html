@@ -1,0 +1,276 @@
+<ngx-display-controls-card
+  title="Fieldset lab controls"
+  description="Drive the same grouped form patterns through the newer fieldset presentation APIs so the trade-offs stay visible instead of theoretical."
+  [chips]="currentControlChips()"
+  layout="split"
+>
+  <ngx-error-display-mode-selector
+    [(selectedMode)]="selectedMode"
+    [embedded]="true"
+    display-controls-primary
+    class="block min-w-0"
+  />
+
+  <ngx-display-controls-section
+    title="🧱 Fieldset shell"
+    description="Switch between the current bordered section shell and a semantic-only fieldset that keeps just the legend and grouped meaning."
+  >
+    <div
+      [class]="controlGroupClass"
+      role="group"
+      aria-label="Fieldset appearance"
+    >
+      @for (appearance of fieldsetAppearanceOptions; track appearance) {
+      <button
+        type="button"
+        [class]="controlButtonClass"
+        (click)="selectedFieldsetAppearance.set(appearance)"
+        [attr.aria-pressed]="selectedFieldsetAppearance() === appearance"
+        [class.bg-[#e8f4fb]]="selectedFieldsetAppearance() === appearance"
+        [class.shadow-sm]="selectedFieldsetAppearance() === appearance"
+        [class.text-[#005d96]]="selectedFieldsetAppearance() === appearance"
+        [class.dark:bg-gray-700]="selectedFieldsetAppearance() === appearance"
+        [class.dark:text-blue-300]="selectedFieldsetAppearance() === appearance"
+      >
+        {{ fieldsetAppearanceLabels[appearance] }}
+      </button>
+      }
+    </div>
+  </ngx-display-controls-section>
+
+  <ngx-display-controls-section
+    title="🪧 Grouped feedback"
+    description="Swap between the compact text renderer and surfaced notification card without changing the validation source."
+  >
+    <div
+      [class]="controlGroupClass"
+      role="group"
+      aria-label="Grouped feedback appearance"
+    >
+      @for (appearance of feedbackAppearanceOptions; track appearance) {
+      <button
+        type="button"
+        [class]="controlButtonClass"
+        (click)="selectedFeedbackAppearance.set(appearance)"
+        [attr.aria-pressed]="selectedFeedbackAppearance() === appearance"
+        [class.bg-[#e8f4fb]]="selectedFeedbackAppearance() === appearance"
+        [class.shadow-sm]="selectedFeedbackAppearance() === appearance"
+        [class.text-[#005d96]]="selectedFeedbackAppearance() === appearance"
+        [class.dark:bg-gray-700]="selectedFeedbackAppearance() === appearance"
+        [class.dark:text-blue-300]="selectedFeedbackAppearance() === appearance"
+      >
+        {{ feedbackAppearanceLabels[appearance] }}
+      </button>
+      }
+    </div>
+  </ngx-display-controls-section>
+
+  <ngx-display-controls-section
+    title="🎨 Surface tone"
+    description="Preview the neutral/info/success family independently from validation state, then compare how the grouped summary sits on top."
+  >
+    <div
+      [class]="controlGroupClass"
+      role="group"
+      aria-label="Fieldset surface tone"
+    >
+      @for (tone of surfaceToneOptions; track tone) {
+      <button
+        type="button"
+        [class]="controlButtonClass"
+        (click)="selectedSurfaceTone.set(tone)"
+        [attr.aria-pressed]="selectedSurfaceTone() === tone"
+        [class.bg-[#e8f4fb]]="selectedSurfaceTone() === tone"
+        [class.shadow-sm]="selectedSurfaceTone() === tone"
+        [class.text-[#005d96]]="selectedSurfaceTone() === tone"
+        [class.dark:bg-gray-700]="selectedSurfaceTone() === tone"
+        [class.dark:text-blue-300]="selectedSurfaceTone() === tone"
+      >
+        {{ surfaceToneLabels[tone] }}
+      </button>
+      }
+    </div>
+  </ngx-display-controls-section>
+
+  <ngx-display-controls-section
+    title="🌊 Validation surface"
+    description="Keep the message standalone or tint the full grouped surface while errors or warnings are active."
+  >
+    <div
+      [class]="controlGroupClass"
+      role="group"
+      aria-label="Validation surface behavior"
+    >
+      @for (surface of validationSurfaceOptions; track surface) {
+      <button
+        type="button"
+        [class]="controlButtonClass"
+        (click)="selectedValidationSurface.set(surface)"
+        [attr.aria-pressed]="selectedValidationSurface() === surface"
+        [class.bg-[#e8f4fb]]="selectedValidationSurface() === surface"
+        [class.shadow-sm]="selectedValidationSurface() === surface"
+        [class.text-[#005d96]]="selectedValidationSurface() === surface"
+        [class.dark:bg-gray-700]="selectedValidationSurface() === surface"
+        [class.dark:text-blue-300]="selectedValidationSurface() === surface"
+      >
+        {{ validationSurfaceLabels[surface] }}
+      </button>
+      }
+    </div>
+  </ngx-display-controls-section>
+
+  <ngx-display-controls-section
+    title="🧾 Summary formatting"
+    description="Compare dense bullet lists against stacked plain text when a grouped summary owns multiple messages."
+  >
+    <div
+      [class]="controlGroupClass"
+      role="group"
+      aria-label="Grouped summary list style"
+    >
+      @for (style of listStyleOptions; track style) {
+      <button
+        type="button"
+        [class]="controlButtonClass"
+        (click)="selectedListStyle.set(style)"
+        [attr.aria-pressed]="selectedListStyle() === style"
+        [class.bg-[#e8f4fb]]="selectedListStyle() === style"
+        [class.shadow-sm]="selectedListStyle() === style"
+        [class.text-[#005d96]]="selectedListStyle() === style"
+        [class.dark:bg-gray-700]="selectedListStyle() === style"
+        [class.dark:text-blue-300]="selectedListStyle() === style"
+      >
+        {{ listStyleLabels[style] }}
+      </button>
+      }
+    </div>
+  </ngx-display-controls-section>
+
+  <ngx-display-controls-section
+    title="↕️ Message placement"
+    description="Move the grouped summary above or below each section to compare whether the error should lead or follow the controls."
+  >
+    <div
+      [class]="controlGroupClass"
+      role="group"
+      aria-label="Grouped message placement"
+    >
+      @for (placement of errorPlacementOptions; track placement) {
+      <button
+        type="button"
+        [class]="controlButtonClass"
+        (click)="selectedErrorPlacement.set(placement)"
+        [attr.aria-pressed]="selectedErrorPlacement() === placement"
+        [class.bg-[#e8f4fb]]="selectedErrorPlacement() === placement"
+        [class.shadow-sm]="selectedErrorPlacement() === placement"
+        [class.text-[#005d96]]="selectedErrorPlacement() === placement"
+        [class.dark:bg-gray-700]="selectedErrorPlacement() === placement"
+        [class.dark:text-blue-300]="selectedErrorPlacement() === placement"
+      >
+        {{ errorPlacementLabels[placement] }}
+      </button>
+      }
+    </div>
+  </ngx-display-controls-section>
+
+  <ngx-display-controls-section
+    title="🪜 Aggregation mode"
+    description="Compare group-only feedback against a full nested summary when descendant wrappers would otherwise speak for themselves."
+  >
+    <div
+      [class]="controlGroupClass"
+      role="group"
+      aria-label="Grouped error aggregation mode"
+    >
+      <button
+        type="button"
+        [class]="controlButtonClass"
+        (click)="includeNestedErrors.set(false)"
+        [attr.aria-pressed]="!includeNestedErrors()"
+        [class.bg-[#e8f4fb]]="!includeNestedErrors()"
+        [class.shadow-sm]="!includeNestedErrors()"
+        [class.text-[#005d96]]="!includeNestedErrors()"
+        [class.dark:bg-gray-700]="!includeNestedErrors()"
+        [class.dark:text-blue-300]="!includeNestedErrors()"
+      >
+        Group only
+      </button>
+      <button
+        type="button"
+        [class]="controlButtonClass"
+        (click)="includeNestedErrors.set(true)"
+        [attr.aria-pressed]="includeNestedErrors()"
+        [class.bg-[#e8f4fb]]="includeNestedErrors()"
+        [class.shadow-sm]="includeNestedErrors()"
+        [class.text-[#005d96]]="includeNestedErrors()"
+        [class.dark:bg-gray-700]="includeNestedErrors()"
+        [class.dark:text-blue-300]="includeNestedErrors()"
+      >
+        Include nested
+      </button>
+    </div>
+  </ngx-display-controls-section>
+
+  <ngx-display-controls-section
+    title="📝 Notification title"
+    description="Keep the section-level title visible in auto/notification mode, or strip it away to compare a quieter grouped card. Auto mode still resolves to the surfaced notification card for grouped sections."
+  >
+    <div
+      [class]="controlGroupClass"
+      role="group"
+      aria-label="Notification title visibility"
+    >
+      <button
+        type="button"
+        [class]="controlButtonClass"
+        (click)="showNotificationTitle.set(true)"
+        [attr.aria-pressed]="showNotificationTitle()"
+        [class.bg-[#e8f4fb]]="showNotificationTitle()"
+        [class.shadow-sm]="showNotificationTitle()"
+        [class.text-[#005d96]]="showNotificationTitle()"
+        [class.dark:bg-gray-700]="showNotificationTitle()"
+        [class.dark:text-blue-300]="showNotificationTitle()"
+      >
+        Title on
+      </button>
+      <button
+        type="button"
+        [class]="controlButtonClass"
+        (click)="showNotificationTitle.set(false)"
+        [attr.aria-pressed]="!showNotificationTitle()"
+        [class.bg-[#e8f4fb]]="!showNotificationTitle()"
+        [class.shadow-sm]="!showNotificationTitle()"
+        [class.text-[#005d96]]="!showNotificationTitle()"
+        [class.dark:bg-gray-700]="!showNotificationTitle()"
+        [class.dark:text-blue-300]="!showNotificationTitle()"
+      >
+        Title off
+      </button>
+    </div>
+    <p class="text-sm text-slate-600 dark:text-slate-300">
+      Current title state: {{ notificationTitleChip() }}.
+    </p>
+  </ngx-display-controls-section>
+</ngx-display-controls-card>
+
+<ngx-split-layout>
+  <ngx-fieldset-form
+    #formComponent
+    [errorDisplayMode]="selectedMode()"
+    [fieldsetAppearance]="selectedFieldsetAppearance()"
+    [errorPlacement]="selectedErrorPlacement()"
+    [feedbackAppearance]="selectedFeedbackAppearance()"
+    [surfaceTone]="selectedSurfaceTone()"
+    [validationSurface]="selectedValidationSurface()"
+    [listStyle]="selectedListStyle()"
+    [includeNestedErrors]="includeNestedErrors()"
+    [notificationTitle]="resolvedNotificationTitle()"
+    left
+  />
+
+  @if (formComponent) {
+  <div right>
+    <ngx-signal-form-debugger [formTree]="formComponent.fieldsetForm" />
+  </div>
+  }
+</ngx-split-layout>

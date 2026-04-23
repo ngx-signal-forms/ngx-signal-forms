@@ -341,6 +341,44 @@ describe('NgxFormFieldset', () => {
     ).toContain('--_fieldset-clr-danger');
   });
 
+  it('defaults the fieldset shell appearance to outline', async () => {
+    const fieldset = createFieldsetState();
+
+    const { container } = await render(
+      `<ngx-form-fieldset [fieldsetField]="fieldset">
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    expect(container.querySelector('ngx-form-fieldset')).toHaveAttribute(
+      'data-appearance',
+      'outline',
+    );
+  });
+
+  it('exposes the semantic plain appearance on the host data attribute', async () => {
+    const fieldset = createFieldsetState();
+
+    const { container } = await render(
+      `<ngx-form-fieldset [fieldsetField]="fieldset" appearance="plain">
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    expect(container.querySelector('ngx-form-fieldset')).toHaveAttribute(
+      'data-appearance',
+      'plain',
+    );
+  });
+
   it('treats selection-only groups like regular grouped sections in auto mode', async () => {
     const fieldset = createFieldsetState({
       errors: () => [{ kind: 'required', message: 'Choose one option' }],

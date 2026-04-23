@@ -98,6 +98,14 @@ export const appRoutes: Routes = [
         title: getRouteTitle('/form-field-wrapper/complex-forms'),
       },
       {
+        path: 'fieldset-appearance',
+        loadComponent: () =>
+          import('./04-form-field-wrapper/fieldset-appearance/fieldset-appearance.page').then(
+            (m) => m.FieldsetAppearancePage,
+          ),
+        title: getRouteTitle('/form-field-wrapper/fieldset-appearance'),
+      },
+      {
         path: 'custom-controls',
         loadComponent: () =>
           import('./04-form-field-wrapper/custom-controls/custom-controls.page').then(

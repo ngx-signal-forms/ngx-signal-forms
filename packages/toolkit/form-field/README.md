@@ -223,6 +223,7 @@ aggregation signals without any prebuilt markup, drop down to
 | `showErrors`          | `boolean`                                                                | `true`      | Toggle error display                                           |
 | `includeNestedErrors` | `boolean`                                                                | `false`     | Include child field errors via `errorSummary()`                |
 | `errorPlacement`      | `'top' \| 'bottom'`                                                      | `'bottom'`  | Render grouped messages before or after content                |
+| `appearance`          | `'outline' \| 'plain'`                                                   | `'outline'` | Border-and-padding shell or semantic-only grouping             |
 | `feedbackAppearance`  | `'auto' \| 'plain' \| 'notification'`                                    | `'auto'`    | Choose compact grouped text or surfaced notification cards     |
 | `notificationTitle`   | `string`                                                                 | —           | Optional title for notification-style grouped feedback         |
 | `listStyle`           | `'plain' \| 'bullets'`                                                   | `'bullets'` | Grouped message layout                                         |
@@ -233,6 +234,11 @@ aggregation signals without any prebuilt markup, drop down to
 
 - **Group-only** (default) — shows only group-level errors. Use when nested fields display their own errors via wrappers.
 - **Aggregated** (`includeNestedErrors`) — collects all nested errors. Use when fields don't have individual error display.
+
+### Fieldset appearances
+
+- **`outline`** (default) — the current bordered grouped section with inner padding
+- **`plain`** — semantic-only grouping with no border, no padding, and no surfaced background; useful when you want the legend and grouped validation semantics without visible fieldset chrome
 
 ### Summary placement
 

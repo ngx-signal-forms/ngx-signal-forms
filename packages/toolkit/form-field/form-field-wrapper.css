@@ -662,6 +662,11 @@
     /* Focus styling handled by container :focus-within */
   }
 
+  &:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
   &:disabled {
     /* Disabled styling handled by container :has() */
     cursor: not-allowed;
@@ -670,6 +675,24 @@
   &::placeholder {
     color: var(--_placeholder-color);
   }
+}
+
+:host:not(.ngx-signal-form-field-wrapper--switch)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__main
+  input:not([type='radio']):not([type='checkbox']):not(
+    [role='switch']
+  ):focus-visible,
+:host:not(.ngx-signal-form-field-wrapper--switch)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__main
+  textarea:focus-visible,
+:host:not(.ngx-signal-form-field-wrapper--switch)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__main
+  select:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 /* ============================================================================ */

@@ -208,13 +208,17 @@
     --ngx-signal-form-fieldset-legend-font-size,
     var(--_fieldset-text-body)
   );
+  --_fieldset-legend-family: var(
+    --ngx-signal-form-fieldset-legend-font-family,
+    var(--typography-font-family, inherit)
+  );
   --_fieldset-legend-line-height: var(
     --ngx-signal-form-fieldset-legend-line-height,
     var(--_fieldset-line-height-body)
   );
   --_fieldset-legend-weight: var(
     --ngx-signal-form-fieldset-legend-font-weight,
-    var(--_fieldset-weight-semibold)
+    var(--_fieldset-weight-medium)
   );
   --_fieldset-legend-letter-spacing: var(
     --ngx-signal-form-fieldset-legend-letter-spacing,
@@ -232,6 +236,10 @@
   --_fieldset-legend-radius: var(
     --ngx-signal-form-fieldset-legend-border-radius,
     var(--_fieldset-radius-sm)
+  );
+  --_fieldset-legend-inset-inline-start: var(
+    --ngx-signal-form-fieldset-legend-inset-inline-start,
+    var(--_fieldset-space-sm)
   );
   --_fieldset-invalid-border: var(
     --ngx-signal-form-fieldset-invalid-border-color,
@@ -397,17 +405,19 @@
   padding: 0;
   border: var(--_fieldset-border-width) solid var(--_fieldset-border-color);
   border-radius: var(--_fieldset-radius);
-  background: transparent;
+  background: var(--_fieldset-surface-bg);
   color: var(--_fieldset-color);
   transition: var(--_fieldset-transition-chrome);
 }
 
 :host > legend {
   max-inline-size: 100%;
+  margin-inline-start: var(--_fieldset-legend-inset-inline-start);
   padding: var(--_fieldset-legend-padding);
   color: var(--_fieldset-legend-color);
   background: var(--_fieldset-legend-bg);
   border-radius: var(--_fieldset-legend-radius);
+  font-family: var(--_fieldset-legend-family);
   font-size: var(--_fieldset-legend-size);
   line-height: var(--_fieldset-legend-line-height);
   font-weight: var(--_fieldset-legend-weight);
@@ -431,6 +441,16 @@
 :host(.ngx-signal-form-fieldset--warning) > legend {
   color: var(--_fieldset-warning-legend-color);
   background: var(--_fieldset-warning-legend-bg);
+}
+
+:host([data-appearance='plain']) {
+  --_fieldset-border-width: 0px;
+  --_fieldset-padding: 0px;
+  --_fieldset-surface-bg: transparent;
+  --_fieldset-legend-inset-inline-start: 0px;
+  --_fieldset-surface-radius: 0px;
+
+  background: transparent;
 }
 
 :host([data-surface-tone='neutral']) {
@@ -468,22 +488,25 @@
   flex-direction: column;
   padding: var(--_fieldset-padding);
   border-radius: var(--_fieldset-surface-radius);
-  background: var(--_fieldset-surface-bg);
+  background: transparent;
   transition: var(--_fieldset-transition-chrome);
 }
 
 :host(fieldset) > .ngx-signal-form-fieldset__surface {
-  padding-block-start: calc(var(--_fieldset-padding) - 0.35rem);
+  padding-block-start: max(0px, calc(var(--_fieldset-padding) - 0.35rem));
 }
 
-:host(.ngx-signal-form-fieldset--surface-invalid)
-  .ngx-signal-form-fieldset__surface {
+:host(.ngx-signal-form-fieldset--surface-invalid) {
   background: var(--_fieldset-invalid-surface-bg);
 }
 
-:host(.ngx-signal-form-fieldset--surface-warning)
-  .ngx-signal-form-fieldset__surface {
+:host(.ngx-signal-form-fieldset--surface-warning) {
   background: var(--_fieldset-warning-surface-bg);
+}
+
+:host([data-appearance='plain'].ngx-signal-form-fieldset--surface-invalid),
+:host([data-appearance='plain'].ngx-signal-form-fieldset--surface-warning) {
+  background: transparent;
 }
 
 .ngx-signal-form-fieldset__content {

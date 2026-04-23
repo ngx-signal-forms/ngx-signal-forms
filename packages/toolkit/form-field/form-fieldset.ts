@@ -21,6 +21,7 @@ import { NgxHeadlessFieldset } from '@ngx-signal-forms/toolkit/headless';
 import type { NgxFormFieldErrorPlacement } from './form-field-wrapper';
 
 export type NgxFieldsetFeedbackAppearance = 'auto' | 'plain' | 'notification';
+export type NgxFieldsetAppearance = 'outline' | 'plain';
 export type NgxFieldsetSurfaceTone =
   | 'default'
   | 'neutral'
@@ -135,6 +136,7 @@ export type NgxFieldsetValidationSurface = 'never' | 'always';
     '[attr.aria-labelledby]': 'legendLabelId()',
     '[attr.aria-describedby]': 'describedByIds()',
     '[attr.data-error-placement]': 'errorPlacement()',
+    '[attr.data-appearance]': 'resolvedAppearance()',
     '[attr.data-feedback-appearance]': 'resolvedFeedbackAppearance()',
     '[attr.data-surface-tone]': 'resolvedSurfaceTone()',
     '[attr.data-validation-surface]': 'resolvedValidationSurface()',
@@ -221,6 +223,14 @@ export class NgxFormFieldset {
   readonly errorPlacement = input<NgxFormFieldErrorPlacement>('bottom');
 
   /**
+   * Visual shell for the grouped fieldset.
+   *
+   * - `outline` (default): bordered grouped section with inner padding
+   * - `plain`: semantic-only grouping with no border, no padding, and no surfaced background
+   */
+  readonly appearance = input<NgxFieldsetAppearance>('outline');
+
+  /**
    * Presentation style for grouped feedback.
    *
    * - `auto` (default): surfaced notification for grouped sections
@@ -264,9 +274,31 @@ export class NgxFormFieldset {
   });
 
   #warnedInvalidFeedbackAppearance = false;
+  #warnedInvalidAppearance = false;
   #warnedInvalidSurfaceTone = false;
   #warnedInvalidValidationSurface = false;
   #warnedTitleIgnoredOnPlain = false;
+
+  protected readonly resolvedAppearance = computed<NgxFieldsetAppearance>(
+    () => {
+      const appearance = this.appearance();
+
+      if (appearance === 'outline' || appearance === 'plain') {
+        return appearance;
+      }
+
+      if (isDevMode() && !this.#warnedInvalidAppearance) {
+        this.#warnedInvalidAppearance = true;
+        // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+        console.error(
+          `[ngx-signal-forms] NgxFormFieldset: unknown appearance "${String(appearance)}". ` +
+            `Expected 'outline' | 'plain'. Falling back to 'outline'.`,
+        );
+      }
+
+      return 'outline';
+    },
+  );
 
   protected readonly resolvedFeedbackAppearance = computed<
     Exclude<NgxFieldsetFeedbackAppearance, 'auto'>
