@@ -142,6 +142,10 @@ export type DisplayControlChip = {
       min-width: 0;
     }
 
+    .control-stack--single {
+      padding-top: 0.25rem;
+    }
+
     :host-context(.dark) {
       .control-deck {
         border-color: rgba(129, 140, 248, 0.22);
@@ -231,11 +235,12 @@ export type DisplayControlChip = {
             <ng-content select="[display-controls-primary]"></ng-content>
           </div>
 
-          @if (layout() === 'split') {
-            <div class="control-stack">
-              <ng-content select="ngx-display-controls-section"></ng-content>
-            </div>
-          }
+          <div
+            class="control-stack"
+            [class.control-stack--single]="layout() === 'single'"
+          >
+            <ng-content select="ngx-display-controls-section"></ng-content>
+          </div>
         </div>
       </div>
     </section>

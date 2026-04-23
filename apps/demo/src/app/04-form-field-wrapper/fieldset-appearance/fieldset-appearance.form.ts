@@ -5,7 +5,6 @@ import {
   signal,
 } from '@angular/core';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
-import type { NgxFormFieldListStyle } from '@ngx-signal-forms/toolkit/assistive';
 import {
   type NgxFieldsetAppearance,
   type NgxFieldsetFeedbackAppearance,
@@ -20,8 +19,8 @@ import {
   SplitLayoutComponent,
 } from '../../ui';
 import {
+  ERROR_DISPLAY_MODES,
   ERROR_DISPLAY_MODE_LABELS,
-  ErrorDisplayModeSelectorComponent,
 } from '../../ui/error-display-mode-selector/error-display-mode-selector';
 import { FieldsetFormComponent } from '../complex-forms/fieldset.form';
 
@@ -79,12 +78,11 @@ const VALIDATION_SURFACE_LABELS: Record<NgxFieldsetValidationSurface, string> =
     always: 'Tint surface',
   };
 
-const LIST_STYLE_OPTIONS: readonly NgxFormFieldListStyle[] = [
-  'bullets',
-  'plain',
-];
+type FieldsetListStyle = 'plain' | 'bullets';
 
-const LIST_STYLE_LABELS: Record<NgxFormFieldListStyle, string> = {
+const LIST_STYLE_OPTIONS: readonly FieldsetListStyle[] = ['bullets', 'plain'];
+
+const LIST_STYLE_LABELS: Record<FieldsetListStyle, string> = {
   bullets: 'Bullets',
   plain: 'Plain text',
 };
@@ -92,6 +90,12 @@ const LIST_STYLE_LABELS: Record<NgxFormFieldListStyle, string> = {
 const ERROR_PLACEMENT_OPTIONS: readonly NgxFormFieldErrorPlacement[] = [
   'top',
   'bottom',
+];
+
+const ERROR_DISPLAY_MODE_OPTIONS: readonly ErrorDisplayStrategy[] = [
+  'immediate',
+  'on-touch',
+  'on-submit',
 ];
 
 const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
@@ -105,19 +109,160 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
   imports: [
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
-    ErrorDisplayModeSelectorComponent,
     FieldsetFormComponent,
     NgxSignalFormDebugger,
     SplitLayoutComponent,
   ],
+  styles: `
+    :host {
+      display: block;
+      min-width: 0;
+    }
+
+    .fieldset-appearance-form__control-group {
+      display: inline-flex;
+      max-width: 100%;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.25rem;
+      border: 1px solid rgb(229 231 235 / 0.8);
+      border-radius: 9999px;
+      background: rgb(255 255 255 / 0.8);
+      padding: 0.25rem;
+      box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
+      backdrop-filter: blur(10px);
+    }
+
+    .fieldset-appearance-form__control-button {
+      border: 0;
+      border-radius: 9999px;
+      background: transparent;
+      padding: 0.375rem 1rem;
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      font-weight: 500;
+      color: rgb(75 85 99);
+      transition:
+        color 150ms ease,
+        background-color 150ms ease,
+        box-shadow 150ms ease;
+    }
+
+    .fieldset-appearance-form__control-button:hover {
+      color: rgb(17 24 39);
+    }
+
+    .fieldset-appearance-form__control-button:focus-visible {
+      outline: 2px solid #005fcc;
+      outline-offset: 2px;
+    }
+
+    .fieldset-appearance-form__control-button--selected {
+      background: #e8f4fb;
+      box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
+      color: #005d96;
+    }
+
+    .fieldset-appearance-form__primary-panel {
+      display: grid;
+      gap: 0.9rem;
+      min-width: 0;
+    }
+
+    .fieldset-appearance-form__primary-title {
+      margin: 0;
+      font-size: 1.125rem;
+      line-height: 1.75rem;
+      font-weight: 600;
+      color: rgb(17 24 39);
+    }
+
+    .fieldset-appearance-form__primary-summary,
+    .fieldset-appearance-form__primary-instructions {
+      display: grid;
+      gap: 0.35rem;
+      padding-top: 0.9rem;
+    }
+
+    .fieldset-appearance-form__primary-summary {
+      border-top: 1px solid rgb(99 102 241 / 0.14);
+    }
+
+    .fieldset-appearance-form__primary-instructions {
+      border-top: 1px dashed rgb(245 158 11 / 0.38);
+    }
+
+    .fieldset-appearance-form__primary-copy {
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+      color: rgb(17 24 39);
+    }
+
+    .fieldset-appearance-form__primary-hint {
+      font-size: 0.75rem;
+      line-height: 1.25rem;
+      color: rgb(75 85 99);
+    }
+
+    .fieldset-appearance-form__primary-instruction-title {
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+      font-weight: 500;
+      color: rgb(146 64 14);
+    }
+
+    .fieldset-appearance-form__primary-instruction-copy {
+      font-size: 0.75rem;
+      line-height: 1.25rem;
+      color: rgb(180 83 9);
+    }
+
+    :host-context(.dark) .fieldset-appearance-form__control-group {
+      border-color: rgb(55 65 81);
+      background: rgb(31 41 55 / 0.9);
+    }
+
+    :host-context(.dark) .fieldset-appearance-form__control-button {
+      color: rgb(209 213 219);
+    }
+
+    :host-context(.dark) .fieldset-appearance-form__control-button:hover {
+      color: rgb(255 255 255);
+    }
+
+    :host-context(.dark) .fieldset-appearance-form__control-button--selected {
+      background: rgb(55 65 81);
+      color: rgb(147 197 253);
+    }
+
+    :host-context(.dark) .fieldset-appearance-form__primary-title,
+    :host-context(.dark) .fieldset-appearance-form__primary-copy {
+      color: rgb(243 244 246);
+    }
+
+    :host-context(.dark) .fieldset-appearance-form__primary-summary {
+      border-top-color: rgb(129 140 248 / 0.28);
+    }
+
+    :host-context(.dark) .fieldset-appearance-form__primary-hint {
+      color: rgb(156 163 175);
+    }
+
+    :host-context(.dark) .fieldset-appearance-form__primary-instructions {
+      border-top-color: rgb(251 191 36 / 0.34);
+    }
+
+    :host-context(.dark) .fieldset-appearance-form__primary-instruction-title {
+      color: rgb(253 230 138);
+    }
+
+    :host-context(.dark) .fieldset-appearance-form__primary-instruction-copy {
+      color: rgb(252 211 77);
+    }
+  `,
   templateUrl: './fieldset-appearance.form.html',
 })
 export class FieldsetAppearanceFormComponent {
-  protected readonly controlGroupClass =
-    'inline-flex items-center gap-1 rounded-full border border-gray-200/80 bg-white/80 p-1 shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/90';
-  protected readonly controlButtonClass =
-    'rounded-full px-4 py-1.5 text-sm font-medium text-gray-600 transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#005fcc] dark:text-gray-300 dark:hover:text-white';
-
   protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedFieldsetAppearance =
     signal<NgxFieldsetAppearance>('outline');
@@ -127,8 +272,7 @@ export class FieldsetAppearanceFormComponent {
     signal<NgxFieldsetSurfaceTone>('default');
   protected readonly selectedValidationSurface =
     signal<NgxFieldsetValidationSurface>('never');
-  protected readonly selectedListStyle =
-    signal<NgxFormFieldListStyle>('bullets');
+  protected readonly selectedListStyle = signal<FieldsetListStyle>('bullets');
   protected readonly selectedErrorPlacement =
     signal<NgxFormFieldErrorPlacement>('bottom');
   protected readonly includeNestedErrors = signal(true);
@@ -144,6 +288,8 @@ export class FieldsetAppearanceFormComponent {
   protected readonly validationSurfaceLabels = VALIDATION_SURFACE_LABELS;
   protected readonly listStyleOptions = LIST_STYLE_OPTIONS;
   protected readonly listStyleLabels = LIST_STYLE_LABELS;
+  protected readonly errorDisplayModeLabels = ERROR_DISPLAY_MODE_LABELS;
+  protected readonly errorDisplayModeOptions = ERROR_DISPLAY_MODE_OPTIONS;
   protected readonly errorPlacementOptions = ERROR_PLACEMENT_OPTIONS;
   protected readonly errorPlacementLabels = ERROR_PLACEMENT_LABELS;
 
@@ -161,6 +307,27 @@ export class FieldsetAppearanceFormComponent {
   protected readonly notificationTitleChip = computed(() =>
     this.resolvedNotificationTitle() ? 'Visible' : 'Hidden',
   );
+
+  protected readonly currentModeConfig = computed(() => {
+    return (
+      ERROR_DISPLAY_MODES.find((mode) => mode.mode === this.selectedMode()) ??
+      ERROR_DISPLAY_MODES[1]
+    );
+  });
+
+  protected readonly currentModeInstructions = computed(() => {
+    switch (this.selectedMode()) {
+      case 'immediate':
+        return '1. Start typing invalid data → 2. See feedback update instantly → 3. Notice how errors clear as you type';
+      case 'inherit':
+      case 'on-touch':
+        return '1. Click a field → 2. Enter invalid data → 3. Tab away → 4. Observe errors appearing after you leave the field';
+      case 'on-submit':
+        return '1. Fill the form quickly → 2. Submit without fixing issues → 3. Watch all errors appear together';
+      default:
+        return '1. Click a field → 2. Enter invalid data → 3. Tab away → 4. Observe errors appearing after you leave the field';
+    }
+  });
 
   protected readonly currentControlChips = computed(() => [
     {

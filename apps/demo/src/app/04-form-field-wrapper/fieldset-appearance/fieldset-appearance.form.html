@@ -2,35 +2,70 @@
   title="Fieldset lab controls"
   description="Drive the same grouped form patterns through the newer fieldset presentation APIs so the trade-offs stay visible instead of theoretical."
   [chips]="currentControlChips()"
-  layout="split"
+  layout="single"
 >
-  <ngx-error-display-mode-selector
-    [(selectedMode)]="selectedMode"
-    [embedded]="true"
-    display-controls-primary
-    class="block min-w-0"
-  />
+  <div display-controls-primary class="fieldset-appearance-form__primary-panel">
+    <h3 class="fieldset-appearance-form__primary-title">
+      🎛️ Error Display Mode
+    </h3>
+
+    <div
+      class="fieldset-appearance-form__control-group"
+      role="group"
+      aria-label="Error display mode"
+    >
+      @for (mode of errorDisplayModeOptions; track mode) {
+      <button
+        type="button"
+        class="fieldset-appearance-form__control-button"
+        (click)="selectedMode.set(mode)"
+        [attr.aria-pressed]="selectedMode() === mode"
+        [class.fieldset-appearance-form__control-button--selected]="
+          selectedMode() === mode
+        "
+      >
+        {{ errorDisplayModeLabels[mode] }}
+      </button>
+      }
+    </div>
+
+    <div class="fieldset-appearance-form__primary-summary">
+      <div class="fieldset-appearance-form__primary-copy">
+        {{ currentModeConfig().description }}
+      </div>
+      <div class="fieldset-appearance-form__primary-hint">
+        <strong>When to use:</strong> {{ currentModeConfig().whenToUse }}
+      </div>
+    </div>
+
+    <div class="fieldset-appearance-form__primary-instructions">
+      <div class="fieldset-appearance-form__primary-instruction-title">
+        🧪 Try this with "{{ currentModeConfig().label }}":
+      </div>
+      <div class="fieldset-appearance-form__primary-instruction-copy">
+        {{ currentModeInstructions() }}
+      </div>
+    </div>
+  </div>
 
   <ngx-display-controls-section
     title="🧱 Fieldset shell"
     description="Switch between the current bordered section shell and a semantic-only fieldset that keeps just the legend and grouped meaning."
   >
     <div
-      [class]="controlGroupClass"
+      class="fieldset-appearance-form__control-group"
       role="group"
       aria-label="Fieldset appearance"
     >
       @for (appearance of fieldsetAppearanceOptions; track appearance) {
       <button
         type="button"
-        [class]="controlButtonClass"
+        class="fieldset-appearance-form__control-button"
         (click)="selectedFieldsetAppearance.set(appearance)"
         [attr.aria-pressed]="selectedFieldsetAppearance() === appearance"
-        [class.bg-[#e8f4fb]]="selectedFieldsetAppearance() === appearance"
-        [class.shadow-sm]="selectedFieldsetAppearance() === appearance"
-        [class.text-[#005d96]]="selectedFieldsetAppearance() === appearance"
-        [class.dark:bg-gray-700]="selectedFieldsetAppearance() === appearance"
-        [class.dark:text-blue-300]="selectedFieldsetAppearance() === appearance"
+        [class.fieldset-appearance-form__control-button--selected]="
+          selectedFieldsetAppearance() === appearance
+        "
       >
         {{ fieldsetAppearanceLabels[appearance] }}
       </button>
@@ -43,21 +78,19 @@
     description="Swap between the compact text renderer and surfaced notification card without changing the validation source."
   >
     <div
-      [class]="controlGroupClass"
+      class="fieldset-appearance-form__control-group"
       role="group"
       aria-label="Grouped feedback appearance"
     >
       @for (appearance of feedbackAppearanceOptions; track appearance) {
       <button
         type="button"
-        [class]="controlButtonClass"
+        class="fieldset-appearance-form__control-button"
         (click)="selectedFeedbackAppearance.set(appearance)"
         [attr.aria-pressed]="selectedFeedbackAppearance() === appearance"
-        [class.bg-[#e8f4fb]]="selectedFeedbackAppearance() === appearance"
-        [class.shadow-sm]="selectedFeedbackAppearance() === appearance"
-        [class.text-[#005d96]]="selectedFeedbackAppearance() === appearance"
-        [class.dark:bg-gray-700]="selectedFeedbackAppearance() === appearance"
-        [class.dark:text-blue-300]="selectedFeedbackAppearance() === appearance"
+        [class.fieldset-appearance-form__control-button--selected]="
+          selectedFeedbackAppearance() === appearance
+        "
       >
         {{ feedbackAppearanceLabels[appearance] }}
       </button>
@@ -70,21 +103,19 @@
     description="Preview the neutral/info/success family independently from validation state, then compare how the grouped summary sits on top."
   >
     <div
-      [class]="controlGroupClass"
+      class="fieldset-appearance-form__control-group"
       role="group"
       aria-label="Fieldset surface tone"
     >
       @for (tone of surfaceToneOptions; track tone) {
       <button
         type="button"
-        [class]="controlButtonClass"
+        class="fieldset-appearance-form__control-button"
         (click)="selectedSurfaceTone.set(tone)"
         [attr.aria-pressed]="selectedSurfaceTone() === tone"
-        [class.bg-[#e8f4fb]]="selectedSurfaceTone() === tone"
-        [class.shadow-sm]="selectedSurfaceTone() === tone"
-        [class.text-[#005d96]]="selectedSurfaceTone() === tone"
-        [class.dark:bg-gray-700]="selectedSurfaceTone() === tone"
-        [class.dark:text-blue-300]="selectedSurfaceTone() === tone"
+        [class.fieldset-appearance-form__control-button--selected]="
+          selectedSurfaceTone() === tone
+        "
       >
         {{ surfaceToneLabels[tone] }}
       </button>
@@ -97,21 +128,19 @@
     description="Keep the message standalone or tint the full grouped surface while errors or warnings are active."
   >
     <div
-      [class]="controlGroupClass"
+      class="fieldset-appearance-form__control-group"
       role="group"
       aria-label="Validation surface behavior"
     >
       @for (surface of validationSurfaceOptions; track surface) {
       <button
         type="button"
-        [class]="controlButtonClass"
+        class="fieldset-appearance-form__control-button"
         (click)="selectedValidationSurface.set(surface)"
         [attr.aria-pressed]="selectedValidationSurface() === surface"
-        [class.bg-[#e8f4fb]]="selectedValidationSurface() === surface"
-        [class.shadow-sm]="selectedValidationSurface() === surface"
-        [class.text-[#005d96]]="selectedValidationSurface() === surface"
-        [class.dark:bg-gray-700]="selectedValidationSurface() === surface"
-        [class.dark:text-blue-300]="selectedValidationSurface() === surface"
+        [class.fieldset-appearance-form__control-button--selected]="
+          selectedValidationSurface() === surface
+        "
       >
         {{ validationSurfaceLabels[surface] }}
       </button>
@@ -124,21 +153,19 @@
     description="Compare dense bullet lists against stacked plain text when a grouped summary owns multiple messages."
   >
     <div
-      [class]="controlGroupClass"
+      class="fieldset-appearance-form__control-group"
       role="group"
       aria-label="Grouped summary list style"
     >
       @for (style of listStyleOptions; track style) {
       <button
         type="button"
-        [class]="controlButtonClass"
+        class="fieldset-appearance-form__control-button"
         (click)="selectedListStyle.set(style)"
         [attr.aria-pressed]="selectedListStyle() === style"
-        [class.bg-[#e8f4fb]]="selectedListStyle() === style"
-        [class.shadow-sm]="selectedListStyle() === style"
-        [class.text-[#005d96]]="selectedListStyle() === style"
-        [class.dark:bg-gray-700]="selectedListStyle() === style"
-        [class.dark:text-blue-300]="selectedListStyle() === style"
+        [class.fieldset-appearance-form__control-button--selected]="
+          selectedListStyle() === style
+        "
       >
         {{ listStyleLabels[style] }}
       </button>
@@ -151,21 +178,19 @@
     description="Move the grouped summary above or below each section to compare whether the error should lead or follow the controls."
   >
     <div
-      [class]="controlGroupClass"
+      class="fieldset-appearance-form__control-group"
       role="group"
       aria-label="Grouped message placement"
     >
       @for (placement of errorPlacementOptions; track placement) {
       <button
         type="button"
-        [class]="controlButtonClass"
+        class="fieldset-appearance-form__control-button"
         (click)="selectedErrorPlacement.set(placement)"
         [attr.aria-pressed]="selectedErrorPlacement() === placement"
-        [class.bg-[#e8f4fb]]="selectedErrorPlacement() === placement"
-        [class.shadow-sm]="selectedErrorPlacement() === placement"
-        [class.text-[#005d96]]="selectedErrorPlacement() === placement"
-        [class.dark:bg-gray-700]="selectedErrorPlacement() === placement"
-        [class.dark:text-blue-300]="selectedErrorPlacement() === placement"
+        [class.fieldset-appearance-form__control-button--selected]="
+          selectedErrorPlacement() === placement
+        "
       >
         {{ errorPlacementLabels[placement] }}
       </button>
@@ -178,33 +203,29 @@
     description="Compare group-only feedback against a full nested summary when descendant wrappers would otherwise speak for themselves."
   >
     <div
-      [class]="controlGroupClass"
+      class="fieldset-appearance-form__control-group"
       role="group"
       aria-label="Grouped error aggregation mode"
     >
       <button
         type="button"
-        [class]="controlButtonClass"
+        class="fieldset-appearance-form__control-button"
         (click)="includeNestedErrors.set(false)"
         [attr.aria-pressed]="!includeNestedErrors()"
-        [class.bg-[#e8f4fb]]="!includeNestedErrors()"
-        [class.shadow-sm]="!includeNestedErrors()"
-        [class.text-[#005d96]]="!includeNestedErrors()"
-        [class.dark:bg-gray-700]="!includeNestedErrors()"
-        [class.dark:text-blue-300]="!includeNestedErrors()"
+        [class.fieldset-appearance-form__control-button--selected]="
+          !includeNestedErrors()
+        "
       >
         Group only
       </button>
       <button
         type="button"
-        [class]="controlButtonClass"
+        class="fieldset-appearance-form__control-button"
         (click)="includeNestedErrors.set(true)"
         [attr.aria-pressed]="includeNestedErrors()"
-        [class.bg-[#e8f4fb]]="includeNestedErrors()"
-        [class.shadow-sm]="includeNestedErrors()"
-        [class.text-[#005d96]]="includeNestedErrors()"
-        [class.dark:bg-gray-700]="includeNestedErrors()"
-        [class.dark:text-blue-300]="includeNestedErrors()"
+        [class.fieldset-appearance-form__control-button--selected]="
+          includeNestedErrors()
+        "
       >
         Include nested
       </button>
@@ -216,33 +237,29 @@
     description="Keep the section-level title visible in auto/notification mode, or strip it away to compare a quieter grouped card. Auto mode still resolves to the surfaced notification card for grouped sections."
   >
     <div
-      [class]="controlGroupClass"
+      class="fieldset-appearance-form__control-group"
       role="group"
       aria-label="Notification title visibility"
     >
       <button
         type="button"
-        [class]="controlButtonClass"
+        class="fieldset-appearance-form__control-button"
         (click)="showNotificationTitle.set(true)"
         [attr.aria-pressed]="showNotificationTitle()"
-        [class.bg-[#e8f4fb]]="showNotificationTitle()"
-        [class.shadow-sm]="showNotificationTitle()"
-        [class.text-[#005d96]]="showNotificationTitle()"
-        [class.dark:bg-gray-700]="showNotificationTitle()"
-        [class.dark:text-blue-300]="showNotificationTitle()"
+        [class.fieldset-appearance-form__control-button--selected]="
+          showNotificationTitle()
+        "
       >
         Title on
       </button>
       <button
         type="button"
-        [class]="controlButtonClass"
+        class="fieldset-appearance-form__control-button"
         (click)="showNotificationTitle.set(false)"
         [attr.aria-pressed]="!showNotificationTitle()"
-        [class.bg-[#e8f4fb]]="!showNotificationTitle()"
-        [class.shadow-sm]="!showNotificationTitle()"
-        [class.text-[#005d96]]="!showNotificationTitle()"
-        [class.dark:bg-gray-700]="!showNotificationTitle()"
-        [class.dark:text-blue-300]="!showNotificationTitle()"
+        [class.fieldset-appearance-form__control-button--selected]="
+          !showNotificationTitle()
+        "
       >
         Title off
       </button>
