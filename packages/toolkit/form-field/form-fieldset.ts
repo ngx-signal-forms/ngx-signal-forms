@@ -116,7 +116,7 @@ export type NgxFieldsetValidationSurface = 'never' | 'always';
     },
   ],
   imports: [NgTemplateOutlet, NgxFormFieldError, NgxFormFieldNotification],
-  styleUrl: './form-fieldset.scss',
+  styleUrls: ['./feedback-tokens.css', './form-fieldset.css'],
   exportAs: 'ngxFormFieldset',
   // BEM classnames keep the legacy `ngx-signal-form-fieldset--*` prefix for
   // theming back-compat. The host's element selector uses the new short

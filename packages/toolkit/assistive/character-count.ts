@@ -171,7 +171,7 @@ export type NgxCharacterCountValue = CharacterCountValue;
     :host([data-limit-state='warning']) {
       /* Default: Tailwind amber-700 (#a16207) — ~5.17:1 on white meets
        * WCAG 1.4.3 AA for normal text (#f59e0b previously used was 2.16:1).
-       * Kept consistent with the warning color in form-field-error.scss. */
+       * Kept consistent with the warning color in form-field-error.css. */
       color: var(--ngx-form-field-char-count-color-warning, #a16207);
     }
 

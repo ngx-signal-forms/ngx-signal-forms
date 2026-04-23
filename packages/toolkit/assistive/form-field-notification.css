@@ -1,22 +1,17 @@
-/// ============================================================================
-/// THEMING ARCHITECTURE
-/// ============================================================================
-/// Uses Lea Verou's "pseudo-private variables" pattern for fallback management:
-/// https://lea.verou.me/blog/2021/10/custom-properties-with-defaults/
-///
-/// Layering approach:
-/// 1. Design tokens (internal, --_notification-*)
-/// 2. Shared feedback tier (--_feedback-*, from form-field/_feedback-tokens)
-/// 3. Public API (--ngx-signal-form-notification-*)
-/// 4. Resolved pseudo-private variables (--_notification-*)
-/// 5. Implementation consumes only the resolved variables
-
-@use '../form-field/feedback-tokens' as feedback;
+/* ============================================================================ */
+/* THEMING ARCHITECTURE */
+/* ============================================================================ */
+/* Uses Lea Verou's "pseudo-private variables" pattern for fallback management: */
+/* https://lea.verou.me/blog/2021/10/custom-properties-with-defaults/ */
+/* Layering approach: */
+/* 1. Design tokens (internal, --_notification-*) */
+/* 2. Shared feedback tier (--_feedback-*, from form-field/_feedback-tokens) */
+/* 3. Public API (--ngx-signal-form-notification-*) */
+/* 4. Resolved pseudo-private variables (--_notification-*) */
+/* 5. Implementation consumes only the resolved variables */
 
 :host {
-  @include feedback.tokens;
-
-  // Internal design tokens (notification-specific)
+  /* Internal design tokens (notification-specific) */
   --_notification-space-0: 0;
   --_notification-space-2xs: 0.25rem;
   --_notification-space-sm: 0.5rem;
@@ -47,7 +42,7 @@
   );
   --_notification-bg-warning-dark: rgb(120 53 15 / 0.28);
 
-  // Resolved pseudo-private variables
+  /* Resolved pseudo-private variables */
   --_notification-gap: var(
     --ngx-signal-form-notification-gap,
     var(--_notification-space-2xs)
@@ -297,9 +292,9 @@
   }
 }
 
-// High-contrast mode: soft background + color-mix border can drop below the
-// WCAG contrast threshold. Mirror the `form-field-error` treatment by solidifying
-// the border and bumping width.
+/* High-contrast mode: soft background + color-mix border can drop below the */
+/* WCAG contrast threshold. Mirror the `form-field-error` treatment by solidifying */
+/* the border and bumping width. */
 @media (prefers-contrast: more) {
   .ngx-form-field-notification--error {
     border-color: var(--_notification-error-color);
@@ -312,10 +307,10 @@
   }
 }
 
-// Windows High Contrast (`forced-colors: active`): the soft backgrounds and
-// translucent borders are replaced with system colors. Without this block the
-// notification would flatten to the default system surface and lose its
-// error/warning semantic.
+/* Windows High Contrast (`forced-colors: active`): the soft backgrounds and */
+/* translucent borders are replaced with system colors. Without this block the */
+/* notification would flatten to the default system surface and lose its */
+/* error/warning semantic. */
 @media (forced-colors: active) {
   .ngx-form-field-notification {
     forced-color-adjust: none;

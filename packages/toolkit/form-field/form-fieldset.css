@@ -1,24 +1,18 @@
-/// ============================================================================
-/// THEMING ARCHITECTURE
-/// ============================================================================
-/// Uses Lea Verou's "pseudo-private variables" pattern for fallback management:
-/// https://lea.verou.me/blog/2021/10/custom-properties-with-defaults/
-///
-/// Layering approach:
-/// 1. Design tokens (internal, --_fieldset-*) - Base values for colors, spacing, typography
-/// 2. Shared feedback tier (--_feedback-*, from form-field/_feedback-tokens)
-/// 3. Public API (--ngx-signal-form-fieldset-*) - Overridable by consumers
-/// 4. Pseudo-private (--_fieldset-*) - Resolve public → feedback → internal defaults
-/// 5. Implementation - Uses only the resolved --_* variables
-///
-/// This keeps the CSS API stable while avoiding repeated literal fallbacks.
-
-@use './feedback-tokens' as feedback;
+/* ============================================================================ */
+/* THEMING ARCHITECTURE */
+/* ============================================================================ */
+/* Uses Lea Verou's "pseudo-private variables" pattern for fallback management: */
+/* https://lea.verou.me/blog/2021/10/custom-properties-with-defaults/ */
+/* Layering approach: */
+/* 1. Design tokens (internal, --_fieldset-*) - Base values for colors, spacing, typography */
+/* 2. Shared feedback tier (--_feedback-*, from form-field/_feedback-tokens) */
+/* 3. Public API (--ngx-signal-form-fieldset-*) - Overridable by consumers */
+/* 4. Pseudo-private (--_fieldset-*) - Resolve public → feedback → internal defaults */
+/* 5. Implementation - Uses only the resolved --_* variables */
+/* This keeps the CSS API stable while avoiding repeated literal fallbacks. */
 
 :host {
-  @include feedback.tokens;
-
-  // Internal design tokens
+  /* Internal design tokens */
   --_fieldset-space-0: 0;
   --_fieldset-space-2xs: 0.25rem;
   --_fieldset-space-xs: 0.375rem;
@@ -51,7 +45,7 @@
   --_fieldset-message-animation-default: ngxStatusSlideIn 300ms
     cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 
-  // Resolved pseudo-private variables
+  /* Resolved pseudo-private variables */
   --_fieldset-gap: var(
     --ngx-signal-form-fieldset-gap,
     var(--_fieldset-space-lg)
@@ -164,7 +158,8 @@
       var(
           --ngx-signal-form-fieldset-surface-border-radius,
           var(--_fieldset-radius)
-        ) - var(--_fieldset-border-width)
+        ) -
+        var(--_fieldset-border-width)
     )
   );
   --_fieldset-border-width: var(
@@ -511,7 +506,7 @@
   overflow: clip;
   transition: var(--_fieldset-transition-spacing);
 
-  // Theme the nested error component with the fieldset's message tier.
+  /* Theme the nested error component with the fieldset's message tier. */
   --ngx-signal-form-error-padding: var(--_fieldset-message-padding);
   --ngx-signal-form-error-padding-inline-start: var(
     --_fieldset-message-padding-inline-start
@@ -536,7 +531,7 @@
     --_fieldset-message-warning-border
   );
 
-  // Theme the nested notification component with the fieldset's notification tier.
+  /* Theme the nested notification component with the fieldset's notification tier. */
   --ngx-signal-form-notification-error-color: var(
     --_fieldset-notification-error-color
   );

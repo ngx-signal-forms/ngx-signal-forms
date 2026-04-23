@@ -14,6 +14,30 @@ A theming system based entirely on **CSS Custom Properties (Variables)**. It exp
 - **Runtime Theming:** Support Light/Dark modes or multiple themes instantly without rebuilding.
 - **Framework Integration:** Easily map tokens from Bootstrap, Tailwind, or Material to the toolkit.
 
+### Browser support
+
+The toolkit ships its component styles as native CSS (no Sass). The
+minimum browser versions supported by the published package are driven
+by the most demanding features used:
+
+| Feature                                        | Chrome | Edge | Safari | Firefox |
+| :--------------------------------------------- | :----- | :--- | :----- | :------ |
+| CSS custom properties                          | 49     | 15   | 9.1    | 31      |
+| `:has(...)` (required by `appearance=outline`) | 105    | 105  | 15.4   | 121     |
+| Native CSS nesting                             | 112    | 112  | 16.5   | 117     |
+| `color-mix()`                                  | 111    | 111  | 16.2   | 113     |
+
+That lands the toolkit's effective baseline at **Chrome 112, Edge 112,
+Safari 16.5, Firefox 121** (Jan 2024). Older evergreen browsers may
+render a flattened approximation — the design tokens still resolve —
+but nested selectors, hover/invalid overrides, and the outline
+appearance depend on the features above.
+
+Progressive enhancements (`interpolate-size: allow-keywords`,
+`@supports` blocks for grouped notification animations,
+`prefers-contrast: more`, `forced-colors: active`) are gated behind
+feature queries, so they only apply where supported.
+
 ### Control-aware styling hooks
 
 `ngx-form-field-wrapper` exposes stable data attributes that you can use
@@ -47,7 +71,7 @@ The system works in layers to ensure consistency while allowing deep customizati
 1. **Layer 1: Design Tokens** `(--_field-clr-primary)` / `(--_fieldset-clr-text)`
    - Internal defaults. Do not override these.
 2. **Layer 2: Shared Feedback (Base)** `(--ngx-signal-form-feedback-font-size)`
-   - **Public API.** Controls the "micro-copy" typography and spacing across Errors, Warnings, Notifications, Hints, and Character Counts. Defined in `form-field/_feedback-tokens.scss` and included via Sass mixin in each consuming component, so the tokens resolve consistently whether the component is nested inside `ngx-form-field-wrapper` or used standalone.
+   - **Public API.** Controls the "micro-copy" typography and spacing across Errors, Warnings, Notifications, Hints, and Character Counts. Defined in `form-field/feedback-tokens.css` and pulled into each consuming component's `styleUrls` alongside its own CSS, so the resolved `--_feedback-*` variables are visible on every feedback host — whether it is nested inside `ngx-form-field-wrapper` or used standalone.
 3. **Layer 3: Semantic Colors** `(--ngx-form-field-color-primary)`
    - **Public API.** The main integration point. Maps abstract roles (Primary, Error) to concrete colors.
 4. **Layer 4: Component Properties** `(--ngx-form-field-focus-color)`

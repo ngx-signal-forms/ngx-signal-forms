@@ -1,26 +1,21 @@
-/// ============================================================================
-/// THEMING ARCHITECTURE
-/// ============================================================================
-/// Uses Lea Verou's "pseudo-private variables" pattern for fallback management:
-/// https://lea.verou.me/blog/2021/10/custom-properties-with-defaults/
-///
-/// Layering approach:
-/// 1. Design tokens (internal, --_error-*)
-/// 2. Shared feedback tier (--_feedback-*, from form-field/_feedback-tokens)
-/// 3. Public API (--ngx-signal-form-error-* / --ngx-signal-form-warning-*)
-/// 4. Resolved pseudo-private variables (--_error-* / --_warning-*)
-/// 5. Implementation consumes only the resolved variables
-
-@use '../form-field/feedback-tokens' as feedback;
+/* ============================================================================ */
+/* THEMING ARCHITECTURE */
+/* ============================================================================ */
+/* Uses Lea Verou's "pseudo-private variables" pattern for fallback management: */
+/* https://lea.verou.me/blog/2021/10/custom-properties-with-defaults/ */
+/* Layering approach: */
+/* 1. Design tokens (internal, --_error-*) */
+/* 2. Shared feedback tier (--_feedback-*, from form-field/_feedback-tokens) */
+/* 3. Public API (--ngx-signal-form-error-* / --ngx-signal-form-warning-*) */
+/* 4. Resolved pseudo-private variables (--_error-* / --_warning-*) */
+/* 5. Implementation consumes only the resolved variables */
 
 :host {
-  @include feedback.tokens;
-
-  // Internal design tokens (error-specific, not covered by the feedback tier)
+  /* Internal design tokens (error-specific, not covered by the feedback tier) */
   --_error-space-0: 0;
   --_error-space-2xs: 0.25rem;
 
-  // WCAG 1.4.3 (AA): #a16207 keeps warning text >= 4.5:1 on white.
+  /* WCAG 1.4.3 (AA): #a16207 keeps warning text >= 4.5:1 on white. */
   --_error-clr-danger: #db1818;
   --_error-clr-warning: #a16207;
   --_error-clr-danger-dark: #fca5a5;
@@ -33,7 +28,7 @@
   --_error-animation-default: ngxStatusSlideIn 300ms
     cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 
-  // Resolved pseudo-private variables
+  /* Resolved pseudo-private variables */
   --_error-margin-top: var(
     --ngx-signal-form-error-margin-top,
     var(--_feedback-margin-top)

@@ -198,10 +198,7 @@ export type NgxFormFieldErrorPlacement = 'top' | 'bottom';
       },
     },
   ],
-  styleUrls: [
-    './form-field-wrapper.scss',
-    './form-field-wrapper.selection.scss',
-  ],
+  styleUrls: ['./form-field-wrapper.css', './form-field-wrapper.selection.css'],
   host: {
     '[attr.outline]': 'isOutline() ? "" : null',
     // NOTE: `aria-invalid` is intentionally NOT bound on the host. ARIA

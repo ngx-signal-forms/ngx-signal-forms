@@ -200,7 +200,7 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
       }
     </div>
   `,
-  styleUrl: './form-field-error.scss',
+  styleUrls: ['../form-field/feedback-tokens.css', './form-field-error.css'],
 })
 export class NgxFormFieldError {
   /**

@@ -42,7 +42,10 @@ export type NgxFormFieldNotificationTone = 'auto' | 'error' | 'warning';
 @Component({
   selector: 'ngx-form-field-notification',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './form-field-notification.scss',
+  styleUrls: [
+    '../form-field/feedback-tokens.css',
+    './form-field-notification.css',
+  ],
   template: `
     <div
       class="ngx-form-field-notification"

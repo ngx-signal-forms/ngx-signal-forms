@@ -85,6 +85,8 @@ npm install @ngx-signal-forms/toolkit
 
 Requirements: Angular `>=21.2.0 <22.0.0` (Signal Forms API), TypeScript 5.9+, modern browsers. Angular 22 support ships in a future toolkit line — see [`COMPATIBILITY.md`](./COMPATIBILITY.md).
 
+**Supported browsers:** Chrome/Edge 112+, Safari 16.5+, Firefox 121+ (Jan 2024). The toolkit's styles ship as native CSS (no Sass) and use CSS nesting, `color-mix()`, and `:has()` for the outline appearance. See the [theming guide](./packages/toolkit/form-field/THEMING.md#browser-support) for the per-feature breakdown.
+
 > Angular Signal Forms is still marked **experimental** upstream. The toolkit's own public API aims to stay stable — see [`COMPATIBILITY.md`](./COMPATIBILITY.md) before adopting a stable major in production.
 
 ---
