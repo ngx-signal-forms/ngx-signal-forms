@@ -176,6 +176,12 @@ The light-theme danger defaults follow the current Figma card recipe:
 - border: same semantic danger hue at `50%` alpha
 - background: `#fdebeb`
 
+Grouped notifications now animate as a progressive enhancement:
+
+- baseline-safe fade/slide/color transitions always apply
+- browsers with `interpolate-size: allow-keywords` also animate the card's block-size between `0` and `auto`
+- `calc-size()` is intentionally not used here because the component does not need size math; `interpolate-size` is the recommended simpler opt-in for this case
+
 The border still derives from the semantic danger color by default, while the
 background stays pinned to the Figma light-danger surface. Override
 `--ngx-signal-form-notification-error-bg` when your theme needs a different
@@ -316,6 +322,10 @@ Validation tinting is mode-aware:
 - `validationSurface="auto"` tints only selection-only groups (radio/checkbox)
 - `validationSurface="always"` tints every invalid/warning fieldset
 - `validationSurface="never"` leaves the surface neutral and relies on grouped feedback alone
+
+`validationSurface="auto"` now intentionally keeps grouped sections neutral by
+default. If you want validation tinting on a fieldset, opt in with
+`validationSurface="always"`.
 
 Grouped summaries intentionally inherit from the shared `ngx-form-field-error`
 tokens by default. The fieldset-specific variables above are aliases for the
@@ -586,6 +596,31 @@ fields).
 ```css
 ngx-form-fieldset {
   --ngx-signal-form-fieldset-direction: row;
+}
+```
+
+### Wrapper selection groups
+
+Grouped radios and grouped checkboxes that live inside
+`ngx-form-field-wrapper` expose a separate theming surface from the fieldset.
+These wrappers keep normal inline feedback placement, but swap the usual border
+state for a surfaced background when invalid or warning.
+
+| Property                                      | Default                                        | Description                                  |
+| :-------------------------------------------- | :--------------------------------------------- | :------------------------------------------- |
+| `--ngx-form-field-selection-group-gap`        | `0.75rem`                                      | Vertical gap between grouped options         |
+| `--ngx-form-field-selection-group-padding`    | `1rem`                                         | Inner padding of the grouped control surface |
+| `--ngx-form-field-selection-group-radius`     | `0.25rem`                                      | Border radius of the grouped control surface |
+| `--ngx-form-field-selection-group-bg`         | `transparent`                                  | Base surface background                      |
+| `--ngx-form-field-selection-group-invalid-bg` | `#fbdddd`                                      | Invalid surface background                   |
+| `--ngx-form-field-selection-group-warning-bg` | `color-mix(in srgb, warning 12%, transparent)` | Warning surface background                   |
+
+Example:
+
+```css
+.delivery-method-wrapper {
+  --ngx-form-field-selection-group-padding: 1rem;
+  --ngx-form-field-selection-group-invalid-bg: #fce2e2;
 }
 ```
 

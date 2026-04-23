@@ -186,8 +186,10 @@ by `'on-touch'` or `'on-submit'`. See
 `ngx-form-fieldset` — groups related fields with aggregated error display.
 
 Use it when the validation belongs to the group as a whole — cross-field rules,
-radio/checkbox groups, repeated row sections, or dense subsections that should
-own a single summary. If each child control should render its own feedback,
+repeated row sections, or dense subsections that should
+own a single summary. For radio groups and checkbox groups that should behave
+like a single field with inline wrapper feedback, use
+`ngx-form-field-wrapper` instead. If each child control should render its own feedback,
 keep the fieldset in the default group-only mode and let the nested
 `ngx-form-field-wrapper`s stay responsible for leaf errors. If you want the
 aggregation signals without any prebuilt markup, drop down to
@@ -249,29 +251,70 @@ aggregation signals without any prebuilt markup, drop down to
 ### Grouped feedback appearance
 
 - **`feedbackAppearance="auto"`** (default) uses a surfaced notification card
-  for regular grouped sections, but keeps radio/checkbox-only groups compact.
+  for grouped sections.
 - **`plain`** always uses the compact `ngx-form-field-error` presentation.
 - **`notification`** always uses `ngx-form-field-notification`.
 
-This matches the common design split where “normal” grouped sections get a
-top/bottom notification card, while radio/checkbox groups can pair a single
-error line with an invalid fieldset surface.
-
-Selection-only groups also pick up a dedicated design-system recipe in auto
-mode: medium-weight legend text, `1rem` surface padding, no host border, and a
-stronger danger surface (`#fbdddd`) that is distinct from the lighter
-notification card background. Use the
-`--ngx-signal-form-fieldset-selection-legend-*` CSS variables when selection
-groups need a different legend size, weight, line-height, color, or letter
-spacing.
+This keeps the fieldset focused on grouped summaries and surfaced sections.
+Radio groups and checkbox groups that should show inline errors and invalid
+backgrounds now belong in `ngx-form-field-wrapper`, not `ngx-form-fieldset`.
 
 ### Fieldset surface behavior
 
 - **`surfaceTone`** controls the base fill of the fieldset surface.
-- **`validationSurface="auto"`** tints only selection-only groups when they
-  become invalid or warning.
+- **`validationSurface="auto"`** currently behaves like `never`; use it when
+  you want to follow the default grouped-section recipe without validation tint.
 - Set **`validationSurface="always"`** when every grouped section should tint
   on validation state, or **`never`** to rely on the grouped message alone.
+
+## Grouped radio/checkbox controls in the wrapper
+
+Use `ngx-form-field-wrapper` when a radio group or checkbox group should behave
+like a single field with wrapper-owned inline feedback.
+
+```html
+<ngx-form-field-wrapper
+  [formField]="form.deliveryMethod"
+  fieldName="delivery-method"
+  errorPlacement="bottom"
+>
+  <span ngxFormFieldLabel>Delivery option *</span>
+
+  <div class="delivery-options">
+    <label>
+      <input
+        id="delivery-standard"
+        type="radio"
+        name="deliveryMethod"
+        [formField]="form.deliveryMethod"
+        value="standard"
+      />
+      <span>Standard</span>
+    </label>
+
+    <label>
+      <input
+        id="delivery-express"
+        type="radio"
+        name="deliveryMethod"
+        [formField]="form.deliveryMethod"
+        value="express"
+      />
+      <span>Express</span>
+    </label>
+  </div>
+</ngx-form-field-wrapper>
+```
+
+Use a normal `<label for="..."></label>` for single controls. For grouped
+radio/checkbox wrappers, project a neutral heading element such as
+`<span ngxFormFieldLabel>` instead of an HTML `<label>` because the wrapper is
+labelling the group container (`radiogroup`/`group`), not a single input.
+
+When the wrapper detects a grouped radio or checkbox cluster, it uses a surfaced
+background on the wrapper content instead of a text-field border. The feedback
+still renders through the normal wrapper assistive row or `errorPlacement`
+setting.
 
 ```html
 <ngx-form-fieldset

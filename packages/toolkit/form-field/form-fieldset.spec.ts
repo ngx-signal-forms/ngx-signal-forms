@@ -341,7 +341,7 @@ describe('NgxFormFieldset', () => {
     ).toContain('--_fieldset-clr-danger');
   });
 
-  it('uses compact feedback and tints selection-only groups in auto mode', async () => {
+  it('treats selection-only groups like regular grouped sections in auto mode', async () => {
     const fieldset = createFieldsetState({
       errors: () => [{ kind: 'required', message: 'Choose one option' }],
       errorSummary: () => [{ kind: 'required', message: 'Choose one option' }],
@@ -361,15 +361,12 @@ describe('NgxFormFieldset', () => {
 
     const host = container.querySelector('fieldset');
 
-    expect(host).toHaveAttribute('data-feedback-appearance', 'plain');
-    expect(
-      host?.classList.contains('ngx-signal-form-fieldset--selection-group'),
-    ).toBe(true);
+    expect(host).toHaveAttribute('data-feedback-appearance', 'notification');
     expect(
       host?.classList.contains('ngx-signal-form-fieldset--surface-invalid'),
-    ).toBe(true);
-    expect(container.querySelector('ngx-form-field-notification')).toBeNull();
-    expect(container.querySelector('ngx-form-field-error')).toBeTruthy();
+    ).toBe(false);
+    expect(container.querySelector('ngx-form-field-notification')).toBeTruthy();
+    expect(container.querySelector('ngx-form-field-error')).toBeNull();
   });
 
   it('marks the host aria-busy while the composed headless directive is pending', async () => {

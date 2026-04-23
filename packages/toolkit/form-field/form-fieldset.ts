@@ -27,24 +27,6 @@ export type FieldsetSurfaceTone =
   | 'danger';
 export type FieldsetValidationSurface = 'never' | 'auto' | 'always';
 
-const SELECTION_GROUP_SELECTOR = [
-  "input[type='radio']",
-  "input[type='checkbox']:not([role='switch'])",
-  "[data-ngx-signal-form-control-kind='checkbox']",
-  "[data-ngx-signal-form-control-kind='radio-group']",
-].join(', ');
-
-const NON_SELECTION_GROUP_SELECTOR = [
-  "input:not([type='radio']):not([type='checkbox'])",
-  'textarea',
-  'select',
-  "[data-ngx-signal-form-control-kind='input-like']",
-  "[data-ngx-signal-form-control-kind='standalone-field-like']",
-  "[data-ngx-signal-form-control-kind='switch']",
-  "[data-ngx-signal-form-control-kind='slider']",
-  "[data-ngx-signal-form-control-kind='composite']",
-].join(', ');
-
 /**
  * Form fieldset component for grouping related form fields with aggregated error/warning display.
  *
@@ -79,7 +61,7 @@ const NON_SELECTION_GROUP_SELECTOR = [
  * - **Group-Only Mode**: Show only group-level errors when nested fields display their own
  * - **Deduplication**: Same error shown only once even if multiple fields have it
  * - **Warning Support**: Non-blocking warnings (with `warn:` prefix) shown when no errors
- * - **Adaptive Feedback UI**: Notification cards for standard groups, compact text for selection-only groups
+ * - **Adaptive Feedback UI**: Notification cards by default, with an optional compact text mode
  * - **Configurable Surface Tones**: Neutral, info, success, warning, or danger base surfaces
  * - **WCAG 2.2 Compliant**: Errors use `role="alert"`, warnings use `role="status"`
  * - **Strategy Aware**: Respects `ErrorDisplayStrategy` from form context or input
@@ -139,8 +121,6 @@ const NON_SELECTION_GROUP_SELECTOR = [
   // form so consumer overrides like `.ngx-signal-form-fieldset--invalid {…}`
   // keep working without rewriting their stylesheets.
   host: {
-    '[class.ngx-signal-form-fieldset--selection-group]':
-      'isSelectionGroupFieldset()',
     '[class.ngx-signal-form-fieldset--invalid]': 'fieldset.shouldShowErrors()',
     '[class.ngx-signal-form-fieldset--warning]':
       'fieldset.shouldShowWarnings()',
@@ -161,18 +141,18 @@ const NON_SELECTION_GROUP_SELECTOR = [
     <ng-content select="legend" />
 
     <div class="ngx-signal-form-fieldset__surface">
-      @if (showMessages() && isTopPlacement()) {
+      @if (isTopPlacement()) {
         <div class="ngx-signal-form-fieldset__messages">
           @if (usesNotificationFeedback()) {
             <ngx-form-field-notification
-              [errors]="filteredErrorsSignal"
+              [errors]="displayedMessagesSignal"
               [fieldName]="fieldset.resolvedFieldsetId()"
               [title]="notificationTitle()"
               [listStyle]="resolvedListStyle()"
             />
           } @else {
             <ngx-form-field-error
-              [errors]="filteredErrorsSignal"
+              [errors]="displayedMessagesSignal"
               [fieldName]="fieldset.resolvedFieldsetId()"
               [strategy]="fieldset.resolvedStrategy()"
               [submittedStatus]="fieldset.resolvedSubmittedStatus()"
@@ -186,18 +166,18 @@ const NON_SELECTION_GROUP_SELECTOR = [
         <ng-content />
       </div>
 
-      @if (showMessages() && !isTopPlacement()) {
+      @if (!isTopPlacement()) {
         <div class="ngx-signal-form-fieldset__messages">
           @if (usesNotificationFeedback()) {
             <ngx-form-field-notification
-              [errors]="filteredErrorsSignal"
+              [errors]="displayedMessagesSignal"
               [fieldName]="fieldset.resolvedFieldsetId()"
               [title]="notificationTitle()"
               [listStyle]="resolvedListStyle()"
             />
           } @else {
             <ngx-form-field-error
-              [errors]="filteredErrorsSignal"
+              [errors]="displayedMessagesSignal"
               [fieldName]="fieldset.resolvedFieldsetId()"
               [strategy]="fieldset.resolvedStrategy()"
               [submittedStatus]="fieldset.resolvedSubmittedStatus()"
@@ -218,7 +198,6 @@ export class NgxFormFieldset {
    */
   protected readonly fieldset = inject(NgxHeadlessFieldset);
   readonly #elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
-  readonly #isSelectionGroupFieldset = signal(false);
   readonly #legendId = signal<string | null>(null);
   // `<fieldset>` natively implies role="group" and associates a child <legend>.
   // Any other host tag (custom element `<ngx-form-fieldset>` or a bare
@@ -254,8 +233,7 @@ export class NgxFormFieldset {
   /**
    * Presentation style for grouped feedback.
    *
-   * - `auto` (default): surfaced notification for regular grouped sections,
-   *   compact inline feedback for selection-only groups (radio/checkbox)
+   * - `auto` (default): surfaced notification for grouped sections
    * - `plain`: always use the compact `ngx-form-field-error` presentation
    * - `notification`: always use the surfaced notification card
    */
@@ -280,7 +258,7 @@ export class NgxFormFieldset {
    * Whether validation state should tint the fieldset surface.
    *
    * - `never`: keep the surface neutral and rely on the grouped message only
-   * - `auto` (default): tint only selection-only groups such as radio/checkbox sets
+   * - `auto` (default): same as `never`; reserved for future design-system defaults
    * - `always`: tint every invalid/warning fieldset surface
    */
   readonly validationSurface = input<FieldsetValidationSurface>('auto');
@@ -304,26 +282,15 @@ export class NgxFormFieldset {
       return appearance;
     }
 
-    return this.#isSelectionGroupFieldset() ? 'plain' : 'notification';
+    return 'notification';
   });
 
   protected readonly usesNotificationFeedback = computed(() => {
     return this.resolvedFeedbackAppearance() === 'notification';
   });
 
-  protected readonly isSelectionGroupFieldset = computed(() => {
-    return this.#isSelectionGroupFieldset();
-  });
-
   protected readonly resolvedListStyle = computed<NgxFormFieldErrorListStyle>(
     () => {
-      if (
-        this.feedbackAppearance() === 'auto' &&
-        this.#isSelectionGroupFieldset()
-      ) {
-        return 'plain';
-      }
-
       return this.listStyle();
     },
   );
@@ -339,17 +306,21 @@ export class NgxFormFieldset {
     return blocking.length > 0 ? blocking : this.fieldset.aggregatedWarnings();
   });
 
+  protected readonly displayedMessagesSignal = computed(() => {
+    return this.showMessages() ? this.filteredErrorsSignal() : [];
+  });
+
   protected readonly showInvalidSurface = computed(() => {
     if (!this.fieldset.shouldShowErrors()) {
       return false;
     }
 
     const mode = this.validationSurface();
-    if (mode === 'never') {
+    if (mode !== 'always') {
       return false;
     }
 
-    return mode === 'always' || this.#isSelectionGroupFieldset();
+    return true;
   });
 
   protected readonly showWarningSurface = computed(() => {
@@ -361,11 +332,11 @@ export class NgxFormFieldset {
     }
 
     const mode = this.validationSurface();
-    if (mode === 'never') {
+    if (mode !== 'always') {
       return false;
     }
 
-    return mode === 'always' || this.#isSelectionGroupFieldset();
+    return true;
   });
 
   protected readonly hostRole = computed<'group' | null>(() =>
@@ -402,34 +373,16 @@ export class NgxFormFieldset {
     afterEveryRender({
       earlyRead: () => {
         const host = this.#elementRef.nativeElement;
-        const content = host.querySelector(
-          '.ngx-signal-form-fieldset__content',
-        );
-        const scope = content ?? host;
-
-        const hasSelectionControls = scope.querySelector(
-          SELECTION_GROUP_SELECTOR,
-        );
-        const hasNonSelectionControls = scope.querySelector(
-          NON_SELECTION_GROUP_SELECTOR,
-        );
-
         const legend = host.querySelector(':scope > legend');
         const legendId =
           legend instanceof HTMLElement ? legend.id || null : null;
 
         return {
-          isSelectionGroupFieldset:
-            Boolean(hasSelectionControls) && !hasNonSelectionControls,
           legend: legend instanceof HTMLElement ? legend : null,
           legendId,
         };
       },
-      write: ({ isSelectionGroupFieldset, legend, legendId }) => {
-        if (isSelectionGroupFieldset !== this.#isSelectionGroupFieldset()) {
-          this.#isSelectionGroupFieldset.set(isSelectionGroupFieldset);
-        }
-
+      write: ({ legend, legendId }) => {
         if (legend && !legendId) {
           const assigned = `${this.fieldset.resolvedFieldsetId()}-legend`;
           legend.id = assigned;

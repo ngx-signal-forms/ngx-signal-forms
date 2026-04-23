@@ -401,8 +401,8 @@
     color: var(--color-text-muted);
   }
 
-  /* Choice-group fieldset (radio/checkbox groups inside preferences) */
-  .choice-group-fieldset__legend {
+  /* Grouped radio/checkbox field inside the form-field wrapper */
+  .choice-group-field__label {
     @apply block;
     font-size: var(
       --ngx-signal-form-fieldset-selection-legend-font-size,
@@ -423,12 +423,12 @@
     color: var(--ngx-signal-form-fieldset-selection-legend-color, #324155);
   }
 
-  .choice-group-fieldset__options {
+  .choice-group-field__options {
     @apply flex flex-col;
     gap: 0.5rem;
   }
 
-  .choice-group-option {
+  .choice-group-field__option {
     @apply flex cursor-pointer items-center rounded;
     min-height: 2rem;
     gap: 0.75rem;
@@ -438,7 +438,7 @@
     color: var(--color-text);
   }
 
-  .choice-group-option input {
+  .choice-group-field__option input {
     @apply m-0 shrink-0;
     inline-size: 1.5rem;
     block-size: 1.5rem;
@@ -446,13 +446,13 @@
     background: #fff;
   }
 
-  .choice-group-option:hover,
-  .choice-group-option:focus-within {
+  .choice-group-field__option:hover,
+  .choice-group-field__option:focus-within {
     background: rgb(15 23 42 / 0.03);
   }
 
-  .dark .choice-group-option:hover,
-  .dark .choice-group-option:focus-within {
+  .dark .choice-group-field__option:hover,
+  .dark .choice-group-field__option:focus-within {
     background: rgb(255 255 255 / 0.04);
   }
 

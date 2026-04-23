@@ -152,6 +152,22 @@
       var(--_fieldset-message-animation-default)
     )
   );
+  --_fieldset-transition-duration: 180ms;
+  --_fieldset-transition-easing: ease-in-out;
+  --_fieldset-transition-chrome:
+    border-color var(--_fieldset-transition-duration)
+      var(--_fieldset-transition-easing),
+    background-color var(--_fieldset-transition-duration)
+      var(--_fieldset-transition-easing),
+    color var(--_fieldset-transition-duration)
+      var(--_fieldset-transition-easing),
+    box-shadow var(--_fieldset-transition-duration)
+      var(--_fieldset-transition-easing);
+  --_fieldset-transition-spacing:
+    margin-top var(--_fieldset-transition-duration)
+      var(--_fieldset-transition-easing),
+    margin-bottom var(--_fieldset-transition-duration)
+      var(--_fieldset-transition-easing);
   --_fieldset-radius: var(
     --ngx-signal-form-fieldset-border-radius,
     var(--_fieldset-radius-lg)
@@ -405,6 +421,7 @@
   border-radius: var(--_fieldset-radius);
   background: transparent;
   color: var(--_fieldset-color);
+  transition: var(--_fieldset-transition-chrome);
 }
 
 :host > legend {
@@ -417,6 +434,7 @@
   line-height: var(--_fieldset-legend-line-height);
   font-weight: var(--_fieldset-legend-weight);
   letter-spacing: var(--_fieldset-legend-letter-spacing);
+  transition: var(--_fieldset-transition-chrome);
 }
 
 :host(.ngx-signal-form-fieldset--invalid) {
@@ -435,30 +453,6 @@
 :host(.ngx-signal-form-fieldset--warning) > legend {
   color: var(--_fieldset-warning-legend-color);
   background: var(--_fieldset-warning-legend-bg);
-}
-
-:host(.ngx-signal-form-fieldset--selection-group) {
-  --_fieldset-gap: var(--_fieldset-selection-gap);
-  --_fieldset-padding: var(--_fieldset-selection-padding);
-  --_fieldset-border-width: var(--_fieldset-selection-border-width);
-  --_fieldset-radius: var(--_fieldset-selection-radius);
-  --_fieldset-legend-color: var(--_fieldset-selection-legend-color);
-  --_fieldset-legend-size: var(--_fieldset-selection-legend-size);
-  --_fieldset-legend-line-height: var(--_fieldset-selection-legend-line-height);
-  --_fieldset-legend-weight: var(--_fieldset-selection-legend-weight);
-  --_fieldset-legend-letter-spacing: var(
-    --_fieldset-selection-legend-letter-spacing
-  );
-  --_fieldset-invalid-legend-color: var(--_fieldset-selection-legend-color);
-  --_fieldset-warning-legend-color: var(--_fieldset-selection-legend-color);
-  --_fieldset-message-margin-top: var(--_fieldset-selection-message-margin-top);
-  --_fieldset-message-margin-bottom: var(
-    --_fieldset-selection-message-margin-bottom
-  );
-  --_fieldset-invalid-bg: var(--_fieldset-selection-invalid-surface-bg);
-  --_fieldset-invalid-surface-bg: var(--_fieldset-selection-invalid-surface-bg);
-  --_fieldset-warning-bg: var(--_fieldset-selection-warning-surface-bg);
-  --_fieldset-warning-surface-bg: var(--_fieldset-selection-warning-surface-bg);
 }
 
 :host([data-surface-tone='neutral']) {
@@ -497,15 +491,11 @@
   padding: var(--_fieldset-padding);
   border-radius: var(--_fieldset-surface-radius);
   background: var(--_fieldset-surface-bg);
+  transition: var(--_fieldset-transition-chrome);
 }
 
 :host(fieldset) > .ngx-signal-form-fieldset__surface {
   padding-block-start: calc(var(--_fieldset-padding) - 0.35rem);
-}
-
-:host(fieldset.ngx-signal-form-fieldset--selection-group)
-  > .ngx-signal-form-fieldset__surface {
-  padding-block-start: var(--_fieldset-padding);
 }
 
 :host(.ngx-signal-form-fieldset--surface-invalid)
@@ -535,6 +525,8 @@
   margin-inline-start: var(--_fieldset-current-message-inset-inline-start);
   margin-inline-end: var(--_fieldset-current-message-inset-inline-end);
   min-inline-size: 0;
+  overflow: clip;
+  transition: var(--_fieldset-transition-spacing);
 
   --ngx-signal-form-error-padding: var(--_fieldset-message-padding);
   --ngx-signal-form-error-padding-inline-start: var(
@@ -592,6 +584,13 @@
   --ngx-signal-form-notification-warning-border: var(
     --_fieldset-notification-warning-border
   );
+}
+
+.ngx-signal-form-fieldset__messages:has(
+  :is(.ngx-form-field-notification--empty, .ngx-form-field-error--empty)
+) {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 :host(.ngx-signal-form-fieldset--messages-top)

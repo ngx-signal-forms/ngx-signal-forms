@@ -431,20 +431,22 @@
         />
       </ngx-form-field-wrapper>
 
-      <fieldset
-        ngxFormFieldset
-        [fieldsetField]="complexForm.preferences.contactMethod"
+      <ngx-form-field-wrapper
+        fieldName="contact-method"
+        [formField]="complexForm.preferences.contactMethod"
+        [appearance]="appearance()"
+        [orientation]="orientation()"
         [errorPlacement]="errorPlacement()"
-        fieldsetId="contact-method"
-        class="choice-group-fieldset"
+        class="choice-group-field"
       >
-        <legend class="choice-group-fieldset__legend">
+        <span ngxFormFieldLabel class="choice-group-field__label">
           Preferred contact method *
-        </legend>
+        </span>
 
-        <div class="choice-group-fieldset__options">
-          <label class="choice-group-option">
+        <div class="choice-group-field__options">
+          <label class="choice-group-field__option">
             <input
+              id="contactMethod-email"
               type="radio"
               [formField]="complexForm.preferences.contactMethod"
               value="email"
@@ -453,8 +455,9 @@
             <span>Email</span>
           </label>
 
-          <label class="choice-group-option">
+          <label class="choice-group-field__option">
             <input
+              id="contactMethod-sms"
               type="radio"
               [formField]="complexForm.preferences.contactMethod"
               value="sms"
@@ -463,8 +466,9 @@
             <span>SMS</span>
           </label>
 
-          <label class="choice-group-option">
+          <label class="choice-group-field__option">
             <input
+              id="contactMethod-phone"
               type="radio"
               [formField]="complexForm.preferences.contactMethod"
               value="phone"
@@ -473,7 +477,7 @@
             <span>Phone</span>
           </label>
         </div>
-      </fieldset>
+      </ngx-form-field-wrapper>
     </div>
   </ngx-form-fieldset>
 

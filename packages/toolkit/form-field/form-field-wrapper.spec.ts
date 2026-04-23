@@ -664,6 +664,31 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(input).toBeTruthy();
     });
 
+    it('should project ngxFormFieldLabel content into the wrapper label slot', async () => {
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" fieldName="delivery-method">
+          <span ngxFormFieldLabel>Delivery option *</span>
+          <div>
+            <input id="delivery-standard" type="radio" name="delivery" value="standard" />
+          </div>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const slotLabel = container.querySelector(
+        '.ngx-signal-form-field-wrapper__label [ngxformfieldlabel]',
+      );
+
+      expect(slotLabel).toBeTruthy();
+      expect(slotLabel?.textContent?.trim()).toBe('Delivery option *');
+      expect(slotLabel).not.toBeInstanceOf(HTMLLabelElement);
+    });
+
     it('should project multiple form controls', async () => {
       const { container } = await render(
         `<ngx-form-field-wrapper [formField]="field" fieldName="test-field">
@@ -1124,6 +1149,117 @@ describe('NgxSignalFormWrapperComponent', () => {
 
       expect(legend).toBeTruthy();
       expect(radios).toHaveLength(2);
+    });
+
+    it('should treat grouped radio controls as a selection cluster with wrapper-owned feedback', async () => {
+      const invalidField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [
+          { kind: 'required', message: 'Preferred contact method is required' },
+        ],
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" fieldName="delivery-method">
+          <span ngxFormFieldLabel>Delivery option *</span>
+          <div>
+            <label>
+              <input id="delivery-standard" type="radio" name="delivery" value="standard" />
+              Standard
+            </label>
+            <label>
+              <input id="delivery-express" type="radio" name="delivery" value="express" />
+              Express
+            </label>
+          </div>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: invalidField,
+          },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      const label = container.querySelector(
+        '[ngxformfieldlabel][id="delivery-method-label"]',
+      );
+
+      expect(wrapper).toHaveAttribute(
+        'data-ngx-signal-form-control-kind',
+        'radio-group',
+      );
+      expect(wrapper).toHaveClass(
+        'ngx-signal-form-field-wrapper--selection-group',
+        'ngx-signal-form-field-wrapper--selection-cluster',
+        'ngx-signal-form-field-wrapper--invalid',
+      );
+      expect(wrapper).toHaveAttribute('role', 'radiogroup');
+      expect(wrapper).toHaveAttribute(
+        'aria-labelledby',
+        'delivery-method-label',
+      );
+      expect(wrapper).toHaveAttribute(
+        'aria-describedby',
+        'delivery-method-error',
+      );
+      expect(label).toBeTruthy();
+      expect(label).not.toBeInstanceOf(HTMLLabelElement);
+      expect(
+        container.querySelector('[id="delivery-method-error"]'),
+      ).toBeTruthy();
+    });
+
+    it('should keep explicit labels associated to single controls while using neutral headings for grouped controls', async () => {
+      const invalidField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'required', message: 'Required' }],
+      });
+
+      const { container } = await render(
+        `<div>
+          <ngx-form-field-wrapper [formField]="textField">
+            <label for="email">Email</label>
+            <input id="email" type="email" />
+          </ngx-form-field-wrapper>
+
+          <ngx-form-field-wrapper [formField]="radioField" fieldName="delivery-method">
+            <span ngxFormFieldLabel>Delivery option *</span>
+            <div>
+              <label>
+                <input id="delivery-standard" type="radio" name="delivery" value="standard" />
+                Standard
+              </label>
+            </div>
+          </ngx-form-field-wrapper>
+        </div>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            textField: createMockFieldState(),
+            radioField: invalidField,
+          },
+        },
+      );
+
+      const singleControlLabel = container.querySelector('label[for="email"]');
+      const groupHeading = container.querySelector(
+        '[ngxformfieldlabel][id="delivery-method-label"]',
+      );
+      const groupedWrapper = container.querySelectorAll(
+        'ngx-form-field-wrapper',
+      )[1];
+
+      expect(singleControlLabel).toBeInstanceOf(HTMLLabelElement);
+      expect(groupHeading).toBeTruthy();
+      expect(groupHeading).not.toBeInstanceOf(HTMLLabelElement);
+      expect(groupedWrapper).toHaveAttribute(
+        'aria-labelledby',
+        'delivery-method-label',
+      );
     });
   });
 

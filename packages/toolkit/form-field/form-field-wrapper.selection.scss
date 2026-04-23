@@ -21,11 +21,12 @@
 // Explicit checkbox rows get their own layout below and should stay chrome-free.
 :host:not(.ngx-signal-form-field-wrapper--switch):not(
     .ngx-signal-form-field-wrapper--checkbox
-  )
+  ):not(.ngx-signal-form-field-wrapper--selection-cluster)
   .ngx-signal-form-field-wrapper__content:has(
     input[type='checkbox']:not([role='switch'])
   ),
-:host .ngx-signal-form-field-wrapper__content:has(input[type='radio']) {
+:host:not(.ngx-signal-form-field-wrapper--selection-cluster)
+  .ngx-signal-form-field-wrapper__content:has(input[type='radio']) {
   border: none;
   background-color: transparent;
   padding: 0;
@@ -61,6 +62,79 @@
 :host(.ngx-signal-form-field-wrapper--selection-group)
   .ngx-signal-form-field-wrapper__main {
   min-height: var(--_field-touch-target);
+}
+
+:host(.ngx-signal-form-field-wrapper--selection-cluster) {
+  --_selection-assistive-gap: var(--_field-space-2xs);
+}
+
+:host(.ngx-signal-form-field-wrapper--selection-cluster)
+  .ngx-signal-form-field-wrapper__content {
+  display: block;
+  min-height: 0;
+  padding: var(--_selection-cluster-padding);
+  border: none;
+  border-radius: var(--_selection-cluster-radius);
+  background: var(--_selection-cluster-bg);
+  box-shadow: none;
+
+  &:hover,
+  &:focus-within {
+    border-color: transparent;
+    box-shadow: none;
+  }
+}
+
+:host(.ngx-signal-form-field-wrapper--selection-cluster)
+  .ngx-signal-form-field-wrapper__main {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 0;
+  gap: var(--_selection-cluster-gap);
+}
+
+:host(.ngx-signal-form-field-wrapper--selection-cluster)
+  .ngx-signal-form-field-wrapper__prefix,
+:host(.ngx-signal-form-field-wrapper--selection-cluster)
+  .ngx-signal-form-field-wrapper__suffix {
+  display: none;
+}
+
+:host(.ngx-signal-form-field-wrapper--selection-cluster)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__main
+  :is([role='radiogroup'], [role='group'], fieldset) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--_selection-cluster-gap);
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+:host(.ngx-signal-form-field-wrapper--selection-cluster)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__main
+  label {
+  display: flex;
+  align-items: center;
+  gap: var(--_field-space-sm);
+}
+
+:host(
+    .ngx-signal-form-field-wrapper--selection-cluster.ngx-signal-form-field-wrapper--invalid
+  )
+  .ngx-signal-form-field-wrapper__content {
+  background: var(--_selection-cluster-invalid-bg);
+}
+
+:host(
+    .ngx-signal-form-field-wrapper--selection-cluster.ngx-signal-form-field-wrapper--warning
+  )
+  .ngx-signal-form-field-wrapper__content {
+  background: var(--_selection-cluster-warning-bg);
 }
 
 :host(.ngx-signal-form-field-wrapper--checkbox),

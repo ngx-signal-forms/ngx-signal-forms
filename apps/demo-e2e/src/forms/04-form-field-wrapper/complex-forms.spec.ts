@@ -4,7 +4,7 @@ import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
 import { FormFieldWrapperComplexPage } from '../../page-objects/form-field-wrapper-complex.page';
 
 const contactMethodFieldsetTopAriaSnapshot = `
-- group "Preferred contact method *":
+- radiogroup "Preferred contact method *":
   - text: Preferred contact method *
   - alert:
     - paragraph: Preferred contact method is required
@@ -17,7 +17,7 @@ const contactMethodFieldsetTopAriaSnapshot = `
 `;
 
 const contactMethodFieldsetBottomAriaSnapshot = `
-- group "Preferred contact method *":
+- radiogroup "Preferred contact method *":
   - text: Preferred contact method *
   - radio "Email"
   - text: Email
@@ -41,13 +41,20 @@ function getMessagePlacement(
   fieldset: ReturnType<FormFieldWrapperComplexPage['getFieldsetByLegend']>,
 ): Promise<'top' | 'bottom' | 'missing'> {
   return fieldset.evaluate((host) => {
-    const surface = host.querySelector('.ngx-signal-form-fieldset__surface');
-    const children = Array.from(surface?.children ?? []);
-    const contentIndex = children.findIndex((child) =>
-      child.classList.contains('ngx-signal-form-fieldset__content'),
+    const layoutRoot =
+      host.querySelector('.ngx-signal-form-fieldset__surface') ?? host;
+    const messageContainer = host.querySelector(
+      '.ngx-signal-form-fieldset__messages, .ngx-signal-form-field-wrapper__messages, ngx-form-field-assistive-row',
     );
-    const messageIndex = children.findIndex((child) =>
-      child.classList.contains('ngx-signal-form-fieldset__messages'),
+    const contentContainer = layoutRoot.querySelector(
+      '.ngx-signal-form-fieldset__content, .ngx-signal-form-field-wrapper__content',
+    );
+    const children = Array.from(layoutRoot.children);
+    const contentIndex = children.findIndex(
+      (child) => child === contentContainer,
+    );
+    const messageIndex = children.findIndex(
+      (child) => child === messageContainer,
     );
 
     if (contentIndex === -1 || messageIndex === -1) {
@@ -66,7 +73,6 @@ function getGroupedFieldsets(page: FormFieldWrapperComplexPage) {
     page.contactsFieldset,
     page.credentialsFieldset,
     page.preferencesFieldset,
-    page.contactMethodFieldset,
   ];
 }
 
@@ -133,14 +139,39 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       await expect(page.preferencesFieldset).toBeVisible();
     });
 
-    test('should have exactly 7 fieldsets', async () => {
+    test('should have exactly 6 fieldsets', async () => {
       await expect(page.fieldsets.first()).toBeVisible();
       const count = await page.countFieldsets();
-      expect(count).toBe(7);
+      expect(count).toBe(6);
     });
 
     test('should render contact method radio group in preferences', async () => {
       await expect(page.preferencesContactRadios).toHaveCount(3);
+    });
+
+    test('should use a neutral projected heading to label the contact-method radiogroup', async () => {
+      await expect(page.contactMethodGroupLabel).toBeVisible();
+      await expect(page.contactMethodGroupLabel).toContainText(
+        'Preferred contact method *',
+      );
+      await expect(page.contactMethodGroupLabel).toHaveAttribute(
+        'id',
+        'contact-method-label',
+      );
+
+      const headingSemantics = await page.contactMethodGroupLabel.evaluate(
+        (element) => ({
+          tagName: element.tagName,
+          forAttribute: element.getAttribute('for'),
+        }),
+      );
+
+      expect(headingSemantics.tagName).toBe('SPAN');
+      expect(headingSemantics.forAttribute).toBeNull();
+      await expect(page.contactMethodGroup).toHaveAttribute(
+        'aria-labelledby',
+        'contact-method-label',
+      );
     });
 
     test('should keep grouped fieldset summaries at the bottom by default', async () => {
@@ -156,10 +187,13 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
         );
       }
 
-      await triggerContactMethodFieldsetError(page);
-      expect(await getMessagePlacement(page.contactMethodFieldset)).toBe(
+      await expect(page.contactMethodGroup).toHaveAttribute(
+        'data-error-placement',
         'bottom',
       );
+
+      await triggerContactMethodFieldsetError(page);
+      expect(await getMessagePlacement(page.contactMethodGroup)).toBe('bottom');
     });
 
     test('should let the demo move grouped fieldset summaries to the top', async () => {
@@ -179,8 +213,13 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
         await expect(fieldset).toHaveAttribute('data-error-placement', 'top');
       }
 
+      await expect(page.contactMethodGroup).toHaveAttribute(
+        'data-error-placement',
+        'top',
+      );
+
       await triggerContactMethodFieldsetError(page);
-      expect(await getMessagePlacement(page.contactMethodFieldset)).toBe('top');
+      expect(await getMessagePlacement(page.contactMethodGroup)).toBe('top');
     });
 
     test('should display aggregated errors in fieldset after submit', async () => {
@@ -215,56 +254,54 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       ).toContainText('Passwords must match');
     });
 
-    test('should use the selection-group error surface recipe from the design system', async () => {
+    test('should use the wrapper selection-group error surface recipe from the design system', async () => {
       await triggerContactMethodFieldsetError(page);
 
-      const surface = page.contactMethodFieldset.locator(
-        '.ngx-signal-form-fieldset__surface',
+      const surface = page.contactMethodGroup.locator(
+        '.ngx-signal-form-field-wrapper__content',
       );
-      const legend = page.contactMethodFieldset.locator('legend');
-      const options = page.contactMethodFieldset.locator(
-        '.choice-group-fieldset__options',
+      const heading = page.contactMethodGroup.locator(
+        '.choice-group-field__label',
       );
-      const messages = page.contactMethodFieldset.locator(
-        '.ngx-signal-form-fieldset__messages',
+      const options = page.contactMethodGroup.locator(
+        '.choice-group-field__options',
       );
-      const alert = page.contactMethodFieldset.getByRole('alert');
-      const firstOption = page.contactMethodFieldset
-        .locator('.choice-group-option')
+      const messages = page.contactMethodGroup.locator(
+        'ngx-form-field-assistive-row',
+      );
+      const alert = page.contactMethodGroup.getByRole('alert');
+      const firstOption = page.contactMethodGroup
+        .locator('.choice-group-field__option')
         .first();
 
       await expect(surface).toBeVisible();
-      await expect(legend).toBeVisible();
+      await expect(heading).toBeVisible();
       await expect(options).toBeVisible();
       await expect(messages).toBeVisible();
       await expect(alert).toBeVisible();
       await expect(firstOption).toBeVisible();
+      await expect(surface).toHaveCSS('background-color', 'rgb(251, 221, 221)');
 
       const [
-        hostChrome,
         surfaceStyles,
         legendStyles,
         optionsGap,
         optionMinHeight,
-        messageMarginTop,
         alertStyles,
       ] = await Promise.all([
-        page.contactMethodFieldset.evaluate((host) => ({
-          hostBorderWidth: getComputedStyle(host).borderTopWidth,
-          hostRadius: getComputedStyle(host).borderTopLeftRadius,
-        })),
         surface.evaluate((element) => ({
           surfaceBg: getComputedStyle(element).backgroundColor,
           surfacePadding: getComputedStyle(element).padding,
+          surfaceBorderWidth: getComputedStyle(element).borderTopWidth,
+          surfaceRadius: getComputedStyle(element).borderTopLeftRadius,
         })),
-        legend.evaluate((element) => ({
-          legendColor: getComputedStyle(element).color,
-          legendFontSize: getComputedStyle(element).fontSize,
-          legendFontWeight: getComputedStyle(element).fontWeight,
+        heading.evaluate((element) => ({
+          headingColor: getComputedStyle(element).color,
+          headingFontSize: getComputedStyle(element).fontSize,
+          headingFontWeight: getComputedStyle(element).fontWeight,
         })),
         options.evaluate((element) => getComputedStyle(element).gap),
         firstOption.evaluate((element) => getComputedStyle(element).minHeight),
-        messages.evaluate((element) => getComputedStyle(element).marginTop),
         alert.evaluate((element) => ({
           alertColor: getComputedStyle(element).color,
           alertFontSize: getComputedStyle(element).fontSize,
@@ -273,25 +310,22 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       ]);
 
       const selectionRecipe = {
-        ...hostChrome,
         ...surfaceStyles,
         ...legendStyles,
         optionsGap,
         optionMinHeight,
-        messageMarginTop,
         ...alertStyles,
       };
 
-      expect(selectionRecipe.hostBorderWidth).toBe('0px');
-      expect(selectionRecipe.hostRadius).toBe('4px');
       expect(selectionRecipe.surfaceBg).toBe('rgb(251, 221, 221)');
-      expect(selectionRecipe.surfacePadding).toBe('16px');
-      expect(selectionRecipe.legendColor).toBe('rgb(50, 65, 85)');
-      expect(selectionRecipe.legendFontSize).toBe('14px');
-      expect(selectionRecipe.legendFontWeight).toBe('500');
+      expect(selectionRecipe.surfacePadding).toBe('12px');
+      expect(selectionRecipe.surfaceBorderWidth).toBe('0px');
+      expect(selectionRecipe.surfaceRadius).toBe('4px');
+      expect(selectionRecipe.headingColor).toBe('rgb(50, 65, 85)');
+      expect(selectionRecipe.headingFontSize).toBe('14px');
+      expect(selectionRecipe.headingFontWeight).toBe('500');
       expect(selectionRecipe.optionsGap).toBe('8px');
       expect(selectionRecipe.optionMinHeight).toBe('32px');
-      expect(selectionRecipe.messageMarginTop).toBe('8px');
       expect(selectionRecipe.alertColor).toBe('rgb(219, 24, 24)');
       expect(selectionRecipe.alertFontSize).toBe('12px');
       expect(selectionRecipe.alertLineHeight).toBe('16px');
@@ -409,13 +443,13 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
 
     test('should preserve the contact-method accessibility tree for top and bottom placement', async () => {
       await triggerContactMethodFieldsetError(page);
-      await expect(page.contactMethodFieldset).toMatchAriaSnapshot(
+      await expect(page.contactMethodGroup).toMatchAriaSnapshot(
         contactMethodFieldsetBottomAriaSnapshot,
       );
 
       await page.showTopFieldsetSummaryPlacement();
       await triggerContactMethodFieldsetError(page);
-      await expect(page.contactMethodFieldset).toMatchAriaSnapshot(
+      await expect(page.contactMethodGroup).toMatchAriaSnapshot(
         contactMethodFieldsetTopAriaSnapshot,
       );
     });
@@ -452,9 +486,9 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
     test('snapshot: contact-method grouped error with top placement', async () => {
       await page.showTopFieldsetSummaryPlacement();
       await triggerContactMethodFieldsetError(page);
-      await page.contactMethodFieldset.scrollIntoViewIfNeeded();
+      await page.contactMethodGroup.scrollIntoViewIfNeeded();
 
-      await expect(page.contactMethodFieldset).toHaveScreenshot(
+      await expect(page.contactMethodGroup).toHaveScreenshot(
         'complex-forms-contact-method-error-top.png',
       );
     });
@@ -462,9 +496,9 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
     test('snapshot: contact-method grouped error with bottom placement', async () => {
       await page.showBottomFieldsetSummaryPlacement();
       await triggerContactMethodFieldsetError(page);
-      await page.contactMethodFieldset.scrollIntoViewIfNeeded();
+      await page.contactMethodGroup.scrollIntoViewIfNeeded();
 
-      await expect(page.contactMethodFieldset).toHaveScreenshot(
+      await expect(page.contactMethodGroup).toHaveScreenshot(
         'complex-forms-contact-method-error-bottom.png',
       );
     });
@@ -641,9 +675,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       await page.preferencesContactRadios.first().focus();
       await page.preferencesContactRadios.first().blur();
 
-      await expect(
-        page.getFieldsetErrorsByLegend(/Preferred contact method/i).first(),
-      ).toBeVisible();
+      await expect(page.contactMethodFieldsetError).toBeVisible();
     });
 
     test('should keep error colors readable in explicit light mode even when the browser prefers dark', async ({
@@ -658,9 +690,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       await page.submit();
 
       const firstError = page.errorAlerts.first();
-      const groupedError = page
-        .getFieldsetErrorsByLegend(/Preferred contact method/i)
-        .first();
+      const groupedError = page.contactMethodFieldsetError;
 
       await expect(firstError).toBeVisible();
       await expect(groupedError).toBeVisible();

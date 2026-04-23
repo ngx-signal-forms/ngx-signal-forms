@@ -46,7 +46,6 @@ export type NgxFormFieldNotificationTone = 'auto' | 'error' | 'warning';
       [id]="hasMessages() ? containerId() : null"
       [attr.role]="resolvedTone() === 'warning' ? 'status' : 'alert'"
       [attr.aria-hidden]="hasMessages() ? null : 'true'"
-      [hidden]="!hasMessages()"
     >
       @if (hasMessages()) {
         @if (title()) {

@@ -139,6 +139,18 @@
     --ngx-signal-form-notification-list-style-position,
     var(--_notification-list-style-position-default)
   );
+  --_notification-motion-duration: 180ms;
+  --_notification-motion-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --_notification-motion-distance: 0.25rem;
+  --_notification-state-transition:
+    opacity var(--_notification-motion-duration)
+      var(--_notification-motion-easing),
+    transform var(--_notification-motion-duration)
+      var(--_notification-motion-easing),
+    padding var(--_notification-motion-duration)
+      var(--_notification-motion-easing),
+    border-color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   --_notification-error-color: var(
     --ngx-signal-form-notification-error-color,
     var(--_notification-clr-danger)
@@ -214,6 +226,11 @@
   box-shadow: var(--_notification-box-shadow);
   font-size: var(--_notification-font-size);
   line-height: var(--_notification-line-height);
+  overflow: clip;
+  opacity: 1;
+  transform: translateY(0);
+  transform-origin: top center;
+  transition: var(--_notification-state-transition);
 }
 
 .ngx-form-field-notification--error {
@@ -232,6 +249,9 @@
   padding: 0;
   border-width: 0;
   box-shadow: none;
+  opacity: 0;
+  transform: translateY(calc(var(--_notification-motion-distance) * -1));
+  pointer-events: none;
 }
 
 .ngx-form-field-notification__title,
@@ -266,8 +286,39 @@
   list-style-position: var(--_notification-list-style-position);
 }
 
+@supports (interpolate-size: allow-keywords) {
+  .ngx-form-field-notification {
+    interpolate-size: allow-keywords;
+    block-size: auto;
+    transition:
+      block-size var(--_notification-motion-duration)
+        var(--_notification-motion-easing),
+      var(--_notification-state-transition);
+  }
+
+  .ngx-form-field-notification--empty {
+    block-size: 0;
+  }
+}
+
+@starting-style {
+  .ngx-form-field-notification:not(.ngx-form-field-notification--empty) {
+    opacity: 0;
+    transform: translateY(calc(var(--_notification-motion-distance) * -1));
+  }
+}
+
+@supports (interpolate-size: allow-keywords) {
+  @starting-style {
+    .ngx-form-field-notification:not(.ngx-form-field-notification--empty) {
+      block-size: 0;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ngx-form-field-notification {
     transition: none;
+    transform: none;
   }
 }

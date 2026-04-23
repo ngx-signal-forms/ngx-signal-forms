@@ -402,9 +402,34 @@
   --_selection-row-padding-inline: var(--_padding-horizontal);
   --_selection-row-padding-block: 0rem;
   --_selection-assistive-gap: 0rem;
+  --_selection-cluster-gap: var(
+    --ngx-form-field-selection-group-gap,
+    var(--_field-space-sm)
+  );
+  --_selection-cluster-padding: var(
+    --ngx-form-field-selection-group-padding,
+    var(--_field-space-lg)
+  );
+  --_selection-cluster-radius: var(
+    --ngx-form-field-selection-group-radius,
+    var(--_field-radius)
+  );
+  --_selection-cluster-bg: var(
+    --ngx-form-field-selection-group-bg,
+    transparent
+  );
+  --_selection-cluster-invalid-bg: var(
+    --ngx-form-field-selection-group-invalid-bg,
+    #fbdddd
+  );
+  --_selection-cluster-warning-bg: var(
+    --ngx-form-field-selection-group-warning-bg,
+    color-mix(in srgb, var(--_warning-color) 12%, transparent)
+  );
   --_transition-color: color 0.15s ease-in-out;
   --_transition-chrome:
-    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    border-color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   --_transition-surface:
     background-color 0.15s ease-in-out, color 0.15s ease-in-out;
   --_selection-row-min-block-size: calc(
@@ -633,7 +658,11 @@
 :host:not(.ngx-signal-form-field-wrapper--switch)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
-  :is(input:not([role='switch']), textarea, select) {
+  :is(
+    input:not([type='radio']):not([type='checkbox']):not([role='switch']),
+    textarea,
+    select
+  ) {
   font-size: var(--_input-size);
   font-family: var(--_input-font-family);
   color: var(--_input-color);
@@ -689,7 +718,7 @@
     pointer-events: none;
     padding: var(--_field-space-2xs) var(--_field-space-xs) 0;
 
-    label {
+    :is(label, [ngxFormFieldLabel]) {
       // Caption typography: smaller, lighter for inline labels
       font-size: var(--_label-outline-size);
       line-height: var(--_label-outline-line-height);
@@ -916,7 +945,7 @@
 // Plain appearance is a non-goal (it already strips label chrome), so
 // exclude it explicitly to keep the spec and the CSS in sync.
 :host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain)):not(
-    :has(.ngx-signal-form-field-wrapper__label label)
+    :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
   )
   .ngx-signal-form-field-wrapper__label {
   display: none;
@@ -927,7 +956,7 @@
 // `.ngx-signal-forms-plain` are mutually exclusive appearance classes, so
 // no extra exclusion is needed here.
 :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual):not(
-  :has(.ngx-signal-form-field-wrapper__label label)
+  :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
 ) {
   // Mirror the labelled outline's public-API fallback chain so that a
   // consumer's explicit --ngx-form-field-min-height override is still
@@ -958,7 +987,9 @@
   .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
       .ngx-signal-forms-plain
     )
-):not(:has(.ngx-signal-form-field-wrapper__label label)) {
+):not(
+  :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
+) {
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
     'content'
@@ -969,7 +1000,9 @@
   .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
       .ngx-signal-forms-plain
     )
-):not(:has(.ngx-signal-form-field-wrapper__label label)) {
+):not(
+  :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
+) {
   grid-template-areas:
     'messages'
     'content'

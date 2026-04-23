@@ -26,7 +26,7 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
       name: /Add Skill/i,
     });
     this.fieldsetSummaryPlacementGroup = this.page.getByRole('group', {
-      name: 'Fieldset summary placement',
+      name: 'Grouped feedback placement',
     });
     this.bottomFieldsetSummaryButton =
       this.fieldsetSummaryPlacementGroup.getByRole('button', {
@@ -147,12 +147,22 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
     return this.getFieldsetByLegend(/Preferences/i);
   }
 
+  get contactMethodGroup(): Locator {
+    return this.form.locator('ngx-form-field-wrapper.choice-group-field');
+  }
+
+  get contactMethodGroupLabel(): Locator {
+    return this.contactMethodGroup.locator(
+      ':scope > .ngx-signal-form-field-wrapper__label [ngxFormFieldLabel]',
+    );
+  }
+
   get contactMethodFieldset(): Locator {
-    return this.form.locator('fieldset.choice-group-fieldset[ngxFormFieldset]');
+    return this.contactMethodGroup;
   }
 
   get contactMethodFieldsetError(): Locator {
-    return this.contactMethodFieldset.getByRole('alert');
+    return this.contactMethodGroup.getByRole('alert');
   }
 
   get credentialsPasswordInput(): Locator {
@@ -181,7 +191,7 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
    * Get contact method radios within preferences
    */
   get preferencesContactRadios(): Locator {
-    return this.preferencesFieldset.getByRole('radio');
+    return this.contactMethodGroup.getByRole('radio');
   }
 
   /**

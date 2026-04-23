@@ -120,13 +120,13 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<FieldsetErrorPlacement, string> =
         </ngx-display-controls-section>
 
         <ngx-display-controls-section
-          title="↕️ Fieldset summary placement"
-          description="Move grouped fieldset feedback above or below each section to compare when a shared summary should lead or follow the controls."
+          title="↕️ Grouped feedback placement"
+          description="Move grouped feedback above or below each section to compare when a shared summary or grouped wrapper error should lead or follow the controls."
         >
           <div
             class="inline-flex items-center gap-1 rounded-full border border-gray-200/80 bg-white/80 p-1 shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/90"
             role="group"
-            aria-label="Fieldset summary placement"
+            aria-label="Grouped feedback placement"
           >
             @for (placement of fieldsetErrorPlacementOptions; track placement) {
               <button
@@ -218,7 +218,7 @@ export class ComplexFormsPage {
       value: getOrientationLabel(this.selectedOrientation()),
     },
     {
-      label: 'Fieldset summary',
+      label: 'Grouped feedback',
       value:
         this.fieldsetErrorPlacementLabels[
           this.selectedFieldsetErrorPlacement()

@@ -146,6 +146,24 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
  * </ngx-form-field-wrapper>
  * ```
  *
+ * @example Grouped Radio/Checkbox Heading
+ * ```html
+ * <ngx-form-field-wrapper [formField]="form.deliveryMethod" fieldName="delivery-method">
+ *   <span ngxFormFieldLabel>Delivery option *</span>
+ *
+ *   <div>
+ *     <label>
+ *       <input type="radio" value="standard" [formField]="form.deliveryMethod" />
+ *       Standard
+ *     </label>
+ *     <label>
+ *       <input type="radio" value="express" [formField]="form.deliveryMethod" />
+ *       Express
+ *     </label>
+ *   </div>
+ * </ngx-form-field-wrapper>
+ * ```
+ *
  * @example Type Inference
  * ```typescript
  * /// TypeScript knows email is FieldTree<string>
@@ -201,6 +219,8 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
     '[class.ngx-signal-form-field-wrapper--checkbox]': 'isCheckboxControl()',
     '[class.ngx-signal-form-field-wrapper--selection-group]':
       'isSelectionGroupControl()',
+    '[class.ngx-signal-form-field-wrapper--selection-cluster]':
+      'isSelectionCluster()',
     '[class.ngx-signal-form-field-wrapper--switch]': 'isSwitchControl()',
     '[class.ngx-signal-form-field-wrapper--padded-control]':
       'hasPaddedContentControl()',
@@ -210,11 +230,14 @@ export type FormFieldErrorPlacement = 'top' | 'bottom';
     '[attr.data-orientation]': 'resolvedOrientation()',
     '[attr.data-error-placement]': 'errorPlacement()',
     '[attr.data-show-required]': 'showRequiredMarkerVisible() ? "true" : null',
+    '[attr.role]': 'selectionClusterRole()',
+    '[attr.aria-labelledby]': 'selectionClusterLabelledBy()',
+    '[attr.aria-describedby]': 'selectionClusterDescribedBy()',
   },
   template: `
     <!-- Label slot (outside bordered container for standard layout, visually inside for outline via CSS) -->
     <div class="ngx-signal-form-field-wrapper__label">
-      <ng-content select="label" />
+      <ng-content select="label, [ngxFormFieldLabel]" />
       @if (showRequiredMarkerVisible()) {
         <!--
           Required marker rendered in the template (not via CSS ::after content)
@@ -422,6 +445,8 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * required marker stays in sync with the projected control's attributes.
    */
   readonly #boundControlIsRequired = signal(false);
+  readonly #isSelectionCluster = signal(false);
+  readonly #selectionClusterLabelId = signal<string | null>(null);
 
   readonly #controlSemantics = signal<ResolvedNgxSignalFormControlSemantics>({
     kind: null,
@@ -623,6 +648,10 @@ export class NgxFormFieldWrapper<TValue = unknown> {
 
   protected readonly isSelectionGroupControl = computed(() => {
     return isSelectionGroupKind(this.#controlKind());
+  });
+
+  protected readonly isSelectionCluster = computed(() => {
+    return this.#isSelectionCluster();
   });
 
   protected readonly isSwitchControl = computed(() => {
@@ -842,6 +871,49 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     return this.errorPlacement() === 'top';
   });
 
+  protected readonly selectionClusterRole = computed<
+    'group' | 'radiogroup' | null
+  >(() => {
+    if (!this.isSelectionCluster()) {
+      return null;
+    }
+
+    return this.#controlKind() === 'radio-group' ? 'radiogroup' : 'group';
+  });
+
+  protected readonly selectionClusterLabelledBy = computed<string | null>(
+    () => {
+      if (!this.isSelectionCluster()) {
+        return null;
+      }
+
+      return this.#selectionClusterLabelId();
+    },
+  );
+
+  protected readonly selectionClusterDescribedBy = computed<string | null>(
+    () => {
+      if (!this.isSelectionCluster()) {
+        return null;
+      }
+
+      const fieldName = this.resolvedFieldName();
+      if (fieldName === null) {
+        return null;
+      }
+
+      if (this.showInvalidState()) {
+        return `${fieldName}-error`;
+      }
+
+      if (this.showWarningState()) {
+        return `${fieldName}-warning`;
+      }
+
+      return null;
+    },
+  );
+
   constructor() {
     // Single afterEveryRender with proper phased callbacks:
     // - earlyRead: read projected control metadata from the DOM before writes
@@ -881,11 +953,18 @@ export class NgxFormFieldWrapper<TValue = unknown> {
             inputEl,
             this.#controlPresets,
           ),
+          selectionControlCount: hostEl.querySelectorAll(
+            "input[type='radio'], input[type='checkbox']:not([role='switch']), [role='radio'], [role='checkbox']",
+          ).length,
+          label: hostEl.querySelector(
+            ':scope > .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])',
+          ),
         };
       },
       // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- afterEveryRender passes DOM-backed render state with mutable HTMLElement references.
       write: (renderState) => {
-        const { inputEl, inputId, semantics } = renderState;
+        const { inputEl, inputId, semantics, selectionControlCount, label } =
+          renderState;
         const previousBoundControl = this.#boundControlElement();
 
         if (previousBoundControl !== inputEl) {
@@ -907,6 +986,33 @@ export class NgxFormFieldWrapper<TValue = unknown> {
             inputEl.getAttribute('aria-required') === 'true');
         if (isRequired !== this.#boundControlIsRequired()) {
           this.#boundControlIsRequired.set(isRequired);
+        }
+
+        const isSelectionCluster =
+          semantics.kind === 'radio-group' ||
+          (semantics.kind === 'checkbox' && selectionControlCount > 1);
+        if (isSelectionCluster !== this.#isSelectionCluster()) {
+          this.#isSelectionCluster.set(isSelectionCluster);
+        }
+
+        if (label instanceof HTMLElement && isSelectionCluster) {
+          const existingLabelId = label.id.trim();
+          const resolvedFieldName = this.resolvedFieldName();
+          const nextLabelId =
+            existingLabelId ||
+            (resolvedFieldName === null
+              ? 'selection-group-label'
+              : `${resolvedFieldName}-label`);
+
+          if (existingLabelId.length === 0) {
+            label.id = nextLabelId;
+          }
+
+          if (nextLabelId !== this.#selectionClusterLabelId()) {
+            this.#selectionClusterLabelId.set(nextLabelId);
+          }
+        } else if (this.#selectionClusterLabelId() !== null) {
+          this.#selectionClusterLabelId.set(null);
         }
 
         const current = this.#controlSemantics();
