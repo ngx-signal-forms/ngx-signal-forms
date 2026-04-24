@@ -6,6 +6,7 @@ import {
   effect,
   input,
   isDevMode,
+  untracked,
 } from '@angular/core';
 import type {
   FieldState,
@@ -81,14 +82,23 @@ function isFieldStateLike(value: unknown): value is FieldState<unknown> {
   }
 
   const state = value as Record<string, unknown>;
+  const fieldTree = state['fieldTree'];
 
-  return (
-    typeof state['fieldTree'] === 'function' &&
-    typeof state['value'] === 'function' &&
-    typeof state['touched'] === 'function' &&
-    typeof state['invalid'] === 'function' &&
-    typeof state['errors'] === 'function'
-  );
+  if (
+    typeof fieldTree !== 'function' ||
+    typeof state['value'] !== 'function' ||
+    typeof state['touched'] !== 'function' ||
+    typeof state['invalid'] !== 'function' ||
+    typeof state['errors'] !== 'function'
+  ) {
+    return false;
+  }
+
+  try {
+    return untracked(() => fieldTree()) === value;
+  } catch {
+    return false;
+  }
 }
 
 function isFieldTreeLike(value: unknown): value is FieldTree<unknown> {

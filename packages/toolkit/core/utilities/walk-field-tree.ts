@@ -44,11 +44,10 @@ export function* walkFieldTreeIterable(
 }
 
 /**
- * Depth-first field-tree walk with stable dotted paths for internal consumers.
+ * Depth-first field-tree walk with stable dotted paths for sibling toolkit
+ * entry points that need stable per-field identity.
  *
  * @yields Each reachable `FieldState` plus its dotted path.
- *
- * @internal
  */
 export function* walkFieldTreeEntries(
   root: FieldTree<unknown>,

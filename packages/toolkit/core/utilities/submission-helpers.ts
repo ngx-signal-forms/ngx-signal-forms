@@ -192,6 +192,9 @@ export async function submitWithWarnings<TModel>(
     action: async () => undefined,
   });
 
+  // Preserve the existing blur-vs-submit safety gap: touched state is now
+  // delegated to Angular's native submit flow, but the error summary can still
+  // lag by one microtask when the active control is mid-blur as submit fires.
   await new Promise<void>((resolve) => {
     queueMicrotask(resolve);
   });

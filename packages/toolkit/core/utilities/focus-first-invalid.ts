@@ -60,7 +60,14 @@ export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
     for (const fieldState of walkFieldTreeIterable(formTree)) {
       fieldStates.set(fieldState.fieldTree, fieldState);
     }
-  } catch {
+  } catch (error) {
+    if (
+      !(error instanceof Error) ||
+      !error.message.includes('walkFieldTree expected')
+    ) {
+      throw error;
+    }
+
     // Some tests and edge-case callers still provide minimal mock field trees
     // that are sufficient for `errorSummary()` but not for full tree walking.
     // In that case we fall back to the error payload's own field reference.
