@@ -23,6 +23,7 @@ export {
 } from './directives/ngx-signal-form';
 
 // Utilities
+export * from './utilities/cascading-resolver';
 export * from './utilities/create-unique-id';
 export * from './utilities/control-semantics';
 export * from './utilities/form-field-input';

@@ -33,7 +33,12 @@ export function resolveValidationErrorMessage(
   registry?: Readonly<ErrorMessageRegistry> | null,
   options?: ResolveErrorMessageOptions,
 ): string {
-  if (error.message) {
+  // Nullish-only check: an explicit empty-string validator message suppresses
+  // further tiers (registry and default), consistent with the cascading
+  // resolver contract. The previous truthy check `if (error.message)` would
+  // silently fall through for `message: ''`, discarding the validator's intent.
+  // eslint-disable-next-line eqeqeq -- intentional: single check accepts both null and undefined
+  if (error.message != null) {
     return error.message;
   }
 
