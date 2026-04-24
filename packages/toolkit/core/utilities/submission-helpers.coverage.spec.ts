@@ -35,7 +35,7 @@ describe('createSubmittedStatusTracker', () => {
     submitting: () => boolean,
     touched: () => boolean,
   ): FieldTree<unknown> => {
-    return signal({
+    return createMockFieldTree({
       value: () => ({}),
       valid: () => true,
       invalid: () => false,
@@ -185,6 +185,21 @@ describe('createSubmittedStatusTracker', () => {
     ).toThrow(/FieldTree or Signal<FieldTree>/);
   });
 });
+
+function createMockFieldTree<TValue>(
+  state: Readonly<Record<string, unknown>>,
+): FieldTree<TValue> {
+  let fieldTree!: FieldTree<TValue>;
+
+  fieldTree = (() => ({
+    ...state,
+    get fieldTree() {
+      return fieldTree;
+    },
+  })) as FieldTree<TValue>;
+
+  return fieldTree;
+}
 
 describe('hasOnlyWarnings', () => {
   it('returns true for an empty errors array', () => {

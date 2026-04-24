@@ -1,6 +1,7 @@
 import { isDevMode } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
+import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { isFieldStateInteractive } from './field-interactivity';
+import { walkFieldTreeIterable } from './walk-field-tree';
 
 /**
  * Focus the first **focusable** invalid field in a form after failed submission.
@@ -54,10 +55,21 @@ export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
   const errors = formTree().errorSummary();
   if (!Array.isArray(errors) || errors.length === 0) return false;
 
+  const fieldStates = new Map<Function, FieldState<unknown>>();
+  try {
+    for (const fieldState of walkFieldTreeIterable(formTree)) {
+      fieldStates.set(fieldState.fieldTree, fieldState);
+    }
+  } catch {
+    // Some tests and edge-case callers still provide minimal mock field trees
+    // that are sufficient for `errorSummary()` but not for full tree walking.
+    // In that case we fall back to the error payload's own field reference.
+  }
+
   for (const error of errors) {
     if (typeof error.fieldTree !== 'function') continue;
 
-    const fieldState = error.fieldTree();
+    const fieldState = fieldStates.get(error.fieldTree) ?? error.fieldTree();
 
     if (!fieldState || typeof fieldState.focusBoundControl !== 'function') {
       continue;

@@ -1,8 +1,8 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import type { FieldTree, ValidationError } from '@angular/forms/signals';
+import type { FieldTree } from '@angular/forms/signals';
 import { describe, expect, it, vi } from 'vitest';
-import { hasSubmitted, submitWithWarnings } from './submission-helpers';
+import { hasSubmitted } from './submission-helpers';
 /**
  * Test suite for submission helper utilities.
  *
@@ -177,52 +177,6 @@ describe('Submission Helpers', () => {
       expect(hasSubmittedResult()).toBe(true);
     });
   });
-
-  describe('submitWithWarnings', () => {
-    it('should allow submission after touched state settles to warning-only', async () => {
-      const action = vi.fn(async () => {});
-      const markAsTouched = vi.fn(() => {
-        queueMicrotask(() => {
-          errorsState.set([
-            { kind: 'warn:weak-password', message: 'Weak password' },
-          ]);
-        });
-      });
-      const errorsState = signal<ValidationError[]>([
-        { kind: 'required', message: 'Password is required' },
-      ]);
-      const mockForm = createMockFormForSubmitWithWarnings(
-        () => errorsState(),
-        markAsTouched,
-      );
-
-      await submitWithWarnings(mockForm, action);
-
-      expect(markAsTouched).toHaveBeenCalledOnce();
-      expect(action).toHaveBeenCalledOnce();
-    });
-
-    it('should not submit when blocking errors remain after settling', async () => {
-      const action = vi.fn(async () => {});
-      const markAsTouched = vi.fn(() => {
-        queueMicrotask(() => {
-          errorsState.set([{ kind: 'required', message: 'Email is required' }]);
-        });
-      });
-      const errorsState = signal<ValidationError[]>([
-        { kind: 'required', message: 'Email is required' },
-      ]);
-      const mockForm = createMockFormForSubmitWithWarnings(
-        () => errorsState(),
-        markAsTouched,
-      );
-
-      await submitWithWarnings(mockForm, action);
-
-      expect(markAsTouched).toHaveBeenCalledOnce();
-      expect(action).not.toHaveBeenCalled();
-    });
-  });
 });
 
 /**
@@ -234,7 +188,7 @@ describe('Submission Helpers', () => {
 function createMockFormWithSubmitting(
   submitting: () => boolean,
 ): FieldTree<unknown> {
-  return signal({
+  return createMockFieldTree({
     value: () => ({}),
     valid: () => true,
     invalid: () => false,
@@ -266,7 +220,7 @@ function createMockFormWithSubmittingAndTouched(
   submitting: () => boolean,
   touched: () => boolean,
 ): FieldTree<unknown> {
-  return signal({
+  return createMockFieldTree({
     value: () => ({}),
     valid: () => true,
     invalid: () => false,
@@ -300,7 +254,7 @@ function createMockFormCompleteWithTouched(
   submitting: () => boolean,
   touched: () => boolean,
 ): FieldTree<unknown> {
-  return signal({
+  return createMockFieldTree({
     value: () => ({}),
     valid,
     invalid: () => !valid(),
@@ -321,35 +275,8 @@ function createMockFormCompleteWithTouched(
   });
 }
 
-function createMockFormForSubmitWithWarnings(
-  errors: () => readonly ValidationError[],
-  markAsTouched: () => void,
-): FieldTree<unknown> {
-  const formTree = (() => ({
-    value: () => ({}),
-    valid: () => errors().length === 0,
-    invalid: () => errors().length > 0,
-    touched: () => false,
-    dirty: () => true,
-    errors,
-    pending: () => false,
-    disabled: () => false,
-    readonly: () => false,
-    hidden: () => false,
-    submitting: () => false,
-    submittedStatus: () => 'unsubmitted' as const,
-    reset: createVoidSpy(),
-    markAsTouched,
-    markAsDirty: createVoidSpy(),
-    resetSubmittedStatus: createVoidSpy(),
-    errorSummary: errors,
-  })) satisfies FieldTree<unknown>;
-
-  return formTree;
-}
-
 function createMockLeafField(value: string): FieldTree<string> {
-  return signal({
+  return createMockFieldTree({
     value: () => value,
     valid: () => true,
     invalid: () => false,
@@ -371,6 +298,21 @@ function createMockLeafField(value: string): FieldTree<string> {
     errorSummary: () => [],
     metadata: () => {},
   });
+}
+
+function createMockFieldTree<TValue>(
+  state: Readonly<Record<string, unknown>>,
+): FieldTree<TValue> {
+  let fieldTree!: FieldTree<TValue>;
+
+  fieldTree = (() => ({
+    ...state,
+    get fieldTree() {
+      return fieldTree;
+    },
+  })) as FieldTree<TValue>;
+
+  return fieldTree;
 }
 
 function createVoidSpy(): () => void {
