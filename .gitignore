@@ -57,3 +57,5 @@ build.log
 .claude/settings.local.json
 .nx/polygraph
 .playwright-mcp/
+
+.nx/self-healing
