@@ -261,13 +261,25 @@ interface HeadlessErrorStateCore {
  *
  * Exposed to `error-state.ts` via a named export only.
  *
+ * When `errorsOverride` is provided and returns a defined array, that array
+ * replaces the field-based error extraction entirely. This enables the
+ * `NgxFormFieldError.errors` direct-input mode (pre-aggregated errors from
+ * fieldsets) to flow through the same split/resolution pipeline as
+ * field-derived errors.
+ *
  * @internal
  */
 export function buildHeadlessErrorState(
   fieldState: ReadSignal<unknown>,
   fieldName: ReadSignal<string | null>,
+  errorsOverride?: ReadSignal<readonly ValidationError[] | undefined>,
 ): HeadlessErrorStateCore {
-  const split = computed(() => splitByKind(readDirectErrors(fieldState())));
+  const split = computed(() => {
+    const override = errorsOverride?.();
+    return override !== undefined
+      ? splitByKind(override)
+      : splitByKind(readDirectErrors(fieldState()));
+  });
 
   return {
     errors: computed(() => split().blocking),
