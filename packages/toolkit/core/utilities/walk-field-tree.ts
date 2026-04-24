@@ -14,6 +14,13 @@ type WalkFieldTreeEntry = {
   readonly state: FieldState<unknown>;
 };
 
+export class InvalidFieldTreeError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InvalidFieldTreeError';
+  }
+}
+
 /**
  * Visit every reachable `FieldState` in a field tree in depth-first order.
  *
@@ -52,6 +59,8 @@ export function* walkFieldTreeIterable(
 export function* walkFieldTreeEntries(
   root: FieldTree<unknown>,
 ): Iterable<WalkFieldTreeEntry> {
+  // Angular does not produce cycles, but a hand-rolled or malformed tree can.
+  // Guarding by reference keeps traversal total and prevents infinite recursion.
   const seen = new WeakSet<FieldTree<unknown>>();
   yield* walk(root, '', seen);
 }
@@ -128,7 +137,10 @@ function readFieldState(
     typeof state.submitting !== 'function' ||
     typeof state.markAsTouched !== 'function'
   ) {
-    throw new Error(
+    // This targets Angular 21.2's current FieldState contract: the shared
+    // walker only depends on the members it actually reads and on the
+    // back-reference from `state.fieldTree` to the callable tree itself.
+    throw new InvalidFieldTreeError(
       `[ngx-signal-forms] walkFieldTree expected ${formatPath(path)} to resolve to a FieldState.`,
     );
   }
@@ -146,7 +158,7 @@ function hasIterator(
 }
 
 function invalidChildError(parentPath: string, segment: string): Error {
-  return new Error(
+  return new InvalidFieldTreeError(
     `[ngx-signal-forms] walkFieldTree expected ${formatPath(joinPath(parentPath, segment))} to be a FieldTree.`,
   );
 }

@@ -187,17 +187,14 @@ export async function submitWithWarnings<TModel>(
   formTree: FieldTree<TModel>,
   action: () => Promise<void>,
 ): Promise<void> {
+  // This native submit call exists only for Angular's touch-all side effect.
+  // The warning-aware gate and the real user action still live below.
   await submit(formTree, {
     ignoreValidators: 'all',
     action: async () => undefined,
   });
 
-  // Preserve the existing blur-vs-submit safety gap: touched state is now
-  // delegated to Angular's native submit flow, but the error summary can still
-  // lag by one microtask when the active control is mid-blur as submit fires.
-  await new Promise<void>((resolve) => {
-    queueMicrotask(resolve);
-  });
+  await waitForValidationSettlement();
 
   if (getBlockingErrors(formTree().errorSummary()).length > 0) {
     return;
@@ -213,9 +210,21 @@ function assertFieldTree(value: unknown): FieldTree<unknown> {
     );
   }
 
+  // A single iteration is enough to force `walkFieldTreeIterable()` to read the
+  // root FieldState contract. We intentionally stop immediately because the
+  // tracker only needs validation, not a full traversal.
   for (const _state of walkFieldTreeIterable(value as FieldTree<unknown>)) {
     break;
   }
 
   return value as FieldTree<unknown>;
+}
+
+function waitForValidationSettlement(): Promise<void> {
+  // Preserve the existing blur-vs-submit safety gap: touched state is now
+  // delegated to Angular's native submit flow, but the error summary can still
+  // lag by one microtask when the active control is mid-blur as submit fires.
+  return new Promise((resolve) => {
+    queueMicrotask(resolve);
+  });
 }

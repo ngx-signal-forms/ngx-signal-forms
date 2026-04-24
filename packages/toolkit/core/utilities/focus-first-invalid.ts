@@ -1,7 +1,10 @@
 import { isDevMode } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { isFieldStateInteractive } from './field-interactivity';
-import { walkFieldTreeIterable } from './walk-field-tree';
+import {
+  InvalidFieldTreeError,
+  walkFieldTreeIterable,
+} from './walk-field-tree';
 
 /**
  * Focus the first **focusable** invalid field in a form after failed submission.
@@ -61,10 +64,7 @@ export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
       fieldStates.set(fieldState.fieldTree, fieldState);
     }
   } catch (error) {
-    if (
-      !(error instanceof Error) ||
-      !error.message.includes('walkFieldTree expected')
-    ) {
+    if (!(error instanceof InvalidFieldTreeError)) {
       throw error;
     }
 

@@ -146,7 +146,7 @@ function createMockWalkableField<TValue>(value: TValue): FieldTree<TValue> {
     },
   ) as FieldTree<TValue>;
 
-  Object.defineProperty(fieldTree, '__setEntries', {
+  Object.defineProperty(fieldTree, 'setChildrenForTest', {
     value(nextEntries: Array<readonly [string, unknown]>) {
       entries = nextEntries;
     },
@@ -161,7 +161,7 @@ function attachEntries(
 ): void {
   (
     fieldTree as FieldTree<unknown> & {
-      __setEntries(nextEntries: Array<readonly [string, unknown]>): void;
+      setChildrenForTest(nextEntries: Array<readonly [string, unknown]>): void;
     }
-  ).__setEntries(entries);
+  ).setChildrenForTest(entries);
 }
