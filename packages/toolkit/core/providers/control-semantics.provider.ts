@@ -35,7 +35,8 @@ function mergeNgxSignalFormControlPresets(
       continue;
     }
 
-    // isNgxSignalFormControlKind is a type predicate — rawKind is narrowed here.
+    // isNgxSignalFormControlKind is a type predicate that narrowed rawKind
+    // above; it is a valid NgxSignalFormControlKind from this point on.
     normalized[rawKind] = {
       layout: createCascadingResolver({
         input: override.layout,

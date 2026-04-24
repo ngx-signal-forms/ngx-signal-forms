@@ -18,7 +18,6 @@ export type CascadingTier = 'input' | 'context' | 'configDefault' | 'fallback';
  *
  * @internal
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Symbol-keyed property
 export const CASCADING_SOURCE: unique symbol = Symbol(
   'ngxSignalForms.cascadingSource',
 );
