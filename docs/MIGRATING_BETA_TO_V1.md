@@ -542,6 +542,21 @@ case set `warningStrategy="inherit"` (or match `strategy` explicitly).
   `submittedStatus` output is now `resolvedSubmittedStatus`, and `strategy` is
   surfaced as `resolvedStrategy`. If you were reading either output from a
   template reference or through Angular's output API, update the binding name.
+- **`errorPlacement` default flipped from `'top'` to `'bottom'`** (breaking).
+  Grouped summaries now render after the projected field content by default,
+  which matches dense review-style layouts. This is a DOM-order change, not
+  just a CSS tweak — screen-reader reading order for grouped sections shifts
+  accordingly. To preserve pre-v1 behavior, pin `errorPlacement="top"` on any
+  `<ngx-form-fieldset>` that relies on the summary appearing directly below
+  the legend. Re-record any visual snapshots that cover grouped fieldsets.
+- **`feedbackAppearance` default `'auto'` resolves to `'notification'`**
+  (breaking). Grouped summaries now render inside the surfaced notification
+  card by default. Pass `feedbackAppearance="plain"` to keep the compact
+  inline `ngx-form-field-error` treatment.
+- **`validationSurface` is now `'never' | 'always'` (default `'never'`)**
+  (breaking). The old `'auto'` value was dropped as a dead branch; opt in
+  explicitly with `validationSurface="always"` when every invalid/warning
+  fieldset surface should tint.
 
 ### `NgxFormField` convenience bundle
 

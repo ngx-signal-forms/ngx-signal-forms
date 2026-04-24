@@ -412,26 +412,11 @@
   .choice-group-field__label {
     @apply block;
 
-    font-size: var(
-      --ngx-signal-form-fieldset-selection-legend-font-size,
-      0.875rem
-    );
-    line-height: var(
-      --ngx-signal-form-fieldset-selection-legend-line-height,
-      1.25rem
-    );
-    font-weight: var(
-      --ngx-signal-form-fieldset-selection-legend-font-weight,
-      500
-    );
-    letter-spacing: var(
-      --ngx-signal-form-fieldset-selection-legend-letter-spacing,
-      0
-    );
-    color: var(
-      --ngx-signal-form-fieldset-selection-legend-color,
-      var(--color-text-muted)
-    );
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--color-text-muted);
   }
 
   .choice-group-field__options {

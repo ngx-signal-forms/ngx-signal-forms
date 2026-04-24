@@ -140,6 +140,7 @@ export type NgxFieldsetValidationSurface = 'never' | 'always';
     '[attr.data-feedback-appearance]': 'resolvedFeedbackAppearance()',
     '[attr.data-surface-tone]': 'resolvedSurfaceTone()',
     '[attr.data-validation-surface]': 'resolvedValidationSurface()',
+    '[attr.data-has-messages]': 'showMessages() ? "" : null',
     '[attr.aria-busy]': 'fieldset.isPending() ? "true" : null',
   },
   template: `
@@ -268,7 +269,7 @@ export class NgxFormFieldset {
   readonly validationSurface = input<NgxFieldsetValidationSurface>('never');
 
   protected readonly isTopPlacement = computed(() => {
-    return this.errorPlacement() !== 'bottom';
+    return this.errorPlacement() === 'top';
   });
 
   protected readonly showMessages = computed(() => {

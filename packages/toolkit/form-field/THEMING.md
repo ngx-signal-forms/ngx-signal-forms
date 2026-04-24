@@ -27,11 +27,14 @@ by the most demanding features used:
 | Native CSS nesting                             | 112    | 112  | 16.5   | 117     |
 | `color-mix()`                                  | 111    | 111  | 16.2   | 113     |
 
-That lands the toolkit's effective baseline at **Chrome 112, Edge 112,
-Safari 16.5, Firefox 121** (Jan 2024). Older evergreen browsers may
-render a flattened approximation — the design tokens still resolve —
-but nested selectors, hover/invalid overrides, and the outline
-appearance depend on the features above.
+The effective baseline is the **most demanding** row, not any single
+feature: each component stylesheet uses native nesting on every rule,
+so the `:has(...)` row's lower Safari threshold does **not** relax
+the overall minimum. That lands the toolkit's effective baseline at
+**Chrome 112, Edge 112, Safari 16.5, Firefox 121** (Jan 2024). Older
+evergreen browsers may render a flattened approximation — the design
+tokens still resolve — but nested selectors, hover/invalid overrides,
+and the outline appearance depend on the features above.
 
 Progressive enhancements (`interpolate-size: allow-keywords`,
 `@supports` blocks for grouped notification animations,
@@ -288,19 +291,6 @@ fallbacks throughout the stylesheet.
 - `--ngx-signal-form-fieldset-warning-border-color` — default `#a16207`; border color when warnings are shown
 - `--ngx-signal-form-fieldset-invalid-surface-bg` — default `var(--...notification-error-bg...)`; error-tinted background below the legend
 - `--ngx-signal-form-fieldset-warning-surface-bg` — default `var(--...notification-warning-bg...)`; warning-tinted background below the legend
-- `--ngx-signal-form-fieldset-selection-gap` — default `1rem`; spacing between options inside selection-only groups (radio/checkbox)
-- `--ngx-signal-form-fieldset-selection-padding` — default `1rem`; inner padding for selection-only group surfaces
-- `--ngx-signal-form-fieldset-selection-border-width` — default `0`; host border width for selection-only groups
-- `--ngx-signal-form-fieldset-selection-border-radius` — default `0.25rem`; outer radius for selection-only groups
-- `--ngx-signal-form-fieldset-selection-message-margin-top` — default `0.5rem`; gap between a selection-group surface and its grouped summary
-- `--ngx-signal-form-fieldset-selection-message-margin-bottom` — default `0.5rem`; bottom gap for top-placed selection-group summaries
-- `--ngx-signal-form-fieldset-selection-legend-color` — default `#324155`; legend text color for selection-only groups
-- `--ngx-signal-form-fieldset-selection-legend-font-size` — default `0.875rem`; legend font size for selection-only groups
-- `--ngx-signal-form-fieldset-selection-legend-line-height` — default `1.25rem`; legend line height for selection-only groups
-- `--ngx-signal-form-fieldset-selection-legend-font-weight` — default `500`; legend weight for selection-only groups
-- `--ngx-signal-form-fieldset-selection-legend-letter-spacing` — default `0`; legend letter spacing for selection-only groups
-- `--ngx-signal-form-fieldset-selection-invalid-surface-bg` — default `#fbdddd`; invalid surface color for selection-only groups
-- `--ngx-signal-form-fieldset-selection-warning-surface-bg` — default `var(--...notification-warning-bg...)`; warning surface color for selection-only groups
 - `--ngx-signal-form-fieldset-invalid-legend-color` — default `var(--...invalid-border...)`; legend color in error state
 - `--ngx-signal-form-fieldset-warning-legend-color` — default `var(--...warning-border...)`; legend color in warning state
 - `--ngx-signal-form-fieldset-invalid-legend-bg` — default `var(--...legend-bg...)`; optional legend background in error state

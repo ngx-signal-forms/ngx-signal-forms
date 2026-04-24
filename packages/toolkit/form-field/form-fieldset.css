@@ -38,7 +38,6 @@
   --_fieldset-clr-warning-strong: #92400e;
 
   --_fieldset-bg-danger-soft: #fdebeb;
-  --_fieldset-bg-selection-danger: #fbdddd;
   --_fieldset-bg-warning-soft: #fff6e8;
   --_fieldset-border-danger-soft: rgb(219 24 24 / 0.18);
   --_fieldset-border-warning-soft: rgb(161 98 7 / 0.2);
@@ -344,59 +343,6 @@
       var(--_fieldset-clr-warning-strong)
     )
   );
-  --_fieldset-selection-gap: var(
-    --ngx-signal-form-fieldset-selection-gap,
-    var(--_fieldset-space-lg)
-  );
-  --_fieldset-selection-padding: var(
-    --ngx-signal-form-fieldset-selection-padding,
-    var(--_fieldset-space-lg)
-  );
-  --_fieldset-selection-border-width: var(
-    --ngx-signal-form-fieldset-selection-border-width,
-    var(--_fieldset-space-0)
-  );
-  --_fieldset-selection-radius: var(
-    --ngx-signal-form-fieldset-selection-border-radius,
-    var(--_fieldset-radius-sm)
-  );
-  --_fieldset-selection-message-margin-top: var(
-    --ngx-signal-form-fieldset-selection-message-margin-top,
-    var(--_fieldset-space-sm)
-  );
-  --_fieldset-selection-message-margin-bottom: var(
-    --ngx-signal-form-fieldset-selection-message-margin-bottom,
-    var(--_fieldset-space-sm)
-  );
-  --_fieldset-selection-legend-color: var(
-    --ngx-signal-form-fieldset-selection-legend-color,
-    var(--_fieldset-clr-text)
-  );
-  --_fieldset-selection-legend-size: var(
-    --ngx-signal-form-fieldset-selection-legend-font-size,
-    var(--_fieldset-text-body)
-  );
-  --_fieldset-selection-legend-line-height: var(
-    --ngx-signal-form-fieldset-selection-legend-line-height,
-    var(--_fieldset-line-height-body)
-  );
-  --_fieldset-selection-legend-weight: var(
-    --ngx-signal-form-fieldset-selection-legend-font-weight,
-    var(--_fieldset-weight-medium)
-  );
-  --_fieldset-selection-legend-letter-spacing: var(
-    --ngx-signal-form-fieldset-selection-legend-letter-spacing,
-    0
-  );
-  --_fieldset-selection-invalid-surface-bg: var(
-    --ngx-signal-form-fieldset-selection-invalid-surface-bg,
-    var(--_fieldset-bg-selection-danger)
-  );
-  --_fieldset-selection-warning-surface-bg: var(
-    --ngx-signal-form-fieldset-selection-warning-surface-bg,
-    var(--_fieldset-notification-warning-bg)
-  );
-
   --_fieldset-direction: var(--ngx-signal-form-fieldset-direction, column);
 
   display: block;
