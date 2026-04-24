@@ -42,7 +42,7 @@
   --_fieldset-bg-warning-soft: #fff6e8;
   --_fieldset-border-danger-soft: rgb(219 24 24 / 0.18);
   --_fieldset-border-warning-soft: rgb(161 98 7 / 0.2);
-  --_fieldset-message-animation-default: ngxStatusSlideIn 300ms
+  --_fieldset-message-animation-default: ngx-status-slide-in 300ms
     cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 
   /* Resolved pseudo-private variables */
@@ -584,9 +584,17 @@
   );
 }
 
-.ngx-signal-form-fieldset__messages:has(
-  :is(.ngx-form-field-notification--empty, .ngx-form-field-error--empty)
-) {
+/*
+ * Collapse the wrapper's vertical rhythm when the host knows there are no
+ * visible messages. We can't gate on a child `:has(...--empty)` selector here
+ * because `ngx-form-field-error` always renders BOTH an alert and a status
+ * container (per WCAG 4.1.3 — the live region must be present BEFORE the
+ * first announcement); at any moment one of them carries `--empty` even
+ * when the other is announcing. The host directive owns the authoritative
+ * `showMessages()` state and exposes it via `[data-has-messages]` so the CSS
+ * can collapse symmetrically without inspecting child markup.
+ */
+:host(:not([data-has-messages])) .ngx-signal-form-fieldset__messages {
   margin-top: 0;
   margin-bottom: 0;
 }

@@ -669,7 +669,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         `<ngx-form-field-wrapper [formField]="field" fieldName="delivery-method">
           <span ngxFormFieldLabel>Delivery option *</span>
           <div>
-            <input id="delivery-standard" type="radio" name="delivery" value="standard" />
+            <input id="delivery-standard" type="radio" value="standard" />
           </div>
         </ngx-form-field-wrapper>`,
         {
@@ -1127,11 +1127,11 @@ describe('NgxSignalFormWrapperComponent', () => {
           <fieldset>
             <legend>Choose size</legend>
             <label>
-              <input type="radio" name="size" value="small" />
+              <input type="radio" value="small" />
               Small
             </label>
             <label>
-              <input type="radio" name="size" value="large" />
+              <input type="radio" value="large" />
               Large
             </label>
           </fieldset>
@@ -1165,11 +1165,11 @@ describe('NgxSignalFormWrapperComponent', () => {
           <span ngxFormFieldLabel>Delivery option *</span>
           <div>
             <label>
-              <input id="delivery-standard" type="radio" name="delivery" value="standard" />
+              <input id="delivery-standard" type="radio" value="standard" />
               Standard
             </label>
             <label>
-              <input id="delivery-express" type="radio" name="delivery" value="express" />
+              <input id="delivery-express" type="radio" value="express" />
               Express
             </label>
           </div>
@@ -1230,7 +1230,7 @@ describe('NgxSignalFormWrapperComponent', () => {
             <span ngxFormFieldLabel>Delivery option *</span>
             <div>
               <label>
-                <input id="delivery-standard" type="radio" name="delivery" value="standard" />
+                <input id="delivery-standard" type="radio" value="standard" />
                 Standard
               </label>
             </div>

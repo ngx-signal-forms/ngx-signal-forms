@@ -19,6 +19,7 @@ import type {
   FormFieldAppearanceInput,
   FormFieldOrientation,
   FormFieldOrientationInput,
+  NgxFormFieldErrorPlacement,
 } from '@ngx-signal-forms/toolkit';
 import {
   NGX_SIGNAL_FORM_CONTROL_PRESETS,
@@ -54,13 +55,6 @@ import {
   supportsOutlinedAppearance,
   type FormFieldControlKind,
 } from './form-field.utils';
-
-/**
- * Placement of the validation summary relative to the control or fieldset
- * content. Shared by both `NgxFormFieldWrapper` and `NgxFormFieldset` so a
- * single value binds cleanly across both APIs.
- */
-export type NgxFormFieldErrorPlacement = 'top' | 'bottom';
 
 /**
  * Form field wrapper component with automatic error/warning display.
@@ -908,7 +902,11 @@ export class NgxFormFieldWrapper<TValue = unknown> {
         return `${fieldName}-error`;
       }
 
-      if (this.showWarningState()) {
+      // `shouldShowErrors()` gates the `<ngx-form-field-error>` template, so
+      // the `${fieldName}-warning` id only exists in the DOM when that branch
+      // renders. Guard `aria-describedby` on the same signal to avoid dangling
+      // references for warning-only clusters with `showErrors="false"`.
+      if (this.showWarningState() && this.shouldShowErrors()) {
         return `${fieldName}-warning`;
       }
 

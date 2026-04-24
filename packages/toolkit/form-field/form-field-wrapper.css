@@ -416,7 +416,7 @@
   );
   --_selection-cluster-invalid-bg: var(
     --ngx-form-field-selection-group-invalid-bg,
-    #fbdddd
+    color-mix(in srgb, var(--_invalid-color) 12%, transparent)
   );
   --_selection-cluster-warning-bg: var(
     --ngx-form-field-selection-group-warning-bg,
@@ -447,8 +447,7 @@
     --ngx-form-field-min-height,
     calc(
       var(--_label-outline-line-height) + var(--_label-outline-gap) +
-        var(--_input-outline-line-height) + var(--_padding-vertical) +
-        var(--_padding-vertical)
+        var(--_input-outline-line-height) + (var(--_padding-vertical) * 2)
     )
   );
   --_outline-focus-color: var(--_focus-color);

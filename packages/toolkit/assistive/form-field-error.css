@@ -25,7 +25,7 @@
   --_error-border-width-default: 0;
   --_error-border-radius-default: 0;
   --_error-border-style-default: solid;
-  --_error-animation-default: ngxStatusSlideIn 300ms
+  --_error-animation-default: ngx-status-slide-in 300ms
     cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 
   /* Resolved pseudo-private variables */
@@ -103,7 +103,7 @@
     --_error-clr-warning: var(--_error-clr-warning-dark);
   }
 
-  :host-context(:root:not(.dark)) {
+  :host-context(:root.light) {
     --_error-clr-danger: #db1818;
     --_error-clr-warning: #a16207;
   }
@@ -180,7 +180,7 @@
 }
 
 /* Animations */
-@keyframes ngxStatusSlideIn {
+@keyframes ngx-status-slide-in {
   from {
     opacity: 0;
     transform: translateY(-0.5rem) scale(0.98);
@@ -192,7 +192,7 @@
 }
 
 /* High Contrast Mode Support */
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
   :host {
     --_error-border-width-default: 2px;
   }

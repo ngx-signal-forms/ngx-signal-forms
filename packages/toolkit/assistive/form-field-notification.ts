@@ -153,21 +153,26 @@ export class NgxFormFieldNotification {
   protected readonly resolvedTone = computed<'error' | 'warning'>(() => {
     const explicit = this.tone();
     const messages = this.#resolvedErrors();
-    const allWarnings = messages.length > 0 && messages.every(isWarningError);
+    const hasBlockingError = messages.some(
+      (message) => !isWarningError(message),
+    );
+
+    // Content wins both ways: a blocking error keeps `role='alert'` even when
+    // the caller explicitly requested `tone='warning'`, and an all-warning
+    // list stays `role='status'` even when the caller requested `tone='error'`.
+    // Downgrading real errors to a polite live region would bury the alert;
+    // upgrading warnings would over-announce non-urgent text.
+    if (hasBlockingError) {
+      return 'error';
+    }
 
     if (explicit === 'warning') {
       return 'warning';
     }
 
-    // An explicit `tone='error'` on an all-warning message list would flip
-    // the live region to `role='alert'` over non-urgent warning text. Treat
-    // content as the source of truth for semantics in that case.
+    const allWarnings = messages.length > 0 && !hasBlockingError;
     if (allWarnings) {
       return 'warning';
-    }
-
-    if (explicit === 'error') {
-      return 'error';
     }
 
     return 'error';

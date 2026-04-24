@@ -147,11 +147,11 @@ export type NgxCharacterCountValue = CharacterCountValue;
       white-space: nowrap;
       padding-inline-start: var(
         --ngx-form-field-char-count-padding-inline-start,
-        0
+        var(--ngx-signal-form-feedback-padding-horizontal, 0)
       );
       padding-inline-end: var(
         --ngx-form-field-char-count-padding-inline-end,
-        0.5rem
+        var(--ngx-signal-form-feedback-padding-horizontal, 0.5rem)
       );
     }
 

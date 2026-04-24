@@ -388,14 +388,16 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
             )
             .trim(),
           listStyle: style
-            .getPropertyValue('--ngx-signal-form-fieldset-message-list-style')
+            .getPropertyValue(
+              '--ngx-signal-form-fieldset-notification-list-style',
+            )
             .trim(),
         };
       });
 
       expect(recipe.contentOffset).toBe('0');
       expect(recipe.insetInlineStart).toBe('0.875rem');
-      expect(recipe.listStyle).toBe('disc inside');
+      expect(recipe.listStyle).toBe('disc outside');
 
       const [messageSlotBox, notificationCardBox] = await Promise.all([
         messageSlot.boundingBox(),

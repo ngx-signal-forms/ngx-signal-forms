@@ -137,13 +137,13 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
                 [attr.aria-pressed]="
                   selectedFieldsetErrorPlacement() === placement
                 "
-                [class.bg-[#e8f4fb]]="
+                [class.bg-blue-50]="
                   selectedFieldsetErrorPlacement() === placement
                 "
                 [class.shadow-sm]="
                   selectedFieldsetErrorPlacement() === placement
                 "
-                [class.text-[#005d96]]="
+                [class.text-blue-700]="
                   selectedFieldsetErrorPlacement() === placement
                 "
                 [class.dark:bg-gray-700]="
@@ -152,7 +152,7 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
                 [class.dark:text-blue-300]="
                   selectedFieldsetErrorPlacement() === placement
                 "
-                class="rounded-full px-4 py-1.5 text-sm font-medium text-gray-600 transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#005fcc] dark:text-gray-300 dark:hover:text-white"
+                class="rounded-full px-4 py-1.5 text-sm font-medium text-gray-600 transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:text-gray-300 dark:hover:text-white"
               >
                 {{ fieldsetErrorPlacementLabels[placement] }}
               </button>

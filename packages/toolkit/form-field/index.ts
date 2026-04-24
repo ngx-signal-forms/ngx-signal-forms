@@ -2,6 +2,11 @@
 export * from './form-field-wrapper';
 export * from './form-fieldset';
 
+// Re-export the shared placement type from core so consumers importing from
+// `@ngx-signal-forms/toolkit/form-field` keep resolving it after the type
+// moved to the core barrel during v1 hardening.
+export type { NgxFormFieldErrorPlacement } from '@ngx-signal-forms/toolkit';
+
 import { NgxSignalFormAutoAria } from '@ngx-signal-forms/toolkit';
 import {
   NgxFormFieldAssistiveRow,

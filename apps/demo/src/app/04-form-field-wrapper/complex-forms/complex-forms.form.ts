@@ -208,7 +208,14 @@ export class ComplexFormsComponent {
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 500);
         });
-        console.log('Complex form submitted:', this.#model());
+        const submitted = this.#model();
+        console.log('Complex form submitted:', {
+          ...submitted,
+          credentials: {
+            password: '[redacted]',
+            confirmPassword: '[redacted]',
+          },
+        });
       },
       onInvalid: createOnInvalidHandler(),
     },

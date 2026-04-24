@@ -366,7 +366,15 @@ the fieldset is reserved for the shared cross-field message.
 ```
 
 ```typescript
+import { signal } from '@angular/core';
 import { form, required, validateTree } from '@angular/forms/signals';
+
+const model = signal({
+  passwords: {
+    password: '',
+    confirm: '',
+  },
+});
 
 const signupForm = form(model, (path) => {
   required(path.passwords.password, { message: 'Password is required' });

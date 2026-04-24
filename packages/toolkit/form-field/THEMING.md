@@ -111,26 +111,26 @@ implementation details.
 
 > **Note:** The default `--ngx-signal-form-warning-color` was `#f59e0b` prior to v1.0; it was changed to `#a16207` (Tailwind amber-700) for WCAG 1.4.3 AA contrast compliance on white backgrounds.
 
-| Property                                            | Default                                                          | Description                        |
-| :-------------------------------------------------- | :--------------------------------------------------------------- | :--------------------------------- |
-| `--ngx-signal-form-error-color`                     | `#db1818`                                                        | Text color for errors              |
-| `--ngx-signal-form-error-bg`                        | `transparent`                                                    | Error background color             |
-| `--ngx-signal-form-error-border-color`              | `transparent`                                                    | Error border color                 |
-| `--ngx-signal-form-warning-color`                   | `#a16207`                                                        | Text color for warnings            |
-| `--ngx-signal-form-warning-bg`                      | `transparent`                                                    | Warning background color           |
-| `--ngx-signal-form-warning-border-color`            | `transparent`                                                    | Warning border color               |
-| `--ngx-signal-form-error-font-size`                 | `var(--...feedback...)`                                          | Text size                          |
-| `--ngx-signal-form-error-line-height`               | `var(--...feedback...)`                                          | Line height                        |
-| `--ngx-signal-form-error-margin-top`                | `var(--...feedback...)`                                          | Spacing from input                 |
-| `--ngx-signal-form-error-message-spacing`           | `0.25rem`                                                        | Spacing between messages           |
-| `--ngx-signal-form-error-border-width`              | `0`                                                              | Border width                       |
-| `--ngx-signal-form-error-border-radius`             | `0`                                                              | Border radius                      |
-| `--ngx-signal-form-error-padding`                   | `0`                                                              | Container padding                  |
-| `--ngx-signal-form-error-padding-inline-start`      | `var(--...feedback...)`                                          | Start-edge (inline) padding        |
-| `--ngx-signal-form-error-padding-inline-end`        | `var(--...feedback...)`                                          | End-edge (inline) padding          |
-| `--ngx-signal-form-error-animation`                 | `ngxStatusSlideIn 300ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards` | Entry animation                    |
-| `--ngx-signal-form-error-list-style`                | `var(--...feedback...)`                                          | `list-style` shorthand for bullets |
-| `--ngx-signal-form-error-list-padding-inline-start` | `var(--...feedback...)`                                          | Indent for bulleted summaries      |
+| Property                                            | Default                                                             | Description                        |
+| :-------------------------------------------------- | :------------------------------------------------------------------ | :--------------------------------- |
+| `--ngx-signal-form-error-color`                     | `#db1818`                                                           | Text color for errors              |
+| `--ngx-signal-form-error-bg`                        | `transparent`                                                       | Error background color             |
+| `--ngx-signal-form-error-border-color`              | `transparent`                                                       | Error border color                 |
+| `--ngx-signal-form-warning-color`                   | `#a16207`                                                           | Text color for warnings            |
+| `--ngx-signal-form-warning-bg`                      | `transparent`                                                       | Warning background color           |
+| `--ngx-signal-form-warning-border-color`            | `transparent`                                                       | Warning border color               |
+| `--ngx-signal-form-error-font-size`                 | `var(--...feedback...)`                                             | Text size                          |
+| `--ngx-signal-form-error-line-height`               | `var(--...feedback...)`                                             | Line height                        |
+| `--ngx-signal-form-error-margin-top`                | `var(--...feedback...)`                                             | Spacing from input                 |
+| `--ngx-signal-form-error-message-spacing`           | `0.25rem`                                                           | Spacing between messages           |
+| `--ngx-signal-form-error-border-width`              | `0`                                                                 | Border width                       |
+| `--ngx-signal-form-error-border-radius`             | `0`                                                                 | Border radius                      |
+| `--ngx-signal-form-error-padding`                   | `0`                                                                 | Container padding                  |
+| `--ngx-signal-form-error-padding-inline-start`      | `var(--...feedback...)`                                             | Start-edge (inline) padding        |
+| `--ngx-signal-form-error-padding-inline-end`        | `var(--...feedback...)`                                             | End-edge (inline) padding          |
+| `--ngx-signal-form-error-animation`                 | `ngx-status-slide-in 300ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards` | Entry animation                    |
+| `--ngx-signal-form-error-list-style`                | `var(--...feedback...)`                                             | `list-style` shorthand for bullets |
+| `--ngx-signal-form-error-list-padding-inline-start` | `var(--...feedback...)`                                             | Indent for bulleted summaries      |
 
 ### Hints
 
@@ -313,7 +313,7 @@ fallbacks throughout the stylesheet.
 - `--ngx-signal-form-fieldset-message-spacing` — default `0.25rem`; spacing between grouped summary messages
 - `--ngx-signal-form-fieldset-message-list-style` — default `var(--...feedback-list-style...)`; grouped summary `list-style` shorthand (type + position)
 - `--ngx-signal-form-fieldset-message-list-padding-inline-start` — default `var(--...feedback-list-indent...)`; grouped summary list indent
-- `--ngx-signal-form-fieldset-message-animation` — default `ngxStatusSlideIn 300ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards`; grouped summary entry animation
+- `--ngx-signal-form-fieldset-message-animation` — default `ngx-status-slide-in 300ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards`; grouped summary entry animation
 - `--ngx-signal-form-fieldset-error-color` — default cascades through `--ngx-signal-form-error-color` before falling back to the internal danger tone; grouped error text color
 - `--ngx-signal-form-fieldset-error-bg` — default cascades through `--ngx-signal-form-error-bg` before falling back to `transparent`; grouped error background
 - `--ngx-signal-form-fieldset-error-border-color` — default cascades through `--ngx-signal-form-error-border-color` before falling back to `transparent`; grouped error border color
@@ -636,14 +636,14 @@ Grouped radios and grouped checkboxes that live inside
 These wrappers keep normal inline feedback placement, but swap the usual border
 state for a surfaced background when invalid or warning.
 
-| Property                                      | Default                                        | Description                                  |
-| :-------------------------------------------- | :--------------------------------------------- | :------------------------------------------- |
-| `--ngx-form-field-selection-group-gap`        | `0.75rem`                                      | Vertical gap between grouped options         |
-| `--ngx-form-field-selection-group-padding`    | `1rem`                                         | Inner padding of the grouped control surface |
-| `--ngx-form-field-selection-group-radius`     | `0.25rem`                                      | Border radius of the grouped control surface |
-| `--ngx-form-field-selection-group-bg`         | `transparent`                                  | Base surface background                      |
-| `--ngx-form-field-selection-group-invalid-bg` | `#fbdddd`                                      | Invalid surface background                   |
-| `--ngx-form-field-selection-group-warning-bg` | `color-mix(in srgb, warning 12%, transparent)` | Warning surface background                   |
+| Property                                      | Default                                                      | Description                                  |
+| :-------------------------------------------- | :----------------------------------------------------------- | :------------------------------------------- |
+| `--ngx-form-field-selection-group-gap`        | `0.75rem`                                                    | Vertical gap between grouped options         |
+| `--ngx-form-field-selection-group-padding`    | `1rem`                                                       | Inner padding of the grouped control surface |
+| `--ngx-form-field-selection-group-radius`     | `0.25rem`                                                    | Border radius of the grouped control surface |
+| `--ngx-form-field-selection-group-bg`         | `transparent`                                                | Base surface background                      |
+| `--ngx-form-field-selection-group-invalid-bg` | `color-mix(in srgb, var(--_invalid-color) 12%, transparent)` | Invalid surface background                   |
+| `--ngx-form-field-selection-group-warning-bg` | `color-mix(in srgb, var(--_warning-color) 12%, transparent)` | Warning surface background                   |
 
 Example:
 
@@ -692,8 +692,10 @@ ngx-form-field-wrapper {
 ### Scenario C: Dark Mode
 
 The components use `prefers-color-scheme` as the default signal, and also
-support explicit class-based theming such as `html.dark`. Manual app theme
-selection should win over OS/browser preference.
+support explicit class-based theming such as `html.dark` / `html.light`.
+Manual app theme selection should win over OS/browser preference, but only
+when the user has actively chosen one — an absent class should defer back
+to `prefers-color-scheme`.
 
 If your app has a manual toggle, use this pattern:
 
@@ -709,13 +711,18 @@ If your app has a manual toggle, use this pattern:
   }
 }
 
-/* 2. Fix: Force Light Mode if user explicitly chose it (even if system is Dark) */
-:root:not(.dark) ngx-form-field-wrapper {
+/* 2. Force Light Mode only when the user explicitly chose it */
+html.light ngx-form-field-wrapper {
   --ngx-form-field-color-surface: #ffffff;
   --ngx-form-field-color-text: #324155;
   /* ... reset to light tokens */
 }
 ```
+
+> Use an explicit `.light` / `.dark` class for manual overrides rather than
+> a `:not(.dark)` selector. `:not(.dark)` matches every page that has not
+> opted into dark mode — including OS-dark users — and would silently
+> cancel `prefers-color-scheme: dark`.
 
 ## Rendering without a label
 

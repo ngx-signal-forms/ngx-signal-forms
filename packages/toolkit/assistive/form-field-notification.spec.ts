@@ -105,7 +105,10 @@ describe('NgxFormFieldNotification', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
-  it('honors an explicit warning tone even when every message is blocking', async () => {
+  it('keeps alert semantics for blocking errors even when tone="warning"', async () => {
+    // Downgrading a real blocking error to role="status" would bury the alert
+    // in a polite live region. Content wins over explicit tone in both
+    // directions — see resolvedTone docs on the component.
     const errors = signal([{ kind: 'required', message: 'Required' }]);
 
     await render(
@@ -120,11 +123,11 @@ describe('NgxFormFieldNotification', () => {
       },
     );
 
-    expect(screen.getByRole('status')).toBeTruthy();
-    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.getByRole('alert')).toBeTruthy();
+    expect(screen.queryByRole('status')).toBeNull();
   });
 
-  it('flips the container id between error and warning when tone changes', async () => {
+  it('keeps the error container id while blocking errors exist, regardless of tone', async () => {
     const tone = signal<'error' | 'warning'>('error');
     const errors = signal([{ kind: 'required', message: 'Required' }]);
 
@@ -146,8 +149,9 @@ describe('NgxFormFieldNotification', () => {
     tone.set('warning');
     await fixture.whenStable();
 
-    expect(container.querySelector('#switch-tone-warning')).toBeTruthy();
-    expect(container.querySelector('#switch-tone-error')).toBeNull();
+    // Blocking error still present → stays on the error id and role='alert'.
+    expect(container.querySelector('#switch-tone-error')).toBeTruthy();
+    expect(container.querySelector('#switch-tone-warning')).toBeNull();
   });
 
   it('accepts a signal wrapping a static readonly array of errors', async () => {

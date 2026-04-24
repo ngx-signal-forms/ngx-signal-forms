@@ -18,7 +18,7 @@ import {
 } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxHeadlessFieldset } from '@ngx-signal-forms/toolkit/headless';
 
-import type { NgxFormFieldErrorPlacement } from './form-field-wrapper';
+import type { NgxFormFieldErrorPlacement } from '@ngx-signal-forms/toolkit';
 
 export type NgxFieldsetFeedbackAppearance = 'auto' | 'plain' | 'notification';
 export type NgxFieldsetAppearance = 'outline' | 'plain';
@@ -191,6 +191,11 @@ export class NgxFormFieldset {
   protected readonly fieldset = inject(NgxHeadlessFieldset);
   readonly #elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #legendId = signal<string | null>(null);
+  // Capture any caller-supplied `aria-labelledby` at construction so we can fall
+  // back to it on non-native hosts that lack a projected `<legend>` — otherwise
+  // the binding below would overwrite the author's accessible label with `null`.
+  readonly #initialAriaLabelledby =
+    this.#elementRef.nativeElement.getAttribute('aria-labelledby');
   // `<fieldset>` natively implies role="group" and associates a child <legend>.
   // Any other host tag (custom element `<ngx-form-fieldset>` or a bare
   // `[ngxFormFieldset]` attribute target) needs an explicit group role so the
@@ -423,7 +428,7 @@ export class NgxFormFieldset {
     if (this.#isNativeFieldset) {
       return null;
     }
-    return this.#legendId();
+    return this.#legendId() ?? this.#initialAriaLabelledby;
   });
 
   protected readonly describedByIds = computed(() => {

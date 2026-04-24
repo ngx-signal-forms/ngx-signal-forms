@@ -26,7 +26,7 @@
   --_notification-border-radius-default: 0.5rem;
   --_notification-box-shadow-default: none;
 
-  --_notification-token-current-color: currentColor;
+  --_notification-token-current-color: currentcolor;
   --_notification-token-transparent: transparent;
 
   --_notification-clr-danger: #db1818;
@@ -163,7 +163,7 @@
     --_notification-bg-warning-light: var(--_notification-bg-warning-dark);
   }
 
-  :host-context(:root:not(.dark)) {
+  :host-context(:root.light) {
     --_notification-clr-danger: #db1818;
     --_notification-clr-danger-soft: #fdebeb;
     --_notification-clr-warning: #a16207;

@@ -83,13 +83,13 @@ Grouped validation notification with an optional title.
 />
 ```
 
-| Input       | Type                                             | Description                                       |
-| ----------- | ------------------------------------------------ | ------------------------------------------------- |
-| `errors`    | `ValidationError[] \| Signal<ValidationError[]>` | Grouped validation messages to present            |
-| `fieldName` | `string`                                         | Optional id base for `aria-describedby` linkage   |
-| `title`     | `string`                                         | Optional title above the grouped messages         |
-| `listStyle` | `'plain' \| 'bullets'`                           | Stacked paragraphs or bullet list                 |
-| `tone`      | `'auto' \| 'error' \| 'warning'`                 | Resolve the card as an error/warning notification |
+| Input       | Type                             | Description                                       |
+| ----------- | -------------------------------- | ------------------------------------------------- |
+| `errors`    | `Signal<ValidationError[]>`      | Grouped validation messages to present            |
+| `fieldName` | `string`                         | Optional id base for `aria-describedby` linkage   |
+| `title`     | `string`                         | Optional title above the grouped messages         |
+| `listStyle` | `'plain' \| 'bullets'`           | Stacked paragraphs or bullet list                 |
+| `tone`      | `'auto' \| 'error' \| 'warning'` | Resolve the card as an error/warning notification |
 
 - `tone="auto"` treats an all-warning list as a polite status notification
 - Blocking errors keep `role="alert"`
