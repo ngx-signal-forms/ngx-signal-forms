@@ -207,7 +207,7 @@ function isFieldTreeLike(value: unknown): value is FieldTree<unknown> {
     NgxSignalFormDebuggerBadgeIcon,
   ],
   templateUrl: './signal-form-debugger.html',
-  styleUrl: './signal-form-debugger.scss',
+  styleUrl: './signal-form-debugger.css',
 })
 export class NgxSignalFormDebugger {
   // ============================================================================

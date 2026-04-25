@@ -4,6 +4,7 @@ export const DEMO_PATHS = {
   warningSupport: '/toolkit-core/warning-support',
   fieldsetUtilities: '/headless/fieldset-utilities',
   complexForms: '/form-field-wrapper/complex-forms',
+  fieldsetAppearance: '/form-field-wrapper/fieldset-appearance',
   customControls: '/form-field-wrapper/custom-controls',
   labellessFields: '/form-field-wrapper/labelless-fields',
   globalConfiguration: '/advanced-scenarios/global-configuration',
@@ -61,6 +62,10 @@ export const DEMO_CATEGORIES = [
       {
         path: '/form-field-wrapper/complex-forms',
         label: 'Complex Forms (Nested + Arrays)',
+      },
+      {
+        path: '/form-field-wrapper/fieldset-appearance',
+        label: 'Fieldset Appearance',
       },
       {
         path: '/form-field-wrapper/custom-controls',

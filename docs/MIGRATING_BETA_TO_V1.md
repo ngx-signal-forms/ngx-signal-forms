@@ -18,6 +18,7 @@ releases will not include any of the renames below.
 
 - **`[formRoot]` selector** — Directive is now an additive enhancer: add `ngxSignalForm`
 - **Public API surface** — `/core` is hidden; `@internal` plumbing is no longer published
+- **CSS custom properties** — several theming tokens were renamed or collapsed during the rc cycle (see [`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md))
 - **Removed helpers** — `computeShowErrors`, `canSubmit`, `injectFormConfig`, …
 - **Removed directive** — `NgxFloatingLabelDirective` (use `appearance="outline"`)
 - **Renamed components** — `NgxSignalFormError*` → `NgxFormFieldError*`
@@ -113,14 +114,16 @@ Starting in v1, the published `package.json` no longer exposes the
   that are re-exported from the root barrel.
 - `packages/toolkit/index.ts` is the authoritative list of the stable
   public surface (54 values and 26 types, enumerated by hand).
-- CSS custom properties are unchanged — theme overrides continue
-  to work untouched. Two prefix families exist and stay stable:
-  `--ngx-signal-form-*` for shared feedback tokens
+- CSS custom properties — two prefix families remain stable and split by
+  role: `--ngx-signal-form-*` covers cross-cutting feedback concerns
   (e.g. `--ngx-signal-form-feedback-font-size`,
   `--ngx-signal-form-error-color`, `--ngx-signal-form-fieldset-*`) and
-  `--ngx-form-field-*` for component-scoped tokens
+  `--ngx-form-field-*` covers wrapper-level chrome
   (e.g. `--ngx-form-field-color-primary`, `--ngx-form-field-focus-color`).
-  See [`packages/toolkit/form-field/THEMING.md`](../packages/toolkit/form-field/THEMING.md#architecture-semantic-layering)
+  **Several tokens were renamed or collapsed during the rc cycle** — the
+  full before/after table is in
+  [`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md). See
+  [`packages/toolkit/form-field/THEMING.md`](../packages/toolkit/form-field/THEMING.md#architecture-semantic-layering)
   for the full layering.
 
 If you were reaching into `/core` for something that is **not**
@@ -225,6 +228,27 @@ import {
 CSS custom properties are unchanged: overrides targeting
 `--ngx-signal-form-error-color`, `--ngx-signal-form-error-bg`, etc.
 keep working.
+
+### 4a-bis. Shared list-style and placement types
+
+Several list-style and placement unions used to be exported under
+component-specific names. V1 consolidates them so bindings compose without
+casts when passing values between the wrapper, fieldset, and notification
+components.
+
+| Before (rc)                         | After (v1)                                                            |
+| ----------------------------------- | --------------------------------------------------------------------- |
+| `FieldsetErrorPlacement`            | `NgxFormFieldErrorPlacement`                                          |
+| `FormFieldErrorPlacement`           | `NgxFormFieldErrorPlacement`                                          |
+| `FieldsetFeedbackAppearance`        | `NgxFieldsetFeedbackAppearance`                                       |
+| `FieldsetSurfaceTone`               | `NgxFieldsetSurfaceTone`                                              |
+| `FieldsetValidationSurface`         | `NgxFieldsetValidationSurface`                                        |
+| `NgxFormFieldNotificationListStyle` | `NgxFormFieldListStyle` _(shared)_                                    |
+| `NgxFormFieldErrorListStyle`        | `NgxFormFieldListStyle` _(shared, old name kept as deprecated alias)_ |
+
+The two deprecated list-style aliases still resolve to the same union, so
+existing imports keep compiling; switch to `NgxFormFieldListStyle` at your
+convenience.
 
 ### 4b. Appearances renamed
 
@@ -518,6 +542,21 @@ case set `warningStrategy="inherit"` (or match `strategy` explicitly).
   `submittedStatus` output is now `resolvedSubmittedStatus`, and `strategy` is
   surfaced as `resolvedStrategy`. If you were reading either output from a
   template reference or through Angular's output API, update the binding name.
+- **`errorPlacement` default flipped from `'top'` to `'bottom'`** (breaking).
+  Grouped summaries now render after the projected field content by default,
+  which matches dense review-style layouts. This is a DOM-order change, not
+  just a CSS tweak — screen-reader reading order for grouped sections shifts
+  accordingly. To preserve pre-v1 behavior, pin `errorPlacement="top"` on any
+  `<ngx-form-fieldset>` that relies on the summary appearing directly below
+  the legend. Re-record any visual snapshots that cover grouped fieldsets.
+- **`feedbackAppearance` default `'auto'` resolves to `'notification'`**
+  (breaking). Grouped summaries now render inside the surfaced notification
+  card by default. Pass `feedbackAppearance="plain"` to keep the compact
+  inline `ngx-form-field-error` treatment.
+- **`validationSurface` is now `'never' | 'always'` (default `'never'`)**
+  (breaking). The old `'auto'` value was dropped as a dead branch; opt in
+  explicitly with `validationSurface="always"` when every invalid/warning
+  fieldset surface should tint.
 
 ### `NgxFormField` convenience bundle
 
@@ -616,6 +655,14 @@ action is required on Angular 21.x.
 - **Run the build** (`pnpm nx run-many -t build`) to catch remaining
   references at compile time, then run your tests.
 
+- **Sweep your stylesheets for renamed/removed CSS custom properties**
+  if you themed the toolkit — see
+  [`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md). Common renames:
+  `-border` → `-border-color`; `-list-style-type` + `-list-style-position`
+  → `-list-style` shorthand; `-padding-horizontal` shortcuts →
+  `-padding-inline-start` / `-inline-end` pairs; legacy
+  `--ngx-form-field-outline-*` aliases removed.
+
 ---
 
 ## Reference
@@ -623,6 +670,8 @@ action is required on Angular 21.x.
 - [`docs/ANGULAR_PUBLIC_API_POLICY.md`](./ANGULAR_PUBLIC_API_POLICY.md)
   — the boundary between Angular Signal Forms and toolkit, plus the
   build-time-only `/core` story.
+- [`docs/MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md) — every
+  renamed or removed CSS custom property with before/after examples.
 - [`docs/CUSTOM_CONTROLS.md`](./CUSTOM_CONTROLS.md) — control semantics,
   manual ARIA ownership, third-party component patterns.
 - [`docs/COMPLEX_NESTED_FORMS.md`](./COMPLEX_NESTED_FORMS.md) — fieldset

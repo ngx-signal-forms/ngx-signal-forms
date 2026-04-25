@@ -1,11 +1,11 @@
-// ============================================================================
-// CHECKBOX/RADIO ADAPTATIONS
-// ============================================================================
+/* ============================================================================ */
+/* CHECKBOX/RADIO ADAPTATIONS */
+/* ============================================================================ */
 
-// Case 1: Input nested INSIDE Label (e.g. <label><input type="checkbox"> Text</label>)
-// The label wraps the input, so it gets projected into the label slot via select="label".
-// The content slot is effectively empty but still renders a border/height.
-// SOLUTION: Hide the main content wrapper entirely when the label contains a check/radio.
+/* Case 1: Input nested INSIDE Label (e.g. <label><input type="checkbox"> Text</label>) */
+/* The label wraps the input, so it gets projected into the label slot via select="label". */
+/* The content slot is effectively empty but still renders a border/height. */
+/* SOLUTION: Hide the main content wrapper entirely when the label contains a check/radio. */
 :host:not(.ngx-signal-form-field-wrapper--switch):has(
     .ngx-signal-form-field-wrapper__label input[type='checkbox']
   ),
@@ -15,17 +15,18 @@
   }
 }
 
-// Case 2: Input SEPARATE from Label (e.g. <label>Text</label> <input type="checkbox">)
-// The input is projected into the content slot.
-// SOLUTION: Remove text-field-like styling (border, background, padding) from the wrapper.
-// Explicit checkbox rows get their own layout below and should stay chrome-free.
+/* Case 2: Input SEPARATE from Label (e.g. <label>Text</label> <input type="checkbox">) */
+/* The input is projected into the content slot. */
+/* SOLUTION: Remove text-field-like styling (border, background, padding) from the wrapper. */
+/* Explicit checkbox rows get their own layout below and should stay chrome-free. */
 :host:not(.ngx-signal-form-field-wrapper--switch):not(
     .ngx-signal-form-field-wrapper--checkbox
-  )
+  ):not(.ngx-signal-form-field-wrapper--selection-cluster)
   .ngx-signal-form-field-wrapper__content:has(
     input[type='checkbox']:not([role='switch'])
   ),
-:host .ngx-signal-form-field-wrapper__content:has(input[type='radio']) {
+:host:not(.ngx-signal-form-field-wrapper--selection-cluster)
+  .ngx-signal-form-field-wrapper__content:has(input[type='radio']) {
   border: none;
   background-color: transparent;
   padding: 0;
@@ -38,8 +39,8 @@
   }
 }
 
-// Case 2 continuation: Reset input styles for checkbox/radio
-// Text fields get width: 100% which distorts checkboxes.
+/* Case 2 continuation: Reset input styles for checkbox/radio */
+/* Text fields get width: 100% which distorts checkboxes. */
 :host
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
@@ -61,6 +62,66 @@
 :host(.ngx-signal-form-field-wrapper--selection-group)
   .ngx-signal-form-field-wrapper__main {
   min-height: var(--_field-touch-target);
+}
+
+:host(.ngx-signal-form-field-wrapper--selection-cluster) {
+  --_selection-assistive-gap: var(--_field-space-2xs);
+}
+
+:host(.ngx-signal-form-field-wrapper--selection-cluster)
+  .ngx-signal-form-field-wrapper__content {
+  display: block;
+  min-height: 0;
+  padding: var(--_selection-cluster-padding);
+  border: none;
+  border-radius: var(--_selection-cluster-radius);
+  background: var(--_selection-cluster-bg);
+  box-shadow: none;
+
+  &:hover,
+  &:focus-within {
+    border-color: transparent;
+    box-shadow: none;
+  }
+}
+
+:host(.ngx-signal-form-field-wrapper--selection-cluster)
+  .ngx-signal-form-field-wrapper__main {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 0;
+  gap: var(--_selection-cluster-gap);
+}
+
+:host(.ngx-signal-form-field-wrapper--selection-cluster)
+  .ngx-signal-form-field-wrapper__prefix,
+:host(.ngx-signal-form-field-wrapper--selection-cluster)
+  .ngx-signal-form-field-wrapper__suffix {
+  display: none;
+}
+
+/*
+ * Selection-cluster container and label layout is consumer-owned. Projected
+ * wrapping elements (<fieldset>, [role='radiogroup'], [role='group']) and
+ * their <label> children sit outside the wrapper's style encapsulation, so
+ * the consumer applies their own flex/gap normalization at the app level.
+ * The `--ngx-form-field-selection-group-gap` and `--ngx-form-field-*` tokens
+ * remain available for that styling.
+ */
+
+:host(
+    .ngx-signal-form-field-wrapper--selection-cluster.ngx-signal-form-field-wrapper--invalid
+  )
+  .ngx-signal-form-field-wrapper__content {
+  background: var(--_selection-cluster-invalid-bg);
+}
+
+:host(
+    .ngx-signal-form-field-wrapper--selection-cluster.ngx-signal-form-field-wrapper--warning
+  )
+  .ngx-signal-form-field-wrapper__content {
+  background: var(--_selection-cluster-warning-bg);
 }
 
 :host(.ngx-signal-form-field-wrapper--checkbox),
@@ -218,8 +279,8 @@
   grid-area: assistive;
 }
 
-// checkbox-based switches (e.g. input[type='checkbox'][role='switch'])
-// These should render as a compact label + control row instead of a stacked field.
+/* checkbox-based switches (e.g. input[type='checkbox'][role='switch']) */
+/* These should render as a compact label + control row instead of a stacked field. */
 :host(.ngx-signal-form-field-wrapper--switch) {
   --ngx-form-field-hint-padding-inline-start: var(
     --_selection-row-padding-inline
@@ -277,14 +338,12 @@
   }
 }
 
-// Case 3: Plain appearance
-// Removes text-field-like styling (border, background, padding) from the wrapper.
+/* Case 3: Plain appearance */
+/* Removes text-field-like styling (border, background, padding) from the wrapper. */
 :host(.ngx-signal-forms-plain) {
-  // Remove horizontal padding in plain appearances
-  // so they align perfectly with the flush-left content.
-  --ngx-form-field-hint-padding-horizontal: 0;
-  --ngx-signal-form-error-padding-horizontal: 0;
-  --ngx-form-field-hint-font-size: var(--_field-text-caption);
+  /* Remove horizontal padding in plain appearances */
+  /* so they align perfectly with the flush-left content. */
+  --ngx-signal-form-feedback-padding-horizontal: 0;
   --ngx-signal-form-feedback-font-size: var(--_field-text-caption);
   --ngx-form-field-hint-color: var(--_color-text-secondary);
 
@@ -302,13 +361,12 @@
   }
 }
 
-// Plain custom controls should still inherit the stacked field padding so they
-// align with regular inputs without consumer-side overrides.
+/* Plain custom controls should still inherit the stacked field padding so they */
+/* align with regular inputs without consumer-side overrides. */
 :host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--selection-group),
 :host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--padded-control),
 :host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--switch) {
-  --ngx-form-field-hint-padding-horizontal: var(--_padding-horizontal);
-  --ngx-signal-form-error-padding-horizontal: var(--_padding-horizontal);
+  --ngx-signal-form-feedback-padding-horizontal: var(--_padding-horizontal);
 }
 
 :host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--selection-group)
@@ -320,14 +378,14 @@
   padding: var(--_input-padding);
 }
 
-// ============================================================================
-// HORIZONTAL LAYOUT
-// ============================================================================
-// Label placed to the left of the input via CSS Grid.
-// Only applies to non-outline wrappers.
-// Outline keeps its floating-label treatment and always resolves to vertical.
-// Selection controls (checkbox, switch, radio-group) are excluded in the
-// component and keep their own grid templates.
+/* ============================================================================ */
+/* HORIZONTAL LAYOUT */
+/* ============================================================================ */
+/* Label placed to the left of the input via CSS Grid. */
+/* Only applies to non-outline wrappers. */
+/* Outline keeps its floating-label treatment and always resolves to vertical. */
+/* Selection controls (checkbox, switch, radio-group) are excluded in the */
+/* component and keep their own grid templates. */
 
 :host(.ngx-signal-form-field-wrapper--horizontal) {
   display: grid;
