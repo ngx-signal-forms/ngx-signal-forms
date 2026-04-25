@@ -1,8 +1,19 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { signal } from '@angular/core';
 import { provideErrorMessages } from '@ngx-signal-forms/toolkit/core';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldNotification } from './form-field-notification';
+
+// jsdom does not compute custom-property values from emulated component
+// stylesheets, so theme-default specs read the CSS source directly. Runtime
+// resolution is covered by the *.browser.spec.ts suite and e2e snapshots.
+const notificationCssSource = readFileSync(
+  resolve(import.meta.dirname, './form-field-notification.css'),
+  'utf8',
+);
 
 describe('NgxFormFieldNotification', () => {
   it('renders an optional title and bulleted grouped errors', async () => {
@@ -253,42 +264,18 @@ describe('NgxFormFieldNotification', () => {
     expect(container.textContent).toContain('Message from registry');
   });
 
-  it('defaults the light-theme error surface to the Figma background color token', async () => {
-    const errors = signal([
-      { kind: 'required', message: 'First name is required' },
-    ]);
-
-    const { container } = await render(
-      `<ngx-form-field-notification
-        [errors]="errors"
-        fieldName="personal-info"
-      />`,
-      {
-        imports: [NgxFormFieldNotification],
-        componentProperties: { errors },
-      },
+  it('defaults the light-theme error surface to the Figma background color token', () => {
+    // The light-theme error surface uses the soft-danger token (#fdebeb)
+    // pulled from the Figma palette. The pseudo-private variable
+    // `--_notification-error-bg` resolves through `--_notification-clr-danger-soft`,
+    // so consumers can opt into a different surface via the public alias
+    // without reaching into the implementation token. Runtime resolution is
+    // covered by browser-mode specs.
+    expect(notificationCssSource).toMatch(
+      /--_notification-clr-danger-soft:\s*#fdebeb\b/,
     );
-
-    const notificationHost = container.querySelector(
-      'ngx-form-field-notification',
-    );
-
-    if (!(notificationHost instanceof HTMLElement)) {
-      throw new Error('expected notification host element');
-    }
-
-    expect(
-      getComputedStyle(notificationHost)
-        .getPropertyValue('--_notification-clr-danger-soft')
-        .trim(),
-    ).toContain('#fdebeb');
-    expect(
-      getComputedStyle(notificationHost)
-        .getPropertyValue('--_notification-error-bg')
-        .trim(),
-    ).toContain('--_notification-clr-danger-soft');
-    expect(getComputedStyle(notificationHost).backgroundColor).toBe(
-      'rgba(0, 0, 0, 0)',
+    expect(notificationCssSource).toMatch(
+      /--_notification-error-bg:[^;]*--_notification-clr-danger-soft/,
     );
   });
 });

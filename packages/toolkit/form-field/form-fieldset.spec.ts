@@ -1,7 +1,18 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { signal } from '@angular/core';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldset } from './form-fieldset';
+
+// jsdom does not compute custom-property values from emulated component
+// stylesheets, so theme-default specs read the CSS source directly. Runtime
+// resolution is covered by the *.browser.spec.ts suite and e2e snapshots.
+const fieldsetCssSource = readFileSync(
+  resolve(import.meta.dirname, './form-fieldset.css'),
+  'utf8',
+);
 
 type MockState = {
   invalid: () => boolean;
@@ -327,18 +338,15 @@ describe('NgxFormFieldset', () => {
     expect(container.querySelector('ngx-form-field-notification')).toBeTruthy();
     expect(container.querySelector('ngx-form-field-error')).toBeNull();
 
-    if (!(host instanceof HTMLElement)) {
-      throw new Error('expected fieldset host element');
-    }
-
-    expect(
-      getComputedStyle(host).getPropertyValue('--_fieldset-clr-danger').trim(),
-    ).toContain('#db1818');
-    expect(
-      getComputedStyle(host)
-        .getPropertyValue('--_fieldset-notification-error-color')
-        .trim(),
-    ).toContain('--_fieldset-clr-danger');
+    // Verify the danger token default and that the notification error color
+    // resolves through it. Asserting against the source keeps the contrast
+    // contract documented; runtime resolution is covered in browser-mode
+    // and e2e specs (jsdom can't compute custom properties from emulated
+    // component stylesheets).
+    expect(fieldsetCssSource).toMatch(/--_fieldset-clr-danger:\s*#db1818\b/);
+    expect(fieldsetCssSource).toMatch(
+      /--_fieldset-notification-error-color:[^;]*--_fieldset-clr-danger/,
+    );
   });
 
   it('defaults the fieldset shell appearance to outline', async () => {

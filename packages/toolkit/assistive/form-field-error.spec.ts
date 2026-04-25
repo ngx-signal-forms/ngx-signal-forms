@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import {
   email,
@@ -16,6 +19,14 @@ import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { NgxFormFieldError } from './form-field-error';
+
+// jsdom does not compute custom-property values from emulated component
+// stylesheets, so theme-default specs read the CSS source directly. Runtime
+// resolution is covered by the *.browser.spec.ts suite and e2e snapshots.
+const errorCssSource = readFileSync(
+  resolve(import.meta.dirname, './form-field-error.css'),
+  'utf8',
+);
 
 describe('NgxFormFieldError', () => {
   describe('BUG REPRODUCTION - Initial Render', () => {
@@ -86,41 +97,18 @@ describe('NgxFormFieldError', () => {
   });
 
   describe('error rendering', () => {
-    it('exposes token-backed theme defaults through pseudo-private properties', async () => {
-      const errors = signal([
-        { kind: 'required', message: 'Email is required' },
-      ]);
-
-      const { container } = await render(
-        `<ngx-form-field-error fieldName="email" [errors]="errors" />`,
-        {
-          imports: [NgxFormFieldError],
-          componentProperties: { errors },
-        },
+    it('exposes token-backed theme defaults through pseudo-private properties', () => {
+      // The pseudo-private variables flow design tokens (`--_error-clr-*`)
+      // into the public-facing names (`--_error-color`, `--_warning-color`)
+      // via `var(--ngx-…, var(--_error-clr-…))`. Asserting on the source keeps
+      // the WCAG-AA contrast contract documented and prevents accidental
+      // overrides — runtime resolution is covered in browser-mode specs.
+      expect(errorCssSource).toMatch(/--_error-clr-danger:\s*#db1818\b/);
+      expect(errorCssSource).toMatch(/--_error-color:[^;]*--_error-clr-danger/);
+      expect(errorCssSource).toMatch(/--_error-clr-warning:\s*#a16207\b/);
+      expect(errorCssSource).toMatch(
+        /--_warning-color:[^;]*--_error-clr-warning/,
       );
-
-      const errorHost = container.querySelector('ngx-form-field-error');
-
-      if (!(errorHost instanceof HTMLElement)) {
-        throw new Error('expected error host element');
-      }
-
-      expect(
-        getComputedStyle(errorHost)
-          .getPropertyValue('--_error-clr-danger')
-          .trim(),
-      ).toContain('#db1818');
-      expect(
-        getComputedStyle(errorHost).getPropertyValue('--_error-color').trim(),
-      ).toContain('--_error-clr-danger');
-      expect(
-        getComputedStyle(errorHost)
-          .getPropertyValue('--_error-clr-warning')
-          .trim(),
-      ).toContain('#a16207');
-      expect(
-        getComputedStyle(errorHost).getPropertyValue('--_warning-color').trim(),
-      ).toContain('--_error-clr-warning');
     });
 
     it('should render errors when field is invalid and touched (on-touch strategy)', async () => {

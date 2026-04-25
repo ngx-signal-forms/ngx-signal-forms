@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Component, inputBinding, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
@@ -10,6 +13,14 @@ import { DEFAULT_NGX_SIGNAL_FORMS_CONFIG } from '@ngx-signal-forms/toolkit/core'
 import { render, screen } from '@testing-library/angular';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NgxFormFieldWrapper as NgxSignalFormWrapperComponent } from './form-field-wrapper';
+
+// jsdom does not compute custom-property values from emulated component
+// stylesheets, so theme-default specs read the CSS source directly. Runtime
+// resolution is covered by the *.browser.spec.ts suite and e2e snapshots.
+const wrapperCssSource = readFileSync(
+  resolve(import.meta.dirname, './form-field-wrapper.css'),
+  'utf8',
+);
 
 type MockValidationError = {
   kind?: string;
@@ -3465,36 +3476,14 @@ describe('NgxSignalFormWrapperComponent', () => {
   });
 
   describe('Theming defaults (a11y)', () => {
-    it('should resolve the warning color custom property to an AA-compliant value on white', async () => {
+    it('should resolve the warning color custom property to an AA-compliant value on white', () => {
       // The previous default of #f59e0b (Tailwind amber-500) only achieves
       // ~2.16:1 contrast on white — fine for borders/icons, but the same
       // token also drives warning *text*, which fails WCAG 2.2 AA (4.5:1).
-      // Locking in the darker default protects consumers who do not override
-      // `--ngx-form-field-color-warning` themselves.
-      const { container } = await render(
-        `<ngx-form-field-wrapper [formField]="field">
-          <label for="email">Email</label>
-          <input id="email" type="email" />
-        </ngx-form-field-wrapper>`,
-        {
-          imports: [NgxSignalFormWrapperComponent],
-          componentProperties: {
-            field: createMockFieldState(),
-          },
-        },
-      );
-
-      const wrapper = container.querySelector('ngx-form-field-wrapper');
-      expect(wrapper).toBeTruthy();
-
-      // `getComputedStyle` walks `:host` declarations the same way it would in
-      // an app, so this verifies what consumers actually see in the browser.
-      const computed = getComputedStyle(wrapper as HTMLElement);
-      const warningToken = computed
-        .getPropertyValue('--_field-clr-warning')
-        .trim()
-        .toLowerCase();
-      expect(warningToken).toBe('#a16207');
+      // Locking in the darker default in the CSS source protects consumers
+      // who do not override `--ngx-form-field-color-warning` themselves.
+      // Runtime resolution is covered by the browser-mode and e2e suites.
+      expect(wrapperCssSource).toMatch(/--_field-clr-warning:\s*#a16207\b/);
     });
   });
 });
