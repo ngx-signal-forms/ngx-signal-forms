@@ -55,7 +55,8 @@ build.log
 
 .claude/worktrees
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 .nx/polygraph
 .playwright-mcp/
 
-.nx/self-healing
+.nx/self-healing.claude/
