@@ -11,6 +11,7 @@ import type {
   FormFieldAppearance,
   FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
+import type { NgxFormFieldErrorPlacement } from '@ngx-signal-forms/toolkit/form-field';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import {
   AppearanceToggleComponent,
@@ -32,6 +33,19 @@ import {
 } from '../../ui/orientation-toggle';
 import { COMPLEX_FORMS_CONTENT } from './complex-forms.content';
 import { ComplexFormsComponent } from './complex-forms.form';
+
+const FIELDSET_ERROR_PLACEMENT_OPTIONS: NgxFormFieldErrorPlacement[] = [
+  'top',
+  'bottom',
+];
+
+const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
+  NgxFormFieldErrorPlacement,
+  string
+> = {
+  top: 'Top',
+  bottom: 'Bottom',
+};
 
 /**
  * Complex Forms Page
@@ -106,6 +120,45 @@ import { ComplexFormsComponent } from './complex-forms.form';
             [appearance]="selectedAppearance()"
           />
         </ngx-display-controls-section>
+
+        <ngx-display-controls-section
+          title="↕️ Grouped feedback placement"
+          description="Move grouped feedback above or below each section to compare when a shared summary or grouped wrapper error should lead or follow the controls."
+        >
+          <div
+            class="inline-flex items-center gap-1 rounded-full border border-gray-200/80 bg-white/80 p-1 shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/90"
+            role="group"
+            aria-label="Grouped feedback placement"
+          >
+            @for (placement of fieldsetErrorPlacementOptions; track placement) {
+              <button
+                type="button"
+                (click)="selectedFieldsetErrorPlacement.set(placement)"
+                [attr.aria-pressed]="
+                  selectedFieldsetErrorPlacement() === placement
+                "
+                [class.bg-blue-50]="
+                  selectedFieldsetErrorPlacement() === placement
+                "
+                [class.shadow-sm]="
+                  selectedFieldsetErrorPlacement() === placement
+                "
+                [class.text-blue-700]="
+                  selectedFieldsetErrorPlacement() === placement
+                "
+                [class.dark:bg-gray-700]="
+                  selectedFieldsetErrorPlacement() === placement
+                "
+                [class.dark:text-blue-300]="
+                  selectedFieldsetErrorPlacement() === placement
+                "
+                class="rounded-full px-4 py-1.5 text-sm font-medium text-gray-600 transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:text-gray-300 dark:hover:text-white"
+              >
+                {{ fieldsetErrorPlacementLabels[placement] }}
+              </button>
+            }
+          </div>
+        </ngx-display-controls-section>
       </ngx-display-controls-card>
     </ngx-example-cards>
 
@@ -120,6 +173,7 @@ import { ComplexFormsComponent } from './complex-forms.form';
             [errorDisplayMode]="errorDisplayMode()"
             [appearance]="selectedAppearance()"
             [orientation]="selectedOrientation()"
+            [errorPlacement]="selectedFieldsetErrorPlacement()"
           />
         </section>
       </div>
@@ -144,6 +198,12 @@ export class ComplexFormsPage {
     signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
+  protected readonly fieldsetErrorPlacementLabels =
+    FIELDSET_ERROR_PLACEMENT_LABELS;
+  protected readonly fieldsetErrorPlacementOptions =
+    FIELDSET_ERROR_PLACEMENT_OPTIONS;
+  protected readonly selectedFieldsetErrorPlacement =
+    signal<NgxFormFieldErrorPlacement>('bottom');
   protected readonly selectedOrientation =
     signal<FormFieldOrientation>('vertical');
   protected readonly currentControlChips = computed(() => [
@@ -158,6 +218,13 @@ export class ComplexFormsPage {
     {
       label: 'Orientation',
       value: getOrientationLabel(this.selectedOrientation()),
+    },
+    {
+      label: 'Grouped feedback',
+      value:
+        this.fieldsetErrorPlacementLabels[
+          this.selectedFieldsetErrorPlacement()
+        ],
     },
   ]);
 

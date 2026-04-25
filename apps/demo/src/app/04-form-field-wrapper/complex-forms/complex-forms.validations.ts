@@ -8,6 +8,7 @@ import {
   required,
   schema,
   validate,
+  validateTree,
 } from '@angular/forms/signals';
 import type { ComplexFormModel } from './complex-forms.model';
 
@@ -65,6 +66,27 @@ export const complexFormSchema = schema<ComplexFormModel>((path) => {
     // Note: In real app, would use conditional validation
     // For now, just ensure value is not empty
     minLength(contact.value, 3, { message: 'At least 3 characters' });
+  });
+
+  // Credentials
+  required(path.credentials.password, { message: 'Password is required' });
+  minLength(path.credentials.password, 8, {
+    message: 'Password must be at least 8 characters',
+  });
+  required(path.credentials.confirmPassword, {
+    message: 'Please confirm your password',
+  });
+  validateTree(path.credentials, ({ value }) => {
+    const { password, confirmPassword } = value();
+
+    if (password && confirmPassword && password !== confirmPassword) {
+      return {
+        kind: 'password-mismatch',
+        message: 'Passwords must match',
+      };
+    }
+
+    return null;
   });
 
   // Preferences

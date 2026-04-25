@@ -1,0 +1,337 @@
+/* ============================================================================ */
+/* THEMING ARCHITECTURE */
+/* ============================================================================ */
+/* Uses Lea Verou's "pseudo-private variables" pattern for fallback management: */
+/* https://lea.verou.me/blog/2021/10/custom-properties-with-defaults/ */
+/* Layering approach: */
+/* 1. Design tokens (internal, --_notification-*) */
+/* 2. Shared feedback tier (--_feedback-*, from form-field/_feedback-tokens) */
+/* 3. Public API (--ngx-signal-form-notification-*) */
+/* 4. Resolved pseudo-private variables (--_notification-*) */
+/* 5. Implementation consumes only the resolved variables */
+
+:host {
+  /* Internal design tokens (notification-specific) */
+  --_notification-space-0: 0;
+  --_notification-space-2xs: 0.25rem;
+  --_notification-space-sm: 0.5rem;
+  --_notification-space-lg: 1rem;
+
+  --_notification-text-base: 1rem;
+  --_notification-line-height-base: 1.5rem;
+  --_notification-weight-medium: 500;
+
+  --_notification-border-width-default: 1px;
+  --_notification-border-style-default: solid;
+  --_notification-border-radius-default: 0.5rem;
+  --_notification-box-shadow-default: none;
+
+  --_notification-token-current-color: currentcolor;
+  --_notification-token-transparent: transparent;
+
+  --_notification-clr-danger: #db1818;
+  --_notification-clr-warning: #a16207;
+  --_notification-clr-danger-soft: #fdebeb;
+  --_notification-clr-danger-dark: #fecaca;
+  --_notification-clr-warning-dark: #fde68a;
+  --_notification-bg-danger-dark: rgb(127 29 29 / 0.32);
+  --_notification-bg-warning-light: color-mix(
+    in srgb,
+    var(--_notification-clr-warning) 10%,
+    white
+  );
+  --_notification-bg-warning-dark: rgb(120 53 15 / 0.28);
+
+  /* Resolved pseudo-private variables */
+  --_notification-gap: var(
+    --ngx-signal-form-notification-gap,
+    var(--_notification-space-2xs)
+  );
+  --_notification-padding: var(
+    --ngx-signal-form-notification-padding,
+    var(--_notification-space-lg)
+  );
+  --_notification-border-width: var(
+    --ngx-signal-form-notification-border-width,
+    var(--_notification-border-width-default)
+  );
+  --_notification-border-style: var(
+    --ngx-signal-form-notification-border-style,
+    var(--_notification-border-style-default)
+  );
+  --_notification-border-radius: var(
+    --ngx-signal-form-notification-border-radius,
+    var(--_notification-border-radius-default)
+  );
+  --_notification-box-shadow: var(
+    --ngx-signal-form-notification-box-shadow,
+    var(--_notification-box-shadow-default)
+  );
+  --_notification-font-size: var(
+    --ngx-signal-form-notification-font-size,
+    var(--_feedback-font-size)
+  );
+  --_notification-line-height: var(
+    --ngx-signal-form-notification-line-height,
+    var(--_feedback-line-height)
+  );
+  --_notification-title-color: var(
+    --ngx-signal-form-notification-title-color,
+    var(--_notification-token-current-color)
+  );
+  --_notification-title-font-size: var(
+    --ngx-signal-form-notification-title-font-size,
+    var(--_notification-text-base)
+  );
+  --_notification-title-line-height: var(
+    --ngx-signal-form-notification-title-line-height,
+    var(--_notification-line-height-base)
+  );
+  --_notification-title-font-weight: var(
+    --ngx-signal-form-notification-title-font-weight,
+    var(--_notification-weight-medium)
+  );
+  --_notification-title-letter-spacing: var(
+    --ngx-signal-form-notification-title-letter-spacing,
+    var(--_notification-space-0)
+  );
+  --_notification-message-color: var(
+    --ngx-signal-form-notification-message-color,
+    var(--_notification-token-current-color)
+  );
+  --_notification-message-spacing: var(
+    --ngx-signal-form-notification-message-spacing,
+    var(--_notification-space-2xs)
+  );
+  --_notification-message-line-height: var(
+    --ngx-signal-form-notification-message-line-height,
+    var(--_notification-line-height)
+  );
+  --_notification-list-padding-inline-start: var(
+    --ngx-signal-form-notification-list-padding-inline-start,
+    var(--_feedback-list-indent)
+  );
+  --_notification-list-style: var(
+    --ngx-signal-form-notification-list-style,
+    var(--_feedback-list-style)
+  );
+  --_notification-motion-duration: 180ms;
+  --_notification-motion-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --_notification-motion-distance: 0.25rem;
+  --_notification-state-transition:
+    opacity var(--_notification-motion-duration)
+      var(--_notification-motion-easing),
+    transform var(--_notification-motion-duration)
+      var(--_notification-motion-easing),
+    padding var(--_notification-motion-duration)
+      var(--_notification-motion-easing),
+    border-color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  --_notification-error-color: var(
+    --ngx-signal-form-notification-error-color,
+    var(--_notification-clr-danger)
+  );
+  --_notification-error-border-color: var(
+    --ngx-signal-form-notification-error-border-color,
+    color-mix(in srgb, var(--_notification-error-color) 50%, transparent)
+  );
+  --_notification-error-bg: var(
+    --ngx-signal-form-notification-error-bg,
+    var(--_notification-clr-danger-soft)
+  );
+  --_notification-warning-color: var(
+    --ngx-signal-form-notification-warning-color,
+    var(--_notification-clr-warning)
+  );
+  --_notification-warning-border-color: var(
+    --ngx-signal-form-notification-warning-border-color,
+    color-mix(in srgb, var(--_notification-warning-color) 50%, transparent)
+  );
+  --_notification-warning-bg: var(
+    --ngx-signal-form-notification-warning-bg,
+    var(--_notification-bg-warning-light)
+  );
+
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    --_notification-clr-danger: var(--_notification-clr-danger-dark);
+    --_notification-clr-danger-soft: var(--_notification-bg-danger-dark);
+    --_notification-clr-warning: var(--_notification-clr-warning-dark);
+    --_notification-bg-warning-light: var(--_notification-bg-warning-dark);
+  }
+
+  :host-context(:root:not(.dark)) {
+    --_notification-clr-danger: #db1818;
+    --_notification-clr-danger-soft: #fdebeb;
+    --_notification-clr-warning: #a16207;
+    --_notification-bg-warning-light: color-mix(
+      in srgb,
+      var(--_notification-clr-warning) 10%,
+      white
+    );
+  }
+}
+
+:host-context(.dark) {
+  --_notification-clr-danger: var(--_notification-clr-danger-dark);
+  --_notification-clr-danger-soft: var(--_notification-bg-danger-dark);
+  --_notification-clr-warning: var(--_notification-clr-warning-dark);
+  --_notification-bg-warning-light: var(--_notification-bg-warning-dark);
+}
+
+.ngx-form-field-notification {
+  display: flex;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  align-self: stretch;
+  flex-direction: column;
+  gap: var(--_notification-gap);
+  padding: var(--_notification-padding);
+  border: var(--_notification-border-width) var(--_notification-border-style)
+    transparent;
+  border-radius: var(--_notification-border-radius);
+  box-shadow: var(--_notification-box-shadow);
+  font-size: var(--_notification-font-size);
+  line-height: var(--_notification-line-height);
+  overflow: clip;
+  opacity: 1;
+  transform: translateY(0);
+  transform-origin: top center;
+  transition: var(--_notification-state-transition);
+}
+
+.ngx-form-field-notification--error {
+  color: var(--_notification-error-color);
+  border-color: var(--_notification-error-border-color);
+  background: var(--_notification-error-bg);
+}
+
+.ngx-form-field-notification--warning {
+  color: var(--_notification-warning-color);
+  border-color: var(--_notification-warning-border-color);
+  background: var(--_notification-warning-bg);
+}
+
+.ngx-form-field-notification--empty {
+  padding: 0;
+  border-width: 0;
+  box-shadow: none;
+  opacity: 0;
+  transform: translateY(calc(var(--_notification-motion-distance) * -1));
+  pointer-events: none;
+}
+
+.ngx-form-field-notification__title,
+.ngx-form-field-notification__message {
+  margin: 0;
+}
+
+.ngx-form-field-notification__title {
+  color: var(--_notification-title-color);
+  font-size: var(--_notification-title-font-size);
+  line-height: var(--_notification-title-line-height);
+  font-weight: var(--_notification-title-font-weight);
+  letter-spacing: var(--_notification-title-letter-spacing);
+}
+
+.ngx-form-field-notification__stack,
+.ngx-form-field-notification__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--_notification-message-spacing);
+}
+
+.ngx-form-field-notification__message {
+  color: var(--_notification-message-color);
+  line-height: var(--_notification-message-line-height);
+}
+
+.ngx-form-field-notification__list {
+  margin: 0;
+  padding-inline-start: var(--_notification-list-padding-inline-start);
+  list-style: var(--_notification-list-style);
+}
+
+@supports (interpolate-size: allow-keywords) {
+  .ngx-form-field-notification {
+    interpolate-size: allow-keywords;
+    block-size: auto;
+    transition:
+      block-size var(--_notification-motion-duration)
+        var(--_notification-motion-easing),
+      var(--_notification-state-transition);
+  }
+
+  .ngx-form-field-notification--empty {
+    block-size: 0;
+  }
+}
+
+@starting-style {
+  .ngx-form-field-notification:not(.ngx-form-field-notification--empty) {
+    opacity: 0;
+    transform: translateY(calc(var(--_notification-motion-distance) * -1));
+  }
+}
+
+@supports (interpolate-size: allow-keywords) {
+  @starting-style {
+    .ngx-form-field-notification:not(.ngx-form-field-notification--empty) {
+      block-size: 0;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ngx-form-field-notification {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* High-contrast mode: soft background + color-mix border can drop below the */
+/* WCAG contrast threshold. Mirror the `form-field-error` treatment by solidifying */
+/* the border and bumping width. */
+@media (prefers-contrast: more) {
+  .ngx-form-field-notification--error {
+    border-color: var(--_notification-error-color);
+    border-width: 2px;
+  }
+
+  .ngx-form-field-notification--warning {
+    border-color: var(--_notification-warning-color);
+    border-width: 2px;
+  }
+}
+
+/* Windows High Contrast (`forced-colors: active`): the soft backgrounds and */
+/* translucent borders are replaced with system colors. Without this block the */
+/* notification would flatten to the default system surface and lose its */
+/* error/warning semantic. */
+@media (forced-colors: active) {
+  .ngx-form-field-notification {
+    forced-color-adjust: none;
+    background: Canvas;
+    color: CanvasText;
+    border: 2px solid CanvasText;
+  }
+
+  .ngx-form-field-notification--error {
+    border-color: Mark;
+    color: MarkText;
+    background: Mark;
+  }
+
+  .ngx-form-field-notification--warning {
+    border-color: CanvasText;
+    color: CanvasText;
+    background: Canvas;
+  }
+
+  .ngx-form-field-notification--empty {
+    border-width: 0;
+  }
+}

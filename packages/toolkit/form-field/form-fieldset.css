@@ -1,0 +1,552 @@
+/* ============================================================================ */
+/* THEMING ARCHITECTURE */
+/* ============================================================================ */
+/* Uses Lea Verou's "pseudo-private variables" pattern for fallback management: */
+/* https://lea.verou.me/blog/2021/10/custom-properties-with-defaults/ */
+/* Layering approach: */
+/* 1. Design tokens (internal, --_fieldset-*) - Base values for colors, spacing, typography */
+/* 2. Shared feedback tier (--_feedback-*, from form-field/_feedback-tokens) */
+/* 3. Public API (--ngx-signal-form-fieldset-*) - Overridable by consumers */
+/* 4. Pseudo-private (--_fieldset-*) - Resolve public → feedback → internal defaults */
+/* 5. Implementation - Uses only the resolved --_* variables */
+/* This keeps the CSS API stable while avoiding repeated literal fallbacks. */
+
+:host {
+  /* Internal design tokens */
+  --_fieldset-space-0: 0;
+  --_fieldset-space-2xs: 0.25rem;
+  --_fieldset-space-xs: 0.375rem;
+  --_fieldset-space-sm: 0.5rem;
+  --_fieldset-space-lg: 1rem;
+
+  --_fieldset-text-body: 0.875rem;
+  --_fieldset-line-height-body: 1.25rem;
+  --_fieldset-weight-medium: 500;
+  --_fieldset-weight-semibold: 600;
+
+  --_fieldset-radius-sm: 0.25rem;
+  --_fieldset-radius-lg: 0.75rem;
+  --_fieldset-border-width-default: 1px;
+
+  --_fieldset-clr-text: #324155;
+  --_fieldset-clr-text-secondary: rgba(50, 65, 85, 0.75);
+  --_fieldset-clr-border: rgba(50, 65, 85, 0.25);
+  --_fieldset-clr-info: #007bc7;
+  --_fieldset-clr-success: #3f8f4f;
+  --_fieldset-clr-danger: #db1818;
+  --_fieldset-clr-warning: #a16207;
+  --_fieldset-clr-warning-strong: #92400e;
+
+  --_fieldset-bg-danger-soft: #fdebeb;
+  --_fieldset-bg-warning-soft: #fff6e8;
+  --_fieldset-border-danger-soft: rgb(219 24 24 / 0.18);
+  --_fieldset-border-warning-soft: rgb(161 98 7 / 0.2);
+  --_fieldset-message-animation-default: ngx-status-slide-in 300ms
+    cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+
+  /* Resolved pseudo-private variables */
+  --_fieldset-gap: var(
+    --ngx-signal-form-fieldset-gap,
+    var(--_fieldset-space-lg)
+  );
+  --_fieldset-padding: var(
+    --ngx-signal-form-fieldset-padding,
+    var(--_fieldset-space-lg)
+  );
+  --_fieldset-content-offset: var(
+    --ngx-signal-form-fieldset-content-offset,
+    var(--_fieldset-space-0)
+  );
+  --_fieldset-message-inset-inline-start: var(
+    --ngx-signal-form-fieldset-message-inset-inline-start,
+    var(--_fieldset-space-0)
+  );
+  --_fieldset-message-inset-inline-end: var(
+    --ngx-signal-form-fieldset-message-inset-inline-end,
+    var(--_fieldset-space-0)
+  );
+  --_fieldset-current-message-inset-inline-start: var(
+    --_fieldset-message-inset-inline-start
+  );
+  --_fieldset-current-message-inset-inline-end: var(
+    --_fieldset-message-inset-inline-end
+  );
+  --_fieldset-message-margin-top: var(
+    --ngx-signal-form-fieldset-message-margin-top,
+    var(--_fieldset-gap)
+  );
+  --_fieldset-message-margin-bottom: var(
+    --ngx-signal-form-fieldset-message-margin-bottom,
+    var(--_fieldset-gap)
+  );
+  --_fieldset-message-padding: var(
+    --ngx-signal-form-fieldset-message-padding,
+    var(--_fieldset-space-0)
+  );
+  --_fieldset-message-padding-inline-start: var(
+    --ngx-signal-form-fieldset-message-padding-inline-start,
+    var(--_feedback-padding-horizontal)
+  );
+  --_fieldset-message-padding-inline-end: var(
+    --ngx-signal-form-fieldset-message-padding-inline-end,
+    var(--_feedback-padding-horizontal)
+  );
+  --_fieldset-message-border-width: var(
+    --ngx-signal-form-fieldset-message-border-width,
+    var(--_fieldset-space-0)
+  );
+  --_fieldset-message-border-radius: var(
+    --ngx-signal-form-fieldset-message-border-radius,
+    var(--_fieldset-space-0)
+  );
+  --_fieldset-message-spacing: var(
+    --ngx-signal-form-fieldset-message-spacing,
+    var(--_fieldset-space-2xs)
+  );
+  --_fieldset-message-list-style: var(
+    --ngx-signal-form-fieldset-message-list-style,
+    var(--_feedback-list-style)
+  );
+  --_fieldset-message-list-padding-inline-start: var(
+    --ngx-signal-form-fieldset-message-list-padding-inline-start,
+    var(--_feedback-list-indent)
+  );
+  --_fieldset-notification-inset-inline-start: var(
+    --ngx-signal-form-fieldset-notification-inset-inline-start,
+    var(--_fieldset-space-0)
+  );
+  --_fieldset-notification-inset-inline-end: var(
+    --ngx-signal-form-fieldset-notification-inset-inline-end,
+    var(--_fieldset-space-0)
+  );
+  --_fieldset-notification-list-style: var(
+    --ngx-signal-form-fieldset-notification-list-style,
+    var(--_feedback-list-style)
+  );
+  --_fieldset-notification-list-padding-inline-start: var(
+    --ngx-signal-form-fieldset-notification-list-padding-inline-start,
+    var(--_feedback-list-indent)
+  );
+  --_fieldset-message-animation: var(
+    --ngx-signal-form-fieldset-message-animation,
+    var(--_fieldset-message-animation-default)
+  );
+  --_fieldset-transition-duration: 180ms;
+  --_fieldset-transition-easing: ease-in-out;
+  --_fieldset-transition-chrome:
+    border-color var(--_fieldset-transition-duration)
+      var(--_fieldset-transition-easing),
+    background-color var(--_fieldset-transition-duration)
+      var(--_fieldset-transition-easing),
+    color var(--_fieldset-transition-duration)
+      var(--_fieldset-transition-easing),
+    box-shadow var(--_fieldset-transition-duration)
+      var(--_fieldset-transition-easing);
+  --_fieldset-transition-spacing:
+    margin-top var(--_fieldset-transition-duration)
+      var(--_fieldset-transition-easing),
+    margin-bottom var(--_fieldset-transition-duration)
+      var(--_fieldset-transition-easing);
+  --_fieldset-radius: var(
+    --ngx-signal-form-fieldset-border-radius,
+    var(--_fieldset-radius-lg)
+  );
+  --_fieldset-surface-radius: max(
+    0px,
+    calc(
+      var(
+          --ngx-signal-form-fieldset-surface-border-radius,
+          var(--_fieldset-radius)
+        ) -
+        var(--_fieldset-border-width)
+    )
+  );
+  --_fieldset-border-width: var(
+    --ngx-signal-form-fieldset-border-width,
+    var(--_fieldset-border-width-default)
+  );
+  --_fieldset-border-color: var(
+    --ngx-signal-form-fieldset-border-color,
+    var(--_fieldset-clr-border)
+  );
+  --_fieldset-bg: var(--ngx-signal-form-fieldset-bg, transparent);
+  --_fieldset-surface-base-bg: var(
+    --ngx-signal-form-fieldset-surface-bg,
+    var(--_fieldset-bg)
+  );
+  --_fieldset-surface-bg: var(--_fieldset-surface-base-bg);
+  --_fieldset-neutral-surface-bg: var(
+    --ngx-signal-form-fieldset-neutral-surface-bg,
+    color-mix(in srgb, var(--_fieldset-color) 4%, transparent)
+  );
+  --_fieldset-info-surface-bg: var(
+    --ngx-signal-form-fieldset-info-surface-bg,
+    color-mix(in srgb, var(--_fieldset-clr-info) 10%, transparent)
+  );
+  --_fieldset-success-surface-bg: var(
+    --ngx-signal-form-fieldset-success-surface-bg,
+    color-mix(in srgb, var(--_fieldset-clr-success) 10%, transparent)
+  );
+  --_fieldset-warning-surface-base-bg: var(
+    --ngx-signal-form-fieldset-warning-surface-base-bg,
+    var(--_fieldset-notification-warning-bg)
+  );
+  --_fieldset-danger-surface-bg: var(
+    --ngx-signal-form-fieldset-danger-surface-bg,
+    var(--_fieldset-notification-error-bg)
+  );
+  --_fieldset-color: var(
+    --ngx-signal-form-fieldset-color,
+    var(--_fieldset-clr-text)
+  );
+  --_fieldset-muted-color: var(
+    --ngx-signal-form-fieldset-muted-color,
+    var(--_fieldset-clr-text-secondary)
+  );
+  --_fieldset-legend-size: var(
+    --ngx-signal-form-fieldset-legend-font-size,
+    var(--_fieldset-text-body)
+  );
+  --_fieldset-legend-family: var(
+    --ngx-signal-form-fieldset-legend-font-family,
+    var(--typography-font-family, inherit)
+  );
+  --_fieldset-legend-line-height: var(
+    --ngx-signal-form-fieldset-legend-line-height,
+    var(--_fieldset-line-height-body)
+  );
+  --_fieldset-legend-weight: var(
+    --ngx-signal-form-fieldset-legend-font-weight,
+    var(--_fieldset-weight-medium)
+  );
+  --_fieldset-legend-letter-spacing: var(
+    --ngx-signal-form-fieldset-legend-letter-spacing,
+    0
+  );
+  --_fieldset-legend-padding: var(
+    --ngx-signal-form-fieldset-legend-padding,
+    var(--_fieldset-space-0) var(--_fieldset-space-xs)
+  );
+  --_fieldset-legend-color: var(
+    --ngx-signal-form-fieldset-legend-color,
+    var(--_fieldset-color)
+  );
+  --_fieldset-legend-bg: var(--ngx-signal-form-fieldset-legend-bg, transparent);
+  --_fieldset-legend-radius: var(
+    --ngx-signal-form-fieldset-legend-border-radius,
+    var(--_fieldset-radius-sm)
+  );
+  --_fieldset-legend-inset-inline-start: var(
+    --ngx-signal-form-fieldset-legend-inset-inline-start,
+    var(--_fieldset-space-sm)
+  );
+  --_fieldset-invalid-border: var(
+    --ngx-signal-form-fieldset-invalid-border-color,
+    var(--_fieldset-clr-danger)
+  );
+  --_fieldset-warning-border: var(
+    --ngx-signal-form-fieldset-warning-border-color,
+    var(--_fieldset-clr-warning)
+  );
+  --_fieldset-invalid-bg: var(
+    --ngx-signal-form-fieldset-invalid-bg,
+    var(--_fieldset-notification-error-bg)
+  );
+  --_fieldset-invalid-surface-bg: var(
+    --ngx-signal-form-fieldset-invalid-surface-bg,
+    var(--_fieldset-invalid-bg)
+  );
+  --_fieldset-invalid-legend-color: var(
+    --ngx-signal-form-fieldset-invalid-legend-color,
+    var(--_fieldset-invalid-border)
+  );
+  --_fieldset-invalid-legend-bg: var(
+    --ngx-signal-form-fieldset-invalid-legend-bg,
+    var(--_fieldset-legend-bg)
+  );
+  --_fieldset-warning-bg: var(
+    --ngx-signal-form-fieldset-warning-bg,
+    var(--_fieldset-notification-warning-bg)
+  );
+  --_fieldset-warning-surface-bg: var(
+    --ngx-signal-form-fieldset-warning-surface-bg,
+    var(--_fieldset-warning-bg)
+  );
+  --_fieldset-warning-legend-color: var(
+    --ngx-signal-form-fieldset-warning-legend-color,
+    var(--_fieldset-warning-border)
+  );
+  --_fieldset-warning-legend-bg: var(
+    --ngx-signal-form-fieldset-warning-legend-bg,
+    var(--_fieldset-legend-bg)
+  );
+  --_fieldset-message-error-color: var(
+    --ngx-signal-form-fieldset-error-color,
+    var(--ngx-signal-form-error-color, var(--_fieldset-clr-danger))
+  );
+  --_fieldset-message-error-bg: var(
+    --ngx-signal-form-fieldset-error-bg,
+    var(--ngx-signal-form-error-bg, transparent)
+  );
+  --_fieldset-message-error-border: var(
+    --ngx-signal-form-fieldset-error-border-color,
+    var(--ngx-signal-form-error-border-color, transparent)
+  );
+  --_fieldset-message-warning-color: var(
+    --ngx-signal-form-fieldset-warning-color,
+    var(--ngx-signal-form-warning-color, var(--_fieldset-clr-warning))
+  );
+  --_fieldset-message-warning-bg: var(
+    --ngx-signal-form-fieldset-warning-bg,
+    var(--ngx-signal-form-warning-bg, transparent)
+  );
+  --_fieldset-message-warning-border: var(
+    --ngx-signal-form-fieldset-warning-border-color,
+    var(--ngx-signal-form-warning-border-color, transparent)
+  );
+  --_fieldset-notification-error-bg: var(
+    --ngx-signal-form-fieldset-notification-error-bg,
+    var(
+      --ngx-signal-form-notification-error-bg,
+      var(--_fieldset-bg-danger-soft)
+    )
+  );
+  --_fieldset-notification-error-border: var(
+    --ngx-signal-form-fieldset-notification-error-border-color,
+    var(
+      --ngx-signal-form-notification-error-border-color,
+      var(--_fieldset-border-danger-soft)
+    )
+  );
+  --_fieldset-notification-error-color: var(
+    --ngx-signal-form-fieldset-notification-error-color,
+    var(--ngx-signal-form-notification-error-color, var(--_fieldset-clr-danger))
+  );
+  --_fieldset-notification-warning-bg: var(
+    --ngx-signal-form-fieldset-notification-warning-bg,
+    var(
+      --ngx-signal-form-notification-warning-bg,
+      var(--_fieldset-bg-warning-soft)
+    )
+  );
+  --_fieldset-notification-warning-border: var(
+    --ngx-signal-form-fieldset-notification-warning-border-color,
+    var(
+      --ngx-signal-form-notification-warning-border-color,
+      var(--_fieldset-border-warning-soft)
+    )
+  );
+  --_fieldset-notification-warning-color: var(
+    --ngx-signal-form-fieldset-notification-warning-color,
+    var(
+      --ngx-signal-form-notification-warning-color,
+      var(--_fieldset-clr-warning-strong)
+    )
+  );
+  --_fieldset-direction: var(--ngx-signal-form-fieldset-direction, column);
+
+  display: block;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: var(--_fieldset-border-width) solid var(--_fieldset-border-color);
+  border-radius: var(--_fieldset-radius);
+  background: var(--_fieldset-surface-bg);
+  color: var(--_fieldset-color);
+  transition: var(--_fieldset-transition-chrome);
+}
+
+:host > legend {
+  max-inline-size: 100%;
+  margin-inline-start: var(--_fieldset-legend-inset-inline-start);
+  padding: var(--_fieldset-legend-padding);
+  color: var(--_fieldset-legend-color);
+  background: var(--_fieldset-legend-bg);
+  border-radius: var(--_fieldset-legend-radius);
+  font-family: var(--_fieldset-legend-family);
+  font-size: var(--_fieldset-legend-size);
+  line-height: var(--_fieldset-legend-line-height);
+  font-weight: var(--_fieldset-legend-weight);
+  letter-spacing: var(--_fieldset-legend-letter-spacing);
+  transition: var(--_fieldset-transition-chrome);
+}
+
+:host(.ngx-signal-form-fieldset--invalid) {
+  border-color: var(--_fieldset-invalid-border);
+}
+
+:host(.ngx-signal-form-fieldset--warning) {
+  border-color: var(--_fieldset-warning-border);
+}
+
+:host(.ngx-signal-form-fieldset--invalid) > legend {
+  color: var(--_fieldset-invalid-legend-color);
+  background: var(--_fieldset-invalid-legend-bg);
+}
+
+:host(.ngx-signal-form-fieldset--warning) > legend {
+  color: var(--_fieldset-warning-legend-color);
+  background: var(--_fieldset-warning-legend-bg);
+}
+
+:host([data-appearance='plain']) {
+  --_fieldset-border-width: 0px;
+  --_fieldset-padding: 0px;
+  --_fieldset-surface-bg: transparent;
+  --_fieldset-legend-inset-inline-start: 0px;
+  --_fieldset-surface-radius: 0px;
+
+  background: transparent;
+}
+
+:host([data-surface-tone='neutral']) {
+  --_fieldset-surface-bg: var(--_fieldset-neutral-surface-bg);
+}
+
+:host([data-surface-tone='info']) {
+  --_fieldset-surface-bg: var(--_fieldset-info-surface-bg);
+}
+
+:host([data-surface-tone='success']) {
+  --_fieldset-surface-bg: var(--_fieldset-success-surface-bg);
+}
+
+:host([data-surface-tone='warning']) {
+  --_fieldset-surface-bg: var(--_fieldset-warning-surface-base-bg);
+}
+
+:host([data-surface-tone='danger']) {
+  --_fieldset-surface-bg: var(--_fieldset-danger-surface-bg);
+}
+
+:host([data-feedback-appearance='notification']) {
+  --_fieldset-current-message-inset-inline-start: var(
+    --_fieldset-notification-inset-inline-start
+  );
+  --_fieldset-current-message-inset-inline-end: var(
+    --_fieldset-notification-inset-inline-end
+  );
+}
+
+.ngx-signal-form-fieldset__surface {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  padding: var(--_fieldset-padding);
+  border-radius: var(--_fieldset-surface-radius);
+  background: transparent;
+  transition: var(--_fieldset-transition-chrome);
+}
+
+:host(fieldset) > .ngx-signal-form-fieldset__surface {
+  padding-block-start: max(0px, calc(var(--_fieldset-padding) - 0.35rem));
+}
+
+:host(.ngx-signal-form-fieldset--surface-invalid) {
+  background: var(--_fieldset-invalid-surface-bg);
+}
+
+:host(.ngx-signal-form-fieldset--surface-warning) {
+  background: var(--_fieldset-warning-surface-bg);
+}
+
+:host([data-appearance='plain'].ngx-signal-form-fieldset--surface-invalid),
+:host([data-appearance='plain'].ngx-signal-form-fieldset--surface-warning) {
+  background: transparent;
+}
+
+.ngx-signal-form-fieldset__content {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: var(--_fieldset-direction);
+  gap: var(--_fieldset-gap);
+}
+
+:host(.ngx-signal-form-fieldset--messages-top)
+  .ngx-signal-form-fieldset__content {
+  margin-top: var(--_fieldset-content-offset);
+}
+
+.ngx-signal-form-fieldset__messages {
+  margin-top: var(--_fieldset-message-margin-top);
+  margin-inline-start: var(--_fieldset-current-message-inset-inline-start);
+  margin-inline-end: var(--_fieldset-current-message-inset-inline-end);
+  min-inline-size: 0;
+  overflow: clip;
+  transition: var(--_fieldset-transition-spacing);
+
+  /* Theme the nested error component with the fieldset's message tier. */
+  --ngx-signal-form-error-padding: var(--_fieldset-message-padding);
+  --ngx-signal-form-error-padding-inline-start: var(
+    --_fieldset-message-padding-inline-start
+  );
+  --ngx-signal-form-error-padding-inline-end: var(
+    --_fieldset-message-padding-inline-end
+  );
+  --ngx-signal-form-error-border-width: var(--_fieldset-message-border-width);
+  --ngx-signal-form-error-border-radius: var(--_fieldset-message-border-radius);
+  --ngx-signal-form-error-message-spacing: var(--_fieldset-message-spacing);
+  --ngx-signal-form-error-list-style: var(--_fieldset-message-list-style);
+  --ngx-signal-form-error-list-padding-inline-start: var(
+    --_fieldset-message-list-padding-inline-start
+  );
+  --ngx-signal-form-error-animation: var(--_fieldset-message-animation);
+  --ngx-signal-form-error-color: var(--_fieldset-message-error-color);
+  --ngx-signal-form-error-bg: var(--_fieldset-message-error-bg);
+  --ngx-signal-form-error-border-color: var(--_fieldset-message-error-border);
+  --ngx-signal-form-warning-color: var(--_fieldset-message-warning-color);
+  --ngx-signal-form-warning-bg: var(--_fieldset-message-warning-bg);
+  --ngx-signal-form-warning-border-color: var(
+    --_fieldset-message-warning-border
+  );
+
+  /* Theme the nested notification component with the fieldset's notification tier. */
+  --ngx-signal-form-notification-error-color: var(
+    --_fieldset-notification-error-color
+  );
+  --ngx-signal-form-notification-message-spacing: var(
+    --_fieldset-message-spacing
+  );
+  --ngx-signal-form-notification-list-style: var(
+    --_fieldset-notification-list-style
+  );
+  --ngx-signal-form-notification-list-padding-inline-start: var(
+    --_fieldset-notification-list-padding-inline-start
+  );
+  --ngx-signal-form-notification-error-bg: var(
+    --_fieldset-notification-error-bg
+  );
+  --ngx-signal-form-notification-error-border-color: var(
+    --_fieldset-notification-error-border
+  );
+  --ngx-signal-form-notification-warning-color: var(
+    --_fieldset-notification-warning-color
+  );
+  --ngx-signal-form-notification-warning-bg: var(
+    --_fieldset-notification-warning-bg
+  );
+  --ngx-signal-form-notification-warning-border-color: var(
+    --_fieldset-notification-warning-border
+  );
+}
+
+/*
+ * Collapse the wrapper's vertical rhythm when the host knows there are no
+ * visible messages. We can't gate on a child `:has(...--empty)` selector here
+ * because `ngx-form-field-error` always renders BOTH an alert and a status
+ * container (per WCAG 4.1.3 — the live region must be present BEFORE the
+ * first announcement); at any moment one of them carries `--empty` even
+ * when the other is announcing. The host directive owns the authoritative
+ * `showMessages()` state and exposes it via `[data-has-messages]` so the CSS
+ * can collapse symmetrically without inspecting child markup.
+ */
+:host(:not([data-has-messages])) .ngx-signal-form-fieldset__messages {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+:host(.ngx-signal-form-fieldset--messages-top)
+  .ngx-signal-form-fieldset__messages {
+  margin-top: 0;
+  margin-bottom: var(--_fieldset-message-margin-bottom);
+}
