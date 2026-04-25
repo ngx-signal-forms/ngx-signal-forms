@@ -192,11 +192,15 @@ export class NgxFormFieldset {
   protected readonly fieldset = inject(NgxHeadlessFieldset);
   readonly #elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #legendId = signal<string | null>(null);
-  // Capture any caller-supplied `aria-labelledby` at construction so we can fall
-  // back to it on non-native hosts that lack a projected `<legend>` — otherwise
-  // the binding below would overwrite the author's accessible label with `null`.
+  // Capture any caller-supplied `aria-labelledby` / `aria-label` at construction
+  // so we can fall back to them on non-native hosts that lack a projected
+  // `<legend>` — otherwise the binding below would overwrite the author's
+  // accessible label with `null`, and `hostRole()` needs to know whether *any*
+  // accessible name source exists before exposing `role="group"`.
   readonly #initialAriaLabelledby =
     this.#elementRef.nativeElement.getAttribute('aria-labelledby');
+  readonly #initialAriaLabel =
+    this.#elementRef.nativeElement.getAttribute('aria-label');
   // `<fieldset>` natively implies role="group" and associates a child <legend>.
   // Any other host tag (custom element `<ngx-form-fieldset>` or a bare
   // `[ngxFormFieldset]` attribute target) needs an explicit group role so the
@@ -419,9 +423,21 @@ export class NgxFormFieldset {
     );
   });
 
-  protected readonly hostRole = computed<'group' | null>(() =>
-    this.#isNativeFieldset ? null : 'group',
-  );
+  protected readonly hostRole = computed<'group' | null>(() => {
+    // Native `<fieldset>` already exposes role="group" implicitly with the
+    // projected `<legend>` as accessible name — adding `role="group"` would be
+    // redundant and could double-up labels.
+    if (this.#isNativeFieldset) {
+      return null;
+    }
+    // Avoid exposing an unnamed group to AT (axe `aria-required-children` /
+    // empty group flags). Only assert `role="group"` when an accessible name
+    // exists from a projected legend, caller-supplied aria-labelledby, or
+    // aria-label.
+    const hasAccessibleName =
+      this.legendLabelId() !== null || this.#initialAriaLabel !== null;
+    return hasAccessibleName ? 'group' : null;
+  });
 
   protected readonly legendLabelId = computed<string | null>(() => {
     // Native `<fieldset>` auto-associates its first <legend>; explicit

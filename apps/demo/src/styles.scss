@@ -121,11 +121,15 @@
     outline-offset: 2px;
   }
 
-  /* Toolkit wrappers own the visible focus treatment via container :focus-within. */
-  ngx-form-field-wrapper :is(input, textarea, select):focus,
-  ngx-form-field-wrapper :is(input, textarea, select):focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
+  /* Toolkit wrappers own the visible focus treatment via container :focus-within.
+     Skipped under forced-colors so user/UA focus indicators remain the only
+     visible cue in high-contrast modes (WCAG 2.4.7 / 1.4.11). */
+  @media not (forced-colors: active) {
+    ngx-form-field-wrapper :is(input, textarea, select):focus,
+    ngx-form-field-wrapper :is(input, textarea, select):focus-visible {
+      outline: none !important;
+      box-shadow: none !important;
+    }
   }
 }
 

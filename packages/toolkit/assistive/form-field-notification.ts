@@ -47,18 +47,61 @@ export type NgxFormFieldNotificationTone = 'auto' | 'error' | 'warning';
     './form-field-notification.css',
   ],
   template: `
+    <!--
+      Dual stable live regions: role is fixed per container so the alert/status
+      role is never re-assigned at the same tick as content insertion. Toggling
+      role between alert and status when the first message arrives is the same
+      bug class NgxFormFieldError works around (NVDA + Chrome miss the very
+      first announcement when role and content arrive together).
+    -->
     <div
-      class="ngx-form-field-notification"
-      [class.ngx-form-field-notification--error]="resolvedTone() === 'error'"
-      [class.ngx-form-field-notification--warning]="
-        resolvedTone() === 'warning'
-      "
-      [class.ngx-form-field-notification--empty]="!hasMessages()"
-      [attr.id]="hasMessages() ? containerId() : null"
-      [attr.role]="resolvedTone() === 'warning' ? 'status' : 'alert'"
-      [attr.aria-hidden]="hasMessages() ? null : 'true'"
+      class="ngx-form-field-notification ngx-form-field-notification--error"
+      [class.ngx-form-field-notification--empty]="!showErrorContainer()"
+      [attr.id]="showErrorContainer() ? errorContainerId() : null"
+      role="alert"
+      [attr.aria-hidden]="showErrorContainer() ? null : 'true'"
+      [hidden]="!showErrorContainer()"
     >
-      @if (hasMessages()) {
+      @if (showErrorContainer()) {
+        @if (title()) {
+          <p class="ngx-form-field-notification__title">{{ title() }}</p>
+        }
+
+        @if (usesBulletList()) {
+          <ul class="ngx-form-field-notification__list" role="list">
+            @for (
+              message of resolvedMessages();
+              track message.kind + ':' + message.message + ':' + $index
+            ) {
+              <li class="ngx-form-field-notification__message">
+                {{ message.message }}
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="ngx-form-field-notification__stack">
+            @for (
+              message of resolvedMessages();
+              track message.kind + ':' + message.message + ':' + $index
+            ) {
+              <p class="ngx-form-field-notification__message">
+                {{ message.message }}
+              </p>
+            }
+          </div>
+        }
+      }
+    </div>
+
+    <div
+      class="ngx-form-field-notification ngx-form-field-notification--warning"
+      [class.ngx-form-field-notification--empty]="!showWarningContainer()"
+      [attr.id]="showWarningContainer() ? warningContainerId() : null"
+      role="status"
+      [attr.aria-hidden]="showWarningContainer() ? null : 'true'"
+      [hidden]="!showWarningContainer()"
+    >
+      @if (showWarningContainer()) {
         @if (title()) {
           <p class="ngx-form-field-notification__title">{{ title() }}</p>
         }
@@ -178,15 +221,22 @@ export class NgxFormFieldNotification {
     return 'error';
   });
 
-  protected readonly containerId = computed<string | null>(() => {
-    const fieldName = this.fieldName()?.trim();
-    if (!fieldName) {
-      return null;
-    }
+  protected readonly showErrorContainer = computed(
+    () => this.hasMessages() && this.resolvedTone() === 'error',
+  );
 
-    return this.resolvedTone() === 'warning'
-      ? generateWarningId(fieldName)
-      : generateErrorId(fieldName);
+  protected readonly showWarningContainer = computed(
+    () => this.hasMessages() && this.resolvedTone() === 'warning',
+  );
+
+  protected readonly errorContainerId = computed<string | null>(() => {
+    const fieldName = this.fieldName()?.trim();
+    return fieldName ? generateErrorId(fieldName) : null;
+  });
+
+  protected readonly warningContainerId = computed<string | null>(() => {
+    const fieldName = this.fieldName()?.trim();
+    return fieldName ? generateWarningId(fieldName) : null;
   });
 
   protected readonly resolvedMessages = computed(() => {

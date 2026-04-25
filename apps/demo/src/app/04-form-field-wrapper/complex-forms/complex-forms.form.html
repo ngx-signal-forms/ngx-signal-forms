@@ -78,6 +78,7 @@
         <input
           id="age"
           type="number"
+          inputmode="numeric"
           [formField]="complexForm.personalInfo.age"
         />
         <span suffix aria-hidden="true" class="text-sm text-gray-400"
@@ -227,6 +228,7 @@
         <input
           [id]="'skill-' + i + '-level'"
           type="number"
+          inputmode="numeric"
           [formField]="complexForm.skills[i].level"
         />
       </ngx-form-field-wrapper>
