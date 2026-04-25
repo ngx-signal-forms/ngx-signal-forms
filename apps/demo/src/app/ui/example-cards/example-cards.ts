@@ -38,6 +38,25 @@ type LearningCardConfig = {
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
+      min-width: 0;
+    }
+
+    .example-cards__section {
+      min-width: 0;
+    }
+
+    .example-cards__list,
+    .example-cards__list li {
+      min-width: 0;
+    }
+
+    .example-cards__list li {
+      overflow-wrap: anywhere;
+    }
+
+    .example-cards__list code {
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
   `,
   template: `
@@ -54,11 +73,13 @@ type LearningCardConfig = {
       </div>
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         @for (section of demonstrated().sections; track section.title) {
-          <div>
+          <div class="example-cards__section">
             <h3 class="mb-2 font-medium text-gray-900 dark:text-gray-100">
               {{ section.title }}
             </h3>
-            <ul class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+            <ul
+              class="example-cards__list space-y-1 text-sm text-gray-600 dark:text-gray-400"
+            >
               @for (item of section.items; track item) {
                 <li [innerHTML]="item"></li>
               }
@@ -77,13 +98,15 @@ type LearningCardConfig = {
 
       <div class="grid gap-4 md:grid-cols-2">
         @for (section of learning().sections; track section.title) {
-          <div>
+          <div class="example-cards__section">
             <h3
               class="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100"
             >
               {{ section.title }}
             </h3>
-            <ul class="space-y-1 text-xs text-gray-700 dark:text-gray-300">
+            <ul
+              class="example-cards__list space-y-1 text-xs text-gray-700 dark:text-gray-300"
+            >
               @for (item of section.items; track item) {
                 <li [innerHTML]="item"></li>
               }
