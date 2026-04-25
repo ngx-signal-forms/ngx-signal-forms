@@ -79,8 +79,13 @@ describe('CONTROL_KIND_CAPABILITIES exhaustiveness', () => {
   });
 
   it('should cover exactly the set of known control kinds — no extras, no gaps', () => {
-    const testedKinds = new Set(Object.keys(EXPECTED_CAPABILITIES));
-    const registeredKinds = new Set(NGX_SIGNAL_FORM_CONTROL_KIND_VALUES);
+    // Both sets are widened to `Set<string>` so the cross-checks stay
+    // type-safe regardless of which side iterates first — `Set<T>.has`
+    // would otherwise reject the inferred type from the opposing iterator.
+    const testedKinds = new Set<string>(Object.keys(EXPECTED_CAPABILITIES));
+    const registeredKinds = new Set<string>(
+      NGX_SIGNAL_FORM_CONTROL_KIND_VALUES,
+    );
 
     for (const kind of registeredKinds) {
       expect(testedKinds.has(kind)).toBe(true);
