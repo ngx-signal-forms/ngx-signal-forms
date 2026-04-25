@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 import { Component, inputBinding, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {

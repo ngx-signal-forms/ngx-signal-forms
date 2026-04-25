@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import {
   email,
