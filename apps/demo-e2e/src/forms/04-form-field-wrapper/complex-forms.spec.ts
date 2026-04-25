@@ -372,7 +372,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
         '.ngx-signal-form-fieldset__messages',
       );
       const notificationCard = page.credentialsFieldset.locator(
-        'ngx-form-field-notification .ngx-form-field-notification',
+        'ngx-form-field-notification .ngx-form-field-notification:not(.ngx-form-field-notification--empty)',
       );
 
       const recipe = await page.credentialsFieldset.evaluate((host) => {
