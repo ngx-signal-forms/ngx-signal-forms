@@ -163,7 +163,7 @@
     --_notification-bg-warning-light: var(--_notification-bg-warning-dark);
   }
 
-  :host-context(:root.light) {
+  :host-context(:root:not(.dark)) {
     --_notification-clr-danger: #db1818;
     --_notification-clr-danger-soft: #fdebeb;
     --_notification-clr-warning: #a16207;

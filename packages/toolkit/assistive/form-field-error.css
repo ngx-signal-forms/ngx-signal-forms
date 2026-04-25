@@ -103,7 +103,7 @@
     --_error-clr-warning: var(--_error-clr-warning-dark);
   }
 
-  :host-context(:root.light) {
+  :host-context(:root:not(.dark)) {
     --_error-clr-danger: #db1818;
     --_error-clr-warning: #a16207;
   }

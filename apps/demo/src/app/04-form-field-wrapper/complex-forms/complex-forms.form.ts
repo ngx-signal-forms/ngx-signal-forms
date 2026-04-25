@@ -89,8 +89,16 @@ function createInitialComplexFormModel(): ComplexFormModel {
       --ngx-signal-form-fieldset-message-inset-inline-start: 0.875rem;
       --ngx-signal-form-fieldset-message-padding-inline-start: 0;
       --ngx-signal-form-fieldset-message-padding-inline-end: 0;
-      --ngx-signal-form-fieldset-message-list-style: disc inside;
+      --ngx-signal-form-fieldset-notification-list-style: disc outside;
       --ngx-signal-form-fieldset-message-list-padding-inline-start: 0;
+    }
+
+    .choice-group-field {
+      --ngx-form-field-selection-group-invalid-bg: #fbdddd;
+    }
+
+    .choice-group-field__label {
+      color: #324155;
     }
 
     .preferences-stack {
