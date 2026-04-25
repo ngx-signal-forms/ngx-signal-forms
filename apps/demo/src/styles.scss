@@ -120,6 +120,17 @@
     outline: 2px solid var(--color-border-focus);
     outline-offset: 2px;
   }
+
+  /* Toolkit wrappers own the visible focus treatment via container :focus-within.
+     Skipped under forced-colors so user/UA focus indicators remain the only
+     visible cue in high-contrast modes (WCAG 2.4.7 / 1.4.11). */
+  @media not (forced-colors: active) {
+    ngx-form-field-wrapper :is(input, textarea, select):focus,
+    ngx-form-field-wrapper :is(input, textarea, select):focus-visible {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+  }
 }
 
 /* Components: semantic classes used by examples */
@@ -401,49 +412,50 @@
     color: var(--color-text-muted);
   }
 
-  /* Choice-group fieldset (radio/checkbox groups inside preferences) */
-  .choice-group-fieldset {
-    --ngx-signal-form-fieldset-gap: 0.25rem;
-    --ngx-signal-form-fieldset-padding: 0;
-    --ngx-signal-form-fieldset-border-width: 0;
-    --ngx-signal-form-fieldset-content-offset: 0;
-    --ngx-signal-form-fieldset-message-margin-top: 0.25rem;
-    --ngx-signal-form-fieldset-message-margin-bottom: 0.25rem;
-    --ngx-signal-form-fieldset-legend-padding: 0;
-    --ngx-signal-form-fieldset-legend-font-size: 0.875rem;
-    --ngx-signal-form-fieldset-legend-line-height: 1.25rem;
-    --ngx-signal-form-fieldset-legend-font-weight: 400;
-    --ngx-signal-form-fieldset-color: var(--color-text-muted);
-    --ngx-signal-form-fieldset-muted-color: var(--color-text-muted);
-  }
+  /* Grouped radio/checkbox field inside the form-field wrapper */
+  .choice-group-field__label {
+    @apply block;
 
-  .choice-group-fieldset__legend {
-    @apply block text-sm font-normal tracking-wide;
-    padding-inline-start: 0.125rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    letter-spacing: 0;
     color: var(--color-text-muted);
   }
 
-  .choice-group-fieldset__options {
-    @apply flex flex-col gap-1;
+  .choice-group-field__options {
+    @apply flex flex-col;
+
+    gap: var(--spacing-2);
   }
 
-  .choice-group-option {
-    @apply flex min-h-7 cursor-pointer items-center gap-2.5 rounded-xl text-sm;
-    padding-inline: 0.125rem;
+  .choice-group-field__option {
+    @apply flex cursor-pointer items-center rounded;
+
+    min-height: 2rem;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    padding-inline: 0;
     color: var(--color-text);
   }
 
-  .choice-group-option input {
+  .choice-group-field__option input {
     @apply m-0 shrink-0;
+
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    border-color: var(--color-border);
+    background: var(--color-bg-elevated);
   }
 
-  .choice-group-option:hover,
-  .choice-group-option:focus-within {
+  .choice-group-field__option:hover,
+  .choice-group-field__option:focus-within {
     background: rgb(15 23 42 / 0.03);
   }
 
-  .dark .choice-group-option:hover,
-  .dark .choice-group-option:focus-within {
+  .dark .choice-group-field__option:hover,
+  .dark .choice-group-field__option:focus-within {
     background: rgb(255 255 255 / 0.04);
   }
 
@@ -455,8 +467,11 @@
   }
 
   .fieldset-legend {
-    @apply px-2 text-lg font-semibold;
-    color: var(--color-text);
+    padding-inline: var(
+      --ngx-signal-form-fieldset-legend-padding-inline,
+      0.5rem
+    );
+    color: var(--ngx-signal-form-fieldset-legend-color, var(--color-text));
   }
 
   .fieldset-description {

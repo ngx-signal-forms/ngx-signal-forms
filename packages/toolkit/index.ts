@@ -83,6 +83,7 @@ export type {
   FormFieldAppearanceInput,
   FormFieldOrientation,
   FormFieldOrientationInput,
+  NgxFormFieldErrorPlacement,
   NgxSignalFormContext,
   NgxSignalFormControlAriaMode,
   NgxSignalFormControlKind,

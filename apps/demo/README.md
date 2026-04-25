@@ -62,10 +62,11 @@ Renderless primitives for custom UI systems.
 
 The batteries-included path for reusable field UI.
 
-| Example                                                                          | Focus                     | What You Learn                                      |
-| -------------------------------------------------------------------------------- | ------------------------- | --------------------------------------------------- |
-| **[complex-forms](./src/app/04-form-field-wrapper/complex-forms/README.md)**     | Nested objects + arrays   | Wrapper composition, grouped sections, long-form UX |
-| **[custom-controls](./src/app/04-form-field-wrapper/custom-controls/README.md)** | FormValueControl patterns | Custom control integration with wrapper + auto-ARIA |
+| Example                                                                                  | Focus                     | What You Learn                                      |
+| ---------------------------------------------------------------------------------------- | ------------------------- | --------------------------------------------------- |
+| **[complex-forms](./src/app/04-form-field-wrapper/complex-forms/README.md)**             | Nested objects + arrays   | Wrapper composition, grouped sections, long-form UX |
+| **[fieldset-appearance](./src/app/04-form-field-wrapper/fieldset-appearance/README.md)** | Grouped feedback styling  | Fieldset appearance, tones, aggregation, placement  |
+| **[custom-controls](./src/app/04-form-field-wrapper/custom-controls/README.md)**         | FormValueControl patterns | Custom control integration with wrapper + auto-ARIA |
 
 ### Level 5: Advanced Scenarios
 
@@ -90,6 +91,7 @@ Production-ready patterns for real applications.
 - **Warning support** → [`warning-support`](./src/app/02-toolkit-core/warning-support/README.md) — non-blocking validation semantics
 - **Headless grouped state** → [`fieldset-utilities`](./src/app/03-headless/fieldset-utilities/README.md) — summary, fieldset aggregation, utility helpers
 - **Wrapper long-form composition** → [`complex-forms`](./src/app/04-form-field-wrapper/complex-forms/README.md) — consolidated wrapper basics, grouped sections, nested arrays
+- **Fieldset presentation APIs** → [`fieldset-appearance`](./src/app/04-form-field-wrapper/fieldset-appearance/README.md) — grouped summary appearance, surfaced tones, and nested aggregation
 - **Custom control integration** → [`custom-controls`](./src/app/04-form-field-wrapper/custom-controls/README.md) — wrapper + custom value controls
 - **Global toolkit defaults** → [`global-configuration`](./src/app/05-advanced/global-configuration/README.md) — app-level provider composition and per-form overrides
 - **Async submit + server error UX** → [`submission-patterns`](./src/app/05-advanced/submission-patterns/README.md) — submission lifecycle and recovery

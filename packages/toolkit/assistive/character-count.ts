@@ -135,17 +135,23 @@ export type NgxCharacterCountValue = CharacterCountValue;
     :host {
       display: block;
       position: relative;
-      font-size: var(--ngx-form-field-char-count-font-size, 0.75rem);
+      font-size: var(
+        --ngx-form-field-char-count-font-size,
+        var(--ngx-signal-form-feedback-font-size, 0.75rem)
+      );
       line-height: var(--ngx-form-field-char-count-line-height, 1.25);
       color: var(--ngx-form-field-char-count-color-ok, rgba(50, 65, 85, 0.75));
       transition:
         color 0.2s ease,
         font-weight 0.2s ease;
       white-space: nowrap;
-      padding-left: var(--ngx-form-field-char-count-padding-horizontal, 0);
-      padding-right: var(
-        --ngx-form-field-char-count-padding-horizontal,
-        0.5rem
+      padding-inline-start: var(
+        --ngx-form-field-char-count-padding-inline-start,
+        var(--ngx-signal-form-feedback-padding-horizontal, 0)
+      );
+      padding-inline-end: var(
+        --ngx-form-field-char-count-padding-inline-end,
+        var(--ngx-signal-form-feedback-padding-horizontal, 0.5rem)
       );
     }
 
@@ -165,7 +171,7 @@ export type NgxCharacterCountValue = CharacterCountValue;
     :host([data-limit-state='warning']) {
       /* Default: Tailwind amber-700 (#a16207) — ~5.17:1 on white meets
        * WCAG 1.4.3 AA for normal text (#f59e0b previously used was 2.16:1).
-       * Kept consistent with the warning color in form-field-error.scss. */
+       * Kept consistent with the warning color in form-field-error.css. */
       color: var(--ngx-form-field-char-count-color-warning, #a16207);
     }
 

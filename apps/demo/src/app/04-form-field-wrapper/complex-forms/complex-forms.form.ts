@@ -15,7 +15,10 @@ import {
   createOnInvalidHandler,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
-import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
+import {
+  type NgxFormFieldErrorPlacement,
+  NgxFormField,
+} from '@ngx-signal-forms/toolkit/form-field';
 import { SwitchControlComponent } from '../../shared/controls';
 import type { ComplexFormModel } from './complex-forms.model';
 import { complexFormSchema } from './complex-forms.validations';
@@ -36,6 +39,10 @@ function createInitialComplexFormModel(): ComplexFormModel {
     },
     skills: [{ name: '', level: 1 }],
     contacts: [{ type: 'email', value: '' }],
+    credentials: {
+      password: '',
+      confirmPassword: '',
+    },
     preferences: {
       newsletter: false,
       notifications: false,
@@ -75,6 +82,23 @@ function createInitialComplexFormModel(): ComplexFormModel {
 
     .complex-array-fieldset {
       --ngx-signal-form-fieldset-gap: 0;
+    }
+
+    .complex-form-fieldset--credentials-summary {
+      --ngx-signal-form-fieldset-content-offset: 0;
+      --ngx-signal-form-fieldset-message-inset-inline-start: 0.875rem;
+      --ngx-signal-form-fieldset-message-padding-inline-start: 0;
+      --ngx-signal-form-fieldset-message-padding-inline-end: 0;
+      --ngx-signal-form-fieldset-notification-list-style: disc outside;
+      --ngx-signal-form-fieldset-message-list-padding-inline-start: 0;
+    }
+
+    .choice-group-field {
+      --ngx-form-field-selection-group-invalid-bg: #fbdddd;
+    }
+
+    .choice-group-field__label {
+      color: #324155;
     }
 
     .preferences-stack {
@@ -167,6 +191,8 @@ export class ComplexFormsComponent {
 
   readonly orientation = input<FormFieldOrientation>('vertical');
 
+  readonly errorPlacement = input<NgxFormFieldErrorPlacement>('bottom');
+
   protected readonly personalInfoGridClass = computed(() =>
     this.isStandardHorizontalLayout()
       ? 'grid grid-cols-1 gap-x-4 gap-y-4'
@@ -190,7 +216,14 @@ export class ComplexFormsComponent {
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 500);
         });
-        console.log('Complex form submitted:', this.#model());
+        const submitted = this.#model();
+        console.log('Complex form submitted:', {
+          ...submitted,
+          credentials: {
+            password: '[redacted]',
+            confirmPassword: '[redacted]',
+          },
+        });
       },
       onInvalid: createOnInvalidHandler(),
     },

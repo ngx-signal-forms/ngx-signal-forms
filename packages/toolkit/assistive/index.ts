@@ -25,8 +25,14 @@ export { NgxFormFieldAssistiveRow } from './assistive-row';
 export { NgxFormFieldCharacterCount } from './character-count';
 export {
   NgxFormFieldError,
+  type NgxFormFieldListStyle,
   type NgxFormFieldErrorListStyle,
 } from './form-field-error';
+export {
+  NgxFormFieldNotification,
+  type NgxFormFieldNotificationListStyle,
+  type NgxFormFieldNotificationTone,
+} from './form-field-notification';
 export { NgxFormFieldErrorSummary } from './form-field-error-summary';
 export { NgxFormFieldHint } from './hint';
 export { isBlockingError, isWarningError, warningError } from './warning-error';

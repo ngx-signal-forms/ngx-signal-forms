@@ -1,7 +1,17 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { signal } from '@angular/core';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldset } from './form-fieldset';
+
+// jsdom does not compute custom-property values from emulated component
+// stylesheets, so theme-default specs read the CSS source directly. Runtime
+// resolution is covered by the *.browser.spec.ts suite and e2e snapshots.
+const fieldsetCssSource = readFileSync(
+  resolve(import.meta.dirname, './form-fieldset.css'),
+  'utf8',
+);
 
 type MockState = {
   invalid: () => boolean;
@@ -100,7 +110,7 @@ describe('NgxFormFieldset', () => {
       ],
     });
 
-    await render(
+    const { container } = await render(
       `<ngx-form-fieldset [fieldsetField]="fieldset">
         <div>Content without nested form field</div>
       </ngx-form-fieldset>`,
@@ -113,6 +123,7 @@ describe('NgxFormFieldset', () => {
     const errors = screen.getAllByRole('alert');
     expect(errors).toHaveLength(1);
     expect(errors[0]?.textContent).toContain('Street required');
+    expect(container.querySelector('ngx-form-field-notification')).toBeTruthy();
     expect(errors[0]?.querySelector('ul')).toBeTruthy();
     expect(errors[0]?.querySelectorAll('li')).toHaveLength(1);
   });
@@ -243,7 +254,7 @@ describe('NgxFormFieldset', () => {
     expect(host).toHaveAttribute('aria-describedby', 'address-error');
   });
 
-  it('renders aggregated messages above content by default', async () => {
+  it('renders aggregated messages below content by default', async () => {
     const fieldset = createFieldsetState({
       errors: () => [{ kind: 'required', message: 'Required' }],
       errorSummary: () => [{ kind: 'required', message: 'Required' }],
@@ -264,10 +275,10 @@ describe('NgxFormFieldset', () => {
     const content = host?.querySelector('.ngx-signal-form-fieldset__content');
 
     expect(
-      host?.classList.contains('ngx-signal-form-fieldset--messages-top'),
+      host?.classList.contains('ngx-signal-form-fieldset--messages-bottom'),
     ).toBe(true);
-    expect(content).toBeInstanceOf(Node);
-    expect(message?.compareDocumentPosition(content)).toBe(
+    expect(message).toBeInstanceOf(Node);
+    expect(content?.compareDocumentPosition(message)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
   });
@@ -294,9 +305,113 @@ describe('NgxFormFieldset', () => {
       },
     );
 
-    const errorList = container.querySelector('.ngx-form-field-error__list');
+    const errorList = container.querySelector(
+      '.ngx-form-field-notification__list',
+    );
     expect(errorList?.tagName).toBe('UL');
     expect(errorList?.querySelectorAll('li')).toHaveLength(2);
+  });
+
+  it('defaults regular grouped sections to notification feedback without tinting the surface', async () => {
+    const fieldset = createFieldsetState({
+      errors: () => [{ kind: 'required', message: 'Street required' }],
+      errorSummary: () => [{ kind: 'required', message: 'Street required' }],
+    });
+
+    const { container } = await render(
+      `<ngx-form-fieldset [fieldsetField]="fieldset" fieldsetId="address">
+        <div class="content">Projected</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-form-fieldset');
+
+    expect(host).toHaveAttribute('data-feedback-appearance', 'notification');
+    expect(
+      host?.classList.contains('ngx-signal-form-fieldset--surface-invalid'),
+    ).toBe(false);
+    expect(container.querySelector('ngx-form-field-notification')).toBeTruthy();
+    expect(container.querySelector('ngx-form-field-error')).toBeNull();
+
+    // Verify the danger token default and that the notification error color
+    // resolves through it. Asserting against the source keeps the contrast
+    // contract documented; runtime resolution is covered in browser-mode
+    // and e2e specs (jsdom can't compute custom properties from emulated
+    // component stylesheets).
+    expect(fieldsetCssSource).toMatch(/--_fieldset-clr-danger:\s*#db1818\b/);
+    expect(fieldsetCssSource).toMatch(
+      /--_fieldset-notification-error-color:[^;]*--_fieldset-clr-danger/,
+    );
+  });
+
+  it('defaults the fieldset shell appearance to outline', async () => {
+    const fieldset = createFieldsetState();
+
+    const { container } = await render(
+      `<ngx-form-fieldset [fieldsetField]="fieldset">
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    expect(container.querySelector('ngx-form-fieldset')).toHaveAttribute(
+      'data-appearance',
+      'outline',
+    );
+  });
+
+  it('exposes the semantic plain appearance on the host data attribute', async () => {
+    const fieldset = createFieldsetState();
+
+    const { container } = await render(
+      `<ngx-form-fieldset [fieldsetField]="fieldset" appearance="plain">
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    expect(container.querySelector('ngx-form-fieldset')).toHaveAttribute(
+      'data-appearance',
+      'plain',
+    );
+  });
+
+  it('treats selection-only groups like regular grouped sections in auto mode', async () => {
+    const fieldset = createFieldsetState({
+      errors: () => [{ kind: 'required', message: 'Choose one option' }],
+      errorSummary: () => [{ kind: 'required', message: 'Choose one option' }],
+    });
+
+    const { container } = await render(
+      `<fieldset ngxFormFieldset [fieldsetField]="fieldset" fieldsetId="contact-method">
+        <legend>Preferred contact method</legend>
+        <label><input type="radio" name="contact" />Email</label>
+        <label><input type="radio" name="contact" />SMS</label>
+      </fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('fieldset');
+
+    expect(host).toHaveAttribute('data-feedback-appearance', 'notification');
+    expect(
+      host?.classList.contains('ngx-signal-form-fieldset--surface-invalid'),
+    ).toBe(false);
+    expect(container.querySelector('ngx-form-field-notification')).toBeTruthy();
+    expect(container.querySelector('ngx-form-field-error')).toBeNull();
   });
 
   it('marks the host aria-busy while the composed headless directive is pending', async () => {
@@ -349,14 +464,56 @@ describe('NgxFormFieldset', () => {
     expect(errors[0]?.textContent).toContain('Nested error');
   });
 
-  it('renders aggregated messages below content when errorPlacement is bottom', async () => {
+  it('applies role="group" and aria-labelledby on custom-element hosts', async () => {
+    const fieldset = createFieldsetState();
+
+    const { container } = await render(
+      `<ngx-form-fieldset [fieldsetField]="fieldset" fieldsetId="personal-info">
+        <legend>Personal Information</legend>
+        <div class="content">Projected</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-form-fieldset');
+    const legend = container.querySelector('ngx-form-fieldset > legend');
+
+    expect(host).toHaveAttribute('role', 'group');
+    expect(legend?.id).toBe('personal-info-legend');
+    expect(host).toHaveAttribute('aria-labelledby', 'personal-info-legend');
+  });
+
+  it('leaves native <fieldset> hosts to use their intrinsic group semantics', async () => {
+    const fieldset = createFieldsetState();
+
+    const { container } = await render(
+      `<fieldset ngxFormFieldset [fieldsetField]="fieldset" fieldsetId="native">
+        <legend>Shipping Address</legend>
+        <div class="content">Projected</div>
+      </fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('fieldset');
+
+    expect(host).not.toHaveAttribute('role');
+    expect(host).not.toHaveAttribute('aria-labelledby');
+  });
+
+  it('renders aggregated messages above content when errorPlacement is top', async () => {
     const fieldset = createFieldsetState({
       errors: () => [{ kind: 'required', message: 'Required' }],
       errorSummary: () => [{ kind: 'required', message: 'Required' }],
     });
 
     const { container } = await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset" errorPlacement="bottom">
+      `<ngx-form-fieldset [fieldsetField]="fieldset" errorPlacement="top">
         <div class="content">Content</div>
       </ngx-form-fieldset>`,
       {
@@ -369,13 +526,273 @@ describe('NgxFormFieldset', () => {
     const message = host?.querySelector('.ngx-signal-form-fieldset__messages');
     const content = host?.querySelector('.ngx-signal-form-fieldset__content');
 
+    expect(host).toHaveAttribute('data-error-placement', 'top');
+    expect(
+      host?.classList.contains('ngx-signal-form-fieldset--messages-top'),
+    ).toBe(true);
+    expect(content).toBeInstanceOf(Node);
+    expect(message?.compareDocumentPosition(content)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
+  it('defaults errorPlacement to bottom on the host data attribute', async () => {
+    const fieldset = createFieldsetState();
+
+    const { container } = await render(
+      `<ngx-form-fieldset [fieldsetField]="fieldset">
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-form-fieldset');
+
+    // Regression guard for the 1.0.0-rc.7 default change (`top` -> `bottom`).
     expect(host).toHaveAttribute('data-error-placement', 'bottom');
     expect(
       host?.classList.contains('ngx-signal-form-fieldset--messages-bottom'),
     ).toBe(true);
-    expect(message).toBeInstanceOf(Node);
-    expect(content?.compareDocumentPosition(message)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
+  });
+
+  it('renders the compact ngx-form-field-error when feedbackAppearance="plain"', async () => {
+    const fieldset = createFieldsetState({
+      errors: () => [{ kind: 'required', message: 'Required' }],
+      errorSummary: () => [{ kind: 'required', message: 'Required' }],
+    });
+
+    const { container } = await render(
+      `<ngx-form-fieldset
+        [fieldsetField]="fieldset"
+        feedbackAppearance="plain"
+      >
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
     );
+
+    const host = container.querySelector('ngx-form-fieldset');
+    expect(host).toHaveAttribute('data-feedback-appearance', 'plain');
+    expect(container.querySelector('ngx-form-field-error')).toBeTruthy();
+    expect(container.querySelector('ngx-form-field-notification')).toBeNull();
+  });
+
+  it('forces the notification card when feedbackAppearance="notification"', async () => {
+    const fieldset = createFieldsetState({
+      errors: () => [{ kind: 'required', message: 'Required' }],
+      errorSummary: () => [{ kind: 'required', message: 'Required' }],
+    });
+
+    const { container } = await render(
+      `<ngx-form-fieldset
+        [fieldsetField]="fieldset"
+        feedbackAppearance="notification"
+      >
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-form-fieldset');
+    expect(host).toHaveAttribute('data-feedback-appearance', 'notification');
+    expect(container.querySelector('ngx-form-field-notification')).toBeTruthy();
+    expect(container.querySelector('ngx-form-field-error')).toBeNull();
+  });
+
+  it('forwards notificationTitle to the grouped notification card', async () => {
+    const fieldset = createFieldsetState({
+      errors: () => [{ kind: 'required', message: 'Required' }],
+      errorSummary: () => [{ kind: 'required', message: 'Required' }],
+    });
+
+    const { container } = await render(
+      `<ngx-form-fieldset
+        [fieldsetField]="fieldset"
+        notificationTitle="Please review the following"
+      >
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const title = container.querySelector(
+      '.ngx-form-field-notification__title',
+    );
+    expect(title?.textContent).toContain('Please review the following');
+  });
+
+  it('renders grouped messages as stacked paragraphs when listStyle="plain"', async () => {
+    const fieldset = createFieldsetState({
+      errors: () => [
+        { kind: 'required', message: 'First required' },
+        { kind: 'minlength', message: 'Too short' },
+      ],
+      errorSummary: () => [
+        { kind: 'required', message: 'First required' },
+        { kind: 'minlength', message: 'Too short' },
+      ],
+    });
+
+    const { container } = await render(
+      `<ngx-form-fieldset
+        [fieldsetField]="fieldset"
+        listStyle="plain"
+      >
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    expect(
+      container.querySelector('.ngx-form-field-notification__list'),
+    ).toBeNull();
+    expect(
+      container.querySelectorAll('.ngx-form-field-notification__stack p'),
+    ).toHaveLength(2);
+  });
+
+  it('exposes surfaceTone as a data attribute for consumer styling', async () => {
+    const fieldset = createFieldsetState();
+
+    const { container } = await render(
+      `<ngx-form-fieldset
+        [fieldsetField]="fieldset"
+        surfaceTone="info"
+      >
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-form-fieldset');
+    expect(host).toHaveAttribute('data-surface-tone', 'info');
+  });
+
+  it('tints the surface when validationSurface="always" and errors are showing', async () => {
+    const fieldset = createFieldsetState({
+      errors: () => [{ kind: 'required', message: 'Required' }],
+      errorSummary: () => [{ kind: 'required', message: 'Required' }],
+    });
+
+    const { container } = await render(
+      `<ngx-form-fieldset
+        [fieldsetField]="fieldset"
+        validationSurface="always"
+      >
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-form-fieldset');
+    expect(host).toHaveAttribute('data-validation-surface', 'always');
+    expect(
+      host?.classList.contains('ngx-signal-form-fieldset--surface-invalid'),
+    ).toBe(true);
+  });
+
+  it('tints the warning surface when validationSurface="always" and only warnings exist', async () => {
+    const fieldset = createFieldsetState({
+      errors: () => [{ kind: 'warn:soft', message: 'Warning' }],
+      errorSummary: () => [{ kind: 'warn:soft', message: 'Warning' }],
+    });
+
+    const { container } = await render(
+      `<ngx-form-fieldset
+        [fieldsetField]="fieldset"
+        validationSurface="always"
+      >
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-form-fieldset');
+    expect(
+      host?.classList.contains('ngx-signal-form-fieldset--surface-warning'),
+    ).toBe(true);
+    expect(
+      host?.classList.contains('ngx-signal-form-fieldset--surface-invalid'),
+    ).toBe(false);
+  });
+
+  it('leaves the surface neutral when validationSurface="never"', async () => {
+    const fieldset = createFieldsetState({
+      errors: () => [{ kind: 'required', message: 'Required' }],
+      errorSummary: () => [{ kind: 'required', message: 'Required' }],
+    });
+
+    const { container } = await render(
+      `<ngx-form-fieldset
+        [fieldsetField]="fieldset"
+        validationSurface="never"
+      >
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-form-fieldset');
+    expect(
+      host?.classList.contains('ngx-signal-form-fieldset--surface-invalid'),
+    ).toBe(false);
+    expect(
+      host?.classList.contains('ngx-signal-form-fieldset--surface-warning'),
+    ).toBe(false);
+  });
+
+  it('omits aria-describedby when showErrors is false even on an invalid fieldset', async () => {
+    // Regression guard: without the `showMessages()` gate on describedByIds,
+    // the host would advertise `${fieldsetId}-error` while the rendered
+    // notification strips its id because the message list is empty.
+    const fieldset = createFieldsetState({
+      errors: () => [{ kind: 'required', message: 'Required' }],
+      errorSummary: () => [{ kind: 'required', message: 'Required' }],
+    });
+
+    const { container } = await render(
+      `<ngx-form-fieldset
+        [fieldsetField]="fieldset"
+        fieldsetId="no-announce"
+        [showErrors]="false"
+      >
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-form-fieldset');
+    expect(host).not.toHaveAttribute('aria-describedby');
+    expect(container.querySelector('#no-announce-error')).toBeNull();
   });
 });

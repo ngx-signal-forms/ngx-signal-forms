@@ -79,7 +79,11 @@
         <fieldset
           ngxFormFieldset
           [fieldsetField]="placementDesignPreviewForm.address"
-          class="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700"
+          [feedbackAppearance]="feedbackAppearance()"
+          [listStyle]="listStyle()"
+          [notificationTitle]="notificationTitle() ?? undefined"
+          [surfaceTone]="surfaceTone()"
+          [validationSurface]="validationSurface()"
           fieldsetId="placement-design-preview-address"
         >
           <legend class="fieldset-legend">Shipping Address</legend>
@@ -122,7 +126,11 @@
         <fieldset
           ngxFormFieldset
           [fieldsetField]="placementDesignPreviewForm.deliveryMethod"
-          class="space-y-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700"
+          [feedbackAppearance]="feedbackAppearance()"
+          [listStyle]="listStyle()"
+          [notificationTitle]="notificationTitle() ?? undefined"
+          [surfaceTone]="surfaceTone()"
+          [validationSurface]="validationSurface()"
           fieldsetId="placement-design-preview-delivery"
         >
           <legend class="form-label">Delivery option</legend>
@@ -207,10 +215,14 @@
           ngxFormFieldset
           [fieldsetField]="placementPreviewForm.address"
           [errorPlacement]="errorPlacement()"
+          [feedbackAppearance]="feedbackAppearance()"
+          [includeNestedErrors]="includeNestedErrors()"
+          [listStyle]="listStyle()"
+          [notificationTitle]="notificationTitle() ?? undefined"
+          [surfaceTone]="surfaceTone()"
+          [validationSurface]="validationSurface()"
           strategy="immediate"
-          class="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700"
           fieldsetId="placement-preview-address"
-          includeNestedErrors
         >
           <legend class="fieldset-legend">Shipping Address</legend>
 
@@ -255,8 +267,12 @@
           ngxFormFieldset
           [fieldsetField]="placementPreviewForm.deliveryMethod"
           [errorPlacement]="errorPlacement()"
+          [feedbackAppearance]="feedbackAppearance()"
+          [listStyle]="listStyle()"
+          [notificationTitle]="notificationTitle() ?? undefined"
+          [surfaceTone]="surfaceTone()"
+          [validationSurface]="validationSurface()"
           strategy="immediate"
-          class="space-y-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700"
           fieldsetId="placement-preview-delivery"
         >
           <legend class="form-label">Delivery option *</legend>
@@ -333,10 +349,16 @@
   <fieldset
     ngxFormFieldset
     [fieldsetField]="fieldsetForm.shippingAddress"
+    [appearance]="fieldsetAppearance()"
     [errorPlacement]="errorPlacement()"
+    [feedbackAppearance]="feedbackAppearance()"
+    [includeNestedErrors]="includeNestedErrors()"
+    [listStyle]="listStyle()"
+    [notificationTitle]="notificationTitle() ?? undefined"
+    [surfaceTone]="surfaceTone()"
+    [validationSurface]="validationSurface()"
     fieldsetId="shipping-address"
     class="fieldset-demo"
-    includeNestedErrors
   >
     <legend class="fieldset-legend">Shipping Address</legend>
     <p class="fieldset-description">
@@ -425,10 +447,16 @@
   <fieldset
     ngxFormFieldset
     [fieldsetField]="fieldsetForm.billingAddress"
+    [appearance]="fieldsetAppearance()"
     [errorPlacement]="errorPlacement()"
+    [feedbackAppearance]="feedbackAppearance()"
+    [includeNestedErrors]="includeNestedErrors()"
+    [listStyle]="listStyle()"
+    [notificationTitle]="notificationTitle() ?? undefined"
+    [surfaceTone]="surfaceTone()"
+    [validationSurface]="validationSurface()"
     fieldsetId="billing-address"
     class="fieldset-demo"
-    includeNestedErrors
   >
     <legend class="fieldset-legend">Billing Address</legend>
     <p class="fieldset-description">
@@ -503,7 +531,13 @@
   <fieldset
     ngxFormFieldset
     [fieldsetField]="fieldsetForm.delivery"
+    [appearance]="fieldsetAppearance()"
     [errorPlacement]="errorPlacement()"
+    [feedbackAppearance]="feedbackAppearance()"
+    [listStyle]="listStyle()"
+    [notificationTitle]="notificationTitle() ?? undefined"
+    [surfaceTone]="surfaceTone()"
+    [validationSurface]="validationSurface()"
     fieldsetId="delivery-method"
     class="fieldset-demo"
   >
@@ -516,9 +550,15 @@
     <fieldset
       ngxFormFieldset
       [fieldsetField]="fieldsetForm.delivery.method"
+      [appearance]="fieldsetAppearance()"
+      [feedbackAppearance]="feedbackAppearance()"
       fieldsetId="delivery-method-options"
       class="space-y-3"
       [errorPlacement]="errorPlacement()"
+      [listStyle]="listStyle()"
+      [notificationTitle]="notificationTitle() ?? undefined"
+      [surfaceTone]="surfaceTone()"
+      [validationSurface]="validationSurface()"
     >
       <legend class="form-label">Delivery option *</legend>
 
@@ -558,10 +598,16 @@
   <fieldset
     ngxFormFieldset
     [fieldsetField]="fieldsetForm.credentials"
+    [appearance]="fieldsetAppearance()"
     [errorPlacement]="errorPlacement()"
+    [feedbackAppearance]="feedbackAppearance()"
+    [includeNestedErrors]="includeNestedErrors()"
+    [listStyle]="listStyle()"
+    [notificationTitle]="notificationTitle() ?? undefined"
+    [surfaceTone]="surfaceTone()"
+    [validationSurface]="validationSurface()"
     fieldsetId="credentials"
     class="fieldset-demo"
-    includeNestedErrors
   >
     <legend class="fieldset-legend">Account Credentials</legend>
     <p class="fieldset-description">

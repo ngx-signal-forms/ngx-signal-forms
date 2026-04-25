@@ -14,6 +14,8 @@ This section demonstrates the batteries-included path: one component (`ngx-form-
 
 - **[complex-forms](./complex-forms/README.md)** — realistic form with nested objects, dynamic arrays, grouped fieldsets, and mixed control families.
   - What you'll learn: nested schemas · array add/remove wiring · `NgxFormFieldset` aggregation · explicit `ngxSignalFormControl="switch"` / `"checkbox"` semantics for projection-safe rows.
+- **[fieldset-appearance](./fieldset-appearance/README.md)** — focused showroom for grouped summaries, surface tones, and nested aggregation.
+  - What you'll learn: `feedbackAppearance` · `surfaceTone` · `validationSurface` · `listStyle` · `includeNestedErrors` trade-offs in one place.
 - **[custom-controls](./custom-controls/README.md)** — star rating, native switch, and slider integrated into the wrapper.
   - What you'll learn: `FormValueControl` contract (no `ControlValueAccessor`) · `ngxSignalFormControl="slider"` with `ariaMode: 'manual'` · component-scoped presets.
 
@@ -22,7 +24,7 @@ This section demonstrates the batteries-included path: one component (`ngx-form-
 - **The wrapper** — `ngx-form-field-wrapper` projects label, control, hints, and errors into a consistent layout. API reference in [form-field README](../../../../../packages/toolkit/form-field/README.md).
 - **Appearances** — `standard` / `outline` / `plain` via the `appearance` input. Theme with CSS custom properties; see [theming guide](../../../../../packages/toolkit/form-field/THEMING.md).
 - **Control semantics** — `ngxSignalFormControl="switch|checkbox|slider"` makes projection explicit instead of guessed. Background in [ADR-0001](../../../../../docs/decisions/0001-control-semantics-architecture.md) and [docs/CUSTOM_CONTROLS.md](../../../../../docs/CUSTOM_CONTROLS.md).
-- **Fieldset grouping** — `<ngx-form-fieldset>` aggregates descendant errors for grouped layouts. See [docs/COMPLEX_NESTED_FORMS.md](../../../../../docs/COMPLEX_NESTED_FORMS.md).
+- **Fieldset grouping** — `<ngx-form-fieldset>` aggregates descendant errors for grouped layouts, and the dedicated [fieldset-appearance](./fieldset-appearance/README.md) page compares grouped summary modes, surfaced tones, and nested aggregation. See [docs/COMPLEX_NESTED_FORMS.md](../../../../../docs/COMPLEX_NESTED_FORMS.md).
 
 ## 🤔 When to use this section
 
