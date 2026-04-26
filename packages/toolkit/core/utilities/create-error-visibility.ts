@@ -1,17 +1,17 @@
-import { inject, type Injector, type Signal } from '@angular/core';
-import { NGX_SIGNAL_FORM_CONTEXT } from '../tokens';
+import { type Injector, type Signal } from '@angular/core';
 import type {
   ErrorDisplayStrategy,
   ReactiveOrStatic,
   SubmittedStatus,
 } from '../types';
+import { assertInjector } from './assert-injector';
 import type { ErrorVisibilityState } from './field-state-types';
+import { injectFormContext } from './inject-form-context';
 import {
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
 } from './resolve-strategy';
 import { createShowErrorsComputed } from './show-errors';
-import { assertInjector } from './assert-injector';
 import { unwrapValue } from './unwrap-signal-or-value';
 
 /**
@@ -26,8 +26,9 @@ export interface CreateErrorVisibilityOptions {
   /**
    * Error display strategy override.
    *
-   * - Static `ErrorDisplayStrategy` — resolved once at construction time.
-   * - `Signal<ErrorDisplayStrategy>` — re-evaluated on every computed read.
+   * - Static `ErrorDisplayStrategy` — value is read on every computed
+   *   evaluation but is stable, so the result does not change.
+   * - `Signal<ErrorDisplayStrategy>` — tracked reactively.
    * - `undefined` / omitted — inherits from form context, then falls back to
    *   `'on-touch'`.
    */
@@ -142,11 +143,12 @@ export function createErrorVisibility(
   opts?: CreateErrorVisibilityOptions,
 ): Signal<boolean> {
   return assertInjector(createErrorVisibility, opts?.injector, () => {
-    const formContext =
-      inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true }) ?? undefined;
+    const formContext = injectFormContext();
 
-    // Wrap strategy resolution in a computed so a Signal<ErrorDisplayStrategy>
-    // input stays reactive and context signal changes are tracked.
+    // Plain getter (not `computed()`): `createShowErrorsComputed` already runs
+    // its body inside a `computed()`, so wrapping again would just add an
+    // intermediate signal node. Reading `unwrapValue()` here keeps Signal
+    // inputs reactive and context signal changes tracked.
     const resolvedStrategy = () => {
       const strategyValue =
         opts?.strategy !== undefined
