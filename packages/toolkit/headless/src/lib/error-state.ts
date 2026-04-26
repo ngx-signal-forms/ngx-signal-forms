@@ -121,8 +121,10 @@ export class NgxHeadlessErrorState<
    * `[formField]` conflicts with Angular's `FormField` directive selector).
    *
    * Host components call `connectFieldState()` in their constructor to
-   * push a reactive `Signal<unknown>` so that this directive can compute
-   * strategy-based visibility and error-split. `null` until connected.
+   * provide a reactive signal of the current field state
+   * (`Partial<ErrorReadableState> | null | undefined`), not the `FieldTree`
+   * itself, so this directive can compute strategy-based visibility and
+   * error-split. `null` until connected.
    */
   readonly #bridgedFieldState = signal<Signal<
     Partial<ErrorReadableState> | null | undefined
@@ -243,9 +245,16 @@ export class NgxHeadlessErrorState<
   /**
    * Whether errors should be shown based on strategy.
    *
-   * Returns `true` unconditionally when no field state is available
-   * (direct-errors mode via `errorsOverride`, or no field bound) — the
-   * caller controls visibility through `hasErrors`/`hasWarnings`.
+   * Returns `true` unconditionally in two cases:
+   * 1. **Direct-errors mode** — `errorsOverride` is bound. Strategy gating
+   *    is intentionally bypassed here: callers using `errorsOverride` (e.g.
+   *    `NgxFormFieldset.filteredErrorsSignal`) already aggregate and gate
+   *    their own error lists upstream, so a second strategy filter here
+   *    would double-gate. Visibility is delegated to the caller via
+   *    `hasErrors`/`hasWarnings`.
+   * 2. **No field state available** — neither `field` nor a bridged value
+   *    via `connectFieldState()` is set. The host controls visibility
+   *    through its own template conditions.
    *
    * The bridge slot is checked by *value*, not by presence: host components
    * that compose this directive via `hostDirectives` always call

@@ -13,7 +13,10 @@ import {
   schema,
   type ValidationError,
 } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import {
+  generateErrorId,
+  NgxSignalFormToolkit,
+} from '@ngx-signal-forms/toolkit';
 import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
@@ -239,7 +242,7 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
     const { container } = await render(TestIdComponent);
 
     const alertEl = container.querySelector('[role="alert"]');
-    // ID must be present and stable when errors are visible
-    expect(alertEl?.getAttribute('id')).toMatch(/email/);
+    // ID must be deterministic and equal to generateErrorId('email').
+    expect(alertEl?.getAttribute('id')).toBe(generateErrorId('email'));
   });
 });

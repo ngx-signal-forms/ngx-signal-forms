@@ -1,11 +1,20 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
+  inject,
   isSignal,
   signal,
   viewChild,
+  type Signal,
 } from '@angular/core';
-import { form, FormField, required, schema } from '@angular/forms/signals';
+import {
+  form,
+  FormField,
+  required,
+  schema,
+  type ValidationError,
+} from '@angular/forms/signals';
 import type { SubmittedStatus } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
@@ -489,6 +498,142 @@ describe('NgxHeadlessErrorState', () => {
 
       // Now errors should be shown
       expect(screen.getByTestId('show-errors')).toBeTruthy();
+    });
+  });
+
+  describe('errorsOverride (direct-errors mode)', () => {
+    it('replaces field-derived errors with the override signal', async () => {
+      @Component({
+        selector: 'ngx-test-errors-override',
+        imports: [NgxHeadlessErrorState],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <div
+            ngxHeadlessErrorState
+            #errorState="errorState"
+            [errorsOverride]="overrideErrors"
+            fieldName="address"
+          >
+            @for (error of errorState.resolvedErrors(); track error.kind) {
+              <span data-testid="override-error">{{ error.message }}</span>
+            }
+            @if (errorState.showErrors()) {
+              <span data-testid="show">Show</span>
+            }
+          </div>
+        `,
+      })
+      class TestComponent {
+        readonly overrideErrors: Signal<readonly ValidationError[]> = computed(
+          () => [
+            { kind: 'required', message: 'Street is required' },
+            { kind: 'required', message: 'City is required' },
+          ],
+        );
+      }
+
+      await render(TestComponent);
+
+      // showErrors short-circuits to true in direct-errors mode (caller
+      // controls visibility via the override signal contents).
+      expect(screen.getByTestId('show')).toBeTruthy();
+
+      const messages = screen.getAllByTestId('override-error');
+      expect(messages.map((el) => el.textContent)).toEqual([
+        'Street is required',
+        'City is required',
+      ]);
+    });
+
+    it('treats an explicit empty array as "no errors to display"', async () => {
+      @Component({
+        selector: 'ngx-test-errors-override-empty',
+        imports: [NgxHeadlessErrorState],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <div
+            ngxHeadlessErrorState
+            #errorState="errorState"
+            [errorsOverride]="empty"
+            fieldName="address"
+          >
+            @if (errorState.hasErrors()) {
+              <span data-testid="has-errors">Has Errors</span>
+            } @else {
+              <span data-testid="no-errors">No Errors</span>
+            }
+          </div>
+        `,
+      })
+      class TestComponent {
+        readonly empty: Signal<readonly ValidationError[]> = computed(() => []);
+      }
+
+      await render(TestComponent);
+
+      expect(screen.getByTestId('no-errors')).toBeTruthy();
+    });
+  });
+
+  describe('connectFieldState() bridge', () => {
+    it('drives showErrors from a host-bridged field state when [field] is omitted', async () => {
+      @Component({
+        selector: 'ngx-bridged-host',
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        hostDirectives: [
+          { directive: NgxHeadlessErrorState, inputs: ['strategy'] },
+        ],
+        template: `
+          @if (headless.showErrors()) {
+            <span data-testid="bridge-show">Show</span>
+          } @else {
+            <span data-testid="bridge-hide">Hide</span>
+          }
+        `,
+      })
+      class BridgedHostComponent {
+        protected readonly headless = inject(NgxHeadlessErrorState);
+        readonly hostField = signal<{
+          touched: () => boolean;
+          invalid: () => boolean;
+        } | null>(null);
+
+        constructor() {
+          // Mirror what NgxFormFieldError does: bridge a signal of field state
+          // (not a FieldTree) into the headless directive in the constructor.
+          this.headless.connectFieldState(computed(() => this.hostField()));
+        }
+      }
+
+      @Component({
+        selector: 'ngx-test-bridge',
+        imports: [BridgedHostComponent],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `<ngx-bridged-host strategy="on-touch" />`,
+      })
+      class TestComponent {
+        readonly host = viewChild.required(BridgedHostComponent);
+      }
+
+      const { fixture } = await render(TestComponent);
+
+      // No bridged value yet — showErrors short-circuits to true (host
+      // controls visibility via its own template conditions).
+      expect(screen.getByTestId('bridge-show')).toBeTruthy();
+
+      // Bridge an untouched + invalid field — on-touch strategy should hide.
+      fixture.componentInstance
+        .host()
+        .hostField.set({ touched: () => false, invalid: () => true });
+      fixture.detectChanges();
+      expect(screen.getByTestId('bridge-hide')).toBeTruthy();
+
+      // Touch the bridged field — strategy now permits visibility.
+      fixture.componentInstance
+        .host()
+        .hostField.set({ touched: () => true, invalid: () => true });
+      fixture.detectChanges();
+      expect(screen.getByTestId('bridge-show')).toBeTruthy();
     });
   });
 });

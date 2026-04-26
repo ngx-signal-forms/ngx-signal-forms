@@ -83,8 +83,11 @@ describe('cross-surface: NgxFormFieldNotification vs NgxHeadlessNotification', (
     expect(customError?.textContent).toContain('Street is required');
 
     // Both surfaces produce the same generated id for the same fieldName
-    // (proving ID generation lives in one place).
-    expect(alert?.getAttribute('id')).toBe(customError?.getAttribute('id'));
+    // (proving ID generation lives in one place). Assert non-null first so
+    // a `null === null` coalescence cannot silently pass.
+    const alertId = alert?.getAttribute('id');
+    expect(alertId).toBeTruthy();
+    expect(customError?.getAttribute('id')).toBe(alertId);
   });
 
   it('both surfaces route an all-warning list to the status container', async () => {

@@ -53,7 +53,7 @@ export interface NotificationStateSignals {
  * Owns the message-resolution, tone-routing, and ID-generation logic for
  * grouped fieldset feedback and custom summary cards. Used as a
  * `hostDirectives` entry by `NgxFormFieldNotification` so the styled shell
- * stays a UI-only review.
+ * stays a UI-only wrapper.
  *
  * ## Tone resolution rules
  *
@@ -127,6 +127,8 @@ export class NgxHeadlessNotification implements NotificationStateSignals {
   readonly resolvedTone = computed<'error' | 'warning'>(() => {
     const explicit = this.tone();
     const messages = this.#resolvedErrors();
+    if (messages.length === 0) return 'error';
+
     const hasBlockingError = messages.some(
       (message) => !isWarningError(message),
     );
@@ -134,10 +136,7 @@ export class NgxHeadlessNotification implements NotificationStateSignals {
     if (hasBlockingError) return 'error';
     if (explicit === 'warning') return 'warning';
 
-    const allWarnings = messages.length > 0 && !hasBlockingError;
-    if (allWarnings) return 'warning';
-
-    return 'error';
+    return 'warning';
   });
 
   readonly showErrorContainer = computed(

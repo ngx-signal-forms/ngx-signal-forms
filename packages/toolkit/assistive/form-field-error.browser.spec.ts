@@ -1,8 +1,14 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { FormField, form, required, schema } from '@angular/forms/signals';
+import {
+  FormField,
+  form,
+  required,
+  schema,
+  validate,
+} from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { render } from '@testing-library/angular';
-import userEvent from '@testing-library/user-event';
+import { userEvent } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldError } from './form-field-error';
 
@@ -109,16 +115,42 @@ describe('NgxFormFieldError — WCAG 4.1.3 live-region first-insertion', () => {
       readonly #model = signal({ pwd: '' });
       readonly testForm = form(
         this.#model,
-        schema(() => undefined),
+        schema((path) => {
+          validate(path.pwd, (ctx) => {
+            const value = ctx.value();
+            if (value.length > 0 && value.length < 8) {
+              return {
+                kind: 'warn:weak-password',
+                message: 'Consider 8+ characters',
+              };
+            }
+            return null;
+          });
+        }),
       );
     }
 
     const { container } = await render(TestComponent);
 
-    const statusEl = container.querySelector('[role="status"]');
-    expect(statusEl).toBeTruthy();
-    expect(statusEl?.hasAttribute('hidden')).toBe(true);
-    expect(statusEl?.getAttribute('aria-hidden')).toBe('true');
-    expect(statusEl?.textContent?.trim()).toBe('');
+    // Before any value: status region must exist (so the first
+    // announcement is delivered) but be hidden + empty.
+    const statusBefore = container.querySelector('[role="status"]');
+    expect(statusBefore).toBeTruthy();
+    expect(statusBefore?.hasAttribute('hidden')).toBe(true);
+    expect(statusBefore?.getAttribute('aria-hidden')).toBe('true');
+    expect(statusBefore?.textContent?.trim()).toBe('');
+
+    // Type a short password to trigger the `warn:weak-password` warning.
+    const input = container.querySelector<HTMLInputElement>('input#pwd')!;
+    await userEvent.click(input);
+    await userEvent.type(input, 'abc');
+
+    // Same DOM node must now expose its content (the live region was NOT
+    // newly inserted — that's the WCAG 4.1.3 guarantee for status too).
+    const statusAfter = container.querySelector('[role="status"]');
+    expect(statusAfter).toBe(statusBefore);
+    expect(statusAfter?.hasAttribute('hidden')).toBe(false);
+    expect(statusAfter?.getAttribute('aria-hidden')).toBeNull();
+    expect(statusAfter?.textContent).toContain('Consider 8+ characters');
   });
 });
