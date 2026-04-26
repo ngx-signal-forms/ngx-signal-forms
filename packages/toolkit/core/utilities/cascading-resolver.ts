@@ -99,13 +99,25 @@ function resolveTiers<T>(
 }
 
 function attachSource<T>(value: T, source: CascadingTier): T {
-  if (isDevMode() && value !== null && typeof value === 'object') {
-    Object.defineProperty(value, CASCADING_SOURCE, {
-      configurable: true,
-      enumerable: false,
-      value: source,
-      writable: true,
-    });
+  // Dev-mode source tagging is diagnostic-only and must never break resolution:
+  // skip non-extensible (frozen/sealed) values, and swallow any defineProperty
+  // failure (e.g. host-defined objects with unconfigurable symbol slots).
+  if (
+    isDevMode() &&
+    value !== null &&
+    typeof value === 'object' &&
+    Object.isExtensible(value)
+  ) {
+    try {
+      Object.defineProperty(value, CASCADING_SOURCE, {
+        configurable: true,
+        enumerable: false,
+        value: source,
+        writable: true,
+      });
+    } catch {
+      // intentionally empty — diagnostic-only
+    }
   }
   return value;
 }

@@ -24,6 +24,22 @@ describe('resolveValidationErrorMessage — 3-tier priority', () => {
     );
   });
 
+  it('should preserve empty-string validator message as an explicit override', () => {
+    const error: ValidationError = { kind: 'required', message: '' };
+
+    // Empty string is a valid suppression — must not fall through to registry
+    // or default. Regression guard for the previous truthy-check bug.
+    expect(resolveValidationErrorMessage(error, registry)).toBe('');
+  });
+
+  it('should fall through to registry when message is undefined', () => {
+    const error: ValidationError = { kind: 'required', message: undefined };
+
+    expect(resolveValidationErrorMessage(error, registry)).toBe(
+      'Registry: field is required',
+    );
+  });
+
   it('should fall back to registry (tier 2) when no validator message', () => {
     const error: ValidationError = { kind: 'required' };
 
