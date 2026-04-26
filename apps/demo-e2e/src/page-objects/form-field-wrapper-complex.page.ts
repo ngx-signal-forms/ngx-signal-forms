@@ -9,12 +9,15 @@ import { BaseFormPage } from './base-form.page';
  */
 export class FormFieldWrapperComplexPage extends BaseFormPage {
   readonly addSkillButton: Locator;
+  readonly bottomFieldsetSummaryButton: Locator;
+  readonly fieldsetSummaryPlacementGroup: Locator;
   readonly horizontalOrientationButton: Locator;
   readonly outlineAppearanceButton: Locator;
   readonly plainAppearanceButton: Locator;
   readonly resetButton: Locator;
   readonly standardAppearanceButton: Locator;
   readonly submitButton: Locator;
+  readonly topFieldsetSummaryButton: Locator;
   readonly verticalOrientationButton: Locator;
 
   constructor(page: Page) {
@@ -22,6 +25,13 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
     this.addSkillButton = this.form.getByRole('button', {
       name: /Add Skill/i,
     });
+    this.fieldsetSummaryPlacementGroup = this.page.getByRole('group', {
+      name: 'Grouped feedback placement',
+    });
+    this.bottomFieldsetSummaryButton =
+      this.fieldsetSummaryPlacementGroup.getByRole('button', {
+        name: 'Bottom',
+      });
     this.horizontalOrientationButton = this.page.getByRole('button', {
       name: 'Horizontal',
     });
@@ -40,6 +50,10 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
     this.submitButton = this.form.getByRole('button', {
       name: /Submit Application|Submitting/i,
     });
+    this.topFieldsetSummaryButton =
+      this.fieldsetSummaryPlacementGroup.getByRole('button', {
+        name: 'Top',
+      });
     this.verticalOrientationButton = this.page.getByRole('button', {
       name: 'Vertical',
     });
@@ -102,10 +116,65 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
   }
 
   /**
+   * Get Account Credentials fieldset
+   */
+  get credentialsFieldset(): Locator {
+    return this.getFieldsetByLegend(/Account Credentials/i);
+  }
+
+  get credentialsFieldsetSurface(): Locator {
+    return this.credentialsFieldset.locator(
+      '.ngx-signal-form-fieldset__surface',
+    );
+  }
+
+  get credentialsFieldsetError(): Locator {
+    return this.credentialsFieldset
+      .locator('.ngx-signal-form-fieldset__messages')
+      .getByRole('alert')
+      .first();
+  }
+
+  get credentialsFieldsetErrorList(): Locator {
+    return this.credentialsFieldset
+      .locator('.ngx-signal-form-fieldset__messages')
+      .locator(
+        '.ngx-form-field-notification__list, .ngx-form-field-error__list',
+      )
+      .first();
+  }
+
+  /**
    * Get Preferences fieldset
    */
   get preferencesFieldset(): Locator {
     return this.getFieldsetByLegend(/Preferences/i);
+  }
+
+  get contactMethodGroup(): Locator {
+    return this.form.locator('ngx-form-field-wrapper.choice-group-field');
+  }
+
+  get contactMethodGroupLabel(): Locator {
+    return this.contactMethodGroup.locator(
+      ':scope > .ngx-signal-form-field-wrapper__label [ngxFormFieldLabel]',
+    );
+  }
+
+  get contactMethodFieldset(): Locator {
+    return this.contactMethodGroup;
+  }
+
+  get contactMethodFieldsetError(): Locator {
+    return this.contactMethodGroup.getByRole('alert');
+  }
+
+  get credentialsPasswordInput(): Locator {
+    return this.form.locator('#credentialsPassword');
+  }
+
+  get credentialsConfirmPasswordInput(): Locator {
+    return this.form.locator('#credentialsConfirmPassword');
   }
 
   /**
@@ -126,7 +195,7 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
    * Get contact method radios within preferences
    */
   get preferencesContactRadios(): Locator {
-    return this.preferencesFieldset.getByRole('radio');
+    return this.contactMethodGroup.getByRole('radio');
   }
 
   /**
@@ -204,6 +273,20 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
    */
   async showPlainAppearance(): Promise<void> {
     await this.plainAppearanceButton.click();
+  }
+
+  /**
+   * Switch grouped fieldset summaries to top placement.
+   */
+  async showTopFieldsetSummaryPlacement(): Promise<void> {
+    await this.topFieldsetSummaryButton.click();
+  }
+
+  /**
+   * Switch grouped fieldset summaries to bottom placement.
+   */
+  async showBottomFieldsetSummaryPlacement(): Promise<void> {
+    await this.bottomFieldsetSummaryButton.click();
   }
 
   /**

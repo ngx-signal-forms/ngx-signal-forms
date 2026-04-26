@@ -19,7 +19,12 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
 
-export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
+export type NgxFormFieldListStyle = 'plain' | 'bullets';
+
+/**
+ * @deprecated Use {@link NgxFormFieldListStyle} instead.
+ */
+export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
 
 /**
  * Reusable error and warning display component with WCAG 2.2 compliance.
@@ -195,7 +200,7 @@ export type NgxFormFieldErrorListStyle = 'plain' | 'bullets';
       }
     </div>
   `,
-  styleUrl: './form-field-error.scss',
+  styleUrls: ['../form-field/feedback-tokens.css', './form-field-error.css'],
 })
 export class NgxFormFieldError {
   /**
@@ -260,7 +265,7 @@ export class NgxFormFieldError {
    * - `plain` (default): stacked paragraph messages for inline field feedback
    * - `bullets`: unordered list for grouped summaries such as fieldsets
    */
-  readonly listStyle = input<NgxFormFieldErrorListStyle>('plain');
+  readonly listStyle = input<NgxFormFieldListStyle>('plain');
 
   constructor() {
     // Bridge the `formField` class input to the headless directive so it can
@@ -296,6 +301,11 @@ export class NgxFormFieldError {
     return null;
   });
 
+  /**
+   * Computed error ID for aria-describedby linking. Returns `null` when no
+   * field name can be resolved, which keeps the rendered `[id]` binding
+   * absent instead of producing a broken id like `"-error"`.
+   */
   protected readonly errorId = computed<string | null>(() => {
     const fieldName = this.#resolvedFieldName();
     return fieldName === null ? null : generateErrorId(fieldName);

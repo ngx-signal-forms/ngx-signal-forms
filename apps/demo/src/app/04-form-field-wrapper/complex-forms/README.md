@@ -9,12 +9,13 @@ A realistic, non-trivial form with nested objects, dynamic arrays, and mixed con
 - `NgxSignalFormToolkit` — root directive for auto-ARIA and form context.
 - `NgxFormField` wrapper — automatic label/error/hint layout for every field.
 - `NgxFormFieldset` — realistic section structure with grouped state.
+- Wrapper-owned grouped radio feedback for the contact-method choice group.
 - Dynamic array mutations on signal models (add/remove skills and contacts).
 - Explicit `ngxSignalFormControl="switch|checkbox"` semantics so switch/checkbox rows land on the right wrapper layout without projection heuristics.
 
 ## Form model
 
-- Signal model: `signal<ComplexFormModel>()` with nested `personalInfo`, `address`, `skills[]`, `contacts[]`, `preferences`.
+- Signal model: `signal<ComplexFormModel>()` with nested `personalInfo`, `addressInfo`, `skills[]`, `contacts[]`, `preferences`.
 - Schema: `form(model, complexFormSchema)`.
 
 ## Validation rules
@@ -22,14 +23,15 @@ A realistic, non-trivial form with nested objects, dynamic arrays, and mixed con
 ### Errors
 
 - Personal info — first/last name required, min length 2; email required + email format; age required, min 18, max 120.
-- Address — street, city, zip, country required; ZIP pattern `12345` or `12345-6789`.
+- Address info — street, city, zip, country required; ZIP pattern `12345` or `12345-6789`.
 - Skills — each entry requires name and level (1–10).
 - Contacts — type and value required; value min length 3.
+- Credentials — password required + min length 8; confirm password required; grouped fieldset shows `Passwords must match`.
 - Preferences — contact method required.
 
 ### Warnings
 
-- `warn:sms-charges` — warns when the preferred contact method is SMS.
+- `warn:sms-rate` — warns when the preferred contact method is SMS (carrier rates may apply).
 
 ## Strong suites
 
@@ -49,9 +51,11 @@ A realistic, non-trivial form with nested objects, dynamic arrays, and mixed con
 1. Run the demo and navigate to `/form-field-wrapper/complex-forms`.
 2. Add and remove entries in the skills and contacts arrays to exercise per-row validation.
 3. Enter an age outside 18–120 or a malformed ZIP to see field-level errors.
-4. Choose `SMS` as contact method to trigger the warning (submission still allowed).
-5. Toggle the newsletter switch and notification checkbox and confirm each renders with the correct wrapper layout and ARIA wiring.
-6. Submit with errors and confirm aggregated fieldset errors appear at the section level.
+4. Enter different values in password and confirm password to see the credentials fieldset surface the shared mismatch error.
+5. Blur the contact-method radio group without choosing an option to see the wrapper-owned grouped error surface.
+6. Choose `SMS` as contact method to trigger the warning (submission still allowed).
+7. Toggle the newsletter switch and notification checkbox and confirm each renders with the correct wrapper layout and ARIA wiring.
+8. Submit with errors and confirm aggregated fieldset errors appear at the section level.
 
 ## Related
 

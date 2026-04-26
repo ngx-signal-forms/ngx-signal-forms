@@ -322,12 +322,12 @@ match `strategy` explicitly).
   /* Error styles (red) */
   --ngx-signal-form-error-color: #dc2626;
   --ngx-signal-form-error-bg: transparent;
-  --ngx-signal-form-error-border: transparent;
+  --ngx-signal-form-error-border-color: transparent;
 
   /* Warning styles (amber) */
   --ngx-signal-form-warning-color: #a16207;
   --ngx-signal-form-warning-bg: transparent;
-  --ngx-signal-form-warning-border: transparent;
+  --ngx-signal-form-warning-border-color: transparent;
 
   /* Spacing */
   --ngx-signal-form-error-margin-top: 0.375rem;
@@ -361,9 +361,9 @@ match `strategy` explicitly).
 /* Add backgrounds and borders */
 :root {
   --ngx-signal-form-error-bg: #fef2f2;
-  --ngx-signal-form-error-border: #fca5a5;
+  --ngx-signal-form-error-border-color: #fca5a5;
   --ngx-signal-form-warning-bg: #fffbeb;
-  --ngx-signal-form-warning-border: #fcd34d;
+  --ngx-signal-form-warning-border-color: #fcd34d;
   --ngx-signal-form-error-border-width: 1px;
   --ngx-signal-form-error-border-radius: 0.375rem;
   --ngx-signal-form-error-padding: 0.5rem;
@@ -374,10 +374,10 @@ match `strategy` explicitly).
   :root {
     --ngx-signal-form-error-color: #fca5a5;
     --ngx-signal-form-error-bg: #7f1d1d;
-    --ngx-signal-form-error-border: #991b1b;
+    --ngx-signal-form-error-border-color: #991b1b;
     --ngx-signal-form-warning-color: #fcd34d;
     --ngx-signal-form-warning-bg: #78350f;
-    --ngx-signal-form-warning-border: #92400e;
+    --ngx-signal-form-warning-border-color: #92400e;
   }
 }
 ```

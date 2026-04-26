@@ -17,6 +17,11 @@ export interface ContactModel {
   value: string;
 }
 
+export interface CredentialsModel {
+  password: string;
+  confirmPassword: string;
+}
+
 export interface ComplexFormModel {
   // Personal Information (nested object)
   personalInfo: {
@@ -39,6 +44,9 @@ export interface ComplexFormModel {
 
   // Contact Methods (dynamic array with mixed types)
   contacts: ContactModel[];
+
+  // Account Credentials (nested group-level validation)
+  credentials: CredentialsModel;
 
   // Preferences
   preferences: {

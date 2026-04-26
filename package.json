@@ -32,12 +32,12 @@
     "@angular-architects/ngrx-toolkit": "catalog:",
     "@angular/aria": "catalog:angular",
     "@angular/cdk": "catalog:angular",
-    "@angular/common": "catalog:angular",
-    "@angular/compiler": "catalog:angular",
-    "@angular/core": "catalog:angular",
-    "@angular/forms": "catalog:angular",
-    "@angular/platform-browser": "catalog:angular",
-    "@angular/router": "catalog:angular",
+    "@angular/common": "21.2.10",
+    "@angular/compiler": "21.2.10",
+    "@angular/core": "21.2.10",
+    "@angular/forms": "21.2.10",
+    "@angular/platform-browser": "21.2.10",
+    "@angular/router": "21.2.10",
     "@ngrx/signals": "catalog:",
     "@shikijs/core": "catalog:shiki",
     "msw": "catalog:",
@@ -108,20 +108,14 @@
   "simple-git-hooks": {
     "pre-commit": "pnpm exec lint-staged"
   },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx,mjs,cjs}": [
-      "oxlint --fix --quiet",
-      "oxfmt --write"
-    ],
-    "*.{json,html,css,scss,md,yml,yaml}": "oxfmt --write"
-  },
   "pnpm": {
     "overrides": {
-      "@angular/common": "21.2.9",
-      "@angular/compiler": "21.2.9",
-      "@angular/core": "21.2.9",
-      "@angular/forms": "21.2.9",
-      "@angular/platform-browser": "21.2.9",
+      "@angular/common": "21.2.10",
+      "@angular/compiler": "21.2.10",
+      "@angular/core": "21.2.10",
+      "@angular/forms": "21.2.10",
+      "@angular/platform-browser": "21.2.10",
+      "@angular/router": "21.2.10",
       "lodash": "4.18.1",
       "@verdaccio/core>minimatch": "7.4.9"
     },

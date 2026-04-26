@@ -185,6 +185,16 @@ by `'on-touch'` or `'on-submit'`. See
 
 `ngx-form-fieldset` — groups related fields with aggregated error display.
 
+Use it when the validation belongs to the group as a whole — cross-field rules,
+repeated row sections, or dense subsections that should
+own a single summary. For radio groups and checkbox groups that should behave
+like a single field with inline wrapper feedback, use
+`ngx-form-field-wrapper` instead. If each child control should render its own feedback,
+keep the fieldset in the default group-only mode and let the nested
+`ngx-form-field-wrapper`s stay responsible for leaf errors. If you want the
+aggregation signals without any prebuilt markup, drop down to
+[`/headless`](../headless/README.md).
+
 ```html
 <ngx-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
   <legend>Shipping Address</legend>
@@ -204,20 +214,183 @@ by `'on-touch'` or `'on-submit'`. See
 </ngx-form-fieldset>
 ```
 
-| Input                 | Type                   | Default   | Description                                     |
-| --------------------- | ---------------------- | --------- | ----------------------------------------------- |
-| `fieldsetField`       | `FieldTree` (required) | —         | Field tree to aggregate                         |
-| `fields`              | `FieldTree[]`          | `null`    | Explicit field list (overrides tree traversal)  |
-| `fieldsetId`          | `string`               | Generated | ID for ARIA linking                             |
-| `strategy`            | `ErrorDisplayStrategy` | Inherited | Error display strategy                          |
-| `showErrors`          | `boolean`              | `true`    | Toggle error display                            |
-| `includeNestedErrors` | `boolean`              | `false`   | Include child field errors via `errorSummary()` |
-| `errorPlacement`      | `'top' \| 'bottom'`    | `'top'`   | Render grouped messages before or after content |
+| Input                 | Type                                                                     | Default     | Description                                                    |
+| --------------------- | ------------------------------------------------------------------------ | ----------- | -------------------------------------------------------------- |
+| `fieldsetField`       | `FieldTree` (required)                                                   | —           | Field tree to aggregate                                        |
+| `fields`              | `FieldTree[]`                                                            | `null`      | Explicit field list (overrides tree traversal)                 |
+| `fieldsetId`          | `string`                                                                 | Generated   | ID for ARIA linking                                            |
+| `strategy`            | `ErrorDisplayStrategy`                                                   | Inherited   | Error display strategy                                         |
+| `showErrors`          | `boolean`                                                                | `true`      | Toggle error display                                           |
+| `includeNestedErrors` | `boolean`                                                                | `false`     | Include child field errors via `errorSummary()`                |
+| `errorPlacement`      | `'top' \| 'bottom'`                                                      | `'bottom'`  | Render grouped messages before or after content                |
+| `appearance`          | `'outline' \| 'plain'`                                                   | `'outline'` | Border-and-padding shell or semantic-only grouping             |
+| `feedbackAppearance`  | `'auto' \| 'plain' \| 'notification'`                                    | `'auto'`    | Choose compact grouped text or surfaced notification cards     |
+| `notificationTitle`   | `string`                                                                 | —           | Optional title for notification-style grouped feedback         |
+| `listStyle`           | `'plain' \| 'bullets'`                                                   | `'bullets'` | Grouped message layout                                         |
+| `surfaceTone`         | `'default' \| 'neutral' \| 'info' \| 'success' \| 'warning' \| 'danger'` | `'default'` | Base fieldset surface tint below the legend                    |
+| `validationSurface`   | `'never' \| 'always'`                                                    | `'never'`   | Whether invalid/warning state should tint the fieldset surface |
 
 ### Error display modes
 
 - **Group-only** (default) — shows only group-level errors. Use when nested fields display their own errors via wrappers.
 - **Aggregated** (`includeNestedErrors`) — collects all nested errors. Use when fields don't have individual error display.
+
+### Fieldset appearances
+
+- **`outline`** (default) — the current bordered grouped section with inner padding
+- **`plain`** — semantic-only grouping with no border, no padding, and no surfaced background; useful when you want the legend and grouped validation semantics without visible fieldset chrome
+
+### Summary placement
+
+- **`top`** — useful when grouped summaries should be read immediately after
+  the legend or supporting copy.
+- **`bottom`** (default) — useful when the user should scan the controls first
+  and see the grouped summary after the section.
+
+```html
+<ngx-form-fieldset [fieldsetField]="form.deliveryMethod" errorPlacement="top">
+  <legend>Delivery method</legend>
+  <!-- grouped controls -->
+</ngx-form-fieldset>
+```
+
+### Grouped feedback appearance
+
+- **`feedbackAppearance="auto"`** (default) uses a surfaced notification card
+  for grouped sections.
+- **`plain`** always uses the compact `ngx-form-field-error` presentation.
+- **`notification`** always uses `ngx-form-field-notification`.
+
+This keeps the fieldset focused on grouped summaries and surfaced sections.
+Radio groups and checkbox groups that should show inline errors and invalid
+backgrounds now belong in `ngx-form-field-wrapper`, not `ngx-form-fieldset`.
+
+### Fieldset surface behavior
+
+- **`surfaceTone`** controls the base fill of the fieldset surface.
+- **`validationSurface="never"`** (default) keeps the surface neutral and relies
+  on the grouped message alone.
+- **`validationSurface="always"`** tints every grouped section on validation
+  state.
+
+## Grouped radio/checkbox controls in the wrapper
+
+Use `ngx-form-field-wrapper` when a radio group or checkbox group should behave
+like a single field with wrapper-owned inline feedback.
+
+```html
+<ngx-form-field-wrapper
+  [formField]="form.deliveryMethod"
+  fieldName="delivery-method"
+  errorPlacement="bottom"
+>
+  <span ngxFormFieldLabel>Delivery option *</span>
+
+  <div class="delivery-options">
+    <label>
+      <input
+        id="delivery-standard"
+        type="radio"
+        name="deliveryMethod"
+        [formField]="form.deliveryMethod"
+        value="standard"
+      />
+      <span>Standard</span>
+    </label>
+
+    <label>
+      <input
+        id="delivery-express"
+        type="radio"
+        name="deliveryMethod"
+        [formField]="form.deliveryMethod"
+        value="express"
+      />
+      <span>Express</span>
+    </label>
+  </div>
+</ngx-form-field-wrapper>
+```
+
+Use a normal `<label for="..."></label>` for single controls. For grouped
+radio/checkbox wrappers, project a neutral heading element such as
+`<span ngxFormFieldLabel>` instead of an HTML `<label>` because the wrapper is
+labelling the group container (`radiogroup`/`group`), not a single input.
+
+When the wrapper detects a grouped radio or checkbox cluster, it uses a surfaced
+background on the wrapper content instead of a text-field border. The feedback
+still renders through the normal wrapper assistive row or `errorPlacement`
+setting.
+
+```html
+<ngx-form-fieldset
+  [fieldsetField]="form.contactMethod"
+  surfaceTone="neutral"
+  validationSurface="always"
+>
+  <legend>Preferred contact method</legend>
+  <!-- radio group -->
+</ngx-form-fieldset>
+```
+
+### Password group example
+
+This is the common “two normal fields plus one group-level rule” case. The
+wrappers keep ownership of leaf validation such as required/min-length, while
+the fieldset is reserved for the shared cross-field message.
+
+```html
+<ngx-form-fieldset [fieldsetField]="form.passwords" fieldsetId="passwords">
+  <legend>Passwords</legend>
+
+  <ngx-form-field-wrapper [formField]="form.passwords.password">
+    <label for="password">Password</label>
+    <input
+      id="password"
+      type="password"
+      [formField]="form.passwords.password"
+    />
+  </ngx-form-field-wrapper>
+
+  <ngx-form-field-wrapper [formField]="form.passwords.confirm">
+    <label for="confirm-password">Confirm password</label>
+    <input
+      id="confirm-password"
+      type="password"
+      [formField]="form.passwords.confirm"
+    />
+  </ngx-form-field-wrapper>
+
+  <!-- The fieldset shows only "Passwords must match" -->
+</ngx-form-fieldset>
+```
+
+```typescript
+import { signal } from '@angular/core';
+import { form, required, validateTree } from '@angular/forms/signals';
+
+const model = signal({
+  passwords: {
+    password: '',
+    confirm: '',
+  },
+});
+
+const signupForm = form(model, (path) => {
+  required(path.passwords.password, { message: 'Password is required' });
+  required(path.passwords.confirm, {
+    message: 'Please confirm your password',
+  });
+
+  validateTree(path.passwords, ({ value }) => {
+    const { password, confirm } = value();
+    if (password && confirm && password !== confirm) {
+      return { kind: 'mismatch', message: 'Passwords must match' };
+    }
+    return null;
+  });
+});
+```
 
 Can also be used as an attribute selector on native `<fieldset>` or `<div>`:
 
@@ -230,7 +403,7 @@ Can also be used as an attribute selector on native `<fieldset>` or `<div>`:
 
 ## Theming
 
-All components share a CSS custom properties system. See the [Theming Guide](./THEMING.md) for the full reference (20+ variables covering layout, typography, colors, and dark mode).
+All components share a CSS custom properties system. See the [Theming Guide](./THEMING.md) for the full reference (~120 CSS custom properties covering layout, typography, feedback surfaces, and dark mode).
 
 Quick example:
 
