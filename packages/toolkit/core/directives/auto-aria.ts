@@ -10,7 +10,6 @@ import {
 import { FORM_FIELD, type FieldState } from '@angular/forms/signals';
 import {
   NGX_SIGNAL_FORM_ARIA_MODE,
-  NGX_SIGNAL_FORM_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
 } from '../tokens';
 import {
@@ -18,7 +17,7 @@ import {
   generateWarningId,
   resolveFieldName,
 } from '../utilities/field-resolution';
-import { createShowErrorsComputed } from '../utilities/show-errors';
+import { createErrorVisibility } from '../utilities/create-error-visibility';
 import { isBlockingError, isWarningError } from '../utilities/warning-error';
 
 interface AutoAriaDomSnapshot {
@@ -116,7 +115,6 @@ export class NgxSignalFormAutoAria {
 
   readonly #element: ElementRef<HTMLElement> = inject(ElementRef);
   readonly #injector = inject(Injector);
-  readonly #context = inject(NGX_SIGNAL_FORM_CONTEXT, { optional: true });
   readonly #ariaModeSignal = inject(NGX_SIGNAL_FORM_ARIA_MODE, {
     optional: true,
     self: true,
@@ -141,11 +139,13 @@ export class NgxSignalFormAutoAria {
    * decision so `#shouldShowBy` only contributes the per-error-type filter.
    * Keeps auto-aria in lockstep with the wrapper component and the form
    * field error component.
+   *
+   * Uses `createErrorVisibility` to auto-consume the nearest
+   * `[ngxSignalForm]` context (strategy + submittedStatus) via DI, matching
+   * the same cascade as the form-field wrapper and headless error-state.
    */
-  readonly #visibilityByStrategy = createShowErrorsComputed(
-    () => this.#resolveFieldState(),
-    () => this.#context?.errorStrategy() ?? 'on-touch',
-    () => this.#context?.submittedStatus() ?? 'unsubmitted',
+  readonly #visibilityByStrategy = createErrorVisibility(() =>
+    this.#resolveFieldState(),
   );
 
   /**
