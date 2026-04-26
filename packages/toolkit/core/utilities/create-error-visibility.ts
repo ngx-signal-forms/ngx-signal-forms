@@ -84,7 +84,9 @@ export interface CreateErrorVisibilityOptions {
  * additional logic (e.g. a config-default cascade, a component preset
  * registry) reach for the individual building blocks instead.
  *
- * @param field Reactive or static field state. `null`/`undefined` short-circuit to `false`.
+ * @param field Reactive or static field state. `null`/`undefined` values
+ *   short-circuit the result to `false` — this is handled by the underlying
+ *   {@link createShowErrorsComputed} building block.
  * @param opts Optional overrides; all properties are optional.
  * @returns A computed `Signal<boolean>` that is `true` when the strategy says
  *   errors should be visible.

@@ -135,7 +135,7 @@ export class NgxSignalFormAutoAria {
   });
 
   /**
-   * Shared visibility-timing computed. Centralises the `shouldShowErrors`
+   * Shared visibility-timing computed. Centralizes the `shouldShowErrors`
    * decision so `#shouldShowBy` only contributes the per-error-type filter.
    * Keeps auto-aria in lockstep with the wrapper component and the form
    * field error component.
