@@ -19,6 +19,7 @@ import {
 } from '../utilities/field-resolution';
 import { createErrorVisibility } from '../utilities/create-error-visibility';
 import { isBlockingError, isWarningError } from '../utilities/warning-error';
+import { NgxFieldIdentity } from '../services/field-identity';
 
 interface AutoAriaDomSnapshot {
   readonly fieldName: string | null;
@@ -123,12 +124,29 @@ export class NgxSignalFormAutoAria {
     optional: true,
   });
 
+  /**
+   * Shared field-identity service, provided by the nearest `NgxFormFieldWrapper`.
+   * When present, field-name resolution and ID generation are delegated to the
+   * identity service so the wrapper and auto-aria share the same source of
+   * truth. When absent (standalone auto-aria usage without a wrapper), the
+   * directive falls back to reading the element's `id` attribute directly.
+   */
+  readonly #fieldIdentity = inject(NgxFieldIdentity, { optional: true });
+
   /// Inject Angular's FormField to avoid creating a duplicate `formField` input,
   /// which triggers the pass-through flag and disables FormField's blur/value binding.
   readonly #formField = inject(FORM_FIELD);
 
   readonly #domSnapshot = signal(INITIAL_DOM_SNAPSHOT);
   readonly #managedDescribedByIds = signal<readonly string[]>([]);
+  /**
+   * Tracks whether the control is currently visible via `IntersectionObserver`.
+   * Starts as `true` so aria-invalid is evaluated immediately on the first
+   * render; flips to `false` when the element exits the viewport, causing
+   * `aria-invalid` to be removed until the element becomes visible again.
+   * Only active when `#fieldIdentity` is present (wrapper context).
+   */
+  readonly #isControlVisible = signal(true);
 
   readonly #isManualAriaMode = computed(() => {
     return this.#ariaModeSignal?.() === 'manual';
@@ -149,12 +167,15 @@ export class NgxSignalFormAutoAria {
   );
 
   /**
-   * Hint IDs contributed by the surrounding hint registry (typically provided
-   * by the form field wrapper). Filters by field name when the hint records
-   * it; falls back to "belongs to any field" when the hint has not declared
-   * one.
+   * Hint IDs from the identity service when available, falling back to the
+   * hint registry snapshot when the identity service is absent.
    */
   readonly #hintIds = computed((): readonly string[] => {
+    // Identity service provides pre-filtered hint IDs for this field.
+    if (this.#fieldIdentity) {
+      return this.#fieldIdentity.hintIds();
+    }
+
     const registry = this.#hintRegistry;
     if (!registry) return [];
 
@@ -181,6 +202,10 @@ export class NgxSignalFormAutoAria {
    *
    * Respects the configured ErrorDisplayStrategy, so aria-invalid='true' only
    * appears when errors should be visible according to the strategy.
+   *
+   * When the identity service is present and the control is not visible
+   * (e.g. inside a collapsed fieldset), returns null so `aria-invalid` is
+   * removed from the hidden control rather than going stale.
    */
   protected readonly ariaInvalid = computed(() => {
     if (this.#isManualAriaMode()) {
@@ -188,6 +213,13 @@ export class NgxSignalFormAutoAria {
     }
 
     if (!this.#hasUsableFieldState()) {
+      return null;
+    }
+
+    // When the wrapper's identity service is present and the control has
+    // exited the viewport, remove aria-invalid so it cannot go stale on
+    // collapsed/hidden fieldsets.
+    if (this.#fieldIdentity && !this.#isControlVisible()) {
       return null;
     }
 
@@ -326,7 +358,12 @@ export class NgxSignalFormAutoAria {
   }
 
   #readDomSnapshot(): AutoAriaDomSnapshot {
-    const fieldName = resolveFieldName(this.#element.nativeElement);
+    // When the identity service is present (wrapper context), prefer its
+    // field name over the element's id attribute. This ensures auto-aria and
+    // the wrapper always agree on which name drives ID generation.
+    const fieldName = this.#fieldIdentity
+      ? this.#fieldIdentity.fieldName()
+      : resolveFieldName(this.#element.nativeElement);
 
     return {
       fieldName,
@@ -350,6 +387,37 @@ export class NgxSignalFormAutoAria {
 
   constructor() {
     this.#domSnapshot.set(this.#readDomSnapshot());
+
+    // When the identity service is present, subscribe to control visibility
+    // changes so aria-invalid is re-evaluated when the control is
+    // hidden/shown (e.g. inside a collapsed fieldset). The cleanup is
+    // deferred until after the first render so the identity service has had
+    // a chance to resolve the control element via the wrapper's
+    // afterEveryRender write phase.
+    if (this.#fieldIdentity) {
+      const identity = this.#fieldIdentity;
+      const isControlVisible = this.#isControlVisible;
+      let observedElement: HTMLElement | null = null;
+      let cleanupVisibility: () => void = () => undefined;
+
+      afterEveryRender(
+        {
+          write: () => {
+            // Reconnect the observer whenever the bound control element changes.
+            const el = identity.resolveControlElement();
+            if (el === observedElement) return;
+            cleanupVisibility();
+            observedElement = el;
+            cleanupVisibility = identity.onControlVisibilityChange(
+              (isVisible) => {
+                isControlVisible.set(isVisible);
+              },
+            );
+          },
+        },
+        { injector: this.#injector },
+      );
+    }
 
     // Single afterEveryRender with proper phased callbacks:
     // - earlyRead: read DOM attributes before any writes (prevents layout thrashing)

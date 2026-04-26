@@ -14,6 +14,9 @@ export * from './providers/control-semantics.provider';
 export * from './providers/error-messages.provider';
 export * from './providers/field-labels.provider';
 
+// Services
+export * from './services/field-identity';
+
 // Directives
 export * from './directives/auto-aria';
 export * from './directives/control-semantics';

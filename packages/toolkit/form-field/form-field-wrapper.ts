@@ -40,6 +40,7 @@ import {
 import {
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   type NgxSignalFormHintDescriptor,
+  NgxFieldIdentity,
 } from '@ngx-signal-forms/toolkit/core';
 import {
   NgxFormFieldAssistiveRow,
@@ -175,6 +176,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgxFormFieldError, NgxFormFieldAssistiveRow],
   providers: [
+    NgxFieldIdentity,
     {
       provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
       useFactory: () => {
@@ -416,6 +418,13 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
 
   readonly #controlPresets = inject(NGX_SIGNAL_FORM_CONTROL_PRESETS);
+
+  /**
+   * Shared field-identity service. Provided by this component so auto-aria
+   * and future surfaces can read field name, error / warning IDs, and the
+   * bound control element through a single, centralized source of truth.
+   */
+  readonly #fieldIdentity = inject(NgxFieldIdentity);
 
   /**
    * Form context (optional, for submission state tracking).
@@ -1065,6 +1074,14 @@ export class NgxFormFieldWrapper<TValue = unknown> {
             inputEl.removeAttribute('data-signal-field');
           }
         }
+
+        // Sync the shared NgxFieldIdentity service so auto-aria and any other
+        // consumer always see the same field name, control element, and IDs.
+        this.#fieldIdentity._setFieldName(this.resolvedFieldName());
+        this.#fieldIdentity._setControlElement(inputEl);
+        this.#fieldIdentity._setHintIds(
+          this.hintDescriptors().map((h) => h.id),
+        );
       },
     });
   }
