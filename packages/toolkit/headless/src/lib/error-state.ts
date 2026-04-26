@@ -14,6 +14,7 @@ import {
   resolveValidationErrorMessage,
   showErrors,
   type ErrorDisplayStrategy,
+  type ErrorReadableState,
   type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
@@ -123,7 +124,9 @@ export class NgxHeadlessErrorState<
    * push a reactive `Signal<unknown>` so that this directive can compute
    * strategy-based visibility and error-split. `null` until connected.
    */
-  readonly #bridgedFieldState = signal<Signal<unknown> | null>(null);
+  readonly #bridgedFieldState = signal<Signal<
+    Partial<ErrorReadableState> | null | undefined
+  > | null>(null);
 
   /**
    * The Signal Forms field to track error state for.
@@ -187,7 +190,9 @@ export class NgxHeadlessErrorState<
    * Not intended for external callers outside of `NgxFormFieldError`.
    * @internal
    */
-  connectFieldState(s: Readonly<Signal<unknown>>): void {
+  connectFieldState(
+    s: Signal<Partial<ErrorReadableState> | null | undefined>,
+  ): void {
     this.#bridgedFieldState.set(s);
   }
 
@@ -212,9 +217,9 @@ export class NgxHeadlessErrorState<
    * Resolved field state from: (1) `field` input, or (2) a bridged signal
    * connected via `connectFieldState()`. `undefined` when neither is set.
    */
-  readonly #fieldState = computed(
-    () => this.field()?.() ?? this.#bridgedFieldState()?.(),
-  );
+  readonly #fieldState = computed<
+    Partial<ErrorReadableState> | null | undefined
+  >(() => this.field()?.() ?? this.#bridgedFieldState()?.());
 
   readonly #core = buildHeadlessErrorState(
     this.#fieldState,
@@ -239,11 +244,17 @@ export class NgxHeadlessErrorState<
    * Whether errors should be shown based on strategy.
    *
    * Returns `true` unconditionally when no field state is available
-   * (direct-errors mode or no field bound) — the caller controls visibility
-   * through `hasErrors`/`hasWarnings`.
+   * (direct-errors mode via `errorsOverride`, or no field bound) — the
+   * caller controls visibility through `hasErrors`/`hasWarnings`.
+   *
+   * The bridge slot is checked by *value*, not by presence: host components
+   * that compose this directive via `hostDirectives` always call
+   * `connectFieldState()` in their constructor, so the slot is non-null
+   * even when the host's `[formField]` input is unbound.
    */
   readonly showErrors = computed(() => {
-    if (!this.field() && !this.#bridgedFieldState()) return true;
+    if (this.errorsOverride()) return true;
+    if (!this.field() && this.#bridgedFieldState()?.() == null) return true;
     return this.#strategyBasedShowErrors();
   });
 

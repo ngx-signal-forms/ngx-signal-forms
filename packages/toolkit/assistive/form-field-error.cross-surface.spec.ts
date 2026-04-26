@@ -1,10 +1,18 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   signal,
+  type Signal,
 } from '@angular/core';
-import { FormField, form, required, schema } from '@angular/forms/signals';
+import {
+  FormField,
+  form,
+  required,
+  schema,
+  type ValidationError,
+} from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
 import { render, screen } from '@testing-library/angular';
@@ -144,6 +152,62 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
     // Both surfaces clear together
     expect(screen.queryByRole('alert')).toBeFalsy();
     expect(screen.queryByTestId('custom-error')).toBeFalsy();
+  });
+
+  // Regression for PR #30: when `NgxFormFieldset` (or any host) binds
+  // `[errors]` without `[formField]`, the headless directive must short-circuit
+  // showErrors to true so the caller's pre-aggregated error list renders.
+  // Previously, the bridge slot set unconditionally in the constructor caused
+  // the guard `!field() && !#bridgedFieldState()` to fall through to the
+  // strategy-based path and hide the errors.
+  it('direct-errors mode (no formField) renders aggregated errors', async () => {
+    @Component({
+      selector: 'test-direct-errors',
+      imports: [NgxFormFieldError],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `
+        <ngx-form-field-error [errors]="aggregatedErrors" fieldName="address" />
+      `,
+    })
+    class TestDirectErrorsComponent {
+      readonly aggregatedErrors: Signal<readonly ValidationError[]> = computed(
+        () => [
+          { kind: 'required', message: 'Street is required' },
+          { kind: 'required', message: 'City is required' },
+        ],
+      );
+    }
+
+    await render(TestDirectErrorsComponent);
+
+    const alert = screen.queryByRole('alert');
+    expect(alert).toBeTruthy();
+    expect(alert?.textContent).toContain('Street is required');
+    expect(alert?.textContent).toContain('City is required');
+  });
+
+  it('direct-errors mode renders empty state when array is empty', async () => {
+    @Component({
+      selector: 'test-direct-errors-empty',
+      imports: [NgxFormFieldError],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `
+        <ngx-form-field-error [errors]="aggregatedErrors" fieldName="address" />
+      `,
+    })
+    class TestEmptyDirectErrorsComponent {
+      readonly aggregatedErrors: Signal<readonly ValidationError[]> = computed(
+        () => [],
+      );
+    }
+
+    const { container } = await render(TestEmptyDirectErrorsComponent);
+
+    // Live region stays in DOM (WCAG 4.1.3) but is hidden + empty
+    const alertEl = container.querySelector('[role="alert"]');
+    expect(alertEl).toBeTruthy();
+    expect(alertEl?.hasAttribute('hidden')).toBe(true);
+    expect(alertEl?.textContent?.trim()).toBe('');
   });
 
   it('NgxFormFieldError errorId matches generateErrorId output', async () => {

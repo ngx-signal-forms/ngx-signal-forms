@@ -15,6 +15,7 @@ import { NgxHeadlessErrorState } from './lib/error-state';
 import { NgxHeadlessErrorSummary } from './lib/error-summary';
 import { NgxHeadlessFieldName } from './lib/field-name';
 import { NgxHeadlessFieldset } from './lib/fieldset';
+import { NgxHeadlessNotification } from './lib/notification';
 
 // Directives
 export {
@@ -43,6 +44,13 @@ export {
   NgxHeadlessFieldName,
   type FieldNameStateSignals,
 } from './lib/field-name';
+
+export {
+  NgxHeadlessNotification,
+  type NgxNotificationTone,
+  type NotificationStateSignals,
+  type ResolvedNotificationMessage,
+} from './lib/notification';
 
 // Utility functions
 export {
@@ -89,4 +97,5 @@ export const NgxHeadlessToolkit = [
   NgxHeadlessFieldset,
   NgxHeadlessCharacterCount,
   NgxHeadlessFieldName,
+  NgxHeadlessNotification,
 ] as const;
