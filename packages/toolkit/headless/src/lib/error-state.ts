@@ -1,4 +1,11 @@
-import { computed, Directive, inject, input, type Signal } from '@angular/core';
+import {
+  computed,
+  Directive,
+  inject,
+  input,
+  signal,
+  type Signal,
+} from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   injectFormContext,
@@ -7,6 +14,7 @@ import {
   resolveValidationErrorMessage,
   showErrors,
   type ErrorDisplayStrategy,
+  type ErrorReadableState,
   type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
@@ -108,16 +116,38 @@ export class NgxHeadlessErrorState<
   });
 
   /**
-   * The Signal Forms field to track error state for.
+   * Bridged field-state signal, set by host components that cannot forward
+   * their `[formField]` input via `hostDirectives` inputs (because
+   * `[formField]` conflicts with Angular's `FormField` directive selector).
+   *
+   * Host components call `connectFieldState()` in their constructor to
+   * provide a reactive signal of the current field state
+   * (`Partial<ErrorReadableState> | null | undefined`), not the `FieldTree`
+   * itself, so this directive can compute strategy-based visibility and
+   * error-split. `null` until connected.
    */
-  readonly field = input.required<FieldTree<TValue>>();
+  readonly #bridgedFieldState = signal<Signal<
+    Partial<ErrorReadableState> | null | undefined
+  > | null>(null);
+
+  /**
+   * The Signal Forms field to track error state for.
+   *
+   * Optional when `errorsOverride` is provided (direct-errors mode) or when
+   * the host component calls `connectFieldState()`. When neither is supplied
+   * the directive renders as an empty, always-visible shell — the host
+   * component controls visibility via its own conditions.
+   */
+  readonly field = input<FieldTree<TValue>>();
 
   /**
    * The field name for generating error/warning IDs.
-   * Pass `null` to disable ID generation (e.g. when the field name cannot be
-   * resolved yet from a companion `ngxHeadlessFieldName` directive).
+   * Pass `null` (or omit) to disable ID generation (e.g. when the field name
+   * cannot be resolved yet).
+   *
+   * @default null
    */
-  readonly fieldName = input.required<string | null>();
+  readonly fieldName = input<string | null>(null);
 
   /**
    * Error display strategy override.
@@ -131,24 +161,73 @@ export class NgxHeadlessErrorState<
    */
   readonly submittedStatus = input<SubmittedStatus | undefined>();
 
+  /**
+   * Pre-aggregated error signal that replaces field-based error extraction.
+   *
+   * When provided, errors and warnings are derived from this signal rather
+   * than from `field`. Useful for fieldsets or custom components that
+   * compute their own error lists (e.g. `NgxFormFieldset.filteredErrorsSignal`).
+   * In this mode `field` is not required and `showErrors` always returns
+   * `true` (the caller controls visibility through `hasErrors`/`hasWarnings`).
+   */
+  readonly errorsOverride = input<Signal<readonly ValidationError[]>>();
+
+  /**
+   * Bridges a host component's field input to this directive when the
+   * component cannot forward `formField` via `hostDirectives` inputs
+   * (because `[formField]` conflicts with Angular's `FormField` directive
+   * selector `[formField]`).
+   *
+   * Call this once from the host component's constructor after `inject()`
+   * resolves this directive:
+   *
+   * ```typescript
+   * constructor() {
+   *   inject(NgxHeadlessErrorState).connectFieldState(
+   *     computed(() => this.formField()?.()),
+   *   );
+   * }
+   * ```
+   *
+   * Not intended for external callers outside of `NgxFormFieldError`.
+   * @internal
+   */
+  connectFieldState(
+    s: Signal<Partial<ErrorReadableState> | null | undefined>,
+  ): void {
+    this.#bridgedFieldState.set(s);
+  }
+
   readonly #resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() =>
     resolveStrategyFromContext(this.strategy(), this.#injectedContext),
   );
 
-  readonly #resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(
-    () =>
-      resolveSubmittedStatusFromContext(
-        this.submittedStatus(),
-        this.#injectedContext,
-      ),
+  /**
+   * Resolved submission status after applying form-context defaults.
+   * Exposed so that host components composing this directive via
+   * `hostDirectives` can reuse the resolved value without re-calling
+   * `resolveSubmittedStatusFromContext`.
+   */
+  readonly resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(() =>
+    resolveSubmittedStatusFromContext(
+      this.submittedStatus(),
+      this.#injectedContext,
+    ),
   );
 
   /**
-   * Field state from the FieldTree.
+   * Resolved field state from: (1) `field` input, or (2) a bridged signal
+   * connected via `connectFieldState()`. `undefined` when neither is set.
    */
-  readonly #fieldState = computed(() => this.field()());
+  readonly #fieldState = computed<
+    Partial<ErrorReadableState> | null | undefined
+  >(() => this.field()?.() ?? this.#bridgedFieldState()?.());
 
-  readonly #core = buildHeadlessErrorState(this.#fieldState, this.fieldName);
+  readonly #core = buildHeadlessErrorState(
+    this.#fieldState,
+    this.fieldName,
+    computed(() => this.errorsOverride()?.()),
+  );
 
   readonly errorId = this.#core.errorId;
   readonly warningId = this.#core.warningId;
@@ -157,17 +236,39 @@ export class NgxHeadlessErrorState<
   readonly hasErrors = this.#core.hasErrors;
   readonly hasWarnings = this.#core.hasWarnings;
 
-  /**
-   * Whether errors should be shown based on strategy.
-   */
-  readonly showErrors = showErrors(
+  readonly #strategyBasedShowErrors = showErrors(
     this.#fieldState,
     this.#resolvedStrategy,
-    this.#resolvedSubmittedStatus,
+    this.resolvedSubmittedStatus,
   );
 
   /**
-   * Whether warnings should be shown (same logic as errors).
+   * Whether errors should be shown based on strategy.
+   *
+   * Returns `true` unconditionally in two cases:
+   * 1. **Direct-errors mode** — `errorsOverride` is bound. Strategy gating
+   *    is intentionally bypassed here: callers using `errorsOverride` (e.g.
+   *    `NgxFormFieldset.filteredErrorsSignal`) already aggregate and gate
+   *    their own error lists upstream, so a second strategy filter here
+   *    would double-gate. Visibility is delegated to the caller via
+   *    `hasErrors`/`hasWarnings`.
+   * 2. **No field state available** — neither `field` nor a bridged value
+   *    via `connectFieldState()` is set. The host controls visibility
+   *    through its own template conditions.
+   *
+   * The bridge slot is checked by *value*, not by presence: host components
+   * that compose this directive via `hostDirectives` always call
+   * `connectFieldState()` in their constructor, so the slot is non-null
+   * even when the host's `[formField]` input is unbound.
+   */
+  readonly showErrors = computed(() => {
+    if (this.errorsOverride()) return true;
+    if (!this.field() && this.#bridgedFieldState()?.() == null) return true;
+    return this.#strategyBasedShowErrors();
+  });
+
+  /**
+   * Whether warnings should be shown (same strategy logic as errors).
    */
   readonly showWarnings = this.showErrors;
 
