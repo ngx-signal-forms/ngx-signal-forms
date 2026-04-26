@@ -183,8 +183,9 @@ describe('NgxFieldIdentity', () => {
         changeDetection: ChangeDetectionStrategy.OnPush,
       })
       class TestProvider {
+        readonly #identity = inject(NgxFieldIdentity);
         constructor() {
-          captured = inject(NgxFieldIdentity);
+          captured = this.#identity;
         }
       }
 
@@ -210,9 +211,9 @@ describe('NgxFieldIdentity', () => {
         changeDetection: ChangeDetectionStrategy.OnPush,
       })
       class TestWrapper {
-        // inject() inside constructor uses the element injector
+        readonly #identity = inject(NgxFieldIdentity);
         constructor() {
-          instances.push(inject(NgxFieldIdentity));
+          instances.push(this.#identity);
         }
       }
 

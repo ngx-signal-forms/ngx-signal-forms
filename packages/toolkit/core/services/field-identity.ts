@@ -139,8 +139,8 @@ export class NgxFieldIdentity {
       // oxlint-disable-next-line no-console -- dev-only a11y diagnostic
       console.warn(
         '[ngx-signal-forms] NgxFieldIdentity: the bound control has no `id` ' +
-          'attribute. Label-for and aria-describedby linking will not work ' +
-          'until an `id` is set on the control element or an explicit ' +
+          'attribute. `label[for]` and `aria-describedby` linking will not ' +
+          'work until an `id` is set on the control element or an explicit ' +
           '`fieldName` input is added to the wrapper.',
         el,
       );
