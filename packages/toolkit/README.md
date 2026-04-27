@@ -270,10 +270,15 @@ provideFieldLabels(() => {
 
 ### ARIA and identity
 
-| Function                                   | Description                                          |
-| ------------------------------------------ | ---------------------------------------------------- |
-| `buildAriaDescribedBy(fieldName, options)` | Assemble `aria-describedby` for manual ARIA controls |
-| `injectFormContext()`                      | Get `ngxSignalForm` context or `undefined`           |
+| Function                                        | Description                                                                                |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `buildAriaDescribedBy(fieldName, options)`      | Assemble `aria-describedby` for manual ARIA controls                                       |
+| `normalizeFieldName(value)`                     | Trim and null-collapse a candidate name into the v1 identity form                          |
+| `resolveFieldName(element)`                     | Read a usable field name from an element's `id` (trimmed, with `element.id` fallback)      |
+| `resolveFieldNameFromCandidates(...candidates)` | Pick the first non-blank field name from a precedence chain (explicit → host id → context) |
+| `generateErrorId(fieldName)`                    | Derive the `{fieldName}-error` element id used for `aria-describedby`                      |
+| `generateWarningId(fieldName)`                  | Derive the `{fieldName}-warning` element id used for `aria-describedby`                    |
+| `injectFormContext()`                           | Get `ngxSignalForm` context or `undefined`                                                 |
 
 ### Other
 
