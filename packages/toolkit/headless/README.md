@@ -18,6 +18,7 @@ import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
 import {
   NgxHeadlessErrorState,
   NgxHeadlessErrorSummary,
+  NgxHeadlessNotification,
   NgxHeadlessCharacterCount,
   NgxHeadlessFieldset,
   NgxHeadlessFieldName,
@@ -155,6 +156,20 @@ Aggregates error state across multiple fields for group validation.
 
 Signals: `isValid()`, `isInvalid()`, `isTouched()`, `isDirty()`, `isPending()`, `aggregatedErrors()`, `aggregatedWarnings()`, `hasErrors()`, `hasWarnings()`, `shouldShowErrors()`, `shouldShowWarnings()`, `resolvedStrategy()`, `resolvedSubmittedStatus()`, `resolvedFieldsetId()`.
 
+### NgxHeadlessNotification
+
+Selector: `[ngxHeadlessNotification]` · Export: `notification`
+
+Tone-aware grouped validation state for custom notification cards and summary blocks.
+
+| Input       | Type                                 | Description                             |
+| ----------- | ------------------------------------ | --------------------------------------- |
+| `errors`    | `Signal<readonly ValidationError[]>` | Grouped validation messages             |
+| `fieldName` | `string \| null`                     | Base id for generated error/warning ids |
+| `tone`      | `'auto' \| 'error' \| 'warning'`     | Resolve role/tone for grouped messaging |
+
+Signals: `resolvedMessages()`, `resolvedTone()`, `showErrorContainer()`, `showWarningContainer()`, `errorContainerId()` (nullable), `warningContainerId()` (nullable).
+
 ### NgxHeadlessFieldName
 
 Selector: `[ngxHeadlessFieldName]` · Export: `fieldName`
@@ -194,7 +209,7 @@ createUniqueId('field'); // 'field-1', 'field-2', ...
 
 - [Toolkit core](../README.md) — error strategies, ARIA, configuration
 - [Form field wrapper](../form-field/README.md) — pre-styled wrapper component
-- [Assistive components](../assistive/README.md) — styled error, hint, and count components
+- [Assistive components](../assistive/README.md) — styled error, grouped notification, hint, counter, and summary components
 - [Theming guide](../form-field/THEMING.md) — CSS custom properties for styled components
 
 ## License

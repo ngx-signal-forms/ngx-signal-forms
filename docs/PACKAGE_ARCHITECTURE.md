@@ -40,6 +40,8 @@ packages/toolkit/
 │   ├── assistive-row.ts
 │   ├── character-count.ts
 │   ├── form-field-error.ts
+│   ├── form-field-notification.ts
+│   ├── form-field-error-summary.ts
 │   ├── hint.ts
 │   ├── warning-error.ts
 │   └── index.ts
@@ -53,6 +55,7 @@ packages/toolkit/
 │   │   └── lib/
 │   │       ├── error-state.ts
 │   │       ├── error-summary.ts
+│   │       ├── notification.ts
 │   │       ├── character-count.ts
 │   │       ├── fieldset.ts
 │   │       ├── field-name.ts
@@ -115,6 +118,8 @@ import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 ```typescript
 import {
   NgxFormFieldError,
+  NgxFormFieldNotification,
+  NgxFormFieldErrorSummary,
   NgxFormFieldHint,
   NgxFormFieldCharacterCount,
   NgxFormFieldAssistiveRow,
@@ -134,6 +139,7 @@ import {
   NgxHeadlessToolkit,
   NgxHeadlessErrorState,
   NgxHeadlessErrorSummary,
+  NgxHeadlessNotification,
   NgxHeadlessCharacterCount,
   NgxHeadlessFieldset,
   NgxHeadlessFieldName,

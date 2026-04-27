@@ -6,7 +6,7 @@
 
 Most Angular Signal Forms projects need the same things around each field: a label, error messages that appear at the right time, hints, character counts, and proper ARIA linking. The form-field wrapper handles all of this in one component.
 
-If you need full control over markup, use [`/headless`](../headless/README.md) instead. If you only need the error/hint components without the wrapper layout, use [`/assistive`](../assistive/README.md).
+If you need full control over markup, use [`/headless`](../headless/README.md) instead. If you only need standalone feedback components (error, grouped notification, hint, counter, summary) without wrapper layout, use [`/assistive`](../assistive/README.md).
 
 ## Import
 
@@ -25,7 +25,7 @@ import {
 // import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
-`NgxFormField` bundles the wrapper, fieldset, and all assistive components (error, hint, character count, assistive row) for convenience. Individual assistive components should be imported from `@ngx-signal-forms/toolkit/assistive`.
+`NgxFormField` bundles the wrapper, fieldset, and wrapper-used assistive components (`NgxFormFieldError`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`, `NgxFormFieldAssistiveRow`) for convenience. `NgxFormFieldNotification` and `NgxFormFieldErrorSummary` remain available via `@ngx-signal-forms/toolkit/assistive`.
 
 ## Quick start
 
@@ -420,7 +420,7 @@ Quick example:
 
 - [Theming guide](./THEMING.md) — complete CSS custom properties reference
 - [Toolkit core](../README.md) — error strategies, ARIA, configuration
-- [Assistive components](../assistive/README.md) — standalone error, hint, and count components
+- [Assistive components](../assistive/README.md) — standalone error, grouped notification, hint, counter, and summary components
 - [Headless primitives](../headless/README.md) — renderless directives for full custom UI
 - [Custom controls](../../docs/CUSTOM_CONTROLS.md) — wrapping sliders, date pickers, and third-party widgets
 - [CSS framework integration](../../docs/CSS_FRAMEWORK_INTEGRATION.md) — Tailwind, Bootstrap, Material
