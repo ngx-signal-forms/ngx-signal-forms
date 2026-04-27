@@ -40,6 +40,8 @@ import {
 import {
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   type NgxSignalFormHintDescriptor,
+  NgxFieldIdentity,
+  isElementCssVisible,
 } from '@ngx-signal-forms/toolkit/core';
 import {
   NgxFormFieldAssistiveRow,
@@ -175,6 +177,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgxFormFieldError, NgxFormFieldAssistiveRow],
   providers: [
+    NgxFieldIdentity,
     {
       provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
       useFactory: () => {
@@ -416,6 +419,13 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
 
   readonly #controlPresets = inject(NGX_SIGNAL_FORM_CONTROL_PRESETS);
+
+  /**
+   * Shared field-identity service. Provided by this component so auto-aria
+   * and future surfaces can read field name, error / warning IDs, and the
+   * bound control element through a single, centralized source of truth.
+   */
+  readonly #fieldIdentity = inject(NgxFieldIdentity);
 
   /**
    * Form context (optional, for submission state tracking).
@@ -1065,6 +1075,28 @@ export class NgxFormFieldWrapper<TValue = unknown> {
             inputEl.removeAttribute('data-signal-field');
           }
         }
+
+        // Sync the shared NgxFieldIdentity service so auto-aria and any other
+        // consumer always see the same field name, control element, IDs, and
+        // visibility state. Visibility is polled per render via
+        // `Element.checkVisibility()` so a control inside a collapsed
+        // `<details>` / `hidden` ancestor flips the flag the next time
+        // Angular runs CD, which is when wrappers see the change anyway.
+        // Keep order: name → element → visible → hints.
+        const resolvedFieldName = this.resolvedFieldName();
+        this.#fieldIdentity._setFieldName(resolvedFieldName);
+        this.#fieldIdentity._setControlElement(inputEl);
+        this.#fieldIdentity._setControlVisible(
+          inputEl ? isElementCssVisible(inputEl) : true,
+        );
+        this.#fieldIdentity._setHintIds(
+          this.hintDescriptors()
+            .filter(
+              (hint) =>
+                hint.fieldName === null || hint.fieldName === resolvedFieldName,
+            )
+            .map((hint) => hint.id),
+        );
       },
     });
   }

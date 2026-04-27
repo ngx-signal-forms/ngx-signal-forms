@@ -14,6 +14,9 @@ export * from './providers/control-semantics.provider';
 export * from './providers/error-messages.provider';
 export * from './providers/field-labels.provider';
 
+// Services
+export * from './services/field-identity';
+
 // Directives
 export * from './directives/auto-aria';
 export * from './directives/control-semantics';
@@ -34,6 +37,7 @@ export {
   isFieldStateInteractive,
 } from './utilities/field-interactivity';
 export * from './utilities/field-resolution';
+export * from './utilities/find-bound-control';
 export type * from './utilities/field-state-types';
 export * from './utilities/focus-first-invalid';
 export {
