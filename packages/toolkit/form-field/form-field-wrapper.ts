@@ -41,6 +41,7 @@ import {
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   type NgxSignalFormHintDescriptor,
   NgxFieldIdentity,
+  isElementCssVisible,
 } from '@ngx-signal-forms/toolkit/core';
 import {
   NgxFormFieldAssistiveRow,
@@ -1076,9 +1077,16 @@ export class NgxFormFieldWrapper<TValue = unknown> {
         }
 
         // Sync the shared NgxFieldIdentity service so auto-aria and any other
-        // consumer always see the same field name, control element, and IDs.
+        // consumer always see the same field name, control element, IDs, and
+        // visibility state. Visibility is polled per render via
+        // `Element.checkVisibility()` so a control inside a collapsed
+        // `<details>` / `hidden` ancestor flips the flag the next time
+        // Angular runs CD, which is when wrappers see the change anyway.
         this.#fieldIdentity._setFieldName(this.resolvedFieldName());
         this.#fieldIdentity._setControlElement(inputEl);
+        this.#fieldIdentity._setControlVisible(
+          inputEl ? isElementCssVisible(inputEl) : true,
+        );
         this.#fieldIdentity._setHintIds(
           this.hintDescriptors().map((h) => h.id),
         );

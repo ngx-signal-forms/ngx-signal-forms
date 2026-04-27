@@ -171,4 +171,57 @@ describe('NgxSignalFormAutoAria browser mode', () => {
     await expect.element(switchInput).toHaveAttribute('aria-invalid', 'false');
     await expect.element(switchInput).toHaveAttribute('aria-required', 'false');
   });
+
+  it('clears aria-invalid when the wrapper hides the bound control and restores it when shown again', async () => {
+    // User Story 2: aria-invalid must not go stale on collapsed/hidden
+    // controls. The wrapper polls `Element.checkVisibility()` in its
+    // `afterEveryRender` write phase and pushes the result into
+    // `NgxFieldIdentity._setControlVisible`. Auto-aria's `ariaInvalid`
+    // computed returns null while `isControlVisible() === false`, so
+    // hiding the input via the `hidden` attribute removes the attribute.
+    @Component({
+      selector: 'ngx-test-auto-aria-browser-visibility',
+      imports: [MockFormFieldDirective, NgxSignalFormAutoAria, NgxFormField],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `
+        <ngx-form-field-wrapper [formField]="emailControl">
+          <label for="email">Email</label>
+          <input id="email" [formField]="emailControl()" [hidden]="hidden()" />
+        </ngx-form-field-wrapper>
+        <button type="button" (click)="toggle()">Toggle</button>
+      `,
+    })
+    class TestComponent {
+      readonly emailControl = createMockControl(true, true, [
+        { kind: 'required', message: 'Required' },
+      ]);
+      readonly hidden = signal(false);
+
+      protected toggle(): void {
+        this.hidden.update((value) => !value);
+      }
+    }
+
+    await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const emailInput = page.getByRole('textbox', {
+      name: 'Email',
+      includeHidden: true,
+    });
+    await expect.element(emailInput).toHaveAttribute('aria-invalid', 'true');
+
+    // Hide the control. The wrapper's next `afterEveryRender` write tick
+    // sees `checkVisibility() === false` and pushes that into the identity
+    // service; auto-aria's `ariaInvalid` computed then returns null.
+    await page.getByRole('button', { name: 'Toggle' }).click();
+    await TestBed.inject(ApplicationRef).whenStable();
+    await expect.element(emailInput).not.toHaveAttribute('aria-invalid');
+
+    // Show again — visibility flips back, auto-aria restores the attribute
+    // based on the field's strategy outcome.
+    await page.getByRole('button', { name: 'Toggle' }).click();
+    await TestBed.inject(ApplicationRef).whenStable();
+    await expect.element(emailInput).toHaveAttribute('aria-invalid', 'true');
+  });
 });

@@ -139,14 +139,6 @@ export class NgxSignalFormAutoAria {
 
   readonly #domSnapshot = signal(INITIAL_DOM_SNAPSHOT);
   readonly #managedDescribedByIds = signal<readonly string[]>([]);
-  /**
-   * Tracks whether the control is currently visible via `IntersectionObserver`.
-   * Starts as `true` so aria-invalid is evaluated immediately on the first
-   * render; flips to `false` when the element exits the viewport, causing
-   * `aria-invalid` to be removed until the element becomes visible again.
-   * Only active when `#fieldIdentity` is present (wrapper context).
-   */
-  readonly #isControlVisible = signal(true);
 
   readonly #isManualAriaMode = computed(() => {
     return this.#ariaModeSignal?.() === 'manual';
@@ -217,9 +209,12 @@ export class NgxSignalFormAutoAria {
     }
 
     // When the wrapper's identity service is present and the control has
-    // exited the viewport, remove aria-invalid so it cannot go stale on
-    // collapsed/hidden fieldsets.
-    if (this.#fieldIdentity && !this.#isControlVisible()) {
+    // no layout box (collapsed `<details>`, `hidden` attribute,
+    // `display: none`), remove aria-invalid so it cannot go stale on
+    // collapsed/hidden fieldsets. The identity service's
+    // `IntersectionObserver` uses an oversized `rootMargin` so this does
+    // not trigger merely because the control is scrolled off-screen.
+    if (this.#fieldIdentity && !this.#fieldIdentity.isControlVisible()) {
       return null;
     }
 
@@ -388,36 +383,9 @@ export class NgxSignalFormAutoAria {
   constructor() {
     this.#domSnapshot.set(this.#readDomSnapshot());
 
-    // When the identity service is present, subscribe to control visibility
-    // changes so aria-invalid is re-evaluated when the control is
-    // hidden/shown (e.g. inside a collapsed fieldset). The cleanup is
-    // deferred until after the first render so the identity service has had
-    // a chance to resolve the control element via the wrapper's
-    // afterEveryRender write phase.
-    if (this.#fieldIdentity) {
-      const identity = this.#fieldIdentity;
-      const isControlVisible = this.#isControlVisible;
-      let observedElement: HTMLElement | null = null;
-      let cleanupVisibility: () => void = () => undefined;
-
-      afterEveryRender(
-        {
-          write: () => {
-            // Reconnect the observer whenever the bound control element changes.
-            const el = identity.resolveControlElement();
-            if (el === observedElement) return;
-            cleanupVisibility();
-            observedElement = el;
-            cleanupVisibility = identity.onControlVisibilityChange(
-              (isVisible) => {
-                isControlVisible.set(isVisible);
-              },
-            );
-          },
-        },
-        { injector: this.#injector },
-      );
-    }
+    // Visibility tracking lives entirely in `NgxFieldIdentity` — auto-aria
+    // reads `isControlVisible()` directly in the `ariaInvalid` computed,
+    // so no afterEveryRender wiring is needed here.
 
     // Single afterEveryRender with proper phased callbacks:
     // - earlyRead: read DOM attributes before any writes (prevents layout thrashing)
