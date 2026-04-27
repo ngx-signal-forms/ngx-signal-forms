@@ -217,6 +217,9 @@ describe('NgxSignalFormAutoAria browser mode', () => {
     await page.getByRole('button', { name: 'Toggle' }).click();
     await TestBed.inject(ApplicationRef).whenStable();
     await expect.element(emailInput).not.toHaveAttribute('aria-invalid');
+    await expect
+      .element(emailInput)
+      .toHaveAttribute('aria-describedby', 'email-error');
 
     // Show again — visibility flips back, auto-aria restores the attribute
     // based on the field's strategy outcome.

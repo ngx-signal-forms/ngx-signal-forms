@@ -59,6 +59,7 @@ export function isElementCssVisible(el: HTMLElement): boolean {
 export class NgxFieldIdentity {
   readonly #fieldName = signal<string | null>(null);
   readonly #controlElement = signal<HTMLElement | null>(null);
+  readonly #controlId = signal<string | null>(null);
   readonly #hintIds = signal<readonly string[]>([]);
   readonly #isControlVisible = signal(true);
   #warnedNoId = false;
@@ -73,10 +74,7 @@ export class NgxFieldIdentity {
    * The bound control element's `id` attribute.
    * Null when no control is found or when the control has no `id`.
    */
-  readonly controlId: Signal<string | null> = computed(() => {
-    const el = this.#controlElement();
-    return el && el.id.length > 0 ? el.id : null;
-  });
+  readonly controlId: Signal<string | null> = this.#controlId.asReadonly();
 
   /**
    * Generated error element ID for the field (`{fieldName}-error`).
@@ -155,6 +153,8 @@ export class NgxFieldIdentity {
    * Updates the bound control element reference.
    *
    * Called by `NgxFormFieldWrapper` in its `afterEveryRender` write phase.
+   * Callers should set `_setFieldName` first so dev-only diagnostics evaluate
+   * the latest explicit name state before checking id-less controls.
    * Emits a dev-mode warning when the element has no `id` attribute and no
    * explicit `fieldName` override is present — the a11y gap is surfaced once
    * per instance without crashing production rendering.
@@ -162,6 +162,11 @@ export class NgxFieldIdentity {
    * @internal
    */
   _setControlElement(el: HTMLElement | null): void {
+    const nextControlId = el && el.id.length > 0 ? el.id : null;
+    if (nextControlId !== this.#controlId()) {
+      this.#controlId.set(nextControlId);
+    }
+
     if (el === this.#controlElement()) {
       return;
     }
@@ -172,7 +177,14 @@ export class NgxFieldIdentity {
       this.#isControlVisible.set(true);
       return;
     }
-    if (isDevMode() && !el.id && !this.#fieldName() && !this.#warnedNoId) {
+    const isWrapperHosted = el.closest('ngx-form-field-wrapper') !== null;
+    if (
+      isDevMode() &&
+      !el.id &&
+      !this.#fieldName() &&
+      !this.#warnedNoId &&
+      !isWrapperHosted
+    ) {
       this.#warnedNoId = true;
       // oxlint-disable-next-line no-console -- dev-only a11y diagnostic
       console.warn(

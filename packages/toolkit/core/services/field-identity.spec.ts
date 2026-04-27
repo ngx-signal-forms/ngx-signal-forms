@@ -7,10 +7,14 @@ import {
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { render } from '@testing-library/angular';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { isElementCssVisible, NgxFieldIdentity } from './field-identity';
 
 describe('NgxFieldIdentity', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('unit — constructed inside an injection context', () => {
     function createService(): NgxFieldIdentity {
       return TestBed.runInInjectionContext(() => new NgxFieldIdentity());
@@ -98,23 +102,23 @@ describe('NgxFieldIdentity', () => {
         expect(svc.resolveControlElement()).toBeNull();
       });
 
-      it('emits dev-mode warning when element has no id and no explicit fieldName', () => {
-        if (!isDevMode()) return;
+      it.skipIf(!isDevMode())(
+        'emits dev-mode warning when element has no id and no explicit fieldName',
+        () => {
+          const consoleSpy = vi
+            .spyOn(console, 'warn')
+            .mockImplementation(() => undefined);
 
-        const consoleSpy = vi
-          .spyOn(console, 'warn')
-          .mockImplementation(() => undefined);
+          const svc = createService();
+          const el = document.createElement('input');
+          svc._setControlElement(el);
 
-        const svc = createService();
-        const el = document.createElement('input');
-        svc._setControlElement(el);
-
-        expect(consoleSpy).toHaveBeenCalledWith(
-          expect.stringContaining('[ngx-signal-forms] NgxFieldIdentity'),
-          el,
-        );
-        consoleSpy.mockRestore();
-      });
+          expect(consoleSpy).toHaveBeenCalledWith(
+            expect.stringContaining('[ngx-signal-forms] NgxFieldIdentity'),
+            el,
+          );
+        },
+      );
 
       it('does NOT emit warning when element has an id', () => {
         const consoleSpy = vi
@@ -131,7 +135,6 @@ describe('NgxFieldIdentity', () => {
             typeof args[0] === 'string' && args[0].includes('NgxFieldIdentity'),
         );
         expect(identityWarnings).toHaveLength(0);
-        consoleSpy.mockRestore();
       });
 
       it('does NOT emit warning when explicit fieldName is set', () => {
@@ -149,29 +152,29 @@ describe('NgxFieldIdentity', () => {
             typeof args[0] === 'string' && args[0].includes('NgxFieldIdentity'),
         );
         expect(identityWarnings).toHaveLength(0);
-        consoleSpy.mockRestore();
       });
 
-      it('warns at most once per instance even on repeated id-less swaps', () => {
-        if (!isDevMode()) return;
+      it.skipIf(!isDevMode())(
+        'warns at most once per instance even on repeated id-less swaps',
+        () => {
+          const consoleSpy = vi
+            .spyOn(console, 'warn')
+            .mockImplementation(() => undefined);
 
-        const consoleSpy = vi
-          .spyOn(console, 'warn')
-          .mockImplementation(() => undefined);
+          const svc = createService();
+          const a = document.createElement('input');
+          const b = document.createElement('input');
+          svc._setControlElement(a);
+          svc._setControlElement(b);
 
-        const svc = createService();
-        const a = document.createElement('input');
-        const b = document.createElement('input');
-        svc._setControlElement(a);
-        svc._setControlElement(b);
-
-        const identityWarnings = consoleSpy.mock.calls.filter(
-          (args) =>
-            typeof args[0] === 'string' && args[0].includes('NgxFieldIdentity'),
-        );
-        expect(identityWarnings).toHaveLength(1);
-        consoleSpy.mockRestore();
-      });
+          const identityWarnings = consoleSpy.mock.calls.filter(
+            (args) =>
+              typeof args[0] === 'string' &&
+              args[0].includes('NgxFieldIdentity'),
+          );
+          expect(identityWarnings).toHaveLength(1);
+        },
+      );
 
       it('resets visibility to true when element is unset to null', () => {
         const svc = createService();
@@ -206,6 +209,8 @@ describe('NgxFieldIdentity', () => {
         );
         probe();
         const before = computeCount;
+        // Angular signals already short-circuit same-primitive writes,
+        // so this mainly documents that `_setControlVisible` preserves that.
         svc._setControlVisible(true);
         probe();
         svc._setControlVisible(true);
@@ -241,6 +246,9 @@ describe('NgxFieldIdentity', () => {
         const before = computeCount;
         svc._setHintIds(['a', 'b']);
         probe();
+        // This second write uses a fresh array reference with identical
+        // contents; the service's shallow-equality guard should suppress
+        // recomputation.
         svc._setHintIds(['a', 'b']);
         probe();
         // One recompute for the first set, zero for the second.

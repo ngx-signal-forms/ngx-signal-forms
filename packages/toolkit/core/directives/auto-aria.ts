@@ -211,8 +211,8 @@ export class NgxSignalFormAutoAria {
     // When the wrapper's identity service is present and the control has
     // no layout box (collapsed `<details>`, `hidden` attribute,
     // `display: none`), remove aria-invalid so it cannot go stale on
-    // collapsed/hidden fieldsets. The identity service's
-    // `IntersectionObserver` uses an oversized `rootMargin` so this does
+    // collapsed/hidden fieldsets. Visibility is pushed from the wrapper
+    // via `checkVisibility()` polling in `afterEveryRender`, so this does
     // not trigger merely because the control is scrolled off-screen.
     if (this.#fieldIdentity && !this.#fieldIdentity.isControlVisible()) {
       return null;

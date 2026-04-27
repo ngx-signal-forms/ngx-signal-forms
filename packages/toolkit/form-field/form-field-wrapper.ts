@@ -1082,13 +1082,20 @@ export class NgxFormFieldWrapper<TValue = unknown> {
         // `Element.checkVisibility()` so a control inside a collapsed
         // `<details>` / `hidden` ancestor flips the flag the next time
         // Angular runs CD, which is when wrappers see the change anyway.
-        this.#fieldIdentity._setFieldName(this.resolvedFieldName());
+        // Keep order: name → element → visible → hints.
+        const resolvedFieldName = this.resolvedFieldName();
+        this.#fieldIdentity._setFieldName(resolvedFieldName);
         this.#fieldIdentity._setControlElement(inputEl);
         this.#fieldIdentity._setControlVisible(
           inputEl ? isElementCssVisible(inputEl) : true,
         );
         this.#fieldIdentity._setHintIds(
-          this.hintDescriptors().map((h) => h.id),
+          this.hintDescriptors()
+            .filter(
+              (hint) =>
+                hint.fieldName === null || hint.fieldName === resolvedFieldName,
+            )
+            .map((hint) => hint.id),
         );
       },
     });
