@@ -121,12 +121,10 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
   });
 
   it('marks nested-object and array subtrees as touched before reading errorSummary()', async () => {
-    // Contract for `markAllFieldsAsTouched()` (see submission-helpers.ts:353):
-    // every leaf in the form tree — including children under nested objects
-    // AND each element of an array — MUST be touched before the helper
-    // filters `errorSummary()`. If Angular changes how `FieldTree` exposes
-    // children (e.g. non-enumerable array indices), this test fails and
-    // signals the walk needs to be re-investigated.
+    // Contract for the native `submit(..., { ignoreValidators: 'all' })`
+    // delegation inside `submitWithWarnings()`: every leaf in the form tree —
+    // including children under nested objects AND each element of an array —
+    // MUST be touched before the helper filters `errorSummary()`.
     interface Address {
       street: string;
       city: string;

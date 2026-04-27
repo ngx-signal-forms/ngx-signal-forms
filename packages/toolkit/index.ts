@@ -41,6 +41,7 @@ export {
   inferNgxSignalFormControlKind,
   injectFieldControl,
   injectFormContext,
+  InvalidFieldTreeError,
   isBlockingError,
   isFieldStateHidden,
   isFieldStateInteractive,
@@ -71,6 +72,9 @@ export {
   unwrapValue,
   updateAt,
   updateNested,
+  walkFieldTree,
+  walkFieldTreeEntries,
+  walkFieldTreeIterable,
   warningError,
 } from '@ngx-signal-forms/toolkit/core';
 
