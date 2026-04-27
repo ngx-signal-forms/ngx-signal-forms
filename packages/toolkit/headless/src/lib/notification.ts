@@ -59,14 +59,14 @@ export interface NotificationStateSignals {
  *
  * ## Tone resolution rules
  *
- * Content always wins over caller intent:
- * - Any blocking (non-`warn:`) error → `'error'` (raises `role="alert"`)
- *   even when the caller passes `tone='warning'` — downgrading real errors
- *   to a polite live region would bury the alert.
- * - Explicit `tone='warning'` is honored when no blocking error is present.
- * - All-warning lists default to `'warning'` even when caller passes
- *   `tone='error'` — over-announcing non-urgent text harms UX.
- * - Empty list defaults to `'error'` (the container stays hidden anyway).
+ * Tone is content-driven; the `tone` input is currently a no-op retained
+ * for API stability and future expansion. The resolved tone is:
+ * - Any blocking (non-`warn:`) error → `'error'` (raises `role="alert"`).
+ * - All-warning lists → `'warning'` (polite `role="status"`).
+ * - Empty list → `'error'` (the container stays hidden anyway).
+ *
+ * Rationale: downgrading real errors to a polite region would bury the
+ * alert; over-announcing warning-only text via `role="alert"` harms UX.
  *
  * ## Usage
  *
@@ -115,6 +115,9 @@ export class NgxHeadlessNotification implements NotificationStateSignals {
    * Tone for the notification — see {@link NgxNotificationTone} and the
    * directive-level "tone resolution rules" doc.
    *
+   * Currently a no-op: tone is fully content-driven. Retained as a stable
+   * API surface for future expansion.
+   *
    * @default 'auto'
    */
   readonly tone = input<NgxNotificationTone>('auto');
@@ -134,9 +137,9 @@ export class NgxHeadlessNotification implements NotificationStateSignals {
     const messages = this.#resolvedErrors();
     if (messages.length === 0) return 'error';
 
-    // All-warning lists default to `'warning'` regardless of the explicit
-    // `tone` input — see the directive-level "tone resolution rules" doc.
-    // Content always wins over caller intent, so `tone` does not factor in.
+    // Tone is content-driven (see directive-level "tone resolution rules"):
+    // any blocking error promotes the group to `'error'`; all-warning lists
+    // default to `'warning'`. The `tone` input does not factor in.
     const hasBlockingError = messages.some(
       (message) => !isWarningError(message),
     );

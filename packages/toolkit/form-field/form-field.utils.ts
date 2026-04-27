@@ -86,9 +86,19 @@ export function readFormFieldWrapperDomSnapshot(
     inputEl,
     inputId: inputEl && inputEl.id.length > 0 ? inputEl.id : null,
     semantics: resolveNgxSignalFormControlSemantics(inputEl, controlPresets),
-    selectionControlCount: hostEl.querySelectorAll(
-      "input[type='radio'], input[type='checkbox']:not([role='switch']), [role='radio'], [role='checkbox']",
-    ).length,
+    // Scope the scan to the projected control region so selection controls
+    // rendered in `[prefix]` / `[suffix]` (e.g. a checkbox-shaped icon
+    // toggle) cannot flip a single-control wrapper into selection-cluster
+    // mode. The `__main` slot is always rendered by the wrapper template;
+    // the `?? 0` is defense-in-depth against unexpected DOM trees.
+    selectionControlCount:
+      hostEl
+        .querySelector(
+          ':scope > .ngx-signal-form-field-wrapper__content > .ngx-signal-form-field-wrapper__main',
+        )
+        ?.querySelectorAll(
+          "input[type='radio'], input[type='checkbox']:not([role='switch']), [role='radio'], [role='checkbox']",
+        ).length ?? 0,
     label: hostEl.querySelector(
       ':scope > .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])',
     ),
