@@ -1,6 +1,6 @@
 ---
 name: ngx-signal-forms
-description: Implements @ngx-signal-forms/toolkit for Angular Signal Forms. Use whenever working with any toolkit entry point — deciding whether plain form[formRoot] fallback is enough or the ngxSignalForm enhancer is needed, auto-ARIA, control semantics (ngxSignalFormControl directive, provideNgxSignalFormControlPresets), error strategies (on-touch/on-submit/immediate), submittedStatus/showErrors helpers, error message registries, field-label resolution, form field wrappers (ngx-form-field-wrapper), grouped fieldsets, error summaries, standalone assistive components (errors, hints, character count), renderless headless primitives, Vest validation integration, development-time form debugging, or migration from beta / older RC-era toolkit APIs to the current public surface. Always invoke this skill when the user mentions @ngx-signal-forms/toolkit, migration or upgrade questions, renamed/removed toolkit APIs, error strategies, submitted status, an error summary, a form wrapper, field visibility, ARIA wiring, control semantics, or custom form controls, even if they don't use the skill name explicitly.
+description: Guides use of @ngx-signal-forms/toolkit across the root and secondary entry points for Angular Signal Forms, including form enhancers, control semantics, wrappers, assistive feedback, grouped notifications, headless primitives, Vest integration, debugger UI, and migration to the current public API. Use when working with @ngx-signal-forms/toolkit, ngxSignalForm, ngxSignalFormControl, wrappers or fieldsets, error summaries or grouped notifications, assistive or headless state directives, Vest validation, debugger surfaces, or beta/RC-to-current API migrations.
 ---
 
 # ngx-signal-forms Toolkit
@@ -16,7 +16,7 @@ Use this skill when the task involves:
 - Declaring control semantics with `ngxSignalFormControl` or setting up control preset providers
 - Adding form-level error summaries or field-label resolution
 - Adding form field wrappers or grouped fieldsets
-- Displaying validation errors, hints, or character counts
+- Displaying validation errors, grouped notifications, hints, or character counts
 - Building custom form controls with full markup control
 - Integrating Vest validation suites
 - Adding a dev-time debugger panel
@@ -24,14 +24,14 @@ Use this skill when the task involves:
 
 ## Entry Points at a Glance
 
-| Entry point                            | Purpose                                                   |
-| -------------------------------------- | --------------------------------------------------------- |
-| `@ngx-signal-forms/toolkit`            | Core: `[formRoot]`, auto-ARIA, strategies, utilities      |
-| `@ngx-signal-forms/toolkit/form-field` | Styled wrapper, fieldset grouping, floating label         |
-| `@ngx-signal-forms/toolkit/assistive`  | Standalone errors, hints, character count, summaries      |
-| `@ngx-signal-forms/toolkit/headless`   | Renderless state and summary directives for custom markup |
-| `@ngx-signal-forms/toolkit/vest`       | Vest validation adapter (optional)                        |
-| `@ngx-signal-forms/toolkit/debugger`   | Dev-only form-tree inspection panel                       |
+| Entry point                            | Purpose                                                    |
+| -------------------------------------- | ---------------------------------------------------------- |
+| `@ngx-signal-forms/toolkit`            | Core: `[formRoot]`, auto-ARIA, strategies, utilities       |
+| `@ngx-signal-forms/toolkit/form-field` | Styled wrapper, fieldset grouping, floating label          |
+| `@ngx-signal-forms/toolkit/assistive`  | Standalone errors, grouped notifications, hints, summaries |
+| `@ngx-signal-forms/toolkit/headless`   | Renderless state, notification, and summary directives     |
+| `@ngx-signal-forms/toolkit/vest`       | Vest validation adapter (optional)                         |
+| `@ngx-signal-forms/toolkit/debugger`   | Dev-only form-tree inspection panel                        |
 
 > `@angular/forms/signals` is always the source of truth for the form model. The toolkit only adds UX, accessibility, and composition value on top.
 
@@ -42,8 +42,8 @@ Use this skill when the task involves:
 | `[formRoot]`, error strategy, ARIA, submission                    | [core/SKILL.md](core/SKILL.md)             |
 | Control semantics directive, preset providers                     | [core/SKILL.md](core/SKILL.md)             |
 | Field wrappers, fieldsets, floating labels, custom control layout | [form-field/SKILL.md](form-field/SKILL.md) |
-| Standalone error/hint/char-count components                       | [assistive/SKILL.md](assistive/SKILL.md)   |
-| Custom markup with full control over DOM                          | [headless/SKILL.md](headless/SKILL.md)     |
+| Standalone errors, grouped notifications, hints, counters         | [assistive/SKILL.md](assistive/SKILL.md)   |
+| Custom markup with full DOM control                               | [headless/SKILL.md](headless/SKILL.md)     |
 | Vest suite integration                                            | [vest/SKILL.md](vest/SKILL.md)             |
 | Dev-time form inspection                                          | [debugger/SKILL.md](debugger/SKILL.md)     |
 
@@ -61,7 +61,7 @@ Load these reference files when the sub-skill or task requires deeper API detail
 ```
 Need form-level setup, ARIA, or submission helpers?         → core
 Need a styled label+input+error shell?                      → form-field
-Need standalone error text, hints, or char-count?           → assistive
+Need standalone errors, grouped notifications, or hints?    → assistive
 Need full DOM control for custom design systems?            → headless
 Using Vest validation suites?                               → vest
 Adding a debug panel during development?                    → debugger

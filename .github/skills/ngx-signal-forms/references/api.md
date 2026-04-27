@@ -287,6 +287,7 @@ unwrapValue(signalOrValue): value
 import {
   NgxFormFieldError, // <ngx-form-field-error>
   NgxFormFieldErrorSummary, // <ngx-form-field-error-summary>
+  NgxFormFieldNotification, // <ngx-form-field-notification>
   NgxFormFieldHint, // <ngx-form-field-hint>
   NgxFormFieldCharacterCount, // <ngx-form-field-character-count>
   NgxFormFieldAssistiveRow, // <ngx-form-field-assistive-row>
@@ -311,6 +312,25 @@ import {
 
 - `NgxFormFieldHint` — static descriptive hint content
 - `NgxFormFieldAssistiveRow` — stable row container for hint + character count
+
+### NgxFormFieldNotification inputs
+
+Selector: `ngx-form-field-notification`
+
+| Input       | Type                        | Default     | Notes                                                                |
+| ----------- | --------------------------- | ----------- | -------------------------------------------------------------------- |
+| `errors`    | `Signal<ValidationError[]>` | required    | Grouped validation messages to render                                |
+| `fieldName` | string                      | optional    | Generates deterministic error/warning container ids when provided    |
+| `tone`      | `NgxNotificationTone`       | `'auto'`    | `'auto'` routes blocking lists to alert, all-warning lists to status |
+| `title`     | string                      | optional    | Optional heading rendered above the messages                         |
+| `listStyle` | `plain` or `bullets`        | `'bullets'` | Bullet list or stacked paragraph rendering                           |
+
+Thin styled shell over `NgxHeadlessNotification`. Uses dual stable live regions: `role="alert"` for blocking content, `role="status"` for warning-only content.
+
+Migration aliases still exist for compatibility, but prefer the shared names:
+
+- `NgxFormFieldNotificationListStyle` → prefer `NgxFormFieldListStyle`
+- `NgxFormFieldNotificationTone` → prefer `NgxNotificationTone` from `@ngx-signal-forms/toolkit/headless`
 
 ### NgxFormFieldErrorSummary inputs
 
@@ -398,7 +418,7 @@ import {
 import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
 // Bundle: [NgxHeadlessErrorState, NgxHeadlessErrorSummary,
 //          NgxHeadlessFieldset, NgxHeadlessCharacterCount,
-//          NgxHeadlessFieldName]
+//          NgxHeadlessFieldName, NgxHeadlessNotification]
 ```
 
 ### Additional exports
@@ -411,6 +431,7 @@ Directive-level types and constants also available from this entry point:
 - `DEFAULT_WARNING_THRESHOLD` (80), `DEFAULT_DANGER_THRESHOLD` (95) — default thresholds
 - `ErrorSummaryEntry`, `ErrorSummarySignals` — from `NgxHeadlessErrorSummary`
 - `FieldNameStateSignals` — from `NgxHeadlessFieldName`
+- `NgxNotificationTone`, `NotificationStateSignals`, `ResolvedNotificationMessage` — from `NgxHeadlessNotification`
 
 ### NgxHeadlessErrorState
 
@@ -475,6 +496,30 @@ Selector: `[ngxHeadlessFieldName]` | Export: `#fieldName="fieldName"`
 Inputs: `field` (required), `fieldName`
 
 Signals: `resolvedFieldName()` (`string | null`), `errorId` (`Signal<string | null>`), `warningId` (`Signal<string | null>`)
+
+### NgxHeadlessNotification
+
+Selector: `[ngxHeadlessNotification]` | Export: `#notification="notificationState"`
+
+Inputs:
+
+- `errors` (required) — `Signal<readonly ValidationError[]>`
+- `fieldName` — `string | null | undefined`
+- `tone` — `'auto' | 'error' | 'warning'` (default `'auto'`)
+
+Signals/methods (implements `NotificationStateSignals`):
+
+- `hasMessages()`
+- `resolvedTone()` — `'error' | 'warning'`
+- `showErrorContainer()` / `showWarningContainer()`
+- `errorContainerId()` / `warningContainerId()`
+- `resolvedMessages()` — `ResolvedNotificationMessage[]`
+
+Tone resolution is content-aware:
+
+- any blocking error forces the error container / `role="alert"`
+- warning-only lists resolve to the warning container / `role="status"`
+- empty lists keep both containers hidden
 
 ### Utility Functions
 

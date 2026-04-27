@@ -1,5 +1,5 @@
 ---
-description: Sub-skill of ngx-signal-forms for the @ngx-signal-forms/toolkit/headless entry point — renderless primitives for custom design-system components with full DOM control: headless error state, error summaries, character count, fieldset aggregation, field-name resolution, and programmatic utilities. Not independently invocable; the hub SKILL.md routes here.
+description: Sub-skill of ngx-signal-forms for the @ngx-signal-forms/toolkit/headless entry point — renderless primitives for custom design-system components with full DOM control: headless error state, grouped notifications, error summaries, character count, fieldset aggregation, field-name resolution, and programmatic utilities. Not independently invocable; the hub SKILL.md routes here.
 ---
 
 # Toolkit Headless
@@ -22,7 +22,7 @@ For ready-to-render components with built-in markup, use `assistive/SKILL.md` or
 
 ## Workflow
 
-1. Import via `NgxHeadlessToolkit` bundle or individual directive exports from `@ngx-signal-forms/toolkit/headless`. Bundle contents: `NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`, `NgxHeadlessFieldset`, `NgxHeadlessCharacterCount`, `NgxHeadlessFieldName`.
+1. Import via `NgxHeadlessToolkit` bundle or individual directive exports from `@ngx-signal-forms/toolkit/headless`. Bundle contents: `NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`, `NgxHeadlessFieldset`, `NgxHeadlessCharacterCount`, `NgxHeadlessFieldName`, `NgxHeadlessNotification`.
 
 2. **Provide deterministic identity.** Headless directives need either an explicit `fieldName` input or a stable `id` on the host element. Generate predictable IDs with `createUniqueId()`.
 
@@ -38,6 +38,8 @@ For ready-to-render components with built-in markup, use `assistive/SKILL.md` or
    ```
 
 5. **Use `NgxHeadlessFieldset`** for aggregated group state — validity, errors, and warnings across a field tree without rebuilding the traversal.
+
+6. **Use `NgxHeadlessNotification`** when you already have aggregated `ValidationError[]` and need a grouped live-region surface that can route to either assertive or polite announcement semantics without giving up DOM control.
 
 ## Error Summary Directive Pattern
 
@@ -69,6 +71,37 @@ Use `ngxHeadlessErrorSummary` when you need a form-level summary with full DOM c
 ```
 
 For a styled out-of-the-box error summary without warnings, use `NgxFormFieldErrorSummary` from `@ngx-signal-forms/toolkit/assistive` instead.
+
+## Grouped Notification Directive Pattern
+
+Use `ngxHeadlessNotification` when a fieldset, summary card, or custom block already owns the grouped `ValidationError[]` list and only needs tone resolution, message lookup, and deterministic IDs.
+
+```html
+<section
+  ngxHeadlessNotification
+  #notification="notificationState"
+  [errors]="addressErrors"
+  fieldName="address"
+>
+  @if (notification.showErrorContainer()) {
+  <div role="alert" [id]="notification.errorContainerId()">
+    @for (message of notification.resolvedMessages(); track message.kind + ':' +
+    $index) {
+    <p>{{ message.message }}</p>
+    }
+  </div>
+  } @if (notification.showWarningContainer()) {
+  <div role="status" [id]="notification.warningContainerId()">
+    @for (message of notification.resolvedMessages(); track message.kind + ':' +
+    $index) {
+    <p>{{ message.message }}</p>
+    }
+  </div>
+  }
+</section>
+```
+
+`tone="auto"` is the safe default. Any blocking error forces the assertive container; all-warning lists use the polite container. This preserves urgency semantics even when callers pass a mismatched tone.
 
 ## Template Directive Pattern
 
@@ -187,4 +220,5 @@ createUniqueId('my-field'); // 'my-field-1', 'my-field-2', ...
 
 - If IDs are inconsistent: add explicit `fieldName` instead of relying on implicit host `id` detection.
 - If `'on-submit'` errors don't appear: ensure the form uses `form[formRoot][ngxSignalForm]` so submitted status and toolkit context are available.
+- If a grouped notification resolves to the wrong live region: check whether the error list includes any blocking errors — `tone="auto"` intentionally prefers `role="alert"` whenever one is present.
 - If the component is recreating the full wrapper layout: stop and use `form-field/SKILL.md` instead.
