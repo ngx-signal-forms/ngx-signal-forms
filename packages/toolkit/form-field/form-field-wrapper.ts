@@ -950,8 +950,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
         const cached = this.#boundControlElement();
         // oxlint-disable-next-line @typescript-eslint/prefer-optional-chain -- rewriting to `cached?.isConnected` trades one lint rule for another (strict-boolean-expressions on the resulting nullable boolean)
         const cacheHit =
-          cached &&
-          cached.isConnected &&
+          cached?.isConnected &&
           hostEl.contains(cached) &&
           cached.hasAttribute('id');
         const inputEl = cacheHit ? cached : findBoundControl(hostEl);
@@ -1084,12 +1083,12 @@ export class NgxFormFieldWrapper<TValue = unknown> {
         // Angular runs CD, which is when wrappers see the change anyway.
         // Keep order: name → element → visible → hints.
         const resolvedFieldName = this.resolvedFieldName();
-        this.#fieldIdentity._setFieldName(resolvedFieldName);
-        this.#fieldIdentity._setControlElement(inputEl);
-        this.#fieldIdentity._setControlVisible(
+        this.#fieldIdentity.setFieldName(resolvedFieldName);
+        this.#fieldIdentity.setControlElement(inputEl);
+        this.#fieldIdentity.setControlVisible(
           inputEl ? isElementCssVisible(inputEl) : true,
         );
-        this.#fieldIdentity._setHintIds(
+        this.#fieldIdentity.setHintIds(
           this.hintDescriptors()
             .filter(
               (hint) =>

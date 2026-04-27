@@ -52,8 +52,8 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
     test('should show Form Model section collapsed by default', async ({
       page,
     }) => {
-      const debugger_ = getDebugger(page);
-      const formModelDetails = debugger_.locator('details').filter({
+      const debuggerPanel = getDebugger(page);
+      const formModelDetails = debuggerPanel.locator('details').filter({
         has: page.locator('summary', { hasText: 'Form Model' }),
       });
 
@@ -64,8 +64,8 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
     test('should show 0/total visible errors on initial load', async ({
       page,
     }) => {
-      const debugger_ = getDebugger(page);
-      const validationErrorsHeader = debugger_.getByText(
+      const debuggerPanel = getDebugger(page);
+      const validationErrorsHeader = debuggerPanel.getByText(
         /Validation Errors \d+\/\d+/,
       );
       await expect(validationErrorsHeader).toBeVisible();
@@ -79,8 +79,9 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
     test('should show all errors as "Hidden by strategy" initially', async ({
       page,
     }) => {
-      const debugger_ = getDebugger(page);
-      const hiddenByStrategyBadges = debugger_.getByText('Hidden by strategy');
+      const debuggerPanel = getDebugger(page);
+      const hiddenByStrategyBadges =
+        debuggerPanel.getByText('Hidden by strategy');
       await expect(hiddenByStrategyBadges.first()).toBeVisible();
 
       const count = await hiddenByStrategyBadges.count();
@@ -96,8 +97,8 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
       await lastNameInput.focus();
       await lastNameInput.blur();
 
-      const debugger_ = getDebugger(page);
-      const validationErrorsHeader = debugger_.getByText(
+      const debuggerPanel = getDebugger(page);
+      const validationErrorsHeader = debuggerPanel.getByText(
         /Validation Errors \d+\/\d+/,
       );
       await expect(validationErrorsHeader).toBeVisible();
@@ -115,10 +116,10 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
       await lastNameInput.focus();
       await lastNameInput.blur();
 
-      const debugger_ = getDebugger(page);
+      const debuggerPanel = getDebugger(page);
 
       // Find the error entry div that contains "Last name is required" text
-      const lastNameErrorEntry = debugger_
+      const lastNameErrorEntry = debuggerPanel
         .getByRole('listitem')
         .filter({ hasText: 'Last name is required' });
       await expect(lastNameErrorEntry).toBeVisible();
@@ -135,8 +136,9 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
       await lastNameInput.focus();
       await lastNameInput.blur();
 
-      const debugger_ = getDebugger(page);
-      const hiddenByStrategyBadges = debugger_.getByText('Hidden by strategy');
+      const debuggerPanel = getDebugger(page);
+      const hiddenByStrategyBadges =
+        debuggerPanel.getByText('Hidden by strategy');
       const count = await hiddenByStrategyBadges.count();
 
       // Should have multiple errors still hidden (total - 1)
@@ -148,14 +150,14 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
     test('should increment visible count for each touched field', async ({
       page,
     }) => {
-      const debugger_ = getDebugger(page);
+      const debuggerPanel = getDebugger(page);
 
       // Touch Last Name
       const lastNameInput = page.getByRole('textbox', { name: 'Last Name *' });
       await lastNameInput.focus();
       await lastNameInput.blur();
 
-      let headerText = await debugger_
+      let headerText = await debuggerPanel
         .getByText(/Validation Errors \d+\/\d+/)
         .textContent();
       let counts = parseValidationCounts(headerText);
@@ -166,7 +168,7 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
       await emailInput.focus();
       await emailInput.blur();
 
-      headerText = await debugger_
+      headerText = await debuggerPanel
         .getByText(/Validation Errors \d+\/\d+/)
         .textContent();
       counts = parseValidationCounts(headerText);
@@ -177,7 +179,7 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
       await streetInput.focus();
       await streetInput.blur();
 
-      headerText = await debugger_
+      headerText = await debuggerPanel
         .getByText(/Validation Errors \d+\/\d+/)
         .textContent();
       counts = parseValidationCounts(headerText);
@@ -187,19 +189,19 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
 
   test.describe('Error Display Strategy Info', () => {
     test('should show error display strategy indicator', async ({ page }) => {
-      const debugger_ = getDebugger(page);
+      const debuggerPanel = getDebugger(page);
       await expect(
-        debugger_.getByText('Error Display Strategy:', { exact: false }),
+        debuggerPanel.getByText('Error Display Strategy:', { exact: false }),
       ).toBeVisible();
-      await expect(debugger_.getByText('on-touch')).toBeVisible();
+      await expect(debuggerPanel.getByText('on-touch')).toBeVisible();
     });
 
     test('should show warning about hidden errors initially', async ({
       page,
     }) => {
-      const debugger_ = getDebugger(page);
+      const debuggerPanel = getDebugger(page);
       await expect(
-        debugger_.getByText(/Errors hidden until you touch.*fields/i),
+        debuggerPanel.getByText(/Errors hidden until you touch.*fields/i),
       ).toBeVisible();
     });
 
@@ -208,9 +210,9 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
       await lastNameInput.focus();
       await lastNameInput.blur();
 
-      const debugger_ = getDebugger(page);
+      const debuggerPanel = getDebugger(page);
       await expect(
-        debugger_.getByText(/Errors shown because fields were touched/i),
+        debuggerPanel.getByText(/Errors shown because fields were touched/i),
       ).toBeVisible();
     });
   });

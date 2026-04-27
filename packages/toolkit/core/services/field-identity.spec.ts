@@ -47,30 +47,30 @@ describe('NgxFieldIdentity', () => {
     describe('_setFieldName', () => {
       it('updates fieldName signal', () => {
         const svc = createService();
-        svc._setFieldName('email');
+        svc.setFieldName('email');
         expect(svc.fieldName()).toBe('email');
       });
 
       it('derives errorId and warningId from fieldName', () => {
         const svc = createService();
-        svc._setFieldName('email');
+        svc.setFieldName('email');
         expect(svc.errorId()).toBe('email-error');
         expect(svc.warningId()).toBe('email-warning');
       });
 
       it('clears errorId and warningId when fieldName is set to null', () => {
         const svc = createService();
-        svc._setFieldName('email');
-        svc._setFieldName(null);
+        svc.setFieldName('email');
+        svc.setFieldName(null);
         expect(svc.errorId()).toBeNull();
         expect(svc.warningId()).toBeNull();
       });
 
       it('is idempotent — does not reassign when value is unchanged', () => {
         const svc = createService();
-        svc._setFieldName('email');
+        svc.setFieldName('email');
         const snapshotBefore = svc.fieldName();
-        svc._setFieldName('email');
+        svc.setFieldName('email');
         expect(svc.fieldName()).toBe(snapshotBefore);
       });
     });
@@ -80,7 +80,7 @@ describe('NgxFieldIdentity', () => {
         const svc = createService();
         const el = document.createElement('input');
         el.id = 'email';
-        svc._setControlElement(el);
+        svc.setControlElement(el);
         expect(svc.controlId()).toBe('email');
         expect(svc.resolveControlElement()).toBe(el);
       });
@@ -88,7 +88,7 @@ describe('NgxFieldIdentity', () => {
       it('controlId is null when element has no id', () => {
         const svc = createService();
         const el = document.createElement('input');
-        svc._setControlElement(el);
+        svc.setControlElement(el);
         expect(svc.controlId()).toBeNull();
       });
 
@@ -96,8 +96,8 @@ describe('NgxFieldIdentity', () => {
         const svc = createService();
         const el = document.createElement('input');
         el.id = 'email';
-        svc._setControlElement(el);
-        svc._setControlElement(null);
+        svc.setControlElement(el);
+        svc.setControlElement(null);
         expect(svc.controlId()).toBeNull();
         expect(svc.resolveControlElement()).toBeNull();
       });
@@ -111,7 +111,7 @@ describe('NgxFieldIdentity', () => {
 
           const svc = createService();
           const el = document.createElement('input');
-          svc._setControlElement(el);
+          svc.setControlElement(el);
 
           expect(consoleSpy).toHaveBeenCalledWith(
             expect.stringContaining('[ngx-signal-forms] NgxFieldIdentity'),
@@ -128,7 +128,7 @@ describe('NgxFieldIdentity', () => {
         const svc = createService();
         const el = document.createElement('input');
         el.id = 'email';
-        svc._setControlElement(el);
+        svc.setControlElement(el);
 
         const identityWarnings = consoleSpy.mock.calls.filter(
           (args) =>
@@ -143,9 +143,9 @@ describe('NgxFieldIdentity', () => {
           .mockImplementation(() => undefined);
 
         const svc = createService();
-        svc._setFieldName('email');
+        svc.setFieldName('email');
         const el = document.createElement('input');
-        svc._setControlElement(el);
+        svc.setControlElement(el);
 
         const identityWarnings = consoleSpy.mock.calls.filter(
           (args) =>
@@ -164,8 +164,8 @@ describe('NgxFieldIdentity', () => {
           const svc = createService();
           const a = document.createElement('input');
           const b = document.createElement('input');
-          svc._setControlElement(a);
-          svc._setControlElement(b);
+          svc.setControlElement(a);
+          svc.setControlElement(b);
 
           const identityWarnings = consoleSpy.mock.calls.filter(
             (args) =>
@@ -180,11 +180,11 @@ describe('NgxFieldIdentity', () => {
         const svc = createService();
         const el = document.createElement('input');
         el.id = 'email';
-        svc._setControlElement(el);
-        svc._setControlVisible(false);
+        svc.setControlElement(el);
+        svc.setControlVisible(false);
         expect(svc.isControlVisible()).toBe(false);
 
-        svc._setControlElement(null);
+        svc.setControlElement(null);
         expect(svc.isControlVisible()).toBe(true);
       });
     });
@@ -192,9 +192,9 @@ describe('NgxFieldIdentity', () => {
     describe('_setControlVisible', () => {
       it('flips isControlVisible to false and back', () => {
         const svc = createService();
-        svc._setControlVisible(false);
+        svc.setControlVisible(false);
         expect(svc.isControlVisible()).toBe(false);
-        svc._setControlVisible(true);
+        svc.setControlVisible(true);
         expect(svc.isControlVisible()).toBe(true);
       });
 
@@ -211,9 +211,9 @@ describe('NgxFieldIdentity', () => {
         const before = computeCount;
         // Angular signals already short-circuit same-primitive writes,
         // so this mainly documents that `_setControlVisible` preserves that.
-        svc._setControlVisible(true);
+        svc.setControlVisible(true);
         probe();
-        svc._setControlVisible(true);
+        svc.setControlVisible(true);
         probe();
         expect(computeCount - before).toBe(0);
       });
@@ -222,14 +222,14 @@ describe('NgxFieldIdentity', () => {
     describe('_setHintIds', () => {
       it('updates hintIds signal', () => {
         const svc = createService();
-        svc._setHintIds(['email-hint-1', 'email-hint-2']);
+        svc.setHintIds(['email-hint-1', 'email-hint-2']);
         expect(svc.hintIds()).toEqual(['email-hint-1', 'email-hint-2']);
       });
 
       it('clears hintIds when set to empty array', () => {
         const svc = createService();
-        svc._setHintIds(['email-hint']);
-        svc._setHintIds([]);
+        svc.setHintIds(['email-hint']);
+        svc.setHintIds([]);
         expect(svc.hintIds()).toEqual([]);
       });
 
@@ -244,12 +244,12 @@ describe('NgxFieldIdentity', () => {
         );
         probe();
         const before = computeCount;
-        svc._setHintIds(['a', 'b']);
+        svc.setHintIds(['a', 'b']);
         probe();
         // This second write uses a fresh array reference with identical
         // contents; the service's shallow-equality guard should suppress
         // recomputation.
-        svc._setHintIds(['a', 'b']);
+        svc.setHintIds(['a', 'b']);
         probe();
         // One recompute for the first set, zero for the second.
         expect(computeCount - before).toBe(1);
@@ -259,7 +259,7 @@ describe('NgxFieldIdentity', () => {
     describe('describedBy aggregator', () => {
       it('joins hint IDs with spaces', () => {
         const svc = createService();
-        svc._setHintIds(['a-hint', 'b-hint']);
+        svc.setHintIds(['a-hint', 'b-hint']);
         expect(svc.describedBy()).toBe('a-hint b-hint');
       });
 

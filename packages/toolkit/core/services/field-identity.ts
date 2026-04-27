@@ -143,7 +143,7 @@ export class NgxFieldIdentity {
    * Called by `NgxFormFieldWrapper` in its `afterEveryRender` write phase.
    * @internal
    */
-  _setFieldName(name: string | null): void {
+  setFieldName(name: string | null): void {
     if (name !== this.#fieldName()) {
       this.#fieldName.set(name);
     }
@@ -161,7 +161,7 @@ export class NgxFieldIdentity {
    *
    * @internal
    */
-  _setControlElement(el: HTMLElement | null): void {
+  setControlElement(el: HTMLElement | null): void {
     const nextControlId = el && el.id.length > 0 ? el.id : null;
     if (nextControlId !== this.#controlId()) {
       this.#controlId.set(nextControlId);
@@ -208,7 +208,7 @@ export class NgxFieldIdentity {
    *
    * @internal
    */
-  _setControlVisible(isVisible: boolean): void {
+  setControlVisible(isVisible: boolean): void {
     if (isVisible !== this.#isControlVisible()) {
       this.#isControlVisible.set(isVisible);
     }
@@ -222,7 +222,7 @@ export class NgxFieldIdentity {
    *
    * @internal
    */
-  _setHintIds(ids: readonly string[]): void {
+  setHintIds(ids: readonly string[]): void {
     const current = this.#hintIds();
     if (
       current.length === ids.length &&

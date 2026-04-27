@@ -107,7 +107,9 @@ function isFieldTreeLike(value: unknown): value is FieldTree<unknown> {
   }
 
   try {
-    for (const _state of walkFieldTreeIterable(value as FieldTree<unknown>)) {
+    for (const treeState of walkFieldTreeIterable(
+      value as FieldTree<unknown>,
+    )) {
       break;
     }
     return true;
