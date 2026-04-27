@@ -1,42 +1,66 @@
 # Package Architecture
 
-## Overview
+This document combines two documentation views:
 
-The current `@ngx-signal-forms` ecosystem in this repository consists of a
-single publishable package with multiple entry points:
+- **Explanation**: why the package is split into entry points.
+- **Reference**: what exists and where.
 
-1. **`@ngx-signal-forms/toolkit`** - Core directives, utilities, and providers
-2. **`@ngx-signal-forms/toolkit/assistive`** - Styled feedback components
-3. **`@ngx-signal-forms/toolkit/form-field`** - Form field wrapper components
-4. **`@ngx-signal-forms/toolkit/headless`** - Renderless primitives
-5. **`@ngx-signal-forms/toolkit/vest`** - Optional Vest convenience helpers
-6. **`@ngx-signal-forms/toolkit/debugger`** - Development-time form inspection tools
+---
 
-## Package Structure
+## Explanation
 
-### @ngx-signal-forms/toolkit (Main Package)
+### Architecture intent
+
+The repository publishes one package, `@ngx-signal-forms/toolkit`, with
+multiple public entry points. The split keeps adoption simple for most users
+while preserving tree-shaking and opt-in advanced surfaces.
+
+### Why one package with multiple entry points
+
+1. **Single install path** for common usage (`npm install @ngx-signal-forms/toolkit`).
+2. **Layered adoption** from core behavior to styled UI to headless primitives.
+3. **No forced runtime coupling** for optional integrations (Vest, debugger).
+4. **Bundle control** by importing only the entry points a consumer needs.
+
+### Role of each entry point
+
+- `@ngx-signal-forms/toolkit` — core directives, providers, and utilities.
+- `@ngx-signal-forms/toolkit/assistive` — styled feedback components.
+- `@ngx-signal-forms/toolkit/form-field` — wrapper + fieldset components.
+- `@ngx-signal-forms/toolkit/headless` — renderless state primitives.
+- `@ngx-signal-forms/toolkit/vest` — optional Vest convenience helpers.
+- `@ngx-signal-forms/toolkit/debugger` — development inspection UI.
+
+### Internal boundary
+
+`packages/toolkit/core` is intentionally **internal**. It powers public entry
+points but is stripped from the published exports map; consumers should import
+from documented public entry points only.
+
+---
+
+## Reference
+
+### Public entry points
+
+- `@ngx-signal-forms/toolkit` — core directives, providers, utilities
+- `@ngx-signal-forms/toolkit/assistive` — styled error/notification/hint/counter/summary UI
+- `@ngx-signal-forms/toolkit/form-field` — prebuilt wrapper + fieldset UI
+- `@ngx-signal-forms/toolkit/headless` — renderless directives and utility functions
+- `@ngx-signal-forms/toolkit/vest` — Vest helper adapters
+- `@ngx-signal-forms/toolkit/debugger` — dev-only form inspector components
+
+### Package layout
 
 ```bash
 packages/toolkit/
-├── core/                               # Core implementation (internal — not a public entry point)
+├── core/                               # Internal implementation (not public import path)
 │   ├── directives/
-│   │   ├── auto-aria.ts
-│   │   ├── control-semantics.ts
-│   │   └── ngx-signal-form.ts
-│   ├── utilities/
-│   │   ├── control-semantics.ts
-│   │   ├── error-strategies.ts
-│   │   ├── field-resolution.ts
-│   │   ├── show-errors.ts
-│   │   └── warning-error.ts
 │   ├── providers/
-│   │   ├── config.provider.ts
-│   │   ├── control-semantics.provider.ts
-│   │   ├── error-messages.provider.ts
-│   │   └── field-labels.provider.ts
+│   ├── utilities/
 │   ├── tokens.ts
 │   └── types.ts
-├── assistive/                           # Styled assistive components entry
+├── assistive/
 │   ├── assistive-row.ts
 │   ├── character-count.ts
 │   ├── form-field-error.ts
@@ -45,11 +69,11 @@ packages/toolkit/
 │   ├── hint.ts
 │   ├── warning-error.ts
 │   └── index.ts
-├── form-field/                          # Optional form-field entry
+├── form-field/
 │   ├── form-field-wrapper.ts
 │   ├── form-fieldset.ts
 │   └── index.ts
-├── headless/                            # Headless primitives entry
+├── headless/
 │   ├── src/
 │   │   ├── index.ts
 │   │   └── lib/
@@ -59,165 +83,53 @@ packages/toolkit/
 │   │       ├── character-count.ts
 │   │       ├── fieldset.ts
 │   │       ├── field-name.ts
-│   │       └── utilities.ts            # Shared utility functions
+│   │       └── utilities.ts
 │   ├── ng-package.json
 │   └── README.md
-├── vest/                                # Optional Vest integration entry
+├── vest/
 │   ├── src/
 │   │   ├── index.ts
 │   │   └── validate-vest.ts
 │   ├── ng-package.json
 │   └── README.md
-├── debugger/                            # Development-time debugging tools
+├── debugger/
 │   ├── signal-form-debugger.ts
 │   ├── debugger-badge.ts
 │   ├── index.ts
 │   └── ng-package.json
-├── index.ts                             # Primary entry (providers/types)
+├── index.ts
 ├── README.md
 └── package.json
 ```
 
-**Entry Points:**
-
-- `@ngx-signal-forms/toolkit` - Providers, directives, utilities
-- `@ngx-signal-forms/toolkit/assistive` - Styled feedback components
-- `@ngx-signal-forms/toolkit/form-field` - Form field wrapper (optional)
-- `@ngx-signal-forms/toolkit/headless` - Headless primitives (optional)
-- `@ngx-signal-forms/toolkit/vest` - Optional Vest helpers
-- `@ngx-signal-forms/toolkit/debugger` - Development-time inspection tools
-
-## Installation
-
-```bash
-# Main toolkit (required for most users)
-npm install @ngx-signal-forms/toolkit
-```
-
-## Usage
-
-### Primary Entry (Providers/Types)
+### Import examples
 
 ```typescript
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
-```
-
-### Root Entry (Directives/Utilities)
-
-```typescript
-import {
-  NgxSignalFormToolkit,
-  NgxSignalFormAutoAria,
-  NgxSignalForm,
-} from '@ngx-signal-forms/toolkit';
-import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
-```
-
-### Secondary Entry (Assistive Components - Optional)
-
-```typescript
-import {
-  NgxFormFieldError,
-  NgxFormFieldNotification,
-  NgxFormFieldErrorSummary,
-  NgxFormFieldHint,
-  NgxFormFieldCharacterCount,
-  NgxFormFieldAssistiveRow,
-} from '@ngx-signal-forms/toolkit/assistive';
-```
-
-### Secondary Entry (Form Field - Optional)
-
-```typescript
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-```
-
-### Secondary Entry (Headless Primitives - Optional)
-
-```typescript
-import {
-  NgxHeadlessToolkit,
-  NgxHeadlessErrorState,
-  NgxHeadlessErrorSummary,
-  NgxHeadlessNotification,
-  NgxHeadlessCharacterCount,
-  NgxHeadlessFieldset,
-  NgxHeadlessFieldName,
-  createErrorState,
-  createCharacterCount,
-  createFieldStateFlags,
-  readFieldFlag,
-  readErrors,
-  dedupeValidationErrors,
-} from '@ngx-signal-forms/toolkit/headless';
-```
-
-### Secondary Entry (Vest Helpers - Optional)
-
-```typescript
+import { NgxFormFieldNotification } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxHeadlessNotification } from '@ngx-signal-forms/toolkit/headless';
 import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 ```
 
-## Dependency Graph
+### Dependency graph
 
 ```text
 @angular/core (peer)
-@angular/forms/signals (peer) ← Signal Forms API
-vest ^6.0.0 (optional peer) ← Only when using /vest (v6+ required for Standard Schema)
+@angular/forms/signals (peer)
+vest ^6 (optional peer for /vest)
         ↓
-@ngx-signal-forms/toolkit (main package)
-├── Primary: Providers/types + directives + utilities (all via root entry)
-│                 /core is internal — stripped from the published exports map
-├── /assistive (optional secondary entry - styled feedback)
-├── /form-field (optional secondary entry)
-├── /headless (optional secondary entry - renderless primitives)
-├── /vest (optional secondary entry - Vest DX helpers)
-└── /debugger (optional secondary entry - development-time inspection)
+@ngx-signal-forms/toolkit
+├── root (core public API)
+├── /assistive
+├── /form-field
+├── /headless
+├── /vest
+└── /debugger
 ```
 
-## Design Summary
+### Publishing notes
 
-### Why Toolkit is the Main Package
-
-1. **Simplified Installation**: Most users only need one package
-2. **Core Functionality**: Contains all essential directives and utilities
-3. **Optional Features**: Secondary entry point for form-field
-4. **Tree-shakable**: Unused secondary entries are excluded from bundle
-
-### Why Form-field is a Secondary Entry
-
-1. **Easy Opt-out**: Developers can choose not to use it
-2. **Tree-shakable**: Only included when imported
-3. **Part of Toolkit**: Conceptually belongs to the main package
-4. **Smaller Bundle**: Not included unless explicitly imported
-
-### Why Headless is a Secondary Entry
-
-1. **Renderless Primitives**: State-only directives without UI rendering
-2. **Shared Utilities**: Common functions (`readFieldFlag`, `readErrors`, `dedupeValidationErrors`, `humanizeFieldPath`) used by both form-field and custom components
-3. **Design System Integration**: Perfect for custom component libraries
-4. **Host Directive Composition**: Works with Angular's Directive Composition API
-5. **Minimal Bundle**: Include only what you need
-
-### Why Vest is a Secondary Entry
-
-1. **Optional dependency**: Most toolkit users do not need Vest
-2. **Native Angular integration**: Angular Signal Forms already supports Standard Schema
-3. **DX-focused layer**: Keeps the helper thin and discoverable for Vest users
-4. **No runtime coupling**: Core, assistive, and form-field stay vendor-agnostic
-
-## Future Considerations
-
-If the toolkit grows too large, consider extracting shared utilities into a
-dedicated internal package.
-
-## Publishing Strategy
-
-### @ngx-signal-forms/toolkit
-
-- **Scope**: Main functionality
-- **Versioning**: Semantic versioning
-- **Breaking Changes**: Major version bumps
-- **Release Cadence**: Regular releases with features/fixes
-
-## Key Design Decisions
+- Package follows semantic versioning.
+- Breaking changes are released in major versions.
+- `core/` remains internal even though it exists in source.
