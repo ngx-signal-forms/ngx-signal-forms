@@ -12,13 +12,16 @@ import {
   isNgxSignalFormControlKind,
   NGX_SIGNAL_FORM_CONTROL_KIND_VALUES,
 } from '../utilities/control-semantics';
+import { createCascadingResolver } from '../utilities/cascading-resolver';
 
 function mergeNgxSignalFormControlPresets(
-  base: NgxSignalFormControlPresetRegistry,
+  parentPresetsOrNull: NgxSignalFormControlPresetRegistry | null,
   presets: NgxSignalFormControlPresetOverrides,
 ): NgxSignalFormControlPresetRegistry {
+  const parentPresets =
+    parentPresetsOrNull ?? DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS;
   const normalized: NgxSignalFormControlPresetRegistry = {
-    ...base,
+    ...parentPresets,
   };
 
   for (const [rawKind, override] of Object.entries(presets)) {
@@ -32,9 +35,21 @@ function mergeNgxSignalFormControlPresets(
       continue;
     }
 
+    // isNgxSignalFormControlKind is a type predicate that narrowed rawKind
+    // above; it is a valid NgxSignalFormControlKind from this point on.
     normalized[rawKind] = {
-      layout: override.layout ?? normalized[rawKind].layout,
-      ariaMode: override.ariaMode ?? normalized[rawKind].ariaMode,
+      layout: createCascadingResolver({
+        input: override.layout,
+        // NgxSignalFormControlPresetRegistry is Record<..., NgxSignalFormControlPreset>,
+        // so [rawKind].layout is always defined when parentPresetsOrNull is non-null.
+        configDefault: parentPresetsOrNull?.[rawKind].layout,
+        fallback: DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS[rawKind].layout,
+      }),
+      ariaMode: createCascadingResolver({
+        input: override.ariaMode,
+        configDefault: parentPresetsOrNull?.[rawKind].ariaMode,
+        fallback: DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS[rawKind].ariaMode,
+      }),
     };
   }
 
@@ -45,13 +60,12 @@ function createPresetFactory(
   presets: NgxSignalFormControlPresetOverrides,
 ): () => NgxSignalFormControlPresetRegistry {
   return () => {
-    const parentPresets =
-      inject(NGX_SIGNAL_FORM_CONTROL_PRESETS, {
-        optional: true,
-        skipSelf: true,
-      }) ?? DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS;
+    const parentPresetsOrNull = inject(NGX_SIGNAL_FORM_CONTROL_PRESETS, {
+      optional: true,
+      skipSelf: true,
+    });
 
-    return mergeNgxSignalFormControlPresets(parentPresets, presets);
+    return mergeNgxSignalFormControlPresets(parentPresetsOrNull, presets);
   };
 }
 

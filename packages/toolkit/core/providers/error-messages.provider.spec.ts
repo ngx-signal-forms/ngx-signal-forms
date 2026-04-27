@@ -291,6 +291,24 @@ describe('provideErrorMessages', () => {
       expect(registry['email']).toBeUndefined();
     });
 
+    it('should preserve empty-string override — not replaced by built-in default', () => {
+      // Regression guard: an explicit '' in the registry must be preserved as-is.
+      // Using '||' semantics (falsy check) would silently fall through to the
+      // built-in default; the cascading resolver uses nullish-only checks to
+      // prevent this.
+      TestBed.configureTestingModule({
+        providers: [
+          provideErrorMessages({
+            required: '',
+          }),
+        ],
+      });
+
+      const registry = TestBed.inject(NGX_ERROR_MESSAGES);
+
+      expect(registry['required']).toBe('');
+    });
+
     it('should handle empty registry object', () => {
       TestBed.configureTestingModule({
         providers: [provideErrorMessages({})],

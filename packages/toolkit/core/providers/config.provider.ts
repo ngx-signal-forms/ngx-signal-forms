@@ -5,6 +5,7 @@ import {
   NGX_SIGNAL_FORMS_CONFIG,
 } from '../tokens';
 import type { NgxSignalFormsConfig, NgxSignalFormsUserConfig } from '../types';
+import { createCascadingResolver } from '../utilities/cascading-resolver';
 
 /**
  * Factory that merges the parent-scope `NGX_SIGNAL_FORMS_CONFIG` (if one is
@@ -17,31 +18,52 @@ import type { NgxSignalFormsConfig, NgxSignalFormsUserConfig } from '../types';
  * `provideNgxSignalFormControlPresetsForComponent` to keep the two providers
  * behaviorally symmetric.
  *
+ * Tiers per property: `userConfig` → `parentConfig` → `DEFAULT_NGX_SIGNAL_FORMS_CONFIG`.
+ * Uses nullish-only short-circuit so falsy overrides (e.g. `requiredMarker: ''`,
+ * `autoAria: false`) are preserved and do not fall through to parent defaults.
+ *
  * @internal
  */
 function createConfigFactory(
   userConfig: NgxSignalFormsUserConfig,
 ): () => NgxSignalFormsConfig {
   return () => {
-    const parent =
-      inject(NGX_SIGNAL_FORMS_CONFIG, {
-        optional: true,
-        skipSelf: true,
-      }) ?? DEFAULT_NGX_SIGNAL_FORMS_CONFIG;
+    const parentOrNull = inject(NGX_SIGNAL_FORMS_CONFIG, {
+      optional: true,
+      skipSelf: true,
+    });
 
     return {
-      autoAria: userConfig.autoAria ?? parent.autoAria,
-      defaultErrorStrategy:
-        userConfig.defaultErrorStrategy ?? parent.defaultErrorStrategy,
-      defaultFormFieldAppearance:
-        userConfig.defaultFormFieldAppearance ??
-        parent.defaultFormFieldAppearance,
-      defaultFormFieldOrientation:
-        userConfig.defaultFormFieldOrientation ??
-        parent.defaultFormFieldOrientation,
-      showRequiredMarker:
-        userConfig.showRequiredMarker ?? parent.showRequiredMarker,
-      requiredMarker: userConfig.requiredMarker ?? parent.requiredMarker,
+      autoAria: createCascadingResolver({
+        input: userConfig.autoAria,
+        configDefault: parentOrNull?.autoAria,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.autoAria,
+      }),
+      defaultErrorStrategy: createCascadingResolver({
+        input: userConfig.defaultErrorStrategy,
+        configDefault: parentOrNull?.defaultErrorStrategy,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy,
+      }),
+      defaultFormFieldAppearance: createCascadingResolver({
+        input: userConfig.defaultFormFieldAppearance,
+        configDefault: parentOrNull?.defaultFormFieldAppearance,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultFormFieldAppearance,
+      }),
+      defaultFormFieldOrientation: createCascadingResolver({
+        input: userConfig.defaultFormFieldOrientation,
+        configDefault: parentOrNull?.defaultFormFieldOrientation,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultFormFieldOrientation,
+      }),
+      showRequiredMarker: createCascadingResolver({
+        input: userConfig.showRequiredMarker,
+        configDefault: parentOrNull?.showRequiredMarker,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.showRequiredMarker,
+      }),
+      requiredMarker: createCascadingResolver({
+        input: userConfig.requiredMarker,
+        configDefault: parentOrNull?.requiredMarker,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.requiredMarker,
+      }),
     };
   };
 }
