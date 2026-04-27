@@ -32,6 +32,12 @@ import { isBlockingError } from './warning-error';
  * history resets to `'unsubmitted'`.
  *
  * @param formTree A `FieldTree` or `Signal<FieldTree>` (supports deferred resolution via `input.required()`)
+ * @param submitAttempted Optional `WritableSignal<boolean>` consumers set to
+ *   `true` when an invalid-form submit attempt would otherwise leave native
+ *   `submitting()` flat (Angular's `submit()` short-circuits on invalid forms
+ *   without ever flipping the signal). The tracker treats a `true` value as
+ *   evidence of a completed attempt and reports `'submitted'`. The signal is
+ *   cleared automatically when `touched()` returns to `false` (form reset).
  * @returns Signal with the current `SubmittedStatus`
  *
  * @remarks

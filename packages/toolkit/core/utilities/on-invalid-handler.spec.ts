@@ -3,7 +3,15 @@ import { describe, expect, it, vi } from 'vitest';
 import { createOnInvalidHandler } from './on-invalid-handler';
 
 function createMockFieldTree(errors: unknown[] = []): FieldTree<unknown> {
-  const fieldTree = (() => ({
+  let fieldTree!: FieldTree<unknown>;
+  // The walker enforces a `state.fieldTree === fieldTree` back-reference, so
+  // mocks consumed via focusFirstInvalid (and therefore via this handler)
+  // must expose it. A getter keeps the closed-over `fieldTree` referenced
+  // after Object.assign without TDZ headaches.
+  fieldTree = (() => ({
+    get fieldTree() {
+      return fieldTree;
+    },
     errorSummary: () => errors,
     errors: () => errors,
     invalid: () => errors.length > 0,

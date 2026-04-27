@@ -1,10 +1,7 @@
 import { isDevMode } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { isFieldStateInteractive } from './field-interactivity';
-import {
-  InvalidFieldTreeError,
-  walkFieldTreeIterable,
-} from './walk-field-tree';
+import { walkFieldTreeIterable } from './walk-field-tree';
 
 /**
  * Focus the first **focusable** invalid field in a form after failed submission.
@@ -58,19 +55,14 @@ export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
   const errors = formTree().errorSummary();
   if (!Array.isArray(errors) || errors.length === 0) return false;
 
+  // The walker fails loudly on malformed trees (see InvalidFieldTreeError).
+  // That contract is intentional: a malformed FieldTree here means a wiring
+  // mistake (custom control missing `registerAsBinding()`, mock missing
+  // required state methods, etc.) that consumers should learn about
+  // immediately rather than via silently-non-functional focus management.
   const fieldStates = new Map<Function, FieldState<unknown>>();
-  try {
-    for (const fieldState of walkFieldTreeIterable(formTree)) {
-      fieldStates.set(fieldState.fieldTree, fieldState);
-    }
-  } catch (error) {
-    if (!(error instanceof InvalidFieldTreeError)) {
-      throw error;
-    }
-
-    // Some tests and edge-case callers still provide minimal mock field trees
-    // that are sufficient for `errorSummary()` but not for full tree walking.
-    // In that case we fall back to the error payload's own field reference.
+  for (const fieldState of walkFieldTreeIterable(formTree)) {
+    fieldStates.set(fieldState.fieldTree, fieldState);
   }
 
   for (const error of errors) {

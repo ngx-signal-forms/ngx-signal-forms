@@ -1,12 +1,17 @@
-import type { FieldState, FieldTree } from '@angular/forms/signals';
+import { untracked } from '@angular/core';
+import type {
+  FieldState,
+  FieldTree,
+  MaybeFieldTree,
+} from '@angular/forms/signals';
 
 type ArrayFieldTree = FieldTree<readonly unknown[]> & {
   readonly length: number;
-  readonly [index: number]: FieldTree<unknown> | undefined;
+  readonly [index: number]: MaybeFieldTree<unknown> | undefined;
 };
 
 type ObjectFieldTree = FieldTree<Record<string, unknown>> & {
-  [Symbol.iterator](): Iterator<[string, FieldTree<unknown> | undefined]>;
+  [Symbol.iterator](): Iterator<[string, MaybeFieldTree<unknown> | undefined]>;
 };
 
 type WalkFieldTreeEntry = {
@@ -14,9 +19,36 @@ type WalkFieldTreeEntry = {
   readonly state: FieldState<unknown>;
 };
 
+/**
+ * Members of `FieldState` the shared walker validates on every visited node.
+ *
+ * The walker itself only reads `value` and `touched`; the remaining methods
+ * are required for the downstream traversal consumers (debugger snapshots,
+ * focus management, submit gating). Centralising the contract here keeps
+ * every consumer on the same expectation of "what a FieldState is" without
+ * each having to re-validate.
+ */
+const REQUIRED_FIELD_STATE_METHODS = [
+  'value',
+  'touched',
+  'errors',
+  'errorSummary',
+  'submitting',
+  'markAsTouched',
+] as const satisfies readonly (keyof FieldState<unknown>)[];
+
+/**
+ * Thrown when {@link walkFieldTree} encounters a value that does not satisfy
+ * the FieldTree / FieldState contract. Always loud — never swallowed —
+ * because malformed trees indicate a wiring mistake (mock missing required
+ * methods, child typed as a non-callable value, etc.) rather than a runtime
+ * condition the toolkit can recover from.
+ *
+ * @public
+ */
 export class InvalidFieldTreeError extends Error {
-  constructor(message: string) {
-    super(message);
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
     this.name = 'InvalidFieldTreeError';
   }
 }
@@ -26,8 +58,8 @@ export class InvalidFieldTreeError extends Error {
  *
  * @public
  */
-export function walkFieldTree(
-  root: FieldTree<unknown>,
+export function walkFieldTree<TModel>(
+  root: FieldTree<TModel>,
   visitor: (state: FieldState<unknown>) => void,
 ): void {
   for (const state of walkFieldTreeIterable(root)) {
@@ -42,8 +74,8 @@ export function walkFieldTree(
  *
  * @public
  */
-export function* walkFieldTreeIterable(
-  root: FieldTree<unknown>,
+export function* walkFieldTreeIterable<TModel>(
+  root: FieldTree<TModel>,
 ): Iterable<FieldState<unknown>> {
   for (const entry of walkFieldTreeEntries(root)) {
     yield entry.state;
@@ -51,18 +83,20 @@ export function* walkFieldTreeIterable(
 }
 
 /**
- * Depth-first field-tree walk with stable dotted paths for sibling toolkit
- * entry points that need stable per-field identity.
+ * Depth-first field-tree walk with stable dotted paths for consumers that
+ * need stable per-field identity (e.g. `@for` track keys in the debugger).
  *
  * @yields Each reachable `FieldState` plus its dotted path.
+ *
+ * @public
  */
-export function* walkFieldTreeEntries(
-  root: FieldTree<unknown>,
+export function* walkFieldTreeEntries<TModel>(
+  root: FieldTree<TModel>,
 ): Iterable<WalkFieldTreeEntry> {
   // Angular does not produce cycles, but a hand-rolled or malformed tree can.
   // Guarding by reference keeps traversal total and prevents infinite recursion.
   const seen = new WeakSet<FieldTree<unknown>>();
-  yield* walk(root, '', seen);
+  yield* walk(root as FieldTree<unknown>, '', seen);
 }
 
 function* walk(
@@ -79,8 +113,14 @@ function* walk(
   const state = readFieldState(fieldTree, path);
   yield { path, state };
 
-  if (Array.isArray(state.value())) {
-    yield* walkArrayChildren(fieldTree as ArrayFieldTree, path, seen);
+  // Detect array vs object via the model value but read it `untracked` so
+  // consuming `computed()` calls (e.g. the debugger snapshot) do not subscribe
+  // to every leaf field's value and recompute on unrelated value changes.
+  // A purely structural check would be ideal, but Angular's `FieldTree` is a
+  // callable whose `.length` is the function's arity (always 0) — collides
+  // with empty-array length, ruling out the obvious property probe.
+  if (isArrayFieldTree(fieldTree, state)) {
+    yield* walkArrayChildren(fieldTree, path, seen);
     return;
   }
 
@@ -97,7 +137,7 @@ function* walk(
       throw invalidChildError(path, key);
     }
 
-    yield* walk(child, joinPath(path, key), seen);
+    yield* walk(child as FieldTree<unknown>, joinPath(path, key), seen);
   }
 }
 
@@ -116,7 +156,11 @@ function* walkArrayChildren(
       throw invalidChildError(path, String(index));
     }
 
-    yield* walk(child, joinPath(path, String(index)), seen);
+    yield* walk(
+      child as FieldTree<unknown>,
+      joinPath(path, String(index)),
+      seen,
+    );
   }
 }
 
@@ -124,28 +168,33 @@ function readFieldState(
   fieldTree: FieldTree<unknown>,
   path: string,
 ): FieldState<unknown> {
-  const state = fieldTree();
+  const candidate: unknown = fieldTree();
 
   if (
-    state === null ||
-    typeof state !== 'object' ||
-    state.fieldTree !== fieldTree ||
-    typeof state.value !== 'function' ||
-    typeof state.touched !== 'function' ||
-    typeof state.errors !== 'function' ||
-    typeof state.errorSummary !== 'function' ||
-    typeof state.submitting !== 'function' ||
-    typeof state.markAsTouched !== 'function'
+    candidate === null ||
+    typeof candidate !== 'object' ||
+    (candidate as FieldState<unknown>).fieldTree !== fieldTree
   ) {
-    // This targets Angular 21.2's current FieldState contract: the shared
-    // walker only depends on the members it actually reads and on the
-    // back-reference from `state.fieldTree` to the callable tree itself.
-    throw new InvalidFieldTreeError(
-      `[ngx-signal-forms] walkFieldTree expected ${formatPath(path)} to resolve to a FieldState.`,
-    );
+    throw invalidFieldStateError(path);
+  }
+
+  const state = candidate as FieldState<unknown>;
+  for (const method of REQUIRED_FIELD_STATE_METHODS) {
+    if (typeof state[method] !== 'function') {
+      throw invalidFieldStateError(path);
+    }
   }
 
   return state;
+}
+
+function isArrayFieldTree(
+  fieldTree: FieldTree<unknown>,
+  state: FieldState<unknown>,
+): fieldTree is ArrayFieldTree {
+  // Read the model value untracked so this structural decision does not
+  // subscribe consuming `computed()` callers to every field's value signal.
+  return Array.isArray(untracked(() => state.value()));
 }
 
 function hasIterator(
@@ -157,7 +206,17 @@ function hasIterator(
   return typeof iterator === 'function';
 }
 
-function invalidChildError(parentPath: string, segment: string): Error {
+function invalidFieldStateError(path: string): InvalidFieldTreeError {
+  return new InvalidFieldTreeError(
+    `[ngx-signal-forms] walkFieldTree expected ${formatPath(path)} to resolve to a FieldState. ` +
+      `A FieldState must expose ${REQUIRED_FIELD_STATE_METHODS.join(', ')} as functions and a back-reference (\`state.fieldTree === fieldTree\`).`,
+  );
+}
+
+function invalidChildError(
+  parentPath: string,
+  segment: string,
+): InvalidFieldTreeError {
   return new InvalidFieldTreeError(
     `[ngx-signal-forms] walkFieldTree expected ${formatPath(joinPath(parentPath, segment))} to be a FieldTree.`,
   );
