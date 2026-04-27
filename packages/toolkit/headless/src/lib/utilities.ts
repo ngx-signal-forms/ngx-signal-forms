@@ -2,8 +2,6 @@ import { computed, isDevMode, type Signal } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createUniqueId,
-  generateErrorId,
-  generateWarningId,
   isFieldStateInteractive,
   readDirectErrors,
   resolveValidationErrorMessage,
@@ -16,6 +14,7 @@ import {
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import {
+  createFieldMessageIdSignals,
   humanizeFieldPath,
   stripAngularFormPrefix,
   type ErrorMessageRegistry,
@@ -281,19 +280,15 @@ export function buildHeadlessErrorState(
       : splitByKind(readDirectErrors(fieldState()));
   });
 
+  const ids = createFieldMessageIdSignals(fieldName);
+
   return {
     errors: computed(() => split().blocking),
     warnings: computed(() => split().warnings),
     hasErrors: computed(() => split().blocking.length > 0),
     hasWarnings: computed(() => split().warnings.length > 0),
-    errorId: computed(() => {
-      const name = fieldName();
-      return name === null ? null : generateErrorId(name);
-    }),
-    warningId: computed(() => {
-      const name = fieldName();
-      return name === null ? null : generateWarningId(name);
-    }),
+    errorId: ids.errorId,
+    warningId: ids.warningId,
   };
 }
 

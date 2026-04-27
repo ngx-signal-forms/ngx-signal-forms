@@ -7,7 +7,11 @@ import {
   isDevMode,
   type Signal,
 } from '@angular/core';
-import { generateErrorId, generateWarningId } from '@ngx-signal-forms/toolkit';
+import {
+  createFieldMessageIdSignals,
+  resolveFieldName,
+  resolveFieldNameFromCandidates,
+} from '@ngx-signal-forms/toolkit/core';
 
 /**
  * Field name state signals exposed by the headless directive.
@@ -104,17 +108,12 @@ export class NgxHeadlessFieldName implements FieldNameStateSignals {
    * IDs like `"-error"`.
    */
   readonly resolvedFieldName = computed<string | null>(() => {
-    const inputValue = this.fieldName();
-    if (inputValue !== undefined) {
-      const resolved = inputValue.trim();
-      if (resolved.length > 0) {
-        return resolved;
-      }
-    }
-
-    const hostId = this.#readHostId();
-    if (hostId) {
-      return hostId;
+    const resolvedFieldName = resolveFieldNameFromCandidates(
+      this.fieldName(),
+      resolveFieldName(this.#elementRef.nativeElement),
+    );
+    if (resolvedFieldName !== null) {
+      return resolvedFieldName;
     }
 
     if (isDevMode() && !this.#warnedMissingName) {
@@ -127,33 +126,17 @@ export class NgxHeadlessFieldName implements FieldNameStateSignals {
     return null;
   });
 
+  readonly #fieldMessageIds = createFieldMessageIdSignals(
+    this.resolvedFieldName,
+  );
+
   /**
    * Generated error region ID, or `null` when no field name is resolvable.
    */
-  readonly errorId = computed<string | null>(() => {
-    const name = this.resolvedFieldName();
-    return name === null ? null : generateErrorId(name);
-  });
+  readonly errorId = this.#fieldMessageIds.errorId;
 
   /**
    * Generated warning region ID, or `null` when no field name is resolvable.
    */
-  readonly warningId = computed<string | null>(() => {
-    const name = this.resolvedFieldName();
-    return name === null ? null : generateWarningId(name);
-  });
-
-  #readHostId(): string | null {
-    const nativeElement = this.#elementRef.nativeElement;
-
-    if (typeof nativeElement.getAttribute === 'function') {
-      const attrId = nativeElement.getAttribute('id')?.trim();
-      if (attrId) {
-        return attrId;
-      }
-    }
-
-    const propertyId = nativeElement.id.trim();
-    return propertyId ? propertyId : null;
-  }
+  readonly warningId = this.#fieldMessageIds.warningId;
 }

@@ -28,11 +28,13 @@ export interface CreateErrorVisibilityOptions {
    *
    * - Static `ErrorDisplayStrategy` — value is read on every computed
    *   evaluation but is stable, so the result does not change.
-   * - `Signal<ErrorDisplayStrategy>` — tracked reactively.
+   * - `Signal<ErrorDisplayStrategy | undefined>` — tracked reactively.
    * - `undefined` / omitted — inherits from form context, then falls back to
    *   `'on-touch'`.
    */
-  readonly strategy?: ErrorDisplayStrategy | Signal<ErrorDisplayStrategy>;
+  readonly strategy?:
+    | ErrorDisplayStrategy
+    | Signal<ErrorDisplayStrategy | undefined>;
 
   /**
    * Explicit submission status.
@@ -149,10 +151,15 @@ export function createErrorVisibility(
     // its body inside a `computed()`, so wrapping again would just add an
     // intermediate signal node. Reading `unwrapValue()` here keeps Signal
     // inputs reactive and context signal changes tracked.
+    //
+    // The explicit `<ErrorDisplayStrategy | undefined>` parameter accepts
+    // both the static `ErrorDisplayStrategy` branch and the
+    // `Signal<ErrorDisplayStrategy | undefined>` branch without a cast —
+    // it is the union of what `opts.strategy` can yield once unwrapped.
     const resolvedStrategy = () => {
       const strategyValue =
         opts?.strategy !== undefined
-          ? unwrapValue(opts.strategy as ReactiveOrStatic<ErrorDisplayStrategy>)
+          ? unwrapValue<ErrorDisplayStrategy | undefined>(opts.strategy)
           : undefined;
       return resolveStrategyFromContext(strategyValue, formContext);
     };
@@ -161,11 +168,7 @@ export function createErrorVisibility(
     const resolvedSubmittedStatus = () => {
       const statusValue =
         opts?.submittedStatus !== undefined
-          ? unwrapValue(
-              opts.submittedStatus as ReactiveOrStatic<
-                SubmittedStatus | undefined
-              >,
-            )
+          ? unwrapValue<SubmittedStatus | undefined>(opts.submittedStatus)
           : undefined;
       return resolveSubmittedStatusFromContext(statusValue, formContext);
     };

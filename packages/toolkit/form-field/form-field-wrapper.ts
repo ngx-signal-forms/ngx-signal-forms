@@ -34,7 +34,6 @@ import {
   isWarningError,
   readDirectErrors,
   type ResolvedNgxSignalFormControlSemantics,
-  resolveNgxSignalFormControlSemantics,
   resolveErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -53,6 +52,7 @@ import {
   hasPaddedControlContent,
   isSelectionGroupKind,
   isTextualControlKind,
+  readFormFieldWrapperDomSnapshot,
   requireHostElement,
   supportsOutlinedAppearance,
   type FormFieldControlKind,
@@ -939,36 +939,11 @@ export class NgxFormFieldWrapper<TValue = unknown> {
       earlyRead: () => {
         const hostEl = requireHostElement(this.#elementRef);
 
-        // DOM-query cache: reuse the previously bound control when it is
-        // still mounted inside this host AND still carries an `id` (without
-        // the id it no longer satisfies the `findBoundControl` selector).
-        // The `isConnected` + `hostEl.contains` guard covers the common
-        // `@if`-branch-swap case where Angular detaches the old node from
-        // its parent on branch change. Moving `[formField]` to a sibling
-        // inside the same template branch without a re-render is an
-        // author-error edge case this cache does not catch.
-        const cached = this.#boundControlElement();
-        // oxlint-disable-next-line @typescript-eslint/prefer-optional-chain -- rewriting to `cached?.isConnected` trades one lint rule for another (strict-boolean-expressions on the resulting nullable boolean)
-        const cacheHit =
-          cached?.isConnected &&
-          hostEl.contains(cached) &&
-          cached.hasAttribute('id');
-        const inputEl = cacheHit ? cached : findBoundControl(hostEl);
-
-        return {
-          inputEl,
-          inputId: inputEl && inputEl.id.length > 0 ? inputEl.id : null,
-          semantics: resolveNgxSignalFormControlSemantics(
-            inputEl,
-            this.#controlPresets,
-          ),
-          selectionControlCount: hostEl.querySelectorAll(
-            "input[type='radio'], input[type='checkbox']:not([role='switch']), [role='radio'], [role='checkbox']",
-          ).length,
-          label: hostEl.querySelector(
-            ':scope > .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])',
-          ),
-        };
+        return readFormFieldWrapperDomSnapshot(
+          hostEl,
+          this.#boundControlElement(),
+          this.#controlPresets,
+        );
       },
       // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- afterEveryRender passes DOM-backed render state with mutable HTMLElement references.
       write: (renderState) => {

@@ -1,8 +1,11 @@
 import type { ElementRef } from '@angular/core';
 import type {
   NgxSignalFormControlKind,
+  NgxSignalFormControlPresetRegistry,
   ResolvedNgxSignalFormControlSemantics,
 } from '@ngx-signal-forms/toolkit';
+import { resolveNgxSignalFormControlSemantics } from '@ngx-signal-forms/toolkit';
+import { findBoundControl } from '@ngx-signal-forms/toolkit/core';
 
 // Re-exported here for backward compatibility with intra-toolkit callers.
 // Owning module is `@ngx-signal-forms/toolkit/core` so `NgxFieldIdentity`
@@ -35,6 +38,72 @@ export function requireHostElement(
  */
 export type FormFieldControlKind =
   ResolvedNgxSignalFormControlSemantics['kind'];
+
+/**
+ * DOM snapshot consumed by `NgxFormFieldWrapper`'s render hook.
+ *
+ * @internal
+ */
+export interface FormFieldWrapperDomSnapshot {
+  readonly inputEl: HTMLElement | null;
+  readonly inputId: string | null;
+  readonly semantics: ResolvedNgxSignalFormControlSemantics;
+  readonly selectionControlCount: number;
+  readonly label: Element | null;
+}
+
+/**
+ * Read the wrapper's projected-control DOM snapshot in one place.
+ *
+ * Called from `NgxFormFieldWrapper`'s `afterEveryRender` early-read phase, so
+ * this must stay synchronous and free of reactive reads. `controlPresets` is
+ * passed as a plain registry (not a signal) for the same reason — the
+ * wrapper resolves it once at construction and reuses it here.
+ *
+ * @internal
+ */
+export function readFormFieldWrapperDomSnapshot(
+  hostEl: HTMLElement,
+  cachedControl: HTMLElement | null,
+  controlPresets: NgxSignalFormControlPresetRegistry,
+): FormFieldWrapperDomSnapshot {
+  // DOM-query cache: reuse the previously bound control when it is
+  // still mounted inside this host AND still carries an `id` (without
+  // the id it no longer satisfies the `findBoundControl` selector).
+  // The `isConnected` + `hostEl.contains` guard covers the common
+  // `@if`-branch-swap case where Angular detaches the old node from
+  // its parent on branch change. Moving `[formField]` to a sibling
+  // inside the same template branch without a re-render is an
+  // author-error edge case this cache does not catch.
+  // oxlint-disable-next-line @typescript-eslint/prefer-optional-chain -- rewriting to `cachedControl?.isConnected` trades one lint rule for another (strict-boolean-expressions on the resulting nullable boolean)
+  const cacheHit =
+    cachedControl?.isConnected &&
+    hostEl.contains(cachedControl) &&
+    cachedControl.hasAttribute('id');
+  const inputEl = cacheHit ? cachedControl : findBoundControl(hostEl);
+
+  return {
+    inputEl,
+    inputId: inputEl && inputEl.id.length > 0 ? inputEl.id : null,
+    semantics: resolveNgxSignalFormControlSemantics(inputEl, controlPresets),
+    // Scope the scan to the projected control region so selection controls
+    // rendered in `[prefix]` / `[suffix]` (e.g. a checkbox-shaped icon
+    // toggle) cannot flip a single-control wrapper into selection-cluster
+    // mode. The `__main` slot is always rendered by the wrapper template;
+    // the `?? 0` is defense-in-depth against unexpected DOM trees.
+    selectionControlCount:
+      hostEl
+        .querySelector(
+          ':scope > .ngx-signal-form-field-wrapper__content > .ngx-signal-form-field-wrapper__main',
+        )
+        ?.querySelectorAll(
+          "input[type='radio'], input[type='checkbox']:not([role='switch']), [role='radio'], [role='checkbox']",
+        ).length ?? 0,
+    label: hostEl.querySelector(
+      ':scope > .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])',
+    ),
+  };
+}
 
 /**
  * Wrapper-visible capability flags for a control kind.

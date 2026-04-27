@@ -51,6 +51,15 @@ describe('NgxFieldIdentity', () => {
         expect(svc.fieldName()).toBe('email');
       });
 
+      it('normalizes whitespace-only names to null and trims non-empty names', () => {
+        const svc = createService();
+        svc.setFieldName('  email  ');
+        expect(svc.fieldName()).toBe('email');
+
+        svc.setFieldName('   ');
+        expect(svc.fieldName()).toBeNull();
+      });
+
       it('derives errorId and warningId from fieldName', () => {
         const svc = createService();
         svc.setFieldName('email');

@@ -1,19 +1,88 @@
+import { computed, type Signal } from '@angular/core';
+
 /**
- * Resolves the field name from an HTML element's `id` attribute.
+ * Normalize a potential field name into the deterministic v1 identity form.
+ *
+ * Returns `null` for nullish or whitespace-only inputs, and trims leading
+ * and trailing whitespace everywhere else. This is the single source of
+ * truth for "is this a usable field name?" — wrappers, headless directives,
+ * and consumer-built field-identity surfaces should call it before using
+ * a name as the basis for an `id` or `aria-describedby` chain.
+ *
+ * @example
+ * ```typescript
+ * normalizeFieldName('email');      // 'email'
+ * normalizeFieldName('  email  ');  // 'email'
+ * normalizeFieldName('   ');        // null
+ * normalizeFieldName('');           // null
+ * normalizeFieldName(null);         // null
+ * normalizeFieldName(undefined);    // null
+ * ```
+ */
+export function normalizeFieldName(
+  fieldName: string | null | undefined,
+): string | null {
+  if (fieldName == null) {
+    return null;
+  }
+
+  const trimmed = fieldName.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+/**
+ * Resolve the first usable field name from a list of candidates.
+ *
+ * Each candidate is run through {@link normalizeFieldName} and the first
+ * non-null result wins. Returns `null` only when every candidate is
+ * nullish, empty, or whitespace-only.
+ *
+ * Use this when assembling a field name from a precedence chain — explicit
+ * input first, host element id second, parent context third — and you want
+ * the same trimming/empty-collapse rules applied to every source.
+ *
+ * @example
+ * ```typescript
+ * // explicit input wins, then host id, then context
+ * resolveFieldNameFromCandidates(
+ *   this.fieldName(),
+ *   this.#elementRef.nativeElement.id,
+ *   this.#fieldContext?.fieldName(),
+ * );
+ * ```
+ */
+export function resolveFieldNameFromCandidates(
+  ...fieldNameCandidates: readonly (string | null | undefined)[]
+): string | null {
+  for (const candidate of fieldNameCandidates) {
+    const resolved = normalizeFieldName(candidate);
+    if (resolved !== null) {
+      return resolved;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Resolves the field name from an HTML element's `id`.
  *
  * Field identity is deterministic: the bound control must have an `id`.
  * Standalone error/headless APIs require an explicit `fieldName` input;
  * wrappers may infer from the control's `id`.
  *
- * An empty-string `id` attribute is treated as absent and returns `null`.
+ * Resolution rules (frozen for v1):
+ * - Reads `getAttribute('id')` first, then the `element.id` property as a
+ *   fallback. The two are equivalent for normal HTML hosts; the property
+ *   read covers attribute-less / detached cases.
+ * - Whitespace is trimmed. `"  email  "` → `"email"`. Whitespace-only and
+ *   empty strings collapse to `null`, treated as "no id".
  *
  * @param element - The HTML element to resolve the field name from
- * @returns The element's `id` attribute value, or `null` if absent
+ * @returns The trimmed `id`, or `null` if the element has no usable id
  */
 export function resolveFieldName(element: HTMLElement): string | null {
-  const id = element.getAttribute('id');
-  // oxlint-disable-next-line @typescript-eslint/strict-boolean-expressions -- empty id="" is intentionally treated as "no id"; freezing semantic for v1
-  return id || null;
+  return resolveFieldNameFromCandidates(element.getAttribute('id'), element.id);
 }
 
 /**
@@ -30,6 +99,36 @@ export function resolveFieldName(element: HTMLElement): string | null {
  */
 export function generateErrorId(fieldName: string): string {
   return `${fieldName}-error`;
+}
+
+/**
+ * Computed ID signals for a resolved field name.
+ *
+ * @internal
+ */
+export interface FieldMessageIdSignals {
+  readonly errorId: Signal<string | null>;
+  readonly warningId: Signal<string | null>;
+}
+
+/**
+ * Create computed error / warning IDs for a resolved field name.
+ *
+ * @internal
+ */
+export function createFieldMessageIdSignals(
+  fieldName: () => string | null,
+): FieldMessageIdSignals {
+  return {
+    errorId: computed(() => {
+      const name = fieldName();
+      return name === null ? null : generateErrorId(name);
+    }),
+    warningId: computed(() => {
+      const name = fieldName();
+      return name === null ? null : generateWarningId(name);
+    }),
+  };
 }
 
 /**
