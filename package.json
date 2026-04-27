@@ -25,7 +25,7 @@
     "format:check": "nx run workspace:format-check",
     "test:all": "nx run-many --target=test --all",
     "test:browser": "nx run toolkit:test-browser",
-    "prepare": "simple-git-hooks"
+    "prepare": "node tools/simple-git-hooks-worktree.cjs"
   },
   "private": true,
   "dependencies": {

@@ -242,7 +242,9 @@ describe('NgxFormFieldNotification', () => {
   });
 
   it('resolves messages from NGX_ERROR_MESSAGES when the ValidationError lacks a message', async () => {
-    const errors = signal([{ kind: 'custom-rule', message: '' }]);
+    // Note: omit `message` entirely. An empty string is now a valid explicit
+    // override (see resolve-error-message.ts) and would no longer fall through.
+    const errors = signal([{ kind: 'custom-rule' }]);
 
     const { container } = await render(
       `<ngx-form-field-notification

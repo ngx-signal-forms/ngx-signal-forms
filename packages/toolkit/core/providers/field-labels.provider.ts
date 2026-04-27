@@ -1,6 +1,7 @@
 import { InjectionToken, type Provider } from '@angular/core';
 
 import { humanizeFieldPath } from '../utilities/humanize-field-path';
+import { createCascadingResolver } from '../utilities/cascading-resolver';
 
 /**
  * A function that resolves a raw field path (e.g. `'address.postalCode'`)
@@ -102,5 +103,9 @@ export function provideFieldLabels(
 }
 
 function createMapResolver(map: FieldLabelMap): FieldLabelResolver {
-  return (fieldPath) => map[fieldPath] ?? humanizeFieldPath(fieldPath);
+  return (fieldPath) =>
+    createCascadingResolver({
+      input: map[fieldPath],
+      fallback: humanizeFieldPath(fieldPath),
+    });
 }
