@@ -266,12 +266,12 @@ Key exports: `NgxSignalFormToolkit`, `showErrors()`, `combineShowErrors()`, `foc
 
 ### `@ngx-signal-forms/toolkit/assistive` — standalone feedback
 
-Use this when you want error, hint, and counter components _without_ adopting the full
-field wrapper — e.g. you already have a layout system but want the toolkit's error
+Use this when you want standalone error, grouped-notification, hint, counter, and summary
+components _without_ adopting the full field wrapper — e.g. you already have a layout system but want the toolkit's error
 timing and ARIA.
 
-Key exports: `NgxFormFieldError`, `NgxFormFieldErrorSummary`,
-`NgxFormFieldHint`, `NgxFormFieldCharacterCount`,
+Key exports: `NgxFormFieldError`, `NgxFormFieldNotification`,
+`NgxFormFieldErrorSummary`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`,
 `NgxFormFieldAssistiveRow`.
 
 **[→ Assistive docs](./packages/toolkit/assistive/README.md)** ·
@@ -284,7 +284,8 @@ error visibility, aggregation, focus behavior, character counts — while you co
 every bit of markup and styling.
 
 Key exports: `NgxHeadlessToolkit`, `NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`,
-`NgxHeadlessCharacterCount`, `NgxHeadlessFieldset`, `NgxHeadlessFieldName`,
+`NgxHeadlessNotification`, `NgxHeadlessCharacterCount`, `NgxHeadlessFieldset`,
+`NgxHeadlessFieldName`,
 `createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()`,
 `readErrors()`, `dedupeValidationErrors()`.
 
@@ -519,7 +520,7 @@ form (axe, Lighthouse, screen-reader testing) before claiming conformance.
 
 - [Core toolkit](./packages/toolkit/README.md)
 - [Form field wrapper](./packages/toolkit/form-field/README.md) · [theming](./packages/toolkit/form-field/THEMING.md)
-- [Assistive components](./packages/toolkit/assistive/README.md)
+- [Assistive components](./packages/toolkit/assistive/README.md) — standalone error, grouped notification, hint, counter, and summary components
 - [Headless primitives](./packages/toolkit/headless/README.md)
 - [Vest integration](./packages/toolkit/vest/README.md)
 - [Debugger](./packages/toolkit/debugger/README.md)
