@@ -1,12 +1,14 @@
 import { computed, Directive, inject, input, type Signal } from '@angular/core';
 import type { ValidationError } from '@angular/forms/signals';
 import {
-  generateErrorId,
-  generateWarningId,
   isWarningError,
   resolveValidationErrorMessage,
 } from '@ngx-signal-forms/toolkit';
-import { NGX_ERROR_MESSAGES } from '@ngx-signal-forms/toolkit/core';
+import {
+  createFieldMessageIdSignals,
+  NGX_ERROR_MESSAGES,
+  normalizeFieldName,
+} from '@ngx-signal-forms/toolkit/core';
 
 /**
  * Visual / ARIA tone for grouped notifications.
@@ -122,21 +124,24 @@ export class NgxHeadlessNotification implements NotificationStateSignals {
     return provided === undefined ? [] : provided();
   });
 
+  readonly #resolvedFieldName = computed(() =>
+    normalizeFieldName(this.fieldName()),
+  );
+
   readonly hasMessages = computed(() => this.#resolvedErrors().length > 0);
 
   readonly resolvedTone = computed<'error' | 'warning'>(() => {
-    const explicit = this.tone();
     const messages = this.#resolvedErrors();
     if (messages.length === 0) return 'error';
 
+    // All-warning lists default to `'warning'` regardless of the explicit
+    // `tone` input — see the directive-level "tone resolution rules" doc.
+    // Content always wins over caller intent, so `tone` does not factor in.
     const hasBlockingError = messages.some(
       (message) => !isWarningError(message),
     );
 
-    if (hasBlockingError) return 'error';
-    if (explicit === 'warning') return 'warning';
-
-    return 'warning';
+    return hasBlockingError ? 'error' : 'warning';
   });
 
   readonly showErrorContainer = computed(
@@ -147,15 +152,11 @@ export class NgxHeadlessNotification implements NotificationStateSignals {
     () => this.hasMessages() && this.resolvedTone() === 'warning',
   );
 
-  readonly errorContainerId = computed<string | null>(() => {
-    const fieldName = this.fieldName()?.trim();
-    return fieldName ? generateErrorId(fieldName) : null;
-  });
-
-  readonly warningContainerId = computed<string | null>(() => {
-    const fieldName = this.fieldName()?.trim();
-    return fieldName ? generateWarningId(fieldName) : null;
-  });
+  readonly #fieldMessageIds = createFieldMessageIdSignals(
+    this.#resolvedFieldName,
+  );
+  readonly errorContainerId = this.#fieldMessageIds.errorId;
+  readonly warningContainerId = this.#fieldMessageIds.warningId;
 
   readonly resolvedMessages = computed<readonly ResolvedNotificationMessage[]>(
     () =>

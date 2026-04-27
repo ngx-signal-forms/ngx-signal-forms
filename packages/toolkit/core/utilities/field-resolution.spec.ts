@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildAriaDescribedBy,
+  createFieldMessageIdSignals,
   generateErrorId,
   generateWarningId,
+  normalizeFieldName,
   resolveFieldName,
+  resolveFieldNameFromCandidates,
 } from './field-resolution';
 
 describe('field-resolution', () => {
@@ -29,6 +32,36 @@ describe('field-resolution', () => {
 
       const fieldName = resolveFieldName(element);
       expect(fieldName).toBeNull();
+    });
+
+    it('should trim whitespace around id values', () => {
+      const element = document.createElement('input');
+      element.setAttribute('id', '  email  ');
+
+      const fieldName = resolveFieldName(element);
+      expect(fieldName).toBe('email');
+    });
+  });
+
+  describe('normalizeFieldName', () => {
+    it('should trim non-empty values', () => {
+      expect(normalizeFieldName('  email  ')).toBe('email');
+    });
+
+    it('should return null for blank values', () => {
+      expect(normalizeFieldName('   ')).toBeNull();
+    });
+  });
+
+  describe('resolveFieldNameFromCandidates', () => {
+    it('should pick the first non-blank candidate', () => {
+      expect(
+        resolveFieldNameFromCandidates('   ', null, 'email', 'backup'),
+      ).toBe('email');
+    });
+
+    it('should return null when all candidates are empty', () => {
+      expect(resolveFieldNameFromCandidates(undefined, '', '   ')).toBeNull();
     });
   });
 
@@ -123,6 +156,22 @@ describe('field-resolution', () => {
           showErrors: true,
         }),
       ).toBe('email-hint email-description email-error');
+    });
+  });
+
+  describe('createFieldMessageIdSignals', () => {
+    it('should derive null ids from a null field name', () => {
+      const ids = createFieldMessageIdSignals(() => null);
+
+      expect(ids.errorId()).toBeNull();
+      expect(ids.warningId()).toBeNull();
+    });
+
+    it('should derive error and warning ids from a resolved field name', () => {
+      const ids = createFieldMessageIdSignals(() => 'email');
+
+      expect(ids.errorId()).toBe('email-error');
+      expect(ids.warningId()).toBe('email-warning');
     });
   });
 });

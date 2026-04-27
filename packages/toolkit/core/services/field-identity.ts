@@ -1,13 +1,8 @@
+import { computed, Injectable, isDevMode, signal } from '@angular/core';
 import {
-  computed,
-  Injectable,
-  isDevMode,
-  type Signal,
-  signal,
-} from '@angular/core';
-import {
-  generateErrorId,
-  generateWarningId,
+  createFieldMessageIdSignals,
+  normalizeFieldName,
+  resolveFieldName,
 } from '../utilities/field-resolution';
 
 /**
@@ -68,37 +63,33 @@ export class NgxFieldIdentity {
    * Resolved field name. Null when no field name can be determined.
    * Updated by `NgxFormFieldWrapper` via `_setFieldName`.
    */
-  readonly fieldName: Signal<string | null> = this.#fieldName.asReadonly();
+  readonly fieldName = this.#fieldName.asReadonly();
 
   /**
    * The bound control element's `id` attribute.
    * Null when no control is found or when the control has no `id`.
    */
-  readonly controlId: Signal<string | null> = this.#controlId.asReadonly();
+  readonly controlId = this.#controlId.asReadonly();
+
+  readonly #fieldMessageIds = createFieldMessageIdSignals(this.#fieldName);
 
   /**
    * Generated error element ID for the field (`{fieldName}-error`).
    * Null when no field name is available.
    */
-  readonly errorId: Signal<string | null> = computed(() => {
-    const name = this.#fieldName();
-    return name ? generateErrorId(name) : null;
-  });
+  readonly errorId = this.#fieldMessageIds.errorId;
 
   /**
    * Generated warning element ID for the field (`{fieldName}-warning`).
    * Null when no field name is available.
    */
-  readonly warningId: Signal<string | null> = computed(() => {
-    const name = this.#fieldName();
-    return name ? generateWarningId(name) : null;
-  });
+  readonly warningId = this.#fieldMessageIds.warningId;
 
   /**
    * Hint IDs contributed by the surrounding hint registry, filtered for
    * this field. Updated by `NgxFormFieldWrapper` when `hintDescriptors` changes.
    */
-  readonly hintIds: Signal<readonly string[]> = this.#hintIds.asReadonly();
+  readonly hintIds = this.#hintIds.asReadonly();
 
   /**
    * Whether the bound control currently has a CSS layout box that the
@@ -112,8 +103,7 @@ export class NgxFieldIdentity {
    * (with an `offsetParent` fallback). Defaults to `true` so consumers
    * never strip ARIA attributes pre-visibility-eval.
    */
-  readonly isControlVisible: Signal<boolean> =
-    this.#isControlVisible.asReadonly();
+  readonly isControlVisible = this.#isControlVisible.asReadonly();
 
   /**
    * Aggregated `aria-describedby` ID chain for this field, derived from
@@ -124,7 +114,7 @@ export class NgxFieldIdentity {
    * does not encode `shouldShowErrors` because that decision is owned by
    * the consumer, not the identity service.
    */
-  readonly describedBy: Signal<string | null> = computed(() => {
+  readonly describedBy = computed<string | null>(() => {
     const ids = this.#hintIds();
     return ids.length > 0 ? ids.join(' ') : null;
   });
@@ -144,8 +134,9 @@ export class NgxFieldIdentity {
    * @internal
    */
   setFieldName(name: string | null): void {
-    if (name !== this.#fieldName()) {
-      this.#fieldName.set(name);
+    const normalizedName = normalizeFieldName(name);
+    if (normalizedName !== this.#fieldName()) {
+      this.#fieldName.set(normalizedName);
     }
   }
 
@@ -162,7 +153,7 @@ export class NgxFieldIdentity {
    * @internal
    */
   setControlElement(el: HTMLElement | null): void {
-    const nextControlId = el && el.id.length > 0 ? el.id : null;
+    const nextControlId = el ? resolveFieldName(el) : null;
     if (nextControlId !== this.#controlId()) {
       this.#controlId.set(nextControlId);
     }

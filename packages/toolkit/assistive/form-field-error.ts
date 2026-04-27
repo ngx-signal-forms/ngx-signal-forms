@@ -8,8 +8,6 @@ import {
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import {
-  generateErrorId,
-  generateWarningId,
   injectFormContext,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   resolveStrategyFromContext,
@@ -17,6 +15,10 @@ import {
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
+import {
+  createFieldMessageIdSignals,
+  resolveFieldNameFromCandidates,
+} from '@ngx-signal-forms/toolkit/core';
 import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
 
 export type NgxFormFieldListStyle = 'plain' | 'bullets';
@@ -278,17 +280,12 @@ export class NgxFormFieldError {
 
   // ── Field name / ID resolution ────────────────────────────────────────
   readonly #resolvedFieldName = computed<string | null>(() => {
-    const explicit = this.fieldName();
-    if (explicit !== undefined) {
-      const trimmed = explicit.trim();
-      if (trimmed.length > 0) {
-        return trimmed;
-      }
-    }
-
-    const contextFieldName = this.#fieldContext?.fieldName();
-    if (contextFieldName !== undefined && contextFieldName !== null) {
-      return contextFieldName;
+    const resolvedFieldName = resolveFieldNameFromCandidates(
+      this.fieldName(),
+      this.#fieldContext?.fieldName(),
+    );
+    if (resolvedFieldName !== null) {
+      return resolvedFieldName;
     }
 
     if (isDevMode() && !this.#warnedMissingName) {
@@ -302,19 +299,15 @@ export class NgxFormFieldError {
   });
 
   /**
-   * Computed error ID for aria-describedby linking. Returns `null` when no
-   * field name can be resolved, which keeps the rendered `[id]` binding
-   * absent instead of producing a broken id like `"-error"`.
+   * Computed error / warning IDs for aria-describedby linking. Both return
+   * `null` when no field name can be resolved, which keeps the rendered
+   * `[id]` binding absent instead of producing broken ids like `"-error"`.
    */
-  protected readonly errorId = computed<string | null>(() => {
-    const fieldName = this.#resolvedFieldName();
-    return fieldName === null ? null : generateErrorId(fieldName);
-  });
-
-  protected readonly warningId = computed<string | null>(() => {
-    const fieldName = this.#resolvedFieldName();
-    return fieldName === null ? null : generateWarningId(fieldName);
-  });
+  readonly #fieldMessageIds = createFieldMessageIdSignals(
+    this.#resolvedFieldName,
+  );
+  protected readonly errorId = this.#fieldMessageIds.errorId;
+  protected readonly warningId = this.#fieldMessageIds.warningId;
 
   // ── Warning strategy ──────────────────────────────────────────────────
   readonly #resolvedWarningStrategy = computed<ResolvedErrorDisplayStrategy>(

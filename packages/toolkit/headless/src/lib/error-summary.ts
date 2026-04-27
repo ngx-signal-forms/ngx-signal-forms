@@ -1,13 +1,9 @@
 import { computed, Directive, inject, input, type Signal } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
-  injectFormContext,
-  resolveStrategyFromContext,
-  resolveSubmittedStatusFromContext,
-  showErrors,
+  createErrorVisibility,
   splitByKind,
   type ErrorDisplayStrategy,
-  type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -90,7 +86,6 @@ export interface ErrorSummarySignals {
   exportAs: 'errorSummary',
 })
 export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
-  readonly #formContext = injectFormContext();
   readonly #errorMessagesRegistry = inject(NGX_ERROR_MESSAGES, {
     optional: true,
   });
@@ -117,23 +112,10 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
 
   readonly #fieldState = computed(() => this.formTree()());
 
-  readonly #resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() =>
-    resolveStrategyFromContext(this.strategy(), this.#formContext),
-  );
-
-  readonly #resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(
-    () =>
-      resolveSubmittedStatusFromContext(
-        this.submittedStatus(),
-        this.#formContext,
-      ),
-  );
-
-  readonly #showErrorsSignal = showErrors(
-    this.#fieldState,
-    this.#resolvedStrategy,
-    this.#resolvedSubmittedStatus,
-  );
+  readonly #showErrorsSignal = createErrorVisibility(this.#fieldState, {
+    strategy: this.strategy,
+    submittedStatus: this.submittedStatus,
+  });
 
   /**
    * Errors with `errorSummary()` traversal, then filtered to drop entries
