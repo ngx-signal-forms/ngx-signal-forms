@@ -1,6 +1,6 @@
 {
   "name": "ngx-signal-forms",
-  "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be",
+  "packageManager": "pnpm@11.0.0",
   "engines": {
     "node": "^20.19.0 || ^22.12.0 || >=24.0.0"
   },
@@ -107,31 +107,6 @@
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm exec lint-staged"
-  },
-  "pnpm": {
-    "overrides": {
-      "@angular/common": "21.2.10",
-      "@angular/compiler": "21.2.10",
-      "@angular/core": "21.2.10",
-      "@angular/forms": "21.2.10",
-      "@angular/platform-browser": "21.2.10",
-      "@angular/router": "21.2.10",
-      "lodash": "4.18.1",
-      "@verdaccio/core>minimatch": "7.4.9"
-    },
-    "ignoredBuiltDependencies": [
-      "@parcel/watcher",
-      "less",
-      "lmdb",
-      "msgpackr-extract"
-    ],
-    "onlyBuiltDependencies": [
-      "@swc/core",
-      "esbuild",
-      "msw",
-      "nx",
-      "simple-git-hooks"
-    ]
   },
   "nx": {
     "includedScripts": []
