@@ -97,6 +97,7 @@ overrides:
   lodash: 4.18.1
   '@verdaccio/core>minimatch': 7.4.9
 allowBuilds:
+  esbuild: true
   '@swc/core': true
   msw: true
   nx: true
