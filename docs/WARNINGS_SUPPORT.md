@@ -27,8 +27,6 @@ Validators that emit conformant messages today:
 - **Other adapter packages** — Zod, Yup, and similar adapters that wish to surface
   non-blocking validation should adopt the same prefix.
 
-The toolkit treats validation messages differently based on their `kind` field:
-
 | Message Type        | Convention                           | Blocks Submission | ARIA Role | Implicit ARIA live mode |
 | ------------------- | ------------------------------------ | ----------------- | --------- | ----------------------- |
 | **Error** (default) | `kind` does NOT start with `'warn:'` | ✅ Yes            | `alert`   | assertive               |
@@ -692,7 +690,7 @@ If you're integrating a non-Vest validator (Zod, Yup, custom), produce
 import { warningError } from '@ngx-signal-forms/toolkit';
 
 const error = warningError(
-  'my-validator:soft-rule', // any `warn:`-prefixed string — the function adds `warn:` for you
+  'my-validator:soft-rule', // bare kind — `warn:` is prepended automatically
   'This will work but is unusual', // optional message
 );
 ```
