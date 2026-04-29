@@ -179,7 +179,7 @@ function hasIterator(
 
 function invalidFieldStateError(path: string): InvalidFieldTreeError {
   return new InvalidFieldTreeError(
-    `[ngx-signal-forms] walkFieldTree expected ${formatPath(path)} to resolve to a FieldState. ` +
+    `[ngx-signal-forms] walkFieldTreeEntries expected ${formatPath(path)} to resolve to a FieldState. ` +
       `A FieldState must expose ${REQUIRED_FIELD_STATE_METHODS.join(', ')} as functions and a back-reference (\`state.fieldTree === fieldTree\`).`,
   );
 }
@@ -189,7 +189,7 @@ function invalidChildError(
   segment: string,
 ): InvalidFieldTreeError {
   return new InvalidFieldTreeError(
-    `[ngx-signal-forms] walkFieldTree expected ${formatPath(joinPath(parentPath, segment))} to be a FieldTree.`,
+    `[ngx-signal-forms] walkFieldTreeEntries expected ${formatPath(joinPath(parentPath, segment))} to be a FieldTree.`,
   );
 }
 

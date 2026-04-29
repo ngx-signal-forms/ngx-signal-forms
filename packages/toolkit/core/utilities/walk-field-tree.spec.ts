@@ -56,6 +56,25 @@ describe('walkFieldTreeEntries', () => {
     ]);
   });
 
+  it('yields stable dotted paths for nested objects and arrays', () => {
+    const orderForm = makeOrderForm();
+
+    const paths = [...walkFieldTreeEntries(orderForm)].map(
+      (entry) => entry.path,
+    );
+
+    expect(paths).toEqual([
+      '',
+      'name',
+      'address',
+      'address.street',
+      'address.city',
+      'items',
+      'items.0',
+      'items.1',
+    ]);
+  });
+
   it('defensively stops revisiting nodes when a cycle is encountered', () => {
     const root = createMockWalkableField<Record<string, unknown>>({});
     const loop = createMockWalkableField<Record<string, unknown>>({});
