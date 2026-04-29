@@ -7,62 +7,34 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@angular/build:application",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/demo"],
+      "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/apps/demo",
-        "browser": "apps/demo/src/main.ts",
-        "polyfills": [],
-        "tsConfig": "apps/demo/tsconfig.app.json",
-        "assets": [
-          {
-            "glob": "**/*",
-            "input": "apps/demo/public"
-          }
-        ],
-        "styles": ["apps/demo/src/styles.scss"]
+        "cwd": "apps/demo"
       },
       "configurations": {
         "production": {
-          "budgets": [
-            {
-              "type": "initial",
-              "maximumWarning": "500kb",
-              "maximumError": "1mb"
-            },
-            {
-              "type": "anyComponentStyle",
-              "maximumWarning": "24kb",
-              "maximumError": "32kb"
-            }
-          ],
-          "outputHashing": "all"
+          "command": "vite build --mode production"
         },
         "development": {
-          "optimization": false,
-          "extractLicenses": false,
-          "sourceMap": true
+          "command": "vite build --mode development"
         }
-      },
-      "defaultConfiguration": "production"
+      }
     },
     "serve": {
-      "continuous": true,
-      "executor": "@angular/build:dev-server",
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "cwd": "apps/demo"
+      },
       "configurations": {
         "production": {
-          "buildTarget": "demo:build:production"
+          "command": "vite preview --port 4200"
         },
         "development": {
-          "buildTarget": "demo:build:development"
+          "command": "vite --port 4200"
         }
-      },
-      "defaultConfiguration": "development"
-    },
-    "extract-i18n": {
-      "executor": "@angular/build:extract-i18n",
-      "options": {
-        "buildTarget": "demo:build"
       }
     },
     "lint": {
@@ -72,13 +44,20 @@
       }
     },
     "serve-static": {
-      "continuous": true,
       "executor": "@nx/web:file-server",
+      "defaultConfiguration": "production",
       "options": {
-        "buildTarget": "demo:build",
+        "buildTarget": "demo:build:production",
         "port": 4200,
-        "staticFilePath": "dist/apps/demo/browser",
+        "staticFilePath": "dist/apps/demo",
         "spa": true
+      }
+    },
+    "preview": {
+      "executor": "@nx/vite:preview-server",
+      "defaultConfiguration": "production",
+      "options": {
+        "buildTarget": "demo:build:production"
       }
     }
   }
