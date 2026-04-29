@@ -13,7 +13,7 @@ import {
   type ValidationError,
 } from '@angular/forms/signals';
 import type { SubmittedStatus } from '../types';
-import { walkFieldTreeIterable } from './walk-field-tree';
+import { walkFieldTreeEntries } from './walk-field-tree';
 import { isBlockingError } from './warning-error';
 
 /**
@@ -216,10 +216,12 @@ function assertFieldTree(value: unknown): FieldTree<unknown> {
     );
   }
 
-  // A single iteration is enough to force `walkFieldTreeIterable()` to read the
+  // A single iteration is enough to force `walkFieldTreeEntries()` to read the
   // root FieldState contract. We intentionally stop immediately because the
   // tracker only needs validation, not a full traversal.
-  for (const treeState of walkFieldTreeIterable(value as FieldTree<unknown>)) {
+  for (const { state: treeState } of walkFieldTreeEntries(
+    value as FieldTree<unknown>,
+  )) {
     break;
   }
 
