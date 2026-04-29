@@ -145,16 +145,15 @@ export const NGX_SIGNAL_FORM_ARIA_MODE = new InjectionToken<
 >('NGX_SIGNAL_FORM_ARIA_MODE');
 
 /**
- * Describes a hint element that should contribute to `aria-describedby` for
+ * Descriptor for a hint element that should contribute to `aria-describedby` for
  * a specific field. `fieldName` may be `null` when a hint has not been
- * correlated to a field yet — in that case the registry consumer decides
- * whether to include it.
+ * correlated to a field yet — registries decide whether to include it.
  *
- * Wire format for the already-internal `NgxSignalFormHintRegistry` contract
- * between the form field wrapper and the auto-ARIA directive. Consumers
- * should not depend on its shape.
+ * Public wire format for the {@link NgxSignalFormHintRegistry} contract.
+ * Third-party form-field wrappers expose hints to `NgxSignalFormAutoAria`
+ * by providing a registry whose `hints` signal yields these descriptors.
  *
- * @internal
+ * @public
  */
 export interface NgxSignalFormHintDescriptor {
   readonly id: string;
@@ -162,27 +161,26 @@ export interface NgxSignalFormHintDescriptor {
 }
 
 /**
- * Registry of hints that live inside a form field wrapper (or any other
- * provider of `NGX_SIGNAL_FORM_HINT_REGISTRY`). `NgxSignalFormAutoAria`
- * reads this registry instead of querying the DOM for hint elements.
+ * Registry of hints that live inside a form-field wrapper. `NgxSignalFormAutoAria`
+ * reads this registry instead of querying the DOM, so any wrapper that provides
+ * the registry participates in `aria-describedby` chaining.
  *
- * @internal
+ * @public
  */
 export interface NgxSignalFormHintRegistry {
   readonly hints: Signal<readonly NgxSignalFormHintDescriptor[]>;
 }
 
 /**
- * Injection token for the hint registry contributed by a form field wrapper.
- * Decouples auto-ARIA from DOM knowledge of the wrapper and hint component
- * selectors: hint IDs are now handed to auto-ARIA by whoever owns the wrapper.
+ * Injection token for the hint registry contributed by a form-field wrapper.
+ * Decouples auto-ARIA from DOM knowledge of wrapper internals: hint IDs are
+ * handed to auto-ARIA by whoever owns the wrapper.
  *
- * Internal contract between the form field wrapper component and the
- * auto-ARIA directive. Consumers authoring their own wrapper component may
- * provide it, but it is not part of the stable public API surface and may
- * evolve alongside auto-ARIA internals.
+ * Third-party wrapper authors should provide this token at the wrapper
+ * component level so projected hints automatically link to the bound control's
+ * `aria-describedby`. See `docs/CUSTOM_WRAPPERS.md` for the authoring contract.
  *
- * @internal
+ * @public
  */
 export const NGX_SIGNAL_FORM_HINT_REGISTRY =
   new InjectionToken<NgxSignalFormHintRegistry>(
