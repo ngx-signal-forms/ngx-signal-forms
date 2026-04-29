@@ -65,8 +65,6 @@ export { unwrapValue } from './utilities/unwrap-signal-or-value';
 export {
   InvalidFieldTreeError,
   walkFieldTreeEntries,
-  walkFieldTree,
-  walkFieldTreeIterable,
 } from './utilities/walk-field-tree';
 export {
   isBlockingError,

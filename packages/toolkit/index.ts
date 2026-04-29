@@ -75,9 +75,7 @@ export {
   unwrapValue,
   updateAt,
   updateNested,
-  walkFieldTree,
   walkFieldTreeEntries,
-  walkFieldTreeIterable,
   warningError,
 } from '@ngx-signal-forms/toolkit/core';
 

@@ -38,7 +38,7 @@ const REQUIRED_FIELD_STATE_METHODS = [
 ] as const satisfies readonly (keyof FieldState<unknown>)[];
 
 /**
- * Thrown when {@link walkFieldTree} encounters a value that does not satisfy
+ * Thrown when {@link walkFieldTreeEntries} encounters a value that does not satisfy
  * the FieldTree / FieldState contract. Always loud — never swallowed —
  * because malformed trees indicate a wiring mistake (mock missing required
  * methods, child typed as a non-callable value, etc.) rather than a runtime
@@ -50,35 +50,6 @@ export class InvalidFieldTreeError extends Error {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
     this.name = 'InvalidFieldTreeError';
-  }
-}
-
-/**
- * Visit every reachable `FieldState` in a field tree in depth-first order.
- *
- * @public
- */
-export function walkFieldTree<TModel>(
-  root: FieldTree<TModel>,
-  visitor: (state: FieldState<unknown>) => void,
-): void {
-  for (const state of walkFieldTreeIterable(root)) {
-    visitor(state);
-  }
-}
-
-/**
- * Iterate every reachable `FieldState` in a field tree in depth-first order.
- *
- * @yields Each reachable `FieldState` exactly once.
- *
- * @public
- */
-export function* walkFieldTreeIterable<TModel>(
-  root: FieldTree<TModel>,
-): Iterable<FieldState<unknown>> {
-  for (const entry of walkFieldTreeEntries(root)) {
-    yield entry.state;
   }
 }
 
