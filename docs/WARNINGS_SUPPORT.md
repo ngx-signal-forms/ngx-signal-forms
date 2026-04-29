@@ -8,7 +8,24 @@
 
 ## Convention-Based Approach
 
-### How It Works
+### The `warn:` convention
+
+The toolkit treats any validation message whose `kind` starts with `warn:` as a
+non-blocking warning. This is a **toolkit-level convention** — any validator that
+produces messages in this shape integrates with the toolkit's warning utilities
+(`splitByKind`, `canSubmitWithWarnings`, `isWarningError`, `<ngx-form-field-error>`,
+etc.).
+
+Validators that emit conformant messages today:
+
+- **Vest adapter** (`@ngx-signal-forms/toolkit/vest`) — the `validateVest` adapter
+  prefixes warning messages with `warn:vest:` automatically. See
+  `VEST_WARNING_KIND_PREFIX`.
+- **Custom validators** — pass `kind: 'warn:my-validator:rule-name'` (or any other
+  `warn:`-prefixed string) when you build a `ValidationError` by hand or with
+  `warningError(...)`.
+- **Other adapter packages** — Zod, Yup, and similar adapters that wish to surface
+  non-blocking validation should adopt the same prefix.
 
 The toolkit treats validation messages differently based on their `kind` field:
 
@@ -663,6 +680,40 @@ provideFieldLabels(() => {
 
 Import `humanizeFieldPath` from `@ngx-signal-forms/toolkit/headless` to compose
 it as a fallback inside custom resolvers.
+
+---
+
+## Building your own validator
+
+If you're integrating a non-Vest validator (Zod, Yup, custom), produce
+`ValidationError`s shaped like this for warnings:
+
+```typescript
+import { warningError } from '@ngx-signal-forms/toolkit';
+
+const error = warningError(
+  'my-validator:soft-rule', // any `warn:`-prefixed string — the function adds `warn:` for you
+  'This will work but is unusual', // optional message
+);
+```
+
+> `warningError(kind, message?)` takes the bare kind (without the `warn:` prefix)
+> as its first positional argument and an optional message string as the second.
+> The function prepends `warn:` automatically, so pass `'my-validator:soft-rule'`,
+> **not** `'warn:my-validator:soft-rule'`.
+
+The `warn:` prefix is the only requirement. The toolkit utilities (`splitByKind`,
+`canSubmitWithWarnings`, `isWarningError`, `<ngx-form-field-error>`) recognise the
+prefix without any further wiring. If you prefer to construct the literal yourself:
+
+```typescript
+const error: ValidationError = {
+  kind: 'warn:my-validator:soft-rule',
+  message: 'This will work but is unusual',
+};
+```
+
+Both approaches are equivalent at runtime.
 
 ---
 
