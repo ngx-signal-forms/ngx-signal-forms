@@ -21,10 +21,7 @@ import {
   shouldShowErrors,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
-import {
-  walkFieldTreeEntries,
-  walkFieldTreeIterable,
-} from '@ngx-signal-forms/toolkit/core';
+import { walkFieldTreeEntries } from '@ngx-signal-forms/toolkit/core';
 import {
   NgxSignalFormDebuggerBadge,
   NgxSignalFormDebuggerBadgeIcon,
@@ -107,7 +104,7 @@ function isFieldTreeLike(value: unknown): value is FieldTree<unknown> {
   }
 
   try {
-    for (const treeState of walkFieldTreeIterable(
+    for (const { state: treeState } of walkFieldTreeEntries(
       value as FieldTree<unknown>,
     )) {
       break;
