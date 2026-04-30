@@ -1,4 +1,4 @@
-import { Component, input, signal } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { provideFormFieldErrorRenderer } from '@ngx-signal-forms/toolkit';
@@ -8,6 +8,7 @@ type MockFieldState = {
   invalid: () => boolean;
   touched: () => boolean;
   errors: () => { kind: string; message: string }[];
+  hidden: () => boolean;
 };
 
 /**
@@ -35,12 +36,11 @@ class StubErrorRenderer {
    * Reads the error count through the formField signal to verify the wrapper
    * passed the input through the renderer contract correctly.
    */
-  protected errorCount(): number {
+  protected readonly errorCount = computed(() => {
     const fieldTree = this.formField() as (() => MockFieldState) | undefined;
     if (!fieldTree) return 0;
-    const state = fieldTree();
-    return state.errors().length;
-  }
+    return fieldTree().errors().length;
+  });
 }
 
 describe('form-field wrapper renderer seam', () => {
@@ -49,6 +49,7 @@ describe('form-field wrapper renderer seam', () => {
       invalid: () => true,
       touched: () => true,
       errors: () => [{ kind: 'required', message: 'required' }],
+      hidden: () => false,
     });
 
     @Component({
@@ -81,6 +82,6 @@ describe('form-field wrapper renderer seam', () => {
     // NgxFormFieldError. The error count probe confirms the wrapper passed
     // the formField input through the renderer contract correctly.
     const stub = await screen.findByTestId('stub-error');
-    expect(stub.textContent).toBe('STUB-ERR:1');
+    expect(stub.textContent?.trim()).toBe('STUB-ERR:1');
   });
 });
