@@ -13,6 +13,7 @@ export * from './providers/config.provider';
 export * from './providers/control-semantics.provider';
 export * from './providers/error-messages.provider';
 export * from './providers/field-labels.provider';
+export * from './providers/form-field-renderer.provider';
 
 // Services
 export * from './services/field-identity';
