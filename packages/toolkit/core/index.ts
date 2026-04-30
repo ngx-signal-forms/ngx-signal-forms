@@ -29,6 +29,10 @@ export {
 // Utilities
 export { createAriaInvalidSignal } from './utilities/aria/create-aria-invalid-signal';
 export {
+  type AriaRequiredFieldState,
+  createAriaRequiredSignal,
+} from './utilities/aria/create-aria-required-signal';
+export {
   createHintIdsSignal,
   type CreateHintIdsSignalOptions,
   type HintIdsFieldNameReader,

@@ -29,6 +29,7 @@ export {
   buildAriaDescribedBy,
   canSubmitWithWarnings,
   combineShowErrors,
+  createAriaRequiredSignal,
   createErrorVisibility,
   createOnInvalidHandler,
   createShowErrorsComputed,
@@ -88,6 +89,7 @@ export {
 
 export type {
   AriaDescribedByChainOptions,
+  AriaRequiredFieldState,
   CreateErrorVisibilityOptions,
   ErrorDisplayStrategy,
   ErrorReadableState,

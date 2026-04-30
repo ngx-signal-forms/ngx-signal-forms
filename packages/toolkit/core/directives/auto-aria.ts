@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { FORM_FIELD, type FieldState } from '@angular/forms/signals';
+import { createAriaRequiredSignal } from '../utilities/aria/create-aria-required-signal';
 import {
   NGX_SIGNAL_FORM_ARIA_MODE,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
@@ -215,22 +216,24 @@ export class NgxSignalFormAutoAria {
     return this.#factoryAriaInvalid();
   });
 
+  readonly #ariaRequiredFromFactory = createAriaRequiredSignal(
+    this.#fieldStateSignal,
+  );
+
   /**
    * Computed ARIA required state.
    * Returns 'true' | null based on the field's `required()` signal.
+   *
+   * Delegates to {@link createAriaRequiredSignal} for the actual resolution.
+   * The directive shell only owns the manual-mode opt-out branch — when
+   * `ngxSignalFormControlAria='manual'`, the consumer's DOM value wins.
    */
   protected readonly ariaRequired = computed(() => {
     if (this.#isManualAriaMode()) {
       return this.#domSnapshot().ariaRequired;
     }
 
-    const fieldState = this.#resolveFieldState();
-
-    if (!fieldState) {
-      return null;
-    }
-
-    return fieldState.required() ? 'true' : null;
+    return this.#ariaRequiredFromFactory();
   });
 
   /**
