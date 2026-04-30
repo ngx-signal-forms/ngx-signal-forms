@@ -1,3 +1,4 @@
+import { NgComponentOutlet } from '@angular/common';
 import {
   afterEveryRender,
   booleanAttribute,
@@ -11,6 +12,7 @@ import {
   isDevMode,
   type Signal,
   signal,
+  type Type,
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import type {
@@ -22,6 +24,8 @@ import type {
   NgxFormFieldErrorPlacement,
 } from '@ngx-signal-forms/toolkit';
 import {
+  NGX_FORM_FIELD_ERROR_RENDERER,
+  NGX_FORM_FIELD_HINT_RENDERER,
   NGX_SIGNAL_FORM_CONTROL_PRESETS,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORMS_CONFIG,
@@ -174,7 +178,7 @@ import {
 @Component({
   selector: 'ngx-form-field-wrapper',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgxFormFieldError],
+  imports: [NgComponentOutlet],
   providers: [
     NgxFieldIdentity,
     {
@@ -253,10 +257,11 @@ import {
 
     @if (isTopPlacement() && shouldShowErrors()) {
       <div class="ngx-signal-form-field-wrapper__messages">
-        <ngx-form-field-error
-          [formField]="formField()"
-          [strategy]="effectiveStrategy()"
-          [submittedStatus]="submittedStatus()"
+        <ng-container
+          *ngComponentOutlet="
+            errorRendererComponent();
+            inputs: errorRendererInputs()
+          "
         />
       </div>
     }
@@ -283,10 +288,11 @@ import {
     <div class="ngx-signal-form-field-wrapper__assistive">
       <div class="ngx-signal-form-field-wrapper__assistive-left">
         @if (!isTopPlacement() && shouldShowErrors()) {
-          <ngx-form-field-error
-            [formField]="formField()"
-            [strategy]="effectiveStrategy()"
-            [submittedStatus]="submittedStatus()"
+          <ng-container
+            *ngComponentOutlet="
+              errorRendererComponent();
+              inputs: errorRendererInputs()
+            "
           />
         }
         <div [style.display]="shouldShowErrors() ? 'none' : 'contents'">
@@ -417,6 +423,55 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
 
   readonly #controlPresets = inject(NGX_SIGNAL_FORM_CONTROL_PRESETS);
+
+  /**
+   * Optional error renderer override resolved via DI. The wrapper is the
+   * default-fallback owner: when no provider is registered the resolved
+   * component below is `NgxFormFieldError`, preserving zero-config behaviour.
+   */
+  readonly #errorRenderer = inject(NGX_FORM_FIELD_ERROR_RENDERER, {
+    optional: true,
+  });
+
+  /**
+   * Optional hint renderer override resolved via DI. Surface kept symmetric
+   * with the error renderer; the default fallback is `NgxFormFieldHint`.
+   */
+  readonly #hintRenderer = inject(NGX_FORM_FIELD_HINT_RENDERER, {
+    optional: true,
+  });
+
+  /**
+   * Resolved error-renderer component. `computed` so the outlet rebinds if
+   * the resolved component ever changes; in practice the DI-provided value
+   * is stable for the wrapper's lifetime.
+   */
+  protected readonly errorRendererComponent = computed<Type<unknown>>(
+    () => this.#errorRenderer?.component ?? NgxFormFieldError,
+  );
+
+  /**
+   * Resolved hint-renderer component. Currently unused at the template level
+   * because hints are projected via `<ng-content select="ngx-form-field-hint">`,
+   * but kept for symmetry and future parity with the error slot.
+   */
+  protected readonly hintRendererComponent = computed<Type<unknown>>(
+    () => this.#hintRenderer?.component ?? NgxFormFieldHint,
+  );
+
+  /**
+   * Inputs map passed to `*ngComponentOutlet` for the error renderer. Mirrors
+   * the input shape the static `<ngx-form-field-error>` element previously
+   * received. Custom error renderers must accept these three input names; any
+   * extra inputs the consumer's renderer declares are unaffected.
+   */
+  protected readonly errorRendererInputs = computed<Record<string, unknown>>(
+    () => ({
+      formField: this.formField(),
+      strategy: this.effectiveStrategy(),
+      submittedStatus: this.submittedStatus(),
+    }),
+  );
 
   /**
    * Shared field-identity service. Provided by this component so auto-aria
