@@ -2,6 +2,7 @@ import {
   Component,
   createEnvironmentInjector,
   EnvironmentInjector,
+  inject,
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
@@ -85,7 +86,9 @@ describe('provideFormFieldErrorRendererForComponent (component scope)', () => {
       standalone: true,
       providers: [provideFormFieldErrorRendererForComponent({})],
     })
-    class HostComponent {}
+    class HostComponent {
+      readonly renderer = inject(NGX_FORM_FIELD_ERROR_RENDERER);
+    }
 
     TestBed.configureTestingModule({
       providers: [
@@ -94,10 +97,9 @@ describe('provideFormFieldErrorRendererForComponent (component scope)', () => {
     });
 
     const fixture = TestBed.createComponent(HostComponent);
-    expect(
-      fixture.debugElement.injector.get(NGX_FORM_FIELD_ERROR_RENDERER)
-        .component,
-    ).toBe(StubErrorComponent);
+    expect(fixture.componentInstance.renderer.component).toBe(
+      StubErrorComponent,
+    );
   });
 
   it('component override wins over environment scope', () => {
@@ -110,7 +112,9 @@ describe('provideFormFieldErrorRendererForComponent (component scope)', () => {
         }),
       ],
     })
-    class HostComponent {}
+    class HostComponent {
+      readonly renderer = inject(NGX_FORM_FIELD_ERROR_RENDERER);
+    }
 
     TestBed.configureTestingModule({
       providers: [
@@ -119,10 +123,9 @@ describe('provideFormFieldErrorRendererForComponent (component scope)', () => {
     });
 
     const fixture = TestBed.createComponent(HostComponent);
-    expect(
-      fixture.debugElement.injector.get(NGX_FORM_FIELD_ERROR_RENDERER)
-        .component,
-    ).toBe(OverrideErrorComponent);
+    expect(fixture.componentInstance.renderer.component).toBe(
+      OverrideErrorComponent,
+    );
   });
 });
 
@@ -162,7 +165,9 @@ describe('provideFormFieldHintRendererForComponent (component scope)', () => {
       standalone: true,
       providers: [provideFormFieldHintRendererForComponent({})],
     })
-    class HostComponent {}
+    class HostComponent {
+      readonly renderer = inject(NGX_FORM_FIELD_HINT_RENDERER);
+    }
 
     TestBed.configureTestingModule({
       providers: [
@@ -171,9 +176,9 @@ describe('provideFormFieldHintRendererForComponent (component scope)', () => {
     });
 
     const fixture = TestBed.createComponent(HostComponent);
-    expect(
-      fixture.debugElement.injector.get(NGX_FORM_FIELD_HINT_RENDERER).component,
-    ).toBe(StubHintComponent);
+    expect(fixture.componentInstance.renderer.component).toBe(
+      StubHintComponent,
+    );
   });
 
   it('component override wins over environment scope', () => {
@@ -186,7 +191,9 @@ describe('provideFormFieldHintRendererForComponent (component scope)', () => {
         }),
       ],
     })
-    class HostComponent {}
+    class HostComponent {
+      readonly renderer = inject(NGX_FORM_FIELD_HINT_RENDERER);
+    }
 
     TestBed.configureTestingModule({
       providers: [
@@ -195,8 +202,8 @@ describe('provideFormFieldHintRendererForComponent (component scope)', () => {
     });
 
     const fixture = TestBed.createComponent(HostComponent);
-    expect(
-      fixture.debugElement.injector.get(NGX_FORM_FIELD_HINT_RENDERER).component,
-    ).toBe(OverrideHintComponent);
+    expect(fixture.componentInstance.renderer.component).toBe(
+      OverrideHintComponent,
+    );
   });
 });

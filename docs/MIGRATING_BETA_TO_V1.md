@@ -19,7 +19,8 @@ releases will not include any of the renames below.
 - **`[formRoot]` selector** — Directive is now an additive enhancer: add `ngxSignalForm`
 - **Public API surface** — `/core` is hidden; `@internal` plumbing is no longer published
 - **CSS custom properties** — several theming tokens were renamed or collapsed during the rc cycle (see [`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md))
-- **Removed helpers** — `computeShowErrors`, `canSubmit`, `injectFormConfig`, …
+- **Removed helpers** — `computeShowErrors`, `canSubmit`, `injectFormConfig`, `walkFieldTree(visitor)`, `walkFieldTreeIterable`, …
+- **Removed component** — `NgxFormFieldAssistiveRow` (inlined into `NgxFormFieldWrapper`)
 - **Removed directive** — `NgxFloatingLabelDirective` (use `appearance="outline"`)
 - **Renamed components** — `NgxSignalFormError*` → `NgxFormFieldError*`
 - **Renamed appearances** — final appearance set is `standard` / `outline` / `plain`
@@ -140,19 +141,22 @@ for the full policy.
 The following symbols existed in betas or early RCs and have been
 removed. Replace them with the v1 equivalents.
 
-| Removed API                                 | Current replacement                                    |
-| ------------------------------------------- | ------------------------------------------------------ |
-| `computeShowErrors()`                       | `showErrors()`                                         |
-| `createShowErrorsSignal()`                  | `showErrors()`                                         |
-| `canSubmit()`                               | `canSubmitWithWarnings()`                              |
-| `isSubmitting()`                            | `submittedStatus()` from the `ngxSignalForm` directive |
-| `'manual'` error strategy                   | `showErrors()` + a manual `WritableSignal<boolean>`    |
-| `fieldNameResolver` config                  | Put an `id` on the bound control element               |
-| `strictFieldResolution` config              | Removed — strict by default                            |
-| `debug` config field                        | Removed — use the `/debugger` entry point instead      |
-| `injectFormConfig()`                        | `inject(NGX_SIGNAL_FORMS_CONFIG)`                      |
-| `NgxFloatingLabelDirective`                 | `<ngx-form-field-wrapper appearance="outline">`        |
-| `NgxSignalFormsUserConfig` as `DeepPartial` | `Partial<NgxSignalFormsConfig>` (top-level only)       |
+| Removed API                                 | Current replacement                                                                                  |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `computeShowErrors()`                       | `showErrors()`                                                                                       |
+| `createShowErrorsSignal()`                  | `showErrors()`                                                                                       |
+| `canSubmit()`                               | `canSubmitWithWarnings()`                                                                            |
+| `isSubmitting()`                            | `submittedStatus()` from the `ngxSignalForm` directive                                               |
+| `'manual'` error strategy                   | `showErrors()` + a manual `WritableSignal<boolean>`                                                  |
+| `fieldNameResolver` config                  | Put an `id` on the bound control element                                                             |
+| `strictFieldResolution` config              | Removed — strict by default                                                                          |
+| `debug` config field                        | Removed — use the `/debugger` entry point instead                                                    |
+| `injectFormConfig()`                        | `inject(NGX_SIGNAL_FORMS_CONFIG)`                                                                    |
+| `NgxFloatingLabelDirective`                 | `<ngx-form-field-wrapper appearance="outline">`                                                      |
+| `NgxSignalFormsUserConfig` as `DeepPartial` | `Partial<NgxSignalFormsConfig>` (top-level only)                                                     |
+| `walkFieldTree(form, visitor)`              | `for (const { state } of walkFieldTreeEntries(form)) { visitor(state); }`                            |
+| `walkFieldTreeIterable(form)`               | `walkFieldTreeEntries(form)` (same iterator shape, yields `{ state, path }`)                         |
+| `NgxFormFieldAssistiveRow`                  | Removed; markup + styles inlined into `NgxFormFieldWrapper`. CSS custom-property contract preserved. |
 
 ### `NgxFloatingLabelDirective` → `appearance="outline"`
 
@@ -189,9 +193,9 @@ unless you were explicitly typing a partial config by hand.
 ### 4a. Error components renamed for prefix consistency
 
 Every other field-scoped component used the `NgxFormField*` prefix
-(`NgxFormFieldHint`, `NgxFormFieldCharacterCount`,
-`NgxFormFieldAssistiveRow`), but the error display and error
-summary components used `NgxSignalFormError*`. That mismatch is fixed.
+(`NgxFormFieldHint`, `NgxFormFieldCharacterCount`), but the error
+display and error summary components used `NgxSignalFormError*`. That
+mismatch is fixed.
 
 | Before                                     | After                                     |
 | ------------------------------------------ | ----------------------------------------- |
@@ -332,26 +336,26 @@ name.
 
 #### Class names
 
-| Before                                   | After                            |
-| ---------------------------------------- | -------------------------------- |
-| `NgxSignalFormDirective`                 | `NgxSignalForm`                  |
-| `NgxSignalFormAutoAriaDirective`         | `NgxSignalFormAutoAria`          |
-| `NgxSignalFormControlSemanticsDirective` | _(unchanged — exception)_        |
-| `NgxSignalFormFieldWrapperComponent`     | `NgxFormFieldWrapper`            |
-| `NgxSignalFormFieldsetComponent`         | `NgxFormFieldset`                |
-| `NgxFormFieldErrorComponent`             | `NgxFormFieldError`              |
-| `NgxFormFieldErrorSummaryComponent`      | `NgxFormFieldErrorSummary`       |
-| `NgxFormFieldHintComponent`              | `NgxFormFieldHint`               |
-| `NgxFormFieldCharacterCountComponent`    | `NgxFormFieldCharacterCount`     |
-| `NgxFormFieldAssistiveRowComponent`      | `NgxFormFieldAssistiveRow`       |
-| `NgxHeadlessErrorStateDirective`         | `NgxHeadlessErrorState`          |
-| `NgxHeadlessErrorSummaryDirective`       | `NgxHeadlessErrorSummary`        |
-| `NgxHeadlessCharacterCountDirective`     | `NgxHeadlessCharacterCount`      |
-| `NgxHeadlessFieldsetDirective`           | `NgxHeadlessFieldset`            |
-| `NgxHeadlessFieldNameDirective`          | `NgxHeadlessFieldName`           |
-| `SignalFormDebuggerComponent`            | `NgxSignalFormDebugger`          |
-| `DebuggerBadgeComponent`                 | `NgxSignalFormDebuggerBadge`     |
-| `DebuggerBadgeIconComponent`             | `NgxSignalFormDebuggerBadgeIcon` |
+| Before                                   | After                                                |
+| ---------------------------------------- | ---------------------------------------------------- |
+| `NgxSignalFormDirective`                 | `NgxSignalForm`                                      |
+| `NgxSignalFormAutoAriaDirective`         | `NgxSignalFormAutoAria`                              |
+| `NgxSignalFormControlSemanticsDirective` | _(unchanged — exception)_                            |
+| `NgxSignalFormFieldWrapperComponent`     | `NgxFormFieldWrapper`                                |
+| `NgxSignalFormFieldsetComponent`         | `NgxFormFieldset`                                    |
+| `NgxFormFieldErrorComponent`             | `NgxFormFieldError`                                  |
+| `NgxFormFieldErrorSummaryComponent`      | `NgxFormFieldErrorSummary`                           |
+| `NgxFormFieldHintComponent`              | `NgxFormFieldHint`                                   |
+| `NgxFormFieldCharacterCountComponent`    | `NgxFormFieldCharacterCount`                         |
+| `NgxFormFieldAssistiveRowComponent`      | _Removed in v1 — inlined into `NgxFormFieldWrapper`_ |
+| `NgxHeadlessErrorStateDirective`         | `NgxHeadlessErrorState`                              |
+| `NgxHeadlessErrorSummaryDirective`       | `NgxHeadlessErrorSummary`                            |
+| `NgxHeadlessCharacterCountDirective`     | `NgxHeadlessCharacterCount`                          |
+| `NgxHeadlessFieldsetDirective`           | `NgxHeadlessFieldset`                                |
+| `NgxHeadlessFieldNameDirective`          | `NgxHeadlessFieldName`                               |
+| `SignalFormDebuggerComponent`            | `NgxSignalFormDebugger`                              |
+| `DebuggerBadgeComponent`                 | `NgxSignalFormDebuggerBadge`                         |
+| `DebuggerBadgeIconComponent`             | `NgxSignalFormDebuggerBadgeIcon`                     |
 
 The debugger bundle const is `NgxSignalFormDebuggerToolkit` (mirrors
 `NgxSignalFormToolkit`).
