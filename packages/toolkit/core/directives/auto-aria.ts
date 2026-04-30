@@ -20,6 +20,7 @@ import {
   resolveFieldName,
 } from '../utilities/field-resolution';
 import { createErrorVisibility } from '../utilities/create-error-visibility';
+import { createAriaDescribedBySignal } from '../utilities/aria/create-aria-described-by-signal';
 import { createHintIdsSignal } from '../utilities/aria/create-hint-ids-signal';
 import { isBlockingError, isWarningError } from '../utilities/warning-error';
 import { NgxFieldIdentity } from '../services/field-identity';
@@ -170,6 +171,14 @@ export class NgxSignalFormAutoAria {
     fieldName: () => this.#domSnapshot().fieldName,
   });
 
+  /**
+   * Reactive view of the resolved field state, exposed as a `Signal` so it
+   * can be threaded into pure-signal ARIA factories (e.g.
+   * `createAriaInvalidSignal`) without giving them access to the directive's
+   * private resolver.
+   */
+  readonly #fieldStateSignal = computed(() => this.#resolveFieldState());
+
   /** Delegates to `#visibilityByStrategy` after filtering to blocking errors. */
   readonly #shouldShowErrors = computed(() => {
     return this.#shouldShowBy('blocking');
@@ -180,19 +189,26 @@ export class NgxSignalFormAutoAria {
     return this.#shouldShowBy('warning');
   });
 
-  /**
-   * Reactive view of the resolved field state, exposed as a `Signal` so it
-   * can be threaded into pure-signal ARIA factories (e.g.
-   * `createAriaInvalidSignal`) without giving them access to the directive's
-   * private resolver.
-   */
-  readonly #fieldStateSignal = computed(() => this.#resolveFieldState());
-
   readonly #factoryAriaInvalid = createAriaInvalidSignal(
     this.#fieldStateSignal,
     this.#visibilityByStrategy,
     this.#fieldIdentity?.isControlVisible,
   );
+
+  /**
+   * Pure-signal `aria-describedby` composer. Mirrors the directive's
+   * historical preserved-IDs + hints + error/warning composition, but lives
+   * in the headless surface so wrapper authors can reuse it without
+   * inheriting the directive shell. Manual-mode opt-out is still owned by
+   * this directive — the factory itself is unconditional.
+   */
+  readonly #factoryAriaDescribedBy = createAriaDescribedBySignal({
+    fieldState: this.#fieldStateSignal,
+    hintIds: this.#hintIds,
+    visibility: this.#visibilityByStrategy,
+    preservedIds: () => this.#domSnapshot().describedBy,
+    fieldName: () => this.#domSnapshot().fieldName,
+  });
 
   /**
    * Computed ARIA invalid state.
@@ -241,43 +257,17 @@ export class NgxSignalFormAutoAria {
    * Links to error/warning message elements for screen readers.
    *
    * Preserves existing aria-describedby values (hints, descriptions) and
-   * appends error/warning IDs when they should be shown.
+   * appends error/warning IDs when they should be shown. Delegates to the
+   * pure `createAriaDescribedBySignal` factory; the manual-mode opt-out
+   * stays in this directive shell so the factory contract stays
+   * unconditional.
    */
   protected readonly ariaDescribedBy = computed(() => {
     if (this.#isManualAriaMode()) {
       return this.#domSnapshot().describedBy;
     }
 
-    const snapshot = this.#domSnapshot();
-    const fieldName = snapshot.fieldName;
-    if (!fieldName) return snapshot.describedBy;
-
-    const existing = snapshot.describedBy;
-    const parts: string[] = existing ? existing.split(' ').filter(Boolean) : [];
-
-    for (const hintId of this.#hintIds()) {
-      if (!parts.includes(hintId)) {
-        parts.push(hintId);
-      }
-    }
-
-    // Add error ID if showing errors
-    if (this.#shouldShowErrors()) {
-      const errorId = generateErrorId(fieldName);
-      if (!parts.includes(errorId)) {
-        parts.push(errorId);
-      }
-    }
-
-    // Add warning ID if showing warnings
-    if (this.#shouldShowWarnings()) {
-      const warningId = generateWarningId(fieldName);
-      if (!parts.includes(warningId)) {
-        parts.push(warningId);
-      }
-    }
-
-    return parts.length > 0 ? parts.join(' ') : null;
+    return this.#factoryAriaDescribedBy();
   });
 
   #haveSameIds(current: readonly string[], next: readonly string[]): boolean {

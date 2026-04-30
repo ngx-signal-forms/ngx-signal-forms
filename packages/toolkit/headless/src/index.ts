@@ -56,10 +56,14 @@ export {
 // (`NgxSignalFormAutoAria`) and the headless re-export in lockstep without
 // duplicating implementation or forming a cycle through this barrel.
 export {
+  createAriaDescribedBySignal,
   createAriaInvalidSignal,
   createAriaRequiredSignal,
   createHintIdsSignal,
+  type AriaDescribedByFieldNameReader,
+  type AriaDescribedByPreservedIdsReader,
   type AriaRequiredFieldState,
+  type CreateAriaDescribedBySignalOptions,
   type CreateHintIdsSignalOptions,
   type HintIdsFieldNameReader,
   type HintIdsIdentityLike,

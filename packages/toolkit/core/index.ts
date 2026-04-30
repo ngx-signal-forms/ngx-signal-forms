@@ -27,6 +27,12 @@ export {
 } from './directives/ngx-signal-form';
 
 // Utilities
+export {
+  createAriaDescribedBySignal,
+  type AriaDescribedByFieldNameReader,
+  type AriaDescribedByPreservedIdsReader,
+  type CreateAriaDescribedBySignalOptions,
+} from './utilities/aria/create-aria-described-by-signal';
 export { createAriaInvalidSignal } from './utilities/aria/create-aria-invalid-signal';
 export {
   createAriaRequiredSignal,
