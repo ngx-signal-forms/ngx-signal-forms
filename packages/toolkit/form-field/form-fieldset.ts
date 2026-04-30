@@ -1,4 +1,4 @@
-import { NgTemplateOutlet } from '@angular/common';
+import { NgComponentOutlet, NgTemplateOutlet } from '@angular/common';
 import {
   afterEveryRender,
   booleanAttribute,
@@ -10,6 +10,7 @@ import {
   input,
   isDevMode,
   signal,
+  type Type,
 } from '@angular/core';
 import {
   NgxFormFieldError,
@@ -18,7 +19,10 @@ import {
 } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxHeadlessFieldset } from '@ngx-signal-forms/toolkit/headless';
 
-import type { NgxFormFieldErrorPlacement } from '@ngx-signal-forms/toolkit';
+import {
+  NGX_FORM_FIELD_ERROR_RENDERER,
+  type NgxFormFieldErrorPlacement,
+} from '@ngx-signal-forms/toolkit';
 
 export type NgxFieldsetFeedbackAppearance = 'auto' | 'plain' | 'notification';
 export type NgxFieldsetAppearance = 'outline' | 'plain';
@@ -116,7 +120,7 @@ export type NgxFieldsetValidationSurface = 'never' | 'always';
       ],
     },
   ],
-  imports: [NgTemplateOutlet, NgxFormFieldError, NgxFormFieldNotification],
+  imports: [NgComponentOutlet, NgTemplateOutlet, NgxFormFieldNotification],
   styleUrls: ['./feedback-tokens.css', './form-fieldset.css'],
   exportAs: 'ngxFormFieldset',
   // BEM classnames keep the legacy `ngx-signal-form-fieldset--*` prefix for
@@ -170,12 +174,11 @@ export type NgxFieldsetValidationSurface = 'never' | 'always';
             [listStyle]="listStyle()"
           />
         } @else {
-          <ngx-form-field-error
-            [errors]="displayedMessagesSignal"
-            [fieldName]="fieldset.resolvedFieldsetId()"
-            [strategy]="fieldset.resolvedStrategy()"
-            [submittedStatus]="fieldset.resolvedSubmittedStatus()"
-            [listStyle]="listStyle()"
+          <ng-container
+            *ngComponentOutlet="
+              errorRendererComponent();
+              inputs: errorRendererInputs()
+            "
           />
         }
       </div>
@@ -191,6 +194,17 @@ export class NgxFormFieldset {
    */
   protected readonly fieldset = inject(NgxHeadlessFieldset);
   readonly #elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
+  /**
+   * Optional error renderer override resolved via DI. Mirrors the wrapper:
+   * when no provider is registered the resolved component below is
+   * `NgxFormFieldError`, preserving zero-config behaviour.
+   *
+   * The notification slot keeps its static `NgxFormFieldNotification`
+   * binding — notification customisation is out of scope for v1.
+   */
+  readonly #errorRenderer = inject(NGX_FORM_FIELD_ERROR_RENDERER, {
+    optional: true,
+  });
   readonly #legendId = signal<string | null>(null);
   // Capture any caller-supplied `aria-labelledby` / `aria-label` at construction
   // so we can fall back to them on non-native hosts that lack a projected
@@ -365,6 +379,35 @@ export class NgxFormFieldset {
   protected readonly displayedMessagesSignal = computed(() => {
     return this.showMessages() ? this.filteredErrorsSignal() : [];
   });
+
+  /**
+   * Resolved error-renderer component. `computed` so the outlet rebinds if
+   * the resolved component ever changes; in practice the DI-provided value
+   * is stable for the fieldset's lifetime.
+   */
+  protected readonly errorRendererComponent = computed<Type<unknown>>(
+    () => this.#errorRenderer?.component ?? NgxFormFieldError,
+  );
+
+  /**
+   * Inputs map passed to `*ngComponentOutlet` for the error renderer. Mirrors
+   * the input shape the static `<ngx-form-field-error>` element previously
+   * received in the fieldset's plain-feedback branch — including `errors`,
+   * `fieldName`, and `listStyle`, which the wrapper does not bind.
+   *
+   * Custom error renderers must accept these input names; extra inputs
+   * declared on a custom renderer are unaffected. The notification branch
+   * keeps `NgxFormFieldNotification` as a static element.
+   */
+  protected readonly errorRendererInputs = computed<Record<string, unknown>>(
+    () => ({
+      errors: this.displayedMessagesSignal,
+      fieldName: this.fieldset.resolvedFieldsetId(),
+      strategy: this.fieldset.resolvedStrategy(),
+      submittedStatus: this.fieldset.resolvedSubmittedStatus(),
+      listStyle: this.listStyle(),
+    }),
+  );
 
   protected readonly resolvedValidationSurface =
     computed<NgxFieldsetValidationSurface>(() => {
