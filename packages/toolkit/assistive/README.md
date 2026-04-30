@@ -17,7 +17,6 @@ import {
   NgxFormFieldErrorSummary,
   NgxFormFieldHint,
   NgxFormFieldCharacterCount,
-  NgxFormFieldAssistiveRow,
   warningError,
   isWarningError,
   isBlockingError,
@@ -34,13 +33,11 @@ import {
 
   <label for="bio">Bio</label>
   <textarea id="bio" [formField]="contactForm.bio"></textarea>
-  <ngx-form-field-assistive-row>
-    <ngx-form-field-hint>Max 500 characters</ngx-form-field-hint>
-    <ngx-form-field-character-count
-      [formField]="contactForm.bio"
-      [maxLength]="500"
-    />
-  </ngx-form-field-assistive-row>
+  <ngx-form-field-hint>Max 500 characters</ngx-form-field-hint>
+  <ngx-form-field-character-count
+    [formField]="contactForm.bio"
+    [maxLength]="500"
+  />
 </form>
 ```
 
@@ -134,17 +131,6 @@ Character counter with progressive color states (ok → warning → danger → e
 ```
 
 When a matching max-length validator is present, `maxLength` can be omitted and detected automatically. Add `liveAnnounce` for polite screen reader announcements.
-
-### NgxFormFieldAssistiveRow
-
-Layout container for hint and character count side by side.
-
-```html
-<ngx-form-field-assistive-row>
-  <ngx-form-field-hint>Enter your bio</ngx-form-field-hint>
-  <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
-</ngx-form-field-assistive-row>
-```
 
 ## Warning utilities
 

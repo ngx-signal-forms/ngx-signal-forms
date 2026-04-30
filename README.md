@@ -271,8 +271,7 @@ components _without_ adopting the full field wrapper — e.g. you already have a
 timing and ARIA.
 
 Key exports: `NgxFormFieldError`, `NgxFormFieldNotification`,
-`NgxFormFieldErrorSummary`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`,
-`NgxFormFieldAssistiveRow`.
+`NgxFormFieldErrorSummary`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`.
 
 **[→ Assistive docs](./packages/toolkit/assistive/README.md)** ·
 **Demo:** [`your-first-form` (code)](./apps/demo/src/app/01-getting-started/your-first-form) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/getting-started/your-first-form/)

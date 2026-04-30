@@ -25,7 +25,7 @@ import {
 // import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
-`NgxFormField` bundles the wrapper, fieldset, and wrapper-used assistive components (`NgxFormFieldError`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`, `NgxFormFieldAssistiveRow`) for convenience. `NgxFormFieldNotification` and `NgxFormFieldErrorSummary` remain available via `@ngx-signal-forms/toolkit/assistive`.
+`NgxFormField` bundles the wrapper, fieldset, and wrapper-used assistive components (`NgxFormFieldError`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`) for convenience. `NgxFormFieldNotification` and `NgxFormFieldErrorSummary` remain available via `@ngx-signal-forms/toolkit/assistive`.
 
 ## Quick start
 
