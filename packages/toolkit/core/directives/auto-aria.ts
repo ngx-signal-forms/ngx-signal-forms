@@ -12,6 +12,7 @@ import {
   NGX_SIGNAL_FORM_ARIA_MODE,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
 } from '../tokens';
+import { createAriaInvalidSignal } from '../utilities/aria/create-aria-invalid-signal';
 import {
   generateErrorId,
   generateWarningId,
@@ -92,10 +93,6 @@ export class NgxSignalFormAutoAria {
       typeof field === 'function' ? field() : this.#formField.state();
 
     return fieldState ?? null;
-  }
-
-  #hasUsableFieldState(): boolean {
-    return this.#resolveFieldState() !== null;
   }
 
   #shouldShowBy(errorType: 'blocking' | 'warning'): boolean {
@@ -183,6 +180,20 @@ export class NgxSignalFormAutoAria {
   });
 
   /**
+   * Reactive view of the resolved field state, exposed as a `Signal` so it
+   * can be threaded into pure-signal ARIA factories (e.g.
+   * `createAriaInvalidSignal`) without giving them access to the directive's
+   * private resolver.
+   */
+  readonly #fieldStateSignal = computed(() => this.#resolveFieldState());
+
+  readonly #factoryAriaInvalid = createAriaInvalidSignal(
+    this.#fieldStateSignal,
+    this.#visibilityByStrategy,
+    this.#fieldIdentity?.isControlVisible,
+  );
+
+  /**
    * Computed ARIA invalid state.
    * Returns 'true' | 'false' | null based on field validity and error display strategy.
    *
@@ -194,25 +205,14 @@ export class NgxSignalFormAutoAria {
    * removed from the hidden control rather than going stale.
    */
   protected readonly ariaInvalid = computed(() => {
+    // Manual-mode opt-out lives in the directive shell — the factory is
+    // unconditional, so the pass-through to the DOM snapshot has to be gated
+    // here, before delegating.
     if (this.#isManualAriaMode()) {
       return this.#domSnapshot().ariaInvalid;
     }
 
-    if (!this.#hasUsableFieldState()) {
-      return null;
-    }
-
-    // When the wrapper's identity service is present and the control has
-    // no layout box (collapsed `<details>`, `hidden` attribute,
-    // `display: none`), remove aria-invalid so it cannot go stale on
-    // collapsed/hidden fieldsets. Visibility is pushed from the wrapper
-    // via `checkVisibility()` polling in `afterEveryRender`, so this does
-    // not trigger merely because the control is scrolled off-screen.
-    if (this.#fieldIdentity && !this.#fieldIdentity.isControlVisible()) {
-      return null;
-    }
-
-    return this.#shouldShowErrors() ? 'true' : 'false';
+    return this.#factoryAriaInvalid();
   });
 
   /**
