@@ -203,6 +203,11 @@ export const NGX_SIGNAL_FORM_HINT_REGISTRY =
  * theming hooks); the wrapper/fieldset ignore them and Angular accepts the
  * `inputs` map without warning.
  *
+ * The provided `component` must be a standalone component — the wrapper and
+ * fieldset instantiate it via `*ngComponentOutlet` without supplying
+ * `ngComponentOutletNgModule`, so module-declared components are not
+ * supported.
+ *
  * @public
  */
 export interface NgxFormFieldErrorRenderer {
@@ -222,6 +227,10 @@ export interface NgxFormFieldErrorRenderer {
  * Hint renderers receive no wrapper-bound inputs; when instantiated, they
  * consume `NGX_SIGNAL_FORM_FIELD_CONTEXT` (and any other DI tokens)
  * directly.
+ *
+ * The provided `component` must be a standalone component — wrappers that
+ * instantiate it via `*ngComponentOutlet` without `ngComponentOutletNgModule`
+ * cannot resolve module-declared components.
  *
  * @public
  */
