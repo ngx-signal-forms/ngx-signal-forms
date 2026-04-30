@@ -41,6 +41,11 @@ import {
 </form>
 ```
 
+`ngx-form-field-hint` and `ngx-form-field-character-count` are only
+auto-associated with the control when a form-field wrapper (or a custom
+`NGX_SIGNAL_FORM_HINT_REGISTRY` provider) owns the field association. Used
+next to a bare control as shown above, they remain visual-only.
+
 ## Components
 
 ### NgxFormFieldError
