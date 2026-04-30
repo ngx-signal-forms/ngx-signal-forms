@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Component, inputBinding, signal } from '@angular/core';
+import { form } from '@angular/forms/signals';
 import { TestBed } from '@angular/core/testing';
 import {
   NGX_SIGNAL_FORMS_CONFIG,
@@ -9,6 +10,10 @@ import {
   provideNgxSignalFormControlPresetsForComponent,
 } from '@ngx-signal-forms/toolkit';
 import { DEFAULT_NGX_SIGNAL_FORMS_CONFIG } from '@ngx-signal-forms/toolkit/core';
+import {
+  NgxFormFieldCharacterCount,
+  NgxFormFieldHint,
+} from '@ngx-signal-forms/toolkit/assistive';
 import { render, screen } from '@testing-library/angular';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NgxFormFieldWrapper as NgxSignalFormWrapperComponent } from './form-field-wrapper';
@@ -3487,6 +3492,107 @@ describe('NgxSignalFormWrapperComponent', () => {
       // who do not override `--ngx-form-field-color-warning` themselves.
       // Runtime resolution is covered by the browser-mode and e2e suites.
       expect(wrapperCssSource).toMatch(/--_field-clr-warning:\s*#a16207\b/);
+    });
+  });
+
+  // The 30-line `NgxFormFieldAssistiveRow` component was inlined into the
+  // wrapper template and CSS in this PR. Its standalone spec went away with
+  // it; these tests reconstitute its load-bearing assertions so the layout
+  // contracts still have a regression net.
+  describe('Assistive row layout (inlined from former NgxFormFieldAssistiveRow)', () => {
+    it('projects ngx-form-field-hint into the left slot and character-count into the right slot', async () => {
+      @Component({
+        selector: 'ngx-test-assistive-projection',
+        imports: [
+          NgxSignalFormWrapperComponent,
+          NgxFormFieldHint,
+          NgxFormFieldCharacterCount,
+        ],
+        template: `
+          <ngx-form-field-wrapper [formField]="testForm.bio">
+            <label for="bio">Bio</label>
+            <textarea id="bio" [formField]="testForm.bio"></textarea>
+            <ngx-form-field-hint data-testid="bio-hint"
+              >Up to 10 chars</ngx-form-field-hint
+            >
+            <ngx-form-field-character-count
+              [formField]="testForm.bio"
+              [maxLength]="10"
+              data-testid="bio-count"
+            />
+          </ngx-form-field-wrapper>
+        `,
+      })
+      class Host {
+        protected readonly testForm = form(signal({ bio: '' }));
+      }
+
+      const { container } = await render(Host);
+
+      const left = container.querySelector(
+        '.ngx-signal-form-field-wrapper__assistive-left',
+      );
+      const right = container.querySelector(
+        '.ngx-signal-form-field-wrapper__assistive-right',
+      );
+
+      expect(left?.querySelector('[data-testid="bio-hint"]')).toBeTruthy();
+      expect(right?.querySelector('[data-testid="bio-count"]')).toBeTruthy();
+      // Character count must NOT fall through into the left slot — that would
+      // mean the `<ng-content select="ngx-form-field-character-count, [characterCount]">`
+      // slot selector regressed and the catch-all `<ng-content />` (used for the
+      // control itself) is sweeping it up instead.
+      expect(left?.querySelector('[data-testid="bio-count"]')).toBeNull();
+    });
+
+    it('projects [characterCount] attribute into the right slot (not just the dedicated component)', async () => {
+      @Component({
+        selector: 'ngx-test-assistive-attr-slot',
+        imports: [NgxSignalFormWrapperComponent, NgxFormFieldHint],
+        template: `
+          <ngx-form-field-wrapper [formField]="testForm.bio">
+            <label for="bio">Bio</label>
+            <textarea id="bio" [formField]="testForm.bio"></textarea>
+            <ngx-form-field-hint data-testid="left-hint"
+              >Hint</ngx-form-field-hint
+            >
+            <span characterCount data-testid="right-custom">3 / 10</span>
+          </ngx-form-field-wrapper>
+        `,
+      })
+      class Host {
+        protected readonly testForm = form(signal({ bio: '' }));
+      }
+
+      const { container } = await render(Host);
+
+      const left = container.querySelector(
+        '.ngx-signal-form-field-wrapper__assistive-left',
+      );
+      const right = container.querySelector(
+        '.ngx-signal-form-field-wrapper__assistive-right',
+      );
+
+      expect(right?.querySelector('[data-testid="right-custom"]')).toBeTruthy();
+      expect(left?.querySelector('[data-testid="right-custom"]')).toBeNull();
+      expect(left?.querySelector('[data-testid="left-hint"]')).toBeTruthy();
+    });
+
+    // jsdom does not resolve `:has()`-driven custom-property cascades from
+    // emulated component stylesheets, so the runtime flip is asserted in
+    // the browser-mode suite. Here we lock in the CSS *source* so the
+    // selector + custom-property contract cannot silently regress in
+    // refactors of this stylesheet.
+    it('declares the :has()-driven --ngx-form-field-hint-align override in CSS source', () => {
+      expect(wrapperCssSource).toMatch(
+        /\.ngx-signal-form-field-wrapper__assistive:has\(\s*\.ngx-signal-form-field-wrapper__assistive-right:not\(:empty\)\s*\)\s*\{[^}]*--ngx-form-field-hint-align:\s*left;/,
+      );
+    });
+
+    it('declares display:none for empty assistive-row slots in CSS source', () => {
+      expect(wrapperCssSource).toMatch(
+        /\.ngx-signal-form-field-wrapper__assistive-left:empty,\s*\.ngx-signal-form-field-wrapper__assistive-right:empty\s*\{\s*display:\s*none;/,
+      );
     });
   });
 });

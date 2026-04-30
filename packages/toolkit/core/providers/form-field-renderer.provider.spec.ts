@@ -37,6 +37,13 @@ class StubHintComponent {}
 })
 class OverrideErrorComponent {}
 
+@Component({
+  selector: 'override-hint',
+  template: 'OVERRIDE-HINT',
+  standalone: true,
+})
+class OverrideHintComponent {}
+
 const createInjector = (
   providers: Parameters<typeof createEnvironmentInjector>[0],
   parent: EnvironmentInjector = TestBed.inject(EnvironmentInjector),
@@ -129,6 +136,23 @@ describe('provideFormFieldHintRenderer (environment scope)', () => {
       StubHintComponent,
     );
   });
+
+  it('child injector overrides parent', () => {
+    const parent = createInjector([
+      provideFormFieldHintRenderer({ component: StubHintComponent }),
+    ]);
+    const child = createInjector(
+      [provideFormFieldHintRenderer({ component: OverrideHintComponent })],
+      parent,
+    );
+
+    expect(child.get(NGX_FORM_FIELD_HINT_RENDERER).component).toBe(
+      OverrideHintComponent,
+    );
+    expect(parent.get(NGX_FORM_FIELD_HINT_RENDERER).component).toBe(
+      StubHintComponent,
+    );
+  });
 });
 
 describe('provideFormFieldHintRendererForComponent (component scope)', () => {
@@ -150,5 +174,29 @@ describe('provideFormFieldHintRendererForComponent (component scope)', () => {
     expect(
       fixture.debugElement.injector.get(NGX_FORM_FIELD_HINT_RENDERER).component,
     ).toBe(StubHintComponent);
+  });
+
+  it('component override wins over environment scope', () => {
+    @Component({
+      template: '',
+      standalone: true,
+      providers: [
+        provideFormFieldHintRendererForComponent({
+          component: OverrideHintComponent,
+        }),
+      ],
+    })
+    class HostComponent {}
+
+    TestBed.configureTestingModule({
+      providers: [
+        provideFormFieldHintRenderer({ component: StubHintComponent }),
+      ],
+    });
+
+    const fixture = TestBed.createComponent(HostComponent);
+    expect(
+      fixture.debugElement.injector.get(NGX_FORM_FIELD_HINT_RENDERER).component,
+    ).toBe(OverrideHintComponent);
   });
 });
