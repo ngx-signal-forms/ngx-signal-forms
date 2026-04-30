@@ -1,4 +1,4 @@
-import { InjectionToken, type Signal } from '@angular/core';
+import { InjectionToken, type Signal, type Type } from '@angular/core';
 import type { NgxSignalFormContext } from './directives/ngx-signal-form';
 import type {
   NgxSignalFormControlAriaMode,
@@ -186,3 +186,62 @@ export const NGX_SIGNAL_FORM_HINT_REGISTRY =
   new InjectionToken<NgxSignalFormHintRegistry>(
     'NGX_SIGNAL_FORM_HINT_REGISTRY',
   );
+
+/**
+ * Renderer contract for the form-field wrapper's error slot. The wrapper
+ * instantiates the configured component via `*ngComponentOutlet` and binds
+ * the same inputs it would have passed to the default `NgxFormFieldError`:
+ * `formField`, `strategy`, `submittedStatus`.
+ *
+ * Custom renderers must accept those three input names. Renderers may
+ * accept extra inputs (analytics tags, theming hooks); the wrapper
+ * ignores them and Angular accepts the `inputs` map without warning.
+ *
+ * @public
+ */
+export interface NgxFormFieldErrorRenderer {
+  readonly component: Type<unknown>;
+}
+
+/**
+ * Renderer contract for the form-field wrapper's hint slot. The wrapper
+ * instantiates the configured component via `*ngComponentOutlet`. Hint
+ * renderers receive no inputs from the wrapper; they consume
+ * `NGX_SIGNAL_FORM_FIELD_CONTEXT` (and any other DI tokens) directly.
+ *
+ * @public
+ */
+export interface NgxFormFieldHintRenderer {
+  readonly component: Type<unknown>;
+}
+
+/**
+ * Injection token for the error renderer used by `NgxFormFieldWrapper`
+ * and `NgxFormFieldset`. Defaults (when no provider is supplied) to a
+ * renderer whose `component` is `NgxFormFieldError` from
+ * `@ngx-signal-forms/toolkit/assistive`.
+ *
+ * Override at environment scope via `provideFormFieldErrorRenderer(...)`
+ * or at component scope via `provideFormFieldErrorRendererForComponent(...)`.
+ * See `docs/CUSTOM_WRAPPERS.md`.
+ *
+ * @public
+ */
+export const NGX_FORM_FIELD_ERROR_RENDERER =
+  new InjectionToken<NgxFormFieldErrorRenderer>(
+    'NGX_FORM_FIELD_ERROR_RENDERER',
+  );
+
+/**
+ * Injection token for the hint renderer used by `NgxFormFieldWrapper`.
+ * Defaults (when no provider is supplied) to a renderer whose `component`
+ * is `NgxFormFieldHint` from `@ngx-signal-forms/toolkit/assistive`.
+ *
+ * Override at environment scope via `provideFormFieldHintRenderer(...)`
+ * or at component scope via `provideFormFieldHintRendererForComponent(...)`.
+ * See `docs/CUSTOM_WRAPPERS.md`.
+ *
+ * @public
+ */
+export const NGX_FORM_FIELD_HINT_RENDERER =
+  new InjectionToken<NgxFormFieldHintRenderer>('NGX_FORM_FIELD_HINT_RENDERER');

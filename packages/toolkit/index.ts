@@ -15,6 +15,8 @@
 
 export {
   DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS,
+  NGX_FORM_FIELD_ERROR_RENDERER,
+  NGX_FORM_FIELD_HINT_RENDERER,
   NGX_SIGNAL_FORM_CONTEXT,
   NGX_SIGNAL_FORM_CONTROL_PRESETS,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
@@ -91,6 +93,8 @@ export type {
   FormFieldOrientation,
   FormFieldOrientationInput,
   NgxFormFieldErrorPlacement,
+  NgxFormFieldErrorRenderer,
+  NgxFormFieldHintRenderer,
   NgxSignalFormContext,
   NgxSignalFormControlAriaMode,
   NgxSignalFormControlKind,
