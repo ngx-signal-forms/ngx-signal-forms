@@ -590,7 +590,9 @@ describe('NgxSignalFormWrapperComponent', () => {
       const content = host?.querySelector(
         '.ngx-signal-form-field-wrapper__content',
       );
-      const assistiveRow = host?.querySelector('ngx-form-field-assistive-row');
+      const assistiveRow = host?.querySelector(
+        '.ngx-signal-form-field-wrapper__assistive',
+      );
 
       expect(host).toHaveAttribute('data-error-placement', 'top');
       expect(
