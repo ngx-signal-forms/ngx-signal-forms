@@ -52,7 +52,7 @@ provider helpers documented below.
 Import the directive in the wrapper's `imports` array. The directive's
 selector matches `[formField]` on the projected control element, reads the
 two tokens above, and writes the managed ARIA attributes to the bound
-control. The wrapper itself never touches `aria-invalid` or
+control. The wrapper itself never touches `aria-invalid`, `aria-required`, or
 `aria-describedby` — that's the directive's job, and providing the two
 tokens is what lets it do that job correctly.
 
@@ -146,6 +146,7 @@ export class MyFormField<TValue = unknown> {
 
   protected readonly errorInputs = computed<Record<string, unknown>>(() => ({
     formField: this.formField(),
+    // production: resolve from injected form context — see NgxFormFieldWrapper
     strategy: null,
     submittedStatus: 'unsubmitted',
   }));
@@ -221,11 +222,11 @@ generic `inputs` signature).
 - [ ] Wrapper injects `NGX_FORM_FIELD_ERROR_RENDERER` with
       `{ optional: true }`, falls back to `NgxFormFieldError`, and renders
       the resolved component via `*ngComponentOutlet`.
-- [ ] `errorRendererInputs` binds `{ formField, strategy, submittedStatus }`
-      so any compliant renderer works.
-- [ ] Wrapper does **not** write `aria-invalid` or `aria-describedby` on
-      its host element — those belong on the bound control and are owned by
-      `NgxSignalFormAutoAria`.
+- [ ] The computed feeding `*ngComponentOutlet` inputs binds
+      `{ formField, strategy, submittedStatus }` so any compliant renderer works.
+- [ ] Wrapper does **not** write `aria-invalid`, `aria-required`, or
+      `aria-describedby` on its host element — those belong on the bound
+      control and are owned by `NgxSignalFormAutoAria`.
 - [ ] Optional: provide `NGX_FORM_FIELD_HINT_RENDERER` symmetry if your
       wrapper's hint slot uses an outlet rather than projected
       `<ng-content>`. (The first-party wrapper currently projects content
