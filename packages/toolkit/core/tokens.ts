@@ -217,9 +217,11 @@ export interface NgxFormFieldHintRenderer {
 
 /**
  * Injection token for the error renderer used by `NgxFormFieldWrapper`
- * and `NgxFormFieldset`. Defaults (when no provider is supplied) to a
- * renderer whose `component` is `NgxFormFieldError` from
- * `@ngx-signal-forms/toolkit/assistive`.
+ * and `NgxFormFieldset`. When no provider is registered, `NgxFormFieldWrapper`
+ * and `NgxFormFieldset` fall back to `NgxFormFieldError` from
+ * `@ngx-signal-forms/toolkit/assistive`. The token itself has no factory —
+ * consumers injecting it directly should use `{ optional: true }` and treat
+ * `null` as "use the wrapper's default".
  *
  * Override at environment scope via `provideFormFieldErrorRenderer(...)`
  * or at component scope via `provideFormFieldErrorRendererForComponent(...)`.
@@ -234,8 +236,10 @@ export const NGX_FORM_FIELD_ERROR_RENDERER =
 
 /**
  * Injection token for the hint renderer used by `NgxFormFieldWrapper`.
- * Defaults (when no provider is supplied) to a renderer whose `component`
- * is `NgxFormFieldHint` from `@ngx-signal-forms/toolkit/assistive`.
+ * When no provider is registered, `NgxFormFieldWrapper` falls back to
+ * `NgxFormFieldHint` from `@ngx-signal-forms/toolkit/assistive`. The token
+ * itself has no factory — consumers injecting it directly should use
+ * `{ optional: true }` and treat `null` as "use the wrapper's default".
  *
  * Override at environment scope via `provideFormFieldHintRenderer(...)`
  * or at component scope via `provideFormFieldHintRendererForComponent(...)`.
