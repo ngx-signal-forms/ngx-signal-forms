@@ -46,7 +46,7 @@ export class InvalidFieldTreeError extends Error {
  * methods (`value`, `touched`, `errors`, `errorSummary`, `submitting`,
  * `markAsTouched`) are functions and whose `.fieldTree` back-reference points
  * to `value` itself. Returns `false` for any value that fails this contract,
- * including ones that throw synchronously when invoked.
+ * including ones that throw when invoked.
  *
  * Use this at toolkit boundaries that accept `unknown` (debugger probes,
  * submission tracker entry points, third-party wrapper integration code) so

@@ -381,23 +381,20 @@ export class NgxFormFieldset {
   });
 
   /**
-   * Resolved error-renderer component. `computed` so the outlet rebinds if
-   * the resolved component ever changes; in practice the DI-provided value
-   * is stable for the fieldset's lifetime.
+   * Resolved error-renderer component, exposed as a signal so the outlet
+   * rebinds if the DI-provided renderer changes.
    */
   protected readonly errorRendererComponent = computed<Type<unknown>>(
     () => this.#errorRenderer?.component ?? NgxFormFieldError,
   );
 
   /**
-   * Inputs map passed to `*ngComponentOutlet` for the error renderer. Mirrors
-   * the input shape the static `<ngx-form-field-error>` element previously
-   * received in the fieldset's plain-feedback branch — including `errors`,
-   * `fieldName`, and `listStyle`, which the wrapper does not bind.
-   *
-   * Custom error renderers must accept these input names; extra inputs
-   * declared on a custom renderer are unaffected. The notification branch
-   * keeps `NgxFormFieldNotification` as a static element.
+   * Inputs map passed to `*ngComponentOutlet` for the error renderer. The
+   * fieldset binds `errors`, `fieldName`, `strategy`, `submittedStatus`, and
+   * `listStyle` — a superset of the wrapper's contract (`errors`, `fieldName`,
+   * and `listStyle` are fieldset-only). Custom renderers must accept these
+   * input names; extras declared on a custom renderer are unaffected. The
+   * notification branch keeps `NgxFormFieldNotification` as a static element.
    */
   protected readonly errorRendererInputs = computed<Record<string, unknown>>(
     () => ({

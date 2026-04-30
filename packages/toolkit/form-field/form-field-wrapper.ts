@@ -424,28 +424,26 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   readonly #controlPresets = inject(NGX_SIGNAL_FORM_CONTROL_PRESETS);
 
   /**
-   * Optional error renderer override resolved via DI. The wrapper is the
-   * default-fallback owner: when no provider is registered the resolved
-   * component below is `NgxFormFieldError`, preserving zero-config behaviour.
+   * Optional error renderer override resolved via DI. When no provider is
+   * registered the resolved component below is `NgxFormFieldError`, the
+   * wrapper's built-in default.
    */
   readonly #errorRenderer = inject(NGX_FORM_FIELD_ERROR_RENDERER, {
     optional: true,
   });
 
   /**
-   * Resolved error-renderer component. `computed` so the outlet rebinds if
-   * the resolved component ever changes; in practice the DI-provided value
-   * is stable for the wrapper's lifetime.
+   * Resolved error-renderer component, exposed as a signal so the outlet
+   * rebinds if the DI-provided renderer changes.
    */
   protected readonly errorRendererComponent = computed<Type<unknown>>(
     () => this.#errorRenderer?.component ?? NgxFormFieldError,
   );
 
   /**
-   * Inputs map passed to `*ngComponentOutlet` for the error renderer. Mirrors
-   * the input shape the static `<ngx-form-field-error>` element previously
-   * received. Custom error renderers must accept these three input names; any
-   * extra inputs the consumer's renderer declares are unaffected.
+   * Inputs map passed to `*ngComponentOutlet` for the error renderer. Custom
+   * error renderers must accept `formField`, `strategy`, and `submittedStatus`;
+   * any extra inputs the consumer's renderer declares are unaffected.
    */
   protected readonly errorRendererInputs = computed<Record<string, unknown>>(
     () => ({

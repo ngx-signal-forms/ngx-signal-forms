@@ -214,10 +214,10 @@ export interface NgxFormFieldErrorRenderer {
  * chooses to instantiate a configured hint component, for example via
  * `*ngComponentOutlet`.
  *
- * The first-party `NgxFormFieldWrapper` currently projects
- * `<ngx-form-field-hint>` content directly and does not consult this token
- * for its hint slot. This token therefore applies to wrappers that opt into
- * dynamic hint rendering.
+ * The first-party `NgxFormFieldWrapper` projects `<ngx-form-field-hint>`
+ * content directly and does not consult a hint renderer for its hint slot.
+ * This contract therefore applies to wrappers that opt into dynamic hint
+ * rendering.
  *
  * Hint renderers receive no wrapper-bound inputs; when instantiated, they
  * consume `NGX_SIGNAL_FORM_FIELD_CONTEXT` (and any other DI tokens)
