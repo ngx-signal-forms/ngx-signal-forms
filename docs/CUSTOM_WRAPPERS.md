@@ -37,7 +37,7 @@ Provide an `NgxSignalFormHintRegistry` whose `hints` signal yields a
 `NgxSignalFormAutoAria` reads this registry instead of querying the DOM,
 so hint IDs flow into `aria-describedby` purely through DI. The descriptor
 shape is the public wire format — see `NgxSignalFormHintDescriptor` in
-`@ngx-signal-forms/toolkit/core`.
+`@ngx-signal-forms/toolkit`.
 
 ### 3. `NGX_FORM_FIELD_ERROR_RENDERER` (and optionally `NGX_FORM_FIELD_HINT_RENDERER`)
 
@@ -164,6 +164,14 @@ declares `<input [formField]="...">` must import `NgxSignalFormAutoAria`
 (or a bundle export such as `NgxFormField` that already includes it).
 Wrapper-level imports only apply when the wrapper owns the control element in
 its own template.
+
+The same projection rule applies to `NgxFormFieldHint`. Importing it in the
+wrapper's `imports` array enables the wrapper's own `contentChildren` query
+(it can find projected hint instances), but it does **not** make the
+`<ngx-form-field-hint>` element selector available inside consumer templates.
+Consumers authoring `<ngx-form-field-hint>...</ngx-form-field-hint>` between
+the wrapper's tags must import `NgxFormFieldHint` themselves (or a bundle
+export that re-exports it from `@ngx-signal-forms/toolkit/assistive`).
 
 A production wrapper will resolve `fieldName` from the bound control's `id`
 attribute, propagate `strategy` and `submittedStatus` from the form context,

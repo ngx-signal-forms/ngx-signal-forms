@@ -244,7 +244,7 @@ export interface NgxFormFieldHintRenderer {
  * @public
  */
 export const NGX_FORM_FIELD_ERROR_RENDERER =
-  new InjectionToken<NgxFormFieldErrorRenderer>(
+  new InjectionToken<NgxFormFieldErrorRenderer | null>(
     'NGX_FORM_FIELD_ERROR_RENDERER',
   );
 
@@ -269,4 +269,6 @@ export const NGX_FORM_FIELD_ERROR_RENDERER =
  * @public
  */
 export const NGX_FORM_FIELD_HINT_RENDERER =
-  new InjectionToken<NgxFormFieldHintRenderer>('NGX_FORM_FIELD_HINT_RENDERER');
+  new InjectionToken<NgxFormFieldHintRenderer | null>(
+    'NGX_FORM_FIELD_HINT_RENDERER',
+  );
