@@ -65,6 +65,7 @@ export * from './utilities/submission-helpers';
 export { unwrapValue } from './utilities/unwrap-signal-or-value';
 export {
   InvalidFieldTreeError,
+  isFieldTree,
   walkFieldTreeEntries,
 } from './utilities/walk-field-tree';
 export {

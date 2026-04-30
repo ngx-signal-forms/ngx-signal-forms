@@ -13,8 +13,8 @@ import {
   type ValidationError,
 } from '@angular/forms/signals';
 import type { SubmittedStatus } from '../types';
-import { isFieldStateForTree } from './field-tree-contract';
 import { isBlockingError } from './warning-error';
+import { isFieldTree } from './walk-field-tree';
 
 /**
  * Tracks completed-once submission history on top of native
@@ -212,14 +212,7 @@ export async function submitWithWarnings<TModel>(
 }
 
 function assertFieldTree(value: unknown): asserts value is FieldTree<unknown> {
-  if (typeof value !== 'function') {
-    throw new TypeError(
-      'createSubmittedStatusTracker requires a FieldTree or Signal<FieldTree>.',
-    );
-  }
-
-  const stateCandidate: unknown = Reflect.apply(value, undefined, []);
-  if (!isFieldStateForTree(stateCandidate, value)) {
+  if (!isFieldTree(value)) {
     throw new TypeError(
       'createSubmittedStatusTracker requires a FieldTree or Signal<FieldTree>.',
     );

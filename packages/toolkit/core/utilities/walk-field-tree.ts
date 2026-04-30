@@ -40,6 +40,38 @@ export class InvalidFieldTreeError extends Error {
 }
 
 /**
+ * Type predicate for an externally-supplied value claiming to be a `FieldTree`.
+ *
+ * Verifies that `value` is callable and produces a `FieldState` whose required
+ * methods (`value`, `touched`, `errors`, `errorSummary`, `submitting`,
+ * `markAsTouched`) are functions and whose `.fieldTree` back-reference points
+ * to `value` itself. Returns `false` for any value that fails this contract,
+ * including ones that throw synchronously when invoked.
+ *
+ * Use this at toolkit boundaries that accept `unknown` (debugger probes,
+ * submission tracker entry points, third-party wrapper integration code) so
+ * the cast to `FieldTree<unknown>` is provably safe rather than asserted.
+ *
+ * @public
+ */
+export function isFieldTree(value: unknown): value is FieldTree<unknown> {
+  if (typeof value !== 'function') {
+    return false;
+  }
+
+  try {
+    const candidate: unknown = Reflect.apply(
+      value as (...args: readonly unknown[]) => unknown,
+      undefined,
+      [],
+    );
+    return isFieldStateForTree(candidate, value);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Depth-first field-tree walk with stable dotted paths for consumers that
  * need stable per-field identity (e.g. `@for` track keys in the debugger).
  *

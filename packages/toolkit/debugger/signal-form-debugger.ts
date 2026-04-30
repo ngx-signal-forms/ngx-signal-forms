@@ -21,7 +21,10 @@ import {
   shouldShowErrors,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
-import { walkFieldTreeEntries } from '@ngx-signal-forms/toolkit/core';
+import {
+  isFieldTree,
+  walkFieldTreeEntries,
+} from '@ngx-signal-forms/toolkit/core';
 import {
   NgxSignalFormDebuggerBadge,
   NgxSignalFormDebuggerBadgeIcon,
@@ -93,20 +96,6 @@ function isFieldStateLike(value: unknown): value is FieldState<unknown> {
 
   try {
     return untracked(() => fieldTree()) === value;
-  } catch {
-    return false;
-  }
-}
-
-function isFieldTreeLike(value: unknown): value is FieldTree<unknown> {
-  if (typeof value !== 'function') {
-    return false;
-  }
-
-  try {
-    const entries = walkFieldTreeEntries(value as FieldTree<unknown>);
-    entries[Symbol.iterator]().next();
-    return true;
   } catch {
     return false;
   }
@@ -312,13 +301,13 @@ export class NgxSignalFormDebugger {
   protected readonly inputUsable = computed(
     () =>
       isFieldStateLike(this.formTree() as unknown) ||
-      this.#isFieldTree(this.formTree() as unknown),
+      isFieldTree(this.formTree() as unknown),
   );
 
   /** Normalize to root `FieldState` regardless of input shape. */
   protected readonly rootState = computed<FieldState<unknown>>(() => {
     const v = this.formTree() as unknown;
-    if (this.#isFieldTree(v)) {
+    if (isFieldTree(v)) {
       return (v as () => FieldState<unknown>)();
     }
 
@@ -366,7 +355,7 @@ export class NgxSignalFormDebugger {
    */
   readonly #treeSnapshot = computed<TreeSnapshot>(() => {
     const tree = this.formTree();
-    if (!this.#isFieldTree(tree)) {
+    if (!isFieldTree(tree)) {
       return EMPTY_SNAPSHOT;
     }
 
@@ -434,7 +423,7 @@ export class NgxSignalFormDebugger {
    */
   protected readonly allErrors = computed<readonly DebuggerError[]>(() => {
     const tree = this.formTree();
-    if (this.#isFieldTree(tree)) {
+    if (isFieldTree(tree)) {
       return this.#treeSnapshot().fieldErrors;
     }
 
@@ -587,7 +576,7 @@ export class NgxSignalFormDebugger {
   readonly #fieldTreeWarningEffect = isDevMode()
     ? effect(() => {
         const value = this.formTree() as unknown;
-        if (!value || typeof value !== 'object' || this.#isFieldTree(value)) {
+        if (!value || typeof value !== 'object' || isFieldTree(value)) {
           return;
         }
         if (this.#warnedTrees.has(value)) return;
@@ -604,15 +593,6 @@ export class NgxSignalFormDebugger {
   // ============================================================================
   // Private helpers
   // ============================================================================
-
-  /**
-   * Type guard: a `FieldTree` is callable AND calling it yields a
-   * `FieldState`-shaped object. The stricter check (compared to a bare
-   * `typeof v === 'function'`) prevents the walker from following arbitrary
-   * functions pushed into `formTree` in misuse cases.
-   */
-  readonly #isFieldTree = (v: unknown): v is FieldTree<unknown> =>
-    isFieldTreeLike(v);
 
   /**
    * Any field in the tree touched? Pulls from the shared snapshot so the
