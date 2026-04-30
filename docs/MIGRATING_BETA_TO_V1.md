@@ -362,13 +362,13 @@ The debugger bundle const is `NgxSignalFormDebuggerToolkit` (mirrors
 
 #### Element selectors
 
-| Before                                    | After                              |
-| ----------------------------------------- | ---------------------------------- |
-| `<ngx-signal-form-field-wrapper>`         | `<ngx-form-field-wrapper>`         |
-| `<ngx-signal-form-fieldset>`              | `<ngx-form-fieldset>`              |
-| `<ngx-signal-form-field-hint>`            | `<ngx-form-field-hint>`            |
-| `<ngx-signal-form-field-character-count>` | `<ngx-form-field-character-count>` |
-| `<ngx-signal-form-field-assistive-row>`   | `<ngx-form-field-assistive-row>`   |
+| Before                                    | After                                                                   |
+| ----------------------------------------- | ----------------------------------------------------------------------- |
+| `<ngx-signal-form-field-wrapper>`         | `<ngx-form-field-wrapper>`                                              |
+| `<ngx-signal-form-fieldset>`              | `<ngx-form-fieldset>`                                                   |
+| `<ngx-signal-form-field-hint>`            | `<ngx-form-field-hint>`                                                 |
+| `<ngx-signal-form-field-character-count>` | `<ngx-form-field-character-count>`                                      |
+| `<ngx-signal-form-field-assistive-row>`   | _Removed in v1 — inlined into `<ngx-form-field-wrapper>` (no selector)_ |
 
 The `<ngx-form-field-error*>` and `<ngx-signal-form-debugger>` selectors
 already use the current naming pattern.
@@ -565,8 +565,8 @@ case set `warningStrategy="inherit"` (or match `strategy` explicitly).
 ### `NgxFormField` convenience bundle
 
 `@ngx-signal-forms/toolkit/form-field` now exports a `NgxFormField` const array
-containing the wrapper, fieldset, hint, error, character-count, assistive-row,
-and auto-ARIA directive. Drop it into `imports` instead of listing each piece:
+containing the wrapper, fieldset, hint, error, character-count, and auto-ARIA
+directive. Drop it into `imports` instead of listing each piece:
 
 ```ts
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
