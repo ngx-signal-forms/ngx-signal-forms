@@ -127,3 +127,46 @@ jobs:
       - run: pnpm exec nx fix-ci --outputStyle=static
         if: ${{ always() && !inputs.skip_cloud && steps.nx_cloud.outputs.enabled == 'true' }}
         continue-on-error: true
+
+  # Proves the published toolkit stays design-system-free as the reference
+  # demo apps (#40 - Material/PrimeNG/Spartan) land. Two assertions:
+  #   1. Static: toolkit's own package.json declares no design-system deps.
+  #   2. Runtime: `nx build toolkit` succeeds in a workspace pruned to
+  #      toolkit + its transitive deps via `pnpm install --filter`, so even
+  #      if a future demo app pulls in @angular/material et al., none of
+  #      those packages are present in node_modules during the toolkit build.
+  toolkit-isolation:
+    name: Toolkit isolation (design-system-free build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      NX_NO_CLOUD: 'true'
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          filter: tree:0
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: '.node-version'
+          cache: 'pnpm'
+
+      - name: Assert toolkit declares no design-system deps
+        run: pnpm check:toolkit-peer-deps
+
+      - name: Install only toolkit + its dependencies
+        # `--filter "@ngx-signal-forms/toolkit..."` includes the toolkit and
+        # its transitive workspace deps but excludes apps/demo* and any
+        # future demo apps that depend on the toolkit. Demo design-system
+        # deps therefore never enter node_modules in this job.
+        run: pnpm install --frozen-lockfile --filter "@ngx-signal-forms/toolkit..."
+
+      - name: Build toolkit
+        run: pnpm exec nx build toolkit

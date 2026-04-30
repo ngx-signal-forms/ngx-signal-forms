@@ -222,9 +222,24 @@ export default defineConfig({
             enforceBuildableLibDependency: true,
             allow: ['^@ngx-signal-forms/toolkit/.*$'],
             depConstraints: [
+              // The published toolkit must never reach into demo-only code.
+              // This is what keeps the design-system reference apps (#40)
+              // from contaminating the toolkit bundle.
               {
-                sourceTag: '*',
-                onlyDependOnLibsWithTags: ['*'],
+                sourceTag: 'scope:lib',
+                onlyDependOnLibsWithTags: ['scope:lib'],
+              },
+              {
+                sourceTag: 'scope:demo',
+                onlyDependOnLibsWithTags: ['scope:lib', 'scope:demo'],
+              },
+              {
+                sourceTag: 'type:lib',
+                onlyDependOnLibsWithTags: ['type:lib'],
+              },
+              {
+                sourceTag: 'type:app',
+                onlyDependOnLibsWithTags: ['type:lib', 'type:app'],
               },
             ],
           },
