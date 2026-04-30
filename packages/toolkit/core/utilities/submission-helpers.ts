@@ -216,14 +216,12 @@ function assertFieldTree(value: unknown): FieldTree<unknown> {
     );
   }
 
-  // A single iteration is enough to force `walkFieldTreeEntries()` to read the
-  // root FieldState contract. We intentionally stop immediately because the
-  // tracker only needs validation, not a full traversal.
-  for (const { state: treeState } of walkFieldTreeEntries(
-    value as FieldTree<unknown>,
-  )) {
-    break;
-  }
+  // A single iterator step is enough to force `walkFieldTreeEntries()` to
+  // read the root FieldState contract. We intentionally stop immediately
+  // because the tracker only needs validation, not a full traversal.
+  walkFieldTreeEntries(value as FieldTree<unknown>)
+    [Symbol.iterator]()
+    .next();
 
   return value as FieldTree<unknown>;
 }

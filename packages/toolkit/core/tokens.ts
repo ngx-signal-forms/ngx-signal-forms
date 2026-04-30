@@ -210,10 +210,18 @@ export interface NgxFormFieldErrorRenderer {
 }
 
 /**
- * Renderer contract for the form-field wrapper's hint slot. The wrapper
- * instantiates the configured component via `*ngComponentOutlet`. Hint
- * renderers receive no inputs from the wrapper; they consume
- * `NGX_SIGNAL_FORM_FIELD_CONTEXT` (and any other DI tokens) directly.
+ * Renderer contract for a form-field wrapper's hint slot when that wrapper
+ * chooses to instantiate a configured hint component, for example via
+ * `*ngComponentOutlet`.
+ *
+ * The first-party `NgxFormFieldWrapper` currently projects
+ * `<ngx-form-field-hint>` content directly and does not consult this token
+ * for its hint slot. This token therefore applies to wrappers that opt into
+ * dynamic hint rendering.
+ *
+ * Hint renderers receive no wrapper-bound inputs; when instantiated, they
+ * consume `NGX_SIGNAL_FORM_FIELD_CONTEXT` (and any other DI tokens)
+ * directly.
  *
  * @public
  */
@@ -241,11 +249,18 @@ export const NGX_FORM_FIELD_ERROR_RENDERER =
   );
 
 /**
- * Injection token for the hint renderer used by `NgxFormFieldWrapper`.
- * When no provider is registered, `NgxFormFieldWrapper` falls back to
- * `NgxFormFieldHint` from `@ngx-signal-forms/toolkit/assistive`. The token
- * itself has no factory — consumers injecting it directly should use
- * `{ optional: true }` and treat `null` as "use the wrapper's default".
+ * Injection token for form-field wrapper implementations that render the
+ * hint slot via a component outlet.
+ *
+ * The first-party `NgxFormFieldWrapper` currently renders projected hint
+ * content directly and does not consult this token. Wrappers that do render
+ * hints dynamically may use this token to resolve a custom hint renderer,
+ * typically falling back to `NgxFormFieldHint` from
+ * `@ngx-signal-forms/toolkit/assistive` when no provider is registered.
+ *
+ * The token itself has no factory — consumers injecting it directly should
+ * use `{ optional: true }` and treat `null` as "no custom hint renderer
+ * configured".
  *
  * Override at environment scope via `provideFormFieldHintRenderer(...)`
  * or at component scope via `provideFormFieldHintRendererForComponent(...)`.

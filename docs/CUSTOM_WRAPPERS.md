@@ -11,13 +11,15 @@ A wrapper that satisfies the four contracts below gets:
   bound control via `NgxSignalFormAutoAria`
 - automatic chaining of projected `<ngx-form-field-hint>` IDs into
   `aria-describedby`
-- swappable error and hint renderers without forking the wrapper
+- swappable error renderers without forking the wrapper, plus optional hint
+  renderer symmetry for wrappers that render hints through an outlet
 
 ## The four contracts
 
 A wrapper component must satisfy these four DI seams. The first two are
-**provided** at the wrapper's component level; the third is **consumed**
-(with a fallback); the fourth is a **directive import**.
+**provided** at the wrapper's component level, the third is **consumed**
+(with a fallback), and the fourth is about keeping the ARIA directive in
+scope wherever the bound control is declared.
 
 ### 1. `NGX_SIGNAL_FORM_FIELD_CONTEXT`
 
@@ -49,12 +51,17 @@ provider helpers documented below.
 
 ### 4. `NgxSignalFormAutoAria`
 
-Import the directive in the wrapper's `imports` array. The directive's
-selector matches `[formField]` on the projected control element, reads the
-two tokens above, and writes the managed ARIA attributes to the bound
-control. The wrapper itself never touches `aria-invalid`, `aria-required`, or
-`aria-describedby` — that's the directive's job, and providing the two
-tokens is what lets it do that job correctly.
+`NgxSignalFormAutoAria` must be in scope in the template that declares the
+`[formField]` control. If your wrapper renders that control in its own
+template, import the directive in the wrapper's `imports` array. If your
+wrapper accepts a projected control, the consumer must import
+`NgxSignalFormAutoAria` (or a bundle export that includes it), because
+Angular resolves directives on projected nodes in the declaring template.
+
+Wherever the directive is imported, it reads the two tokens above and writes
+the managed ARIA attributes to the bound control. The wrapper itself never
+touches `aria-invalid`, `aria-required`, or `aria-describedby` directly —
+providing the two tokens is what lets the directive do that job correctly.
 
 ## Minimal working example
 
@@ -78,7 +85,6 @@ import {
   NGX_FORM_FIELD_ERROR_RENDERER,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
-  NgxSignalFormAutoAria,
   type NgxSignalFormHintDescriptor,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -89,7 +95,7 @@ import {
 @Component({
   selector: 'my-form-field',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgComponentOutlet, NgxSignalFormAutoAria, NgxFormFieldHint],
+  imports: [NgComponentOutlet, NgxFormFieldHint],
   providers: [
     {
       provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
@@ -152,6 +158,12 @@ export class MyFormField<TValue = unknown> {
   }));
 }
 ```
+
+Because the control is projected via `<ng-content />`, the consumer that
+declares `<input [formField]="...">` must import `NgxSignalFormAutoAria`
+(or a bundle export such as `NgxFormField` that already includes it).
+Wrapper-level imports only apply when the wrapper owns the control element in
+its own template.
 
 A production wrapper will resolve `fieldName` from the bound control's `id`
 attribute, propagate `strategy` and `submittedStatus` from the form context,
@@ -217,8 +229,9 @@ generic `inputs` signature).
       signal that yields the resolved field name (or `null`).
 - [ ] Wrapper provides `NGX_SIGNAL_FORM_HINT_REGISTRY` with a `hints`
       signal derived from projected `NgxFormFieldHint` children.
-- [ ] Wrapper imports `NgxSignalFormAutoAria` so the directive applies on
-      the projected control.
+- [ ] `NgxSignalFormAutoAria` is in scope where the `[formField]` control is
+      declared — in the wrapper if it renders the control, or in the consumer
+      if the control is projected.
 - [ ] Wrapper injects `NGX_FORM_FIELD_ERROR_RENDERER` with
       `{ optional: true }`, falls back to `NgxFormFieldError`, and renders
       the resolved component via `*ngComponentOutlet`.

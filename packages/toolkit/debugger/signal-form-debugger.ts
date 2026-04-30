@@ -104,11 +104,9 @@ function isFieldTreeLike(value: unknown): value is FieldTree<unknown> {
   }
 
   try {
-    for (const { state: treeState } of walkFieldTreeEntries(
-      value as FieldTree<unknown>,
-    )) {
-      break;
-    }
+    walkFieldTreeEntries(value as FieldTree<unknown>)
+      [Symbol.iterator]()
+      .next();
     return true;
   } catch {
     return false;
