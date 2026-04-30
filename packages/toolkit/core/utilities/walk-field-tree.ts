@@ -4,6 +4,10 @@ import type {
   FieldTree,
   MaybeFieldTree,
 } from '@angular/forms/signals';
+import {
+  isFieldStateForTree,
+  REQUIRED_FIELD_STATE_METHODS,
+} from './field-tree-contract';
 
 type ArrayFieldTree = FieldTree<readonly unknown[]> & {
   readonly length: number;
@@ -18,24 +22,6 @@ type WalkFieldTreeEntry = {
   readonly path: string;
   readonly state: FieldState<unknown>;
 };
-
-/**
- * Members of `FieldState` the shared walker validates on every visited node.
- *
- * The walker itself only reads `value` and `touched`; the remaining methods
- * are required for the downstream traversal consumers (debugger snapshots,
- * focus management, submit gating). Centralising the contract here keeps
- * every consumer on the same expectation of "what a FieldState is" without
- * each having to re-validate.
- */
-const REQUIRED_FIELD_STATE_METHODS = [
-  'value',
-  'touched',
-  'errors',
-  'errorSummary',
-  'submitting',
-  'markAsTouched',
-] as const satisfies readonly (keyof FieldState<unknown>)[];
 
 /**
  * Thrown when {@link walkFieldTreeEntries} encounters a value that does not satisfy
@@ -141,22 +127,11 @@ function readFieldState(
 ): FieldState<unknown> {
   const candidate: unknown = fieldTree();
 
-  if (
-    candidate === null ||
-    typeof candidate !== 'object' ||
-    (candidate as FieldState<unknown>).fieldTree !== fieldTree
-  ) {
+  if (!isFieldStateForTree(candidate, fieldTree)) {
     throw invalidFieldStateError(path);
   }
 
-  const state = candidate as FieldState<unknown>;
-  for (const method of REQUIRED_FIELD_STATE_METHODS) {
-    if (typeof state[method] !== 'function') {
-      throw invalidFieldStateError(path);
-    }
-  }
-
-  return state;
+  return candidate;
 }
 
 function isArrayFieldTree(
