@@ -188,14 +188,20 @@ export const NGX_SIGNAL_FORM_HINT_REGISTRY =
   );
 
 /**
- * Renderer contract for the form-field wrapper's error slot. The wrapper
- * instantiates the configured component via `*ngComponentOutlet` and binds
- * the same inputs it would have passed to the default `NgxFormFieldError`:
- * `formField`, `strategy`, `submittedStatus`.
+ * Renderer contract for the form-field error slot. Two consumers bind this
+ * renderer:
  *
- * Custom renderers must accept those three input names. Renderers may
- * accept extra inputs (analytics tags, theming hooks); the wrapper
- * ignores them and Angular accepts the `inputs` map without warning.
+ * - `NgxFormFieldWrapper` binds inputs `{formField, strategy, submittedStatus}`.
+ * - `NgxFormFieldset` binds inputs `{errors, fieldName, strategy, submittedStatus, listStyle}`.
+ *
+ * The wrapper instantiates the configured component via `*ngComponentOutlet`
+ * and binds the relevant input set per call site. A custom renderer intended
+ * to replace both must accept the union of those input names; inputs the
+ * renderer doesn't declare are silently dropped by `*ngComponentOutlet`.
+ *
+ * Renderers may accept extra inputs beyond the contract (analytics tags,
+ * theming hooks); the wrapper/fieldset ignore them and Angular accepts the
+ * `inputs` map without warning.
  *
  * @public
  */
