@@ -25,7 +25,6 @@ import type {
 } from '@ngx-signal-forms/toolkit';
 import {
   NGX_FORM_FIELD_ERROR_RENDERER,
-  NGX_FORM_FIELD_HINT_RENDERER,
   NGX_SIGNAL_FORM_CONTROL_PRESETS,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORMS_CONFIG,
@@ -434,29 +433,12 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   });
 
   /**
-   * Optional hint renderer override resolved via DI. Surface kept symmetric
-   * with the error renderer; the default fallback is `NgxFormFieldHint`.
-   */
-  readonly #hintRenderer = inject(NGX_FORM_FIELD_HINT_RENDERER, {
-    optional: true,
-  });
-
-  /**
    * Resolved error-renderer component. `computed` so the outlet rebinds if
    * the resolved component ever changes; in practice the DI-provided value
    * is stable for the wrapper's lifetime.
    */
   protected readonly errorRendererComponent = computed<Type<unknown>>(
     () => this.#errorRenderer?.component ?? NgxFormFieldError,
-  );
-
-  /**
-   * Resolved hint-renderer component. Currently unused at the template level
-   * because hints are projected via `<ng-content select="ngx-form-field-hint">`,
-   * but kept for symmetry and future parity with the error slot.
-   */
-  protected readonly hintRendererComponent = computed<Type<unknown>>(
-    () => this.#hintRenderer?.component ?? NgxFormFieldHint,
   );
 
   /**
