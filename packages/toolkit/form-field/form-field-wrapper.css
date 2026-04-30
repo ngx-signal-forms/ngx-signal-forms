@@ -1002,3 +1002,51 @@
     'content'
     'assistive';
 }
+
+/* ============================================================================ */
+/* ASSISTIVE ROW (inlined from former NgxFormFieldAssistiveRow) */
+/* ============================================================================ */
+/*
+ * Inlined from former NgxFormFieldAssistiveRow. The CSS custom properties
+ * remain consumer-overridable from any ancestor scope (no longer scoped
+ * to a separate component host).
+ */
+.ngx-signal-form-field-wrapper__assistive {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ngx-form-field-assistive-gap, 0.5rem);
+  min-height: var(--ngx-form-field-assistive-min-height, 1.25rem);
+  margin-top: var(--ngx-form-field-assistive-margin-top, 2px);
+  margin-bottom: var(--ngx-form-field-assistive-margin-bottom, 0.25rem);
+  width: 100%;
+}
+
+.ngx-signal-form-field-wrapper__assistive-left {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.ngx-signal-form-field-wrapper__assistive-right {
+  display: flex;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+
+/* Hide empty slots to prevent unnecessary spacing */
+.ngx-signal-form-field-wrapper__assistive-left:empty,
+.ngx-signal-form-field-wrapper__assistive-right:empty {
+  display: none;
+}
+
+/*
+ * When the right slot contains content (e.g. character count),
+ * force the hint in the left slot to align left.
+ */
+.ngx-signal-form-field-wrapper__assistive:has(
+  .ngx-signal-form-field-wrapper__assistive-right:not(:empty)
+) {
+  --ngx-form-field-hint-align: left;
+}

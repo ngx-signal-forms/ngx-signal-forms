@@ -547,7 +547,9 @@ describe('NgxSignalFormWrapperComponent', () => {
       );
 
       const host = container.querySelector('ngx-form-field-wrapper');
-      const assistiveRow = host?.querySelector('ngx-form-field-assistive-row');
+      const assistiveRow = host?.querySelector(
+        '.ngx-signal-form-field-wrapper__assistive',
+      );
 
       expect(host).toHaveAttribute('data-error-placement', 'bottom');
       expect(
@@ -1020,7 +1022,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       const errorElement = container.querySelector('[id="emailUpdates-error"]');
       const wrapper = container.querySelector('ngx-form-field-wrapper');
       const assistiveRow = container.querySelector(
-        'ngx-form-field-assistive-row',
+        '.ngx-signal-form-field-wrapper__assistive',
       );
 
       expect(switchControl).toBeTruthy();

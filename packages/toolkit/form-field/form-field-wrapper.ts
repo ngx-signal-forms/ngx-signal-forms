@@ -43,7 +43,6 @@ import {
   isElementCssVisible,
 } from '@ngx-signal-forms/toolkit/core';
 import {
-  NgxFormFieldAssistiveRow,
   NgxFormFieldError,
   NgxFormFieldHint,
 } from '@ngx-signal-forms/toolkit/assistive';
@@ -175,7 +174,7 @@ import {
 @Component({
   selector: 'ngx-form-field-wrapper',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgxFormFieldError, NgxFormFieldAssistiveRow],
+  imports: [NgxFormFieldError],
   providers: [
     NgxFieldIdentity,
     {
@@ -281,24 +280,23 @@ import {
     </div>
 
     <!-- Assistive row: fixed-height container prevents layout shift -->
-    <ngx-form-field-assistive-row
-      class="ngx-signal-form-field-wrapper__assistive"
-    >
-      <!-- Left side: hint (hidden when errors shown) or errors -->
-      @if (!isTopPlacement() && shouldShowErrors()) {
-        <ngx-form-field-error
-          [formField]="formField()"
-          [strategy]="effectiveStrategy()"
-          [submittedStatus]="submittedStatus()"
-        />
-      }
-      <div [style.display]="shouldShowErrors() ? 'none' : 'contents'">
-        <ng-content select="ngx-form-field-hint" />
+    <div class="ngx-signal-form-field-wrapper__assistive">
+      <div class="ngx-signal-form-field-wrapper__assistive-left">
+        @if (!isTopPlacement() && shouldShowErrors()) {
+          <ngx-form-field-error
+            [formField]="formField()"
+            [strategy]="effectiveStrategy()"
+            [submittedStatus]="submittedStatus()"
+          />
+        }
+        <div [style.display]="shouldShowErrors() ? 'none' : 'contents'">
+          <ng-content select="ngx-form-field-hint" />
+        </div>
       </div>
-
-      <!-- Right side: character count -->
-      <ng-content select="ngx-form-field-character-count" />
-    </ngx-form-field-assistive-row>
+      <div class="ngx-signal-form-field-wrapper__assistive-right">
+        <ng-content select="ngx-form-field-character-count, [characterCount]" />
+      </div>
+    </div>
   `,
 })
 export class NgxFormFieldWrapper<TValue = unknown> {
