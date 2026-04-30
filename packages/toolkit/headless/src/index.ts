@@ -52,6 +52,15 @@ export {
   type ResolvedNotificationMessage,
 } from './lib/notification';
 
+// ARIA primitives — sourced from `/core` to keep the directive shell and
+// the headless re-export in lockstep without duplicating implementation.
+export {
+  createHintIdsSignal,
+  type CreateHintIdsSignalOptions,
+  type HintIdsFieldNameReader,
+  type HintIdsSignal,
+} from '@ngx-signal-forms/toolkit/core';
+
 // Utility functions
 export {
   createCharacterCount,

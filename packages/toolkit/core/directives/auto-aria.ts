@@ -18,6 +18,7 @@ import {
   resolveFieldName,
 } from '../utilities/field-resolution';
 import { createErrorVisibility } from '../utilities/create-error-visibility';
+import { createHintIdsSignal } from '../utilities/aria/create-hint-ids-signal';
 import { isBlockingError, isWarningError } from '../utilities/warning-error';
 import { NgxFieldIdentity } from '../services/field-identity';
 
@@ -160,22 +161,15 @@ export class NgxSignalFormAutoAria {
 
   /**
    * Hint IDs from the identity service when available, falling back to the
-   * hint registry snapshot when the identity service is absent.
+   * hint registry snapshot when the identity service is absent. Delegates
+   * to the pure `createHintIdsSignal` factory so consumers building bespoke
+   * wrappers can reuse the same resolution order without inheriting this
+   * directive.
    */
-  readonly #hintIds = computed((): readonly string[] => {
-    // Identity service provides pre-filtered hint IDs for this field.
-    if (this.#fieldIdentity) {
-      return this.#fieldIdentity.hintIds();
-    }
-
-    const registry = this.#hintRegistry;
-    if (!registry) return [];
-
-    const fieldName = this.#domSnapshot().fieldName;
-    return registry
-      .hints()
-      .filter((hint) => !hint.fieldName || hint.fieldName === fieldName)
-      .map((hint) => hint.id);
+  readonly #hintIds = createHintIdsSignal({
+    identity: this.#fieldIdentity,
+    registry: this.#hintRegistry,
+    fieldName: () => this.#domSnapshot().fieldName,
   });
 
   /** Delegates to `#visibilityByStrategy` after filtering to blocking errors. */
