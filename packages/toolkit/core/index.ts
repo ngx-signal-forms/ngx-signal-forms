@@ -13,6 +13,7 @@ export * from './providers/config.provider';
 export * from './providers/control-semantics.provider';
 export * from './providers/error-messages.provider';
 export * from './providers/field-labels.provider';
+export * from './providers/form-field-renderer.provider';
 
 // Services
 export * from './services/field-identity';
@@ -64,9 +65,8 @@ export * from './utilities/submission-helpers';
 export { unwrapValue } from './utilities/unwrap-signal-or-value';
 export {
   InvalidFieldTreeError,
+  isFieldTree,
   walkFieldTreeEntries,
-  walkFieldTree,
-  walkFieldTreeIterable,
 } from './utilities/walk-field-tree';
 export {
   isBlockingError,

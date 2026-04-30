@@ -4,6 +4,10 @@ import type {
   FieldTree,
   MaybeFieldTree,
 } from '@angular/forms/signals';
+import {
+  isFieldStateForTree,
+  REQUIRED_FIELD_STATE_METHODS,
+} from './field-tree-contract';
 
 type ArrayFieldTree = FieldTree<readonly unknown[]> & {
   readonly length: number;
@@ -20,25 +24,7 @@ type WalkFieldTreeEntry = {
 };
 
 /**
- * Members of `FieldState` the shared walker validates on every visited node.
- *
- * The walker itself only reads `value` and `touched`; the remaining methods
- * are required for the downstream traversal consumers (debugger snapshots,
- * focus management, submit gating). Centralising the contract here keeps
- * every consumer on the same expectation of "what a FieldState is" without
- * each having to re-validate.
- */
-const REQUIRED_FIELD_STATE_METHODS = [
-  'value',
-  'touched',
-  'errors',
-  'errorSummary',
-  'submitting',
-  'markAsTouched',
-] as const satisfies readonly (keyof FieldState<unknown>)[];
-
-/**
- * Thrown when {@link walkFieldTree} encounters a value that does not satisfy
+ * Thrown when {@link walkFieldTreeEntries} encounters a value that does not satisfy
  * the FieldTree / FieldState contract. Always loud — never swallowed —
  * because malformed trees indicate a wiring mistake (mock missing required
  * methods, child typed as a non-callable value, etc.) rather than a runtime
@@ -54,31 +40,34 @@ export class InvalidFieldTreeError extends Error {
 }
 
 /**
- * Visit every reachable `FieldState` in a field tree in depth-first order.
+ * Type predicate for an externally-supplied value claiming to be a `FieldTree`.
+ *
+ * Verifies that `value` is callable and produces a `FieldState` whose required
+ * methods (`value`, `touched`, `errors`, `errorSummary`, `submitting`,
+ * `markAsTouched`) are functions and whose `.fieldTree` back-reference points
+ * to `value` itself. Returns `false` for any value that fails this contract,
+ * including ones that throw when invoked.
+ *
+ * Use this at toolkit boundaries that accept `unknown` (debugger probes,
+ * submission tracker entry points, third-party wrapper integration code) so
+ * the cast to `FieldTree<unknown>` is provably safe rather than asserted.
  *
  * @public
  */
-export function walkFieldTree<TModel>(
-  root: FieldTree<TModel>,
-  visitor: (state: FieldState<unknown>) => void,
-): void {
-  for (const state of walkFieldTreeIterable(root)) {
-    visitor(state);
+export function isFieldTree(value: unknown): value is FieldTree<unknown> {
+  if (typeof value !== 'function') {
+    return false;
   }
-}
 
-/**
- * Iterate every reachable `FieldState` in a field tree in depth-first order.
- *
- * @yields Each reachable `FieldState` exactly once.
- *
- * @public
- */
-export function* walkFieldTreeIterable<TModel>(
-  root: FieldTree<TModel>,
-): Iterable<FieldState<unknown>> {
-  for (const entry of walkFieldTreeEntries(root)) {
-    yield entry.state;
+  try {
+    const candidate: unknown = Reflect.apply(
+      value as (...args: readonly unknown[]) => unknown,
+      undefined,
+      [],
+    );
+    return isFieldStateForTree(candidate, value);
+  } catch {
+    return false;
   }
 }
 
@@ -170,22 +159,11 @@ function readFieldState(
 ): FieldState<unknown> {
   const candidate: unknown = fieldTree();
 
-  if (
-    candidate === null ||
-    typeof candidate !== 'object' ||
-    (candidate as FieldState<unknown>).fieldTree !== fieldTree
-  ) {
+  if (!isFieldStateForTree(candidate, fieldTree)) {
     throw invalidFieldStateError(path);
   }
 
-  const state = candidate as FieldState<unknown>;
-  for (const method of REQUIRED_FIELD_STATE_METHODS) {
-    if (typeof state[method] !== 'function') {
-      throw invalidFieldStateError(path);
-    }
-  }
-
-  return state;
+  return candidate;
 }
 
 function isArrayFieldTree(
@@ -208,7 +186,7 @@ function hasIterator(
 
 function invalidFieldStateError(path: string): InvalidFieldTreeError {
   return new InvalidFieldTreeError(
-    `[ngx-signal-forms] walkFieldTree expected ${formatPath(path)} to resolve to a FieldState. ` +
+    `[ngx-signal-forms] walkFieldTreeEntries expected ${formatPath(path)} to resolve to a FieldState. ` +
       `A FieldState must expose ${REQUIRED_FIELD_STATE_METHODS.join(', ')} as functions and a back-reference (\`state.fieldTree === fieldTree\`).`,
   );
 }
@@ -218,7 +196,7 @@ function invalidChildError(
   segment: string,
 ): InvalidFieldTreeError {
   return new InvalidFieldTreeError(
-    `[ngx-signal-forms] walkFieldTree expected ${formatPath(joinPath(parentPath, segment))} to be a FieldTree.`,
+    `[ngx-signal-forms] walkFieldTreeEntries expected ${formatPath(joinPath(parentPath, segment))} to be a FieldTree.`,
   );
 }
 

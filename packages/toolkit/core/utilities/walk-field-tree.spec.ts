@@ -10,9 +10,9 @@ import {
   type MetadataKey,
 } from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
-import { walkFieldTree, walkFieldTreeIterable } from './walk-field-tree';
+import { walkFieldTreeEntries } from './walk-field-tree';
 
-describe('walkFieldTree', () => {
+describe('walkFieldTreeEntries', () => {
   interface OrderModel {
     name: string;
     address: {
@@ -40,8 +40,8 @@ describe('walkFieldTree', () => {
   it('visits object and array subtrees in depth-first order', () => {
     const orderForm = makeOrderForm();
 
-    const visited = [...walkFieldTreeIterable(orderForm)].map(
-      (state) => state.fieldTree,
+    const visited = [...walkFieldTreeEntries(orderForm)].map(
+      (entry) => entry.state.fieldTree,
     );
 
     expect(visited).toEqual([
@@ -56,18 +56,23 @@ describe('walkFieldTree', () => {
     ]);
   });
 
-  it('supports the callback form and includes terminal leaves', () => {
+  it('yields stable dotted paths for nested objects and arrays', () => {
     const orderForm = makeOrderForm();
-    const visited: FieldTree<unknown>[] = [];
 
-    walkFieldTree(orderForm, (state) => {
-      visited.push(state.fieldTree);
-    });
+    const paths = [...walkFieldTreeEntries(orderForm)].map(
+      (entry) => entry.path,
+    );
 
-    expect(visited).toContain(orderForm.address.street);
-    expect(visited).toContain(orderForm.address.city);
-    expect(visited).toContain(orderForm.items[0]);
-    expect(visited).toContain(orderForm.items[1]);
+    expect(paths).toEqual([
+      '',
+      'name',
+      'address',
+      'address.street',
+      'address.city',
+      'items',
+      'items.0',
+      'items.1',
+    ]);
   });
 
   it('defensively stops revisiting nodes when a cycle is encountered', () => {
@@ -77,8 +82,8 @@ describe('walkFieldTree', () => {
     attachEntries(root, [['loop', loop]]);
     attachEntries(loop, [['root', root]]);
 
-    const visited = [...walkFieldTreeIterable(root)].map(
-      (state) => state.fieldTree,
+    const visited = [...walkFieldTreeEntries(root)].map(
+      (entry) => entry.state.fieldTree,
     );
 
     expect(visited).toEqual([root, loop]);
@@ -88,7 +93,7 @@ describe('walkFieldTree', () => {
     const malformedRoot = createMockWalkableField<Record<string, unknown>>({});
     attachEntries(malformedRoot, [['broken', {}]]);
 
-    expect(() => [...walkFieldTreeIterable(malformedRoot)]).toThrow(
+    expect(() => [...walkFieldTreeEntries(malformedRoot)]).toThrow(
       /field "broken" to be a FieldTree/,
     );
   });

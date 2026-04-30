@@ -44,7 +44,7 @@ function getMessagePlacement(
     const layoutRoot =
       host.querySelector('.ngx-signal-form-fieldset__surface') ?? host;
     const messageContainer = host.querySelector(
-      '.ngx-signal-form-fieldset__messages, .ngx-signal-form-field-wrapper__messages, ngx-form-field-assistive-row',
+      '.ngx-signal-form-fieldset__messages, .ngx-signal-form-field-wrapper__messages, .ngx-signal-form-field-wrapper__assistive',
     );
     const contentContainer = layoutRoot.querySelector(
       '.ngx-signal-form-fieldset__content, .ngx-signal-form-field-wrapper__content',
@@ -267,7 +267,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
         '.choice-group-field__options',
       );
       const messages = page.contactMethodGroup.locator(
-        'ngx-form-field-assistive-row',
+        '.ngx-signal-form-field-wrapper__assistive',
       );
       const alert = page.contactMethodGroup.getByRole('alert');
       const firstOption = page.contactMethodGroup

@@ -12,16 +12,12 @@
  *
  * @example
  * ```html
- * <ngx-form-field-assistive-row>
- *   <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
- *   <ngx-form-field-character-count [formField]="form.phone" [maxLength]="14" />
- * </ngx-form-field-assistive-row>
- *
+ * <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
+ * <ngx-form-field-character-count [formField]="form.phone" [maxLength]="14" />
  * <ngx-form-field-error [formField]="form.email" fieldName="email" />
  * ```
  */
 
-export { NgxFormFieldAssistiveRow } from './assistive-row';
 export { NgxFormFieldCharacterCount } from './character-count';
 export {
   NgxFormFieldError,

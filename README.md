@@ -271,8 +271,7 @@ components _without_ adopting the full field wrapper — e.g. you already have a
 timing and ARIA.
 
 Key exports: `NgxFormFieldError`, `NgxFormFieldNotification`,
-`NgxFormFieldErrorSummary`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`,
-`NgxFormFieldAssistiveRow`.
+`NgxFormFieldErrorSummary`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`.
 
 **[→ Assistive docs](./packages/toolkit/assistive/README.md)** ·
 **Demo:** [`your-first-form` (code)](./apps/demo/src/app/01-getting-started/your-first-form) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/getting-started/your-first-form/)
@@ -530,6 +529,7 @@ form (axe, Lighthouse, screen-reader testing) before claiming conformance.
 - [Angular vs toolkit](./docs/ANGULAR_VS_TOOLKIT.md) — what the toolkit adds, with a before/after example
 - [Validation strategies](./docs/VALIDATION_STRATEGY.md) — when to use Angular validators, Zod, or Vest
 - [Custom controls](./docs/CUSTOM_CONTROLS.md) — wrapping custom and third-party widgets
+- [Custom wrappers](./docs/CUSTOM_WRAPPERS.md) — DI contracts for third-party form-field wrappers (Material, PrimeNG, in-house)
 - [Complex and nested forms](./docs/COMPLEX_NESTED_FORMS.md) — fieldset aggregation, error summary, strategy inheritance
 - [Warnings support](./docs/WARNINGS_SUPPORT.md) — warning convention, error flow, message resolution
 - [CSS framework integration](./docs/CSS_FRAMEWORK_INTEGRATION.md) — Tailwind, Bootstrap, Material

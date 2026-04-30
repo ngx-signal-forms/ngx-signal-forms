@@ -9,7 +9,6 @@ export type { NgxFormFieldErrorPlacement } from '@ngx-signal-forms/toolkit';
 
 import { NgxSignalFormAutoAria } from '@ngx-signal-forms/toolkit';
 import {
-  NgxFormFieldAssistiveRow,
   NgxFormFieldCharacterCount,
   NgxFormFieldError,
   NgxFormFieldHint,
@@ -50,7 +49,6 @@ export const NgxFormField = [
   NgxFormFieldWrapper,
   NgxFormFieldHint,
   NgxFormFieldCharacterCount,
-  NgxFormFieldAssistiveRow,
   NgxFormFieldError,
   NgxFormFieldset,
 ] as const;

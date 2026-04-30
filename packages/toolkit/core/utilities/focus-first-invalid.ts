@@ -1,7 +1,7 @@
 import { isDevMode } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { isFieldStateInteractive } from './field-interactivity';
-import { walkFieldTreeIterable } from './walk-field-tree';
+import { walkFieldTreeEntries } from './walk-field-tree';
 
 /**
  * Focus the first **focusable** invalid field in a form after failed submission.
@@ -61,7 +61,7 @@ export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
   // required state methods, etc.) that consumers should learn about
   // immediately rather than via silently-non-functional focus management.
   const fieldStates = new Map<Function, FieldState<unknown>>();
-  for (const fieldState of walkFieldTreeIterable(formTree)) {
+  for (const { state: fieldState } of walkFieldTreeEntries(formTree)) {
     fieldStates.set(fieldState.fieldTree, fieldState);
   }
 

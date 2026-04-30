@@ -238,7 +238,7 @@ Displays progress towards a character limit.
 
 ### Assistive Row
 
-**Component:** `ngx-form-field-assistive-row`
+**Owner:** `NgxFormFieldWrapper` (inlined assistive row)
 
 Layout container for hint/error and character count alignment.
 

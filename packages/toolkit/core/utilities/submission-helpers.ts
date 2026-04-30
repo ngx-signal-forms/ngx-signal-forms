@@ -13,8 +13,8 @@ import {
   type ValidationError,
 } from '@angular/forms/signals';
 import type { SubmittedStatus } from '../types';
-import { walkFieldTreeIterable } from './walk-field-tree';
 import { isBlockingError } from './warning-error';
+import { isFieldTree } from './walk-field-tree';
 
 /**
  * Tracks completed-once submission history on top of native
@@ -54,7 +54,8 @@ export function createSubmittedStatusTracker(
 
   const resolve = (): FieldTree<unknown> => {
     const resolvedFieldTree = isSignal(formTree) ? formTree() : formTree;
-    return assertFieldTree(resolvedFieldTree);
+    assertFieldTree(resolvedFieldTree);
+    return resolvedFieldTree;
   };
 
   if (!isSignal(formTree)) {
@@ -73,16 +74,17 @@ export function createSubmittedStatusTracker(
       };
     },
     computation: (curr, prev) => {
+      const previousSource = prev?.source;
+
       if (
-        prev !== undefined &&
-        prev.source.touched &&
+        previousSource?.touched === true &&
         !curr.touched &&
         !curr.submitting
       ) {
         return false;
       }
 
-      if (prev !== undefined && prev.source.submitting && !curr.submitting) {
+      if (previousSource?.submitting === true && !curr.submitting) {
         return true;
       }
 
@@ -115,7 +117,7 @@ export function createSubmittedStatusTracker(
       return 'submitting';
     }
 
-    return submittedHistory() || submitAttempted?.()
+    return submittedHistory() || (submitAttempted?.() ?? false)
       ? 'submitted'
       : 'unsubmitted';
   });
@@ -159,7 +161,7 @@ export function hasOnlyWarnings(errors: readonly ValidationError[]): boolean {
 export function getBlockingErrors(
   errors: readonly ValidationError[],
 ): ValidationError[] {
-  return errors.filter(isBlockingError);
+  return errors.filter((error) => isBlockingError(error));
 }
 
 /**
@@ -197,7 +199,7 @@ export async function submitWithWarnings<TModel>(
   // The warning-aware gate and the real user action still live below.
   await submit(formTree, {
     ignoreValidators: 'all',
-    action: async () => undefined,
+    action: () => Promise.resolve(undefined),
   });
 
   await waitForValidationSettlement();
@@ -209,21 +211,12 @@ export async function submitWithWarnings<TModel>(
   await action();
 }
 
-function assertFieldTree(value: unknown): FieldTree<unknown> {
-  if (typeof value !== 'function') {
+function assertFieldTree(value: unknown): asserts value is FieldTree<unknown> {
+  if (!isFieldTree(value)) {
     throw new TypeError(
       'createSubmittedStatusTracker requires a FieldTree or Signal<FieldTree>.',
     );
   }
-
-  // A single iteration is enough to force `walkFieldTreeIterable()` to read the
-  // root FieldState contract. We intentionally stop immediately because the
-  // tracker only needs validation, not a full traversal.
-  for (const treeState of walkFieldTreeIterable(value as FieldTree<unknown>)) {
-    break;
-  }
-
-  return value as FieldTree<unknown>;
 }
 
 function waitForValidationSettlement(): Promise<void> {
