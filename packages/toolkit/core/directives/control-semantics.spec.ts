@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, viewChild } from '@angular/core';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import {
@@ -288,6 +288,26 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
       // Layout override alone makes hasSemantics true
       expect(host.hasAttribute('data-ngx-signal-form-control')).toBe(true);
       expect(host.getAttribute('data-ngx-signal-form-control-kind')).toBeNull();
+    });
+  });
+
+  describe('elementRef exposure', () => {
+    it("should expose the directive's host element so parents can locate the bound control via contentChildren", async () => {
+      @Component({
+        template: '<div data-testid="host" ngxSignalFormControl="text"></div>',
+        imports: [NgxSignalFormControlSemanticsDirective],
+      })
+      class TestComponent {
+        readonly directive = viewChild.required(
+          NgxSignalFormControlSemanticsDirective,
+        );
+      }
+
+      const { fixture } = await render(TestComponent);
+      const host = screen.getByTestId('host');
+      const directive = fixture.componentInstance.directive();
+
+      expect(directive.elementRef.nativeElement).toBe(host);
     });
   });
 });
