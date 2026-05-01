@@ -58,6 +58,8 @@ export {
   createHintIdsSignal,
   type CreateHintIdsSignalOptions,
   type HintIdsFieldNameReader,
+  type HintIdsIdentityLike,
+  type HintIdsRegistryLike,
   type HintIdsSignal,
 } from '@ngx-signal-forms/toolkit/core';
 

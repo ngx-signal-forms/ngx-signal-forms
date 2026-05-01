@@ -30,6 +30,8 @@ export {
   createHintIdsSignal,
   type CreateHintIdsSignalOptions,
   type HintIdsFieldNameReader,
+  type HintIdsIdentityLike,
+  type HintIdsRegistryLike,
   type HintIdsSignal,
 } from './utilities/aria/create-hint-ids-signal';
 export * from './utilities/cascading-resolver';

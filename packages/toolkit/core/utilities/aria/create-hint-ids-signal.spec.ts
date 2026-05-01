@@ -155,6 +155,30 @@ describe('createHintIdsSignal – registry-with-fieldName-filter path', () => {
 
     expect(result()).toEqual(['second', 'first', 'third']);
   });
+
+  it('treats an empty-string fieldName as scoped, not unscoped', () => {
+    const hints = signal<readonly NgxSignalFormHintDescriptor[]>([
+      { id: 'unscoped', fieldName: null },
+      { id: 'empty-scoped', fieldName: '' },
+      { id: 'email-scoped', fieldName: 'email' },
+    ]);
+
+    // For a non-empty current field name, the empty-string-scoped hint must
+    // NOT be matched as unscoped.
+    const emailResult = createHintIdsSignal({
+      registry: createStubRegistry(hints),
+      fieldName: () => 'email',
+    });
+    expect(emailResult()).toEqual(['unscoped', 'email-scoped']);
+
+    // The empty-string-scoped hint only matches when the current field name
+    // is itself the empty string.
+    const emptyResult = createHintIdsSignal({
+      registry: createStubRegistry(hints),
+      fieldName: () => '',
+    });
+    expect(emptyResult()).toEqual(['unscoped', 'empty-scoped']);
+  });
 });
 
 // ---------------------------------------------------------------------------
