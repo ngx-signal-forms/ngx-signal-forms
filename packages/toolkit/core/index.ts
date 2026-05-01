@@ -27,6 +27,7 @@ export {
 } from './directives/ngx-signal-form';
 
 // Utilities
+export { createAriaInvalidSignal } from './utilities/aria/create-aria-invalid-signal';
 export {
   createHintIdsSignal,
   type CreateHintIdsSignalOptions,

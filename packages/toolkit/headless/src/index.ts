@@ -55,6 +55,7 @@ export {
 // ARIA primitives — sourced from `/core` to keep the directive shell and
 // the headless re-export in lockstep without duplicating implementation.
 export {
+  createAriaInvalidSignal,
   createHintIdsSignal,
   type CreateHintIdsSignalOptions,
   type HintIdsFieldNameReader,
