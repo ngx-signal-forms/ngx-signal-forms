@@ -11,8 +11,6 @@ import {
   generateWarningId,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   resolveFieldNameFromCandidates,
-  type ErrorDisplayStrategy,
-  type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
 
@@ -58,49 +56,72 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
       font-size: 0.85rem;
       line-height: 1.2;
     }
+
+    /*
+     * Empty live-region containers stay mounted in the DOM so first
+     * announcements are not missed on some AT/browser combos. The
+     * containers carry [hidden] in this state — back it up with display:
+     * none so they contribute no visual whitespace either.
+     */
+    .p-error--empty,
+    .p-warn--empty {
+      display: none;
+    }
   `,
   template: `
     <!--
       role="alert" — implicit aria-live="assertive" + aria-atomic="true".
       The id matches the {fieldName}-error convention so auto-aria's
       aria-describedby chain points at the rendered error element.
+
+      The container stays MOUNTED unconditionally and toggles [hidden] +
+      [attr.aria-hidden] based on visibility (matches the toolkit's
+      NgxFormFieldError pattern). This keeps the live region in the DOM
+      so the very first error announcement isn't lost on AT/browser pairs
+      that only fire role="alert" on content insertion into a pre-existing
+      live region (WCAG 4.1.3, NVDA + Chrome edge case).
     -->
-    @if (showErrors() && hasErrors()) {
-      <small
-        [id]="errorId()"
-        class="p-error"
-        role="alert"
-        data-testid="prime-error"
-      >
+    <small
+      [id]="errorContainerVisible() ? errorId() : null"
+      class="p-error"
+      [class.p-error--empty]="!errorContainerVisible()"
+      role="alert"
+      [attr.aria-hidden]="errorContainerVisible() ? null : 'true'"
+      [hidden]="!errorContainerVisible()"
+      data-testid="prime-error"
+    >
+      @if (errorContainerVisible()) {
         @for (
           error of headless.resolvedErrors();
           track error.kind + ':' + error.message + ':' + $index
         ) {
           <span class="p-error__message">{{ error.message }}</span>
         }
-      </small>
-    }
+      }
+    </small>
 
     <!--
       role="status" — implicit aria-live="polite" + aria-atomic="true".
-      Warnings render alongside errors under the same Prime idiom and use
-      the {fieldName}-warning id so auto-aria can chain them too.
+      Same always-mounted live-region pattern as the error container above.
     -->
-    @if (showWarnings() && hasWarnings()) {
-      <small
-        [id]="warningId()"
-        class="p-warn"
-        role="status"
-        data-testid="prime-warning"
-      >
+    <small
+      [id]="warningContainerVisible() ? warningId() : null"
+      class="p-warn"
+      [class.p-warn--empty]="!warningContainerVisible()"
+      role="status"
+      [attr.aria-hidden]="warningContainerVisible() ? null : 'true'"
+      [hidden]="!warningContainerVisible()"
+      data-testid="prime-warning"
+    >
+      @if (warningContainerVisible()) {
         @for (
           warning of headless.resolvedWarnings();
           track warning.kind + ':' + warning.message + ':' + $index
         ) {
           <span class="p-warn__message">{{ warning.message }}</span>
         }
-      </small>
-    }
+      }
+    </small>
   `,
 })
 export class PrimeFieldErrorComponent {
@@ -124,15 +145,16 @@ export class PrimeFieldErrorComponent {
    * Inputs forwarded by `*ngComponentOutlet` from the wrapper / fieldset.
    * Listed explicitly so the renderer's TypeScript signature matches the
    * `NGX_FORM_FIELD_ERROR_RENDERER` contract.
+   *
+   * `strategy` and `submittedStatus` are intentionally NOT redeclared here —
+   * they are exposed on this component's input surface via the
+   * `hostDirectives.inputs` mapping above, which forwards them straight to
+   * `NgxHeadlessErrorState`. Declaring duplicates would shadow the
+   * forwarding and prevent the strategy/submission status from reaching the
+   * headless directive.
    */
   readonly formField = input<FieldTree<unknown>>();
   readonly fieldName = input<string | null | undefined>();
-  // The renderer only forwards these to the host directive, so they are
-  // declared on the component to absorb the `inputs` map without warnings.
-  // `strategy` and `submittedStatus` are then bridged into the headless
-  // directive via the `hostDirectives.inputs` mapping above.
-  readonly strategy = input<ErrorDisplayStrategy | null | undefined>();
-  readonly submittedStatus = input<SubmittedStatus | undefined>();
 
   protected readonly resolvedFieldName = computed<string | null>(() => {
     const explicit = this.fieldName();
@@ -156,6 +178,23 @@ export class PrimeFieldErrorComponent {
   );
   protected readonly hasErrors = computed(() => this.headless.hasErrors());
   protected readonly hasWarnings = computed(() => this.headless.hasWarnings());
+
+  /**
+   * Whether the error live-region container should expose its content.
+   * The container itself stays MOUNTED unconditionally; this flag toggles
+   * `[hidden]` + `[attr.aria-hidden]` and gates the inner content render.
+   */
+  protected readonly errorContainerVisible = computed(
+    () => this.showErrors() && this.hasErrors(),
+  );
+
+  /**
+   * Whether the warning live-region container should expose its content.
+   * Same always-mounted pattern as `errorContainerVisible`.
+   */
+  protected readonly warningContainerVisible = computed(
+    () => this.showWarnings() && this.hasWarnings(),
+  );
 
   constructor() {
     // Bridge the wrapper-supplied `formField` input into the headless

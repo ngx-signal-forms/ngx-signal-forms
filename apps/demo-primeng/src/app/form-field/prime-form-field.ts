@@ -115,10 +115,18 @@ import {
 
     <div class="prime-form-field__assistive">
       <!--
-        Hints render unconditionally; the toolkit's auto-aria directive
-        chains their IDs into aria-describedby via NGX_SIGNAL_FORM_HINT_REGISTRY.
-        Errors render via the configured error renderer (PrimeFieldErrorComponent
-        in this app) and replace the visual hint slot when shouldShowErrors().
+        Hints and errors render side-by-side, both unconditionally projected
+        into the assistive slot. The toolkit's auto-aria directive chains
+        each rendered ID into aria-describedby via NGX_SIGNAL_FORM_HINT_REGISTRY
+        for hints and the headless error state's id signals for errors.
+
+        - <ng-content select="ngx-form-field-hint" /> projects any
+          NgxFormFieldHint children — these stay visible alongside errors
+          (hints are persistent help text, not replaced on validation).
+        - The error renderer outlet below renders PrimeFieldErrorComponent
+          (the registered NGX_FORM_FIELD_ERROR_RENDERER), which itself
+          gates visibility via showErrors() / showWarnings() from the
+          composed NgxHeadlessErrorState directive.
       -->
       <ng-content select="ngx-form-field-hint" />
 
@@ -140,11 +148,11 @@ export class PrimeFormFieldComponent<TValue = unknown> {
   readonly formField = input.required<FieldTree<TValue>>();
 
   /**
-   * Optional explicit field name override. When omitted, the field name is
-   * inferred from `[fieldName]` or — at the app level — the bound control's
-   * `id` attribute via PrimeNG's directives. A stable `fieldName` is required
-   * for `aria-describedby` linking; this wrapper requires it explicitly so the
-   * contract is visible at the call site.
+   * Required field name for this wrapper instance.
+   *
+   * The wrapper uses this value to provide field context to projected
+   * assistive content and to keep `aria-describedby` linking stable and
+   * explicit at the call site.
    */
   readonly fieldName = input.required<string>();
 

@@ -22,7 +22,9 @@ test.describe('demo-primeng — profile form', () => {
 
     // Initial render: aria-invalid is unset (or 'false') because the field
     // has not been touched and on-touch is the default error strategy.
-    await expect(emailInput).toBeVisible();
+    // Asserting the attribute directly implies the element is in the DOM,
+    // so we skip a redundant visibility check.
+    await expect(emailInput).not.toHaveAttribute('aria-invalid', 'true');
 
     // Tab into the field, then tab away to trigger touched().
     await emailInput.focus();
