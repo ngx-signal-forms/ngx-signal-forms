@@ -1,0 +1,83 @@
+{
+  "name": "demo-material",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "ngx",
+  "sourceRoot": "apps/demo-material/src",
+  "tags": ["scope:demo", "type:app"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/demo-material"],
+      "defaultConfiguration": "production",
+      "options": {
+        "cwd": "apps/demo-material"
+      },
+      "configurations": {
+        "production": {
+          "command": "vite build --mode production",
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "1mb",
+              "maximumError": "2mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "8kb",
+              "maximumError": "16kb"
+            }
+          ]
+        },
+        "development": {
+          "command": "vite build --mode development"
+        }
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "cwd": "apps/demo-material"
+      },
+      "configurations": {
+        "production": {
+          "command": "vite preview --port 4201"
+        },
+        "development": {
+          "command": "vite --port 4201"
+        }
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/coverage/apps/demo-material"],
+      "dependsOn": [
+        {
+          "projects": ["toolkit"],
+          "target": "build"
+        }
+      ],
+      "options": {
+        "command": "vitest run",
+        "cwd": "apps/demo-material"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "oxlint {projectRoot} --type-aware"
+      }
+    },
+    "serve-static": {
+      "executor": "@nx/web:file-server",
+      "defaultConfiguration": "production",
+      "options": {
+        "buildTarget": "demo-material:build:production",
+        "port": 4201,
+        "staticFilePath": "dist/apps/demo-material",
+        "spa": true
+      }
+    }
+  }
+}
