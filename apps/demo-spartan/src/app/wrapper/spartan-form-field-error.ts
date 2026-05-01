@@ -8,11 +8,14 @@ import {
 } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
-  NGX_SIGNAL_FORM_FIELD_CONTEXT,
+  createShowErrorsComputed,
   generateErrorId,
   generateWarningId,
   isBlockingError,
   isWarningError,
+  NGX_SIGNAL_FORM_FIELD_CONTEXT,
+  type ResolvedErrorDisplayStrategy,
+  type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 
 /**
@@ -32,21 +35,45 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgClass],
   template: `
-    @if (firstError(); as err) {
-      <p
-        class="hlm-error"
-        [attr.id]="errorId()"
-        [attr.data-warning]="false"
-        [ngClass]="{ 'hlm-error--block': true }"
-      >
+    <!--
+      Blocking errors. role="alert" implies aria-live="assertive". The <p> is
+      kept mounted (toggling [hidden] + [attr.aria-hidden]) so the live region
+      preexists its first content insertion - some AT/browser combos miss the
+      first announcement when role="alert" is created together with content.
+      Mirrors the canonical toolkit pattern in NgxFormFieldError.
+    -->
+    <p
+      class="hlm-error"
+      [attr.id]="firstError() ? errorId() : null"
+      [attr.data-warning]="false"
+      [ngClass]="{ 'hlm-error--block': true }"
+      role="alert"
+      aria-live="assertive"
+      [attr.aria-hidden]="firstError() ? null : 'true'"
+      [hidden]="!firstError()"
+    >
+      @if (firstError(); as err) {
         {{ err.message ?? err.kind }}
-      </p>
-    }
-    @if (firstWarning(); as warn) {
-      <p class="hlm-error" [attr.id]="warningId()" [attr.data-warning]="true">
+      }
+    </p>
+
+    <!--
+      Non-blocking warnings. role="status" implies aria-live="polite". Same
+      mounted-toggle pattern as the alert container above.
+    -->
+    <p
+      class="hlm-error"
+      [attr.id]="firstWarning() ? warningId() : null"
+      [attr.data-warning]="true"
+      role="status"
+      aria-live="polite"
+      [attr.aria-hidden]="firstWarning() ? null : 'true'"
+      [hidden]="!firstWarning()"
+    >
+      @if (firstWarning(); as warn) {
         {{ warn.message ?? warn.kind }}
-      </p>
-    }
+      }
+    </p>
   `,
 })
 export class SpartanFormFieldErrorComponent {
@@ -58,12 +85,17 @@ export class SpartanFormFieldErrorComponent {
   readonly formField = input<FieldTree<unknown> | undefined>();
 
   /**
-   * Declared so `*ngComponentOutlet` can pass them in without emitting an
-   * NG0303 dev warning. The renderer ignores both — visibility timing lives
-   * in the toolkit's auto-ARIA / wrapper, not the renderer component.
+   * Strategy resolved by the parent wrapper. Threaded into the live-region
+   * visibility computed so blocking-error and warning containers stay in the
+   * DOM but only "activate" once the strategy says messages should surface.
    */
-  readonly strategy = input<unknown>();
-  readonly submittedStatus = input<unknown>();
+  readonly strategy = input<ResolvedErrorDisplayStrategy>('on-touch');
+
+  /**
+   * Submission status forwarded from the wrapper. Required for the
+   * `'on-submit'` strategy.
+   */
+  readonly submittedStatus = input<SubmittedStatus | undefined>();
 
   /**
    * Field name from the surrounding wrapper context. Used to generate the
@@ -80,13 +112,36 @@ export class SpartanFormFieldErrorComponent {
     return tree().errors();
   });
 
-  protected readonly firstError = computed(() =>
+  readonly #firstBlockingError = computed(() =>
     this.errors().find(isBlockingError),
   );
 
-  protected readonly firstWarning = computed(() =>
-    this.errors().find(isWarningError),
+  readonly #firstWarning = computed(() => this.errors().find(isWarningError));
+
+  /**
+   * Strategy-aware visibility for the blocking-error live region. The <p>
+   * element stays mounted regardless (so role="alert" preexists its first
+   * content insertion - WCAG 4.1.3); this signal only gates whether the
+   * region is "active" (has content + id, not aria-hidden).
+   */
+  readonly #fieldState = computed(() => this.formField()?.());
+  readonly #showErrorsByStrategy = createShowErrorsComputed(
+    this.#fieldState,
+    this.strategy,
+    this.submittedStatus,
   );
+
+  protected readonly firstError = computed(() => {
+    if (!this.#showErrorsByStrategy()) return undefined;
+    return this.#firstBlockingError();
+  });
+
+  /**
+   * Warnings surface immediately (matching the toolkit's
+   * `NgxFormFieldError` default `warningStrategy: 'immediate'`) - they are
+   * informational and not gated by the blocking-error strategy.
+   */
+  protected readonly firstWarning = this.#firstWarning;
 
   protected readonly errorId = computed(() => {
     const name = this.#fieldContext?.fieldName() ?? null;

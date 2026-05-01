@@ -90,7 +90,6 @@ const accountSchema = schema<AccountPreferences>((path) => {
           brnInput
           ngxSignalFormControl="input-like"
           id="display-name"
-          name="displayName"
           type="text"
           class="hlm-input"
           placeholder="e.g. Ada Lovelace"
@@ -107,7 +106,6 @@ const accountSchema = schema<AccountPreferences>((path) => {
         <select
           ngxSignalFormControl="input-like"
           id="plan"
-          name="plan"
           class="hlm-select"
           [formField]="form.plan"
         >
@@ -124,7 +122,6 @@ const accountSchema = schema<AccountPreferences>((path) => {
           <input
             ngxSignalFormControl="checkbox"
             id="newsletter"
-            name="newsletter"
             type="checkbox"
             class="hlm-checkbox"
             [formField]="form.newsletter"

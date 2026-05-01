@@ -13,7 +13,6 @@ import type { FieldTree } from '@angular/forms/signals';
 import { BrnField } from '@spartan-ng/brain/field';
 import { BrnLabel } from '@spartan-ng/brain/label';
 import {
-  createShowErrorsComputed,
   injectFormContext,
   NGX_FORM_FIELD_ERROR_RENDERER,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
@@ -86,11 +85,16 @@ import { SpartanFormFieldErrorComponent } from './spartan-form-field-error';
     <ng-content />
     <ng-content select="ngx-form-field-hint" />
 
-    @if (shouldShowMessages()) {
-      <ng-container
-        *ngComponentOutlet="errorComponent(); inputs: errorInputs()"
-      />
-    }
+    <!--
+      The renderer is mounted unconditionally so its role="alert" /
+      role="status" live regions preexist their first content insertion (WCAG
+      4.1.3). Strategy-aware visibility flows into the renderer via the
+      \`strategy\` and \`submittedStatus\` inputs, and the renderer toggles
+      [hidden] / [attr.aria-hidden] on the live-region <p> elements.
+    -->
+    <ng-container
+      *ngComponentOutlet="errorComponent(); inputs: errorInputs()"
+    />
   `,
 })
 export class SpartanFormFieldComponent<TValue = unknown> {
@@ -103,9 +107,10 @@ export class SpartanFormFieldComponent<TValue = unknown> {
   readonly formField = input.required<FieldTree<TValue>>();
 
   /**
-   * Explicit field name. The wrapper falls back to the projected control's
-   * `id` attribute if omitted, but recommends an explicit value for clarity.
-   * Used to generate stable `aria-describedby` ids.
+   * Explicit field name used to generate stable `aria-describedby` ids.
+   * When omitted, resolution relies on the wrapper's existing association
+   * logic, such as projected label metadata; there is no projected control
+   * `id` fallback.
    */
   readonly fieldName = input<string>();
 
@@ -185,9 +190,10 @@ export class SpartanFormFieldComponent<TValue = unknown> {
 
   /**
    * Visibility-timing pieces match `NgxFormFieldWrapper`. Pulled from the
-   * form context (provided by `[ngxSignalForm]`) so the renderer-component
-   * outlet only mounts once the strategy says messages should be visible —
-   * mirrors what auto-ARIA decides for `aria-describedby` chaining.
+   * form context (provided by `[ngxSignalForm]`) and forwarded to the
+   * renderer-component via the `*ngComponentOutlet` `inputs:` map so the
+   * renderer can gate its live-region visibility on strategy + submission
+   * state - mirrors what auto-ARIA decides for `aria-describedby` chaining.
    */
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
   readonly #formContext = injectFormContext();
@@ -203,24 +209,6 @@ export class SpartanFormFieldComponent<TValue = unknown> {
   protected readonly submittedStatus = computed(() =>
     this.#formContext ? this.#formContext.submittedStatus() : 'unsubmitted',
   );
-
-  /**
-   * Cache the field state in a single computed so visibility checks and
-   * the renderer outlet never thrash through duplicate `formField()()` reads.
-   */
-  readonly #fieldState = computed(() => this.formField()());
-
-  readonly #showErrorsByStrategy = createShowErrorsComputed(
-    this.#fieldState,
-    this.effectiveStrategy,
-    this.submittedStatus,
-  );
-
-  protected readonly shouldShowMessages = computed(() => {
-    const errors = this.#fieldState().errors();
-    if (errors.length === 0) return false;
-    return this.#showErrorsByStrategy();
-  });
 
   /**
    * Inputs handed to `*ngComponentOutlet`. Matches the contract documented

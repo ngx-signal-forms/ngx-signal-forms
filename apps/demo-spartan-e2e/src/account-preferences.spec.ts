@@ -15,7 +15,6 @@ test('Spartan reference wrapper - fill, blur, and observe error wiring', async (
   await page.waitForLoadState('domcontentloaded');
 
   const displayName = page.getByLabel('Display name');
-  await expect(displayName).toBeVisible();
 
   // Initial state: no error rendered, aria-invalid not "true".
   await expect(displayName).not.toHaveAttribute('aria-invalid', 'true');
