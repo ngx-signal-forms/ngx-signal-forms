@@ -1,0 +1,285 @@
+/*
+ * Hand-rolled `hlm` look-alike styling for the demo-spartan reference.
+ *
+ * Why not pull `@spartan-ng/helm` from npm? `helm` is not published as an
+ * installable npm package — Spartan's recommended workflow is to run the
+ * `@spartan-ng/cli` generator, which copies styled wrappers into the
+ * consumer's source tree. To keep this reference reproducible (no codegen
+ * step in CI) we re-create the same Tailwind-flavoured tokens locally.
+ *
+ * The shape of the classes mirrors what `hlm-form-field`, `hlm-error`,
+ * `hlm-hint`, `hlm-input`, `hlm-select`, and `hlm-checkbox` would emit.
+ * That's enough fidelity to demonstrate the toolkit seam composing on top
+ * of Spartan's directive-first primitives — the visual chrome is incidental.
+ */
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 240 5% 64.9%;
+  --primary: 240 5.9% 10%;
+  --primary-foreground: 0 0% 98%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 13%;
+  --radius: 0.5rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+    Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  line-height: 1.5;
+}
+
+.shell {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem;
+}
+
+.shell__title {
+  font-size: 1.875rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  margin: 0 0 0.5rem;
+}
+
+.shell__subtitle {
+  color: hsl(var(--muted-foreground));
+  margin: 0 0 2.5rem;
+}
+
+.shell__panel {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 2rem;
+  background: hsl(var(--background));
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.shell__panel + .shell__panel {
+  margin-top: 1.5rem;
+}
+
+.shell__panel-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.shell__panel-description {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+  margin: 0 0 1.5rem;
+}
+
+/* `hlm-form-field` look-alike: vertical stack with consistent spacing. */
+.hlm-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hlm-form-field + .hlm-form-field {
+  margin-top: 1.25rem;
+}
+
+.hlm-form-field__label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.hlm-form-field__label[data-required]::after {
+  content: ' *';
+  color: hsl(var(--destructive));
+}
+
+/* `hlm-input` look-alike: surfaces the typical Spartan input chrome. */
+.hlm-input {
+  display: flex;
+  height: 2.5rem;
+  width: 100%;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid hsl(var(--input));
+  background: hsl(var(--background));
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: hsl(var(--foreground));
+}
+
+.hlm-input::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+.hlm-input:focus-visible {
+  outline: none;
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.4);
+}
+
+.hlm-input[aria-invalid='true'] {
+  border-color: hsl(var(--destructive));
+}
+
+.hlm-input[aria-invalid='true']:focus-visible {
+  box-shadow: 0 0 0 2px hsl(var(--destructive) / 0.4);
+}
+
+/* `hlm-select` look-alike — native select keeps the demo scope tight. */
+.hlm-select {
+  display: flex;
+  height: 2.5rem;
+  width: 100%;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid hsl(var(--input));
+  background: hsl(var(--background));
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: hsl(var(--foreground));
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23737373' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 0.75rem;
+  padding-right: 2rem;
+}
+
+.hlm-select:focus-visible {
+  outline: none;
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.4);
+}
+
+.hlm-select[aria-invalid='true'] {
+  border-color: hsl(var(--destructive));
+}
+
+/* `hlm-checkbox` look-alike. */
+.hlm-checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.hlm-checkbox-row__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.hlm-checkbox-row__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.hlm-checkbox {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  margin: 0.125rem 0 0;
+  border: 1px solid hsl(var(--input));
+  border-radius: calc(var(--radius) - 4px);
+  background: hsl(var(--background));
+  cursor: pointer;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hlm-checkbox:checked {
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+}
+
+.hlm-checkbox:checked::after {
+  content: '';
+  width: 0.625rem;
+  height: 0.625rem;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 8l3.5 3.5L13 5'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.hlm-checkbox:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.4);
+}
+
+.hlm-checkbox[aria-invalid='true'] {
+  border-color: hsl(var(--destructive));
+}
+
+/* `hlm-hint` and `hlm-error` look-alike. */
+.hlm-hint {
+  font-size: 0.8125rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.hlm-error {
+  font-size: 0.8125rem;
+  color: hsl(var(--destructive));
+  font-weight: 500;
+}
+
+.hlm-error[data-warning='true'] {
+  color: hsl(var(--warning-foreground));
+  background: hsl(var(--warning) / 0.15);
+  border-radius: calc(var(--radius) - 4px);
+  padding: 0.375rem 0.5rem;
+}
+
+/* `hlm-button` primary look-alike for the form submit. */
+.hlm-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: calc(var(--radius) - 2px);
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 1.5rem;
+}
+
+.hlm-button:hover {
+  background: hsl(var(--primary) / 0.9);
+}
+
+.hlm-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.4);
+}
+
+.shell__result {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: calc(var(--radius) - 2px);
+  background: hsl(var(--muted));
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.8125rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

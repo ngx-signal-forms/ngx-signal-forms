@@ -1,0 +1,9 @@
+{
+  "name": "@ngx-signal-forms/demo-spartan",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Reference wrapper integrating ngx-signal-forms toolkit on top of Spartan Components",
+  "dependencies": {
+    "@spartan-ng/brain": "0.0.1-alpha.682"
+  }
+}
