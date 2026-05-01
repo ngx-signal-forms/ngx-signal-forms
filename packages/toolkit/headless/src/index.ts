@@ -52,11 +52,14 @@ export {
   type ResolvedNotificationMessage,
 } from './lib/notification';
 
-// ARIA primitives — sourced from `/core` to keep the directive shell and
-// the headless re-export in lockstep without duplicating implementation.
+// ARIA primitives — sourced from `/core` to keep the directive shell
+// (`NgxSignalFormAutoAria`) and the headless re-export in lockstep without
+// duplicating implementation or forming a cycle through this barrel.
 export {
   createAriaInvalidSignal,
+  createAriaRequiredSignal,
   createHintIdsSignal,
+  type AriaRequiredFieldState,
   type CreateHintIdsSignalOptions,
   type HintIdsFieldNameReader,
   type HintIdsIdentityLike,
