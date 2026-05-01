@@ -1,6 +1,7 @@
 import {
   afterEveryRender,
   computed,
+  contentChildren,
   Directive,
   ElementRef,
   inject,
@@ -9,7 +10,7 @@ import {
   signal,
   type Signal,
 } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
+import type { FieldState, FieldTree } from '@angular/forms/signals';
 import {
   createShowErrorsComputed,
   injectFormContext,
@@ -24,6 +25,7 @@ import {
   type ErrorDisplayStrategy,
   type NgxSignalFormHintDescriptor,
 } from '@ngx-signal-forms/toolkit';
+import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import {
   createAriaDescribedBySignal,
   createAriaInvalidSignal,
@@ -218,9 +220,34 @@ export class MatFormFieldWrapper<TValue = unknown> {
   });
 
   // ── Hint registry (forward-compat with <ngx-form-field-hint>) ─────────
+  //
+  // Material consumers can additionally project `<ngx-form-field-hint>` into
+  // the form-field (alongside or instead of `<mat-hint>`). Wiring those hints
+  // through `NGX_SIGNAL_FORM_HINT_REGISTRY` is what lets
+  // `createHintIdsSignal` / `createAriaDescribedBySignal` know which hint
+  // IDs the toolkit owns and should compose into `aria-describedby`.
+
+  /**
+   * Hint children projected into the wrapped `<mat-form-field>`. Mirrors the
+   * `contentChildren(NgxFormFieldHint, { descendants: true })` query in the
+   * toolkit's own `NgxFormFieldWrapper` so the registry contract behaves the
+   * same way regardless of which wrapper hosts the hint.
+   *
+   * Angular's `contentChildren` API requires non-private visibility.
+   *
+   * @internal
+   */
+  protected readonly hintChildren = contentChildren(NgxFormFieldHint, {
+    descendants: true,
+  });
 
   readonly hintDescriptors: Signal<readonly NgxSignalFormHintDescriptor[]> =
-    computed(() => []);
+    computed(() =>
+      this.hintChildren().map((hint) => ({
+        id: hint.resolvedId(),
+        fieldName: hint.resolvedFieldName(),
+      })),
+    );
 
   // ── ARIA primitive factories ──────────────────────────────────────────
   // The four factories from `@ngx-signal-forms/toolkit/headless` drive
@@ -247,19 +274,27 @@ export class MatFormFieldWrapper<TValue = unknown> {
    * The `preservedIds` reader returns Material's current
    * `aria-describedby` value verbatim — that's what makes this the
    * **escape hatch for Material's ARIA ownership**. The factory preserves
-   * everything Material owns and only appends the toolkit's
-   * `${fieldName}-error` / `${fieldName}-warning` IDs when (a) the toolkit
-   * owns those rendered elements and (b) visibility timing says they should
-   * be announced.
+   * everything Material owns, appends projected `<ngx-form-field-hint>`
+   * IDs (which Material does not know about), and stops there.
    *
-   * In this Material reference the toolkit does NOT add its own assistive
-   * elements (errors/warnings render inside `<mat-error>` / `<mat-hint>`,
-   * which Material registers itself), so the appended ID list is empty.
-   * The factory still runs so the demo proves the wrapper is wired up
-   * correctly for consumers who do introduce non-Material assistive IDs.
+   * **Why we pass `null` for `fieldState`**: in the unmodified factory, a
+   * real `fieldState` causes the composed string to suffix
+   * `${fieldName}-error` / `${fieldName}-warning` whenever the field is
+   * invalid + visibility is `true`. Those IDs do not exist in this
+   * Material setup — error/warning copy lives inside `<mat-error>` /
+   * `<mat-hint>` with Material-owned IDs that Material has already
+   * preserved into the chain. Appending toolkit-owned IDs would emit
+   * dangling IDREFs (WCAG 1.3.1 / 4.1.2). Pinning `fieldState` to a
+   * constant `null` short-circuits the error/warning branch in the factory
+   * (`createAriaDescribedBySignal` skips both when `state` is falsy) so the
+   * resulting attribute is exactly `preservedIds + hintIds`.
+   *
+   * Consumers who DO render their own toolkit-owned error/warning surfaces
+   * outside Material's slots can re-thread `this.#fieldStateSignal` here
+   * and the IDs will be appended correctly.
    */
   readonly toolkitAriaDescribedBy = createAriaDescribedBySignal({
-    fieldState: this.#fieldStateSignal,
+    fieldState: computed<FieldState<unknown> | null>(() => null),
     hintIds: this.#hintIds,
     visibility: this.#showByStrategy,
     preservedIds: () =>

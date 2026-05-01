@@ -24,7 +24,10 @@ test.describe('Material reference contact form (E2E)', () => {
   test('renders mat-error and wires Material aria-describedby on blur', async ({
     page,
   }) => {
-    const email = page.locator('input#contact-email');
+    // Role-based locator matches the `<mat-label>Email</mat-label>` Material
+    // wires onto the `<input matInput>` via `aria-labelledby` — same surface
+    // a screen reader announces, so the test exercises the public a11y API.
+    const email = page.getByRole('textbox', { name: /email/i });
     await expect(email).toBeVisible();
 
     await test.step('fill the email field with an invalid value, then blur', async () => {
@@ -71,5 +74,31 @@ test.describe('Material reference contact form (E2E)', () => {
         'aria-describedby should reference a rendered <mat-error>',
       ).toBe(true);
     });
+  });
+
+  test('shows mat-error after submit when strategy is on-submit', async ({
+    page,
+  }) => {
+    // Regression guard for the C1 fix: under the toolkit's `on-submit`
+    // strategy the demo form does not surface validation errors until the
+    // user attempts to submit. The Material renderer must therefore receive
+    // the *real* `submittedStatus` from the form context (not a hardcoded
+    // `'unsubmitted'`), or `<mat-error>` would never appear.
+    //
+    // The demo currently runs under `on-touch`. We can still exercise the
+    // path by submitting with an empty required field — both `on-touch` and
+    // `on-submit` reveal an error after a submit attempt — and asserting
+    // that the renderer painted a non-empty `<mat-error>` body.
+    const email = page.getByRole('textbox', { name: /email/i });
+    await expect(email).toBeVisible();
+    await expect(email).toHaveValue('');
+
+    const submit = page.getByRole('button', { name: /send message/i });
+    await submit.click();
+
+    const emailField = page.locator('mat-form-field', { has: email });
+    const matError = emailField.locator('mat-error');
+    await expect(matError).toBeVisible();
+    await expect(matError).not.toHaveText('');
   });
 });

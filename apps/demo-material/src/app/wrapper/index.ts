@@ -1,4 +1,7 @@
-import { provideFormFieldErrorRendererForComponent } from '@ngx-signal-forms/toolkit';
+import {
+  provideFormFieldErrorRendererForComponent,
+  provideFormFieldHintRendererForComponent,
+} from '@ngx-signal-forms/toolkit';
 import { MaterialFeedbackRenderer } from './material-error-renderer';
 
 export { MatCheckboxFeedback } from './mat-checkbox-feedback';
@@ -10,15 +13,30 @@ export { MaterialFeedbackRenderer } from './material-error-renderer';
 
 /**
  * Component-scoped provider that registers the Material feedback renderer
- * for the toolkit's `NGX_FORM_FIELD_ERROR_RENDERER` token.
+ * for both the `NGX_FORM_FIELD_ERROR_RENDERER` and
+ * `NGX_FORM_FIELD_HINT_RENDERER` tokens.
  *
- * Drop this in any component that hosts a `<ngx-mat-form-field>` and the
- * wrapper will render `<mat-error>` / `<mat-hint>` content through this
- * Material-styled renderer instead of the toolkit's default
- * `NgxFormFieldError`.
+ * Drop this in any component that hosts a `<mat-form-field ngxMatFormField>`
+ * and:
+ *
+ * - The wrapper instantiates `MaterialFeedbackRenderer` inside `<mat-error>`
+ *   (slot=`'error'`) and `<mat-hint>` (slot=`'warning'`) for blocking
+ *   errors and warnings.
+ * - Any descendant component that consults `NGX_FORM_FIELD_HINT_RENDERER`
+ *   (e.g. a different wrapper deeper in the tree, or a test) sees the same
+ *   Material renderer rather than the toolkit's default `NgxFormFieldHint`.
+ *
+ * The Material wrapper itself reads `NGX_FORM_FIELD_ERROR_RENDERER` for the
+ * outlet binding; the hint-renderer provider is wired so the README claim
+ * (and the toolkit's renderer-token contract) holds end-to-end.
  */
 export function provideMaterialFeedbackRenderer() {
-  return provideFormFieldErrorRendererForComponent({
-    component: MaterialFeedbackRenderer,
-  });
+  return [
+    ...provideFormFieldErrorRendererForComponent({
+      component: MaterialFeedbackRenderer,
+    }),
+    ...provideFormFieldHintRendererForComponent({
+      component: MaterialFeedbackRenderer,
+    }),
+  ];
 }

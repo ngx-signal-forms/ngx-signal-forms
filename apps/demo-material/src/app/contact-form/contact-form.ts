@@ -244,6 +244,12 @@ export class ContactFormComponent {
    * `NgxFormFieldWrapper` (`{ formField, strategy, submittedStatus }`) and
    * adds the `slot` discriminator the Material renderer uses to distinguish
    * its error vs warning branch.
+   *
+   * `submittedStatus` is intentionally omitted: the headless directive falls
+   * back to the form-context value (`NgxSignalFormContext.submittedStatus()`)
+   * via `resolveSubmittedStatusFromContext` when the input is undefined.
+   * Hardcoding `'unsubmitted'` here would suppress mat-error rendering under
+   * the `on-submit` strategy after a real submit cycle.
    */
   protected readonly feedbackInputs = (
     formField: unknown,
@@ -251,7 +257,6 @@ export class ContactFormComponent {
   ): Record<string, unknown> => ({
     formField,
     strategy: null,
-    submittedStatus: 'unsubmitted',
     slot,
   });
 
