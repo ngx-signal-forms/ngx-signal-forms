@@ -29,8 +29,8 @@ export {
 // Utilities
 export { createAriaInvalidSignal } from './utilities/aria/create-aria-invalid-signal';
 export {
-  type AriaRequiredFieldState,
   createAriaRequiredSignal,
+  type AriaRequiredFieldState,
 } from './utilities/aria/create-aria-required-signal';
 export {
   createHintIdsSignal,

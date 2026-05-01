@@ -25,7 +25,7 @@ export type AriaRequiredFieldState = Pick<FieldState<unknown>, 'required'>;
  * @example Compose inside a custom wrapper
  * ```typescript
  * const ariaRequired = createAriaRequiredSignal(
- *   computed(() => this.formField()()),
+ *   computed(() => this.formField()?.()),
  * );
  * // ariaRequired() → 'true' | null
  * ```
