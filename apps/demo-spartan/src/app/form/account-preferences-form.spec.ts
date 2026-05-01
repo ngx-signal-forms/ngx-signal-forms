@@ -72,4 +72,23 @@ describe('Spartan reference wrapper — smoke', () => {
     const describedBy = displayName.getAttribute('aria-describedby') ?? '';
     expect(describedBy.split(/\s+/)).toContain('display-name-warning');
   });
+
+  it("threads hint ids through Brain's BrnFieldControlDescribedBy via the wrapper-scoped bridge", async () => {
+    // Renders without any user interaction. The hint child for `display-name`
+    // has a stable, content-derived id; the wrapper-scoped
+    // `SpartanAriaDescribedByBridge` feeds it into the toolkit composition,
+    // and Brain's `BrnFieldControlDescribedBy` host binding writes it onto
+    // the helm input host element. Without the bridge this assertion fails
+    // (Brain's default `BrnFieldA11yService` returns null because nothing
+    // registered a description through its API).
+    await render(AccountPreferencesFormComponent);
+
+    const displayName = screen.getByLabelText(/display name/i);
+
+    const hintElement = screen.getByText(/public name shown on your profile/i);
+    expect(hintElement.id).toBeTruthy();
+
+    const describedBy = displayName.getAttribute('aria-describedby') ?? '';
+    expect(describedBy.split(/\s+/)).toContain(hintElement.id);
+  });
 });

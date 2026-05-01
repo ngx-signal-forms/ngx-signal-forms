@@ -10,10 +10,15 @@ import {
   type Type,
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
-import { BrnField } from '@spartan-ng/brain/field';
+import { BrnField, BrnFieldA11yService } from '@spartan-ng/brain/field';
 import { BrnLabel } from '@spartan-ng/brain/label';
 import {
+  createErrorVisibility,
+  generateErrorId,
+  generateWarningId,
   injectFormContext,
+  isBlockingError,
+  isWarningError,
   NGX_FORM_FIELD_ERROR_RENDERER,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
@@ -22,6 +27,7 @@ import {
   type NgxSignalFormHintDescriptor,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
+import { SpartanAriaDescribedByBridge } from './spartan-aria-describedby-bridge';
 import { SpartanFormFieldErrorComponent } from './spartan-form-field-error';
 
 /**
@@ -74,6 +80,16 @@ import { SpartanFormFieldErrorComponent } from './spartan-form-field-error';
         const wrapper = inject(SpartanFormFieldComponent);
         return { hints: wrapper.hintDescriptors };
       },
+    },
+    // Brain's `BrnField` host directive declares
+    // `providers: [BrnFieldA11yService]` at the same element. Component-level
+    // providers win over host-directive providers, so this `useClass`
+    // registration replaces Brain's empty service with the wrapper-scoped
+    // bridge that re-exposes the toolkit's `aria-describedby` composition.
+    // See `./spartan-aria-describedby-bridge.ts` for the rationale.
+    {
+      provide: BrnFieldA11yService,
+      useClass: SpartanAriaDescribedByBridge,
     },
   ],
   host: {
@@ -225,4 +241,58 @@ export class SpartanFormFieldComponent<TValue = unknown> {
     strategy: this.effectiveStrategy(),
     submittedStatus: this.submittedStatus(),
   }));
+
+  /**
+   * Visibility-timing computed shared with auto-aria's strategy cascade.
+   * Auto-consumes the surrounding `[ngxSignalForm]` context via DI so the
+   * wrapper's bridge service stays in lockstep with auto-aria's writes.
+   */
+  readonly #visibility = createErrorVisibility(() => this.formField()());
+
+  /**
+   * Reactive `aria-describedby` value composed from the toolkit's
+   * field-context primitives:
+   *
+   *   - hint IDs from the projected `<ngx-form-field-hint>` children, then
+   *   - `<fieldName>-error` if the bound field has any blocking error AND
+   *     the strategy says errors should surface, then
+   *   - `<fieldName>-warning` if the bound field has a warning error AND
+   *     the strategy says errors should surface.
+   *
+   * Consumed by {@link SpartanAriaDescribedByBridge} (provided at this
+   * component's injector level) so that `BrnFieldControlDescribedBy`'s host
+   * binding on `[hlmInput]` writes the toolkit-managed IDs onto the host
+   * element, instead of overwriting auto-aria's `setAttribute` calls with
+   * an empty service value. Mirrors the composition documented in
+   * `createAriaDescribedBySignal` without taking a build-time-only `/core`
+   * import dependency.
+   */
+  readonly toolkitAriaDescribedBy = computed<string | null>(() => {
+    const fieldName = this.resolvedFieldName();
+    const parts: string[] = [];
+
+    for (const hint of this.hintDescriptors()) {
+      if (!parts.includes(hint.id)) {
+        parts.push(hint.id);
+      }
+    }
+
+    if (fieldName !== null && this.#visibility()) {
+      const errors = this.formField()().errors();
+      if (errors.some(isBlockingError)) {
+        const errorId = generateErrorId(fieldName);
+        if (!parts.includes(errorId)) {
+          parts.push(errorId);
+        }
+      }
+      if (errors.some(isWarningError)) {
+        const warningId = generateWarningId(fieldName);
+        if (!parts.includes(warningId)) {
+          parts.push(warningId);
+        }
+      }
+    }
+
+    return parts.length > 0 ? parts.join(' ') : null;
+  });
 }

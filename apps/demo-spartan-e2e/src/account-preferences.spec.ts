@@ -8,21 +8,19 @@ import { expect, test } from '@playwright/test';
  * provider wiring (renderer-token registration, hint-registry projection,
  * auto-ARIA selector matching against `[hlmInput]`) surfaces here.
  *
- * Notes on what is and isn't asserted, and why:
+ * Pre-interaction `aria-invalid` is not asserted. Helm's host directive stack
+ * (`[hlmInput]` brings `BrnInput` + `BrnFieldControl` +
+ * `BrnFieldControlDescribedBy`) interacts with focus on mount in real
+ * browsers, which can mark the field touched before the test runs. The
+ * post-interaction state is what the seam actually owns.
  *
- *   - Pre-interaction `aria-invalid` is not asserted. Helm's host directive
- *     stack (`[hlmInput]` brings `BrnInput` + `BrnFieldControl` +
- *     `BrnFieldControlDescribedBy`) interacts with focus on mount in real
- *     browsers, which can mark the field touched before the test runs. The
- *     post-interaction state is what the seam actually owns.
- *
- *   - `aria-describedby` chain is not asserted on the input. helm's
- *     `BrnFieldControlDescribedBy` host directive owns the attribute and
- *     mediates it through `BrnFieldA11yService`, intentionally severing the
- *     direct write path that the toolkit's auto-aria uses outside helm.
- *     The smoke spec covers the toolkit-only path via jsdom; here we assert
- *     that the error element exists at the field-name-derived id, which is
- *     the contract the wrapper guarantees end-to-end.
+ * `aria-describedby` is the contract that
+ * {@link `apps/demo-spartan/src/app/wrapper/spartan-aria-describedby-bridge.ts`}
+ * mediates: Brain's `BrnFieldControlDescribedBy` host directive owns the
+ * attribute on `[hlmInput]`, but the wrapper-scoped bridge service feeds it
+ * from the toolkit's composition so the toolkit-managed `<fieldName>-error`
+ * id reaches the helm input host element. This spec asserts that contract
+ * end-to-end (the smoke spec covers the same path through jsdom).
  */
 test('Spartan reference wrapper - fill, blur, and observe error wiring', async ({
   page,
@@ -44,4 +42,23 @@ test('Spartan reference wrapper - fill, blur, and observe error wiring', async (
   // visibility, so we assert presence + content rather than `toBeVisible`.
   const error = page.locator('#display-name-error');
   await expect(error).toContainText(/display name is required/i);
+
+  // The wrapper-scoped `BrnFieldA11yService` bridge feeds the toolkit's
+  // composed id list into Brain's `BrnFieldControlDescribedBy` host binding,
+  // so the helm input host element exposes `display-name-error` for AT.
+  // This is the contract-level assertion that proves the bridge is wired
+  // correctly (without it, Brain's empty service nulls the attribute).
+  await expect(displayName).toHaveAttribute(
+    'aria-describedby',
+    /\bdisplay-name-error\b/,
+  );
+
+  // Sanity: the id surfaced through `aria-describedby` resolves to the
+  // rendered error element so screen readers can actually find it.
+  const describedBy =
+    (await displayName.getAttribute('aria-describedby')) ?? '';
+  expect(describedBy.split(/\s+/)).toContain('display-name-error');
+  await expect(page.locator(`#display-name-error`)).toContainText(
+    /display name is required/i,
+  );
 });
