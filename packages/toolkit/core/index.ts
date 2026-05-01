@@ -27,6 +27,14 @@ export {
 } from './directives/ngx-signal-form';
 
 // Utilities
+export {
+  createHintIdsSignal,
+  type CreateHintIdsSignalOptions,
+  type HintIdsFieldNameReader,
+  type HintIdsIdentityLike,
+  type HintIdsRegistryLike,
+  type HintIdsSignal,
+} from './utilities/aria/create-hint-ids-signal';
 export * from './utilities/cascading-resolver';
 export * from './utilities/create-error-visibility';
 export * from './utilities/create-unique-id';
