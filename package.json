@@ -39,6 +39,8 @@
     "@angular/forms": "21.2.10",
     "@angular/platform-browser": "21.2.10",
     "@angular/router": "21.2.10",
+    "@ng-icons/core": "catalog:spartan",
+    "@ng-icons/lucide": "catalog:spartan",
     "@ngrx/signals": "catalog:",
     "@shikijs/core": "catalog:shiki",
     "@spartan-ng/brain": "catalog:spartan",
