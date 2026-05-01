@@ -10,8 +10,7 @@
 // breach, not a build break.
 
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import { resolve } from 'node:path';
 
 const here = import.meta.dirname;
 const pkgPath = resolve(here, '../../packages/toolkit/package.json');
