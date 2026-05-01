@@ -11,15 +11,21 @@
  *    drifts, this fixture fails to typecheck and the docs go red with the
  *    code.
  * 2. **Behavior smoke test.** A minimal end-to-end mounts the directive on a
- *    `<form [formRoot]>` template and asserts the four managed ARIA
- *    attributes track the factories' outputs through `afterEveryRender`
- *    phasing.
+ *    host template with an `<input [formField]>` and asserts the three
+ *    managed ARIA attributes track the factories' outputs through
+ *    `afterEveryRender` phasing.
  *
- * Single deliberate diff from the docs: the docs example exports the
- * directive (`export class MyDesignSystemAriaDirective`) so consumers can
- * import it from their own module. This fixture drops the `export` because
- * `eslint-plugin-jest(no-export)` forbids exports from spec files. Drop in
- * the `export` keyword if you transplant this into a non-test source file.
+ * Intentional diffs from the docs:
+ *   - The docs example exports the directive
+ *     (`export class MyDesignSystemAriaDirective`) so consumers can import it
+ *     from their own module. This fixture drops the `export` because
+ *     `eslint-plugin-jest(no-export)` forbids exports from spec files. Drop
+ *     in the `export` keyword if you transplant this into a non-test source
+ *     file.
+ *   - `signal` is imported at the top of the spec alongside the other
+ *     `@angular/core` test imports rather than inside the verbatim-copy
+ *     block, so the docs example block stays focused on the directive's own
+ *     dependencies.
  *
  * Keep this file in lockstep with the worked example in
  * `docs/CUSTOM_WRAPPERS.md`. If you change one, change the other.

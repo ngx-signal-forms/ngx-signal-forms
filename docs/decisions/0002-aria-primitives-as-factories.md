@@ -10,15 +10,16 @@ Accepted
 
 ## Context
 
-The toolkit's `NgxSignalFormAutoAria` directive owns four managed ARIA
-attributes on every `[formField]` host:
+The toolkit's `NgxSignalFormAutoAria` directive owns three host ARIA
+attributes and the hint-ID list primitive used to compose `aria-describedby`
+on every `[formField]` host:
 
 - `aria-invalid` — derived from `errors()` and the visibility cascade
 - `aria-required` — derived from `required()`
 - `aria-describedby` — composed from preserved IDs + hint IDs + generated
   error/warning IDs
 - the hint-ID list itself — resolved from the field-identity service or the
-  hint registry
+  hint registry, then folded into `aria-describedby`
 
 For 95 % of consumers — anyone using `NgxFormFieldWrapper` or building a
 wrapper that pattern-matches it — `NgxSignalFormAutoAria` is the right

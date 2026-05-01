@@ -231,8 +231,8 @@ factories, not in the factories themselves. (See
 A custom directive that wires all four factories plus the visibility cascade
 on a `[formField]` host. Pattern after
 `packages/toolkit/core/directives/auto-aria.ts` — this example trims the
-manual-mode opt-out and the hint-registry plumbing that the production
-directive carries on top.
+manual-mode opt-out and some of the production-only wrapper wiring, while
+keeping the hint-registry integration needed to compose projected hint IDs.
 
 ```typescript
 import {
