@@ -9,8 +9,9 @@ import { isBlockingError } from '../warning-error';
  * Returns one of:
  * - `'true'` — the control has at least one blocking error AND error
  *   visibility evaluates to `true` (per the configured display strategy).
- * - `'false'` — the control is reachable and visible, but has no blocking
- *   errors that should be announced.
+ * - `'false'` — the control is reachable and visible, but is not currently
+ *   announcing blocking errors, either because none exist or because error
+ *   visibility currently evaluates to `false`.
  * - `null` — the field state is missing, OR the control is not currently
  *   laid out (collapsed `<details>`, `hidden`, `display: none`). Consumers
  *   should remove `aria-invalid` from the host element in this case so the
