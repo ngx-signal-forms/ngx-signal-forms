@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/demo-shared/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["scope:demo", "type:lib"],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
