@@ -190,7 +190,7 @@ inheriting the directive shell.
 
 The default story for "the toolkit owns ARIA on this control" is
 [`NgxSignalFormAutoAria`](#4-ngxsignalformautoaria) — drop the directive into
-scope and the four managed ARIA attributes flow into the control automatically.
+scope and the three managed ARIA attributes flow into the control automatically.
 That's the right answer for 95 % of wrappers, including the canonical
 `NgxFormFieldWrapper`.
 
