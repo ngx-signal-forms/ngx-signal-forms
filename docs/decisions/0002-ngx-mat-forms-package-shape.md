@@ -115,13 +115,30 @@ Neither touches `NGX_SIGNAL_FORMS_CONFIG`. Defaults stay opt-in via
 
 ### 6. Bound-control discovery via `contentChildren`
 
-The wrapper queries
-`contentChildren(NgxSignalFormControlSemanticsDirective, { descendants: true })`
-to find its bound control. Pure signals, zero `afterEveryRender`. The query
-re-runs only when projected content changes.
+The wrapper queries `contentChildren` to find its bound control. Pure
+signals, zero `afterEveryRender`. The query re-runs only when projected
+content changes.
 
-To make this work without a per-design-system base class, the toolkit-side
-`NgxSignalFormControlSemanticsDirective` exposes `elementRef` publicly:
+**Material specifically queries an abstract `NgxMatBoundControl` base
+class** — every concrete per-control directive (`NgxMatTextControl`,
+`NgxMatSelectControl`, …) extends it and registers itself under that token
+via `{ provide: NgxMatBoundControl, useExisting: forwardRef(() => Self) }`
+(the canonical Angular pattern, mirrors `MatFormFieldControl`).
+
+The base class is necessary because Angular's host-directive metadata
+supports forwarding consumer-bound inputs but **does not support setting
+default input values**. There is therefore no way to compose the toolkit's
+`NgxSignalFormControlSemanticsDirective` AND force its `ariaMode` to
+`'manual'` at construction time — and Material setups always need
+`'manual'` (Material's `MatFormFieldControl` owns `aria-describedby` on
+the projected control). The base class hardcodes `'manual'` via a direct
+`NGX_SIGNAL_FORM_ARIA_MODE` provider, removing per-control consumer
+ceremony.
+
+**The toolkit-side `elementRef` exposure on `NgxSignalFormControlSemanticsDirective`
+is still load-bearing** for the other reference wrappers and for consumer
+custom wrappers — any setup that lets the consumer keep ownership of
+`ngxSignalFormControlAria` queries the toolkit directive directly:
 
 ```ts
 export class NgxSignalFormControlSemanticsDirective {
@@ -130,10 +147,11 @@ export class NgxSignalFormControlSemanticsDirective {
 }
 ```
 
-This is an additive surface change. Cost: zero runtime overhead (the
-directive already lives on the host for its host bindings). Benefit: every
-reference wrapper (Material, PrimeNG, Spartan) and every consumer custom
-wrapper queries the same directive — no per-DS base class required.
+This is an additive surface change. Zero runtime overhead (the directive
+already lives on the host for its host bindings). Benefit: PrimeNG,
+Spartan, and consumer custom wrappers can drop their DOM-probing branches
+in favour of `contentChildren(NgxSignalFormControlSemanticsDirective)`
+without any per-DS base class.
 
 The `preservedIds` reader for Material's `aria-describedby` ownership still
 performs imperative DOM reads, but inside a `computed` triggered by signal
