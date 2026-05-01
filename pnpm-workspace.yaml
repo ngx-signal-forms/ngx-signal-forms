@@ -64,6 +64,9 @@ catalogs:
     '@shikijs/core': ^4.0.2
     '@shikijs/types': ^4.0.2
     shiki: ^4.0.2
+  spartan:
+    '@spartan-ng/brain': 0.0.1-alpha.682
+    '@spartan-ng/cli': 0.0.1-alpha.682
   swc:
     '@swc-node/register': 1.11.1
     '@swc/core': 1.15.32
