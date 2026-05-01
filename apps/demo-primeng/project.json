@@ -1,0 +1,84 @@
+{
+  "name": "demo-primeng",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "ngx",
+  "sourceRoot": "apps/demo-primeng/src",
+  "tags": ["scope:demo", "type:app"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/demo-primeng"],
+      "defaultConfiguration": "production",
+      "options": {
+        "cwd": "apps/demo-primeng"
+      },
+      "configurations": {
+        "production": {
+          "command": "vite build --mode production",
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "1.5mb",
+              "maximumError": "3mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "12kb",
+              "maximumError": "24kb"
+            }
+          ]
+        },
+        "development": {
+          "command": "vite build --mode development"
+        }
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "cwd": "apps/demo-primeng"
+      },
+      "configurations": {
+        "production": {
+          "command": "vite preview --port 4220"
+        },
+        "development": {
+          "command": "vite --port 4220"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "config": "apps/demo-primeng/vitest.config.mts",
+        "reportsDirectory": "{workspaceRoot}/coverage/apps/demo-primeng"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "oxlint {projectRoot} --type-aware"
+      }
+    },
+    "serve-static": {
+      "executor": "@nx/web:file-server",
+      "defaultConfiguration": "production",
+      "options": {
+        "buildTarget": "demo-primeng:build:production",
+        "port": 4220,
+        "staticFilePath": "dist/apps/demo-primeng",
+        "spa": true
+      }
+    },
+    "preview": {
+      "executor": "@nx/vite:preview-server",
+      "defaultConfiguration": "production",
+      "options": {
+        "buildTarget": "demo-primeng:build:production"
+      }
+    }
+  }
+}

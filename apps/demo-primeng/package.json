@@ -1,0 +1,11 @@
+{
+  "name": "@ngx-signal-forms/demo-primeng",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Reference wrapper integrating @ngx-signal-forms/toolkit with PrimeNG.",
+  "dependencies": {
+    "primeng": "21.1.6",
+    "@primeuix/themes": "2.0.3",
+    "primeicons": "7.0.0"
+  }
+}
