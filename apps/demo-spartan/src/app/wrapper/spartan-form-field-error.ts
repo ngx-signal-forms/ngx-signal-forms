@@ -1,4 +1,3 @@
-import { NgClass } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -33,7 +32,6 @@ import {
 @Component({
   selector: 'spartan-form-field-error',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgClass],
   template: `
     <!--
       Blocking errors. role="alert" implies aria-live="assertive". The <p> is
@@ -43,10 +41,9 @@ import {
       Mirrors the canonical toolkit pattern in NgxFormFieldError.
     -->
     <p
-      class="hlm-error"
+      class="text-destructive text-sm font-medium"
       [attr.id]="firstError() ? errorId() : null"
       [attr.data-warning]="false"
-      [ngClass]="{ 'hlm-error--block': true }"
       role="alert"
       aria-live="assertive"
       [attr.aria-hidden]="firstError() ? null : 'true'"
@@ -62,7 +59,7 @@ import {
       mounted-toggle pattern as the alert container above.
     -->
     <p
-      class="hlm-error"
+      class="rounded-md bg-amber-100/60 px-2 py-1.5 text-sm font-medium text-amber-900 dark:bg-amber-900/20 dark:text-amber-200"
       [attr.id]="firstWarning() ? warningId() : null"
       [attr.data-warning]="true"
       role="status"

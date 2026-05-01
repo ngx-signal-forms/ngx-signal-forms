@@ -8,14 +8,22 @@ import {
   schema,
   validate,
 } from '@angular/forms/signals';
-import { BrnLabel } from '@spartan-ng/brain/label';
-import { BrnInput } from '@spartan-ng/brain/input';
 import {
   NgxSignalForm,
   NgxSignalFormAutoAria,
   NgxSignalFormControlSemanticsDirective,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
+import { HlmCheckbox } from '@spartan-ng/helm/checkbox';
+import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmLabel } from '@spartan-ng/helm/label';
+import {
+  HlmSelect,
+  HlmSelectContent,
+  HlmSelectItem,
+  HlmSelectTrigger,
+  HlmSelectValue,
+} from '@spartan-ng/helm/select';
 import { SpartanFormFieldComponent } from '../wrapper/spartan-form-field';
 
 interface AccountPreferences {
@@ -48,12 +56,12 @@ const accountSchema = schema<AccountPreferences>((path) => {
 });
 
 /**
- * Single representative form: text input + select + checkbox. Wires
- * warnings on the `displayName` field to demonstrate the warning slot.
+ * Single representative form: text input + select + checkbox composed
+ * with real `@spartan-ng/helm` components scaffolded into `libs/ui`.
  *
  * Each control declares `NgxSignalFormControlSemanticsDirective` alongside
- * the Spartan host directives — the toolkit reads semantics through DI
- * (not DOM heuristics), so combining `[brnInput] ngxSignalFormControl="..."`
+ * Spartan's helm directives — the toolkit reads semantics through DI
+ * (not DOM heuristics), so combining `[hlmInput] ngxSignalFormControl="..."`
  * is the canonical "alongside" composition the PRD asks the reference to
  * exercise.
  */
@@ -61,10 +69,16 @@ const accountSchema = schema<AccountPreferences>((path) => {
   selector: 'ngx-account-preferences-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    BrnInput,
-    BrnLabel,
     FormField,
     FormRoot,
+    HlmCheckbox,
+    HlmInput,
+    HlmLabel,
+    HlmSelect,
+    HlmSelectContent,
+    HlmSelectItem,
+    HlmSelectTrigger,
+    HlmSelectValue,
     NgxFormFieldHint,
     NgxSignalForm,
     NgxSignalFormAutoAria,
@@ -83,15 +97,12 @@ const accountSchema = schema<AccountPreferences>((path) => {
         [formField]="form.displayName"
         fieldName="display-name"
       >
-        <label brnLabel for="display-name" class="hlm-form-field__label">
-          Display name
-        </label>
+        <label hlmLabel for="display-name">Display name</label>
         <input
-          brnInput
+          hlmInput
           ngxSignalFormControl="input-like"
           id="display-name"
           type="text"
-          class="hlm-input"
           placeholder="e.g. Ada Lovelace"
           [formField]="form.displayName"
         />
@@ -100,36 +111,35 @@ const accountSchema = schema<AccountPreferences>((path) => {
         </ngx-form-field-hint>
       </spartan-form-field>
 
-      <!-- Select -->
+      <!--
+        Select. The hlm-select element hosts BrnSelect (the actual form
+        control), so [formField] binds there. The native focusable surface
+        lives on the hlm-select-trigger button.
+      -->
       <spartan-form-field [formField]="form.plan" fieldName="plan">
-        <label brnLabel for="plan" class="hlm-form-field__label">Plan</label>
-        <select
-          ngxSignalFormControl="input-like"
-          id="plan"
-          class="hlm-select"
-          [formField]="form.plan"
-        >
-          <option value="" disabled>Select a plan</option>
-          <option value="starter">Starter</option>
-          <option value="pro">Pro</option>
-          <option value="enterprise">Enterprise</option>
-        </select>
+        <label hlmLabel for="plan-trigger">Plan</label>
+        <hlm-select ngxSignalFormControl="input-like" [formField]="form.plan">
+          <hlm-select-trigger id="plan-trigger" class="w-full">
+            <hlm-select-value placeholder="Select a plan" />
+          </hlm-select-trigger>
+          <hlm-select-content>
+            <hlm-select-item value="starter">Starter</hlm-select-item>
+            <hlm-select-item value="pro">Pro</hlm-select-item>
+            <hlm-select-item value="enterprise">Enterprise</hlm-select-item>
+          </hlm-select-content>
+        </hlm-select>
       </spartan-form-field>
 
       <!-- Checkbox -->
       <spartan-form-field [formField]="form.newsletter" fieldName="newsletter">
-        <div class="hlm-checkbox-row">
-          <input
+        <div class="flex items-start gap-3">
+          <hlm-checkbox
             ngxSignalFormControl="checkbox"
-            id="newsletter"
-            type="checkbox"
-            class="hlm-checkbox"
+            inputId="newsletter"
             [formField]="form.newsletter"
           />
-          <div class="hlm-checkbox-row__copy">
-            <label for="newsletter" class="hlm-checkbox-row__label">
-              Send me product updates
-            </label>
+          <div class="flex flex-col gap-1">
+            <label hlmLabel for="newsletter">Send me product updates</label>
             <ngx-form-field-hint position="left">
               You can unsubscribe at any time
             </ngx-form-field-hint>
@@ -137,7 +147,11 @@ const accountSchema = schema<AccountPreferences>((path) => {
         </div>
       </spartan-form-field>
 
-      <button type="submit" class="hlm-button" data-testid="submit-button">
+      <button
+        type="submit"
+        class="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-ring/40 mt-6 inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium shadow-xs transition-colors outline-none focus-visible:ring-2"
+        data-testid="submit-button"
+      >
         Save preferences
       </button>
     </form>

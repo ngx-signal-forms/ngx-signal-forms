@@ -77,7 +77,10 @@ import { SpartanFormFieldErrorComponent } from './spartan-form-field-error';
     },
   ],
   host: {
-    class: 'hlm-form-field',
+    // Layout-only chrome owned by the wrapper (vertical stack with
+    // consistent spacing). Visual styling for inner controls now flows
+    // from real `@spartan-ng/helm` components.
+    class: 'flex flex-col gap-2 mt-5 first:mt-0',
     '[attr.data-spartan-form-field]': '""',
   },
   template: `
