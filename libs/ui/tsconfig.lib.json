@@ -1,0 +1,30 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "declaration": true,
+    "declarationMap": true,
+    "inlineSources": true,
+    "types": []
+  },
+  "include": [
+    "src/**/*.ts",
+    "**/*.ts",
+    "input/src/**/*.ts",
+    "input/**/*.ts",
+    "utils/src/**/*.ts",
+    "utils/**/*.ts",
+    "utils/input/src/**/*.ts",
+    "utils/input/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "input/src/**/*.spec.ts",
+    "input/src/**/*.test.ts",
+    "utils/src/**/*.spec.ts",
+    "utils/src/**/*.test.ts",
+    "utils/input/src/**/*.spec.ts",
+    "utils/input/src/**/*.test.ts"
+  ]
+}

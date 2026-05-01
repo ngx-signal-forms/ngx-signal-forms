@@ -158,6 +158,15 @@ catalogs:
     '@spartan-ng/cli':
       specifier: 0.0.1-alpha.682
       version: 0.0.1-alpha.682
+    class-variance-authority:
+      specifier: ^0.7.0
+      version: 0.7.1
+    clsx:
+      specifier: ^2.1.1
+      version: 2.1.1
+    tailwind-merge:
+      specifier: ^3.5.0
+      version: 3.5.0
   swc:
     '@swc-node/register':
       specifier: 1.11.1
@@ -175,6 +184,9 @@ catalogs:
     '@tailwindcss/postcss':
       specifier: ^4.2.4
       version: 4.2.4
+    autoprefixer:
+      specifier: ^10.4.27
+      version: 10.5.0
     postcss:
       specifier: ^8.5.12
       version: 8.5.12
@@ -261,6 +273,12 @@ importers:
       '@spartan-ng/brain':
         specifier: catalog:spartan
         version: 0.0.1-alpha.682(@angular/cdk@21.2.8(@angular/common@21.2.10(@angular/core@21.2.10(@angular/compiler@21.2.10)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.10(@angular/compiler@21.2.10)(rxjs@7.8.2))(@angular/platform-browser@21.2.10(@angular/common@21.2.10(@angular/core@21.2.10(@angular/compiler@21.2.10)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.10(@angular/compiler@21.2.10)(rxjs@7.8.2)))(rxjs@7.8.2))(@angular/common@21.2.10(@angular/core@21.2.10(@angular/compiler@21.2.10)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.10(@angular/compiler@21.2.10)(rxjs@7.8.2))(@angular/forms@21.2.10(@angular/common@21.2.10(@angular/core@21.2.10(@angular/compiler@21.2.10)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.10(@angular/compiler@21.2.10)(rxjs@7.8.2))(@angular/platform-browser@21.2.10(@angular/common@21.2.10(@angular/core@21.2.10(@angular/compiler@21.2.10)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@21.2.10(@angular/compiler@21.2.10)(rxjs@7.8.2)))(rxjs@7.8.2))(clsx@2.1.1)(luxon@3.7.2)(rxjs@7.8.2)(tailwindcss@4.2.4)
+      class-variance-authority:
+        specifier: catalog:spartan
+        version: 0.7.1
+      clsx:
+        specifier: catalog:spartan
+        version: 2.1.1
       msw:
         specifier: 'catalog:'
         version: 2.13.6(@types/node@24.10.9)(typescript@5.9.3)
@@ -270,6 +288,9 @@ importers:
       shiki:
         specifier: catalog:shiki
         version: 4.0.2
+      tailwind-merge:
+        specifier: catalog:spartan
+        version: 3.5.0
       zod:
         specifier: 'catalog:'
         version: 4.3.6
@@ -394,6 +415,9 @@ importers:
       arktype:
         specifier: ^2.2.0
         version: 2.2.0
+      autoprefixer:
+        specifier: catalog:tailwind
+        version: 10.5.0(postcss@8.5.12)
       eslint:
         specifier: 'catalog:'
         version: 10.2.1(jiti@2.6.1)
@@ -427,6 +451,9 @@ importers:
       postcss:
         specifier: catalog:tailwind
         version: 8.5.12
+      prettier:
+        specifier: ~3.6.2
+        version: 3.6.2
       simple-git-hooks:
         specifier: ^2.13.1
         version: 2.13.1
@@ -5019,6 +5046,9 @@ packages:
     resolution: {integrity: sha512-77PSwercCZU2Fc4sX94eF8k8Pxte6JAwL4/ICZLFjJLqegs7kCuAsqqj/70NQF6TvDpgFjkubQB2FW2ZZddvQg==}
     engines: {node: '>=8'}
 
+  class-variance-authority@0.7.1:
+    resolution: {integrity: sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg==}
+
   cli-cursor@3.1.0:
     resolution: {integrity: sha512-I/zHAwsKf9FqGoXM4WWRACob9+SNukZTd94DWF57E4toouRulbCxcUh6RKUEOQlYTHJnzkPMySvPNaaSLNfLZw==}
     engines: {node: '>=8'}
@@ -7692,6 +7722,11 @@ packages:
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
+
+  prettier@3.6.2:
+    resolution: {integrity: sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==}
+    engines: {node: '>=14'}
+    hasBin: true
 
   pretty-format@27.5.1:
     resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==}
@@ -14228,6 +14263,10 @@ snapshots:
 
   ci-info@4.4.0: {}
 
+  class-variance-authority@0.7.1:
+    dependencies:
+      clsx: 2.1.1
+
   cli-cursor@3.1.0:
     dependencies:
       restore-cursor: 3.1.0
@@ -17254,6 +17293,8 @@ snapshots:
       source-map-js: 1.2.1
 
   prelude-ls@1.2.1: {}
+
+  prettier@3.6.2: {}
 
   pretty-format@27.5.1:
     dependencies:

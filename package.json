@@ -42,9 +42,12 @@
     "@ngrx/signals": "catalog:",
     "@shikijs/core": "catalog:shiki",
     "@spartan-ng/brain": "catalog:spartan",
+    "class-variance-authority": "catalog:spartan",
+    "clsx": "catalog:spartan",
     "msw": "catalog:",
     "rxjs": "catalog:",
     "shiki": "catalog:shiki",
+    "tailwind-merge": "catalog:spartan",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -88,6 +91,7 @@
     "@vitest/coverage-v8": "catalog:vitest",
     "@vitest/ui": "catalog:vitest",
     "arktype": "^2.2.0",
+    "autoprefixer": "catalog:tailwind",
     "eslint": "catalog:",
     "eslint-plugin-playwright": "catalog:playwright",
     "jiti": "2.6.1",
@@ -99,6 +103,7 @@
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
     "postcss": "catalog:tailwind",
+    "prettier": "~3.6.2",
     "simple-git-hooks": "^2.13.1",
     "tailwindcss": "catalog:tailwind",
     "tslib": "catalog:",

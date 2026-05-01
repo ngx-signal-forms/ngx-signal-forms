@@ -39,7 +39,10 @@
       "@ngx-signal-forms/toolkit/headless": [
         "./packages/toolkit/headless/src/index.ts"
       ],
-      "@ngx-signal-forms/demo-shared": ["./packages/demo-shared/src/index.ts"]
+      "@ngx-signal-forms/demo-shared": ["./packages/demo-shared/src/index.ts"],
+      "@spartan-ng/helm": ["./libs/ui/src/index.ts"],
+      "@spartan-ng/helm/input": ["./libs/ui/input/src/index.ts"],
+      "@spartan-ng/helm/utils": ["./libs/ui/utils/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"],
