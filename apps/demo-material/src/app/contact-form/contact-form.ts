@@ -1,4 +1,3 @@
-import { NgComponentOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -12,16 +11,16 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { NgComponentOutlet } from '@angular/common';
 import {
   createOnInvalidHandler,
   NGX_FORM_FIELD_ERROR_RENDERER,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
 import {
-  MatCheckboxFeedback,
-  MatFormFieldBundle,
   MaterialFeedbackRenderer,
-  provideMaterialFeedbackRenderer,
+  NgxMatFormBundle,
+  type NgxMatFeedbackSeverity,
 } from '../wrapper';
 import {
   INITIAL_CONTACT_MODEL,
@@ -32,27 +31,25 @@ import { contactFormSchema } from './contact-form.validations';
 /**
  * Material reference contact form.
  *
- * Demonstrates the four toolkit contracts on top of Angular Material 21+:
+ * Demonstrates the four toolkit contracts on top of Angular Material 21+
+ * with the lean ergonomic surface from ADR-0002:
  *
- * 1. **Renderer registration** — `provideMaterialFeedbackRenderer()` registers
- *    `MaterialFeedbackRenderer` for both `mat-error` and `mat-hint` slots
- *    via the `NGX_FORM_FIELD_ERROR_RENDERER` token, scoped to this component.
- * 2. **`NgxSignalFormControlSemanticsDirective`** — declared on every control
- *    with `ngxSignalFormControl="<kind>"` and `ngxSignalFormControlAria="manual"`.
- *    Manual ARIA mode hands `aria-invalid` / `aria-describedby` ownership back
- *    to Material's matInput / mat-select / mat-checkbox.
- * 3. **`MatFormFieldWrapper`** — applied as `[ngxMatFormField]` on
- *    `<mat-form-field>`. Drives error visibility from the toolkit's
- *    strategy-aware computed and exposes the four ARIA primitive factories'
- *    output for inspection. The describedby factory uses
- *    `preservedIdsReader` to layer on top of Material's IDs.
- * 4. **One representative form** — text + select + checkbox, with warnings on
- *    the `name` field.
- *
- * The renderer-token outlet (`*ngComponentOutlet`) runs inside this
- * component's template — Material's `<mat-error>` / `<mat-hint>` accept
- * arbitrary projected content, so the toolkit just hands the resolved
- * renderer component to a `<ng-container>` inside those slots.
+ * 1. **Renderer registration** — `provideNgxMatForms()` (in `main.ts`)
+ *    registers `MaterialFeedbackRenderer` for both `<mat-error>` and
+ *    `<mat-hint>` slots app-wide. The slot directives below resolve the
+ *    field → message string and stamp the renderer with `{ message,
+ *    severity }`; consumers swap presentation in one DI call.
+ * 2. **Per-control directives** — `ngxMatTextControl` /
+ *    `ngxMatSelectControl` / `ngxMatCheckboxControl` apply
+ *    `ariaMode="manual"` automatically (Material owns `aria-describedby`
+ *    on the projected control), no string parameter required.
+ * 3. **Wrapper directive** — `[ngxMatFormField]` runs `contentChildren`
+ *    over `NgxMatBoundControl` to discover the bound control. No
+ *    `*ngComponentOutlet` boilerplate; `*ngxMatErrorSlot` and
+ *    `*ngxMatHintSlot` own conditional rendering.
+ * 4. **`*ngxMatFeedback`** — the control-agnostic feedback slot for
+ *    Material controls that don't fit `<mat-form-field>` (here, the
+ *    consent checkbox).
  */
 @Component({
   selector: 'ngx-contact-form',
@@ -61,15 +58,13 @@ import { contactFormSchema } from './contact-form.validations';
     NgComponentOutlet,
     FormField,
     NgxSignalFormToolkit,
-    MatFormFieldBundle,
-    MatCheckboxFeedback,
+    NgxMatFormBundle,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatCheckboxModule,
     MatButtonModule,
   ],
-  providers: [provideMaterialFeedbackRenderer()],
   template: `
     <form [formRoot]="contactForm" ngxSignalForm class="demo-form">
       <h2>Contact us</h2>
@@ -78,7 +73,6 @@ import { contactFormSchema } from './contact-form.validations';
         [ngxMatFormField]="contactForm.name"
         fieldName="contact-name"
         appearance="outline"
-        #nameField="ngxMatFormField"
       >
         <mat-label>Name</mat-label>
         <input
@@ -86,40 +80,35 @@ import { contactFormSchema } from './contact-form.validations';
           id="contact-name"
           type="text"
           [formField]="contactForm.name"
-          ngxSignalFormControl="text"
-          ngxSignalFormControlAria="manual"
+          ngxMatTextControl
           autocomplete="name"
         />
-        @if (!nameField.warningVisible()) {
-          <mat-hint>What should we call you?</mat-hint>
-        }
-        @if (nameField.warningVisible()) {
-          <mat-hint class="demo-form__warning-hint">
+        <mat-hint *ngxMatHintSlot="contactForm.name; let warning">
+          @if (warning) {
             <ng-container
               *ngComponentOutlet="
-                feedbackComponent;
-                inputs: feedbackInputs(contactForm.name, 'warning')
+                feedbackRenderer;
+                inputs: rendererInputs(warning, 'warning')
               "
             />
-          </mat-hint>
-        }
-        @if (nameField.errorVisible()) {
-          <mat-error>
-            <ng-container
-              *ngComponentOutlet="
-                feedbackComponent;
-                inputs: feedbackInputs(contactForm.name, 'error')
-              "
-            />
-          </mat-error>
-        }
+          } @else {
+            What should we call you?
+          }
+        </mat-hint>
+        <mat-error *ngxMatErrorSlot="contactForm.name; let message">
+          <ng-container
+            *ngComponentOutlet="
+              feedbackRenderer;
+              inputs: rendererInputs(message, 'error')
+            "
+          />
+        </mat-error>
       </mat-form-field>
 
       <mat-form-field
         [ngxMatFormField]="contactForm.email"
         fieldName="contact-email"
         appearance="outline"
-        #emailField="ngxMatFormField"
       >
         <mat-label>Email</mat-label>
         <input
@@ -127,70 +116,94 @@ import { contactFormSchema } from './contact-form.validations';
           id="contact-email"
           type="email"
           [formField]="contactForm.email"
-          ngxSignalFormControl="text"
-          ngxSignalFormControlAria="manual"
+          ngxMatTextControl
           autocomplete="email"
         />
-        @if (emailField.errorVisible()) {
-          <mat-error>
-            <ng-container
-              *ngComponentOutlet="
-                feedbackComponent;
-                inputs: feedbackInputs(contactForm.email, 'error')
-              "
-            />
-          </mat-error>
-        }
+        <mat-error *ngxMatErrorSlot="contactForm.email; let message">
+          <ng-container
+            *ngComponentOutlet="
+              feedbackRenderer;
+              inputs: rendererInputs(message, 'error')
+            "
+          />
+        </mat-error>
       </mat-form-field>
 
       <mat-form-field
         [ngxMatFormField]="contactForm.topic"
         fieldName="contact-topic"
         appearance="outline"
-        #topicField="ngxMatFormField"
       >
         <mat-label>Topic</mat-label>
         <mat-select
           id="contact-topic"
           [formField]="contactForm.topic"
-          ngxSignalFormControl="select"
-          ngxSignalFormControlAria="manual"
+          ngxMatSelectControl
         >
           <mat-option value="">— Choose one —</mat-option>
           <mat-option value="support">Product support</mat-option>
           <mat-option value="sales">Sales question</mat-option>
           <mat-option value="feedback">General feedback</mat-option>
         </mat-select>
-        <mat-hint>Pick the closest match</mat-hint>
-        @if (topicField.errorVisible()) {
-          <mat-error>
+        <mat-hint *ngxMatHintSlot="contactForm.topic; let warning">
+          @if (warning) {
             <ng-container
               *ngComponentOutlet="
-                feedbackComponent;
-                inputs: feedbackInputs(contactForm.topic, 'error')
+                feedbackRenderer;
+                inputs: rendererInputs(warning, 'warning')
               "
             />
-          </mat-error>
-        }
+          } @else {
+            Pick the closest match
+          }
+        </mat-hint>
+        <mat-error *ngxMatErrorSlot="contactForm.topic; let message">
+          <ng-container
+            *ngComponentOutlet="
+              feedbackRenderer;
+              inputs: rendererInputs(message, 'error')
+            "
+          />
+        </mat-error>
       </mat-form-field>
 
       <div class="demo-form__row">
         <mat-checkbox
           id="contact-agree"
           [formField]="contactForm.agree"
-          ngxSignalFormControl="checkbox"
-          ngxSignalFormControlAria="manual"
+          ngxMatCheckboxControl
         >
           I agree to be contacted
         </mat-checkbox>
       </div>
       <!-- Material's mat-checkbox does not project into mat-form-field, so
-           its errors render via a standalone feedback component. The toolkit
-           still owns visibility timing through the same renderer token. -->
-      <ngx-mat-checkbox-feedback
-        [formField]="contactForm.agree"
-        fieldName="contact-agree"
-      />
+           its errors render via the control-agnostic feedback slot. The
+           toolkit still owns visibility timing through the same DI seam. -->
+      <ng-container
+        *ngxMatFeedback="
+          contactForm.agree;
+          fieldName: 'contact-agree';
+          let messages;
+          severity as severity;
+          id as id
+        "
+      >
+        <p
+          class="demo-form__feedback"
+          [class.demo-form__feedback--warning]="severity === 'warning'"
+          [attr.role]="severity === 'error' ? 'alert' : 'status'"
+          [id]="id"
+        >
+          @for (message of messages; track message) {
+            <ng-container
+              *ngComponentOutlet="
+                feedbackRenderer;
+                inputs: rendererInputs(message, severity)
+              "
+            />
+          }
+        </p>
+      </ng-container>
 
       <div class="demo-form__actions">
         <button mat-stroked-button type="button" (click)="resetForm()">
@@ -229,36 +242,26 @@ export class ContactFormComponent {
 
   /**
    * Resolved feedback renderer (default: `MaterialFeedbackRenderer`). Reads
-   * from the same DI token consumer projects can override via
-   * `provideFormFieldErrorRenderer` — proves the renderer-token seam works
-   * end-to-end inside Material's idiom.
+   * from the same DI token consumers can override via
+   * `provideNgxMatForms({ feedbackRenderer })` — proves the renderer-token
+   * seam works end-to-end inside Material's idiom.
    */
   readonly #errorRenderer = inject(NGX_FORM_FIELD_ERROR_RENDERER, {
     optional: true,
   });
-  protected readonly feedbackComponent: Type<unknown> =
+  protected readonly feedbackRenderer: Type<unknown> =
     this.#errorRenderer?.component ?? MaterialFeedbackRenderer;
 
   /**
-   * Inputs map for the renderer-token outlet. Mirrors the contract bound by
-   * `NgxFormFieldWrapper` (`{ formField, strategy, submittedStatus }`) and
-   * adds the `slot` discriminator the Material renderer uses to distinguish
-   * its error vs warning branch.
-   *
-   * `submittedStatus` is intentionally omitted: the headless directive falls
-   * back to the form-context value (`NgxSignalFormContext.submittedStatus()`)
-   * via `resolveSubmittedStatusFromContext` when the input is undefined.
-   * Hardcoding `'unsubmitted'` here would suppress mat-error rendering under
-   * the `on-submit` strategy after a real submit cycle.
+   * Inputs map for the renderer outlet. The simplified renderer contract
+   * (ADR-0002 §7) accepts only `{ message, severity }`; the slot directives
+   * resolve `formField` → message text, so the consumer only forwards the
+   * resolved string and the severity discriminator.
    */
-  protected readonly feedbackInputs = (
-    formField: unknown,
-    slot: 'error' | 'warning',
-  ): Record<string, unknown> => ({
-    formField,
-    strategy: null,
-    slot,
-  });
+  protected readonly rendererInputs = (
+    message: string,
+    severity: NgxMatFeedbackSeverity,
+  ): Record<string, unknown> => ({ message, severity });
 
   protected resetForm(): void {
     this.model.set({ ...INITIAL_CONTACT_MODEL });

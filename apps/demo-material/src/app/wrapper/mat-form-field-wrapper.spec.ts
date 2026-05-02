@@ -19,12 +19,12 @@ import {
   provideNgxSignalFormsConfig,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
-import { render } from '@testing-library/angular';
+import { render, waitFor } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import {
-  MatFormFieldBundle,
   MatFormFieldWrapper,
+  NgxMatFormBundle,
 } from './mat-form-field-wrapper';
 
 interface ContactModel {
@@ -47,7 +47,7 @@ const testSchema = schema<ContactModel>((path) => {
   imports: [
     FormField,
     NgxSignalFormToolkit,
-    MatFormFieldBundle,
+    NgxMatFormBundle,
     MatFormFieldModule,
     MatInputModule,
     NgxFormFieldHint,
@@ -65,8 +65,7 @@ const testSchema = schema<ContactModel>((path) => {
           id="contact-email"
           type="email"
           [formField]="contactForm.email"
-          ngxSignalFormControl="text"
-          ngxSignalFormControlAria="manual"
+          ngxMatTextControl
         />
         <ngx-form-field-hint id="contact-email-custom-hint">
           We never share your email.
@@ -80,6 +79,43 @@ class TestHostComponent {
   readonly contactForm = form<ContactModel>(this.model, testSchema);
 
   readonly wrapper = viewChild.required(MatFormFieldWrapper<string>);
+}
+
+/**
+ * Host harness with a bare `<input matInput [formField]>` — no
+ * per-control directive. Used to exercise the dev-mode missing-control
+ * assertion called out in ADR-0002 §6.
+ */
+@Component({
+  selector: 'ngx-bare-host',
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxMatFormBundle,
+    MatFormFieldModule,
+    MatInputModule,
+  ],
+  template: `
+    <form [formRoot]="contactForm" ngxSignalForm>
+      <mat-form-field
+        [ngxMatFormField]="contactForm.email"
+        fieldName="contact-email"
+        appearance="outline"
+      >
+        <mat-label>Email</mat-label>
+        <input
+          matInput
+          id="contact-email"
+          type="email"
+          [formField]="contactForm.email"
+        />
+      </mat-form-field>
+    </form>
+  `,
+})
+class BareControlHostComponent {
+  protected readonly model = signal<ContactModel>({ email: '' });
+  readonly contactForm = form<ContactModel>(this.model, testSchema);
 }
 
 describe('MatFormFieldWrapper.toolkitAriaDescribedBy', () => {
@@ -111,9 +147,15 @@ describe('MatFormFieldWrapper.toolkitAriaDescribedBy', () => {
 
     const wrapper = view.fixture.componentInstance.wrapper();
 
-    // toolkitAriaDescribedBy should not be null when hints + preserved IDs exist.
-    const composed = wrapper.toolkitAriaDescribedBy();
-    expect(composed).not.toBeNull();
+    // Await zoneless CD + content-query settle: with `contentChildren` the
+    // bound-control element resolves over a microtask boundary, and the
+    // composed describedby chain depends on that resolution + Material's
+    // own subsequent describedby write.
+    let composed: string | null = null;
+    await waitFor(() => {
+      composed = wrapper.toolkitAriaDescribedBy();
+      expect(composed).not.toBeNull();
+    });
 
     const ids = (composed ?? '').split(/\s+/).filter(Boolean);
 
@@ -137,5 +179,38 @@ describe('MatFormFieldWrapper.toolkitAriaDescribedBy', () => {
     // because no element with that ID exists in this Material setup.
     expect(ids).not.toContain('contact-email-error');
     expect(ids).not.toContain('contact-email-warning');
+  });
+});
+
+describe('MatFormFieldWrapper dev-mode missing-control assertion', () => {
+  let consoleError: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    consoleError = vi.spyOn(console, 'error').mockImplementation(() => {
+      // swallow — assertions read the spy's calls
+    });
+  });
+
+  afterEach(() => {
+    consoleError.mockRestore();
+  });
+
+  it('logs an error when no NgxMatBoundControl directive matched inside the form-field', async () => {
+    await render(BareControlHostComponent, {
+      providers: [
+        provideZonelessChangeDetection(),
+        provideAnimationsAsync('noop'),
+        provideNgxSignalFormsConfig({
+          defaultErrorStrategy: 'on-touch',
+          autoAria: true,
+        }),
+      ],
+    });
+
+    expect(consoleError).toHaveBeenCalledTimes(1);
+    const [message] = consoleError.mock.calls[0];
+    expect(message).toContain('No NgxMatBoundControl directive matched');
+    expect(message).toContain('contact-email');
+    expect(message).toContain('ngxMatTextControl');
   });
 });

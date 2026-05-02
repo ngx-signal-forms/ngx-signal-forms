@@ -1,73 +1,47 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  input,
-} from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
-import type {
-  ErrorDisplayStrategy,
-  SubmittedStatus,
-} from '@ngx-signal-forms/toolkit';
-import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 /**
- * Material-friendly error / warning renderer.
+ * Severity discriminator carried alongside the resolved message string.
  *
- * Wired through `NGX_FORM_FIELD_ERROR_RENDERER` so the demo's
- * `MatFormFieldWrapper` instantiates this component via `*ngComponentOutlet`
- * whenever it needs to render a field's blocking errors or non-blocking
- * warnings inside Material's `mat-error` / `mat-hint` slots.
+ * - `'error'` — blocking validation failure rendered inside `<mat-error>`
+ *   (or the error block of `*ngxMatFeedback`).
+ * - `'warning'` — non-blocking `warn:*` message rendered inside
+ *   `<mat-hint>` (or the warning block of `*ngxMatFeedback`).
  *
- * Notable contract:
- * - Accepts the canonical `{ formField, strategy, submittedStatus }` inputs
- *   bound by every toolkit wrapper.
- * - Composes the headless `NgxHeadlessErrorState` host directive so visibility
- *   timing, strategy resolution, and message resolution stay aligned with
- *   the rest of the toolkit.
- * - Splits its template via the `slot` input — the wrapper instantiates this
- *   component twice: once inside `<mat-error>` (slot = 'error') and once
- *   inside `<mat-hint>` (slot = 'warning'). Each branch consults the same
- *   headless state and returns the matching half.
- * - **Does NOT add its own container ID.** Material's `<mat-error>` /
- *   `<mat-hint>` parents already own unique IDs that `mat-form-field`
- *   registers in the bound control's `aria-describedby` chain.
+ * The renderer chooses presentation (icon, colour, typography) from this
+ * discriminator; visibility, message resolution, and ID generation are all
+ * owned by the slot directive that hosts it.
+ */
+export type NgxMatFeedbackSeverity = 'error' | 'warning';
+
+/**
+ * Default presentational renderer for `*ngxMatErrorSlot`,
+ * `*ngxMatHintSlot`, and `*ngxMatFeedback`.
  *
- * @see MatFormFieldWrapper for the wrapper that registers this component.
+ * Accepts `{ message, severity }` only — the slot directives resolve
+ * `formField` → message text via `readDirectErrors` + the toolkit's
+ * strategy and hand the resolved string to this component. The renderer is
+ * the single seam consumers swap (icon prefix, custom typography) without
+ * touching the toolkit's resolution logic.
+ *
+ * @example Component-scoped override:
+ * ```ts
+ * providers: [
+ *   provideNgxMatForms({ feedbackRenderer: { component: MyIconRenderer } }),
+ * ],
+ * ```
+ *
+ * @see ADR-0002 §7 for the contract simplification rationale.
  */
 @Component({
   selector: 'ngx-material-feedback-renderer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  hostDirectives: [
-    {
-      directive: NgxHeadlessErrorState,
-      // `formField` is bridged via the constructor — see headless / assistive
-      // form-field-error.ts for the `passThroughInput` rationale that prevents
-      // the input from being forwarded through `hostDirectives`.
-      inputs: ['strategy', 'submittedStatus'],
-    },
-  ],
   template: `
-    @if (slot() === 'error' && showErrors()) {
-      @for (
-        error of headless.resolvedErrors();
-        track error.kind + ':' + error.message + ':' + $index
-      ) {
-        <span class="ngx-mat-feedback__message">{{ error.message }}</span>
-      }
-    }
-    @if (slot() === 'warning' && showWarnings()) {
-      @for (
-        warning of headless.resolvedWarnings();
-        track warning.kind + ':' + warning.message + ':' + $index
-      ) {
-        <span
-          class="ngx-mat-feedback__message ngx-mat-feedback__message--warning"
-          >{{ warning.message }}</span
-        >
-      }
-    }
+    <span
+      class="ngx-mat-feedback__message"
+      [class.ngx-mat-feedback__message--warning]="severity() === 'warning'"
+      >{{ message() }}</span
+    >
   `,
   styles: `
     :host {
@@ -78,43 +52,15 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
       display: block;
     }
 
-    .ngx-mat-feedback__message + .ngx-mat-feedback__message {
-      margin-top: 0.125rem;
-    }
-
     .ngx-mat-feedback__message--warning {
       color: #92400e;
     }
   `,
 })
 export class MaterialFeedbackRenderer {
-  /** Bound by the toolkit wrapper via `*ngComponentOutlet` inputs. */
-  readonly formField = input<FieldTree<unknown>>();
-  readonly strategy = input<ErrorDisplayStrategy | null>(null);
-  readonly submittedStatus = input<SubmittedStatus>('unsubmitted');
+  /** Resolved message text — already filtered by strategy and severity. */
+  readonly message = input.required<string>();
 
-  /**
-   * Discriminator passed by the wrapper so a single component can serve both
-   * `mat-error` and `mat-hint` slots. The wrapper passes 'error' inside
-   * `<mat-error>` and 'warning' inside `<mat-hint>`.
-   */
-  readonly slot = input<'error' | 'warning'>('error');
-
-  protected readonly headless = inject(NgxHeadlessErrorState);
-
-  protected readonly showErrors = computed(() => {
-    return this.headless.showErrors() && this.headless.hasErrors();
-  });
-
-  protected readonly showWarnings = computed(() => {
-    return this.headless.showWarnings() && this.headless.hasWarnings();
-  });
-
-  constructor() {
-    // Bridge the `formField` input to the headless directive so it computes
-    // strategy-aware visibility and resolved errors against the same source
-    // of truth as the rest of the toolkit. Mirrors the bridge in
-    // `NgxFormFieldError`.
-    this.headless.connectFieldState(computed(() => this.formField()?.()));
-  }
+  /** Severity discriminator; drives visual presentation only. */
+  readonly severity = input.required<NgxMatFeedbackSeverity>();
 }

@@ -5,119 +5,263 @@ A runnable end-to-end example showing how to integrate
 **Angular Material 21+**. Pinned to `@angular/material@~21.2.9` and
 `@angular/cdk@~21.2.9`.
 
-## What this shows
+## Why use this on Material?
+
+Material already ships an `ErrorStateMatcher` and `MatFormField` aggregates
+`<mat-error>` and `<mat-hint>` IDs into the projected control's
+`aria-describedby` automatically. **Material-only apps with simple forms
+should keep using plain Material + Signal Forms** — the toolkit's marquee
+auto-ARIA layer is intentionally disabled on Material (Material owns
+`aria-describedby`), so without other toolkit features the wrapper is net
+boilerplate.
+
+This reference wrapper earns its keep when **a single app has Material
+forms next to non-Material forms** and needs a unified seam:
+
+| Toolkit feature                                                                            | Plain Material + Signal Forms | This wrapper                        |
+| ------------------------------------------------------------------------------------------ | ----------------------------- | ----------------------------------- |
+| Unified `errorStrategy` (`on-touch` / `on-submit` / `immediate`) across non-Material forms | ✗                             | ✅                                  |
+| First-class warnings (`warn:*`, non-blocking)                                              | ✗                             | ✅ rendered inside `<mat-hint>`     |
+| Centralised label / error-message DI (`provideFieldLabels`, `provideErrorMessages`)        | ✗                             | ✅                                  |
+| `submittedStatus` state machine (post-submit UI, "submitting…" guards)                     | ✗                             | ✅                                  |
+| `<mat-error>` aggregation + Material `aria-describedby`                                    | ✅                            | ✅ (Material remains single writer) |
+| Async validators, debugger panel                                                           | partial                       | ✅ via the rest of the toolkit      |
+
+If none of the rows on the right line up with your app, **prefer plain
+Material**. The wrapper does not change Material's a11y story; it adds
+strategy/warnings/centralised-DI on top.
+
+## What's wired
 
 A single contact form (`src/app/contact-form/`) bound to Angular Signal
 Forms via `[formField]`, using a custom Material wrapper
 (`src/app/wrapper/`) that satisfies the four contracts in
-[`docs/CUSTOM_WRAPPERS.md`](../../docs/CUSTOM_WRAPPERS.md):
-
-- **One representative form** — text input (`<input matInput>`), select
-  (`<mat-select>`), and checkbox (`<mat-checkbox>`) covering the three
-  control kinds the toolkit recognises.
-- **Renderer-token registration** — `provideMaterialFeedbackRenderer()`
-  scopes a `MaterialFeedbackRenderer` component to the form via
-  `provideFormFieldErrorRendererForComponent`. The wrapper instantiates it
-  through `*ngComponentOutlet` inside both `<mat-error>` (errors) and
-  `<mat-hint>` (warnings) so output renders in Material's idiom.
-- **`NgxSignalFormControlSemanticsDirective`** — declared on every control
-  with `ngxSignalFormControl="<kind>"` and `ngxSignalFormControlAria="manual"`.
-- **Strategy-aware visibility** — the wrapper drives `<mat-error>` /
-  `<mat-hint>` visibility from the toolkit's `createShowErrorsComputed`
-  helper, **not** Material's default "invalid + touched" rule. Switching
-  the global strategy (e.g. to `on-submit` via `provideNgxSignalFormsConfig`)
-  takes effect immediately.
-- **All four ARIA primitive factories from `@ngx-signal-forms/toolkit/headless`**:
-  - `createAriaInvalidSignal`, `createAriaRequiredSignal` — surfaced on the
-    wrapper's host as `data-ngx-mat-invalid` / `data-ngx-mat-required` so
-    consumers and tests can probe the toolkit's view.
-  - `createHintIdsSignal` — collected for forward-compat with projected
-    `<ngx-form-field-hint>`.
-  - `createAriaDescribedBySignal` — composes a toolkit-managed
-    `aria-describedby` value layered on top of Material's IDs via the
-    `preservedIds` reader (see "Material-specific gotchas" below).
-- **Warnings rendering** — the `name` field exercises a `kind: 'warn:short-name'`
-  warning. The toolkit treats it as non-blocking and renders it inside
-  `<mat-hint>`; the form remains submittable.
+[`docs/CUSTOM_WRAPPERS.md`](../../docs/CUSTOM_WRAPPERS.md).
 
 ```text
 src/app/
-  contact-form/             form + validations + smoke spec
+  contact-form/                       form + validations + smoke spec
   wrapper/
-    mat-form-field-wrapper.ts   directive applied on <mat-form-field>
-    material-error-renderer.ts  renderer component for the error/hint slots
-    mat-checkbox-feedback.ts    standalone error slot for <mat-checkbox>
+    mat-form-field-wrapper.ts         directive applied on <mat-form-field>
+    control-directives.ts             ngxMat*Control per-control directives
+    slot-directives.ts                *ngxMatErrorSlot / *ngxMatHintSlot
+    feedback-directive.ts             *ngxMatFeedback for non-form-field controls
+    material-error-renderer.ts        renderer with { message, severity } contract
+    index.ts                          provideNgxMatForms + bundle exports
+```
+
+Per [ADR-0002](../../docs/decisions/0002-ngx-mat-forms-package-shape.md)
+the surface mirrors the future `@ngx-signal-forms/material` package — a
+graduation will be a single import-path swap.
+
+### Per-control directives (no string parameter)
+
+```html
+<input matInput [formField]="form.email" ngxMatTextControl />
+<mat-select [formField]="form.topic" ngxMatSelectControl>…</mat-select>
+<mat-checkbox [formField]="form.agree" ngxMatCheckboxControl>…</mat-checkbox>
+<mat-slide-toggle [formField]="form.live" ngxMatSlideToggleControl
+  >…</mat-slide-toggle
+>
+```
+
+Each per-control directive composes the toolkit's semantics layer with
+`ariaMode="manual"` baked in (Material owns `aria-describedby`). The
+directive name **is** the kind — no `ngxSignalFormControl="text"` /
+`ngxSignalFormControlAria="manual"` boilerplate.
+
+The wrapper queries `contentChildren(NgxMatBoundControl)` to find the
+projected control: pure-signal, lexical, zero `afterEveryRender` /
+`querySelector` DOM probing.
+
+### Structural slot directives
+
+```html
+<mat-form-field [ngxMatFormField]="form.name" fieldName="contact-name">
+  <mat-label>Name</mat-label>
+  <input matInput [formField]="form.name" ngxMatTextControl />
+  <mat-hint *ngxMatHintSlot="form.name; let warning">
+    @if (warning) {
+    <ng-container
+      *ngComponentOutlet="
+          renderer;
+          inputs: { message: warning, severity: 'warning' }
+        "
+    />
+    } @else { What should we call you? }
+  </mat-hint>
+  <mat-error *ngxMatErrorSlot="form.name; let message">
+    <ng-container
+      *ngComponentOutlet="
+        renderer;
+        inputs: { message, severity: 'error' }
+      "
+    />
+  </mat-error>
+</mat-form-field>
+```
+
+`*ngxMatErrorSlot` stamps **one `<mat-error>` per blocking error message**
+the toolkit resolves — Material then aggregates each rendered ID into the
+projected control's `aria-describedby` automatically.
+
+`*ngxMatHintSlot` always stamps **exactly one `<mat-hint>`**; consumers
+branch on the `let warning` implicit to swap between the neutral helper
+text and the warning message without rendering two competing hints.
+
+### `*ngxMatFeedback` for controls outside `<mat-form-field>`
+
+`<mat-checkbox>`, `<mat-slide-toggle>`, `<mat-radio-group>`,
+`<mat-button-toggle-group>`, `<mat-chip-grid>`, and `<mat-datepicker>` do
+not implement `MatFormFieldControl`. Use `*ngxMatFeedback` adjacent to
+those controls:
+
+```html
+<mat-checkbox [formField]="form.agree" ngxMatCheckboxControl>
+  I agree to be contacted
+</mat-checkbox>
+
+<ng-container
+  *ngxMatFeedback="
+    form.agree;
+    fieldName: 'contact-agree';
+    let messages;
+    severity as severity;
+    id as id
+  "
+>
+  <p [attr.role]="severity === 'error' ? 'alert' : 'status'" [id]="id">
+    @for (message of messages; track message) {
+    <ng-container
+      *ngComponentOutlet="
+          renderer;
+          inputs: { message, severity }
+        "
+    />
+    }
+  </p>
+</ng-container>
+```
+
+The directive stamps **at most one block per kind** (one error block, one
+warning block) so each block owns a single stable ID
+(`{fieldName}-error` / `{fieldName}-warning`) consumers can wire into
+`aria-describedby` manually if Material's auto-aggregation is not
+available.
+
+### Renderer registration
+
+```ts
+// main.ts
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideZonelessChangeDetection(),
+    provideAnimationsAsync('noop'),
+    provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-touch' }),
+    provideNgxMatForms(), // registers MaterialFeedbackRenderer for both error + hint slots
+  ],
+});
+```
+
+The renderer contract is the lean `{ message, severity }` shape
+(ADR-0002 §7) — the slot directives resolve `formField` → message text
+and the renderer is purely presentational. Override per app or per
+component:
+
+```ts
+provideNgxMatForms({
+  feedbackRenderer: { component: MyIconPrefixedRenderer },
+});
+
+// Component-scoped:
+providers: [
+  provideNgxMatFormsForComponent({
+    feedbackRenderer: { component: FlashyRenderer },
+  }),
+];
 ```
 
 ## Material-specific gotchas
 
 ### `aria-describedby` ownership
 
-Material's `MatFormFieldControl` (the directive on `<input matInput>`,
-`<mat-select>`, `<mat-checkbox>`, etc.) **owns** the projected control's
-`aria-describedby`. Every render, Material aggregates the IDs of its
-projected `<mat-error>` and `<mat-hint>` elements and writes them back
-onto the bound control. Letting `NgxSignalFormAutoAria` participate in
-that write would result in two directives stomping each other on the
-same attribute.
+Material's `MatFormFieldControl` owns the projected control's
+`aria-describedby`. Every render Material aggregates the IDs of its
+projected `<mat-error>` and `<mat-hint>` elements and writes them onto
+the bound control. Letting `NgxSignalFormAutoAria` participate would
+double-write the attribute.
 
-**Resolution: declare `ngxSignalFormControlAria="manual"` on the bound
-control.** That opt-out tells `NgxSignalFormAutoAria` to leave
-`aria-invalid` / `aria-required` / `aria-describedby` alone — Material
-becomes the single writer.
+**Resolution:** the per-control directives
+(`ngxMatTextControl`/`ngxMatSelectControl`/`ngxMatCheckboxControl`/`ngxMatSlideToggleControl`)
+provide `NGX_SIGNAL_FORM_ARIA_MODE` as the frozen `'manual'` signal at
+construction. Auto-aria leaves `aria-invalid` / `aria-required` /
+`aria-describedby` alone — Material is the single writer. No
+per-control consumer ceremony.
 
-If you need to add a non-Material assistive ID (a custom hint, a tooltip
-description, etc.), use the wrapper's `toolkitAriaDescribedBy` signal
-(driven by `createAriaDescribedBySignal`) and bind it to
+If you need to compose a non-Material assistive ID (a tooltip
+description, a custom hint outside Material's slots, etc.) bind the
+wrapper's `toolkitAriaDescribedBy` signal to
 `<mat-form-field [userAriaDescribedBy]>`. The factory uses the
 `preservedIds` reader to read the bound control's _current_
-`aria-describedby`, preserve every ID Material wrote there, and append
-only the IDs the toolkit owns. This is the documented escape hatch for
+`aria-describedby`, preserve every ID Material wrote, and append only
+the IDs the toolkit owns. This is the documented escape hatch for
 Material's ARIA ownership.
 
-### `<mat-checkbox>` lives outside `<mat-form-field>`
+### Warnings under `submission.action`
 
-Material's `<mat-checkbox>` does not implement `MatFormFieldControl`,
-so it cannot project into `<mat-form-field>`. The demo handles checkbox
-errors via `MatCheckboxFeedback` — a standalone component that uses the
-**same renderer token** to render its messages but stamps its own
-`${fieldName}-error` / `${fieldName}-warning` IDs (the toolkit's
-managed ID convention). Consumers who want belt-and-braces ARIA can
-manually set `aria-describedby="contact-agree-error"` on the checkbox's
-inner `<input>`; the demo leaves that wiring out because Material
-doesn't expose the inner input through a public API and screen readers
-already announce the `role="alert"` live region inside
-`MatCheckboxFeedback`.
+Angular Signal Forms' `submission.action` rejects fields with **any**
+validation result, including non-blocking `warn:*` results. If a form
+relies on warnings (e.g. `warn:short-name` on the contact form's `name`
+field), submitting via `<form (submit)>` will be blocked by the warning
+unless the consumer routes the submit through `submitWithWarnings()`
+from `@ngx-signal-forms/toolkit`. The demo defaults to `on-touch` and
+documents the choice — adopt `submitWithWarnings()` for any form that
+needs warnings to remain non-blocking after a submit attempt.
+
+### `<mat-checkbox>` aria wiring
+
+`<mat-checkbox>` doesn't expose its inner `<input>` via a public API,
+so `aria-describedby` cannot be wired to the feedback block
+automatically. The demo leaves the wiring out because the
+`role="alert"` / `role="status"` live regions inside `*ngxMatFeedback`
+already announce changes to a screen reader. Consumers who need
+belt-and-braces wiring can set the attribute by hand using the IDs the
+directive emits (`{fieldName}-error` / `{fieldName}-warning`).
 
 ### `floatLabel` is out of scope
 
 Material's `floatLabel` (`'auto' | 'always'`) interacts with Material's
-internal `empty` / `focused` state and is **not** wired through the
-toolkit. The demo uses Material's default (`'auto'`) and lets
-`<mat-label>` projection do the rest. Consumers needing a different
-mode set it on `<mat-form-field>` directly:
+internal `empty` / `focused` state and is not wired through the toolkit.
+The demo uses Material's default (`'auto'`); set a different mode on
+`<mat-form-field>` directly when needed.
+
+## Extending the error slot
+
+For consumers who need to compose extras inside `<mat-error>` (icons,
+custom typography, multi-line layouts), the verbose `*ngComponentOutlet`
+form remains a documented escape hatch. Use the wrapper's `errorVisible`
+/ `warningVisible` computeds in place of the slot directives:
 
 ```html
-<mat-form-field [ngxMatFormField]="form.email" floatLabel="always">
-  <mat-label>Email</mat-label>
-  <input matInput [formField]="form.email" />
+<mat-form-field
+  [ngxMatFormField]="form.email"
+  fieldName="contact-email"
+  #wrap="ngxMatFormField"
+>
+  … @if (wrap.errorVisible()) {
+  <mat-error>
+    <mat-icon>error</mat-icon>
+    <ng-container
+      *ngComponentOutlet="renderer; inputs: customInputs(form.email, 'error')"
+    />
+  </mat-error>
+  }
 </mat-form-field>
 ```
 
-## What's not shown
-
-- `floatLabel` modes other than the default (out of scope; documented above).
-- `mat-form-field-prefix` / `mat-form-field-suffix` icons — orthogonal to
-  the toolkit seam.
-- Async validators (e.g. `validateAsync`) and the toolkit's debugger
-  panel. The toolkit demo (`apps/demo`) exercises both.
-- Material theming customisation. The demo uses the prebuilt
-  `azure-blue.css` theme.
-- Multi-form scenarios (wizards, fieldsets, error summaries). One
-  representative form covers the seam; the rest is application-level
-  composition.
-- Material's `errorStateMatcher` integration. The toolkit drives
-  visibility timing instead, so consumers don't need a custom matcher.
+This bypasses the slot directive entirely and gives the consumer full
+control over the rendered tree, at the cost of explicit visibility
+management.
 
 ## ARIA verification
 
@@ -136,8 +280,15 @@ Two automated layers verify the wrapper's ARIA wiring stays correct:
    to existing DOM IDs, and at least one of those IDs belongs to a
    `<mat-error>` element.
 3. The `warn:short-name` warning renders inside `<mat-hint>` (not
-   `<mat-error>`), and no `<mat-error>` is visible on that field — the
-   form is still submittable.
+   `<mat-error>`), and no `<mat-error>` is visible on that field.
+
+A wrapper-level spec
+(`src/app/wrapper/mat-form-field-wrapper.spec.ts`) additionally asserts
+the `toolkitAriaDescribedBy` composition (preserved IDs + projected
+`<ngx-form-field-hint>` IDs, with toolkit-owned error IDs suppressed in
+the Material setup) and the dev-mode console error fired when a
+projected `[formField]` element is missing one of the
+`ngxMat*Control` directives.
 
 ### Playwright spec
 

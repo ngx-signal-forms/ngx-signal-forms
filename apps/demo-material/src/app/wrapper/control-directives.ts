@@ -4,6 +4,7 @@ import {
   forwardRef,
   inject,
   signal,
+  type Provider,
   type Signal,
 } from '@angular/core';
 import {
@@ -21,16 +22,35 @@ const MANUAL_ARIA_MODE: Signal<NgxSignalFormControlAriaMode | null> =
   signal('manual');
 
 /**
+ * Provider tuple shared by every concrete `NgxMatBoundControl` subclass:
+ * forces `manual` ARIA mode and registers the directive instance under
+ * the abstract `NgxMatBoundControl` token so `MatFormFieldWrapper`'s
+ * `contentChildren` query finds it.
+ *
+ * Angular does not inherit `@Directive({ providers })` metadata across
+ * subclasses, so each per-control directive must spread these providers
+ * directly. Centralising them here keeps the four directives in lockstep.
+ */
+function ngxMatBoundControlProviders(
+  self: () => new (...args: never[]) => NgxMatBoundControl,
+): Provider[] {
+  return [
+    { provide: NGX_SIGNAL_FORM_ARIA_MODE, useValue: MANUAL_ARIA_MODE },
+    { provide: NgxMatBoundControl, useExisting: forwardRef(self) },
+  ];
+}
+
+/**
  * Abstract base for Material per-control directives.
  *
  * Used as the query token by `MatFormFieldWrapper`:
  * `contentChildren(NgxMatBoundControl)` finds every concrete per-control
  * directive in one shot regardless of which Material control kind it wraps.
  *
- * Each concrete directive registers itself under this token via a
- * `{ provide: NgxMatBoundControl, useExisting: forwardRef(() => Self) }`
- * provider — the canonical Angular pattern for queryable abstract bases
- * (mirrors `MatFormFieldControl` / `MatInput` / `MatSelect`).
+ * Concrete directives register themselves under this token via
+ * `ngxMatBoundControlProviders(() => Self)` — the canonical Angular
+ * pattern for queryable abstract bases (mirrors `MatFormFieldControl` /
+ * `MatInput` / `MatSelect`).
  *
  * ## Why not host-directive composition over the toolkit's
  *    `NgxSignalFormControlSemanticsDirective`?
@@ -52,14 +72,7 @@ const MANUAL_ARIA_MODE: Signal<NgxSignalFormControlAriaMode | null> =
  * class so consumers can extend it for custom Material controls (e.g. their
  * own `MatFormFieldControl` implementor).
  */
-@Directive({
-  providers: [
-    {
-      provide: NGX_SIGNAL_FORM_ARIA_MODE,
-      useValue: MANUAL_ARIA_MODE,
-    },
-  ],
-})
+@Directive({})
 export abstract class NgxMatBoundControl {
   readonly elementRef = inject(ElementRef<HTMLElement>);
 }
@@ -80,12 +93,7 @@ export abstract class NgxMatBoundControl {
 @Directive({
   selector:
     'input[matInput][ngxMatTextControl], textarea[matInput][ngxMatTextControl]',
-  providers: [
-    {
-      provide: NgxMatBoundControl,
-      useExisting: forwardRef(() => NgxMatTextControl),
-    },
-  ],
+  providers: ngxMatBoundControlProviders(() => NgxMatTextControl),
 })
 export class NgxMatTextControl extends NgxMatBoundControl {}
 
@@ -102,12 +110,7 @@ export class NgxMatTextControl extends NgxMatBoundControl {}
  */
 @Directive({
   selector: 'mat-select[ngxMatSelectControl]',
-  providers: [
-    {
-      provide: NgxMatBoundControl,
-      useExisting: forwardRef(() => NgxMatSelectControl),
-    },
-  ],
+  providers: ngxMatBoundControlProviders(() => NgxMatSelectControl),
 })
 export class NgxMatSelectControl extends NgxMatBoundControl {}
 
@@ -120,12 +123,7 @@ export class NgxMatSelectControl extends NgxMatBoundControl {}
  */
 @Directive({
   selector: 'mat-checkbox[ngxMatCheckboxControl]',
-  providers: [
-    {
-      provide: NgxMatBoundControl,
-      useExisting: forwardRef(() => NgxMatCheckboxControl),
-    },
-  ],
+  providers: ngxMatBoundControlProviders(() => NgxMatCheckboxControl),
 })
 export class NgxMatCheckboxControl extends NgxMatBoundControl {}
 
@@ -140,11 +138,6 @@ export class NgxMatCheckboxControl extends NgxMatBoundControl {}
  */
 @Directive({
   selector: 'mat-slide-toggle[ngxMatSlideToggleControl]',
-  providers: [
-    {
-      provide: NgxMatBoundControl,
-      useExisting: forwardRef(() => NgxMatSlideToggleControl),
-    },
-  ],
+  providers: ngxMatBoundControlProviders(() => NgxMatSlideToggleControl),
 })
 export class NgxMatSlideToggleControl extends NgxMatBoundControl {}

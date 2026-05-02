@@ -72,8 +72,9 @@ describe('ContactFormComponent (Material reference, smoke)', () => {
     await user.type(emailInput, 'not-an-email');
     await user.tab();
 
-    // Material's matInput owns aria-invalid for the projected control
-    // because the wrapper sets `ngxSignalFormControlAria="manual"`. Wait for
+    // Material's matInput owns aria-invalid for the projected control —
+    // Material's per-control directive (`ngxMatTextControl`) bakes
+    // `ariaMode="manual"` so the toolkit's auto-aria stands aside. Wait for
     // zoneless CD + effect microtasks to flush before asserting attribute
     // state — `userEvent.tab()` schedules but does not await effects.
     await waitFor(() => {
@@ -81,11 +82,16 @@ describe('ContactFormComponent (Material reference, smoke)', () => {
     });
 
     // Material populates aria-describedby with the mat-error ID once the
-    // wrapper renders the error. This is the key invariant: the toolkit
-    // and Material are not fighting over the attribute — Material owns it.
-    const describedBy = emailInput.getAttribute('aria-describedby');
-    expect(describedBy).not.toBeNull();
-    expect(describedBy?.length ?? 0).toBeGreaterThan(0);
+    // slot directive stamps `<mat-error>`. The describedby write happens
+    // in Material's own CD cycle after the slot directive's effect runs,
+    // so wait for the chain to settle before asserting — synchronous reads
+    // race the zoneless effect → query update → Material aggregation.
+    let describedBy: string | null = null;
+    await waitFor(() => {
+      describedBy = emailInput.getAttribute('aria-describedby');
+      expect(describedBy).not.toBeNull();
+      expect(describedBy?.length ?? 0).toBeGreaterThan(0);
+    });
 
     // Each ID listed in aria-describedby must resolve to an element in the DOM.
     // (No dangling references — that's the whole point of preserving Material's

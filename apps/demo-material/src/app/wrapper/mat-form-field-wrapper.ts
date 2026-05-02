@@ -1,12 +1,11 @@
 import {
-  afterEveryRender,
   computed,
   contentChildren,
   Directive,
-  ElementRef,
+  effect,
   inject,
-  Injector,
   input,
+  isDevMode,
   signal,
   type Signal,
 } from '@angular/core';
@@ -32,6 +31,15 @@ import {
   createAriaRequiredSignal,
   createHintIdsSignal,
 } from '@ngx-signal-forms/toolkit/headless';
+import {
+  NgxMatBoundControl,
+  NgxMatCheckboxControl,
+  NgxMatSelectControl,
+  NgxMatSlideToggleControl,
+  NgxMatTextControl,
+} from './control-directives';
+import { NgxMatFeedback } from './feedback-directive';
+import { NgxMatErrorSlot, NgxMatHintSlot } from './slot-directives';
 
 /**
  * Material reference wrapper — implemented as a **directive** applied
@@ -49,23 +57,8 @@ import {
  * tree, not the rendered DOM).
  *
  * Living on the same element side-steps that problem: the consumer writes a
- * single `<mat-form-field ngxMatFormField>` element and Material's queries
+ * single `<mat-form-field [ngxMatFormField]>` element and Material's queries
  * see all its real children directly.
- *
- * **Four contracts (per `docs/CUSTOM_WRAPPERS.md`):**
- *
- * 1. Provides `NGX_SIGNAL_FORM_FIELD_CONTEXT` — exposes the resolved field
- *    name to projected `<ngx-form-field-hint>` content.
- * 2. Provides `NGX_SIGNAL_FORM_HINT_REGISTRY` — wires projected hint IDs
- *    into the registry (forward-compat — Material consumers usually use
- *    `<mat-hint>` directly).
- * 3. The renderer token is consumed by sibling components
- *    (`MaterialFeedbackRenderer`) — see `mat-form-field` template patterns
- *    in `contact-form.ts` and the `<ng-container *ngComponentOutlet ...>`
- *    pattern there.
- * 4. `NgxSignalFormControlSemanticsDirective` is declared on the bound
- *    control by the consumer, with `ariaMode="manual"` so the directive
- *    keeps Material's `aria-describedby` ownership intact.
  *
  * **ARIA model:**
  *
@@ -74,10 +67,12 @@ import {
  * `<mat-error>`/`<mat-hint>`. Layering the toolkit's auto-aria on top would
  * cause double-writes that fight each other across renders.
  *
- * Resolution: the consumer declares `ngxSignalFormControlAria="manual"` on
- * the bound control. That opt-out tells `NgxSignalFormAutoAria` to leave the
- * control's `aria-invalid` / `aria-required` / `aria-describedby` alone —
- * Material owns them.
+ * Resolution: every per-control directive in `NgxMatFormBundle`
+ * (`NgxMatTextControl`, `NgxMatSelectControl`, `NgxMatCheckboxControl`,
+ * `NgxMatSlideToggleControl`) bakes `ariaMode="manual"` in via a direct
+ * `NGX_SIGNAL_FORM_ARIA_MODE` provider. That tells `NgxSignalFormAutoAria`
+ * to leave the control's `aria-invalid` / `aria-required` /
+ * `aria-describedby` alone — Material owns them.
  *
  * The toolkit's four ARIA primitive factories still drive **wrapper-side**
  * state:
@@ -89,14 +84,27 @@ import {
  *   `<ngx-form-field-hint>` consumers.
  * - `createAriaDescribedBySignal` (with `preservedIds`) — composes a
  *   "toolkit-managed describedby suffix" that consumers can opt into via
- *   `<mat-form-field [userAriaDescribedBy]>`. This is the
- *   `preservedIdsReader` path: the factory reads the bound control's
- *   current `aria-describedby` (which Material already wrote with mat-error
- *   and mat-hint IDs), preserves them verbatim, and only appends IDs the
- *   toolkit owns. In this Material reference no toolkit-only IDs need
- *   appending — Material handles all of them — but the wrapper still wires
- *   the factory so consumers who add non-Material assistive elements (e.g.
- *   bespoke `<ngx-form-field-hint>`) get correct composition for free.
+ *   `<mat-form-field [userAriaDescribedBy]>`. The factory reads the bound
+ *   control's current `aria-describedby` (which Material already wrote
+ *   with mat-error and mat-hint IDs), preserves them verbatim, and only
+ *   appends IDs the toolkit owns. In this Material reference no
+ *   toolkit-only IDs need appending — Material handles all of them — but
+ *   the wrapper still wires the factory so consumers who add non-Material
+ *   assistive elements (e.g. bespoke `<ngx-form-field-hint>`) get correct
+ *   composition for free.
+ *
+ * **Bound-control discovery:**
+ *
+ * Pure-signal, lexical content query: `contentChildren(NgxMatBoundControl)`.
+ * Every concrete per-control directive registers itself under the abstract
+ * `NgxMatBoundControl` token (the canonical Angular pattern, mirroring
+ * `MatFormFieldControl`), so a single query covers every Material control
+ * kind. No `afterEveryRender`, no DOM probing — the query re-runs only
+ * when projected content changes.
+ *
+ * @see ADR-0002 §6 for the discovery decision and the elementRef-on-toolkit
+ *      rationale that lets PrimeNG / Spartan wrappers query
+ *      `NgxSignalFormControlSemanticsDirective` directly.
  */
 @Directive({
   selector: 'mat-form-field[ngxMatFormField]',
@@ -132,7 +140,8 @@ export class MatFormFieldWrapper<TValue = unknown> {
   /**
    * Field name used to generate toolkit-managed error / warning IDs.
    * When omitted, the directive inspects the bound control's `id`
-   * attribute (post-render) for parity with `NgxFormFieldWrapper`.
+   * attribute (resolved via the lexical content query) for parity with
+   * `NgxFormFieldWrapper`.
    */
   readonly fieldName = input<string>();
 
@@ -143,10 +152,8 @@ export class MatFormFieldWrapper<TValue = unknown> {
 
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
   readonly #formContext = injectFormContext();
-  readonly #elementRef = inject(ElementRef<HTMLElement>);
-  readonly #injector = inject(Injector);
 
-  protected readonly effectiveStrategy = computed(() =>
+  readonly effectiveStrategy = computed(() =>
     resolveErrorDisplayStrategy(
       this.strategy(),
       this.#formContext ? this.#formContext.errorStrategy() : undefined,
@@ -154,7 +161,7 @@ export class MatFormFieldWrapper<TValue = unknown> {
     ),
   );
 
-  protected readonly submittedStatus = computed(() =>
+  readonly submittedStatus = computed(() =>
     this.#formContext ? this.#formContext.submittedStatus() : 'unsubmitted',
   );
 
@@ -190,9 +197,9 @@ export class MatFormFieldWrapper<TValue = unknown> {
   );
 
   /**
-   * Drives `<mat-error>` rendering. Templates probe via the directive's
-   * exported reference: `<mat-form-field ngxMatFormField #wrap="ngxMatFormField">`
-   * then `@if (wrap.errorVisible()) { <mat-error>...</mat-error> }`.
+   * Drives `<mat-error>` rendering for consumers that opt out of the slot
+   * directives and still want a wrapper-side visibility computed (the
+   * documented "Extending the error slot" escape hatch in `README`).
    */
   readonly errorVisible = computed(
     () => this.hasErrors() && this.#showByStrategy(),
@@ -203,9 +210,30 @@ export class MatFormFieldWrapper<TValue = unknown> {
     () => this.hasWarnings() && this.#showByStrategy() && !this.errorVisible(),
   );
 
-  // ── Field-name resolution ─────────────────────────────────────────────
+  // ── Bound-control discovery via contentChildren ───────────────────────
+  //
+  // Lexical content query — fires when projected children change. The
+  // abstract `NgxMatBoundControl` is provided by every concrete per-control
+  // directive in `control-directives.ts`, so a single query token covers
+  // every Material control kind without a `MatFormFieldControl`-style
+  // matcher table.
 
-  readonly #boundControlId = signal<string | null>(null);
+  protected readonly boundControls = contentChildren(NgxMatBoundControl, {
+    descendants: true,
+  });
+
+  readonly #boundControl = computed<NgxMatBoundControl | null>(
+    () => this.boundControls()[0] ?? null,
+  );
+
+  readonly #boundControlElement = computed<HTMLElement | null>(
+    () => this.#boundControl()?.elementRef.nativeElement ?? null,
+  );
+
+  readonly #boundControlId = computed<string | null>(() => {
+    const id = this.#boundControlElement()?.id;
+    return id && id.length > 0 ? id : null;
+  });
 
   readonly resolvedFieldName = computed<string | null>(() => {
     const explicit = this.fieldName();
@@ -298,52 +326,76 @@ export class MatFormFieldWrapper<TValue = unknown> {
     hintIds: this.#hintIds,
     visibility: this.#showByStrategy,
     preservedIds: () =>
-      this.#boundControl()?.getAttribute('aria-describedby') ?? null,
+      this.#boundControlElement()?.getAttribute('aria-describedby') ?? null,
     fieldName: () => this.resolvedFieldName(),
   });
 
-  // ── Per-render bound-control discovery ────────────────────────────────
+  // ── Dev-mode missing-control assertion ────────────────────────────────
+  //
+  // Bare `<input matInput [formField]>` (no `ngxMat*Control` directive)
+  // stops working with `[ngxMatFormField]`: the contentChildren query
+  // returns empty and the wrapper's bound-control derivations stall on
+  // `null`. ADR-0002 §6 calls out a dev-mode warning as the mitigation —
+  // one console.error per wrapper instance, never spammed across renders.
 
-  readonly #boundControl = signal<HTMLElement | null>(null);
+  readonly #hasWarned = signal(false);
 
   constructor() {
-    afterEveryRender(
-      {
-        earlyRead: () => {
-          const host = this.#elementRef.nativeElement;
-          // Match anything bound to a Signal Forms field — covers
-          // <input matInput>, <mat-select>, <mat-checkbox>, and custom
-          // FormValueControl hosts.
-          const candidate = host.querySelector(
-            '[formField]',
-          ) as HTMLElement | null;
-
-          return {
-            element: candidate,
-            id: candidate?.id || null,
-          };
-        },
-        write: (snapshot) => {
-          if (this.#boundControl() !== snapshot.element) {
-            this.#boundControl.set(snapshot.element);
-          }
-          if (this.#boundControlId() !== snapshot.id) {
-            this.#boundControlId.set(snapshot.id);
-          }
-        },
-      },
-      { injector: this.#injector },
-    );
+    if (isDevMode()) {
+      effect(() => {
+        if (this.#hasWarned()) {
+          return;
+        }
+        if (this.boundControls().length > 0) {
+          // A control was projected — the query found it; future empty
+          // states (e.g. while the consumer toggles control kinds with
+          // @if) are intentional, so suppress further warnings.
+          this.#hasWarned.set(true);
+          return;
+        }
+        const fieldName = this.resolvedFieldName() ?? '<unknown>';
+        console.error(
+          `[ngxMatFormField] No NgxMatBoundControl directive matched inside the form-field bound to "${fieldName}". ` +
+            `Add one of \`ngxMatTextControl\`, \`ngxMatSelectControl\`, \`ngxMatCheckboxControl\`, or \`ngxMatSlideToggleControl\` ` +
+            `to the projected control.`,
+        );
+        this.#hasWarned.set(true);
+      });
+    }
   }
 }
 
 /**
- * Bundle exports so consumers can import a single symbol: the directive
- * applied on `<mat-form-field>` and the toolkit's
- * `NgxSignalFormControlSemanticsDirective` (which the consumer must declare
- * on the bound control with `ariaMode="manual"`).
+ * Bundle exports so consumers can import a single symbol covering every
+ * directive needed to use the Material reference wrapper:
+ *
+ * - `MatFormFieldWrapper` — the wrapper directive on `<mat-form-field>`.
+ * - The four per-control directives (`NgxMatTextControl`,
+ *   `NgxMatSelectControl`, `NgxMatCheckboxControl`,
+ *   `NgxMatSlideToggleControl`) bound to their respective Material
+ *   controls.
+ * - The slot directives (`NgxMatErrorSlot`, `NgxMatHintSlot`) for
+ *   `<mat-error>` / `<mat-hint>` conditional rendering.
+ * - `NgxMatFeedback` for non-form-field controls (`<mat-checkbox>`,
+ *   `<mat-slide-toggle>`, …).
+ * - `NgxSignalFormControlSemanticsDirective` — bridge to the toolkit's
+ *   semantics layer (consumers can still apply this directive directly
+ *   for custom Material controls that aren't covered by the per-control
+ *   directives shipped here).
+ *
+ * The `Mat*` prefix is preserved on the wrapper itself for selector
+ * stability; `NgxMatFormBundle` is the canonical bundle export name and
+ * mirrors the future `@ngx-signal-forms/material` package shape — see
+ * ADR-0002 §8 for the forward-compat decision.
  */
-export const MatFormFieldBundle = [
+export const NgxMatFormBundle = [
   MatFormFieldWrapper,
+  NgxMatTextControl,
+  NgxMatSelectControl,
+  NgxMatCheckboxControl,
+  NgxMatSlideToggleControl,
+  NgxMatErrorSlot,
+  NgxMatHintSlot,
+  NgxMatFeedback,
   NgxSignalFormControlSemanticsDirective,
 ] as const;
