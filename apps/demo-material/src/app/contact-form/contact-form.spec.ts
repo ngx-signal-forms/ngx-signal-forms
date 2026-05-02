@@ -1,7 +1,7 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
-import { render, screen } from '@testing-library/angular';
+import { render, screen, waitFor } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { ContactFormComponent } from './contact-form';
@@ -73,8 +73,12 @@ describe('ContactFormComponent (Material reference, smoke)', () => {
     await user.tab();
 
     // Material's matInput owns aria-invalid for the projected control
-    // because the wrapper sets `ngxSignalFormControlAria="manual"`.
-    expect(emailInput.getAttribute('aria-invalid')).toBe('true');
+    // because the wrapper sets `ngxSignalFormControlAria="manual"`. Wait for
+    // zoneless CD + effect microtasks to flush before asserting attribute
+    // state — `userEvent.tab()` schedules but does not await effects.
+    await waitFor(() => {
+      expect(emailInput.getAttribute('aria-invalid')).toBe('true');
+    });
 
     // Material populates aria-describedby with the mat-error ID once the
     // wrapper renders the error. This is the key invariant: the toolkit

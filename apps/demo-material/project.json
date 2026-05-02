@@ -15,19 +15,7 @@
       },
       "configurations": {
         "production": {
-          "command": "vite build --mode production",
-          "budgets": [
-            {
-              "type": "initial",
-              "maximumWarning": "1mb",
-              "maximumError": "2mb"
-            },
-            {
-              "type": "anyComponentStyle",
-              "maximumWarning": "8kb",
-              "maximumError": "16kb"
-            }
-          ]
+          "command": "vite build --mode production"
         },
         "development": {
           "command": "vite build --mode development"
