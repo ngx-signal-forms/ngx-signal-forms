@@ -3,7 +3,6 @@
     "nrwl.angular-console",
     "oxc.oxc-vscode",
     "ms-playwright.playwright",
-    "firsttris.vscode-jest-runner",
-    "esbenp.prettier-vscode"
+    "firsttris.vscode-jest-runner"
   ]
 }

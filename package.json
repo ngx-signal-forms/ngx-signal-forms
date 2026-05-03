@@ -105,7 +105,6 @@
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
     "postcss": "catalog:tailwind",
-    "prettier": "~3.6.2",
     "simple-git-hooks": "^2.13.1",
     "tailwindcss": "catalog:tailwind",
     "tslib": "catalog:",
