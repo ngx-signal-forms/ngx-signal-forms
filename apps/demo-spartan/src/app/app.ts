@@ -7,7 +7,10 @@ import { AccountPreferencesForm } from './form/account-preferences-form';
   imports: [AccountPreferencesForm],
   template: `
     <main class="shell">
-      <h1 class="shell__title">ngx-signal-forms × Spartan Components</h1>
+      <h1 class="shell__title">
+        ngx-signal-forms <span aria-hidden="true">♥</span
+        ><span class="sr-only"> loves </span> Spartan Components
+      </h1>
       <p class="shell__subtitle">
         Reference wrapper composing the toolkit's renderer / hint / context seam
         with Spartan's <code>brnField</code> host directive.

@@ -22,34 +22,91 @@ import { expect, test } from '@playwright/test';
  * id reaches the helm input host element. This spec asserts that contract
  * end-to-end (the smoke spec covers the same path through jsdom).
  */
-test('Spartan reference wrapper - fill, blur, and observe error wiring', async ({
-  page,
-}) => {
-  await page.goto('/');
-  await page.waitForLoadState('domcontentloaded');
+test.describe('Spartan account preferences form', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+  });
 
-  const displayName = page.getByLabel('Display name');
+  test('keeps the plan select closed until the user opens it', async ({
+    page,
+  }) => {
+    const plan = page.getByRole('combobox', { name: 'Plan' });
 
-  // Fill empty value, blur via Tab. on-touch strategy reveals the error.
-  await displayName.click();
-  await displayName.press('Tab');
+    await test.step('Verify the select starts collapsed with no inline options', async () => {
+      await expect(plan).toHaveAttribute('aria-expanded', 'false');
+      await expect(page.getByRole('option', { name: 'Starter' })).toHaveCount(
+        0,
+      );
+    });
 
-  // Toolkit owns aria-invalid on the bound control after touch.
-  await expect(displayName).toHaveAttribute('aria-invalid', 'true');
+    await test.step('Open the select and verify options are rendered in the overlay', async () => {
+      await plan.focus();
+      await plan.press('ArrowDown');
 
-  // The error slot rendered through the configured renderer at the
-  // field-name-derived id. Live region <p> stays mounted regardless of
-  // visibility, so we assert presence + content rather than `toBeVisible`.
-  const error = page.locator('#display-name-error');
-  await expect(error).toContainText(/display name is required/i);
+      await expect(page.getByRole('option', { name: 'Starter' })).toBeVisible();
+      await expect(page.getByRole('option', { name: 'Pro' })).toBeVisible();
+      await expect(
+        page.getByRole('option', { name: 'Enterprise' }),
+      ).toBeVisible();
+    });
+  });
 
-  // The wrapper-scoped `BrnFieldA11yService` bridge feeds the toolkit's
-  // composed id list into Brain's `BrnFieldControlDescribedBy` host binding,
-  // so the helm input host element exposes `display-name-error` for AT.
-  // This is the contract-level assertion that proves the bridge is wired
-  // correctly (without it, Brain's empty service nulls the attribute).
-  await expect(displayName).toHaveAttribute(
-    'aria-describedby',
-    /\bdisplay-name-error\b/,
-  );
+  test('shows blocking errors and wires aria-describedby after touch', async ({
+    page,
+  }) => {
+    const displayName = page.getByLabel('Display name');
+
+    await test.step('Blur the empty field to trigger on-touch validation', async () => {
+      await displayName.click();
+      await displayName.press('Tab');
+    });
+
+    await test.step('Verify error rendering and aria linkage', async () => {
+      await expect(displayName).toHaveAttribute('aria-invalid', 'true');
+
+      const error = page.locator('#display-name-error');
+      await expect(error).toContainText(/display name is required/i);
+      await expect(displayName).toHaveAttribute(
+        'aria-describedby',
+        /\bdisplay-name-error\b/,
+      );
+    });
+  });
+
+  test('renders warnings without marking the field invalid and still submits', async ({
+    page,
+  }) => {
+    const displayName = page.getByLabel('Display name');
+    const plan = page.getByRole('combobox', { name: 'Plan' });
+
+    await test.step('Enter a short-but-valid display name to trigger the warning path', async () => {
+      await displayName.fill('Ada');
+      await displayName.press('Tab');
+
+      const warning = page.locator('#display-name-warning');
+      await expect(warning).toContainText(
+        /short names are accepted but easy to confuse with handles/i,
+      );
+      await expect(displayName).toHaveAttribute('aria-invalid', 'false');
+      await expect(displayName).toHaveAttribute(
+        'aria-describedby',
+        /\bdisplay-name-warning\b/,
+      );
+    });
+
+    await test.step('Choose a plan and submit successfully with warnings only', async () => {
+      await plan.focus();
+      await plan.press('ArrowDown');
+      await page.getByRole('option', { name: 'Starter' }).click();
+      await page.getByTestId('submit-button').click();
+
+      await expect(page.getByTestId('last-submission')).toContainText(
+        '"displayName": "Ada"',
+      );
+      await expect(page.getByTestId('last-submission')).toContainText(
+        '"plan": "starter"',
+      );
+    });
+  });
 });

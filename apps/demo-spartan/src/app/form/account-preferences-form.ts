@@ -9,6 +9,8 @@ import {
   validate,
 } from '@angular/forms/signals';
 import {
+  createOnInvalidHandler,
+  hasOnlyWarnings,
   NgxSignalForm,
   NgxSignalFormAutoAria,
 } from '@ngx-signal-forms/toolkit';
@@ -20,6 +22,7 @@ import {
   HlmSelect,
   HlmSelectContent,
   HlmSelectItem,
+  HlmSelectPortal,
   HlmSelectTrigger,
   HlmSelectValue,
 } from '@spartan-ng/helm/select';
@@ -82,6 +85,7 @@ const accountSchema = schema<AccountPreferences>((path) => {
     HlmSelect,
     HlmSelectContent,
     HlmSelectItem,
+    HlmSelectPortal,
     HlmSelectTrigger,
     HlmSelectValue,
     NgxFormFieldHint,
@@ -90,12 +94,7 @@ const accountSchema = schema<AccountPreferences>((path) => {
     NgxSpartanFormBundle,
   ],
   template: `
-    <form
-      [formRoot]="form"
-      ngxSignalForm
-      (submit)="$event.preventDefault(); handleSubmit()"
-      novalidate
-    >
+    <form [formRoot]="form" ngxSignalForm novalidate>
       <!--
         Text input. The wrapper's selector requires [ngxSpartanFormField]
         (rather than [formField]) so Angular's FormField directive does
@@ -132,10 +131,10 @@ const accountSchema = schema<AccountPreferences>((path) => {
           ngxSignalFormControl="input-like"
           [formField]="form.plan"
         >
-          <hlm-select-trigger id="plan-trigger" class="w-full">
+          <hlm-select-trigger buttonId="plan-trigger" class="w-full">
             <hlm-select-value placeholder="Select a plan" />
           </hlm-select-trigger>
-          <hlm-select-content>
+          <hlm-select-content *hlmSelectPortal>
             <hlm-select-item value="starter">Starter</hlm-select-item>
             <hlm-select-item value="pro">Pro</hlm-select-item>
             <hlm-select-item value="enterprise">Enterprise</hlm-select-item>
@@ -177,6 +176,8 @@ const accountSchema = schema<AccountPreferences>((path) => {
   `,
 })
 export class AccountPreferencesForm {
+  readonly #onInvalid = createOnInvalidHandler();
+
   protected readonly form = form(
     signal<AccountPreferences>({
       displayName: '',
@@ -184,18 +185,20 @@ export class AccountPreferencesForm {
       newsletter: false,
     }),
     accountSchema,
+    {
+      submission: {
+        ignoreValidators: 'all',
+        action: async () => {
+          if (!hasOnlyWarnings(this.form().errorSummary())) {
+            this.#onInvalid(this.form);
+            return;
+          }
+
+          this.lastSubmission.set(JSON.stringify(this.form().value(), null, 2));
+        },
+      },
+    },
   );
 
   protected readonly lastSubmission = signal<string | null>(null);
-
-  protected handleSubmit(): void {
-    const state = this.form();
-    if (state.invalid()) {
-      // Touch the form so on-touch error display kicks in for any field that
-      // hasn't been blurred yet.
-      state.markAsTouched();
-      return;
-    }
-    this.lastSubmission.set(JSON.stringify(state.value(), null, 2));
-  }
 }

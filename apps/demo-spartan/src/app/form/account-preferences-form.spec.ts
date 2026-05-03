@@ -1,7 +1,15 @@
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { AccountPreferencesForm } from './account-preferences-form';
+
+beforeAll(() => {
+  Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+    value: vi.fn(),
+    configurable: true,
+    writable: true,
+  });
+});
 
 /**
  * Smoke spec for the Spartan reference wrapper.
@@ -20,6 +28,24 @@ import { AccountPreferencesForm } from './account-preferences-form';
  * the seam under test is the toolkit's, not Spartan's.
  */
 describe('Spartan reference wrapper — smoke', () => {
+  it('keeps plan options hidden until the combobox opens', async () => {
+    const user = userEvent.setup();
+
+    await render(AccountPreferencesForm);
+
+    expect(screen.queryByRole('option', { name: /starter/i })).toBeNull();
+
+    await user.click(screen.getByRole('combobox', { name: /plan/i }));
+
+    expect(screen.getByRole('option', { name: /starter/i })).toBeTruthy();
+  });
+
+  it('labels the plan combobox through the trigger button id', async () => {
+    await render(AccountPreferencesForm);
+
+    expect(screen.getByRole('combobox', { name: /plan/i })).toBeTruthy();
+  });
+
   it('renders hlm-error and wires aria-invalid + aria-describedby on blur with empty value', async () => {
     const user = userEvent.setup();
 
@@ -90,5 +116,22 @@ describe('Spartan reference wrapper — smoke', () => {
 
     const describedBy = displayName.getAttribute('aria-describedby') ?? '';
     expect(describedBy.split(/\s+/)).toContain(hintElement.id);
+  });
+
+  it('submits when only warnings remain', async () => {
+    const user = userEvent.setup();
+
+    await render(AccountPreferencesForm);
+
+    const displayName = screen.getByLabelText(/display name/i);
+    await user.type(displayName, 'Ada');
+
+    await user.click(screen.getByRole('combobox', { name: /plan/i }));
+    await user.click(screen.getByRole('option', { name: /starter/i }));
+    await user.click(screen.getByTestId('submit-button'));
+
+    const submission = await screen.findByTestId('last-submission');
+    expect(submission.textContent).toContain('"displayName": "Ada"');
+    expect(submission.textContent).toContain('"plan": "starter"');
   });
 });

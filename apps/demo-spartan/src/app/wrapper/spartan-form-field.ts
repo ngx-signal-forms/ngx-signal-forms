@@ -83,7 +83,7 @@ import { NgxSpartanFormFieldError } from './spartan-form-field-error';
   // the inner `<input [formField]>` gets the toolkit's `FormField` directive.
   selector: 'spartan-form-field[ngxSpartanFormField]',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgComponentOutlet, NgxFormFieldHint],
+  imports: [NgComponentOutlet],
   hostDirectives: [
     {
       directive: BrnField,
