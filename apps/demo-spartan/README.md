@@ -217,6 +217,19 @@ exposed from `@ngx-signal-forms/toolkit/headless`.
 auto-aria — Brain does not write either of those, so no bridge is
 needed there.
 
+### `hlm-select`: pin `fieldName` explicitly
+
+Helm select splits its concerns across two elements: `<hlm-select>`
+hosts the form control (and the toolkit's semantics directive), while
+the native focusable surface — and the visible `<label for=…>` target —
+lives on `<hlm-select-trigger>`. The wrapper's tier-3 field-name
+fallback (bound-control host `id`) reads `<hlm-select>`'s id, which is
+invisible to the label, so a refactor that drops the host id silently
+breaks `aria-describedby` correlation. Pin the namespace with
+`[fieldName]="'plan'"` on `<spartan-form-field>` instead of relying on
+the fallback. The text-input and checkbox controls don't have this
+split, so they can rely on label-`for=` resolution (tier-2).
+
 ## What's not shown
 
 - `BrnFieldControl` and Spartan's `ErrorStateMatcher`. See "Host-directive
