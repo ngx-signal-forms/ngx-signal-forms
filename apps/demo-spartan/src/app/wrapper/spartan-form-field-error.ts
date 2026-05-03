@@ -45,7 +45,6 @@ import {
       [attr.id]="firstError() ? errorId() : null"
       [attr.data-warning]="false"
       role="alert"
-      aria-live="assertive"
       [attr.aria-hidden]="firstError() ? null : 'true'"
       [hidden]="!firstError()"
     >
