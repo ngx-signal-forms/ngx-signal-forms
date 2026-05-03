@@ -62,7 +62,6 @@ import {
       [attr.id]="firstWarning() ? warningId() : null"
       [attr.data-warning]="true"
       role="status"
-      aria-live="polite"
       [attr.aria-hidden]="firstWarning() ? null : 'true'"
       [hidden]="!firstWarning()"
     >
