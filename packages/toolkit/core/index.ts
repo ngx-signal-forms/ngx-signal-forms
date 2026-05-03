@@ -28,6 +28,11 @@ export {
 
 // Utilities
 export {
+  createAriaDescribedByBridge,
+  type AriaDescribedByBridge,
+  type CreateAriaDescribedByBridgeOptions,
+} from './utilities/aria/create-aria-described-by-bridge';
+export {
   createAriaDescribedBySignal,
   type AriaDescribedByFieldNameReader,
   type AriaDescribedByPreservedIdsReader,
@@ -48,6 +53,12 @@ export {
 } from './utilities/aria/create-hint-ids-signal';
 export * from './utilities/cascading-resolver';
 export * from './utilities/create-error-visibility';
+export {
+  createFieldNameResolver,
+  type BoundControlElementReader,
+  type CreateFieldNameResolverOptions,
+  type LabelForReader,
+} from './utilities/create-field-name-resolver';
 export * from './utilities/create-unique-id';
 export * from './utilities/control-semantics';
 export * from './utilities/form-field-input';
@@ -82,6 +93,13 @@ export {
 } from './utilities/show-errors';
 export * from './utilities/submission-helpers';
 export { unwrapValue } from './utilities/unwrap-signal-or-value';
+export {
+  createErrorRendererInputs,
+  toHintDescriptors,
+  type CreateErrorRendererInputsOptions,
+  type HintLike,
+  type NgxFormFieldErrorRendererInputs,
+} from './utilities/wrapper-helpers';
 export {
   InvalidFieldTreeError,
   isFieldTree,
