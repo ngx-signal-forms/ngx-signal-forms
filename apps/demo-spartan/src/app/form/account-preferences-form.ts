@@ -37,9 +37,9 @@ const accountSchema = schema<AccountPreferences>((path) => {
     message: 'Display name must be at least 3 characters',
   });
 
-  // Warning rendered through `validate({ kind: 'warn:*' })`. Surfaces in
-  // `<spartan-form-field-error>` via `isWarningError`. Showcases the toolkit's
-  // warnings slot without blocking submission.
+  // Warning rendered by returning a `ValidationError` whose `kind` starts
+  // with `warn:` from inside `validate()`. Surfaces in
+  // `<spartan-form-field-error>` via `isWarningError` without blocking submission.
   validate(path.displayName, (ctx) => {
     const value = ctx.value();
     if (value.length >= 3 && value.length < 5) {
