@@ -16,16 +16,27 @@ exposes its own seams (`NgxSignalFormControlSemanticsDirective`,
 - A custom wrapper component (`spartan-form-field`) that **composes**
   Spartan's `BrnField` host directive instead of re-skinning Spartan's
   internals.
+- Real `@spartan-ng/helm` components scaffolded into `libs/ui` via
+  `@spartan-ng/cli` (`hlmInput`, `<hlm-select>`, `<hlm-checkbox>`,
+  `[hlmLabel]`) — the demo exercises the actual Spartan toolchain rather
+  than a CSS impersonation.
 - Renderer registration for both error and hint slots:
   - `NGX_FORM_FIELD_ERROR_RENDERER` falls back to
-    `SpartanFormFieldErrorComponent` (a local `hlm-error` look-alike).
+    `NgxSpartanFormFieldError` (a local `hlm-error` look-alike that
+    splits blocking errors and warnings into role="alert" / role="status"
+    live regions).
   - Hint output flows through `<ngx-form-field-hint>` projected as
     `<small data-slot="form-description">`-style copy.
-- `NgxSignalFormControlSemanticsDirective` declared **alongside** Spartan's
-  `[brnInput]` / native `<select>` / `<input type=checkbox>` directives —
+- `NgxSignalFormControlSemanticsDirective` declared **alongside** the
+  helm directives (`[hlmInput]` / `<hlm-select>` / `<hlm-checkbox>`) —
   the toolkit reads control semantics through DI, not DOM heuristics, so
   layering both directives on the same host element is the canonical
   composition pattern.
+- A wrapper-scoped `NgxSpartanAriaDescribedByBridge` that swaps Brain's
+  `BrnFieldA11yService` (via component-level `useClass`) so Brain's
+  `BrnFieldControlDescribedBy` host binding writes the toolkit-managed
+  `aria-describedby` IDs onto the helm input host element — see the
+  "`aria-describedby` interop" section below.
 - One representative form covering text input + select + checkbox.
 - Warning rendering exercised via a `validate(..., { kind: 'warn:*' })`
   rule on the `displayName` field.
@@ -55,47 +66,67 @@ and double-write `aria-describedby` (Spartan's `BrnFieldA11yService` chain
 plus the toolkit's auto-ARIA chain). The toolkit's auto-ARIA owns the
 ARIA writes — Spartan's a11y service stays out of the picture.
 
+### `aria-describedby` interop — `NgxSpartanAriaDescribedByBridge`
+
+`[hlmInput]` declares `BrnFieldControlDescribedBy` as a host directive
+that owns `aria-describedby` on the helm input host element via a host
+binding fed by `BrnFieldA11yService`. Brain populates the service
+through label/hint registrations in `NgControl`-based reactive forms;
+Angular Signal Forms (`[formField]`) does not run those registrations,
+so the toolkit's auto-aria writes the composed id list directly to the
+host element — only for Brain's host binding to overwrite those writes
+on the next change-detection tick (its `aria-describedby` input alias
+does not observe DOM mutations).
+
+`apps/demo-spartan/src/app/wrapper/spartan-aria-describedby-bridge.ts`
+provides a wrapper-scoped `BrnFieldA11yService` replacement (registered
+via `useClass` at the `<spartan-form-field>` component level — these
+providers win over the host-directive provider Brain registers via
+`BrnField`). The bridge's `describedBy` signal mirrors the toolkit
+composition (hint ids + error/warning ids gated on the strategy), so
+`BrnFieldControlDescribedBy` writes the toolkit-managed ids onto the
+helm input host element through its own host binding — no DOM
+tug-of-war. Brain's original `register*` API is preserved so any other
+helm primitive that registers a description id stays compatible. This
+is a reusable pattern for any Brain + toolkit interop.
+
+`aria-invalid` and `aria-required` stay owned by the toolkit's
+auto-aria — Brain does not write either of those, so no bridge is
+needed there.
+
 ### Tailwind / CSS-variable interplay
 
-Spartan's `helm` styled components (the `hlm-*` package) are not
-distributed as a runtime npm package — they ship as a `@spartan-ng/cli`
-generator that copies code into the consumer's tree. To keep this
-reference reproducible (no codegen step in CI), the demo bundles a
-hand-rolled `styles.css` with the same shape: `--background`,
-`--foreground`, `--destructive`, `--ring`, `--radius`, etc. as HSL CSS
-variables, so a real Spartan project's `hlm-tailwind-preset.css` can be
-dropped in without rewriting the wrapper.
+Spartan's `helm` styled components are not distributed as a runtime npm
+package — they ship as a `@spartan-ng/cli` generator that copies source
+into the consumer's tree. This demo did exactly that: `libs/ui` was
+scaffolded via the workspace-root `components.json` config and exposes
+`@spartan-ng/helm/*` secondary entry points. The Spartan version is
+pinned via the `spartan:` pnpm catalog in `pnpm-workspace.yaml`.
 
-When integrating into a real Spartan-themed app:
-
-1. Run `npx @spartan-ng/cli@latest ui form-field input select checkbox label`
-   to copy the `hlm-*` styled components into your tree.
-2. Replace this app's `styles.css` with the generated
-   `hlm-tailwind-preset.css` import.
-3. Swap `SpartanFormFieldErrorComponent` for the generated `HlmError` —
-   the toolkit's `NGX_FORM_FIELD_ERROR_RENDERER` is the single point of
-   change.
+`apps/demo-spartan/src/styles.css` bootstraps Tailwind v4
+(`@import 'tailwindcss'` + `tw-animate-css`) and defines the design
+tokens helm uses (`--background`, `--foreground`, `--destructive`,
+`--ring`, `--radius`, etc.) in `oklch`. Both light and dark palettes
+ship; theme flipping uses the `.dark` variant.
 
 The wrapper's `data-spartan-form-field` attribute is the join point
-between Spartan's `helm` selectors and the toolkit's chrome — your
-generated styling can target it without forking the wrapper.
+between Spartan's `helm` selectors and the toolkit's chrome — bespoke
+styling can target it without forking the wrapper.
 
 ## What's not shown
 
-- Spartan's `brn-select` / `brn-combobox` overlay-based controls. Those
-  rely on `BrnPopover` and an `*hlmSelectPortal` template, which add a
-  layer of indirection that distracts from the seam under test. A native
-  `<select>` carries the toolkit semantics just as cleanly.
 - `BrnFieldControl` and Spartan's `ErrorStateMatcher`. See "Host-directive
-  ordering" above — the toolkit owns control state via `[formField]`.
-- Light / dark theming. The hand-rolled CSS only ships a light palette;
-  flipping themes in a real Spartan app uses Spartan's `cssVar` toolchain.
+  ordering" above — the toolkit owns control state via `[formField]`,
+  and Brain's a11y service is replaced by the bridge.
 - Submission patterns (`submitWithWarnings`, async submission, server
   errors). Out of scope per the PRD; the existing `apps/demo`
   "Submission patterns" page covers those independently of the wrapper
   choice.
 - A floating-label appearance. Spartan's design language doesn't ship
   one; the wrapper sticks to the `hlm-form-field` vertical-stack default.
+- Theme switching UI. The `.dark` palette is wired in `styles.css`, but
+  there's no toggle in the demo — flip `<html class="dark">` in DevTools
+  to verify both palettes resolve through helm's `data-state` selectors.
 
 ## ARIA verification
 

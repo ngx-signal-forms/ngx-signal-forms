@@ -5,7 +5,7 @@ import {
   signal,
   type Signal,
 } from '@angular/core';
-import { SpartanFormFieldComponent } from './spartan-form-field';
+import { NgxSpartanFormField } from './spartan-form-field';
 
 /**
  * Wrapper-scoped replacement for Spartan brain's `BrnFieldA11yService`.
@@ -37,7 +37,7 @@ import { SpartanFormFieldComponent } from './spartan-form-field';
  * win over host-directive providers, this `useClass` registration replaces
  * Brain's empty service with one whose `describedBy` signal is fed from the
  * toolkit's `aria-describedby` composition exposed by
- * {@link SpartanFormFieldComponent}. `BrnFieldControlDescribedBy` then writes
+ * {@link NgxSpartanFormField}. `BrnFieldControlDescribedBy` then writes
  * the toolkit-managed IDs (hint / error / warning) onto the helm input host
  * element through its own host binding — no DOM tug-of-war.
  *
@@ -54,11 +54,11 @@ import { SpartanFormFieldComponent } from './spartan-form-field';
 // at runtime, not by structural compatibility — so we keep the public
 // surface in lockstep without `implements` and rely on the unit + e2e
 // specs to enforce the contract. The cast at the `useClass` provider site
-// is unnecessary because `useClass: SpartanAriaDescribedByBridge` is
+// is unnecessary because `useClass: NgxSpartanAriaDescribedByBridge` is
 // resolved against the token, not against the declared type.
 @Injectable()
-export class SpartanAriaDescribedByBridge {
-  readonly #wrapper = inject(SpartanFormFieldComponent);
+export class NgxSpartanAriaDescribedByBridge {
+  readonly #wrapper = inject(NgxSpartanFormField);
 
   /**
    * Internal registries kept identical to Brain's `BrnFieldA11yService` so
@@ -72,7 +72,7 @@ export class SpartanAriaDescribedByBridge {
   /**
    * IDs derived from the wrapper's toolkit composition
    * (`createAriaDescribedBySignal`). These are the hint / error / warning
-   * IDs that {@link SpartanFormFieldComponent} produces from
+   * IDs that {@link NgxSpartanFormField} produces from
    * `NGX_SIGNAL_FORM_HINT_REGISTRY` and the bound `FieldState`.
    */
   readonly #toolkitIds = computed<readonly string[]>(() => {

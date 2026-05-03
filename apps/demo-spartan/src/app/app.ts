@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AccountPreferencesFormComponent } from './form/account-preferences-form';
+import { AccountPreferencesForm } from './form/account-preferences-form';
 
 @Component({
   selector: 'ngx-spartan-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AccountPreferencesFormComponent],
+  imports: [AccountPreferencesForm],
   template: `
     <main class="shell">
       <h1 class="shell__title">ngx-signal-forms × Spartan Components</h1>
@@ -27,4 +27,4 @@ import { AccountPreferencesFormComponent } from './form/account-preferences-form
     </main>
   `,
 })
-export class AppComponent {}
+export class App {}

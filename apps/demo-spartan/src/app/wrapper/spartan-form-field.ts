@@ -4,18 +4,20 @@ import {
   Component,
   computed,
   contentChildren,
+  effect,
   inject,
   input,
+  isDevMode,
+  signal,
   type Signal,
   type Type,
 } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
+import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { BrnField, BrnFieldA11yService } from '@spartan-ng/brain/field';
 import { BrnLabel } from '@spartan-ng/brain/label';
 import {
   createErrorVisibility,
-  generateErrorId,
-  generateWarningId,
+  createShowErrorsComputed,
   injectFormContext,
   isBlockingError,
   isWarningError,
@@ -23,12 +25,19 @@ import {
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
+  NgxSignalFormControlSemanticsDirective,
   resolveErrorDisplayStrategy,
   type NgxSignalFormHintDescriptor,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
-import { SpartanAriaDescribedByBridge } from './spartan-aria-describedby-bridge';
-import { SpartanFormFieldErrorComponent } from './spartan-form-field-error';
+import {
+  createAriaDescribedBySignal,
+  createAriaInvalidSignal,
+  createAriaRequiredSignal,
+  createHintIdsSignal,
+} from '@ngx-signal-forms/toolkit/headless';
+import { NgxSpartanAriaDescribedByBridge } from './spartan-aria-describedby-bridge';
+import { NgxSpartanFormFieldError } from './spartan-form-field-error';
 
 /**
  * Spartan-flavoured form-field wrapper composing `BrnField` (the unstyled
@@ -42,7 +51,7 @@ import { SpartanFormFieldErrorComponent } from './spartan-form-field-error';
  * 2. `NGX_SIGNAL_FORM_HINT_REGISTRY` — projects hint children into the
  *    descriptor signal that auto-ARIA reads through DI.
  * 3. `NGX_FORM_FIELD_ERROR_RENDERER` — falls back to
- *    `SpartanFormFieldErrorComponent` when no provider overrides it.
+ *    `NgxSpartanFormFieldError` when no provider overrides it.
  * 4. `NgxSignalFormAutoAria` — declared by the consumer's bound control
  *    template (it is a directive selector on `[formField]`); the wrapper does
  *    NOT touch `aria-invalid` / `aria-required` / `aria-describedby` directly.
@@ -55,6 +64,16 @@ import { SpartanFormFieldErrorComponent } from './spartan-form-field-error';
  * owns the ARIA writes. Layering both would double-write `aria-describedby`
  * (Spartan's `BrnFieldA11yService` chain plus the toolkit's chain), which
  * is the exact failure mode the renderer-seam is designed to avoid.
+ *
+ * **Bound-control discovery:**
+ *
+ * Pure-signal lexical content query —
+ * `contentChildren(NgxSignalFormControlSemanticsDirective)` finds every
+ * projected control that opted into the toolkit's semantics layer. The
+ * directive exposes `elementRef` (added per ADR-0002 §6 specifically to
+ * unblock Spartan / PrimeNG / consumer custom wrappers), so the wrapper
+ * reads the bound element's `id` for the third-tier `resolvedFieldName`
+ * fallback without `afterEveryRender` or imperative DOM probing.
  */
 @Component({
   selector: 'spartan-form-field',
@@ -70,14 +89,14 @@ import { SpartanFormFieldErrorComponent } from './spartan-form-field-error';
     {
       provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
       useFactory: () => {
-        const wrapper = inject(SpartanFormFieldComponent);
+        const wrapper = inject(NgxSpartanFormField);
         return { fieldName: wrapper.resolvedFieldName };
       },
     },
     {
       provide: NGX_SIGNAL_FORM_HINT_REGISTRY,
       useFactory: () => {
-        const wrapper = inject(SpartanFormFieldComponent);
+        const wrapper = inject(NgxSpartanFormField);
         return { hints: wrapper.hintDescriptors };
       },
     },
@@ -89,7 +108,7 @@ import { SpartanFormFieldErrorComponent } from './spartan-form-field-error';
     // See `./spartan-aria-describedby-bridge.ts` for the rationale.
     {
       provide: BrnFieldA11yService,
-      useClass: SpartanAriaDescribedByBridge,
+      useClass: NgxSpartanAriaDescribedByBridge,
     },
   ],
   host: {
@@ -98,6 +117,11 @@ import { SpartanFormFieldErrorComponent } from './spartan-form-field-error';
     // from real `@spartan-ng/helm` components.
     class: 'flex flex-col gap-2 mt-5 first:mt-0',
     '[attr.data-spartan-form-field]': '""',
+    // Mirrors the parity demos: surface the toolkit's view of validity /
+    // required-ness on the wrapper for debug overlays and smoke specs,
+    // even though Brain owns the actual ARIA writes on the bound control.
+    '[attr.data-spartan-invalid]': 'ariaInvalidValue()',
+    '[attr.data-spartan-required]': 'ariaRequiredValue()',
   },
   template: `
     <ng-content select="label,[brnLabel]" />
@@ -116,20 +140,20 @@ import { SpartanFormFieldErrorComponent } from './spartan-form-field-error';
     />
   `,
 })
-export class SpartanFormFieldComponent<TValue = unknown> {
+export class NgxSpartanFormField<TValue = unknown> {
   /**
-   * Bound `FieldTree`. Required because `SpartanFormFieldErrorComponent`
-   * reads errors directly off the tree to render the `hlm-error` slot —
-   * mirroring how `NgxFormFieldWrapper` binds the same input to its
-   * configured renderer.
+   * Bound `FieldTree`. Required because `NgxSpartanFormFieldError` reads
+   * errors directly off the tree to render the `hlm-error` slot — mirroring
+   * how `NgxFormFieldWrapper` binds the same input to its configured
+   * renderer.
    */
   readonly formField = input.required<FieldTree<TValue>>();
 
   /**
    * Explicit field name used to generate stable `aria-describedby` ids.
-   * When omitted, resolution relies on the wrapper's existing association
-   * logic, such as projected label metadata; there is no projected control
-   * `id` fallback.
+   * When omitted, resolution falls back to the projected `brnLabel`'s
+   * `for=` attribute, then to the bound control's `id` resolved via
+   * `contentChildren(NgxSignalFormControlSemanticsDirective)`.
    */
   readonly fieldName = input<string>();
 
@@ -140,6 +164,27 @@ export class SpartanFormFieldComponent<TValue = unknown> {
    * but `brnLabel`'s `for=` keeps Spartan's labelable contract happy.
    */
   protected readonly projectedLabels = contentChildren(BrnLabel);
+
+  /**
+   * Bound-control discovery via the toolkit's semantics directive. Every
+   * helm input/select/checkbox in the demo declares
+   * `ngxSignalFormControl="…"`, which mounts this directive on the host
+   * element. The directive exposes `elementRef` (ADR-0002 §6) so the
+   * wrapper reads the bound element without imperative DOM probing.
+   */
+  protected readonly boundSemantics = contentChildren(
+    NgxSignalFormControlSemanticsDirective,
+    { descendants: true },
+  );
+
+  readonly #boundControlElement = computed<HTMLElement | null>(
+    () => this.boundSemantics()[0]?.elementRef.nativeElement ?? null,
+  );
+
+  readonly #boundControlId = computed<string | null>(() => {
+    const id = this.#boundControlElement()?.id;
+    return id && id.length > 0 ? id : null;
+  });
 
   /**
    * Hint children projected through `<ng-content select="ngx-form-field-hint">`.
@@ -168,11 +213,8 @@ export class SpartanFormFieldComponent<TValue = unknown> {
    *
    *   1. explicit `fieldName` input
    *   2. first projected `brnLabel`'s `for=` attribute
-   *   3. `null` (auto-ARIA gracefully no-ops)
-   *
-   * For a production-grade wrapper you'd add a third tier (read the bound
-   * control's `id` from a post-render DOM snapshot). Intentionally omitted
-   * here so the demo stays compact and the seam stays the focus.
+   *   3. bound control's `id` (read from `NgxSignalFormControlSemanticsDirective.elementRef`)
+   *   4. `null` (auto-ARIA gracefully no-ops)
    */
   readonly resolvedFieldName = computed<string | null>(() => {
     const explicit = this.fieldName()?.trim();
@@ -188,7 +230,7 @@ export class SpartanFormFieldComponent<TValue = unknown> {
       }
     }
 
-    return null;
+    return this.#boundControlId();
   });
 
   /**
@@ -204,7 +246,7 @@ export class SpartanFormFieldComponent<TValue = unknown> {
   });
 
   protected readonly errorComponent = computed<Type<unknown>>(
-    () => this.#errorRenderer?.component ?? SpartanFormFieldErrorComponent,
+    () => this.#errorRenderer?.component ?? NgxSpartanFormFieldError,
   );
 
   /**
@@ -243,56 +285,109 @@ export class SpartanFormFieldComponent<TValue = unknown> {
   }));
 
   /**
-   * Visibility-timing computed shared with auto-aria's strategy cascade.
-   * Auto-consumes the surrounding `[ngxSignalForm]` context via DI so the
-   * wrapper's bridge service stays in lockstep with auto-aria's writes.
+   * Bridges the `InputSignal<FieldTree>` to the underlying `FieldState`.
+   * Mirrors the cache pattern in `NgxFormFieldWrapper` so every downstream
+   * computed reads from one signal node.
    */
-  readonly #visibility = createErrorVisibility(() => this.formField()());
+  readonly #fieldStateSignal = computed<FieldState<TValue> | null>(() =>
+    this.formField()(),
+  );
 
   /**
-   * Reactive `aria-describedby` value composed from the toolkit's
-   * field-context primitives:
-   *
-   *   - hint IDs from the projected `<ngx-form-field-hint>` children, then
-   *   - `<fieldName>-error` if the bound field has any blocking error AND
-   *     the strategy says errors should surface, then
-   *   - `<fieldName>-warning` if the bound field has a warning error AND
-   *     the strategy says errors should surface.
-   *
-   * Consumed by {@link SpartanAriaDescribedByBridge} (provided at this
-   * component's injector level) so that `BrnFieldControlDescribedBy`'s host
-   * binding on `[hlmInput]` writes the toolkit-managed IDs onto the host
-   * element, instead of overwriting auto-aria's `setAttribute` calls with
-   * an empty service value. Mirrors the composition documented in
-   * `createAriaDescribedBySignal` without taking a build-time-only `/core`
-   * import dependency.
+   * Strategy-aware visibility timing. `createErrorVisibility` (auto-aria's
+   * cascade) drives the bridge composition; `createShowErrorsComputed`
+   * (strategy + submission state) is the same primitive used by the
+   * canonical `NgxFormFieldWrapper`. Wrapper-side state stays in lockstep
+   * with what auto-aria would write if it were active.
    */
-  readonly toolkitAriaDescribedBy = computed<string | null>(() => {
-    const fieldName = this.resolvedFieldName();
-    const parts: string[] = [];
+  readonly #visibility = createErrorVisibility(this.#fieldStateSignal);
+  readonly #showByStrategy = createShowErrorsComputed(
+    this.#fieldStateSignal,
+    this.effectiveStrategy,
+    this.submittedStatus,
+  );
 
-    for (const hint of this.hintDescriptors()) {
-      if (!parts.includes(hint.id)) {
-        parts.push(hint.id);
-      }
-    }
+  // ── ARIA primitive factories ──────────────────────────────────────────
+  // The four factories from `@ngx-signal-forms/toolkit/headless` drive
+  // wrapper-side state. Exposed publicly so the demo / smoke spec can
+  // verify the toolkit's identity model is wired even though Brain owns
+  // the host binding on the bound control (and the bridge feeds it).
 
-    if (fieldName !== null && this.#visibility()) {
-      const errors = this.formField()().errors();
-      if (errors.some(isBlockingError)) {
-        const errorId = generateErrorId(fieldName);
-        if (!parts.includes(errorId)) {
-          parts.push(errorId);
-        }
-      }
-      if (errors.some(isWarningError)) {
-        const warningId = generateWarningId(fieldName);
-        if (!parts.includes(warningId)) {
-          parts.push(warningId);
-        }
-      }
-    }
+  readonly ariaInvalidValue = createAriaInvalidSignal(
+    this.#fieldStateSignal,
+    this.#showByStrategy,
+  );
 
-    return parts.length > 0 ? parts.join(' ') : null;
+  readonly ariaRequiredValue = createAriaRequiredSignal(this.#fieldStateSignal);
+
+  readonly hintIds = createHintIdsSignal({
+    registry: { hints: this.hintDescriptors },
+    fieldName: () => this.resolvedFieldName(),
   });
+
+  /**
+   * Toolkit-managed `aria-describedby` value, consumed by
+   * {@link NgxSpartanAriaDescribedByBridge} so Brain's
+   * `BrnFieldControlDescribedBy` host binding writes the toolkit-managed
+   * IDs onto the helm input host element.
+   *
+   * `preservedIds` returns `null` because the bridge synthesises the
+   * value the bound control's `aria-describedby` ultimately receives —
+   * there is no upstream DOM-resident list to preserve. Hints + error/
+   * warning IDs come from the bound `FieldState` and the hint registry.
+   */
+  readonly toolkitAriaDescribedBy = createAriaDescribedBySignal({
+    fieldState: this.#fieldStateSignal,
+    hintIds: this.hintIds,
+    visibility: this.#visibility,
+    preservedIds: () => null,
+    fieldName: () => this.resolvedFieldName(),
+  });
+
+  // ── Dev-mode missing-control assertion ────────────────────────────────
+  //
+  // A bare helm input (no `ngxSignalFormControl`) would mean the wrapper's
+  // contentChildren query stays empty and tier-3 field-name resolution
+  // never fires. Mirrors the Material wrapper's diagnostic pattern from
+  // ADR-0002 §6 — one console.error per wrapper instance, never spammed.
+
+  readonly #hasWarned = signal(false);
+
+  constructor() {
+    if (isDevMode()) {
+      effect(() => {
+        if (this.#hasWarned()) {
+          return;
+        }
+        if (this.boundSemantics().length > 0) {
+          // A control was projected — the query found it; future empty
+          // states (e.g. while the consumer toggles control kinds with
+          // @if) are intentional, so suppress further warnings.
+          this.#hasWarned.set(true);
+          return;
+        }
+        const fieldName = this.resolvedFieldName() ?? '<unknown>';
+        console.error(
+          `[spartan-form-field] No NgxSignalFormControlSemanticsDirective matched inside the wrapper bound to "${fieldName}". ` +
+            `Add \`ngxSignalFormControl="input-like"\` (or \`"checkbox"\`) to the helm control so the toolkit's auto-ARIA, ` +
+            `tier-3 field-name resolution, and the NgxSpartanAriaDescribedByBridge can wire up.`,
+        );
+        this.#hasWarned.set(true);
+      });
+    }
+  }
 }
+
+/**
+ * Bundle of every directive needed to use the Spartan reference wrapper.
+ *
+ * The naming (`NgxSpartanFormBundle`) mirrors the Material reference's
+ * `NgxMatFormBundle` so the demo's API matches the future
+ * `@ngx-signal-forms/spartan` package's surface — no rename when the
+ * wrapper graduates out of the demo (see ADR-0002 §8 for the precedent).
+ */
+export const NgxSpartanFormBundle = [
+  NgxSpartanFormField,
+  NgxSpartanFormFieldError,
+  NgxSignalFormControlSemanticsDirective,
+] as const;

@@ -1,7 +1,7 @@
 import { isDevMode, provideZonelessChangeDetection } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
-import { AppComponent } from './app/app';
+import { App } from './app/app';
 
 // Wrap in async IIFE so the JIT compiler import only loads in dev (Angular
 // Vite builder needs it for templateUrl/styleUrls during local dev).
@@ -15,7 +15,7 @@ void (async () => {
     // production builds don't need it
   }
 
-  await bootstrapApplication(AppComponent, {
+  await bootstrapApplication(App, {
     providers: [
       provideZonelessChangeDetection(),
       provideNgxSignalFormsConfig({

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { AccountPreferencesFormComponent } from './account-preferences-form';
+import { AccountPreferencesForm } from './account-preferences-form';
 
 /**
  * Smoke spec for the Spartan reference wrapper.
@@ -9,7 +9,7 @@ import { AccountPreferencesFormComponent } from './account-preferences-form';
  * Asserts the four contracts the renderer-token seam promises:
  *
  *   1. invalid field renders the `hlm-error` slot through the configured
- *      renderer (default: `SpartanFormFieldErrorComponent`),
+ *      renderer (default: `NgxSpartanFormFieldError`),
  *   2. `aria-invalid='true'` lands on the bound control (toolkit owns this),
  *   3. `aria-describedby` on the bound control points at the rendered
  *      error element by id,
@@ -23,7 +23,7 @@ describe('Spartan reference wrapper — smoke', () => {
   it('renders hlm-error and wires aria-invalid + aria-describedby on blur with empty value', async () => {
     const user = userEvent.setup();
 
-    await render(AccountPreferencesFormComponent);
+    await render(AccountPreferencesForm);
 
     const displayName = screen.getByLabelText(/display name/i);
     expect(displayName).toBeInstanceOf(HTMLInputElement);
@@ -51,7 +51,7 @@ describe('Spartan reference wrapper — smoke', () => {
   it('renders the warning slot through the same renderer when a warn:* validator fires', async () => {
     const user = userEvent.setup();
 
-    await render(AccountPreferencesFormComponent);
+    await render(AccountPreferencesForm);
 
     const displayName = screen.getByLabelText(/display name/i);
 
@@ -76,12 +76,12 @@ describe('Spartan reference wrapper — smoke', () => {
   it("threads hint ids through Brain's BrnFieldControlDescribedBy via the wrapper-scoped bridge", async () => {
     // Renders without any user interaction. The hint child for `display-name`
     // has a stable, content-derived id; the wrapper-scoped
-    // `SpartanAriaDescribedByBridge` feeds it into the toolkit composition,
+    // `NgxSpartanAriaDescribedByBridge` feeds it into the toolkit composition,
     // and Brain's `BrnFieldControlDescribedBy` host binding writes it onto
     // the helm input host element. Without the bridge this assertion fails
     // (Brain's default `BrnFieldA11yService` returns null because nothing
     // registered a description through its API).
-    await render(AccountPreferencesFormComponent);
+    await render(AccountPreferencesForm);
 
     const displayName = screen.getByLabelText(/display name/i);
 

@@ -18,7 +18,7 @@ import {
 } from '@ngx-signal-forms/toolkit';
 
 /**
- * `hlm-error` look-alike. Bound by `SpartanFormFieldComponent` via the
+ * `hlm-error` look-alike. Bound by `NgxSpartanFormField` via the
  * `NGX_FORM_FIELD_ERROR_RENDERER` token. Reads `formField` and produces both
  * the blocking-error and warning slots, mirroring what
  * `<small data-slot="form-error">` would render in a hand-written Spartan
@@ -73,7 +73,7 @@ import {
     </p>
   `,
 })
-export class SpartanFormFieldErrorComponent {
+export class NgxSpartanFormFieldError {
   /**
    * Bound by `NgxFormFieldWrapper`-style consumers via `*ngComponentOutlet`'s
    * `inputs:` map. The Spartan wrapper passes the same shape — the `FieldTree`

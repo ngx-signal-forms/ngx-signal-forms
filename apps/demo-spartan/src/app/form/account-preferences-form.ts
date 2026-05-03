@@ -11,7 +11,6 @@ import {
 import {
   NgxSignalForm,
   NgxSignalFormAutoAria,
-  NgxSignalFormControlSemanticsDirective,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import { HlmCheckbox } from '@spartan-ng/helm/checkbox';
@@ -24,7 +23,7 @@ import {
   HlmSelectTrigger,
   HlmSelectValue,
 } from '@spartan-ng/helm/select';
-import { SpartanFormFieldComponent } from '../wrapper/spartan-form-field';
+import { NgxSpartanFormBundle } from '../wrapper/spartan-form-field';
 
 interface AccountPreferences {
   readonly displayName: string;
@@ -59,11 +58,17 @@ const accountSchema = schema<AccountPreferences>((path) => {
  * Single representative form: text input + select + checkbox composed
  * with real `@spartan-ng/helm` components scaffolded into `libs/ui`.
  *
- * Each control declares `NgxSignalFormControlSemanticsDirective` alongside
- * Spartan's helm directives — the toolkit reads semantics through DI
- * (not DOM heuristics), so combining `[hlmInput] ngxSignalFormControl="..."`
- * is the canonical "alongside" composition the PRD asks the reference to
- * exercise.
+ * Each control declares `NgxSignalFormControlSemanticsDirective` (re-exported
+ * from `NgxSpartanFormBundle`) alongside Spartan's helm directives — the
+ * toolkit reads control semantics through DI (not DOM heuristics), so
+ * combining `[hlmInput] ngxSignalFormControl="…"` is the canonical
+ * "alongside" composition the PRD asks the reference to exercise.
+ *
+ * The wrapper's bound-control discovery
+ * (`contentChildren(NgxSignalFormControlSemanticsDirective)`) relies on
+ * the directive being mounted on every helm input — without it, the
+ * dev-mode missing-control assertion fires and tier-3 field-name
+ * resolution stalls on `null`.
  */
 @Component({
   selector: 'ngx-account-preferences-form',
@@ -82,8 +87,7 @@ const accountSchema = schema<AccountPreferences>((path) => {
     NgxFormFieldHint,
     NgxSignalForm,
     NgxSignalFormAutoAria,
-    NgxSignalFormControlSemanticsDirective,
-    SpartanFormFieldComponent,
+    NgxSpartanFormBundle,
   ],
   template: `
     <form
@@ -93,10 +97,7 @@ const accountSchema = schema<AccountPreferences>((path) => {
       novalidate
     >
       <!-- Text input -->
-      <spartan-form-field
-        [formField]="form.displayName"
-        fieldName="display-name"
-      >
+      <spartan-form-field [formField]="form.displayName">
         <label hlmLabel for="display-name">Display name</label>
         <input
           hlmInput
@@ -116,9 +117,13 @@ const accountSchema = schema<AccountPreferences>((path) => {
         control), so [formField] binds there. The native focusable surface
         lives on the hlm-select-trigger button.
       -->
-      <spartan-form-field [formField]="form.plan" fieldName="plan">
+      <spartan-form-field [formField]="form.plan">
         <label hlmLabel for="plan-trigger">Plan</label>
-        <hlm-select ngxSignalFormControl="input-like" [formField]="form.plan">
+        <hlm-select
+          id="plan"
+          ngxSignalFormControl="input-like"
+          [formField]="form.plan"
+        >
           <hlm-select-trigger id="plan-trigger" class="w-full">
             <hlm-select-value placeholder="Select a plan" />
           </hlm-select-trigger>
@@ -131,9 +136,10 @@ const accountSchema = schema<AccountPreferences>((path) => {
       </spartan-form-field>
 
       <!-- Checkbox -->
-      <spartan-form-field [formField]="form.newsletter" fieldName="newsletter">
+      <spartan-form-field [formField]="form.newsletter">
         <div class="flex items-start gap-3">
           <hlm-checkbox
+            id="newsletter"
             ngxSignalFormControl="checkbox"
             inputId="newsletter"
             [formField]="form.newsletter"
@@ -163,7 +169,7 @@ const accountSchema = schema<AccountPreferences>((path) => {
     }
   `,
 })
-export class AccountPreferencesFormComponent {
+export class AccountPreferencesForm {
   protected readonly form = form(
     signal<AccountPreferences>({
       displayName: '',
