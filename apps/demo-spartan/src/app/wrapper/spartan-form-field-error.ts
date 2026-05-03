@@ -140,11 +140,11 @@ export class NgxSpartanFormFieldError {
 
   protected readonly errorId = computed(() => {
     const name = this.#fieldContext?.fieldName() ?? null;
-    return name ? generateErrorId(name) : null;
+    return name !== null && name.length > 0 ? generateErrorId(name) : null;
   });
 
   protected readonly warningId = computed(() => {
     const name = this.#fieldContext?.fieldName() ?? null;
-    return name ? generateWarningId(name) : null;
+    return name !== null && name.length > 0 ? generateWarningId(name) : null;
   });
 }
