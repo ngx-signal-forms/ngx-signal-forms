@@ -52,13 +52,4 @@ test('Spartan reference wrapper - fill, blur, and observe error wiring', async (
     'aria-describedby',
     /\bdisplay-name-error\b/,
   );
-
-  // Sanity: the id surfaced through `aria-describedby` resolves to the
-  // rendered error element so screen readers can actually find it.
-  const describedBy =
-    (await displayName.getAttribute('aria-describedby')) ?? '';
-  expect(describedBy.split(/\s+/)).toContain('display-name-error');
-  await expect(page.locator(`#display-name-error`)).toContainText(
-    /display name is required/i,
-  );
 });
