@@ -101,10 +101,10 @@ describe('Spartan reference wrapper — smoke', () => {
 
   it("threads hint ids through Brain's BrnFieldControlDescribedBy via the wrapper-scoped bridge", async () => {
     // Renders without any user interaction. The hint child for `display-name`
-    // has a stable, content-derived id; the wrapper-scoped
-    // `NgxSpartanAriaDescribedByBridge` feeds it into the toolkit composition,
+    // has a stable, content-derived id; the wrapper-scoped `BrnFieldA11yService`
+    // factory in `spartan-form-field.ts` feeds it into the toolkit composition,
     // and Brain's `BrnFieldControlDescribedBy` host binding writes it onto
-    // the helm input host element. Without the bridge this assertion fails
+    // the helm input host element. Without the factory this assertion fails
     // (Brain's default `BrnFieldA11yService` returns null because nothing
     // registered a description through its API).
     await render(AccountPreferencesForm);

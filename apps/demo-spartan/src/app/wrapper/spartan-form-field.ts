@@ -27,6 +27,7 @@ import {
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import {
   createAriaDescribedBySignal,
+  createAriaDescribedByBridge,
   createAriaInvalidSignal,
   createAriaRequiredSignal,
   createErrorRendererInputs,
@@ -34,8 +35,25 @@ import {
   createHintIdsSignal,
   toHintDescriptors,
 } from '@ngx-signal-forms/toolkit/headless';
-import { NgxSpartanAriaDescribedByBridge } from './spartan-aria-describedby-bridge';
 import { NgxSpartanFormFieldError } from './spartan-form-field-error';
+
+/**
+ * Compile-time guard that the inline `BrnFieldA11yService` factory below
+ * stays a structural superset of Brain's public contract. If Brain adds a
+ * new public member, the `useFactory` return-type annotation fails at
+ * typecheck time. We `Pick` the documented members (rather than asserting
+ * full structural equivalence) because Brain's class also has `private`
+ * fields the bridge intentionally keeps separate — DI matches by token
+ * identity at runtime, not by structural compatibility.
+ */
+type BrnFieldA11yPublicSurface = Pick<
+  BrnFieldA11yService,
+  | 'describedBy'
+  | 'registerDescription'
+  | 'unregisterDescription'
+  | 'registerError'
+  | 'unregisterError'
+>;
 
 /**
  * Spartan-flavoured form-field wrapper composing `BrnField` (the unstyled
@@ -107,13 +125,22 @@ import { NgxSpartanFormFieldError } from './spartan-form-field-error';
     },
     // Brain's `BrnField` host directive declares
     // `providers: [BrnFieldA11yService]` at the same element. Component-level
-    // providers win over host-directive providers, so this `useClass`
-    // registration replaces Brain's empty service with the wrapper-scoped
+    // providers win over host-directive providers, so this `useFactory`
+    // registration replaces Brain's empty service with a wrapper-scoped
     // bridge that re-exposes the toolkit's `aria-describedby` composition.
-    // See `./spartan-aria-describedby-bridge.ts` for the rationale.
+    //
+    // The factory delegates to the toolkit's `createAriaDescribedByBridge`
+    // primitive — it merges the toolkit composition with any IDs registered
+    // through Brain's `register*` API, so other helm primitives that push
+    // descriptions through the service stay compatible. The return-type
+    // annotation (`BrnFieldA11yPublicSurface`) is the typecheck guard that
+    // fires if Brain ever adds a new public member to its contract.
     {
       provide: BrnFieldA11yService,
-      useClass: NgxSpartanAriaDescribedByBridge,
+      useFactory: (): BrnFieldA11yPublicSurface =>
+        createAriaDescribedByBridge({
+          toolkit: inject(NgxSpartanFormField).toolkitAriaDescribedBy,
+        }),
     },
   ],
   host: {
@@ -330,8 +357,8 @@ export class NgxSpartanFormField<TValue = unknown> {
   });
 
   /**
-   * Toolkit-managed `aria-describedby` value, consumed by
-   * {@link NgxSpartanAriaDescribedByBridge} so Brain's
+   * Toolkit-managed `aria-describedby` value, consumed by the inline
+   * `BrnFieldA11yService` factory above so Brain's
    * `BrnFieldControlDescribedBy` host binding writes the toolkit-managed
    * IDs onto the helm input host element.
    *
@@ -376,7 +403,7 @@ export class NgxSpartanFormField<TValue = unknown> {
         console.error(
           `[spartan-form-field] No NgxSignalFormControlSemanticsDirective matched inside the wrapper bound to "${fieldName}". ` +
             `Add \`ngxSignalFormControl="input-like"\` (or \`"checkbox"\`) to the helm control so the toolkit's auto-ARIA, ` +
-            `tier-3 field-name resolution, and the NgxSpartanAriaDescribedByBridge can wire up.`,
+            `tier-3 field-name resolution, and the wrapper-scoped BrnFieldA11yService bridge can wire up.`,
         );
         this.#hasWarned = true;
       });

@@ -14,11 +14,12 @@ import { expect, test } from '@playwright/test';
  * browsers, which can mark the field touched before the test runs. The
  * post-interaction state is what the seam actually owns.
  *
- * `aria-describedby` is the contract that
- * {@link `apps/demo-spartan/src/app/wrapper/spartan-aria-describedby-bridge.ts`}
+ * `aria-describedby` is the contract that the wrapper-scoped
+ * `BrnFieldA11yService` factory in
+ * {@link `apps/demo-spartan/src/app/wrapper/spartan-form-field.ts`}
  * mediates: Brain's `BrnFieldControlDescribedBy` host directive owns the
- * attribute on `[hlmInput]`, but the wrapper-scoped bridge service feeds it
- * from the toolkit's composition so the toolkit-managed `<fieldName>-error`
+ * attribute on `[hlmInput]`, but the factory-installed bridge service feeds
+ * it from the toolkit's composition so the toolkit-managed `<fieldName>-error`
  * id reaches the helm input host element. This spec asserts that contract
  * end-to-end (the smoke spec covers the same path through jsdom).
  */

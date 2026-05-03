@@ -98,9 +98,8 @@ so it is intentionally not in the bundle — see
 src/app/
   form/                                form + validations + smoke spec
   wrapper/
-    spartan-form-field.ts              the wrapper component (BrnField host directive)
+    spartan-form-field.ts              the wrapper component (BrnField host directive + inline BrnFieldA11yService factory)
     spartan-form-field-error.ts        default error renderer (role="alert" + role="status")
-    spartan-aria-describedby-bridge.ts BrnFieldA11yService replacement
 ```
 
 - A custom wrapper component (`spartan-form-field`) that **composes**
@@ -122,11 +121,12 @@ src/app/
   the toolkit reads control semantics through DI, not DOM heuristics, so
   layering both directives on the same host element is the canonical
   composition pattern.
-- A wrapper-scoped `NgxSpartanAriaDescribedByBridge` that swaps Brain's
-  `BrnFieldA11yService` (via component-level `useClass`) so Brain's
-  `BrnFieldControlDescribedBy` host binding writes the toolkit-managed
-  `aria-describedby` IDs onto the helm input host element — see the
-  "`aria-describedby` interop" section below.
+- A wrapper-scoped `BrnFieldA11yService` replacement, registered via an
+  inline `useFactory` provider on `<spartan-form-field>` that delegates
+  to the toolkit's `createAriaDescribedByBridge` primitive — Brain's
+  `BrnFieldControlDescribedBy` host binding then writes the
+  toolkit-managed `aria-describedby` IDs onto the helm input host
+  element. See the "`aria-describedby` interop" section below.
 - One representative form covering text input + select + checkbox.
 - Warning rendering exercised via a `validate()` callback on the
   `displayName` field that returns a `ValidationError` with
@@ -187,7 +187,7 @@ and double-write `aria-describedby` (Spartan's `BrnFieldA11yService` chain
 plus the toolkit's auto-ARIA chain). The toolkit's auto-ARIA owns the
 ARIA writes — Spartan's a11y service stays out of the picture.
 
-### `aria-describedby` interop — `NgxSpartanAriaDescribedByBridge`
+### `aria-describedby` interop — wrapper-scoped `BrnFieldA11yService`
 
 `[hlmInput]` declares `BrnFieldControlDescribedBy` as a host directive
 that owns `aria-describedby` on the helm input host element via a host
@@ -199,19 +199,20 @@ host element — only for Brain's host binding to overwrite those writes
 on the next change-detection tick (its `aria-describedby` input alias
 does not observe DOM mutations).
 
-`apps/demo-spartan/src/app/wrapper/spartan-aria-describedby-bridge.ts`
-provides a wrapper-scoped `BrnFieldA11yService` replacement (registered
-via `useClass` at the `<spartan-form-field>` component level — these
+`apps/demo-spartan/src/app/wrapper/spartan-form-field.ts` provides a
+wrapper-scoped `BrnFieldA11yService` replacement via an inline
+`useFactory` at the `<spartan-form-field>` component level (these
 providers win over the host-directive provider Brain registers via
-`BrnField`). The bridge's `describedBy` signal mirrors the toolkit
-composition (hint ids + error/warning ids gated on the strategy), so
-`BrnFieldControlDescribedBy` writes the toolkit-managed ids onto the
-helm input host element through its own host binding — no DOM
-tug-of-war. Brain's original `register*` API is preserved so any other
-helm primitive that registers a description id stays compatible. This
-is a reusable pattern for any Brain + toolkit interop — the bridge
-delegates to the toolkit's `createAriaDescribedByBridge` primitive
-exposed from `@ngx-signal-forms/toolkit/headless`.
+`BrnField`). The factory delegates to the toolkit's
+`createAriaDescribedByBridge` primitive — its `describedBy` signal
+mirrors the toolkit composition (hint ids + error/warning ids gated on
+the strategy), so `BrnFieldControlDescribedBy` writes the
+toolkit-managed ids onto the helm input host element through its own
+host binding — no DOM tug-of-war. Brain's original `register*` API is
+preserved so any other helm primitive that registers a description id
+stays compatible. This is a reusable pattern for any Brain + toolkit
+interop — the bridge primitive is exposed from
+`@ngx-signal-forms/toolkit/headless`.
 
 `aria-invalid` and `aria-required` stay owned by the toolkit's
 auto-aria — Brain does not write either of those, so no bridge is
