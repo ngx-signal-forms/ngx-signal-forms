@@ -173,8 +173,16 @@ export class NgxSpartanFormField<TValue = unknown> {
    * inside `BrnField` provides labelable id wiring; the toolkit's
    * `aria-describedby` chain still flows through the field-name signal,
    * but `brnLabel`'s `for=` keeps Spartan's labelable contract happy.
+   *
+   * `descendants: true` so consumers can wrap the label in layout chrome
+   * (a `<div class="flex flex-col">` etc.) without breaking tier-2
+   * field-name resolution. DOM-order means the topmost label wins, which
+   * matches the intuitive "the first projected label is the one I mean"
+   * contract every other content query in this wrapper uses.
    */
-  protected readonly projectedLabels = contentChildren(BrnLabel);
+  protected readonly projectedLabels = contentChildren(BrnLabel, {
+    descendants: true,
+  });
 
   /**
    * Bound-control discovery via the toolkit's semantics directive. Every
@@ -222,7 +230,8 @@ export class NgxSpartanFormField<TValue = unknown> {
     explicit: this.fieldName,
     labelFor: () => {
       const label = this.projectedLabels()[0];
-      return label?.for() ?? null;
+      if (label === undefined) return null;
+      return label.for() ?? null;
     },
     boundControl: () => this.#boundControlElement(),
     wrapperName: 'spartan-form-field',

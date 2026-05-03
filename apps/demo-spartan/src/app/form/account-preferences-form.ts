@@ -119,9 +119,13 @@ const accountSchema = schema<AccountPreferences>((path) => {
       <!--
         Select. The hlm-select element hosts BrnSelect (the actual form
         control), so [formField] binds there. The native focusable surface
-        lives on the hlm-select-trigger button.
+        lives on the hlm-select-trigger button — so the visible <label
+        for="plan-trigger"> targets it, while [fieldName]="plan" pins the
+        wrapper's id namespace explicitly (rather than relying on tier-3
+        falling through to the hlm-select host id, which is invisible to
+        the label and easy to forget when refactoring).
       -->
-      <spartan-form-field [ngxSpartanFormField]="form.plan">
+      <spartan-form-field [ngxSpartanFormField]="form.plan" fieldName="plan">
         <label hlmLabel for="plan-trigger">Plan</label>
         <hlm-select
           id="plan"
@@ -143,7 +147,6 @@ const accountSchema = schema<AccountPreferences>((path) => {
       <spartan-form-field [ngxSpartanFormField]="form.newsletter">
         <div class="flex items-start gap-3">
           <hlm-checkbox
-            id="newsletter"
             ngxSignalFormControl="checkbox"
             inputId="newsletter"
             [formField]="form.newsletter"
