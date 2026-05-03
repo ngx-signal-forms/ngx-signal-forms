@@ -14,6 +14,32 @@ A wrapper that satisfies the four contracts below gets:
 - swappable error renderers without forking the wrapper, plus optional hint
   renderer symmetry for wrappers that render hints through an outlet
 
+## Runnable references
+
+Two reference wrappers in the repo follow this guide end-to-end. Each
+demonstrates a different "ARIA ownership" path, so use whichever matches
+your design system's posture:
+
+- [`apps/demo-material`](../apps/demo-material/README.md) — wraps Angular
+  Material's `<mat-form-field>`. Material **owns** `aria-describedby` and
+  the toolkit's auto-ARIA is suppressed via `ariaMode="manual"` per-control
+  directives; the wrapper composes only `createAriaInvalidSignal` /
+  `createAriaRequiredSignal` and lets Material aggregate hint and error
+  IDs through its own slot mechanism.
+- [`apps/demo-spartan`](../apps/demo-spartan/README.md) — wraps Spartan's
+  `BrnField` host directive. Spartan's `BrnFieldControlDescribedBy` host
+  binding owns `aria-describedby` writes, but the wrapper-scoped
+  `BrnFieldA11yService` replacement (built via the toolkit's
+  `createAriaDescribedByBridge`) feeds the toolkit's id composition into
+  Brain — so the toolkit owns id resolution while Brain owns the DOM
+  write.
+
+Both mirror the surface of future first-party `@ngx-signal-forms/material`
+and `@ngx-signal-forms/spartan` packages per
+[ADR-0002 §8](decisions/0002-ngx-mat-forms-package-shape.md). Read this
+guide first for the contracts; consult the demos when picking an ARIA
+ownership posture for your wrapper.
+
 ## The four contracts
 
 A wrapper component must satisfy these four DI seams. The first two are

@@ -1,17 +1,107 @@
-# demo-spartan
+# `apps/demo-spartan` — Reference wrapper for Spartan Components
 
-Reference wrapper integrating the **ngx-signal-forms toolkit** on top of
-**Spartan Components** (`@spartan-ng/brain`). This is the canonical "host
-directive" example for the toolkit's renderer-token seam — Spartan's
-directive-first composition model maps directly onto how the toolkit
-exposes its own seams (`NgxSignalFormControlSemanticsDirective`,
+A runnable end-to-end example showing how to integrate
+[`@ngx-signal-forms/toolkit`](../../packages/toolkit/README.md) on top of
+**Spartan Components** (`@spartan-ng/brain` + `@spartan-ng/helm`). This is
+the canonical "host directive" example for the toolkit's renderer-token
+seam — Spartan's directive-first composition model maps directly onto how
+the toolkit exposes its own seams (`NgxSignalFormControlSemanticsDirective`,
 `NgxSignalFormAutoAria`).
 
-- **Spartan version pinned:** `@spartan-ng/brain@0.0.1-alpha.682`
-- **Toolkit version:** consumed in-tree via the workspace tsconfig path
-  alias (no `@spartan-ng/*` reaches `packages/toolkit/package.json`).
+The four contracts from
+[`docs/CUSTOM_WRAPPERS.md`](../../docs/CUSTOM_WRAPPERS.md) are satisfied
+here; per
+[ADR-0002 §8](../../docs/decisions/0002-ngx-mat-forms-package-shape.md)
+the public surface mirrors the future `@ngx-signal-forms/spartan` package
+so a graduation will be a single import-path swap.
 
-## What this shows
+## Why use this on Spartan?
+
+Spartan's `helm` inputs already declare `BrnFieldControlDescribedBy` as a
+host directive that owns `aria-describedby` on the control's host element,
+and `BrnField` already owns `data-invalid` / `data-touched` for styling.
+**Spartan-only apps that already use Reactive Forms (`NgControl`-based)
+can keep using plain Spartan + helm form wiring** — Brain's
+`BrnFieldA11yService` chain already does the right thing there.
+
+This reference wrapper earns its keep when **a Spartan app adopts Angular
+Signal Forms (`[formField]`)** and needs Brain's a11y service to consume
+the toolkit's id composition instead of its own `register*` calls:
+
+| Toolkit feature                                                                           | Plain Spartan + Reactive Forms | This wrapper                                    |
+| ----------------------------------------------------------------------------------------- | ------------------------------ | ----------------------------------------------- |
+| Angular Signal Forms (`[formField]`) instead of `NgControl`                               | ✗                              | ✅                                              |
+| Unified `errorStrategy` (`on-touch` / `on-submit` / `immediate`) across non-Spartan forms | ✗                              | ✅                                              |
+| First-class warnings (`warn:*`, non-blocking, role="status")                              | ✗                              | ✅ rendered through the same `hlm-error` outlet |
+| Centralised label / error-message DI (`provideFieldLabels`, `provideErrorMessages`)       | ✗                              | ✅                                              |
+| `submittedStatus` state machine (post-submit UI, "submitting…" guards)                    | ✗                              | ✅                                              |
+| Brain `BrnField` `data-invalid` / `data-touched` styling tokens                           | ✅                             | ✅ (Brain remains source of truth)              |
+| Brain `aria-describedby` ownership on helm controls                                       | ✅                             | ✅ (bridge feeds the toolkit composition in)    |
+
+If none of the rows on the right line up with your app, **prefer plain
+Spartan + Reactive Forms**. The wrapper does not change Spartan's styling
+or its DOM contract; it adds Signal Forms + strategy + warnings +
+centralised DI on top.
+
+## What it looks like
+
+The consumer template uses the aliased `[ngxSpartanFormField]` input
+(`[formField]` on the wrapper would collide with Angular Signal Forms'
+own `FormField` directive — see
+[CUSTOM_WRAPPERS.md → Common pitfalls](../../docs/CUSTOM_WRAPPERS.md#common-pitfalls)):
+
+```html
+<form [formRoot]="form" ngxSignalForm>
+  <spartan-form-field [ngxSpartanFormField]="form.displayName">
+    <label hlmLabel for="display-name">Display name</label>
+    <input
+      hlmInput
+      id="display-name"
+      [formField]="form.displayName"
+      ngxSignalFormControl="input-like"
+    />
+    <ngx-form-field-hint
+      >Public name shown on your profile.</ngx-form-field-hint
+    >
+  </spartan-form-field>
+</form>
+```
+
+```ts
+import { NgxSpartanFormBundle } from './wrapper/spartan-form-field';
+
+@Component({
+  imports: [
+    NgxSpartanFormBundle, // wrapper + semantics directive
+    NgxSignalFormToolkit, // ngxSignalForm + auto-ARIA
+    NgxFormFieldHint, // hint element
+    HlmInput,
+    HlmLabel, // helm directives
+  ],
+  // ...
+})
+export class MyForm {
+  /* ... */
+}
+```
+
+`NgxSpartanFormBundle` is the import bundle for the wrapper itself plus
+`NgxSignalFormControlSemanticsDirective`. The error renderer
+(`NgxSpartanFormFieldError`) is mounted dynamically via
+`*ngComponentOutlet` and resolved through `NGX_FORM_FIELD_ERROR_RENDERER`,
+so it is intentionally not in the bundle — see
+[Customising the error renderer](#customising-the-error-renderer) below.
+
+## What's wired
+
+```text
+src/app/
+  form/                                form + validations + smoke spec
+  wrapper/
+    spartan-form-field.ts              the wrapper component (BrnField host directive)
+    spartan-form-field-error.ts        default error renderer (role="alert" + role="status")
+    spartan-aria-describedby-bridge.ts BrnFieldA11yService replacement
+```
 
 - A custom wrapper component (`spartan-form-field`) that **composes**
   Spartan's `BrnField` host directive instead of re-skinning Spartan's
@@ -43,6 +133,36 @@ exposes its own seams (`NgxSignalFormControlSemanticsDirective`,
 - Smoke spec asserting `aria-invalid='true'` and `aria-describedby`
   pointing at the rendered error element id.
 - A single Playwright spec exercising fill → blur → observe-error.
+
+## Customising the error renderer
+
+`NgxSpartanFormFieldError` is the default; consumers swap it via the
+toolkit's standard `provideFormFieldErrorRenderer` family — same pattern
+as the canonical wrapper, no Spartan-specific helper needed:
+
+```ts
+// Per app (environment scope)
+bootstrapApplication(App, {
+  providers: [
+    provideFormFieldErrorRenderer({ component: MyBrandedSpartanError }),
+  ],
+});
+
+// Per component (component scope)
+@Component({
+  providers: [
+    provideFormFieldErrorRendererForComponent({
+      component: MyBrandedSpartanError,
+    }),
+  ],
+  // ...
+})
+export class CheckoutForm {}
+```
+
+A custom renderer receives the toolkit's standard renderer-input contract
+(`{ formField, strategy, submittedStatus }`). See
+[CUSTOM_WRAPPERS.md → The renderer interface](../../docs/CUSTOM_WRAPPERS.md#the-renderer-interface).
 
 ## Spartan-specific gotchas
 
@@ -88,30 +208,13 @@ composition (hint ids + error/warning ids gated on the strategy), so
 helm input host element through its own host binding — no DOM
 tug-of-war. Brain's original `register*` API is preserved so any other
 helm primitive that registers a description id stays compatible. This
-is a reusable pattern for any Brain + toolkit interop.
+is a reusable pattern for any Brain + toolkit interop — the bridge
+delegates to the toolkit's `createAriaDescribedByBridge` primitive
+exposed from `@ngx-signal-forms/toolkit/headless`.
 
 `aria-invalid` and `aria-required` stay owned by the toolkit's
 auto-aria — Brain does not write either of those, so no bridge is
 needed there.
-
-### Tailwind / CSS-variable interplay
-
-Spartan's `helm` styled components are not distributed as a runtime npm
-package — they ship as a `@spartan-ng/cli` generator that copies source
-into the consumer's tree. This demo did exactly that: `libs/ui` was
-scaffolded via the workspace-root `components.json` config and exposes
-`@spartan-ng/helm/*` secondary entry points. The Spartan version is
-pinned via the `spartan:` pnpm catalog in `pnpm-workspace.yaml`.
-
-`apps/demo-spartan/src/styles.css` bootstraps Tailwind v4
-(`@import 'tailwindcss'` + `tw-animate-css`) and defines the design
-tokens helm uses (`--background`, `--foreground`, `--destructive`,
-`--ring`, `--radius`, etc.) in `oklch`. Both light and dark palettes
-ship; theme flipping uses the `.dark` variant.
-
-The wrapper's `data-spartan-form-field` attribute is the join point
-between Spartan's `helm` selectors and the toolkit's chrome — bespoke
-styling can target it without forking the wrapper.
 
 ## What's not shown
 
@@ -160,10 +263,44 @@ single Playwright spec
 re-runs the fill → blur → observe-error path through a Vite-compiled
 build.
 
+## Demo-internal notes
+
+### Tailwind / CSS-variable interplay
+
+Spartan's `helm` styled components are not distributed as a runtime npm
+package — they ship as a `@spartan-ng/cli` generator that copies source
+into the consumer's tree. This demo did exactly that: `libs/ui` was
+scaffolded via the workspace-root `components.json` config and exposes
+`@spartan-ng/helm/*` secondary entry points. The Spartan version is
+pinned via the `spartan:` pnpm catalog in `pnpm-workspace.yaml`.
+
+`apps/demo-spartan/src/styles.css` bootstraps Tailwind v4
+(`@import 'tailwindcss'` + `tw-animate-css`) and defines the design
+tokens helm uses (`--background`, `--foreground`, `--destructive`,
+`--ring`, `--radius`, etc.) in `oklch`. Both light and dark palettes
+ship; theme flipping uses the `.dark` variant.
+
+The wrapper's `data-spartan-form-field` attribute is the join point
+between Spartan's `helm` selectors and the toolkit's chrome — bespoke
+styling can target it without forking the wrapper.
+
+## Pinned versions
+
+| Package             | Version               |
+| ------------------- | --------------------- |
+| `@spartan-ng/brain` | `0.0.1-alpha.682`     |
+| `@spartan-ng/cli`   | (catalog: `spartan:`) |
+| `@ng-icons/core`    | `>=32.0.0 <34.0.0`    |
+| `@ng-icons/lucide`  | `>=32.0.0 <34.0.0`    |
+| `tw-animate-css`    | (catalog: `spartan:`) |
+
+The toolkit itself is consumed in-tree via the workspace tsconfig path
+alias (no `@spartan-ng/*` reaches `packages/toolkit/package.json`).
+
 ## Run it
 
 ```bash
-pnpm nx serve demo-spartan          # dev server on :4220
+pnpm nx serve demo-spartan          # dev server on http://localhost:4220
 pnpm nx run demo-spartan:build      # production build
 pnpm nx run demo-spartan:test       # smoke spec (vitest)
 pnpm nx run demo-spartan-e2e:e2e    # Playwright spec
