@@ -128,8 +128,9 @@ src/app/
   `aria-describedby` IDs onto the helm input host element — see the
   "`aria-describedby` interop" section below.
 - One representative form covering text input + select + checkbox.
-- Warning rendering exercised via a `validate(..., { kind: 'warn:*' })`
-  rule on the `displayName` field.
+- Warning rendering exercised via a `validate()` callback on the
+  `displayName` field that returns a `ValidationError` with
+  `kind: 'warn:...'`.
 - Smoke spec asserting `aria-invalid='true'` and `aria-describedby`
   pointing at the rendered error element id.
 - A single Playwright spec exercising fill → blur → observe-error.
