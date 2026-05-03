@@ -98,9 +98,13 @@ export function createErrorRendererInputs<TValue>(
   options: CreateErrorRendererInputsOptions<TValue>,
 ): Signal<Record<string, unknown>> {
   const { formField, strategy, submittedStatus } = options;
-  return computed<Record<string, unknown>>(() => ({
-    formField: formField(),
-    strategy: strategy(),
-    submittedStatus: submittedStatus(),
-  }));
+  return computed<Record<string, unknown>>(() => {
+    const inputs = {
+      formField: formField(),
+      strategy: strategy(),
+      submittedStatus: submittedStatus(),
+    } satisfies NgxFormFieldErrorRendererInputs<TValue>;
+
+    return inputs;
+  });
 }
