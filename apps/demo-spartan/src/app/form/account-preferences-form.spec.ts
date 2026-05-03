@@ -1,0 +1,137 @@
+import { render, screen } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { AccountPreferencesForm } from './account-preferences-form';
+
+beforeAll(() => {
+  Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+    value: vi.fn(),
+    configurable: true,
+    writable: true,
+  });
+});
+
+/**
+ * Smoke spec for the Spartan reference wrapper.
+ *
+ * Asserts the four contracts the renderer-token seam promises:
+ *
+ *   1. invalid field renders the `hlm-error` slot through the configured
+ *      renderer (default: `NgxSpartanFormFieldError`),
+ *   2. `aria-invalid='true'` lands on the bound control (toolkit owns this),
+ *   3. `aria-describedby` on the bound control points at the rendered
+ *      error element by id,
+ *   4. warnings surface through the same slot when the warning validator
+ *      fires (the `displayName` field has a `warn:short-display-name` rule).
+ *
+ * The spec deliberately avoids any DOM probing inside Spartan internals —
+ * the seam under test is the toolkit's, not Spartan's.
+ */
+describe('Spartan reference wrapper — smoke', () => {
+  it('keeps plan options hidden until the combobox opens', async () => {
+    const user = userEvent.setup();
+
+    await render(AccountPreferencesForm);
+
+    expect(screen.queryByRole('option', { name: /starter/i })).toBeNull();
+
+    await user.click(screen.getByRole('combobox', { name: /plan/i }));
+
+    expect(screen.getByRole('option', { name: /starter/i })).toBeTruthy();
+  });
+
+  it('labels the plan combobox through the trigger button id', async () => {
+    await render(AccountPreferencesForm);
+
+    expect(screen.getByRole('combobox', { name: /plan/i })).toBeTruthy();
+  });
+
+  it('renders hlm-error and wires aria-invalid + aria-describedby on blur with empty value', async () => {
+    const user = userEvent.setup();
+
+    await render(AccountPreferencesForm);
+
+    const displayName = screen.getByLabelText(/display name/i);
+    expect(displayName).toBeInstanceOf(HTMLInputElement);
+
+    // No errors before interaction (default `on-touch` strategy).
+    expect(displayName.getAttribute('aria-invalid')).not.toBe('true');
+
+    // Focus + blur with empty value → required validator fires + on-touch shows error.
+    await user.click(displayName);
+    await user.tab();
+
+    // Toolkit's auto-aria writes aria-invalid=true on the bound control.
+    expect(displayName.getAttribute('aria-invalid')).toBe('true');
+
+    // hlm-error slot rendered the configured component, with the field-name-derived id.
+    const errorElement = await screen.findByText(/display name is required/i);
+    expect(errorElement).toBeTruthy();
+    expect(errorElement.id).toBe('display-name-error');
+
+    // aria-describedby on the bound control points at the rendered error id.
+    const describedBy = displayName.getAttribute('aria-describedby') ?? '';
+    expect(describedBy.split(/\s+/)).toContain('display-name-error');
+  });
+
+  it('renders the warning slot through the same renderer when a warn:* validator fires', async () => {
+    const user = userEvent.setup();
+
+    await render(AccountPreferencesForm);
+
+    const displayName = screen.getByLabelText(/display name/i);
+
+    // Type a value that satisfies `required` + `minLength(3)` but fires the
+    // `warn:short-display-name` rule (length 3-4).
+    await user.type(displayName, 'Ada');
+    await user.tab();
+
+    // Warning copy reaches the DOM through the same `hlm-error` outlet.
+    const warningElement = await screen.findByText(/short names are accepted/i);
+    expect(warningElement).toBeTruthy();
+    expect(warningElement.id).toBe('display-name-warning');
+
+    // Warnings are non-blocking: aria-invalid stays "false" / unset because
+    // there are no blocking errors. The toolkit chains the warning id into
+    // aria-describedby instead.
+    expect(displayName.getAttribute('aria-invalid')).not.toBe('true');
+    const describedBy = displayName.getAttribute('aria-describedby') ?? '';
+    expect(describedBy.split(/\s+/)).toContain('display-name-warning');
+  });
+
+  it("threads hint ids through Brain's BrnFieldControlDescribedBy via the wrapper-scoped bridge", async () => {
+    // Renders without any user interaction. The hint child for `display-name`
+    // has a stable, content-derived id; the wrapper-scoped `BrnFieldA11yService`
+    // factory in `spartan-form-field.ts` feeds it into the toolkit composition,
+    // and Brain's `BrnFieldControlDescribedBy` host binding writes it onto
+    // the helm input host element. Without the factory this assertion fails
+    // (Brain's default `BrnFieldA11yService` returns null because nothing
+    // registered a description through its API).
+    await render(AccountPreferencesForm);
+
+    const displayName = screen.getByLabelText(/display name/i);
+
+    const hintElement = screen.getByText(/public name shown on your profile/i);
+    expect(hintElement.id).toBeTruthy();
+
+    const describedBy = displayName.getAttribute('aria-describedby') ?? '';
+    expect(describedBy.split(/\s+/)).toContain(hintElement.id);
+  });
+
+  it('submits when only warnings remain', async () => {
+    const user = userEvent.setup();
+
+    await render(AccountPreferencesForm);
+
+    const displayName = screen.getByLabelText(/display name/i);
+    await user.type(displayName, 'Ada');
+
+    await user.click(screen.getByRole('combobox', { name: /plan/i }));
+    await user.click(screen.getByRole('option', { name: /starter/i }));
+    await user.click(screen.getByTestId('submit-button'));
+
+    const submission = await screen.findByTestId('last-submission');
+    expect(submission.textContent).toContain('"displayName": "Ada"');
+    expect(submission.textContent).toContain('"plan": "starter"');
+  });
+});

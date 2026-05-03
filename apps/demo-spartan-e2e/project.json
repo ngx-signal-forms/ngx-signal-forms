@@ -1,0 +1,30 @@
+{
+  "name": "demo-spartan-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/demo-spartan-e2e/src",
+  "implicitDependencies": ["demo-spartan"],
+  "tags": ["scope:demo", "type:app"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "oxlint {projectRoot} --type-aware"
+      }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-spartan-e2e"],
+      "options": {
+        "config": "{projectRoot}/playwright.config.ts"
+      }
+    },
+    "e2e-ci": {
+      "executor": "@nx/playwright:playwright",
+      "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-spartan-e2e"],
+      "options": {
+        "config": "{projectRoot}/playwright.config.ts"
+      }
+    }
+  }
+}

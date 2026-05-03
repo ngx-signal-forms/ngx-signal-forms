@@ -14,6 +14,32 @@ A wrapper that satisfies the four contracts below gets:
 - swappable error renderers without forking the wrapper, plus optional hint
   renderer symmetry for wrappers that render hints through an outlet
 
+## Runnable references
+
+Two reference wrappers in the repo follow this guide end-to-end. Each
+demonstrates a different "ARIA ownership" path, so use whichever matches
+your design system's posture:
+
+- [`apps/demo-material`](../apps/demo-material/README.md) — wraps Angular
+  Material's `<mat-form-field>`. Material **owns** `aria-describedby` and
+  the toolkit's auto-ARIA is suppressed via `ariaMode="manual"` per-control
+  directives; the wrapper composes only `createAriaInvalidSignal` /
+  `createAriaRequiredSignal` and lets Material aggregate hint and error
+  IDs through its own slot mechanism.
+- [`apps/demo-spartan`](../apps/demo-spartan/README.md) — wraps Spartan's
+  `BrnField` host directive. Spartan's `BrnFieldControlDescribedBy` host
+  binding owns `aria-describedby` writes, but the wrapper-scoped
+  `BrnFieldA11yService` replacement (built via the toolkit's
+  `createAriaDescribedByBridge`) feeds the toolkit's id composition into
+  Brain — so the toolkit owns id resolution while Brain owns the DOM
+  write.
+
+Both mirror the surface of future first-party `@ngx-signal-forms/material`
+and `@ngx-signal-forms/spartan` packages per
+[ADR-0002 §8](decisions/0002-ngx-mat-forms-package-shape.md). Read this
+guide first for the contracts; consult the demos when picking an ARIA
+ownership posture for your wrapper.
+
 ## The four contracts
 
 A wrapper component must satisfy these four DI seams. The first two are
@@ -522,3 +548,73 @@ generic `inputs` signature).
       wrapper's hint slot uses an outlet rather than projected
       `<ng-content>`. (The first-party wrapper currently projects content
       directly; the token is reserved for future parity.)
+
+## Common pitfalls
+
+### Alias your `formField` input to avoid double-binding
+
+If your wrapper accepts the bound field as a component or directive
+input named `formField`, the consumer template binding
+`<my-wrapper [formField]="form.x">` will **also** match Angular Signal
+Forms' `FormField` directive (selector `[formField]`) when the consumer
+imports it into the same template. Both directives bind, both register
+themselves as `FORM_FIELD` / `NgControl` providers at the wrapper's
+host element, and you have a soundness landmine — even if observable
+behaviour stays correct today.
+
+The fix is to alias your input and put the alias in the selector so the
+consumer never writes `[formField]` on the wrapper element:
+
+```ts
+@Component({
+  selector: 'my-wrapper[ngxMyWrapperField]', // alias in the selector
+  // ...
+})
+export class MyWrapper<TValue = unknown> {
+  readonly formField = input.required<FieldTree<TValue>>({
+    alias: 'ngxMyWrapperField', // alias on the input
+  });
+}
+```
+
+Consumer template:
+
+```html
+<my-wrapper [ngxMyWrapperField]="form.x">
+  <input [formField]="form.x" id="x" />
+</my-wrapper>
+```
+
+`FormField` no longer matches the wrapper element; only the inner
+`<input>` carries the toolkit's `FormField` directive, and the wrapper
+gets its bound field through the aliased input. The first-party
+`NgxFormFieldWrapper` accepts `[formField]` directly because it lives
+in the same package as `FormField` and accepts the double-bind risk for
+backward compatibility — your wrapper does not have that constraint and
+should alias.
+
+### Use the toolkit's wrapper helpers instead of reinventing them
+
+The `@ngx-signal-forms/toolkit/headless` entry point exposes four
+helpers for the boilerplate every form-field wrapper otherwise
+reimplements:
+
+- `createFieldNameResolver({ explicit, labelFor?, boundControl, wrapperName })` —
+  the priority cascade `explicit → labelFor → boundControl.id → null +
+dev warning`.
+- `toHintDescriptors(hints)` — maps `Signal<readonly NgxFormFieldHint[]>`
+  to the registry wire format.
+- `createErrorRendererInputs({ formField, strategy, submittedStatus })` —
+  builds the `*ngComponentOutlet` `inputs:` map with a typed
+  `NgxFormFieldErrorRendererInputs<TValue>` payload.
+- `createAriaDescribedByBridge({ toolkit })` — for design systems that
+  own `aria-describedby` via an injectable a11y service (Spartan brain's
+  `BrnFieldA11yService`, or any equivalent), exposes a structurally
+  matching `AriaDescribedByBridge` whose `describedBy` signal merges
+  the toolkit composition with `register*` IDs. Provide it via
+  `useFactory`/`useClass` at the wrapper's component-level injector.
+
+These keep every reference wrapper on a single canonical primitive so a
+behaviour change in one place takes effect everywhere — and they give
+new wrappers a consistent look so consumers reading any reference
+recognise the shape.

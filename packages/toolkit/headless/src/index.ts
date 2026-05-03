@@ -52,23 +52,36 @@ export {
   type ResolvedNotificationMessage,
 } from './lib/notification';
 
-// ARIA primitives — sourced from `/core` to keep the directive shell
-// (`NgxSignalFormAutoAria`) and the headless re-export in lockstep without
-// duplicating implementation or forming a cycle through this barrel.
+// ARIA primitives + wrapper helpers — sourced from `/core` to keep the
+// directive shell (`NgxSignalFormAutoAria`) and the headless re-export in
+// lockstep without duplicating implementation or forming a cycle through
+// this barrel.
 export {
+  createAriaDescribedByBridge,
   createAriaDescribedBySignal,
   createAriaInvalidSignal,
   createAriaRequiredSignal,
+  createErrorRendererInputs,
+  createFieldNameResolver,
   createHintIdsSignal,
+  toHintDescriptors,
+  type AriaDescribedByBridge,
   type AriaDescribedByFieldNameReader,
   type AriaDescribedByPreservedIdsReader,
   type AriaRequiredFieldState,
+  type BoundControlElementReader,
+  type CreateAriaDescribedByBridgeOptions,
   type CreateAriaDescribedBySignalOptions,
+  type CreateErrorRendererInputsOptions,
+  type CreateFieldNameResolverOptions,
   type CreateHintIdsSignalOptions,
   type HintIdsFieldNameReader,
   type HintIdsIdentityLike,
   type HintIdsRegistryLike,
   type HintIdsSignal,
+  type HintLike,
+  type LabelForReader,
+  type NgxFormFieldErrorRendererInputs,
 } from '@ngx-signal-forms/toolkit/core';
 
 // Utility functions

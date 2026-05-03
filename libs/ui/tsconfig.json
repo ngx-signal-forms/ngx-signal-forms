@@ -1,0 +1,26 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "isolatedModules": true,
+    "emitDecoratorMetadata": false,
+    "module": "preserve",
+    // Spartan helm's `utils/hlm.ts` uses `Array.prototype.toSorted` (ES2023).
+    // Bumping lib here keeps the workspace target on ES2022 while letting
+    // helm compile the upstream code unchanged.
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "target": "ES2023"
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
+}
