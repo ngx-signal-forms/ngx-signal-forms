@@ -10,7 +10,6 @@ import {
   inject,
   input,
   isDevMode,
-  type Signal,
   signal,
   type Type,
 } from '@angular/core';
@@ -41,9 +40,9 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import {
   NGX_SIGNAL_FORM_HINT_REGISTRY,
-  type NgxSignalFormHintDescriptor,
   NgxFieldIdentity,
   isElementCssVisible,
+  toHintDescriptors,
 } from '@ngx-signal-forms/toolkit/core';
 import {
   NgxFormFieldError,
@@ -775,7 +774,9 @@ export class NgxFormFieldWrapper<TValue = unknown> {
 
   /**
    * Reactive view of the projected hints, shaped for the
-   * `NGX_SIGNAL_FORM_HINT_REGISTRY` contract in the core package.
+   * `NGX_SIGNAL_FORM_HINT_REGISTRY` contract in the core package. Built via
+   * the toolkit's {@link toHintDescriptors} helper so the registry-wire
+   * shape stays in lockstep with every other wrapper that ships hints.
    *
    * Exposed so this component can provide itself into the hint registry via
    * a decorator-level `useFactory` (TypeScript access modifiers would block
@@ -785,13 +786,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    *
    * @internal
    */
-  readonly hintDescriptors: Signal<readonly NgxSignalFormHintDescriptor[]> =
-    computed(() =>
-      this.hintChildren().map((hint) => ({
-        id: hint.resolvedId(),
-        fieldName: hint.resolvedFieldName(),
-      })),
-    );
+  readonly hintDescriptors = toHintDescriptors(this.hintChildren);
 
   /**
    * Effective error display strategy combining component input and form context defaults.
