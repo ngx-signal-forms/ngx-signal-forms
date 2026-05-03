@@ -63,8 +63,9 @@ export interface CreateFieldNameResolverOptions {
  *   3. Bound control's `id` attribute.
  *   4. `null` (auto-ARIA gracefully no-ops; emits a one-shot dev warning).
  *
- * The dev-mode warning latches on first miss so it never spams. Once a
- * name resolves the latch is closed for the lifetime of the resolver.
+ * The dev-mode warning latches on the first miss and stays silent for
+ * every subsequent recomputation (hit or miss) for the resolver's
+ * lifetime, so it never spams.
  *
  * @example Spartan wrapper (uses tier-3 only, skips label `for=` tier)
  * ```ts
