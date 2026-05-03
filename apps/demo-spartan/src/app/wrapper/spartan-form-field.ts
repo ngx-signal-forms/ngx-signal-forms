@@ -8,8 +8,6 @@ import {
   inject,
   input,
   isDevMode,
-  signal,
-  type Signal,
   type Type,
 } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
@@ -19,22 +17,22 @@ import {
   createErrorVisibility,
   createShowErrorsComputed,
   injectFormContext,
-  isBlockingError,
-  isWarningError,
   NGX_FORM_FIELD_ERROR_RENDERER,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
   NgxSignalFormControlSemanticsDirective,
   resolveErrorDisplayStrategy,
-  type NgxSignalFormHintDescriptor,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import {
   createAriaDescribedBySignal,
   createAriaInvalidSignal,
   createAriaRequiredSignal,
+  createErrorRendererInputs,
+  createFieldNameResolver,
   createHintIdsSignal,
+  toHintDescriptors,
 } from '@ngx-signal-forms/toolkit/headless';
 import { NgxSpartanAriaDescribedByBridge } from './spartan-aria-describedby-bridge';
 import { NgxSpartanFormFieldError } from './spartan-form-field-error';
@@ -76,7 +74,14 @@ import { NgxSpartanFormFieldError } from './spartan-form-field-error';
  * fallback without `afterEveryRender` or imperative DOM probing.
  */
 @Component({
-  selector: 'spartan-form-field',
+  // Aliased selector: matching `spartan-form-field[ngxSpartanFormField]`
+  // (rather than bare `spartan-form-field`) prevents Angular's `FormField`
+  // directive from `@angular/forms/signals` (selector `[formField]`) from
+  // double-binding to the wrapper element when consumers write
+  // `<spartan-form-field [formField]="form.x">`. The wrapper accepts the
+  // field via the aliased input (`[ngxSpartanFormField]`) instead, so only
+  // the inner `<input [formField]>` gets the toolkit's `FormField` directive.
+  selector: 'spartan-form-field[ngxSpartanFormField]',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgComponentOutlet, NgxFormFieldHint],
   hostDirectives: [
@@ -142,12 +147,18 @@ import { NgxSpartanFormFieldError } from './spartan-form-field-error';
 })
 export class NgxSpartanFormField<TValue = unknown> {
   /**
-   * Bound `FieldTree`. Required because `NgxSpartanFormFieldError` reads
-   * errors directly off the tree to render the `hlm-error` slot — mirroring
-   * how `NgxFormFieldWrapper` binds the same input to its configured
-   * renderer.
+   * Bound `FieldTree`. Aliased to `ngxSpartanFormField` (matching the
+   * component selector) so the consumer-template binding
+   * `<spartan-form-field [ngxSpartanFormField]="form.x">` does not collide
+   * with Angular Signal Forms' `FormField` directive (selector
+   * `[formField]`). Required because `NgxSpartanFormFieldError` reads
+   * errors directly off the tree to render the `hlm-error` slot —
+   * mirroring how `NgxFormFieldWrapper` binds the same input to its
+   * configured renderer.
    */
-  readonly formField = input.required<FieldTree<TValue>>();
+  readonly formField = input.required<FieldTree<TValue>>({
+    alias: 'ngxSpartanFormField',
+  });
 
   /**
    * Explicit field name used to generate stable `aria-describedby` ids.
@@ -181,11 +192,6 @@ export class NgxSpartanFormField<TValue = unknown> {
     () => this.boundSemantics()[0]?.elementRef.nativeElement ?? null,
   );
 
-  readonly #boundControlId = computed<string | null>(() => {
-    const id = this.#boundControlElement()?.id;
-    return id && id.length > 0 ? id : null;
-  });
-
   /**
    * Hint children projected through `<ng-content select="ngx-form-field-hint">`.
    * Exposed publicly because Angular forbids `private`/`#` fields from being
@@ -198,39 +204,28 @@ export class NgxSpartanFormField<TValue = unknown> {
   /**
    * Hint descriptors in the public wire format consumed by
    * `NGX_SIGNAL_FORM_HINT_REGISTRY`. Auto-ARIA reads these IDs and threads
-   * them into `aria-describedby` on the bound control.
+   * them into `aria-describedby` on the bound control. Built via the
+   * toolkit's {@link toHintDescriptors} helper so the registry-wire
+   * shape stays in lockstep with the canonical wrapper.
    */
-  readonly hintDescriptors: Signal<readonly NgxSignalFormHintDescriptor[]> =
-    computed(() =>
-      this.hintChildren().map((hint) => ({
-        id: hint.resolvedId(),
-        fieldName: hint.resolvedFieldName(),
-      })),
-    );
+  readonly hintDescriptors = toHintDescriptors(this.hintChildren);
 
   /**
-   * Resolved field name. Priority order matches `NgxFormFieldWrapper`:
-   *
-   *   1. explicit `fieldName` input
-   *   2. first projected `brnLabel`'s `for=` attribute
-   *   3. bound control's `id` (read from `NgxSignalFormControlSemanticsDirective.elementRef`)
-   *   4. `null` (auto-ARIA gracefully no-ops)
+   * Resolved field name. Built via the toolkit's
+   * {@link createFieldNameResolver} so the priority cascade
+   * (explicit → label `for=` → bound-control `id` → `null` + dev warning)
+   * stays in lockstep with the canonical wrapper. Mirrors what
+   * `NgxFormFieldWrapper` does — keeping every wrapper on the same
+   * resolver primitive prevents drift if the cascade evolves.
    */
-  readonly resolvedFieldName = computed<string | null>(() => {
-    const explicit = this.fieldName()?.trim();
-    if (explicit !== undefined && explicit.length > 0) {
-      return explicit;
-    }
-
-    const labels = this.projectedLabels();
-    for (const label of labels) {
-      const target = label.for();
-      if (target !== undefined && target.trim().length > 0) {
-        return target.trim();
-      }
-    }
-
-    return this.#boundControlId();
+  readonly resolvedFieldName = createFieldNameResolver({
+    explicit: this.fieldName,
+    labelFor: () => {
+      const label = this.projectedLabels()[0];
+      return label?.for() ?? null;
+    },
+    boundControl: () => this.#boundControlElement(),
+    wrapperName: 'spartan-form-field',
   });
 
   /**
@@ -272,17 +267,17 @@ export class NgxSpartanFormField<TValue = unknown> {
   );
 
   /**
-   * Inputs handed to `*ngComponentOutlet`. Matches the contract documented
-   * in `docs/CUSTOM_WRAPPERS.md`: `{ formField, strategy, submittedStatus }`.
-   * Renderers that don't declare these inputs see them dropped silently by
-   * `*ngComponentOutlet` — but renderers that do declare them get the same
-   * visibility timing the wrapper uses for its own gating.
+   * Inputs handed to `*ngComponentOutlet`. Built via the toolkit's
+   * {@link createErrorRendererInputs} so the renderer contract
+   * (`{ formField, strategy, submittedStatus }`) stays in lockstep with
+   * the canonical wrapper and any `NgxFormFieldErrorRendererInputs`-typed
+   * renderer that consumers swap in.
    */
-  protected readonly errorInputs = computed<Record<string, unknown>>(() => ({
-    formField: this.formField(),
-    strategy: this.effectiveStrategy(),
-    submittedStatus: this.submittedStatus(),
-  }));
+  protected readonly errorInputs = createErrorRendererInputs({
+    formField: this.formField,
+    strategy: this.effectiveStrategy,
+    submittedStatus: this.submittedStatus,
+  });
 
   /**
    * Bridges the `InputSignal<FieldTree>` to the underlying `FieldState`.
@@ -348,22 +343,24 @@ export class NgxSpartanFormField<TValue = unknown> {
   //
   // A bare helm input (no `ngxSignalFormControl`) would mean the wrapper's
   // contentChildren query stays empty and tier-3 field-name resolution
-  // never fires. Mirrors the Material wrapper's diagnostic pattern from
-  // ADR-0002 §6 — one console.error per wrapper instance, never spammed.
+  // never fires. Mirrors the canonical `NgxFormFieldWrapper` diagnostic
+  // pattern: a plain class field as the latch (not a signal) so the
+  // effect doesn't read its own write and re-run. One `console.error` per
+  // wrapper instance, never spammed.
 
-  readonly #hasWarned = signal(false);
+  #hasWarned = false;
 
   constructor() {
     if (isDevMode()) {
       effect(() => {
-        if (this.#hasWarned()) {
+        if (this.#hasWarned) {
           return;
         }
         if (this.boundSemantics().length > 0) {
           // A control was projected — the query found it; future empty
           // states (e.g. while the consumer toggles control kinds with
           // @if) are intentional, so suppress further warnings.
-          this.#hasWarned.set(true);
+          this.#hasWarned = true;
           return;
         }
         const fieldName = this.resolvedFieldName() ?? '<unknown>';
@@ -372,14 +369,19 @@ export class NgxSpartanFormField<TValue = unknown> {
             `Add \`ngxSignalFormControl="input-like"\` (or \`"checkbox"\`) to the helm control so the toolkit's auto-ARIA, ` +
             `tier-3 field-name resolution, and the NgxSpartanAriaDescribedByBridge can wire up.`,
         );
-        this.#hasWarned.set(true);
+        this.#hasWarned = true;
       });
     }
   }
 }
 
 /**
- * Bundle of every directive needed to use the Spartan reference wrapper.
+ * Bundle of every directive a consumer template needs to use the Spartan
+ * reference wrapper. Lists only the symbols that appear in templates —
+ * `NgxSpartanFormFieldError` is mounted dynamically through
+ * `*ngComponentOutlet` (resolved via `NGX_FORM_FIELD_ERROR_RENDERER`), so
+ * it's intentionally NOT in the bundle. Consumers extending the renderer
+ * import it directly from `./spartan-form-field-error`.
  *
  * The naming (`NgxSpartanFormBundle`) mirrors the Material reference's
  * `NgxMatFormBundle` so the demo's API matches the future
@@ -388,6 +390,5 @@ export class NgxSpartanFormField<TValue = unknown> {
  */
 export const NgxSpartanFormBundle = [
   NgxSpartanFormField,
-  NgxSpartanFormFieldError,
   NgxSignalFormControlSemanticsDirective,
 ] as const;

@@ -96,8 +96,12 @@ const accountSchema = schema<AccountPreferences>((path) => {
       (submit)="$event.preventDefault(); handleSubmit()"
       novalidate
     >
-      <!-- Text input -->
-      <spartan-form-field [formField]="form.displayName">
+      <!--
+        Text input. The wrapper's selector requires [ngxSpartanFormField]
+        (rather than [formField]) so Angular's FormField directive does
+        not double-bind to <spartan-form-field>'s host element.
+      -->
+      <spartan-form-field [ngxSpartanFormField]="form.displayName">
         <label hlmLabel for="display-name">Display name</label>
         <input
           hlmInput
@@ -117,7 +121,7 @@ const accountSchema = schema<AccountPreferences>((path) => {
         control), so [formField] binds there. The native focusable surface
         lives on the hlm-select-trigger button.
       -->
-      <spartan-form-field [formField]="form.plan">
+      <spartan-form-field [ngxSpartanFormField]="form.plan">
         <label hlmLabel for="plan-trigger">Plan</label>
         <hlm-select
           id="plan"
@@ -136,7 +140,7 @@ const accountSchema = schema<AccountPreferences>((path) => {
       </spartan-form-field>
 
       <!-- Checkbox -->
-      <spartan-form-field [formField]="form.newsletter">
+      <spartan-form-field [ngxSpartanFormField]="form.newsletter">
         <div class="flex items-start gap-3">
           <hlm-checkbox
             id="newsletter"

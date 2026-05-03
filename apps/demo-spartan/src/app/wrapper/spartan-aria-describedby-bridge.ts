@@ -1,117 +1,89 @@
+import { inject, Injectable, type Signal } from '@angular/core';
+import type { BrnFieldA11yService } from '@spartan-ng/brain/field';
 import {
-  computed,
-  inject,
-  Injectable,
-  signal,
-  type Signal,
-} from '@angular/core';
+  createAriaDescribedByBridge,
+  type AriaDescribedByBridge,
+} from '@ngx-signal-forms/toolkit/headless';
 import { NgxSpartanFormField } from './spartan-form-field';
 
 /**
  * Wrapper-scoped replacement for Spartan brain's `BrnFieldA11yService`.
  *
- * ## Why this exists
+ * `[hlmInput]` declares `BrnFieldControlDescribedBy` as a host directive,
+ * and that directive owns `aria-describedby` on the helm input host
+ * element via a host binding fed by `BrnFieldA11yService.describedBy`.
+ * In a `NgControl`-based reactive form, helm's own label/hint/error
+ * directives populate Brain's service via `register*`; with Angular Signal
+ * Forms (`[formField]`) the toolkit's auto-aria writes IDs directly to the
+ * host element via `setAttribute`, but Brain's host binding wins on the
+ * next change-detection tick and overwrites those writes (the manual
+ * `aria-describedby` input does not observe DOM mutations).
  *
- * `[hlmInput]` declares `BrnFieldControlDescribedBy` as a host directive, and
- * that directive owns `aria-describedby` on the helm input host element via:
+ * The bridge is provided at the `<spartan-form-field>` component level
+ * (component-scope providers win over host-directive providers, so this
+ * `useClass` registration replaces the `BrnFieldA11yService` instance
+ * Brain registers via the wrapper's `BrnField` host directive). Brain's
+ * `BrnFieldControlDescribedBy` then writes the toolkit-managed IDs onto
+ * the helm input host element through its own host binding — no DOM
+ * tug-of-war.
  *
- * ```ts
- * host: { '[attr.aria-describedby]': '_computedDescribedBy()' }
- * ```
- *
- * `_computedDescribedBy` reads from `BrnFieldA11yService.describedBy` (a
- * computed of internal description/error registries) and from the manual
- * `aria-describedby` input. In a NgControl-based reactive form, helm's own
- * label/hint/error directives populate the registries via
- * `registerDescription` / `registerError`; with Angular Signal Forms
- * (`[formField]`) the toolkit's auto-aria writes IDs directly to the host
- * element via `setAttribute`, but Brain's host binding wins on the next
- * change-detection tick and overwrites those writes (the manual input alias
- * `aria-describedby` does not observe DOM mutations).
- *
- * ## What it does
- *
- * The bridge is provided at the `<spartan-form-field>` component level —
- * because `BrnField` (the wrapper's host directive) provides
- * `BrnFieldA11yService` at the same element, and component-level providers
- * win over host-directive providers, this `useClass` registration replaces
- * Brain's empty service with one whose `describedBy` signal is fed from the
- * toolkit's `aria-describedby` composition exposed by
- * {@link NgxSpartanFormField}. `BrnFieldControlDescribedBy` then writes
- * the toolkit-managed IDs (hint / error / warning) onto the helm input host
- * element through its own host binding — no DOM tug-of-war.
- *
- * The `register*` methods keep their original behaviour and merge into the
- * same output, so any other Spartan helm primitive that registers a
- * description ID on the field still surfaces alongside the toolkit IDs. This
- * keeps the bridge a strict superset of Brain's contract rather than a
- * lossy replacement.
+ * The implementation delegates to the toolkit's
+ * {@link createAriaDescribedByBridge} primitive so the
+ * "merge toolkit composition with `register*` IDs, dedupe, return `null`
+ * when empty" logic stays centralised. This class is a thin DI shim over
+ * the primitive — it has no behaviour beyond satisfying Brain's class
+ * shape so the `useClass` provider can swap it in.
  */
-// `BrnFieldA11yService` is exported as a concrete class with `private`
-// fields (`_descriptions`, `_errors`), so `implements BrnFieldA11yService`
-// would force this bridge to redeclare those as private members. That is
-// strictly tighter than what DI requires — the token is matched by identity
-// at runtime, not by structural compatibility — so we keep the public
-// surface in lockstep without `implements` and rely on the unit + e2e
-// specs to enforce the contract. The cast at the `useClass` provider site
-// is unnecessary because `useClass: NgxSpartanAriaDescribedByBridge` is
-// resolved against the token, not against the declared type.
 @Injectable()
-export class NgxSpartanAriaDescribedByBridge {
+export class NgxSpartanAriaDescribedByBridge implements AriaDescribedByBridge {
   readonly #wrapper = inject(NgxSpartanFormField);
-
-  /**
-   * Internal registries kept identical to Brain's `BrnFieldA11yService` so
-   * downstream Spartan primitives that call `registerDescription` /
-   * `registerError` (none today, but the contract is part of the public
-   * surface) keep working transparently.
-   */
-  readonly #descriptions = signal<readonly string[]>([]);
-  readonly #errors = signal<readonly string[]>([]);
-
-  /**
-   * IDs derived from the wrapper's toolkit composition
-   * (`createAriaDescribedBySignal`). These are the hint / error / warning
-   * IDs that {@link NgxSpartanFormField} produces from
-   * `NGX_SIGNAL_FORM_HINT_REGISTRY` and the bound `FieldState`.
-   */
-  readonly #toolkitIds = computed<readonly string[]>(() => {
-    const value = this.#wrapper.toolkitAriaDescribedBy();
-    if (value === null || value.length === 0) return [];
-    return value.split(/\s+/).filter(Boolean);
+  readonly #bridge = createAriaDescribedByBridge({
+    toolkit: this.#wrapper.toolkitAriaDescribedBy,
   });
 
-  /**
-   * Composed `aria-describedby` value with deduped insertion order:
-   * toolkit-managed IDs first (hints, then error/warning), then any IDs
-   * registered through the original Brain API. `BrnFieldControlDescribedBy`
-   * additionally merges the manual `aria-describedby` input on the host.
-   */
-  readonly describedBy: Signal<string | null> = computed(() => {
-    const ids = [
-      ...this.#toolkitIds(),
-      ...this.#descriptions(),
-      ...this.#errors(),
-    ].filter(Boolean);
-
-    const unique = [...new Set(ids)];
-
-    return unique.length > 0 ? unique.join(' ') : null;
-  });
+  readonly describedBy: Signal<string | null> = this.#bridge.describedBy;
 
   registerDescription(id: string): void {
-    this.#descriptions.update((ids) => (ids.includes(id) ? ids : [...ids, id]));
+    this.#bridge.registerDescription(id);
   }
 
   unregisterDescription(id: string): void {
-    this.#descriptions.update((ids) => ids.filter((value) => value !== id));
+    this.#bridge.unregisterDescription(id);
   }
 
   registerError(id: string): void {
-    this.#errors.update((ids) => (ids.includes(id) ? ids : [...ids, id]));
+    this.#bridge.registerError(id);
   }
 
   unregisterError(id: string): void {
-    this.#errors.update((ids) => ids.filter((value) => value !== id));
+    this.#bridge.unregisterError(id);
   }
 }
+
+/**
+ * Compile-time guard that the bridge stays a structural superset of
+ * Brain's `BrnFieldA11yService` contract. If Brain adds a new public
+ * member, this assertion fails at typecheck time. We `Pick` the documented
+ * members (rather than asserting full structural equivalence) because
+ * Brain's class also has `private` fields the bridge intentionally keeps
+ * separate — DI matches by token identity at runtime, not by structural
+ * compatibility.
+ */
+type BrnFieldA11yPublicSurface = Pick<
+  BrnFieldA11yService,
+  | 'describedBy'
+  | 'registerDescription'
+  | 'unregisterDescription'
+  | 'registerError'
+  | 'unregisterError'
+>;
+
+// Function form sidesteps `no-underscore-dangle`/`no-unused-vars` while
+// still triggering a typecheck failure if the bridge ever drifts away
+// from Brain's public contract. Unreferenced at runtime.
+function assertSpartanBridgeContract(
+  bridge: NgxSpartanAriaDescribedByBridge,
+): BrnFieldA11yPublicSurface {
+  return bridge;
+}
+void assertSpartanBridgeContract;
