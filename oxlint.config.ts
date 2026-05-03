@@ -247,7 +247,11 @@ export default defineConfig({
       },
     },
     {
-      files: ['apps/demo/src/**/*.ts', 'packages/toolkit/**/*.ts'],
+      files: [
+        'apps/demo/src/**/*.ts',
+        'apps/demo-material/src/**/*.ts',
+        'packages/toolkit/**/*.ts',
+      ],
       jsPlugins: ['@angular-eslint/eslint-plugin'],
       rules: {
         '@angular-eslint/contextual-lifecycle': 'error',
@@ -265,7 +269,7 @@ export default defineConfig({
       },
     },
     {
-      files: ['apps/demo/src/**/*.ts'],
+      files: ['apps/demo/src/**/*.ts', 'apps/demo-material/src/**/*.ts'],
       jsPlugins: ['@angular-eslint/eslint-plugin'],
       rules: {
         '@angular-eslint/directive-selector': [
@@ -309,7 +313,7 @@ export default defineConfig({
       },
     },
     {
-      files: ['apps/demo/src/**/*.ts'],
+      files: ['apps/demo/src/**/*.ts', 'apps/demo-material/src/**/*.ts'],
       rules: {
         'no-restricted-imports': [
           'error',

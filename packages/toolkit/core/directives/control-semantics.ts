@@ -1,4 +1,4 @@
-import { computed, Directive, inject, input } from '@angular/core';
+import { computed, Directive, ElementRef, inject, input } from '@angular/core';
 import {
   NGX_SIGNAL_FORM_ARIA_MODE,
   NGX_SIGNAL_FORM_CONTROL_PRESETS,
@@ -95,6 +95,18 @@ type NgxSignalFormControlDirectiveValue =
 })
 export class NgxSignalFormControlSemanticsDirective {
   readonly #presets = inject(NGX_SIGNAL_FORM_CONTROL_PRESETS);
+
+  /**
+   * Host element this directive is applied to.
+   *
+   * Exposed so parent wrappers can locate the bound control via
+   * `contentChildren(NgxSignalFormControlSemanticsDirective)` and read the
+   * host's tag, `id`, or current attributes (e.g. Material's
+   * `aria-describedby` for the `preservedIds` reader of
+   * `createAriaDescribedBySignal`). This is the canonical signal-native
+   * alternative to imperative DOM probing from a render hook.
+   */
+  readonly elementRef = inject(ElementRef<HTMLElement>);
 
   readonly semanticsInput = input<NgxSignalFormControlDirectiveValue>(
     undefined,
