@@ -1,0 +1,57 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": [],
+    "paths": {
+      "@ngx-signal-forms/toolkit": [
+        "../../packages/toolkit/index.ts",
+        "../../dist/packages/toolkit"
+      ],
+      "@ngx-signal-forms/toolkit/core": [
+        "../../packages/toolkit/core/index.ts"
+      ],
+      "@ngx-signal-forms/toolkit/assistive": [
+        "../../packages/toolkit/assistive/index.ts",
+        "../../dist/packages/toolkit/assistive"
+      ],
+      "@ngx-signal-forms/toolkit/form-field": [
+        "../../packages/toolkit/form-field/index.ts",
+        "../../dist/packages/toolkit/form-field"
+      ],
+      "@ngx-signal-forms/toolkit/headless": [
+        "../../packages/toolkit/headless/src/index.ts",
+        "../../dist/packages/toolkit/headless"
+      ],
+      "@spartan-ng/helm": ["../../libs/ui/src/index.ts"],
+      "@spartan-ng/helm/input": ["../../libs/ui/input/src/index.ts"],
+      "@spartan-ng/helm/utils": ["../../libs/ui/utils/src/index.ts"],
+      "@spartan-ng/helm/label": ["../../libs/ui/label/src/index.ts"],
+      "@spartan-ng/helm/select": ["../../libs/ui/select/src/index.ts"],
+      "@spartan-ng/helm/icon": ["../../libs/ui/icon/src/index.ts"],
+      "@spartan-ng/helm/checkbox": ["../../libs/ui/checkbox/src/index.ts"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "../../packages/toolkit/index.ts",
+    "../../packages/toolkit/core/**/*.ts",
+    "../../packages/toolkit/assistive/**/*.ts",
+    "../../packages/toolkit/form-field/**/*.ts",
+    "../../packages/toolkit/headless/src/**/*.ts",
+    "../../libs/ui/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/test-setup.ts",
+    "vite.config.mts",
+    "vitest.config.mts",
+    "../../packages/toolkit/**/*.spec.ts",
+    "../../packages/toolkit/test-setup.ts",
+    "../../packages/toolkit/test-setup.browser.ts",
+    "../../packages/toolkit/test.utilities.ts",
+    "../../libs/ui/**/*.spec.ts",
+    "../../libs/ui/**/*.test.ts"
+  ]
+}

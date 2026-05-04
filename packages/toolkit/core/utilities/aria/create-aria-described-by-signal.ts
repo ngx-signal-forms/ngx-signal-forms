@@ -108,7 +108,7 @@ export function createAriaDescribedBySignal(
     }
 
     const parts: string[] = preserved
-      ? preserved.split(' ').filter(Boolean)
+      ? preserved.split(/\s+/).filter(Boolean)
       : [];
 
     for (const hintId of hintIds()) {

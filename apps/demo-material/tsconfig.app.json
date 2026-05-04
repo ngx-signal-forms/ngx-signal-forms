@@ -1,0 +1,44 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": [],
+    "paths": {
+      "@ngx-signal-forms/toolkit": [
+        "../../packages/toolkit/index.ts",
+        "../../dist/packages/toolkit"
+      ],
+      "@ngx-signal-forms/toolkit/core": [
+        "../../packages/toolkit/core/index.ts"
+      ],
+      "@ngx-signal-forms/toolkit/assistive": [
+        "../../packages/toolkit/assistive/index.ts",
+        "../../dist/packages/toolkit/assistive"
+      ],
+      "@ngx-signal-forms/toolkit/headless": [
+        "../../packages/toolkit/headless/src/index.ts",
+        "../../dist/packages/toolkit/headless"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "../../packages/toolkit/index.ts",
+    "../../packages/toolkit/core/**/*.ts",
+    "../../packages/toolkit/assistive/**/*.ts",
+    "../../packages/toolkit/headless/src/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/test-setup.ts",
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
+    "../../packages/toolkit/**/*.spec.ts",
+    "../../packages/toolkit/test-setup.ts",
+    "../../packages/toolkit/test-setup.browser.ts",
+    "../../packages/toolkit/test.utilities.ts"
+  ]
+}
