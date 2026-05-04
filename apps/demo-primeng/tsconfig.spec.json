@@ -1,0 +1,29 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node"],
+    "paths": {
+      "@ngx-signal-forms/toolkit": ["../../packages/toolkit/index.ts"],
+      "@ngx-signal-forms/toolkit/core": [
+        "../../packages/toolkit/core/index.ts"
+      ],
+      "@ngx-signal-forms/toolkit/assistive": [
+        "../../packages/toolkit/assistive/index.ts"
+      ],
+      "@ngx-signal-forms/toolkit/form-field": [
+        "../../packages/toolkit/form-field/index.ts"
+      ],
+      "@ngx-signal-forms/toolkit/headless": [
+        "../../packages/toolkit/headless/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "vitest.config.mts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.d.ts",
+    "src/test-setup.ts"
+  ]
+}

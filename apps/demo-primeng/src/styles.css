@@ -1,0 +1,198 @@
+/* PrimeNG icon font */
+@import 'primeicons/primeicons.css';
+
+:root {
+  --demo-ink: #1d2433;
+  --demo-muted: #5f6675;
+  --demo-paper: rgb(248 242 233 / 0.96);
+  --demo-paper-strong: rgb(255 251 245 / 0.98);
+  --demo-border: rgb(148 121 79 / 0.18);
+  --demo-accent: #b8661d;
+  --demo-accent-soft: rgb(184 102 29 / 0.14);
+  --demo-shadow: 0 24px 80px rgb(15 23 42 / 0.18);
+  --demo-summary-bg: #182132;
+  --demo-summary-ink: #f8f4ed;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family:
+    'Avenir Next', 'Segoe UI', 'Helvetica Neue', Helvetica, sans-serif;
+  min-height: 100%;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgb(245 158 11 / 0.24),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at right 20%,
+      rgb(217 119 6 / 0.18),
+      transparent 24%
+    ),
+    linear-gradient(160deg, #111827 0%, #1f2937 48%, #0f172a 100%);
+  color: var(--demo-summary-ink);
+}
+
+main.shell {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 3.5rem 1.5rem 5rem;
+}
+
+.shell__hero {
+  max-width: 42rem;
+  margin-bottom: 2rem;
+}
+
+.shell__eyebrow,
+.profile-form__eyebrow,
+.profile-form__status-label,
+.summary-panel__title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--demo-accent);
+}
+
+.shell__title,
+.profile-form__title {
+  font-family:
+    'Iowan Old Style', 'Palatino Linotype', Baskerville, 'Book Antiqua',
+    Georgia, serif;
+  letter-spacing: -0.03em;
+}
+
+.shell__title {
+  margin: 0.45rem 0 0.85rem;
+  font-size: clamp(2.6rem, 5vw, 4.6rem);
+  line-height: 0.95;
+}
+
+.shell__lede {
+  margin: 0;
+  max-width: 38rem;
+  font-size: 1.03rem;
+  line-height: 1.7;
+  color: rgb(248 242 233 / 0.82);
+}
+
+.shell__panel {
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 2rem;
+  padding: clamp(1.25rem, 2vw, 1.75rem);
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.08),
+    rgb(255 255 255 / 0.03)
+  );
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.24);
+  backdrop-filter: blur(20px);
+}
+
+.profile-form {
+  padding: clamp(1.35rem, 2vw, 2rem);
+  border-radius: 1.4rem;
+  background: linear-gradient(
+    180deg,
+    var(--demo-paper-strong),
+    var(--demo-paper)
+  );
+  box-shadow: var(--demo-shadow);
+  color: var(--demo-ink);
+}
+
+.field-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.profile-form__intro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.profile-form__title {
+  margin: 0;
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  line-height: 1;
+}
+
+.profile-form__copy,
+.profile-form__status-copy {
+  margin: 0;
+  max-width: 40rem;
+  color: var(--demo-muted);
+  line-height: 1.65;
+}
+
+.profile-form__grid {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.profile-form__status {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--demo-border);
+  border-radius: 1rem;
+  background: linear-gradient(
+    135deg,
+    rgb(255 255 255 / 0.7),
+    var(--demo-accent-soft)
+  );
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.summary-panel {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(
+    180deg,
+    rgb(24 33 50 / 0.96),
+    rgb(15 23 42 / 0.92)
+  );
+}
+
+.summary {
+  margin: 0.75rem 0 0;
+  padding: 1rem;
+  border-radius: 0.9rem;
+  background: rgb(255 255 255 / 0.06);
+  color: var(--demo-summary-ink);
+  font-family:
+    'SFMono-Regular', 'IBM Plex Mono', 'Cascadia Code', Menlo, Monaco, Consolas,
+    monospace;
+  font-size: 0.84rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+@media (width >= 48rem) {
+  .profile-form__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  prime-form-field[data-field-name='profile-newsletter'] {
+    max-width: 32rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
