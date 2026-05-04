@@ -18,6 +18,11 @@ specific.
     falls back to `NgxFormFieldError`
   - keeps `NgxSignalFormAutoAria` in scope where consumers declare the
     `[formField]` control
+- A single **`NgxPrimeFormBundle`** export that consumers can drop into
+  their component's `imports` (mirrors `NgxMatFormBundle` /
+  `NgxSpartanFormBundle`).
+- A single **`provideNgxPrimeForms()`** bootstrap helper that registers
+  both renderer tokens in one call (mirrors `provideNgxMatForms()`).
 - A custom **`PrimeFieldErrorComponent`** registered through
   `provideFormFieldErrorRenderer({ component: ... })` that emits PrimeNG's
   `<small class="p-error">` idiom (and `<small class="p-warn">` for
@@ -26,18 +31,74 @@ specific.
   `provideFormFieldHintRenderer({ component: ... })` so the hint slot is
   ready for the toolkit's future dynamic-outlet hint mode without any
   template changes.
-- One representative form (`ProfileFormComponent`) covering:
-  - text input with `p-iconfield` + `pInputText`
-  - select via `<p-select>` (the current PrimeNG primitive — see version pin
-    below)
-  - checkbox via `<p-checkbox>`
-  - a non-blocking warning on the email field, exercising the warnings
-    branch of the renderer
-- `NgxSignalFormControlSemanticsDirective` declared on each control
-  (`ngxSignalFormControl="input-like"`, `"standalone-field-like"`,
-  `"checkbox"`) so the toolkit knows the control kind without DOM
-  heuristics — a must-have when bound controls live inside Prime's host
-  components.
+
+The wrapper composes the toolkit's headless primitives directly
+(`createFieldNameResolver`, `toHintDescriptors`,
+`createErrorRendererInputs`, `createAriaInvalidSignal`,
+`createAriaRequiredSignal`, `createShowErrorsComputed`) so the seam never
+drifts from the canonical `NgxFormFieldWrapper` as the toolkit evolves.
+
+## Quick start
+
+```ts
+// main.ts
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideNgxPrimeForms(),
+    // …PrimeNG / animations / signal-forms-config
+  ],
+});
+```
+
+```ts
+// my-form.component.ts
+@Component({
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxFormFieldHint,
+    NgxPrimeFormBundle,
+    /* PrimeNG modules */
+  ],
+  template: `
+    <prime-form-field [ngxPrimeFormField]="form.email" fieldName="email">
+      <label for="email">Email</label>
+      <input
+        id="email"
+        pInputText
+        [formField]="form.email"
+        ngxSignalFormControl="input-like"
+      />
+    </prime-form-field>
+  `,
+})
+export class MyFormComponent {
+  /* … */
+}
+```
+
+The aliased input (`[ngxPrimeFormField]`) avoids a subtle collision with
+Angular Signal Forms' own `FormField` directive (selector `[formField]`),
+which would otherwise double-bind to the wrapper element.
+
+## Demo coverage
+
+`ProfileFormComponent` exercises every contract above on a representative
+form:
+
+- text input with `p-iconfield` + `pInputText`
+- select via `<p-select>` (the current PrimeNG primitive — see version
+  pin below)
+- checkbox via `<p-checkbox>`
+- a non-blocking warning on the email field, exercising the warnings
+  branch of the renderer
+
+`NgxSignalFormControlSemanticsDirective` is declared on every control
+(`ngxSignalFormControl="input-like"`, `"standalone-field-like"`,
+`"checkbox"`) so the toolkit knows the control kind without DOM
+heuristics — a must-have when bound controls live inside PrimeNG's host
+components, and the input the wrapper queries via `contentChildren` for
+tier-3 field-name resolution and the dev-mode missing-control assertion.
 
 ## Design-system version pin
 
@@ -70,6 +131,49 @@ directives can be applied to that label without changes to the wrapper.
 The other floating-label modes are intentionally **out of scope** — they
 introduce their own ARIA wiring and styling tokens that are orthogonal
 to the toolkit seam.
+
+### ARIA writes target the host element, not PrimeNG's inner input
+
+PrimeNG's host components (`<p-select>`, `<p-checkbox>`,
+`<p-multiselect>`, …) wrap an internal `<input>` — that internal input is
+what owns visual focus and the WAI-ARIA combobox / checkbox role. The
+toolkit's `[formField]` directive (and therefore `NgxSignalFormAutoAria`)
+is declared on the **outer** PrimeNG host, so `aria-invalid` and
+`aria-describedby` land there.
+
+For the text-input case (`<input pInputText [formField]>` directly bound)
+this is a non-issue — the bound element is also the focusable element AT
+will read.
+
+For host-component cases there is an additional twist: `<p-select>` and
+`<p-checkbox>` write their **own** `aria-describedby` (e.g. PrimeNG's
+auto-generated `pn_id_n-error` IDs) on the host element. That write
+clobbers anything `NgxSignalFormAutoAria` would put there, so the
+toolkit's `{fieldName}-error` ID never lands in the host's
+`aria-describedby` chain — the e2e spec in this folder asserts that
+boundary explicitly.
+
+The Prime-flavoured error element still renders with the correct id and
+live-region semantics — only the chain from the host to that id is
+broken. Two ways to bridge:
+
+- Implement a per-control bridge directive that mirrors the Material
+  reference's `NgxMatTextControl` / `NgxMatSelectControl` /
+  `NgxMatCheckboxControl` pattern
+  (`apps/demo-material/src/app/wrapper/control-directives.ts`). Each
+  bridge sets `aria-mode="manual"` (so auto-aria leaves the control
+  alone) and forwards the inner-input's `aria-describedby` through a
+  toolkit-driven composition. Out of scope for this reference — this
+  reference deliberately keeps the seam minimal.
+- Use `<input pInputText>` directly where AT compatibility through the
+  bound control's own `aria-describedby` is critical. The text-input
+  path is fully covered by the smoke + Playwright specs.
+
+The smoke + Playwright specs cover the text-input path end-to-end. The
+host-component path is verified at the wrapper level (host data
+attributes, error element id and role) and at the boundary (the
+PrimeNG-owned `aria-describedby` is asserted to be present and
+non-empty, but its content is left to PrimeNG).
 
 ### Theme-token interplay
 

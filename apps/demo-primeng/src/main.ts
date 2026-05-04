@@ -1,16 +1,11 @@
 import { isDevMode, provideZonelessChangeDetection } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import {
-  provideFormFieldErrorRenderer,
-  provideFormFieldHintRenderer,
-  provideNgxSignalFormsConfig,
-} from '@ngx-signal-forms/toolkit';
+import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 import Aura from '@primeuix/themes/aura';
 import { providePrimeNG } from 'primeng/config';
 import { AppComponent } from './app/app';
-import { PrimeFieldErrorComponent } from './app/form-field/prime-field-error';
-import { PrimeFieldHintComponent } from './app/form-field/prime-field-hint';
+import { provideNgxPrimeForms } from './app/form-field';
 
 // Wrap in async IIFE so the dev compiler import only loads in dev builds.
 // oxlint-disable-next-line unicorn/prefer-top-level-await -- async IIFE is intentional for build-target compatibility
@@ -43,13 +38,11 @@ void (async () => {
         defaultErrorStrategy: 'on-touch',
         autoAria: true,
       }),
-      // Renderer tokens registered for both error and hint slots so the
-      // toolkit's wrapper authoring contract is exercised in CI. The wrapper
-      // in this app is custom (PrimeFormFieldComponent), but the same Prime
-      // idioms are also surfaced through the toolkit's default wrapper
-      // anywhere it might be used.
-      provideFormFieldErrorRenderer({ component: PrimeFieldErrorComponent }),
-      provideFormFieldHintRenderer({ component: PrimeFieldHintComponent }),
+      // Single bootstrap entry point for the PrimeNG reference renderers.
+      // Registers both NGX_FORM_FIELD_ERROR_RENDERER and
+      // NGX_FORM_FIELD_HINT_RENDERER with the Prime-flavoured components,
+      // mirroring `provideNgxMatForms()` in the Material reference.
+      provideNgxPrimeForms(),
     ],
   });
 })();

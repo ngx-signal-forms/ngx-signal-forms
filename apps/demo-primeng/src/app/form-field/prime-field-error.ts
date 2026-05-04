@@ -61,10 +61,11 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
      * Empty live-region containers stay mounted in the DOM so first
      * announcements are not missed on some AT/browser combos. The
      * containers carry [hidden] in this state — back it up with display:
-     * none so they contribute no visual whitespace either.
+     * none so they contribute no visual whitespace either. Class names
+     * are wrapper-local on purpose: prefixing with prime-feedback avoids
+     * masquerading as a PrimeNG public class hook.
      */
-    .p-error--empty,
-    .p-warn--empty {
+    .prime-feedback--empty {
       display: none;
     }
   `,
@@ -84,7 +85,7 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
     <small
       [id]="errorContainerVisible() ? errorId() : null"
       class="p-error"
-      [class.p-error--empty]="!errorContainerVisible()"
+      [class.prime-feedback--empty]="!errorContainerVisible()"
       role="alert"
       [attr.aria-hidden]="errorContainerVisible() ? null : 'true'"
       [hidden]="!errorContainerVisible()"
@@ -107,7 +108,7 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
     <small
       [id]="warningContainerVisible() ? warningId() : null"
       class="p-warn"
-      [class.p-warn--empty]="!warningContainerVisible()"
+      [class.prime-feedback--empty]="!warningContainerVisible()"
       role="status"
       [attr.aria-hidden]="warningContainerVisible() ? null : 'true'"
       [hidden]="!warningContainerVisible()"
@@ -172,20 +173,13 @@ export class PrimeFieldErrorComponent {
     return name === null ? null : generateWarningId(name);
   });
 
-  protected readonly showErrors = computed(() => this.headless.showErrors());
-  protected readonly showWarnings = computed(() =>
-    this.headless.showWarnings(),
-  );
-  protected readonly hasErrors = computed(() => this.headless.hasErrors());
-  protected readonly hasWarnings = computed(() => this.headless.hasWarnings());
-
   /**
    * Whether the error live-region container should expose its content.
    * The container itself stays MOUNTED unconditionally; this flag toggles
    * `[hidden]` + `[attr.aria-hidden]` and gates the inner content render.
    */
   protected readonly errorContainerVisible = computed(
-    () => this.showErrors() && this.hasErrors(),
+    () => this.headless.showErrors() && this.headless.hasErrors(),
   );
 
   /**
@@ -193,7 +187,7 @@ export class PrimeFieldErrorComponent {
    * Same always-mounted pattern as `errorContainerVisible`.
    */
   protected readonly warningContainerVisible = computed(
-    () => this.showWarnings() && this.hasWarnings(),
+    () => this.headless.showWarnings() && this.headless.hasWarnings(),
   );
 
   constructor() {

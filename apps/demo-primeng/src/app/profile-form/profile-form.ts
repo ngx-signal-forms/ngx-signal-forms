@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { form, FormField } from '@angular/forms/signals';
 import {
-  NgxSignalFormControlSemanticsDirective,
-  NgxSignalFormToolkit,
-} from '@ngx-signal-forms/toolkit';
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+} from '@angular/core';
+import { form, FormField } from '@angular/forms/signals';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -11,7 +13,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { PrimeFormFieldComponent } from '../form-field/prime-form-field';
+import { NgxPrimeFormBundle } from '../form-field';
 import { ROLE_OPTIONS, type ProfileFormModel } from './profile-form.model';
 import { profileFormSchema } from './profile-form.schema';
 
@@ -49,9 +51,8 @@ import { profileFormSchema } from './profile-form.schema';
     InputTextModule,
     SelectModule,
     NgxSignalFormToolkit,
-    NgxSignalFormControlSemanticsDirective,
     NgxFormFieldHint,
-    PrimeFormFieldComponent,
+    NgxPrimeFormBundle,
   ],
   template: `
     <form
@@ -62,9 +63,9 @@ import { profileFormSchema } from './profile-form.schema';
     >
       <!-- Text input + p-iconfield -->
       <prime-form-field
-        [formField]="profileForm.email"
+        [ngxPrimeFormField]="profileForm.email"
         fieldName="profile-email"
-        [showRequiredMarker]="true"
+        showRequiredMarker
       >
         <label for="profile-email">Email</label>
         <p-iconfield iconPosition="left">
@@ -85,9 +86,9 @@ import { profileFormSchema } from './profile-form.schema';
 
       <!-- Select (p-select is the current PrimeNG primitive; v20+) -->
       <prime-form-field
-        [formField]="profileForm.role"
+        [ngxPrimeFormField]="profileForm.role"
         fieldName="profile-role"
-        [showRequiredMarker]="true"
+        showRequiredMarker
       >
         <label for="profile-role">Role</label>
         <p-select
@@ -103,7 +104,7 @@ import { profileFormSchema } from './profile-form.schema';
 
       <!-- Checkbox -->
       <prime-form-field
-        [formField]="profileForm.newsletter"
+        [ngxPrimeFormField]="profileForm.newsletter"
         fieldName="profile-newsletter"
       >
         <label for="profile-newsletter">Subscribe to the newsletter</label>
@@ -120,7 +121,7 @@ import { profileFormSchema } from './profile-form.schema';
           type="submit"
           label="Save profile"
           severity="primary"
-          [disabled]="profileForm().submitting()"
+          [disabled]="isSubmitting()"
         />
         <p-button
           type="button"
@@ -149,12 +150,20 @@ export class ProfileFormComponent {
 
   protected readonly profileForm = form(this.#model, profileFormSchema);
 
+  protected readonly isSubmitting = computed(() =>
+    this.profileForm().submitting(),
+  );
+
   protected readonly lastSubmission = signal<string | null>(null);
 
   protected onSubmit(event: Event): void {
     event.preventDefault();
     const root = this.profileForm();
     if (root.invalid()) {
+      // markAsTouched cascades to every leaf so the on-touch strategy
+      // lights up every invalid field at once. Keeps the renderer + the
+      // wrapper's data-invalid attribute in lockstep without per-field
+      // bookkeeping.
       root.markAsTouched();
       return;
     }
@@ -162,6 +171,9 @@ export class ProfileFormComponent {
   }
 
   protected reset(): void {
+    // Reset model first so the form derives its baseline from the cleared
+    // value when reset() runs; otherwise the form would briefly snapshot
+    // the previous model state.
     this.#model.set({ email: '', role: '', newsletter: false });
     this.profileForm().reset();
     this.lastSubmission.set(null);
