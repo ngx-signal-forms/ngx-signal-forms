@@ -22,8 +22,9 @@ in `@spartan-ng/ui`, then come back through `nx g @spartan-ng/cli:ui …`.
 
 ## Consumed in-tree only
 
-This library is not built or published. Apps consume it through the
-`@spartan-ng/helm/*` tsconfig path aliases declared in
+This library is not consumed from built or published artifacts in this
+repo. Apps consume it through the `@spartan-ng/helm/*` tsconfig path
+aliases declared in
 `tsconfig.base.json`, which point directly at each secondary
 entrypoint's `src/index.ts`. The build target, `package.json`
 peerDependencies, and `ng-package.json` files are leftover Spartan-CLI
