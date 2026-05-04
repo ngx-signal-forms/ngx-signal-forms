@@ -65,15 +65,11 @@ test.describe('demo-primeng — profile form', () => {
     await expect(warningEl).toHaveText(/personal email/i);
   });
 
-  test('select required error surfaces on touch and the toolkit anchors describedby on the host', async ({
+  test('select required error surfaces on blur and the combobox stays linked to its assistive text', async ({
     page,
   }) => {
-    // PrimeNG's `<p-select>` puts the consumer-provided `inputId` on the
-    // inner combobox-shaped element. Focusing that element and tabbing
-    // away flips touched() on the bound field and triggers the on-touch
-    // strategy.
-    const roleInner = page.locator('#profile-role');
-    await roleInner.focus();
+    const roleCombobox = page.getByRole('combobox', { name: /pick a role/i });
+    await roleCombobox.focus();
     await page.keyboard.press('Tab');
 
     // (1) the Prime-flavoured error renders for the role field with the
@@ -91,26 +87,18 @@ test.describe('demo-primeng — profile form', () => {
     );
     await expect(roleField).toHaveAttribute('data-invalid', 'true');
 
-    // (3) Documented limitation: PrimeNG's `<p-select>` writes its own
-    //     `aria-describedby` (e.g. `pn_id_n-error`) on the host element,
-    //     overriding any value the toolkit's auto-ARIA layer writes.
-    //     The toolkit's `{fieldName}-error` element still exists in the
-    //     DOM with the correct id and live-region semantics, but a
-    //     consumer who needs the bound control's `aria-describedby` to
-    //     point at it must implement a per-control bridge directive
-    //     (mirroring the Material reference's `NgxMatSelectControl`).
-    //
-    //     This assertion deliberately verifies the *current* behaviour so
-    //     a future PrimeNG change that lets the toolkit own describedby
-    //     would surface as a test failure here, prompting documentation
-    //     and the README gotcha to be revisited.
-    const roleSelect = page.locator('p-select[inputId="profile-role"]').first();
-    const describedBy = await roleSelect.getAttribute('aria-describedby');
-    // Either PrimeNG-owned (current) or toolkit-owned (future bridge):
-    // both forms are acceptable — the assertion enforces that *some*
-    // describedby is wired, never an empty / null value.
-    expect(describedBy).not.toBeNull();
-    expect(describedBy?.length ?? 0).toBeGreaterThan(0);
+    // (3) the accessible combobox keeps the wrapper-managed hint and error
+    //     IDs in its `aria-describedby` chain.
+    await expect(roleCombobox).toHaveAttribute(
+      'aria-describedby',
+      /profile-role-hint/,
+    );
+    await expect(roleCombobox).toHaveAttribute(
+      'aria-describedby',
+      /profile-role-error/,
+    );
+    await expect(roleCombobox).toHaveAttribute('aria-invalid', 'true');
+    await expect(roleCombobox).toHaveAttribute('aria-required', 'true');
   });
 
   test('checkbox wrapper exposes resolved field name on the host attribute', async ({

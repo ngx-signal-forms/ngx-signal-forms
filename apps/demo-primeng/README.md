@@ -27,6 +27,12 @@ specific.
   `provideFormFieldErrorRenderer({ component: ... })` that emits PrimeNG's
   `<small class="p-error">` idiom (and `<small class="p-warn">` for
   warnings) — so error display matches the rest of a Prime-themed app.
+- A narrow **`PrimeSelectControlComponent`** compatibility shim for
+  PrimeNG's `<p-select>`. The real integration seam in this demo is still
+  the toolkit wrapper/renderer layer; this shim exists only because direct
+  `[formField]` on `<p-select>` collides with PrimeNG's inherited
+  Angular-forms-style inputs, so Signal Forms needs a clean
+  `FormValueControl` host.
 - A custom **`PrimeFieldHintComponent`** registered through
   `provideFormFieldHintRenderer({ component: ... })` so the hint slot is
   ready for the toolkit's future dynamic-outlet hint mode without any
@@ -87,8 +93,8 @@ which would otherwise double-bind to the wrapper element.
 form:
 
 - text input with `p-iconfield` + `pInputText`
-- select via `<p-select>` (the current PrimeNG primitive — see version
-  pin below)
+- select via `<prime-select-control>` (a minimal compatibility shim around
+  PrimeNG's current `<p-select>` primitive — see version pin below)
 - checkbox via `<p-checkbox>`
 - a non-blocking warning on the email field, exercising the warnings
   branch of the renderer
@@ -132,6 +138,25 @@ The other floating-label modes are intentionally **out of scope** — they
 introduce their own ARIA wiring and styling tokens that are orthogonal
 to the toolkit seam.
 
+### Why the demo keeps a tiny wrapper for `p-select`
+
+Tim Deschryver's directive-first pattern is the right default when you only
+need to configure or extend a third-party component. This demo follows that
+spirit for the actual integration seam: the Prime field wrapper, renderer
+tokens, hint registry, and control semantics are all toolkit primitives
+composed around PrimeNG.
+
+`<p-select>` is the exception. PrimeNG already supports Angular's CVA-based
+forms APIs, but Angular Signal Forms generates a broader host contract on a
+direct `[formField]` binding (including inputs like `pattern`). PrimeNG's
+inherited input surface does not line up with that contract, so a plain
+directive on `<p-select>` still fails type-checking.
+
+That is why this demo keeps a tiny wrapper component for select only: it
+creates a clean `FormValueControl<string>` host for Signal Forms while still
+rendering the real PrimeNG control inside. The wrapper is a compatibility
+shim, not the main integration story.
+
 ### ARIA writes target the host element, not PrimeNG's inner input
 
 PrimeNG's host components (`<p-select>`, `<p-checkbox>`,
@@ -163,8 +188,10 @@ broken. Two ways to bridge:
   (`apps/demo-material/src/app/wrapper/control-directives.ts`). Each
   bridge sets `aria-mode="manual"` (so auto-aria leaves the control
   alone) and forwards the inner-input's `aria-describedby` through a
-  toolkit-driven composition. Out of scope for this reference — this
-  reference deliberately keeps the seam minimal.
+  toolkit-driven composition. That would be the next step if this demo grows
+  into a first-class `@ngx-signal-forms/primeng` package. For the reference
+  app, the select shim keeps the integration understandable while the rest of
+  the wrapper seam stays purely toolkit-driven.
 - Use `<input pInputText>` directly where AT compatibility through the
   bound control's own `aria-describedby` is critical. The text-input
   path is fully covered by the smoke + Playwright specs.
@@ -189,6 +216,24 @@ This reference pins **`@primeuix/themes/aura`** with no overrides
 customisation is intentionally out of scope — the goal is to show the
 toolkit seam, not to ship a styled showcase.
 
+### Timing: ship now or wait for PrimeNG v22?
+
+Current PrimeNG documentation shows first-class support for Angular's
+template-driven and reactive forms APIs (`ngModel`, `formControlName`), but
+not yet a native Angular Signal Forms surface. Angular's own Signal Forms
+guidance explicitly allows custom `FormValueControl` components as the bridge
+for third-party libraries that have not caught up yet.
+
+That makes this demo valid **today** as a documented compatibility reference:
+
+- keep it if the goal is "how to use `@ngx-signal-forms/toolkit` with
+  PrimeNG as it exists now"
+- revisit and simplify it once PrimeNG v22 support is actually adopted in
+  this workspace
+
+In other words: do **not** block the PrimeNG demo on v22, but do document it
+as a pre-v22 integration seam rather than the final long-term shape.
+
 If you need to bridge tokens (e.g. mirror PrimeNG's `--p-form-field-invalid-border-color`
 into the toolkit's `--ngx-form-field-error-color`), do it in your app's
 `styles.css`. The wrapper itself does not consume Prime tokens directly so
@@ -202,8 +247,9 @@ that the same wrapper can render under any Prime theme.
 - PrimeNG's filled / outlined `pInputText` variants. Pick whichever your
   product uses; the wrapper is variant-agnostic.
 - `p-multiselect`, `p-autocomplete`, `p-calendar`, `p-radiobutton`, etc.
-  The seam is identical; one representative select primitive (`p-select`)
-  proves the contract.
+  The seam is similar; this demo uses one representative select path
+  (`p-select` through `PrimeSelectControlComponent`) to prove the current
+  compatibility contract.
 - A submission backend. The form's submit handler logs the JSON payload
   inline so the integration is self-contained.
 - Theme dark / light toggling. PrimeNG's Aura preset auto-switches with

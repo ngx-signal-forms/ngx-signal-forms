@@ -1,5 +1,6 @@
 import { NgComponentOutlet } from '@angular/common';
 import {
+  afterEveryRender,
   booleanAttribute,
   ChangeDetectionStrategy,
   Component,
@@ -7,6 +8,7 @@ import {
   contentChildren,
   effect,
   inject,
+  Injector,
   input,
   isDevMode,
   signal,
@@ -34,6 +36,10 @@ import {
   createFieldNameResolver,
   toHintDescriptors,
 } from '@ngx-signal-forms/toolkit/headless';
+import {
+  isElementCssVisible,
+  NgxFieldIdentity,
+} from '@ngx-signal-forms/toolkit/core';
 
 /**
  * PrimeNG-flavoured form-field wrapper.
@@ -80,6 +86,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgComponentOutlet],
   providers: [
+    NgxFieldIdentity,
     {
       provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
       useFactory: () => {
@@ -124,6 +131,38 @@ import {
       gap: 0.1rem;
       min-height: 1.1rem;
     }
+
+    :host(.prime-form-field--checkbox) {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-areas:
+        'control label'
+        'assistive assistive';
+      column-gap: 0.75rem;
+      row-gap: 0.35rem;
+      align-items: start;
+    }
+
+    :host(.prime-form-field--checkbox) .prime-form-field__label {
+      grid-area: label;
+      display: flex;
+      align-items: center;
+      min-height: 1.75rem;
+      font-size: 1rem;
+      line-height: 1.4;
+    }
+
+    :host(.prime-form-field--checkbox) .prime-form-field__control {
+      grid-area: control;
+      display: flex;
+      align-items: center;
+      min-height: 1.75rem;
+    }
+
+    :host(.prime-form-field--checkbox) .prime-form-field__assistive {
+      grid-area: assistive;
+      padding-inline-start: calc(1.25rem + 0.75rem);
+    }
   `,
   host: {
     style:
@@ -131,6 +170,7 @@ import {
     '[attr.data-invalid]': 'ariaInvalidValue() === "true" ? "true" : null',
     '[attr.data-field-name]': 'resolvedFieldName()',
     '[attr.data-prime-required]': 'ariaRequiredValue()',
+    '[class.prime-form-field--checkbox]': 'isCheckboxControl()',
   },
   template: `
     <span class="prime-form-field__label">
@@ -250,6 +290,8 @@ export class PrimeFormFieldComponent<TValue = unknown> {
   // ── Strategy / submission state plumbing ──────────────────────────────
 
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
+  readonly #injector = inject(Injector);
+  readonly #fieldIdentity = inject(NgxFieldIdentity);
   readonly #formContext = injectFormContext();
 
   /**
@@ -309,6 +351,10 @@ export class PrimeFormFieldComponent<TValue = unknown> {
 
   readonly ariaRequiredValue = createAriaRequiredSignal(this.#fieldStateSignal);
 
+  readonly isCheckboxControl = computed(
+    () => this.boundSemantics()[0]?.kind() === 'checkbox',
+  );
+
   // ── Dev-mode missing-control assertion ────────────────────────────────
   //
   // A bare `<input pInputText [formField]>` (no `ngxSignalFormControl`)
@@ -320,6 +366,31 @@ export class PrimeFormFieldComponent<TValue = unknown> {
   readonly #hasWarned = signal(false);
 
   constructor() {
+    afterEveryRender(
+      {
+        write: () => {
+          const boundControl = this.#boundControlElement();
+          const resolvedFieldName = this.resolvedFieldName();
+
+          this.#fieldIdentity.setFieldName(resolvedFieldName);
+          this.#fieldIdentity.setControlElement(boundControl);
+          this.#fieldIdentity.setControlVisible(
+            boundControl ? isElementCssVisible(boundControl) : true,
+          );
+          this.#fieldIdentity.setHintIds(
+            this.hintDescriptors()
+              .filter(
+                (hint) =>
+                  hint.fieldName === null ||
+                  hint.fieldName === resolvedFieldName,
+              )
+              .map((hint) => hint.id),
+          );
+        },
+      },
+      { injector: this.#injector },
+    );
+
     if (isDevMode()) {
       effect(() => {
         if (this.#hasWarned()) {

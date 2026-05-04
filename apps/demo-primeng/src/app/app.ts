@@ -5,9 +5,10 @@ import { ProfileFormComponent } from './profile-form/profile-form';
  * Root component for the PrimeNG reference demo.
  *
  * Hosts a single representative form (text + select + checkbox + warnings)
- * built on top of `PrimeFormFieldComponent`. Everything else is intentionally
- * minimal so the wiring between PrimeNG and `@ngx-signal-forms/toolkit` stays
- * front-and-centre — see `apps/demo-primeng/README.md`.
+ * built on top of `PrimeFormFieldComponent`. The shell wraps that form in an
+ * editorial-style hero + panel — purely cosmetic chrome so the demo doubles
+ * as a presentable showcase. Every toolkit-relevant moving part lives inside
+ * `<demo-primeng-profile-form>`; see `apps/demo-primeng/README.md`.
  */
 @Component({
   selector: 'ngx-root',
@@ -15,12 +16,20 @@ import { ProfileFormComponent } from './profile-form/profile-form';
   imports: [ProfileFormComponent],
   template: `
     <main class="shell">
-      <h1>ngx-signal-forms · PrimeNG reference</h1>
-      <p class="lede">
-        A single representative form built on PrimeNG, wired up through the
-        toolkit's renderer-token, control-semantics, and ARIA contracts.
-      </p>
-      <demo-primeng-profile-form />
+      <header class="shell__hero">
+        <p class="shell__eyebrow">PrimeNG reference demo</p>
+        <h1 class="shell__title">
+          ngx-signal-forms <span aria-hidden="true">♥</span> PrimeNG
+        </h1>
+        <p class="shell__lede">
+          A sharper PrimeNG editorial shell with submit-time validation that
+          actually behaves.
+        </p>
+      </header>
+
+      <section class="shell__panel">
+        <demo-primeng-profile-form />
+      </section>
     </main>
   `,
 })

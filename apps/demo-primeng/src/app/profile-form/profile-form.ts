@@ -4,17 +4,25 @@ import {
   computed,
   signal,
 } from '@angular/core';
-import { form, FormField } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import { type FieldTree, form, FormField } from '@angular/forms/signals';
+import {
+  createOnInvalidHandler,
+  hasOnlyWarnings,
+  NgxSignalFormToolkit,
+} from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
-import { SelectModule } from 'primeng/select';
+import { PrimeSelectControlComponent } from '../controls/prime-select-control';
 import { NgxPrimeFormBundle } from '../form-field';
-import { ROLE_OPTIONS, type ProfileFormModel } from './profile-form.model';
+import {
+  ROLE_OPTIONS,
+  type ProfileFormModel,
+  type RoleOption,
+} from './profile-form.model';
 import { profileFormSchema } from './profile-form.schema';
 
 /**
@@ -28,12 +36,17 @@ import { profileFormSchema } from './profile-form.schema';
  *    `PrimeFieldErrorComponent` up via `NGX_FORM_FIELD_ERROR_RENDERER` so
  *    errors render as PrimeNG's `<small class="p-error">` idiom.
  * 3. **`NgxSignalFormControlSemanticsDirective`** is declared on each control
- *    (text input via `pInputText`, the `<p-select>` host, and `<p-checkbox>`)
+ *    (text input via `pInputText`, the `prime-select-control` compatibility
+ *    host, and `<p-checkbox>`)
  *    so the toolkit knows the control kind without DOM heuristics.
  * 4. **`NgxSignalFormAutoAria`** is in scope via `NgxSignalForm` / direct
  *    import so it can wire `aria-invalid` / `aria-describedby` on each
  *    bound control. The directive reads the wrapper's hint-registry token
  *    to chain hint IDs.
+ * 5. **Toolkit submission helpers** (`createOnInvalidHandler` and
+ *    `hasOnlyWarnings`) keep submit-time behaviour aligned with the
+ *    Spartan/Material references: blockers focus the first invalid control,
+ *    warnings stay visible but do not block a successful submit.
  *
  * Floating labels are rendered with the *simplest* PrimeNG variant — a plain
  * `<label>` shown above the control. The README documents that other Prime
@@ -49,7 +62,7 @@ import { profileFormSchema } from './profile-form.schema';
     IconFieldModule,
     InputIconModule,
     InputTextModule,
-    SelectModule,
+    PrimeSelectControlComponent,
     NgxSignalFormToolkit,
     NgxFormFieldHint,
     NgxPrimeFormBundle,
@@ -58,89 +71,125 @@ import { profileFormSchema } from './profile-form.schema';
     <form
       [formRoot]="profileForm"
       ngxSignalForm
-      class="field-stack"
-      (submit)="onSubmit($event)"
+      novalidate
+      class="profile-form field-stack"
     >
-      <!-- Text input + p-iconfield -->
-      <prime-form-field
-        [ngxPrimeFormField]="profileForm.email"
-        fieldName="profile-email"
-        showRequiredMarker
-      >
-        <label for="profile-email">Email</label>
-        <p-iconfield iconPosition="left">
-          <p-inputicon styleClass="pi pi-envelope" />
-          <input
-            id="profile-email"
-            pInputText
-            type="email"
-            placeholder="you@example.com"
-            ngxSignalFormControl="input-like"
-            [formField]="profileForm.email"
-          />
-        </p-iconfield>
-        <ngx-form-field-hint>
-          We'll never share your address.
-        </ngx-form-field-hint>
-      </prime-form-field>
+      <header class="profile-form__intro">
+        <p class="profile-form__eyebrow">PrimeNG reference form</p>
+        <h2 class="profile-form__title">
+          A profile flow that behaves like a real product form
+        </h2>
+        <p class="profile-form__copy">
+          Blur reveals field-level issues, <strong>Save profile</strong> exposes
+          untouched blockers, and advisory warnings stay visible without
+          blocking submission.
+        </p>
+      </header>
 
-      <!-- Select (p-select is the current PrimeNG primitive; v20+) -->
-      <prime-form-field
-        [ngxPrimeFormField]="profileForm.role"
-        fieldName="profile-role"
-        showRequiredMarker
-      >
-        <label for="profile-role">Role</label>
-        <p-select
-          inputId="profile-role"
-          [options]="roleOptions"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Pick a role"
-          ngxSignalFormControl="standalone-field-like"
-          [formField]="profileForm.role"
-        />
-      </prime-form-field>
+      <div class="profile-form__grid">
+        <!-- Text input + p-iconfield -->
+        <prime-form-field
+          [ngxPrimeFormField]="emailField"
+          fieldName="profile-email"
+          showRequiredMarker
+        >
+          <label for="profile-email">Email</label>
+          <p-iconfield iconPosition="left">
+            <p-inputicon styleClass="pi pi-envelope" />
+            <input
+              id="profile-email"
+              pInputText
+              type="email"
+              placeholder="you@example.com"
+              ngxSignalFormControl="input-like"
+              [formField]="emailField"
+            />
+          </p-iconfield>
+          <ngx-form-field-hint>
+            Work addresses are best for recovery and team handoff.
+          </ngx-form-field-hint>
+        </prime-form-field>
+
+        <!-- Select (PrimeNG compatibility shim; toolkit wiring still lives in the wrapper layer) -->
+        <prime-form-field
+          [ngxPrimeFormField]="roleField"
+          fieldName="profile-role"
+          showRequiredMarker
+        >
+          <label for="profile-role">Role</label>
+          <prime-select-control
+            inputId="profile-role"
+            [options]="roleOptions"
+            placeholder="Pick a role"
+            ngxSignalFormControl="standalone-field-like"
+            [formField]="roleField"
+          />
+          <ngx-form-field-hint>
+            We use this to tailor examples and sensible defaults.
+          </ngx-form-field-hint>
+        </prime-form-field>
+      </div>
 
       <!-- Checkbox -->
       <prime-form-field
-        [ngxPrimeFormField]="profileForm.newsletter"
+        [ngxPrimeFormField]="newsletterField"
         fieldName="profile-newsletter"
       >
-        <label for="profile-newsletter">Subscribe to the newsletter</label>
+        <label for="profile-newsletter">Subscribe to the release notes</label>
         <p-checkbox
           inputId="profile-newsletter"
           [binary]="true"
           ngxSignalFormControl="checkbox"
-          [formField]="profileForm.newsletter"
+          [formField]="newsletterField"
         />
+        <ngx-form-field-hint>
+          One concise digest when new toolkit features ship — no inbox confetti.
+        </ngx-form-field-hint>
       </prime-form-field>
 
+      <aside class="profile-form__status" aria-live="polite">
+        <p class="profile-form__status-label">Validation rhythm</p>
+        <p class="profile-form__status-copy">
+          Blocking errors follow the form's on-touch strategy. Advisory warnings
+          stay immediate so guidance lands while the user is still editing.
+        </p>
+      </aside>
+
       <div class="actions">
-        <p-button
+        <button
+          pButton
           type="submit"
           label="Save profile"
-          severity="primary"
+          icon="pi pi-save"
+          [loading]="isSubmitting()"
           [disabled]="isSubmitting()"
-        />
-        <p-button
+          data-testid="submit-button"
+        ></button>
+        <button
+          pButton
           type="button"
           label="Reset"
           severity="secondary"
+          icon="pi pi-refresh"
           (click)="reset()"
-        />
+        ></button>
       </div>
 
       @if (lastSubmission()) {
-        <pre class="summary" data-testid="submission-summary">{{
-          lastSubmission()
-        }}</pre>
+        <section class="summary-panel">
+          <p class="summary-panel__title">Submitted snapshot</p>
+          <pre class="summary" data-testid="submission-summary">{{
+            lastSubmission()
+          }}</pre>
+        </section>
       }
     </form>
   `,
 })
 export class ProfileFormComponent {
-  protected readonly roleOptions = ROLE_OPTIONS;
+  readonly #onInvalid = createOnInvalidHandler();
+
+  protected readonly roleOptions: RoleOption[] = Array.from(ROLE_OPTIONS);
 
   readonly #model = signal<ProfileFormModel>({
     email: '',
@@ -148,27 +197,39 @@ export class ProfileFormComponent {
     newsletter: false,
   });
 
-  protected readonly profileForm = form(this.#model, profileFormSchema);
+  protected readonly profileForm = form(this.#model, profileFormSchema, {
+    submission: {
+      ignoreValidators: 'all',
+      action: () => {
+        if (!hasOnlyWarnings(this.profileForm().errorSummary())) {
+          this.#onInvalid(this.profileForm);
+          return Promise.resolve(undefined);
+        }
+
+        this.lastSubmission.set(
+          JSON.stringify(this.profileForm().value(), null, 2),
+        );
+
+        return Promise.resolve(undefined);
+      },
+    },
+  });
+
+  protected readonly emailField: FieldTree<ProfileFormModel['email']> =
+    this.profileForm.email;
+
+  protected readonly roleField: FieldTree<ProfileFormModel['role']> =
+    this.profileForm.role;
+
+  protected readonly newsletterField: FieldTree<
+    ProfileFormModel['newsletter']
+  > = this.profileForm.newsletter;
 
   protected readonly isSubmitting = computed(() =>
     this.profileForm().submitting(),
   );
 
   protected readonly lastSubmission = signal<string | null>(null);
-
-  protected onSubmit(event: Event): void {
-    event.preventDefault();
-    const root = this.profileForm();
-    if (root.invalid()) {
-      // markAsTouched cascades to every leaf so the on-touch strategy
-      // lights up every invalid field at once. Keeps the renderer + the
-      // wrapper's data-invalid attribute in lockstep without per-field
-      // bookkeeping.
-      root.markAsTouched();
-      return;
-    }
-    this.lastSubmission.set(JSON.stringify(this.#model(), null, 2));
-  }
 
   protected reset(): void {
     // Reset model first so the form derives its baseline from the cleared

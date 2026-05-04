@@ -11,6 +11,7 @@ import {
   generateWarningId,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   resolveFieldNameFromCandidates,
+  showErrors,
 } from '@ngx-signal-forms/toolkit';
 import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
 
@@ -157,6 +158,22 @@ export class PrimeFieldErrorComponent {
   readonly formField = input<FieldTree<unknown>>();
   readonly fieldName = input<string | null | undefined>();
 
+  readonly #fieldState = computed(() => this.formField()?.() ?? null);
+
+  /**
+   * Warning visibility uses an `immediate` strategy independent of the
+   * blocking-error strategy — informational warnings should land while the
+   * user is still editing, even when blocking errors are gated until touch
+   * or submit. Mirrors `NgxFormFieldError`'s `warningStrategy` default
+   * (see `packages/toolkit/assistive/form-field-error.ts`) and the Spartan
+   * reference (`firstWarning = #firstWarning`, no strategy gate).
+   */
+  readonly #showWarningsImmediately = showErrors(
+    this.#fieldState,
+    computed(() => 'immediate' as const),
+    this.headless.resolvedSubmittedStatus,
+  );
+
   protected readonly resolvedFieldName = computed<string | null>(() => {
     const explicit = this.fieldName();
     const fromContext = this.#fieldContext?.fieldName() ?? null;
@@ -187,7 +204,7 @@ export class PrimeFieldErrorComponent {
    * Same always-mounted pattern as `errorContainerVisible`.
    */
   protected readonly warningContainerVisible = computed(
-    () => this.headless.showWarnings() && this.headless.hasWarnings(),
+    () => this.#showWarningsImmediately() && this.headless.hasWarnings(),
   );
 
   constructor() {
