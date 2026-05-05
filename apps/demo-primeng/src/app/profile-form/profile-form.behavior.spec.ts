@@ -69,12 +69,13 @@ describe('ProfileFormComponent', () => {
   it('reveals untouched blocking errors when Save profile is clicked', async () => {
     const user = userEvent.setup();
 
-    await renderProfileForm();
+    const { whenStable } = await renderProfileForm();
 
     expect(screen.queryByText(/email is required/i)).toBeNull();
     expect(screen.queryByText(/role is required/i)).toBeNull();
 
     await user.click(screen.getByTestId('submit-button'));
+    await whenStable();
 
     expect(await screen.findByText(/email is required/i)).toBeTruthy();
     expect(await screen.findByText(/role is required/i)).toBeTruthy();
@@ -97,10 +98,11 @@ describe('ProfileFormComponent', () => {
   it('shows the personal-email warning and still submits once role is selected', async () => {
     const user = userEvent.setup();
 
-    await renderProfileForm();
+    const { whenStable } = await renderProfileForm();
 
     const email = screen.getByLabelText(/email/i);
     await user.type(email, 'alex@gmail.com');
+    await whenStable();
 
     expect(
       await screen.findByText(/personal email domains may complicate/i),
@@ -109,6 +111,7 @@ describe('ProfileFormComponent', () => {
     await user.click(screen.getByRole('combobox', { name: /pick a role/i }));
     await user.click(await screen.findByText(/^Designer$/));
     await user.click(screen.getByTestId('submit-button'));
+    await whenStable();
 
     const submission = await screen.findByTestId('submission-summary');
     expect(submission.textContent).toContain('"email": "alex@gmail.com"');

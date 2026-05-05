@@ -174,36 +174,33 @@ this is a non-issue — the bound element is also the focusable element AT
 will read.
 
 For host-component cases there is an additional twist: `<p-select>` and
-`<p-checkbox>` write their **own** `aria-describedby` (e.g. PrimeNG's
-auto-generated `pn_id_n-error` IDs) on the host element. That write
-clobbers anything `NgxSignalFormAutoAria` would put there, so the
-toolkit's `{fieldName}-error` ID never lands in the host's
-`aria-describedby` chain — the e2e spec in this folder asserts that
-boundary explicitly.
+`<p-checkbox>` would normally write their **own** `aria-describedby`
+(e.g. PrimeNG's auto-generated `pn_id_n-error` IDs) onto the inner
+combobox/checkbox. Left alone, that write would clobber anything
+`NgxSignalFormAutoAria` puts on the host, so the toolkit's
+`{fieldName}-error` and `{fieldName}-hint` IDs would never reach the
+focusable inner element AT actually reads.
 
-The Prime-flavoured error element still renders with the correct id and
-live-region semantics — only the chain from the host to that id is
-broken. Two ways to bridge:
+The select demo solves this with a per-control bridge directive
+(`PrimeSelectControlComponent` in `apps/demo-primeng/src/app/controls/`)
+that mirrors the Material reference's `NgxMatSelectControl` pattern. The
+shim provides `NGX_SIGNAL_FORM_ARIA_MODE: 'manual'` so auto-aria leaves
+the host alone, then binds the toolkit's `createAriaDescribedBySignal`
+output directly onto the inner `<p-select>`. The Playwright spec now
+asserts the result explicitly: the role combobox carries
+`aria-describedby` containing both `profile-role-hint` and
+`profile-role-error` tokens (plus `aria-invalid="true"` and
+`aria-required="true"`) — the host-component ARIA boundary is verified
+end-to-end via `NgxSignalFormAutoAria` + the shim, not just inferred
+from the rendered error element's id.
 
-- Implement a per-control bridge directive that mirrors the Material
-  reference's `NgxMatTextControl` / `NgxMatSelectControl` /
-  `NgxMatCheckboxControl` pattern
-  (`apps/demo-material/src/app/wrapper/control-directives.ts`). Each
-  bridge sets `aria-mode="manual"` (so auto-aria leaves the control
-  alone) and forwards the inner-input's `aria-describedby` through a
-  toolkit-driven composition. That would be the next step if this demo grows
-  into a first-class `@ngx-signal-forms/primeng` package. For the reference
-  app, the select shim keeps the integration understandable while the rest of
-  the wrapper seam stays purely toolkit-driven.
-- Use `<input pInputText>` directly where AT compatibility through the
-  bound control's own `aria-describedby` is critical. The text-input
-  path is fully covered by the smoke + Playwright specs.
+For text inputs (`<input pInputText [formField]>`) the bound element is
+the focusable element, so no shim is needed — the smoke + Playwright
+specs cover that path end-to-end.
 
-The smoke + Playwright specs cover the text-input path end-to-end. The
-host-component path is verified at the wrapper level (host data
-attributes, error element id and role) and at the boundary (the
-PrimeNG-owned `aria-describedby` is asserted to be present and
-non-empty, but its content is left to PrimeNG).
+If you build a first-class `@ngx-signal-forms/primeng` package, ship a
+matching bridge for every host component (checkbox, multiselect,
+calendar, …). The select shim in this demo is the reference pattern.
 
 ### Theme-token interplay
 

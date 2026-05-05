@@ -1,6 +1,5 @@
 import { NgComponentOutlet } from '@angular/common';
 import {
-  afterEveryRender,
   booleanAttribute,
   ChangeDetectionStrategy,
   Component,
@@ -8,7 +7,6 @@ import {
   contentChildren,
   effect,
   inject,
-  Injector,
   input,
   isDevMode,
   signal,
@@ -36,10 +34,6 @@ import {
   createFieldNameResolver,
   toHintDescriptors,
 } from '@ngx-signal-forms/toolkit/headless';
-import {
-  isElementCssVisible,
-  NgxFieldIdentity,
-} from '@ngx-signal-forms/toolkit/core';
 
 /**
  * PrimeNG-flavoured form-field wrapper.
@@ -78,7 +72,7 @@ import {
  * projected control that opted into the toolkit's semantics layer. The
  * directive exposes `elementRef` (per ADR-0002 §6) so the wrapper reads the
  * bound element's `id` for the third-tier `resolvedFieldName` fallback
- * without `afterEveryRender` or imperative DOM probing.
+ * without imperative DOM probing.
  */
 @Component({
   selector: 'prime-form-field[ngxPrimeFormField]',
@@ -86,7 +80,6 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgComponentOutlet],
   providers: [
-    NgxFieldIdentity,
     {
       provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
       useFactory: () => {
@@ -293,8 +286,6 @@ export class PrimeFormFieldComponent<TValue = unknown> {
   // ── Strategy / submission state plumbing ──────────────────────────────
 
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
-  readonly #injector = inject(Injector);
-  readonly #fieldIdentity = inject(NgxFieldIdentity);
   readonly #formContext = injectFormContext();
 
   /**
@@ -369,31 +360,6 @@ export class PrimeFormFieldComponent<TValue = unknown> {
   readonly #hasWarned = signal(false);
 
   constructor() {
-    afterEveryRender(
-      {
-        write: () => {
-          const boundControl = this.#boundControlElement();
-          const resolvedFieldName = this.resolvedFieldName();
-
-          this.#fieldIdentity.setFieldName(resolvedFieldName);
-          this.#fieldIdentity.setControlElement(boundControl);
-          this.#fieldIdentity.setControlVisible(
-            boundControl ? isElementCssVisible(boundControl) : true,
-          );
-          this.#fieldIdentity.setHintIds(
-            this.hintDescriptors()
-              .filter(
-                (hint) =>
-                  hint.fieldName === null ||
-                  hint.fieldName === resolvedFieldName,
-              )
-              .map((hint) => hint.id),
-          );
-        },
-      },
-      { injector: this.#injector },
-    );
-
     if (isDevMode()) {
       effect(() => {
         if (this.#hasWarned()) {

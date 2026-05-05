@@ -7,6 +7,12 @@ import { defineConfig } from 'vitest/config';
 
 const toolkitRoot = resolve(__dirname, '../../packages/toolkit');
 
+// `toolkit/core` is intentionally aliased even though this app's source
+// never imports from it directly — the toolkit's root barrel
+// (`packages/toolkit/index.ts`) re-exports through
+// `@ngx-signal-forms/toolkit/core`, so vite must resolve that subpath
+// transitively. Sibling demos (Material, Spartan) keep the same
+// path-mapping for the same reason.
 const toolkitEntryAliases = [
   {
     find: /^@ngx-signal-forms\/toolkit\/assistive$/,
