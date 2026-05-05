@@ -830,6 +830,50 @@ describe('NgxFormFieldError', () => {
       expect(alert).toBeFalsy();
     });
 
+    // Regression: when both `[formField]` and `[errors]` are bound, the
+    // headless directive's `showErrors` short-circuits to override mode, but
+    // the resolved-errors accessor used to read `formField` first — so the
+    // alert container could go visible while `resolvedErrors()` resolved
+    // messages from the field's own errors instead of the override list.
+    // Fixed by inverting the order: override wins, formField is the fallback.
+    it('should prefer errorsOverride over formField when both are bound', async () => {
+      @Component({
+        selector: 'ngx-test-override-precedence',
+        imports: [FormField, NgxFormFieldError],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <input id="email" [formField]="contactForm.email" />
+          <ngx-form-field-error
+            [formField]="contactForm.email"
+            fieldName="email"
+            strategy="immediate"
+            [errors]="overrideErrors"
+          />
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'From field validator' });
+          }),
+        );
+        readonly overrideErrors = signal([
+          { kind: 'override', message: 'From override input' },
+        ]);
+      }
+
+      const { container } = await render(TestComponent);
+
+      const messages = container.querySelectorAll(
+        '.ngx-form-field-error__message',
+      );
+      expect(messages).toHaveLength(1);
+      expect(messages[0].textContent).toContain('From override input');
+      expect(messages[0].textContent).not.toContain('From field validator');
+    });
+
     // Regression: createErrorMessageSignal pinned the directive's `strategy`
     // input even in `errorsOverride` mode. With `strategy="on-submit"` and no
     // submitted status, the headless directive's own `showErrors()` would

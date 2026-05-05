@@ -287,24 +287,28 @@ export class NgxFormFieldError {
    * `createErrorMessageSignal()` calls below so the in-tree wrapper and any
    * external headless consumer share one resolution code path.
    *
-   * In direct-errors mode (the host binds `[errors]`/`errorsOverride`),
-   * synthesise a minimal field-state shape from the override signal so the
-   * primitive's `createErrorVisibility` cascade still short-circuits to
-   * "visible" (matching the headless directive's own override-mode
-   * short-circuit) and `readDirectErrors` finds the override entries.
+   * Override precedence matches `NgxHeadlessErrorState.showErrors`: when the
+   * host binds `[errors]`/`errorsOverride`, synthesise a minimal field-state
+   * shape from the override signal so the primitive's `createErrorVisibility`
+   * cascade short-circuits to "visible" and `readDirectErrors` finds the
+   * override entries. Only when no override is supplied do we fall through
+   * to the `[formField]` input. Reversing this order would let the alert
+   * container go visible (driven by `headless.showErrors`, which checks
+   * `errorsOverride` first) while `resolvedErrors()` read messages from
+   * `formField` instead.
    */
   readonly #fieldStateAccessor = computed(() => {
-    const fieldState = this.formField()?.();
-    if (fieldState !== undefined) return fieldState;
     const override = this.headless.errorsOverride()?.();
-    if (override === undefined) return undefined;
-    // Synthesised field-state surface: only the three accessors the primitive
-    // reads (`errors`, `invalid`, `touched`).
-    return {
-      errors: (): readonly ValidationError[] => override,
-      invalid: (): boolean => override.length > 0,
-      touched: (): boolean => true,
-    };
+    if (override !== undefined) {
+      // Synthesised field-state surface: only the three accessors the primitive
+      // reads (`errors`, `invalid`, `touched`).
+      return {
+        errors: (): readonly ValidationError[] => override,
+        invalid: (): boolean => override.length > 0,
+        touched: (): boolean => true,
+      };
+    }
+    return this.formField()?.();
   });
 
   // ── Field name / ID resolution ────────────────────────────────────────
