@@ -7,7 +7,6 @@ import {
   input,
   isDevMode,
   signal,
-  type Signal,
 } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import {
@@ -22,14 +21,15 @@ import {
   readDirectErrors,
   resolveErrorDisplayStrategy,
   type ErrorDisplayStrategy,
-  type NgxSignalFormHintDescriptor,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import {
   createAriaDescribedBySignal,
   createAriaInvalidSignal,
   createAriaRequiredSignal,
+  createFieldNameResolver,
   createHintIdsSignal,
+  toHintDescriptors,
 } from '@ngx-signal-forms/toolkit/headless';
 import {
   NgxMatBoundControl,
@@ -39,6 +39,7 @@ import {
   NgxMatTextControl,
 } from './control-directives';
 import { NgxMatFeedback } from './feedback-directive';
+import { NgxMatFeedbackOutlet } from './material-error-renderer';
 import { NgxMatErrorSlot, NgxMatHintSlot } from './slot-directives';
 
 /**
@@ -230,21 +231,18 @@ export class MatFormFieldWrapper<TValue = unknown> {
     () => this.#boundControl()?.elementRef.nativeElement ?? null,
   );
 
-  readonly #boundControlId = computed<string | null>(() => {
-    const id = this.#boundControlElement()?.id;
-    return id && id.length > 0 ? id : null;
-  });
-
-  readonly resolvedFieldName = computed<string | null>(() => {
-    const explicit = this.fieldName();
-    if (explicit !== undefined) {
-      const trimmed = explicit.trim();
-      if (trimmed.length > 0) {
-        return trimmed;
-      }
-    }
-
-    return this.#boundControlId();
+  /**
+   * Resolved field name. Built via the toolkit's
+   * {@link createFieldNameResolver} so the priority cascade
+   * (explicit → bound-control `id` → `null` + dev warning) stays in
+   * lockstep with the canonical wrapper. Mirrors what `NgxFormFieldWrapper`
+   * and the Spartan reference do — keeping every wrapper on the same
+   * resolver primitive prevents drift if the cascade evolves.
+   */
+  readonly resolvedFieldName = createFieldNameResolver({
+    explicit: this.fieldName,
+    boundControl: () => this.#boundControlElement(),
+    wrapperName: 'mat-form-field',
   });
 
   // ── Hint registry (forward-compat with <ngx-form-field-hint>) ─────────
@@ -269,13 +267,13 @@ export class MatFormFieldWrapper<TValue = unknown> {
     descendants: true,
   });
 
-  readonly hintDescriptors: Signal<readonly NgxSignalFormHintDescriptor[]> =
-    computed(() =>
-      this.hintChildren().map((hint) => ({
-        id: hint.resolvedId(),
-        fieldName: hint.resolvedFieldName(),
-      })),
-    );
+  /**
+   * Hint descriptors in the public wire format consumed by
+   * `NGX_SIGNAL_FORM_HINT_REGISTRY`. Built via the toolkit's
+   * {@link toHintDescriptors} helper so the registry-wire shape stays in
+   * lockstep with the canonical wrapper.
+   */
+  readonly hintDescriptors = toHintDescriptors(this.hintChildren);
 
   // ── ARIA primitive factories ──────────────────────────────────────────
   // The four factories from `@ngx-signal-forms/toolkit/headless` drive
@@ -397,5 +395,6 @@ export const NgxMatFormBundle = [
   NgxMatErrorSlot,
   NgxMatHintSlot,
   NgxMatFeedback,
+  NgxMatFeedbackOutlet,
   NgxSignalFormControlSemanticsDirective,
 ] as const;

@@ -29,6 +29,7 @@ export {
 } from './mat-form-field-wrapper';
 export {
   MaterialFeedbackRenderer,
+  NgxMatFeedbackOutlet,
   type NgxMatFeedbackSeverity,
 } from './material-error-renderer';
 export { MaterialHintRenderer } from './material-hint-renderer';
