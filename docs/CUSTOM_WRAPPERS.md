@@ -16,7 +16,7 @@ A wrapper that satisfies the four contracts below gets:
 
 ## Runnable references
 
-Two reference wrappers in the repo follow this guide end-to-end. Each
+Three reference wrappers in the repo follow this guide end-to-end. Each
 demonstrates a different "ARIA ownership" path, so use whichever matches
 your design system's posture:
 
@@ -33,6 +33,15 @@ your design system's posture:
   `createAriaDescribedByBridge`) feeds the toolkit's id composition into
   Brain — so the toolkit owns id resolution while Brain owns the DOM
   write.
+- [`apps/demo-primeng`](../apps/demo-primeng/README.md) — wraps PrimeNG with
+  a projected-control form-field wrapper. The wrapper still follows the
+  standard `NGX_SIGNAL_FORM_FIELD_CONTEXT` / hint-registry / renderer-token
+  contracts, and direct-input cases (`<input pInputText [formField]>`) rely on
+  `NgxSignalFormAutoAria` the same way the canonical wrapper does. Prime host
+  components like `p-select` are the current exception: the demo uses a narrow
+  compatibility shim (`PrimeSelectControlComponent`) until PrimeNG's own Signal
+  Forms story matures, and documents a future manual-bridge path for full
+  `aria-describedby` ownership.
 
 Both mirror the surface of future first-party `@ngx-signal-forms/material`
 and `@ngx-signal-forms/spartan` packages per
