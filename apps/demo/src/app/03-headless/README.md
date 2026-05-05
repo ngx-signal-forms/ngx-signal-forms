@@ -15,6 +15,9 @@ This section is the escape hatch for teams that cannot adopt the `NgxFormField` 
 - **[fieldset-utilities](./fieldset-utilities/README.md)** — headless fieldset grouping plus the `createErrorState` / `createCharacterCount` / `createFieldStateFlags` utilities applied to a delivery form.
   - What you'll learn: `NgxHeadlessToolkit` bundle · `ngxHeadlessErrorSummary` click-to-focus · `ngxHeadlessFieldset` aggregation · composing custom UI from utility factories · `provideFieldLabels()` for custom summary labels.
 
+- **[error-message-signal](./error-message-signal/README.md)** — `createErrorMessageSignal` exercised across all three `includeWarnings` modes with reactive registry swapping and `aria-describedby` wiring.
+  - What you'll learn: flat `@for` iteration without an outer `@if` gate · blocking-only vs. all-errors vs. warnings-only views · stable per-error IDs for `aria-describedby` · reactive `errorMessages` signal override.
+
 ## 🧠 Core concepts
 
 - **Renderless directives** — headless directives expose state via template context; you own every DOM node. See [headless README](../../../../../packages/toolkit/headless/README.md).

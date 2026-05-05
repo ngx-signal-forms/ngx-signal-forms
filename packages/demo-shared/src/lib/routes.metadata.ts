@@ -3,6 +3,7 @@ export const DEMO_PATHS = {
   errorDisplayModes: '/toolkit-core/error-display-modes',
   warningSupport: '/toolkit-core/warning-support',
   fieldsetUtilities: '/headless/fieldset-utilities',
+  errorMessageSignal: '/headless/error-message-signal',
   complexForms: '/form-field-wrapper/complex-forms',
   fieldsetAppearance: '/form-field-wrapper/fieldset-appearance',
   customControls: '/form-field-wrapper/custom-controls',
@@ -51,6 +52,10 @@ export const DEMO_CATEGORIES = [
       {
         path: '/headless/fieldset-utilities',
         label: 'Fieldset + Utilities',
+      },
+      {
+        path: '/headless/error-message-signal',
+        label: 'Error Message Signal',
       },
     ],
   },

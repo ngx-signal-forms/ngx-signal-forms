@@ -79,6 +79,14 @@ export const appRoutes: Routes = [
           ),
         title: getRouteTitle('/headless/fieldset-utilities'),
       },
+      {
+        path: 'error-message-signal',
+        loadComponent: () =>
+          import('./03-headless/error-message-signal/error-message-signal.page').then(
+            (m) => m.ErrorMessageSignalPageComponent,
+          ),
+        title: getRouteTitle('/headless/error-message-signal'),
+      },
     ],
   },
 
