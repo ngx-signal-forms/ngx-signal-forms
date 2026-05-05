@@ -17,6 +17,14 @@ import { NgxHeadlessFieldName } from './lib/field-name';
 import { NgxHeadlessFieldset } from './lib/fieldset';
 import { NgxHeadlessNotification } from './lib/notification';
 
+// Reactive primitives
+export {
+  createErrorMessageSignal,
+  type CreateErrorMessageSignalOptions,
+  type IncludeWarningsOption,
+  type ResolvedFieldError,
+} from './lib/create-error-message-signal';
+
 // Directives
 export {
   NgxHeadlessErrorState,

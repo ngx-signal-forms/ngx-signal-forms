@@ -22,6 +22,7 @@ import {
   NgxHeadlessCharacterCount,
   NgxHeadlessFieldset,
   NgxHeadlessFieldName,
+  createErrorMessageSignal,
   createErrorState,
   createCharacterCount,
   createFieldStateFlags,
@@ -177,6 +178,48 @@ Selector: `[ngxHeadlessFieldName]` · Export: `fieldName`
 Resolves field names and generates stable IDs for ARIA linking. Falls back to the host element `id` when `fieldName` is omitted. When neither a non-empty `fieldName` input nor a non-empty host `id` is provided, `resolvedFieldName()`, `errorId()`, and `warningId()` return `null` and the directive emits a one-shot `console.error` in dev mode. Downstream ARIA wiring should gate on a non-null value rather than produce unstable `"-error"` IDs.
 
 Signals: `resolvedFieldName()` (nullable), `errorId()` (nullable), `warningId()` (nullable).
+
+## Reactive primitives
+
+### createErrorMessageSignal
+
+A `Signal<readonly ResolvedFieldError[]>` that combines visibility gating, the 3-tier message cascade (validator `message` → `NGX_ERROR_MESSAGES` registry → default), and stable per-error DOM IDs in a single primitive. Use it when you want the directive's resolution logic without the directive itself — for example inside a custom error renderer that the form-field wrapper drives via `*ngComponentOutlet`, or in an Angular `Component` that opts to read errors directly off a `FieldTree`.
+
+```typescript
+import { createErrorMessageSignal } from '@ngx-signal-forms/toolkit/headless';
+
+@Component({
+  /* ... */
+})
+export class EmailErrors {
+  readonly field = input.required<FieldTree<string>>();
+
+  readonly resolvedErrors = createErrorMessageSignal(() => this.field()(), {
+    fieldName: 'email',
+  });
+
+  readonly resolvedWarnings = createErrorMessageSignal(() => this.field()(), {
+    includeWarnings: 'only',
+    fieldName: 'email',
+    strategy: 'immediate',
+  });
+}
+```
+
+Each entry is `{ kind, message, id, error }`:
+
+- `kind` — convenience copy of the validator kind, lifted to the top level so templates can write `entry.kind` instead of `entry.error.kind`.
+- `message` — the resolved display string after the 3-tier cascade.
+- `id` — `{fieldName}-error-{kind}`, stable so external renderers and the in-tree wrapper interoperate on `aria-describedby` chains without re-deriving the format.
+- `error` — the raw `ValidationError` from the field, kept for consumers that need validator-specific params or a non-stripped `message` override.
+
+Options of note:
+
+- `includeWarnings`: `false` (default), `true`, or `'only'` — selects blocking errors, both, or warnings only.
+- `stripWarningPrefix`: defaults to `true` (display-oriented); set to `false` to keep the `warn:` prefix visible for debugging.
+- `errorMessages`: explicit `Signal<ErrorMessageRegistry>` override; when omitted, the primitive auto-injects `NGX_ERROR_MESSAGES`.
+- `strategy` / `submittedStatus`: forwarded to `createErrorVisibility`. Omit to inherit from the form context.
+- `injector`: optional, for use outside an Angular injection context.
 
 ## Utility functions
 

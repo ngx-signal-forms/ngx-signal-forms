@@ -37,6 +37,7 @@ releases will not include any of the renames below.
 - **New: `NgxFormField` bundle** — convenience import array of wrapper + assistive parts + auto-ARIA directive
 - **New: fieldset toggle** — `includeNestedErrors` on fieldset; `submittedStatus` override input
 - **New: error component APIs** — `errors`, `listStyle`, `submittedStatus` inputs on `NgxFormFieldError`
+- **New: headless message resolution** — `createErrorMessageSignal()` combines visibility, the 3-tier message cascade, and stable per-error IDs for custom error renderers
 - **New: Vest options** — `only` selector, `resetOnDestroy`, `VEST_*_KIND_PREFIX` exports
 - **A11y** — removed explicit `aria-live` / `aria-atomic`; role semantics now authoritative
 - **Behavior** — missing `fieldName` / `id` now logs (dev mode) instead of throwing
@@ -486,6 +487,33 @@ usage patterns.
   the split between blocking errors and warnings, so
   `canSubmitWithWarnings()` lets a form submit while soft warnings
   remain visible. See [`docs/WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md).
+
+### Headless error-message resolution — `createErrorMessageSignal()`
+
+`@ngx-signal-forms/toolkit/headless` now exports a `createErrorMessageSignal(field, options?)`
+primitive that returns a `Signal<readonly ResolvedFieldError[]>` combining the visibility
+cascade (`createErrorVisibility`), the 3-tier message cascade (validator `message` →
+`NGX_ERROR_MESSAGES` registry → default), and stable per-error DOM IDs
+(`{fieldName}-error-{kind}` via `generateErrorId`). Each entry is `{ kind, message, id, error }`
+— `kind`/`message`/`id` lifted to the top level for template ergonomics, with the raw
+`ValidationError` retained on `.error` for consumers that need validator params.
+
+Use it when you want the directive's resolution logic without the directive itself — for
+example inside a custom error renderer driven via `*ngComponentOutlet` or any component
+reading errors directly off a `FieldTree`. The in-tree `NgxFormFieldError` now consumes
+this primitive, so external renderers and the wrapper share one resolution path.
+
+```ts
+import { createErrorMessageSignal } from '@ngx-signal-forms/toolkit/headless';
+
+readonly resolvedErrors = createErrorMessageSignal(() => this.field()(), {
+  fieldName: 'email',
+  // includeWarnings: false (default) | true | 'only'
+});
+```
+
+See [`packages/toolkit/headless/README.md`](../packages/toolkit/headless/README.md#createerrormessagesignal)
+for full options and worked examples.
 
 ### `/debugger` entry point
 

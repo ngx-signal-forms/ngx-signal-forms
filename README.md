@@ -287,8 +287,8 @@ every bit of markup and styling.
 Key exports: `NgxHeadlessToolkit`, `NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`,
 `NgxHeadlessNotification`, `NgxHeadlessCharacterCount`, `NgxHeadlessFieldset`,
 `NgxHeadlessFieldName`,
-`createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()`,
-`readErrors()`, `dedupeValidationErrors()`.
+`createErrorMessageSignal()`, `createErrorState()`, `createCharacterCount()`,
+`createFieldStateFlags()`, `readErrors()`, `dedupeValidationErrors()`.
 
 **[→ Headless docs](./packages/toolkit/headless/README.md)** ·
 **Demo:** [`fieldset-utilities` (code)](./apps/demo/src/app/03-headless/fieldset-utilities) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/headless/fieldset-utilities/)

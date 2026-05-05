@@ -77,6 +77,30 @@ describe('field-resolution', () => {
     it('should generate error ID for array field', () => {
       expect(generateErrorId('items[0].name')).toBe('items[0].name-error');
     });
+
+    it('should append kind suffix when supplied', () => {
+      expect(generateErrorId('email', 'required')).toBe('email-error-required');
+    });
+
+    it('should append kind suffix for nested field paths', () => {
+      expect(generateErrorId('address.city', 'minLength')).toBe(
+        'address.city-error-minLength',
+      );
+    });
+
+    it('should append kind suffix for array fields', () => {
+      expect(generateErrorId('items[0].name', 'required')).toBe(
+        'items[0].name-error-required',
+      );
+    });
+
+    it('should preserve container form when kind is undefined', () => {
+      expect(generateErrorId('email', undefined)).toBe('email-error');
+    });
+
+    it('should treat empty-string kind as a literal suffix', () => {
+      expect(generateErrorId('email', '')).toBe('email-error-');
+    });
   });
 
   describe('generateWarningId', () => {
