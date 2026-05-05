@@ -149,8 +149,8 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
           </ul>
         } @else {
           @for (
-            error of headless.resolvedErrors();
-            track error.kind + ':' + error.message + ':' + $index
+            error of resolvedErrors();
+            track error.error.kind + ':' + error.message + ':' + $index
           ) {
             <p
               class="ngx-form-field-error__message ngx-form-field-error__message--error"
@@ -192,8 +192,8 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
           </ul>
         } @else {
           @for (
-            warning of headless.resolvedWarnings();
-            track warning.kind + ':' + warning.message + ':' + $index
+            warning of resolvedWarnings();
+            track warning.error.kind + ':' + warning.message + ':' + $index
           ) {
             <p
               class="ngx-form-field-error__message ngx-form-field-error__message--warning"
@@ -394,6 +394,22 @@ export class NgxFormFieldError {
   // private field at evaluation time without tripping a forward-reference.
 
   /**
+   * Strategy passed to the resolved-errors primitive. Mirrors the headless
+   * directive's own override-mode short-circuit: when `errorsOverride` is
+   * bound the caller has already aggregated and gated the error list
+   * upstream, so the primitive's visibility cascade must bypass strategy
+   * (otherwise an `'on-submit'` strategy with no submitted status would
+   * leave `resolvedErrors()` empty while `errorContainerVisible` is true,
+   * rendering an empty live region).
+   */
+  readonly #resolvedErrorsStrategy = computed<ErrorDisplayStrategy | undefined>(
+    () =>
+      this.headless.errorsOverride() !== undefined
+        ? 'immediate'
+        : this.headless.strategy(),
+  );
+
+  /**
    * Blocking errors, resolved through the public {@link createErrorMessageSignal}
    * primitive. The strategy and submitted-status inputs are forwarded so the
    * primitive's visibility cascade matches the directive's `showErrors` —
@@ -403,7 +419,7 @@ export class NgxFormFieldError {
   protected readonly resolvedErrors = createErrorMessageSignal(
     this.#fieldStateAccessor,
     {
-      strategy: this.headless.strategy,
+      strategy: this.#resolvedErrorsStrategy,
       submittedStatus: this.headless.submittedStatus,
       fieldName: computed(() => this.#resolvedFieldName()),
     },
