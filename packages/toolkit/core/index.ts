@@ -51,6 +51,7 @@ export {
   type HintIdsRegistryLike,
   type HintIdsSignal,
 } from './utilities/aria/create-hint-ids-signal';
+export { assertInjector } from './utilities/assert-injector';
 export * from './utilities/cascading-resolver';
 export * from './utilities/create-error-visibility';
 export {

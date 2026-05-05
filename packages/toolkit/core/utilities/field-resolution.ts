@@ -88,17 +88,31 @@ export function resolveFieldName(element: HTMLElement): string | null {
 /**
  * Generates an error ID for a field, following WCAG best practices.
  *
+ * When `kind` is omitted the result identifies the *container* that holds
+ * one or more error messages — the form returned by the toolkit's wrappers
+ * and used as a single `aria-describedby` target. When `kind` is supplied
+ * the result identifies a *specific error*, suitable for headless consumers
+ * that render one DOM node per error and want each node addressable on its
+ * own. Both forms remain stable so wrapper-rendered and headless-rendered
+ * IDs interoperate without the call site re-deriving the format.
+ *
  * @param fieldName - The field name
- * @returns The error ID in format: `{fieldName}-error`
+ * @param kind - Optional error kind (e.g. `'required'`); appended after the
+ *   `-error` suffix when present
+ * @returns `{fieldName}-error` (container form) or
+ *   `{fieldName}-error-{kind}` (per-error form)
  *
  * @example
  * ```typescript
- * generateErrorId('email') // Returns: 'email-error'
- * generateErrorId('address.city') // Returns: 'address.city-error'
+ * generateErrorId('email');                  // 'email-error'
+ * generateErrorId('email', 'required');      // 'email-error-required'
+ * generateErrorId('address.city', 'minLen'); // 'address.city-error-minLen'
  * ```
  */
-export function generateErrorId(fieldName: string): string {
-  return `${fieldName}-error`;
+export function generateErrorId(fieldName: string, kind?: string): string {
+  return kind === undefined
+    ? `${fieldName}-error`
+    : `${fieldName}-error-${kind}`;
 }
 
 /**

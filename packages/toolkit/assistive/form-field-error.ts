@@ -6,7 +6,7 @@ import {
   input,
   isDevMode,
 } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
+import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   injectFormContext,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
@@ -19,7 +19,10 @@ import {
   createFieldMessageIdSignals,
   resolveFieldNameFromCandidates,
 } from '@ngx-signal-forms/toolkit/core';
-import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
+import {
+  createErrorMessageSignal,
+  NgxHeadlessErrorState,
+} from '@ngx-signal-forms/toolkit/headless';
 
 export type NgxFormFieldListStyle = 'plain' | 'bullets';
 
@@ -134,8 +137,8 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
         @if (usesBulletList()) {
           <ul class="ngx-form-field-error__list" role="list">
             @for (
-              error of headless.resolvedErrors();
-              track error.kind + ':' + error.message + ':' + $index
+              error of resolvedErrors();
+              track error.error.kind + ':' + error.message + ':' + $index
             ) {
               <li
                 class="ngx-form-field-error__message ngx-form-field-error__message--error"
@@ -177,8 +180,8 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
         @if (usesBulletList()) {
           <ul class="ngx-form-field-error__list" role="list">
             @for (
-              warning of headless.resolvedWarnings();
-              track warning.kind + ':' + warning.message + ':' + $index
+              warning of resolvedWarnings();
+              track warning.error.kind + ':' + warning.message + ':' + $index
             ) {
               <li
                 class="ngx-form-field-error__message ngx-form-field-error__message--warning"
@@ -278,6 +281,32 @@ export class NgxFormFieldError {
     this.headless.connectFieldState(computed(() => this.formField()?.()));
   }
 
+  /**
+   * Reactive accessor to the underlying field state, derived from the same
+   * `[formField]` input the headless directive consumes. Used to drive the
+   * `createErrorMessageSignal()` calls below so the in-tree wrapper and any
+   * external headless consumer share one resolution code path.
+   *
+   * In direct-errors mode (the host binds `[errors]`/`errorsOverride`),
+   * synthesise a minimal field-state shape from the override signal so the
+   * primitive's `createErrorVisibility` cascade still short-circuits to
+   * "visible" (matching the headless directive's own override-mode
+   * short-circuit) and `readDirectErrors` finds the override entries.
+   */
+  readonly #fieldStateAccessor = computed(() => {
+    const fieldState = this.formField()?.();
+    if (fieldState !== undefined) return fieldState;
+    const override = this.headless.errorsOverride()?.();
+    if (override === undefined) return undefined;
+    // Synthesised field-state surface: only the three accessors the primitive
+    // reads (`errors`, `invalid`, `touched`).
+    return {
+      errors: (): readonly ValidationError[] => override,
+      invalid: (): boolean => override.length > 0,
+      touched: (): boolean => true,
+    };
+  });
+
   // ── Field name / ID resolution ────────────────────────────────────────
   readonly #resolvedFieldName = computed<string | null>(() => {
     const resolvedFieldName = resolveFieldNameFromCandidates(
@@ -357,5 +386,43 @@ export class NgxFormFieldError {
    */
   protected readonly warningContainerVisible = computed(
     () => this.showWarnings() && this.headless.hasWarnings(),
+  );
+
+  // ── Resolved messages (delegate to the public createErrorMessageSignal) ──
+  // Keep these field initializers AFTER `#resolvedFieldName` so that the
+  // arrow-bodied `fieldName` accessor passed to the primitive can read the
+  // private field at evaluation time without tripping a forward-reference.
+
+  /**
+   * Blocking errors, resolved through the public {@link createErrorMessageSignal}
+   * primitive. The strategy and submitted-status inputs are forwarded so the
+   * primitive's visibility cascade matches the directive's `showErrors` —
+   * `errorContainerVisible` still gates rendering, so an empty list during
+   * hidden states is a no-op.
+   */
+  protected readonly resolvedErrors = createErrorMessageSignal(
+    this.#fieldStateAccessor,
+    {
+      strategy: this.headless.strategy,
+      submittedStatus: this.headless.submittedStatus,
+      fieldName: computed(() => this.#resolvedFieldName()),
+    },
+  );
+
+  /**
+   * Warnings, resolved through {@link createErrorMessageSignal} with
+   * `includeWarnings: 'only'`. Warnings use their own immediate-by-default
+   * visibility — the wrapper's `warningContainerVisible` gates rendering,
+   * and the primitive call uses `'immediate'` so warnings are always
+   * resolved when the field is invalid (the warning kinds themselves cause
+   * `field.invalid()` to be true upstream).
+   */
+  protected readonly resolvedWarnings = createErrorMessageSignal(
+    this.#fieldStateAccessor,
+    {
+      strategy: 'immediate',
+      includeWarnings: 'only',
+      fieldName: computed(() => this.#resolvedFieldName()),
+    },
   );
 }
