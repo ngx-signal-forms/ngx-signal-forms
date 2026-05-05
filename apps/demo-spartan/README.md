@@ -99,7 +99,7 @@ src/app/
   form/                                form + validations + smoke spec
   wrapper/
     spartan-form-field.ts              the wrapper component (BrnField host directive + inline BrnFieldA11yService factory)
-    spartan-form-field-error.ts        default error renderer (role="alert" + role="status")
+    spartan-form-field-error.ts        default error renderer (role="alert" + role="status"); resolves messages via `createErrorMessageSignal` so it inherits the toolkit's 3-tier cascade (validator message → `NGX_ERROR_MESSAGES` → default)
 ```
 
 - A custom wrapper component (`spartan-form-field`) that **composes**

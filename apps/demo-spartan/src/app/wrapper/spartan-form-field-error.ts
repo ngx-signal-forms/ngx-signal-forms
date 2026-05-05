@@ -5,17 +5,15 @@ import {
   inject,
   input,
 } from '@angular/core';
-import type { FieldTree, ValidationError } from '@angular/forms/signals';
+import type { FieldTree } from '@angular/forms/signals';
 import {
-  createShowErrorsComputed,
   generateErrorId,
   generateWarningId,
-  isBlockingError,
-  isWarningError,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
+import { createErrorMessageSignal } from '@ngx-signal-forms/toolkit/headless';
 
 /**
  * `hlm-error` look-alike. Bound by `NgxSpartanFormField` via the
@@ -23,6 +21,12 @@ import {
  * the blocking-error and warning slots, mirroring what
  * `<small data-slot="form-error">` would render in a hand-written Spartan
  * `hlm-error` component.
+ *
+ * Message resolution delegates to the public `createErrorMessageSignal`
+ * primitive, so consumers that configure `NGX_ERROR_MESSAGES` see registry
+ * values surface here through the same 3-tier cascade
+ * (validator message → registry → default) as the in-tree
+ * `NgxFormFieldError`.
  *
  * The toolkit hands the wrapper a single component for the error slot;
  * splitting blocking errors and warnings into separate `<p>` elements at
@@ -49,7 +53,7 @@ import {
       [hidden]="!firstError()"
     >
       @if (firstError(); as err) {
-        {{ err.message ?? err.kind }}
+        {{ err.message }}
       }
     </p>
 
@@ -66,7 +70,7 @@ import {
       [hidden]="!firstWarning()"
     >
       @if (firstWarning(); as warn) {
-        {{ warn.message ?? warn.kind }}
+        {{ warn.message }}
       }
     </p>
   `,
@@ -80,9 +84,12 @@ export class NgxSpartanFormFieldError {
   readonly formField = input<FieldTree<unknown> | undefined>();
 
   /**
-   * Strategy resolved by the parent wrapper. Threaded into the live-region
-   * visibility computed so blocking-error and warning containers stay in the
-   * DOM but only "activate" once the strategy says messages should surface.
+   * Strategy resolved by the parent wrapper. Forwarded to
+   * `createErrorMessageSignal` so the primitive's visibility cascade matches
+   * the wrapper's strategy. The `<p>` element stays mounted regardless (so
+   * `role="alert"` preexists its first content insertion — WCAG 4.1.3); this
+   * input only gates whether the region "activates" (has content + id, not
+   * aria-hidden).
    */
   readonly strategy = input<ResolvedErrorDisplayStrategy>('on-touch');
 
@@ -94,50 +101,51 @@ export class NgxSpartanFormFieldError {
 
   /**
    * Field name from the surrounding wrapper context. Used to generate the
-   * stable error/warning IDs that `NgxSignalFormAutoAria` writes into
-   * `aria-describedby` on the bound control.
+   * stable error/warning container IDs that `NgxSignalFormAutoAria` writes
+   * into `aria-describedby` on the bound control.
    */
   readonly #fieldContext = inject(NGX_SIGNAL_FORM_FIELD_CONTEXT, {
     optional: true,
   });
 
-  protected readonly errors = computed<readonly ValidationError[]>(() => {
-    const tree = this.formField();
-    if (!tree) return [];
-    return tree().errors();
-  });
-
-  readonly #firstBlockingError = computed(() =>
-    this.errors().find(isBlockingError),
-  );
-
-  readonly #firstWarning = computed(() => this.errors().find(isWarningError));
+  readonly #fieldStateAccessor = computed(() => this.formField()?.());
 
   /**
-   * Strategy-aware visibility for the blocking-error live region. The <p>
-   * element stays mounted regardless (so role="alert" preexists its first
-   * content insertion - WCAG 4.1.3); this signal only gates whether the
-   * region is "active" (has content + id, not aria-hidden).
+   * Blocking errors, resolved through the public primitive. Strategy and
+   * submission status are forwarded so visibility matches the wrapper's
+   * cascade; the registry is auto-injected from `NGX_ERROR_MESSAGES`.
    */
-  readonly #fieldState = computed(() => this.formField()?.());
-  readonly #showErrorsByStrategy = createShowErrorsComputed(
-    this.#fieldState,
-    this.strategy,
-    this.submittedStatus,
+  readonly #resolvedErrors = createErrorMessageSignal(
+    this.#fieldStateAccessor,
+    {
+      strategy: this.strategy,
+      submittedStatus: this.submittedStatus,
+    },
   );
 
-  protected readonly firstError = computed(() => {
-    if (!this.#showErrorsByStrategy()) return undefined;
-    return this.#firstBlockingError();
-  });
+  /**
+   * Warnings surface immediately (matching `NgxFormFieldError`'s default
+   * `warningStrategy: 'immediate'`) — they are informational and not gated by
+   * the blocking-error strategy.
+   */
+  readonly #resolvedWarnings = createErrorMessageSignal(
+    this.#fieldStateAccessor,
+    {
+      strategy: 'immediate',
+      includeWarnings: 'only',
+    },
+  );
+
+  protected readonly firstError = computed(() => this.#resolvedErrors()[0]);
+  protected readonly firstWarning = computed(() => this.#resolvedWarnings()[0]);
 
   /**
-   * Warnings surface immediately (matching the toolkit's
-   * `NgxFormFieldError` default `warningStrategy: 'immediate'`) - they are
-   * informational and not gated by the blocking-error strategy.
+   * Container IDs use the kind-less `generateErrorId(name)` /
+   * `generateWarningId(name)` shape so they stay in lockstep with the
+   * `aria-describedby` chain produced by `NgxSignalFormAutoAria`. Do not
+   * substitute `ResolvedFieldError.id` here — that ID embeds the validator
+   * `kind` and would break the consumer's wiring.
    */
-  protected readonly firstWarning = this.#firstWarning;
-
   protected readonly errorId = computed(() => {
     const name = this.#fieldContext?.fieldName() ?? null;
     return name !== null && name.length > 0 ? generateErrorId(name) : null;

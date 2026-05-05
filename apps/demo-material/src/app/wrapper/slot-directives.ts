@@ -9,16 +9,8 @@ import {
   ViewContainerRef,
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
-import {
-  createShowErrorsComputed,
-  injectFormContext,
-  isBlockingError,
-  isWarningError,
-  NGX_SIGNAL_FORMS_CONFIG,
-  readDirectErrors,
-  resolveErrorDisplayStrategy,
-  type ErrorDisplayStrategy,
-} from '@ngx-signal-forms/toolkit';
+import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import { createErrorMessageSignal } from '@ngx-signal-forms/toolkit/headless';
 
 /**
  * Embedded-view context for the error / hint slot directives.
@@ -53,8 +45,9 @@ export interface NgxMatHintSlotContext {
  * <mat-error *ngxMatErrorSlot="form.email; let message">{{ message }}</mat-error>
  * ```
  *
- * Visibility timing reuses `createShowErrorsComputed` — the same helper
- * `NgxFormFieldWrapper` and `NgxSignalFormAutoAria` consult — so the
+ * Message resolution + visibility timing delegate to the public
+ * {@link createErrorMessageSignal} primitive — the same primitive that
+ * powers the canonical wrapper and the Spartan reference, so the
  * `errorStrategy` (`on-touch` / `on-submit` / `immediate`) decision stays
  * single-sourced across every surface in the demo.
  *
@@ -75,38 +68,10 @@ export class NgxMatErrorSlot<TValue = unknown> {
   readonly #templateRef = inject(TemplateRef<NgxMatErrorSlotContext>);
   readonly #viewContainerRef = inject(ViewContainerRef);
 
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
-  readonly #formContext = injectFormContext();
-
-  readonly #fieldStateSignal = computed(() => this.formField()());
-
-  readonly #effectiveStrategy = computed(() =>
-    resolveErrorDisplayStrategy(
-      this.strategy(),
-      this.#formContext ? this.#formContext.errorStrategy() : undefined,
-      this.#config.defaultErrorStrategy,
-    ),
+  readonly #resolvedErrors = createErrorMessageSignal(
+    () => this.formField()(),
+    { strategy: computed(() => this.strategy() ?? undefined) },
   );
-
-  readonly #submittedStatus = computed(() =>
-    this.#formContext ? this.#formContext.submittedStatus() : 'unsubmitted',
-  );
-
-  readonly #showByStrategy = createShowErrorsComputed(
-    this.#fieldStateSignal,
-    this.#effectiveStrategy,
-    this.#submittedStatus,
-  );
-
-  readonly #blockingMessages = computed<readonly string[]>(() => {
-    if (!this.#showByStrategy()) {
-      return [];
-    }
-    return readDirectErrors(this.#fieldStateSignal())
-      .filter(isBlockingError)
-      .map((error) => error.message ?? '')
-      .filter((message) => message.length > 0);
-  });
 
   /** @internal — type guard for template language services. */
   static ngTemplateContextGuard<TValue>(
@@ -118,9 +83,12 @@ export class NgxMatErrorSlot<TValue = unknown> {
 
   constructor() {
     effect(() => {
+      const messages = this.#resolvedErrors()
+        .map((error) => error.message)
+        .filter((message) => message.length > 0);
       syncEmbeddedViews(
         this.#viewContainerRef,
-        this.#blockingMessages(),
+        messages,
         (message) => ({ $implicit: message, severity: 'error' as const }),
         this.#templateRef,
       );
@@ -165,41 +133,21 @@ export class NgxMatHintSlot<TValue = unknown> {
   readonly #templateRef = inject(TemplateRef<NgxMatHintSlotContext>);
   readonly #viewContainerRef = inject(ViewContainerRef);
 
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
-  readonly #formContext = injectFormContext();
+  readonly #strategySignal = computed(() => this.strategy() ?? undefined);
 
-  readonly #fieldStateSignal = computed(() => this.formField()());
-
-  readonly #effectiveStrategy = computed(() =>
-    resolveErrorDisplayStrategy(
-      this.strategy(),
-      this.#formContext ? this.#formContext.errorStrategy() : undefined,
-      this.#config.defaultErrorStrategy,
-    ),
+  readonly #blockingErrors = createErrorMessageSignal(
+    () => this.formField()(),
+    { strategy: this.#strategySignal },
   );
 
-  readonly #submittedStatus = computed(() =>
-    this.#formContext ? this.#formContext.submittedStatus() : 'unsubmitted',
-  );
-
-  readonly #showByStrategy = createShowErrorsComputed(
-    this.#fieldStateSignal,
-    this.#effectiveStrategy,
-    this.#submittedStatus,
-  );
-
-  readonly #hasBlockingError = computed(() =>
-    readDirectErrors(this.#fieldStateSignal()).some(isBlockingError),
-  );
+  readonly #warnings = createErrorMessageSignal(() => this.formField()(), {
+    strategy: this.#strategySignal,
+    includeWarnings: 'only',
+  });
 
   readonly #warningMessage = computed<string | null>(() => {
-    if (!this.#showByStrategy() || this.#hasBlockingError()) {
-      return null;
-    }
-    const firstWarning = readDirectErrors(this.#fieldStateSignal()).find(
-      isWarningError,
-    );
-    return firstWarning?.message?.trim() || null;
+    if (this.#blockingErrors().length > 0) return null;
+    return this.#warnings()[0]?.message?.trim() || null;
   });
 
   /** @internal — type guard for template language services. */

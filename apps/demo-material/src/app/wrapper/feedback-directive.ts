@@ -12,9 +12,6 @@ import type { FieldTree } from '@angular/forms/signals';
 import {
   generateErrorId,
   generateWarningId,
-  injectFormContext,
-  NGX_SIGNAL_FORMS_CONFIG,
-  resolveErrorDisplayStrategy,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import { createErrorMessageSignal } from '@ngx-signal-forms/toolkit/headless';
@@ -43,12 +40,6 @@ export interface NgxMatFeedbackContext {
  * non-blocking warnings — so each block owns a single stable ID
  * (`{fieldName}-error` / `{fieldName}-warning`) that consumers can wire into
  * the bound control's `aria-describedby` chain by hand.
- *
- * Message resolution delegates to the public `createErrorMessageSignal`
- * primitive, so consumers that configure `NGX_ERROR_MESSAGES` see registry
- * values surface here through the same 3-tier cascade
- * (validator message → registry → default) as the in-tree
- * `NgxFormFieldError`.
  *
  * @example
  * ```html
@@ -95,84 +86,39 @@ export class NgxMatFeedback<TValue = unknown> {
   readonly #templateRef = inject(TemplateRef<NgxMatFeedbackContext>);
   readonly #viewContainerRef = inject(ViewContainerRef);
 
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
-  readonly #formContext = injectFormContext();
+  readonly #strategySignal = computed(() => this.strategy() ?? undefined);
 
-  readonly #fieldStateAccessor = computed(() => this.formField()());
-
-  readonly #effectiveStrategy = computed(() =>
-    resolveErrorDisplayStrategy(
-      this.strategy(),
-      this.#formContext ? this.#formContext.errorStrategy() : undefined,
-      this.#config.defaultErrorStrategy,
-    ),
+  readonly #blockingErrors = createErrorMessageSignal(
+    () => this.formField()(),
+    { strategy: this.#strategySignal },
   );
 
-  readonly #submittedStatus = computed(() =>
-    this.#formContext ? this.#formContext.submittedStatus() : 'unsubmitted',
-  );
-
-  /**
-   * Blocking errors, resolved through the public primitive. The strategy and
-   * submission status are forwarded so the primitive's visibility cascade
-   * matches the directive's own; the registry is auto-injected from
-   * `NGX_ERROR_MESSAGES`.
-   */
-  readonly #resolvedErrors = createErrorMessageSignal(
-    this.#fieldStateAccessor,
-    {
-      strategy: this.#effectiveStrategy,
-      submittedStatus: this.#submittedStatus,
-    },
-  );
-
-  /**
-   * Warnings share the directive's strategy/submission gating with errors —
-   * Material's `*ngxMatFeedback` historically gated both via the same
-   * `#showByStrategy`, so forwarding `#effectiveStrategy` keeps existing
-   * consumers' "wait for touch / submit" behavior. `#blocks` then suppresses
-   * warnings whenever blocking errors are present so at most one block
-   * renders per field. (This deliberately differs from the Spartan slice in
-   * #65, which mirrors `NgxFormFieldError`'s `'immediate'` warning default.)
-   */
-  readonly #resolvedWarnings = createErrorMessageSignal(
-    this.#fieldStateAccessor,
-    {
-      strategy: this.#effectiveStrategy,
-      submittedStatus: this.#submittedStatus,
-      includeWarnings: 'only',
-    },
-  );
+  readonly #warnings = createErrorMessageSignal(() => this.formField()(), {
+    strategy: this.#strategySignal,
+    includeWarnings: 'only',
+  });
 
   readonly #blocks = computed<readonly NgxMatFeedbackContext[]>(() => {
     const fieldName = this.fieldName();
-    // Filter empty strings so a deliberate `message: ''` validator/registry
-    // override doesn't render a live region with an ID + role but no text.
-    const blockingMessages = this.#resolvedErrors()
+    const blockingMessages = this.#blockingErrors()
       .map((entry) => entry.message)
-      .filter((message) => message !== '');
+      .filter((message) => message.length > 0);
     if (blockingMessages.length > 0) {
       return [
         {
           $implicit: blockingMessages,
           messages: blockingMessages,
           severity: 'error',
-          // Container IDs use the kind-less `generateErrorId(name)` /
-          // `generateWarningId(name)` shape so they stay in lockstep with
-          // the consumer's `aria-describedby` wiring. Do not substitute
-          // `ResolvedFieldError.id` — that ID embeds the validator `kind`
-          // and would break that wiring.
           id: generateErrorId(fieldName),
         },
       ];
     }
-
     // Warnings render only when there are no blocking errors — matching the
     // previous `MatCheckboxFeedback` semantics and Material's hint-vs-error
     // convention.
-    const warningMessages = this.#resolvedWarnings()
+    const warningMessages = this.#warnings()
       .map((entry) => entry.message)
-      .filter((message) => message !== '');
+      .filter((message) => message.length > 0);
     if (warningMessages.length > 0) {
       return [
         {
@@ -183,7 +129,6 @@ export class NgxMatFeedback<TValue = unknown> {
         },
       ];
     }
-
     return [];
   });
 
