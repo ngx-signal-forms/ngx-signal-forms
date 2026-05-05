@@ -73,7 +73,7 @@ body {
 
 .app-shell__eyebrow {
   margin: 0 0 0.75rem;
-  color: #6a7894;
+  color: var(--app-muted);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.18em;
@@ -111,7 +111,7 @@ body {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.52);
   font-family:
-    'SF Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+    'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', monospace;
   font-size: 0.85em;
 }
 
@@ -154,7 +154,7 @@ body {
 
 .demo-form__eyebrow {
   margin: 0;
-  color: #6a7894;
+  color: var(--app-muted);
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.16em;
