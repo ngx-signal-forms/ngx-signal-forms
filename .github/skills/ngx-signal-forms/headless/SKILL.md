@@ -183,6 +183,7 @@ with `NgxFormFieldError`, the wrapper, and other toolkit consumers). Prefer
 
 ```typescript
 import {
+  createErrorMessageSignal,
   createErrorState,
   createCharacterCount,
   createFieldStateFlags,
@@ -196,6 +197,17 @@ const state = createErrorState({
 });
 const count = createCharacterCount({ field: form.bio }); // maxLength auto-detected from validator
 const flags = createFieldStateFlags(() => form.email()); // boolean signal flags
+
+// Reactive resolved errors: visibility cascade + 3-tier message resolution
+// + stable per-error DOM IDs ({fieldName}-error-{kind}). Use this in custom
+// renderers that mount via `*ngComponentOutlet` or any component that wants
+// the directive's resolution logic without the directive itself.
+const resolved = createErrorMessageSignal(() => form.email(), {
+  fieldName: 'email',
+  // includeWarnings: true | 'only' (default: false)
+  // strategy / submittedStatus inherit from form context when omitted
+});
+// resolved() => readonly { error, message, id }[]
 ```
 
 ## Utility Functions

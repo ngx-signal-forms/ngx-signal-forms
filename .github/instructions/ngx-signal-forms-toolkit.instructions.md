@@ -206,7 +206,8 @@ Current public exports, grouped by category:
 **ARIA & ID generation:**
 
 - `buildAriaDescribedBy()`
-- `generateErrorId()` / `generateWarningId()` / `createUniqueId()`
+- `generateErrorId(fieldName, kind?)` — `{fieldName}-error` (container form, no `kind`) or `{fieldName}-error-{kind}` (per-error form). Per-error IDs are produced by `createErrorMessageSignal()` so external renderers and the in-tree wrapper interoperate on `aria-describedby` chains.
+- `generateWarningId()` / `createUniqueId()`
 
 **Message resolution:**
 
@@ -538,6 +539,7 @@ Public directives and helpers include:
 
 **Factory functions:**
 
+- `createErrorMessageSignal(field, options?)` — `Signal<readonly ResolvedFieldError[]>` combining the visibility cascade, 3-tier message resolution (validator `message` → `NGX_ERROR_MESSAGES` registry → default), and stable per-error DOM IDs (`{fieldName}-error-{kind}`). Auto-injects `NGX_ERROR_MESSAGES` unless `errorMessages` is supplied. Options: `includeWarnings` (`false` | `true` | `'only'`), `stripWarningPrefix` (default `true`), `strategy`, `submittedStatus`, `fieldName`, `errorMessages`, `injector`.
 - `createErrorState()` / `createCharacterCount()` / `createFieldStateFlags()`
 - `createUniqueId()`
 
