@@ -618,9 +618,10 @@ describe('NgxFormFieldHint — renderer dispatch', () => {
 
       // The capture <div> is hidden via display:none when a renderer is active
       const captureDiv = container.querySelector(
-        'ngx-form-field-hint > div[style*="none"]',
-      );
+        'ngx-form-field-hint > div',
+      ) as HTMLElement | null;
       expect(captureDiv).toBeInTheDocument();
+      expect(captureDiv?.style.display).toBe('none');
     });
 
     it('still sets host attributes (id, data-*) when renderer is active', async () => {

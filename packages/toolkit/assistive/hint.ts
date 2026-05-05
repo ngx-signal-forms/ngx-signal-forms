@@ -144,9 +144,13 @@ export class NgxFormFieldHint implements AfterContentInit, OnDestroy {
     optional: true,
   });
 
-  // @ViewChild is used here (not signal-based viewChild) because static:true
-  // resolution is required — both refs must be available in ngAfterContentInit
-  // before Angular updates signal-based view queries.
+  // @ViewChild({ static: true }) is used here instead of signal-based viewChild()
+  // for two reasons:
+  // 1. static:true guarantees resolution before ngAfterContentInit so we can
+  //    read projected childNodes before Angular updates signal-based view queries.
+  // 2. @ViewChild sets the value via `instance[propName] = value` at runtime,
+  //    which is incompatible with ES # private fields (only accessible inside the
+  //    class body). TypeScript `private readonly` is the necessary exception.
   @ViewChild('capture', { static: true })
   private readonly captureRef!: ElementRef<HTMLDivElement>;
 
