@@ -47,7 +47,11 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
     }
 
     .p-error {
-      color: var(--p-form-field-invalid-placeholder-color, #ef4444);
+      /* Fallback #b91c1c (Tailwind red-700, ~6.1:1 on white) is used when
+         the PrimeNG token is unresolved (e.g. SSR pre-render, stripped
+         CSS). PrimeNG's default #ef4444 would fall short of WCAG 2.2 AA
+         contrast (1.4.3) at the 0.85rem error size. */
+      color: var(--p-form-field-invalid-placeholder-color, #b91c1c);
       font-size: 0.85rem;
       line-height: 1.2;
     }

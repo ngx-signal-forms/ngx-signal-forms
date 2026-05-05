@@ -111,6 +111,8 @@ class HostImplicitNameCmp {
 
 describe('demo-primeng smoke spec', () => {
   it('renders the Prime error idiom and wires ARIA when the field is invalid', async () => {
+    const user = userEvent.setup();
+
     await render(HostCmp, {
       providers: [
         provideFormFieldErrorRenderer({ component: PrimeFieldErrorComponent }),
@@ -125,8 +127,8 @@ describe('demo-primeng smoke spec', () => {
     // Touch the field so the on-touch / immediate strategy lights up. Using
     // `immediate` in the schema would also work, but a tab away from the
     // control is closer to what consumers experience in the running demo.
-    await userEvent.click(input);
-    await userEvent.tab();
+    await user.click(input);
+    await user.tab();
 
     // (1) the Prime error element renders. PrimeFieldErrorComponent emits
     //     `<small class="p-error" data-testid="prime-error">…</small>`.
@@ -149,14 +151,16 @@ describe('demo-primeng smoke spec', () => {
   });
 
   it('falls back to NgxFormFieldError when no renderer is registered', async () => {
+    const user = userEvent.setup();
+
     await render(HostNoRendererCmp);
 
     const input = screen.getByLabelText(/email/i);
     if (!(input instanceof HTMLInputElement)) {
       throw new Error('Expected an <input> element for the email control.');
     }
-    await userEvent.click(input);
-    await userEvent.tab();
+    await user.click(input);
+    await user.tab();
 
     // The Prime renderer is NOT registered; the wrapper must fall back to
     // the toolkit's `NgxFormFieldError` (rendered as `<ngx-form-field-error>`
@@ -171,6 +175,8 @@ describe('demo-primeng smoke spec', () => {
   });
 
   it('resolves field name from the bound control id (tier-3) when input is omitted', async () => {
+    const user = userEvent.setup();
+
     await render(HostImplicitNameCmp, {
       providers: [
         provideFormFieldErrorRenderer({ component: PrimeFieldErrorComponent }),
@@ -181,8 +187,8 @@ describe('demo-primeng smoke spec', () => {
     if (!(input instanceof HTMLInputElement)) {
       throw new Error('Expected an <input> element for the email control.');
     }
-    await userEvent.click(input);
-    await userEvent.tab();
+    await user.click(input);
+    await user.tab();
 
     const errorEl = await screen.findByTestId('prime-error');
     // The wrapper resolved field name from the bound input's id attribute,

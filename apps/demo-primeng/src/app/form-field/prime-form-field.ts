@@ -109,10 +109,13 @@ import {
       gap: 0.35rem;
     }
 
-    :host([data-invalid='true']) ::ng-deep .p-inputtext,
-    :host([data-invalid='true']) ::ng-deep .p-select {
-      border-color: var(--prime-form-field-invalid-border-color);
-    }
+    /*
+     * NOTE: invalid-state border styling for projected PrimeNG controls
+     * (.p-inputtext, .p-select) lives in apps/demo-primeng/src/styles.css
+     * keyed off prime-form-field[data-invalid='true']. Repo policy forbids
+     * ::ng-deep, and the wrapper publishes data-invalid as its public
+     * styling seam.
+     */
 
     .prime-form-field__label {
       font-weight: 500;

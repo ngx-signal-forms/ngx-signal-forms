@@ -1,4 +1,5 @@
-import { provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationRef, provideZonelessChangeDetection } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
@@ -33,7 +34,7 @@ beforeAll(() => {
 });
 
 async function renderProfileForm() {
-  return render(ProfileFormComponent, {
+  const result = await render(ProfileFormComponent, {
     providers: [
       provideZonelessChangeDetection(),
       provideAnimationsAsync(),
@@ -54,6 +55,14 @@ async function renderProfileForm() {
       ...provideNgxPrimeForms(),
     ],
   });
+
+  // Wait for the zoneless app + PrimeNG's afterEveryRender plumbing to settle
+  // before tests start asserting; helper is also returned so callers can
+  // re-await stability after user interactions.
+  const appRef = TestBed.inject(ApplicationRef);
+  await appRef.whenStable();
+
+  return { ...result, whenStable: () => appRef.whenStable() };
 }
 
 describe('ProfileFormComponent', () => {

@@ -172,12 +172,25 @@ main.shell {
   background: rgb(255 255 255 / 0.06);
   color: var(--demo-summary-ink);
   font-family:
-    'SFMono-Regular', 'IBM Plex Mono', 'Cascadia Code', Menlo, Monaco, Consolas,
+    SFMono-Regular, 'IBM Plex Mono', 'Cascadia Code', Menlo, Monaco, Consolas,
     monospace;
   font-size: 0.84rem;
   line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: break-word;
+}
+
+/*
+ * Invalid-state border for projected PrimeNG controls. Lives in this app-level
+ * stylesheet (rather than inside PrimeFormFieldComponent's view-encapsulated
+ * styles) so we never have to reach through Angular's encapsulation with
+ * ::ng-deep. The wrapper exposes its validity state via the public
+ * data-invalid attribute, which makes a non-piercing descendant selector
+ * sufficient.
+ */
+prime-form-field[data-invalid='true'] .p-inputtext,
+prime-form-field[data-invalid='true'] .p-select {
+  border-color: var(--prime-form-field-invalid-border-color);
 }
 
 @media (width >= 48rem) {

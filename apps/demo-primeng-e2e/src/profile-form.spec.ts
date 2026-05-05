@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 /**
  * Single E2E spec for the PrimeNG reference demo.
@@ -8,6 +8,11 @@ import { expect, test } from '@playwright/test';
  * regression (auto-aria selector miss, hint registry mismatch, renderer
  * token misroute) shows up here without needing component-level instrumentation.
  */
+
+async function selectRole(page: Page, optionName: string): Promise<void> {
+  await page.getByRole('combobox', { name: /pick a role/i }).click();
+  await page.getByRole('option', { name: optionName }).click();
+}
 
 test.describe('demo-primeng — profile form', () => {
   test.beforeEach(async ({ page }) => {
@@ -20,31 +25,28 @@ test.describe('demo-primeng — profile form', () => {
   }) => {
     const emailInput = page.locator('#profile-email');
 
-    // Initial render: aria-invalid is unset (or 'false') because the field
-    // has not been touched and on-touch is the default error strategy.
-    // Asserting the attribute directly implies the element is in the DOM,
-    // so we skip a redundant visibility check.
-    await expect(emailInput).not.toHaveAttribute('aria-invalid', 'true');
+    await test.step('blur the untouched email field', async () => {
+      // Initial render: aria-invalid is unset (or 'false') because the field
+      // has not been touched and on-touch is the default error strategy.
+      await expect(emailInput).not.toHaveAttribute('aria-invalid', 'true');
 
-    // Tab into the field, then tab away to trigger touched().
-    await emailInput.focus();
-    await emailInput.blur();
+      await emailInput.focus();
+      await emailInput.blur();
+    });
 
-    // (1) the Prime error element is visible — it is the
-    //     `<small class="p-error">` rendered by PrimeFieldErrorComponent.
-    const errorEl = page.getByTestId('prime-error').first();
-    await expect(errorEl).toBeVisible();
-    await expect(errorEl).toHaveText(/required/i);
-    await expect(errorEl).toHaveAttribute('id', 'profile-email-error');
+    await test.step('show the Prime error idiom and connect ARIA', async () => {
+      const errorEl = page.getByTestId('prime-error').first();
+      await expect(errorEl).toBeVisible();
+      await expect(errorEl).toHaveText(/required/i);
+      await expect(errorEl).toHaveAttribute('id', 'profile-email-error');
 
-    // (2) auto-aria writes aria-invalid="true" on the bound control once the
-    //     error becomes visible.
-    await expect(emailInput).toHaveAttribute('aria-invalid', 'true');
+      await expect(emailInput).toHaveAttribute('aria-invalid', 'true');
 
-    // (3) aria-describedby chain points at the rendered error element.
-    const describedBy = await emailInput.getAttribute('aria-describedby');
-    expect(describedBy).not.toBeNull();
-    expect(describedBy?.split(/\s+/)).toContain('profile-email-error');
+      await expect(emailInput).toHaveAttribute(
+        'aria-describedby',
+        /profile-email-error/,
+      );
+    });
   });
 
   test('warning idiom renders for the personal-email heuristic', async ({
@@ -52,66 +54,88 @@ test.describe('demo-primeng — profile form', () => {
   }) => {
     const emailInput = page.locator('#profile-email');
 
-    await emailInput.fill('alex@gmail.com');
-    await emailInput.blur();
+    await test.step('enter a personal email address', async () => {
+      await emailInput.fill('alex@gmail.com');
+      await emailInput.blur();
+    });
 
-    // The warning renderer emits <small class="p-warn"> with the
-    // {fieldName}-warning id. Errors should be cleared (the value is a valid
-    // email), so only the warning element should be present.
-    const warningEl = page.getByTestId('prime-warning').first();
-    await expect(warningEl).toBeVisible();
-    await expect(warningEl).toHaveAttribute('id', 'profile-email-warning');
-    await expect(warningEl).toHaveAttribute('role', 'status');
-    await expect(warningEl).toHaveText(/personal email/i);
+    await test.step('render the warning without a blocking error', async () => {
+      const warningEl = page.getByTestId('prime-warning').first();
+      await expect(warningEl).toBeVisible();
+      await expect(warningEl).toHaveAttribute('id', 'profile-email-warning');
+      await expect(warningEl).toHaveAttribute('role', 'status');
+      await expect(warningEl).toHaveText(/personal email/i);
+    });
   });
 
   test('select required error surfaces on blur and the combobox stays linked to its assistive text', async ({
     page,
   }) => {
     const roleCombobox = page.getByRole('combobox', { name: /pick a role/i });
-    await roleCombobox.focus();
-    await page.keyboard.press('Tab');
 
-    // (1) the Prime-flavoured error renders for the role field with the
-    //     {fieldName}-error id convention.
-    const roleError = page.locator('#profile-role-error');
-    await expect(roleError).toBeVisible();
-    await expect(roleError).toHaveText(/role is required/i);
-    await expect(roleError).toHaveAttribute('role', 'alert');
+    await test.step('blur the untouched role control', async () => {
+      await roleCombobox.focus();
+      await page.keyboard.press('Tab');
+    });
 
-    // (2) the wrapper surfaces its toolkit-derived view of validity on
-    //     the host attribute, useful for tests / debug overlays / styling.
-    //     This works regardless of PrimeNG's host-component ARIA model.
-    const roleField = page.locator(
-      'prime-form-field[data-field-name="profile-role"]',
-    );
-    await expect(roleField).toHaveAttribute('data-invalid', 'true');
+    await test.step('render the role error and wire the combobox ARIA', async () => {
+      const roleError = page.locator('#profile-role-error');
+      await expect(roleError).toBeVisible();
+      await expect(roleError).toHaveText(/role is required/i);
+      await expect(roleError).toHaveAttribute('role', 'alert');
 
-    // (3) the accessible combobox keeps the wrapper-managed hint and error
-    //     IDs in its `aria-describedby` chain.
-    await expect(roleCombobox).toHaveAttribute(
-      'aria-describedby',
-      /profile-role-hint/,
-    );
-    await expect(roleCombobox).toHaveAttribute(
-      'aria-describedby',
-      /profile-role-error/,
-    );
-    await expect(roleCombobox).toHaveAttribute('aria-invalid', 'true');
-    await expect(roleCombobox).toHaveAttribute('aria-required', 'true');
+      const roleField = page.locator(
+        'prime-form-field[data-field-name="profile-role"]',
+      );
+      await expect(roleField).toHaveAttribute('data-invalid', 'true');
+
+      await expect(roleCombobox).toHaveAttribute(
+        'aria-describedby',
+        /profile-role-hint/,
+      );
+      await expect(roleCombobox).toHaveAttribute(
+        'aria-describedby',
+        /profile-role-error/,
+      );
+      await expect(roleCombobox).toHaveAttribute('aria-invalid', 'true');
+      await expect(roleCombobox).toHaveAttribute('aria-required', 'true');
+    });
   });
 
-  test('checkbox wrapper exposes resolved field name on the host attribute', async ({
+  test('submits a completed form and reset returns it to its initial state', async ({
     page,
   }) => {
-    // `[ngxPrimeFormField]` resolves the field name and surfaces it on the
-    // wrapper host so styling / tests / debug overlays can correlate the
-    // wrapper to the bound field without DOM walking. Same boundary
-    // applies as for `<p-select>`: auto-aria writes land on `<p-checkbox>`,
-    // not its inner input.
-    const newsletterField = page.locator(
-      'prime-form-field[data-field-name="profile-newsletter"]',
-    );
-    await expect(newsletterField).toBeVisible();
+    const emailInput = page.locator('#profile-email');
+    const roleCombobox = page.getByRole('combobox', { name: /pick a role/i });
+    const newsletterCheckbox = page.getByRole('checkbox', {
+      name: /subscribe to the release notes/i,
+    });
+    const submitButton = page.getByTestId('submit-button');
+    const resetButton = page.getByRole('button', { name: /reset/i });
+
+    await test.step('complete the form and submit it', async () => {
+      await emailInput.fill('team@company.com');
+      await selectRole(page, 'Designer');
+      await newsletterCheckbox.click();
+
+      await expect(newsletterCheckbox).toBeChecked();
+      await submitButton.click();
+
+      const summary = page.getByTestId('submission-summary');
+      await expect(summary).toBeVisible();
+      await expect(summary).toContainText('"email": "team@company.com"');
+      await expect(summary).toContainText('"role": "designer"');
+      await expect(summary).toContainText('"newsletter": true');
+    });
+
+    await test.step('reset the form back to its initial state', async () => {
+      await resetButton.click();
+
+      await expect(page.getByTestId('submission-summary')).toBeHidden();
+      await expect(emailInput).toHaveValue('');
+      await expect(newsletterCheckbox).not.toBeChecked();
+      await expect(roleCombobox).toHaveText('Pick a role');
+      await expect(page.locator('#profile-role-error')).toBeHidden();
+    });
   });
 });

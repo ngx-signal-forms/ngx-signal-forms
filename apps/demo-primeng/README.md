@@ -25,8 +25,11 @@ specific.
   both renderer tokens in one call (mirrors `provideNgxMatForms()`).
 - A custom **`PrimeFieldErrorComponent`** registered through
   `provideFormFieldErrorRenderer({ component: ... })` that emits PrimeNG's
-  `<small class="p-error">` idiom (and `<small class="p-warn">` for
-  warnings) — so error display matches the rest of a Prime-themed app.
+  `<small class="p-error">` idiom for blocking errors plus a demo-local
+  `<small class="p-warn">` for non-blocking warnings (`p-error` is the
+  documented PrimeNG class; `p-warn` is a wrapper-local class styled in
+  `prime-field-error.ts` so the warning slot uses the same Prime visual
+  weight without claiming to be a standard PrimeNG hook).
 - A narrow **`PrimeSelectControlComponent`** compatibility shim for
   PrimeNG's `<p-select>`. The real integration seam in this demo is still
   the toolkit wrapper/renderer layer; this shim exists only because direct
