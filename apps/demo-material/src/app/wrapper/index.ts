@@ -10,6 +10,7 @@ import {
   provideFormFieldHintRenderer,
 } from '@ngx-signal-forms/toolkit';
 import { MaterialFeedbackRenderer } from './material-error-renderer';
+import { MaterialHintRenderer } from './material-hint-renderer';
 
 export {
   NgxMatBoundControl,
@@ -30,6 +31,7 @@ export {
   MaterialFeedbackRenderer,
   type NgxMatFeedbackSeverity,
 } from './material-error-renderer';
+export { MaterialHintRenderer } from './material-hint-renderer';
 export {
   NgxMatErrorSlot,
   NgxMatHintSlot,
@@ -39,8 +41,8 @@ export {
 
 /**
  * Optional override shape for `provideNgxMatForms*`. When omitted, the
- * Material reference's default `MaterialFeedbackRenderer` is registered
- * for both error and hint slots.
+ * Material reference's defaults are used: `MaterialFeedbackRenderer` for the
+ * error slot and `MaterialHintRenderer` for the hint slot.
  */
 export interface NgxMatFormsProviderOptions {
   /**
@@ -48,15 +50,21 @@ export interface NgxMatFormsProviderOptions {
    * error/warning blocks of `*ngxMatFeedback`.
    */
   readonly feedbackRenderer?: { readonly component: Type<unknown> };
+  /**
+   * Override the renderer dispatched by `NgxFormFieldHint` via
+   * `NGX_FORM_FIELD_HINT_RENDERER`. Defaults to `MaterialHintRenderer`.
+   */
+  readonly hintRenderer?: { readonly component: Type<unknown> };
 }
 
 /**
  * Application-level provider that registers the Material feedback renderer
- * for both `NGX_FORM_FIELD_ERROR_RENDERER` and `NGX_FORM_FIELD_HINT_RENDERER`.
+ * for `NGX_FORM_FIELD_ERROR_RENDERER` and a Material-styled hint renderer
+ * for `NGX_FORM_FIELD_HINT_RENDERER`.
  *
  * Recommended path for apps that consume the Material reference wrapper —
- * one call at bootstrap registers the default `MaterialFeedbackRenderer`
- * (or a consumer-supplied override) once for the entire app.
+ * one call at bootstrap registers the defaults (or consumer-supplied
+ * overrides) once for the entire app.
  *
  * @example
  * ```ts
@@ -71,11 +79,13 @@ export interface NgxMatFormsProviderOptions {
 export function provideNgxMatForms(
   options?: NgxMatFormsProviderOptions,
 ): EnvironmentProviders[] {
-  const component =
+  const feedbackComponent =
     options?.feedbackRenderer?.component ?? MaterialFeedbackRenderer;
+  const hintComponent =
+    options?.hintRenderer?.component ?? MaterialHintRenderer;
   return [
-    provideFormFieldErrorRenderer({ component }),
-    provideFormFieldHintRenderer({ component }),
+    provideFormFieldErrorRenderer({ component: feedbackComponent }),
+    provideFormFieldHintRenderer({ component: hintComponent }),
   ];
 }
 
@@ -103,10 +113,14 @@ export function provideNgxMatForms(
 export function provideNgxMatFormsForComponent(
   options?: NgxMatFormsProviderOptions,
 ): Provider[] {
-  const component =
+  const feedbackComponent =
     options?.feedbackRenderer?.component ?? MaterialFeedbackRenderer;
+  const hintComponent =
+    options?.hintRenderer?.component ?? MaterialHintRenderer;
   return [
-    ...provideFormFieldErrorRendererForComponent({ component }),
-    ...provideFormFieldHintRendererForComponent({ component }),
+    ...provideFormFieldErrorRendererForComponent({
+      component: feedbackComponent,
+    }),
+    ...provideFormFieldHintRendererForComponent({ component: hintComponent }),
   ];
 }

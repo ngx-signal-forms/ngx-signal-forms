@@ -258,14 +258,17 @@ export const NGX_FORM_FIELD_ERROR_RENDERER =
   );
 
 /**
- * Injection token for form-field wrapper implementations that render the
- * hint slot via a component outlet.
+ * Injection token for the hint renderer used by `NgxFormFieldHint`.
  *
- * The first-party `NgxFormFieldWrapper` currently renders projected hint
- * content directly and does not consult this token. Wrappers that do render
- * hints dynamically may use this token to resolve a custom hint renderer,
- * typically falling back to `NgxFormFieldHint` from
- * `@ngx-signal-forms/toolkit/assistive` when no provider is registered.
+ * When a provider is registered, `NgxFormFieldHint` instantiates the supplied
+ * component via `createComponent({ projectableNodes })` and forwards the
+ * projected content into its `<ng-content />` slot. When no provider is
+ * registered, `NgxFormFieldHint` falls back to direct `<ng-content />`
+ * projection (backwards-compatible default).
+ *
+ * This token mirrors `NGX_FORM_FIELD_ERROR_RENDERER` — both follow the same
+ * dispatch + fallback pattern. Wrappers that render hints dynamically may also
+ * use this token to resolve a custom hint renderer.
  *
  * The token itself has no factory — consumers injecting it directly should
  * use `{ optional: true }` and treat `null` as "no custom hint renderer

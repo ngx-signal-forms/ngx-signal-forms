@@ -1,14 +1,20 @@
 import {
+  AfterContentInit,
   ChangeDetectionStrategy,
   Component,
+  ComponentRef,
   computed,
   ElementRef,
   inject,
   input,
+  OnDestroy,
   signal,
+  ViewChild,
+  ViewContainerRef,
 } from '@angular/core';
 import {
   createUniqueId,
+  NGX_FORM_FIELD_HINT_RENDERER,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
 } from '@ngx-signal-forms/toolkit';
 
@@ -68,7 +74,18 @@ import {
 @Component({
   selector: 'ngx-form-field-hint',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: ` <ng-content /> `,
+  template: `
+    <!--
+      When a renderer is registered, projected content is captured in the
+      hidden div and forwarded to the renderer via createComponent projectableNodes.
+      When no renderer is registered, display:contents makes the div transparent
+      to layout so the hint renders exactly as before (backwards-compatible).
+    -->
+    <div #capture [style.display]="hintRenderer ? 'none' : 'contents'">
+      <ng-content />
+    </div>
+    <ng-container #outlet></ng-container>
+  `,
   styles: `
     :host {
       display: block;
@@ -107,11 +124,36 @@ import {
     '[attr.data-signal-field]': 'resolvedFieldName()',
   },
 })
-export class NgxFormFieldHint {
+export class NgxFormFieldHint implements AfterContentInit, OnDestroy {
   readonly #elementRef = inject(ElementRef<HTMLElement>);
   readonly #fieldContext = inject(NGX_SIGNAL_FORM_FIELD_CONTEXT, {
     optional: true,
   });
+
+  /**
+   * Optional hint renderer resolved via `NGX_FORM_FIELD_HINT_RENDERER`.
+   * When registered, projected content is forwarded to the renderer component
+   * via `createComponent({ projectableNodes })`. When absent, falls back to
+   * direct `<ng-content />` projection (backwards-compatible default).
+   *
+   * Protected so Angular templates can evaluate `hintRenderer ? 'none' : 'contents'`.
+   * `@ViewChild` below cannot use ES `#` private fields — Angular sets the value
+   * via property access, which requires at minimum TypeScript `private`.
+   */
+  protected readonly hintRenderer = inject(NGX_FORM_FIELD_HINT_RENDERER, {
+    optional: true,
+  });
+
+  // @ViewChild is used here (not signal-based viewChild) because static:true
+  // resolution is required — both refs must be available in ngAfterContentInit
+  // before Angular updates signal-based view queries.
+  @ViewChild('capture', { static: true })
+  private readonly captureRef!: ElementRef<HTMLDivElement>;
+
+  @ViewChild('outlet', { static: true, read: ViewContainerRef })
+  private readonly outletVcr!: ViewContainerRef;
+
+  #rendererRef: ComponentRef<unknown> | null = null;
 
   readonly #explicitId = signal<string | null>(null);
 
@@ -160,5 +202,22 @@ export class NgxFormFieldHint {
     if (existingId !== null && existingId.length > 0) {
       this.#explicitId.set(existingId);
     }
+  }
+
+  ngAfterContentInit(): void {
+    if (!this.hintRenderer) return;
+    // Move projected nodes into the renderer component. Content has been
+    // projected into #capture by the time this hook fires, and @ViewChild
+    // static:true ensures captureRef / outletVcr are already resolved.
+    const nodes = Array.from(this.captureRef.nativeElement.childNodes);
+    this.#rendererRef = this.outletVcr.createComponent(
+      this.hintRenderer.component,
+      { projectableNodes: [nodes] },
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.#rendererRef?.destroy();
+    this.#rendererRef = null;
   }
 }

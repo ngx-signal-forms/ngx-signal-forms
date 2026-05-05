@@ -1,5 +1,8 @@
-import { signal } from '@angular/core';
-import { NGX_SIGNAL_FORM_FIELD_CONTEXT } from '@ngx-signal-forms/toolkit';
+import { Component, signal } from '@angular/core';
+import {
+  NGX_FORM_FIELD_HINT_RENDERER,
+  NGX_SIGNAL_FORM_FIELD_CONTEXT,
+} from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldHint } from './hint';
@@ -519,6 +522,129 @@ describe('NgxFormFieldHint', () => {
       const span = container.querySelector('span[style*="color"]');
       expect(span).toBeInTheDocument();
       expect(span).toHaveTextContent('Important note');
+    });
+  });
+});
+
+/**
+ * Tests for NGX_FORM_FIELD_HINT_RENDERER dispatch and fallback.
+ *
+ * Covers:
+ * - Fallback path: no renderer → direct <ng-content /> projection
+ * - Dispatch path: renderer registered → renderer component instantiated
+ * - Content forwarding: projected nodes reach the renderer's <ng-content />
+ */
+
+@Component({
+  selector: 'stub-hint-renderer',
+  template: `<span class="stub-renderer"><ng-content /></span>`,
+  standalone: true,
+})
+class StubHintRendererComponent {}
+
+describe('NgxFormFieldHint — renderer dispatch', () => {
+  describe('Fallback path (no renderer registered)', () => {
+    it('projects content directly when no renderer is provided', async () => {
+      await render(
+        `<ngx-form-field-hint>Direct projection</ngx-form-field-hint>`,
+        { imports: [NgxFormFieldHint] },
+      );
+
+      expect(screen.getByText('Direct projection')).toBeInTheDocument();
+    });
+
+    it('does not create a stub-renderer element when no renderer is registered', async () => {
+      const { container } = await render(
+        `<ngx-form-field-hint>No renderer</ngx-form-field-hint>`,
+        { imports: [NgxFormFieldHint] },
+      );
+
+      expect(container.querySelector('.stub-renderer')).toBeNull();
+    });
+  });
+
+  describe('Dispatch path (renderer registered)', () => {
+    it('renders content inside the registered renderer component', async () => {
+      const { container } = await render(
+        `<ngx-form-field-hint>Via renderer</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          providers: [
+            {
+              provide: NGX_FORM_FIELD_HINT_RENDERER,
+              useValue: { component: StubHintRendererComponent },
+            },
+          ],
+        },
+      );
+
+      const rendererEl = container.querySelector('.stub-renderer');
+      expect(rendererEl).toBeInTheDocument();
+      expect(rendererEl).toHaveTextContent('Via renderer');
+    });
+
+    it('forwards projected HTML content into the renderer', async () => {
+      const { container } = await render(
+        `<ngx-form-field-hint><strong>Bold hint</strong></ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          providers: [
+            {
+              provide: NGX_FORM_FIELD_HINT_RENDERER,
+              useValue: { component: StubHintRendererComponent },
+            },
+          ],
+        },
+      );
+
+      const strong = container.querySelector('.stub-renderer strong');
+      expect(strong).toBeInTheDocument();
+      expect(strong).toHaveTextContent('Bold hint');
+    });
+
+    it('hides the capture div when renderer is active', async () => {
+      const { container } = await render(
+        `<ngx-form-field-hint>Hidden capture</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          providers: [
+            {
+              provide: NGX_FORM_FIELD_HINT_RENDERER,
+              useValue: { component: StubHintRendererComponent },
+            },
+          ],
+        },
+      );
+
+      // The capture <div> is hidden via display:none when a renderer is active
+      const captureDiv = container.querySelector(
+        'ngx-form-field-hint > div[style*="none"]',
+      );
+      expect(captureDiv).toBeInTheDocument();
+    });
+
+    it('still sets host attributes (id, data-*) when renderer is active', async () => {
+      const { container } = await render(
+        `<ngx-form-field-hint>Hint</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          providers: [
+            {
+              provide: NGX_FORM_FIELD_HINT_RENDERER,
+              useValue: { component: StubHintRendererComponent },
+            },
+            {
+              provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+              useValue: { fieldName: signal('email') },
+            },
+          ],
+        },
+      );
+
+      const hint = container.querySelector('ngx-form-field-hint');
+      expect(hint).toHaveAttribute('id', 'email-hint');
+      expect(hint).toHaveAttribute('data-ngx-signal-form-hint', 'true');
+      expect(hint).toHaveAttribute('data-signal-field', 'email');
     });
   });
 });

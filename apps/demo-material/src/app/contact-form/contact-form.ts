@@ -17,6 +17,7 @@ import {
   NGX_FORM_FIELD_ERROR_RENDERER,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
+import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import {
   MaterialFeedbackRenderer,
   NgxMatFormBundle,
@@ -58,6 +59,7 @@ import { contactFormSchema } from './contact-form.validations';
     NgComponentOutlet,
     FormField,
     NgxSignalFormToolkit,
+    NgxFormFieldHint,
     NgxMatFormBundle,
     MatFormFieldModule,
     MatInputModule,
@@ -119,6 +121,9 @@ import { contactFormSchema } from './contact-form.validations';
           ngxMatTextControl
           autocomplete="email"
         />
+        <!-- ngx-form-field-hint dispatches via NGX_FORM_FIELD_HINT_RENDERER →
+             MaterialHintRenderer (registered by provideNgxMatForms()). -->
+        <ngx-form-field-hint>Format: user&#64;example.com</ngx-form-field-hint>
         <mat-error *ngxMatErrorSlot="contactForm.email; let message">
           <ng-container
             *ngComponentOutlet="

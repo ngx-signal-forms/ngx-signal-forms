@@ -544,10 +544,10 @@ generic `inputs` signature).
 - [ ] Wrapper does **not** write `aria-invalid`, `aria-required`, or
       `aria-describedby` on its host element — those belong on the bound
       control and are owned by `NgxSignalFormAutoAria`.
-- [ ] Optional: provide `NGX_FORM_FIELD_HINT_RENDERER` symmetry if your
-      wrapper's hint slot uses an outlet rather than projected
-      `<ng-content>`. (The first-party wrapper currently projects content
-      directly; the token is reserved for future parity.)
+- [ ] Optional: provide `NGX_FORM_FIELD_HINT_RENDERER` if your wrapper renders
+      hints via a component outlet rather than projected `<ng-content>`. The
+      first-party `NgxFormFieldHint` dispatches via this token (falls back to
+      direct `<ng-content />` projection when no provider is registered).
 
 ## Common pitfalls
 
