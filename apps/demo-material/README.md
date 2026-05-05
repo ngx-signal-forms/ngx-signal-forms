@@ -149,6 +149,12 @@ warning block) so each block owns a single stable ID
 `aria-describedby` manually if Material's auto-aggregation is not
 available.
 
+Internally, `*ngxMatFeedback` resolves messages through the public
+`createErrorMessageSignal` primitive, so any registry configured via
+`NGX_ERROR_MESSAGES` (e.g. through `provideErrorMessages`) flows through
+the same 3-tier cascade (validator message → registry → default) used by
+the in-tree `NgxFormFieldError`.
+
 ### Renderer registration
 
 ```ts
