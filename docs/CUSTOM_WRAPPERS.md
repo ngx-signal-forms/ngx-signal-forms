@@ -74,15 +74,24 @@ so hint IDs flow into `aria-describedby` purely through DI. The descriptor
 shape is the public wire format — see `NgxSignalFormHintDescriptor` in
 `@ngx-signal-forms/toolkit`.
 
-### 3. `NGX_FORM_FIELD_ERROR_RENDERER` (and optionally `NGX_FORM_FIELD_HINT_RENDERER`)
+### 3. `NGX_FORM_FIELD_ERROR_RENDERER` and `NGX_FORM_FIELD_HINT_RENDERER`
 
-Inject the renderer token with `{ optional: true }`, fall back to
-`NgxFormFieldError` (or `NgxFormFieldHint`) when it returns `null`, and
-instantiate the resolved component via `*ngComponentOutlet`. This is the
-seam that lets consumers swap a Material-styled error component into your
-wrapper without forking it. The token JSDoc spells out the contract:
-the wrapper owns the default fallback; consumers override via the
-provider helpers documented below.
+Inject the error renderer token with `{ optional: true }`, fall back to
+`NgxFormFieldError` when it returns `null`, and instantiate the resolved
+component via `*ngComponentOutlet`. This is the seam that lets consumers
+swap a Material-styled error component into your wrapper without forking
+it. The token JSDoc spells out the contract: the wrapper owns the default
+fallback; consumers override via the provider helpers documented below.
+
+The hint renderer (`NGX_FORM_FIELD_HINT_RENDERER`) is dispatched **inside**
+`NgxFormFieldHint` itself — wrappers do not need to call
+`*ngComponentOutlet` for the hint slot. Register a hint renderer via
+`provideFormFieldHintRenderer(...)` and any projected
+`<ngx-form-field-hint>` automatically renders the configured component with
+the projected content forwarded into its default `<ng-content>` slot. The
+renderer receives `{ resolvedFieldName, resolvedId, position }` as inputs;
+declare all three with `input()` (any default is fine) because Angular's
+`componentRef.setInput` rejects writes to undeclared inputs.
 
 ### 4. `NgxSignalFormAutoAria`
 
@@ -553,10 +562,12 @@ generic `inputs` signature).
 - [ ] Wrapper does **not** write `aria-invalid`, `aria-required`, or
       `aria-describedby` on its host element — those belong on the bound
       control and are owned by `NgxSignalFormAutoAria`.
-- [ ] Optional: provide `NGX_FORM_FIELD_HINT_RENDERER` symmetry if your
-      wrapper's hint slot uses an outlet rather than projected
-      `<ng-content>`. (The first-party wrapper currently projects content
-      directly; the token is reserved for future parity.)
+- [ ] Optional: register `NGX_FORM_FIELD_HINT_RENDERER` via
+      `provideFormFieldHintRenderer(...)` if you want projected
+      `<ngx-form-field-hint>` instances to render with design-system chrome.
+      `NgxFormFieldHint` dispatches through the token internally, so the
+      wrapper itself does not need a hint outlet — the registration is
+      enough.
 
 ## Common pitfalls
 

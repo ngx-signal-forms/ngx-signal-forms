@@ -1,5 +1,13 @@
-import { signal } from '@angular/core';
-import { NGX_SIGNAL_FORM_FIELD_CONTEXT } from '@ngx-signal-forms/toolkit';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
+import {
+  NGX_FORM_FIELD_HINT_RENDERER,
+  NGX_SIGNAL_FORM_FIELD_CONTEXT,
+} from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldHint } from './hint';
@@ -519,6 +527,141 @@ describe('NgxFormFieldHint', () => {
       const span = container.querySelector('span[style*="color"]');
       expect(span).toBeInTheDocument();
       expect(span).toHaveTextContent('Important note');
+    });
+  });
+
+  describe('Renderer dispatch (NGX_FORM_FIELD_HINT_RENDERER)', () => {
+    @Component({
+      selector: 'stub-hint-renderer',
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `
+        <div data-testid="stub-hint-renderer">
+          <span data-testid="resolved-field-name">{{
+            resolvedFieldName() ?? 'null'
+          }}</span>
+          <span data-testid="resolved-id">{{ resolvedId() }}</span>
+          <span data-testid="position">{{ position() ?? 'null' }}</span>
+          <div data-testid="projected">
+            <ng-content />
+          </div>
+        </div>
+      `,
+    })
+    class StubHintRenderer {
+      readonly resolvedFieldName = input<string | null>(null);
+      readonly resolvedId = input.required<string>();
+      readonly position = input<'left' | 'right' | null>(null);
+    }
+
+    it('dispatches to the registered renderer instead of projecting directly', async () => {
+      await render(
+        `<ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          providers: [
+            {
+              provide: NGX_FORM_FIELD_HINT_RENDERER,
+              useValue: { component: StubHintRenderer },
+            },
+          ],
+        },
+      );
+
+      expect(screen.getByTestId('stub-hint-renderer')).toBeInTheDocument();
+    });
+
+    it('forwards projected content into the renderer’s default ng-content slot', async () => {
+      const view = await render(
+        `<ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          providers: [
+            {
+              provide: NGX_FORM_FIELD_HINT_RENDERER,
+              useValue: { component: StubHintRenderer },
+            },
+          ],
+        },
+      );
+
+      view.detectChanges();
+      const projected = screen.getByTestId('projected');
+      expect(projected.textContent).toContain('Format: 123-456-7890');
+    });
+
+    it('passes resolvedFieldName, resolvedId, and position as inputs', async () => {
+      await render(
+        `<ngx-form-field-hint position="left">Hint copy</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+              useValue: { fieldName: signal('email') },
+            },
+            {
+              provide: NGX_FORM_FIELD_HINT_RENDERER,
+              useValue: { component: StubHintRenderer },
+            },
+          ],
+        },
+      );
+
+      expect(screen.getByTestId('resolved-field-name').textContent).toBe(
+        'email',
+      );
+      expect(screen.getByTestId('resolved-id').textContent).toBe('email-hint');
+      expect(screen.getByTestId('position').textContent).toBe('left');
+    });
+
+    it('preserves the host element’s id and field-name attributes when dispatched', async () => {
+      const { container } = await render(
+        `<ngx-form-field-hint id="custom-hint">Hint</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          providers: [
+            {
+              provide: NGX_FORM_FIELD_HINT_RENDERER,
+              useValue: { component: StubHintRenderer },
+            },
+          ],
+        },
+      );
+
+      const host = container.querySelector('ngx-form-field-hint');
+      expect(host).toHaveAttribute('id', 'custom-hint');
+      expect(host).toHaveAttribute('data-ngx-signal-form-hint', 'true');
+      expect(screen.getByTestId('resolved-id').textContent).toBe('custom-hint');
+    });
+  });
+
+  describe('Renderer dispatch fallback', () => {
+    it('projects content directly when no renderer is registered', async () => {
+      await render(
+        `<ngx-form-field-hint>Direct projection</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+        },
+      );
+
+      expect(screen.getByText('Direct projection')).toBeInTheDocument();
+    });
+
+    it('treats an explicitly null renderer the same as none registered', async () => {
+      const { container } = await render(
+        `<ngx-form-field-hint>Direct projection</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          providers: [
+            { provide: NGX_FORM_FIELD_HINT_RENDERER, useValue: null },
+          ],
+        },
+      );
+
+      expect(screen.getByText('Direct projection')).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-testid="stub-hint-renderer"]'),
+      ).toBeNull();
     });
   });
 });

@@ -1,14 +1,19 @@
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   ElementRef,
   inject,
   input,
   signal,
+  ViewContainerRef,
+  type ComponentRef,
 } from '@angular/core';
 import {
   createUniqueId,
+  NGX_FORM_FIELD_HINT_RENDERER,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
 } from '@ngx-signal-forms/toolkit';
 
@@ -18,8 +23,28 @@ import {
  * Provides visual guidance and instructions without blocking form submission.
  * Commonly used for format examples, field instructions, or contextual help.
  *
+ * ## Renderer dispatch
+ *
+ * When `NGX_FORM_FIELD_HINT_RENDERER` is registered (typically by a custom
+ * wrapper via `provideFormFieldHintRenderer(...)`), `<ngx-form-field-hint>`
+ * lifts its projected children off the host after the first render and
+ * mounts the configured renderer component as a host child, forwarding the
+ * lifted nodes into the renderer's default `<ng-content />` slot. The
+ * dispatched renderer receives the metadata `<ngx-form-field-hint>` already
+ * exposes as inputs: `{ resolvedFieldName: string | null, resolvedId:
+ * string, position: 'left' | 'right' | null }` — renderers must declare all
+ * three with `input()` because Angular's `componentRef.setInput` rejects
+ * writes to undeclared inputs.
+ *
+ * The dispatch only runs in browser contexts (`afterNextRender`); SSR keeps
+ * the projected fallback content. When no renderer is registered, content
+ * is projected directly via `<ng-content />` — preserving backwards
+ * compatibility for consumers using `<ngx-form-field-hint>` outside a
+ * wrapper.
+ *
  * Key features:
  * - Content projection for flexible hint text
+ * - Renderer-token dispatch for design-system-flavoured chrome
  * - Semantic HTML for accessibility
  * - Themeable via CSS custom properties
  * - Optional position control (left/right alignment)
@@ -68,7 +93,7 @@ import {
 @Component({
   selector: 'ngx-form-field-hint',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: ` <ng-content /> `,
+  template: `<ng-content />`,
   styles: `
     :host {
       display: block;
@@ -109,11 +134,23 @@ import {
 })
 export class NgxFormFieldHint {
   readonly #elementRef = inject(ElementRef<HTMLElement>);
+  readonly #viewContainerRef = inject(ViewContainerRef);
   readonly #fieldContext = inject(NGX_SIGNAL_FORM_FIELD_CONTEXT, {
+    optional: true,
+  });
+  readonly #hintRenderer = inject(NGX_FORM_FIELD_HINT_RENDERER, {
     optional: true,
   });
 
   readonly #explicitId = signal<string | null>(null);
+
+  /**
+   * Component reference for the dispatched renderer (when one is registered).
+   * Created imperatively after the first render so the projected children
+   * are already attached to the host and can be moved into the dynamic
+   * component's `<ng-content />` slot via `projectableNodes`.
+   */
+  #dispatchedRef: ComponentRef<unknown> | null = null;
 
   /**
    * Text alignment position.
@@ -160,5 +197,55 @@ export class NgxFormFieldHint {
     if (existingId !== null && existingId.length > 0) {
       this.#explicitId.set(existingId);
     }
+
+    const renderer = this.#hintRenderer;
+    if (renderer === null) return;
+
+    // Dispatch path: after the first render, lift the projected children
+    // off the host and hand them to the configured renderer's default
+    // `<ng-content />` via `projectableNodes`. The dynamic component is
+    // appended as a sibling inside the host element, so the host keeps
+    // owning the live region the wrapper or auto-aria layer points at.
+    //
+    // `afterNextRender` is browser-only by design — the dispatch path
+    // walks live DOM and is meaningless server-side; SSR keeps the
+    // projected fallback content from the static template.
+    afterNextRender(() => {
+      const host = this.#elementRef.nativeElement;
+      const projected: Node[] = [];
+      while (host.firstChild !== null) {
+        projected.push(host.removeChild(host.firstChild));
+      }
+      this.#dispatchedRef = this.#viewContainerRef.createComponent<unknown>(
+        renderer.component,
+        { projectableNodes: [projected] },
+      );
+      this.#applyRendererInputs(this.#dispatchedRef);
+      // Move the dynamic component's host element into our own host so the
+      // rendered chrome sits visually inside `<ngx-form-field-hint>` rather
+      // than next to it. `ViewContainerRef` anchors the new view at a
+      // sibling position by default; relocating keeps the wrapper's host
+      // styles (font-size, color, padding) wrapping the renderer's chrome.
+      host.append(this.#dispatchedRef.location.nativeElement);
+    });
+
+    // Keep the dispatched renderer's inputs in lockstep with the metadata
+    // signals — `position` and the resolved id/field-name flow through
+    // here whenever they change after the dispatch is wired up.
+    effect(() => {
+      // Track signal reads so the effect re-fires on changes.
+      this.position();
+      this.resolvedFieldName();
+      this.resolvedId();
+      if (this.#dispatchedRef !== null) {
+        this.#applyRendererInputs(this.#dispatchedRef);
+      }
+    });
+  }
+
+  #applyRendererInputs(ref: ComponentRef<unknown>): void {
+    ref.setInput('resolvedFieldName', this.resolvedFieldName());
+    ref.setInput('resolvedId', this.resolvedId());
+    ref.setInput('position', this.position());
   }
 }
