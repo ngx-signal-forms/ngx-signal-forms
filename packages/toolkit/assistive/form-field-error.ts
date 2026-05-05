@@ -138,7 +138,7 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
           <ul class="ngx-form-field-error__list" role="list">
             @for (
               error of resolvedErrors();
-              track error.error.kind + ':' + error.message + ':' + $index
+              track \`\${error.kind}:\${error.message}:\${$index}\`
             ) {
               <li
                 class="ngx-form-field-error__message ngx-form-field-error__message--error"
@@ -150,7 +150,7 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
         } @else {
           @for (
             error of resolvedErrors();
-            track error.error.kind + ':' + error.message + ':' + $index
+            track \`\${error.kind}:\${error.message}:\${$index}\`
           ) {
             <p
               class="ngx-form-field-error__message ngx-form-field-error__message--error"
@@ -181,7 +181,7 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
           <ul class="ngx-form-field-error__list" role="list">
             @for (
               warning of resolvedWarnings();
-              track warning.error.kind + ':' + warning.message + ':' + $index
+              track \`\${warning.kind}:\${warning.message}:\${$index}\`
             ) {
               <li
                 class="ngx-form-field-error__message ngx-form-field-error__message--warning"
@@ -193,7 +193,7 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
         } @else {
           @for (
             warning of resolvedWarnings();
-            track warning.error.kind + ':' + warning.message + ':' + $index
+            track \`\${warning.kind}:\${warning.message}:\${$index}\`
           ) {
             <p
               class="ngx-form-field-error__message ngx-form-field-error__message--warning"

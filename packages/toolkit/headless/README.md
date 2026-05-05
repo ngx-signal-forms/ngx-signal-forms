@@ -206,7 +206,14 @@ export class EmailErrors {
 }
 ```
 
-Each entry is `{ error, message, id }` where `id` is `{fieldName}-error-{kind}` so external renderers and the in-tree wrapper interoperate on `aria-describedby` chains without re-deriving the format. Options of note:
+Each entry is `{ kind, message, id, error }`:
+
+- `kind` — convenience copy of the validator kind, lifted to the top level so templates can write `entry.kind` instead of `entry.error.kind`.
+- `message` — the resolved display string after the 3-tier cascade.
+- `id` — `{fieldName}-error-{kind}`, stable so external renderers and the in-tree wrapper interoperate on `aria-describedby` chains without re-deriving the format.
+- `error` — the raw `ValidationError` from the field, kept for consumers that need validator-specific params or a non-stripped `message` override.
+
+Options of note:
 
 - `includeWarnings`: `false` (default), `true`, or `'only'` — selects blocking errors, both, or warnings only.
 - `stripWarningPrefix`: defaults to `true` (display-oriented); set to `false` to keep the `warn:` prefix visible for debugging.

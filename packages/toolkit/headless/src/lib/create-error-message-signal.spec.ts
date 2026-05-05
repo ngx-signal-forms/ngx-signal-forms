@@ -65,9 +65,10 @@ describe('createErrorMessageSignal — registry resolution', () => {
 
     expect(result()).toEqual<readonly ResolvedFieldError[]>([
       {
-        error: { kind: 'required', message: 'Validator says required' },
+        kind: 'required',
         message: 'Validator says required',
         id: 'email-error-required',
+        error: { kind: 'required', message: 'Validator says required' },
       },
     ]);
   });
@@ -215,10 +216,7 @@ describe('createErrorMessageSignal — includeWarnings', () => {
       createErrorMessageSignal(() => field, { fieldName: 'f' }),
     );
 
-    expect(result().map((r) => r.error.kind)).toEqual([
-      'required',
-      'minLength',
-    ]);
+    expect(result().map((r) => r.kind)).toEqual(['required', 'minLength']);
   });
 
   it('returns blocking errors first then warnings when includeWarnings is true', () => {
@@ -232,7 +230,7 @@ describe('createErrorMessageSignal — includeWarnings', () => {
       }),
     );
 
-    expect(result().map((r) => r.error.kind)).toEqual([
+    expect(result().map((r) => r.kind)).toEqual([
       'required',
       'minLength',
       'warn:weak',
@@ -251,10 +249,7 @@ describe('createErrorMessageSignal — includeWarnings', () => {
       }),
     );
 
-    expect(result().map((r) => r.error.kind)).toEqual([
-      'warn:weak',
-      'warn:trim',
-    ]);
+    expect(result().map((r) => r.kind)).toEqual(['warn:weak', 'warn:trim']);
   });
 });
 
@@ -429,10 +424,10 @@ describe('createErrorMessageSignal — reactive registry', () => {
       () => createErrorMessageSignal(() => field, { fieldName: 'name' }),
     );
 
-    expect(result()[0]?.error.kind).toBe('required');
+    expect(result()[0]?.kind).toBe('required');
 
     field.errors.set([{ kind: 'minLength', minLength: 8 } as ValidationError]);
-    expect(result()[0]?.error.kind).toBe('minLength');
+    expect(result()[0]?.kind).toBe('minLength');
     expect(result()[0]?.message).toBe('Minimum 8 characters required');
   });
 });
@@ -451,6 +446,21 @@ describe('createErrorMessageSignal — edge cases', () => {
     );
 
     expect(result()).toEqual([]);
+  });
+
+  it('exposes the raw ValidationError for consumers that need params', () => {
+    const injector = injectorWithRegistry(null);
+    const raw: ValidationError = {
+      kind: 'minLength',
+      minLength: 8,
+    } as ValidationError;
+    const field = mockFieldState({ errors: [raw] });
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorMessageSignal(() => field, { fieldName: 'password' }),
+    );
+
+    expect(result()[0]?.error).toBe(raw);
   });
 
   it('returns an empty list for a field with no errors', () => {

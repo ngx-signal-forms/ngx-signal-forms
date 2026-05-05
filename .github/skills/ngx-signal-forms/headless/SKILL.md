@@ -207,7 +207,11 @@ const resolved = createErrorMessageSignal(() => form.email(), {
   // includeWarnings: true | 'only' (default: false)
   // strategy / submittedStatus inherit from form context when omitted
 });
-// resolved() => readonly { error, message, id }[]
+// resolved() => readonly { kind, message, id, error }[]
+//   kind:    validator kind (lifted from error.kind for template ergonomics)
+//   message: resolved display string
+//   id:      `{fieldName}-error-{kind}` — stable for aria-describedby chains
+//   error:   raw ValidationError, for params/custom inspection
 ```
 
 ## Utility Functions

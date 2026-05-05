@@ -17,20 +17,24 @@ import {
 /**
  * One resolved validation error, ready for rendering.
  *
- * - `error` — the raw `ValidationError` from the field, so consumers can
- *   inspect `kind`, `message` overrides, custom params, etc.
+ * - `kind` — convenience copy of `error.kind`, lifted to the top level so
+ *   templates can write `entry.kind` instead of `entry.error.kind`.
  * - `message` — the resolved display string after the 3-tier cascade
  *   (validator message → registry → default).
  * - `id` — DOM ID built via `generateErrorId(fieldName, error.kind)`.
  *   Stable so external renderers and the in-tree wrapper can interoperate
  *   on `aria-describedby` without re-deriving IDs.
+ * - `error` — the raw `ValidationError` from the field, kept for consumers
+ *   that need access to validator-specific params, custom fields, or a
+ *   non-stripped `message` override.
  *
  * @public
  */
 export interface ResolvedFieldError {
-  readonly error: ValidationError;
+  readonly kind: string;
   readonly message: string;
   readonly id: string;
+  readonly error: ValidationError;
 }
 
 /**
@@ -264,11 +268,12 @@ export function createErrorMessageSignal(
       const fieldName = resolvedFieldName();
 
       return ordered.map((error) => ({
-        error,
+        kind: error.kind,
         message: resolveValidationErrorMessage(error, registry, {
           stripWarningPrefix,
         }),
         id: generateErrorId(fieldName, error.kind),
+        error,
       }));
     });
   });
