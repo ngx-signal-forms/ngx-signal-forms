@@ -427,11 +427,14 @@ export class NgxFormFieldError {
 
   /**
    * Warnings, resolved through {@link createErrorMessageSignal} with
-   * `includeWarnings: 'only'`. Warnings use their own immediate-by-default
-   * visibility — the wrapper's `warningContainerVisible` gates rendering,
-   * and the primitive call uses `'immediate'` so warnings are always
-   * resolved when the field is invalid (the warning kinds themselves cause
-   * `field.invalid()` to be true upstream).
+   * `includeWarnings: 'only'`. The primitive call pins `strategy: 'immediate'`
+   * unconditionally — warnings are informational and never gated by the
+   * blocking-error strategy, so the override-mode bypass that
+   * `#resolvedErrorsStrategy` performs for blocking errors is unnecessary
+   * here. `warningContainerVisible` (driven by `showWarnings`, which uses
+   * the warning-specific strategy cascade) controls rendering, and the
+   * primitive's immediate cascade ensures `resolvedWarnings()` is non-empty
+   * whenever warning kinds are present.
    */
   protected readonly resolvedWarnings = createErrorMessageSignal(
     this.#fieldStateAccessor,

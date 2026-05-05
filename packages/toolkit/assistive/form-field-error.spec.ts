@@ -829,6 +829,42 @@ describe('NgxFormFieldError', () => {
       const alert = screen.queryByRole('alert');
       expect(alert).toBeFalsy();
     });
+
+    // Regression: createErrorMessageSignal pinned the directive's `strategy`
+    // input even in `errorsOverride` mode. With `strategy="on-submit"` and no
+    // submitted status, the headless directive's own `showErrors()` would
+    // bypass the strategy gate (override-mode short-circuit) and the
+    // error container would become visible — but the primitive's visibility
+    // cascade would still suppress message resolution, leaving an empty live
+    // region. Fixed by switching the primitive's strategy to `'immediate'`
+    // when `errorsOverride` is bound.
+    it('should resolve override errors under on-submit strategy without a submitted status', async () => {
+      @Component({
+        selector: 'ngx-test-override-on-submit-regression',
+        imports: [NgxFormFieldError],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <ngx-form-field-error
+            fieldName="address"
+            strategy="on-submit"
+            [errors]="errors"
+          />
+        `,
+      })
+      class TestComponent {
+        readonly errors = signal([
+          { kind: 'required', message: 'Street is required' },
+        ]);
+      }
+
+      const { container } = await render(TestComponent);
+
+      const messages = container.querySelectorAll(
+        '.ngx-form-field-error__message',
+      );
+      expect(messages).toHaveLength(1);
+      expect(messages[0].textContent).toContain('Street is required');
+    });
   });
 
   describe('fieldName resolution from DI context', () => {
