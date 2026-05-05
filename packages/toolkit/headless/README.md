@@ -183,6 +183,8 @@ Signals: `resolvedFieldName()` (nullable), `errorId()` (nullable), `warningId()`
 
 ### createErrorMessageSignal
 
+> **Lockstep guarantee:** `NgxHeadlessErrorState.resolvedErrors`/`resolvedWarnings` and `createErrorMessageSignal` share the same internal resolver — message resolution behaviour is guaranteed identical across both surfaces.
+
 A `Signal<readonly ResolvedFieldError[]>` that combines visibility gating, the 3-tier message cascade (validator `message` → `NGX_ERROR_MESSAGES` registry → default), and stable per-error DOM IDs in a single primitive. Use it when you want the directive's resolution logic without the directive itself — for example inside a custom error renderer that the form-field wrapper drives via `*ngComponentOutlet`, or in an Angular `Component` that opts to read errors directly off a `FieldTree`.
 
 See a runnable example at `apps/demo/src/app/03-headless/error-message-signal/`.

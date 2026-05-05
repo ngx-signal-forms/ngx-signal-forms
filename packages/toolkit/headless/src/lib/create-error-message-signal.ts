@@ -6,13 +6,14 @@ import {
   generateErrorId,
   NGX_ERROR_MESSAGES,
   readDirectErrors,
-  resolveValidationErrorMessage,
   splitByKind,
   type CreateErrorVisibilityOptions,
   type ErrorDisplayStrategy,
   type ErrorMessageRegistry,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit/core';
+
+import { resolveErrorMessage } from './utilities';
 
 /**
  * One resolved validation error, ready for rendering.
@@ -269,9 +270,7 @@ export function createErrorMessageSignal(
 
       return ordered.map((error) => ({
         kind: error.kind,
-        message: resolveValidationErrorMessage(error, registry, {
-          stripWarningPrefix,
-        }),
+        message: resolveErrorMessage(error, registry, stripWarningPrefix),
         id: generateErrorId(fieldName, error.kind),
         error,
       }));

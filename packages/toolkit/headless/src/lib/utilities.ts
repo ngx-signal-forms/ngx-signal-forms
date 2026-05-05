@@ -689,3 +689,21 @@ export function toErrorSummaryEntry(
     },
   };
 }
+
+/**
+ * Resolve a validation error's display message using the toolkit's standard
+ * settings (`stripWarningPrefix: true` by default).
+ *
+ * Shared by `NgxHeadlessErrorState` and `createErrorMessageSignal` so that
+ * both surfaces stay in lockstep — changing message resolution behaviour
+ * requires editing exactly one place.
+ *
+ * @internal
+ */
+export function resolveErrorMessage(
+  error: ValidationError,
+  registry: Readonly<ErrorMessageRegistry> | null | undefined,
+  stripWarningPrefix = true,
+): string {
+  return resolveValidationErrorMessage(error, registry, { stripWarningPrefix });
+}

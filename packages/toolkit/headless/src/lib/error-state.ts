@@ -11,7 +11,6 @@ import {
   injectFormContext,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
-  resolveValidationErrorMessage,
   showErrors,
   type ErrorDisplayStrategy,
   type ErrorReadableState,
@@ -20,7 +19,7 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { NGX_ERROR_MESSAGES } from '@ngx-signal-forms/toolkit/core';
 
-import { buildHeadlessErrorState } from './utilities';
+import { buildHeadlessErrorState, resolveErrorMessage } from './utilities';
 
 /**
  * Resolved error with kind and message.
@@ -293,8 +292,6 @@ export class NgxHeadlessErrorState<
   );
 
   #resolveErrorMessage(error: ValidationError): string {
-    return resolveValidationErrorMessage(error, this.#errorMessagesRegistry, {
-      stripWarningPrefix: true,
-    });
+    return resolveErrorMessage(error, this.#errorMessagesRegistry);
   }
 }
