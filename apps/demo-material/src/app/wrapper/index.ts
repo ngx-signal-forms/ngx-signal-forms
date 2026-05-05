@@ -65,12 +65,16 @@ export interface NgxMatFormsProviderOptions {
 }
 
 /**
- * Application-level provider that registers the Material feedback renderer
- * for both `NGX_FORM_FIELD_ERROR_RENDERER` and `NGX_FORM_FIELD_HINT_RENDERER`.
+ * Application-level provider that registers the Material renderers for the
+ * toolkit's feedback and hint slots: `MaterialFeedbackRenderer` for
+ * `NGX_FORM_FIELD_ERROR_RENDERER` and `MaterialHintRenderer` for
+ * `NGX_FORM_FIELD_HINT_RENDERER`. The two slots get distinct renderers
+ * because the feedback renderer requires `message` + `severity` inputs that
+ * the hint dispatch can't supply.
  *
  * Recommended path for apps that consume the Material reference wrapper —
- * one call at bootstrap registers the default `MaterialFeedbackRenderer`
- * (or a consumer-supplied override) once for the entire app.
+ * one call at bootstrap registers both defaults (or consumer-supplied
+ * overrides via `feedbackRenderer` / `hintRenderer`) once for the entire app.
  *
  * @example
  * ```ts

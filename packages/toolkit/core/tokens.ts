@@ -217,10 +217,11 @@ export interface NgxFormFieldErrorRenderer {
 /**
  * Renderer contract for the hint slot dispatched by `NgxFormFieldHint`.
  *
- * When registered, `<ngx-form-field-hint>` instantiates the configured
- * component via `*ngComponentOutlet` and forwards projected content into
- * the renderer's default `<ng-content />` slot. The renderer receives the
- * metadata `NgxFormFieldHint` already exposes as inputs:
+ * When registered, `<ngx-form-field-hint>` dynamically instantiates the
+ * configured component (via `ViewContainerRef.createComponent` with
+ * `projectableNodes`) and forwards projected content into the renderer's
+ * default `<ng-content />` slot. The renderer receives the metadata
+ * `NgxFormFieldHint` already exposes as inputs:
  * `{ resolvedFieldName: string | null, resolvedId: string, position:
  * 'left' | 'right' | null }`. Renderers must declare all three with
  * `input()` — Angular's `componentRef.setInput` rejects writes to
@@ -230,9 +231,9 @@ export interface NgxFormFieldErrorRenderer {
  * `<ng-content />` projection (preserving backwards compatibility for
  * consumers using the component outside a wrapper).
  *
- * The provided `component` must be a standalone component —
- * `*ngComponentOutlet` is invoked without `ngComponentOutletNgModule`, so
- * module-declared components are not supported.
+ * The provided `component` must be a standalone component — it is
+ * instantiated without an `NgModuleRef`, so module-declared components are
+ * not supported.
  *
  * @public
  */
@@ -263,12 +264,12 @@ export const NGX_FORM_FIELD_ERROR_RENDERER =
  * Injection token consulted by `NgxFormFieldHint` to dispatch hint
  * rendering through a custom design-system-flavoured component.
  *
- * When registered, `<ngx-form-field-hint>` instantiates the configured
- * component via `*ngComponentOutlet` and forwards projected content into
- * the renderer's default `<ng-content />` slot — see
- * {@link NgxFormFieldHintRenderer} for the input contract. When no
- * provider is registered, `NgxFormFieldHint` falls back to direct content
- * projection (`<ng-content />`).
+ * When registered, `<ngx-form-field-hint>` dynamically instantiates the
+ * configured component (via `ViewContainerRef.createComponent` with
+ * `projectableNodes`) and forwards projected content into the renderer's
+ * default `<ng-content />` slot — see {@link NgxFormFieldHintRenderer} for
+ * the input contract. When no provider is registered, `NgxFormFieldHint`
+ * falls back to direct content projection (`<ng-content />`).
  *
  * The token itself has no factory — consumers injecting it directly should
  * use `{ optional: true }` and treat `null` as "no custom hint renderer
