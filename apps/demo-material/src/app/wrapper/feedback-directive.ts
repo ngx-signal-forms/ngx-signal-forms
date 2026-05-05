@@ -127,23 +127,30 @@ export class NgxMatFeedback<TValue = unknown> {
   );
 
   /**
-   * Warnings — surfaced immediately (informational, not gated by the
-   * blocking-error strategy), then suppressed below when blocking errors are
-   * present so the directive renders at most one block per kind.
+   * Warnings share the directive's strategy/submission gating with errors —
+   * Material's `*ngxMatFeedback` historically gated both via the same
+   * `#showByStrategy`, so forwarding `#effectiveStrategy` keeps existing
+   * consumers' "wait for touch / submit" behavior. `#blocks` then suppresses
+   * warnings whenever blocking errors are present so at most one block
+   * renders per field. (This deliberately differs from the Spartan slice in
+   * #65, which mirrors `NgxFormFieldError`'s `'immediate'` warning default.)
    */
   readonly #resolvedWarnings = createErrorMessageSignal(
     this.#fieldStateAccessor,
     {
-      strategy: 'immediate',
+      strategy: this.#effectiveStrategy,
+      submittedStatus: this.#submittedStatus,
       includeWarnings: 'only',
     },
   );
 
   readonly #blocks = computed<readonly NgxMatFeedbackContext[]>(() => {
     const fieldName = this.fieldName();
-    const blockingMessages = this.#resolvedErrors().map(
-      (entry) => entry.message,
-    );
+    // Filter empty strings so a deliberate `message: ''` validator/registry
+    // override doesn't render a live region with an ID + role but no text.
+    const blockingMessages = this.#resolvedErrors()
+      .map((entry) => entry.message)
+      .filter((message) => message !== '');
     if (blockingMessages.length > 0) {
       return [
         {
@@ -163,9 +170,9 @@ export class NgxMatFeedback<TValue = unknown> {
     // Warnings render only when there are no blocking errors — matching the
     // previous `MatCheckboxFeedback` semantics and Material's hint-vs-error
     // convention.
-    const warningMessages = this.#resolvedWarnings().map(
-      (entry) => entry.message,
-    );
+    const warningMessages = this.#resolvedWarnings()
+      .map((entry) => entry.message)
+      .filter((message) => message !== '');
     if (warningMessages.length > 0) {
       return [
         {
