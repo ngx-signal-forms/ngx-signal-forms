@@ -10,17 +10,11 @@ import {
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import {
-  createShowErrorsComputed,
   generateErrorId,
   generateWarningId,
-  injectFormContext,
-  isBlockingError,
-  isWarningError,
-  NGX_SIGNAL_FORMS_CONFIG,
-  readDirectErrors,
-  resolveErrorDisplayStrategy,
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
+import { createErrorMessageSignal } from '@ngx-signal-forms/toolkit/headless';
 
 /**
  * Embedded-view context for `*ngxMatFeedback`.
@@ -92,64 +86,50 @@ export class NgxMatFeedback<TValue = unknown> {
   readonly #templateRef = inject(TemplateRef<NgxMatFeedbackContext>);
   readonly #viewContainerRef = inject(ViewContainerRef);
 
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
-  readonly #formContext = injectFormContext();
+  readonly #strategySignal = computed(() => this.strategy() ?? undefined);
 
-  readonly #fieldStateSignal = computed(() => this.formField()());
-
-  readonly #effectiveStrategy = computed(() =>
-    resolveErrorDisplayStrategy(
-      this.strategy(),
-      this.#formContext ? this.#formContext.errorStrategy() : undefined,
-      this.#config.defaultErrorStrategy,
-    ),
+  readonly #blockingErrors = createErrorMessageSignal(
+    () => this.formField()(),
+    { strategy: this.#strategySignal },
   );
 
-  readonly #submittedStatus = computed(() =>
-    this.#formContext ? this.#formContext.submittedStatus() : 'unsubmitted',
-  );
-
-  readonly #showByStrategy = createShowErrorsComputed(
-    this.#fieldStateSignal,
-    this.#effectiveStrategy,
-    this.#submittedStatus,
-  );
+  readonly #warnings = createErrorMessageSignal(() => this.formField()(), {
+    strategy: this.#strategySignal,
+    includeWarnings: 'only',
+  });
 
   readonly #blocks = computed<readonly NgxMatFeedbackContext[]>(() => {
-    if (!this.#showByStrategy()) {
-      return [];
-    }
-    const errors = readDirectErrors(this.#fieldStateSignal());
-    const blockingMessages = errors
-      .filter(isBlockingError)
-      .map((entry) => entry.message ?? '')
-      .filter((message) => message.length > 0);
-    const warningMessages = errors
-      .filter(isWarningError)
-      .map((entry) => entry.message ?? '')
-      .filter((message) => message.length > 0);
-
-    const out: NgxMatFeedbackContext[] = [];
     const fieldName = this.fieldName();
+    const blockingMessages = this.#blockingErrors()
+      .map((entry) => entry.message)
+      .filter((message) => message.length > 0);
     if (blockingMessages.length > 0) {
-      out.push({
-        $implicit: blockingMessages,
-        messages: blockingMessages,
-        severity: 'error',
-        id: generateErrorId(fieldName),
-      });
-    } else if (warningMessages.length > 0) {
-      // Warnings render only when there are no blocking errors — matching
-      // the previous `MatCheckboxFeedback` semantics and Material's
-      // hint-vs-error convention.
-      out.push({
-        $implicit: warningMessages,
-        messages: warningMessages,
-        severity: 'warning',
-        id: generateWarningId(fieldName),
-      });
+      return [
+        {
+          $implicit: blockingMessages,
+          messages: blockingMessages,
+          severity: 'error',
+          id: generateErrorId(fieldName),
+        },
+      ];
     }
-    return out;
+    // Warnings render only when there are no blocking errors — matching the
+    // previous `MatCheckboxFeedback` semantics and Material's hint-vs-error
+    // convention.
+    const warningMessages = this.#warnings()
+      .map((entry) => entry.message)
+      .filter((message) => message.length > 0);
+    if (warningMessages.length > 0) {
+      return [
+        {
+          $implicit: warningMessages,
+          messages: warningMessages,
+          severity: 'warning',
+          id: generateWarningId(fieldName),
+        },
+      ];
+    }
+    return [];
   });
 
   /** @internal — type guard for template language services. */

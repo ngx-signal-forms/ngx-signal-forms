@@ -15,15 +15,17 @@ import { ContactFormComponent } from './contact-form/contact-form';
   imports: [ContactFormComponent],
   template: `
     <main class="app-shell">
-      <h1>ngx-signal-forms · Angular Material 21+ reference</h1>
-      <p class="lead">
-        A single contact form composed on top of
-        <code>@angular/material</code> using
-        <code>@ngx-signal-forms/toolkit</code>. See the README for the four
-        contracts the wrapper satisfies and the Material-specific gotchas
-        (especially <code>aria-describedby</code> ownership and
-        <code>floatLabel</code>).
-      </p>
+      <p class="app-shell__eyebrow">Angular Material reference demo</p>
+      <section class="app-shell__hero" aria-labelledby="app-title">
+        <h1 id="app-title">Material feedback, with better rhythm.</h1>
+        <p class="lead">
+          A focused contact form built with <code>@angular/material</code> and
+          <code>@ngx-signal-forms/toolkit</code>, tuned so blocking errors stay
+          close to their fields, non-blocking warnings read gently, and Material
+          keeps ownership of <code>aria-describedby</code> exactly where it
+          should.
+        </p>
+      </section>
 
       <ngx-contact-form />
     </main>

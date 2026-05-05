@@ -1,0 +1,133 @@
+<form [formRoot]="contactForm" ngxSignalForm class="demo-form">
+  <header class="demo-form__header">
+    <p class="demo-form__eyebrow">Reference form</p>
+    <h2>Contact us</h2>
+    <p class="demo-form__intro">
+      Tell us what you need and we’ll route it to the right team. Validation
+      stays close to each control, and short-but-valid names surface as a gentle
+      warning instead of a blocker.
+    </p>
+  </header>
+
+  <mat-form-field
+    class="demo-form__field"
+    [ngxMatFormField]="contactForm.name"
+    fieldName="contact-name"
+    appearance="outline"
+    floatLabel="always"
+    subscriptSizing="dynamic"
+  >
+    <mat-label>Name</mat-label>
+    <input
+      matInput
+      id="contact-name"
+      type="text"
+      [formField]="contactForm.name"
+      ngxMatTextControl
+      autocomplete="name"
+    />
+    <mat-hint *ngxMatHintSlot="contactForm.name; let warning">
+      @if (warning) {
+      <ngx-mat-feedback-outlet [message]="warning" severity="warning" />
+      } @else { What should we call you? }
+    </mat-hint>
+    <mat-error *ngxMatErrorSlot="contactForm.name; let message">
+      <ngx-mat-feedback-outlet [message]="message" severity="error" />
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field
+    class="demo-form__field"
+    [ngxMatFormField]="contactForm.email"
+    fieldName="contact-email"
+    appearance="outline"
+    floatLabel="always"
+    subscriptSizing="dynamic"
+  >
+    <mat-label>Email</mat-label>
+    <input
+      matInput
+      id="contact-email"
+      type="email"
+      [formField]="contactForm.email"
+      ngxMatTextControl
+      autocomplete="email"
+    />
+    <mat-error *ngxMatErrorSlot="contactForm.email; let message">
+      <ngx-mat-feedback-outlet [message]="message" severity="error" />
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field
+    class="demo-form__field"
+    [ngxMatFormField]="contactForm.topic"
+    fieldName="contact-topic"
+    appearance="outline"
+    floatLabel="always"
+    subscriptSizing="dynamic"
+  >
+    <mat-label>Topic</mat-label>
+    <mat-select
+      id="contact-topic"
+      [formField]="contactForm.topic"
+      ngxMatSelectControl
+    >
+      <mat-option value="">— Choose one —</mat-option>
+      <mat-option value="support">Product support</mat-option>
+      <mat-option value="sales">Sales question</mat-option>
+      <mat-option value="feedback">General feedback</mat-option>
+    </mat-select>
+    <mat-hint *ngxMatHintSlot="contactForm.topic; let warning">
+      @if (warning) {
+      <ngx-mat-feedback-outlet [message]="warning" severity="warning" />
+      } @else { Pick the closest match }
+    </mat-hint>
+    <mat-error *ngxMatErrorSlot="contactForm.topic; let message">
+      <ngx-mat-feedback-outlet [message]="message" severity="error" />
+    </mat-error>
+  </mat-form-field>
+
+  <div class="demo-form__row">
+    <mat-checkbox
+      id="contact-agree"
+      [formField]="contactForm.agree"
+      ngxMatCheckboxControl
+    >
+      I agree to be contacted
+    </mat-checkbox>
+  </div>
+  <!-- Material's mat-checkbox does not project into mat-form-field, so
+       its errors render via the control-agnostic feedback slot. The
+       toolkit still owns visibility timing through the same DI seam. -->
+  <ng-container
+    *ngxMatFeedback="
+      contactForm.agree;
+      fieldName: 'contact-agree';
+      let messages;
+      severity as severity;
+      id as id
+    "
+  >
+    <p
+      class="demo-form__feedback"
+      [class.demo-form__feedback--warning]="severity === 'warning'"
+      [attr.role]="severity === 'error' ? 'alert' : 'status'"
+      [id]="id"
+    >
+      @for (message of messages; track message) {
+      <ngx-mat-feedback-outlet [message]="message" [severity]="severity" />
+      }
+    </p>
+  </ng-container>
+
+  <div class="demo-form__actions">
+    <button mat-stroked-button type="button" (click)="resetForm()">
+      Reset
+    </button>
+    <button mat-flat-button color="primary" type="submit">Send message</button>
+  </div>
+
+  @if (submitted()) {
+  <p class="success-banner" role="status">Thanks! We received your message.</p>
+  }
+</form>
