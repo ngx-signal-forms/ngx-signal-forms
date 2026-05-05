@@ -88,15 +88,19 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
       live region (WCAG 4.1.3, NVDA + Chrome edge case).
     -->
     <small
-      [id]="errorContainerVisible() ? errorId() : null"
+      [id]="headless.showErrors() && headless.hasErrors() ? errorId() : null"
       class="p-error"
-      [class.prime-feedback--empty]="!errorContainerVisible()"
+      [class.prime-feedback--empty]="
+        !(headless.showErrors() && headless.hasErrors())
+      "
       role="alert"
-      [attr.aria-hidden]="errorContainerVisible() ? null : 'true'"
-      [hidden]="!errorContainerVisible()"
+      [attr.aria-hidden]="
+        headless.showErrors() && headless.hasErrors() ? null : 'true'
+      "
+      [hidden]="!(headless.showErrors() && headless.hasErrors())"
       data-testid="prime-error"
     >
-      @if (errorContainerVisible()) {
+      @if (headless.showErrors() && headless.hasErrors()) {
         @for (
           error of headless.resolvedErrors();
           track error.kind + ':' + error.message + ':' + $index
@@ -109,17 +113,24 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
     <!--
       role="status" — implicit aria-live="polite" + aria-atomic="true".
       Same always-mounted live-region pattern as the error container above.
+      Warning visibility is independent of the blocking-error strategy: the
+      'immediate' showWarnings signal lights up while the user is still
+      editing, mirroring NgxFormFieldError's warningStrategy default.
     -->
     <small
-      [id]="warningContainerVisible() ? warningId() : null"
+      [id]="showWarnings() && headless.hasWarnings() ? warningId() : null"
       class="p-warn"
-      [class.prime-feedback--empty]="!warningContainerVisible()"
+      [class.prime-feedback--empty]="
+        !(showWarnings() && headless.hasWarnings())
+      "
       role="status"
-      [attr.aria-hidden]="warningContainerVisible() ? null : 'true'"
-      [hidden]="!warningContainerVisible()"
+      [attr.aria-hidden]="
+        showWarnings() && headless.hasWarnings() ? null : 'true'
+      "
+      [hidden]="!(showWarnings() && headless.hasWarnings())"
       data-testid="prime-warning"
     >
-      @if (warningContainerVisible()) {
+      @if (showWarnings() && headless.hasWarnings()) {
         @for (
           warning of headless.resolvedWarnings();
           track warning.kind + ':' + warning.message + ':' + $index
@@ -172,7 +183,7 @@ export class PrimeFieldErrorComponent {
    * (see `packages/toolkit/assistive/form-field-error.ts`) and the Spartan
    * reference (`firstWarning = #firstWarning`, no strategy gate).
    */
-  readonly #showWarningsImmediately = showErrors(
+  protected readonly showWarnings = showErrors(
     this.#fieldState,
     computed(() => 'immediate' as const),
     this.headless.resolvedSubmittedStatus,
@@ -193,23 +204,6 @@ export class PrimeFieldErrorComponent {
     const name = this.resolvedFieldName();
     return name === null ? null : generateWarningId(name);
   });
-
-  /**
-   * Whether the error live-region container should expose its content.
-   * The container itself stays MOUNTED unconditionally; this flag toggles
-   * `[hidden]` + `[attr.aria-hidden]` and gates the inner content render.
-   */
-  protected readonly errorContainerVisible = computed(
-    () => this.headless.showErrors() && this.headless.hasErrors(),
-  );
-
-  /**
-   * Whether the warning live-region container should expose its content.
-   * Same always-mounted pattern as `errorContainerVisible`.
-   */
-  protected readonly warningContainerVisible = computed(
-    () => this.#showWarningsImmediately() && this.headless.hasWarnings(),
-  );
 
   constructor() {
     // Bridge the wrapper-supplied `formField` input into the headless
