@@ -2,6 +2,7 @@ import { isDevMode, provideZonelessChangeDetection } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 import { App } from './app/app';
+import { provideNgxSpartanForms } from './app/wrapper';
 
 // Wrap in async IIFE so the JIT compiler import only loads in dev (Angular
 // Vite builder needs it for templateUrl/styleUrls during local dev).
@@ -22,6 +23,11 @@ void (async () => {
         defaultErrorStrategy: 'on-touch',
         autoAria: true,
       }),
+      // Single bootstrap entry point for the Spartan reference renderers.
+      // Registers both NGX_FORM_FIELD_ERROR_RENDERER and
+      // NGX_FORM_FIELD_HINT_RENDERER with the helm-flavoured components,
+      // mirroring `provideNgxMatForms()` and `provideNgxPrimeForms()`.
+      provideNgxSpartanForms(),
     ],
   });
 })();
