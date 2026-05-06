@@ -67,10 +67,10 @@ jobs:
 
       - name: Build Demo
         # nx-safe.sh retries locally if Nx Cloud rejects workspace authorization.
-        run: bash .github/scripts/nx-safe.sh pnpm exec nx run demo:build --configuration=production --baseHref=/ngx-signal-forms/
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx run demo:build --configuration=production --base=/ngx-signal-forms/
 
       - name: Create 404.html for SPA routing
-        run: cp dist/apps/demo/browser/index.html dist/apps/demo/browser/404.html
+        run: cp dist/apps/demo/index.html dist/apps/demo/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -78,8 +78,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # The application builder output is usually in a 'browser' subdirectory
-          path: dist/apps/demo/browser
+          path: dist/apps/demo
 
       - name: Deploy to GitHub Pages
         id: deployment
