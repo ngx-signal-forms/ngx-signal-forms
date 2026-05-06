@@ -525,10 +525,16 @@ export function createCharacterCount(
       value !== undefined
     ) {
       warnedUnsupportedValue = true;
+      // Log a type descriptor only — never the raw value, which may contain
+      // user-entered data and end up in dev consoles, CI logs, or screenshots.
+      const valueType =
+        typeof value === 'object'
+          ? (value.constructor?.name ?? 'object')
+          : typeof value;
       // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
       console.warn(
         '[ngx-signal-forms] createCharacterCount: unsupported value type — expected `string` or `readonly string[]`, got',
-        value,
+        valueType,
         '— rendering length as 0.',
       );
     }
