@@ -303,9 +303,19 @@ export interface CreateErrorStateOptions<TValue = unknown> {
   readonly field: FieldTree<TValue>;
   /** Field name for ID generation. `null` disables ID generation. */
   readonly fieldName: ReactiveOrStatic<string | null>;
-  /** Error display strategy (defaults to 'on-touch') */
+  /**
+   * Error display strategy override.
+   *
+   * Resolution order: this option (when not `'inherit'`) → ambient
+   * `NGX_SIGNAL_FORM_CONTEXT.errorStrategy` → `'on-touch'`.
+   */
   readonly strategy?: ReactiveOrStatic<ErrorDisplayStrategy>;
-  /** Submitted status signal (optional) */
+  /**
+   * Submitted status override.
+   *
+   * Resolution order: this option (when not `undefined`) → ambient
+   * `NGX_SIGNAL_FORM_CONTEXT.submittedStatus` → `undefined`.
+   */
   readonly submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>;
 }
 
@@ -337,8 +347,10 @@ export interface ErrorStateResult {
  * Creates error state signals for a form field.
  *
  * This utility provides the same state management as NgxHeadlessErrorState
- * but as standalone signals for programmatic use. Defaults to the 'on-touch'
- * strategy when no strategy is provided.
+ * but as standalone signals for programmatic use. When no `strategy` is
+ * provided, it resolves from the ambient `NGX_SIGNAL_FORM_CONTEXT` (set by
+ * `provideNgxSignalFormsConfig` or a parent form host) and falls back to
+ * `'on-touch'`. The same precedence applies to `submittedStatus`.
  *
  * ## Usage
  *
