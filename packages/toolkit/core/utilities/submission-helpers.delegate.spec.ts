@@ -109,6 +109,47 @@ describe('submitWithWarnings native submit() delegation', () => {
     expect(submitSpy).toHaveBeenCalledOnce();
     expect(action).not.toHaveBeenCalled();
   });
+
+  it('skips the action when pending() is true after the microtask settlement delay', async () => {
+    // Regression for Bug 1 (issue #73): submitWithWarnings was missing the
+    // pending() guard that canSubmitWithWarnings already had. An async validator
+    // still in flight after the microtask delay could leave pending()=true while
+    // errorSummary() appears empty, causing the action to fire prematurely.
+    const pendingState = signal(true);
+    const errorsState = signal<ValidationError[]>([]);
+    const formTree = createMockFieldTree({
+      value: () => ({}),
+      valid: () => true,
+      invalid: () => false,
+      touched: () => true,
+      dirty: () => false,
+      errors: () => errorsState(),
+      pending: () => pendingState(),
+      disabled: () => false,
+      readonly: () => false,
+      hidden: () => false,
+      submitting: () => false,
+      reset: (): void => undefined,
+      markAsTouched: (): void => undefined,
+      markAsDirty: (): void => undefined,
+      errorSummary: () => errorsState(),
+    });
+    const action = vi.fn(async () => {});
+
+    submitSpy.mockImplementation(async (_form, options) => {
+      if (typeof options === 'object') await options.action?.();
+      return true;
+    });
+
+    // pending()=true → action must NOT fire.
+    await submitWithWarnings(formTree, action);
+    expect(action).not.toHaveBeenCalled();
+
+    // Once async validators settle, pending()=false → action fires.
+    pendingState.set(false);
+    await submitWithWarnings(formTree, action);
+    expect(action).toHaveBeenCalledOnce();
+  });
 });
 
 function createMockFieldTree<TValue>(

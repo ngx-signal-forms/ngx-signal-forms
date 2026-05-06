@@ -2,8 +2,11 @@ import { computed, isDevMode, type Signal } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createUniqueId,
+  injectFormContext,
   isFieldStateInteractive,
   readDirectErrors,
+  resolveStrategyFromContext,
+  resolveSubmittedStatusFromContext,
   resolveValidationErrorMessage,
   showErrors,
   splitByKind,
@@ -382,26 +385,25 @@ export function createErrorState<TValue = unknown>(
 ): ErrorStateResult {
   const { field, fieldName, strategy, submittedStatus } = options;
 
+  // Capture form context at factory call time (inside injection context).
+  // Optional: callers outside a form boundary (tests, standalone components)
+  // get undefined and fall through to 'on-touch', matching the directive.
+  const formContext = injectFormContext();
+
   const fieldState = computed(() => field());
 
   const resolvedFieldName = computed(() => unwrapValue(fieldName));
 
   const resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() => {
-    if (strategy !== undefined) {
-      const resolved = unwrapValue(strategy);
-      if (resolved !== 'inherit') {
-        return resolved;
-      }
-    }
-
-    return 'on-touch';
+    const strategyValue =
+      strategy !== undefined ? unwrapValue(strategy) : undefined;
+    return resolveStrategyFromContext(strategyValue, formContext);
   });
 
   const resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(() => {
-    if (submittedStatus !== undefined) {
-      return unwrapValue(submittedStatus);
-    }
-    return undefined;
+    const statusValue =
+      submittedStatus !== undefined ? unwrapValue(submittedStatus) : undefined;
+    return resolveSubmittedStatusFromContext(statusValue, formContext);
   });
 
   const showErrorsSignal = showErrors(

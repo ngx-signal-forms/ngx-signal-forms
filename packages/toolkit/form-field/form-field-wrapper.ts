@@ -735,17 +735,14 @@ export class NgxFormFieldWrapper<TValue = unknown> {
       }
     }
 
-    // Priority 2: Derive from input element's id attribute (signal updated by afterEveryRender)
+    // Priority 2: Derive from input element's id attribute (signal updated by
+    // afterEveryRender). This is the correct reactive path — the DOM is never
+    // queried synchronously inside a computed() to avoid SSR crashes
+    // (requireHostElement throws TypeError when nativeElement is not HTMLElement)
+    // and to keep the dependency graph fully reactive.
     const idFromInput = this.#inputElementId();
     if (idFromInput) {
       return idFromInput;
-    }
-
-    const controlId = findBoundControl(
-      requireHostElement(this.#elementRef),
-    )?.id;
-    if (controlId !== undefined && controlId.length > 0) {
-      return controlId;
     }
 
     if (isDevMode() && !this.#warnedUnresolvedFieldName) {

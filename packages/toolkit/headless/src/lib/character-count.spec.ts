@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NgxHeadlessCharacterCount } from './character-count';
 
 describe('NgxHeadlessCharacterCount', () => {
@@ -522,6 +522,91 @@ describe('NgxHeadlessCharacterCount', () => {
 
       expect(screen.getByTestId('count').textContent?.trim()).toBe('5 / 100');
       expect(screen.queryByTestId('over-limit')).toBeFalsy();
+    });
+  });
+
+  describe('unsupported value type dev warning (regression for Bug 3 / #73)', () => {
+    // NgxHeadlessCharacterCount was silently returning 0 for unsupported types
+    // with no warning. The createCharacterCount factory already had a one-shot
+    // console.warn; this suite pins the same behaviour for the directive.
+
+    beforeEach(() => {
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('emits a console.warn once when the field value is an unsupported type', async () => {
+      @Component({
+        selector: 'ngx-test-unsupported-value',
+        imports: [FormField, NgxHeadlessCharacterCount],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <div
+            ngxHeadlessCharacterCount
+            #charCount="characterCount"
+            [field]="objectField"
+            [maxLength]="100"
+          >
+            <span data-testid="length">{{ charCount.currentLength() }}</span>
+          </div>
+        `,
+      })
+      class TestComponent {
+        // An object value is unsupported by the character count directive.
+        readonly #model = signal({ data: { nested: 'value' } });
+        readonly objectForm = form(this.#model);
+        readonly objectField = this.objectForm.data;
+      }
+
+      const { fixture } = await render(TestComponent);
+      await fixture.whenStable();
+
+      // currentLength should still return 0 (no crash).
+      expect(screen.getByTestId('length').textContent).toBe('0');
+
+      // A single console.warn should have been emitted.
+      expect(console.warn).toHaveBeenCalledOnce();
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('NgxHeadlessCharacterCount'),
+        expect.anything(),
+        expect.stringContaining('0'),
+      );
+
+      // Trigger another change-detection cycle; warn must NOT fire again.
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(console.warn).toHaveBeenCalledOnce();
+    });
+
+    it('does NOT warn for null or undefined values (treated as empty)', async () => {
+      @Component({
+        selector: 'ngx-test-null-value',
+        imports: [FormField, NgxHeadlessCharacterCount],
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        template: `
+          <div
+            ngxHeadlessCharacterCount
+            #charCount="characterCount"
+            [field]="nullableField"
+            [maxLength]="100"
+          >
+            <span data-testid="length">{{ charCount.currentLength() }}</span>
+          </div>
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ tag: null as string | null });
+        readonly tagForm = form(this.#model);
+        readonly nullableField = this.tagForm.tag;
+      }
+
+      await render(TestComponent);
+
+      expect(screen.getByTestId('length').textContent).toBe('0');
+      expect(console.warn).not.toHaveBeenCalled();
     });
   });
 
