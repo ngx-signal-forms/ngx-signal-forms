@@ -90,6 +90,9 @@ jobs:
         run: bash .github/scripts/nx-safe.sh pnpm exec nx report
 
       - name: Check formatting
+        env:
+          NX_NO_CLOUD: 'true'
+          NX_DAEMON: 'false'
         run: bash .github/scripts/nx-safe.sh pnpm run format:check
 
       - name: Lint with GitHub annotations
