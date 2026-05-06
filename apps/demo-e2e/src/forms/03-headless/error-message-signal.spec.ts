@@ -40,10 +40,18 @@ test.describe('Headless - createErrorMessageSignal', () => {
       });
 
       await test.step('aria-describedby on input resolves to the rendered error', async () => {
-        const describedBy = await input.getAttribute('aria-describedby');
-        await expect(
-          page.getByTestId('section-blocking').locator(`#${describedBy}`),
-        ).toHaveAttribute('data-testid', 'blocking-error-required');
+        const expectedErrorId = 'password-error-required';
+        const describedBy = input;
+        await expect(describedBy).toHaveAttribute(
+          'aria-describedby',
+          expectedErrorId,
+        );
+        const describedByError = page.locator(`#${expectedErrorId}`);
+        await expect(describedByError).toHaveCount(1);
+        await expect(describedByError).toHaveAttribute(
+          'data-testid',
+          'blocking-error-required',
+        );
         await expect(input).toHaveAttribute('aria-invalid', 'true');
       });
     });
@@ -139,10 +147,18 @@ test.describe('Headless - createErrorMessageSignal', () => {
       });
 
       await test.step('aria-describedby still resolves to the (re-resolved) error', async () => {
-        const describedBy = await input.getAttribute('aria-describedby');
-        await expect(
-          page.getByTestId('section-blocking').locator(`#${describedBy}`),
-        ).toHaveAttribute('data-testid', 'blocking-error-minLength');
+        const expectedErrorId = 'password-error-minLength';
+        const describedBy = input;
+        await expect(describedBy).toHaveAttribute(
+          'aria-describedby',
+          expectedErrorId,
+        );
+        const describedByError = page.locator(`#${expectedErrorId}`);
+        await expect(describedByError).toHaveCount(1);
+        await expect(describedByError).toHaveAttribute(
+          'data-testid',
+          'blocking-error-minLength',
+        );
       });
     });
   });
