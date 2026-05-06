@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Runs a command, retrying without Nx Cloud if the run hard-fails because
 # Nx Cloud rejects or cannot serve the workspace (auth failure, org disabled,
-# or plan/quota rejection). Nx Cloud stays enabled when it's healthy; CI never
-# blocks when it isn't.
+# or plan/quota rejection), or if Nx Cloud's downloaded hotfix bootstrap goes
+# missing from the local cache. Nx Cloud stays enabled when it's healthy; CI
+# never blocks when it isn't.
 #
 # Nx already tolerates transient remote-cache outages during task execution, so
 # this wrapper only handles the failures that abort the command before local
@@ -19,12 +20,31 @@ set -uo pipefail
 # Classifier pattern. Kept as a single ERE so a match can be logged with the
 # offending line for debuggability on fallback.
 readonly NX_CLOUD_FAILURE_PATTERN='(Exiting run|organization has been disabled|workspace has been disabled|unable to be authorized|status code (401|402|403)|quota|credit(s)? (exceeded|exhausted)|plan limit|free plan|payment required)'
+readonly NX_CLOUD_HOTFIX_MISSING_PATTERN="Cannot find module '.*[.]nx/cache/cloud/"
+readonly NX_CLOUD_UPDATE_MANAGER_PATTERN='nx-cloud/update-manager[.]js'
+
+is_nx_cloud_hotfix_failure() {
+  local file_path=$1
+
+  grep -qiE "$NX_CLOUD_HOTFIX_MISSING_PATTERN" "$file_path" &&
+    grep -qiE "$NX_CLOUD_UPDATE_MANAGER_PATTERN" "$file_path"
+}
 
 is_nx_cloud_hard_failure() {
   local file_path=$1
 
-  grep -qi 'Nx Cloud' "$file_path" &&
-    grep -qiE "$NX_CLOUD_FAILURE_PATTERN" "$file_path"
+  if grep -qi 'Nx Cloud' "$file_path" &&
+    grep -qiE "$NX_CLOUD_FAILURE_PATTERN" "$file_path"; then
+    return 0
+  fi
+
+  is_nx_cloud_hotfix_failure "$file_path"
+}
+
+first_nx_cloud_failure_line() {
+  local file_path=$1
+
+  grep -iE "$NX_CLOUD_FAILURE_PATTERN|$NX_CLOUD_HOTFIX_MISSING_PATTERN|$NX_CLOUD_UPDATE_MANAGER_PATTERN" "$file_path" | head -n 1 || true
 }
 
 if [ "$#" -eq 0 ]; then
@@ -44,7 +64,7 @@ fi
 
 if is_nx_cloud_hard_failure "$logfile"; then
   # Surface the matched line so fallbacks are never silent in CI logs.
-  matched_line=$(grep -iE "$NX_CLOUD_FAILURE_PATTERN" "$logfile" | head -n 1 || true)
+  matched_line=$(first_nx_cloud_failure_line "$logfile")
   echo "::warning title=Nx Cloud unavailable::Retrying '$*' locally without Nx Cloud. Trigger: ${matched_line:-<no match line captured>}"
 
   # Persist a cloud-less environment for downstream steps in the same job.
