@@ -354,7 +354,7 @@ export class ErrorMessageSignalComponent {
   protected readonly allErrors = createErrorMessageSignal(
     () => this.passwordForm.password(),
     {
-      fieldName: 'password',
+      fieldName: 'password-all',
       includeWarnings: true,
       errorMessages: this.activeRegistry,
     },
@@ -364,7 +364,7 @@ export class ErrorMessageSignalComponent {
   protected readonly warningsOnly = createErrorMessageSignal(
     () => this.passwordForm.password(),
     {
-      fieldName: 'password',
+      fieldName: 'password-warnings',
       includeWarnings: 'only',
       errorMessages: this.activeRegistry,
     },
