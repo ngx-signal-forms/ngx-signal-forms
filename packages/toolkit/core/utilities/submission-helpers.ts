@@ -204,6 +204,12 @@ export async function submitWithWarnings<TModel>(
 
   await waitForValidationSettlement();
 
+  // Mirrors the canSubmitWithWarnings() guard: async validators may still be
+  // settling after the microtask delay — skip action until they resolve.
+  if (formTree().pending()) {
+    return;
+  }
+
   if (getBlockingErrors(formTree().errorSummary()).length > 0) {
     return;
   }

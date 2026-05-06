@@ -33,6 +33,23 @@ describe('NgxFormFieldWrapper — shared field-identity convergence', () => {
     expect(errorContainer).toBeTruthy();
   });
 
+  it('resolves field name from the projected input id via the reactive afterEveryRender path', async () => {
+    const { container, fixture } = await render(
+      `<ngx-form-field-wrapper [formField]="field">
+        <label for="name">Name</label>
+        <input id="name" type="text" />
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: invalidField() },
+      },
+    );
+    await fixture.whenStable();
+
+    const errorContainer = container.querySelector('[id="name-error"]');
+    expect(errorContainer).toBeTruthy();
+  });
+
   it('does not drift when the projected control element is swapped', async () => {
     const useA = signal(true);
 

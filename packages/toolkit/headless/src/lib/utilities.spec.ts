@@ -6,6 +6,7 @@ import {
   validate,
   type ValidationError,
 } from '@angular/forms/signals';
+import { NGX_SIGNAL_FORM_CONTEXT } from '@ngx-signal-forms/toolkit/core';
 import { describe, expect, it } from 'vitest';
 import {
   createErrorState,
@@ -721,6 +722,95 @@ describe('Headless Utilities', () => {
       expect(errorState.hasWarnings()).toBe(true);
       expect(errorState.hasErrors()).toBe(false);
       expect(errorState.showWarnings()).toBe(true);
+    });
+  });
+
+  // ============================================================================
+  // createErrorState — form context inheritance (regression for Bug 2 / #73)
+  // ============================================================================
+
+  describe('createErrorState — on-submit strategy inherited from form context', () => {
+    // Regression for Bug 2 (issue #73): createErrorState was not calling
+    // injectFormContext(), so it always fell back to 'on-touch' even inside an
+    // on-submit form. The fix captures formContext at factory call time and
+    // passes it to resolveStrategyFromContext / resolveSubmittedStatusFromContext.
+
+    it('hides errors before submission when the form context uses on-submit strategy', () => {
+      const submittedStatus = signal<
+        'unsubmitted' | 'submitting' | 'submitted'
+      >('unsubmitted');
+
+      TestBed.configureTestingModule({
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_CONTEXT,
+            useValue: {
+              errorStrategy: signal('on-submit'),
+              submittedStatus,
+              form: {},
+            },
+          },
+        ],
+      });
+
+      const model = signal({ email: '' });
+      const emailForm = TestBed.runInInjectionContext(() =>
+        form(
+          model,
+          schema((path) => {
+            validate(path.email, (ctx) =>
+              ctx.value() ? null : { kind: 'required', message: 'Required' },
+            );
+          }),
+        ),
+      );
+
+      const errorState = TestBed.runInInjectionContext(() =>
+        createErrorState({
+          field: emailForm.email,
+          fieldName: 'email',
+        }),
+      );
+
+      // on-submit strategy: field is invalid and touched, but errors are hidden
+      // until the form has been submitted.
+      emailForm.email().markAsTouched();
+      expect(errorState.hasErrors()).toBe(true);
+      expect(errorState.showErrors()).toBe(false);
+
+      // After submission the errors become visible.
+      submittedStatus.set('submitted');
+      expect(errorState.showErrors()).toBe(true);
+    });
+
+    it('falls back to on-touch when no form context is present', () => {
+      // Callers outside a form boundary (tests, standalone) must still work.
+      const model = signal({ email: '' });
+      const emailForm = TestBed.runInInjectionContext(() =>
+        form(
+          model,
+          schema((path) => {
+            validate(path.email, (ctx) =>
+              ctx.value() ? null : { kind: 'required', message: 'Required' },
+            );
+          }),
+        ),
+      );
+
+      const errorState = TestBed.runInInjectionContext(() =>
+        createErrorState({
+          field: emailForm.email,
+          fieldName: 'email',
+        }),
+      );
+
+      // Before touch: hidden.
+      expect(errorState.showErrors()).toBe(false);
+
+      // After touch: visible (on-touch fallback).
+      emailForm.email().markAsTouched();
+      expect(errorState.hasErrors()).toBe(true);
+      expect(errorState.showErrors()).toBe(true);
     });
   });
 });

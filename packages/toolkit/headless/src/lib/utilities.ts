@@ -2,8 +2,11 @@ import { computed, isDevMode, type Signal } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createUniqueId,
+  injectFormContext,
   isFieldStateInteractive,
   readDirectErrors,
+  resolveStrategyFromContext,
+  resolveSubmittedStatusFromContext,
   resolveValidationErrorMessage,
   showErrors,
   splitByKind,
@@ -300,9 +303,19 @@ export interface CreateErrorStateOptions<TValue = unknown> {
   readonly field: FieldTree<TValue>;
   /** Field name for ID generation. `null` disables ID generation. */
   readonly fieldName: ReactiveOrStatic<string | null>;
-  /** Error display strategy (defaults to 'on-touch') */
+  /**
+   * Error display strategy override.
+   *
+   * Resolution order: this option (when not `'inherit'`) → ambient
+   * `NGX_SIGNAL_FORM_CONTEXT.errorStrategy` → `'on-touch'`.
+   */
   readonly strategy?: ReactiveOrStatic<ErrorDisplayStrategy>;
-  /** Submitted status signal (optional) */
+  /**
+   * Submitted status override.
+   *
+   * Resolution order: this option (when not `undefined`) → ambient
+   * `NGX_SIGNAL_FORM_CONTEXT.submittedStatus` → `undefined`.
+   */
   readonly submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>;
 }
 
@@ -334,8 +347,11 @@ export interface ErrorStateResult {
  * Creates error state signals for a form field.
  *
  * This utility provides the same state management as NgxHeadlessErrorState
- * but as standalone signals for programmatic use. Defaults to the 'on-touch'
- * strategy when no strategy is provided.
+ * but as standalone signals for programmatic use. When no `strategy` is
+ * provided, it resolves from the ambient `NGX_SIGNAL_FORM_CONTEXT` (installed
+ * by the parent form host directive, `NgxSignalForm` on
+ * `form[formRoot][ngxSignalForm]`) and falls back to `'on-touch'`. The same
+ * precedence applies to `submittedStatus`.
  *
  * ## Usage
  *
@@ -382,26 +398,25 @@ export function createErrorState<TValue = unknown>(
 ): ErrorStateResult {
   const { field, fieldName, strategy, submittedStatus } = options;
 
+  // Capture form context at factory call time (inside injection context).
+  // Optional: callers outside a form boundary (tests, standalone components)
+  // get undefined and fall through to 'on-touch', matching the directive.
+  const formContext = injectFormContext();
+
   const fieldState = computed(() => field());
 
   const resolvedFieldName = computed(() => unwrapValue(fieldName));
 
   const resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() => {
-    if (strategy !== undefined) {
-      const resolved = unwrapValue(strategy);
-      if (resolved !== 'inherit') {
-        return resolved;
-      }
-    }
-
-    return 'on-touch';
+    const strategyValue =
+      strategy !== undefined ? unwrapValue(strategy) : undefined;
+    return resolveStrategyFromContext(strategyValue, formContext);
   });
 
   const resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(() => {
-    if (submittedStatus !== undefined) {
-      return unwrapValue(submittedStatus);
-    }
-    return undefined;
+    const statusValue =
+      submittedStatus !== undefined ? unwrapValue(submittedStatus) : undefined;
+    return resolveSubmittedStatusFromContext(statusValue, formContext);
   });
 
   const showErrorsSignal = showErrors(
@@ -523,10 +538,16 @@ export function createCharacterCount(
       value !== undefined
     ) {
       warnedUnsupportedValue = true;
+      // Log a type descriptor only — never the raw value, which may contain
+      // user-entered data and end up in dev consoles, CI logs, or screenshots.
+      const valueType =
+        typeof value === 'object'
+          ? (value.constructor?.name ?? 'object')
+          : typeof value;
       // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
       console.warn(
         '[ngx-signal-forms] createCharacterCount: unsupported value type — expected `string` or `readonly string[]`, got',
-        value,
+        valueType,
         '— rendering length as 0.',
       );
     }
