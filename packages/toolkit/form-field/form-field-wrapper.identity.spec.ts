@@ -33,12 +33,7 @@ describe('NgxFormFieldWrapper — shared field-identity convergence', () => {
     expect(errorContainer).toBeTruthy();
   });
 
-  it('resolves field name without synchronous DOM query — no crash when host is not an HTMLElement (Bug 5 / #73)', async () => {
-    // Regression: resolvedFieldName previously called requireHostElement() inside
-    // a computed(), which throws a TypeError in SSR environments where nativeElement
-    // is not HTMLElement. The fix removes the sync DOM fallback; the reactive
-    // afterEveryRender signal (#inputElementId) is the only fallback path.
-    // Here we verify that the component works correctly via the reactive path.
+  it('resolves field name from the projected input id via the reactive afterEveryRender path', async () => {
     const { container, fixture } = await render(
       `<ngx-form-field-wrapper [formField]="field">
         <label for="name">Name</label>
@@ -51,8 +46,6 @@ describe('NgxFormFieldWrapper — shared field-identity convergence', () => {
     );
     await fixture.whenStable();
 
-    // The reactive afterEveryRender path must resolve the field name to 'name'
-    // from the projected input's id attribute.
     const errorContainer = container.querySelector('[id="name-error"]');
     expect(errorContainer).toBeTruthy();
   });
