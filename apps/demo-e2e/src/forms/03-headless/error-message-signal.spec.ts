@@ -44,8 +44,10 @@ test.describe('Headless - createErrorMessageSignal', () => {
         const errorId = requiredError;
         await expect(errorId).toHaveAttribute('id');
 
-        const describedBy = input;
-        await expect(describedBy).toHaveAttribute('aria-describedby', errorId);
+        await expect(input).toHaveAttribute(
+          'aria-describedby',
+          errorId as string,
+        );
         await expect(input).toHaveAttribute('aria-invalid', 'true');
       });
     });
@@ -141,9 +143,12 @@ test.describe('Headless - createErrorMessageSignal', () => {
       });
 
       await test.step('aria-describedby still points at the (re-resolved) error id', async () => {
-        const errorId = await blockingMinLength.getAttribute('id');
-        const describedBy = input;
-        await expect(describedBy).toHaveAttribute('aria-describedby', errorId);
+        const errorId = blockingMinLength;
+        await expect(errorId).toHaveAttribute('id');
+        await expect(input).toHaveAttribute(
+          'aria-describedby',
+          errorId as string,
+        );
       });
     });
   });
