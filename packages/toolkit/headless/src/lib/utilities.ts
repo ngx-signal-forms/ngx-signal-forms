@@ -348,9 +348,10 @@ export interface ErrorStateResult {
  *
  * This utility provides the same state management as NgxHeadlessErrorState
  * but as standalone signals for programmatic use. When no `strategy` is
- * provided, it resolves from the ambient `NGX_SIGNAL_FORM_CONTEXT` (set by
- * `provideNgxSignalFormsConfig` or a parent form host) and falls back to
- * `'on-touch'`. The same precedence applies to `submittedStatus`.
+ * provided, it resolves from the ambient `NGX_SIGNAL_FORM_CONTEXT` (installed
+ * by the parent form host directive, `NgxSignalForm` on
+ * `form[formRoot][ngxSignalForm]`) and falls back to `'on-touch'`. The same
+ * precedence applies to `submittedStatus`.
  *
  * ## Usage
  *
