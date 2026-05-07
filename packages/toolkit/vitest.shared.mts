@@ -9,7 +9,7 @@ import { type UserWorkspaceConfig } from 'vitest/config';
 process.env.NX_DAEMON ??= 'false';
 
 export const toolkitSpecRoots =
-  '{src,core,form-field,headless,assistive,testing,debugger,vest}';
+  '{src,core,form-field,headless,assistive,testing,vest}';
 export const toolkitSpecFiles = `${toolkitSpecRoots}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}`;
 export const toolkitBrowserSpecFiles = `${toolkitSpecRoots}/**/*.browser.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}`;
 
@@ -21,10 +21,6 @@ export const toolkitEntryAliases = [
   {
     find: /^@ngx-signal-forms\/toolkit\/core$/,
     replacement: resolve(__dirname, 'core/index.ts'),
-  },
-  {
-    find: /^@ngx-signal-forms\/toolkit\/debugger$/,
-    replacement: resolve(__dirname, 'debugger/index.ts'),
   },
   {
     find: /^@ngx-signal-forms\/toolkit\/form-field$/,
@@ -80,7 +76,6 @@ export const toolkitSharedConfig = {
         'form-field/**/*.ts',
         'headless/**/*.ts',
         'vest/**/*.ts',
-        'debugger/**/*.ts',
       ],
       exclude: [
         '**/*.spec.ts',

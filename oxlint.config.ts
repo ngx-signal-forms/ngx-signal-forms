@@ -205,7 +205,7 @@ export default defineConfig({
     {
       files: [
         'apps/demo/src/**/*.ts',
-        'packages/toolkit/debugger/**/*.ts',
+        'libs/ui/debugger/**/*.ts',
         'packages/toolkit/vite.config.mts',
       ],
       rules: {

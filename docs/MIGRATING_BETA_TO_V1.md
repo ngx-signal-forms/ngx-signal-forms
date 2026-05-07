@@ -32,7 +32,7 @@ releases will not include any of the renames below.
 - **New: control semantics** — `ngxSignalFormControl="…"` contract for layout + auto-ARIA
 - **New: error summary** — `NgxFormFieldErrorSummary` + headless directive
 - **New: field labels** — `provideFieldLabels()` + warning/error split utilities
-- **New: debugger entry point** — `@ngx-signal-forms/toolkit/debugger`
+- **Debugger moved internal** — use `@spartan-ng/helm/debugger` in this repo's demos
 - **New: `warningStrategy`** — decouples warning visibility from error timing; default `'immediate'`
 - **New: `NgxFormField` bundle** — convenience import array of wrapper + assistive parts + auto-ARIA directive
 - **New: fieldset toggle** — `includeNestedErrors` on fieldset; `submittedStatus` override input
@@ -515,14 +515,14 @@ readonly resolvedErrors = createErrorMessageSignal(() => this.field()(), {
 See [`packages/toolkit/headless/README.md`](../packages/toolkit/headless/README.md#createerrormessagesignal)
 for full options and worked examples.
 
-### `/debugger` entry point
+### Internal debugger entry point
 
-The `@ngx-signal-forms/toolkit/debugger` entry ships a development-only
+The `@spartan-ng/helm/debugger` entry ships a development-only
 component that replaces the old `debug: true` config flag. Gate it with
 `isDevMode()` and drop it anywhere in the form template:
 
 ```ts
-import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+import { NgxSignalFormDebugger } from '@spartan-ng/helm/debugger';
 
 @Component({
   imports: [NgxSignalFormDebugger /* … */],

@@ -5,7 +5,7 @@ import {
   signal,
 } from '@angular/core';
 import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+import { NgxSignalFormDebugger } from '@spartan-ng/helm/debugger';
 import {
   DisplayControlsCardComponent,
   ExampleCardsComponent,

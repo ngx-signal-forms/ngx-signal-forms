@@ -11,7 +11,7 @@ import {
   type FormFieldAppearance,
   type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+import { NgxSignalFormDebugger } from '@spartan-ng/helm/debugger';
 import {
   AppearanceToggleComponent,
   DisplayControlsCardComponent,

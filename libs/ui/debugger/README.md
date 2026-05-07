@@ -1,4 +1,4 @@
-# @ngx-signal-forms/toolkit/debugger
+# @spartan-ng/helm/debugger
 
 > Development-time visual inspector for Angular Signal Forms state and validation.
 
@@ -12,10 +12,10 @@ It is a development-only tool — gate it behind `isDevMode()` so production bui
 
 ```typescript
 // Bundle import (recommended) — includes the debugger panel + badge directives
-import { NgxSignalFormDebuggerToolkit } from '@ngx-signal-forms/toolkit/debugger';
+import { NgxSignalFormDebuggerToolkit } from '@spartan-ng/helm/debugger';
 
 // Individual import — just the panel component
-import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+import { NgxSignalFormDebugger } from '@spartan-ng/helm/debugger';
 ```
 
 ## Quick start
@@ -24,7 +24,7 @@ import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
 import { Component, isDevMode, signal } from '@angular/core';
 import { form, FormField, required } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+import { NgxSignalFormDebugger } from '@spartan-ng/helm/debugger';
 
 @Component({
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormDebugger],

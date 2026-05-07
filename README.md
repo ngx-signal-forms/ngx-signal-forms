@@ -174,7 +174,6 @@ advanced and specialized cases — pull them in when you hit that specific need.
 | Multi-step / wizard forms           | Core + `NgxFormFieldset`                                         | [`advanced-wizard`](./apps/demo/src/app/05-advanced/advanced-wizard)                                                                                       |
 | Customize submission handling       | `createOnInvalidHandler`, `focusFirstInvalid`                    | [`submission-patterns`](./apps/demo/src/app/05-advanced/submission-patterns)                                                                               |
 | Set app-wide defaults               | `provideNgxSignalFormsConfig`                                    | [`global-configuration`](./apps/demo/src/app/05-advanced/global-configuration)                                                                             |
-| Debug form state during development | [`/debugger`](./packages/toolkit/debugger/README.md)             | —                                                                                                                                                          |
 | Use with Angular Material           | Custom wrapper on `mat-form-field`                               | [`demo-material`](./apps/demo-material/README.md)                                                                                                          |
 | Use with Spartan Components         | Custom wrapper on `BrnField` + `helm`                            | [`demo-spartan`](./apps/demo-spartan/README.md)                                                                                                            |
 
@@ -308,23 +307,6 @@ npm install @ngx-signal-forms/toolkit vest@6.2.7
 [`vest-validation` (code)](./apps/demo/src/app/05-advanced/vest-validation) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/advanced-scenarios/vest-validation/),
 [`zod-vest-validation` (code)](./apps/demo/src/app/05-advanced/zod-vest-validation) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/advanced-scenarios/zod-vest-validation/) ·
 **[Migrating from `ngx-vest-forms`](./docs/MIGRATING_FROM_NGX_VEST_FORMS.md)**
-
-### `@ngx-signal-forms/toolkit/debugger` — dev-only inspector
-
-Pass the form tree to inspect field state, visibility rules, and resolved errors
-during development.
-
-Key exports: `NgxSignalFormDebuggerToolkit` (bundle), `NgxSignalFormDebugger` (panel component).
-
-```html
-<ngx-signal-form-debugger [formTree]="form" />
-```
-
-**[→ Debugger docs](./packages/toolkit/debugger/README.md)** ·
-**Demos:** [`your-first-form` (code)](./apps/demo/src/app/01-getting-started/your-first-form) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/getting-started/your-first-form/),
-[`complex-forms` (code)](./apps/demo/src/app/04-form-field-wrapper/complex-forms) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/form-field-wrapper/complex-forms/)
-
----
 
 ## Validation strategies
 
@@ -536,7 +518,7 @@ form (axe, Lighthouse, screen-reader testing) before claiming conformance.
 - [Assistive components](./packages/toolkit/assistive/README.md) — standalone error, grouped notification, hint, counter, and summary components
 - [Headless primitives](./packages/toolkit/headless/README.md)
 - [Vest integration](./packages/toolkit/vest/README.md)
-- [Debugger](./packages/toolkit/debugger/README.md)
+- [Demo/internal debugger](./libs/ui/debugger/README.md)
 
 **Guides**
 

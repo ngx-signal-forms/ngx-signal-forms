@@ -5,7 +5,9 @@ via the Spartan CLI (`nx g @spartan-ng/cli:ui …`). Spartan ships with a
 copy-the-source distribution model (à la shadcn/ui): the helm components
 are installed _into_ your repo so you own them and can theme them
 locally. The files under `libs/ui/{checkbox,icon,input,label,select,utils}`
-are the output of that CLI step — not custom reimplementations.
+are the output of that CLI step — not custom reimplementations. The
+`libs/ui/debugger` entry point is repo-owned and intentionally not part of
+the Spartan-generated set.
 
 ## Upstream fidelity is the default
 

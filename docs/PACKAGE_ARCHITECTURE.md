@@ -19,7 +19,7 @@ while preserving tree-shaking and opt-in advanced surfaces.
 
 1. **Single install path** for common usage (`npm install @ngx-signal-forms/toolkit`).
 2. **Layered adoption** from core behavior to styled UI to headless primitives.
-3. **No forced runtime coupling** for optional integrations (Vest, debugger).
+3. **No forced runtime coupling** for optional integrations (Vest).
 4. **Bundle control** by importing only the entry points a consumer needs.
 
 ### Role of each entry point
@@ -29,7 +29,6 @@ while preserving tree-shaking and opt-in advanced surfaces.
 - `@ngx-signal-forms/toolkit/form-field` — wrapper + fieldset components.
 - `@ngx-signal-forms/toolkit/headless` — renderless state primitives.
 - `@ngx-signal-forms/toolkit/vest` — optional Vest convenience helpers.
-- `@ngx-signal-forms/toolkit/debugger` — development inspection UI.
 
 ### Internal boundary
 
@@ -48,7 +47,6 @@ from documented public entry points only.
 - `@ngx-signal-forms/toolkit/form-field` — prebuilt wrapper + fieldset UI
 - `@ngx-signal-forms/toolkit/headless` — renderless directives and utility functions
 - `@ngx-signal-forms/toolkit/vest` — Vest helper adapters
-- `@ngx-signal-forms/toolkit/debugger` — dev-only form inspector components
 
 ### Package layout
 
@@ -92,11 +90,6 @@ packages/toolkit/
 │   │   └── validate-vest.ts
 │   ├── ng-package.json
 │   └── README.md
-├── debugger/
-│   ├── signal-form-debugger.ts
-│   ├── debugger-badge.ts
-│   ├── index.ts
-│   └── ng-package.json
 ├── index.ts
 ├── README.md
 └── package.json
@@ -124,9 +117,14 @@ vest ^6 (optional peer for /vest)
 ├── /assistive
 ├── /form-field
 ├── /headless
-├── /vest
-└── /debugger
+└── /vest
 ```
+
+### Internal-only debugger
+
+The form debugger is no longer part of the published toolkit package. It now
+lives in `libs/ui/debugger` for internal/demo usage and is consumed via
+`@spartan-ng/helm/debugger` path aliases inside this repository.
 
 ### Publishing notes
 
