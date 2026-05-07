@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
-import { NgxSignalFormDebugger } from '@spartan-ng/helm/debugger';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   CardComponent,
   ExampleCardsComponent,

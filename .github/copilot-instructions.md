@@ -41,7 +41,7 @@ applyTo: '**'
 
 | Entry Point                 | Description                       |
 | --------------------------- | --------------------------------- |
-| `@spartan-ng/helm/debugger` | Development form inspection tools |
+| `@ngx-signal-forms/debugger` | Development form inspection tools |
 
 ### Developer Commands
 

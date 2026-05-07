@@ -12,7 +12,7 @@ import {
   type NgxFieldsetValidationSurface,
   type NgxFormFieldErrorPlacement,
 } from '@ngx-signal-forms/toolkit/form-field';
-import { NgxSignalFormDebugger } from '@spartan-ng/helm/debugger';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,

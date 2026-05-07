@@ -15,9 +15,8 @@
         "../../packages/toolkit/assistive/index.ts",
         "../../dist/packages/toolkit/assistive"
       ],
-      "@spartan-ng/helm/debugger": [
-        "../../libs/ui/debugger/src/index.ts",
-        "../../dist/libs/ui/debugger"
+      "@ngx-signal-forms/debugger": [
+        "../../libs/debugger/src/index.ts"
       ],
       "@ngx-signal-forms/toolkit/form-field": [
         "../../packages/toolkit/form-field/index.ts",
@@ -42,7 +41,7 @@
     "../../packages/toolkit/index.ts",
     "../../packages/toolkit/core/**/*.ts",
     "../../packages/toolkit/assistive/**/*.ts",
-    "../../libs/ui/debugger/**/*.ts",
+    "../../libs/debugger/**/*.ts",
     "../../packages/toolkit/form-field/**/*.ts",
     "../../packages/toolkit/headless/src/**/*.ts",
     "../../packages/toolkit/vest/src/**/*.ts"

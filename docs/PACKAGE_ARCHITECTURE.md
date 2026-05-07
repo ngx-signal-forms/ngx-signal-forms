@@ -123,8 +123,8 @@ vest ^6 (optional peer for /vest)
 ### Internal-only debugger
 
 The form debugger is no longer part of the published toolkit package. It now
-lives in `libs/ui/debugger` for internal/demo usage and is consumed via
-`@spartan-ng/helm/debugger` path aliases inside this repository.
+lives in `libs/debugger` for internal/demo usage and is consumed via
+`@ngx-signal-forms/debugger` path aliases inside this repository.
 
 ### Publishing notes
 

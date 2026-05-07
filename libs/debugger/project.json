@@ -1,0 +1,8 @@
+{
+  "name": "debugger",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/debugger/src",
+  "prefix": "ngx",
+  "tags": ["scope:demo", "type:lib"],
+  "projectType": "library"
+}

@@ -44,7 +44,7 @@ Horizontal `FormFieldOrientation` is exercised via the shared `ui/orientation-to
 - `packages/toolkit/assistive/README.md` — Assistive component docs
 - `packages/toolkit/headless/README.md` — Headless primitive docs
 - `packages/toolkit/vest/README.md` — Vest adapter, suite lifecycle, `only()` selector
-- `libs/ui/debugger/README.md` — Debugger (internal/demo only), badges, production tree-shaking
+- `libs/debugger/README.md` — Debugger (internal/demo only), badges, production tree-shaking
 
 ### Cross-cutting docs (`docs/`)
 

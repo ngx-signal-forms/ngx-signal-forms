@@ -38,7 +38,7 @@ Use the correct entry point for the thing you need.
 
 | Entry Point                 | Description                            |
 | --------------------------- | -------------------------------------- |
-| `@spartan-ng/helm/debugger` | Visual debugging tools for development |
+| `@ngx-signal-forms/debugger` | Visual debugging tools for development |
 
 ### Import rules
 
@@ -46,7 +46,7 @@ Use the correct entry point for the thing you need.
   - `NgxSignalFormToolkit`
   - `NgxFormField`
   - `NgxHeadlessToolkit`
-  - `NgxSignalFormDebuggerToolkit` (from `@spartan-ng/helm/debugger` for internal/demo use only)
+  - `NgxSignalFormDebuggerToolkit` (from `@ngx-signal-forms/debugger` for internal/demo use only)
 - Import assistive, form-field, headless, and vest APIs from their own secondary entry points.
 - Do **not** pretend the root entry point exports everything.
 
@@ -593,7 +593,7 @@ const signupForm = form(signupModel, (path) => {
 
 ## Debugger Entry Point (Internal/Demo Only)
 
-Use `@spartan-ng/helm/debugger` for development-only debugging in demo apps and internal projects. **This is not part of the published toolkit package.**
+Use `@ngx-signal-forms/debugger` for development-only debugging in demo apps and internal projects. **This is not part of the published toolkit package.**
 
 Current debugger exports include:
 

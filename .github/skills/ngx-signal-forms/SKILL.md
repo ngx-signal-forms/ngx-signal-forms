@@ -36,7 +36,7 @@ Use this skill when the task involves:
 
 | Entry Point                 | Description                         |
 | --------------------------- | ----------------------------------- |
-| `@spartan-ng/helm/debugger` | Dev-only form-tree inspection panel |
+| `@ngx-signal-forms/debugger` | Dev-only form-tree inspection panel |
 
 > `@angular/forms/signals` is always the source of truth for the form model. The toolkit only adds UX, accessibility, and composition value on top.
 
