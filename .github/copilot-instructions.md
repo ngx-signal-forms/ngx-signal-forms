@@ -36,7 +36,12 @@ applyTo: '**'
 | `@ngx-signal-forms/toolkit/form-field` | Styled wrapper and fieldset components             |
 | `@ngx-signal-forms/toolkit/headless`   | Renderless state directives and utilities          |
 | `@ngx-signal-forms/toolkit/vest`       | Vest v6+ integration (optional)                    |
-| `@ngx-signal-forms/toolkit/debugger`   | Development form inspection tools                  |
+
+### Internal UI Components (Demo/Development Only)
+
+| Entry Point                 | Description                       |
+| --------------------------- | --------------------------------- |
+| `@spartan-ng/helm/debugger` | Development form inspection tools |
 
 ### Developer Commands
 
