@@ -59,7 +59,7 @@ const accountSchema = schema<AccountPreferences>((path) => {
 
 /**
  * Single representative form: text input + select + checkbox composed
- * with real `@spartan-ng/helm` components scaffolded into `libs/ui`.
+ * with real `@spartan-ng/helm` components scaffolded into `libs/spartan/ui`.
  *
  * Each control declares `NgxSignalFormControlSemanticsDirective` (re-exported
  * from `NgxSpartanFormBundle`) alongside Spartan's helm directives — the
