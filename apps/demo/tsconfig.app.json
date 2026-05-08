@@ -15,9 +15,7 @@
         "../../packages/toolkit/assistive/index.ts",
         "../../dist/packages/toolkit/assistive"
       ],
-      "@ngx-signal-forms/debugger": [
-        "../../libs/debugger/src/index.ts"
-      ],
+      "@ngx-signal-forms/debugger": ["../../libs/debugger/src/index.ts"],
       "@ngx-signal-forms/toolkit/form-field": [
         "../../packages/toolkit/form-field/index.ts",
         "../../dist/packages/toolkit/form-field"

@@ -39,8 +39,8 @@ applyTo: '**'
 
 ### Internal UI Components (Demo/Development Only)
 
-| Entry Point                 | Description                       |
-| --------------------------- | --------------------------------- |
+| Entry Point                  | Description                       |
+| ---------------------------- | --------------------------------- |
 | `@ngx-signal-forms/debugger` | Development form inspection tools |
 
 ### Developer Commands
