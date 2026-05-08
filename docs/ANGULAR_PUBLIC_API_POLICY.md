@@ -53,7 +53,6 @@ These APIs are part of `@ngx-signal-forms/toolkit`. They build on top of Angular
 | Form fieldset             | `toolkit/form-field` | Grouped field layout                                 |
 | Warning convention        | `toolkit/assistive`  | `warn:` prefix for non-blocking messages             |
 | Vest integration          | `toolkit/vest`       | Vest v6+ validation suite adapter                    |
-| Form debugger             | `toolkit/debugger`   | Development-time form state inspection               |
 
 ## Design Principles
 

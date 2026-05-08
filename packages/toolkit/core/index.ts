@@ -4,7 +4,7 @@ export type * from './types';
 // Tokens — symbols tagged `@internal` are intentionally exported from this
 // barrel because `/core` is a build-time-only secondary entry point hidden
 // from the published `exports` map. Other toolkit entries (form-field,
-// assistive, headless, debugger) import internal plumbing from
+// assistive, headless) import internal plumbing from
 // `@ngx-signal-forms/toolkit/core` at build time; consumers cannot reach in.
 export * from './tokens';
 

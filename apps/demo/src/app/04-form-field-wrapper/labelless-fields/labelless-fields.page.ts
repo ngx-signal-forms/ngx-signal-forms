@@ -11,7 +11,7 @@ import type {
   FormFieldAppearance,
   FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   AppearanceToggleComponent,
   DisplayControlsCardComponent,

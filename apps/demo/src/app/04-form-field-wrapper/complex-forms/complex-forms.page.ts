@@ -12,7 +12,7 @@ import type {
   FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import type { NgxFormFieldErrorPlacement } from '@ngx-signal-forms/toolkit/form-field';
-import { NgxSignalFormDebugger } from '@ngx-signal-forms/toolkit/debugger';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   AppearanceToggleComponent,
   DisplayControlsCardComponent,

@@ -1,7 +1,7 @@
 {
   "name": "ui-helm",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/ui/src",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/spartan/ui/src",
   "prefix": "hlm",
   "tags": ["scope:lib", "type:lib"],
   "projectType": "library",
@@ -10,12 +10,12 @@
       "executor": "@nx/angular:ng-packagr-lite",
       "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "options": {
-        "project": "libs/ui/ng-package.json",
-        "tsConfig": "libs/ui/tsconfig.lib.json"
+        "project": "libs/spartan/ui/ng-package.json",
+        "tsConfig": "libs/spartan/ui/tsconfig.lib.json"
       },
       "configurations": {
         "production": {
-          "tsConfig": "libs/ui/tsconfig.lib.prod.json"
+          "tsConfig": "libs/spartan/ui/tsconfig.lib.prod.json"
         },
         "development": {}
       },

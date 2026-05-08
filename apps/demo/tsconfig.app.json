@@ -15,10 +15,7 @@
         "../../packages/toolkit/assistive/index.ts",
         "../../dist/packages/toolkit/assistive"
       ],
-      "@ngx-signal-forms/toolkit/debugger": [
-        "../../packages/toolkit/debugger/index.ts",
-        "../../dist/packages/toolkit/debugger"
-      ],
+      "@ngx-signal-forms/debugger": ["../../libs/debugger/src/index.ts"],
       "@ngx-signal-forms/toolkit/form-field": [
         "../../packages/toolkit/form-field/index.ts",
         "../../dist/packages/toolkit/form-field"
@@ -42,7 +39,7 @@
     "../../packages/toolkit/index.ts",
     "../../packages/toolkit/core/**/*.ts",
     "../../packages/toolkit/assistive/**/*.ts",
-    "../../packages/toolkit/debugger/**/*.ts",
+    "../../libs/debugger/**/*.ts",
     "../../packages/toolkit/form-field/**/*.ts",
     "../../packages/toolkit/headless/src/**/*.ts",
     "../../packages/toolkit/vest/src/**/*.ts"

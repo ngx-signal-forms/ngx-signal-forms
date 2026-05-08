@@ -1,21 +1,23 @@
 ---
-description: Sub-skill of ngx-signal-forms for the @ngx-signal-forms/toolkit/debugger entry point — the dev-only form-tree panel and standalone badge directives for visualizing validation state, error visibility, warnings, and submission state in development or demo pages, plus production tree-shaking guidance. Not independently invocable; the hub SKILL.md routes here.
+description: Sub-skill of ngx-signal-forms for the @ngx-signal-forms/debugger entry point — the dev-only form-tree panel and standalone badge directives for visualizing validation state, error visibility, warnings, and submission state in development or demo pages, plus production tree-shaking guidance. Not independently invocable; the hub SKILL.md routes here. This is an internal/demo-only component, not part of the published toolkit package.
 ---
 
-# Toolkit Debugger
+# Toolkit Debugger (Internal/Demo Only)
 
-Implements the `@ngx-signal-forms/toolkit/debugger` entry point.
+Implements the `@ngx-signal-forms/debugger` entry point for internal use.
 
 ## Principle
 
 The debugger is a **development-only** tool that makes invisible form state visible — field validity, touched/dirty state, error visibility with current strategy, warnings vs blockers, and live model values. Use it in dev builds, demo pages, and teaching examples. Never ship it in production UI.
+
+**Note:** This component is internal to the repository and not published as part of `@ngx-signal-forms/toolkit`.
 
 ## Workflow
 
 1. **Import the bundle for the full debugger surface.** Prefer `NgxSignalFormDebuggerToolkit` — it includes the panel plus the standalone badge directives in one import:
 
    ```typescript
-   import { NgxSignalFormDebuggerToolkit } from '@ngx-signal-forms/toolkit/debugger';
+   import { NgxSignalFormDebuggerToolkit } from '@ngx-signal-forms/debugger';
    ```
 
    Import `NgxSignalFormDebugger` on its own when you only need the panel and don't use the badges.
@@ -47,7 +49,7 @@ import {
 } from '@angular/core';
 import { form, FormField, required } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxSignalFormDebuggerToolkit } from '@ngx-signal-forms/toolkit/debugger';
+import { NgxSignalFormDebuggerToolkit } from '@ngx-signal-forms/debugger';
 
 @Component({
   selector: 'app-debug-form',

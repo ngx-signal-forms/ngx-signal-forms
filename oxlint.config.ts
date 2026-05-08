@@ -205,7 +205,7 @@ export default defineConfig({
     {
       files: [
         'apps/demo/src/**/*.ts',
-        'packages/toolkit/debugger/**/*.ts',
+        'libs/debugger/**/*.ts',
         'packages/toolkit/vite.config.mts',
       ],
       rules: {
@@ -379,7 +379,7 @@ export default defineConfig({
       // rewrite them to fit our local style; instead we relax the rules
       // that conflict with helm's conventions (underscore-prefixed private
       // signals, `cva` typing patterns, etc.).
-      files: ['libs/ui/**/*.ts'],
+      files: ['libs/spartan/ui/**/*.ts'],
       rules: {
         'no-underscore-dangle': 'off',
         '@typescript-eslint/no-unsafe-type-assertion': 'off',

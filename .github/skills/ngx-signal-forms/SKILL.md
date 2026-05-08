@@ -31,7 +31,12 @@ Use this skill when the task involves:
 | `@ngx-signal-forms/toolkit/assistive`  | Standalone errors, grouped notifications, hints, summaries |
 | `@ngx-signal-forms/toolkit/headless`   | Renderless state, notification, and summary directives     |
 | `@ngx-signal-forms/toolkit/vest`       | Vest validation adapter (optional)                         |
-| `@ngx-signal-forms/toolkit/debugger`   | Dev-only form-tree inspection panel                        |
+
+**Internal UI (Demo/Development Only):**
+
+| Entry Point                  | Description                         |
+| ---------------------------- | ----------------------------------- |
+| `@ngx-signal-forms/debugger` | Dev-only form-tree inspection panel |
 
 > `@angular/forms/signals` is always the source of truth for the form model. The toolkit only adds UX, accessibility, and composition value on top.
 

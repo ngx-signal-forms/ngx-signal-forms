@@ -33,7 +33,12 @@ Use the correct entry point for the thing you need.
 | `@ngx-signal-forms/toolkit/form-field` | Wrapper, floating label, grouped fieldset    |
 | `@ngx-signal-forms/toolkit/headless`   | Renderless directives and utility primitives |
 | `@ngx-signal-forms/toolkit/vest`       | Vest v6+ and Standard Schema helpers         |
-| `@ngx-signal-forms/toolkit/debugger`   | Visual debugging tools for development       |
+
+**Internal UI (Demo/Development Only):**
+
+| Entry Point                  | Description                            |
+| ---------------------------- | -------------------------------------- |
+| `@ngx-signal-forms/debugger` | Visual debugging tools for development |
 
 ### Import rules
 
@@ -41,8 +46,8 @@ Use the correct entry point for the thing you need.
   - `NgxSignalFormToolkit`
   - `NgxFormField`
   - `NgxHeadlessToolkit`
-  - `NgxSignalFormDebuggerToolkit`
-- Import assistive, form-field, headless, and debugger APIs from their own secondary entry points.
+  - `NgxSignalFormDebuggerToolkit` (from `@ngx-signal-forms/debugger` for internal/demo use only)
+- Import assistive, form-field, headless, and vest APIs from their own secondary entry points.
 - Do **not** pretend the root entry point exports everything.
 
 ```typescript
@@ -586,11 +591,11 @@ const signupForm = form(signupModel, (path) => {
 - Do **not** declare suites at module scope without `resetOnDestroy: true` unless you can accept stale state across mounts.
 - Use `validateVest(path, suite, { includeWarnings: true })` when the same suite provides both blocking errors and warnings; use `validateVestWarnings()` only when Vest is advisory-only alongside another validation source.
 
-## Debugger Entry Point
+## Debugger Entry Point (Internal/Demo Only)
 
-Use `@ngx-signal-forms/toolkit/debugger` for development-only debugging.
+Use `@ngx-signal-forms/debugger` for development-only debugging in demo apps and internal projects. **This is not part of the published toolkit package.**
 
-Current public debugger exports include:
+Current debugger exports include:
 
 - `NgxSignalFormDebuggerToolkit` — bundle of the panel plus the standalone badge directives
 - `NgxSignalFormDebugger` — the panel component
@@ -661,7 +666,7 @@ Avoid:
 - `packages/toolkit/assistive/README.md`
 - `packages/toolkit/headless/README.md`
 - `packages/toolkit/vest/README.md`
-- `packages/toolkit/debugger/README.md`
+- `libs/debugger/README.md` (internal/demo only)
 
 ### Cross-cutting docs
 

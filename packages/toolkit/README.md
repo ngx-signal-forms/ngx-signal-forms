@@ -21,7 +21,6 @@ You always import the core entry point. The other entry points add UI components
 | `@ngx-signal-forms/toolkit/form-field` | Form field wrapper and fieldset components                         |
 | `@ngx-signal-forms/toolkit/headless`   | Renderless primitives for custom UI                                |
 | `@ngx-signal-forms/toolkit/vest`       | Optional Vest adapter (requires `vest@6`)                          |
-| `@ngx-signal-forms/toolkit/debugger`   | Development-time form inspector                                    |
 
 **Which one do I pick?**
 
@@ -29,7 +28,6 @@ You always import the core entry point. The other entry points add UI components
 - **Custom markup, reuse toolkit error/notification/hint/count/summary components** → [`/assistive`](./assistive/README.md)
 - **Signals-only, fully custom markup** → [`/headless`](./headless/README.md)
 - **Vest business rules** → [`/vest`](./vest/README.md)
-- **Dev-time form inspection** → [`/debugger`](./debugger/README.md)
 
 ## Import
 
@@ -295,7 +293,6 @@ provideFieldLabels(() => {
 - [Assistive components](./assistive/README.md) — standalone error, grouped notification, hint, counter, and summary components
 - [Headless primitives](./headless/README.md) — renderless directives for custom UI
 - [Vest integration](./vest/README.md) — Vest adapter
-- [Debugger](./debugger/README.md) — development-time form inspector
 - [Theming guide](./form-field/THEMING.md) — CSS custom properties
 - [Custom controls](../../docs/CUSTOM_CONTROLS.md) — wrapping custom and third-party widgets
 - [Warnings support](../../docs/WARNINGS_SUPPORT.md) — warning convention and flow
