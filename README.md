@@ -518,7 +518,7 @@ form (axe, Lighthouse, screen-reader testing) before claiming conformance.
 - [Assistive components](./packages/toolkit/assistive/README.md) — standalone error, grouped notification, hint, counter, and summary components
 - [Headless primitives](./packages/toolkit/headless/README.md)
 - [Vest integration](./packages/toolkit/vest/README.md)
-- [Demo/internal debugger](./libs/ui/debugger/README.md)
+- [Demo/internal debugger](./libs/debugger/README.md)
 
 **Guides**
 

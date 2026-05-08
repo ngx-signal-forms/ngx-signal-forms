@@ -643,13 +643,13 @@ See `packages/toolkit/vest/README.md` for the full suite-lifecycle rationale
 
 ---
 
-## Entry Point: `@spartan-ng/helm/debugger` (Internal/Demo Only)
+## Entry Point: `@ngx-signal-forms/debugger` (Internal/Demo Only)
 
 **Note:** The debugger is no longer part of the published `@ngx-signal-forms/toolkit` package. It is now an internal component for demo and development use only.
 
 ```typescript
 // Bundle (recommended): the panel + the badge directives
-import { NgxSignalFormDebuggerToolkit } from '@spartan-ng/helm/debugger';
+import { NgxSignalFormDebuggerToolkit } from '@ngx-signal-forms/debugger';
 // = [NgxSignalFormDebugger, NgxSignalFormDebuggerBadge, NgxSignalFormDebuggerBadgeIcon]
 
 // Individual imports
@@ -659,7 +659,7 @@ import {
   NgxSignalFormDebuggerBadgeIcon,
   type NgxSignalFormDebuggerBadgeAppearance,
   type NgxSignalFormDebuggerBadgeVariant,
-} from '@spartan-ng/helm/debugger';
+} from '@ngx-signal-forms/debugger';
 ```
 
 ### NgxSignalFormDebugger inputs

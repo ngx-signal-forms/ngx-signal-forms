@@ -4,5 +4,15 @@
   "sourceRoot": "libs/debugger/src",
   "prefix": "ngx",
   "tags": ["scope:demo", "type:lib"],
-  "projectType": "library"
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "configFile": "libs/debugger/vite.config.mts",
+        "reportsDirectory": "{projectRoot}/../../coverage/libs/debugger"
+      }
+    }
+  }
 }

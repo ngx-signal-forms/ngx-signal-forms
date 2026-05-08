@@ -1,5 +1,5 @@
 /**
- * `@spartan-ng/helm/debugger`
+ * `@ngx-signal-forms/debugger`
  *
  * Development debugging tools for Angular Signal Forms.
  * Provides a visual debugger panel that displays form state, validation errors,
@@ -7,7 +7,7 @@
  *
  * @example
  * ```typescript
- * import { NgxSignalFormDebuggerToolkit } from '@spartan-ng/helm/debugger';
+ * import { NgxSignalFormDebuggerToolkit } from '@ngx-signal-forms/debugger';
  *
  * @Component({
  *   imports: [NgxSignalFormDebuggerToolkit],
@@ -44,7 +44,7 @@ export {
  *
  * @example
  * ```typescript
- * import { NgxSignalFormDebuggerToolkit } from '@spartan-ng/helm/debugger';
+ * import { NgxSignalFormDebuggerToolkit } from '@ngx-signal-forms/debugger';
  *
  * @Component({
  *   imports: [NgxSignalFormDebuggerToolkit],

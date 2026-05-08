@@ -73,7 +73,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
-import { NgxSignalFormDebugger } from '@spartan-ng/helm/debugger'; // Internal/demo only
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger'; // Internal/demo only
 import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 ```
 

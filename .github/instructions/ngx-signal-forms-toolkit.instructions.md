@@ -36,8 +36,8 @@ Use the correct entry point for the thing you need.
 
 **Internal UI (Demo/Development Only):**
 
-| Entry Point                 | Description                            |
-| --------------------------- | -------------------------------------- |
+| Entry Point                  | Description                            |
+| ---------------------------- | -------------------------------------- |
 | `@ngx-signal-forms/debugger` | Visual debugging tools for development |
 
 ### Import rules
@@ -666,7 +666,7 @@ Avoid:
 - `packages/toolkit/assistive/README.md`
 - `packages/toolkit/headless/README.md`
 - `packages/toolkit/vest/README.md`
-- `libs/ui/debugger/README.md` (internal/demo only)
+- `libs/debugger/README.md` (internal/demo only)
 
 ### Cross-cutting docs
 
