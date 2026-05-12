@@ -49,7 +49,6 @@ import {
   NgxFormFieldHint,
 } from '@ngx-signal-forms/toolkit/assistive';
 import {
-  findBoundControl,
   hasPaddedControlContent,
   isSelectionGroupKind,
   isTextualControlKind,
