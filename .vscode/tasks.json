@@ -45,7 +45,7 @@
     {
       "label": "build-toolkit-and-demo",
       "type": "shell",
-      "command": "pnpm nx build toolkit --skip-nx-cache && pnpm nx build demo --skip-nx-cache",
+      "command": "pnpm nx run toolkit:post-build --skip-nx-cache && pnpm nx build demo --skip-nx-cache",
       "isBackground": false,
       "group": "build"
     },

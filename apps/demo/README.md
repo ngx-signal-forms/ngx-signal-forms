@@ -239,7 +239,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 - Import `NgxSignalFormToolkit` bundle (recommended)
 - Or import individual directives from `@ngx-signal-forms/toolkit`
-- Verify toolkit is built: `pnpm nx build toolkit`
+- Verify toolkit is built: `pnpm nx run toolkit:post-build`
 
 ### Accessibility Issues
 

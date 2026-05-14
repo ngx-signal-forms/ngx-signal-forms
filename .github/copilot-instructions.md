@@ -45,16 +45,16 @@ applyTo: '**'
 
 ### Developer Commands
 
-| Command                    | Description                 |
-| -------------------------- | --------------------------- |
-| `pnpm nx test toolkit`     | Run toolkit unit tests      |
-| `pnpm nx build toolkit`    | Build toolkit library       |
-| `pnpm nx lint toolkit`     | Lint toolkit code           |
-| `pnpm nx serve demo`       | Start demo app (dev server) |
-| `pnpm nx build demo`       | Build demo app              |
-| `pnpm nx e2e demo-e2e`     | Run E2E tests               |
-| `pnpm nx run-many -t test` | Run all tests               |
-| `pnpm nx run-many -t lint` | Lint all projects           |
+| Command                          | Description                         |
+| -------------------------------- | ----------------------------------- |
+| `pnpm nx test toolkit`           | Run toolkit unit tests              |
+| `pnpm nx run toolkit:post-build` | Build publish-ready toolkit library |
+| `pnpm nx lint toolkit`           | Lint toolkit code                   |
+| `pnpm nx serve demo`             | Start demo app (dev server)         |
+| `pnpm nx build demo`             | Build demo app                      |
+| `pnpm nx e2e demo-e2e`           | Run E2E tests                       |
+| `pnpm nx run-many -t test`       | Run all tests                       |
+| `pnpm nx run-many -t lint`       | Lint all projects                   |
 
 ## Core Guidelines
 

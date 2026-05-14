@@ -97,7 +97,7 @@ Two CI mechanisms keep the toolkit publishable and design-system-free:
 2. **Pruned build** — the `toolkit-isolation` job in
    [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs
    `pnpm install --frozen-lockfile --filter "@ngx-signal-forms/toolkit..."`
-   followed by `pnpm nx build toolkit`. The filter excludes demo apps from
+   followed by `pnpm nx run toolkit:post-build`. The filter excludes demo apps from
    the install graph, so even if a demo declares a design-system dep, the
    toolkit build proves it can compile without that dep present.
 

@@ -312,7 +312,7 @@ pnpm nx run demo-material:test        # smoke spec (jsdom + Vitest)
 pnpm nx run demo-material-e2e:e2e     # Playwright spec
 ```
 
-The smoke spec depends on a built toolkit (`pnpm nx build toolkit`),
+The smoke spec depends on a publish-ready toolkit build (`pnpm nx run toolkit:post-build`),
 which Nx schedules automatically via the `dependsOn` in
 `project.json`.
 
