@@ -65,6 +65,7 @@ export const ERROR_DISPLAY_MODES_CONTENT = {
           '<strong>Immediate:</strong> Use for complex rules (password strength)',
           '<strong>On Touch:</strong> Balanced UX, recommended for most forms',
           '<strong>On Submit:</strong> Minimizes interruption, good for simple forms',
+          '<strong>Native vs toolkit:</strong> Keep native input semantics, but let Signal Forms and the toolkit decide when invalid state is actually shown',
           '<strong>Accessibility:</strong> All strategies are WCAG 2.2 compliant',
         ],
       },

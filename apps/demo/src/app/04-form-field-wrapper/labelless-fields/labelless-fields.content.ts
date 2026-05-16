@@ -38,6 +38,7 @@ export const LABELLESS_FIELDS_CONTENT: ExampleCardConfig = {
         items: [
           'Add <code>aria-label</code> to the input when no visible &lt;label&gt; is present',
           'For grouped fields, wrap the group in a <code>role="group"</code> element with <code>aria-labelledby</code>',
+          'Placeholders are only a visual cue here — they do not replace the accessible name or the toolkit&apos;s validation/error model',
           'Selection controls (checkbox, switch, radio) still require a visible label — the collapse behavior intentionally excludes them',
         ],
       },

@@ -34,6 +34,14 @@ export const YOUR_FIRST_FORM_CONTENT = {
         ],
       },
       {
+        title: 'Validation ownership',
+        items: [
+          '<strong>Native HTML still matters:</strong> Keep semantic control attributes such as <code>type</code>, <code>required</code>, and <code>autocomplete</code>',
+          '<strong>Signal Forms owns displayed state:</strong> Error visibility follows field state and the selected strategy, not browser submit-time validation UI',
+          '<strong>Toolkit owns presentation:</strong> <code>aria-invalid</code>, <code>aria-describedby</code>, and reusable error rendering come from Signal Forms state',
+        ],
+      },
+      {
         title: 'What stays under your control',
         items: [
           'HTML structure and layout',
@@ -72,6 +80,7 @@ export const YOUR_FIRST_FORM_CONTENT = {
         items: [
           '<strong>Without toolkit:</strong> Manual ARIA/error plumbing scales linearly with field count',
           '<strong>With this setup:</strong> Form context + error component cover core accessibility behavior',
+          '<strong>Browser validity selectors:</strong> Treat <code>:user-valid</code> / <code>:user-invalid</code> as optional native-input enhancement, not the main validation contract',
           '<strong>Next level:</strong> Wrapper-centric pages optimize larger and nested forms',
         ],
       },

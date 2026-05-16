@@ -329,6 +329,33 @@ form(model, (path) => {
 
 ---
 
+## Native HTML validation vs Signal Forms
+
+Use both — but let each layer own the part it is good at.
+
+- Keep native HTML semantics on real controls: `type="email"`, `required`,
+  `minlength`, `autocomplete`, input modes, and other platform attributes still
+  matter for keyboards, autofill, and intrinsic browser validity.
+- Let Angular Signal Forms own the **displayed validation state**: with
+  `[formRoot]` / `submit()`, your form UX should be driven by field state,
+  validators, and the configured error strategy rather than browser submit-time
+  validation UI.
+- Let `@ngx-signal-forms/toolkit` own the **presentation layer** on top:
+  `aria-invalid`, `aria-describedby`, wrapper invalid/warning styling, summaries,
+  and strategy-aware error timing come from Signal Forms state, not native
+  `:valid` / `:invalid`.
+- Treat `:user-valid` / `:user-invalid` as **optional progressive enhancement**
+  for native `<input>`, `<textarea>`, and `<select>` controls only. They are
+  useful for small visual touches, but they do not cover custom controls,
+  warnings, async or pending validation, or `'on-touch'` / `'on-submit'`
+  visibility timing.
+
+If you want automatic CSS classes from Angular state, enable
+`NG_STATUS_CLASSES` in `provideSignalFormsConfig()` and style those classes
+instead of relying on browser validity pseudo-classes as your primary contract.
+
+---
+
 ## Configuration
 
 ```typescript
