@@ -49,19 +49,33 @@ readonly formField = input<FieldTree<unknown>>();
 
 // Overrides the config default entirely. '{marker}' is still substituted.
 readonly text = input<string>();
+
+// Overrides config requiredMarker for '{marker}' substitution. Mirrors the
+// per-instance requiredMarker input on NgxFormFieldWrapper (form-field-wrapper.ts:415).
+readonly requiredMarker = input<string>();
 ```
 
 ### Text resolution precedence
+
+Text:
 
 1. `[text]` input (if set)
 2. `requiredLegendText` from config
 3. Built-in default: `'{marker} indicates a required field'`
 
-The literal token `{marker}` is replaced with the **trimmed** resolved
-`requiredMarker` (default `' *'` → `*`). Trimming keeps the sentence clean when
-the marker leads the string. `{marker}` is the only supported token; all other
-text renders verbatim. Consumers pass `$localize`'d strings via config or
-`[text]` for i18n.
+Marker (for `{marker}` substitution):
+
+1. `[requiredMarker]` input (if set)
+2. `requiredMarker` from config (default `' *'`)
+
+The literal token `{marker}` is replaced with the **trimmed** resolved marker
+(`' *'` → `*`). Trimming keeps the sentence clean when the marker leads the
+string. `{marker}` is the only supported token; all other text renders verbatim.
+Consumers pass `$localize`'d strings via config or `[text]` for i18n.
+
+Because both `requiredMarker` and `requiredLegendText` are config tokens (not
+hot-swappable at runtime), the per-instance `[requiredMarker]` / `[text]` inputs
+are what enable live, reactive customization — used by the demo below.
 
 ### Form-field resolution
 
@@ -141,6 +155,23 @@ requiredLegendText: '{marker} indicates a required field',
 `requiredLegendText` with `??` like the other string fields, so falsy overrides
 are preserved consistently with `requiredMarker`.
 
+## Demo
+
+New interactive demo page following the existing `*.page.ts` pattern, under
+`apps/demo/src/app/04-form-field-wrapper/required-legend/` (same file layout as
+the `custom-controls` demo: `*.page.ts`, `*.form.ts`, `*.html`, `*.model.ts`,
+`*.content.ts`, `index.ts`, `README.md`). Registered in `app.routes.ts` and the
+route-title registry.
+
+Contents:
+
+- Live controls: a text input bound to the legend `[text]`, and a text input
+  bound to `[requiredMarker]`.
+- The same `[requiredMarker]` is also bound to the field wrapper(s), so the
+  rendered asterisks and the legend stay visibly in sync.
+- A sample form mixing required and optional fields, plus a toggle that makes a
+  field required/optional so the legend's auto-hide can be observed live.
+
 ## Testing
 
 Headless `anyFieldRequired`:
@@ -154,7 +185,8 @@ Headless `anyFieldRequired`:
 Component:
 
 - config default substitution renders `* indicates a required field`
-- `{marker}` sync when `requiredMarker` customized (e.g. `' †'` → `†`)
+- `{marker}` sync when config `requiredMarker` customized (e.g. `' †'` → `†`)
+- `[requiredMarker]` input overrides config for `{marker}` substitution
 - `[text]` override (with and without `{marker}`)
 - context fallback vs explicit `[formField]`
 - missing form → dev error + renders nothing
@@ -168,4 +200,6 @@ Component:
 - `packages/toolkit/core/types.ts`
 - `packages/toolkit/core/tokens.ts`
 - `packages/toolkit/core/utilities/normalize-config.ts`
-- Spec files for each of the above
+- `apps/demo/src/app/04-form-field-wrapper/required-legend/` (new demo)
+- `apps/demo/src/app/app.routes.ts` + route-title registry (demo-shared)
+- Spec files for each of the toolkit changes above
