@@ -116,7 +116,7 @@ specs must be reviewed and updated.
 
 ## Headless helper
 
-New file `headless/src/lib/required-state.ts`, re-exported from the headless
+New file `headless/src/lib/field-optionality.ts`, re-exported from the headless
 barrel:
 
 ```ts
@@ -143,10 +143,10 @@ is safe under signals (covered in the original legend analysis).
 
 ## Legend component
 
-New assistive component `packages/toolkit/assistive/form-required-legend.ts`
-(selector `ngx-form-required-legend`), sibling to `form-field-error-summary.ts`,
+New assistive component `packages/toolkit/assistive/form-marking-legend.ts`
+(selector `ngx-form-marking-legend`), sibling to `form-field-error-summary.ts`,
 exported from the assistive entry point and barrel. Consumer places it anywhere
-in the form/page.
+in the form/page. Class `NgxFormMarkingLegend`.
 
 ### Inputs
 
@@ -181,7 +181,7 @@ Using `createFieldOptionalitySummary(tree)`:
 
 ```html
 @if (visible()) {
-<p class="ngx-form-required-legend">{{ resolvedText() }}</p>
+<p class="ngx-form-marking-legend">{{ resolvedText() }}</p>
 }
 ```
 
@@ -251,14 +251,27 @@ Toolkit:
 - `packages/toolkit/core/utilities/normalize-config.ts`
 - `packages/toolkit/core/providers/config.provider.ts` (merge new keys)
 - `packages/toolkit/form-field/form-field-wrapper.ts` (mode logic, drop outline gate)
-- `packages/toolkit/headless/src/lib/required-state.ts` (new) + barrel
-- `packages/toolkit/assistive/form-required-legend.ts` (new) + assistive barrel
+- `packages/toolkit/headless/src/lib/field-optionality.ts` (new) + barrel
+- `packages/toolkit/assistive/form-marking-legend.ts` (new) + assistive barrel
 
 Consumers / migration of removed `showRequiredMarker`:
 
-- `apps/demo-primeng/src/app/profile-form/profile-form.ts`
-- `apps/demo-primeng/src/app/form-field/prime-form-field.ts`
+- `apps/demo-primeng/*` — note: `prime-form-field.ts` has its **own** local
+  `showRequiredMarker` input (a custom wrapper, not toolkit config). Leave its
+  public input name as-is; only toolkit-config usages migrate. No toolkit-config
+  usage exists in demo-primeng today, so no code change is required there.
+
+Docs (update config name `showRequiredMarker` → `showMarkerWhen`, document
+`optionalMarker` / legend / 3 modes / all-appearance rendering):
+
 - `packages/toolkit/README.md`
+- `packages/toolkit/form-field/README.md`
+- `packages/toolkit/form-field/THEMING.md` (add optional-marker CSS vars +
+  `data-marker` hook)
+- `.github/instructions/ngx-signal-forms-toolkit.instructions.md`
+- `.github/skills/ngx-signal-forms/references/api.md`
+- `.github/skills/ngx-signal-forms/form-field/SKILL.md`
+- `packages/toolkit/core/utilities/cascading-resolver.ts` (doc-comment example)
 
 Demo:
 
@@ -267,4 +280,4 @@ Demo:
 
 Specs: a `*.spec.ts` alongside each new/changed toolkit unit
 (`normalize-config.spec.ts`, `form-field-wrapper.spec.ts`, new
-`required-state.spec.ts`, new legend spec).
+`field-optionality.spec.ts`, new legend spec).

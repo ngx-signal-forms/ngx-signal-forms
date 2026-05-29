@@ -36,11 +36,26 @@ describe('normalizeSignalFormsConfig', () => {
       autoAria: undefined,
       defaultErrorStrategy: undefined,
       defaultFormFieldAppearance: undefined,
-      showRequiredMarker: undefined,
+      showMarkerWhen: undefined,
       requiredMarker: undefined,
+      optionalMarker: undefined,
+      requiredLegendText: undefined,
+      optionalLegendText: undefined,
     });
 
     expect(result).toEqual(DEFAULT_NGX_SIGNAL_FORMS_CONFIG);
+  });
+
+  it('preserves an empty-string optionalMarker override (falsy but intentional)', () => {
+    const result = normalizeSignalFormsConfig({ optionalMarker: '' });
+
+    expect(result.optionalMarker).toBe('');
+  });
+
+  it('preserves a non-default showMarkerWhen mode', () => {
+    const result = normalizeSignalFormsConfig({ showMarkerWhen: 'optional' });
+
+    expect(result.showMarkerWhen).toBe('optional');
   });
 
   it('is a two-tier merge only — does not inherit from a parent config (documented divergence from provideNgxSignalFormsConfig)', () => {
