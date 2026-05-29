@@ -390,17 +390,17 @@ import {
 
 ### NgxFormFieldWrapper inputs
 
-| Input                | Type                                              | Default                                                                                         |
-| -------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `formField`          | field                                             | Required                                                                                        |
-| `fieldName`          | string                                            | Derived from bound control `id`; pass explicitly for nested custom controls or dynamic identity |
-| `strategy`           | ErrorDisplayStrategy                              | Inherited                                                                                       |
-| `appearance`         | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'`                                                                                     |
-| `orientation`        | `'vertical' \| 'horizontal' \| 'inherit'`         | `'inherit'`                                                                                     |
-| `errorPlacement`     | `'top' \| 'bottom'`                               | `'bottom'`                                                                                      |
-| `showMarkerWhen`     | `'required' \| 'optional' \| 'none'`              | From config                                                                                     |
-| `requiredMarker`     | string                                            | `' *'`                                                                                          |
-| `optionalMarker`     | string                                            | `' (optional)'`                                                                                 |
+| Input            | Type                                              | Default                                                                                         |
+| ---------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `formField`      | field                                             | Required                                                                                        |
+| `fieldName`      | string                                            | Derived from bound control `id`; pass explicitly for nested custom controls or dynamic identity |
+| `strategy`       | ErrorDisplayStrategy                              | Inherited                                                                                       |
+| `appearance`     | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'`                                                                                     |
+| `orientation`    | `'vertical' \| 'horizontal' \| 'inherit'`         | `'inherit'`                                                                                     |
+| `errorPlacement` | `'top' \| 'bottom'`                               | `'bottom'`                                                                                      |
+| `showMarkerWhen` | `'required' \| 'optional' \| 'none'`              | From config                                                                                     |
+| `requiredMarker` | string                                            | `' *'`                                                                                          |
+| `optionalMarker` | string                                            | `' (optional)'`                                                                                 |
 
 ### NgxFormFieldset inputs
 

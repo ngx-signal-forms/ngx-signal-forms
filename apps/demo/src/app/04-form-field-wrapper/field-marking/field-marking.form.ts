@@ -1,5 +1,16 @@
-import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
-import { email, FormField, form, required, schema } from '@angular/forms/signals';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
+import {
+  email,
+  FormField,
+  form,
+  required,
+  schema,
+} from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   type FieldMarkingMode,
@@ -22,7 +33,12 @@ import {
 @Component({
   selector: 'ngx-field-marking-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField, NgxFormMarkingLegend],
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxFormField,
+    NgxFormMarkingLegend,
+  ],
   templateUrl: './field-marking.html',
   styles: `
     :host {

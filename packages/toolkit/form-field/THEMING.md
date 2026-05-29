@@ -525,13 +525,13 @@ marked is controlled by the `showMarkerWhen` config / input
 (`'required' \| 'optional' \| 'none'`). The host carries a `data-marker`
 attribute (`"required"` / `"optional"` / absent) for additional styling hooks.
 
-| Property                                  | Default                             | Description             |
-| :---------------------------------------- | :---------------------------------- | :---------------------- |
-| `--ngx-form-field-required-marker-color`  | `var(--ngx-form-field-color-error)` | Required marker color   |
-| `--ngx-form-field-required-marker-weight` | `600`                               | Required marker weight  |
-| `--ngx-form-field-optional-marker-color`  | `currentColor` (muted)              | Optional marker color   |
-| `--ngx-form-field-optional-marker-weight` | `400`                               | Optional marker weight  |
-| `--ngx-form-field-optional-marker-opacity`| `0.7`                               | Optional marker opacity |
+| Property                                   | Default                             | Description             |
+| :----------------------------------------- | :---------------------------------- | :---------------------- |
+| `--ngx-form-field-required-marker-color`   | `var(--ngx-form-field-color-error)` | Required marker color   |
+| `--ngx-form-field-required-marker-weight`  | `600`                               | Required marker weight  |
+| `--ngx-form-field-optional-marker-color`   | `currentColor` (muted)              | Optional marker color   |
+| `--ngx-form-field-optional-marker-weight`  | `400`                               | Optional marker weight  |
+| `--ngx-form-field-optional-marker-opacity` | `0.7`                               | Optional marker opacity |
 
 #### Input (Standard Layout)
 

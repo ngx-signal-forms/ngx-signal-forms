@@ -17,7 +17,7 @@ form-aware legend.
 ## Manual test checklist
 
 1. Default (`required` mode): required fields show `*`, legend reads
-   "* indicates a required field".
+   "\* indicates a required field".
 2. Switch to `optional`: optional fields show `(optional)`, legend explains it;
    required fields are unmarked.
 3. Switch to `none`: no markers, no legend.
