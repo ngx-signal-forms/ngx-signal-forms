@@ -94,6 +94,7 @@ export type {
   ErrorReadableState,
   ErrorVisibilityState,
   FieldLabelMap,
+  FieldMarkingMode,
   FormFieldAppearance,
   FormFieldAppearanceInput,
   FormFieldOrientation,

@@ -60,6 +60,12 @@ export {
   type ResolvedNotificationMessage,
 } from './lib/notification';
 
+export {
+  createFieldOptionalitySummary,
+  summarizeFieldOptionality,
+  type FieldOptionality,
+} from './lib/field-optionality';
+
 // ARIA primitives + wrapper helpers — sourced from `/core` to keep the
 // directive shell (`NgxSignalFormAutoAria`) and the headless re-export in
 // lockstep without duplicating implementation or forming a cycle through
