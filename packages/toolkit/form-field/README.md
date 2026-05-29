@@ -105,8 +105,9 @@ export class ContactFormComponent {
 | `appearance`         | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style variant                           |
 | `strategy`           | `ErrorDisplayStrategy`                            | Inherited   | Override error display strategy                |
 | `errorPlacement`     | `'top' \| 'bottom'`                               | `'bottom'`  | Render errors above or below the control       |
-| `showRequiredMarker` | `boolean`                                         | Config      | Toggle the outlined required marker            |
-| `requiredMarker`     | `string`                                          | Config      | Custom required marker text                    |
+| `showMarkerWhen`     | `'required' \| 'optional' \| 'none'`              | Config      | Which fields carry a visual marker             |
+| `requiredMarker`     | `string`                                          | Config      | Marker text for required fields                |
+| `optionalMarker`     | `string`                                          | Config      | Marker text for optional fields                |
 
 ### Appearances
 

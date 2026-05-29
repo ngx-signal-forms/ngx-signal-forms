@@ -131,8 +131,11 @@ interface NgxSignalFormsUserConfig {
   defaultFormFieldAppearance?: 'standard' | 'outline' | 'plain'; // default: 'standard'
   defaultFormFieldOrientation?: 'vertical' | 'horizontal'; // default: 'vertical'
   // Migration: legacy `stacked` → `standard`, legacy `bare` → `plain`.
-  showRequiredMarker?: boolean;
+  showMarkerWhen?: 'required' | 'optional' | 'none'; // default: 'required'
   requiredMarker?: string; // default: ' *'
+  optionalMarker?: string; // default: ' (optional)'
+  requiredLegendText?: string; // default: '{marker} indicates a required field'
+  optionalLegendText?: string; // default: 'All fields are required unless marked {marker}'
 }
 ```
 
@@ -395,8 +398,9 @@ import {
 | `appearance`         | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'`                                                                                     |
 | `orientation`        | `'vertical' \| 'horizontal' \| 'inherit'`         | `'inherit'`                                                                                     |
 | `errorPlacement`     | `'top' \| 'bottom'`                               | `'bottom'`                                                                                      |
-| `showRequiredMarker` | boolean                                           | From config                                                                                     |
+| `showMarkerWhen`     | `'required' \| 'optional' \| 'none'`              | From config                                                                                     |
 | `requiredMarker`     | string                                            | `' *'`                                                                                          |
+| `optionalMarker`     | string                                            | `' (optional)'`                                                                                 |
 
 ### NgxFormFieldset inputs
 
