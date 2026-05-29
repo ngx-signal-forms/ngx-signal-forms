@@ -8,6 +8,7 @@ export const DEMO_PATHS = {
   fieldsetAppearance: '/form-field-wrapper/fieldset-appearance',
   customControls: '/form-field-wrapper/custom-controls',
   labellessFields: '/form-field-wrapper/labelless-fields',
+  fieldMarking: '/form-field-wrapper/field-marking',
   globalConfiguration: '/advanced-scenarios/global-configuration',
   submissionPatterns: '/advanced-scenarios/submission-patterns',
   advancedWizard: '/advanced-scenarios/advanced-wizard',
@@ -79,6 +80,10 @@ export const DEMO_CATEGORIES = [
       {
         path: '/form-field-wrapper/labelless-fields',
         label: 'Labelless Fields',
+      },
+      {
+        path: '/form-field-wrapper/field-marking',
+        label: 'Required / Optional Marking',
       },
     ],
   },
