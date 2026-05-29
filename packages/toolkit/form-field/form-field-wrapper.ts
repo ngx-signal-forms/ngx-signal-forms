@@ -21,6 +21,7 @@ import type {
   FormFieldOrientation,
   FormFieldOrientationInput,
   NgxFormFieldErrorPlacement,
+  ResolvedMarker,
 } from '@ngx-signal-forms/toolkit';
 import {
   NGX_FORM_FIELD_ERROR_RENDERER,
@@ -679,10 +680,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * avoids the double-announcement that CSS `::after` content caused on
    * NVDA/VoiceOver (WCAG 1.3.1, 4.1.2).
    */
-  protected readonly resolvedMarker = computed<{
-    kind: 'required' | 'optional';
-    text: string;
-  } | null>(() => {
+  protected readonly resolvedMarker = computed<ResolvedMarker | null>(() => {
     if (this.#boundControlElement() === null) {
       return null;
     }

@@ -120,8 +120,19 @@ New file `headless/src/lib/field-optionality.ts`, re-exported from the headless
 barrel:
 
 ```ts
-// Reactive summary of leaf-field optionality across a form tree.
-function createFieldOptionalitySummary(tree: FieldTree<unknown>): {
+// Synchronous summary — reads each leaf's `required()`, so calling it inside a
+// `computed()` / `effect()` makes the result reactive.
+function summarizeFieldOptionality(tree: FieldTree<unknown>): {
+  readonly hasRequired: boolean;
+  readonly hasOptional: boolean;
+};
+
+// Reactive wrapper. Takes a *reader* (not a tree) so the source can be reactive
+// — e.g. an `input()` that is `undefined` until resolved. Null/undefined → both
+// flags `false`.
+function createFieldOptionalitySummary(
+  treeSource: () => FieldTree<unknown> | null | undefined,
+): {
   readonly hasRequired: Signal<boolean>;
   readonly hasOptional: Signal<boolean>;
 };
@@ -165,13 +176,14 @@ readonly optionalMarker = input<string>();                            // overrid
   `optionalLegendText` for `optional`). `none` → render nothing.
 - `{marker}` → trimmed marker for the active mode (`requiredMarker` for
   `required`, `optionalMarker` for `optional`), with per-instance input override.
-- Form tree: `[formField]` → ambient `NGX_SIGNAL_FORM_CONTEXT.form`
-  (`ngx-signal-form.ts:28`). Neither available → dev-mode `console.error` and
+- Form tree: `[formField]` → ambient form context via `injectFormContext()`
+  (`NGX_SIGNAL_FORM_CONTEXT.form`, `ngx-signal-form.ts:28`). Neither available →
+  dev-mode `console.error` (from an `effect`, not the resolution `computed`) and
   render nothing.
 
 ### Visibility (form-aware)
 
-Using `createFieldOptionalitySummary(tree)`:
+Using `createFieldOptionalitySummary(() => resolvedTree())`:
 
 - `required` mode → visible when `hasRequired()`
 - `optional` mode → visible when `hasOptional()`
@@ -179,9 +191,12 @@ Using `createFieldOptionalitySummary(tree)`:
 
 ### Rendering & a11y
 
+Visibility and text are folded into a single `resolvedText()` computed that
+returns `null` when nothing should show (no separate `visible()` signal):
+
 ```html
-@if (visible()) {
-<p class="ngx-form-marking-legend">{{ resolvedText() }}</p>
+@if (resolvedText(); as text) {
+<p class="ngx-form-marking-legend">{{ text }}</p>
 }
 ```
 

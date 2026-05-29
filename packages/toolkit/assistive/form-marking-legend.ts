@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   input,
   isDevMode,
@@ -100,28 +101,36 @@ export class NgxFormMarkingLegend {
   /** Override the optional marker used for `{marker}`. Falls back to config. */
   readonly optionalMarker = input<string>();
 
-  #warnedMissingForm = false;
+  readonly #resolvedTree = computed<FieldTree<unknown> | undefined>(
+    () => this.formField() ?? this.#formContext?.form,
+  );
 
-  readonly #resolvedTree = computed<FieldTree<unknown> | undefined>(() => {
-    const explicit = this.formField();
-    if (explicit !== undefined) {
-      return explicit;
+  constructor() {
+    // Surface a misconfiguration (no `[formField]` and no ambient form host) as
+    // a dev-mode error. Kept in an `effect` — not the `#resolvedTree` computed —
+    // so the warning fires reliably whenever the condition holds (computeds are
+    // pure derivations that may not run if never read), and re-arms if a form
+    // tree appears and later disappears again. Warns at most once per missing
+    // span.
+    if (isDevMode()) {
+      let warned = false;
+      effect(() => {
+        const missing = this.#resolvedTree() === undefined;
+        if (missing && !warned) {
+          warned = true;
+          // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+          console.error(
+            '[ngx-signal-forms] NgxFormMarkingLegend: no form tree available. ' +
+              'Provide a `[formField]` input or place the legend inside a ' +
+              '`form[formRoot][ngxSignalForm]` host. The legend renders nothing ' +
+              'until a form tree is resolvable.',
+          );
+        } else if (!missing) {
+          warned = false;
+        }
+      });
     }
-
-    const fromContext = this.#formContext?.form;
-    if (fromContext === undefined && isDevMode() && !this.#warnedMissingForm) {
-      this.#warnedMissingForm = true;
-      // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-      console.error(
-        '[ngx-signal-forms] NgxFormMarkingLegend: no form tree available. ' +
-          'Provide a `[formField]` input or place the legend inside a ' +
-          '`form[formRoot][ngxSignalForm]` host. The legend renders nothing ' +
-          'until a form tree is resolvable.',
-      );
-    }
-
-    return fromContext;
-  });
+  }
 
   readonly #mode = computed<FieldMarkingMode>(
     () => this.showMarkerWhen() ?? this.#config.showMarkerWhen,

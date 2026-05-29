@@ -247,6 +247,27 @@ export type NgxSignalFormControlPresetOverrides = Partial<
 export type FieldMarkingMode = 'required' | 'optional' | 'none';
 
 /**
+ * The kind of marker actually rendered on a field — the markable subset of
+ * {@link FieldMarkingMode} (`'none'` never produces a marker). Also the set of
+ * values the wrapper's `data-marker` host attribute can take (or absent).
+ *
+ * @public
+ */
+export type MarkerKind = Exclude<FieldMarkingMode, 'none'>;
+
+/**
+ * A resolved field marker: its {@link MarkerKind} and the text to render. A
+ * `null` resolution means no marker (mode is `'none'`, or the field's
+ * required-ness does not match the active mode).
+ *
+ * @public
+ */
+export interface ResolvedMarker {
+  readonly kind: MarkerKind;
+  readonly text: string;
+}
+
+/**
  * Configuration options for the ngx-signal-forms toolkit.
  */
 export interface NgxSignalFormsConfig {

@@ -1,4 +1,4 @@
-import { computed, type Signal } from '@angular/core';
+import { computed, isDevMode, type Signal } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 
 /**
@@ -62,6 +62,18 @@ function* walkLeaves(node: AnyFieldTree): Generator<AnyFieldTree> {
           : undefined;
 
     if (child === undefined) {
+      // A `[key, undefined]` tuple (a sparse / unresolved child) is a benign
+      // skip. Anything else means the FieldTree iteration shape is not what we
+      // expect — its leaves are silently dropped from the summary, so surface
+      // it in dev mode rather than letting the legend quietly under-count.
+      if (isDevMode() && !(Array.isArray(entry) && entry[1] == null)) {
+        // oxlint-disable-next-line no-console -- dev-mode shape-mismatch signal
+        console.error(
+          '[ngx-signal-forms] field-optionality: unrecognised FieldTree ' +
+            `iteration entry (${typeof entry}); its leaves are NOT counted. ` +
+            'This usually means the @angular/forms FieldTree structure changed.',
+        );
+      }
       continue;
     }
 
@@ -70,8 +82,25 @@ function* walkLeaves(node: AnyFieldTree): Generator<AnyFieldTree> {
 }
 
 function readRequired(leaf: AnyFieldTree): boolean {
-  const state = leaf() as { required?: () => boolean };
-  return typeof state.required === 'function' ? state.required() : false;
+  const state = leaf() as { required?: () => boolean } | null | undefined;
+
+  if (state == null || typeof state.required !== 'function') {
+    // Degrade to "optional" rather than throwing, so a single unexpected node
+    // can't break the whole legend. But a present-yet-non-callable `required`
+    // (or a nullish state) is a contract violation, not a normal leaf — flag it
+    // in dev mode so a FieldTree API change is loud rather than silent.
+    if (isDevMode() && (state == null || 'required' in state)) {
+      // oxlint-disable-next-line no-console -- dev-mode shape-mismatch signal
+      console.error(
+        '[ngx-signal-forms] field-optionality: leaf state is missing a ' +
+          'callable `required()`; treating the field as optional. The ' +
+          '@angular/forms FieldState contract may have changed.',
+      );
+    }
+    return false;
+  }
+
+  return state.required();
 }
 
 /**
@@ -96,9 +125,11 @@ export function summarizeFieldOptionality(
       hasOptional = true;
     }
 
-    // Both flags are OR-accumulators; once both are set no further leaf can
-    // change the result. The leaves already read remain tracked, so a counted
-    // field flipping required-ness still triggers a recompute.
+    // Both flags are OR-accumulators. Once both are `true` the result is
+    // saturated — no leaf, tracked or not, can change `{ true, true }` — so
+    // breaking early is safe. (Only leaves read before the break are
+    // signal-tracked, but any transition that could matter re-runs the whole
+    // computed anyway, re-reading from the top.)
     if (hasRequired && hasOptional) {
       break;
     }

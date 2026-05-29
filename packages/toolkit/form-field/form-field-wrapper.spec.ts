@@ -1,11 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Component, inputBinding, signal } from '@angular/core';
-import { form } from '@angular/forms/signals';
+import { FormField, form, required, schema } from '@angular/forms/signals';
 import { TestBed } from '@angular/core/testing';
 import {
   NGX_SIGNAL_FORMS_CONFIG,
   NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormToolkit,
   provideNgxSignalFormControlPresets,
   provideNgxSignalFormControlPresetsForComponent,
 } from '@ngx-signal-forms/toolkit';
@@ -1010,6 +1011,110 @@ describe('NgxSignalFormWrapperComponent', () => {
       );
       expect(marker).toBeTruthy();
       expect(marker).toHaveAttribute('aria-hidden', 'true');
+    });
+
+    it("keeps aria-required on the control in 'none' mode (the a11y guarantee)", async () => {
+      // The whole justification for 'none' mode being "still accessible" is
+      // that required state always reaches AT via `aria-required`, independent
+      // of the visual marker. Uses a real signal-forms field so auto-aria runs
+      // (the mock field state has no `required()` for auto-aria to read).
+      @Component({
+        selector: 'ngx-test-none-aria',
+        imports: [
+          NgxSignalFormWrapperComponent,
+          NgxSignalFormToolkit,
+          FormField,
+        ],
+        template: `
+          <ngx-form-field-wrapper
+            [formField]="testForm.email"
+            showMarkerWhen="none"
+          >
+            <label for="email">Email</label>
+            <input id="email" type="email" [formField]="testForm.email" />
+          </ngx-form-field-wrapper>
+        `,
+      })
+      class Host {
+        protected readonly testForm = form(
+          signal({ email: '' }),
+          schema<{ email: string }>((p) => {
+            required(p.email);
+          }),
+        );
+      }
+
+      const { container } = await render(Host);
+
+      const formField = container.querySelector('ngx-form-field-wrapper');
+      const input = container.querySelector('#email');
+
+      // No visual marker…
+      expect(formField).not.toHaveAttribute('data-marker');
+      expect(
+        formField?.querySelector('.ngx-signal-form-field-wrapper__marker'),
+      ).toBeNull();
+      // …but required state is still exposed programmatically.
+      expect(input).toHaveAttribute('aria-required', 'true');
+    });
+
+    it('honours a global showMarkerWhen config (provider fallback, no input)', async () => {
+      // Most consumers set a project-wide default rather than per-wrapper
+      // inputs. The config-fallback branch (resolvedMarkerMode reads
+      // #config.showMarkerWhen) is otherwise only covered via the input path.
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field">
+          <label for="name">Name</label>
+          <input id="name" type="text" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORMS_CONFIG,
+              useValue: {
+                ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+                showMarkerWhen: 'optional',
+              },
+            },
+          ],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const formField = container.querySelector('ngx-form-field-wrapper');
+      expect(formField).toHaveAttribute('data-marker', 'optional');
+      expect(
+        formField?.querySelector(
+          '.ngx-signal-form-field-wrapper__optional-marker',
+        ),
+      ).toBeTruthy();
+    });
+
+    it("renders no marker before a control is projected, even in 'optional' mode (no flash)", async () => {
+      // resolvedMarker short-circuits to null while #boundControlElement() is
+      // null, so the optional marker never flashes before required-ness is
+      // known. With no projected control the guard is the only thing keeping
+      // the (default-non-required) optional marker from rendering.
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" showMarkerWhen="optional">
+          <label for="name">Name</label>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: createMockFieldState(),
+          },
+        },
+      );
+
+      const formField = container.querySelector('ngx-form-field-wrapper');
+      expect(formField).not.toHaveAttribute('data-marker');
+      expect(
+        formField?.querySelector('.ngx-signal-form-field-wrapper__marker'),
+      ).toBeNull();
     });
   });
 

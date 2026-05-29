@@ -142,6 +142,32 @@ describe('NgxFormMarkingLegend', () => {
       const { container } = await render(Host);
       expect(container.querySelector(LEGEND)).toBeNull();
     });
+
+    it('renders nothing even when [text] is set ([none] wins over text)', async () => {
+      // The demo's live controls let a consumer leave a [text] binding in place
+      // while flipping the mode to 'none'. `none` must still render nothing —
+      // resolvedText short-circuits on the mode before consulting text().
+      @Component({
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        imports: [NgxFormMarkingLegend],
+        template: `<ngx-form-marking-legend
+          [formField]="f"
+          showMarkerWhen="none"
+          text="This should never show {marker}"
+        />`,
+      })
+      class Host {
+        readonly f = form(
+          signal({ email: '' }),
+          schema((p) => {
+            required(p.email);
+          }),
+        );
+      }
+
+      const { container } = await render(Host);
+      expect(container.querySelector(LEGEND)).toBeNull();
+    });
   });
 
   describe('text override', () => {
@@ -241,6 +267,32 @@ describe('NgxFormMarkingLegend', () => {
       expect(errorSpy).toHaveBeenCalledWith(
         expect.stringContaining('NgxFormMarkingLegend: no form tree available'),
       );
+
+      errorSpy.mockRestore();
+    });
+
+    it('warns only once while the form tree stays missing', async () => {
+      const errorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => undefined);
+
+      @Component({
+        changeDetection: ChangeDetectionStrategy.OnPush,
+        imports: [NgxFormMarkingLegend],
+        template: `<ngx-form-marking-legend />`,
+      })
+      class Host {}
+
+      const { fixture } = await render(Host);
+
+      const callsAfterFirstRender = errorSpy.mock.calls.length;
+      expect(callsAfterFirstRender).toBe(1);
+
+      // Further change-detection cycles must not re-log the same misconfiguration.
+      fixture.detectChanges();
+      fixture.detectChanges();
+
+      expect(errorSpy).toHaveBeenCalledTimes(callsAfterFirstRender);
 
       errorSpy.mockRestore();
     });

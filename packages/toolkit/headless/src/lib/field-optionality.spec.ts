@@ -94,6 +94,19 @@ describe('summarizeFieldOptionality', () => {
     });
   });
 
+  it('treats an array of primitives as a container (visits its scalar elements)', () => {
+    // Documented edge: a `string[]` is descended into, so its elements — not the
+    // array node — are visited. With a populated array and no required() on the
+    // elements, they count as optional leaves; the array-level required state is
+    // intentionally not contributed.
+    const tree = makeForm({ tags: ['a', 'b'] });
+
+    expect(summarizeFieldOptionality(tree)).toEqual({
+      hasRequired: false,
+      hasOptional: true,
+    });
+  });
+
   it('reports both false for an empty form', () => {
     const tree = makeForm({});
 
