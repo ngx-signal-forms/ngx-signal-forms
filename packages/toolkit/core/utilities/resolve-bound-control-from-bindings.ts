@@ -22,12 +22,25 @@ export type FormFieldBindingsState = Pick<
  * Prefers `fieldState.formFieldBindings()` — the canonical, framework-owned
  * source of truth for which DOM element a field is bound to — over probing the
  * host DOM with a CSS selector. Returns the first binding whose host `element`
- * is an `HTMLElement` mounted inside `hostEl`.
+ * is an `HTMLElement` mounted inside `hostEl` **and carrying a non-empty `id`**.
  *
  * Scoping to `hostEl.contains(...)` matters because a single `FieldTree` can be
  * bound to multiple controls (e.g. the same field rendered in two wrappers, or
  * a radio group spread across siblings); only the binding projected into *this*
  * wrapper host is relevant to the wrapper's chrome and ARIA derivations.
+ *
+ * ## Why the `id` guard is load-bearing (native-vs-fallback invariant)
+ *
+ * The legacy discovery path (`findBoundControl`'s `BOUND_CONTROL_SELECTOR`)
+ * only ever matches elements that carry an `[id]`. To preserve PR #92's
+ * "identical output" invariant, the native path must agree: it may only win
+ * for an element the fallback could also have produced. Without this guard, an
+ * id-less `[formField]` host — e.g. `<my-control formField><input id="x">…` —
+ * would let the wrapper element (`my-control`, no id) win over the inner
+ * `<input id="x">`, nulling out `inputId`/`resolvedFieldName` and diverging
+ * from the established CSS-selector behaviour. By skipping id-less binding
+ * elements here, an id-less native host falls through to the existing probe,
+ * which still finds the inner `<input id="x">`.
  *
  * Returns `null` (so callers fall back to their existing discovery path) when:
  * - `fieldState` is a partial/mock state without a `formFieldBindings` signal
@@ -36,7 +49,9 @@ export type FormFieldBindingsState = Pick<
  *   render or two before the projected `[formField]` directive initializes), or
  * - the wrapper hosts a plain control with no `[formField]` directive of its own
  *   (the wrapper carries the `FieldTree`; the inner control is a bare
- *   `<input id="...">`), which never appears in the registry.
+ *   `<input id="...">`), which never appears in the registry, or
+ * - every registered binding element inside this host lacks an `id` (the native
+ *   match would diverge from the CSS-selector fallback — see above).
  *
  * @internal
  */
@@ -52,7 +67,16 @@ export function resolveBoundControlFromBindings(
 
   for (const binding of formFieldBindings()) {
     const element = binding.element;
-    if (element instanceof HTMLElement && hostEl.contains(element)) {
+    // Require a non-empty `id`: the CSS-selector fallback only ever matches
+    // elements with an `[id]`, so accepting an id-less native host here would
+    // break the "identical output" invariant (an id-less `[formField]` wrapper
+    // would shadow its inner `<input id>`). Falling through lets the probe find
+    // that inner control instead.
+    if (
+      element instanceof HTMLElement &&
+      element.id.length > 0 &&
+      hostEl.contains(element)
+    ) {
       return element;
     }
   }

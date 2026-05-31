@@ -89,6 +89,13 @@ export function readFormFieldWrapperDomSnapshot(
     cachedControl?.isConnected &&
     hostEl.contains(cachedControl) &&
     cachedControl.hasAttribute('id');
+  // `nativeControl` wins when present. The native-vs-fallback invariant
+  // (PR #92: native and CSS-selector paths must produce identical output) is
+  // upheld upstream in `resolveBoundControlFromBindings`, which only returns a
+  // binding element that carries a non-empty `id` — exactly the constraint the
+  // `findBoundControl` selector enforces. An id-less `[formField]` host
+  // therefore arrives here as `nativeControl === null` and falls through to the
+  // probe, which still finds the inner `<input id>`.
   const inputEl =
     nativeControl ?? (cacheHit ? cachedControl : findBoundControl(hostEl));
 

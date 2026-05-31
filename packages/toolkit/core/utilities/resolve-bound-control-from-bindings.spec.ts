@@ -52,6 +52,7 @@ describe('resolveBoundControlFromBindings', () => {
   it('returns the first registered binding element inside the host', () => {
     const host = document.createElement('div');
     const input = document.createElement('input');
+    input.id = 'control';
     host.append(input);
 
     expect(
@@ -59,11 +60,42 @@ describe('resolveBoundControlFromBindings', () => {
     ).toBe(input);
   });
 
+  it('skips an id-less binding host so the caller falls through to its DOM probe', () => {
+    // The CSS-selector fallback only matches elements with an `[id]`. An id-less
+    // `[formField]` host (e.g. `<my-control formField><input id>`) must not win
+    // here — returning it would shadow the inner `<input id>` and break PR #92's
+    // "identical output" invariant. The resolver returns null so the probe runs.
+    const host = document.createElement('div');
+    const idless = document.createElement('div');
+    host.append(idless);
+
+    expect(
+      resolveBoundControlFromBindings(fieldStateWithBindings([idless]), host),
+    ).toBeNull();
+  });
+
+  it('skips id-less binding hosts but still returns a later id-bearing one', () => {
+    const host = document.createElement('div');
+    const idless = document.createElement('div');
+    const withId = document.createElement('input');
+    withId.id = 'control';
+    host.append(idless, withId);
+
+    expect(
+      resolveBoundControlFromBindings(
+        fieldStateWithBindings([idless, withId]),
+        host,
+      ),
+    ).toBe(withId);
+  });
+
   it('ignores bindings whose element is outside this host (field bound across wrappers)', () => {
     const host = document.createElement('div');
     const otherHost = document.createElement('div');
     const outside = document.createElement('input');
+    outside.id = 'outside';
     const inside = document.createElement('input');
+    inside.id = 'inside';
     otherHost.append(outside);
     host.append(inside);
 
