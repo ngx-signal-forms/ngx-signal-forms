@@ -10,11 +10,11 @@ export default defineConfig({
   publicDir: join(appDir, 'public'),
   cacheDir: '../../node_modules/.vite/apps/demo-spartan',
   server: {
-    port: 4220,
+    port: 4221,
     host: 'localhost',
   },
   preview: {
-    port: 4220,
+    port: 4221,
     host: 'localhost',
   },
   build: {

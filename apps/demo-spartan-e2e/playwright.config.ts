@@ -2,7 +2,7 @@ import { workspaceRoot } from '@nx/devkit';
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { defineConfig, devices } from '@playwright/test';
 
-const baseURL = process.env['BASE_URL'] ?? 'http://localhost:4220';
+const baseURL = process.env['BASE_URL'] ?? 'http://localhost:4221';
 const isCI = Boolean(process.env['CI']);
 
 const preset = nxE2EPreset(__filename, { testDir: './src' });
@@ -24,7 +24,7 @@ export default defineConfig({
   },
   webServer: {
     command: 'pnpm nx serve demo-spartan',
-    url: 'http://localhost:4220',
+    url: 'http://localhost:4221',
     reuseExistingServer: !isCI,
     cwd: workspaceRoot,
     timeout: 120000,
