@@ -623,8 +623,9 @@ import {
 
 interface ValidateVestOptions<TValue = unknown> {
   includeWarnings?: boolean; // default: false — surface warn() as toolkit warnings
-  resetOnDestroy?: boolean; // default: false — call suite.reset() on DestroyRef teardown
+  resetOnDestroy?: boolean; // default: true — call suite.reset() on DestroyRef teardown; pass false to persist state across mounts
   only?: VestOnlyFieldSelector<TValue>; // default: undefined — focus the run on a field
+  focusCurrentField?: boolean; // default: false — derive the focused field name from the bound field's ctx.pathKeys() (dotted, e.g. items.0.sku); ignored when `only` is set; root-bound falls back to a whole-suite run
 }
 
 type VestOnlyFieldSelector<TValue> = (

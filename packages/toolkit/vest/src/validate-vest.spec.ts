@@ -4,7 +4,7 @@ import {
   Component,
   signal,
 } from '@angular/core';
-import { form, FormField } from '@angular/forms/signals';
+import { applyEach, form, FormField } from '@angular/forms/signals';
 import { TestBed } from '@angular/core/testing';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
@@ -760,6 +760,116 @@ describe('validateVest', () => {
     const errors = fixture.componentInstance.f.email().errors();
     expect(errors).toHaveLength(1);
     expect(errors[0]?.message).toBe('Email is required');
+  });
+
+  it('falls back to a whole-suite run when focusCurrentField is bound to the form root', async () => {
+    // A root-bound validator has an empty `ctx.pathKeys()`, so the derived Vest
+    // field name is `undefined` and the adapter must run the whole suite
+    // (`suite.run(value)`) rather than focusing an empty field name.
+    const focusedFields: Array<string | readonly string[] | false> = [];
+    const fullRunValues: Array<{ email: string }> = [];
+    const baseSuite = create((data: { email: string }, field?: string) => {
+      only(field);
+      test('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+    const suite = {
+      ...baseSuite,
+      only(field: string | readonly string[] | false) {
+        focusedFields.push(field);
+        return {
+          run: (value: { email: string }) => baseSuite.only(field).run(value),
+        };
+      },
+      run(value: { email: string }) {
+        fullRunValues.push(value);
+        return baseSuite.run(value);
+      },
+    };
+
+    @Component({
+      selector: 'ngx-test-vest-autofocus-root',
+      imports: [FormField],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `<input [formField]="f.email" />`,
+    })
+    class TestComponent {
+      readonly model = signal({ email: '' });
+      // Bound to the form root, not `path.email`.
+      readonly f = form(this.model, (path) => {
+        validateVest(path, suite, { focusCurrentField: true });
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    // No focused run was attempted; the whole-suite `run(value)` ran instead.
+    expect(focusedFields).toHaveLength(0);
+    expect(fullRunValues.length).toBeGreaterThan(0);
+    // The whole suite still surfaces the error on the bound field.
+    const errors = fixture.componentInstance.f.email().errors();
+    expect(errors).toHaveLength(1);
+    expect(errors[0]?.message).toBe('Email is required');
+  });
+
+  it('derives the dotted Vest field name from a nested/array path for focusCurrentField', async () => {
+    // For a validator bound to an array element's `sku` field via `applyEach`,
+    // `ctx.pathKeys()` yields `['items', '0', 'sku']`, so the derived Vest
+    // field name must be the dotted path `items.0.sku`.
+    const focusedFields: Array<string | readonly string[] | false> = [];
+    const ranTests: string[] = [];
+    const baseSuite = create((sku: string, field?: string) => {
+      only(field);
+      test('items.0.sku', 'SKU is required', () => {
+        ranTests.push('items.0.sku');
+        enforce(sku).isNotBlank();
+      });
+      test('other', 'Other is required', () => {
+        ranTests.push('other');
+        enforce('').isNotBlank();
+      });
+    });
+    const suite = {
+      ...baseSuite,
+      only(field: string | readonly string[] | false) {
+        focusedFields.push(field);
+        return {
+          run: (value: string) => baseSuite.only(field).run(value),
+        };
+      },
+    };
+
+    @Component({
+      selector: 'ngx-test-vest-autofocus-nested',
+      imports: [FormField],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `<input [formField]="f.items[0].sku" />`,
+    })
+    class TestComponent {
+      readonly model = signal({ items: [{ sku: '' }] });
+      // `applyEach` binds the validator to each array element's `sku` field,
+      // so the bound path is `items.0.sku` for the first element.
+      readonly f = form(this.model, (path) => {
+        applyEach(path.items, (item) => {
+          validateVest(item.sku, suite, { focusCurrentField: true });
+        });
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    // The derived focus is the full dotted path for the nested array field.
+    expect(focusedFields).toContain('items.0.sku');
+    // Only the focused field's test body executed.
+    expect(ranTests).toContain('items.0.sku');
+    expect(ranTests).not.toContain('other');
+    // And the focused field still surfaces its error.
+    const errors = fixture.componentInstance.f.items[0].sku().errors();
+    expect(errors).toHaveLength(1);
+    expect(errors[0]?.message).toBe('SKU is required');
   });
 
   it('lets an explicit only selector override focusCurrentField', async () => {
