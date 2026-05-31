@@ -4,9 +4,32 @@
 
 ## Why this entry point exists
 
-Angular Signal Forms already supports Standard Schema validators through `validateStandardSchema()`, and Vest 6 implements Standard Schema. This entry point adds a toolkit-branded adapter that maps Vest's richer suite results — including `warn()` guidance — into toolkit-native warning messages.
+Angular Signal Forms already supports Standard Schema validators through `validateStandardSchema()`, and Vest 6 suites implement Standard Schema. This entry point adds a toolkit-branded adapter that maps Vest's richer suite results — including `warn()` guidance — into toolkit-native warning messages.
 
 Use it **together with** Angular validators and Standard Schema tools like Zod, not instead of them.
+
+### Native `validateStandardSchema()` vs. the toolkit adapter
+
+Because Vest 6 suites are Standard Schema, you may not need this entry point at all. Reach for the smallest tool that covers your case:
+
+**Use native `validateStandardSchema(path, suite)`** (zero toolkit code) when you only need **blocking** validation. This works for any Standard-Schema library (Zod, Valibot, ArkType) and for a plain Vest 6 suite alike:
+
+```typescript
+import { form, validateStandardSchema } from '@angular/forms/signals';
+
+const signupForm = form(model, (path) => {
+  // A Vest 6 suite is a Standard Schema — pass it directly.
+  validateStandardSchema(path, signupSuite);
+});
+```
+
+**Use the toolkit's `validateVest` / `validateVestWarnings`** when you need something the Standard Schema interface cannot express:
+
+- **`warn:*` warning severity** — Standard Schema only models blocking issues; it has no `warn()` / severity concept. Surfacing Vest `warn()` output as toolkit warnings is the irreducible reason this bridge exists.
+- **`only()` focused runs** — thread the changed field into `suite.run(value, field)` so large suites validate one field at a time instead of re-running every test.
+- **`resetOnDestroy` lifecycle** — call `suite.reset()` when the hosting injection context tears down, so module-scope suite state does not leak across mounts.
+
+The adapter reads Vest's full `run()` result, mapping blocking errors **and** `warn()` output in a single pass — so enabling warnings never costs a second suite run.
 
 ## Installation
 
