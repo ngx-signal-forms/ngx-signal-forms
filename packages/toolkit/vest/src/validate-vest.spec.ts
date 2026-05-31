@@ -702,6 +702,199 @@ describe('validateVest', () => {
     expect(runCount.focused).toBeGreaterThan(0);
   });
 
+  it('auto-focuses the bound field via focusCurrentField with zero only() wiring', async () => {
+    // `focusCurrentField` derives the Vest field name from the field this
+    // validator is bound to (here `email`, from `ctx.pathKeys()`), so the
+    // focused run executes only that field's test body — no hand-written
+    // `only` selector required.
+    const focusedFields: Array<string | readonly string[] | false> = [];
+    const ranTests: string[] = [];
+
+    const baseSuite = create((email: string, field?: string) => {
+      only(field);
+      test('email', 'Email is required', () => {
+        ranTests.push('email');
+        enforce(email).isNotBlank();
+      });
+      test('other', 'Other is required', () => {
+        ranTests.push('other');
+        enforce(email).isNotBlank();
+      });
+    });
+
+    const suite = {
+      ...baseSuite,
+      only(field: string | readonly string[] | false) {
+        focusedFields.push(field);
+        return {
+          run: (value: string) => {
+            return baseSuite.only(field).run(value);
+          },
+        };
+      },
+    };
+
+    @Component({
+      selector: 'ngx-test-vest-autofocus',
+      imports: [FormField],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `<input [formField]="f.email" />`,
+    })
+    class TestComponent {
+      readonly model = signal({ email: '' });
+      readonly f = form(this.model, (path) => {
+        validateVest(path.email, suite, { focusCurrentField: true });
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    // The derived focus targets the bound field name only.
+    expect(focusedFields).toContain('email');
+    expect(focusedFields).not.toContain('other');
+    // Only the focused field's test body executed.
+    expect(ranTests).toContain('email');
+    expect(ranTests).not.toContain('other');
+    // And the focused field still surfaces its error.
+    const errors = fixture.componentInstance.f.email().errors();
+    expect(errors).toHaveLength(1);
+    expect(errors[0]?.message).toBe('Email is required');
+  });
+
+  it('lets an explicit only selector override focusCurrentField', async () => {
+    // When both are supplied the explicit `only` selector wins, keeping
+    // existing hand-wired focus working unchanged.
+    const focusedFields: Array<string | readonly string[] | false> = [];
+    const baseSuite = create((email: string, field?: string) => {
+      only(field);
+      test('email', 'Email is required', () => {
+        enforce(email).isNotBlank();
+      });
+    });
+    const suite = {
+      ...baseSuite,
+      only(field: string | readonly string[] | false) {
+        focusedFields.push(field);
+        return {
+          run: (value: string) => {
+            return baseSuite.only(field).run(value);
+          },
+        };
+      },
+    };
+
+    @Component({
+      selector: 'ngx-test-vest-autofocus-override',
+      imports: [FormField],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `<input [formField]="f.email" />`,
+    })
+    class TestComponent {
+      readonly model = signal({ email: '' });
+      readonly f = form(this.model, (path) => {
+        validateVest(path.email, suite, {
+          focusCurrentField: true,
+          only: () => 'explicit-name',
+        });
+      });
+    }
+
+    await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(focusedFields).toContain('explicit-name');
+    expect(focusedFields).not.toContain('email');
+  });
+
+  it('warns once in dev when registered without resetOnDestroy', async () => {
+    const consoleWarnSpy = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {});
+
+    // A suite that exposes `reset` (the recommendation only applies to suites
+    // that can be reset). A fresh suite instance avoids the once-per-suite
+    // WeakSet de-dupe from other tests.
+    const baseSuite = create((data: { email: string }) => {
+      test('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+    const suite = {
+      ...baseSuite,
+      reset: () => {
+        baseSuite.reset();
+      },
+    };
+
+    @Component({
+      selector: 'ngx-test-vest-warn-reset',
+      imports: [FormField],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `<input [formField]="f.email" />`,
+    })
+    class TestComponent {
+      readonly model = signal({ email: '' });
+      readonly f = form(this.model, (path) => {
+        // Registered twice on purpose: the dev warning must still fire only
+        // once per suite.
+        validateVest(path, suite);
+        validateVestWarnings(path, suite);
+      });
+    }
+
+    await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const resetCalls = consoleWarnSpy.mock.calls.filter(([first]) =>
+      String(first).includes('registered without `resetOnDestroy`'),
+    );
+    expect(resetCalls).toHaveLength(1);
+
+    consoleWarnSpy.mockRestore();
+  });
+
+  it('does not warn when resetOnDestroy is enabled', async () => {
+    const consoleWarnSpy = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {});
+
+    const baseSuite = create((data: { email: string }) => {
+      test('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+    const suite = {
+      ...baseSuite,
+      reset: () => {
+        baseSuite.reset();
+      },
+    };
+
+    @Component({
+      selector: 'ngx-test-vest-warn-reset-ok',
+      imports: [FormField],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      template: `<input [formField]="f.email" />`,
+    })
+    class TestComponent {
+      readonly model = signal({ email: '' });
+      readonly f = form(this.model, (path) => {
+        validateVest(path, suite, { resetOnDestroy: true });
+      });
+    }
+
+    await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const resetCalls = consoleWarnSpy.mock.calls.filter(([first]) =>
+      String(first).includes('registered without `resetOnDestroy`'),
+    );
+    expect(resetCalls).toHaveLength(0);
+
+    consoleWarnSpy.mockRestore();
+  });
+
   it('invokes suite.only(fieldName) when the suite exposes the shorthand API', async () => {
     const baseSuite = create((data: { email: string }) => {
       test('email', 'Email is required', () => {
