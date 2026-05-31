@@ -9,7 +9,7 @@ import { TestBed } from '@angular/core/testing';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { create, enforce, group, only, test, warn } from 'vest';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   VEST_ERROR_KIND_PREFIX,
   VEST_WARNING_KIND_PREFIX,
@@ -807,28 +807,24 @@ describe('validateVest', () => {
     expect(focusedFields).not.toContain('email');
   });
 
-  it('warns once in dev when registered without resetOnDestroy', async () => {
-    const consoleWarnSpy = vi
-      .spyOn(console, 'warn')
-      .mockImplementation(() => {});
-
-    // A suite that exposes `reset` (the recommendation only applies to suites
-    // that can be reset). A fresh suite instance avoids the once-per-suite
-    // WeakSet de-dupe from other tests.
+  it('resets suite state on destroy by default (no resetOnDestroy passed)', async () => {
     const baseSuite = create((data: { email: string }) => {
       test('email', 'Email is required', () => {
         enforce(data.email).isNotBlank();
       });
     });
+
+    let resetCount = 0;
     const suite = {
       ...baseSuite,
       reset: () => {
+        resetCount += 1;
         baseSuite.reset();
       },
     };
 
     @Component({
-      selector: 'ngx-test-vest-warn-reset',
+      selector: 'ngx-test-vest-reset-default',
       imports: [FormField],
       changeDetection: ChangeDetectionStrategy.OnPush,
       template: `<input [formField]="f.email" />`,
@@ -836,43 +832,36 @@ describe('validateVest', () => {
     class TestComponent {
       readonly model = signal({ email: '' });
       readonly f = form(this.model, (path) => {
-        // Registered twice on purpose: the dev warning must still fire only
-        // once per suite.
+        // No resetOnDestroy option: the adapter resets on destroy by default.
         validateVest(path, suite);
-        validateVestWarnings(path, suite);
       });
     }
 
-    await render(TestComponent);
+    const { fixture } = await render(TestComponent);
     await TestBed.inject(ApplicationRef).whenStable();
+    fixture.destroy();
 
-    const resetCalls = consoleWarnSpy.mock.calls.filter(([first]) =>
-      String(first).includes('registered without `resetOnDestroy`'),
-    );
-    expect(resetCalls).toHaveLength(1);
-
-    consoleWarnSpy.mockRestore();
+    expect(resetCount).toBe(1);
   });
 
-  it('does not warn when resetOnDestroy is enabled', async () => {
-    const consoleWarnSpy = vi
-      .spyOn(console, 'warn')
-      .mockImplementation(() => {});
-
+  it('lets resetOnDestroy: false opt out of reset-on-destroy', async () => {
     const baseSuite = create((data: { email: string }) => {
       test('email', 'Email is required', () => {
         enforce(data.email).isNotBlank();
       });
     });
+
+    let resetCount = 0;
     const suite = {
       ...baseSuite,
       reset: () => {
+        resetCount += 1;
         baseSuite.reset();
       },
     };
 
     @Component({
-      selector: 'ngx-test-vest-warn-reset-ok',
+      selector: 'ngx-test-vest-reset-optout',
       imports: [FormField],
       changeDetection: ChangeDetectionStrategy.OnPush,
       template: `<input [formField]="f.email" />`,
@@ -880,19 +869,15 @@ describe('validateVest', () => {
     class TestComponent {
       readonly model = signal({ email: '' });
       readonly f = form(this.model, (path) => {
-        validateVest(path, suite, { resetOnDestroy: true });
+        validateVest(path, suite, { resetOnDestroy: false });
       });
     }
 
-    await render(TestComponent);
+    const { fixture } = await render(TestComponent);
     await TestBed.inject(ApplicationRef).whenStable();
+    fixture.destroy();
 
-    const resetCalls = consoleWarnSpy.mock.calls.filter(([first]) =>
-      String(first).includes('registered without `resetOnDestroy`'),
-    );
-    expect(resetCalls).toHaveLength(0);
-
-    consoleWarnSpy.mockRestore();
+    expect(resetCount).toBe(0);
   });
 
   it('invokes suite.only(fieldName) when the suite exposes the shorthand API', async () => {

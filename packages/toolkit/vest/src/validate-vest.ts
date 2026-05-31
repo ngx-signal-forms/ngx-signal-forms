@@ -55,11 +55,14 @@ export interface ValidateVestOptions<TValue = unknown> {
    *
    * Vest suites created with `create()` retain state across runs (last result,
    * pending async tests, test memoization). When consumers declare suites at
-   * module scope (the recommended pattern), state can leak across component
-   * mounts. Enabling this option registers a `DestroyRef.onDestroy()` hook
+   * module scope (the recommended pattern), that state leaks across component
+   * mounts. The toolkit registers a `DestroyRef.onDestroy()` hook **by default**
    * that clears suite state when the hosting component tears down.
    *
-   * @default false
+   * Set to `false` only when you deliberately want suite state to persist
+   * across mounts.
+   *
+   * @default true
    */
   resetOnDestroy?: boolean;
 
@@ -797,8 +800,7 @@ export function validateVestWarnings<TValue>(
     'resetOnDestroy' | 'only' | 'focusCurrentField'
   > = {},
 ): void {
-  warnIfNoResetOnDestroy(suite, options.resetOnDestroy);
-  maybeRegisterResetOnDestroy(suite, options.resetOnDestroy);
+  maybeRegisterResetOnDestroy(suite, options.resetOnDestroy ?? true);
   registerVestValidation(path, suite, {
     includeErrors: false,
     includeWarnings: true,
@@ -819,10 +821,10 @@ export function validateVestWarnings<TValue>(
  * `ngx-form-field-wrapper`, and related components can render them as
  * polite, non-blocking guidance.
  *
- * Pass `{ resetOnDestroy: true }` to call `suite.reset()` when the hosting
- * injection context is destroyed. This is strongly recommended for suites
- * declared at module scope (the documented Vest pattern) because suite state
- * otherwise bleeds across component mounts.
+ * By default the adapter calls `suite.reset()` when the hosting injection
+ * context is destroyed, so module-scope suites (the documented Vest pattern)
+ * do not bleed state across component mounts. Pass `{ resetOnDestroy: false }`
+ * to opt out when you deliberately want suite state to persist.
  *
  * Pass `{ only: (ctx) => fieldName }` to enable per-field focused runs. The
  * adapter then invokes `suite.run(value, fieldName)` (or
@@ -853,7 +855,7 @@ export function validateVestWarnings<TValue>(
  *
  * const loginModel = signal<LoginModel>({ email: '' });
  * const loginForm = form(loginModel, (path) => {
- *   validateVest(path, loginSuite, { resetOnDestroy: true });
+ *   validateVest(path, loginSuite); // resets on destroy by default
  * });
  * ```
  */
@@ -862,59 +864,13 @@ export function validateVest<TValue>(
   suite: VestRunnableSuite<TValue>,
   options: ValidateVestOptions<TValue> = {},
 ): void {
-  warnIfNoResetOnDestroy(suite, options.resetOnDestroy);
-  maybeRegisterResetOnDestroy(suite, options.resetOnDestroy);
+  maybeRegisterResetOnDestroy(suite, options.resetOnDestroy ?? true);
   registerVestValidation(path, suite, {
     includeErrors: true,
     includeWarnings: options.includeWarnings ?? false,
     only: options.only,
     focusCurrentField: options.focusCurrentField,
   });
-}
-
-/**
- * Tracks suites that have already emitted the missing-`resetOnDestroy` dev
- * warning so the guidance fires at most once per suite, even when the same
- * module-scope suite drives many fields or re-mounts repeatedly.
- */
-const resetOnDestroyWarnedSuites = new WeakSet();
-
-/**
- * Emits a one-time dev-mode warning when a Vest suite is registered without
- * `resetOnDestroy`. Module-scope suites (the documented Vest pattern) retain
- * state across component mounts, so omitting `resetOnDestroy` is the most
- * common foot-gun. Non-breaking: the default stays `false` and this only logs.
- *
- * No-op outside dev mode, when `resetOnDestroy` is truthy, when the suite does
- * not expose a `reset` callable (nothing to recommend), or when this suite has
- * already warned.
- */
-function warnIfNoResetOnDestroy(
-  suite: VestRunnableSuite<unknown>,
-  resetOnDestroy: boolean | undefined,
-): void {
-  if (resetOnDestroy || !isDevMode()) {
-    return;
-  }
-
-  if (typeof (suite as { reset?: unknown }).reset !== 'function') {
-    return;
-  }
-
-  const suiteKey = suite as object;
-  if (resetOnDestroyWarnedSuites.has(suiteKey)) {
-    return;
-  }
-  resetOnDestroyWarnedSuites.add(suiteKey);
-
-  // oxlint-disable-next-line no-console -- dev-mode configuration guidance
-  console.warn(
-    '[ngx-signal-forms] Vest suite registered without `resetOnDestroy`. ' +
-      'Module-scope suites retain state (last result, pending async tests, ' +
-      'memoization) across component mounts, which can leak stale validation ' +
-      'state. Pass `{ resetOnDestroy: true }` to clear the suite when the ' +
-      'hosting component is destroyed.',
-  );
 }
 
 /**
