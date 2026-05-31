@@ -142,22 +142,22 @@ for the full policy.
 The following symbols existed in betas or early RCs and have been
 removed. Replace them with the v1 equivalents.
 
-| Removed API                                 | Current replacement                                                                                  |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `computeShowErrors()`                       | `showErrors()`                                                                                       |
-| `createShowErrorsSignal()`                  | `showErrors()`                                                                                       |
-| `canSubmit()`                               | `canSubmitWithWarnings()`                                                                            |
-| `isSubmitting()`                            | `submittedStatus()` from the `ngxSignalForm` directive                                               |
-| `'manual'` error strategy                   | `showErrors()` + a manual `WritableSignal<boolean>`                                                  |
-| `fieldNameResolver` config                  | Put an `id` on the bound control element                                                             |
-| `strictFieldResolution` config              | Removed — strict by default                                                                          |
-| `debug` config field                        | Removed — use the `/debugger` entry point instead                                                    |
-| `injectFormConfig()`                        | `inject(NGX_SIGNAL_FORMS_CONFIG)`                                                                    |
-| `NgxFloatingLabelDirective`                 | `<ngx-form-field-wrapper appearance="outline">`                                                      |
-| `NgxSignalFormsUserConfig` as `DeepPartial` | `Partial<NgxSignalFormsConfig>` (top-level only)                                                     |
-| `walkFieldTree(form, visitor)`              | `for (const { state } of walkFieldTreeEntries(form)) { visitor(state); }`                            |
-| `walkFieldTreeIterable(form)`               | `walkFieldTreeEntries(form)` (same iterator shape, yields `{ state, path }`)                         |
-| `NgxFormFieldAssistiveRow`                  | Removed; markup + styles inlined into `NgxFormFieldWrapper`. CSS custom-property contract preserved. |
+| Removed API                                 | Current replacement                                                                                                                    |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `computeShowErrors()`                       | `showErrors()`                                                                                                                         |
+| `createShowErrorsSignal()`                  | `showErrors()`                                                                                                                         |
+| `canSubmit()`                               | `canSubmitWithWarnings()`                                                                                                              |
+| `isSubmitting()`                            | `submittedStatus()` from the `ngxSignalForm` directive                                                                                 |
+| `'manual'` error strategy                   | `showErrors()` + a manual `WritableSignal<boolean>`                                                                                    |
+| `fieldNameResolver` config                  | Put an `id` on the bound control element                                                                                               |
+| `strictFieldResolution` config              | Removed — strict by default                                                                                                            |
+| `debug` config field                        | Removed — use the `/debugger` entry point instead                                                                                      |
+| `injectFormConfig()`                        | `inject(NGX_SIGNAL_FORMS_CONFIG)`                                                                                                      |
+| `NgxFloatingLabelDirective`                 | `<ngx-form-field-wrapper appearance="outline">`                                                                                        |
+| `NgxSignalFormsUserConfig` as `DeepPartial` | `Partial<NgxSignalFormsConfig>` (top-level only)                                                                                       |
+| `walkFieldTree(form, visitor)`              | Read `form().errorSummary()` (each entry carries a `fieldTree` back-reference) — the toolkit no longer ships a field-tree walker       |
+| `walkFieldTreeIterable(form)`               | `form().errorSummary()` for error traversal; the `walkFieldTreeEntries` / `isFieldTree` / `InvalidFieldTreeError` exports were removed |
+| `NgxFormFieldAssistiveRow`                  | Removed; markup + styles inlined into `NgxFormFieldWrapper`. CSS custom-property contract preserved.                                   |
 
 ### `NgxFloatingLabelDirective` → `appearance="outline"`
 

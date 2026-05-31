@@ -1,7 +1,6 @@
 import { isDevMode } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { isFieldStateInteractive } from './field-interactivity';
-import { walkFieldTreeEntries } from './walk-field-tree';
 
 /**
  * Focus the first **focusable** invalid field in a form after failed submission.
@@ -55,20 +54,18 @@ export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
   const errors = formTree().errorSummary();
   if (!Array.isArray(errors) || errors.length === 0) return false;
 
-  // The walker fails loudly on malformed trees (see InvalidFieldTreeError).
-  // That contract is intentional: a malformed FieldTree here means a wiring
-  // mistake (custom control missing `registerAsBinding()`, mock missing
-  // required state methods, etc.) that consumers should learn about
-  // immediately rather than via silently-non-functional focus management.
-  const fieldStates = new Map<Function, FieldState<unknown>>();
-  for (const { state: fieldState } of walkFieldTreeEntries(formTree)) {
-    fieldStates.set(fieldState.fieldTree, fieldState);
-  }
-
+  // `errorSummary()` is the framework's own flat traversal of the field tree:
+  // every entry carries a `fieldTree` back-reference whose call yields the
+  // owning `FieldState`. No bespoke walk or contract guard is needed — read
+  // the native list and resolve each error's state directly.
   for (const error of errors) {
     if (typeof error.fieldTree !== 'function') continue;
 
-    const fieldState = fieldStates.get(error.fieldTree) ?? error.fieldTree();
+    // `error.fieldTree()` is typed non-null, but a malformed runtime payload
+    // (custom control wiring mistake, hand-rolled error) can still yield
+    // null — widen so the defensive guard below is legitimate.
+    // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- widening to include the malformed-runtime null branch the guard handles.
+    const fieldState = error.fieldTree() as FieldState<unknown> | undefined;
 
     if (!fieldState || typeof fieldState.focusBoundControl !== 'function') {
       continue;

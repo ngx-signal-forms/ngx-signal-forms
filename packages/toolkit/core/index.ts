@@ -102,11 +102,6 @@ export {
   type NgxFormFieldErrorRendererInputs,
 } from './utilities/wrapper-helpers';
 export {
-  InvalidFieldTreeError,
-  isFieldTree,
-  walkFieldTreeEntries,
-} from './utilities/walk-field-tree';
-export {
   isBlockingError,
   isWarningError,
   splitByKind,
