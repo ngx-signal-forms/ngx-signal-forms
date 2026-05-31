@@ -213,6 +213,53 @@ describe('focusFirstInvalid', () => {
       expect(disabledSpy).not.toHaveBeenCalled();
     });
 
+    it('warns once in dev mode when no error could be focused', () => {
+      // Unit tests run in Angular dev mode (isDevMode() === true), so the
+      // diagnostic warning is expected to fire exactly once.
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+        // suppress the warning output during the test run
+      });
+
+      const mockField = createMockFieldWithErrors([
+        createMockError(() => undefined, { hidden: true }),
+        createMockError(() => undefined, { disabled: true }),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(false);
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain('focusFirstInvalid');
+
+      warnSpy.mockRestore();
+    });
+
+    it('should skip an error whose fieldTree state has no focusBoundControl method', () => {
+      const nextFocusSpy = vi.fn();
+
+      const mockField = createMockFieldWithErrors([
+        createMockErrorWithoutFocusBoundControl(),
+        createMockError(() => {
+          nextFocusSpy();
+        }),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(true);
+      expect(nextFocusSpy).toHaveBeenCalledOnce();
+    });
+
+    it('should return false when the only error has no focusBoundControl method', () => {
+      const mockField = createMockFieldWithErrors([
+        createMockErrorWithoutFocusBoundControl(),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(false);
+    });
+
     it('should still focus readonly fields — their errors are user-actionable', () => {
       const readonlyFocusSpy = vi.fn();
 
@@ -289,9 +336,29 @@ function createMockError(
   } satisfies ValidationError.WithFieldTree;
 }
 
+/**
+ * Helper: Create a mock ValidationError whose resolved `FieldState` has no
+ * `focusBoundControl` method — simulating a custom control that never called
+ * `registerAsBinding()`. `focusFirstInvalid()` must skip such errors.
+ */
+function createMockErrorWithoutFocusBoundControl(): ValidationError.WithFieldTree {
+  return {
+    kind: 'required',
+    message: 'Required',
+    fieldTree: createMockFieldTree({
+      errors: [],
+      omitFocusBoundControl: true,
+      invalid: true,
+      valid: false,
+      value: '',
+    }),
+  } satisfies ValidationError.WithFieldTree;
+}
+
 function createMockFieldTree<TValue>({
   errors,
   focusBoundControl,
+  omitFocusBoundControl = false,
   invalid,
   valid,
   value,
@@ -301,6 +368,7 @@ function createMockFieldTree<TValue>({
 }: {
   errors: ValidationError.WithFieldTree[];
   focusBoundControl?: (options?: FocusOptions) => void;
+  omitFocusBoundControl?: boolean;
   invalid: boolean;
   valid: boolean;
   value: TValue;
@@ -349,6 +417,12 @@ function createMockFieldTree<TValue>({
       undefined,
     reset: (_value?: TValue): void => undefined,
   };
+
+  if (omitFocusBoundControl) {
+    // Simulate a custom control that never registered a binding: the native
+    // FieldState surface still exists, but focusBoundControl is absent.
+    delete (fieldState as Partial<FieldState<TValue>>).focusBoundControl;
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- This test helper only needs the callable FieldTree shape used by focusFirstInvalid().
   fieldTree = Object.assign(

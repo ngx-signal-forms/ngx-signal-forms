@@ -14,6 +14,7 @@ import {
 } from '@angular/forms/signals';
 import type { SubmittedStatus } from '../types';
 import { isBlockingError } from './warning-error';
+import { isFieldTree } from './walk-field-tree';
 
 /**
  * Tracks completed-once submission history on top of native
@@ -214,58 +215,6 @@ export async function submitWithWarnings<TModel>(
   }
 
   await action();
-}
-
-/**
- * Methods the toolkit reads off a `FieldState` when validating that an
- * externally-supplied value is a real `FieldTree`. Mirrors the framework's
- * stable `FieldState` surface enough to reject malformed inputs.
- */
-const REQUIRED_FIELD_STATE_METHODS = [
-  'value',
-  'touched',
-  'errors',
-  'errorSummary',
-  'submitting',
-  'markAsTouched',
-] as const;
-
-/**
- * Local type guard for a value claiming to be a `FieldTree`: it must be
- * callable and produce a `FieldState` whose `.fieldTree` back-reference points
- * to the callable itself and whose required methods are functions. Self-
- * contained so the tracker no longer depends on a shared tree-walking module.
- */
-function isFieldTree(value: unknown): value is FieldTree<unknown> {
-  if (typeof value !== 'function') {
-    return false;
-  }
-
-  try {
-    const state: unknown = Reflect.apply(
-      value as (...args: readonly unknown[]) => unknown,
-      undefined,
-      [],
-    );
-
-    if (
-      state === null ||
-      typeof state !== 'object' ||
-      Reflect.get(state, 'fieldTree') !== value
-    ) {
-      return false;
-    }
-
-    for (const method of REQUIRED_FIELD_STATE_METHODS) {
-      if (typeof Reflect.get(state, method) !== 'function') {
-        return false;
-      }
-    }
-
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function assertFieldTree(value: unknown): asserts value is FieldTree<unknown> {
