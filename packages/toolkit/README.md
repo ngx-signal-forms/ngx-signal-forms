@@ -154,10 +154,40 @@ provideNgxSignalFormsConfig({
   defaultErrorStrategy: 'on-touch', // 'immediate' | 'on-touch' | 'on-submit'
   defaultFormFieldAppearance: 'standard', // 'standard' | 'outline' | 'plain'
   defaultFormFieldOrientation: 'vertical', // 'vertical' | 'horizontal'
-  showRequiredMarker: false, // outlined required field indicator
-  requiredMarker: '*', // marker character
+  showMarkerWhen: 'required', // 'required' | 'optional' | 'none'
+  requiredMarker: ' *', // marker for required fields ('required' mode)
+  optionalMarker: ' (optional)', // marker for optional fields ('optional' mode)
+  requiredLegendText: '{marker} indicates a required field',
+  optionalLegendText: 'All fields are required unless marked {marker}',
 });
 ```
+
+### Field marking
+
+`showMarkerWhen` controls which fields carry a visual marker:
+
+- `'required'` (default) — mark required fields with `requiredMarker`.
+- `'optional'` — mark optional fields with `optionalMarker` (best when most
+  fields are required; the GOV.UK / NN/g "mark the exception" guidance).
+- `'none'` — mark nothing. Required state is still exposed via `aria-required`,
+  so this remains accessible.
+
+Markers render in every appearance (`standard`, `outline`, `plain`) and are
+`aria-hidden` (decorative). Drop `NgxFormMarkingLegend` anywhere in a form to
+explain the marker — it is mode-aware, reads its text from config (or a `[text]`
+input), substitutes `{marker}`, and hides itself when the form has no field of
+the relevant kind:
+
+```html
+<form [formRoot]="form" ngxSignalForm>
+  <ngx-form-marking-legend />
+  <!-- fields… -->
+</form>
+```
+
+Per-field / per-legend overrides are available via the `showMarkerWhen`,
+`requiredMarker`, and `optionalMarker` inputs on both
+`<ngx-form-field-wrapper>` and `<ngx-form-marking-legend>`.
 
 For component-scoped overrides: `provideNgxSignalFormsConfigForComponent()`.
 This provider merges with parent configuration property-by-property via

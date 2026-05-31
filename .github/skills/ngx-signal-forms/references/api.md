@@ -131,8 +131,11 @@ interface NgxSignalFormsUserConfig {
   defaultFormFieldAppearance?: 'standard' | 'outline' | 'plain'; // default: 'standard'
   defaultFormFieldOrientation?: 'vertical' | 'horizontal'; // default: 'vertical'
   // Migration: legacy `stacked` → `standard`, legacy `bare` → `plain`.
-  showRequiredMarker?: boolean;
+  showMarkerWhen?: 'required' | 'optional' | 'none'; // default: 'required'
   requiredMarker?: string; // default: ' *'
+  optionalMarker?: string; // default: ' (optional)'
+  requiredLegendText?: string; // default: '{marker} indicates a required field'
+  optionalLegendText?: string; // default: 'All fields are required unless marked {marker}'
 }
 ```
 
@@ -387,16 +390,17 @@ import {
 
 ### NgxFormFieldWrapper inputs
 
-| Input                | Type                                              | Default                                                                                         |
-| -------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `formField`          | field                                             | Required                                                                                        |
-| `fieldName`          | string                                            | Derived from bound control `id`; pass explicitly for nested custom controls or dynamic identity |
-| `strategy`           | ErrorDisplayStrategy                              | Inherited                                                                                       |
-| `appearance`         | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'`                                                                                     |
-| `orientation`        | `'vertical' \| 'horizontal' \| 'inherit'`         | `'inherit'`                                                                                     |
-| `errorPlacement`     | `'top' \| 'bottom'`                               | `'bottom'`                                                                                      |
-| `showRequiredMarker` | boolean                                           | From config                                                                                     |
-| `requiredMarker`     | string                                            | `' *'`                                                                                          |
+| Input            | Type                                              | Default                                                                                         |
+| ---------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `formField`      | field                                             | Required                                                                                        |
+| `fieldName`      | string                                            | Derived from bound control `id`; pass explicitly for nested custom controls or dynamic identity |
+| `strategy`       | ErrorDisplayStrategy                              | Inherited                                                                                       |
+| `appearance`     | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'`                                                                                     |
+| `orientation`    | `'vertical' \| 'horizontal' \| 'inherit'`         | `'inherit'`                                                                                     |
+| `errorPlacement` | `'top' \| 'bottom'`                               | `'bottom'`                                                                                      |
+| `showMarkerWhen` | `'required' \| 'optional' \| 'none'`              | From config                                                                                     |
+| `requiredMarker` | string                                            | `' *'`                                                                                          |
+| `optionalMarker` | string                                            | `' (optional)'`                                                                                 |
 
 ### NgxFormFieldset inputs
 

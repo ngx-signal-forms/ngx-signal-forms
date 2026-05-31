@@ -1,7 +1,6 @@
 import { NgComponentOutlet } from '@angular/common';
 import {
   afterEveryRender,
-  booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -16,11 +15,13 @@ import {
 import type { FieldTree } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
+  FieldMarkingMode,
   FormFieldAppearance,
   FormFieldAppearanceInput,
   FormFieldOrientation,
   FormFieldOrientationInput,
   NgxFormFieldErrorPlacement,
+  ResolvedMarker,
 } from '@ngx-signal-forms/toolkit';
 import {
   NGX_FORM_FIELD_ERROR_RENDERER,
@@ -228,7 +229,7 @@ import {
     '[class.ngx-signal-form-field-wrapper--horizontal]': 'isHorizontal()',
     '[attr.data-orientation]': 'resolvedOrientation()',
     '[attr.data-error-placement]': 'errorPlacement()',
-    '[attr.data-show-required]': 'showRequiredMarkerVisible() ? "true" : null',
+    '[attr.data-marker]': 'resolvedMarker()?.kind ?? null',
     '[attr.role]': 'selectionClusterRole()',
     '[attr.aria-labelledby]': 'selectionClusterLabelledBy()',
     '[attr.aria-describedby]': 'selectionClusterDescribedBy()',
@@ -237,17 +238,23 @@ import {
     <!-- Label slot (outside bordered container for standard layout, visually inside for outline via CSS) -->
     <div class="ngx-signal-form-field-wrapper__label">
       <ng-content select="label, [ngxFormFieldLabel]" />
-      @if (showRequiredMarkerVisible()) {
+      @if (resolvedMarker(); as marker) {
         <!--
-          Required marker rendered in the template (not via CSS ::after content)
-          so screen readers do not double-announce "required" alongside the
-          control's own \`aria-required\` attribute. \`aria-hidden="true"\` keeps
-          the asterisk purely visual (WCAG 1.3.1, 4.1.2).
+          Required/optional marker rendered in the template (not via CSS
+          ::after content) so screen readers do not double-announce alongside
+          the control's own \`aria-required\` attribute. \`aria-hidden="true"\`
+          keeps the marker purely visual (WCAG 1.3.1, 4.1.2).
         -->
         <span
-          class="ngx-signal-form-field-wrapper__required-marker"
+          class="ngx-signal-form-field-wrapper__marker"
+          [class.ngx-signal-form-field-wrapper__required-marker]="
+            marker.kind === 'required'
+          "
+          [class.ngx-signal-form-field-wrapper__optional-marker]="
+            marker.kind === 'optional'
+          "
           aria-hidden="true"
-          >{{ resolvedRequiredMarker() }}</span
+          >{{ marker.text }}</span
         >
       }
     </div>
@@ -403,16 +410,24 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   readonly orientation = input<FormFieldOrientationInput>('inherit');
 
   /**
-   * Whether to show the required marker in outlined fields.
-   * Falls back to NgxSignalFormsConfig.showRequiredMarker when unset.
+   * Which fields carry a visual marker (`'required'` | `'optional'` | `'none'`).
+   * Falls back to `NgxSignalFormsConfig.showMarkerWhen` when unset.
+   *
+   * Markers render in every appearance. `aria-required` is unaffected.
    */
-  readonly showRequiredMarker = input<unknown>();
+  readonly showMarkerWhen = input<FieldMarkingMode>();
 
   /**
-   * Custom character(s) for the required marker in outlined fields.
-   * Falls back to NgxSignalFormsConfig.requiredMarker when unset.
+   * Custom character(s) for the required marker (used in `'required'` mode).
+   * Falls back to `NgxSignalFormsConfig.requiredMarker` when unset.
    */
   readonly requiredMarker = input<string | undefined>();
+
+  /**
+   * Custom text for the optional marker (used in `'optional'` mode).
+   * Falls back to `NgxSignalFormsConfig.optionalMarker` when unset.
+   */
+  readonly optionalMarker = input<string | undefined>();
 
   /**
    * Toolkit configuration for default appearance.
@@ -626,49 +641,67 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   );
 
   /**
-   * Resolved required marker visibility with input override.
+   * Resolved marking mode with input override.
    */
-  protected readonly resolvedShowRequiredMarker = computed(() => {
-    const explicit = this.showRequiredMarker();
-    if (explicit !== undefined) {
-      return booleanAttribute(explicit);
-    }
-
-    return this.#config.showRequiredMarker;
+  protected readonly resolvedMarkerMode = computed<FieldMarkingMode>(() => {
+    return this.showMarkerWhen() ?? this.#config.showMarkerWhen;
   });
 
   /**
    * Resolved required marker text with input override.
    */
   protected readonly resolvedRequiredMarker = computed(() => {
-    const explicit = this.requiredMarker();
-    if (explicit !== undefined) {
-      return explicit;
-    }
-
-    return this.#config.requiredMarker;
+    return this.requiredMarker() ?? this.#config.requiredMarker;
   });
 
   /**
-   * Whether the visual required marker (`<span aria-hidden="true">`) should
-   * render in the template. Mirrors the previous CSS-driven contract:
-   *
-   * - outline appearance is active
-   * - `resolvedShowRequiredMarker()` is true (consumer/config opt-in)
-   * - the bound control declares required-ness via `[required]` or
-   *   `[aria-required="true"]`
-   *
-   * Encoded in TypeScript so the marker can live in the template — generated
-   * `::after` content was being read aloud by NVDA/VoiceOver in addition to
-   * the control's own `aria-required`, causing double announcement (WCAG
-   * 1.3.1, 4.1.2).
+   * Resolved optional marker text with input override.
    */
-  protected readonly showRequiredMarkerVisible = computed(() => {
-    return (
-      this.isOutline() &&
-      this.resolvedShowRequiredMarker() &&
-      this.#boundControlIsRequired()
-    );
+  protected readonly resolvedOptionalMarker = computed(() => {
+    return this.optionalMarker() ?? this.#config.optionalMarker;
+  });
+
+  /**
+   * The visual marker (`<span aria-hidden="true">`) to render in the label,
+   * or `null` for none. Derived from the active {@link resolvedMarkerMode} and
+   * the bound control's required-ness:
+   *
+   * - `'required'` mode → mark required fields with {@link resolvedRequiredMarker}
+   * - `'optional'` mode → mark non-required fields with {@link resolvedOptionalMarker}
+   * - `'none'` mode → never marks
+   *
+   * Renders in every appearance (standard, outline, plain). No marker is shown
+   * until the projected control is discovered, so the optional marker never
+   * flashes before required-ness is known.
+   *
+   * The marker is kept out of the accessibility tree (`aria-hidden="true"`);
+   * required state reaches assistive tech through the control's own
+   * `aria-required` (managed by `auto-aria`), independent of marking mode. This
+   * avoids the double-announcement that CSS `::after` content caused on
+   * NVDA/VoiceOver (WCAG 1.3.1, 4.1.2).
+   */
+  protected readonly resolvedMarker = computed<ResolvedMarker | null>(() => {
+    if (this.#boundControlElement() === null) {
+      return null;
+    }
+
+    const mode = this.resolvedMarkerMode();
+    if (mode === 'none') {
+      return null;
+    }
+
+    const isRequired = this.#boundControlIsRequired();
+
+    if (mode === 'required') {
+      return isRequired
+        ? { kind: 'required', text: this.resolvedRequiredMarker() }
+        : null;
+    }
+
+    // mode === 'optional'
+    return isRequired
+      ? null
+      : { kind: 'optional', text: this.resolvedOptionalMarker() };
   });
 
   protected readonly resolvedControlKind = computed(() => {

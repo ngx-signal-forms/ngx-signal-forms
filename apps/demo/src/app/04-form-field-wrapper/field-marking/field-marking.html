@@ -1,0 +1,68 @@
+<form [formRoot]="markingForm" ngxSignalForm class="field-marking-stack">
+  <!-- The legend, placed wherever it reads best in the form. It mirrors the
+       active mode + markers and hides itself when there is no relevant field. -->
+  <div class="field-marking-legend-slot">
+    <ngx-form-marking-legend
+      [formField]="markingForm"
+      [showMarkerWhen]="markingMode()"
+      [requiredMarker]="requiredMarkerText()"
+      [optionalMarker]="optionalMarkerText()"
+      [text]="legendTextOrUndefined()"
+    />
+  </div>
+
+  <ngx-form-field-wrapper
+    [appearance]="appearance()"
+    [formField]="markingForm.fullName"
+    [showMarkerWhen]="markingMode()"
+    [requiredMarker]="requiredMarkerText()"
+    [optionalMarker]="optionalMarkerText()"
+  >
+    <label for="fullName">Full name</label>
+    <input id="fullName" type="text" [formField]="markingForm.fullName" />
+  </ngx-form-field-wrapper>
+
+  <ngx-form-field-wrapper
+    [appearance]="appearance()"
+    [formField]="markingForm.email"
+    [showMarkerWhen]="markingMode()"
+    [requiredMarker]="requiredMarkerText()"
+    [optionalMarker]="optionalMarkerText()"
+  >
+    <label for="email">Email</label>
+    <input id="email" type="email" [formField]="markingForm.email" />
+  </ngx-form-field-wrapper>
+
+  <ngx-form-field-wrapper
+    [appearance]="appearance()"
+    [formField]="markingForm.phone"
+    [showMarkerWhen]="markingMode()"
+    [requiredMarker]="requiredMarkerText()"
+    [optionalMarker]="optionalMarkerText()"
+  >
+    <label for="phone">Phone</label>
+    <input id="phone" type="tel" [formField]="markingForm.phone" />
+  </ngx-form-field-wrapper>
+
+  <ngx-form-field-wrapper
+    [appearance]="appearance()"
+    [formField]="markingForm.company"
+    [showMarkerWhen]="markingMode()"
+    [requiredMarker]="requiredMarkerText()"
+    [optionalMarker]="optionalMarkerText()"
+  >
+    <label for="company">Company</label>
+    <input id="company" type="text" [formField]="markingForm.company" />
+  </ngx-form-field-wrapper>
+
+  <ngx-form-field-wrapper
+    [appearance]="appearance()"
+    [formField]="markingForm.bio"
+    [showMarkerWhen]="markingMode()"
+    [requiredMarker]="requiredMarkerText()"
+    [optionalMarker]="optionalMarkerText()"
+  >
+    <label for="bio">Short bio</label>
+    <textarea id="bio" rows="2" [formField]="markingForm.bio"></textarea>
+  </ngx-form-field-wrapper>
+</form>

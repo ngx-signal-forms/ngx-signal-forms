@@ -35,10 +35,17 @@ export function normalizeSignalFormsConfig(
     defaultFormFieldOrientation:
       config.defaultFormFieldOrientation ??
       DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultFormFieldOrientation,
-    showRequiredMarker:
-      config.showRequiredMarker ??
-      DEFAULT_NGX_SIGNAL_FORMS_CONFIG.showRequiredMarker,
+    showMarkerWhen:
+      config.showMarkerWhen ?? DEFAULT_NGX_SIGNAL_FORMS_CONFIG.showMarkerWhen,
     requiredMarker:
       config.requiredMarker ?? DEFAULT_NGX_SIGNAL_FORMS_CONFIG.requiredMarker,
+    optionalMarker:
+      config.optionalMarker ?? DEFAULT_NGX_SIGNAL_FORMS_CONFIG.optionalMarker,
+    requiredLegendText:
+      config.requiredLegendText ??
+      DEFAULT_NGX_SIGNAL_FORMS_CONFIG.requiredLegendText,
+    optionalLegendText:
+      config.optionalLegendText ??
+      DEFAULT_NGX_SIGNAL_FORMS_CONFIG.optionalLegendText,
   };
 }

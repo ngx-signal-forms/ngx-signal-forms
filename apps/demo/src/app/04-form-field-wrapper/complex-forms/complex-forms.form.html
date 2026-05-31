@@ -439,8 +439,14 @@
         [appearance]="appearance()"
         [orientation]="orientation()"
         [errorPlacement]="errorPlacement()"
+        showMarkerWhen="none"
         class="choice-group-field"
       >
+        <!--
+          The group label carries its own "*" marker, so opt this choice-group
+          out of the wrapper's automatic marker to avoid a doubled asterisk now
+          that markers render in every appearance (not outline-only).
+        -->
         <span ngxFormFieldLabel class="choice-group-field__label">
           Preferred contact method *
         </span>

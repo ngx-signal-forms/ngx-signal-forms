@@ -28,7 +28,7 @@ The form-field entry point provides a pre-styled field shell (label + control + 
    - Default for fieldset: `errorPlacement="top"`
    - Override per wrapper or per fieldset as needed — these are independent controls.
 
-4. **Required marker:** Use `showRequiredMarker` on the wrapper or configure it globally via `provideNgxSignalFormsConfig({ showRequiredMarker: true })`.
+4. **Field marking:** Use `showMarkerWhen` (`'required' | 'optional' | 'none'`) on the wrapper or globally via `provideNgxSignalFormsConfig({ showMarkerWhen: 'required' })`. Add `<ngx-form-marking-legend>` to explain the marker.
 
 5. **Use `NgxFormFieldset` for grouped sections:**
    - Pass the **parent field tree** to `[fieldsetField]`.

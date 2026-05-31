@@ -233,6 +233,41 @@ export type NgxSignalFormControlPresetOverrides = Partial<
 >;
 
 /**
+ * Field-marking strategy: which fields carry a visual marker.
+ *
+ * - `'required'` — mark required fields (default). Best when most fields are
+ *   optional.
+ * - `'optional'` — mark optional (non-required) fields. Best when most fields
+ *   are required (the GOV.UK / NN/g "mark the exception" guidance).
+ * - `'none'` — mark nothing visually. Required state is still conveyed
+ *   programmatically via `aria-required`, so this stays accessible.
+ *
+ * @public
+ */
+export type FieldMarkingMode = 'required' | 'optional' | 'none';
+
+/**
+ * The kind of marker actually rendered on a field — the markable subset of
+ * {@link FieldMarkingMode} (`'none'` never produces a marker). Also the set of
+ * values the wrapper's `data-marker` host attribute can take (or absent).
+ *
+ * @public
+ */
+export type MarkerKind = Exclude<FieldMarkingMode, 'none'>;
+
+/**
+ * A resolved field marker: its {@link MarkerKind} and the text to render. A
+ * `null` resolution means no marker (mode is `'none'`, or the field's
+ * required-ness does not match the active mode).
+ *
+ * @public
+ */
+export interface ResolvedMarker {
+  readonly kind: MarkerKind;
+  readonly text: string;
+}
+
+/**
  * Configuration options for the ngx-signal-forms toolkit.
  */
 export interface NgxSignalFormsConfig {
@@ -261,16 +296,42 @@ export interface NgxSignalFormsConfig {
   defaultFormFieldOrientation: FormFieldOrientation;
 
   /**
-   * Whether to show the required marker for outlined fields.
-   * @default true
+   * Which fields carry a visual marker (`'required'` | `'optional'` | `'none'`).
+   *
+   * Markers render in every appearance (standard, outline, plain). Regardless
+   * of this setting, required state is always exposed via `aria-required`.
+   *
+   * @default 'required'
    */
-  showRequiredMarker: boolean;
+  showMarkerWhen: FieldMarkingMode;
 
   /**
-   * Custom character(s) to display as the required marker in outlined fields.
+   * Custom character(s) appended to the label of **required** fields when
+   * `showMarkerWhen` is `'required'`.
    * @default ' *'
    */
   requiredMarker: string;
+
+  /**
+   * Custom text appended to the label of **optional** fields when
+   * `showMarkerWhen` is `'optional'`.
+   * @default ' (optional)'
+   */
+  optionalMarker: string;
+
+  /**
+   * Default text for `NgxFormMarkingLegend` in `'required'` mode. The literal
+   * token `{marker}` is replaced with the trimmed {@link requiredMarker}.
+   * @default '{marker} indicates a required field'
+   */
+  requiredLegendText: string;
+
+  /**
+   * Default text for `NgxFormMarkingLegend` in `'optional'` mode. The literal
+   * token `{marker}` is replaced with the trimmed {@link optionalMarker}.
+   * @default 'All fields are required unless marked {marker}'
+   */
+  optionalLegendText: string;
 }
 
 /**
@@ -288,10 +349,19 @@ export interface NgxSignalFormsUserConfig {
   defaultErrorStrategy?: ResolvedErrorDisplayStrategy;
   defaultFormFieldAppearance?: FormFieldAppearance;
   defaultFormFieldOrientation?: FormFieldOrientation;
-  showRequiredMarker?: boolean;
+  showMarkerWhen?: FieldMarkingMode;
   /**
    * Custom character(s) rendered as the required marker. Pass `''` to
-   * clear an inherited marker without disabling `showRequiredMarker`.
+   * clear an inherited marker without changing `showMarkerWhen`.
    */
   requiredMarker?: string;
+  /**
+   * Custom text rendered as the optional marker. Pass `''` to clear an
+   * inherited marker without changing `showMarkerWhen`.
+   */
+  optionalMarker?: string;
+  /** Override the `'required'` legend text. `{marker}` is substituted. */
+  requiredLegendText?: string;
+  /** Override the `'optional'` legend text. `{marker}` is substituted. */
+  optionalLegendText?: string;
 }

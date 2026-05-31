@@ -518,14 +518,20 @@ If the semantic colors aren't enough, you can override specific parts of the com
 | `--ngx-form-field-outline-label-color`       | `var(--ngx-form-field-color-text-secondary)` | Outlined label color       |
 | `--ngx-form-field-outline-label-line-height` | `1rem`                                       | Outlined label line height |
 
-#### Required Marker
+#### Field Markers
 
-**Applies to both layouts, but typically shown only in outline layout.**
+Markers render in every appearance (standard, outline, plain). Which fields are
+marked is controlled by the `showMarkerWhen` config / input
+(`'required' \| 'optional' \| 'none'`). The host carries a `data-marker`
+attribute (`"required"` / `"optional"` / absent) for additional styling hooks.
 
-| Property                                  | Default                             | Description            |
-| :---------------------------------------- | :---------------------------------- | :--------------------- |
-| `--ngx-form-field-required-marker-color`  | `var(--ngx-form-field-color-error)` | Required marker color  |
-| `--ngx-form-field-required-marker-weight` | `600`                               | Required marker weight |
+| Property                                   | Default                             | Description             |
+| :----------------------------------------- | :---------------------------------- | :---------------------- |
+| `--ngx-form-field-required-marker-color`   | `var(--ngx-form-field-color-error)` | Required marker color   |
+| `--ngx-form-field-required-marker-weight`  | `600`                               | Required marker weight  |
+| `--ngx-form-field-optional-marker-color`   | `currentColor` (muted)              | Optional marker color   |
+| `--ngx-form-field-optional-marker-weight`  | `400`                               | Optional marker weight  |
+| `--ngx-form-field-optional-marker-opacity` | `0.7`                               | Optional marker opacity |
 
 #### Input (Standard Layout)
 

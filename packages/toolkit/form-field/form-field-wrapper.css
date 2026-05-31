@@ -301,6 +301,17 @@
     var(--_field-weight-semibold)
   );
 
+  /* Optional marker — muted and lighter than the required marker, since it
+     annotates the exception rather than flagging a problem. */
+  --_optional-marker-color: var(
+    --ngx-form-field-optional-marker-color,
+    var(--_color-label-muted, currentColor)
+  );
+  --_optional-marker-weight: var(
+    --ngx-form-field-optional-marker-weight,
+    var(--_field-weight-normal, 400)
+  );
+
   /* Input - Stacked layout */
   --_input-size: var(--ngx-form-field-input-size, var(--_field-text-body));
   --_input-padding: var(
@@ -836,6 +847,12 @@
 .ngx-signal-form-field-wrapper__required-marker {
   color: var(--_required-marker-color);
   font-weight: var(--_required-marker-weight);
+}
+
+.ngx-signal-form-field-wrapper__optional-marker {
+  color: var(--_optional-marker-color);
+  font-weight: var(--_optional-marker-weight);
+  opacity: var(--ngx-form-field-optional-marker-opacity, 0.7);
 }
 
 /* Remove input default styling (container provides all visual feedback) */

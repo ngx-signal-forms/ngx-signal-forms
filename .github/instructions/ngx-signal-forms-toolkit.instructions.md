@@ -99,8 +99,11 @@ interface NgxSignalFormsConfig {
   defaultErrorStrategy: 'immediate' | 'on-touch' | 'on-submit';
   defaultFormFieldAppearance: 'standard' | 'outline' | 'plain';
   defaultFormFieldOrientation: 'vertical' | 'horizontal';
-  showRequiredMarker: boolean;
+  showMarkerWhen: 'required' | 'optional' | 'none';
   requiredMarker: string;
+  optionalMarker: string;
+  requiredLegendText: string;
+  optionalLegendText: string;
 }
 ```
 
@@ -400,8 +403,9 @@ Important inputs:
 - `appearance` — `'standard' | 'outline' | 'plain' | 'inherit'`
 - `orientation` — `'vertical' | 'horizontal' | 'inherit'`
 - `errorPlacement` — `'top' | 'bottom'` (default: `'bottom'`)
-- `showRequiredMarker`
+- `showMarkerWhen` — `'required' | 'optional' | 'none'`
 - `requiredMarker`
+- `optionalMarker`
 
 Use `appearance="outline"` in new examples. Prefer that over legacy `outline` patterns.
 

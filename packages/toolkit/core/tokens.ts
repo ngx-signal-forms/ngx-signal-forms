@@ -34,8 +34,11 @@ export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG = {
   defaultErrorStrategy: 'on-touch',
   defaultFormFieldAppearance: 'standard',
   defaultFormFieldOrientation: 'vertical',
-  showRequiredMarker: true,
+  showMarkerWhen: 'required',
   requiredMarker: ' *',
+  optionalMarker: ' (optional)',
+  requiredLegendText: '{marker} indicates a required field',
+  optionalLegendText: 'All fields are required unless marked {marker}',
 } as const satisfies NgxSignalFormsConfig;
 
 /**

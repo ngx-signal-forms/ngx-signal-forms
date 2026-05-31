@@ -54,15 +54,30 @@ function createConfigFactory(
         configDefault: parentOrNull?.defaultFormFieldOrientation,
         fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultFormFieldOrientation,
       }),
-      showRequiredMarker: createCascadingResolver({
-        input: userConfig.showRequiredMarker,
-        configDefault: parentOrNull?.showRequiredMarker,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.showRequiredMarker,
+      showMarkerWhen: createCascadingResolver({
+        input: userConfig.showMarkerWhen,
+        configDefault: parentOrNull?.showMarkerWhen,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.showMarkerWhen,
       }),
       requiredMarker: createCascadingResolver({
         input: userConfig.requiredMarker,
         configDefault: parentOrNull?.requiredMarker,
         fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.requiredMarker,
+      }),
+      optionalMarker: createCascadingResolver({
+        input: userConfig.optionalMarker,
+        configDefault: parentOrNull?.optionalMarker,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.optionalMarker,
+      }),
+      requiredLegendText: createCascadingResolver({
+        input: userConfig.requiredLegendText,
+        configDefault: parentOrNull?.requiredLegendText,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.requiredLegendText,
+      }),
+      optionalLegendText: createCascadingResolver({
+        input: userConfig.optionalLegendText,
+        configDefault: parentOrNull?.optionalLegendText,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.optionalLegendText,
       }),
     };
   };
