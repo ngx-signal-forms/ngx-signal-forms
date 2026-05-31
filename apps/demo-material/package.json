@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "description": "Reference wrapper demo: Angular Material 21+ on top of @ngx-signal-forms/toolkit",
   "dependencies": {
-    "@angular/animations": "21.2.10",
-    "@angular/cdk": "~21.2.9",
-    "@angular/material": "~21.2.9"
+    "@angular/animations": "catalog:angular",
+    "@angular/cdk": "catalog:angular",
+    "@angular/material": "catalog:angular-material"
   }
 }
