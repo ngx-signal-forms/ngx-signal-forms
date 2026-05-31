@@ -136,4 +136,33 @@ describe('provideNgxSignalFormsConfigForComponent', () => {
     const resolved = childInjector.get(NGX_SIGNAL_FORMS_CONFIG);
     expect(resolved.requiredMarker).toBe('');
   });
+
+  it('preserves empty-string optionalMarker / legend-text overrides against parent values', () => {
+    // The keys this feature added (`optionalMarker`, `requiredLegendText`,
+    // `optionalLegendText`) share `requiredMarker`'s `??`-merge contract: an
+    // explicit `''` must clear the inherited value (e.g. a theme that renders
+    // the hint via CSS) rather than falling through to the parent under `||`.
+    const parentEnv = createInjectorFromEnvProviders([
+      provideNgxSignalFormsConfig({
+        optionalMarker: ' (optional)',
+        requiredLegendText: '{marker} indicates a required field',
+        optionalLegendText: 'All fields are required unless marked {marker}',
+      }),
+    ]);
+
+    const childProviders = provideNgxSignalFormsConfigForComponent({
+      optionalMarker: '',
+      requiredLegendText: '',
+      optionalLegendText: '',
+    });
+    const childInjector = createInjectorFromEnvProviders(
+      childProviders,
+      parentEnv,
+    );
+
+    const resolved = childInjector.get(NGX_SIGNAL_FORMS_CONFIG);
+    expect(resolved.optionalMarker).toBe('');
+    expect(resolved.requiredLegendText).toBe('');
+    expect(resolved.optionalLegendText).toBe('');
+  });
 });
