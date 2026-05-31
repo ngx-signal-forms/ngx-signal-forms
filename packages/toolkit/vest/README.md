@@ -25,8 +25,8 @@ const signupForm = form(model, (path) => {
 
 **Use the toolkit's `validateVest` / `validateVestWarnings`** when you need something the Standard Schema interface cannot express:
 
-- **`warn:*` warning severity** — Standard Schema only models blocking issues; it has no `warn()` / severity concept. Surfacing Vest `warn()` output as toolkit warnings is the irreducible reason this bridge exists.
-- **`only()` focused runs** — thread the changed field into `suite.run(value, field)` so large suites validate one field at a time instead of re-running every test.
+- **`warn:*` warning severity** — Standard Schema only models blocking issues; it has no `warn()` / severity concept. Surfacing Vest `warn()` output as toolkit warnings is the primary reason this bridge exists.
+- **`only()` focused runs** — thread the changed field into the suite (the adapter prefers the canonical `suite.only(field).run(value)` form, falling back to `suite.run(value, field)`) so large suites validate one field at a time instead of re-running every test.
 - **`resetOnDestroy` lifecycle** — call `suite.reset()` when the hosting injection context tears down, so module-scope suite state does not leak across mounts.
 
 The adapter reads Vest's full `run()` result, mapping blocking errors **and** `warn()` output in a single pass — so enabling warnings never costs a second suite run.
@@ -285,7 +285,7 @@ suites where per-field isolation matters.
 Angular treats every `ValidationError` as blocking. For forms that should allow warnings:
 
 1. Set `ignoreValidators: 'all'` in the `submission` config
-2. Inside `action`, check `hasOnlyWarnings(form().errorSummary())`
+2. Inside `action`, check `hasOnlyWarnings(form().errorSummary())` — `errorSummary()` yields only the fields that errored, so it is not a full-tree enumeration (use the tree walker for that)
 3. Return early and focus the first invalid field when blocking errors remain
 
 ## Related documentation
