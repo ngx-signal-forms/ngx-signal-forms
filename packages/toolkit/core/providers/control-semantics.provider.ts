@@ -14,7 +14,25 @@ import {
 } from '../utilities/control-semantics';
 import { createCascadingResolver } from '../utilities/cascading-resolver';
 
-function mergeNgxSignalFormControlPresets(
+/**
+ * Merges partial preset overrides onto a base registry, returning a new fully
+ * resolved registry. Override fields cascade
+ * (`input → parent → built-in default`) per kind, and unknown kinds are
+ * ignored (with a dev-mode warning) so the result always satisfies the full
+ * {@link NgxSignalFormControlPresetRegistry} shape.
+ *
+ * This is the single source of truth for preset cascade logic — both the DI
+ * providers and {@link NgxControlPresetRegistry} reuse it instead of
+ * duplicating the merge rules.
+ *
+ * @param parentPresetsOrNull Base registry to merge onto, or `null` to start
+ *   from {@link DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS}.
+ * @param presets Partial overrides to apply on top of the base registry.
+ * @returns A new fully resolved preset registry (the input is not mutated).
+ *
+ * @internal
+ */
+export function mergeNgxSignalFormControlPresets(
   parentPresetsOrNull: NgxSignalFormControlPresetRegistry | null,
   presets: NgxSignalFormControlPresetOverrides,
 ): NgxSignalFormControlPresetRegistry {
