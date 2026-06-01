@@ -201,6 +201,14 @@ export const appRoutes: Routes = [
           ),
         title: getRouteTitle('/advanced-scenarios/zod-vest-validation'),
       },
+      {
+        path: 'store-binding',
+        loadComponent: () =>
+          import('./05-advanced/store-binding/store-binding.page').then(
+            (m) => m.StoreBindingPage,
+          ),
+        title: getRouteTitle('/advanced-scenarios/store-binding'),
+      },
     ],
   },
 
