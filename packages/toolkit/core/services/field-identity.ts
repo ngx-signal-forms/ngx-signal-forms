@@ -1,4 +1,10 @@
-import { computed, Injectable, isDevMode, signal } from '@angular/core';
+import {
+  computed,
+  Injectable,
+  isDevMode,
+  signal,
+  type Signal,
+} from '@angular/core';
 import {
   createFieldMessageIdSignals,
   normalizeFieldName,
@@ -14,10 +20,12 @@ import {
  * runtimes — sufficient to detect `display: none` in detached subtrees,
  * which is the common collapsed-fieldset case the issue calls out.
  *
- * Exported so the wrapper can call it from its render hook to push
- * visibility into `_setControlVisible`.
+ * Exposed publicly (re-exported from `@ngx-signal-forms/toolkit`) so custom
+ * controls and third-party wrappers can apply the exact same visibility test
+ * the canonical wrapper uses to drive {@link NgxFieldIdentity.setControlVisible},
+ * keeping the native-binding and CSS-fallback ARIA paths in lockstep.
  *
- * @internal
+ * @public
  */
 export function isElementCssVisible(el: HTMLElement): boolean {
   const checkVisibility = (
@@ -32,9 +40,41 @@ export function isElementCssVisible(el: HTMLElement): boolean {
 }
 
 /**
- * Centralized field identity service that owns field-name resolution,
- * ID generation, describedBy aggregation, control-element discovery, and
- * the shared visibility flag.
+ * A `Signal<boolean>` that is ALSO a one-shot visibility probe.
+ *
+ * - Called with no argument it behaves exactly like the underlying readonly
+ *   signal: it returns the cached "is the bound control laid out?" value and
+ *   participates in reactive dependency tracking (so it can be threaded into
+ *   `computed()` / `createAriaInvalidSignal` unchanged).
+ * - Called with an `HTMLElement` it delegates to {@link isElementCssVisible}
+ *   for an ad-hoc, NON-reactive check of an arbitrary element — useful for a
+ *   custom control that wants to reuse the wrapper's exact visibility rule
+ *   before pushing the result into {@link NgxFieldIdentity.setControlVisible}.
+ *
+ * @public
+ */
+export interface ControlVisibilitySignal extends Signal<boolean> {
+  /** Ad-hoc CSS-visibility probe for an arbitrary element. Non-reactive. */
+  (el: HTMLElement): boolean;
+}
+
+/**
+ * Centralized, element-scoped field identity service that owns the load-bearing
+ * a11y primitives every assistive/headless surface depends on:
+ *
+ * - **Name resolution** — the resolved {@link NgxFieldIdentity.fieldName} and
+ *   the bound control's {@link NgxFieldIdentity.controlId}. The canonical
+ *   wrapper feeds this via {@link NgxFieldIdentity.setFieldName} /
+ *   {@link NgxFieldIdentity.setControlElement} using the precedence cascade
+ *   explicit → label `for=` → bound-control `id` → `null` (the label `for=`
+ *   tier is opt-in; see `createFieldNameResolver`). The result is identical
+ *   whether resolved through the native binding or the CSS fallback.
+ * - **Visibility** — {@link NgxFieldIdentity.isControlVisible}, a callable
+ *   signal that returns the cached visibility flag with no argument and probes
+ *   an arbitrary element (via {@link isElementCssVisible}) when given one.
+ * - **Stable ID generation** — {@link NgxFieldIdentity.errorId} (`{name}-error`)
+ *   and {@link NgxFieldIdentity.warningId} (`{name}-warning`), derived from the
+ *   resolved field name and `null` when no name is available.
  *
  * Provided at the `NgxFormFieldWrapper` level via `providers: [NgxFieldIdentity]`.
  * `NgxSignalFormAutoAria` and hint directives inject it optionally, falling
@@ -44,11 +84,11 @@ export function isElementCssVisible(el: HTMLElement): boolean {
  * provide this service at the root injector. Each wrapper gets a fresh
  * instance keyed on its own DOM subtree.
  *
- * The class is exported so the wrapper can list it in `providers`; the
- * `_set*` writer methods are tagged `@internal` and must not be called
- * from outside this package.
+ * The class is part of the public API; the `set*` writer methods are tagged
+ * `@internal` and must not be called from outside this package — consumers
+ * read the resolved signals, they do not drive them.
  *
- * @internal
+ * @public
  */
 @Injectable({ providedIn: null })
 export class NgxFieldIdentity {
@@ -98,12 +138,52 @@ export class NgxFieldIdentity {
    * to `display: none`. Stays `true` for elements merely scrolled off
    * the viewport.
    *
-   * Driven by the wrapper, which calls `_setControlVisible` from its
+   * Driven by the wrapper, which calls `setControlVisible` from its
    * `afterEveryRender` write phase using `Element.checkVisibility()`
    * (with an `offsetParent` fallback). Defaults to `true` so consumers
    * never strip ARIA attributes pre-visibility-eval.
+   *
+   * This member is a {@link ControlVisibilitySignal}: a real `Signal<boolean>`
+   * (reactive, threadable into `computed()`) that additionally accepts an
+   * `HTMLElement` argument to perform an ad-hoc, non-reactive visibility probe
+   * via {@link isElementCssVisible}. Probing an element never mutates the
+   * cached flag — only `setControlVisible` does.
+   *
+   * @example No-arg: read the cached, reactive flag.
+   * ```ts
+   * effect(() => console.log('laid out?', identity.isControlVisible()));
+   * ```
+   *
+   * @example Element-arg: reuse the wrapper's exact visibility rule.
+   * ```ts
+   * identity.setControlVisible(identity.isControlVisible(myEl));
+   * ```
    */
-  readonly isControlVisible = this.#isControlVisible.asReadonly();
+  readonly isControlVisible: ControlVisibilitySignal =
+    this.#createControlVisibilitySignal();
+
+  /**
+   * Builds the hybrid {@link ControlVisibilitySignal}: a function that probes
+   * an arbitrary element when called with one, and otherwise defers to the
+   * cached readonly signal. The readonly signal's own properties (including the
+   * Angular signal brand and `SIGNAL` node) are copied onto the function so it
+   * remains a fully-valid `Signal<boolean>` for reactive consumers.
+   */
+  #createControlVisibilitySignal(): ControlVisibilitySignal {
+    const readonly = this.#isControlVisible.asReadonly();
+    const probe = (el?: HTMLElement): boolean =>
+      el === undefined ? readonly() : isElementCssVisible(el);
+    for (const key of [
+      ...Object.getOwnPropertyNames(readonly),
+      ...Object.getOwnPropertySymbols(readonly),
+    ]) {
+      const descriptor = Object.getOwnPropertyDescriptor(readonly, key);
+      if (descriptor) {
+        Object.defineProperty(probe, key, descriptor);
+      }
+    }
+    return probe as ControlVisibilitySignal;
+  }
 
   /**
    * Aggregated `aria-describedby` ID chain for this field, derived from

@@ -306,7 +306,83 @@ provideFieldLabels(() => {
 | `resolveFieldNameFromCandidates(...candidates)` | Pick the first non-blank field name from a precedence chain (explicit → host id → context)  |
 | `generateErrorId(fieldName, kind?)`             | Derive `{fieldName}-error` (container) or `{fieldName}-error-{kind}` (per-error) element id |
 | `generateWarningId(fieldName)`                  | Derive the `{fieldName}-warning` element id used for `aria-describedby`                     |
+| `isElementCssVisible(element)`                  | CSS-visibility test (`Element.checkVisibility()` with `offsetParent` fallback)              |
 | `injectFormContext()`                           | Get `ngxSignalForm` context or `undefined`                                                  |
+
+### Field identity service
+
+`NgxFieldIdentity` is the element-scoped service that consolidates the three
+load-bearing accessibility primitives every assistive/headless surface depends
+on: **field-name resolution**, **control visibility**, and **stable error /
+warning ID generation**. The canonical `ngx-form-field-wrapper` provides and
+drives it; custom controls and third-party wrappers can provide it themselves
+to get identical behavior without re-deriving the rules.
+
+| Member                      | Description                                                                                     |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| `fieldName()`               | Resolved field name (explicit → label `for=` → bound-control `id` → `null`), or `null`          |
+| `controlId()`               | The bound control element's `id` attribute, or `null`                                           |
+| `errorId()`                 | Stable `{fieldName}-error` id, or `null` when no name is resolved                               |
+| `warningId()`               | Stable `{fieldName}-warning` id, or `null` when no name is resolved                             |
+| `hintIds()`                 | Hint ids contributed by the surrounding registry for this field                                 |
+| `describedBy()`             | Aggregated `aria-describedby` chain from `hintIds()`, or `null`                                 |
+| `isControlVisible()`        | Callable signal: no-arg returns the cached, reactive visibility flag                            |
+| `isControlVisible(element)` | Same member with an element argument: ad-hoc, non-reactive `isElementCssVisible(element)` probe |
+| `resolveControlElement()`   | The currently bound control element, or `null`                                                  |
+
+Name resolution comes in two interchangeable shapes that produce **identical**
+names:
+
+- The service's internal resolution (driven by the wrapper) follows
+  explicit → bound-control `id` — no label tier.
+- `createFieldNameResolver({ explicit, labelFor?, boundControl, wrapperName })`
+  exposes the same cascade for custom wrappers, with the label `for=` tier as
+  an **opt-in** middle step. Omit `labelFor` and the two paths emit the same
+  name byte-for-byte.
+
+The `set*` writer methods are package-internal — consumers **read** the
+resolved signals, they do not drive them.
+
+#### Custom control example
+
+A custom control can provide `NgxFieldIdentity` on its host and read the
+resolved identity directly, reusing the wrapper's exact visibility rule:
+
+```typescript
+import { Component, ElementRef, inject, afterEveryRender } from '@angular/core';
+import { NgxFieldIdentity } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  selector: 'my-rating-control',
+  providers: [NgxFieldIdentity],
+  template: `
+    <div role="radiogroup" [attr.aria-describedby]="identity.describedBy()">
+      <!-- rating widget -->
+    </div>
+  `,
+})
+export class MyRatingControl {
+  protected readonly identity = inject(NgxFieldIdentity);
+  readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  constructor() {
+    afterEveryRender(() => {
+      const el = this.#host.nativeElement.querySelector('input');
+      // Same explicit → id resolution + ID generation the wrapper uses.
+      this.identity.setFieldName(el?.id ?? null);
+      this.identity.setControlElement(el);
+      // Reuse the wrapper's exact CSS-visibility test.
+      this.identity.setControlVisible(
+        el ? this.identity.isControlVisible(el) : true,
+      );
+    });
+  }
+}
+```
+
+`identity.errorId()` / `identity.warningId()` now yield stable
+`{name}-error` / `{name}-warning` ids the control can wire into its error and
+warning elements, matching every other toolkit surface.
 
 ### Other
 
