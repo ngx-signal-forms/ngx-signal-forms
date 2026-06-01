@@ -4,6 +4,7 @@ import {
   computed,
   input,
   model,
+  output,
   signal,
 } from '@angular/core';
 import type { FormValueControl, ValidationError } from '@angular/forms/signals';
@@ -165,10 +166,14 @@ export class RatingControlComponent implements FormValueControl<number> {
   readonly value = model(0);
 
   /**
-   * Touched state - tracks user interaction.
-   * Set to true on blur or when user selects a rating.
+   * Touched output — notifies the bound field that the user has interacted.
+   *
+   * Angular 22 splits the old `touched` model into a `touched` *input* (field →
+   * control) and a `touch` *output* (control → field). This control only needs
+   * to report interaction, so it emits `touch` on blur and on rating changes;
+   * the `Field` directive marks the field touched in response.
    */
-  readonly touched = model(false);
+  readonly touch = output();
 
   /**
    * Disabled state - read-only input from form.
@@ -236,25 +241,25 @@ export class RatingControlComponent implements FormValueControl<number> {
         event.preventDefault();
         if (current < max) {
           this.value.set(current + 1);
-          this.touched.set(true);
+          this.touch.emit();
         }
         break;
       case 'ArrowLeft':
         event.preventDefault();
         if (current > 0) {
           this.value.set(current - 1);
-          this.touched.set(true);
+          this.touch.emit();
         }
         break;
       case 'Home':
         event.preventDefault();
         this.value.set(0);
-        this.touched.set(true);
+        this.touch.emit();
         break;
       case 'End':
         event.preventDefault();
         this.value.set(max);
-        this.touched.set(true);
+        this.touch.emit();
         break;
     }
   }
@@ -265,7 +270,7 @@ export class RatingControlComponent implements FormValueControl<number> {
 
   protected onBlur(): void {
     this.focused.set(false);
-    this.touched.set(true);
+    this.touch.emit();
   }
 
   /**
@@ -274,7 +279,7 @@ export class RatingControlComponent implements FormValueControl<number> {
   protected selectRating(rating: number): void {
     if (this.disabled()) return;
     this.value.set(rating);
-    this.touched.set(true);
+    this.touch.emit();
   }
 
   /**

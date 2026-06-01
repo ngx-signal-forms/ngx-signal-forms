@@ -55,7 +55,7 @@ export const CUSTOM_CONTROLS_CONTENT: ExampleCardConfig = {
         items: [
           'Implement <code>FormValueControl&lt;T&gt;</code> interface',
           'Define <code>value = model&lt;T&gt;()</code> as required signal',
-          'Define <code>touched = model&lt;boolean&gt;()</code> for interaction tracking',
+          'Emit <code>touch = output&lt;void&gt;()</code> on blur for interaction tracking (Angular 22 replaces the old <code>touched</code> model with a <code>touch</code> output)',
         ],
       },
       {
