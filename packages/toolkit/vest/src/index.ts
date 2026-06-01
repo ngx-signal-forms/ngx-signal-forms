@@ -11,10 +11,23 @@
  */
 
 export {
-  VEST_ERROR_KIND_PREFIX,
-  VEST_WARNING_KIND_PREFIX,
   validateVest,
   validateVestWarnings,
   type ValidateVestOptions,
-  type VestOnlyFieldSelector,
 } from './validate-vest';
+
+export {
+  createVestAdapter,
+  sharedVestAdapter,
+  VEST_ERROR_KIND_PREFIX,
+  VEST_WARNING_KIND_PREFIX,
+  type RunVestSuiteParams,
+  type RunVestSuiteResult,
+  type VestAdapterOptions,
+  type VestFieldPath,
+  type VestOnlyFieldSelector,
+  type VestRegisterOptions,
+  type VestResultLike,
+  type VestRunnableSuite,
+  type VestSuiteAdapter,
+} from './vest-adapter';
