@@ -4,12 +4,20 @@
     "accessibility-a11y": {
       "source": "mindrally/skills",
       "sourceType": "github",
+      "skillPath": "accessibility-a11y/SKILL.md",
       "computedHash": "3117d5b0302f4fbb90cf7b3b65474aa0ea70eadaf91036ab9e20c912d68f9289"
     },
     "angular-developer": {
       "source": "angular/skills",
       "sourceType": "github",
-      "computedHash": "b7764c591c965d85f95f1d4f6d3620b6ab92a1b1fedbcdead7d59e946fc3fd2e"
+      "skillPath": "angular-developer/SKILL.md",
+      "computedHash": "4de273da58236f27f3a59e70a2bbcc34167e298933f9a6f3b132f1d9ca44643c"
+    },
+    "angular-new-app": {
+      "source": "angular/skills",
+      "sourceType": "github",
+      "skillPath": "angular-new-app/SKILL.md",
+      "computedHash": "49bd84ab08bd3498c52f476bed48fbb942dc6dbc0925607e84549adbed34bccf"
     }
   }
 }
