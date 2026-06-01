@@ -9,8 +9,8 @@ import {
 describe('resolveValidationErrorMessage — 3-tier priority', () => {
   const registry: ErrorMessageRegistry = {
     required: 'Registry: field is required',
-    email: ({ domain }: Record<string, unknown>) =>
-      `Registry: invalid email (domain: ${typeof domain === 'string' ? domain : 'unknown'})`,
+    username_taken: (error) =>
+      `Registry: ${typeof error.attemptedValue === 'string' ? error.attemptedValue : 'name'} is taken`,
   };
 
   it('should prefer validator message (tier 1) over registry and default', () => {
@@ -49,10 +49,13 @@ describe('resolveValidationErrorMessage — 3-tier priority', () => {
   });
 
   it('should call registry factory functions with error params', () => {
-    const error = { kind: 'email', domain: 'test.com' } as ValidationError;
+    const error = {
+      kind: 'username_taken',
+      attemptedValue: 'neo',
+    } as ValidationError;
 
     expect(resolveValidationErrorMessage(error, registry)).toBe(
-      'Registry: invalid email (domain: test.com)',
+      'Registry: neo is taken',
     );
   });
 
@@ -65,7 +68,7 @@ describe('resolveValidationErrorMessage — 3-tier priority', () => {
   });
 
   it('should fall back to default when registry has no entry for kind', () => {
-    const error: ValidationError = { kind: 'minLength', minLength: 5 };
+    const error = { kind: 'minLength', minLength: 5 } as ValidationError;
 
     expect(resolveValidationErrorMessage(error, registry)).toBe(
       'Minimum 5 characters required',
@@ -149,5 +152,62 @@ describe('getDefaultValidationMessage', () => {
     expect(getDefaultValidationMessage({ kind: 'password_mismatch' })).toBe(
       'password mismatch',
     );
+  });
+
+  it('should format minDate/maxDate using the locale date string', () => {
+    const minDate = new Date(2025, 0, 15);
+    const maxDate = new Date(2025, 11, 31);
+
+    expect(
+      getDefaultValidationMessage({
+        kind: 'minDate',
+        minDate,
+      } as ValidationError),
+    ).toBe(`Date must be on or after ${minDate.toLocaleDateString()}`);
+
+    expect(
+      getDefaultValidationMessage({
+        kind: 'maxDate',
+        maxDate,
+      } as ValidationError),
+    ).toBe(`Date must be on or before ${maxDate.toLocaleDateString()}`);
+  });
+
+  it('should surface the standard schema issue message', () => {
+    const error = {
+      kind: 'standardSchema',
+      issue: { message: 'Schema rejected the value' },
+    } as unknown as ValidationError;
+
+    expect(getDefaultValidationMessage(error)).toBe(
+      'Schema rejected the value',
+    );
+  });
+
+  it('should fall back to a generic message for an empty standard schema message', () => {
+    const error = {
+      kind: 'standardSchema',
+      issue: { message: '' },
+    } as unknown as ValidationError;
+
+    expect(getDefaultValidationMessage(error)).toBe('Invalid value');
+  });
+
+  it('should fall back to String(value) for a non-date minDate/maxDate', () => {
+    const invalidDate = new Date('not-a-real-date');
+
+    expect(
+      getDefaultValidationMessage({
+        kind: 'minDate',
+        minDate: invalidDate,
+      } as ValidationError),
+    ).toBe(`Date must be on or after ${String(invalidDate)}`);
+
+    expect(
+      getDefaultValidationMessage({
+        kind: 'maxDate',
+        maxDate: invalidDate,
+      } as ValidationError),
+    ).toBe(`Date must be on or before ${String(invalidDate)}`);
   });
 });

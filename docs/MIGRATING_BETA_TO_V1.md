@@ -40,6 +40,7 @@ releases will not include any of the renames below.
 - **New: headless message resolution** — `createErrorMessageSignal()` combines visibility, the 3-tier message cascade, and stable per-error IDs for custom error renderers
 - **New: Vest options** — `only` selector, `focusCurrentField` auto-focus, `VEST_*_KIND_PREFIX` exports
 - **BREAKING: Vest `resetOnDestroy` now defaults to `true`** — the adapter resets module-scope suite state on teardown by default; pass `{ resetOnDestroy: false }` to keep persisting state across mounts
+- **BREAKING: `ErrorMessageRegistry` is now strongly typed per built-in kind** — factory params for built-in kinds (`minLength`, `min`, `pattern`, …) are typed; custom kinds stay `any` (see [§5b](#5b-error-message-registry-is-now-strongly-typed))
 - **A11y** — removed explicit `aria-live` / `aria-atomic`; role semantics now authoritative
 - **Behavior** — missing `fieldName` / `id` now logs (dev mode) instead of throwing
 - **Compatibility** — Angular peer-dep is `>=21.2.0 <22.0.0`
@@ -437,13 +438,38 @@ const show = showErrors(field, 'on-submit', {
 });
 ```
 
-If you are rendering errors inside a form that has `ngxSignalForm` on
-the `<form>` element, prefer `<ngx-form-field-error>`, the wrapper, or
-`createErrorState()` — they all read the status from DI automatically.
-
 ---
 
-## 6. Current features worth adopting
+## 5b. Error-message registry is now strongly typed
+
+`ErrorMessageRegistry` previously typed every value as
+`string | ((params: Record<string, unknown>) => string)` behind a single
+string index signature. It now maps each **built-in** validation error kind to
+its concrete `NgValidationError` subtype, so factory params are typed and
+autocompleted:
+
+```ts
+provideErrorMessages({
+  // built-in kinds → typed params
+  minLength: (error) => `At least ${error.minLength} characters`, // error: MinLengthValidationError
+  min: (error) => `Must be ≥ ${error.min}`, //                       error: MinValidationError
+  // custom kinds → untyped params (any), as before
+  username_taken: (error) => `${error.attemptedValue} is taken`,
+});
+```
+
+What changed for migrators:
+
+- **Factories that destructured fields a built-in error does not carry now fail
+  to compile.** For example `email: ({ domain }) => …` no longer type-checks —
+  `EmailValidationError` has no `domain`. Move such logic to a **custom kind**,
+  which keeps `any`-typed params.
+- **New default messages** are emitted for error kinds Angular 22 added:
+  `minDate`, `maxDate` (locale-formatted date), and `standardSchema` (surfaces
+  the schema issue message). Custom kinds are still humanized from their `kind`
+  string.
+- **No runtime behavior change** for existing string entries or correctly typed
+  factories — this is a compile-time tightening only.
 
 ### Control semantics contract — `ngxSignalFormControl`
 

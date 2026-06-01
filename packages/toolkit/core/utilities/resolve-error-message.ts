@@ -1,31 +1,100 @@
-import type { ValidationError } from '@angular/forms/signals';
+import type {
+  NgValidationError,
+  ValidationError,
+} from '@angular/forms/signals';
 import type { ErrorMessageRegistry } from '../providers/error-messages.provider';
-
-type ValidationErrorParams = Readonly<
-  ValidationError & Record<string, unknown>
->;
 
 interface ResolveErrorMessageOptions {
   readonly stripWarningPrefix?: boolean;
 }
 
-function getNumericValidationParam(
-  params: ValidationErrorParams,
-  key: string,
-): number {
-  const value = params[key];
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value;
-  }
+/**
+ * Compile-time exhaustive lookup of Angular's built-in validation error kinds.
+ *
+ * Typing this as `Record<NgValidationError['kind'], true>` forces the table to
+ * stay in sync with the framework: when an Angular minor adds a new
+ * `NgValidationError` member, this object stops compiling until the new kind is
+ * added (paired with the `assertNever` guard in `describeBuiltInError`).
+ */
+const BUILT_IN_ERROR_KIND_LOOKUP: Record<NgValidationError['kind'], true> = {
+  required: true,
+  email: true,
+  min: true,
+  max: true,
+  minDate: true,
+  maxDate: true,
+  minLength: true,
+  maxLength: true,
+  pattern: true,
+  parse: true,
+  standardSchema: true,
+};
 
-  if (typeof value === 'string' && value.trim().length > 0) {
-    const parsedValue = Number(value);
-    if (Number.isFinite(parsedValue)) {
-      return parsedValue;
-    }
-  }
+/**
+ * Structural narrowing gate for built-in validation errors.
+ *
+ * Matches on the public `kind` discriminant rather than
+ * `instanceof NgValidationError`. Angular brands its error classes with a
+ * private field, so an `instanceof` check fails whenever an error crosses a
+ * realm boundary — duplicated `@angular/forms` copies in a monorepo or a
+ * module-federation host. Matching on `kind` survives those boundaries and also
+ * recognizes the plain error objects that custom validators emit.
+ */
+function isBuiltInError(error: ValidationError): error is NgValidationError {
+  return Object.hasOwn(BUILT_IN_ERROR_KIND_LOOKUP, error.kind);
+}
 
-  return 0;
+function formatDate(value: Date): string {
+  return value instanceof Date && !Number.isNaN(value.getTime())
+    ? value.toLocaleDateString()
+    : String(value);
+}
+
+function assertNever(error: never): never {
+  throw new Error(
+    `Unhandled built-in validation error kind: ${JSON.stringify(error)}`,
+  );
+}
+
+function describeBuiltInError(error: NgValidationError): string {
+  switch (error.kind) {
+    case 'required':
+      return 'This field is required';
+    case 'email':
+      return 'Please enter a valid email address';
+    case 'minLength':
+      return `Minimum ${error.minLength} characters required`;
+    case 'maxLength':
+      return `Maximum ${error.maxLength} characters allowed`;
+    case 'min':
+      return `Minimum value is ${error.min}`;
+    case 'max':
+      return `Maximum value is ${error.max}`;
+    case 'minDate':
+      return `Date must be on or after ${formatDate(error.minDate)}`;
+    case 'maxDate':
+      return `Date must be on or before ${formatDate(error.maxDate)}`;
+    case 'pattern':
+      return 'Invalid format';
+    case 'parse':
+      return 'Invalid value';
+    case 'standardSchema':
+      return error.issue.message || 'Invalid value';
+    default:
+      // Compile-time guarantee: a new NgValidationError member breaks the build
+      // here until a dedicated case is added above.
+      return assertNever(error);
+  }
+}
+
+function humanizeCustomKind(
+  kind: string,
+  options?: ResolveErrorMessageOptions,
+): string {
+  const normalizedKind = options?.stripWarningPrefix
+    ? kind.replace(/^warn:/u, '')
+    : kind;
+  return normalizedKind.replaceAll('_', ' ');
 }
 
 export function resolveValidationErrorMessage(
@@ -45,11 +114,9 @@ export function resolveValidationErrorMessage(
   if (registry) {
     const registryMessage = registry[error.kind];
     if (registryMessage !== undefined) {
-      if (typeof registryMessage === 'function') {
-        return registryMessage({ ...error } as ValidationErrorParams);
-      }
-
-      return registryMessage;
+      return typeof registryMessage === 'function'
+        ? registryMessage(error)
+        : registryMessage;
     }
   }
 
@@ -60,31 +127,7 @@ export function getDefaultValidationMessage(
   error: ValidationError,
   options?: ResolveErrorMessageOptions,
 ): string {
-  const kind = error.kind;
-  const errorParams: ValidationErrorParams = error as ValidationErrorParams;
-
-  switch (kind) {
-    case 'required':
-      return 'This field is required';
-    case 'email':
-      return 'Please enter a valid email address';
-    case 'minLength':
-      return `Minimum ${getNumericValidationParam(errorParams, 'minLength')} characters required`;
-    case 'maxLength':
-      return `Maximum ${getNumericValidationParam(errorParams, 'maxLength')} characters allowed`;
-    case 'min':
-      return `Minimum value is ${getNumericValidationParam(errorParams, 'min')}`;
-    case 'max':
-      return `Maximum value is ${getNumericValidationParam(errorParams, 'max')}`;
-    case 'pattern':
-      return 'Invalid format';
-    case 'parse':
-      return 'Invalid value';
-    default: {
-      const normalizedKind = options?.stripWarningPrefix
-        ? kind.replace(/^warn:/, '')
-        : kind;
-      return normalizedKind.replaceAll('_', ' ');
-    }
-  }
+  return isBuiltInError(error)
+    ? describeBuiltInError(error)
+    : humanizeCustomKind(error.kind, options);
 }

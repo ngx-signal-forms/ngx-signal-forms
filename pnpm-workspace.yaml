@@ -18,26 +18,26 @@ catalogs:
     '@analogjs/vite-plugin-angular': 2.5.2
     '@analogjs/vitest-angular': 2.5.2
   angular:
-    '@angular/animations': ~21.2.15
-    '@angular/aria': ~21.2.13
-    '@angular/cdk': ~21.2.13
-    '@angular/common': ~21.2.15
-    '@angular/compiler': ~21.2.15
-    '@angular/core': ~21.2.15
-    '@angular/forms': ~21.2.15
-    '@angular/platform-browser': ~21.2.15
-    '@angular/router': ~21.2.15
+    '@angular/animations': 22.0.0-rc.2
+    '@angular/aria': 22.0.0-rc.2
+    '@angular/cdk': 22.0.0-rc.2
+    '@angular/common': 22.0.0-rc.2
+    '@angular/compiler': 22.0.0-rc.2
+    '@angular/core': 22.0.0-rc.2
+    '@angular/forms': 22.0.0-rc.2
+    '@angular/platform-browser': 22.0.0-rc.2
+    '@angular/router': 22.0.0-rc.2
   angular-material:
-    '@angular/material': ~21.2.13
+    '@angular/material': 22.0.0-rc.2
   angular-build:
-    '@angular-devkit/core': ~21.2.13
-    '@angular-devkit/schematics': ~21.2.13
-    '@angular/build': ~21.2.13
-    '@angular/cli': ~21.2.13
-    '@angular/compiler-cli': ~21.2.15
-    '@angular/language-service': ~21.2.15
-    '@schematics/angular': ~21.2.13
-    ng-packagr: ~21.2.3
+    '@angular-devkit/core': 22.0.0-rc.2
+    '@angular-devkit/schematics': 22.0.0-rc.2
+    '@angular/build': 22.0.0-rc.2
+    '@angular/cli': 22.0.0-rc.2
+    '@angular/compiler-cli': 22.0.0-rc.2
+    '@angular/language-service': 22.0.0-rc.2
+    '@schematics/angular': 22.0.0-rc.2
+    ng-packagr: 22.0.0-rc.0
   angular-eslint:
     '@angular-eslint/eslint-plugin': 21.4.0
     '@angular-eslint/eslint-plugin-template': 21.4.0
@@ -122,12 +122,12 @@ catalogs:
     '@vitest/ui': 4.1.7
     vitest: 4.1.7
 overrides:
-  '@angular/common': 21.2.15
-  '@angular/compiler': 21.2.15
-  '@angular/core': 21.2.15
-  '@angular/forms': 21.2.15
-  '@angular/platform-browser': 21.2.15
-  '@angular/router': 21.2.15
+  '@angular/common': 22.0.0-rc.2
+  '@angular/compiler': 22.0.0-rc.2
+  '@angular/core': 22.0.0-rc.2
+  '@angular/forms': 22.0.0-rc.2
+  '@angular/platform-browser': 22.0.0-rc.2
+  '@angular/router': 22.0.0-rc.2
   '@babel/plugin-transform-modules-systemjs@>=7.12.0 <=7.29.3': ^7.29.4
   'ajv@>=7.0.0-alpha.0 <8.18.0': ^8.18.0
   'axios@>=1.0.0 <1.15.1': ^1.15.1

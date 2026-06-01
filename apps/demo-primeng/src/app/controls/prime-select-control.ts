@@ -8,6 +8,7 @@ import {
   Injector,
   input,
   model,
+  output,
   signal,
   viewChild,
   type Signal,
@@ -89,7 +90,7 @@ const MANUAL_ARIA_MODE: Signal<NgxSignalFormControlAriaMode | null> =
       [attr.aria-invalid]="ariaInvalid()"
       [attr.aria-required]="ariaRequired()"
       (ngModelChange)="value.set($event ?? '')"
-      (onBlur)="touched.set(true)"
+      (onBlur)="touch.emit()"
     />
   `,
 })
@@ -112,7 +113,9 @@ export class PrimeSelectControlComponent implements FormValueControl<string> {
   readonly optionValue = input('value');
   readonly placeholder = input('Pick an option');
   readonly disabled = input(false);
-  readonly touched = model(false);
+  // Angular 22: emit `touch` (control → field) instead of the old `touched`
+  // model; the Field directive marks the field touched on blur.
+  readonly touch = output();
   readonly value = model('');
 
   protected readonly resolvedOptions = computed(() => [...this.options()]);

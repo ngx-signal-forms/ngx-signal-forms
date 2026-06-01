@@ -8,7 +8,6 @@ import {
   input,
   linkedSignal,
   model,
-  output,
   viewChild,
 } from '@angular/core';
 import { type ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -97,11 +96,15 @@ export class HlmCheckbox implements ControlValueAccessor {
     alias: 'aria-describedby',
   });
 
-  /** The checked state of the checkbox. */
+  /**
+   * The checked state of the checkbox.
+   *
+   * The `model()` already exposes a `checkedChange` output that emits whenever
+   * the value is set (e.g. via `checked.set()` in `_handleChange`), so no
+   * separate `output()` is declared — Angular 22 (NG1054) forbids binding the
+   * same name to both a model and an explicit output.
+   */
   public readonly checked = model<boolean>(false);
-
-  /** Emits when checked state changes. */
-  public readonly checkedChange = output<boolean>();
 
   /**
    * The indeterminate state of the checkbox.
@@ -145,8 +148,8 @@ export class HlmCheckbox implements ControlValueAccessor {
 
   protected _handleChange(value: boolean): void {
     if (this._disabled()) return;
+    // `checked` is a model(); setting it emits `checkedChange` automatically.
     this.checked.set(value);
-    this.checkedChange.emit(value);
     this._onChange?.(value);
   }
 

@@ -1,7 +1,7 @@
 import { DestroyRef, inject, isDevMode, resource } from '@angular/core';
 import {
   type FieldContext,
-  type FieldTree,
+  type ReadonlyFieldTree,
   type SchemaPath,
   type SchemaPathTree,
   type ValidationError,
@@ -212,7 +212,10 @@ interface ResolvedVestValidationPayload {
  * Strongly typed per-suite cache used to share a single Vest run between the
  * sync and async Angular validation phases.
  */
-type VestRunCache = WeakMap<FieldTree<unknown>, VestRunCacheEntry<unknown>>;
+type VestRunCache = WeakMap<
+  ReadonlyFieldTree<unknown>,
+  VestRunCacheEntry<unknown>
+>;
 
 const VEST_PATH_SEGMENT = /[^.[\]]+/g;
 const VEST_KIND_SEGMENT_MAX_LEN = 48;
@@ -239,7 +242,12 @@ function isThenable(value: unknown): value is PromiseLike<unknown> {
   );
 }
 
-function isFieldTree(value: unknown): value is FieldTree<unknown> {
+// Field tree nodes are callable proxies, so callability is a necessary (not
+// sufficient) proxy for "is a tree node". The sole caller
+// (`resolveVestWarningFieldTree`) only uses this to choose between a resolved
+// node and a same-typed `ReadonlyFieldTree` fallback, so a false positive still
+// yields a tree-shaped value — the loose predicate is intentional and contained.
+function isFieldTree(value: unknown): value is ReadonlyFieldTree<unknown> {
   return typeof value === 'function';
 }
 
@@ -339,9 +347,9 @@ function deriveVestFieldNameFromContext<TValue>(
  * cannot accidentally be resolved as field tree nodes.
  */
 function resolveVestWarningFieldTree(
-  fieldTree: FieldTree<unknown>,
+  fieldTree: ReadonlyFieldTree<unknown>,
   fieldPath: string,
-): FieldTree<unknown> {
+): ReadonlyFieldTree<unknown> {
   let current: unknown = fieldTree;
 
   for (const segment of parseVestFieldPath(fieldPath)) {
@@ -438,12 +446,12 @@ function executeVestRun<TValue>(
  */
 function getOrCreateVestRun<TValue>(
   suite: Pick<VestRunnableSuite<TValue>, 'run' | 'only'>,
-  fieldTree: FieldTree<TValue>,
+  fieldTree: ReadonlyFieldTree<TValue>,
   value: TValue,
   focus: string | readonly string[] | undefined,
 ): VestRunCacheEntry<TValue> {
   const suiteCache = getVestSuiteRunCache(suite as object);
-  const cachedEntry = suiteCache.get(fieldTree as FieldTree<unknown>);
+  const cachedEntry = suiteCache.get(fieldTree as ReadonlyFieldTree<unknown>);
   const focusKey = Array.isArray(focus)
     ? focus.join('\u0000')
     : (focus as string | undefined);
@@ -475,7 +483,7 @@ function getOrCreateVestRun<TValue>(
     initialResult: isVestResultLike(runResult) ? runResult : undefined,
   };
 
-  suiteCache.set(fieldTree as FieldTree<unknown>, nextEntry);
+  suiteCache.set(fieldTree as ReadonlyFieldTree<unknown>, nextEntry);
   return nextEntry;
 }
 
@@ -564,7 +572,7 @@ function filterExistingVestEntries(
  */
 function toVestValidationErrors(
   entries: readonly VestValidationEntry[],
-  fieldTree: FieldTree<unknown>,
+  fieldTree: ReadonlyFieldTree<unknown>,
   mode: VestValidationMode,
 ): readonly ValidationError.WithFieldTree[] {
   return entries.map(({ fieldPath, message, occurrence }) => {
@@ -605,7 +613,7 @@ function createVestValidationSnapshot(
  */
 function mapVestValidationResult(
   result: VestResultLike,
-  fieldTree: FieldTree<unknown>,
+  fieldTree: ReadonlyFieldTree<unknown>,
   options: VestValidationRegistrationOptions<unknown>,
   baseline?: VestValidationSnapshot,
 ): readonly ValidationError.WithFieldTree[] {
