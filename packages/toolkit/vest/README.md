@@ -134,19 +134,21 @@ First-class adapter for Vest suites. Reads `suite.run()` results and maps blocki
 ```typescript
 validateVest(path, suite); // blocking errors only
 validateVest(path, suite, { includeWarnings: true }); // + warn() as toolkit warnings
-validateVest(path, suite, { resetOnDestroy: true }); // clear suite state on teardown
+validateVest(path, suite, { resetOnDestroy: false }); // opt out of teardown reset (now the default)
 validateVest(path, suite, { only: (ctx) => ctx.value().focusedField });
+validateVest(path.email, suite, { focusCurrentField: true }); // auto-focus the bound field
 ```
 
 Blocking errors and warnings are read from the same Vest run — enabling warnings does not require a second suite pass.
 
 #### Options
 
-| Option            | Default | Description                                                                                                                                                                                    |
-| ----------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `includeWarnings` | `false` | Surface `warn()` results as toolkit warnings (`kind` prefixed with `warn:vest:`).                                                                                                              |
-| `resetOnDestroy`  | `false` | Call `suite.reset()` via `DestroyRef.onDestroy()` when the hosting injection context tears down. Strongly recommended for module-scope suites (see [Suite lifecycle](#suite-lifecycle) below). |
-| `only`            | _none_  | Selector `(ctx) => string \| string[] \| undefined` that threads a field name into `suite.run(value, fieldName)` (or `suite.only(field).run(value)` where the suite exposes that shorthand).   |
+| Option              | Default | Description                                                                                                                                                                                                                                                                           |
+| ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `includeWarnings`   | `false` | Surface `warn()` results as toolkit warnings (`kind` prefixed with `warn:vest:`).                                                                                                                                                                                                     |
+| `resetOnDestroy`    | `true`  | Call `suite.reset()` via `DestroyRef.onDestroy()` when the hosting injection context tears down. Enabled by default for module-scope suites; pass `{ resetOnDestroy: false }` only to deliberately persist suite state across mounts (see [Suite lifecycle](#suite-lifecycle) below). |
+| `only`              | _none_  | Selector `(ctx) => string \| string[] \| undefined` that threads a field name into `suite.run(value, fieldName)` (or `suite.only(field).run(value)` where the suite exposes that shorthand).                                                                                          |
+| `focusCurrentField` | `false` | Derive the focused Vest field name automatically from the field this validator is bound to (`ctx.pathKeys()`, dotted — e.g. `items.0.sku`). Ignored when `only` is provided; falls back to a whole-suite run when bound to the form root.                                             |
 
 ### Exported constants
 
@@ -231,14 +233,21 @@ hook, suite state bleeds across component mounts. A second mount can see
 stale errors from a previous session, or async tests from an unmounted form
 can continue resolving and leak errors into the new one.
 
-Enable `resetOnDestroy: true` to wire `suite.reset()` into `DestroyRef`:
+To prevent this foot-gun, the adapter wires `suite.reset()` into `DestroyRef`
+**by default** (`resetOnDestroy: true`). It calls `suite.reset()` (and drops
+its internal run cache) when the injection context that registered the
+validator is destroyed — no configuration needed:
 
 ```typescript
-validateVest(path, signupSuite, { resetOnDestroy: true });
+validateVest(path, signupSuite); // resets suite state on teardown automatically
 ```
 
-The adapter calls `suite.reset()` (and drops its internal run cache) when the
-injection context that registered the validator is destroyed.
+Pass `{ resetOnDestroy: false }` only when you deliberately want suite state to
+persist across mounts:
+
+```typescript
+validateVest(path, signupSuite, { resetOnDestroy: false }); // opt out of teardown reset
+```
 
 ### Async caveats
 
@@ -279,6 +288,22 @@ validateVest(path, suite, {
 The default behavior (no `only` option) runs the whole suite on every change,
 which stays correct but re-executes every test body. Use `only` for large
 suites where per-field isolation matters.
+
+#### Auto-focus the bound field
+
+When you bind `validateVest` to a specific field path, pass
+`{ focusCurrentField: true }` to derive the focused Vest field name
+automatically — no hand-written `only` selector required:
+
+```typescript
+validateVest(path.email, suite, { focusCurrentField: true });
+```
+
+The adapter reads the bound field's dotted path from `ctx.pathKeys()` (e.g.
+`items.0.sku` for a nested/array field) and threads it into the focused run.
+When the validator is bound to the **form root** the derived path is empty, so
+the adapter falls back to a whole-suite run. An explicit `only` selector always
+wins — `focusCurrentField` is ignored when `only` is provided.
 
 ## Using Angular `submit()` with warnings
 

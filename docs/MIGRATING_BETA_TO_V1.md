@@ -38,7 +38,8 @@ releases will not include any of the renames below.
 - **New: fieldset toggle** — `includeNestedErrors` on fieldset; `submittedStatus` override input
 - **New: error component APIs** — `errors`, `listStyle`, `submittedStatus` inputs on `NgxFormFieldError`
 - **New: headless message resolution** — `createErrorMessageSignal()` combines visibility, the 3-tier message cascade, and stable per-error IDs for custom error renderers
-- **New: Vest options** — `only` selector, `resetOnDestroy`, `VEST_*_KIND_PREFIX` exports
+- **New: Vest options** — `only` selector, `focusCurrentField` auto-focus, `VEST_*_KIND_PREFIX` exports
+- **BREAKING: Vest `resetOnDestroy` now defaults to `true`** — the adapter resets module-scope suite state on teardown by default; pass `{ resetOnDestroy: false }` to keep persisting state across mounts
 - **A11y** — removed explicit `aria-live` / `aria-atomic`; role semantics now authoritative
 - **Behavior** — missing `fieldName` / `id` now logs (dev mode) instead of throwing
 - **Compatibility** — Angular peer-dep is `>=21.2.0 <22.0.0`
@@ -607,11 +608,33 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 ### Vest adapter additions
 
-- `resetOnDestroy: true` — wires `suite.reset()` into `DestroyRef` so
-  module-scope suites don't leak state across component mounts.
+- **BREAKING — `resetOnDestroy` now defaults to `true`.** The adapter wires
+  `suite.reset()` into `DestroyRef` by default so module-scope suites don't leak
+  state across component mounts (previously this was opt-in via
+  `resetOnDestroy: true`, defaulting to `false`).
+
+  **Action:** Consumers who deliberately rely on persisted suite state across
+  mounts (e.g. memoized async results or accumulated suite state intended to
+  survive a remount) **must now pass `{ resetOnDestroy: false }`** to opt out.
+  Everyone else can drop the now-redundant `{ resetOnDestroy: true }` — it is the
+  default.
+
+  ```typescript
+  // Before (v1 beta): opt in to reset
+  validateVest(path, suite, { resetOnDestroy: true });
+
+  // After (v1): reset is the default — opt out to persist state
+  validateVest(path, suite); // resets on teardown
+  validateVest(path, suite, { resetOnDestroy: false }); // persists across mounts
+  ```
+
 - `only: (ctx) => string | string[] | undefined` — threads a focused field name
   into `suite.run(value, fieldName)` (or `suite.only(field).run(...)`), enabling
   per-field Vest runs for large suites.
+- `focusCurrentField: true` — derives the focused Vest field name automatically
+  from the bound field's `ctx.pathKeys()` (dotted, e.g. `items.0.sku`); ignored
+  when `only` is set and falls back to a whole-suite run when bound to the form
+  root.
 - Exported kind prefixes `VEST_ERROR_KIND_PREFIX` (`'vest:'`) and
   `VEST_WARNING_KIND_PREFIX` (`'warn:vest:'`) for stable consumer checks.
 

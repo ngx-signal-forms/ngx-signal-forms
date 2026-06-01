@@ -55,11 +55,14 @@ export interface ValidateVestOptions<TValue = unknown> {
    *
    * Vest suites created with `create()` retain state across runs (last result,
    * pending async tests, test memoization). When consumers declare suites at
-   * module scope (the recommended pattern), state can leak across component
-   * mounts. Enabling this option registers a `DestroyRef.onDestroy()` hook
+   * module scope (the recommended pattern), that state leaks across component
+   * mounts. The toolkit registers a `DestroyRef.onDestroy()` hook **by default**
    * that clears suite state when the hosting component tears down.
    *
-   * @default false
+   * Set to `false` only when you deliberately want suite state to persist
+   * across mounts.
+   *
+   * @default true
    */
   resetOnDestroy?: boolean;
 
@@ -77,6 +80,26 @@ export interface ValidateVestOptions<TValue = unknown> {
    * @default undefined (full-suite run)
    */
   only?: VestOnlyFieldSelector<TValue>;
+
+  /**
+   * Derive the Vest field name to focus automatically from the field this
+   * validator is bound to, giving you Vest's per-field focused run with zero
+   * wiring. When `true` and {@link only} is not provided, the adapter resolves
+   * the current field's dotted Vest name from `ctx.pathKeys()` and passes it to
+   * the focused run (`suite.only(name).run(value)` or
+   * `suite.run(value, name)`).
+   *
+   * Bind `validateVest` to the specific field path you want focused (e.g.
+   * `validateVest(path.email, suite, { focusCurrentField: true })`) so the
+   * derived name targets that field. When the validator is bound to the form
+   * root the derived path is empty and the run falls back to a whole-suite run.
+   *
+   * Ignored when {@link only} is provided — an explicit selector always wins so
+   * existing wiring keeps working unchanged.
+   *
+   * @default false (full-suite run)
+   */
+  focusCurrentField?: boolean;
 }
 
 type VestFieldPath<TValue> = SchemaPath<TValue> & SchemaPathTree<TValue>;
@@ -166,6 +189,7 @@ interface VestValidationRegistrationOptions<TValue> {
   readonly includeErrors: boolean;
   readonly includeWarnings: boolean;
   readonly only?: VestOnlyFieldSelector<TValue>;
+  readonly focusCurrentField?: boolean;
 }
 
 /**
@@ -286,6 +310,27 @@ function parseVestFieldPath(fieldPath: string): Array<string | number> {
 }
 
 /**
+ * Derives the Vest field name for the field a validator is bound to from the
+ * Angular field context's `pathKeys` (the keys leading from the form root to
+ * the current field). Produces the dotted notation Vest uses for field
+ * targeting (e.g. `['user', 'email'] -> 'user.email'`, `['items', '0', 'sku']
+ * -> 'items.0.sku'`), which is the inverse of {@link parseVestFieldPath}.
+ *
+ * Returns `undefined` for a root-bound validator (empty path) so the caller
+ * falls back to a whole-suite run instead of focusing an empty field name.
+ */
+function deriveVestFieldNameFromContext<TValue>(
+  ctx: FieldContext<TValue>,
+): string | undefined {
+  const pathKeys = ctx.pathKeys();
+  if (pathKeys.length === 0) {
+    return undefined;
+  }
+
+  return pathKeys.join('.');
+}
+
+/**
  * Resolves a Vest warning path to the matching Angular field tree. When the
  * target path is missing, the current field tree is used as a safe fallback.
  *
@@ -310,11 +355,23 @@ function resolveVestWarningFieldTree(
     // oxlint-disable-next-line unicorn/new-for-builtins -- Object() coercion is intentional runtime wrap for own-property probing on callable field trees.
     const container = Object(current) as object;
     const segmentKey = typeof segment === 'number' ? String(segment) : segment;
-    if (!Object.hasOwn(container, segmentKey)) {
+
+    // Angular Signal Forms field trees are proxies whose traps throw
+    // `Reflect.getOwnPropertyDescriptor called on non-object` when probed on a
+    // leaf node (no further children). This happens when a Vest field name is
+    // resolved against a validator bound to that leaf — e.g. the
+    // `focusCurrentField` auto-focus path, where the bound field *is* the
+    // target. Treat any probe failure as "no such child" and fall back to the
+    // bound field tree, which is the correct target in that case.
+    let next: unknown;
+    try {
+      if (!Object.hasOwn(container, segmentKey)) {
+        return fieldTree;
+      }
+      next = Reflect.get(container, segmentKey);
+    } catch {
       return fieldTree;
     }
-
-    const next = Reflect.get(container, segmentKey);
     if (next === undefined) {
       return fieldTree;
     }
@@ -589,7 +646,17 @@ function registerVestValidation<TValue>(
   const resolveFocus = (
     ctx: FieldContext<TValue>,
   ): string | readonly string[] | undefined => {
-    return options.only ? options.only(ctx) : undefined;
+    // An explicit `only` selector always wins so existing wiring is unchanged.
+    if (options.only) {
+      return options.only(ctx);
+    }
+
+    // Opt-in auto-focus: derive the Vest field name from the bound field.
+    if (options.focusCurrentField) {
+      return deriveVestFieldNameFromContext(ctx);
+    }
+
+    return undefined;
   };
 
   validateTree(path, (ctx) => {
@@ -728,13 +795,17 @@ function registerVestValidation<TValue>(
 export function validateVestWarnings<TValue>(
   path: VestFieldPath<TValue>,
   suite: VestRunnableSuite<TValue>,
-  options: Pick<ValidateVestOptions<TValue>, 'resetOnDestroy' | 'only'> = {},
+  options: Pick<
+    ValidateVestOptions<TValue>,
+    'resetOnDestroy' | 'only' | 'focusCurrentField'
+  > = {},
 ): void {
-  maybeRegisterResetOnDestroy(suite, options.resetOnDestroy);
+  maybeRegisterResetOnDestroy(suite, options.resetOnDestroy ?? true);
   registerVestValidation(path, suite, {
     includeErrors: false,
     includeWarnings: true,
     only: options.only,
+    focusCurrentField: options.focusCurrentField,
   });
 }
 
@@ -750,15 +821,20 @@ export function validateVestWarnings<TValue>(
  * `ngx-form-field-wrapper`, and related components can render them as
  * polite, non-blocking guidance.
  *
- * Pass `{ resetOnDestroy: true }` to call `suite.reset()` when the hosting
- * injection context is destroyed. This is strongly recommended for suites
- * declared at module scope (the documented Vest pattern) because suite state
- * otherwise bleeds across component mounts.
+ * By default the adapter calls `suite.reset()` when the hosting injection
+ * context is destroyed, so module-scope suites (the documented Vest pattern)
+ * do not bleed state across component mounts. Pass `{ resetOnDestroy: false }`
+ * to opt out when you deliberately want suite state to persist.
  *
  * Pass `{ only: (ctx) => fieldName }` to enable per-field focused runs. The
  * adapter then invokes `suite.run(value, fieldName)` (or
  * `suite.only(fieldName).run(value)` where supported) rather than a full-suite
  * run. Works with suite callbacks that use `only(fieldName)` internally.
+ *
+ * Pass `{ focusCurrentField: true }` (without `only`) to get the same focused
+ * run with zero wiring: the adapter derives the Vest field name from the field
+ * this validator is bound to. Bind to the specific field path you want focused,
+ * e.g. `validateVest(path.email, suite, { focusCurrentField: true })`.
  *
  * @example
  * ```typescript
@@ -779,7 +855,7 @@ export function validateVestWarnings<TValue>(
  *
  * const loginModel = signal<LoginModel>({ email: '' });
  * const loginForm = form(loginModel, (path) => {
- *   validateVest(path, loginSuite, { resetOnDestroy: true });
+ *   validateVest(path, loginSuite); // resets on destroy by default
  * });
  * ```
  */
@@ -788,11 +864,12 @@ export function validateVest<TValue>(
   suite: VestRunnableSuite<TValue>,
   options: ValidateVestOptions<TValue> = {},
 ): void {
-  maybeRegisterResetOnDestroy(suite, options.resetOnDestroy);
+  maybeRegisterResetOnDestroy(suite, options.resetOnDestroy ?? true);
   registerVestValidation(path, suite, {
     includeErrors: true,
     includeWarnings: options.includeWarnings ?? false,
     only: options.only,
+    focusCurrentField: options.focusCurrentField,
   });
 }
 
