@@ -1,5 +1,9 @@
 import { LOCALE_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import type {
+  MaxLengthValidationError,
+  MinLengthValidationError,
+} from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
 import {
   NGX_ERROR_MESSAGES,
@@ -11,14 +15,6 @@ type ErrorMessageFactory = Exclude<
   ErrorMessageRegistry[string],
   string | undefined
 >;
-
-const readNumericParam = (
-  params: Readonly<Record<string, unknown>>,
-  key: string,
-): number => {
-  const value = params[key];
-  return typeof value === 'number' ? value : 0;
-};
 
 const readStringParam = (
   params: Readonly<Record<string, unknown>>,
@@ -61,10 +57,8 @@ describe('provideErrorMessages', () => {
       TestBed.configureTestingModule({
         providers: [
           provideErrorMessages({
-            minLength: (params: Record<string, unknown>) =>
-              `At least ${readNumericParam(params, 'minLength')} characters`,
-            maxLength: (params: Record<string, unknown>) =>
-              `Maximum ${readNumericParam(params, 'maxLength')} characters`,
+            minLength: (error) => `At least ${error.minLength} characters`,
+            maxLength: (error) => `Maximum ${error.maxLength} characters`,
           }),
         ],
       });
@@ -103,11 +97,9 @@ describe('provideErrorMessages', () => {
         providers: [
           provideErrorMessages({
             required: 'Required field',
-            minLength: (params: Record<string, unknown>) =>
-              `Min ${readNumericParam(params, 'minLength')} chars`,
+            minLength: (error) => `Min ${error.minLength} chars`,
             email: 'Invalid email',
-            max: (params: Record<string, unknown>) =>
-              `Cannot exceed ${readNumericParam(params, 'max')}`,
+            max: (error) => `Cannot exceed ${error.max}`,
           }),
         ],
       });
@@ -159,14 +151,12 @@ describe('provideErrorMessages', () => {
       TestBed.configureTestingModule({
         providers: [
           provideErrorMessages(() => ({
-            minLength: (params: Record<string, unknown>) =>
-              `Minimum length is ${readNumericParam(params, 'minLength')} characters`,
-            maxLength: (params: Record<string, unknown>) =>
-              `Maximum length is ${readNumericParam(params, 'maxLength')} characters`,
-            min: (params: Record<string, unknown>) =>
-              `Minimum value is ${readNumericParam(params, 'min')}`,
-            max: (params: Record<string, unknown>) =>
-              `Maximum value is ${readNumericParam(params, 'max')}`,
+            minLength: (error) =>
+              `Minimum length is ${error.minLength} characters`,
+            maxLength: (error) =>
+              `Maximum length is ${error.maxLength} characters`,
+            min: (error) => `Minimum value is ${error.min}`,
+            max: (error) => `Maximum value is ${error.max}`,
           })),
         ],
       });
@@ -240,8 +230,7 @@ describe('provideErrorMessages', () => {
       const messages: ErrorMessageRegistry = {
         required: 'Required field',
         email: 'Invalid email',
-        minLength: (params: Record<string, unknown>) =>
-          `Min ${readNumericParam(params, 'minLength')} chars`,
+        minLength: (error) => `Min ${error.minLength} chars`,
       };
 
       TestBed.configureTestingModule({
@@ -339,10 +328,10 @@ describe('provideErrorMessages', () => {
     });
 
     it('should preserve function references in registry', () => {
-      const minLengthMessage = (params: Record<string, unknown>) =>
-        `Min ${readNumericParam(params, 'minLength')}`;
-      const maxLengthMessage = (params: Record<string, unknown>) =>
-        `Max ${readNumericParam(params, 'maxLength')}`;
+      const minLengthMessage = (error: MinLengthValidationError) =>
+        `Min ${error.minLength}`;
+      const maxLengthMessage = (error: MaxLengthValidationError) =>
+        `Max ${error.maxLength}`;
 
       TestBed.configureTestingModule({
         providers: [

@@ -157,7 +157,12 @@ export interface ErrorMessageRegistry extends BuiltInErrorMessages {
    * - `maxLength` - Maximum length validation (params: `{ maxLength: number }`)
    * - `min` - Minimum value validation (params: `{ min: number }`)
    * - `max` - Maximum value validation (params: `{ max: number }`)
+   * - `minDate` - Minimum date validation (params: `{ minDate: Date }`)
+   * - `maxDate` - Maximum date validation (params: `{ maxDate: Date }`)
    * - `pattern` - Pattern validation (params: `{ pattern: RegExp }`)
+   * - `parse` - Value parsing/coercion failure
+   * - `standardSchema` - Standard Schema (Zod/Valibot/etc.) validation
+   *   (params: `{ issue: { message: string } }`)
    *
    * ## Custom validator kinds:
    * - Any string key for custom validators (e.g., 'username_taken', 'password_weak')

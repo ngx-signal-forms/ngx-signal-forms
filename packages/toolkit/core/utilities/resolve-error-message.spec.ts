@@ -68,7 +68,7 @@ describe('resolveValidationErrorMessage — 3-tier priority', () => {
   });
 
   it('should fall back to default when registry has no entry for kind', () => {
-    const error: ValidationError = { kind: 'minLength', minLength: 5 };
+    const error = { kind: 'minLength', minLength: 5 } as ValidationError;
 
     expect(resolveValidationErrorMessage(error, registry)).toBe(
       'Minimum 5 characters required',
@@ -182,5 +182,32 @@ describe('getDefaultValidationMessage', () => {
     expect(getDefaultValidationMessage(error)).toBe(
       'Schema rejected the value',
     );
+  });
+
+  it('should fall back to a generic message for an empty standard schema message', () => {
+    const error = {
+      kind: 'standardSchema',
+      issue: { message: '' },
+    } as unknown as ValidationError;
+
+    expect(getDefaultValidationMessage(error)).toBe('Invalid value');
+  });
+
+  it('should fall back to String(value) for a non-date minDate/maxDate', () => {
+    const invalidDate = new Date('not-a-real-date');
+
+    expect(
+      getDefaultValidationMessage({
+        kind: 'minDate',
+        minDate: invalidDate,
+      } as ValidationError),
+    ).toBe(`Date must be on or after ${String(invalidDate)}`);
+
+    expect(
+      getDefaultValidationMessage({
+        kind: 'maxDate',
+        maxDate: invalidDate,
+      } as ValidationError),
+    ).toBe(`Date must be on or before ${String(invalidDate)}`);
   });
 });
