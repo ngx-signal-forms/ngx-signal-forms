@@ -70,6 +70,10 @@ export {
 } from './utilities/field-interactivity';
 export * from './utilities/field-resolution';
 export * from './utilities/find-bound-control';
+export {
+  resolveBoundControlFromBindings,
+  type FormFieldBindingsState,
+} from './utilities/resolve-bound-control-from-bindings';
 export type * from './utilities/field-state-types';
 export * from './utilities/focus-first-invalid';
 export {

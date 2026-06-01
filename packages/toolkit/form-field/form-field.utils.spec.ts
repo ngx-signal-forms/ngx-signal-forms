@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { NGX_SIGNAL_FORM_CONTROL_KIND_VALUES } from '@ngx-signal-forms/toolkit/core';
+import {
+  DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS,
+  NGX_SIGNAL_FORM_CONTROL_KIND_VALUES,
+} from '@ngx-signal-forms/toolkit/core';
 import type { NgxSignalFormControlKind } from '@ngx-signal-forms/toolkit';
 import {
   hasPaddedControlContent,
   isSelectionGroupKind,
   isTextualControlKind,
+  readFormFieldWrapperDomSnapshot,
   supportsOutlinedAppearance,
 } from './form-field.utils';
 
@@ -120,6 +124,67 @@ describe('CONTROL_KIND_CAPABILITIES exhaustiveness', () => {
         EXPECTED_CAPABILITIES[kind].paddedContent,
       );
     });
+  });
+});
+
+describe('readFormFieldWrapperDomSnapshot — native-vs-fallback precedence', () => {
+  /**
+   * Builds the projected-control region the snapshot's selection-control and
+   * label scans expect, then appends `controls` into the `__main` slot. Returns
+   * the host so callers can position a competing `findBoundControl` match.
+   */
+  function hostWithProjectedControls(
+    ...controls: readonly HTMLElement[]
+  ): HTMLElement {
+    const host = document.createElement('div');
+    const content = document.createElement('div');
+    content.className = 'ngx-signal-form-field-wrapper__content';
+    const main = document.createElement('div');
+    main.className = 'ngx-signal-form-field-wrapper__main';
+    main.append(...controls);
+    content.append(main);
+    host.append(content);
+    return host;
+  }
+
+  it('prefers the native binding element (with an id) over a competing findBoundControl match', () => {
+    // Two id-bearing controls in the host: `findBoundControl` would match the
+    // first `<input id>` via the CSS selector, but a non-null `nativeControl`
+    // must win — the native binding registry is the source of truth.
+    const probeMatch = document.createElement('input');
+    probeMatch.id = 'probe-match';
+    const native = document.createElement('input');
+    native.id = 'native-control';
+    const host = hostWithProjectedControls(probeMatch, native);
+
+    const snapshot = readFormFieldWrapperDomSnapshot(
+      host,
+      null,
+      DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS,
+      native,
+    );
+
+    expect(snapshot.inputEl).toBe(native);
+    expect(snapshot.inputId).toBe('native-control');
+  });
+
+  it('falls back to findBoundControl when nativeControl is null', () => {
+    // No native binding (id-less host filtered upstream, mock state, or
+    // pre-init window): the snapshot must run the DOM probe and find the
+    // inner `<input id>`.
+    const probeMatch = document.createElement('input');
+    probeMatch.id = 'probe-match';
+    const host = hostWithProjectedControls(probeMatch);
+
+    const snapshot = readFormFieldWrapperDomSnapshot(
+      host,
+      null,
+      DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS,
+      null,
+    );
+
+    expect(snapshot.inputEl).toBe(probeMatch);
+    expect(snapshot.inputId).toBe('probe-match');
   });
 });
 

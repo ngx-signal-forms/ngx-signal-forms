@@ -66,7 +66,16 @@ export function readFormFieldWrapperDomSnapshot(
   hostEl: HTMLElement,
   cachedControl: HTMLElement | null,
   controlPresets: NgxSignalFormControlPresetRegistry,
+  nativeControl: HTMLElement | null,
 ): FormFieldWrapperDomSnapshot {
+  // Prefer Angular's native binding registry: when the field reports a
+  // `[formField]` binding inside this host, that element is the canonical
+  // bound control and we skip DOM probing entirely. The registry is empty
+  // for plain `<input id>` controls (the wrapper carries the `FieldTree`)
+  // and for a render or two before the projected directive initializes, so
+  // the `findBoundControl` selector below stays as the fallback that keeps
+  // those cases — and the unit tests that bind a mock field state — working.
+  //
   // DOM-query cache: reuse the previously bound control when it is
   // still mounted inside this host AND still carries an `id` (without
   // the id it no longer satisfies the `findBoundControl` selector).
@@ -80,7 +89,15 @@ export function readFormFieldWrapperDomSnapshot(
     cachedControl?.isConnected &&
     hostEl.contains(cachedControl) &&
     cachedControl.hasAttribute('id');
-  const inputEl = cacheHit ? cachedControl : findBoundControl(hostEl);
+  // `nativeControl` wins when present. The native-vs-fallback invariant
+  // (PR #92: native and CSS-selector paths must produce identical output) is
+  // upheld upstream in `resolveBoundControlFromBindings`, which only returns a
+  // binding element that carries a non-empty `id` — exactly the constraint the
+  // `findBoundControl` selector enforces. An id-less `[formField]` host
+  // therefore arrives here as `nativeControl === null` and falls through to the
+  // probe, which still finds the inner `<input id>`.
+  const inputEl =
+    nativeControl ?? (cacheHit ? cachedControl : findBoundControl(hostEl));
 
   return {
     inputEl,

@@ -43,6 +43,7 @@ import {
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NgxFieldIdentity,
   isElementCssVisible,
+  resolveBoundControlFromBindings,
   toHintDescriptors,
 } from '@ngx-signal-forms/toolkit/core';
 import {
@@ -996,10 +997,20 @@ export class NgxFormFieldWrapper<TValue = unknown> {
       earlyRead: () => {
         const hostEl = requireHostElement(this.#elementRef);
 
+        // Resolve the bound control from Angular's native binding registry
+        // first; `readFormFieldWrapperDomSnapshot` falls back to DOM probing
+        // when the registry is empty (plain `<input id>` controls, the
+        // pre-init render window, or mock field states in unit tests).
+        const nativeControl = resolveBoundControlFromBindings(
+          this.#fieldState(),
+          hostEl,
+        );
+
         return readFormFieldWrapperDomSnapshot(
           hostEl,
           this.#boundControlElement(),
           this.#controlPresets,
+          nativeControl,
         );
       },
       // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- afterEveryRender passes DOM-backed render state with mutable HTMLElement references.
