@@ -242,6 +242,11 @@ function isThenable(value: unknown): value is PromiseLike<unknown> {
   );
 }
 
+// Field tree nodes are callable proxies, so callability is a necessary (not
+// sufficient) proxy for "is a tree node". The sole caller
+// (`resolveVestWarningFieldTree`) only uses this to choose between a resolved
+// node and a same-typed `ReadonlyFieldTree` fallback, so a false positive still
+// yields a tree-shaped value — the loose predicate is intentional and contained.
 function isFieldTree(value: unknown): value is ReadonlyFieldTree<unknown> {
   return typeof value === 'function';
 }
