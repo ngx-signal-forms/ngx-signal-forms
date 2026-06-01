@@ -1,8 +1,35 @@
 import { InjectionToken, type Provider } from '@angular/core';
+import type { NgValidationError } from '@angular/forms/signals';
 
-type ErrorMessageFactory = (
-  params: Readonly<Record<string, unknown>>,
+/**
+ * Factory for a built-in validation error kind. Receives the strongly typed
+ * Angular error, so its discriminating fields (e.g. `minLength`, `min`,
+ * `pattern`) are available with full type-safety and autocomplete.
+ */
+type BuiltInErrorMessageFactory<TError extends NgValidationError> = (
+  error: TError,
 ) => string;
+
+/**
+ * Factory for a custom validator kind. Custom errors have no statically known
+ * shape, so their params are intentionally untyped. The `any` parameter also
+ * keeps the per-kind built-in factories assignable to the string index
+ * signature on {@link ErrorMessageRegistry}.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- custom error kinds carry arbitrary, statically-unknown params
+type ErrorMessageFactory = (params: any) => string;
+
+/**
+ * Strongly typed messages for Angular's built-in validation error kinds.
+ *
+ * Each known kind maps to either a static string or a factory that receives the
+ * matching `NgValidationError` subtype.
+ */
+type BuiltInErrorMessages = {
+  [TError in NgValidationError as TError['kind']]?:
+    | string
+    | BuiltInErrorMessageFactory<TError>;
+};
 
 type ErrorMessageRegistryInput = Readonly<ErrorMessageRegistry>;
 type ErrorMessageRegistryFactory = () => ErrorMessageRegistryInput;
@@ -114,7 +141,7 @@ type ErrorMessageRegistryFactory = () => ErrorMessageRegistryInput;
  *
  * @see {@link provideErrorMessages} Provider factory function
  */
-export interface ErrorMessageRegistry {
+export interface ErrorMessageRegistry extends BuiltInErrorMessages {
   /**
    * Map error kinds to display messages.
    *
@@ -130,7 +157,7 @@ export interface ErrorMessageRegistry {
    * - `maxLength` - Maximum length validation (params: `{ maxLength: number }`)
    * - `min` - Minimum value validation (params: `{ min: number }`)
    * - `max` - Maximum value validation (params: `{ max: number }`)
-   * - `pattern` - Pattern validation (params: `{ pattern: string }`)
+   * - `pattern` - Pattern validation (params: `{ pattern: RegExp }`)
    *
    * ## Custom validator kinds:
    * - Any string key for custom validators (e.g., 'username_taken', 'password_weak')

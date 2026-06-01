@@ -13,7 +13,27 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
 <!-- Populate with domain terms as they get resolved. Each entry: term, definition, and any
      synonyms to *avoid* drifting to. -->
 
+- **Built-in validation error** — a validation error produced by Angular's own
+  validators, i.e. a member of the `NgValidationError` union (`required`,
+  `min`, `max`, `minDate`, `maxDate`, `minLength`, `maxLength`, `pattern`,
+  `email`, `parse`, `standardSchema`). Has a known, typed `kind` and typed
+  discriminating fields. The toolkit narrows these structurally (on `kind`,
+  not `instanceof`) so they survive realm boundaries.
+- **Custom validation error** — any validation error with a `kind` outside the
+  `NgValidationError` union: async validators, cross-field checks, warnings
+  (`warn:*` prefix), Vest results, etc. Shape is not known at compile time; the
+  toolkit humanizes its `kind` string for display and types its registry
+  factory params as `any`.
+
 ## Key concepts
 
 <!-- Populate with the load-bearing ideas a new contributor (or agent) needs to know before
      touching the code. -->
+
+- **Structural vs. nominal error narrowing** — error-message resolution keys on
+  the public `kind` discriminant rather than `instanceof NgValidationError`.
+  Angular brands its error classes with a private field, so `instanceof` breaks
+  across duplicated `@angular/forms` copies (monorepo / module federation) and
+  for the plain objects custom validators emit. A compile-time exhaustiveness
+  guard (`Record<NgValidationError['kind'], true>` + an `assertNever` switch
+  default) forces review whenever an Angular minor adds a new built-in kind.
