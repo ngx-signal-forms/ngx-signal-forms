@@ -28,7 +28,4 @@ export default defineConfig({
      */
     pool: 'forks',
   },
-  define: {
-    'import.meta.vitest': true,
-  },
 });

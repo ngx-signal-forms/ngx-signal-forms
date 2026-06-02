@@ -60,6 +60,13 @@ export function delegatedStoreField<T>(
 
   const originalSet = linked.set.bind(linked);
 
+  // Patching `set`/`update` in place is sufficient because Signal Forms `form()`
+  // writes go exclusively through the public `.set` / `.update` API — it never
+  // reaches for an internal/private write path. So overriding these two methods
+  // captures every edit the form makes. (Worth noting for the 22.1 migrator:
+  // once the native custom-`set` overload lands, this in-place patching is what
+  // gets replaced by passing `set` directly to `linkedSignal`.)
+  //
   // Override set: delegate the write to the store, then mirror locally so a
   // synchronous read right after set() is already consistent.
   linked.set = (value: T): void => {
