@@ -18,10 +18,9 @@ export {
 } from './vest-adapter';
 
 /**
- * Callback supplied via {@link ValidateVestOptions.only} to enable per-field
- * focused runs. Receives the Angular Signal Forms field context and returns
- * the Vest field name (or list of names) to focus on for the current run.
- * Returning `undefined` falls back to a whole-suite run.
+ * Options accepted by {@link validateVest} (and the focus/reset subset by
+ * {@link validateVestWarnings}). Controls warning surfacing, suite-state reset
+ * on destroy, and per-field focused runs.
  */
 export interface ValidateVestOptions<TValue = unknown> {
   /**

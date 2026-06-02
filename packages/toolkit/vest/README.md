@@ -248,7 +248,12 @@ const checkoutForm = form(
 
       const result = run.initialResult;
       if (!result) {
-        return []; // async-only suite: the async phase resolves it
+        // No synchronous result yet (the suite's `run()` returned a raw
+        // thenable). This sync-only custom validator has no async phase of its
+        // own, so to surface async-only failures pair it with a regular
+        // `validateVest(path, checkoutSuite)` (or your own `validateAsync`)
+        // on the same path — both share this one cached run.
+        return [];
       }
 
       const failing = Object.keys(result.getErrors());

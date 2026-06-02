@@ -160,6 +160,16 @@ const VEST_PATH_SEGMENT = /[^.[\]]+/g;
 const VEST_KIND_SEGMENT_MAX_LEN = 48;
 
 /**
+ * Internal composite-key separator. A NUL code point can never appear in a Vest
+ * field path, message, or focus name, so it composes collision-free keys for the
+ * baseline dedupe map and the focus cache key. Declared with an explicit
+ * `\u0000` escape in a named constant (rather than a literal control character
+ * embedded in template strings) so the separator stays visible and
+ * tooling/formatter/diff-safe.
+ */
+const VEST_KEY_SEPARATOR = '\u0000';
+
+/**
  * Runtime guard for the subset of Vest's public result object that the adapter
  * consumes.
  */
@@ -421,12 +431,12 @@ function filterExistingVestEntries(
   const remainingCounts = new Map<string, number>();
 
   for (const entry of baseline) {
-    const key = `${entry.fieldPath} ${entry.message}`;
+    const key = `${entry.fieldPath}${VEST_KEY_SEPARATOR}${entry.message}`;
     remainingCounts.set(key, (remainingCounts.get(key) ?? 0) + 1);
   }
 
   return entries.filter((entry) => {
-    const key = `${entry.fieldPath} ${entry.message}`;
+    const key = `${entry.fieldPath}${VEST_KEY_SEPARATOR}${entry.message}`;
     const remainingCount = remainingCounts.get(key) ?? 0;
 
     if (remainingCount === 0) {
@@ -705,7 +715,7 @@ export function createVestAdapter(
     const suiteCache = getVestSuiteRunCache(suite as object);
     const cachedEntry = suiteCache.get(fieldTree as ReadonlyFieldTree<unknown>);
     const focusKey = Array.isArray(focus)
-      ? focus.join(' ')
+      ? focus.join(VEST_KEY_SEPARATOR)
       : (focus as string | undefined);
 
     if (
