@@ -22,8 +22,8 @@ import {
  *
  * Exposed publicly (re-exported from `@ngx-signal-forms/toolkit`) so custom
  * controls and third-party wrappers can apply the exact same visibility test
- * the canonical wrapper uses to drive {@link NgxFieldIdentity.setControlVisible},
- * keeping the native-binding and CSS-fallback ARIA paths in lockstep.
+ * the canonical wrapper uses internally, keeping the native-binding and
+ * CSS-fallback ARIA paths in lockstep.
  *
  * @public
  */
@@ -49,7 +49,7 @@ export function isElementCssVisible(el: HTMLElement): boolean {
  * - Called with an `HTMLElement` it delegates to {@link isElementCssVisible}
  *   for an ad-hoc, NON-reactive check of an arbitrary element — useful for a
  *   custom control that wants to reuse the wrapper's exact visibility rule
- *   before pushing the result into {@link NgxFieldIdentity.setControlVisible}.
+ *   for its own probe without re-implementing the CSS test.
  *
  * @public
  */
@@ -63,12 +63,12 @@ export interface ControlVisibilitySignal extends Signal<boolean> {
  * a11y primitives every assistive/headless surface depends on:
  *
  * - **Name resolution** — the resolved {@link NgxFieldIdentity.fieldName} and
- *   the bound control's {@link NgxFieldIdentity.controlId}. The canonical
- *   wrapper feeds this via {@link NgxFieldIdentity.setFieldName} /
- *   {@link NgxFieldIdentity.setControlElement} using the precedence cascade
- *   explicit → label `for=` → bound-control `id` → `null` (the label `for=`
- *   tier is opt-in; see `createFieldNameResolver`). The result is identical
- *   whether resolved through the native binding or the CSS fallback.
+ *   the bound control's {@link NgxFieldIdentity.controlId}. This service stores
+ *   the resolved name; it does not own the resolution cascade. The canonical
+ *   wrapper computes the name (precedence: explicit → bound-control `id` →
+ *   `null`) and feeds it in. Wrappers that opt into the label `for=` tier do so
+ *   via `createFieldNameResolver`, which exposes the same cascade with the
+ *   label tier as an opt-in middle step.
  * - **Visibility** — {@link NgxFieldIdentity.isControlVisible}, a callable
  *   signal that returns the cached visibility flag with no argument and probes
  *   an arbitrary element (via {@link isElementCssVisible}) when given one.
@@ -154,9 +154,9 @@ export class NgxFieldIdentity {
    * effect(() => console.log('laid out?', identity.isControlVisible()));
    * ```
    *
-   * @example Element-arg: reuse the wrapper's exact visibility rule.
+   * @example Element-arg: reuse the wrapper's exact visibility rule ad hoc.
    * ```ts
-   * identity.setControlVisible(identity.isControlVisible(myEl));
+   * const laidOut = identity.isControlVisible(myEl);
    * ```
    */
   readonly isControlVisible: ControlVisibilitySignal =
