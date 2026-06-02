@@ -227,7 +227,22 @@ For component-scoped overrides: `provideNgxSignalFormControlPresetsForComponent(
 `NGX_SIGNAL_FORM_CONTROL_PRESETS` token. The token stays the source of truth,
 so the registry observes whatever the **calling injector** resolves — including
 component- and feature-scoped `provideNgxSignalFormControlPresetsForComponent()`
-overrides:
+overrides.
+
+`NgxControlPresetRegistry` is `providedIn: null`, so list it in the relevant
+`providers` array (or environment injector) before injecting it — each provided
+node then captures the presets effective at that node:
+
+```typescript
+@Component({
+  // ...
+  providers: [NgxControlPresetRegistry],
+})
+export class MyComponent {
+  private readonly registry = inject(NgxControlPresetRegistry);
+  // ...
+}
+```
 
 ```typescript
 const registry = inject(NgxControlPresetRegistry);

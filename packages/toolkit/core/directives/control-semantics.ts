@@ -133,8 +133,12 @@ export class NgxSignalFormControlSemanticsDirective {
     return value ?? {};
   });
 
-  // Recognized-kind set sourced from the registry so the directive validates
-  // against the effective registry rather than a separately-derived list.
+  // Recognized-kind set sourced from the effective registry (the keys the
+  // calling injector resolves) rather than a separately-derived default list.
+  // For every official provider this is identical to the built-in kind set; it
+  // only diverges if a consumer supplies NGX_SIGNAL_FORM_CONTROL_PRESETS with a
+  // different key set, in which case validating against the registry the
+  // directive actually resolves presets from is the intended contract.
   readonly #recognizedKinds = new Set<string>(this.#presetRegistry.kinds());
 
   readonly kind = computed(() => {
