@@ -274,6 +274,12 @@ function parseVestFieldPath(fieldPath: string): Array<string | number> {
  *
  * Returns `undefined` for a root-bound validator (empty path) so the caller
  * falls back to a whole-suite run instead of focusing an empty field name.
+ *
+ * **Limitation:** field keys that themselves contain `.`, `[`, or `]` are not
+ * supported — the dot-joined encoding intentionally matches how users register
+ * field names in their Vest suite, so these characters cannot be losslessly
+ * escaped. In practice, Angular Signal Forms field keys are TypeScript object
+ * property names (camelCase strings) and do not contain these characters.
  */
 function deriveVestFieldNameFromContext<TValue>(
   ctx: FieldContext<TValue>,
