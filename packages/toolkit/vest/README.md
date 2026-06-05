@@ -182,6 +182,100 @@ const checkoutForm = form(checkoutModel, (path) => {
 
 Prefer `validateVest(path, suite, { includeWarnings: true })` when the same Vest suite provides both blocking errors and warnings. Prefer `validateVestWarnings()` when Vest is advisory-only.
 
+### createVestAdapter() / sharedVestAdapter
+
+`validateVest` and `validateVestWarnings` are thin wrappers over a public
+**Vest adapter** that owns the per-(suite + field-tree) shared run cache and the
+sync/async delta machinery. Advanced consumers can use the adapter directly to
+run a suite once and share that single execution across multiple validators or a
+hand-rolled validation flow — without re-implementing the cache.
+
+```typescript
+import {
+  createVestAdapter,
+  sharedVestAdapter,
+  type VestSuiteAdapter,
+} from '@ngx-signal-forms/toolkit/vest';
+
+// Create your own adapter (its own cache)…
+const adapter: VestSuiteAdapter = createVestAdapter();
+
+// …or reuse the shared instance that the built-in validators are wired onto,
+// so a manual run reuses the SAME cached execution as validateVest().
+const shared = sharedVestAdapter;
+```
+
+| Member                 | Description                                                                                                                                                            |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `register(path, …)`    | Wire the suite into Signal Forms (the `validateTree` + `validateAsync` pipeline). `validateVest`/`validateVestWarnings` delegate here.                                 |
+| `runVestSuite(params)` | Run the suite once through the shared cache. Returns the cached run for an identical `(suite, fieldTree, value, focus)` tuple, or a fresh run when any of them change. |
+| `invalidate(suite)`    | Drop the shared run cache for a suite (the `resetOnDestroy` teardown hook calls this).                                                                                 |
+
+#### Example: a custom validator consuming the adapter
+
+Use `runVestSuite` inside your own `validateTree` callback when you want full
+control over how the Vest result maps onto Signal Forms — for example, to
+collapse every Vest failure into a single summary error while still sharing the
+one suite run with any other `validateVest` registrations on the same path.
+
+```typescript
+import { signal } from '@angular/core';
+import { form, validateTree } from '@angular/forms/signals';
+import { create, enforce, test } from 'vest';
+import { sharedVestAdapter } from '@ngx-signal-forms/toolkit/vest';
+
+interface Checkout {
+  email: string;
+  amount: string;
+}
+
+const checkoutSuite = create((data: Checkout) => {
+  test('email', 'Email is required', () => enforce(data.email).isNotBlank());
+  test('amount', 'Amount is required', () => enforce(data.amount).isNotBlank());
+});
+
+const checkoutForm = form(
+  signal<Checkout>({ email: '', amount: '' }),
+  (path) => {
+    // Custom validator: one shared run, one summary error per field tree.
+    validateTree(path, (ctx) => {
+      const { fieldTree, value } = ctx;
+      const run = sharedVestAdapter.runVestSuite({
+        suite: checkoutSuite,
+        fieldTree,
+        value: value(),
+      });
+
+      const result = run.initialResult;
+      if (!result) {
+        // No synchronous result yet (the suite's `run()` returned a raw
+        // thenable). This sync-only custom validator has no async phase of its
+        // own, so to surface async-only failures pair it with a regular
+        // `validateVest(path, checkoutSuite)` (or your own `validateAsync`)
+        // on the same path — both share this one cached run.
+        return [];
+      }
+
+      const failing = Object.keys(result.getErrors());
+      return failing.length === 0
+        ? []
+        : [
+            {
+              kind: 'vest:summary',
+              message: `${failing.length} field(s) need attention`,
+              fieldTree,
+            },
+          ];
+    });
+  },
+);
+```
+
+Because `runVestSuite` reads the shared cache keyed on
+`(suite, fieldTree, value, focus)`, a custom validator and a regular
+`validateVest(path, checkoutSuite)` on the same path execute `checkoutSuite.run()`
+exactly once per value.
+
 ## When to use Vest
 
 Use Angular Signal Forms validators for simple, field-local rules (`required`, `email`, `minLength`). Use Vest when validation reads more like business policy:
