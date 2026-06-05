@@ -1,6 +1,7 @@
 import { Component, signal, viewChild } from '@angular/core';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
+import { provideNgxSignalFormControlPresetsForComponent } from '../providers/control-semantics.provider';
 import {
   DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS,
   NGX_SIGNAL_FORM_CONTROL_PRESETS,
@@ -197,6 +198,52 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
         'custom',
       );
       expect(host.getAttribute('data-ngx-signal-form-control-aria-mode')).toBe(
+        'manual',
+      );
+    });
+  });
+
+  describe('Component-scoped preset overrides', () => {
+    it('renders different layout/aria-mode attributes for a child that provides a component-scoped override vs a parent at default', async () => {
+      @Component({
+        selector: 'app-child-host',
+        template:
+          '<div data-testid="child" ngxSignalFormControl="slider"></div>',
+        imports: [NgxSignalFormControlSemanticsDirective],
+        providers: [
+          provideNgxSignalFormControlPresetsForComponent({
+            slider: { layout: 'custom', ariaMode: 'manual' },
+          }),
+        ],
+      })
+      class ChildHostComponent {}
+
+      @Component({
+        template: `
+          <div data-testid="parent" ngxSignalFormControl="slider"></div>
+          <app-child-host />
+        `,
+        imports: [NgxSignalFormControlSemanticsDirective, ChildHostComponent],
+      })
+      class ParentComponent {}
+
+      await render(ParentComponent);
+      const parent = screen.getByTestId('parent');
+      const child = screen.getByTestId('child');
+
+      // Parent observes the application default for slider...
+      expect(parent.getAttribute('data-ngx-signal-form-control-layout')).toBe(
+        DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS.slider.layout,
+      );
+      expect(
+        parent.getAttribute('data-ngx-signal-form-control-aria-mode'),
+      ).toBe(DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS.slider.ariaMode);
+
+      // ...while the child observes its component-scoped override end-to-end.
+      expect(child.getAttribute('data-ngx-signal-form-control-layout')).toBe(
+        'custom',
+      );
+      expect(child.getAttribute('data-ngx-signal-form-control-aria-mode')).toBe(
         'manual',
       );
     });
