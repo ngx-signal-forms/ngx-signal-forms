@@ -221,6 +221,45 @@ provideNgxSignalFormControlPresets({
 
 For component-scoped overrides: `provideNgxSignalFormControlPresetsForComponent()`.
 
+#### Reading presets with `NgxControlPresetRegistry`
+
+`NgxControlPresetRegistry` is an injectable read/merge surface over the
+`NGX_SIGNAL_FORM_CONTROL_PRESETS` token. The token stays the source of truth,
+so the registry observes whatever the **calling injector** resolves — including
+component- and feature-scoped `provideNgxSignalFormControlPresetsForComponent()`
+overrides.
+
+`NgxControlPresetRegistry` is `providedIn: null`, so list it in the relevant
+`providers` array (or environment injector) before injecting it — each provided
+node then captures the presets effective at that node:
+
+```typescript
+@Component({
+  // ...
+  providers: [NgxControlPresetRegistry],
+})
+export class MyComponent {
+  private readonly registry = inject(NgxControlPresetRegistry);
+  // ...
+}
+```
+
+```typescript
+const registry = inject(NgxControlPresetRegistry);
+
+registry.resolve('slider'); // → effective { layout, ariaMode } for 'slider'
+registry.kinds(); // → readonly list of registered control kinds
+```
+
+Use `extend()` for a merge-not-replace layering: only the fields you pass are
+overridden, every other kind (and untouched field) is preserved:
+
+```typescript
+const next = registry.extend({ slider: { layout: 'custom' } });
+// next.slider.layout === 'custom'
+// next.slider.ariaMode is unchanged; next.switch, next.composite, ... all stay default
+```
+
 ### Field labels
 
 Override how field paths appear in error summaries:
