@@ -119,8 +119,9 @@
   flex-direction: column;
   gap: var(--_error-spacing);
   padding: var(--_error-padding);
-  padding-inline-start: var(--_error-padding-inline-start);
-  padding-inline-end: var(--_error-padding-inline-end);
+  /* Align error messages with input text start (remove left padding offset) */
+  padding-inline-start: 0;
+  padding-inline-end: 0;
   border-width: var(--_error-border-width);
   border-style: var(--_error-border-style-default);
   border-radius: var(--_error-border-radius);

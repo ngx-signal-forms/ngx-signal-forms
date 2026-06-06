@@ -1034,7 +1034,8 @@
   justify-content: space-between;
   gap: var(--ngx-form-field-assistive-gap, 0.5rem);
   min-height: var(--ngx-form-field-assistive-min-height, 1.25rem);
-  margin-top: var(--ngx-form-field-assistive-margin-top, 2px);
+  /* Increased from 2px to 4px (0.25rem) for better visual separation per modern web guidance */
+  margin-top: var(--ngx-form-field-assistive-margin-top, 0.25rem);
   margin-bottom: var(--ngx-form-field-assistive-margin-bottom, 0.25rem);
   width: 100%;
 }
@@ -1066,4 +1067,28 @@
   .ngx-signal-form-field-wrapper__assistive-right:not(:empty)
 ) {
   --ngx-form-field-hint-align: left;
+}
+
+/* ============================================================================ */
+/* HINT/ERROR VISIBILITY: Show either hint OR error (not both) */
+/* ============================================================================ */
+/* Per modern web guidance (required-field-feedback pattern), hints should
+ * disappear when errors appear to avoid visual clutter and focus user
+ * attention on the blocking error message.
+ *
+ * Implementation:
+ * - When a field has errors/warnings (indicated by host classes
+ *   .ngx-signal-form-field-wrapper--invalid or --warning), hide projected
+ *   hint elements that would otherwise show in the assistive row.
+ * - Hints remain visible only when the field is valid (no error/warning).
+ */
+
+/* Hide hints when field has blocking errors */
+:host(.ngx-signal-form-field-wrapper--invalid) ::ng-deep ngx-form-field-hint {
+  display: none;
+}
+
+/* Hide hints when field has non-blocking warnings (but no errors) */
+:host(.ngx-signal-form-field-wrapper--warning) ::ng-deep ngx-form-field-hint {
+  display: none;
 }
