@@ -27,7 +27,7 @@ describe('NgxHeadlessErrorState', () => {
       @Component({
         selector: 'ngx-test-has-errors',
         imports: [FormField, NgxHeadlessErrorState],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -65,7 +65,7 @@ describe('NgxHeadlessErrorState', () => {
       @Component({
         selector: 'ngx-test-no-errors',
         imports: [FormField, NgxHeadlessErrorState],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -103,7 +103,7 @@ describe('NgxHeadlessErrorState', () => {
       @Component({
         selector: 'ngx-test-show-errors',
         imports: [FormField, NgxHeadlessErrorState],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -150,7 +150,7 @@ describe('NgxHeadlessErrorState', () => {
       @Component({
         selector: 'ngx-test-errors-array',
         imports: [FormField, NgxHeadlessErrorState],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -190,7 +190,7 @@ describe('NgxHeadlessErrorState', () => {
       @Component({
         selector: 'ngx-test-resolved-errors',
         imports: [FormField, NgxHeadlessErrorState],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -228,7 +228,7 @@ describe('NgxHeadlessErrorState', () => {
       @Component({
         selector: 'ngx-test-signal-brand',
         imports: [FormField, NgxHeadlessErrorState],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -275,7 +275,7 @@ describe('NgxHeadlessErrorState', () => {
       @Component({
         selector: 'ngx-test-error-ids',
         imports: [FormField, NgxHeadlessErrorState],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -311,7 +311,7 @@ describe('NgxHeadlessErrorState', () => {
       @Component({
         selector: 'ngx-test-immediate',
         imports: [FormField, NgxHeadlessErrorState],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -349,7 +349,7 @@ describe('NgxHeadlessErrorState', () => {
       @Component({
         selector: 'ngx-test-on-submit',
         imports: [FormField, NgxHeadlessErrorState],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -399,7 +399,7 @@ describe('NgxHeadlessErrorState', () => {
       @Component({
         selector: 'ngx-test-custom-template',
         imports: [FormField, NgxHeadlessErrorState],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -455,7 +455,7 @@ describe('NgxHeadlessErrorState', () => {
       @Component({
         selector: 'ngx-test-user-interaction',
         imports: [FormField, NgxHeadlessErrorState],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -506,7 +506,7 @@ describe('NgxHeadlessErrorState', () => {
       @Component({
         selector: 'ngx-test-errors-override',
         imports: [NgxHeadlessErrorState],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div
             ngxHeadlessErrorState
@@ -549,7 +549,7 @@ describe('NgxHeadlessErrorState', () => {
       @Component({
         selector: 'ngx-test-errors-override-empty',
         imports: [NgxHeadlessErrorState],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div
             ngxHeadlessErrorState
@@ -579,7 +579,7 @@ describe('NgxHeadlessErrorState', () => {
     it('drives showErrors from a host-bridged field state when [field] is omitted', async () => {
       @Component({
         selector: 'ngx-bridged-host',
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         hostDirectives: [
           { directive: NgxHeadlessErrorState, inputs: ['strategy'] },
         ],
@@ -608,7 +608,7 @@ describe('NgxHeadlessErrorState', () => {
       @Component({
         selector: 'ngx-test-bridge',
         imports: [BridgedHostComponent],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `<ngx-bridged-host strategy="on-touch" />`,
       })
       class TestComponent {

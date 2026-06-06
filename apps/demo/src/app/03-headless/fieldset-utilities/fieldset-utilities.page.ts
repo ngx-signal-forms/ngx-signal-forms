@@ -11,7 +11,7 @@ import { HeadlessFieldsetUtilitiesComponent } from './fieldset-utilities.form';
 
 @Component({
   selector: 'ngx-headless-fieldset-utilities-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   styles: `
     :host {
       display: flex;

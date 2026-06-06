@@ -28,7 +28,7 @@ import { WarningsSupportFormComponent } from './warning-support.form';
  */
 @Component({
   selector: 'ngx-warning-support-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,

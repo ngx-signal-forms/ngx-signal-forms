@@ -74,7 +74,7 @@ export interface WizardSubmitEvent {
  */
 @Component({
   selector: 'ngx-wizard',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [NgTemplateOutlet],
   template: `
     <!-- Step Progress Indicator -->

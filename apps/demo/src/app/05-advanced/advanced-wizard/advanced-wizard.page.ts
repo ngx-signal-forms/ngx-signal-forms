@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  signal,
-} from '@angular/core';
+import { Component, computed, linkedSignal, signal } from '@angular/core';
 import {
   type FormFieldAppearance,
   type FormFieldOrientation,
@@ -27,7 +21,7 @@ import { WizardContainerComponent } from './components/wizard-container';
 
 @Component({
   selector: 'ngx-advanced-wizard-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     WizardContainerComponent,
     AppearanceToggleComponent,
@@ -60,7 +54,7 @@ import { WizardContainerComponent } from './components/wizard-container';
           <div display-controls-primary class="grid gap-4">
             <ngx-appearance-toggle [(value)]="selectedAppearance" />
             <ngx-orientation-toggle
-              [(value)]="selectedOrientation"
+              [(value)]="selectedOrientationPreference"
               [appearance]="selectedAppearance()"
             />
           </div>
@@ -102,8 +96,19 @@ import { WizardContainerComponent } from './components/wizard-container';
 export default class AdvancedWizardPage {
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
-  protected readonly selectedOrientation =
+  protected readonly selectedOrientationPreference =
     signal<FormFieldOrientation>('vertical');
+  protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
+    () => {
+      const requestedOrientation = this.selectedOrientationPreference();
+      return isOrientationDisabledForAppearance(
+        this.selectedAppearance(),
+        requestedOrientation,
+      )
+        ? 'vertical'
+        : requestedOrientation;
+    },
+  );
   protected readonly demonstratedContent = ADVANCED_WIZARD_CONTENT.demonstrated;
   protected readonly learningContent = ADVANCED_WIZARD_CONTENT.learning;
   protected readonly currentControlChips = computed(() => [
@@ -116,17 +121,4 @@ export default class AdvancedWizardPage {
       value: getOrientationLabel(this.selectedOrientation()),
     },
   ]);
-
-  constructor() {
-    effect(() => {
-      if (
-        isOrientationDisabledForAppearance(
-          this.selectedAppearance(),
-          this.selectedOrientation(),
-        )
-      ) {
-        this.selectedOrientation.set('vertical');
-      }
-    });
-  }
 }

@@ -21,7 +21,7 @@ import { contactFormSchema } from './your-first-form.validations';
  */
 @Component({
   selector: 'ngx-your-first-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
   template: `
     <form

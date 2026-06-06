@@ -22,6 +22,8 @@ This is the production frontier of the demo app. Each demo here stands on its ow
   - What you'll learn: `pending()` / `status()` signals · suffix projection for loading indicators · gating submission on pending validators.
 - **[cross-field-validation](./cross-field-validation/README.md)** — validators that read sibling values via `ctx.valueOf(path.*)`.
   - What you'll learn: schema-level cross-field rules · reactive re-validation · field-vs-group error placement.
+- **[zod-validation](./zod-validation/README.md)** — compact baseline route for Zod + `validateStandardSchema()` integration.
+  - What you'll learn: pure structural contract validation · typed models from Zod schemas · baseline before layering policy validators.
 - **[vest-validation](./vest-validation/README.md)** — Vest v6+ suites via `validateVest()` from `@ngx-signal-forms/toolkit/vest`.
   - What you'll learn: Standard Schema support · blocking + `warn()` from one suite run · warning-tolerant submission.
 - **[zod-vest-validation](./zod-vest-validation/README.md)** — layered strategy: Zod for contract rules, Vest for business policy.
@@ -39,6 +41,7 @@ This is the production frontier of the demo app. Each demo here stands on its ow
 
 - Use each demo à la carte — they are independent patterns, not a progression.
 - Use `global-configuration` + `submission-patterns` together as the foundation of any production form.
+- Use `zod-validation` when you want a small, reusable Standard Schema baseline before adding policy layers.
 - Use `vest-validation` / `zod-vest-validation` when rules read more naturally as a rulebook than a schema.
 - Use `advanced-wizard` as the reference when cross-step validation, draft state, or lazy step loading is on the table.
 

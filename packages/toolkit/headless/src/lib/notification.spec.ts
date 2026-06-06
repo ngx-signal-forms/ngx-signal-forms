@@ -19,7 +19,7 @@ describe('NgxHeadlessNotification', () => {
     @Component({
       selector: 'ngx-test-notification',
       imports: [NgxHeadlessNotification],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <div
           ngxHeadlessNotification

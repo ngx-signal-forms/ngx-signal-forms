@@ -92,11 +92,10 @@ import {
  */
 @Component({
   selector: 'ngx-form-field-hint',
-
   template: `<ng-content />`,
   styles: `
     :host {
-      display: block;
+      display: var(--ngx-form-field-hint-display, block);
       font-size: var(
         --ngx-form-field-hint-font-size,
         var(--ngx-signal-form-feedback-font-size, 0.75rem)

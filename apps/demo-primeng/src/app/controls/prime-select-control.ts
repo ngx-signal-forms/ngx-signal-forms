@@ -67,7 +67,7 @@ const MANUAL_ARIA_MODE: Signal<NgxSignalFormControlAriaMode | null> =
  */
 @Component({
   selector: 'prime-select-control',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [FormsModule, SelectModule],
   providers: [
     { provide: NGX_SIGNAL_FORM_ARIA_MODE, useValue: MANUAL_ARIA_MODE },

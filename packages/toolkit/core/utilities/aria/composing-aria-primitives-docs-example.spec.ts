@@ -178,7 +178,7 @@ class MyDesignSystemAriaDirective {
 @Component({
   selector: 'ngx-docs-aria-host',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [FormField, MyDesignSystemAriaDirective],
   template: `
     <input id="email" myDesignSystemAria [formField]="userForm.email" />

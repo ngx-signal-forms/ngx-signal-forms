@@ -18,7 +18,7 @@ describe('NgxHeadlessErrorSummary', () => {
       @Component({
         selector: 'ngx-test-summary-errors',
         imports: [FormField, NgxHeadlessErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -54,7 +54,7 @@ describe('NgxHeadlessErrorSummary', () => {
       @Component({
         selector: 'ngx-test-summary-valid',
         imports: [FormField, NgxHeadlessErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -92,7 +92,7 @@ describe('NgxHeadlessErrorSummary', () => {
       @Component({
         selector: 'ngx-test-summary-entries',
         imports: [FormField, NgxHeadlessErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -141,7 +141,7 @@ describe('NgxHeadlessErrorSummary', () => {
       @Component({
         selector: 'ngx-test-summary-on-touch',
         imports: [FormField, NgxHeadlessErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -179,7 +179,7 @@ describe('NgxHeadlessErrorSummary', () => {
       @Component({
         selector: 'ngx-test-summary-after-touch',
         imports: [FormField, NgxHeadlessErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input
@@ -228,7 +228,7 @@ describe('NgxHeadlessErrorSummary', () => {
       @Component({
         selector: 'ngx-test-summary-focus',
         imports: [FormField, NgxHeadlessErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input
@@ -284,7 +284,7 @@ describe('NgxHeadlessErrorSummary', () => {
       @Component({
         selector: 'ngx-test-summary-hidden',
         imports: [FormField, NgxHeadlessErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -329,7 +329,7 @@ describe('NgxHeadlessErrorSummary', () => {
       @Component({
         selector: 'ngx-test-summary-disabled',
         imports: [FormField, NgxHeadlessErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />

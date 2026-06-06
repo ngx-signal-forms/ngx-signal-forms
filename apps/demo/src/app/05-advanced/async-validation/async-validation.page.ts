@@ -2,7 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
+  linkedSignal,
   signal,
   viewChild,
 } from '@angular/core';
@@ -35,7 +35,7 @@ import { AsyncValidationComponent } from './async-validation.form';
 
 @Component({
   selector: 'ngx-async-validation-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   styles: `
     :host {
       display: flex;
@@ -91,7 +91,7 @@ import { AsyncValidationComponent } from './async-validation.form';
         description="Check whether async loading and unavailable feedback still reads clearly when labels move into a horizontal column. Outline stays vertical."
       >
         <ngx-orientation-toggle
-          [(value)]="selectedOrientation"
+          [(value)]="selectedOrientationPreference"
           [appearance]="selectedAppearance()"
         />
       </ngx-display-controls-section>
@@ -118,8 +118,19 @@ export class AsyncValidationPageComponent {
     signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
-  protected readonly selectedOrientation =
+  protected readonly selectedOrientationPreference =
     signal<FormFieldOrientation>('vertical');
+  protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
+    () => {
+      const requestedOrientation = this.selectedOrientationPreference();
+      return isOrientationDisabledForAppearance(
+        this.selectedAppearance(),
+        requestedOrientation,
+      )
+        ? 'vertical'
+        : requestedOrientation;
+    },
+  );
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -136,17 +147,4 @@ export class AsyncValidationPageComponent {
   ]);
   protected readonly content = ASYNC_VALIDATION_CONTENT;
   protected readonly formRef = viewChild(AsyncValidationComponent);
-
-  constructor() {
-    effect(() => {
-      if (
-        isOrientationDisabledForAppearance(
-          this.selectedAppearance(),
-          this.selectedOrientation(),
-        )
-      ) {
-        this.selectedOrientation.set('vertical');
-      }
-    });
-  }
 }

@@ -2,7 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
+  linkedSignal,
   signal,
   viewChild,
 } from '@angular/core';
@@ -43,7 +43,7 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
  */
 @Component({
   selector: 'ngx-global-configuration-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   styles: `
     :host {
       display: flex;
@@ -99,7 +99,7 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
         description="Override the global layout locally so you can compare a vertical form against a horizontal label column without touching the app bootstrap config."
       >
         <ngx-orientation-toggle
-          [(value)]="selectedOrientation"
+          [(value)]="selectedOrientationPreference"
           [appearance]="selectedAppearance()"
         />
       </ngx-display-controls-section>
@@ -125,8 +125,19 @@ export class GlobalConfigurationPage {
     signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
-  protected readonly selectedOrientation =
+  protected readonly selectedOrientationPreference =
     signal<FormFieldOrientation>('vertical');
+  protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
+    () => {
+      const requestedOrientation = this.selectedOrientationPreference();
+      return isOrientationDisabledForAppearance(
+        this.selectedAppearance(),
+        requestedOrientation,
+      )
+        ? 'vertical'
+        : requestedOrientation;
+    },
+  );
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -143,17 +154,4 @@ export class GlobalConfigurationPage {
   ]);
   protected readonly content = GLOBAL_CONFIG_CONTENT;
   protected readonly formRef = viewChild(GlobalConfigurationComponent);
-
-  constructor() {
-    effect(() => {
-      if (
-        isOrientationDisabledForAppearance(
-          this.selectedAppearance(),
-          this.selectedOrientation(),
-        )
-      ) {
-        this.selectedOrientation.set('vertical');
-      }
-    });
-  }
 }

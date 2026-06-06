@@ -88,7 +88,7 @@ const signupSuite = create((data: SignupModel) => {
 @Component({
   selector: 'ngx-signup-form',
   imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   template: `
     <form [formRoot]="signupForm" ngxSignalForm>
       <label for="email">Email</label>

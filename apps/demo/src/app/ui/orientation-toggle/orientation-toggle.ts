@@ -16,7 +16,7 @@ import {
 
 @Component({
   selector: 'ngx-orientation-toggle',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   template: `
     <div
       class="inline-flex items-center gap-1 rounded-full border border-gray-200/80 bg-white/80 p-1 shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/90"

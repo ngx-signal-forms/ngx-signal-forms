@@ -42,6 +42,7 @@ export const ZOD_VEST_VALIDATION_CONTENT = {
           '• OpenAPI-generated Zod schemas with extra frontend business policy.',
           '• Signup or checkout forms where backend shape validation is already defined elsewhere.',
           '• Teams that want to reuse business rules without duplicating basic schema logic.',
+          '• Teams that first validate the structural baseline in <code>Zod-Only Validation</code>, then add Vest as a focused policy layer.',
           '• Flows that want native Angular <code>submit()</code> while still teaching users through non-blocking warnings.',
         ],
       },

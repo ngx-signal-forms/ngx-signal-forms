@@ -105,7 +105,7 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
 
 @Component({
   selector: 'ngx-fieldset-appearance-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,

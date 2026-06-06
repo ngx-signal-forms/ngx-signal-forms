@@ -5,7 +5,7 @@ import { FieldsetAppearanceFormComponent } from './fieldset-appearance.form';
 
 @Component({
   selector: 'ngx-fieldset-appearance-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     ExampleCardsComponent,
     PageHeaderComponent,

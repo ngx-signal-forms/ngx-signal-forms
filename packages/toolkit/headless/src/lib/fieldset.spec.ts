@@ -22,7 +22,7 @@ describe('NgxHeadlessFieldset', () => {
   it('aggregates and deduplicates field errors from nested fields when includeNestedErrors is true', async () => {
     @Component({
       selector: 'ngx-test-fieldset-dedupe',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
@@ -62,7 +62,7 @@ describe('NgxHeadlessFieldset', () => {
   it('defaults to direct errors only (includeNestedErrors=false)', async () => {
     @Component({
       selector: 'ngx-test-fieldset-direct-default',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
@@ -97,7 +97,7 @@ describe('NgxHeadlessFieldset', () => {
   it('prefers explicit fields override for aggregation', async () => {
     @Component({
       selector: 'ngx-test-fieldset-override',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
@@ -133,7 +133,7 @@ describe('NgxHeadlessFieldset', () => {
   it('shows errors only after touch with default on-touch strategy', async () => {
     @Component({
       selector: 'ngx-test-fieldset-show-errors',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
@@ -172,7 +172,7 @@ describe('NgxHeadlessFieldset', () => {
   it('shows warnings when no blocking errors exist', async () => {
     @Component({
       selector: 'ngx-test-fieldset-warnings',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
@@ -228,7 +228,7 @@ describe('NgxHeadlessFieldset', () => {
   it('uses provided fieldsetId or generates a fallback', async () => {
     @Component({
       selector: 'ngx-test-fieldset-id',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
@@ -256,7 +256,7 @@ describe('NgxHeadlessFieldset', () => {
   it('inherits the error-display strategy from the enclosing form context', async () => {
     @Component({
       selector: 'ngx-test-fieldset-inherit-strategy',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [FormRoot, NgxSignalForm, NgxHeadlessFieldset],
       template: `
         <form [formRoot]="addressForm" ngxSignalForm errorStrategy="immediate">
@@ -299,7 +299,7 @@ describe('NgxHeadlessFieldset', () => {
   it('honours an explicit submittedStatus override regardless of form context', async () => {
     @Component({
       selector: 'ngx-test-fieldset-submitted-status',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
@@ -329,7 +329,7 @@ describe('NgxHeadlessFieldset', () => {
   it('attaches to non-<fieldset> hosts via the attribute selector', async () => {
     @Component({
       selector: 'ngx-test-fieldset-attr-selector',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <div
@@ -365,7 +365,7 @@ describe('NgxHeadlessFieldset', () => {
   it('generates a fieldset id when none is provided', async () => {
     @Component({
       selector: 'ngx-test-fieldset-id-generated',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset

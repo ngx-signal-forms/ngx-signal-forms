@@ -2,7 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
+  linkedSignal,
   signal,
   viewChild,
 } from '@angular/core';
@@ -61,7 +61,7 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
  */
 @Component({
   selector: 'ngx-complex-forms-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   styles: `
     :host {
       display: flex;
@@ -116,7 +116,7 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
           description="Switch between standard vertical labels and horizontal label columns for the non-outline wrappers. Outline remains vertical by design."
         >
           <ngx-orientation-toggle
-            [(value)]="selectedOrientation"
+            [(value)]="selectedOrientationPreference"
             [appearance]="selectedAppearance()"
           />
         </ngx-display-controls-section>
@@ -204,8 +204,19 @@ export class ComplexFormsPage {
     FIELDSET_ERROR_PLACEMENT_OPTIONS;
   protected readonly selectedFieldsetErrorPlacement =
     signal<NgxFormFieldErrorPlacement>('bottom');
-  protected readonly selectedOrientation =
+  protected readonly selectedOrientationPreference =
     signal<FormFieldOrientation>('vertical');
+  protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
+    () => {
+      const requestedOrientation = this.selectedOrientationPreference();
+      return isOrientationDisabledForAppearance(
+        this.selectedAppearance(),
+        requestedOrientation,
+      )
+        ? 'vertical'
+        : requestedOrientation;
+    },
+  );
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -231,17 +242,4 @@ export class ComplexFormsPage {
   protected readonly content = COMPLEX_FORMS_CONTENT;
   protected readonly complexFormRef =
     viewChild<ComplexFormsComponent>('complexFormRef');
-
-  constructor() {
-    effect(() => {
-      if (
-        isOrientationDisabledForAppearance(
-          this.selectedAppearance(),
-          this.selectedOrientation(),
-        )
-      ) {
-        this.selectedOrientation.set('vertical');
-      }
-    });
-  }
 }

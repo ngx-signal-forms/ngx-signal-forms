@@ -4,7 +4,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 @Component({
   selector: 'ngx-switch-control',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [FormField, NgxSignalFormToolkit],
   host: {
     class: 'ngx-switch-control',

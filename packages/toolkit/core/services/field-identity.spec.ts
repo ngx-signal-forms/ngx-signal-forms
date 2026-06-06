@@ -398,7 +398,6 @@ describe('NgxFieldIdentity', () => {
         selector: 'test-provider',
         template: '<ng-content />',
         providers: [NgxFieldIdentity],
-        changeDetection: ChangeDetectionStrategy.OnPush,
       })
       class TestProvider {
         readonly #identity = inject(NgxFieldIdentity);
@@ -411,7 +410,6 @@ describe('NgxFieldIdentity', () => {
         selector: 'test-root',
         template: `<test-provider><span>content</span></test-provider>`,
         imports: [TestProvider],
-        changeDetection: ChangeDetectionStrategy.OnPush,
       })
       class TestRoot {}
 
@@ -426,7 +424,6 @@ describe('NgxFieldIdentity', () => {
         selector: 'test-wrapper',
         template: '<ng-content />',
         providers: [NgxFieldIdentity],
-        changeDetection: ChangeDetectionStrategy.OnPush,
       })
       class TestWrapper {
         readonly #identity = inject(NgxFieldIdentity);
@@ -442,7 +439,6 @@ describe('NgxFieldIdentity', () => {
           <test-wrapper id="b"><span>b</span></test-wrapper>
         `,
         imports: [TestWrapper],
-        changeDetection: ChangeDetectionStrategy.OnPush,
       })
       class TestRoot {}
 

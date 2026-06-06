@@ -178,12 +178,28 @@ export const appRoutes: Routes = [
         title: getRouteTitle('/advanced-scenarios/async-validation'),
       },
       {
+        path: 'field-state-patterns',
+        loadComponent: () =>
+          import('./05-advanced/field-state-patterns/field-state-patterns.page').then(
+            (m) => m.FieldStatePatternsPageComponent,
+          ),
+        title: getRouteTitle('/advanced-scenarios/field-state-patterns'),
+      },
+      {
         path: 'cross-field-validation',
         loadComponent: () =>
           import('./05-advanced/cross-field-validation/cross-field-validation.page').then(
             (m) => m.CrossFieldValidationPageComponent,
           ),
         title: getRouteTitle('/advanced-scenarios/cross-field-validation'),
+      },
+      {
+        path: 'zod-validation',
+        loadComponent: () =>
+          import('./05-advanced/zod-validation/zod-validation.page').then(
+            (m) => m.ZodValidationPage,
+          ),
+        title: getRouteTitle('/advanced-scenarios/zod-validation'),
       },
       {
         path: 'vest-validation',

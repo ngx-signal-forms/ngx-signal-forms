@@ -48,7 +48,7 @@ export type NgxFormFieldNotificationTone = NgxNotificationTone;
  */
 @Component({
   selector: 'ngx-form-field-notification',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   hostDirectives: [
     {
       directive: NgxHeadlessNotification,

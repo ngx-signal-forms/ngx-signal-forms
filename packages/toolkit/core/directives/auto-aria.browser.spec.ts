@@ -48,7 +48,7 @@ describe('NgxSignalFormAutoAria browser mode', () => {
     @Component({
       selector: 'ngx-test-auto-aria-browser-wrapper',
       imports: [MockFormFieldDirective, NgxSignalFormAutoAria, NgxFormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <ngx-form-field-wrapper [formField]="emailControl">
           <label for="email">Email</label>
@@ -75,7 +75,7 @@ describe('NgxSignalFormAutoAria browser mode', () => {
     @Component({
       selector: 'ngx-test-auto-aria-browser-auto-update',
       imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <label for="email">Email</label>
         <input id="email" [formField]="emailControl()" />
@@ -121,7 +121,7 @@ describe('NgxSignalFormAutoAria browser mode', () => {
         NgxSignalFormAutoAria,
         NgxSignalFormControlSemanticsDirective,
       ],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <label for="emailUpdates">Email updates</label>
         <input
@@ -182,7 +182,7 @@ describe('NgxSignalFormAutoAria browser mode', () => {
     @Component({
       selector: 'ngx-test-auto-aria-browser-visibility',
       imports: [MockFormFieldDirective, NgxSignalFormAutoAria, NgxFormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <ngx-form-field-wrapper [formField]="emailControl">
           <label for="email">Email</label>

@@ -54,7 +54,7 @@ import { profileFormSchema } from './profile-form.schema';
  */
 @Component({
   selector: 'demo-primeng-profile-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     FormField,
     ButtonModule,

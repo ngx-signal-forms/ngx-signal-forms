@@ -2,7 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
+  linkedSignal,
   signal,
   viewChild,
 } from '@angular/core';
@@ -47,7 +47,7 @@ import { LabellessFieldsFormComponent } from './labelless-fields.form';
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   template: `
     <ngx-page-header
       title="Labelless Form Fields"
@@ -83,7 +83,7 @@ import { LabellessFieldsFormComponent } from './labelless-fields.form';
           description="Horizontal layout collapses the label column when no label is projected."
         >
           <ngx-orientation-toggle
-            [(value)]="selectedOrientation"
+            [(value)]="selectedOrientationPreference"
             [appearance]="selectedAppearance()"
           />
         </ngx-display-controls-section>
@@ -115,8 +115,19 @@ export class LabellessFieldsPage {
   protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('standard');
-  protected readonly selectedOrientation =
+  protected readonly selectedOrientationPreference =
     signal<FormFieldOrientation>('vertical');
+  protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
+    () => {
+      const requestedOrientation = this.selectedOrientationPreference();
+      return isOrientationDisabledForAppearance(
+        this.selectedAppearance(),
+        requestedOrientation,
+      )
+        ? 'vertical'
+        : requestedOrientation;
+    },
+  );
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -135,17 +146,4 @@ export class LabellessFieldsPage {
   protected readonly demonstratedContent =
     LABELLESS_FIELDS_CONTENT.demonstrated;
   protected readonly learningContent = LABELLESS_FIELDS_CONTENT.learning;
-
-  constructor() {
-    effect(() => {
-      if (
-        isOrientationDisabledForAppearance(
-          this.selectedAppearance(),
-          this.selectedOrientation(),
-        )
-      ) {
-        this.selectedOrientation.set('vertical');
-      }
-    });
-  }
 }

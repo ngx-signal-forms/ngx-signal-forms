@@ -35,7 +35,7 @@ import { YourFirstFormComponent } from './your-first-form.form';
  */
 @Component({
   selector: 'ngx-your-first-form-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     YourFirstFormComponent,
     ExampleCardsComponent,

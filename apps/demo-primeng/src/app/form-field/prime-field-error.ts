@@ -34,7 +34,7 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
  */
 @Component({
   selector: 'prime-field-error',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   hostDirectives: [
     {
       directive: NgxHeadlessErrorState,

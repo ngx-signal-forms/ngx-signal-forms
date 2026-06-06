@@ -10,7 +10,7 @@ export type BadgeAppearance =
 
 @Component({
   selector: 'ngx-badge',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   host: {
     '[class]': 'badgeClasses()',
     '[attr.data-variant]': 'variant()',

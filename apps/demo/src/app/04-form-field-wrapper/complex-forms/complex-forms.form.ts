@@ -61,7 +61,7 @@ function createInitialComplexFormModel(): ComplexFormModel {
  */
 @Component({
   selector: 'ngx-complex-forms',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     FormField,
     NgxSignalFormToolkit,

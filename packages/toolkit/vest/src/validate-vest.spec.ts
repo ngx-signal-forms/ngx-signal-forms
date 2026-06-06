@@ -28,7 +28,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-error',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="email">Email</label>
@@ -67,7 +67,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-warning',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="password">Password</label>
@@ -119,7 +119,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-shared-run',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="password">Password</label>
@@ -171,7 +171,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-warning-error',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="amount">Amount</label>
@@ -234,7 +234,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-blocking-crash',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="crash-email">Email</label>
@@ -288,7 +288,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-rapid',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <input [formField]="signupForm.username" />
@@ -333,7 +333,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-nested',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="email">Email</label>
@@ -370,7 +370,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-array',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="sku0">SKU</label>
@@ -411,7 +411,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-mixed',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <input [formField]="signupForm.email" />
@@ -453,7 +453,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-group',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="email">Email</label>
@@ -495,7 +495,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-reset',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="email">Email</label>
@@ -529,7 +529,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-leak',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="email">Email</label>
@@ -579,7 +579,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-async-promise',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="email">Email</label>
@@ -616,7 +616,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-sync-initial',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="signupForm.email" />`,
     })
     class TestComponent {
@@ -668,7 +668,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-full',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class FullComponent {
@@ -681,7 +681,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-only',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class FocusedComponent {
@@ -737,7 +737,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-autofocus',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class TestComponent {
@@ -791,7 +791,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-autofocus-root',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class TestComponent {
@@ -844,7 +844,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-autofocus-nested',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.items[0].sku" />`,
     })
     class TestComponent {
@@ -897,7 +897,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-autofocus-override',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class TestComponent {
@@ -936,7 +936,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-reset-default',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class TestComponent {
@@ -973,7 +973,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-reset-optout',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class TestComponent {
@@ -1020,7 +1020,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-only-shorthand',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class TestComponent {
@@ -1061,7 +1061,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-collision',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <input [formField]="f.alpha" />
         <input [formField]="f.bravo" />

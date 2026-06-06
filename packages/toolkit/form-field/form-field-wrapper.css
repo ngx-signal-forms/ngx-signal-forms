@@ -1076,19 +1076,17 @@
  * disappear when errors appear to avoid visual clutter and focus user
  * attention on the blocking error message.
  *
- * Implementation:
- * - When a field has errors/warnings (indicated by host classes
- *   .ngx-signal-form-field-wrapper--invalid or --warning), hide projected
- *   hint elements that would otherwise show in the assistive row.
- * - Hints remain visible only when the field is valid (no error/warning).
+ * Implementation uses CSS custom properties (no ::ng-deep) so that
+ * ngx-form-field-hint reads --ngx-form-field-hint-display from its host
+ * context. This respects Angular's view encapsulation boundary.
  */
 
-/* Hide hints when field has blocking errors */
-:host(.ngx-signal-form-field-wrapper--invalid) ::ng-deep ngx-form-field-hint {
-  display: none;
-}
-
-/* Hide hints when field has non-blocking warnings (but no errors) */
-:host(.ngx-signal-form-field-wrapper--warning) ::ng-deep ngx-form-field-hint {
-  display: none;
+/* Hide hints when field has blocking errors or warnings */
+:host(
+  :is(
+    .ngx-signal-form-field-wrapper--invalid,
+    .ngx-signal-form-field-wrapper--warning
+  )
+) {
+  --ngx-form-field-hint-display: none;
 }

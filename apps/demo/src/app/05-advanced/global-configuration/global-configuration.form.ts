@@ -33,7 +33,7 @@ import { globalConfigSchema } from './global-configuration.validations';
  */
 @Component({
   selector: 'ngx-global-configuration',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form

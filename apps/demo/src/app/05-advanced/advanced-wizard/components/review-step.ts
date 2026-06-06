@@ -15,7 +15,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
 
 @Component({
   selector: 'ngx-review-step',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   template: `
     <div class="review-step">
       <h2 #stepHeading class="mb-4 text-xl font-semibold" tabindex="-1">

@@ -11,7 +11,7 @@ import { ContactFormComponent } from './contact-form/contact-form';
  */
 @Component({
   selector: 'ngx-root',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [ContactFormComponent],
   template: `
     <main class="app-shell">

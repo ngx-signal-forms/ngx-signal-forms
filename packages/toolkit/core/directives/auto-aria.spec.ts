@@ -27,7 +27,7 @@ import { NgxSignalFormAutoAria } from './auto-aria';
 @Component({
   selector: 'ngx-form-field-wrapper',
   template: '<ng-content />',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   providers: [
     {
       provide: NGX_SIGNAL_FORM_HINT_REGISTRY,

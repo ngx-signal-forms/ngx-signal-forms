@@ -22,7 +22,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  */
 @Component({
   selector: 'ngx-material-hint-renderer',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   template: `<span class="ngx-mat-hint__message"><ng-content /></span>`,
   host: {
     '[attr.data-position]': 'position() ?? null',

@@ -13,7 +13,9 @@ export const DEMO_PATHS = {
   submissionPatterns: '/advanced-scenarios/submission-patterns',
   advancedWizard: '/advanced-scenarios/advanced-wizard',
   asyncValidation: '/advanced-scenarios/async-validation',
+  fieldStatePatterns: '/advanced-scenarios/field-state-patterns',
   crossFieldValidation: '/advanced-scenarios/cross-field-validation',
+  zodValidation: '/advanced-scenarios/zod-validation',
   vestValidation: '/advanced-scenarios/vest-validation',
   zodVestValidation: '/advanced-scenarios/zod-vest-validation',
 } as const;
@@ -109,8 +111,16 @@ export const DEMO_CATEGORIES = [
         label: 'Async Validation',
       },
       {
+        path: '/advanced-scenarios/field-state-patterns',
+        label: 'Field State Patterns',
+      },
+      {
         path: '/advanced-scenarios/cross-field-validation',
         label: 'Cross-Field Validation',
+      },
+      {
+        path: '/advanced-scenarios/zod-validation',
+        label: 'Zod-Only Validation',
       },
       {
         path: '/advanced-scenarios/vest-validation',
