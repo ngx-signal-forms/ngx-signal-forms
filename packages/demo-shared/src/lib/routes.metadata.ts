@@ -18,6 +18,7 @@ export const DEMO_PATHS = {
   zodValidation: '/advanced-scenarios/zod-validation',
   vestValidation: '/advanced-scenarios/vest-validation',
   zodVestValidation: '/advanced-scenarios/zod-vest-validation',
+  storeBinding: '/advanced-scenarios/store-binding',
 } as const;
 
 export const DEMO_CATEGORIES = [
@@ -129,6 +130,10 @@ export const DEMO_CATEGORIES = [
       {
         path: '/advanced-scenarios/zod-vest-validation',
         label: 'Zod + Vest Validation',
+      },
+      {
+        path: '/advanced-scenarios/store-binding',
+        label: 'Store Binding (@ngrx/signals two-way)',
       },
     ],
   },
