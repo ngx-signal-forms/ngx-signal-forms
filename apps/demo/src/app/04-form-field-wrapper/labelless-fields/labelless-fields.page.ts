@@ -17,6 +17,7 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
@@ -39,6 +40,7 @@ import { LabellessFieldsFormComponent } from './labelless-fields.form';
     LabellessFieldsFormComponent,
     ErrorDisplayModeSelectorComponent,
     ExampleCardsComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
@@ -49,15 +51,7 @@ import { LabellessFieldsFormComponent } from './labelless-fields.form';
   ],
 
   template: `
-    <ngx-page-header
-      title="Labelless Form Fields"
-      subtitle="Wrapper collapses reserved label space when no <label> is projected"
-    />
-
-    <ngx-example-cards
-      [demonstrated]="demonstratedContent"
-      [learning]="learningContent"
-    >
+    <ng-template ngxPageControls>
       <ngx-display-controls-card
         title="Appearance + orientation"
         description="Toggle to see the label-space collapse behavior across every layout the toolkit supports."
@@ -88,7 +82,17 @@ import { LabellessFieldsFormComponent } from './labelless-fields.form';
           />
         </ngx-display-controls-section>
       </ngx-display-controls-card>
+    </ng-template>
 
+    <ngx-page-header
+      title="Labelless Form Fields"
+      subtitle="Wrapper collapses reserved label space when no <label> is projected"
+    />
+
+    <ngx-example-cards
+      [demonstrated]="demonstratedContent"
+      [learning]="learningContent"
+    >
       <ngx-split-layout>
         <ngx-labelless-fields
           #formComponent

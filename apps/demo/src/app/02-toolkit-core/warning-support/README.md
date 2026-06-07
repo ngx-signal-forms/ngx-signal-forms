@@ -54,5 +54,5 @@ Real-world forms often need _non-blocking_ feedback — "weak password", "dispos
 
 ## Related
 
-- [Vest-Only Validation](../../05-advanced/vest-validation/README.md) — warnings coming from a Vest suite.
-- [Zod + Vest Validation](../../05-advanced/zod-vest-validation/README.md) — layered errors + warnings.
+- [Vest-Only Validation](../../05-advanced/vest-validation/README.md) — warnings coming from a Vest suite in the dedicated Validation section.
+- [Zod + Vest Validation](../../05-advanced/zod-vest-validation/README.md) — layered errors + warnings in the dedicated Validation section.

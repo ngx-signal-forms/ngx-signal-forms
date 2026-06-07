@@ -8,7 +8,9 @@ import {
   AppearanceToggleComponent,
   DisplayControlsCardComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   OrientationToggleComponent,
+  PageHeaderComponent,
 } from '../../ui';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
@@ -28,69 +30,56 @@ import { WizardContainerComponent } from './components/wizard-container';
     OrientationToggleComponent,
     DisplayControlsCardComponent,
     ExampleCardsComponent,
+    NgxPageControlsDirective,
+    PageHeaderComponent,
   ],
   template: `
-    <div class="page-container">
-      <header class="page-header mb-8">
-        <h1 class="text-2xl font-bold">
-          Travel Booking Wizard (@ngrx/signals + Zod)
-        </h1>
-        <p class="mt-2 text-gray-600">
-          Plan your trip with our multi-step booking wizard. This demo showcases
-          Angular 21.2 Signal Forms with @ngrx/signals state management and
-          Zod-driven validation.
-        </p>
-      </header>
-
-      <ngx-example-cards
-        [demonstrated]="demonstratedContent"
-        [learning]="learningContent"
+    <ng-template ngxPageControls>
+      <ngx-display-controls-card
+        title="Cross-step wrapper controls"
+        description="Carry one wrapper treatment across multiple steps to confirm that toolkit field presentation stays consistent even when the form is split across a wizard flow."
+        [chips]="currentControlChips()"
       >
-        <ngx-display-controls-card
-          title="Cross-step wrapper controls"
-          description="Carry one wrapper treatment across multiple steps to confirm that toolkit field presentation stays consistent even when the form is split across a wizard flow."
-          [chips]="currentControlChips()"
-        >
-          <div display-controls-primary class="grid gap-4">
-            <ngx-appearance-toggle [(value)]="selectedAppearance" />
-            <ngx-orientation-toggle
-              [(value)]="selectedOrientationPreference"
-              [appearance]="selectedAppearance()"
-            />
-          </div>
-        </ngx-display-controls-card>
+        <div display-controls-primary class="grid gap-4">
+          <ngx-appearance-toggle [(value)]="selectedAppearance" />
+          <ngx-orientation-toggle
+            [(value)]="selectedOrientationPreference"
+            [appearance]="selectedAppearance()"
+          />
+        </div>
+      </ngx-display-controls-card>
+    </ng-template>
 
-        <ngx-wizard-container
-          [appearance]="selectedAppearance()"
-          [orientation]="selectedOrientation()"
-        />
+    <ngx-page-header
+      title="Travel Booking Wizard (@ngrx/signals + Zod)"
+      subtitle="Multi-step booking wizard with @ngrx/signals state management and Zod-driven validation"
+    />
 
-        <footer class="page-footer mt-8 border-t pt-4">
-          <details class="text-sm text-gray-500">
-            <summary class="cursor-pointer hover:text-gray-700">
-              Technical Details
-            </summary>
-            <ul class="mt-2 space-y-1 pl-4">
-              <li>Form-per-step architecture with separate .form.ts files</li>
-              <li>NgRx Signal Store with feature composition</li>
-              <li>Zod schemas for type-safe validation</li>
-              <li>
-                Cross-field validation (passport expiry vs departure date)
-              </li>
-              <li>Auto-save with rxMethod debouncing</li>
-              <li>Angular 21.1 lifecycle patterns (effect, DestroyRef)</li>
-            </ul>
-          </details>
-        </footer>
-      </ngx-example-cards>
-    </div>
-  `,
-  styles: `
-    .page-container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 2rem;
-    }
+    <ngx-example-cards
+      [demonstrated]="demonstratedContent"
+      [learning]="learningContent"
+    >
+      <ngx-wizard-container
+        [appearance]="selectedAppearance()"
+        [orientation]="selectedOrientation()"
+      />
+
+      <footer class="page-footer mt-8 border-t pt-4">
+        <details class="text-sm text-gray-500">
+          <summary class="cursor-pointer hover:text-gray-700">
+            Technical Details
+          </summary>
+          <ul class="mt-2 space-y-1 pl-4">
+            <li>Form-per-step architecture with separate .form.ts files</li>
+            <li>NgRx Signal Store with feature composition</li>
+            <li>Zod schemas for type-safe validation</li>
+            <li>Cross-field validation (passport expiry vs departure date)</li>
+            <li>Auto-save with rxMethod debouncing</li>
+            <li>Angular 21.1 lifecycle patterns (effect, DestroyRef)</li>
+          </ul>
+        </details>
+      </footer>
+    </ngx-example-cards>
   `,
 })
 export default class AdvancedWizardPage {

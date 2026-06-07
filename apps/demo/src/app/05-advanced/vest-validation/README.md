@@ -50,7 +50,7 @@ When your form rules are mostly business policy (tier-specific limits, referral 
 
 ## How to test
 
-1. Run the demo and navigate to `/advanced-scenarios/vest-validation`.
+1. Run the demo and navigate to `/validation/vest-validation`.
 2. Switch to `Business`, choose `DE`, `NL`, or `BE`, leave VAT empty — blocking error.
 3. Keep `Personal`, enter a team size above `10` — blocking error.
 4. Enter `STARTER100` as referral with more than 3 seats — blocking error.

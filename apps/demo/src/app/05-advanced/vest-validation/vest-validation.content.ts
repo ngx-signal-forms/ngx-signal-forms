@@ -48,7 +48,7 @@ export const VEST_VALIDATION_CONTENT = {
     ],
     nextStep: {
       text: 'Layer structure rules with Zod next →',
-      link: '/advanced-scenarios/zod-vest-validation',
+      link: '/validation/zod-vest-validation',
       linkText: 'Zod + Vest Validation',
     },
   },

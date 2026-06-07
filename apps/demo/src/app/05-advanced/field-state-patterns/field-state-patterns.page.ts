@@ -17,6 +17,7 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
@@ -51,11 +52,43 @@ import { FieldStatePatternsComponent } from './field-state-patterns.form';
     OrientationToggleComponent,
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
   ],
   template: `
+    <ng-template ngxPageControls>
+      <ngx-display-controls-card
+        title="State visibility framing"
+        description="Compare the same state rules under different error timings and wrapper treatments so you can judge whether hidden, disabled, and readonly affordances stay obvious."
+        [chips]="currentControlChips()"
+        layout="split"
+      >
+        <ngx-error-display-mode-selector
+          [(selectedMode)]="errorDisplayMode"
+          [embedded]="true"
+          display-controls-primary
+          class="block min-w-0"
+        />
+        <ngx-display-controls-section
+          title="🎨 Wrapper appearance"
+          description="Switch the wrapper treatment to confirm that state cues remain understandable across outline, standard, and plain surfaces."
+        >
+          <ngx-appearance-toggle [(value)]="selectedAppearance" />
+        </ngx-display-controls-section>
+        <ngx-display-controls-section
+          title="↔️ Label orientation"
+          description="Check whether disabled and readonly cues still read clearly when labels shift into a horizontal layout. Outline stays vertical on purpose."
+        >
+          <ngx-orientation-toggle
+            [(value)]="selectedOrientationPreference"
+            [appearance]="selectedAppearance()"
+          />
+        </ngx-display-controls-section>
+      </ngx-display-controls-card>
+    </ng-template>
+
     <ngx-page-header
       title="Field State Patterns"
       subtitle="hidden(), disabled(), and readonly() with Angular 22's consistent when() syntax"
@@ -65,37 +98,6 @@ import { FieldStatePatternsComponent } from './field-state-patterns.form';
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
     />
-
-    <ngx-display-controls-card
-      title="State visibility framing"
-      description="Compare the same state rules under different error timings and wrapper treatments so you can judge whether hidden, disabled, and readonly affordances stay obvious."
-      [chips]="currentControlChips()"
-      layout="split"
-    >
-      <ngx-error-display-mode-selector
-        [(selectedMode)]="errorDisplayMode"
-        [embedded]="true"
-        display-controls-primary
-        class="block min-w-0"
-      />
-
-      <ngx-display-controls-section
-        title="🎨 Wrapper appearance"
-        description="Switch the wrapper treatment to confirm that state cues remain understandable across outline, standard, and plain surfaces."
-      >
-        <ngx-appearance-toggle [(value)]="selectedAppearance" />
-      </ngx-display-controls-section>
-
-      <ngx-display-controls-section
-        title="↔️ Label orientation"
-        description="Check whether disabled and readonly cues still read clearly when labels shift into a horizontal layout. Outline stays vertical on purpose."
-      >
-        <ngx-orientation-toggle
-          [(value)]="selectedOrientationPreference"
-          [appearance]="selectedAppearance()"
-        />
-      </ngx-display-controls-section>
-    </ngx-display-controls-card>
 
     <ngx-split-layout>
       <ngx-field-state-patterns

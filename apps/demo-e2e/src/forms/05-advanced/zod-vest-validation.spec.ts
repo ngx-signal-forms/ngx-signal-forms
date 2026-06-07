@@ -19,9 +19,9 @@ function fieldStatus(page: Page, label: string) {
   return fieldWrapper(page, label).locator(ROLE_STATUS_SELECTOR);
 }
 
-test.describe('Advanced Scenarios - Zod + Vest Validation', () => {
+test.describe('Validation - Zod + Vest Validation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/advanced-scenarios/zod-vest-validation');
+    await page.goto('/validation/zod-vest-validation');
     await page.waitForLoadState('domcontentloaded');
   });
 

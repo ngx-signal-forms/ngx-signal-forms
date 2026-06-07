@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  input,
   signal,
 } from '@angular/core';
 import {
@@ -15,7 +16,11 @@ import {
   schema,
   validate,
 } from '@angular/forms/signals';
-import { createOnInvalidHandler } from '@ngx-signal-forms/toolkit';
+import {
+  createOnInvalidHandler,
+  type ErrorDisplayStrategy,
+  NgxSignalForm,
+} from '@ngx-signal-forms/toolkit';
 import {
   createCharacterCount,
   createErrorState,
@@ -82,7 +87,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
 @Component({
   selector: 'ngx-headless-fieldset-utilities',
 
-  imports: [FormField, FormRoot, NgxHeadlessToolkit],
+  imports: [FormField, FormRoot, NgxSignalForm, NgxHeadlessToolkit],
   styles: `
     .headless-summary {
       border: 2px solid var(--ngx-error-summary-border-color, #dc2626);
@@ -148,7 +153,12 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
         plus headless utilities for fully custom UI.
       </p>
 
-      <form [formRoot]="deliveryForm" class="max-w-2xl space-y-6">
+      <form
+        [formRoot]="deliveryForm"
+        ngxSignalForm
+        [errorStrategy]="errorDisplayMode()"
+        class="max-w-2xl space-y-6"
+      >
         <div
           ngxHeadlessErrorSummary
           #formSummary="errorSummary"
@@ -616,6 +626,15 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
   `,
 })
 export class HeadlessFieldsetUtilitiesComponent {
+  /**
+   * Error display strategy for the form. Installed into form context via
+   * `ngxSignalForm`, so every headless directive (error state, fieldset,
+   * summary) inherits it. The `createErrorState` utility below sits in the
+   * component injector — above the `<form>` context — so it receives the same
+   * signal explicitly to stay in sync.
+   */
+  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+
   readonly #initialData: HeadlessDeliveryModel = {
     contactEmail: '',
     address: {
@@ -644,6 +663,7 @@ export class HeadlessFieldsetUtilitiesComponent {
   protected readonly notesError = createErrorState({
     field: this.deliveryForm.deliveryNotes,
     fieldName: 'deliveryNotes',
+    strategy: this.errorDisplayMode,
   });
 
   protected readonly notesCount = createCharacterCount({

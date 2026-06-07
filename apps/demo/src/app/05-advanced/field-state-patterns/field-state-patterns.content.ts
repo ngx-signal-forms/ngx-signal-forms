@@ -43,7 +43,7 @@ export const FIELD_STATE_PATTERNS_CONTENT = {
     ],
     nextStep: {
       text: 'Next: layer structural and policy validation →',
-      link: '/advanced-scenarios/zod-vest-validation',
+      link: '/validation/zod-vest-validation',
       linkText: 'Zod + Vest Validation',
     },
   },

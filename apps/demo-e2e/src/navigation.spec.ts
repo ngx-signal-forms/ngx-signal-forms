@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { DEMO_CATEGORIES } from '@ngx-signal-forms/demo-shared';
+import { DEMO_CATEGORIES, DEMO_PATHS } from '@ngx-signal-forms/demo-shared';
 /**
  * Navigation & Application Shell Tests
  * Tests for Part 1 of DEMO_TEST_PLAN.md
@@ -36,12 +36,12 @@ test.describe('Demo Application - Navigation & Shell', () => {
   test('should display all navigation categories', async ({ page }) => {
     await test.step('Verify all category headers are visible', async () => {
       const categories = DEMO_CATEGORIES.map((c) => c.label);
-      const primaryNavigation = page.getByLabel('Primary navigation');
+      const siteNavigation = page.getByLabel('Site navigation');
 
-      await expect(primaryNavigation).toBeVisible();
+      await expect(siteNavigation).toBeVisible();
 
       for (const category of categories) {
-        const categoryElement = primaryNavigation.getByRole('link', {
+        const categoryElement = siteNavigation.getByRole('button', {
           name: category,
           exact: true,
         });
@@ -54,21 +54,22 @@ test.describe('Demo Application - Navigation & Shell', () => {
     page,
   }) => {
     await test.step('Verify links are accessible by navigating to each category', async () => {
-      // Navigate to each category and verify its example links in sidebar
-      const categoryTests = DEMO_CATEGORIES.map((c) => ({
-        categoryPath: c.links[0].path.split('/').slice(0, 2).join('/'),
-        links: c.links.map((l) => l.label),
-      }));
+      const siteNavigation = page.getByLabel('Site navigation');
 
-      for (const { categoryPath, links } of categoryTests) {
-        await page.goto(categoryPath);
+      for (const category of DEMO_CATEGORIES) {
+        await page.goto(category.links[0].path);
         await page.waitForLoadState('domcontentloaded');
 
-        const sectionNavigation = page.getByLabel('Section navigation');
-        await expect(sectionNavigation).toBeVisible();
+        await expect(siteNavigation).toBeVisible();
 
-        for (const linkText of links) {
-          const link = sectionNavigation.getByRole('link', { name: linkText });
+        const categoryButton = siteNavigation.getByRole('button', {
+          name: category.label,
+          exact: true,
+        });
+        await categoryButton.click();
+
+        for (const linkText of category.links.map((link) => link.label)) {
+          const link = siteNavigation.getByRole('link', { name: linkText });
           await expect(link).toBeVisible({ timeout: 5000 });
         }
       }
@@ -77,24 +78,7 @@ test.describe('Demo Application - Navigation & Shell', () => {
 
   test('should navigate to each demo example', async ({ page }) => {
     await test.step('Navigate through all demo examples', async () => {
-      const examples = [
-        '/getting-started/your-first-form',
-        '/toolkit-core/error-display-modes',
-        '/toolkit-core/warning-support',
-        '/headless/fieldset-utilities',
-        '/form-field-wrapper/complex-forms',
-        '/form-field-wrapper/fieldset-appearance',
-        '/form-field-wrapper/custom-controls',
-        '/form-field-wrapper/labelless-fields',
-        '/advanced-scenarios/global-configuration',
-        '/advanced-scenarios/submission-patterns',
-        '/advanced-scenarios/advanced-wizard',
-        '/advanced-scenarios/async-validation',
-        '/advanced-scenarios/cross-field-validation',
-        '/advanced-scenarios/zod-validation',
-        '/advanced-scenarios/vest-validation',
-        '/advanced-scenarios/zod-vest-validation',
-      ];
+      const examples = Object.values(DEMO_PATHS);
 
       for (const examplePath of examples) {
         await page.goto(examplePath);
@@ -138,22 +122,10 @@ test.describe('Demo Application - Navigation & Shell', () => {
       await page.goto(`/`);
       await page.waitForLoadState('domcontentloaded');
 
-      // Navigate to first page by clicking link (creates proper history entry)
-      const primaryNavigation = page.getByLabel('Primary navigation');
-      await expect(primaryNavigation).toBeVisible();
+      const siteNavigation = page.getByLabel('Site navigation');
+      await expect(siteNavigation).toBeVisible();
 
-      const gettingStartedNav = primaryNavigation.getByRole('link', {
-        name: 'Getting Started',
-        exact: true,
-      });
-      await gettingStartedNav.click();
-      await page.waitForLoadState('domcontentloaded');
-
-      // Click the "Your First Form" link to create a new history entry
-      const sectionNavigation = page.getByLabel('Section navigation');
-      await expect(sectionNavigation).toBeVisible();
-
-      const yourFirstFormLink = sectionNavigation.getByRole('link', {
+      const yourFirstFormLink = siteNavigation.getByRole('link', {
         name: /Your First Form/i,
       });
       await yourFirstFormLink.click();
@@ -162,17 +134,14 @@ test.describe('Demo Application - Navigation & Shell', () => {
       const firstPageUrl = page.url();
       expect(firstPageUrl).toContain('/getting-started/your-first-form');
 
-      // Navigate to second page by clicking link
-      const toolkitCoreNav = primaryNavigation.getByRole('link', {
+      const toolkitCoreNav = siteNavigation.getByRole('button', {
         name: 'Toolkit Core',
         exact: true,
       });
       await toolkitCoreNav.click();
       await page.waitForLoadState('domcontentloaded');
 
-      await expect(sectionNavigation).toBeVisible();
-
-      const accessibilityLink = sectionNavigation.getByRole('link', {
+      const accessibilityLink = siteNavigation.getByRole('link', {
         name: /Error Display Modes/i,
       });
       await accessibilityLink.click();
@@ -326,8 +295,8 @@ test.describe('Demo Application - Route Handling', () => {
       await expect(page).toHaveURL(/\/getting-started\/your-first-form$/);
 
       // Verify app shell is still present (navigation and basic structure)
-      const primaryNavigation = page.getByLabel('Primary navigation');
-      await expect(primaryNavigation).toBeVisible();
+      const siteNavigation = page.getByLabel('Site navigation');
+      await expect(siteNavigation).toBeVisible();
 
       // Main content should be visible
       const main = page.getByRole('main');

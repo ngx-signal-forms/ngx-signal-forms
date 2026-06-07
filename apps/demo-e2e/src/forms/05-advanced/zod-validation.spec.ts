@@ -12,9 +12,9 @@ function fieldAlert(page: Page, label: string) {
   return fieldWrapper(page, label).locator(ROLE_ALERT_SELECTOR);
 }
 
-test.describe('Advanced Scenarios - Zod-Only Validation', () => {
+test.describe('Validation - Zod-Only Validation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/advanced-scenarios/zod-validation');
+    await page.goto('/validation/zod-validation');
     await page.waitForLoadState('domcontentloaded');
   });
 

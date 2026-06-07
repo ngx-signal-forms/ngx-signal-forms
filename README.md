@@ -304,8 +304,8 @@ npm install @ngx-signal-forms/toolkit vest@6.2.7
 ```
 
 **[→ Vest docs](./packages/toolkit/vest/README.md)** · **Demos:**
-[`vest-validation` (code)](./apps/demo/src/app/05-advanced/vest-validation) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/advanced-scenarios/vest-validation/),
-[`zod-vest-validation` (code)](./apps/demo/src/app/05-advanced/zod-vest-validation) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/advanced-scenarios/zod-vest-validation/) ·
+[`vest-validation` (code)](./apps/demo/src/app/05-advanced/vest-validation) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/validation/vest-validation/),
+[`zod-vest-validation` (code)](./apps/demo/src/app/05-advanced/zod-vest-validation) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/validation/zod-vest-validation/) ·
 **[Migrating from `ngx-vest-forms`](./docs/MIGRATING_FROM_NGX_VEST_FORMS.md)**
 
 ## Validation strategies

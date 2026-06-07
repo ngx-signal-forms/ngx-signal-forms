@@ -1,11 +1,24 @@
-import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+  viewChild,
+} from '@angular/core';
+import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   CardComponent,
+  DisplayControlsCardComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
+import {
+  ERROR_DISPLAY_MODE_LABELS,
+  ErrorDisplayModeSelectorComponent,
+} from '../../ui/error-display-mode-selector/error-display-mode-selector';
 import { HEADLESS_FIELDSET_UTILITIES_CONTENT } from './fieldset-utilities.content';
 import { HeadlessFieldsetUtilitiesComponent } from './fieldset-utilities.form';
 
@@ -21,13 +34,31 @@ import { HeadlessFieldsetUtilitiesComponent } from './fieldset-utilities.form';
   `,
   imports: [
     CardComponent,
+    DisplayControlsCardComponent,
+    ErrorDisplayModeSelectorComponent,
     ExampleCardsComponent,
     HeadlessFieldsetUtilitiesComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
   ],
   template: `
+    <ng-template ngxPageControls>
+      <ngx-display-controls-card
+        title="Validation timing controls"
+        description="Switch when this headless form reveals errors. The strategy is installed once via form context and inherited by every headless directive and utility on the page."
+        [chips]="currentControlChips()"
+      >
+        <ngx-error-display-mode-selector
+          [(selectedMode)]="selectedMode"
+          [embedded]="true"
+          display-controls-primary
+          class="block min-w-0"
+        />
+      </ngx-display-controls-card>
+    </ng-template>
+
     <ngx-page-header
       title="Headless Fieldset + Utilities"
       subtitle="Group state, field naming, and utilities for custom UI"
@@ -38,11 +69,17 @@ import { HeadlessFieldsetUtilitiesComponent } from './fieldset-utilities.form';
       [learning]="content.learning"
     >
       <ngx-split-layout>
-        <ngx-headless-fieldset-utilities left />
+        <ngx-headless-fieldset-utilities
+          [errorDisplayMode]="selectedMode()"
+          left
+        />
 
         @if (formRef(); as form) {
           <div right>
-            <ngx-signal-form-debugger [formTree]="form.deliveryForm" />
+            <ngx-signal-form-debugger
+              [formTree]="form.deliveryForm"
+              [errorStrategy]="selectedMode()"
+            />
           </div>
         }
       </ngx-split-layout>
@@ -75,4 +112,12 @@ import { HeadlessFieldsetUtilitiesComponent } from './fieldset-utilities.form';
 export class HeadlessFieldsetUtilitiesPageComponent {
   protected readonly content = HEADLESS_FIELDSET_UTILITIES_CONTENT;
   protected readonly formRef = viewChild(HeadlessFieldsetUtilitiesComponent);
+
+  protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
+  protected readonly currentControlChips = computed(() => [
+    {
+      label: 'Mode',
+      value: ERROR_DISPLAY_MODE_LABELS[this.selectedMode()],
+    },
+  ]);
 }

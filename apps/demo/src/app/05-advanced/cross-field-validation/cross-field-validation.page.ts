@@ -17,6 +17,7 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
@@ -51,11 +52,43 @@ import { CrossFieldValidationComponent } from './cross-field-validation.form';
     OrientationToggleComponent,
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
   ],
   template: `
+    <ng-template ngxPageControls>
+      <ngx-display-controls-card
+        title="Dependency rule controls"
+        description="Use timing and styling controls to study what happens when one input invalidates another, especially for date ranges and guest-dependent promo logic."
+        [chips]="currentControlChips()"
+        layout="split"
+      >
+        <ngx-error-display-mode-selector
+          [(selectedMode)]="errorDisplayMode"
+          [embedded]="true"
+          display-controls-primary
+          class="block min-w-0"
+        />
+        <ngx-display-controls-section
+          title="🎨 Dependency framing"
+          description="Compare wrapper treatments to see which one makes dependent errors easier to read when the problem spans more than one control."
+        >
+          <ngx-appearance-toggle [(value)]="selectedAppearance" />
+        </ngx-display-controls-section>
+        <ngx-display-controls-section
+          title="↔️ Label orientation"
+          description="Compare vertical and horizontal label placement while one field invalidates another. Outline remains vertical so its floating label stays intact."
+        >
+          <ngx-orientation-toggle
+            [(value)]="selectedOrientationPreference"
+            [appearance]="selectedAppearance()"
+          />
+        </ngx-display-controls-section>
+      </ngx-display-controls-card>
+    </ng-template>
+
     <ngx-page-header
       title="Cross-Field Validation"
       subtitle="Validations depending on multiple fields"
@@ -65,37 +98,6 @@ import { CrossFieldValidationComponent } from './cross-field-validation.form';
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
     />
-
-    <ngx-display-controls-card
-      title="Dependency rule controls"
-      description="Use timing and styling controls to study what happens when one input invalidates another, especially for date ranges and guest-dependent promo logic."
-      [chips]="currentControlChips()"
-      layout="split"
-    >
-      <ngx-error-display-mode-selector
-        [(selectedMode)]="errorDisplayMode"
-        [embedded]="true"
-        display-controls-primary
-        class="block min-w-0"
-      />
-
-      <ngx-display-controls-section
-        title="🎨 Dependency framing"
-        description="Compare wrapper treatments to see which one makes dependent errors easier to read when the problem spans more than one control."
-      >
-        <ngx-appearance-toggle [(value)]="selectedAppearance" />
-      </ngx-display-controls-section>
-
-      <ngx-display-controls-section
-        title="↔️ Label orientation"
-        description="Compare vertical and horizontal label placement while one field invalidates another. Outline remains vertical so its floating label stays intact."
-      >
-        <ngx-orientation-toggle
-          [(value)]="selectedOrientationPreference"
-          [appearance]="selectedAppearance()"
-        />
-      </ngx-display-controls-section>
-    </ngx-display-controls-card>
 
     <ngx-split-layout>
       <ngx-cross-field-validation

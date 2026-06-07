@@ -1,4 +1,7 @@
 export { AppearanceToggleComponent } from './appearance-toggle';
+export { NavTreeComponent } from './nav-tree';
+export { PageControlsService, NgxPageControlsDirective } from './page-controls';
+export { RightRailComponent } from './right-rail';
 export { OrientationToggleComponent } from './orientation-toggle';
 export {
   BadgeComponent,
