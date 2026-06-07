@@ -15,8 +15,8 @@ autoInstallPeers: true
 catalogMode: 'prefer'
 catalogs:
   analogjs:
-    '@analogjs/vite-plugin-angular': '2.5.2'
-    '@analogjs/vitest-angular': '2.5.2'
+    '@analogjs/vite-plugin-angular': '2.6.0'
+    '@analogjs/vitest-angular': '2.6.0'
   angular:
     '@angular/animations': '22.0.0'
     '@angular/aria': '22.0.0'
