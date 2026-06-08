@@ -15,6 +15,28 @@ test.describe('Advanced - Global Configuration', () => {
     await expect(page.form).toBeVisible();
   });
 
+  test('should render the debugger and display controls for the config demo', async ({
+    page: playwrightPage,
+  }) => {
+    await expect(
+      playwrightPage.locator('h1.page-title', {
+        hasText: 'Global Toolkit Configuration',
+      }),
+    ).toBeVisible();
+
+    await expect(
+      playwrightPage.locator('ngx-signal-form-debugger').first(),
+    ).toBeVisible();
+
+    await expect(
+      playwrightPage.getByText(/Validation Errors \d+\/\d+/),
+    ).toBeVisible();
+
+    await expect(
+      playwrightPage.getByRole('heading', { name: 'Current Configuration' }),
+    ).toBeVisible();
+  });
+
   test('should apply global error display strategy', async ({
     page: playwrightPage,
   }) => {

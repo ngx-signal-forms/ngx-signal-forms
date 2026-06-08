@@ -1,0 +1,143 @@
+@if (variant() === 'rail') {
+<div class="panel">
+  <ng-container [ngTemplateOutlet]="panelHeader" />
+  <div class="panel__body">
+    <ng-container [ngTemplateOutlet]="panelBody" />
+  </div>
+</div>
+} @else if (panelOpen()) {
+<div class="panel-backdrop" (click)="closePanel()" aria-hidden="true"></div>
+<div
+  class="panel panel--slideover"
+  role="dialog"
+  aria-label="Display controls"
+  aria-modal="true"
+>
+  <ng-container
+    [ngTemplateOutlet]="panelHeader"
+    [ngTemplateOutletContext]="{ closable: true }"
+  />
+  <div class="panel__body">
+    <ng-container [ngTemplateOutlet]="panelBody" />
+  </div>
+</div>
+}
+
+<!-- Pinned header — "Display Controls" -->
+<ng-template #panelHeader let-closable="closable">
+  <header class="panel__header">
+    <span class="panel__eyebrow">
+      <svg
+        viewBox="0 0 16 16"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        aria-hidden="true"
+      >
+        <line x1="2.5" y1="4.5" x2="13.5" y2="4.5" />
+        <circle cx="6" cy="4.5" r="1.7" fill="currentColor" stroke="none" />
+        <line x1="2.5" y1="11.5" x2="13.5" y2="11.5" />
+        <circle cx="10.5" cy="11.5" r="1.7" fill="currentColor" stroke="none" />
+      </svg>
+      Display Controls
+    </span>
+    <div class="panel__actions">
+      @if (template()) {
+      <button
+        class="panel__help"
+        [class.is-on]="showDetails()"
+        type="button"
+        [attr.aria-pressed]="showDetails()"
+        title="Toggle setting descriptions"
+        (click)="toggleHelp()"
+      >
+        <svg
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <circle cx="8" cy="8" r="6.25" />
+          <line x1="8" y1="7.2" x2="8" y2="11.5" stroke-linecap="round" />
+          <circle cx="8" cy="4.8" r="0.85" fill="currentColor" stroke="none" />
+        </svg>
+        Details
+      </button>
+      } @if (closable) {
+      <button
+        class="panel__close"
+        type="button"
+        aria-label="Close configuration panel"
+        (click)="closePanel()"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 14 14"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="M1 1l12 12M13 1L1 13" />
+        </svg>
+      </button>
+      } @else {
+      <button
+        class="panel__close"
+        type="button"
+        aria-label="Collapse display controls"
+        title="Collapse panel"
+        (click)="collapseRail()"
+      >
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M6 3.5l4.5 4.5L6 12.5" />
+          <line x1="13" y1="3" x2="13" y2="13" />
+        </svg>
+      </button>
+      }
+    </div>
+  </header>
+</ng-template>
+
+<!-- Body — page controls or empty state -->
+<ng-template #panelBody>
+  @if (template()) {
+  <ng-container [ngTemplateOutlet]="template()!" />
+  } @else {
+  <div class="panel__empty">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <line x1="4" y1="7" x2="20" y2="7" />
+      <line x1="4" y1="17" x2="20" y2="17" />
+      <circle cx="9" cy="7" r="2.4" />
+      <circle cx="15" cy="17" r="2.4" />
+      <line x1="3" y1="3" x2="21" y2="21" stroke-width="1.75" />
+    </svg>
+    <span class="panel__empty-title">No display controls</span>
+    <p class="panel__empty-text">
+      This page has no configuration options to adjust.
+    </p>
+  </div>
+  }
+</ng-template>

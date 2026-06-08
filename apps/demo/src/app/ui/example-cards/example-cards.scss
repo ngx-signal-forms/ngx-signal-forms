@@ -1,0 +1,24 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.example-cards__section {
+  min-width: 0;
+}
+
+.example-cards__list,
+.example-cards__list li {
+  min-width: 0;
+}
+
+.example-cards__list li {
+  overflow-wrap: anywhere;
+}
+
+.example-cards__list code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}

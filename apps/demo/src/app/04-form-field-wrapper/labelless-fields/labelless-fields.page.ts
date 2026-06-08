@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   linkedSignal,
   signal,
   viewChild,
@@ -29,7 +30,7 @@ import {
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
   getOrientationLabel,
-  isOrientationDisabledForAppearance,
+  normalizeOrientationForAppearance,
 } from '../../ui/orientation-toggle';
 import { LABELLESS_FIELDS_CONTENT } from './labelless-fields.content';
 import { LabellessFieldsFormComponent } from './labelless-fields.form';
@@ -123,15 +124,26 @@ export class LabellessFieldsPage {
     signal<FormFieldOrientation>('vertical');
   protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
     () => {
-      const requestedOrientation = this.selectedOrientationPreference();
-      return isOrientationDisabledForAppearance(
+      return normalizeOrientationForAppearance(
         this.selectedAppearance(),
-        requestedOrientation,
-      )
-        ? 'vertical'
-        : requestedOrientation;
+        this.selectedOrientationPreference(),
+      );
     },
   );
+  constructor() {
+    effect(() => {
+      const preferredOrientation = this.selectedOrientationPreference();
+      const normalizedOrientation = normalizeOrientationForAppearance(
+        this.selectedAppearance(),
+        preferredOrientation,
+      );
+
+      if (preferredOrientation !== normalizedOrientation) {
+        this.selectedOrientationPreference.set(normalizedOrientation);
+      }
+    });
+  }
+
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',

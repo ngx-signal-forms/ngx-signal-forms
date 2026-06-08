@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   getOrientationLabel,
   isOrientationDisabledForAppearance,
+  normalizeOrientationForAppearance,
   ORIENTATION_LABELS,
 } from './orientation.constants';
 
@@ -25,6 +26,18 @@ describe('orientation.constants', () => {
     );
     expect(isOrientationDisabledForAppearance('outline', 'vertical')).toBe(
       false,
+    );
+  });
+
+  it('normalizes invalid orientation choices back to vertical', () => {
+    expect(normalizeOrientationForAppearance('outline', 'horizontal')).toBe(
+      'vertical',
+    );
+    expect(normalizeOrientationForAppearance('outline', 'vertical')).toBe(
+      'vertical',
+    );
+    expect(normalizeOrientationForAppearance('standard', 'horizontal')).toBe(
+      'horizontal',
     );
   });
 });

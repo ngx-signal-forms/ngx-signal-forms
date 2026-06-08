@@ -1,0 +1,429 @@
+<div class="px-6 pt-0 pb-6">
+  <h2 class="mb-4 text-2xl font-bold">Headless Fieldset + Utilities</h2>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    Use headless directives for field grouping and field-name resolution, plus
+    headless utilities for fully custom UI.
+  </p>
+
+  <form
+    [formRoot]="deliveryForm"
+    ngxSignalForm
+    [errorStrategy]="errorDisplayMode()"
+    class="max-w-2xl space-y-6"
+  >
+    <div
+      ngxHeadlessErrorSummary
+      #formSummary="errorSummary"
+      [formTree]="deliveryForm"
+      data-testid="delivery-form-summary"
+    >
+      @if (formSummary.shouldShow() && formSummary.hasErrors()) {
+      <div
+        class="headless-summary"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        <p class="headless-summary__label">Custom form error summary</p>
+        <p class="headless-summary__description">
+          This summary uses
+          <code
+            class="rounded bg-gray-100 px-1.5 py-0.5 text-xs dark:bg-gray-900"
+          >
+            NgxHeadlessErrorSummary
+          </code>
+          with library-aligned styling and fully custom markup.
+        </p>
+
+        <ul class="headless-summary__list" role="list">
+          @for ( entry of formSummary.entries(); track entry.kind +
+          entry.fieldName ) {
+          <li>
+            <button
+              type="button"
+              class="headless-summary__link"
+              [attr.data-testid]="'summary-entry-' + entry.kind"
+              (click)="entry.focus()"
+            >
+              <span class="headless-summary__field-name"
+                >{{ entry.fieldName }}</span
+              >: {{ entry.message }}
+            </button>
+          </li>
+          }
+        </ul>
+      </div>
+      }
+    </div>
+
+    <div class="headless-card">
+      <div
+        ngxHeadlessFieldName
+        fieldName="contactEmail"
+        #emailName="fieldName"
+        class="space-y-2"
+      >
+        <div
+          ngxHeadlessErrorState
+          #emailState="errorState"
+          [field]="deliveryForm.contactEmail"
+          [fieldName]="emailName.resolvedFieldName()"
+          class="space-y-2"
+        >
+          <label
+            [for]="emailName.resolvedFieldName()"
+            class="text-sm font-medium"
+          >
+            Contact email *
+          </label>
+          <input
+            [id]="emailName.resolvedFieldName()"
+            type="email"
+            class="form-input"
+            [formField]="deliveryForm.contactEmail"
+            placeholder="you@example.com"
+            autocomplete="email"
+            [attr.aria-invalid]="emailState.hasErrors() ? 'true' : null"
+            [attr.aria-describedby]="
+              emailState.showErrors() && emailState.hasErrors()
+                ? emailState.errorId()
+                : emailState.showWarnings() && emailState.hasWarnings()
+                  ? emailState.warningId()
+                  : null
+            "
+          />
+
+          @if (emailState.showErrors() && emailState.hasErrors()) {
+          <div
+            [id]="emailState.errorId()"
+            role="alert"
+            class="headless-alert-error text-xs"
+          >
+            @for ( error of emailState.resolvedErrors(); track error.kind + ':'
+            + error.message + ':' + $index ) {
+            <div>{{ error.message }}</div>
+            }
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="headless-card">
+      <fieldset
+        ngxHeadlessFieldset
+        #addressFieldset="fieldset"
+        [fieldsetField]="deliveryForm.address"
+        fieldsetId="address"
+        [includeNestedErrors]="true"
+        class="space-y-4"
+        [attr.aria-describedby]="
+          addressFieldset.shouldShowErrors() ||
+          addressFieldset.shouldShowWarnings()
+            ? addressFieldset.resolvedFieldsetId()
+            : null
+        "
+      >
+        <legend
+          class="text-base font-semibold text-gray-900 dark:text-gray-100"
+        >
+          Shipping address
+        </legend>
+
+        <div
+          class="flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-400"
+        >
+          <span>touched: {{ addressFieldset.isTouched() }}</span>
+          <span>dirty: {{ addressFieldset.isDirty() }}</span>
+          <span>invalid: {{ addressFieldset.isInvalid() }}</span>
+          <span>pending: {{ addressFieldset.isPending() }}</span>
+        </div>
+
+        @if (addressFieldset.shouldShowErrors()) {
+        <div
+          [id]="addressFieldset.resolvedFieldsetId()"
+          role="alert"
+          class="headless-alert-error text-sm"
+        >
+          @for ( error of addressFieldset.aggregatedErrors(); track error.kind +
+          ':' + error.message + ':' + $index ) {
+          <div>{{ error.message }}</div>
+          }
+        </div>
+        } @else if (addressFieldset.shouldShowWarnings()) {
+        <div
+          [id]="addressFieldset.resolvedFieldsetId()"
+          role="status"
+          aria-live="polite"
+          class="headless-alert-warning text-sm"
+        >
+          @for ( warning of addressFieldset.aggregatedWarnings(); track
+          warning.kind + ':' + warning.message + ':' + $index ) {
+          <div>{{ warning.message }}</div>
+          }
+        </div>
+        }
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div
+            ngxHeadlessFieldName
+            fieldName="street"
+            #streetName="fieldName"
+            class="space-y-2"
+          >
+            <div
+              ngxHeadlessErrorState
+              #streetState="errorState"
+              [field]="deliveryForm.address.street"
+              [fieldName]="streetName.resolvedFieldName()"
+              class="space-y-2"
+            >
+              <label
+                [for]="streetName.resolvedFieldName()"
+                class="text-sm font-medium"
+              >
+                Street *
+              </label>
+              <input
+                [id]="streetName.resolvedFieldName()"
+                type="text"
+                class="form-input"
+                [formField]="deliveryForm.address.street"
+                placeholder="123 Main St"
+                [attr.aria-invalid]="
+                  streetState.hasErrors() ? 'true' : null
+                "
+                [attr.aria-describedby]="
+                  streetState.showErrors() && streetState.hasErrors()
+                    ? streetState.errorId()
+                    : streetState.showWarnings() &&
+                        streetState.hasWarnings()
+                      ? streetState.warningId()
+                      : null
+                "
+              />
+
+              @if (streetState.showErrors() && streetState.hasErrors()) {
+              <div
+                [id]="streetState.errorId()"
+                role="alert"
+                class="headless-alert-error text-xs"
+              >
+                @for ( error of streetState.resolvedErrors(); track error.kind +
+                ':' + error.message + ':' + $index ) {
+                <div>{{ error.message }}</div>
+                }
+              </div>
+              } @else if ( streetState.showWarnings() &&
+              streetState.hasWarnings() ) {
+              <div
+                [id]="streetState.warningId()"
+                role="status"
+                aria-live="polite"
+                class="headless-alert-warning text-xs"
+              >
+                @for ( warning of streetState.resolvedWarnings(); track
+                warning.kind + ':' + warning.message + ':' + $index ) {
+                <div>{{ warning.message }}</div>
+                }
+              </div>
+              }
+            </div>
+          </div>
+
+          <div
+            ngxHeadlessFieldName
+            fieldName="city"
+            #cityName="fieldName"
+            class="space-y-2"
+          >
+            <div
+              ngxHeadlessErrorState
+              #cityState="errorState"
+              [field]="deliveryForm.address.city"
+              [fieldName]="cityName.resolvedFieldName()"
+              class="space-y-2"
+            >
+              <label
+                [for]="cityName.resolvedFieldName()"
+                class="text-sm font-medium"
+              >
+                City *
+              </label>
+              <input
+                [id]="cityName.resolvedFieldName()"
+                type="text"
+                class="form-input"
+                [formField]="deliveryForm.address.city"
+                placeholder="Springfield"
+                [attr.aria-invalid]="cityState.hasErrors() ? 'true' : null"
+                [attr.aria-describedby]="
+                  cityState.showErrors() && cityState.hasErrors()
+                    ? cityState.errorId()
+                    : cityState.showWarnings() && cityState.hasWarnings()
+                      ? cityState.warningId()
+                      : null
+                "
+              />
+
+              @if (cityState.showErrors() && cityState.hasErrors()) {
+              <div
+                [id]="cityState.errorId()"
+                role="alert"
+                class="headless-alert-error text-xs"
+              >
+                @for ( error of cityState.resolvedErrors(); track error.kind +
+                ':' + error.message + ':' + $index ) {
+                <div>{{ error.message }}</div>
+                }
+              </div>
+              }
+            </div>
+          </div>
+
+          <div
+            ngxHeadlessFieldName
+            fieldName="postalCode"
+            #postalName="fieldName"
+            class="space-y-2"
+          >
+            <div
+              ngxHeadlessErrorState
+              #postalState="errorState"
+              [field]="deliveryForm.address.postalCode"
+              [fieldName]="postalName.resolvedFieldName()"
+              class="space-y-2"
+            >
+              <label
+                [for]="postalName.resolvedFieldName()"
+                class="text-sm font-medium"
+              >
+                Postal code *
+              </label>
+              <input
+                [id]="postalName.resolvedFieldName()"
+                type="text"
+                class="form-input"
+                [formField]="deliveryForm.address.postalCode"
+                placeholder="12345"
+                [attr.aria-invalid]="
+                  postalState.hasErrors() ? 'true' : null
+                "
+                [attr.aria-describedby]="
+                  postalState.showErrors() && postalState.hasErrors()
+                    ? postalState.errorId()
+                    : postalState.showWarnings() &&
+                        postalState.hasWarnings()
+                      ? postalState.warningId()
+                      : null
+                "
+              />
+
+              @if (postalState.showErrors() && postalState.hasErrors()) {
+              <div
+                [id]="postalState.errorId()"
+                role="alert"
+                class="headless-alert-error text-xs"
+              >
+                @for ( error of postalState.resolvedErrors(); track error.kind +
+                ':' + error.message + ':' + $index ) {
+                <div>{{ error.message }}</div>
+                }
+              </div>
+              } @else if ( postalState.showWarnings() &&
+              postalState.hasWarnings() ) {
+              <div
+                [id]="postalState.warningId()"
+                role="status"
+                aria-live="polite"
+                class="headless-alert-warning text-xs"
+              >
+                @for ( warning of postalState.resolvedWarnings(); track
+                warning.kind + ':' + warning.message + ':' + $index ) {
+                <div>{{ warning.message }}</div>
+                }
+              </div>
+              }
+            </div>
+          </div>
+
+          <div
+            ngxHeadlessFieldName
+            fieldName="deliveryNotes"
+            #notesName="fieldName"
+            class="space-y-2 sm:col-span-2"
+          >
+            <div
+              ngxHeadlessErrorState
+              #notesState="errorState"
+              [field]="deliveryForm.deliveryNotes"
+              [fieldName]="notesName.resolvedFieldName()"
+              class="space-y-2"
+            >
+              <div class="flex items-end justify-between gap-2">
+                <label
+                  [for]="notesName.resolvedFieldName()"
+                  class="text-sm font-medium"
+                >
+                  Delivery notes
+                </label>
+                <span class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ notesCount.currentLength() }}/200
+                </span>
+              </div>
+
+              <textarea
+                [id]="notesName.resolvedFieldName()"
+                class="form-input resize-none"
+                rows="3"
+                [formField]="deliveryForm.deliveryNotes"
+                placeholder="Special instructions…"
+                [attr.aria-invalid]="notesState.hasErrors() ? 'true' : null"
+                [attr.aria-describedby]="
+                  notesState.showErrors() && notesState.hasErrors()
+                    ? notesState.errorId()
+                    : notesState.showWarnings() && notesState.hasWarnings()
+                      ? notesState.warningId()
+                      : null
+                "
+              ></textarea>
+
+              @if (notesState.showErrors() && notesState.hasErrors()) {
+              <div
+                [id]="notesState.errorId()"
+                role="alert"
+                class="headless-alert-error text-xs"
+              >
+                @for ( error of notesState.resolvedErrors(); track error.kind +
+                ':' + error.message + ':' + $index ) {
+                <div>{{ error.message }}</div>
+                }
+              </div>
+              } @else if ( notesState.showWarnings() && notesState.hasWarnings()
+              ) {
+              <div
+                [id]="notesState.warningId()"
+                role="status"
+                aria-live="polite"
+                class="headless-alert-warning text-xs"
+              >
+                @for ( warning of notesState.resolvedWarnings(); track
+                warning.kind + ':' + warning.message + ':' + $index ) {
+                <div>{{ warning.message }}</div>
+                }
+              </div>
+              }
+            </div>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="flex gap-4">
+      <button type="submit" class="btn-primary">Submit</button>
+      <button type="button" (click)="reset()" class="btn-secondary">
+        Reset
+      </button>
+    </div>
+  </form>
+</div>

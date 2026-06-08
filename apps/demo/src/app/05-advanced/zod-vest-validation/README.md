@@ -10,7 +10,7 @@ Shows the practical layered strategy for non-trivial forms: use **Zod** for stru
 - `validateVest(path, suite, { includeWarnings: true })` — first-class Vest adapter mapping both blocking errors and `warn:*` advisories from the same suite run.
 - Layered validators on one `form()` call — errors from both layers are rendered identically by the wrapper.
 - `ngx-form-field-wrapper` + `ngx-form-field-error` — uniform rendering of blocking errors and warnings.
-- `[formRoot]` declarative submission with `ignoreValidators: 'all'` + `hasOnlyWarnings()` — warning-tolerant submission under Angular 21.2.
+- `[formRoot]` declarative submission with `ignoreValidators: 'all'` + `hasOnlyWarnings()` — warning-tolerant submission under Angular 22.
 
 ## Form model
 

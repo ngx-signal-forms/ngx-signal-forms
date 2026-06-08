@@ -9,7 +9,7 @@ Manual submission plumbing — disabling buttons, tracking loading, catching err
 - `form(model, schema, { submission })` — declarative `action` + `onInvalid` lifecycle.
 - `[formRoot]` directive — orchestrates `preventDefault`, `novalidate`, submitting state, and invalid-submit handling.
 - `createOnInvalidHandler()` — focuses the first invalid field on failed submit.
-- `<ngx-form-field-error-summary>` — strategy-aware, aggregated, clickable error summary (`role="alert"`, `aria-live="assertive"`).
+- `<ngx-form-field-error-summary>` — strategy-aware, aggregated, clickable error summary (`role="alert"`, using the role's implicit assertive live-region semantics).
 - `focusBoundControl()` — click-to-focus from the summary into the control.
 - `humanizeFieldPath` + `provideFieldLabels()` — readable field names in the summary.
 - `submitting()` signal — drives the submit button's disabled/loading UI.

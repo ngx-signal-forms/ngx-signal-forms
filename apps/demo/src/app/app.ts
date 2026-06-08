@@ -419,28 +419,29 @@ import { PageControlsService } from './ui/page-controls';
   `,
 })
 export class AppComponent {
-  private readonly router = inject(Router);
-  private readonly title = inject(Title);
-  private readonly pageControls = inject(PageControlsService);
+  readonly #router = inject(Router);
+  readonly #title = inject(Title);
+  readonly #pageControls = inject(PageControlsService);
 
-  protected readonly panelOpen = this.pageControls.panelOpen;
-  protected readonly railCollapsed = this.pageControls.railCollapsed;
+  protected readonly panelOpen = this.#pageControls.panelOpen;
+  protected readonly railCollapsed = this.#pageControls.railCollapsed;
 
-  private readonly currentPath = toSignal(
-    this.router.events.pipe(
+  readonly #currentPath = toSignal(
+    this.#router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
-      map(() => this.router.url.split('?')[0]),
+      map(() => this.#router.url.split('?')[0]),
     ),
-    { initialValue: this.router.url.split('?')[0] },
+    { initialValue: this.#router.url.split('?')[0] },
   );
 
-  constructor() {
-    effect(() => {
-      const path = this.currentPath();
-      const t = getRouteTitle(path);
-      if (t) this.title.setTitle(t);
-    });
-  }
+  // Named Angular effect fields are intentionally unread.
+  // Angular registers and destroys the effect for the component lifecycle.
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
+  readonly #syncRouteTitleEffect = effect(() => {
+    const path = this.#currentPath();
+    const t = getRouteTitle(path);
+    if (t) this.#title.setTitle(t);
+  });
 
   /**
    * Reopen the controls panel using the affordance that fits the current
@@ -452,9 +453,9 @@ export class AppComponent {
       typeof window !== 'undefined' &&
       window.matchMedia('(min-width: 1280px)').matches;
     if (wide) {
-      this.pageControls.expandRail();
+      this.#pageControls.expandRail();
     } else {
-      this.pageControls.openPanel();
+      this.#pageControls.openPanel();
     }
   }
 }

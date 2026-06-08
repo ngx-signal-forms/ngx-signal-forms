@@ -1,4 +1,10 @@
-import { Component, computed, linkedSignal, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 import {
   type FormFieldAppearance,
   type FormFieldOrientation,
@@ -15,7 +21,7 @@ import {
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
   getOrientationLabel,
-  isOrientationDisabledForAppearance,
+  normalizeOrientationForAppearance,
 } from '../../ui/orientation-toggle';
 
 import { ADVANCED_WIZARD_CONTENT } from './advanced-wizard.content';
@@ -89,17 +95,28 @@ export default class AdvancedWizardPage {
     signal<FormFieldOrientation>('vertical');
   protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
     () => {
-      const requestedOrientation = this.selectedOrientationPreference();
-      return isOrientationDisabledForAppearance(
+      return normalizeOrientationForAppearance(
         this.selectedAppearance(),
-        requestedOrientation,
-      )
-        ? 'vertical'
-        : requestedOrientation;
+        this.selectedOrientationPreference(),
+      );
     },
   );
   protected readonly demonstratedContent = ADVANCED_WIZARD_CONTENT.demonstrated;
   protected readonly learningContent = ADVANCED_WIZARD_CONTENT.learning;
+  constructor() {
+    effect(() => {
+      const preferredOrientation = this.selectedOrientationPreference();
+      const normalizedOrientation = normalizeOrientationForAppearance(
+        this.selectedAppearance(),
+        preferredOrientation,
+      );
+
+      if (preferredOrientation !== normalizedOrientation) {
+        this.selectedOrientationPreference.set(normalizedOrientation);
+      }
+    });
+  }
+
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Appearance',

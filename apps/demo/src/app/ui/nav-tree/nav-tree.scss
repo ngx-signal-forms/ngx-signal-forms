@@ -1,0 +1,236 @@
+:host {
+  display: block;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+/* ── Category (disclosure) ───────────────────────────── */
+.cat {
+  display: flex;
+  flex-direction: column;
+}
+
+.cat__trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  cursor: pointer;
+  color: rgb(100 116 139);
+  text-align: left;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+
+  &:hover {
+    background: rgb(241 245 249);
+    color: rgb(51 65 85);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgb(99 102 241);
+    outline-offset: -2px;
+  }
+
+  &[aria-expanded='true'] .cat__chevron {
+    transform: rotate(90deg);
+    color: rgb(99 102 241);
+  }
+
+  &[aria-expanded='true'] .cat__count {
+    color: rgb(79 70 229);
+    background: rgb(238 242 255);
+  }
+}
+
+:host-context(.dark) .cat__trigger {
+  color: rgb(100 116 139);
+
+  &:hover {
+    background: rgb(30 41 59 / 0.55);
+    color: rgb(203 213 225);
+  }
+}
+
+.cat__chevron {
+  width: 0.7rem;
+  height: 0.7rem;
+  flex-shrink: 0;
+  color: rgb(148 163 184);
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cat__label {
+  flex: 1;
+  min-width: 0;
+  font-family:
+    'ui-monospace', 'SFMono-Regular', 'Cascadia Code', 'Menlo', monospace;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* count pill */
+.cat__count {
+  font-family:
+    'ui-monospace', 'SFMono-Regular', 'Cascadia Code', 'Menlo', monospace;
+  font-size: 0.62rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0.18rem 0.36rem;
+  border-radius: 999px;
+  color: rgb(148 163 184);
+  background: rgb(241 245 249);
+  transition:
+    color 140ms ease,
+    background-color 140ms ease;
+}
+
+:host-context(.dark) .cat__count {
+  color: rgb(100 116 139);
+  background: rgb(30 41 59 / 0.7);
+}
+
+:host-context(.dark) .cat__trigger[aria-expanded='true'] .cat__count {
+  color: rgb(165 180 252);
+  background: rgb(49 46 129 / 0.4);
+}
+
+/* ── Animated panel (grid-rows trick) ────────────────── */
+.cat__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 220ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  &[data-open='true'] {
+    grid-template-rows: 1fr;
+  }
+}
+
+.cat__panel-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.cat__list {
+  list-style: none;
+  margin: 0.1rem 0 0.35rem;
+  padding: 0;
+  /* guide rail */
+  margin-left: 1.05rem;
+  border-left: 1px solid rgb(226 232 240);
+}
+
+:host-context(.dark) .cat__list {
+  border-left-color: rgb(30 41 59);
+}
+
+/* ── Leaf link ───────────────────────────────────────── */
+.leaf {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin: 0.05rem 0 0.05rem -1px;
+  padding: 0.4rem 0.6rem 0.4rem 0.85rem;
+  border-left: 2px solid transparent;
+  font-size: 0.83rem;
+  line-height: 1.35;
+  color: rgb(100 116 139);
+  text-decoration: none;
+  transition:
+    color 130ms ease,
+    background-color 130ms ease,
+    border-color 130ms ease;
+
+  &__label {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* config-availability glyph */
+  &__controls {
+    flex-shrink: 0;
+    width: 0.85rem;
+    height: 0.85rem;
+    margin-top: 0.12rem;
+    color: rgb(148 163 184);
+    opacity: 0.55;
+    transition:
+      color 130ms ease,
+      opacity 130ms ease;
+  }
+
+  &:hover {
+    color: rgb(15 23 42);
+    border-left-color: rgb(203 213 225);
+
+    .leaf__controls {
+      opacity: 0.9;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgb(99 102 241);
+    outline-offset: -2px;
+    border-radius: 0.3rem;
+  }
+
+  /* active */
+  &--active {
+    color: rgb(67 56 202);
+    font-weight: 600;
+    border-left-color: rgb(99 102 241);
+    background: linear-gradient(
+      to right,
+      rgb(238 242 255) 0%,
+      rgb(238 242 255 / 0) 100%
+    );
+
+    .leaf__controls {
+      color: rgb(99 102 241);
+      opacity: 1;
+    }
+
+    &:hover {
+      color: rgb(67 56 202);
+      border-left-color: rgb(99 102 241);
+    }
+  }
+}
+
+:host-context(.dark) .leaf {
+  color: rgb(100 116 139);
+
+  &:hover {
+    color: rgb(226 232 240);
+    border-left-color: rgb(51 65 85);
+  }
+
+  &--active {
+    color: rgb(199 210 254);
+    border-left-color: rgb(129 140 248);
+    background: linear-gradient(
+      to right,
+      rgb(49 46 129 / 0.32) 0%,
+      rgb(49 46 129 / 0) 100%
+    );
+
+    .leaf__controls {
+      color: rgb(129 140 248);
+    }
+
+    &:hover {
+      color: rgb(199 210 254);
+    }
+  }
+}

@@ -44,14 +44,14 @@ export class PageControlsService {
   }
 
   collapseRail(): void {
-    this.setRailCollapsed(true);
+    this.#setRailCollapsed(true);
   }
 
   expandRail(): void {
-    this.setRailCollapsed(false);
+    this.#setRailCollapsed(false);
   }
 
-  private setRailCollapsed(collapsed: boolean): void {
+  #setRailCollapsed(collapsed: boolean): void {
     this.railCollapsed.set(collapsed);
     try {
       localStorage.setItem(RAIL_COLLAPSED_KEY, collapsed ? '1' : '0');

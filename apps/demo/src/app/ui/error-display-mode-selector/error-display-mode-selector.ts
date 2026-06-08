@@ -206,12 +206,12 @@ export class ErrorDisplayModeSelectorComponent {
   readonly modes = input<readonly ErrorDisplayStrategy[] | null>(null);
   readonly embedded = input(false);
 
-  private readonly help = inject(PanelHelpService);
+  readonly #help = inject(PanelHelpService);
 
   /** Verbose guidance shows in standalone use, or when the panel's
    *  "Details" toggle is on while embedded. */
   protected readonly showHelp = computed(
-    () => !this.embedded() || this.help.showDetails(),
+    () => !this.embedded() || this.#help.showDetails(),
   );
 
   protected readonly errorDisplayModes = computed(() => {

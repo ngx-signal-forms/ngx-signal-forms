@@ -1,0 +1,82 @@
+<!-- Step Progress Indicator -->
+<nav class="wizard-progress" aria-label="Wizard progress">
+  <ol class="wizard-steps">
+    @for (step of steps(); track step.stepId(); let idx = $index) {
+    <li class="wizard-step-item">
+      <button
+        type="button"
+        class="wizard-step-button"
+        [class.active]="currentStepIndex() === idx"
+        [class.completed]="isStepCompleted(step.stepId())"
+        [class.disabled]="!canNavigateToStep(step.stepId())"
+        [attr.aria-current]="currentStepIndex() === idx ? 'step' : null"
+        [disabled]="!canNavigateToStep(step.stepId())"
+        (click)="goToStep(step.stepId())"
+      >
+        @if (isStepCompleted(step.stepId())) {
+        <span class="sr-only">Completed: </span>
+        } @if (currentStepIndex() === idx) {
+        <span class="sr-only">Current: </span>
+        }
+        <span
+          class="wizard-step-number"
+          [class.bg-blue-600]="currentStepIndex() === idx"
+          [class.text-white]="currentStepIndex() === idx"
+        >
+          @if (step.icon(); as icon) { {{ icon }} } @else { {{ idx + 1 }} }
+        </span>
+        <span class="wizard-step-label">{{ step.label() }}</span>
+      </button>
+    </li>
+    }
+  </ol>
+  <div class="wizard-progress-bar">
+    <div
+      class="wizard-progress-fill"
+      [style.width.%]="progress()"
+      role="progressbar"
+      [attr.aria-valuenow]="progress()"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-label="Wizard progress"
+    ></div>
+  </div>
+</nav>
+
+<!-- Step Content (lazy rendered via NgTemplateOutlet) -->
+<div class="wizard-content">
+  @if (activeStep(); as step) {
+  <ng-container
+    [ngTemplateOutlet]="step.templateRef"
+    [ngTemplateOutletContext]="activeStepContext()"
+  />
+  }
+</div>
+
+<!-- Navigation Buttons -->
+@if (showNavigation()) {
+<div class="wizard-navigation">
+  <button
+    type="button"
+    class="wizard-btn wizard-btn-secondary"
+    [disabled]="isFirstStep()"
+    (click)="previous()"
+  >
+    {{ previousLabel() }}
+  </button>
+
+  @if (!isLastStep()) {
+  <button type="button" class="wizard-btn wizard-btn-primary" (click)="next()">
+    {{ nextLabel() }}
+  </button>
+  } @else {
+  <button
+    type="button"
+    class="wizard-btn wizard-btn-success"
+    (click)="submit()"
+  >
+    {{ submitLabel() }}
+  </button>
+  }
+</div>
+}

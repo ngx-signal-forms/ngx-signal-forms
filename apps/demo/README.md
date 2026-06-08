@@ -215,8 +215,8 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 ✅ **Live Regions**
 
-- Errors: `role="alert"` + `aria-live="assertive"`
-- Warnings: `role="status"` + `aria-live="polite"`
+- Errors: `role="alert"` (implicit assertive live region)
+- Warnings: `role="status"` (implicit polite live region)
 - Screen reader announcements
 
 ✅ **Error Display Strategies**
@@ -227,8 +227,8 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 ## 🔧 Technology Stack
 
-- **Angular**: 21.2.x (Signal Forms experimental API)
-- **TypeScript**: ~5.9 (strict mode)
+- **Angular**: 22.0.x (Signal Forms experimental API)
+- **TypeScript**: ~6.0 (strict mode)
 - **Toolkit**: @ngx-signal-forms/toolkit
 - **Styling**: Tailwind CSS 4.x
 - **Testing**: Vitest (unit), Playwright (E2E)
@@ -237,7 +237,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 **Issue:** Type errors with Signal Forms
 
-- Ensure Angular 21+ is installed
+- Ensure Angular 22+ is installed
 - Signal Forms are experimental - API may change
 - Check `@angular/forms/signals` import path
 
