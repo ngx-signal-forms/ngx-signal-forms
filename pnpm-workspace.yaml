@@ -35,7 +35,7 @@ catalogs:
     '@angular/compiler-cli': '22.0.0'
     '@angular/language-service': '22.0.0'
     '@schematics/angular': '22.0.0'
-    ng-packagr: '22.0.0-rc.0'
+    ng-packagr: '22.0.0'
   angular-eslint:
     '@angular-eslint/eslint-plugin': '21.4.0'
     '@angular-eslint/eslint-plugin-template': '21.4.0'
@@ -70,8 +70,8 @@ catalogs:
   spartan:
     '@ng-icons/core': '^33.2.3'
     '@ng-icons/lucide': '^33.2.3'
-    '@spartan-ng/brain': '0.0.1-alpha.701'
-    '@spartan-ng/cli': '0.0.1-alpha.701'
+    '@spartan-ng/brain': '0.0.1-alpha.706'
+    '@spartan-ng/cli': '0.0.1-alpha.706'
     class-variance-authority: '^0.7.1'
     clsx: '^2.1.1'
     tailwind-merge: '^3.6.0'
@@ -96,12 +96,12 @@ catalogs:
     '@testing-library/jest-dom': '^6.9.1'
     '@testing-library/user-event': '^14.6.1'
   tooling:
-    '@oxc-project/runtime': '^0.133.0'
-    '@types/node': '25.9.1'
+    '@oxc-project/runtime': '^0.134.0'
+    '@types/node': '25.9.2'
     eslint: '^10.4.1'
     jiti: '2.7.0'
     lint-staged: '^17.0.7'
-    oxfmt: '^0.52.0'
+    oxfmt: '^0.53.0'
     oxlint: '^1.68.0'
     oxlint-tsgolint: '^0.23.0'
     simple-git-hooks: '^2.13.1'
@@ -118,9 +118,9 @@ catalogs:
   vitest:
     '@vitest/browser': '~4.1.8'
     '@vitest/browser-playwright': '~4.1.8'
-    '@vitest/coverage-v8': '4.1.7'
-    '@vitest/ui': '4.1.7'
-    vitest: '4.1.7'
+    '@vitest/coverage-v8': '~4.1.8'
+    '@vitest/ui': '~4.1.8'
+    vitest: '~4.1.8'
 overrides:
   '@angular/common': '22.0.0'
   '@angular/compiler': '22.0.0'
