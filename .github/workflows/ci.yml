@@ -20,7 +20,9 @@ permissions:
 jobs:
   main:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Broad PRs that touch shared libs make nearly every project "affected"
+    # (4 demo e2e suites + toolkit browser tests), which can exceed 20 min.
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v5
         with:
