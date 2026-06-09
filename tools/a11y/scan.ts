@@ -1,8 +1,11 @@
+/// <reference lib="es2023" />
+/// <reference types="node" />
+
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
-import { workspaceRoot } from '@nx/devkit';
 import type { Page, TestInfo } from '@playwright/test';
+
+const WORKSPACE_ROOT = '.';
 
 /**
  * axe-core tag set mapping to **WCAG 2.2 Level AA** conformance.
@@ -53,11 +56,13 @@ export interface RouteScanResult {
  * convention.
  */
 export function a11yOutputDir(app: string): string {
-  return join(workspaceRoot, 'dist', '.a11y', app);
+  return `${WORKSPACE_ROOT}/dist/.a11y/${app}`;
 }
 
 function routeSlug(route: string): string {
-  const slug = route.replaceAll(/[^a-z0-9]+/gi, '-').replaceAll(/^-+|-+$/g, '');
+  const slug = route
+    .replaceAll(/[^a-z0-9]+/giu, '-')
+    .replaceAll(/^-+|-+$/gu, '');
   return slug.length > 0 ? slug : 'root';
 }
 
@@ -71,16 +76,16 @@ function routeSlug(route: string): string {
  * the baseline and spamming issues. Strip them so the key is stable across
  * builds while still pinpointing the element.
  */
-function stableTarget(nodeTargets: string[]): string {
-  return nodeTargets
-    .map((selector) =>
+function stableTarget(nodeTargets: readonly string[]): string {
+  return [...nodeTargets]
+    .map((selector: string) =>
       selector
-        .replaceAll(/\[_ng(?:content|host)-[^\]]*\]/g, '')
-        .replaceAll(/\s+/g, ' ')
+        .replaceAll(/\[_ng(?:content|host)-[^\]]*\]/gu, '')
+        .replaceAll(/\s+/gu, ' ')
         .trim(),
     )
-    .filter((selector) => selector.length > 0)
-    .toSorted()
+    .filter((selector: string) => selector.length > 0)
+    .toSorted((left: string, right: string) => left.localeCompare(right))
     .join(', ');
 }
 
@@ -98,42 +103,52 @@ function stableTarget(nodeTargets: string[]): string {
  * @param disableRules axe rule ids to skip for this route — use sparingly and
  *   only for violations owned by third-party UI layers, never toolkit output.
  */
-export async function scanRoute(opts: {
-  page: Page;
-  testInfo: TestInfo;
-  app: string;
-  route: string;
-  disableRules?: string[];
-}): Promise<A11yViolationRecord[]> {
-  const { page, testInfo, app, route, disableRules = [] } = opts;
-
+export async function scanRoute(
+  // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+  {
+    page,
+    testInfo,
+    app,
+    route,
+    disableRules = [],
+  }: Readonly<{
+    page: Page;
+    testInfo: TestInfo;
+    app: string;
+    route: string;
+    disableRules?: readonly string[];
+  }>,
+): Promise<A11yViolationRecord[]> {
   await page.goto(route);
   await page.waitForLoadState('networkidle');
 
   let builder = new AxeBuilder({ page }).withTags([...WCAG_22_AA_TAGS]);
   if (disableRules.length > 0) {
-    builder = builder.disableRules(disableRules);
+    builder = builder.disableRules([...disableRules]);
   }
   const results = await builder.analyze();
 
-  const violations: A11yViolationRecord[] = results.violations.map(
-    (violation) => ({
+  const violations: A11yViolationRecord[] = [];
+
+  for (const violation of results.violations) {
+    const selectors: string[] = [];
+
+    for (const node of violation.nodes) {
+      selectors.push(...node.target.map(String));
+    }
+
+    violations.push({
       route,
       ruleId: violation.id,
       impact: violation.impact ?? null,
       help: violation.help,
       helpUrl: violation.helpUrl,
-      target: stableTarget(
-        violation.nodes.flatMap((node) => node.target.map(String)),
-      ),
-    }),
-  );
+      target: stableTarget(selectors),
+    });
+  }
 
-  const file = join(
-    a11yOutputDir(app),
-    `${testInfo.project.name}__${routeSlug(route)}.json`,
-  );
-  mkdirSync(dirname(file), { recursive: true });
+  const file = `${a11yOutputDir(app)}/${testInfo.project.name}__${routeSlug(route)}.json`;
+  mkdirSync(a11yOutputDir(app), { recursive: true });
   writeFileSync(
     file,
     `${JSON.stringify(
