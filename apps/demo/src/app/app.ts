@@ -4,10 +4,14 @@ import {
   effect,
   inject,
 } from '@angular/core';
-import { RouterLink, RouterModule, RouterOutlet } from '@angular/router';
+import {
+  NavigationEnd,
+  Router,
+  RouterLink,
+  RouterOutlet,
+} from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { getRouteTitle } from '@ngx-signal-forms/demo-shared';
 import { NavTreeComponent } from './ui/nav-tree';
@@ -20,7 +24,6 @@ import { PageControlsService } from './ui/page-controls';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterOutlet,
-    RouterModule,
     RouterLink,
     NavTreeComponent,
     RightRailComponent,
