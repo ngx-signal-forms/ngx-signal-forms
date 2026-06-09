@@ -23,7 +23,6 @@ export { NgxThemeSwitcherComponent } from './theme-switcher/theme-switcher';
 // Code highlighting - consolidated service
 export {
   ShikiHighlightDirective,
-  ShikiHighlightService,
   type SupportedLanguage,
   type SupportedTheme,
 } from './code-highlight';

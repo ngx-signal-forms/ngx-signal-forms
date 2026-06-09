@@ -43,7 +43,7 @@ import { contactFormSchema } from './contact-form.validations';
  */
 @Component({
   selector: 'ngx-contact-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     FormField,
     NgxSignalFormToolkit,

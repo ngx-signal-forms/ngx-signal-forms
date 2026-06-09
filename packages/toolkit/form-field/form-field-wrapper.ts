@@ -176,7 +176,7 @@ import {
  */
 @Component({
   selector: 'ngx-form-field-wrapper',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [NgComponentOutlet],
   providers: [
     NgxFieldIdentity,

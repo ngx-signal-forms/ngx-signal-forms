@@ -11,7 +11,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-current-length',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
@@ -42,7 +42,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-max-length',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
@@ -73,7 +73,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-remaining',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
@@ -102,7 +102,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-negative-remaining',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
@@ -133,7 +133,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-has-limit',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
@@ -162,7 +162,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-percent-used',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
@@ -196,7 +196,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-negative-percent',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="title" [formField]="form.title" />
@@ -235,7 +235,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-ok-state',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
@@ -266,7 +266,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-warning-state',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
@@ -301,7 +301,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-danger-state',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
@@ -336,7 +336,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-exceeded-state',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
@@ -370,7 +370,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-zero-limit',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="title" [formField]="form.title" />
@@ -417,7 +417,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-custom-warning',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
@@ -452,7 +452,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-custom-danger',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
@@ -490,7 +490,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-custom-display',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>
@@ -542,7 +542,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-unsupported-value',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div
             ngxHeadlessCharacterCount
@@ -585,7 +585,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-null-value',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div
             ngxHeadlessCharacterCount
@@ -615,7 +615,7 @@ describe('NgxHeadlessCharacterCount', () => {
       @Component({
         selector: 'ngx-test-user-typing',
         imports: [FormField, NgxHeadlessCharacterCount],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <textarea id="bio" [formField]="contactForm.bio"></textarea>

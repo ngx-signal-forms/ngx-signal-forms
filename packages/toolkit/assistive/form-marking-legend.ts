@@ -57,7 +57,7 @@ import { createFieldOptionalitySummary } from '@ngx-signal-forms/toolkit/headles
  */
 @Component({
   selector: 'ngx-form-marking-legend',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   template: `
     @if (resolvedText(); as text) {
       <p class="ngx-form-marking-legend">{{ text }}</p>

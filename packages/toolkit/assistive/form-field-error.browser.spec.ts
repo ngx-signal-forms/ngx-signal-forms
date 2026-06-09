@@ -25,7 +25,7 @@ describe('NgxFormFieldError — WCAG 4.1.3 live-region first-insertion', () => {
     @Component({
       selector: 'test-empty-live-region',
       imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
           <input id="name" [formField]="testForm.name" />
@@ -58,7 +58,7 @@ describe('NgxFormFieldError — WCAG 4.1.3 live-region first-insertion', () => {
     @Component({
       selector: 'test-first-insertion',
       imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
           <input id="email" [formField]="testForm.email" />
@@ -103,7 +103,7 @@ describe('NgxFormFieldError — WCAG 4.1.3 live-region first-insertion', () => {
     @Component({
       selector: 'test-status-region',
       imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
           <input id="pwd" [formField]="testForm.pwd" />

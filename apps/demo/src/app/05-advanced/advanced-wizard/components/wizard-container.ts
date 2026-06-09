@@ -37,7 +37,7 @@ const MIN_DISPLAY_MS = 500;
 
 @Component({
   selector: 'ngx-wizard-container',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     DatePipe,
     WizardComponent,

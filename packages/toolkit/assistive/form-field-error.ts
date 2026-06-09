@@ -96,7 +96,7 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
  */
 @Component({
   selector: 'ngx-form-field-error',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   hostDirectives: [
     {
       directive: NgxHeadlessErrorState,

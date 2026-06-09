@@ -9,7 +9,7 @@ export type DisplayControlChip = {
 
 @Component({
   selector: 'ngx-display-controls-card',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   styles: `
     .control-deck {
       position: relative;

@@ -2,7 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
+  linkedSignal,
   signal,
   viewChild,
 } from '@angular/core';
@@ -40,7 +40,7 @@ import { SubmissionPatternsComponent } from './submission-patterns.form';
  */
 @Component({
   selector: 'ngx-submission-patterns-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   styles: `
     :host {
       display: flex;
@@ -96,7 +96,7 @@ import { SubmissionPatternsComponent } from './submission-patterns.form';
         description="Switch between vertical labels and horizontal label columns while checking pre-submit, submitting, and server-error states. Outline remains vertical only."
       >
         <ngx-orientation-toggle
-          [(value)]="selectedOrientation"
+          [(value)]="selectedOrientationPreference"
           [appearance]="selectedAppearance()"
         />
       </ngx-display-controls-section>
@@ -123,8 +123,19 @@ export class SubmissionPatternsPage {
     signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
-  protected readonly selectedOrientation =
+  protected readonly selectedOrientationPreference =
     signal<FormFieldOrientation>('vertical');
+  protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
+    () => {
+      const requestedOrientation = this.selectedOrientationPreference();
+      return isOrientationDisabledForAppearance(
+        this.selectedAppearance(),
+        requestedOrientation,
+      )
+        ? 'vertical'
+        : requestedOrientation;
+    },
+  );
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -141,17 +152,4 @@ export class SubmissionPatternsPage {
   ]);
   protected readonly content = SUBMISSION_PATTERNS_CONTENT;
   protected readonly formRef = viewChild(SubmissionPatternsComponent);
-
-  constructor() {
-    effect(() => {
-      if (
-        isOrientationDisabledForAppearance(
-          this.selectedAppearance(),
-          this.selectedOrientation(),
-        )
-      ) {
-        this.selectedOrientation.set('vertical');
-      }
-    });
-  }
 }

@@ -35,7 +35,7 @@ import { createErrorMessageSignal } from '@ngx-signal-forms/toolkit/headless';
  */
 @Component({
   selector: 'spartan-form-field-error',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   template: `
     <!--
       Blocking errors. role="alert" implies aria-live="assertive". The <p> is

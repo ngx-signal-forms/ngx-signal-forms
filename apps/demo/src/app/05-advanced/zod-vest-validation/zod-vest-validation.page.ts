@@ -2,7 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
+  linkedSignal,
   signal,
   viewChild,
 } from '@angular/core';
@@ -35,7 +35,7 @@ import { ZodVestValidationComponent } from './zod-vest-validation.form';
 
 @Component({
   selector: 'ngx-zod-vest-validation-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   styles: `
     :host {
       display: flex;
@@ -66,6 +66,51 @@ import { ZodVestValidationComponent } from './zod-vest-validation.form';
       [learning]="content.learning"
     />
 
+    <section
+      class="rounded-xl border border-indigo-200 bg-indigo-50 p-5 text-indigo-950 dark:border-indigo-900/60 dark:bg-indigo-950/30 dark:text-indigo-100"
+      aria-label="Zod baseline versus layered validation comparison"
+    >
+      <h3 class="text-base font-semibold">Delta from the Zod-only baseline</h3>
+      <p class="mt-2 text-sm">
+        Use this panel as a quick diff: the baseline route stays structural,
+        while this route adds policy and advisory guidance.
+      </p>
+
+      <div class="mt-4 grid gap-4 md:grid-cols-2">
+        <article
+          class="rounded-lg border border-emerald-200 bg-emerald-50/90 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/40"
+        >
+          <h4 class="font-medium">Zod-only baseline keeps</h4>
+          <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+            <li>Required, format, enum, and length checks</li>
+            <li>Typed contract from one schema</li>
+            <li>No business-policy branching layer</li>
+          </ul>
+          <a
+            href="/advanced-scenarios/zod-validation"
+            class="mt-3 inline-flex text-sm font-medium underline underline-offset-4"
+            >Open Zod-Only Validation</a
+          >
+        </article>
+
+        <article
+          class="rounded-lg border border-fuchsia-200 bg-fuchsia-50/90 p-4 dark:border-fuchsia-900/60 dark:bg-fuchsia-950/40"
+        >
+          <h4 class="font-medium">This layered route adds</h4>
+          <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+            <li>Vest business-policy rules on top of Zod</li>
+            <li>Non-blocking <code>warn()</code> advisories</li>
+            <li>Shared rendering for structural + policy feedback</li>
+          </ul>
+          <a
+            href="/advanced-scenarios/vest-validation"
+            class="mt-3 inline-flex text-sm font-medium underline underline-offset-4"
+            >Open Vest-Only Validation</a
+          >
+        </article>
+      </div>
+    </section>
+
     <ngx-display-controls-card
       title="Layered validation visibility"
       description="Use the same form to compare structural errors and business-policy errors while changing only the display timing and wrapper appearance."
@@ -91,7 +136,7 @@ import { ZodVestValidationComponent } from './zod-vest-validation.form';
         description="Use a horizontal label column for the non-outline states to compare how structural and business-policy errors scan in denser layouts."
       >
         <ngx-orientation-toggle
-          [(value)]="selectedOrientation"
+          [(value)]="selectedOrientationPreference"
           [appearance]="selectedAppearance()"
         />
       </ngx-display-controls-section>
@@ -118,8 +163,19 @@ export class ZodVestValidationPage {
     signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
-  protected readonly selectedOrientation =
+  protected readonly selectedOrientationPreference =
     signal<FormFieldOrientation>('vertical');
+  protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
+    () => {
+      const requestedOrientation = this.selectedOrientationPreference();
+      return isOrientationDisabledForAppearance(
+        this.selectedAppearance(),
+        requestedOrientation,
+      )
+        ? 'vertical'
+        : requestedOrientation;
+    },
+  );
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -136,17 +192,4 @@ export class ZodVestValidationPage {
   ]);
   protected readonly content = ZOD_VEST_VALIDATION_CONTENT;
   protected readonly formRef = viewChild(ZodVestValidationComponent);
-
-  constructor() {
-    effect(() => {
-      if (
-        isOrientationDisabledForAppearance(
-          this.selectedAppearance(),
-          this.selectedOrientation(),
-        )
-      ) {
-        this.selectedOrientation.set('vertical');
-      }
-    });
-  }
 }

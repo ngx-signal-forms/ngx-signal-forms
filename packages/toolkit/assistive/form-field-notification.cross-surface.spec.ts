@@ -20,7 +20,7 @@ import { NgxFormFieldNotification } from './form-field-notification';
 /** Minimal custom notification UI built directly on NgxHeadlessNotification. */
 @Component({
   selector: 'custom-notification',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   hostDirectives: [
     {
       directive: NgxHeadlessNotification,
@@ -56,7 +56,7 @@ describe('cross-surface: NgxFormFieldNotification vs NgxHeadlessNotification', (
     @Component({
       selector: 'test-notification-cross-surface-error',
       imports: [NgxFormFieldNotification, CustomNotificationComponent],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <ngx-form-field-notification
           [errors]="errors"
@@ -94,7 +94,7 @@ describe('cross-surface: NgxFormFieldNotification vs NgxHeadlessNotification', (
     @Component({
       selector: 'test-notification-cross-surface-warning',
       imports: [NgxFormFieldNotification, CustomNotificationComponent],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <ngx-form-field-notification [errors]="warnings" fieldName="address" />
         <custom-notification [errors]="warnings" fieldName="address" />
@@ -124,7 +124,7 @@ describe('cross-surface: NgxFormFieldNotification vs NgxHeadlessNotification', (
     @Component({
       selector: 'test-notification-cross-surface-tone',
       imports: [NgxFormFieldNotification, CustomNotificationComponent],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <ngx-form-field-notification
           [errors]="warnings"
@@ -154,7 +154,7 @@ describe('cross-surface: NgxFormFieldNotification vs NgxHeadlessNotification', (
     @Component({
       selector: 'test-notification-cross-surface-override',
       imports: [NgxFormFieldNotification, CustomNotificationComponent],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <ngx-form-field-notification
           [errors]="mixed"
@@ -187,7 +187,7 @@ describe('cross-surface: NgxFormFieldNotification vs NgxHeadlessNotification', (
     @Component({
       selector: 'test-notification-cross-surface-empty',
       imports: [NgxFormFieldNotification],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <ngx-form-field-notification [errors]="empty" fieldName="address" />
       `,

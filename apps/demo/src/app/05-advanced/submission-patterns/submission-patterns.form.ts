@@ -35,7 +35,7 @@ import { submissionSchema } from './submission-patterns.validations';
  */
 @Component({
   selector: 'ngx-submission-patterns',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     FormField,
     NgxSignalFormToolkit,
@@ -86,6 +86,13 @@ import { submissionSchema } from './submission-patterns.validations';
                 >
                   <span class="h-2 w-2 rounded-full bg-green-600"></span>
                   Submitted
+                </span>
+              }
+              @default {
+                <span class="text-xs text-red-700 dark:text-red-300">
+                  {{
+                    unreachableSubmittedStatus(formContext?.submittedStatus())
+                  }}
                 </span>
               }
             }
@@ -380,5 +387,11 @@ export class SubmissionPatternsComponent {
 
     /// Note: the derived submittedStatus returns to 'unsubmitted' after
     /// submitting() is false and the form has been reset (touched cleared)
+  }
+
+  protected unreachableSubmittedStatus(
+    status: SubmittedStatus | undefined,
+  ): string {
+    return `Unhandled submittedStatus: ${String(status)}`;
   }
 }

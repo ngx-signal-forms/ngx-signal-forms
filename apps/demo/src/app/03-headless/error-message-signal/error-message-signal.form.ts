@@ -74,7 +74,7 @@ function ariaDescribedBy(errors: readonly ResolvedFieldError[]): string | null {
 
 @Component({
   selector: 'ngx-error-message-signal',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [FormField, FormRoot],
   styles: `
     .demo-section {

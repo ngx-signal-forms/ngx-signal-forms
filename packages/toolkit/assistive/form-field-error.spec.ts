@@ -33,7 +33,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-initial-render',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -66,7 +66,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-on-submit-untouched',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -114,7 +114,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-touched-invalid',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -151,7 +151,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-valid-field',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -189,7 +189,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-invalid-untouched',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -222,7 +222,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-multiple-errors',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -261,7 +261,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-default-paragraph-layout',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -295,7 +295,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-bullet-layout',
         imports: [NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <ngx-form-field-error
             fieldName="address"
@@ -324,7 +324,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-immediate-strategy',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -358,7 +358,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-on-submit-strategy',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -406,7 +406,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-submitted-untouched',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -441,7 +441,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-submitting-on-touch',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -474,7 +474,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-submitting-on-submit',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -507,7 +507,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-submission-lifecycle',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -556,7 +556,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-wcag-role',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -598,7 +598,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-empty-live-region',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -665,7 +665,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-aria-live',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -699,7 +699,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-error-id',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -731,7 +731,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-nested-field-id',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input
             id="user.profile.email"
@@ -768,7 +768,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-no-errors',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -801,7 +801,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-empty-errors',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -840,7 +840,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-override-precedence',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -886,7 +886,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-override-on-submit-regression',
         imports: [NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <ngx-form-field-error
             fieldName="address"
@@ -923,7 +923,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-context-resolution',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         providers: [
           {
             provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
@@ -969,7 +969,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-explicit-priority',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         providers: [
           {
             provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
@@ -1021,7 +1021,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-fallback',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -1078,7 +1078,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-signal-reactivity',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         providers: [
           {
             provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
@@ -1133,7 +1133,7 @@ describe('NgxFormFieldError', () => {
     @Component({
       selector: 'ngx-test-warning-strategy',
       imports: [FormField, NgxFormFieldError],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <input id="password" [formField]="contactForm.password" />
         <ngx-form-field-error

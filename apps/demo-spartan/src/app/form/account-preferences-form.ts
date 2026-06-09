@@ -75,7 +75,7 @@ const accountSchema = schema<AccountPreferences>((path) => {
  */
 @Component({
   selector: 'ngx-account-preferences-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     FormField,
     FormRoot,

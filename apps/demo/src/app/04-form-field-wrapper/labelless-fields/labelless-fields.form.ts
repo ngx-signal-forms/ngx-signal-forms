@@ -29,7 +29,7 @@ import { labellessFieldsSchema } from './labelless-fields.validations';
  */
 @Component({
   selector: 'ngx-labelless-fields',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   templateUrl: './labelless-fields.html',
   styles: `

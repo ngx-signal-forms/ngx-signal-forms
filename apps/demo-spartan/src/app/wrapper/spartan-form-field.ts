@@ -100,7 +100,7 @@ type BrnFieldA11yPublicSurface = Pick<
   // field via the aliased input (`[ngxSpartanFormField]`) instead, so only
   // the inner `<input [formField]>` gets the toolkit's `FormField` directive.
   selector: 'spartan-form-field[ngxSpartanFormField]',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [NgComponentOutlet],
   hostDirectives: [
     {

@@ -15,7 +15,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  */
 @Component({
   selector: 'prime-field-hint',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   host: {
     '[attr.data-position]': 'position() ?? null',
   },

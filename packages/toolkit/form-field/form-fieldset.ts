@@ -106,7 +106,7 @@ export type NgxFieldsetValidationSurface = 'never' | 'always';
  */
 @Component({
   selector: 'ngx-form-fieldset, [ngxFormFieldset]',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   hostDirectives: [
     {
       directive: NgxHeadlessFieldset,

@@ -32,7 +32,7 @@ import {
  */
 @Component({
   selector: 'ngx-field-marking-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     FormField,
     NgxSignalFormToolkit,

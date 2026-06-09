@@ -77,7 +77,7 @@ import {
 @Component({
   selector: 'prime-form-field[ngxPrimeFormField]',
   exportAs: 'ngxPrimeFormField',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [NgComponentOutlet],
   providers: [
     {

@@ -44,7 +44,7 @@ export type NgxMatFeedbackSeverity = 'error' | 'warning';
  */
 @Component({
   selector: 'ngx-material-feedback-renderer',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   template: `
     <span
       class="ngx-mat-feedback"
@@ -116,7 +116,7 @@ export class MaterialFeedbackRenderer {
  */
 @Component({
   selector: 'ngx-mat-feedback-outlet',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [NgComponentOutlet],
   template: `
     <ng-container

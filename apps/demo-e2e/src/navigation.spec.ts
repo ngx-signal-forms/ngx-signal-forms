@@ -91,6 +91,7 @@ test.describe('Demo Application - Navigation & Shell', () => {
         '/advanced-scenarios/advanced-wizard',
         '/advanced-scenarios/async-validation',
         '/advanced-scenarios/cross-field-validation',
+        '/advanced-scenarios/zod-validation',
         '/advanced-scenarios/vest-validation',
         '/advanced-scenarios/zod-vest-validation',
       ];

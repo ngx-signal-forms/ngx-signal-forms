@@ -9,7 +9,7 @@ import { ErrorMessageSignalComponent } from './error-message-signal.form';
 
 @Component({
   selector: 'ngx-error-message-signal-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   styles: `
     :host {
       display: flex;

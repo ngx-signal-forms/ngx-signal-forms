@@ -2,7 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
+  linkedSignal,
   signal,
   viewChild,
 } from '@angular/core';
@@ -35,7 +35,7 @@ import { VestValidationComponent } from './vest-validation.form';
 
 @Component({
   selector: 'ngx-vest-validation-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   styles: `
     :host {
       display: flex;
@@ -91,7 +91,7 @@ import { VestValidationComponent } from './vest-validation.form';
         description="Compare policy-heavy forms with vertical labels and horizontal columns. Outline remains vertical because the floating-label treatment is intentionally preserved."
       >
         <ngx-orientation-toggle
-          [(value)]="selectedOrientation"
+          [(value)]="selectedOrientationPreference"
           [appearance]="selectedAppearance()"
         />
       </ngx-display-controls-section>
@@ -118,8 +118,19 @@ export class VestValidationPage {
     signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
-  protected readonly selectedOrientation =
+  protected readonly selectedOrientationPreference =
     signal<FormFieldOrientation>('vertical');
+  protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
+    () => {
+      const requestedOrientation = this.selectedOrientationPreference();
+      return isOrientationDisabledForAppearance(
+        this.selectedAppearance(),
+        requestedOrientation,
+      )
+        ? 'vertical'
+        : requestedOrientation;
+    },
+  );
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -136,17 +147,4 @@ export class VestValidationPage {
   ]);
   protected readonly content = VEST_VALIDATION_CONTENT;
   protected readonly formRef = viewChild(VestValidationComponent);
-
-  constructor() {
-    effect(() => {
-      if (
-        isOrientationDisabledForAppearance(
-          this.selectedAppearance(),
-          this.selectedOrientation(),
-        )
-      ) {
-        this.selectedOrientation.set('vertical');
-      }
-    });
-  }
 }

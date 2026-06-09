@@ -2,7 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
+  linkedSignal,
   signal,
   viewChild,
 } from '@angular/core';
@@ -59,7 +59,7 @@ import { CustomControlsFormComponent } from './custom-controls.form';
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   template: `
     <ngx-page-header
       title="Custom Signal Forms Controls"
@@ -95,7 +95,7 @@ import { CustomControlsFormComponent } from './custom-controls.form';
           description="Compare vertical and horizontal labels for the non-outline wrappers. Outline stays vertical because its floating-label treatment depends on the label living inside the field chrome."
         >
           <ngx-orientation-toggle
-            [(value)]="selectedOrientation"
+            [(value)]="selectedOrientationPreference"
             [appearance]="selectedAppearance()"
           />
         </ngx-display-controls-section>
@@ -125,8 +125,19 @@ export class CustomControlsPage {
   protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('standard');
-  protected readonly selectedOrientation =
+  protected readonly selectedOrientationPreference =
     signal<FormFieldOrientation>('vertical');
+  protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
+    () => {
+      const requestedOrientation = this.selectedOrientationPreference();
+      return isOrientationDisabledForAppearance(
+        this.selectedAppearance(),
+        requestedOrientation,
+      )
+        ? 'vertical'
+        : requestedOrientation;
+    },
+  );
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -144,17 +155,4 @@ export class CustomControlsPage {
 
   protected readonly demonstratedContent = CUSTOM_CONTROLS_CONTENT.demonstrated;
   protected readonly learningContent = CUSTOM_CONTROLS_CONTENT.learning;
-
-  constructor() {
-    effect(() => {
-      if (
-        isOrientationDisabledForAppearance(
-          this.selectedAppearance(),
-          this.selectedOrientation(),
-        )
-      ) {
-        this.selectedOrientation.set('vertical');
-      }
-    });
-  }
 }

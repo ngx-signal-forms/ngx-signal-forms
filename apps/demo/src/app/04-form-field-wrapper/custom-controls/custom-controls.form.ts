@@ -47,7 +47,7 @@ import { customControlsSchema } from './custom-controls.validations';
  */
 @Component({
   selector: 'ngx-custom-controls',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   providers: [
     ...provideNgxSignalFormControlPresetsForComponent({
       slider: {

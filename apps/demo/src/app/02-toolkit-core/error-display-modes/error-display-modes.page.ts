@@ -36,7 +36,7 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
     SplitLayoutComponent,
     NgxSignalFormDebugger,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   template: `
     <div>
       <!-- Header Section -->

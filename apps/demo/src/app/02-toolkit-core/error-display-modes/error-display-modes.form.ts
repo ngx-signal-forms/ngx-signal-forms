@@ -36,7 +36,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
 
 @Component({
   selector: 'ngx-error-display-helpers',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   template: `
     <div
       class="rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900 dark:border-indigo-800 dark:bg-indigo-950 dark:text-indigo-100"
@@ -135,7 +135,7 @@ export class ErrorDisplayHelpersComponent {
  */
 @Component({
   selector: 'ngx-error-display-modes-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     ErrorDisplayHelpersComponent,
     FormField,

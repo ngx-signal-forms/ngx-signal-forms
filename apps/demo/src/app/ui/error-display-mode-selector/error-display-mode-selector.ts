@@ -75,7 +75,7 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
  */
 @Component({
   selector: 'ngx-error-display-mode-selector',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   styles: `
     .error-mode-wrapper--embedded {
       margin-bottom: 0;
@@ -177,6 +177,14 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
               1. Fill the form quickly → 2. Submit without fixing issues → 3.
               Watch all errors appear together
             }
+            @case ('inherit') {
+              This mode inherits from the nearest parent
+              <code>ngxSignalForm</code>
+              strategy.
+            }
+            @default {
+              {{ unreachableMode(selectedMode()) }}
+            }
           }
         </div>
       </div>
@@ -212,4 +220,8 @@ export class ErrorDisplayModeSelectorComponent {
       availableModes[0]
     );
   });
+
+  protected unreachableMode(mode: ErrorDisplayStrategy): string {
+    return `Unhandled mode: ${mode}`;
+  }
 }

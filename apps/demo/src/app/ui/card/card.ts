@@ -8,7 +8,7 @@ import {
 
 @Component({
   selector: 'ngx-card',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [NgTemplateOutlet],
   host: {
     '[class]':

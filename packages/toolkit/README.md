@@ -221,6 +221,45 @@ provideNgxSignalFormControlPresets({
 
 For component-scoped overrides: `provideNgxSignalFormControlPresetsForComponent()`.
 
+#### Reading presets with `NgxControlPresetRegistry`
+
+`NgxControlPresetRegistry` is an injectable read/merge surface over the
+`NGX_SIGNAL_FORM_CONTROL_PRESETS` token. The token stays the source of truth,
+so the registry observes whatever the **calling injector** resolves — including
+component- and feature-scoped `provideNgxSignalFormControlPresetsForComponent()`
+overrides.
+
+`NgxControlPresetRegistry` is `providedIn: null`, so list it in the relevant
+`providers` array (or environment injector) before injecting it — each provided
+node then captures the presets effective at that node:
+
+```typescript
+@Component({
+  // ...
+  providers: [NgxControlPresetRegistry],
+})
+export class MyComponent {
+  private readonly registry = inject(NgxControlPresetRegistry);
+  // ...
+}
+```
+
+```typescript
+const registry = inject(NgxControlPresetRegistry);
+
+registry.resolve('slider'); // → effective { layout, ariaMode } for 'slider'
+registry.kinds(); // → readonly list of registered control kinds
+```
+
+Use `extend()` for a merge-not-replace layering: only the fields you pass are
+overridden, every other kind (and untouched field) is preserved:
+
+```typescript
+const next = registry.extend({ slider: { layout: 'custom' } });
+// next.slider.layout === 'custom'
+// next.slider.ariaMode is unchanged; next.switch, next.composite, ... all stay default
+```
+
 ### Field labels
 
 Override how field paths appear in error summaries:
@@ -306,7 +345,96 @@ provideFieldLabels(() => {
 | `resolveFieldNameFromCandidates(...candidates)` | Pick the first non-blank field name from a precedence chain (explicit → host id → context)  |
 | `generateErrorId(fieldName, kind?)`             | Derive `{fieldName}-error` (container) or `{fieldName}-error-{kind}` (per-error) element id |
 | `generateWarningId(fieldName)`                  | Derive the `{fieldName}-warning` element id used for `aria-describedby`                     |
+| `isElementCssVisible(element)`                  | CSS-visibility test (`Element.checkVisibility()` with `offsetParent` fallback)              |
 | `injectFormContext()`                           | Get `ngxSignalForm` context or `undefined`                                                  |
+
+### Field identity service
+
+`NgxFieldIdentity` is the element-scoped service that consolidates the three
+load-bearing accessibility primitives every assistive/headless surface depends
+on: **field-name resolution**, **control visibility**, and **stable error /
+warning ID generation**. The canonical `ngx-form-field-wrapper` provides and
+drives it; custom controls and third-party wrappers can provide it themselves
+to get identical behavior without re-deriving the rules.
+
+| Member                      | Description                                                                                                                 |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `fieldName()`               | Resolved field name (explicit → bound-control `id` → `null`; the label `for=` tier is opt-in via `createFieldNameResolver`) |
+| `controlId()`               | The bound control element's `id` attribute, or `null`                                                                       |
+| `errorId()`                 | Stable `{fieldName}-error` id, or `null` when no name is resolved                                                           |
+| `warningId()`               | Stable `{fieldName}-warning` id, or `null` when no name is resolved                                                         |
+| `hintIds()`                 | Hint ids contributed by the surrounding registry for this field                                                             |
+| `describedBy()`             | Aggregated `aria-describedby` chain from `hintIds()`, or `null`                                                             |
+| `isControlVisible()`        | Callable signal: no-arg returns the cached, reactive visibility flag                                                        |
+| `isControlVisible(element)` | Same member with an element argument: ad-hoc, non-reactive `isElementCssVisible(element)` probe                             |
+| `resolveControlElement()`   | The currently bound control element, or `null`                                                                              |
+
+Name resolution comes in two interchangeable shapes that produce **identical**
+names:
+
+- The service's internal resolution (driven by the wrapper) follows
+  explicit → bound-control `id` — no label tier.
+- `createFieldNameResolver({ explicit, labelFor?, boundControl, wrapperName })`
+  exposes the same cascade for custom wrappers, with the label `for=` tier as
+  an **opt-in** middle step. Omit `labelFor` and the two paths emit the same
+  name byte-for-byte.
+
+The `set*` writer methods are package-internal (stripped from the published
+`.d.ts`): the surrounding `ngx-form-field-wrapper` **drives** the identity, and
+consumers **read** the resolved signals — they do not drive them.
+
+#### Custom control example
+
+A custom control placed inside `ngx-form-field-wrapper` injects the
+wrapper-provided `NgxFieldIdentity` and **reads** the resolved identity it
+publishes — the resolved name, the stable error / warning ids, and the
+aggregated `aria-describedby` chain — so the control stays in lockstep with
+every other toolkit surface without re-deriving any of the rules:
+
+```typescript
+import { Component, ElementRef, inject } from '@angular/core';
+import {
+  NgxFieldIdentity,
+  isElementCssVisible,
+} from '@ngx-signal-forms/toolkit';
+
+@Component({
+  selector: 'my-rating-control',
+  template: `
+    <div role="radiogroup" [attr.aria-describedby]="identity.describedBy()">
+      <!-- rating widget -->
+    </div>
+    @if (identity.errorId(); as errorId) {
+      <div [id]="errorId"><!-- error message --></div>
+    }
+  `,
+})
+export class MyRatingControl {
+  // Injected from the surrounding `ngx-form-field-wrapper`, which drives it.
+  protected readonly identity = inject(NgxFieldIdentity);
+  readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  protected describedBy(): string | null {
+    return this.identity.describedBy();
+  }
+
+  // Read the cached, reactive visibility flag the wrapper maintains…
+  protected isLaidOut(): boolean {
+    return this.identity.isControlVisible();
+  }
+
+  // …or run the wrapper's exact CSS-visibility test against an arbitrary
+  // element ad hoc, via the public `isElementCssVisible` helper.
+  protected isElementLaidOut(): boolean {
+    const el = this.#host.nativeElement.querySelector('input');
+    return el ? isElementCssVisible(el) : true;
+  }
+}
+```
+
+`identity.errorId()` / `identity.warningId()` yield stable
+`{name}-error` / `{name}-warning` ids the control wires into its error and
+warning elements, matching every other toolkit surface.
 
 ### Other
 

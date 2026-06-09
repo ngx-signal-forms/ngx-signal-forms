@@ -17,7 +17,7 @@ describe('NgxFormFieldErrorSummary', () => {
     @Component({
       selector: 'ngx-test-error-summary-immediate',
       imports: [FormField, NgxFormFieldErrorSummary],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <input
           id="email"
@@ -60,7 +60,7 @@ describe('NgxFormFieldErrorSummary', () => {
     @Component({
       selector: 'ngx-test-error-summary-submit',
       imports: [FormField, NgxFormFieldErrorSummary],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <input id="email" [formField]="contactForm.email" />
         <ngx-form-field-error-summary
@@ -100,7 +100,7 @@ describe('NgxFormFieldErrorSummary', () => {
     @Component({
       selector: 'ngx-test-error-summary-default',
       imports: [FormField, NgxFormFieldErrorSummary],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <input id="email" [formField]="contactForm.email" />
         <ngx-form-field-error-summary [formTree]="contactForm" />
@@ -131,7 +131,7 @@ describe('NgxFormFieldErrorSummary', () => {
     @Component({
       selector: 'ngx-test-error-summary-multi',
       imports: [FormField, NgxFormFieldErrorSummary],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <input id="email" [formField]="contactForm.email" />
         <input id="name" [formField]="contactForm.name" />
@@ -168,7 +168,7 @@ describe('NgxFormFieldErrorSummary', () => {
     @Component({
       selector: 'ngx-test-error-summary-empty',
       imports: [FormField, NgxFormFieldErrorSummary],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <input id="email" [formField]="contactForm.email" />
         <ngx-form-field-error-summary
@@ -197,7 +197,7 @@ describe('NgxFormFieldErrorSummary', () => {
     @Component({
       selector: 'ngx-test-error-summary-keyboard',
       imports: [FormField, NgxFormFieldErrorSummary],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <input
           id="email"
@@ -250,7 +250,7 @@ describe('NgxFormFieldErrorSummary', () => {
     @Component({
       selector: 'ngx-test-error-summary-autofocus',
       imports: [FormField, NgxFormFieldErrorSummary],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <input id="email" [formField]="contactForm.email" />
         <ngx-form-field-error-summary
@@ -297,7 +297,7 @@ describe('NgxFormFieldErrorSummary', () => {
     @Component({
       selector: 'ngx-test-error-summary-no-autofocus',
       imports: [FormField, NgxFormFieldErrorSummary],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <input
           id="email"
@@ -374,7 +374,7 @@ describe('NgxFormFieldErrorSummary', () => {
       @Component({
         selector: 'ngx-test-error-summary-focus-failure',
         imports: [FormField, NgxFormFieldErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error-summary
@@ -430,7 +430,7 @@ describe('NgxFormFieldErrorSummary', () => {
       @Component({
         selector: 'ngx-test-error-summary-focus-ok',
         imports: [FormField, NgxFormFieldErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error-summary
@@ -470,7 +470,7 @@ describe('NgxFormFieldErrorSummary', () => {
     @Component({
       selector: 'ngx-test-error-summary-aria',
       imports: [FormField, NgxFormFieldErrorSummary],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <input id="email" [formField]="contactForm.email" />
         <ngx-form-field-error-summary

@@ -38,7 +38,7 @@ import { NgxFormFieldError } from './form-field-error';
 /** Minimal custom error UI built directly on NgxHeadlessErrorState. */
 @Component({
   selector: 'custom-error',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   hostDirectives: [
     {
       directive: NgxHeadlessErrorState,
@@ -69,7 +69,7 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
         NgxFormFieldError,
         CustomErrorComponent,
       ],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
           <input id="name" [formField]="testForm.name" />
@@ -120,7 +120,7 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
         NgxFormFieldError,
         CustomErrorComponent,
       ],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="immediate">
           <input id="name" [formField]="testForm.name" />
@@ -167,7 +167,7 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
     @Component({
       selector: 'test-direct-errors',
       imports: [NgxFormFieldError],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <ngx-form-field-error [errors]="aggregatedErrors" fieldName="address" />
       `,
@@ -193,7 +193,7 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
     @Component({
       selector: 'test-direct-errors-empty',
       imports: [NgxFormFieldError],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <ngx-form-field-error [errors]="aggregatedErrors" fieldName="address" />
       `,
@@ -217,7 +217,7 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
     @Component({
       selector: 'test-id-parity',
       imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="immediate">
           <input id="email" [formField]="testForm.email" />

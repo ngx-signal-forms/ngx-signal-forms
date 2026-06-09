@@ -32,7 +32,7 @@ type LearningCardConfig = {
 @Component({
   selector: 'ngx-example-cards',
   imports: [CardComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   styles: `
     :host {
       display: flex;

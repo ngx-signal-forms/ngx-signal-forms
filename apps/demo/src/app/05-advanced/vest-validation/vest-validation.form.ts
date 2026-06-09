@@ -30,13 +30,16 @@ import { vestOnlyAccountSuite } from './vest-validation.validations';
 const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
   path: Readonly<SchemaPathTree<Readonly<VestValidationModel>>>,
 ) => {
-  validateVest(path, vestOnlyAccountSuite, { includeWarnings: true });
+  validateVest(path, vestOnlyAccountSuite, {
+    includeWarnings: true,
+    resetOnDestroy: true,
+  });
 };
 /* oxlint-enable @typescript-eslint/prefer-readonly-parameter-types */
 
 @Component({
   selector: 'ngx-vest-validation',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   styles: `
     @media (min-width: 48rem) {

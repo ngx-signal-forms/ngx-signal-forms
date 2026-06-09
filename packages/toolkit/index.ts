@@ -23,6 +23,8 @@ export {
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
+  NgxControlPresetRegistry,
+  NgxFieldIdentity,
   NgxSignalFormAutoAria,
   NgxSignalFormControlSemanticsDirective,
   NgxSignalForm,
@@ -46,6 +48,7 @@ export {
   injectFieldControl,
   injectFormContext,
   isBlockingError,
+  isElementCssVisible,
   isFieldStateHidden,
   isFieldStateInteractive,
   isFormFieldAppearance,
@@ -86,6 +89,7 @@ export {
 
 export type {
   AriaDescribedByChainOptions,
+  ControlVisibilitySignal,
   CreateErrorVisibilityOptions,
   ErrorDisplayStrategy,
   ErrorReadableState,

@@ -8,6 +8,10 @@ import {
 import { TestBed } from '@angular/core/testing';
 import { render } from '@testing-library/angular';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  isElementCssVisible as isElementCssVisiblePublic,
+  NgxFieldIdentity as NgxFieldIdentityPublic,
+} from '@ngx-signal-forms/toolkit';
 import { isElementCssVisible, NgxFieldIdentity } from './field-identity';
 
 describe('NgxFieldIdentity', () => {
@@ -265,6 +269,80 @@ describe('NgxFieldIdentity', () => {
       });
     });
 
+    describe('isControlVisible(el) — public visibility probe', () => {
+      it('no-arg call returns the cached visibility value', () => {
+        const svc = createService();
+        expect(svc.isControlVisible()).toBe(true);
+        svc.setControlVisible(false);
+        expect(svc.isControlVisible()).toBe(false);
+      });
+
+      it('returns false for an element with display:none', () => {
+        const svc = createService();
+        const el = document.createElement('input');
+        el.style.display = 'none';
+        document.body.append(el);
+        try {
+          expect(svc.isControlVisible(el)).toBe(false);
+        } finally {
+          el.remove();
+        }
+      });
+
+      it('returns false for a detached element', () => {
+        const svc = createService();
+        const el = document.createElement('input');
+        expect(svc.isControlVisible(el)).toBe(false);
+      });
+
+      it('element-arg does not mutate the cached no-arg value', () => {
+        const svc = createService();
+        const hidden = document.createElement('input');
+        hidden.style.display = 'none';
+        document.body.append(hidden);
+        try {
+          expect(svc.isControlVisible(hidden)).toBe(false);
+          // Probing an element must not flip the cached flag, which is
+          // driven exclusively by `setControlVisible`.
+          expect(svc.isControlVisible()).toBe(true);
+        } finally {
+          hidden.remove();
+        }
+      });
+
+      it('remains a usable Signal for reactive consumers', () => {
+        const svc = createService();
+        const probe = TestBed.runInInjectionContext(() =>
+          computed(() => svc.isControlVisible()),
+        );
+        expect(probe()).toBe(true);
+        svc.setControlVisible(false);
+        expect(probe()).toBe(false);
+      });
+    });
+
+    describe('ID stability', () => {
+      it('errorId is `{name}-error` and warningId is `{name}-warning`', () => {
+        const svc = createService();
+        svc.setFieldName('email');
+        expect(svc.errorId()).toBe('email-error');
+        expect(svc.warningId()).toBe('email-warning');
+      });
+
+      it('preserves dotted field names verbatim in IDs', () => {
+        const svc = createService();
+        svc.setFieldName('address.city');
+        expect(svc.errorId()).toBe('address.city-error');
+        expect(svc.warningId()).toBe('address.city-warning');
+      });
+
+      it('errorId and warningId are null when the field name is null', () => {
+        const svc = createService();
+        expect(svc.errorId()).toBeNull();
+        expect(svc.warningId()).toBeNull();
+      });
+    });
+
     describe('describedBy aggregator', () => {
       it('joins hint IDs with spaces', () => {
         const svc = createService();
@@ -276,6 +354,18 @@ describe('NgxFieldIdentity', () => {
         const svc = createService();
         expect(svc.describedBy()).toBeNull();
       });
+    });
+  });
+
+  describe('public root-barrel export guard', () => {
+    // Pins that `NgxFieldIdentity` and `isElementCssVisible` are reachable from
+    // the documented public entry point `@ngx-signal-forms/toolkit`, not just
+    // the build-time-only `/core` secondary entry. A blanket type-only import
+    // would tree-shake away under `isolatedModules`, so we assert the runtime
+    // bindings resolve to the same symbols re-exported by `/core`.
+    it('re-exports NgxFieldIdentity and isElementCssVisible from the public barrel', () => {
+      expect(NgxFieldIdentityPublic).toBe(NgxFieldIdentity);
+      expect(isElementCssVisiblePublic).toBe(isElementCssVisible);
     });
   });
 
@@ -308,7 +398,6 @@ describe('NgxFieldIdentity', () => {
         selector: 'test-provider',
         template: '<ng-content />',
         providers: [NgxFieldIdentity],
-        changeDetection: ChangeDetectionStrategy.OnPush,
       })
       class TestProvider {
         readonly #identity = inject(NgxFieldIdentity);
@@ -321,7 +410,6 @@ describe('NgxFieldIdentity', () => {
         selector: 'test-root',
         template: `<test-provider><span>content</span></test-provider>`,
         imports: [TestProvider],
-        changeDetection: ChangeDetectionStrategy.OnPush,
       })
       class TestRoot {}
 
@@ -336,7 +424,6 @@ describe('NgxFieldIdentity', () => {
         selector: 'test-wrapper',
         template: '<ng-content />',
         providers: [NgxFieldIdentity],
-        changeDetection: ChangeDetectionStrategy.OnPush,
       })
       class TestWrapper {
         readonly #identity = inject(NgxFieldIdentity);
@@ -352,7 +439,6 @@ describe('NgxFieldIdentity', () => {
           <test-wrapper id="b"><span>b</span></test-wrapper>
         `,
         imports: [TestWrapper],
-        changeDetection: ChangeDetectionStrategy.OnPush,
       })
       class TestRoot {}
 

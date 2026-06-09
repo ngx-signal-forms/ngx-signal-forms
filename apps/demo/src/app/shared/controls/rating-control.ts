@@ -30,7 +30,7 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
  */
 @Component({
   selector: 'ngx-rating-control',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   host: {
     'data-ngx-signal-form-control': '',
     role: 'slider',

@@ -533,7 +533,7 @@ describe('NgxFormFieldHint', () => {
   describe('Renderer dispatch (NGX_FORM_FIELD_HINT_RENDERER)', () => {
     @Component({
       selector: 'stub-hint-renderer',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <div data-testid="stub-hint-renderer">
           <span data-testid="resolved-field-name">{{

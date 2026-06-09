@@ -3,14 +3,12 @@ import {
   Directive,
   ElementRef,
   inject,
+  injectAsync,
   input,
+  onIdle,
   signal,
 } from '@angular/core';
-import {
-  ShikiHighlightService,
-  SupportedLanguage,
-  SupportedTheme,
-} from './shiki-highlight.service';
+import { SupportedLanguage, SupportedTheme } from './shiki-highlight.service';
 
 /**
  * Modern Angular directive for syntax highlighting using Shiki
@@ -42,7 +40,13 @@ export class ShikiHighlightDirective {
   readonly theme = input<SupportedTheme>('tokyo-night');
 
   readonly #element = inject(ElementRef<HTMLElement>);
-  readonly #shikiService = inject(ShikiHighlightService);
+  readonly #getShikiService = injectAsync(
+    () =>
+      import('./shiki-highlight.service').then(
+        (module) => module.ShikiHighlightService,
+      ),
+    { prefetch: onIdle },
+  );
   readonly #isHighlighted = signal(false);
 
   /// Initialize highlighting after render (side effect in initializer)
@@ -62,7 +66,8 @@ export class ShikiHighlightDirective {
     }
 
     try {
-      const highlightedHtml = await this.#shikiService.highlightCode(
+      const shikiService = await this.#getShikiService();
+      const highlightedHtml = await shikiService.highlightCode(
         code,
         this.language(),
         this.theme(),

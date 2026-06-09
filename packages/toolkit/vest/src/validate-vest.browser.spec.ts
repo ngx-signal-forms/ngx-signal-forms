@@ -23,7 +23,7 @@ describe('validateVest browser mode', () => {
     @Component({
       selector: 'ngx-test-vest-browser-mode',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="email">Email</label>

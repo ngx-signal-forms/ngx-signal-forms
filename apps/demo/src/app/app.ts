@@ -22,7 +22,7 @@ import { NgxThemeSwitcherComponent } from './ui/theme-switcher/theme-switcher';
 
 @Component({
   selector: 'ngx-root',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [NgxThemeSwitcherComponent, RouterOutlet, RouterModule],
   styles: `
     :host {
