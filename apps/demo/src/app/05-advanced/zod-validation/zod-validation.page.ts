@@ -1,6 +1,7 @@
 import {
   Component,
   computed,
+  effect,
   linkedSignal,
   signal,
   viewChild,
