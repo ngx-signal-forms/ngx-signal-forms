@@ -223,7 +223,13 @@ export default defineConfig({
           'error',
           {
             enforceBuildableLibDependency: true,
-            allow: ['^@ngx-signal-forms/toolkit/.*$'],
+            allow: [
+              '^@ngx-signal-forms/toolkit/.*$',
+              // Shared Playwright a11y scan helper (tools/a11y), imported by
+              // every e2e project's accessibility.spec.ts. Not an Nx project,
+              // so allow it explicitly rather than tagging it.
+              '^@ngx-signal-forms/a11y-testing$',
+            ],
             depConstraints: [
               // The published toolkit must never reach into demo-only code.
               // This is what keeps the design-system reference apps (#40)

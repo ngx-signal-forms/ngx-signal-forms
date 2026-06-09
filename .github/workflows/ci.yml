@@ -173,3 +173,83 @@ jobs:
 
       - name: Build toolkit
         run: pnpm exec nx build toolkit
+
+  # WCAG 2.2 AA accessibility scan of the demo apps. Runs in parallel with the
+  # main job and is intentionally NON-BLOCKING (continue-on-error): demo apps
+  # showcase the toolkit and may inherit violations from page scaffolding or
+  # third-party UI layers, so they are tracked against a per-app baseline rather
+  # than gated. The toolkit's own WCAG conformance is a hard gate in the main
+  # job's `test-browser` task. On pull requests this job only reports new
+  # violations; on push to main it opens a GitHub issue per new violation.
+  a11y:
+    name: Accessibility (WCAG 2.2 AA demo scan)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    continue-on-error: true
+    permissions:
+      contents: read
+      issues: write
+    env:
+      NX_NO_CLOUD: 'true'
+      NX_DAEMON: 'false'
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          filter: tree:0
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: '.node-version'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      # Both engines: the scan runs in Chromium + Firefox for cross-engine
+      # accessibility coverage of the last-2-versions browser policy.
+      - run: pnpm exec playwright install --with-deps chromium firefox
+
+      - uses: nrwl/nx-set-shas@v4
+        continue-on-error: true
+
+      # PRs: only the affected demo apps, for fast feedback.
+      - name: Scan affected demo apps (pull request)
+        if: ${{ github.event_name == 'pull_request' }}
+        run: pnpm exec nx affected -t a11y --parallel=2 --outputStyle=static
+
+      # main: every demo app, so issue creation sees the full picture.
+      - name: Scan all demo apps (push)
+        if: ${{ github.event_name != 'pull_request' }}
+        run: pnpm exec nx run-many -t a11y --parallel=2 --outputStyle=static
+
+      # PRs: report new violations for visibility (job is non-blocking).
+      - name: Report new violations (pull request)
+        if: ${{ github.event_name == 'pull_request' && !cancelled() }}
+        run: node tools/scripts/a11y-report-violations.mjs --check
+
+      # main: ensure the triage label exists, then open an issue per new
+      # violation (deduped by title inside the script).
+      - name: Open issues for new violations (push)
+        if: ${{ github.event_name != 'pull_request' && !cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create a11y --color 1d76db --description "Accessibility (WCAG) issue" --force
+          node tools/scripts/a11y-report-violations.mjs --create-issues
+
+      - name: Upload a11y artifacts
+        if: ${{ always() && !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-artifacts-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            dist/.a11y/
+            apps/*/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14

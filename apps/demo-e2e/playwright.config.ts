@@ -19,6 +19,11 @@ const preset = nxE2EPreset(__filename, { testDir: './src' });
 
 export default defineConfig({
   ...preset,
+  // The dedicated `a11y` target owns the route-sweep accessibility scan
+  // (src/accessibility.spec.ts); keep it out of the functional e2e run so the
+  // two suites stay independently runnable. The slash anchor is deliberate: it
+  // must not also match the existing forms/**/*-accessibility.spec.ts specs.
+  testIgnore: /[\\/]accessibility\.spec\.ts$/,
   updateSnapshots: isCI ? 'none' : 'missing',
   forbidOnly: isCI,
   retries: isCI ? 1 : 0,

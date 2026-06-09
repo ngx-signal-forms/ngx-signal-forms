@@ -17,6 +17,9 @@ catalogs:
   analogjs:
     '@analogjs/vite-plugin-angular': '2.6.0'
     '@analogjs/vitest-angular': '2.6.0'
+  axe:
+    '@axe-core/playwright': '^4.11.3'
+    axe-core: '^4.12.0'
   angular:
     '@angular/animations': '22.0.0'
     '@angular/aria': '22.0.0'

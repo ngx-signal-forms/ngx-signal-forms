@@ -39,7 +39,8 @@
     "@angular/compiler": "catalog:angular",
     "@angular/core": "catalog:angular",
     "@angular/forms": "catalog:angular",
-    "@angular/platform-browser": "catalog:angular"
+    "@angular/platform-browser": "catalog:angular",
+    "axe-core": "catalog:axe"
   },
   "sideEffects": false
 }

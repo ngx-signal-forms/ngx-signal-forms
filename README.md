@@ -87,7 +87,7 @@ Requirements: Angular `22.x` (`>=22.0.0 <23.0.0`), TypeScript 6.0+, modern brows
 
 No separate stylesheet import is required for the built-in wrapper and assistive components. Their styles ship with the package as native CSS, and you customize them in your global or component styles via CSS custom properties.
 
-**Supported browsers:** Last 2 major versions of Chrome, Edge, Firefox, and Safari (see [`.browserslistrc`](./.browserslistrc)). The toolkit's styles ship as native CSS (no Sass) and use CSS nesting, `color-mix()`, and `:has()` for the outline appearance. The runtime floor for full visual fidelity is Chrome/Edge 112+, Firefox 121+, Safari 16.5+ — see the [theming guide](./packages/toolkit/form-field/THEMING.md#browser-support) for the per-feature breakdown.
+**Supported browsers:** Last 2 major versions of Chrome, Edge, Firefox, and Safari (see [`.browserslistrc`](./.browserslistrc)). Accessibility behaviour is verified cross-engine (Chromium + Firefox) by automated axe-core scans in CI. The toolkit's styles ship as native CSS (no Sass) and use CSS nesting, `color-mix()`, and `:has()` for the outline appearance. The runtime floor for full visual fidelity is Chrome/Edge 112+, Firefox 121+, Safari 16.5+ — see the [theming guide](./packages/toolkit/form-field/THEMING.md#browser-support) for the per-feature breakdown.
 
 > Angular Signal Forms is still marked **experimental** upstream. The toolkit's own public API aims to stay stable — see [`COMPATIBILITY.md`](./COMPATIBILITY.md) before adopting a stable major in production.
 
@@ -555,11 +555,18 @@ The toolkit is designed around the WCAG 2.2 AA form patterns it can automate:
 - `on-touch` error timing by default to avoid premature noise; warnings default to `'immediate'` and can be tuned independently via `warningStrategy` — see [warnings support](./docs/WARNINGS_SUPPORT.md)
 - focus helpers (`focusFirstInvalid`, `createOnInvalidHandler`) for invalid submissions
 
-These cover the mechanics, not the content. WCAG conformance is a property of
-your finished page — the toolkit cannot guarantee accessible labels, color
-contrast, copy, keyboard order, or context that lives outside the form. Treat
-the automation as a head start, then run an end-to-end audit on the deployed
-form (axe, Lighthouse, screen-reader testing) before claiming conformance.
+**Verified in CI.** The toolkit's automated output — the ARIA wiring, live-region
+roles, and error-display markup above — is checked against the **WCAG 2.2 AA**
+axe-core ruleset on every change as a hard-fail test gate, so regressions in what
+the toolkit _can_ control never reach a release. Cross-engine behaviour is exercised
+in Chromium and Firefox.
+
+These checks cover the mechanics the toolkit owns, **not** end-to-end
+conformance. WCAG conformance is a property of your finished page — the toolkit
+cannot guarantee accessible labels, color contrast, copy, keyboard order, or
+context that lives outside the form. Treat the automation as a verified head
+start, then run an end-to-end audit on the deployed form (axe, Lighthouse,
+screen-reader testing) before claiming conformance.
 
 ---
 

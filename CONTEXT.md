@@ -24,6 +24,14 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   (`warn:*` prefix), Vest results, etc. Shape is not known at compile time; the
   toolkit humanizes its `kind` string for display and types its registry
   factory params as `any`.
+- **WCAG 2.2 AA** — the accessibility conformance level this project targets.
+  Toolkit components must satisfy it unconditionally (hard fail in Vitest browser
+  specs). Demo apps track compliance against a versioned baseline; deviations
+  create GitHub issues but do not block PRs.
+- **a11y baseline** — a per-demo-app JSON file (`a11y-baseline.json`) that
+  records known axe violations. The CI `a11y` job diffs the current run against
+  this file; new violations trigger auto-issue creation and a baseline update.
+  Synonym to avoid: "known violations list" (ambiguous — use "a11y baseline").
 
 ## Key concepts
 

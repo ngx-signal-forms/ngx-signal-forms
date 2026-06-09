@@ -25,6 +25,16 @@
       "options": {
         "config": "{projectRoot}/playwright.config.ts"
       }
+    },
+    "a11y": {
+      "executor": "@nx/playwright:playwright",
+      "outputs": [
+        "{workspaceRoot}/dist/.playwright/apps/demo-material-e2e-a11y",
+        "{workspaceRoot}/dist/.a11y/demo-material-e2e"
+      ],
+      "options": {
+        "config": "{projectRoot}/playwright.a11y.config.ts"
+      }
     }
   }
 }
