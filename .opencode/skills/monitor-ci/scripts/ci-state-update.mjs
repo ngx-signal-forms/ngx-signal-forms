@@ -41,37 +41,33 @@ function gate() {
     const count = parseInt(getArg('--local-verify-count') || '0', 10);
     const max = parseInt(getArg('--local-verify-attempts') || '3', 10);
     if (count >= max) {
-      output({
+      return output({
         allowed: false,
         localVerifyCount: count,
         message: `Local fix budget exhausted (${count}/${max} attempts)`,
       });
-      return;
     }
-    output({
+    return output({
       allowed: true,
       localVerifyCount: count + 1,
       message: null,
     });
-    return;
   }
 
   if (gateType === 'env-rerun') {
     const count = parseInt(getArg('--env-rerun-count') || '0', 10);
     if (count >= 2) {
-      output({
+      return output({
         allowed: false,
         envRerunCount: count,
         message: `Environment issue persists after ${count} reruns. Manual investigation needed.`,
       });
-      return;
     }
-    output({
+    return output({
       allowed: true,
       envRerunCount: count + 1,
       message: null,
     });
-    return;
   }
 
   output({ allowed: false, message: `Unknown gate type: ${gateType}` });
@@ -101,8 +97,7 @@ function postAction() {
   const trackByCommitSha = commitShaActions.includes(action);
 
   if (!trackByCipeUrl && !trackByCommitSha) {
-    output({ error: `Unknown action: ${action}` });
-    return;
+    return output({ error: `Unknown action: ${action}` });
   }
 
   // fix-auto-applying: self-healing did it, NOT the monitor
