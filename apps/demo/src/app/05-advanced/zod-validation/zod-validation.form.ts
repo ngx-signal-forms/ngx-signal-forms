@@ -157,6 +157,7 @@ const zodValidationSchema: SchemaFn<Readonly<ZodValidationModel>> = (
           <p class="font-semibold">Zod baseline wiring</p>
           <pre
             class="mt-2 overflow-x-auto"
+            tabindex="0"
           ><code>{{ baselineCode }}</code></pre>
         </div>
 
