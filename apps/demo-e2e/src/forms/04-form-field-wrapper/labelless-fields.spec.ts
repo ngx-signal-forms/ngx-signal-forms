@@ -82,7 +82,7 @@ test.describe('Labelless Form Fields', () => {
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
   });
 
-  test('snapshot: comparison grid and narrow inputs', async () => {
+  test('snapshot: comparison grid and narrow inputs @layout', async () => {
     // Settle layout by focusing then blurring the age input with an
     // invalid value so the narrow-input error is visible in the shot.
     await page.ageInput.fill('5');
@@ -96,7 +96,7 @@ test.describe('Labelless Form Fields', () => {
     );
   });
 
-  test('snapshot: comparison grid (outline appearance)', async () => {
+  test('snapshot: comparison grid (outline appearance) @layout', async () => {
     await page.outlineAppearanceButton.click();
 
     await expect(page.comparisonSection).toHaveScreenshot(
@@ -104,7 +104,7 @@ test.describe('Labelless Form Fields', () => {
     );
   });
 
-  test('snapshot: comparison grid (horizontal orientation)', async () => {
+  test('snapshot: comparison grid (horizontal orientation) @layout', async () => {
     await page.horizontalOrientationButton.click();
 
     await expect(page.comparisonSection).toHaveScreenshot(

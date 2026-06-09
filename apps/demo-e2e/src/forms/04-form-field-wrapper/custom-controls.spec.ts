@@ -770,7 +770,7 @@ test.describe('Custom Signal Forms Controls', () => {
       });
     });
 
-    test('should match the outline vertical wrapper baseline', async () => {
+    test('should match the outline vertical wrapper baseline @layout', async () => {
       await test.step('Show the outline state', async () => {
         await page.showOutlineAppearance();
       });

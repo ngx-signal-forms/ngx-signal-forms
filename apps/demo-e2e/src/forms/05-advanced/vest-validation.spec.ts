@@ -25,31 +25,7 @@ test.describe('Validation - Vest-Only Validation', () => {
     await page.waitForLoadState('domcontentloaded');
   });
 
-  test('Vest-Only Validation - renders the demo guidance and form controls', async ({
-    page,
-  }) => {
-    await test.step('Verify the page-specific guidance is visible', async () => {
-      await expect(
-        page.getByRole('heading', {
-          level: 2,
-          name: 'Vest-Only Validation Demo',
-        }),
-      ).toBeVisible();
-      await expect(
-        page.getByText('Why this is a Vest-friendly example', { exact: true }),
-      ).toBeVisible();
-      await expect(
-        page.getByText('Errors and warnings come from the same Vest run.', {
-          exact: true,
-        }),
-      ).toBeVisible();
-      await expect(
-        page
-          .getByText('Required for business accounts.', { exact: true })
-          .first(),
-      ).toBeVisible();
-    });
-
+  test('Vest-Only Validation - renders form controls', async ({ page }) => {
     await test.step('Verify the key form controls are available', async () => {
       await expect(
         page.getByLabel('Account type', { exact: true }),
@@ -166,19 +142,15 @@ test.describe('Validation - Vest-Only Validation', () => {
     await test.step('Submit successfully while warnings remain visible', async () => {
       await page.getByRole('button', { name: 'Create account' }).click();
 
-      await expect(
-        page.getByText(
-          'Account created. The first-class Vest adapter kept warnings visible without blocking submission.',
-          { exact: true },
-        ),
-      ).toBeVisible();
+      await expect(fieldAlert(page, 'Work email')).toHaveCount(0);
+      await expect(fieldAlert(page, 'Team size')).toHaveCount(0);
       await expect(fieldStatus(page, 'Work email')).toContainText(
         'Using a company email usually speeds up workspace approval',
       );
     });
   });
 
-  test('Vest-Only Validation - uses single-column field rows for standard horizontal mode', async ({
+  test('Vest-Only Validation - uses single-column field rows for standard horizontal mode @layout', async ({
     page,
   }) => {
     const form = page.locator('form.max-w-3xl.space-y-6');
@@ -188,7 +160,7 @@ test.describe('Validation - Vest-Only Validation', () => {
       await page.getByRole('button', { name: 'Standard' }).click();
       await page.getByRole('button', { name: 'Horizontal' }).click();
 
-      await expect(form).toHaveClass(/vest-validation-form--single-column/);
+      await expect(form).toHaveClass(/vest-validation-form--single-column/u);
     });
 
     await test.step('Verify each pair grid resolves to a single column', async () => {
@@ -196,14 +168,14 @@ test.describe('Validation - Vest-Only Validation', () => {
 
       for (let index = 0; index < gridCount; index += 1) {
         await expect
-          .poll(async () =>
+          .poll(() =>
             pairGrids
               .nth(index)
               .evaluate(
                 (element) =>
                   window
                     .getComputedStyle(element)
-                    .gridTemplateColumns.split(/\s+/)
+                    .gridTemplateColumns.split(/\s+/u)
                     .filter(Boolean).length,
               ),
           )

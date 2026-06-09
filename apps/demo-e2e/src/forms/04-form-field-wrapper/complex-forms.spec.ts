@@ -483,7 +483,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       `);
     });
 
-    test('snapshot: contact-method grouped error with top placement', async () => {
+    test('snapshot: contact-method grouped error with top placement @layout', async () => {
       await page.showTopFieldsetSummaryPlacement();
       await triggerContactMethodFieldsetError(page);
       await page.contactMethodGroup.scrollIntoViewIfNeeded();
@@ -493,7 +493,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       );
     });
 
-    test('snapshot: contact-method grouped error with bottom placement', async () => {
+    test('snapshot: contact-method grouped error with bottom placement @layout', async () => {
       await page.showBottomFieldsetSummaryPlacement();
       await triggerContactMethodFieldsetError(page);
       await page.contactMethodGroup.scrollIntoViewIfNeeded();
@@ -503,7 +503,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       );
     });
 
-    test('snapshot: credentials grouped error uses bullets and reduced gap', async () => {
+    test('snapshot: credentials grouped error uses bullets and reduced gap @layout', async () => {
       await page.showTopFieldsetSummaryPlacement();
       await triggerCredentialsFieldsetError(page);
       await page.credentialsFieldset.scrollIntoViewIfNeeded();
@@ -513,7 +513,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       );
     });
 
-    test('snapshot: credentials grouped error with top placement', async () => {
+    test('snapshot: credentials grouped error with top placement @layout', async () => {
       await page.showTopFieldsetSummaryPlacement();
       await triggerCredentialsFieldsetError(page);
       await page.credentialsFieldset.scrollIntoViewIfNeeded();
@@ -523,7 +523,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       );
     });
 
-    test('snapshot: credentials grouped error with bottom placement', async () => {
+    test('snapshot: credentials grouped error with bottom placement @layout', async () => {
       await page.showBottomFieldsetSummaryPlacement();
       await triggerCredentialsFieldsetError(page);
       await page.credentialsFieldset.scrollIntoViewIfNeeded();

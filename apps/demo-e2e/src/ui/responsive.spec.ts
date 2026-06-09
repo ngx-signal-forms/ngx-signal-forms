@@ -1,11 +1,13 @@
 import { DEMO_CATEGORIES, DEMO_PATHS } from '@ngx-signal-forms/demo-shared';
 import { expect, test } from '@playwright/test';
 /**
- * Basic Page Load Tests
- * Ensures all demo pages load successfully
+ * Demo Application UI Tests - Responsive Behavior
+ * 
+ * These tests verify the demo application's responsive design and page loading behavior.
+ * They focus on the demo app's specific UI implementation, not the toolkit library.
  */
 
-test.describe('Demo - Page Loading', () => {
+test.describe('Demo Application UI - Page Loading', () => {
   test('should load all demo pages successfully', async ({ page }) => {
     await test.step('Load all example routes', async () => {
       const routes = [

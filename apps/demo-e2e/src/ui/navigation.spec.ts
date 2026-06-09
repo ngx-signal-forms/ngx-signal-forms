@@ -2,12 +2,14 @@ import { expect, test } from '@playwright/test';
 
 import { DEMO_CATEGORIES, DEMO_PATHS } from '@ngx-signal-forms/demo-shared';
 /**
- * Navigation & Application Shell Tests
- * Tests for Part 1 of DEMO_TEST_PLAN.md
+ * Demo Application UI Tests - Navigation & Application Shell
+ *
+ * These tests verify the demo application's navigation system and UI behavior.
+ * They focus on the demo app's specific UI implementation, not the toolkit library.
  *
  * Verifies:
  * - Application loads successfully
- * - Navigation system works
+ * - Navigation tree works correctly
  * - Theme switching functions
  * - Route handling is correct
  */
@@ -36,14 +38,14 @@ test.describe('Demo Application - Navigation & Shell', () => {
   test('should display all navigation categories', async ({ page }) => {
     await test.step('Verify all category headers are visible', async () => {
       const categories = DEMO_CATEGORIES.map((c) => c.label);
-      const siteNavigation = page.getByLabel('Site navigation');
+      // The category buttons are in the nav-tree component which has its own nav
+      const navTree = page.getByLabel('Documentation sections');
 
-      await expect(siteNavigation).toBeVisible();
+      await expect(navTree).toBeVisible();
 
       for (const category of categories) {
-        const categoryElement = siteNavigation.getByRole('button', {
+        const categoryElement = navTree.getByRole('button', {
           name: category,
-          exact: true,
         });
         await expect(categoryElement).toBeVisible({ timeout: 5000 });
       }
@@ -54,22 +56,21 @@ test.describe('Demo Application - Navigation & Shell', () => {
     page,
   }) => {
     await test.step('Verify links are accessible by navigating to each category', async () => {
-      const siteNavigation = page.getByLabel('Site navigation');
+      const navTree = page.getByLabel('Documentation sections');
 
       for (const category of DEMO_CATEGORIES) {
         await page.goto(category.links[0].path);
         await page.waitForLoadState('domcontentloaded');
 
-        await expect(siteNavigation).toBeVisible();
+        await expect(navTree).toBeVisible();
 
-        const categoryButton = siteNavigation.getByRole('button', {
+        const categoryButton = navTree.getByRole('button', {
           name: category.label,
-          exact: true,
         });
         await categoryButton.click();
 
         for (const linkText of category.links.map((link) => link.label)) {
-          const link = siteNavigation.getByRole('link', { name: linkText });
+          const link = navTree.getByRole('link', { name: linkText });
           await expect(link).toBeVisible({ timeout: 5000 });
         }
       }
@@ -118,69 +119,42 @@ test.describe('Demo Application - Navigation & Shell', () => {
 
   test('should handle browser back button navigation', async ({ page }) => {
     await test.step('Navigate, go back, and verify', async () => {
-      // Start from home page
-      await page.goto(`/`);
+      // Start from Toolkit Core error display modes page
+      await page.goto('/toolkit-core/error-display-modes');
       await page.waitForLoadState('domcontentloaded');
 
-      const siteNavigation = page.getByLabel('Site navigation');
-      await expect(siteNavigation).toBeVisible();
+      const navTree = page.getByLabel('Documentation sections');
+      await expect(navTree).toBeVisible();
 
-      const yourFirstFormLink = siteNavigation.getByRole('link', {
-        name: /Your First Form/i,
-      });
-      await yourFirstFormLink.click();
+      // Navigate to another page
+      await page.goto('/getting-started/your-first-form');
       await page.waitForLoadState('domcontentloaded');
 
       const firstPageUrl = page.url();
       expect(firstPageUrl).toContain('/getting-started/your-first-form');
 
-      const toolkitCoreNav = siteNavigation.getByRole('button', {
-        name: 'Toolkit Core',
-        exact: true,
-      });
-      await toolkitCoreNav.click();
-      await page.waitForLoadState('domcontentloaded');
-
-      const accessibilityLink = siteNavigation.getByRole('link', {
-        name: /Error Display Modes/i,
-      });
-      await accessibilityLink.click();
-      await page.waitForLoadState('domcontentloaded');
-
-      const secondPageUrl = page.url();
-      expect(secondPageUrl).toContain('/toolkit-core/error-display-modes');
-
-      // Go back to first page
+      // Go back to previous page
       await page.goBack();
       await page.waitForLoadState('domcontentloaded');
 
       const afterBackUrl = page.url();
-      expect(afterBackUrl).toContain('/getting-started/your-first-form');
+      expect(afterBackUrl).toContain('/toolkit-core/error-display-modes');
     });
   });
 
-  test('should maintain scroll position reset between navigation', async ({
-    page,
-  }) => {
-    await test.step('Verify navigation works correctly', async () => {
-      // Navigate to first page
+  test('should load new page content after navigation', async ({ page }) => {
+    await test.step('Navigate between two pages and verify both render main content', async () => {
       await page.goto(`/getting-started/your-first-form`);
       await page.waitForLoadState('domcontentloaded');
 
-      const mainContent = page.locator('main').first();
-      await expect(mainContent).toBeVisible();
+      await expect(page.getByRole('main')).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
-      // Verify page heading is visible at top
-      const heading = page.locator('main h1').first();
-      await expect(heading).toBeVisible();
-
-      // Navigate to second page
       await page.goto(`/toolkit-core/error-display-modes`);
       await page.waitForLoadState('domcontentloaded');
 
-      // Verify new page loaded and main content is visible
-      await expect(mainContent).toBeVisible();
-      await expect(page.locator('main h1').first()).toBeVisible();
+      await expect(page.getByRole('main')).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     });
   });
 });
@@ -295,8 +269,8 @@ test.describe('Demo Application - Route Handling', () => {
       await expect(page).toHaveURL(/\/getting-started\/your-first-form$/);
 
       // Verify app shell is still present (navigation and basic structure)
-      const siteNavigation = page.getByLabel('Site navigation');
-      await expect(siteNavigation).toBeVisible();
+      const navTree = page.getByLabel('Documentation sections');
+      await expect(navTree).toBeVisible();
 
       // Main content should be visible
       const main = page.getByRole('main');

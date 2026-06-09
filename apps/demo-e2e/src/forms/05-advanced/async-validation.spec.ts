@@ -29,9 +29,10 @@ test.describe('Advanced Scenarios - Async Validation', () => {
   test('should trigger typed debounce while typing and blur debounce only after blur', async ({
     page,
   }) => {
-    let requestCount = 0;
-    await page.route('**/fake-api/check-user/*', async (route) => {
-      requestCount += 1;
+    await page.route('**/fake-api/check-user/**', async (route) => {
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 300);
+      });
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -42,22 +43,27 @@ test.describe('Advanced Scenarios - Async Validation', () => {
     await test.step('Typing-debounce field issues request without blur', async () => {
       await typingUsernameInput(page).fill('probe');
 
-      await expect
-        .poll(() => requestCount, { timeout: 3000 })
-        .toBeGreaterThanOrEqual(1);
+      await expect(
+        page.getByText('Typing-debounce pending: true'),
+      ).toBeVisible();
+      await expect(
+        page.getByText('Typing-debounce pending: false'),
+      ).toBeVisible();
     });
 
     await test.step('Blur-debounce field waits for blur before requesting', async () => {
-      const requestsBeforeBlurField = requestCount;
       await blurUsernameInput(page).fill('probe');
 
       await page.waitForTimeout(500);
-      expect(requestCount).toBe(requestsBeforeBlurField);
+      await expect(
+        page.getByText('Blur-debounce pending: false'),
+      ).toBeVisible();
 
       await blurUsernameInput(page).blur();
-      await expect
-        .poll(() => requestCount, { timeout: 3000 })
-        .toBeGreaterThan(requestsBeforeBlurField);
+      await expect(page.getByText('Blur-debounce pending: true')).toBeVisible();
+      await expect(
+        page.getByText('Blur-debounce pending: false'),
+      ).toBeVisible();
     });
   });
 
@@ -96,7 +102,7 @@ test.describe('Advanced Scenarios - Async Validation', () => {
   });
 
   test('should show error for "admin" username', async ({ page }) => {
-    await page.route('**/fake-api/check-user/admin', async (route) => {
+    await page.route('**/fake-api/check-user/**', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -106,9 +112,10 @@ test.describe('Advanced Scenarios - Async Validation', () => {
 
     await test.step('Type "admin" username', async () => {
       await typingUsernameInput(page).fill('admin');
+      await typingUsernameInput(page).blur();
 
-      const errorMessage = page.locator('[role="alert"]', {
-        hasText: /username .* already taken/i,
+      const errorMessage = page.locator('[role="status"]', {
+        hasText: /already taken/i,
       });
       await expect(errorMessage).toContainText(
         'The username "admin" is already taken',
@@ -194,7 +201,7 @@ test.describe('Advanced Scenarios - Async Validation', () => {
   test('should allow form submission after async validation passes', async ({
     page,
   }) => {
-    await page.route('**/fake-api/check-user/*', async (route) => {
+    await page.route('**/fake-api/check-user/**', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -204,9 +211,12 @@ test.describe('Advanced Scenarios - Async Validation', () => {
 
     await test.step('Fill valid unique username', async () => {
       const usernameInput = typingUsernameInput(page);
+      const blurUsername = blurUsernameInput(page);
 
       await usernameInput.fill('user_approved');
       await usernameInput.blur();
+      await blurUsername.fill('user_approved_blur');
+      await blurUsername.blur();
 
       const submitButton = page.getByRole('button', { name: /register/i });
       await expect(submitButton).toBeEnabled();
