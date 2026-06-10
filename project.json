@@ -11,19 +11,19 @@
     "lint-fix": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "oxlint . --fix"
+        "command": "oxlint . --fix --quiet"
       }
     },
     "lint-fix-suggestions": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "oxlint . --fix-suggestions"
+        "command": "oxlint . --fix-suggestions --quiet"
       }
     },
     "lint-fix-dangerously": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "oxlint . --fix-dangerously"
+        "command": "oxlint . --fix-dangerously --quiet"
       }
     },
     "lint-github": {

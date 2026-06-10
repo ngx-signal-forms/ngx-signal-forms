@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { form, FormField } from '@angular/forms/signals';
 import {
@@ -442,7 +436,7 @@ export class ErrorDisplayModesFormComponent {
   /** Form instance using Signal Forms */
   readonly productForm = form(this.#model, productFeedbackSchema, {
     submission: {
-      action: async () => {
+      action: () => {
         this.#submissionAttempted.set(true);
         alert('Thank you for your feedback!');
         return null; // No server errors

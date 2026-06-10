@@ -113,7 +113,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(errorContainer).toBeTruthy();
     });
 
-    it('should return null and log a dev-mode error when neither fieldName nor bound control id is provided', async () => {
+    it('should return null and log a dev-mode error when neither fieldName nor bound control id is provided', () => {
       const invalidField = signal({
         invalid: () => true,
         touched: () => true,
@@ -217,7 +217,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(container.querySelector('[id="password-error"]')).toBeTruthy();
     });
 
-    it('should handle empty string fieldName by returning null and logging in dev mode', async () => {
+    it('should handle empty string fieldName by returning null and logging in dev mode', () => {
       const invalidField = signal({
         invalid: () => true,
         touched: () => true,
@@ -2566,7 +2566,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(customError).toBeFalsy();
     });
 
-    it('should return null and log a dev-mode error when custom control has no id', async () => {
+    it('should return null and log a dev-mode error when custom control has no id', () => {
       const invalidField = signal({
         invalid: () => true,
         touched: () => true,
@@ -2675,7 +2675,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(container.querySelector('[id="first-error"]')).toBeTruthy();
     });
 
-    it('should return null and log a dev-mode error when no input has id attribute and no fieldName is provided', async () => {
+    it('should return null and log a dev-mode error when no input has id attribute and no fieldName is provided', () => {
       const invalidField = signal({
         invalid: () => true,
         touched: () => true,
