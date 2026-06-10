@@ -572,13 +572,13 @@
 }
 
 .ngx-signal-form-field-wrapper__prefix {
-  padding-right: var(--_field-space-md);
+  padding-inline-end: var(--_field-space-md);
 }
 
 .ngx-signal-form-field-wrapper__suffix {
   color: var(--_suffix-color);
   gap: var(--_suffix-gap);
-  padding-left: var(--_field-space-md);
+  padding-inline-start: var(--_field-space-md);
 }
 
 /* Modern :has() based dynamic padding - adjust main content when prefix/suffix present */
@@ -805,7 +805,7 @@
     .ngx-signal-form-field-wrapper__prefix:not(:empty)
   ) {
   .ngx-signal-form-field-wrapper__prefix {
-    padding-right: var(--_field-space-sm);
+    padding-inline-end: var(--_field-space-sm);
   }
 }
 
@@ -815,7 +815,7 @@
     .ngx-signal-form-field-wrapper__suffix:not(:empty)
   ) {
   .ngx-signal-form-field-wrapper__suffix {
-    padding-left: var(--_field-space-sm);
+    padding-inline-start: var(--_field-space-sm);
   }
 }
 
@@ -1089,4 +1089,37 @@
   )
 ) {
   --ngx-form-field-hint-display: none;
+}
+
+/* Windows High Contrast (`forced-colors: active`): color-mix() borders and */
+/* soft state backgrounds flatten to system colors, erasing the invalid/ */
+/* warning distinction. Map states to explicit system colors instead. */
+@media (forced-colors: active) {
+  :host(.ngx-signal-form-field-wrapper--textual)
+    .ngx-signal-form-field-wrapper__content {
+    forced-color-adjust: none;
+    background: Field;
+    color: FieldText;
+    border: 2px solid FieldText;
+  }
+
+  :host(
+      .ngx-signal-form-field-wrapper--invalid.ngx-signal-form-field-wrapper--textual
+    )
+    .ngx-signal-form-field-wrapper__content {
+    border-color: Mark;
+  }
+
+  :host(
+      .ngx-signal-form-field-wrapper--warning.ngx-signal-form-field-wrapper--textual
+    )
+    .ngx-signal-form-field-wrapper__content {
+    border-color: CanvasText;
+  }
+
+  :host(.ngx-signal-form-field-wrapper--textual)
+    .ngx-signal-form-field-wrapper__content:focus-within {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
 }

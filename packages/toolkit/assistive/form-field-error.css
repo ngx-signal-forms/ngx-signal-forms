@@ -198,3 +198,28 @@
     --_error-border-width-default: 2px;
   }
 }
+
+/* Windows High Contrast (`forced-colors: active`): soft text colors and */
+/* transparent backgrounds are overridden by the system, erasing the */
+/* error/warning semantic. Map to explicit system colors instead. */
+@media (forced-colors: active) {
+  .ngx-form-field-error {
+    forced-color-adjust: none;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .ngx-form-field-error--error {
+    background: Mark;
+    color: MarkText;
+  }
+
+  .ngx-form-field-error--warning {
+    color: CanvasText;
+    background: Canvas;
+  }
+
+  .ngx-form-field-error--empty {
+    background: transparent;
+  }
+}
