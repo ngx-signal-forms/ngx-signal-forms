@@ -23,7 +23,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "zsh -lc 'lsof -nP -iTCP:4200 -sTCP:LISTEN -t | xargs -r kill; echo e2e-preflight-port-cleared'",
+          "bash -c 'PIDS=$(lsof -nP -iTCP:4200 -sTCP:LISTEN -t); [ -n \"$PIDS\" ] && kill $PIDS; echo e2e-preflight-port-cleared'",
           "pnpm exec playwright test apps/demo-e2e/src/forms --grep-invert @layout --config apps/demo-e2e/playwright.config.ts --project=chromium"
         ],
         "parallel": false
@@ -33,7 +33,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "zsh -lc 'lsof -nP -iTCP:4200 -sTCP:LISTEN -t | xargs -r kill; echo e2e-preflight-port-cleared'",
+          "bash -c 'PIDS=$(lsof -nP -iTCP:4200 -sTCP:LISTEN -t); [ -n \"$PIDS\" ] && kill $PIDS; echo e2e-preflight-port-cleared'",
           "pnpm exec playwright test apps/demo-e2e/src/ui --config apps/demo-e2e/playwright.config.ts --project=chromium"
         ],
         "parallel": false
@@ -43,7 +43,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "zsh -lc 'lsof -nP -iTCP:4200 -sTCP:LISTEN -t | xargs -r kill; echo e2e-preflight-port-cleared'",
+          "bash -c 'PIDS=$(lsof -nP -iTCP:4200 -sTCP:LISTEN -t); [ -n \"$PIDS\" ] && kill $PIDS; echo e2e-preflight-port-cleared'",
           "pnpm exec playwright test apps/demo-e2e/src/ui --config apps/demo-e2e/playwright.config.ts --project=chromium",
           "pnpm exec playwright test apps/demo-e2e/src/forms --grep @layout --config apps/demo-e2e/playwright.config.ts --project=chromium"
         ],
