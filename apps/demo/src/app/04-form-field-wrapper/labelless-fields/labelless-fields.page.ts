@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   linkedSignal,
   signal,
   viewChild,
@@ -17,6 +18,7 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
@@ -28,7 +30,7 @@ import {
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
   getOrientationLabel,
-  isOrientationDisabledForAppearance,
+  normalizeOrientationForAppearance,
 } from '../../ui/orientation-toggle';
 import { LABELLESS_FIELDS_CONTENT } from './labelless-fields.content';
 import { LabellessFieldsFormComponent } from './labelless-fields.form';
@@ -39,6 +41,7 @@ import { LabellessFieldsFormComponent } from './labelless-fields.form';
     LabellessFieldsFormComponent,
     ErrorDisplayModeSelectorComponent,
     ExampleCardsComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
@@ -49,15 +52,7 @@ import { LabellessFieldsFormComponent } from './labelless-fields.form';
   ],
 
   template: `
-    <ngx-page-header
-      title="Labelless Form Fields"
-      subtitle="Wrapper collapses reserved label space when no <label> is projected"
-    />
-
-    <ngx-example-cards
-      [demonstrated]="demonstratedContent"
-      [learning]="learningContent"
-    >
+    <ng-template ngxPageControls>
       <ngx-display-controls-card
         title="Appearance + orientation"
         description="Toggle to see the label-space collapse behavior across every layout the toolkit supports."
@@ -88,7 +83,17 @@ import { LabellessFieldsFormComponent } from './labelless-fields.form';
           />
         </ngx-display-controls-section>
       </ngx-display-controls-card>
+    </ng-template>
 
+    <ngx-page-header
+      title="Labelless Form Fields"
+      subtitle="Wrapper collapses reserved label space when no <label> is projected"
+    />
+
+    <ngx-example-cards
+      [demonstrated]="demonstratedContent"
+      [learning]="learningContent"
+    >
       <ngx-split-layout>
         <ngx-labelless-fields
           #formComponent
@@ -119,15 +124,26 @@ export class LabellessFieldsPage {
     signal<FormFieldOrientation>('vertical');
   protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
     () => {
-      const requestedOrientation = this.selectedOrientationPreference();
-      return isOrientationDisabledForAppearance(
+      return normalizeOrientationForAppearance(
         this.selectedAppearance(),
-        requestedOrientation,
-      )
-        ? 'vertical'
-        : requestedOrientation;
+        this.selectedOrientationPreference(),
+      );
     },
   );
+  constructor() {
+    effect(() => {
+      const preferredOrientation = this.selectedOrientationPreference();
+      const normalizedOrientation = normalizeOrientationForAppearance(
+        this.selectedAppearance(),
+        preferredOrientation,
+      );
+
+      if (preferredOrientation !== normalizedOrientation) {
+        this.selectedOrientationPreference.set(normalizedOrientation);
+      }
+    });
+  }
+
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',

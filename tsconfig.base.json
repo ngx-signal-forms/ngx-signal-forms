@@ -37,6 +37,7 @@
         "./packages/toolkit/headless/src/index.ts"
       ],
       "@ngx-signal-forms/demo-shared": ["./packages/demo-shared/src/index.ts"],
+      "@ngx-signal-forms/a11y-testing": ["./tools/a11y/scan.ts"],
       "@ngx-signal-forms/debugger": ["./libs/debugger/src/index.ts"],
       "@spartan-ng/helm": ["./libs/spartan/ui/src/index.ts"],
       "@spartan-ng/helm/input": ["./libs/spartan/ui/input/src/index.ts"],

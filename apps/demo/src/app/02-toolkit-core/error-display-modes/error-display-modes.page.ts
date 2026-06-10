@@ -9,6 +9,7 @@ import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   DisplayControlsCardComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
@@ -19,12 +20,6 @@ import {
 import { ERROR_DISPLAY_MODES_CONTENT } from './error-display-modes.content';
 import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
 
-/**
- * Error Display Modes Page Wrapper
- *
- * Provides educational context and houses the interactive demo form.
- * This page demonstrates how different error display modes affect user experience.
- */
 @Component({
   selector: 'ngx-error-display-modes-page',
   imports: [
@@ -32,96 +27,91 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,
     DisplayControlsCardComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
   ],
 
   template: `
-    <div>
-      <!-- Header Section -->
-      <ngx-page-header
-        title="Error Display Strategies"
-        subtitle="Explore how different error display timing affects user experience"
-      />
-
-      <ngx-example-cards
-        [demonstrated]="demonstratedContent"
-        [learning]="learningContent"
+    <ng-template ngxPageControls>
+      <ngx-display-controls-card
+        title="Strategy playground"
+        description="Switch between the timing strategies and compare how the same validation scenario feels when feedback is immediate, on touch, or delayed until submit."
+        [chips]="currentControlChips()"
       >
-        <ngx-display-controls-card
-          title="Strategy playground"
-          description="Switch between the timing strategies and compare how the same validation scenario feels when feedback is immediate, on touch, or delayed until submit."
-          [chips]="currentControlChips()"
-        >
-          <ngx-error-display-mode-selector
-            [(selectedMode)]="selectedMode"
-            [embedded]="true"
-            display-controls-primary
-            class="block min-w-0"
-          />
-        </ngx-display-controls-card>
+        <ngx-error-display-mode-selector
+          [(selectedMode)]="selectedMode"
+          [embedded]="true"
+          display-controls-primary
+          class="block min-w-0"
+        />
+      </ngx-display-controls-card>
+    </ng-template>
 
-        @switch (selectedMode()) {
-          @case ('immediate') {
-            <ngx-split-layout>
-              <ngx-error-display-modes-form
-                #formComponent
-                errorDisplayMode="immediate"
-                left
-              />
+    <ngx-page-header
+      title="Error Display Strategies"
+      subtitle="Explore how different error display timing affects user experience"
+    />
 
-              @if (formComponent) {
-                <div right>
-                  <ngx-signal-form-debugger
-                    [formTree]="formComponent.productForm"
-                    errorStrategy="immediate"
-                  />
-                </div>
-              }
-            </ngx-split-layout>
-          }
-
-          @case ('on-submit') {
-            <ngx-split-layout>
-              <ngx-error-display-modes-form
-                #formComponent
-                errorDisplayMode="on-submit"
-                left
-              />
-
-              @if (formComponent) {
-                <div right>
-                  <ngx-signal-form-debugger
-                    [formTree]="formComponent.productForm"
-                    errorStrategy="on-submit"
-                  />
-                </div>
-              }
-            </ngx-split-layout>
-          }
-
-          @default {
-            <ngx-split-layout>
-              <ngx-error-display-modes-form
-                #formComponent
-                errorDisplayMode="on-touch"
-                left
-              />
-
-              @if (formComponent) {
-                <div right>
-                  <ngx-signal-form-debugger
-                    [formTree]="formComponent.productForm"
-                    errorStrategy="on-touch"
-                  />
-                </div>
-              }
-            </ngx-split-layout>
-          }
+    <ngx-example-cards
+      [demonstrated]="demonstratedContent"
+      [learning]="learningContent"
+    >
+      @switch (selectedMode()) {
+        @case ('immediate') {
+          <ngx-split-layout>
+            <ngx-error-display-modes-form
+              #formComponent
+              errorDisplayMode="immediate"
+              left
+            />
+            @if (formComponent) {
+              <div right>
+                <ngx-signal-form-debugger
+                  [formTree]="formComponent.productForm"
+                  errorStrategy="immediate"
+                />
+              </div>
+            }
+          </ngx-split-layout>
         }
-      </ngx-example-cards>
-    </div>
+        @case ('on-submit') {
+          <ngx-split-layout>
+            <ngx-error-display-modes-form
+              #formComponent
+              errorDisplayMode="on-submit"
+              left
+            />
+            @if (formComponent) {
+              <div right>
+                <ngx-signal-form-debugger
+                  [formTree]="formComponent.productForm"
+                  errorStrategy="on-submit"
+                />
+              </div>
+            }
+          </ngx-split-layout>
+        }
+        @default {
+          <ngx-split-layout>
+            <ngx-error-display-modes-form
+              #formComponent
+              errorDisplayMode="on-touch"
+              left
+            />
+            @if (formComponent) {
+              <div right>
+                <ngx-signal-form-debugger
+                  [formTree]="formComponent.productForm"
+                  errorStrategy="on-touch"
+                />
+              </div>
+            }
+          </ngx-split-layout>
+        }
+      }
+    </ngx-example-cards>
   `,
 })
 export class ErrorDisplayModesPageComponent {

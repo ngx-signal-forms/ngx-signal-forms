@@ -8,6 +8,11 @@ out-tsc
 # dependencies
 node_modules
 
+# local environment overrides
+.env
+.env.*
+!.env.example
+
 # IDEs and editors
 /.idea
 .project

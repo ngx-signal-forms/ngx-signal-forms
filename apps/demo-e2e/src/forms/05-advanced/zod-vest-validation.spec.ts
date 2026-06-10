@@ -19,42 +19,13 @@ function fieldStatus(page: Page, label: string) {
   return fieldWrapper(page, label).locator(ROLE_STATUS_SELECTOR);
 }
 
-test.describe('Advanced Scenarios - Zod + Vest Validation', () => {
+test.describe('Validation - Zod + Vest Validation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/advanced-scenarios/zod-vest-validation');
+    await page.goto('/validation/zod-vest-validation');
     await page.waitForLoadState('domcontentloaded');
   });
 
-  test('Zod + Vest Validation - renders layered guidance and form controls', async ({
-    page,
-  }) => {
-    await test.step('Verify the layered guidance copy is visible', async () => {
-      await expect(
-        page.getByRole('heading', {
-          level: 2,
-          name: 'Zod + Vest Validation Demo',
-        }),
-      ).toBeVisible();
-      await expect(
-        page.getByText('Zod handles the baseline', { exact: true }),
-      ).toBeVisible();
-      await expect(
-        page.getByText('Vest handles business policy', { exact: true }),
-      ).toBeVisible();
-      await expect(
-        page.getByText(
-          'Blocking errors and warn() guidance come from the same Vest run.',
-          { exact: false },
-        ),
-      ).toBeVisible();
-      await expect(
-        page.getByText(
-          'Try including your first or last name in the password to trigger a Vest business-policy error. Remove special characters or the VAT country prefix to see non-blocking Vest warnings rendered by the same wrapper-driven assistive UI used for blocking errors.',
-          { exact: true },
-        ),
-      ).toBeVisible();
-    });
-
+  test('Zod + Vest Validation - renders form controls', async ({ page }) => {
     await test.step('Verify the form fields are available', async () => {
       await expect(
         page.getByLabel('First name', { exact: true }),
@@ -82,7 +53,7 @@ test.describe('Advanced Scenarios - Zod + Vest Validation', () => {
         'Last name is required',
       );
       await expect(fieldAlert(page, 'Email')).toContainText(
-        'Enter a valid email address',
+        'Email is required',
       );
       await expect(fieldAlert(page, 'Password')).toContainText(
         'Password must be at least 12 characters',
@@ -92,6 +63,21 @@ test.describe('Advanced Scenarios - Zod + Vest Validation', () => {
       );
       await expect(fieldAlert(page, 'Country')).toContainText(
         'Choose a country',
+      );
+    });
+  });
+
+  test('Zod + Vest Validation - shows email format error for malformed non-empty input', async ({
+    page,
+  }) => {
+    await test.step('Enter malformed email and submit', async () => {
+      await page.getByLabel('Email', { exact: true }).fill('invalid-email');
+      await page.getByRole('button', { name: 'Provision account' }).click();
+    });
+
+    await test.step('Verify baseline email format message is shown', async () => {
+      await expect(fieldAlert(page, 'Email')).toContainText(
+        'Enter a valid email address',
       );
     });
   });
@@ -176,12 +162,8 @@ test.describe('Advanced Scenarios - Zod + Vest Validation', () => {
     await test.step('Submit successfully while the warnings stay advisory', async () => {
       await page.getByRole('button', { name: 'Provision account' }).click();
 
-      await expect(
-        page.getByText(
-          'Account provisioned. Zod errors stayed blocking, and the first-class Vest adapter kept warnings advisory.',
-          { exact: true },
-        ),
-      ).toBeVisible();
+      await expect(fieldAlert(page, 'Password')).toHaveCount(0);
+      await expect(fieldAlert(page, 'VAT number')).toHaveCount(0);
       await expect(fieldStatus(page, 'Password')).toContainText(
         'Add a symbol to make the password stronger',
       );

@@ -1,6 +1,30 @@
 /* PrimeNG icon font */
 @import 'primeicons/primeicons.css';
 
+/*
+ * WCAG 2.2 AA exception — the *only* override to the otherwise-unmodified Aura
+ * preset. Aura's default primary button renders a white label on emerald-500
+ * (#10b981), which is ~2.5:1 — below the 4.5:1 AA threshold. Darken the primary
+ * button surface to emerald-700/800 so the white label clears AA (≈5.5:1).
+ * Scoped to the light scheme (the a11y scan's environment); dark mode keeps
+ * Aura's defaults untouched. See apps/demo-primeng/README.md "Theme-token interplay".
+ */
+@media (prefers-color-scheme: light) {
+  /*
+   * Set on `.p-button` (not `:root`) so it beats PrimeNG's runtime-injected
+   * `:root` token values, which load after this stylesheet. Only the primary
+   * button reads these tokens, so the secondary button is unaffected.
+   */
+  .p-button {
+    --p-button-primary-background: #047857; /* emerald-700 */
+    --p-button-primary-border-color: #047857;
+    --p-button-primary-hover-background: #065f46; /* emerald-800 */
+    --p-button-primary-hover-border-color: #065f46;
+    --p-button-primary-active-background: #065f46;
+    --p-button-primary-active-border-color: #065f46;
+  }
+}
+
 :root {
   --demo-ink: #1d2433;
   --demo-muted: #5f6675;

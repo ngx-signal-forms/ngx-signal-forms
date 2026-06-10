@@ -30,10 +30,10 @@
       },
       "configurations": {
         "production": {
-          "command": "vite preview --port 4201"
+          "command": "vite preview --port 4201 --strictPort"
         },
         "development": {
-          "command": "vite --port 4201"
+          "command": "vite --port 4201 --strictPort"
         }
       }
     },

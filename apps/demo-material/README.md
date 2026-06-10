@@ -1,9 +1,9 @@
-# `apps/demo-material` — Reference wrapper for Angular Material 21+
+# `apps/demo-material` — Reference wrapper for Angular Material 22+
 
 A runnable end-to-end example showing how to integrate
 [`@ngx-signal-forms/toolkit`](../../packages/toolkit/README.md) on top of
-**Angular Material 21+**. Pinned to `@angular/material@~21.2.9` and
-`@angular/cdk@~21.2.9`.
+**Angular Material 22+**. Pinned to the workspace's Angular 22 catalog,
+currently `@angular/material@22.0.0` and `@angular/cdk@22.0.0`.
 
 ## Why use this on Material?
 
@@ -318,8 +318,8 @@ which Nx schedules automatically via the `dependsOn` in
 
 ## Pinned versions
 
-| Package               | Version   |
-| --------------------- | --------- |
-| `@angular/material`   | `~21.2.9` |
-| `@angular/cdk`        | `~21.2.9` |
-| `@angular/animations` | `21.2.10` |
+| Package               | Version  |
+| --------------------- | -------- |
+| `@angular/material`   | `22.0.0` |
+| `@angular/cdk`        | `22.0.0` |
+| `@angular/animations` | `22.0.0` |

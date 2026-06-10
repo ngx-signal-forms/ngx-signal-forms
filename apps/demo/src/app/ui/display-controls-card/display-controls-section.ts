@@ -1,29 +1,36 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  input,
+} from '@angular/core';
+import { PanelHelpService } from './panel-help.service';
 
 @Component({
   selector: 'ngx-display-controls-section',
-
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     :host {
       display: grid;
-      gap: 0.55rem;
+      gap: 0.5rem;
     }
 
     :host + :host {
-      padding-top: 0.95rem;
+      padding-top: 0.8rem;
       border-top: 1px solid rgba(148, 163, 184, 0.18);
     }
 
     .control-panel__title {
       margin: 0;
-      font-size: 0.92rem;
-      font-weight: 700;
+      font-size: 0.86rem;
+      font-weight: 600;
       color: #22314d;
     }
 
     .control-panel__description {
-      font-size: 0.84rem;
-      line-height: 1.55;
+      margin: -0.1rem 0 0.1rem;
+      font-size: 0.8rem;
+      line-height: 1.5;
       color: #5a6b84;
     }
 
@@ -43,13 +50,15 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   `,
   template: `
     <h3 class="control-panel__title">{{ title() }}</h3>
-    @if (description()) {
+    @if (description() && help.showDetails()) {
       <p class="control-panel__description">{{ description() }}</p>
     }
     <ng-content />
   `,
 })
 export class DisplayControlsSectionComponent {
+  protected readonly help = inject(PanelHelpService);
+
   readonly title = input.required<string>();
   readonly description = input('');
 }

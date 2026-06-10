@@ -41,7 +41,7 @@ The most complex demo in the app: a three-step travel-booking wizard built on a 
 - The only demo that exercises **cross-step** validation, not just cross-field — shows how to compose rules that depend on data from earlier steps.
 - Models the "draft + commit" pattern that keeps step forms isolated from each other until the user explicitly advances.
 - Proves that `@defer` + lazy step loading works without breaking the toolkit's form context or focus management.
-- Demonstrates the Angular 21.1 `effect((onCleanup) => …)` pattern for timed UI state (saving indicators).
+- Demonstrates the Angular 22 `effect((onCleanup) => …)` pattern for timed UI state (saving indicators).
 
 ## Architecture in brief
 

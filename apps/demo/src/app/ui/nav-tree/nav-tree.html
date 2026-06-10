@@ -1,0 +1,85 @@
+<nav class="nav" aria-label="Documentation sections">
+  @for (cat of categories; track cat.id) {
+  <div class="cat">
+    <button
+      type="button"
+      class="cat__trigger"
+      [attr.aria-expanded]="isOpen(cat.id)"
+      [attr.aria-controls]="cat.id + '-panel'"
+      (click)="toggle(cat.id)"
+    >
+      <svg
+        class="cat__chevron"
+        viewBox="0 0 16 16"
+        fill="currentColor"
+        aria-hidden="true"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 1 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      <span class="cat__label">{{ cat.label }}</span>
+      <span class="cat__count">{{ cat.links.length }}</span>
+    </button>
+
+    <div
+      class="cat__panel"
+      [attr.data-open]="isOpen(cat.id)"
+      [id]="cat.id + '-panel'"
+    >
+      <div class="cat__panel-inner" [inert]="!isOpen(cat.id)">
+        <ul class="cat__list">
+          @for (link of cat.links; track link.path) {
+          <li>
+            <a
+              class="leaf"
+              [routerLink]="link.path"
+              routerLinkActive="leaf--active"
+              ariaCurrentWhenActive="page"
+              [attr.title]="
+                    link.hasControls
+                      ? link.label + ' — has display controls'
+                      : link.label
+                  "
+            >
+              <span class="leaf__label">{{ link.label }}</span>
+              @if (link.hasControls) {
+              <svg
+                class="leaf__controls"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                aria-label="Has display controls"
+                role="img"
+              >
+                <line x1="2.5" y1="4.5" x2="13.5" y2="4.5" />
+                <circle
+                  cx="6"
+                  cy="4.5"
+                  r="1.6"
+                  fill="currentColor"
+                  stroke="none"
+                />
+                <line x1="2.5" y1="11.5" x2="13.5" y2="11.5" />
+                <circle
+                  cx="10.5"
+                  cy="11.5"
+                  r="1.6"
+                  fill="currentColor"
+                  stroke="none"
+                />
+              </svg>
+              }
+            </a>
+          </li>
+          }
+        </ul>
+      </div>
+    </div>
+  </div>
+  }
+</nav>

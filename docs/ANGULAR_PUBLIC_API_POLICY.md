@@ -92,7 +92,7 @@ The toolkit uses duck-typing when accessing Angular Signal Forms internals that 
 
 ## Angular Version Baseline
 
-- **Tested baseline**: Angular 21.2.x
+- **Tested baseline**: Angular 22.0.x
 - **Signal Forms status**: Experimental (developer preview)
 - **Toolkit stance**: We follow Angular's public API surface. When Angular makes breaking changes to Signal Forms, the toolkit will adapt accordingly.
 

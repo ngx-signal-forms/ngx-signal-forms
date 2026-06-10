@@ -1,0 +1,74 @@
+.demo-section {
+  border: 1px solid var(--ngx-border-color, #e5e7eb);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-block-start: 1rem;
+
+  &__title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ngx-muted-color, #6b7280);
+    margin-block-end: 0.5rem;
+  }
+}
+
+.error-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.error-item {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+
+  &--blocking {
+    color: #dc2626;
+    background: #fef2f2;
+  }
+
+  &--warning {
+    color: #d97706;
+    background: #fffbeb;
+  }
+}
+
+:host-context(.dark) {
+  .error-item {
+    &--blocking {
+      color: #fca5a5;
+      background: rgb(127 29 29 / 0.2);
+    }
+
+    &--warning {
+      color: #fcd34d;
+      background: rgb(120 53 15 / 0.2);
+    }
+  }
+}
+
+.registry-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &--verbose {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  &--terse {
+    background: #d1fae5;
+    color: #065f46;
+  }
+}

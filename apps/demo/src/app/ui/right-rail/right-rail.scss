@@ -1,0 +1,314 @@
+:host {
+  display: contents;
+}
+
+:host(.is-rail) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ── The card surface ──────────────────────────────────── */
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(99, 102, 241, 0.1),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(14, 165, 233, 0.08),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.99) 0%,
+      rgba(248, 250, 252, 0.97) 100%
+    );
+
+  /* faint diagonal weave for texture */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      135deg,
+      transparent 0,
+      transparent 17px,
+      rgba(99, 102, 241, 0.025) 17px,
+      rgba(99, 102, 241, 0.025) 18px
+    );
+  }
+}
+
+/* Persistent rail: full-height surface, flush with the column (mirrors
+   the left nav). The aside's left border is the divider. */
+:host(.is-rail) .panel {
+  flex: 1;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.panel--slideover {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  width: min(26rem, 94vw);
+  border-right: 0;
+  border-radius: 1.25rem 0 0 1.25rem;
+  box-shadow: -10px 0 44px -18px rgba(15, 23, 42, 0.32);
+  animation: slideIn 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:host-context(.dark) .panel {
+  border-color: rgba(129, 140, 248, 0.24);
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(79, 70, 229, 0.18),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(8, 145, 178, 0.14),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(15, 23, 42, 0.97) 0%,
+      rgba(12, 18, 33, 0.96) 100%
+    );
+  box-shadow: 0 24px 56px -38px rgba(0, 0, 0, 0.85);
+}
+
+:host-context(.dark) .panel--slideover {
+  box-shadow: -10px 0 48px -18px rgba(0, 0, 0, 0.7);
+}
+
+/* ── Pinned header ─────────────────────────────────────── */
+.panel__header {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.95rem 1rem 0.7rem;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.14);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 255, 255, 0)
+  );
+}
+
+:host-context(.dark) .panel__header {
+  border-bottom-color: rgba(129, 140, 248, 0.22);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0)
+  );
+}
+
+.panel__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: #5b6fb3;
+
+  svg {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+}
+
+:host-context(.dark) .panel__eyebrow {
+  color: #a5b4fc;
+}
+
+.panel__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* "Details" toggle — reveals the per-setting descriptions */
+.panel__help {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5b6fb3;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+
+  svg {
+    width: 0.78rem;
+    height: 0.78rem;
+  }
+
+  &:hover {
+    border-color: rgba(99, 102, 241, 0.5);
+    background: rgba(238, 242, 255, 0.9);
+  }
+
+  &.is-on {
+    background: rgb(79 70 229);
+    border-color: rgb(79 70 229);
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgb(99 102 241);
+    outline-offset: 2px;
+  }
+}
+
+:host-context(.dark) .panel__help {
+  background: rgba(15, 23, 42, 0.5);
+  border-color: rgba(129, 140, 248, 0.35);
+  color: #a5b4fc;
+
+  &:hover {
+    background: rgba(49, 46, 129, 0.4);
+  }
+
+  &.is-on {
+    background: rgb(99 102 241);
+    border-color: rgb(99 102 241);
+    color: #fff;
+  }
+}
+
+.panel__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: none;
+  cursor: pointer;
+  color: rgb(100 116 139);
+  transition:
+    background 120ms ease,
+    color 120ms ease;
+
+  &:hover {
+    background: rgb(241 245 249);
+    color: rgb(15 23 42);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgb(99 102 241);
+    outline-offset: 2px;
+  }
+}
+
+:host-context(.dark) .panel__close:hover {
+  background: rgb(30 41 59);
+  color: rgb(226 232 240);
+}
+
+/* ── Scrolling body ────────────────────────────────────── */
+.panel__body {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding: 0.95rem 1rem 1.25rem;
+}
+
+/* ── Empty state ───────────────────────────────────────── */
+.panel__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 1.75rem 1rem;
+  text-align: center;
+
+  svg {
+    width: 1.6rem;
+    height: 1.6rem;
+    color: rgb(148 163 184);
+    opacity: 0.7;
+  }
+}
+
+.panel__empty-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgb(71 85 105);
+}
+
+:host-context(.dark) .panel__empty-title {
+  color: rgb(203 213 225);
+}
+
+.panel__empty-text {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: rgb(148 163 184);
+  max-width: 22ch;
+}
+
+/* ── Slide-over backdrop ───────────────────────────────── */
+.panel-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgb(15 23 42 / 0.4);
+  backdrop-filter: blur(2px);
+  animation: fadeIn 180ms ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
