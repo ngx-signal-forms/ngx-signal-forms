@@ -6,6 +6,8 @@ import {
 } from '../../fixtures/aria-selectors';
 import { stabilizeLayoutSnapshotViewport } from '../../fixtures/layout-screenshot.fixture';
 
+const LAYOUT_BASELINE_FORM_WIDTH_PX = 248;
+
 function fieldWrapper(page: Page, label: string) {
   return page.locator('ngx-form-field-wrapper', {
     has: page.getByLabel(label, { exact: true }),
@@ -186,6 +188,12 @@ test.describe('Validation - Vest-Only Validation', () => {
     });
 
     await test.step('Capture the standard horizontal demo baseline', async () => {
+      await form.evaluate((element, width) => {
+        const host = element as HTMLElement;
+        host.style.width = `${width}px`;
+        host.style.maxWidth = `${width}px`;
+      }, LAYOUT_BASELINE_FORM_WIDTH_PX);
+
       await expect(form).toHaveScreenshot(
         'vest-validation-standard-horizontal-single-column.png',
       );
