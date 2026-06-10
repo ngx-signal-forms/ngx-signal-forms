@@ -53,9 +53,27 @@ describe('warning-error utilities', () => {
       expect(isBlockingError(warning)).toBe(false);
     });
 
-    it('returns false for invalid inputs', () => {
-      expect(isBlockingError({ kind: '', message: 'Empty kind' })).toBe(false);
-      expect(isBlockingError({} as ValidationError)).toBe(false);
+    it('treats malformed errors as blocking (fail-safe)', () => {
+      // Under unified semantics, any error that is not a valid warning is
+      // blocking — including errors with empty or non-string kind values.
+      // A malformed validator result must never silently allow submission.
+      expect(isBlockingError({ kind: '', message: 'Empty kind' })).toBe(true);
+      expect(isBlockingError({} as ValidationError)).toBe(true);
+    });
+
+    it('returns true for well-formed blocking kinds', () => {
+      expect(isBlockingError({ kind: 'required' })).toBe(true);
+    });
+
+    it('consistency with splitByKind: isBlockingError matches the blocking bucket', () => {
+      const emptyKind: ValidationError = { kind: '', message: 'x' };
+      const blocking: ValidationError = { kind: 'required' };
+      const warning = warningError('weak');
+
+      for (const error of [emptyKind, blocking, warning]) {
+        const { blocking: blockingBucket } = splitByKind([error]);
+        expect(blockingBucket.includes(error)).toBe(isBlockingError(error));
+      }
     });
   });
 
