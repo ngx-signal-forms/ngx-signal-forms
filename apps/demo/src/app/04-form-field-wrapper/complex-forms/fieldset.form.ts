@@ -1,10 +1,4 @@
-import {
-  booleanAttribute,
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal,
-} from '@angular/core';
+import { booleanAttribute, Component, input, signal } from '@angular/core';
 import {
   email,
   FormField,
@@ -176,7 +170,7 @@ export class FieldsetFormComponent {
    */
   readonly fieldsetForm = form(this.#model, fieldsetDemoSchema, {
     submission: {
-      action: async () => {
+      action: () => {
         console.log('Fieldset form submitted:', this.#model());
         return null;
       },

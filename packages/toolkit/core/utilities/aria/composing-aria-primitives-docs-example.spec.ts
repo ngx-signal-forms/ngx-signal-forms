@@ -30,7 +30,7 @@
  * Keep this file in lockstep with the worked example in
  * `docs/CUSTOM_WRAPPERS.md`. If you change one, change the other.
  */
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { form, FormField, required } from '@angular/forms/signals';
 import { render } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';

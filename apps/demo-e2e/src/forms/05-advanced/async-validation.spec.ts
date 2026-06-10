@@ -54,7 +54,6 @@ test.describe('Advanced Scenarios - Async Validation', () => {
     await test.step('Blur-debounce field waits for blur before requesting', async () => {
       await blurUsernameInput(page).fill('probe');
 
-      await page.waitForTimeout(500);
       await expect(
         page.getByText('Blur-debounce pending: false'),
       ).toBeVisible();

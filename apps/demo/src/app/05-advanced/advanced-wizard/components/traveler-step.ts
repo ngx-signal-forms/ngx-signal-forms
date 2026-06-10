@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
@@ -203,7 +202,7 @@ export class TravelerStepComponent implements WizardStepInterface {
   }
 
   async validateAndFocus(): Promise<boolean> {
-    await submitWithWarnings(this.travelerForm, async () => undefined);
+    await submitWithWarnings(this.travelerForm, () => undefined);
 
     if (this.travelerForm().invalid()) {
       focusFirstInvalid(this.travelerForm);
