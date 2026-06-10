@@ -230,8 +230,10 @@ export function createErrorMessageSignal(
         : null;
 
     const visibilityOptions: CreateErrorVisibilityOptions = {
-      strategy: options?.strategy,
-      submittedStatus: options?.submittedStatus,
+      ...(options?.strategy !== undefined && { strategy: options.strategy }),
+      ...(options?.submittedStatus !== undefined && {
+        submittedStatus: options.submittedStatus,
+      }),
     };
     // `createErrorVisibility` is typed against Angular's `Partial<ErrorVisibilityState>`
     // (signal-branded `invalid` / `touched`). Our `FieldStateLike` keeps the

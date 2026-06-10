@@ -141,6 +141,6 @@ export function warningError(kind: string, message?: string): ValidationError {
 
   return {
     kind: `warn:${normalizedKind}`,
-    message,
+    ...(message !== undefined && { message }),
   };
 }
