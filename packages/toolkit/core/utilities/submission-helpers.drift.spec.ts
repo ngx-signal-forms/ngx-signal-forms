@@ -1,3 +1,4 @@
+import { ApplicationRef, resource } from '@angular/core';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
@@ -7,6 +8,7 @@ import {
   schema,
   submit,
   validate,
+  validateAsync,
   type FieldTree,
 } from '@angular/forms/signals';
 import { describe, expect, it, vi } from 'vitest';
@@ -200,5 +202,127 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
     expect(toolkitAction).toHaveBeenCalledOnce();
 
     expect(toolkitForm().touched()).toBe(nativeForm().touched());
+  });
+
+  it('propagates action rejection and leaves the form re-submittable', async () => {
+    // Pins the behavior of `submitWithWarnings` when the user's action rejects:
+    // the rejection must surface to the caller (not swallowed), AND the form
+    // must be re-submittable on the next call (Plan 001's `finally` clears the
+    // in-flight WeakSet guard even when the action throws).
+    //
+    // Native Angular `submit()` comparison (Angular 22.0.0): native `submit()`
+    // also re-throws action rejections — both helpers match on this dimension.
+    // The re-submittability guarantee is unique to `submitWithWarnings` because
+    // native `submit()` manages its own `submitting()` signal via its own
+    // internal in-flight tracking; `submitWithWarnings` uses an external WeakSet
+    // that must be explicitly cleared in `finally` to avoid a stuck form.
+    const fillValidValues = (f: FieldTree<ContactModel>): void => {
+      f.email().value.set('user@example.com');
+      f.name().value.set('Ada Lovelace');
+    };
+
+    const actionError = new Error('server error');
+    const rejectingAction = vi.fn(() => Promise.reject<void>(actionError));
+    const workingAction = vi.fn(() => Promise.resolve());
+
+    // Native submit() on a rejecting action: Angular re-throws the rejection
+    // rather than swallowing it (observed with Angular 22.0.0). The native
+    // `submit()` call rejects with the action's error, matching the raw
+    // promise semantics: an unhandled throw in an async function propagates.
+    const nativeForm = makeContactForm();
+    fillValidValues(nativeForm);
+    await expect(
+      submit(nativeForm, async () => {
+        await rejectingAction();
+        return null;
+      }),
+    ).rejects.toThrow('server error');
+    expect(rejectingAction).toHaveBeenCalledOnce();
+    rejectingAction.mockClear();
+
+    // submitWithWarnings re-throws the rejection — diverges from native submit().
+    const toolkitForm = makeContactForm();
+    fillValidValues(toolkitForm);
+
+    await expect(
+      submitWithWarnings(toolkitForm, rejectingAction),
+    ).rejects.toThrow('server error');
+
+    // After rejection: the in-flight guard must be cleared (finally block),
+    // so a follow-up submit with a working action succeeds.
+    await submitWithWarnings(toolkitForm, workingAction);
+    expect(workingAction).toHaveBeenCalledOnce();
+  });
+
+  it('skips the action while an async validator is still pending', async () => {
+    // Pins the `pending()` guard inside `submitWithWarnings`: if an async
+    // validator has not yet resolved when `submitWithWarnings` runs, the
+    // action must NOT be invoked. Once the validator settles to "valid", a
+    // second `submitWithWarnings` call should proceed normally.
+    //
+    // `validateAsync` (stable since Angular 22.0.0) requires a `resource()`
+    // factory. We hold the resource in its loading state by giving it a
+    // deferred promise that we control. Angular's `pending()` on the root
+    // `FieldTree` aggregates `pending()` from all descendant async validators.
+    interface AsyncModel {
+      username: string;
+    }
+
+    // Deferred promise — resolves when the test calls `resolveValidation()`.
+    let resolveValidation!: () => void;
+    const validationGate = new Promise<void>((res) => {
+      resolveValidation = res;
+    });
+
+    const model = signal<AsyncModel>({ username: 'ada' });
+
+    const asyncForm: FieldTree<AsyncModel> = TestBed.runInInjectionContext(() =>
+      form(
+        model,
+        schema<AsyncModel>((path) => {
+          validateAsync(path.username, {
+            params: (ctx) => ctx.value(),
+            factory: (params) =>
+              resource({
+                params,
+                loader: async () => {
+                  // Block until the test unblocks the gate.
+                  await validationGate;
+                  return 'valid';
+                },
+              }),
+            onSuccess: (_result, _ctx) => null,
+            onError: (_error, _ctx) => null,
+          });
+        }),
+      ),
+    );
+
+    // Let Angular register the resource (a few microtasks for Angular's
+    // effect() + resource() wiring). Do NOT await whenStable() here — that
+    // would block forever because the resource loader is parked on the gate.
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // The form should be pending — the async validator's resource is loading.
+    expect(asyncForm().pending()).toBe(true);
+
+    const action = vi.fn(async () => {});
+
+    // submitWithWarnings must NOT call action while pending() is true.
+    await submitWithWarnings(asyncForm, action);
+    expect(action).not.toHaveBeenCalled();
+
+    // Unblock the async validator and let it fully settle.
+    resolveValidation();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    // The form should no longer be pending.
+    expect(asyncForm().pending()).toBe(false);
+
+    // Now submitWithWarnings should invoke the action (no blocking errors, not pending).
+    await submitWithWarnings(asyncForm, action);
+    expect(action).toHaveBeenCalledOnce();
   });
 });
