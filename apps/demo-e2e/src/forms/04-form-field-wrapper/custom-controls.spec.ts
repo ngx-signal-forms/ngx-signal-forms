@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 
 import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
 import { verifyNoErrorsOnInitialLoad } from '../../fixtures/form-validation.fixture';
+import { stabilizeLayoutSnapshotViewport } from '../../fixtures/layout-screenshot.fixture';
 import { CustomControlsPage } from '../../page-objects/custom-controls.page';
 
 /**
@@ -771,6 +772,7 @@ test.describe('Custom Signal Forms Controls', () => {
     });
 
     test('should match the outline vertical wrapper baseline @layout', async () => {
+      await stabilizeLayoutSnapshotViewport(page.page);
       await test.step('Show the outline state', async () => {
         await page.showOutlineAppearance();
       });

@@ -4,6 +4,7 @@ import {
   ROLE_ALERT_SELECTOR,
   ROLE_STATUS_SELECTOR,
 } from '../../fixtures/aria-selectors';
+import { stabilizeLayoutSnapshotViewport } from '../../fixtures/layout-screenshot.fixture';
 
 function fieldWrapper(page: Page, label: string) {
   return page.locator('ngx-form-field-wrapper', {
@@ -153,6 +154,7 @@ test.describe('Validation - Vest-Only Validation', () => {
   test('Vest-Only Validation - uses single-column field rows for standard horizontal mode @layout', async ({
     page,
   }) => {
+    await stabilizeLayoutSnapshotViewport(page);
     const form = page.locator('form.max-w-3xl.space-y-6');
     const pairGrids = form.locator('.vest-validation-form__pair-grid');
 

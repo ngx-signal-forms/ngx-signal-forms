@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
+import { stabilizeLayoutSnapshotViewport } from '../../fixtures/layout-screenshot.fixture';
 import { FormFieldWrapperComplexPage } from '../../page-objects/form-field-wrapper-complex.page';
 
 const contactMethodFieldsetTopAriaSnapshot = `
@@ -484,6 +485,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
     });
 
     test('snapshot: contact-method grouped error with top placement @layout', async () => {
+      await stabilizeLayoutSnapshotViewport(page.page);
       await page.showTopFieldsetSummaryPlacement();
       await triggerContactMethodFieldsetError(page);
       await page.contactMethodGroup.scrollIntoViewIfNeeded();
@@ -494,6 +496,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
     });
 
     test('snapshot: contact-method grouped error with bottom placement @layout', async () => {
+      await stabilizeLayoutSnapshotViewport(page.page);
       await page.showBottomFieldsetSummaryPlacement();
       await triggerContactMethodFieldsetError(page);
       await page.contactMethodGroup.scrollIntoViewIfNeeded();
@@ -504,6 +507,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
     });
 
     test('snapshot: credentials grouped error uses bullets and reduced gap @layout', async () => {
+      await stabilizeLayoutSnapshotViewport(page.page);
       await page.showTopFieldsetSummaryPlacement();
       await triggerCredentialsFieldsetError(page);
       await page.credentialsFieldset.scrollIntoViewIfNeeded();
@@ -514,6 +518,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
     });
 
     test('snapshot: credentials grouped error with top placement @layout', async () => {
+      await stabilizeLayoutSnapshotViewport(page.page);
       await page.showTopFieldsetSummaryPlacement();
       await triggerCredentialsFieldsetError(page);
       await page.credentialsFieldset.scrollIntoViewIfNeeded();
@@ -524,6 +529,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
     });
 
     test('snapshot: credentials grouped error with bottom placement @layout', async () => {
+      await stabilizeLayoutSnapshotViewport(page.page);
       await page.showBottomFieldsetSummaryPlacement();
       await triggerCredentialsFieldsetError(page);
       await page.credentialsFieldset.scrollIntoViewIfNeeded();
