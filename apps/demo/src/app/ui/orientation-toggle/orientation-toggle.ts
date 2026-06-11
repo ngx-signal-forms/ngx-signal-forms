@@ -15,7 +15,6 @@ import {
 } from './orientation.constants';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-orientation-toggle',
 
   template: `

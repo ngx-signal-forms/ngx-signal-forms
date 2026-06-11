@@ -35,7 +35,6 @@ const INITIAL_MODEL: ProductFeedbackModel = {
 };
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-error-display-helpers',
 
   template: `
@@ -135,7 +134,6 @@ export class ErrorDisplayHelpersComponent {
  * so the strategy is set once via the form provider directive.
  */
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-error-display-modes-form',
 
   imports: [

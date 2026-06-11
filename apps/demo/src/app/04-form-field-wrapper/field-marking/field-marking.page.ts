@@ -30,7 +30,6 @@ const MODE_OPTIONS: readonly { value: FieldMarkingMode; label: string }[] = [
 ];
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-field-marking-page',
 
   imports: [

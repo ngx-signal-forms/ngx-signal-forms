@@ -184,7 +184,7 @@ function isFieldStateLike(value: unknown): value is FieldState<unknown> {
  */
 @Component({
   selector: 'ngx-signal-form-debugger',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     JsonPipe,
     NgTemplateOutlet,

@@ -9,7 +9,6 @@ import {
 } from '@angular/core';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-theme-switcher',
 
   host: { class: 'theme-toggle-wrapper' },

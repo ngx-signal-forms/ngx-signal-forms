@@ -36,7 +36,6 @@ const SHOW_SAVING_AFTER_MS = 300;
 const MIN_DISPLAY_MS = 500;
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-wizard-container',
 
   imports: [

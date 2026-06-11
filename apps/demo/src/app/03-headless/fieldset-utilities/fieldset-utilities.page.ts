@@ -23,7 +23,6 @@ import { HEADLESS_FIELDSET_UTILITIES_CONTENT } from './fieldset-utilities.conten
 import { HeadlessFieldsetUtilitiesComponent } from './fieldset-utilities.form';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-headless-fieldset-utilities-page',
 
   styles: `

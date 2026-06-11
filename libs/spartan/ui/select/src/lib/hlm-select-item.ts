@@ -8,7 +8,7 @@ import { classes } from '@spartan-ng/helm/utils';
   selector: 'hlm-select-item',
   imports: [NgIcon],
   providers: [provideIcons({ lucideCheck })],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   hostDirectives: [
     { directive: BrnSelectItem, inputs: ['id', 'disabled', 'value'] },
   ],

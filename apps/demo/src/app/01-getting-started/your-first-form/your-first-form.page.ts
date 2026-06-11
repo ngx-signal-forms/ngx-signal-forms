@@ -22,7 +22,6 @@ import { YOUR_FIRST_FORM_CONTENT } from './your-first-form.content';
 import { YourFirstFormComponent } from './your-first-form.form';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-your-first-form-page',
   imports: [
     YourFirstFormComponent,

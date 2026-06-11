@@ -68,7 +68,7 @@ export class NgxSignalFormDebuggerBadgeIcon {}
  */
 @Component({
   selector: 'ngx-signal-form-debugger-badge',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   host: {
     class: 'ngx-debugger-badge',
     '[attr.data-variant]': 'variant()',

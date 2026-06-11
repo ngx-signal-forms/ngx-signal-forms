@@ -66,7 +66,6 @@ const bookingSchema = schema<Booking>((path) => {
 });
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-cross-field-validation',
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],

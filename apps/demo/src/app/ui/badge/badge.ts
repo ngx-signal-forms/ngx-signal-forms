@@ -9,7 +9,6 @@ export type BadgeAppearance =
   | 'danger';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-badge',
 
   host: {

@@ -33,7 +33,6 @@ import { LABELLESS_FIELDS_CONTENT } from './labelless-fields.content';
 import { LabellessFieldsFormComponent } from './labelless-fields.form';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-labelless-fields-page',
   imports: [
     LabellessFieldsFormComponent,

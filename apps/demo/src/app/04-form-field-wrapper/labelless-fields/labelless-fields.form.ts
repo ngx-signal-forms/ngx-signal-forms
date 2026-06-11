@@ -28,7 +28,6 @@ import { labellessFieldsSchema } from './labelless-fields.validations';
  * 5. Narrow inputs whose error messages must wrap beyond the input width.
  */
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-labelless-fields',
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],

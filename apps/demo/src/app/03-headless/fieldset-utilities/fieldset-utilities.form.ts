@@ -87,7 +87,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
 
 @Component({
   selector: 'ngx-headless-fieldset-utilities',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     FormField,
     FormRoot,

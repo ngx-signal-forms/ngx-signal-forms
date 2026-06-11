@@ -60,7 +60,6 @@ function createInitialComplexFormModel(): ComplexFormModel {
  * - Maximum code reduction with form field wrapper
  */
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-complex-forms',
 
   imports: [

@@ -38,7 +38,6 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
 /* oxlint-enable @typescript-eslint/prefer-readonly-parameter-types */
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-vest-validation',
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],

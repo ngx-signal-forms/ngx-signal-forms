@@ -8,7 +8,7 @@ import { PanelHelpService } from './panel-help.service';
 
 @Component({
   selector: 'ngx-display-controls-section',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   styles: `
     :host {
       display: grid;

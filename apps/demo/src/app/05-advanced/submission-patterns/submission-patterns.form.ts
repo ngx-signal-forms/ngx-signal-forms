@@ -34,7 +34,6 @@ import { submissionSchema } from './submission-patterns.validations';
  * - Visual feedback for submission states
  */
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-submission-patterns',
 
   imports: [

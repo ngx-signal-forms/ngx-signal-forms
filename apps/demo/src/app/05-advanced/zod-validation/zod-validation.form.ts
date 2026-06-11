@@ -34,7 +34,6 @@ const zodValidationSchema: SchemaFn<Readonly<ZodValidationModel>> = (
 /* oxlint-enable @typescript-eslint/prefer-readonly-parameter-types */
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-zod-validation',
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],

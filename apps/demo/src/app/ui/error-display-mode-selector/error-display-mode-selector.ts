@@ -76,7 +76,6 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
  * educational context about each mode's characteristics.
  */
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-error-display-mode-selector',
 
   styles: `

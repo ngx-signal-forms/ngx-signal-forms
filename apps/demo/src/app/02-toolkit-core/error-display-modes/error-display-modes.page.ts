@@ -21,7 +21,6 @@ import { ERROR_DISPLAY_MODES_CONTENT } from './error-display-modes.content';
 import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-error-display-modes-page',
   imports: [
     ErrorDisplayModesFormComponent,

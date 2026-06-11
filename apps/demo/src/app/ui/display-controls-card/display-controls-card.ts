@@ -21,7 +21,7 @@ export type DisplayControlChip = {
  */
 @Component({
   selector: 'ngx-display-controls-card',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   templateUrl: './display-controls-card.html',
   styleUrl: './display-controls-card.scss',
 })

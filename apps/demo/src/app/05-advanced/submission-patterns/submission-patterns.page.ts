@@ -33,7 +33,6 @@ import { SUBMISSION_PATTERNS_CONTENT } from './submission-patterns.content';
 import { SubmissionPatternsComponent } from './submission-patterns.form';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-submission-patterns-page',
 
   styles: `

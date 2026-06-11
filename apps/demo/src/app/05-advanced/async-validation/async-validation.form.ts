@@ -98,7 +98,6 @@ const registrationSchema = schema<Registration>((path) => {
 });
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-async-validation',
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField, JsonPipe],

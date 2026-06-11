@@ -21,7 +21,6 @@ import { WizardStore } from '../stores/wizard.store';
 import { WizardStepInterface } from '../wizard-step.interface';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-trip-step',
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],

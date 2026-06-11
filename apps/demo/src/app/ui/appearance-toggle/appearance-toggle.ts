@@ -3,7 +3,6 @@ import type { FormFieldAppearance } from '@ngx-signal-forms/toolkit';
 import { APPEARANCE_LABELS, APPEARANCE_OPTIONS } from './appearance.constants';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-appearance-toggle',
 
   template: `

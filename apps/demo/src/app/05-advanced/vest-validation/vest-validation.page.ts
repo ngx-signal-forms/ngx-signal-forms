@@ -33,7 +33,6 @@ import { VEST_VALIDATION_CONTENT } from './vest-validation.content';
 import { VestValidationComponent } from './vest-validation.form';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-vest-validation-page',
 
   styles: `

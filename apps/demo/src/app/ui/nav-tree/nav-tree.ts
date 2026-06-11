@@ -18,7 +18,7 @@ type CategoryId = (typeof DEMO_CATEGORIES)[number]['id'];
 
 @Component({
   selector: 'ngx-nav-tree',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [RouterLink, RouterLinkActive],
   host: {
     class: 'nav-tree-host',

@@ -33,7 +33,6 @@ import { GLOBAL_CONFIG_CONTENT } from './global-configuration.content';
 import { GlobalConfigurationComponent } from './global-configuration.form';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-global-configuration-page',
 
   styles: `

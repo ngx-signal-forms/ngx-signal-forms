@@ -70,7 +70,6 @@ const fieldStatePatternsSchema = schema<FieldStatePatternsModel>((path) => {
 });
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-field-state-patterns',
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],

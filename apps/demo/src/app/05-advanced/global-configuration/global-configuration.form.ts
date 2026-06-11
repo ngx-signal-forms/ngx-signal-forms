@@ -35,7 +35,6 @@ import { globalConfigSchema } from './global-configuration.validations';
  * Note: This demo configures both providers in apps/demo/src/main.ts.
  */
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-global-configuration',
 
   /**

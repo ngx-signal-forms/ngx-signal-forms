@@ -47,7 +47,6 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
 };
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-complex-forms-page',
 
   styles: `

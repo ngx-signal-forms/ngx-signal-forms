@@ -21,7 +21,7 @@ import { PageControlsService } from './ui/page-controls';
 
 @Component({
   selector: 'ngx-root',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     RouterOutlet,
     RouterLink,

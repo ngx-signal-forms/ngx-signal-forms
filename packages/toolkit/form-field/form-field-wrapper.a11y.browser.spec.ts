@@ -29,7 +29,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
   it('a labelled text field in its initial valid state has no violations', async () => {
     @Component({
       selector: 'ngx-test-a11y-valid',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [FormField, NgxSignalFormToolkit, NgxFormField],
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
@@ -68,7 +68,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
   it('a labelled text field showing a required error has no violations', async () => {
     @Component({
       selector: 'ngx-test-a11y-error',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [FormField, NgxSignalFormToolkit, NgxFormField],
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">

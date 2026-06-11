@@ -15,7 +15,7 @@ import { contactFormSchema } from './your-first-form.validations';
  * Form context and features are documented in the page container.
  */
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   selector: 'ngx-your-first-form',
   imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
   template: `

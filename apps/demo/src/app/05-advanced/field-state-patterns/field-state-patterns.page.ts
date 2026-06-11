@@ -33,7 +33,6 @@ import { FIELD_STATE_PATTERNS_CONTENT } from './field-state-patterns.content';
 import { FieldStatePatternsComponent } from './field-state-patterns.form';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-field-state-patterns-page',
 
   styles: `

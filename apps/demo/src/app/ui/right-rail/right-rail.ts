@@ -20,7 +20,7 @@ import { PanelHelpService } from '../display-controls-card/panel-help.service';
  */
 @Component({
   selector: 'ngx-right-rail',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [NgTemplateOutlet],
   host: {
     '[class.is-rail]': "variant() === 'rail'",

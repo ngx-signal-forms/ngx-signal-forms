@@ -31,7 +31,6 @@ import {
  * auto-hide can be observed live.
  */
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-field-marking-form',
 
   imports: [

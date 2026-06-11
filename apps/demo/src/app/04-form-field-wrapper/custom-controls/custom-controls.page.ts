@@ -33,7 +33,6 @@ import { CUSTOM_CONTROLS_CONTENT } from './custom-controls.content';
 import { CustomControlsFormComponent } from './custom-controls.form';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-custom-controls-page',
   imports: [
     CustomControlsFormComponent,

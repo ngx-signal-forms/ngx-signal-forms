@@ -22,7 +22,6 @@ import { WARNING_SUPPORT_CONTENT } from './warning-support.content';
 import { WarningsSupportFormComponent } from './warning-support.form';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-warning-support-page',
 
   imports: [

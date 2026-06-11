@@ -31,7 +31,7 @@ type LearningCardConfig = {
  */
 @Component({
   selector: 'ngx-example-cards',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [CardComponent],
   templateUrl: './example-cards.html',
   styleUrl: './example-cards.scss',

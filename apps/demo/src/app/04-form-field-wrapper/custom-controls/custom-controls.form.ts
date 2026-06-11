@@ -46,7 +46,6 @@ import { customControlsSchema } from './custom-controls.validations';
  * ```
  */
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-custom-controls',
 
   providers: [

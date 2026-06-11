@@ -105,7 +105,6 @@ const placementDesignPreviewSchema = schema<PlacementDesignPreviewModel>(
  * ```
  */
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-fieldset-form',
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
