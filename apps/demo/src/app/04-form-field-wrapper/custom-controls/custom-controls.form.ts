@@ -1,11 +1,5 @@
 // Custom controls demo form - product review with rating, switch, checkbox controls
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import {
   buildAriaDescribedBy,
@@ -112,7 +106,7 @@ export class CustomControlsFormComponent {
    */
   readonly reviewForm = form(this.#model, customControlsSchema, {
     submission: {
-      action: async () => {
+      action: () => {
         console.log('Review submitted:', this.#model());
         return null;
       },

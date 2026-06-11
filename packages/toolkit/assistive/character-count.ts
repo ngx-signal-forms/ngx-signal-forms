@@ -1,6 +1,5 @@
 import {
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   input,
