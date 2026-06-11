@@ -83,7 +83,9 @@ rewriteImportSpecifier(
   rewrittenDts,
 );
 
-/** @type {any} */
+/** @typedef {{ exports?: Record<string, unknown> }} PackageJsonLike */
+
+/** @type {PackageJsonLike} */
 const pkg = JSON.parse(readFileSync(pkgJsonPath, 'utf8'));
 let exportsStripped = false;
 if (

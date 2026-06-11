@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  inject,
-  viewChild,
-} from '@angular/core';
+import { Component, ElementRef, inject, viewChild } from '@angular/core';
 
 import {
   createReviewStepForm,
@@ -223,7 +217,7 @@ export class ReviewStepComponent implements WizardStepInterface {
 
   // No effects needed - review step validation is computed from store data
 
-  async validateAndFocus(): Promise<boolean> {
+  validateAndFocus(): boolean {
     return true;
   }
 

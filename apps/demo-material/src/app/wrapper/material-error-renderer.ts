@@ -1,12 +1,5 @@
 import { NgComponentOutlet } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  input,
-  type Type,
-} from '@angular/core';
+import { Component, computed, inject, input, type Type } from '@angular/core';
 import { NGX_FORM_FIELD_ERROR_RENDERER } from '@ngx-signal-forms/toolkit';
 
 /**

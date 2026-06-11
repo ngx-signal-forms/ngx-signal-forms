@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   input,
   signal,
@@ -21,7 +20,6 @@ import { contactFormSchema } from './your-first-form.validations';
  */
 @Component({
   selector: 'ngx-your-first-form',
-
   imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
   template: `
     <form

@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  input,
-  inject,
-  viewChild,
-} from '@angular/core';
+import { Component, ElementRef, input, inject, viewChild } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 
 import {
