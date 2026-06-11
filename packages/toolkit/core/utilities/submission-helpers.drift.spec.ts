@@ -1,5 +1,4 @@
-import { ApplicationRef, resource } from '@angular/core';
-import { signal } from '@angular/core';
+import { ApplicationRef, resource, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   applyEach,
@@ -240,7 +239,7 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
     expect(rejectingAction).toHaveBeenCalledOnce();
     rejectingAction.mockClear();
 
-    // submitWithWarnings re-throws the rejection — diverges from native submit().
+    // submitWithWarnings re-throws the rejection — matches native submit() on this dimension.
     const toolkitForm = makeContactForm();
     fillValidValues(toolkitForm);
 
