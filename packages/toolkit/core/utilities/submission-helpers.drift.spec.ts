@@ -297,15 +297,14 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
       ),
     );
 
-    // Let Angular register the resource (a few microtasks for Angular's
-    // effect() + resource() wiring). Do NOT await whenStable() here — that
-    // would block forever because the resource loader is parked on the gate.
-    await Promise.resolve();
-    await Promise.resolve();
-    await Promise.resolve();
-
-    // The form should be pending — the async validator's resource is loading.
-    expect(asyncForm().pending()).toBe(true);
+    // Wait for the async validator's resource to start loading. Poll rather
+    // than awaiting a fixed number of microtasks (brittle: Angular's effect()
+    // + resource() wiring can change how many ticks registration takes). Do
+    // NOT await whenStable() here — that would block forever because the
+    // resource loader is parked on the gate.
+    await vi.waitFor(() => {
+      expect(asyncForm().pending()).toBe(true);
+    });
 
     const action = vi.fn(async () => {});
 
