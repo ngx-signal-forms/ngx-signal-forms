@@ -1,3 +1,5 @@
+import { linkedSignal } from '@angular/core';
+import type { Signal, WritableSignal } from '@angular/core';
 import type {
   FormFieldAppearance,
   FormFieldOrientation,
@@ -35,4 +37,23 @@ export function normalizeOrientationForAppearance(
   return isOrientationDisabledForAppearance(appearance, orientation)
     ? 'vertical'
     : orientation;
+}
+
+/**
+ * Writable orientation selection that snaps to a supported orientation
+ * whenever the appearance changes — the canonical linkedSignal
+ * previous-value pattern (replaces signal + effect write-back).
+ */
+export function createOrientationSelection(
+  appearance: Signal<FormFieldAppearance>,
+  initial: FormFieldOrientation = 'vertical',
+): WritableSignal<FormFieldOrientation> {
+  return linkedSignal<FormFieldAppearance, FormFieldOrientation>({
+    source: appearance,
+    computation: (currentAppearance, previous) =>
+      normalizeOrientationForAppearance(
+        currentAppearance,
+        previous?.value ?? initial,
+      ),
+  });
 }
