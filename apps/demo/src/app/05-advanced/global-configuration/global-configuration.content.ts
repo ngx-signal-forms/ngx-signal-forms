@@ -36,6 +36,17 @@ export const GLOBAL_CONFIG_CONTENT = {
     title: 'Configuration Best Practices',
     sections: [
       {
+        title: '🧪 Try This (global default is on-touch)',
+        items: [
+          '1. Click <strong>Email Address</strong> → Tab away empty → See the component-scoped required message: <em>"This field is required — we use it to personalise your experience."</em> (from <code>provideErrorMessages()</code>, not the global default)',
+          '2. Type <code>not-an-email</code> → Tab away → Error: <em>"Invalid email format"</em>',
+          '3. In <strong>Phone Number</strong>, type <code>1234567890</code> → Error: <em>"Phone must be in format: 123-456-7890"</em>; retype it as <code>123-456-7890</code> → Error clears',
+          '4. Leave <strong>Website</strong> empty → No error (optional); type <code>example.com</code> → Error: <em>"Website must be a valid URL"</em>; prefix with <code>https://</code> → Error clears',
+          '5. Submit with errors and the terms switch off → The error summary lists <em>"Email Address"</em> and <em>"Terms of service"</em> (friendly names from <code>provideFieldLabels()</code>, not <code>userEmail</code>) — click an entry to focus that field',
+          '6. Switch the page control to <strong>Immediate</strong> → Errors now appear while typing, overriding the global <code>on-touch</code> default for this form only',
+        ],
+      },
+      {
         title: 'When to Use Global Config',
         items: [
           '• <strong>Consistency:</strong> Ensure all forms follow the same error display strategy',

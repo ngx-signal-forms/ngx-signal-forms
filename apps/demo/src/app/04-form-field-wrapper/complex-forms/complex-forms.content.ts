@@ -43,6 +43,18 @@ export const COMPLEX_FORMS_CONTENT = {
     title: 'Advanced Patterns & Best Practices',
     sections: [
       {
+        title: '🧪 Try This (Nested groups & arrays)',
+        items: [
+          '1. <strong>First Name:</strong> type <code>A</code> → Tab away → "At least 2 characters"',
+          '2. <strong>Age:</strong> enter <code>17</code> → Tab away → "Must be 18 or older"; enter <code>121</code> → "Invalid age" (max 120)',
+          '3. <strong>Zip Code:</strong> type <code>1234</code> → Tab away → "Format: 12345 or 12345-6789"; <code>12345-6789</code> passes',
+          '4. <strong>Skills:</strong> click "Add Skill", set Level to <code>11</code> → "Level must be 1-10"; remove the row with the ✕ suffix button',
+          '5. <strong>Credentials:</strong> enter password <code>secret12</code> and confirm <code>secret13</code> → the fieldset shows the shared "Passwords must match" message (group-level <code>validateTree</code>)',
+          '6. <strong>Preferences:</strong> pick the <strong>SMS</strong> radio → <strong>warning</strong> "SMS messages may incur carrier charges"',
+          '7. Flip the "Grouped feedback placement" toggle (Top/Bottom) → section-level messages move above or below each group',
+        ],
+      },
+      {
         title: 'Form Architecture & Grouping',
         items: [
           '• <strong>Nested models:</strong> Organize complex data logically',

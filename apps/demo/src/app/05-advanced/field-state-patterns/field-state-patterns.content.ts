@@ -26,6 +26,18 @@ export const FIELD_STATE_PATTERNS_CONTENT = {
     title: 'Choosing the right state',
     sections: [
       {
+        title: '🧪 Try This (watch the state readout under the form)',
+        items: [
+          '1. Switch <strong>Notification preference</strong> from <code>Email</code> to <code>SMS</code> → Mobile number becomes editable and <code>mobileNumber.disabled()</code> flips to <code>false</code>',
+          '2. Keep SMS selected, leave Mobile number empty, click <strong>Save preferences</strong> → Error: <em>"SMS notifications need a mobile number"</em>',
+          '3. Check <strong>Invite-only onboarding</strong> → The Invite code field appears and <code>inviteCode.hidden()</code> flips to <code>false</code>',
+          '4. Submit with the invite code empty → Error: <em>"Enter the invite code from your onboarding email"</em>',
+          '5. Check <strong>Managed by identity provider</strong> → Work email locks (visible but uneditable) and <code>workEmail.readonly()</code> flips to <code>true</code>',
+          '6. Uncheck it, clear <strong>Work email</strong> → <em>"Work email is required"</em>; type <code>ada@</code> → <em>"Enter a valid work email address"</em>',
+          '7. Click <strong>Reset</strong> → Everything returns to the initial state (email prefilled, SMS off, invite code hidden)',
+        ],
+      },
+      {
         title: 'Prefer hidden when',
         items: [
           '• The field is not relevant yet and showing it would add noise.',

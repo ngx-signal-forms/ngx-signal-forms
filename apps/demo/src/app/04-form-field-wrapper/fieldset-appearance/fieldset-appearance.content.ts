@@ -35,6 +35,18 @@ export const FIELDSET_APPEARANCE_CONTENT: ExampleCardConfig = {
     title: 'When to reach for each primitive',
     sections: [
       {
+        title: '🧪 Try This (On Touch mode, default controls)',
+        items: [
+          '1. Type <code>1234</code> in <strong>Shipping ZIP</strong> → Tab away → grouped summary shows "ZIP code must be 5 digits (e.g., 12345 or 12345-6789)"',
+          '2. Switch <strong>Grouped feedback</strong> from Notification to Plain → the same messages re-render as compact text instead of the surfaced card with its "Review the grouped fields below" title',
+          '3. Set <strong>Validation surface</strong> to "Tint surface" → the invalid group\'s whole surface tints instead of showing the message alone',
+          '4. Type <code>Secret1</code> (7 chars) in <strong>Password</strong> → Tab → "Password must be at least 8 characters"; then type a different <strong>Confirm password</strong> → "Passwords do not match"',
+          '5. Pick <strong>Express</strong> delivery → warning "Express delivery may incur extra fees" appears in warning styling (it never blocks submit)',
+          '6. With several address fields invalid, toggle <strong>Aggregation mode</strong> between "Group only" and "Include nested", and <strong>Summary formatting</strong> between Bullets and Plain text → compare how many messages the grouped summary owns and how they stack',
+          '7. Uncheck <strong>Billing same as shipping</strong> → the billing fieldset appears and its required/ZIP rules activate; cycle <strong>Surface tone</strong> buttons to preview tones independently of validation state',
+        ],
+      },
+      {
         title: 'Choose the right grouping layer',
         items: [
           '<code>NgxFormFieldset</code> is the right fit for cross-field rules, nested sections, and shared grouped summaries',
