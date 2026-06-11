@@ -21,7 +21,7 @@ export function isWarningError(error: ValidationError): boolean {
 }
 
 /**
- * Type guard to check if a validation error is a blocking error.
+ * Predicate that checks if a validation error is a blocking error.
  * Any error whose `kind` does NOT start with `'warn:'` is blocking — including
  * malformed errors with an empty or non-string `kind`. This is intentional:
  * a malformed validator result must never silently allow form submission
