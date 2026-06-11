@@ -89,7 +89,7 @@ No separate stylesheet import is required for the built-in wrapper and assistive
 
 **Supported browsers:** Last 2 major versions of Chrome, Edge, Firefox, and Safari (see [`.browserslistrc`](./.browserslistrc)). Accessibility behaviour is verified cross-engine (Chromium + Firefox) by automated axe-core scans in CI. The toolkit's styles ship as native CSS (no Sass) and use CSS nesting, `color-mix()`, and `:has()` for the outline appearance. The runtime floor for full visual fidelity is Chrome/Edge 112+, Firefox 121+, Safari 16.5+ — see the [theming guide](./packages/toolkit/form-field/THEMING.md#browser-support) for the per-feature breakdown.
 
-> Angular Signal Forms is still marked **experimental** upstream. The toolkit's own public API aims to stay stable — see [`COMPATIBILITY.md`](./COMPATIBILITY.md) before adopting a stable major in production.
+> Angular Signal Forms is **stable** as of Angular 22 (`@publicApi 22.0`). The toolkit's own public API also aims to stay stable; because each new Angular **major** can still reshape Signal Forms, the peer range is capped at `<23.0.0` until each major is validated — see [`COMPATIBILITY.md`](./COMPATIBILITY.md).
 
 ---
 
@@ -192,6 +192,25 @@ These are the toolkit APIs most Angular apps reach for first. The rest of the pu
 
 `'on-touch'` is the default path, which is why the first examples do not need `ngxSignalForm` yet.
 
+### How settings resolve (the cascade)
+
+Error strategy, appearance, orientation, markers, control presets, and renderers
+all resolve through **one precedence chain — most specific wins**:
+
+```
+field / component input
+  ?? form context (ngxSignalForm)
+  ?? component-scoped provider (…ForComponent)
+  ?? app-wide provider (provideNgxSignalForms…)
+  ?? built-in default
+```
+
+Inheritance merges with nullish `??`, not truthy coercion, so settings cascade
+**per key**: override one and the rest still inherit, and an explicit falsy value
+is respected (e.g. `requiredMarker: ''` clears the marker, while omitting the key
+inherits it). This is why the examples above need nothing but sensible defaults —
+and why every "you can override this" later in the doc points back to this order.
+
 ---
 
 ## Which part of the toolkit do I need?
@@ -287,6 +306,57 @@ unsubmitted — which is the right default for most forms.
 
 Auto-ARIA works **with or without** `ngxSignalForm`. Without `ngxSignalForm`, it still manages `aria-invalid`, `aria-required`, and `aria-describedby` on supported controls using fallback timing (`'on-touch'`, `'unsubmitted'`).
 With `ngxSignalForm`, auto-ARIA inherits the same form-level `errorStrategy` and `submittedStatus` as the wrapper.
+
+---
+
+## Warnings that don't block submit
+
+Warnings are first-class: non-blocking validation guidance that renders as
+`role="status"` and **lets submission through**. Create them with `warningError()`
+(it prefixes the `kind` with `warn:`), then submit past them with the
+warning-aware helpers — all exported from the package root.
+
+```typescript
+import { form, schema, minLength, validate } from '@angular/forms/signals';
+import {
+  warningError,
+  submitWithWarnings,
+  canSubmitWithWarnings,
+} from '@ngx-signal-forms/toolkit';
+
+protected readonly signupForm = form(
+  this.model,
+  schema((path) => {
+    minLength(path.password, 8, { message: 'Minimum 8 characters' }); // blocking
+    validate(path.password, (ctx) =>
+      ctx.value().length < 12
+        ? warningError('weak', 'Consider 12+ characters for better security')
+        : null,
+    ); // non-blocking
+  }),
+);
+
+// Runs the action only when no *blocking* errors remain; warnings pass through.
+// Touches all fields, waits for validation to settle, and guards double-submits.
+protected readonly submit = () =>
+  submitWithWarnings(this.signupForm, async () => {
+    await this.api.save(this.model());
+  });
+
+// Disable the button on blocking errors only — warnings stay submittable:
+protected readonly canSubmit = canSubmitWithWarnings(this.signupForm);
+```
+
+| Helper                               | Use it to…                                  |
+| ------------------------------------ | ------------------------------------------- |
+| `warningError(kind, message)`        | create a non-blocking `warn:` error         |
+| `isWarningError` / `isBlockingError` | classify a single error                     |
+| `splitByKind(errors)`                | split into `{ blocking, warnings }`         |
+| `hasOnlyWarnings(errors)`            | check no blocking errors remain             |
+| `canSubmitWithWarnings(form)`        | signal: safe to submit (ignores warnings)   |
+| `submitWithWarnings(form, action)`   | submit past warnings, double-submit guarded |
+
+**[→ Warnings support guide](./docs/WARNINGS_SUPPORT.md)**
 
 ---
 
@@ -417,6 +487,31 @@ export const appConfig: ApplicationConfig = {
   ],
 };
 ```
+
+### Per-component overrides
+
+Every `provide*` default can be overridden for a single component subtree with the
+`…ForComponent` variant. Thanks to the [cascade](#how-settings-resolve-the-cascade),
+you override one key and inherit the rest:
+
+```typescript
+import { provideNgxSignalFormsConfigForComponent } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  // Inherits defaultErrorStrategy, markers, etc. from the app — only flips appearance.
+  providers: [
+    provideNgxSignalFormsConfigForComponent({
+      defaultFormFieldAppearance: 'outline',
+    }),
+  ],
+})
+export class CheckoutForm {}
+```
+
+The same `…ForComponent` pattern exists for control presets
+(`provideNgxSignalFormControlPresetsForComponent`) and for swapping the error / hint
+UI (`provideFormFieldErrorRendererForComponent`,
+`provideFormFieldHintRendererForComponent`).
 
 **[→ Configuration reference](./packages/toolkit/README.md#configuration)** · **[→ CSS framework integration](./docs/CSS_FRAMEWORK_INTEGRATION.md)**
 
