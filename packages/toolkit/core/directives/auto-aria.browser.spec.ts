@@ -1,6 +1,5 @@
 import {
   ApplicationRef,
-  ChangeDetectionStrategy,
   Component,
   Directive,
   input as signalInput,

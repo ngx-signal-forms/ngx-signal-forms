@@ -235,7 +235,7 @@ describe('NgxSignalForm', () => {
         readonly #model = signal({ email: 'test@example.com' });
         readonly contactForm = form(this.#model, {
           submission: {
-            action: async () => null,
+            action: () => null,
           },
         });
 
@@ -293,7 +293,7 @@ describe('NgxSignalForm', () => {
         readonly #model = signal({ email: 'test@example.com' });
         readonly contactForm = form(this.#model, {
           submission: {
-            action: async () => null,
+            action: () => null,
           },
         });
 
@@ -362,7 +362,7 @@ describe('NgxSignalForm', () => {
           readonly #model = signal({ email: 'test@example.com' });
           readonly contactForm = form(this.#model, {
             submission: {
-              action: async () => null,
+              action: () => null,
             },
           });
 
@@ -424,7 +424,7 @@ describe('NgxSignalForm', () => {
             }),
             {
               submission: {
-                action: async () => null,
+                action: () => null,
               },
             },
           );
@@ -488,7 +488,7 @@ describe('NgxSignalForm', () => {
             }),
             {
               submission: {
-                action: async () => null,
+                action: () => null,
               },
             },
           );
@@ -557,7 +557,7 @@ describe('NgxSignalForm', () => {
             }),
             {
               submission: {
-                action: async () => null,
+                action: () => null,
               },
             },
           );

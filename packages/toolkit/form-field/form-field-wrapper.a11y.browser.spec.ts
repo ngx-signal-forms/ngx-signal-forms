@@ -59,6 +59,9 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
     const { container } = await render(TestComponent);
     await TestBed.inject(ApplicationRef).whenStable();
 
+    await expect
+      .element(page.getByRole('textbox', { name: 'Email address' }))
+      .toBeVisible();
     await expectNoA11yViolations(container);
   });
 

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import type { ValidationError } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';

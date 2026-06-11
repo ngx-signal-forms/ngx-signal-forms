@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { form, FormRoot, required, schema } from '@angular/forms/signals';
 import {
   NgxSignalForm,

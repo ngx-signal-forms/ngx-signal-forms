@@ -1,4 +1,5 @@
 {
+  "git.path": "/usr/bin/git",
   "oxc.fmt.configPath": ".oxfmtrc.json",
   "oxc.typeAware": true,
   "editor.defaultFormatter": "oxc.oxc-vscode",

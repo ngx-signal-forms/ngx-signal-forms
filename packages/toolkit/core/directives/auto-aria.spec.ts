@@ -1,6 +1,5 @@
 import {
   ApplicationRef,
-  ChangeDetectionStrategy,
   Component,
   computed,
   contentChildren,
