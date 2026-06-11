@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  input,
-} from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { PanelHelpService } from './panel-help.service';
 
 export type DisplayControlsLayout = 'single' | 'split';

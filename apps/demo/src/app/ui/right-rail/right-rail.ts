@@ -1,10 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  input,
-} from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { PageControlsService } from '../page-controls/page-controls.service';
 import { PanelHelpService } from '../display-controls-card/panel-help.service';
 

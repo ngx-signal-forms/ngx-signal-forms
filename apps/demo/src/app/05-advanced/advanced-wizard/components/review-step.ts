@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  inject,
-  viewChild,
-} from '@angular/core';
+import { Component, ElementRef, inject, viewChild } from '@angular/core';
 
 import {
   createReviewStepForm,

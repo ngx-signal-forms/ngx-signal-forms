@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  effect,
-  inject,
-} from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import {
   NavigationEnd,
   Router,

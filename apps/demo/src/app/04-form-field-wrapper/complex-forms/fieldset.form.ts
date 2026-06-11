@@ -1,10 +1,4 @@
-import {
-  booleanAttribute,
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal,
-} from '@angular/core';
+import { booleanAttribute, Component, input, signal } from '@angular/core';
 import {
   email,
   FormField,

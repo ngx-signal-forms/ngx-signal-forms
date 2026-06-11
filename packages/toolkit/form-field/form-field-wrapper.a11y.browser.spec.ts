@@ -1,9 +1,4 @@
-import {
-  ApplicationRef,
-  ChangeDetectionStrategy,
-  Component,
-  signal,
-} from '@angular/core';
+import { ApplicationRef, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormField, form, required, schema } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';

@@ -1,7 +1,6 @@
 import type { BooleanInput } from '@angular/cdk/coercion';
 import {
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   forwardRef,

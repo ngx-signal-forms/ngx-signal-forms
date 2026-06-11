@@ -1,7 +1,6 @@
 import { DatePipe } from '@angular/common';
 import {
   afterRenderEffect,
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
