@@ -1,5 +1,7 @@
+import { signal } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 import {
+  createOrientationSelection,
   getOrientationLabel,
   isOrientationDisabledForAppearance,
   normalizeOrientationForAppearance,
@@ -39,5 +41,77 @@ describe('orientation.constants', () => {
     expect(normalizeOrientationForAppearance('standard', 'horizontal')).toBe(
       'horizontal',
     );
+  });
+});
+
+describe('createOrientationSelection', () => {
+  it('uses the initial value as the starting orientation', () => {
+    const appearance =
+      signal<import('@ngx-signal-forms/toolkit').FormFieldAppearance>(
+        'standard',
+      );
+    const orientation = createOrientationSelection(appearance, 'horizontal');
+    expect(orientation()).toBe('horizontal');
+  });
+
+  it('defaults to vertical when no initial value is provided', () => {
+    const appearance =
+      signal<import('@ngx-signal-forms/toolkit').FormFieldAppearance>(
+        'standard',
+      );
+    const orientation = createOrientationSelection(appearance);
+    expect(orientation()).toBe('vertical');
+  });
+
+  it('allows the user to write a supported orientation value', () => {
+    const appearance =
+      signal<import('@ngx-signal-forms/toolkit').FormFieldAppearance>(
+        'standard',
+      );
+    const orientation = createOrientationSelection(appearance);
+    orientation.set('horizontal');
+    expect(orientation()).toBe('horizontal');
+  });
+
+  it('snaps to vertical when appearance changes to outline with horizontal selected', () => {
+    const appearance =
+      signal<import('@ngx-signal-forms/toolkit').FormFieldAppearance>(
+        'standard',
+      );
+    const orientation = createOrientationSelection(appearance);
+    orientation.set('horizontal');
+    expect(orientation()).toBe('horizontal');
+
+    appearance.set('outline');
+    expect(orientation()).toBe('vertical');
+  });
+
+  it('does not resurrect the pre-snap value when appearance changes back', () => {
+    const appearance =
+      signal<import('@ngx-signal-forms/toolkit').FormFieldAppearance>(
+        'standard',
+      );
+    const orientation = createOrientationSelection(appearance);
+    orientation.set('horizontal');
+
+    // snap to vertical
+    appearance.set('outline');
+    expect(orientation()).toBe('vertical');
+
+    // switch back — should remain at snapped value (vertical), not restore horizontal
+    appearance.set('standard');
+    expect(orientation()).toBe('vertical');
+  });
+
+  it('keeps orientation unchanged when appearance changes to a compatible appearance', () => {
+    const appearance =
+      signal<import('@ngx-signal-forms/toolkit').FormFieldAppearance>(
+        'standard',
+      );
+    const orientation = createOrientationSelection(appearance);
+    orientation.set('horizontal');
+
+    appearance.set('plain');
+    expect(orientation()).toBe('horizontal');
   });
 });
