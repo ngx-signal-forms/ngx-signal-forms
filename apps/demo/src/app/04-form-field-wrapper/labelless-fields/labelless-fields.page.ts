@@ -1,15 +1,7 @@
-import {
-  Component,
-  computed,
-  effect,
-  linkedSignal,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import type {
   ErrorDisplayStrategy,
   FormFieldAppearance,
-  FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
@@ -28,8 +20,8 @@ import {
 } from '../../ui/error-display-mode-selector/error-display-mode-selector';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
+  createOrientationSelection,
   getOrientationLabel,
-  normalizeOrientationForAppearance,
 } from '../../ui/orientation-toggle';
 import { LABELLESS_FIELDS_CONTENT } from './labelless-fields.content';
 import { LabellessFieldsFormComponent } from './labelless-fields.form';
@@ -77,7 +69,7 @@ import { LabellessFieldsFormComponent } from './labelless-fields.form';
           description="Horizontal layout collapses the label column when no label is projected."
         >
           <ngx-orientation-toggle
-            [(value)]="selectedOrientationPreference"
+            [(value)]="selectedOrientation"
             [appearance]="selectedAppearance()"
           />
         </ngx-display-controls-section>
@@ -119,29 +111,9 @@ export class LabellessFieldsPage {
   protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('standard');
-  protected readonly selectedOrientationPreference =
-    signal<FormFieldOrientation>('vertical');
-  protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
-    () => {
-      return normalizeOrientationForAppearance(
-        this.selectedAppearance(),
-        this.selectedOrientationPreference(),
-      );
-    },
+  protected readonly selectedOrientation = createOrientationSelection(
+    this.selectedAppearance,
   );
-  constructor() {
-    effect(() => {
-      const preferredOrientation = this.selectedOrientationPreference();
-      const normalizedOrientation = normalizeOrientationForAppearance(
-        this.selectedAppearance(),
-        preferredOrientation,
-      );
-
-      if (preferredOrientation !== normalizedOrientation) {
-        this.selectedOrientationPreference.set(normalizedOrientation);
-      }
-    });
-  }
 
   protected readonly currentControlChips = computed(() => [
     {
