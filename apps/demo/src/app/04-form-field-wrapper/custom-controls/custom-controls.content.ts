@@ -76,6 +76,15 @@ export const CUSTOM_CONTROLS_CONTENT: ExampleCardConfig = {
           'Implement keyboard navigation and a visible focus state for parity with native controls',
         ],
       },
+      {
+        title: 'NgxFieldIdentity integration',
+        items: [
+          "The rating control here is the reference implementation of the toolkit README's custom-control recipe",
+          'It injects <code class="code-inline">NgxFieldIdentity</code> optionally so it works both standalone and inside a wrapper',
+          'When the wrapper is present, <code class="code-inline">identity.describedBy()</code> drives the hint portion of <code class="code-inline">aria-describedby</code> — explicit inputs take precedence, so manual ARIA mode is unaffected',
+          'Read the wrapper-resolved signals (field name, error/warning ids, hint chain) instead of re-deriving them to stay in lockstep with every other toolkit surface',
+        ],
+      },
     ],
     nextStep: {
       text: 'Explore async and server-backed validation next →',

@@ -1,18 +1,30 @@
 import {
   Component,
   computed,
+  inject,
   input,
   model,
   output,
   signal,
 } from '@angular/core';
 import type { FormValueControl, ValidationError } from '@angular/forms/signals';
+import { NgxFieldIdentity } from '@ngx-signal-forms/toolkit';
 
 /**
  * Custom star rating control implementing Angular Signal Forms FormValueControl interface.
  *
  * This component demonstrates how to create a custom form control that integrates
  * seamlessly with Angular Signal Forms and @ngx-signal-forms/toolkit.
+ *
+ * ## NgxFieldIdentity integration (reference implementation)
+ *
+ * When placed inside `ngx-form-field-wrapper`, the control injects the
+ * wrapper-provided `NgxFieldIdentity` service (optionally, so it continues to
+ * work standalone). When present, the service drives `aria-labelledby` and the
+ * `aria-describedby` hint baseline — exactly as the toolkit README's
+ * custom-control recipe prescribes. Explicit `[labelledBy]` and `[describedBy]`
+ * inputs take precedence so callers that manage ARIA themselves (e.g. manual
+ * ARIA mode) are unaffected.
  *
  * @example Basic usage with formField directive
  * ```html
@@ -34,12 +46,12 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
     'data-ngx-signal-form-control': '',
     role: 'slider',
     tabindex: '0',
-    '[attr.aria-labelledby]': 'labelledBy()',
+    '[attr.aria-labelledby]': 'resolvedLabelledBy()',
     '[attr.aria-valuemin]': '0',
     '[attr.aria-valuemax]': 'maxRating()',
     '[attr.aria-valuenow]': 'currentValue()',
     '[attr.aria-valuetext]': 'valueText()',
-    '[attr.aria-describedby]': 'describedBy()',
+    '[attr.aria-describedby]': 'resolvedDescribedBy()',
     '[attr.aria-invalid]': 'invalid() ? "true" : "false"',
     '[attr.aria-disabled]': 'disabled() ? "true" : "false"',
     '[attr.aria-required]': 'required() ? "true" : null',
@@ -141,6 +153,14 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
 })
 export class RatingControlComponent implements FormValueControl<number> {
   /**
+   * Injected from the surrounding `ngx-form-field-wrapper` when present.
+   * Drives aria-labelledby and the aria-describedby hint baseline following
+   * the toolkit README's canonical custom-control recipe. Absent when the
+   * control is used standalone (outside a wrapper).
+   */
+  readonly #identity = inject(NgxFieldIdentity, { optional: true });
+
+  /**
    * Optional aria-labelledby source for visible labels projected outside
    * the custom control host.
    */
@@ -204,6 +224,28 @@ export class RatingControlComponent implements FormValueControl<number> {
    * Track focus state for styling.
    */
   protected readonly focused = signal(false);
+
+  /**
+   * Resolved aria-labelledby: explicit input wins, then falls back to the
+   * field identity's controlId (the label `for=` target), then null.
+   *
+   * The wrapper's `NgxFieldIdentity` does not itself carry the label-element
+   * id (that lives in `createFieldNameResolver`'s label tier), so we read the
+   * explicit input as the primary path for label linking and use the service
+   * only as a null-coalescing safety net.
+   */
+  protected readonly resolvedLabelledBy = computed(
+    () => this.labelledBy() ?? this.#identity?.controlId() ?? null,
+  );
+
+  /**
+   * Resolved aria-describedby: explicit input wins (manual ARIA mode), then
+   * falls back to the `NgxFieldIdentity`'s aggregated hint-id chain, then null.
+   * Auto-ARIA mode overrides this further at the directive level when active.
+   */
+  protected readonly resolvedDescribedBy = computed(
+    () => this.describedBy() ?? this.#identity?.describedBy() ?? null,
+  );
 
   /**
    * Array of star indices for template iteration.
