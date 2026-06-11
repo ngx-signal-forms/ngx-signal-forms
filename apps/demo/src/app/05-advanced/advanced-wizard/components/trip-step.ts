@@ -6,7 +6,6 @@ import {
   type FormFieldAppearance,
   type FormFieldOrientation,
   NgxSignalFormToolkit,
-  submitWithWarnings,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
@@ -449,7 +448,7 @@ export class TripStepComponent implements WizardStepInterface {
   }
 
   async validateAndFocus(): Promise<boolean> {
-    await submitWithWarnings(this.tripForm, async () => {});
+    this.tripForm().markAsTouched();
 
     if (this.tripForm().invalid() || !this.hasDestinations()) {
       const focused = focusFirstInvalid(this.tripForm);
