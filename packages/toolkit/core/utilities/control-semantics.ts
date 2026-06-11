@@ -143,9 +143,9 @@ export function readNgxSignalFormControlSemantics(
   );
 
   return {
-    kind: isNgxSignalFormControlKind(kind) ? kind : undefined,
-    layout: isNgxSignalFormControlLayout(layout) ? layout : undefined,
-    ariaMode: isNgxSignalFormControlAriaMode(ariaMode) ? ariaMode : undefined,
+    ...(isNgxSignalFormControlKind(kind) && { kind }),
+    ...(isNgxSignalFormControlLayout(layout) && { layout }),
+    ...(isNgxSignalFormControlAriaMode(ariaMode) && { ariaMode }),
   };
 }
 
