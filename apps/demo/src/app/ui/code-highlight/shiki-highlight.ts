@@ -1,6 +1,5 @@
 import {
   afterNextRender,
-  ChangeDetectionStrategy,
   Directive,
   ElementRef,
   inject,
@@ -29,7 +28,9 @@ import { SupportedLanguage, SupportedTheme } from './shiki-highlight.service';
  *
  * <pre ngxShikiHighlight language="angular-ts" theme="github-dark">
  *   @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush, selector: 'ngx-example' })
+ *     changeDetection: ChangeDetectionStrategy.OnPush,
+ *     selector: 'ngx-example',
+ *   })
  *   export class ExampleComponent {}
  * </pre>
  * ```
