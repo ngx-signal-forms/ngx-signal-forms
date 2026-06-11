@@ -1,4 +1,11 @@
-import { Component, ElementRef, input, inject, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+  input,
+  viewChild,
+} from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 
 import {
@@ -14,6 +21,7 @@ import { WizardStore } from '../stores/wizard.store';
 import { WizardStepInterface } from '../wizard-step.interface';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-trip-step',
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
@@ -447,7 +455,7 @@ export class TripStepComponent implements WizardStepInterface {
     this.store.setDestinations(this.#model().destinations);
   }
 
-  async validateAndFocus(): Promise<boolean> {
+  validateAndFocus(): Promise<boolean> {
     this.tripForm().markAsTouched();
 
     if (this.tripForm().invalid() || !this.hasDestinations()) {
@@ -455,10 +463,10 @@ export class TripStepComponent implements WizardStepInterface {
       if (!focused && !this.hasDestinations()) {
         this.addDestinationButton()?.nativeElement.focus();
       }
-      return false;
+      return Promise.resolve(false);
     }
 
-    return true;
+    return Promise.resolve(true);
   }
 
   focusHeading(): void {

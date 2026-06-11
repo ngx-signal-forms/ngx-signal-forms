@@ -1,11 +1,12 @@
 import { DatePipe } from '@angular/common';
 import {
   afterRenderEffect,
+  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
-  input,
   inject,
+  input,
   linkedSignal,
   signal,
   viewChild,
@@ -35,6 +36,7 @@ const SHOW_SAVING_AFTER_MS = 300;
 const MIN_DISPLAY_MS = 500;
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-wizard-container',
 
   imports: [

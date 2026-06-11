@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
   ExampleCardsComponent,
   PageHeaderComponent,
@@ -8,6 +8,7 @@ import { ERROR_MESSAGE_SIGNAL_CONTENT } from './error-message-signal.content';
 import { ErrorMessageSignalComponent } from './error-message-signal.form';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-error-message-signal-page',
 
   styles: `

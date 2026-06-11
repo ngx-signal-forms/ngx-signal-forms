@@ -1,4 +1,9 @@
-import { Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
@@ -9,6 +14,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import { createPasswordForm } from './warning-support.validations';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-warning-support-form',
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],

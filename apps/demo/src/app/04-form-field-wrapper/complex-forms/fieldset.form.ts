@@ -1,4 +1,10 @@
-import { booleanAttribute, Component, input, signal } from '@angular/core';
+import {
+  booleanAttribute,
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
 import {
   email,
   FormField,
@@ -99,6 +105,7 @@ const placementDesignPreviewSchema = schema<PlacementDesignPreviewModel>(
  * ```
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-fieldset-form',
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
@@ -172,7 +179,7 @@ export class FieldsetFormComponent {
     submission: {
       action: () => {
         console.log('Fieldset form submitted:', this.#model());
-        return null;
+        return Promise.resolve(null);
       },
       onInvalid: createOnInvalidHandler(),
     },

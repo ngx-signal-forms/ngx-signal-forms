@@ -1,5 +1,11 @@
 // Custom controls demo form - product review with rating, switch, checkbox controls
-import { Component, computed, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import {
   buildAriaDescribedBy,
@@ -40,6 +46,7 @@ import { customControlsSchema } from './custom-controls.validations';
  * ```
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-custom-controls',
 
   providers: [
@@ -108,7 +115,7 @@ export class CustomControlsFormComponent {
     submission: {
       action: () => {
         console.log('Review submitted:', this.#model());
-        return null;
+        return Promise.resolve(null);
       },
       onInvalid: (formTree) => {
         this.#submitAttempted.set(true);

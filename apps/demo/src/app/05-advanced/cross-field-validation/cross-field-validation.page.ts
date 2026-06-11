@@ -1,4 +1,10 @@
-import { Component, computed, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+  viewChild,
+} from '@angular/core';
 import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
@@ -27,6 +33,7 @@ import { CROSS_FIELD_VALIDATION_CONTENT } from './cross-field-validation.content
 import { CrossFieldValidationComponent } from './cross-field-validation.form';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-cross-field-validation-page',
 
   styles: `

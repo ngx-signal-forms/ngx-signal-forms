@@ -1,4 +1,10 @@
-import { Component, computed, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+  viewChild,
+} from '@angular/core';
 import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
@@ -27,6 +33,7 @@ import { ZOD_VEST_VALIDATION_CONTENT } from './zod-vest-validation.content';
 import { ZodVestValidationComponent } from './zod-vest-validation.form';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-zod-vest-validation-page',
 
   styles: `

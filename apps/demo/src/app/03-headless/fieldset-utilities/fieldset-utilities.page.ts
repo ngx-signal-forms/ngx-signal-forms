@@ -1,4 +1,10 @@
-import { Component, computed, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+  viewChild,
+} from '@angular/core';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
@@ -17,6 +23,7 @@ import { HEADLESS_FIELDSET_UTILITIES_CONTENT } from './fieldset-utilities.conten
 import { HeadlessFieldsetUtilitiesComponent } from './fieldset-utilities.form';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-headless-fieldset-utilities-page',
 
   styles: `

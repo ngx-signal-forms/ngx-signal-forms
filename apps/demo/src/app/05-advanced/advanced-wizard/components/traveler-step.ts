@@ -1,9 +1,10 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
-  input,
   inject,
+  input,
   viewChild,
 } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
@@ -35,6 +36,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
 };
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-traveler-step',
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
@@ -202,7 +204,7 @@ export class TravelerStepComponent implements WizardStepInterface {
   }
 
   async validateAndFocus(): Promise<boolean> {
-    await submitWithWarnings(this.travelerForm, () => undefined);
+    await submitWithWarnings(this.travelerForm, () => Promise.resolve());
 
     if (this.travelerForm().invalid()) {
       focusFirstInvalid(this.travelerForm);

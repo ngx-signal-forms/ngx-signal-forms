@@ -1,4 +1,10 @@
-import { Component, computed, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
@@ -54,6 +60,7 @@ function createInitialComplexFormModel(): ComplexFormModel {
  * - Maximum code reduction with form field wrapper
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-complex-forms',
 
   imports: [

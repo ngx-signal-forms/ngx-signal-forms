@@ -1,4 +1,9 @@
-import { Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
@@ -23,6 +28,7 @@ import { labellessFieldsSchema } from './labelless-fields.validations';
  * 5. Narrow inputs whose error messages must wrap beyond the input width.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-labelless-fields',
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
@@ -103,7 +109,7 @@ export class LabellessFieldsFormComponent {
 
   readonly labellessForm = form(this.#model, labellessFieldsSchema, {
     submission: {
-      action: () => null,
+      action: () => Promise.resolve(null),
       onInvalid: (formTree) => {
         this.#submitAttempted.set(true);
         this.#handleInvalidSubmission(formTree);

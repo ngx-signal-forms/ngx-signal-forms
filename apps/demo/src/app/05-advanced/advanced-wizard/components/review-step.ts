@@ -1,4 +1,10 @@
-import { Component, ElementRef, inject, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+  viewChild,
+} from '@angular/core';
 
 import {
   createReviewStepForm,
@@ -8,6 +14,7 @@ import { WizardStore } from '../stores/wizard.store';
 import { WizardStepInterface } from '../wizard-step.interface';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-review-step',
 
   template: `
@@ -217,8 +224,8 @@ export class ReviewStepComponent implements WizardStepInterface {
 
   // No effects needed - review step validation is computed from store data
 
-  validateAndFocus(): boolean {
-    return true;
+  validateAndFocus(): Promise<boolean> {
+    return Promise.resolve(true);
   }
 
   commitToStore(): void {

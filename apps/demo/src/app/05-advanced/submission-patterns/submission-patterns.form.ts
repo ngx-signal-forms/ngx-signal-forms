@@ -1,4 +1,11 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import {
   type ErrorDisplayStrategy,
@@ -27,6 +34,7 @@ import { submissionSchema } from './submission-patterns.validations';
  * - Visual feedback for submission states
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-submission-patterns',
 
   imports: [
@@ -314,7 +322,7 @@ export class SubmissionPatternsComponent {
           return {
             kind: 'usernameTaken',
             message: `Username "${username}" is already taken. Please choose another.`,
-            fieldTree: this.registrationForm.username,
+            fieldTree: formData.username,
           };
         }
 
@@ -326,7 +334,8 @@ export class SubmissionPatternsComponent {
           confirmPassword: '',
           simulateServerError: false,
         });
-        this.registrationForm().reset();
+        formData().reset();
+        return null; // No server errors
       },
       onInvalid: createOnInvalidHandler(),
     },

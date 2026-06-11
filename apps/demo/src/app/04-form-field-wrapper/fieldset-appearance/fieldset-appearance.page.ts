@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ExampleCardsComponent, PageHeaderComponent } from '../../ui';
 import { FIELDSET_APPEARANCE_CONTENT } from './fieldset-appearance.content';
 import { FieldsetAppearanceFormComponent } from './fieldset-appearance.form';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-fieldset-appearance-page',
 
   imports: [

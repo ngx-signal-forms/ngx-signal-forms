@@ -1,4 +1,10 @@
-import { Component, computed, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { form, FormField } from '@angular/forms/signals';
 import {
@@ -29,6 +35,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
 };
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-error-display-helpers',
 
   template: `
@@ -128,6 +135,7 @@ export class ErrorDisplayHelpersComponent {
  * so the strategy is set once via the form provider directive.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-error-display-modes-form',
 
   imports: [
@@ -439,7 +447,7 @@ export class ErrorDisplayModesFormComponent {
       action: () => {
         this.#submissionAttempted.set(true);
         alert('Thank you for your feedback!');
-        return null; // No server errors
+        return Promise.resolve(null); // No server errors
       },
       onInvalid: createOnInvalidHandler({
         afterInvalid: () => {

@@ -1,4 +1,9 @@
-import { Component, computed, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+} from '@angular/core';
 import { type FormFieldAppearance } from '@ngx-signal-forms/toolkit';
 
 import {
@@ -19,6 +24,7 @@ import { ADVANCED_WIZARD_CONTENT } from './advanced-wizard.content';
 import { WizardContainerComponent } from './components/wizard-container';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'ngx-advanced-wizard-page',
 
   imports: [
