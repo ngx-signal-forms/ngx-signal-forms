@@ -18,6 +18,8 @@ export const HEADLESS_FIELDSET_UTILITIES_CONTENT = {
           '<strong>createErrorState:</strong> Programmatic error visibility signals',
           '<strong>createCharacterCount:</strong> Character count without directives',
           '<strong>createFieldStateFlags:</strong> Reusable valid/invalid/touched/dirty/pending signals',
+          '<strong>NgxHeadlessCharacterCount (directive):</strong> Attach to any element to get <code class="code-inline">currentLength</code>, <code class="code-inline">remaining</code>, <code class="code-inline">limitState</code>, and <code class="code-inline">percentUsed</code> signals — use your own markup and CSS for the ok / warning / danger / exceeded states',
+          '<strong>NgxFormFieldCharacterCount (assistive component):</strong> Drop-in one-liner; auto-detects the maxLength validator and applies the same progressive color states. Themeable via CSS custom properties.',
         ],
       },
     ],

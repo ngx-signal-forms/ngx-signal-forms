@@ -27,6 +27,7 @@ import {
   createFieldStateFlags,
   NgxHeadlessToolkit,
 } from '@ngx-signal-forms/toolkit/headless';
+import { NgxFormFieldCharacterCount } from '@ngx-signal-forms/toolkit/assistive';
 
 interface HeadlessDeliveryModel {
   contactEmail: string;
@@ -87,7 +88,13 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
 @Component({
   selector: 'ngx-headless-fieldset-utilities',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, FormRoot, NgxSignalForm, NgxHeadlessToolkit],
+  imports: [
+    FormField,
+    FormRoot,
+    NgxSignalForm,
+    NgxHeadlessToolkit,
+    NgxFormFieldCharacterCount,
+  ],
   templateUrl: './fieldset-utilities.form.html',
   styleUrl: './fieldset-utilities.form.scss',
 })

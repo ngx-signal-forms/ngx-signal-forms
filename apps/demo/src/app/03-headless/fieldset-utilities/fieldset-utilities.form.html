@@ -367,9 +367,53 @@
                 >
                   Delivery notes
                 </label>
-                <span class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ notesCount.currentLength() }}/200
-                </span>
+
+                <!--
+                  Headless character count — NgxHeadlessCharacterCount
+                  Provides all count signals (currentLength, remaining,
+                  limitState, percentUsed…) for fully custom markup.
+                  States: ok → warning (≥80 %) → danger (≥95 %) → exceeded.
+
+                  The directive is attached to an ng-container so the
+                  exported template reference (#notesCharCount) is read by
+                  child elements only — this avoids NG0950 (required input
+                  not available during the creation pass of the same element).
+                -->
+                <ng-container
+                  ngxHeadlessCharacterCount
+                  #notesCharCount="characterCount"
+                  [field]="deliveryForm.deliveryNotes"
+                  [maxLength]="200"
+                >
+                  <span
+                    aria-live="polite"
+                    aria-atomic="true"
+                    [attr.data-limit-state]="notesCharCount.limitState()"
+                    [attr.data-testid]="'headless-char-count'"
+                    class="text-xs"
+                    [class.text-gray-500]="notesCharCount.limitState() === 'ok'"
+                    [class.text-amber-700]="
+                      notesCharCount.limitState() === 'warning'
+                    "
+                    [class.text-red-600]="notesCharCount.limitState() === 'danger'"
+                    [class.font-semibold]="
+                      notesCharCount.limitState() === 'exceeded'
+                    "
+                    [class.text-red-800]="
+                      notesCharCount.limitState() === 'exceeded'
+                    "
+                  >
+                    {{ notesCharCount.currentLength() }}/{{
+                    notesCharCount.resolvedMaxLength() }} @if
+                    (notesCharCount.limitState() !== 'ok') {
+                    <span class="ml-1"
+                      >({{ notesCharCount.remaining() >= 0 ?
+                      notesCharCount.remaining() + ' left' :
+                      notesCharCount.remaining() * -1 + ' over' }})</span
+                    >
+                    }
+                  </span>
+                </ng-container>
               </div>
 
               <textarea
@@ -413,6 +457,24 @@
                 }
               </div>
               }
+
+              <!--
+                Assistive-tier alternative — NgxFormFieldCharacterCount
+                One-liner: drop it next to the textarea and it auto-detects
+                the maxLength from the field's validation rules. Same
+                progressive color states (ok/warning/danger/exceeded) as the
+                headless version above, fully themed via CSS custom properties.
+              -->
+              <div
+                class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400"
+              >
+                <span>Assistive tier:</span>
+                <ngx-form-field-character-count
+                  [formField]="deliveryForm.deliveryNotes"
+                  [liveAnnounce]="true"
+                  data-testid="assistive-char-count"
+                />
+              </div>
             </div>
           </div>
         </div>
