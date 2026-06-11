@@ -96,7 +96,7 @@ test.describe('Form Field Wrapper - Field Marking', () => {
     await expect(legend).not.toBeVisible();
   });
 
-  test('should hide the legend when phone becomes the only required field and its marker changes', async ({
+  test('should keep the legend visible and mark the phone field when it becomes required', async ({
     page,
   }) => {
     // Make phone required via the checkbox control.

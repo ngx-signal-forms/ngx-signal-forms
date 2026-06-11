@@ -20,11 +20,14 @@ import { NgxFieldIdentity } from '@ngx-signal-forms/toolkit';
  *
  * When placed inside `ngx-form-field-wrapper`, the control injects the
  * wrapper-provided `NgxFieldIdentity` service (optionally, so it continues to
- * work standalone). When present, the service drives `aria-labelledby` and the
- * `aria-describedby` hint baseline — exactly as the toolkit README's
- * custom-control recipe prescribes. Explicit `[labelledBy]` and `[describedBy]`
- * inputs take precedence so callers that manage ARIA themselves (e.g. manual
- * ARIA mode) are unaffected.
+ * work standalone). When present, the service drives the `aria-describedby`
+ * hint baseline — exactly as the toolkit README's custom-control recipe
+ * prescribes. It does NOT drive `aria-labelledby`: `NgxFieldIdentity` exposes
+ * the control's own id (`controlId()`), not the `<label>` element's id, so
+ * falling back to it would be self-referential and invalid ARIA. Label linkage
+ * requires an explicit `[labelledBy]` input. The explicit `[describedBy]` input
+ * takes precedence over the service so callers that manage ARIA themselves
+ * (e.g. manual ARIA mode) are unaffected.
  *
  * @example Basic usage with formField directive
  * ```html
@@ -45,7 +48,7 @@ import { NgxFieldIdentity } from '@ngx-signal-forms/toolkit';
   host: {
     'data-ngx-signal-form-control': '',
     role: 'slider',
-    tabindex: '0',
+    '[attr.tabindex]': 'disabled() ? -1 : 0',
     '[attr.aria-labelledby]': 'resolvedLabelledBy()',
     '[attr.aria-valuemin]': '0',
     '[attr.aria-valuemax]': 'maxRating()',
@@ -154,9 +157,9 @@ import { NgxFieldIdentity } from '@ngx-signal-forms/toolkit';
 export class RatingControlComponent implements FormValueControl<number> {
   /**
    * Injected from the surrounding `ngx-form-field-wrapper` when present.
-   * Drives aria-labelledby and the aria-describedby hint baseline following
-   * the toolkit README's canonical custom-control recipe. Absent when the
-   * control is used standalone (outside a wrapper).
+   * Drives the aria-describedby hint baseline following the toolkit README's
+   * canonical custom-control recipe. Absent when the control is used standalone
+   * (outside a wrapper).
    */
   readonly #identity = inject(NgxFieldIdentity, { optional: true });
 

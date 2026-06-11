@@ -43,6 +43,12 @@ export function normalizeOrientationForAppearance(
  * Writable orientation selection that snaps to a supported orientation
  * whenever the appearance changes — the canonical linkedSignal
  * previous-value pattern (replaces signal + effect write-back).
+ *
+ * **Direct-write contract:** re-normalization only fires when the appearance
+ * SOURCE signal changes. A direct `.set()` of an orientation that
+ * `isOrientationDisabledForAppearance` rejects for the current appearance is
+ * NOT corrected automatically. Callers must not write such values — the demo's
+ * `ngx-orientation-toggle` enforces this by disabling those options.
  */
 export function createOrientationSelection(
   appearance: Signal<FormFieldAppearance>,

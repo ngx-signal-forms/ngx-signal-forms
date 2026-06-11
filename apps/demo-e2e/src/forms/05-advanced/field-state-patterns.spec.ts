@@ -29,7 +29,8 @@ test.describe('Advanced Scenarios - Field State Patterns', () => {
   }) => {
     const inviteCodeInput = page.locator('#field-state-invite-code');
 
-    // Initially invite-only is unchecked — invite-code must not be in the DOM.
+    // Initially invite-only is unchecked — invite-code must not be visible
+    // (hidden at the attribute/CSS level via the wrapper; always in the DOM).
     await expect(inviteCodeInput).not.toBeVisible();
 
     // Enable invite-only.
