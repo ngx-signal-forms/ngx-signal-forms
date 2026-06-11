@@ -392,14 +392,22 @@
                     [attr.data-testid]="'headless-char-count'"
                     class="text-xs"
                     [class.text-gray-500]="notesCharCount.limitState() === 'ok'"
+                    [class.dark:text-gray-400]="notesCharCount.limitState() === 'ok'"
                     [class.text-amber-700]="
                       notesCharCount.limitState() === 'warning'
                     "
+                    [class.dark:text-amber-400]="
+                      notesCharCount.limitState() === 'warning'
+                    "
                     [class.text-red-600]="notesCharCount.limitState() === 'danger'"
+                    [class.dark:text-red-400]="notesCharCount.limitState() === 'danger'"
                     [class.font-semibold]="
                       notesCharCount.limitState() === 'exceeded'
                     "
                     [class.text-red-800]="
+                      notesCharCount.limitState() === 'exceeded'
+                    "
+                    [class.dark:text-red-400]="
                       notesCharCount.limitState() === 'exceeded'
                     "
                   >

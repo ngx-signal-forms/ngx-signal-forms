@@ -11,6 +11,7 @@ import {
   createOnInvalidHandler,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
+import { NgxFormFieldErrorSummary } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import { globalConfigSchema } from './global-configuration.validations';
 
@@ -52,7 +53,12 @@ import { globalConfigSchema } from './global-configuration.validations';
       acceptTerms: 'Terms of service',
     }),
   ],
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxFormField,
+    NgxFormFieldErrorSummary,
+  ],
   template: `
     <form
       [formRoot]="configForm"
@@ -85,6 +91,21 @@ import { globalConfigSchema } from './global-configuration.validations';
           </div>
         </div>
       </div>
+
+      <!-- Form-level error summary (GOV.UK pattern) -->
+      <!-- provideFieldLabels() maps field paths to human-readable names so the
+           summary renders "Email Address" instead of the raw "userEmail" key. -->
+      <!--
+        [autoFocus]="false" prevents a focus race with createOnInvalidHandler(),
+        which focuses the first invalid field on submit. Keep field-level focus
+        as the primary landing point.
+      -->
+      <ngx-form-field-error-summary
+        [formTree]="configForm"
+        summaryLabel="Please fix the following errors before submitting:"
+        [autoFocus]="false"
+        data-testid="global-config-error-summary"
+      />
 
       <!-- Form fields -->
       <div class="space-y-6">

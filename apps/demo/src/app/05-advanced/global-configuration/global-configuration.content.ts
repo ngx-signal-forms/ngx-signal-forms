@@ -19,7 +19,7 @@ export const GLOBAL_CONFIG_CONTENT = {
           '• <strong>provideNgxSignalFormControlPresets():</strong> Define app-level control-family defaults such as the inline switch preset used on this page',
           '• <strong>Form-level override:</strong> Use <code class="code-inline">ngxSignalForm</code> with <code class="code-inline">[formRoot]</code>, then bind <code class="code-inline">[errorStrategy]</code> when a single form needs different timing',
           '• <strong>provideErrorMessages():</strong> Override validation messages at the component level — the "Email Address" required error on this form reads from a component-scoped registry, not from the global app config',
-          '• <strong>provideFieldLabels():</strong> Map raw field paths to human-readable display names; this form maps <code class="code-inline">userEmail → Email Address</code>, <code class="code-inline">userPhone → Phone Number</code>, etc.',
+          '• <strong>provideFieldLabels():</strong> Map raw field paths to human-readable display names; this form maps <code class="code-inline">userEmail → Email Address</code>, <code class="code-inline">userPhone → Phone Number</code>, etc. — the error summary below uses this resolver so entries read "Email Address: …" instead of the humanized fallback "User Email: …"',
         ],
       },
       {

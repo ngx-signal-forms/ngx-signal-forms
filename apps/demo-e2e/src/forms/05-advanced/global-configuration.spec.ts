@@ -117,6 +117,35 @@ test.describe('Advanced - Global Configuration', () => {
         );
       });
     });
+
+    test('should show custom label "Email Address" in error summary via provideFieldLabels', async ({
+      page: playwrightPage,
+    }) => {
+      await test.step('Submit the empty form to trigger on-submit errors', async () => {
+        const submitButton = playwrightPage.getByRole('button', {
+          name: /Submit Form/i,
+        });
+        await submitButton.click();
+      });
+
+      await test.step('Verify the error summary appears', async () => {
+        const summary = playwrightPage.locator(
+          '[data-testid="global-config-error-summary"] [role="alert"]',
+        );
+        await expect(summary).toBeVisible({ timeout: 3000 });
+      });
+
+      await test.step('Verify the summary uses the custom label "Email Address" from provideFieldLabels', async () => {
+        const summary = playwrightPage.locator(
+          '[data-testid="global-config-error-summary"] [role="alert"]',
+        );
+        // provideFieldLabels maps userEmail → 'Email Address'
+        // If the label resolver is wired correctly the entry reads "Email Address: ..."
+        // rather than the humanized fallback "User Email: ..."
+        await expect(summary).toContainText('Email Address');
+        await expect(summary).not.toContainText('User Email');
+      });
+    });
   });
 
   test.describe('Control Presets', () => {

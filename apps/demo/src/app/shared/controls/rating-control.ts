@@ -226,16 +226,17 @@ export class RatingControlComponent implements FormValueControl<number> {
   protected readonly focused = signal(false);
 
   /**
-   * Resolved aria-labelledby: explicit input wins, then falls back to the
-   * field identity's controlId (the label `for=` target), then null.
+   * Resolved aria-labelledby: explicit input wins, then null.
    *
-   * The wrapper's `NgxFieldIdentity` does not itself carry the label-element
-   * id (that lives in `createFieldNameResolver`'s label tier), so we read the
-   * explicit input as the primary path for label linking and use the service
-   * only as a null-coalescing safety net.
+   * `NgxFieldIdentity` does not carry the label-element id — it exposes the
+   * control's own id (`controlId()`), not the `<label>` element's id.
+   * Falling back to `controlId()` would make `aria-labelledby` point at the
+   * host element itself (self-referential, invalid ARIA). Callers that need
+   * label linkage must pass `[labelledBy]` explicitly, matching the toolkit
+   * README's canonical custom-control recipe.
    */
   protected readonly resolvedLabelledBy = computed(
-    () => this.labelledBy() ?? this.#identity?.controlId() ?? null,
+    () => this.labelledBy() ?? null,
   );
 
   /**
