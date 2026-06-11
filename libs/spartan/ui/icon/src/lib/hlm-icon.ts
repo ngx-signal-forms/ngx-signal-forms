@@ -35,7 +35,7 @@ export class HlmIcon {
       case 'xl':
         return '48px';
       case 'none': {
-        throw new Error('Not implemented yet: "none" case');
+        return null;
       }
       default: {
         return size;
