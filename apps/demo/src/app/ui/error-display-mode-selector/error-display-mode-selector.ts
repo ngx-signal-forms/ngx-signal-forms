@@ -1,11 +1,6 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  model,
-} from '@angular/core';
+import { Component, computed, inject, input, model } from '@angular/core';
 import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import { PanelHelpService } from '../display-controls-card/panel-help.service';
 
 export type ErrorDisplayModeConfig = {
   mode: ErrorDisplayStrategy;
@@ -143,51 +138,55 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
         </fieldset>
       </div>
 
-      <div
-        class="error-mode-summary"
-        [class.error-mode-summary--embedded]="embedded()"
-      >
-        <div class="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-          {{ currentModeConfig().description }}
+      @if (showHelp()) {
+        <div
+          class="error-mode-summary"
+          [class.error-mode-summary--embedded]="embedded()"
+        >
+          <div
+            class="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+          >
+            {{ currentModeConfig().description }}
+          </div>
+          <div class="text-xs text-gray-600 dark:text-gray-400">
+            <strong>When to use:</strong> {{ currentModeConfig().whenToUse }}
+          </div>
         </div>
-        <div class="text-xs text-gray-600 dark:text-gray-400">
-          <strong>When to use:</strong> {{ currentModeConfig().whenToUse }}
-        </div>
-      </div>
 
-      <!-- Testing Instructions -->
-      <div
-        class="error-mode-instructions"
-        [class.error-mode-instructions--embedded]="embedded()"
-      >
-        <div class="text-sm font-medium text-amber-800 dark:text-amber-200">
-          🧪 Try this with "{{ currentModeConfig().label }}":
+        <!-- Testing Instructions -->
+        <div
+          class="error-mode-instructions"
+          [class.error-mode-instructions--embedded]="embedded()"
+        >
+          <div class="text-sm font-medium text-amber-800 dark:text-amber-200">
+            🧪 Try this with "{{ currentModeConfig().label }}":
+          </div>
+          <div class="mt-1 text-xs text-amber-700 dark:text-amber-300">
+            @switch (selectedMode()) {
+              @case ('immediate') {
+                1. Start typing invalid data → 2. See feedback update instantly
+                → 3. Notice how errors clear as you type
+              }
+              @case ('on-touch') {
+                1. Click a field → 2. Enter invalid data → 3. Tab away → 4.
+                Observe errors appearing after you leave the field
+              }
+              @case ('on-submit') {
+                1. Fill the form quickly → 2. Submit without fixing issues → 3.
+                Watch all errors appear together
+              }
+              @case ('inherit') {
+                This mode inherits from the nearest parent
+                <code>ngxSignalForm</code>
+                strategy.
+              }
+              @default {
+                {{ unreachableMode(selectedMode()) }}
+              }
+            }
+          </div>
         </div>
-        <div class="mt-1 text-xs text-amber-700 dark:text-amber-300">
-          @switch (selectedMode()) {
-            @case ('immediate') {
-              1. Start typing invalid data → 2. See feedback update instantly →
-              3. Notice how errors clear as you type
-            }
-            @case ('on-touch') {
-              1. Click a field → 2. Enter invalid data → 3. Tab away → 4.
-              Observe errors appearing after you leave the field
-            }
-            @case ('on-submit') {
-              1. Fill the form quickly → 2. Submit without fixing issues → 3.
-              Watch all errors appear together
-            }
-            @case ('inherit') {
-              This mode inherits from the nearest parent
-              <code>ngxSignalForm</code>
-              strategy.
-            }
-            @default {
-              {{ unreachableMode(selectedMode()) }}
-            }
-          }
-        </div>
-      </div>
+      }
     </div>
   `,
 })
@@ -199,6 +198,14 @@ export class ErrorDisplayModeSelectorComponent {
   readonly selectedMode = model.required<ErrorDisplayStrategy>();
   readonly modes = input<readonly ErrorDisplayStrategy[] | null>(null);
   readonly embedded = input(false);
+
+  readonly #help = inject(PanelHelpService);
+
+  /** Verbose guidance shows in standalone use, or when the panel's
+   *  "Details" toggle is on while embedded. */
+  protected readonly showHelp = computed(
+    () => !this.embedded() || this.#help.showDetails(),
+  );
 
   protected readonly errorDisplayModes = computed(() => {
     const allowedModes = this.modes();

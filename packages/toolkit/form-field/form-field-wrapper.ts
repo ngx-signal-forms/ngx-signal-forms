@@ -1,7 +1,6 @@
 import { NgComponentOutlet } from '@angular/common';
 import {
   afterEveryRender,
-  ChangeDetectionStrategy,
   Component,
   computed,
   contentChildren,

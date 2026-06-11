@@ -109,8 +109,10 @@ export function validateVestWarnings<TValue>(
     includeErrors: false,
     includeWarnings: true,
     resetOnDestroy: options.resetOnDestroy ?? true,
-    only: options.only,
-    focusCurrentField: options.focusCurrentField,
+    ...(options.only !== undefined && { only: options.only }),
+    ...(options.focusCurrentField !== undefined && {
+      focusCurrentField: options.focusCurrentField,
+    }),
   });
 }
 
@@ -177,7 +179,9 @@ export function validateVest<TValue>(
     includeErrors: true,
     includeWarnings: options.includeWarnings ?? false,
     resetOnDestroy: options.resetOnDestroy ?? true,
-    only: options.only,
-    focusCurrentField: options.focusCurrentField,
+    ...(options.only !== undefined && { only: options.only }),
+    ...(options.focusCurrentField !== undefined && {
+      focusCurrentField: options.focusCurrentField,
+    }),
   });
 }

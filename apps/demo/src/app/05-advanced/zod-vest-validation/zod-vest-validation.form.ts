@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import {
   form,
   FormField,
@@ -232,6 +227,7 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
           </div>
           <pre
             class="mt-2 overflow-x-auto text-gray-700 dark:text-gray-300"
+            tabindex="0"
           ><code>{{ layeringCode }}</code></pre>
         </div>
 

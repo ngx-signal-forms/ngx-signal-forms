@@ -45,7 +45,7 @@ export const ZOD_VALIDATION_CONTENT = {
     ],
     nextStep: {
       text: 'Layer business policy on top of Zod next →',
-      link: '/advanced-scenarios/zod-vest-validation',
+      link: '/validation/zod-vest-validation',
       linkText: 'Zod + Vest Validation',
     },
   },

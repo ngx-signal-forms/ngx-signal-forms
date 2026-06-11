@@ -30,12 +30,12 @@ export const ADVANCED_WIZARD_CONTENT = {
     ],
   },
   learning: {
-    title: 'Angular 21.1 Patterns',
+    title: 'Angular 22 Patterns',
     sections: [
       {
         title: 'Lifecycle & Signals',
         items: [
-          '• Use <code>effect()</code> in constructor for reactive initialization',
+          '• Prefer named <code>effect()</code> fields over constructor-based setup',
           '• Use <code>DestroyRef.onDestroy()</code> for cleanup (not ngOnDestroy)',
           '• Use <code>computed()</code> for derived state from signals',
         ],

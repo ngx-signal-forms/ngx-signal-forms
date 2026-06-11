@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-} from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type {
   FieldMarkingMode,
@@ -15,6 +10,7 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
@@ -35,6 +31,7 @@ const MODE_OPTIONS: readonly { value: FieldMarkingMode; label: string }[] = [
     FormsModule,
     FieldMarkingFormComponent,
     ExampleCardsComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
@@ -43,15 +40,7 @@ const MODE_OPTIONS: readonly { value: FieldMarkingMode; label: string }[] = [
     DisplayControlsSectionComponent,
   ],
   template: `
-    <ngx-page-header
-      title="Required / Optional Field Marking"
-      subtitle="Mark required fields, mark optional fields, or mark nothing — with a configurable, form-aware legend"
-    />
-
-    <ngx-example-cards
-      [demonstrated]="demonstratedContent"
-      [learning]="learningContent"
-    >
+    <ng-template ngxPageControls>
       <ngx-display-controls-card
         title="Marking controls"
         description="Everything here feeds both the field markers and the legend, so they always agree."
@@ -119,7 +108,17 @@ const MODE_OPTIONS: readonly { value: FieldMarkingMode; label: string }[] = [
           </label>
         </ngx-display-controls-section>
       </ngx-display-controls-card>
+    </ng-template>
 
+    <ngx-page-header
+      title="Required / Optional Field Marking"
+      subtitle="Mark required fields, mark optional fields, or mark nothing — with a configurable, form-aware legend"
+    />
+
+    <ngx-example-cards
+      [demonstrated]="demonstratedContent"
+      [learning]="learningContent"
+    >
       <ngx-split-layout>
         <ngx-field-marking-form
           #formComponent
@@ -163,6 +162,18 @@ const MODE_OPTIONS: readonly { value: FieldMarkingMode; label: string }[] = [
       color: #fff;
     }
 
+    :host-context(.dark) .mode-toggle {
+      background: rgb(255 255 255 / 0.06);
+    }
+
+    :host-context(.dark) .mode-toggle__btn {
+      color: rgb(203 213 225 / 0.85);
+    }
+
+    :host-context(.dark) .mode-toggle__btn--active {
+      color: #fff;
+    }
+
     .text-controls {
       display: flex;
       flex-direction: column;
@@ -171,13 +182,16 @@ const MODE_OPTIONS: readonly { value: FieldMarkingMode; label: string }[] = [
 
     .text-controls__row {
       display: grid;
-      grid-template-columns: 9rem 1fr;
+      grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr);
       gap: 0.5rem;
       align-items: center;
       font-size: 0.875rem;
     }
 
     .text-controls__row input {
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
       padding: 0.35rem 0.5rem;
       border: 1px solid rgb(0 0 0 / 0.15);
       border-radius: 0.375rem;

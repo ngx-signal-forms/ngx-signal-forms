@@ -49,7 +49,7 @@ export const ZOD_VEST_VALIDATION_CONTENT = {
     ],
     nextStep: {
       text: 'Compare this with a pure Vest suite →',
-      link: '/advanced-scenarios/vest-validation',
+      link: '/validation/vest-validation',
       linkText: 'Vest-Only Validation',
     },
   },

@@ -1,7 +1,7 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   linkedSignal,
   signal,
   viewChild,
@@ -17,6 +17,7 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
@@ -24,7 +25,7 @@ import {
 import { getAppearanceLabel } from '../../ui/appearance-toggle';
 import {
   getOrientationLabel,
-  isOrientationDisabledForAppearance,
+  normalizeOrientationForAppearance,
 } from '../../ui/orientation-toggle';
 import {
   ERROR_DISPLAY_MODE_LABELS,
@@ -51,11 +52,43 @@ import { ZodVestValidationComponent } from './zod-vest-validation.form';
     OrientationToggleComponent,
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
   ],
   template: `
+    <ng-template ngxPageControls>
+      <ngx-display-controls-card
+        title="Layered validation visibility"
+        description="Use the same form to compare structural errors and business-policy errors while changing only the display timing and wrapper appearance."
+        [chips]="currentControlChips()"
+        layout="split"
+      >
+        <ngx-error-display-mode-selector
+          [(selectedMode)]="errorDisplayMode"
+          [embedded]="true"
+          display-controls-primary
+          class="block min-w-0"
+        />
+        <ngx-display-controls-section
+          title="🎨 Layer framing"
+          description="Switch the wrapper appearance to confirm that both Zod and Vest messages remain readable without special per-validator rendering logic."
+        >
+          <ngx-appearance-toggle [(value)]="selectedAppearance" />
+        </ngx-display-controls-section>
+        <ngx-display-controls-section
+          title="↔️ Label orientation"
+          description="Use a horizontal label column for the non-outline states to compare how structural and business-policy errors scan in denser layouts."
+        >
+          <ngx-orientation-toggle
+            [(value)]="selectedOrientationPreference"
+            [appearance]="selectedAppearance()"
+          />
+        </ngx-display-controls-section>
+      </ngx-display-controls-card>
+    </ng-template>
+
     <ngx-page-header
       title="Zod + Vest Validation"
       subtitle="Structural contract checks from Zod, business policy from Vest"
@@ -87,7 +120,7 @@ import { ZodVestValidationComponent } from './zod-vest-validation.form';
             <li>No business-policy branching layer</li>
           </ul>
           <a
-            href="/advanced-scenarios/zod-validation"
+            href="/validation/zod-validation"
             class="mt-3 inline-flex text-sm font-medium underline underline-offset-4"
             >Open Zod-Only Validation</a
           >
@@ -103,44 +136,13 @@ import { ZodVestValidationComponent } from './zod-vest-validation.form';
             <li>Shared rendering for structural + policy feedback</li>
           </ul>
           <a
-            href="/advanced-scenarios/vest-validation"
+            href="/validation/vest-validation"
             class="mt-3 inline-flex text-sm font-medium underline underline-offset-4"
             >Open Vest-Only Validation</a
           >
         </article>
       </div>
     </section>
-
-    <ngx-display-controls-card
-      title="Layered validation visibility"
-      description="Use the same form to compare structural errors and business-policy errors while changing only the display timing and wrapper appearance."
-      [chips]="currentControlChips()"
-      layout="split"
-    >
-      <ngx-error-display-mode-selector
-        [(selectedMode)]="errorDisplayMode"
-        [embedded]="true"
-        display-controls-primary
-        class="block min-w-0"
-      />
-
-      <ngx-display-controls-section
-        title="🎨 Layer framing"
-        description="Switch the wrapper appearance to confirm that both Zod and Vest messages remain readable without special per-validator rendering logic."
-      >
-        <ngx-appearance-toggle [(value)]="selectedAppearance" />
-      </ngx-display-controls-section>
-
-      <ngx-display-controls-section
-        title="↔️ Label orientation"
-        description="Use a horizontal label column for the non-outline states to compare how structural and business-policy errors scan in denser layouts."
-      >
-        <ngx-orientation-toggle
-          [(value)]="selectedOrientationPreference"
-          [appearance]="selectedAppearance()"
-        />
-      </ngx-display-controls-section>
-    </ngx-display-controls-card>
 
     <ngx-split-layout>
       <ngx-zod-vest-validation
@@ -167,15 +169,26 @@ export class ZodVestValidationPage {
     signal<FormFieldOrientation>('vertical');
   protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
     () => {
-      const requestedOrientation = this.selectedOrientationPreference();
-      return isOrientationDisabledForAppearance(
+      return normalizeOrientationForAppearance(
         this.selectedAppearance(),
-        requestedOrientation,
-      )
-        ? 'vertical'
-        : requestedOrientation;
+        this.selectedOrientationPreference(),
+      );
     },
   );
+  constructor() {
+    effect(() => {
+      const preferredOrientation = this.selectedOrientationPreference();
+      const normalizedOrientation = normalizeOrientationForAppearance(
+        this.selectedAppearance(),
+        preferredOrientation,
+      );
+
+      if (preferredOrientation !== normalizedOrientation) {
+        this.selectedOrientationPreference.set(normalizedOrientation);
+      }
+    });
+  }
+
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',

@@ -1,35 +1,18 @@
 import { signal } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-const { submitSpy } = vi.hoisted(() => ({
-  submitSpy: vi.fn(),
-}));
-
-vi.mock('@angular/forms/signals', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@angular/forms/signals')>();
-  return {
-    ...actual,
-    submit: submitSpy,
-  };
-});
+import { describe, expect, it, vi } from 'vitest';
 
 import { submitWithWarnings } from './submission-helpers';
 
-describe('submitWithWarnings native submit() delegation', () => {
-  beforeEach(() => {
-    submitSpy.mockReset();
-  });
+describe('submitWithWarnings markAsTouched() delegation', () => {
+  it('delegates touch-all to markAsTouched() on the root form tree', async () => {
+    const errorsState = signal<ValidationError[]>([]);
+    const markAsTouched = vi.fn((): void => undefined);
 
-  it('delegates touched-state updates to Angular submit() with ignoreValidators="all"', async () => {
-    const errorsState = signal<ValidationError[]>([
-      { kind: 'required', message: 'Password is required' },
-    ]);
     const formTree = createMockFieldTree({
       value: () => ({}),
-      valid: () => false,
-      invalid: () => true,
+      valid: () => true,
+      invalid: () => false,
       touched: () => false,
       dirty: () => false,
       errors: () => errorsState(),
@@ -39,38 +22,26 @@ describe('submitWithWarnings native submit() delegation', () => {
       hidden: () => false,
       submitting: () => false,
       reset: (): void => undefined,
-      markAsTouched: (): void => undefined,
+      markAsTouched,
       markAsDirty: (): void => undefined,
       errorSummary: () => errorsState(),
     });
     const action = vi.fn(async () => {});
 
-    submitSpy.mockImplementation(async (_form, options) => {
-      expect(options).toMatchObject({
-        ignoreValidators: 'all',
-        action: expect.any(Function),
-      });
-      queueMicrotask(() => {
-        errorsState.set([
-          { kind: 'warn:weak-password', message: 'Weak password' },
-        ]);
-      });
-      if (typeof options === 'object') {
-        await options.action?.();
-      }
-      return true;
-    });
-
     await submitWithWarnings(formTree, action);
 
-    expect(submitSpy).toHaveBeenCalledOnce();
+    // markAsTouched() must be called before any validation gate check.
+    expect(markAsTouched).toHaveBeenCalledOnce();
+    // No blocking errors → action runs.
     expect(action).toHaveBeenCalledOnce();
   });
 
-  it('keeps the warning-aware gate at the caller layer after native submit() runs', async () => {
+  it('calls markAsTouched() even when blocking errors remain (touch-all is unconditional)', async () => {
     const errorsState = signal<ValidationError[]>([
       { kind: 'required', message: 'Email is required' },
     ]);
+    const markAsTouched = vi.fn((): void => undefined);
+
     const formTree = createMockFieldTree({
       value: () => ({}),
       valid: () => false,
@@ -84,29 +55,17 @@ describe('submitWithWarnings native submit() delegation', () => {
       hidden: () => false,
       submitting: () => false,
       reset: (): void => undefined,
-      markAsTouched: (): void => undefined,
+      markAsTouched,
       markAsDirty: (): void => undefined,
       errorSummary: () => errorsState(),
     });
     const action = vi.fn(async () => {});
 
-    submitSpy.mockImplementation(async (_form, options) => {
-      expect(options).toMatchObject({
-        ignoreValidators: 'all',
-        action: expect.any(Function),
-      });
-      queueMicrotask(() => {
-        errorsState.set([{ kind: 'required', message: 'Email is required' }]);
-      });
-      if (typeof options === 'object') {
-        await options.action?.();
-      }
-      return false;
-    });
-
     await submitWithWarnings(formTree, action);
 
-    expect(submitSpy).toHaveBeenCalledOnce();
+    // markAsTouched() must still be called even when submission is blocked.
+    expect(markAsTouched).toHaveBeenCalledOnce();
+    // Blocking errors → action does NOT run.
     expect(action).not.toHaveBeenCalled();
   });
 
@@ -117,6 +76,8 @@ describe('submitWithWarnings native submit() delegation', () => {
     // errorSummary() appears empty, causing the action to fire prematurely.
     const pendingState = signal(true);
     const errorsState = signal<ValidationError[]>([]);
+    const markAsTouched = vi.fn((): void => undefined);
+
     const formTree = createMockFieldTree({
       value: () => ({}),
       valid: () => true,
@@ -130,16 +91,11 @@ describe('submitWithWarnings native submit() delegation', () => {
       hidden: () => false,
       submitting: () => false,
       reset: (): void => undefined,
-      markAsTouched: (): void => undefined,
+      markAsTouched,
       markAsDirty: (): void => undefined,
       errorSummary: () => errorsState(),
     });
     const action = vi.fn(async () => {});
-
-    submitSpy.mockImplementation(async (_form, options) => {
-      if (typeof options === 'object') await options.action?.();
-      return true;
-    });
 
     // pending()=true → action must NOT fire.
     await submitWithWarnings(formTree, action);

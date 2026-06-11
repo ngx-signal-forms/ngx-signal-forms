@@ -12,8 +12,9 @@
 /* Modern theme tokens with brand gradient */
 @theme default {
   /* Brand colors (from logo gradient) */
-  --color-brand-start: #6366f1; /* Indigo */
+  --color-brand-start: #6366f1; /* Indigo 500 */
   --color-brand-end: #8b5cf6; /* Purple */
+  --color-brand-strong: #4f46e5; /* Indigo 600 — brand shade that clears WCAG AA (≥4.5:1) as text on light surfaces */
 
   /* Neutral colors (modern grays) */
   --color-gray-50: #f9fafb;
@@ -483,7 +484,7 @@
   /* Inline code styling */
   .code-inline {
     @apply rounded bg-indigo-50 px-1.5 py-0.5 font-mono text-sm;
-    color: var(--color-brand-start);
+    color: var(--color-brand-strong);
   }
   .dark .code-inline {
     @apply bg-indigo-900/20;

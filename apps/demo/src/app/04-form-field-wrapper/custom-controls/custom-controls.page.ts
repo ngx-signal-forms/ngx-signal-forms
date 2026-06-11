@@ -1,7 +1,7 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   linkedSignal,
   signal,
   viewChild,
@@ -17,6 +17,7 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
@@ -28,29 +29,18 @@ import {
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
   getOrientationLabel,
-  isOrientationDisabledForAppearance,
+  normalizeOrientationForAppearance,
 } from '../../ui/orientation-toggle';
 import { CUSTOM_CONTROLS_CONTENT } from './custom-controls.content';
 import { CustomControlsFormComponent } from './custom-controls.form';
 
-/**
- * Custom Controls Demo Page
- *
- * Demonstrates how custom Angular Signal Forms controls (FormValueControl)
- * work seamlessly with ngx-form-field-wrapper.
- *
- * Key features:
- * - Custom RatingControl implementing FormValueControl<number>
- * - Auto-derivation of fieldName from custom control's id attribute
- * - Full validation and error display integration
- * - Keyboard navigation and accessibility
- */
 @Component({
   selector: 'ngx-custom-controls-page',
   imports: [
     CustomControlsFormComponent,
     ErrorDisplayModeSelectorComponent,
     ExampleCardsComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
@@ -61,15 +51,7 @@ import { CustomControlsFormComponent } from './custom-controls.form';
   ],
 
   template: `
-    <ngx-page-header
-      title="Custom Signal Forms Controls"
-      subtitle="FormValueControl components with form field wrapper integration"
-    />
-
-    <ngx-example-cards
-      [demonstrated]="demonstratedContent"
-      [learning]="learningContent"
-    >
+    <ng-template ngxPageControls>
       <ngx-display-controls-card
         title="Custom control integration checks"
         description="Verify that a non-native control still inherits the same validation timing, wrapper affordances, and debugging story as the regular toolkit fields around it."
@@ -100,7 +82,17 @@ import { CustomControlsFormComponent } from './custom-controls.form';
           />
         </ngx-display-controls-section>
       </ngx-display-controls-card>
+    </ng-template>
 
+    <ngx-page-header
+      title="Custom Signal Forms Controls"
+      subtitle="FormValueControl components with form field wrapper integration"
+    />
+
+    <ngx-example-cards
+      [demonstrated]="demonstratedContent"
+      [learning]="learningContent"
+    >
       <ngx-split-layout>
         <ngx-custom-controls
           #formComponent
@@ -129,15 +121,26 @@ export class CustomControlsPage {
     signal<FormFieldOrientation>('vertical');
   protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
     () => {
-      const requestedOrientation = this.selectedOrientationPreference();
-      return isOrientationDisabledForAppearance(
+      return normalizeOrientationForAppearance(
         this.selectedAppearance(),
-        requestedOrientation,
-      )
-        ? 'vertical'
-        : requestedOrientation;
+        this.selectedOrientationPreference(),
+      );
     },
   );
+  constructor() {
+    effect(() => {
+      const preferredOrientation = this.selectedOrientationPreference();
+      const normalizedOrientation = normalizeOrientationForAppearance(
+        this.selectedAppearance(),
+        preferredOrientation,
+      );
+
+      if (preferredOrientation !== normalizedOrientation) {
+        this.selectedOrientationPreference.set(normalizedOrientation);
+      }
+    });
+  }
+
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',

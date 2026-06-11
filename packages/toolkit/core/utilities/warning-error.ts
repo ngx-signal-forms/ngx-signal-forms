@@ -21,27 +21,30 @@ export function isWarningError(error: ValidationError): boolean {
 }
 
 /**
- * Type guard to check if a validation error is a blocking error.
- * Blocking errors are errors with `kind` NOT starting with `'warn:'`.
+ * Predicate that checks if a validation error is a blocking error.
+ * Any error whose `kind` does NOT start with `'warn:'` is blocking — including
+ * malformed errors with an empty or non-string `kind`. This is intentional:
+ * a malformed validator result must never silently allow form submission
+ * (fail-safe semantics). Matches the semantics of `splitByKind`, which routes
+ * every non-warning error into the `blocking` bucket.
  *
  * @param error - The validation error to check
- * @returns `true` if the error is blocking, `false` if it's a warning or invalid
+ * @returns `true` if the error is not a warning (including malformed errors),
+ *   `false` only if the error is a valid warning (kind starts with `'warn:'`)
  *
  * @example
  * ```typescript
  * const error = { kind: 'required', message: 'Field required' };
  * const warning = warningError('weak-password', 'Consider stronger password');
+ * const malformed = { kind: '', message: 'Missing kind' };
  *
- * isBlockingError(error);   // true
- * isBlockingError(warning); // false
+ * isBlockingError(error);     // true
+ * isBlockingError(warning);   // false
+ * isBlockingError(malformed); // true  — fail-safe: treated as blocking
  * ```
  */
 export function isBlockingError(error: ValidationError): boolean {
-  return (
-    typeof error.kind === 'string' &&
-    error.kind.length > 0 &&
-    !error.kind.startsWith('warn:')
-  );
+  return !isWarningError(error);
 }
 
 /**
@@ -141,6 +144,6 @@ export function warningError(kind: string, message?: string): ValidationError {
 
   return {
     kind: `warn:${normalizedKind}`,
-    message,
+    ...(message !== undefined && { message }),
   };
 }

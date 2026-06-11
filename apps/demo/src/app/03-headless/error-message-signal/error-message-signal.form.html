@@ -1,0 +1,160 @@
+<div class="px-6 pt-0 pb-6">
+  <h2 class="mb-4 text-2xl font-bold">createErrorMessageSignal</h2>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    A reactive primitive that combines visibility gating, 3-tier message
+    resolution, and stable per-error DOM IDs — without a directive.
+  </p>
+
+  <form [formRoot]="passwordForm" class="max-w-xl space-y-6">
+    <!-- ── Registry toggle ───────────────────────────────────────── -->
+    <div
+      class="flex items-center gap-3 rounded-lg border border-dashed border-gray-300 p-3 dark:border-gray-600"
+    >
+      <span class="text-sm text-gray-600 dark:text-gray-400">
+        Registry:
+        <span
+          class="registry-badge"
+          [class.registry-badge--verbose]="verboseRegistry()"
+          [class.registry-badge--terse]="!verboseRegistry()"
+        >
+          {{ verboseRegistry() ? 'verbose' : 'terse' }}
+        </span>
+      </span>
+      <button
+        type="button"
+        class="btn-secondary text-xs"
+        data-testid="toggle-registry"
+        (click)="toggleRegistry()"
+      >
+        Swap registry
+      </button>
+      <span class="text-xs text-gray-400 dark:text-gray-500">
+        Messages re-resolve reactively
+      </span>
+    </div>
+
+    <!-- ── Password input ────────────────────────────────────────── -->
+    <div class="space-y-2">
+      <label for="password" class="text-sm font-medium"> Password * </label>
+      <input
+        id="password"
+        type="text"
+        class="form-input"
+        [formField]="passwordForm.password"
+        placeholder="Enter a password…"
+        autocomplete="new-password"
+        data-testid="password-input"
+        [attr.aria-invalid]="blockingErrors().length > 0 ? 'true' : null"
+        [attr.aria-describedby]="ariaDescribedByBlocking()"
+      />
+    </div>
+
+    <!-- ── Mode 1: blocking errors only (default) ────────────────── -->
+    <div class="demo-section" data-testid="section-blocking">
+      <p class="demo-section__title">Mode 1 — blocking errors only (default)</p>
+      <p class="mb-2 text-xs text-gray-500 dark:text-gray-400">
+        <code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">
+          createErrorMessageSignal(() =&gt; field())
+        </code>
+      </p>
+
+      <ul class="error-list" role="list" aria-label="Blocking errors">
+        @for (entry of blockingErrors(); track entry.kind) {
+        <li
+          [id]="entry.id"
+          class="error-item error-item--blocking"
+          role="alert"
+          [attr.data-testid]="'blocking-error-' + entry.kind"
+        >
+          {{ entry.message }}
+        </li>
+        }
+      </ul>
+
+      @if (blockingErrors().length === 0) {
+      <p class="text-xs text-gray-400 dark:text-gray-500">
+        No blocking errors to display
+      </p>
+      }
+    </div>
+
+    <!-- ── Mode 2: blocking + warnings ──────────────────────────── -->
+    <div class="demo-section" data-testid="section-all">
+      <p class="demo-section__title">
+        Mode 2 — blocking + warnings
+        <code
+          class="rounded bg-gray-100 px-1 py-0.5 text-xs normal-case dark:bg-gray-800"
+        >
+          includeWarnings: true
+        </code>
+      </p>
+
+      <ul class="error-list" role="list" aria-label="All errors and warnings">
+        @for (entry of allErrors(); track entry.kind) {
+        <li
+          [id]="entry.id"
+          class="error-item"
+          [class.error-item--blocking]="!entry.kind.startsWith('warn:')"
+          [class.error-item--warning]="entry.kind.startsWith('warn:')"
+          [attr.data-testid]="'all-error-' + entry.kind"
+        >
+          {{ entry.message }}
+        </li>
+        }
+      </ul>
+
+      @if (allErrors().length === 0) {
+      <p class="text-xs text-gray-400 dark:text-gray-500">
+        No errors or warnings to display
+      </p>
+      }
+    </div>
+
+    <!-- ── Mode 3: warnings only in an aside ─────────────────────── -->
+    <div class="demo-section" data-testid="section-warnings">
+      <p class="demo-section__title">
+        Mode 3 — warnings only
+        <code
+          class="rounded bg-gray-100 px-1 py-0.5 text-xs normal-case dark:bg-gray-800"
+        >
+          includeWarnings: 'only'
+        </code>
+      </p>
+
+      <aside aria-label="Password warnings">
+        <ul class="error-list" role="list">
+          @for (entry of warningsOnly(); track entry.kind) {
+          <li
+            [id]="entry.id"
+            class="error-item error-item--warning"
+            role="status"
+            aria-live="polite"
+            [attr.data-testid]="'warning-' + entry.kind"
+          >
+            {{ entry.message }}
+          </li>
+          }
+        </ul>
+
+        @if (warningsOnly().length === 0) {
+        <p class="text-xs text-gray-400 dark:text-gray-500">
+          No warnings to display
+        </p>
+        }
+      </aside>
+    </div>
+
+    <div class="flex gap-4">
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="passwordForm().submitting()"
+      >
+        @if (passwordForm().submitting()) { Submitting... } @else { Submit }
+      </button>
+      <button type="button" (click)="reset()" class="btn-secondary">
+        Reset
+      </button>
+    </div>
+  </form>
+</div>

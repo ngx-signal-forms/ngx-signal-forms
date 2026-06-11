@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
@@ -108,7 +103,7 @@ export class LabellessFieldsFormComponent {
 
   readonly labellessForm = form(this.#model, labellessFieldsSchema, {
     submission: {
-      action: async () => null,
+      action: () => null,
       onInvalid: (formTree) => {
         this.#submitAttempted.set(true);
         this.#handleInvalidSubmission(formTree);

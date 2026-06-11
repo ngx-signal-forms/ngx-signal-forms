@@ -43,7 +43,7 @@ releases will not include any of the renames below.
 - **BREAKING: `ErrorMessageRegistry` is now strongly typed per built-in kind** — factory params for built-in kinds (`minLength`, `min`, `pattern`, …) are typed; custom kinds stay `any` (see [§5b](#5b-error-message-registry-is-now-strongly-typed))
 - **A11y** — removed explicit `aria-live` / `aria-atomic`; role semantics now authoritative
 - **Behavior** — missing `fieldName` / `id` now logs (dev mode) instead of throwing
-- **Compatibility** — Angular peer-dep is `>=21.2.0 <22.0.0`
+- **Compatibility** — Angular peer-dep is `>=22.0.0 <23.0.0`
 
 ---
 
@@ -691,9 +691,8 @@ queried the attributes in tests — switch tests to assert `role` instead.
 ### Angular peer-dependency ceiling
 
 Peer dependencies now constrain `@angular/core` and `@angular/forms` to
-`>=21.2.0 <22.0.0`. Angular 22 compatibility will ship in a future toolkit
-line. See [`COMPATIBILITY.md`](../COMPATIBILITY.md) for the reasoning. No
-action is required on Angular 21.x.
+`>=22.0.0 <23.0.0`. See [`COMPATIBILITY.md`](../COMPATIBILITY.md) for the
+reasoning. If you are already on Angular 22, no migration action is required.
 
 ---
 

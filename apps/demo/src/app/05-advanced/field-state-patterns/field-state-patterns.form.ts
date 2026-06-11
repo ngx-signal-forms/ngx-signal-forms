@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import {
   disabled,
   email,
@@ -112,6 +107,7 @@ const fieldStatePatternsSchema = schema<FieldStatePatternsModel>((path) => {
           </div>
           <pre
             class="mt-2 overflow-x-auto text-gray-700 dark:text-gray-300"
+            tabindex="0"
           ><code>{{ stateSchemaCode }}</code></pre>
         </section>
       </div>

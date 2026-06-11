@@ -10,7 +10,7 @@ Shows the practical layered strategy for non-trivial forms: use **Zod** for stru
 - `validateVest(path, suite, { includeWarnings: true })` — first-class Vest adapter mapping both blocking errors and `warn:*` advisories from the same suite run.
 - Layered validators on one `form()` call — errors from both layers are rendered identically by the wrapper.
 - `ngx-form-field-wrapper` + `ngx-form-field-error` — uniform rendering of blocking errors and warnings.
-- `[formRoot]` declarative submission with `ignoreValidators: 'all'` + `hasOnlyWarnings()` — warning-tolerant submission under Angular 21.2.
+- `[formRoot]` declarative submission with `ignoreValidators: 'all'` + `hasOnlyWarnings()` — warning-tolerant submission under Angular 22.
 
 ## Form model
 
@@ -50,7 +50,7 @@ Shows the practical layered strategy for non-trivial forms: use **Zod** for stru
 
 ## How to test
 
-1. Run the demo and navigate to `/advanced-scenarios/zod-vest-validation`.
+1. Run the demo and navigate to `/validation/zod-vest-validation`.
 2. Leave fields empty — confirm Zod structural errors render first.
 3. Fill the fields, choose `Business`, and enter a `gmail.com` address — confirm the Vest policy error replaces the generic one.
 4. Include your first or last name inside the password — confirm the Vest policy error.

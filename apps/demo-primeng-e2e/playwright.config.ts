@@ -9,6 +9,10 @@ const preset = nxE2EPreset(__filename, { testDir: './src' });
 
 export default defineConfig({
   ...preset,
+  // The dedicated `a11y` target owns src/accessibility.spec.ts; keep it out of
+  // the functional e2e run. The slash anchor avoids matching any other
+  // *-accessibility.spec.ts files.
+  testIgnore: /[\\/]accessibility\.spec\.ts$/,
   updateSnapshots: isCI ? 'none' : 'missing',
   forbidOnly: isCI,
   retries: isCI ? 1 : 0,

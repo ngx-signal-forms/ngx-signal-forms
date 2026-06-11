@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-} from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { type FieldTree, form, FormField } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,

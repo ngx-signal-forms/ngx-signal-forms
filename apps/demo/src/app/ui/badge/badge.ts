@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 export type BadgeVariant = 'solid' | 'outline' | 'ghost';
 export type BadgeAppearance =

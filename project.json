@@ -11,19 +11,19 @@
     "lint-fix": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "oxlint . --fix"
+        "command": "oxlint . --fix --quiet"
       }
     },
     "lint-fix-suggestions": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "oxlint . --fix-suggestions"
+        "command": "oxlint . --fix-suggestions --quiet"
       }
     },
     "lint-fix-dangerously": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "oxlint . --fix-dangerously"
+        "command": "oxlint . --fix-dangerously --quiet"
       }
     },
     "lint-github": {
@@ -42,6 +42,30 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "oxfmt . --check"
+      }
+    },
+    "a11y-report": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/scripts/a11y-report-violations.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "a11y-report-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/scripts/a11y-report-violations.mjs --check",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "a11y-baseline": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/scripts/a11y-report-violations.mjs --update-baseline",
+        "cwd": "{workspaceRoot}"
       }
     },
     "local-registry": {

@@ -15,6 +15,31 @@ test.describe('Advanced - Global Configuration', () => {
     await expect(page.form).toBeVisible();
   });
 
+  test('should render the debugger and display controls for the config demo', async ({
+    page: playwrightPage,
+  }) => {
+    await test.step('Verify debugger is rendered with its status badges', async () => {
+      await expect(
+        playwrightPage.getByRole('heading', {
+          name: 'Form State & Validation',
+          level: 3,
+        }),
+      ).toBeVisible();
+
+      await expect(
+        playwrightPage.getByText(/Validation Errors \d+\/\d+/),
+      ).toBeVisible();
+    });
+
+    await test.step('Verify the page configuration panel is present', async () => {
+      await expect(
+        playwrightPage.getByRole('complementary', {
+          name: 'Page configuration',
+        }),
+      ).toBeVisible();
+    });
+  });
+
   test('should apply global error display strategy', async ({
     page: playwrightPage,
   }) => {
@@ -56,7 +81,7 @@ test.describe('Advanced - Global Configuration', () => {
     });
   });
 
-  test('should apply custom CSS classes if configured', async ({
+  test('should set aria-invalid on touched invalid fields', async ({
     page: playwrightPage,
   }) => {
     await test.step('Check for aria-invalid on invalid fields', async () => {

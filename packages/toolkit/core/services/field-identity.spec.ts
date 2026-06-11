@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  isDevMode,
-} from '@angular/core';
+import { Component, computed, inject, isDevMode } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { render } from '@testing-library/angular';
 import { afterEach, describe, expect, it, vi } from 'vitest';

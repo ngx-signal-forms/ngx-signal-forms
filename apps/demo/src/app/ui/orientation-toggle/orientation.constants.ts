@@ -27,3 +27,12 @@ export function isOrientationDisabledForAppearance(
 ): boolean {
   return appearance === 'outline' && orientation === 'horizontal';
 }
+
+export function normalizeOrientationForAppearance(
+  appearance: FormFieldAppearance,
+  orientation: FormFieldOrientation,
+): FormFieldOrientation {
+  return isOrientationDisabledForAppearance(appearance, orientation)
+    ? 'vertical'
+    : orientation;
+}

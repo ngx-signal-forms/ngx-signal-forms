@@ -1,0 +1,5 @@
+{
+  "$comment": "Known WCAG 2.2 AA axe violations for this app, keyed by route::ruleId::target. Maintained by tools/scripts/a11y-report-violations.mjs: new violations open issues and are appended; resolved ones are dropped. Empty means zero known violations — the first CI a11y run will populate this app's findings as issues.",
+  "app": "demo-material-e2e",
+  "violations": []
+}

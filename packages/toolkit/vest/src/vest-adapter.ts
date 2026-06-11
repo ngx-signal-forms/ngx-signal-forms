@@ -770,8 +770,10 @@ export function createVestAdapter(
     registerVestValidation(path, suite, {
       includeErrors,
       includeWarnings,
-      only: registerOptions.only,
-      focusCurrentField: registerOptions.focusCurrentField,
+      ...(registerOptions.only !== undefined && { only: registerOptions.only }),
+      ...(registerOptions.focusCurrentField !== undefined && {
+        focusCurrentField: registerOptions.focusCurrentField,
+      }),
     });
   }
 

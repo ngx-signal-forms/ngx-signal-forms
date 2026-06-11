@@ -1,7 +1,7 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   linkedSignal,
   signal,
   viewChild,
@@ -17,6 +17,7 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
@@ -24,7 +25,7 @@ import {
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
   getOrientationLabel,
-  isOrientationDisabledForAppearance,
+  normalizeOrientationForAppearance,
 } from '../../ui/orientation-toggle';
 import {
   ERROR_DISPLAY_MODE_LABELS,
@@ -51,11 +52,43 @@ import { AsyncValidationComponent } from './async-validation.form';
     OrientationToggleComponent,
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
   ],
   template: `
+    <ng-template ngxPageControls>
+      <ngx-display-controls-card
+        title="Remote validation timing"
+        description="Compare when remote feedback becomes visible while the field moves through idle, pending, and unavailable states, with the network check driving the experience."
+        [chips]="currentControlChips()"
+        layout="split"
+      >
+        <ngx-error-display-mode-selector
+          [(selectedMode)]="errorDisplayMode"
+          [embedded]="true"
+          display-controls-primary
+          class="block min-w-0"
+        />
+        <ngx-display-controls-section
+          title="🎨 Pending-state framing"
+          description="Switch the wrapper treatment while testing the loading and unavailable states so you can judge whether the feedback remains legible during network latency."
+        >
+          <ngx-appearance-toggle [(value)]="selectedAppearance" />
+        </ngx-display-controls-section>
+        <ngx-display-controls-section
+          title="↔️ Label orientation"
+          description="Check whether async loading and unavailable feedback still reads clearly when labels move into a horizontal column. Outline stays vertical."
+        >
+          <ngx-orientation-toggle
+            [(value)]="selectedOrientationPreference"
+            [appearance]="selectedAppearance()"
+          />
+        </ngx-display-controls-section>
+      </ngx-display-controls-card>
+    </ng-template>
+
     <ngx-page-header
       title="Async Validation"
       subtitle="Server-side checks with improved UX"
@@ -65,37 +98,6 @@ import { AsyncValidationComponent } from './async-validation.form';
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
     />
-
-    <ngx-display-controls-card
-      title="Remote validation timing"
-      description="Compare when remote feedback becomes visible while the field moves through idle, pending, and unavailable states, with the network check driving the experience."
-      [chips]="currentControlChips()"
-      layout="split"
-    >
-      <ngx-error-display-mode-selector
-        [(selectedMode)]="errorDisplayMode"
-        [embedded]="true"
-        display-controls-primary
-        class="block min-w-0"
-      />
-
-      <ngx-display-controls-section
-        title="🎨 Pending-state framing"
-        description="Switch the wrapper treatment while testing the loading and unavailable states so you can judge whether the feedback remains legible during network latency."
-      >
-        <ngx-appearance-toggle [(value)]="selectedAppearance" />
-      </ngx-display-controls-section>
-
-      <ngx-display-controls-section
-        title="↔️ Label orientation"
-        description="Check whether async loading and unavailable feedback still reads clearly when labels move into a horizontal column. Outline stays vertical."
-      >
-        <ngx-orientation-toggle
-          [(value)]="selectedOrientationPreference"
-          [appearance]="selectedAppearance()"
-        />
-      </ngx-display-controls-section>
-    </ngx-display-controls-card>
 
     <ngx-split-layout>
       <ngx-async-validation
@@ -122,15 +124,26 @@ export class AsyncValidationPageComponent {
     signal<FormFieldOrientation>('vertical');
   protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
     () => {
-      const requestedOrientation = this.selectedOrientationPreference();
-      return isOrientationDisabledForAppearance(
+      return normalizeOrientationForAppearance(
         this.selectedAppearance(),
-        requestedOrientation,
-      )
-        ? 'vertical'
-        : requestedOrientation;
+        this.selectedOrientationPreference(),
+      );
     },
   );
+  constructor() {
+    effect(() => {
+      const preferredOrientation = this.selectedOrientationPreference();
+      const normalizedOrientation = normalizeOrientationForAppearance(
+        this.selectedAppearance(),
+        preferredOrientation,
+      );
+
+      if (preferredOrientation !== normalizedOrientation) {
+        this.selectedOrientationPreference.set(normalizedOrientation);
+      }
+    });
+  }
+
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',

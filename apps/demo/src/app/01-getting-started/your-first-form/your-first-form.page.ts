@@ -1,15 +1,10 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   DisplayControlsCardComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
@@ -20,41 +15,20 @@ import {
 import { YOUR_FIRST_FORM_CONTENT } from './your-first-form.content';
 import { YourFirstFormComponent } from './your-first-form.form';
 
-/**
- * Your First Form Page - Getting Started with Toolkit
- *
- * Demonstrates basic toolkit features while maintaining manual control over layout.
- * This is the middle ground between pure Signal Forms and full toolkit adoption.
- *
- * Shows:
- * - [formRoot] directive for context and submission tracking
- * - Automatic ARIA attributes
- * - NgxFormFieldError for reusable error display
- * - Error display strategies
- * - Manual HTML layout (you control structure)
- */
 @Component({
   selector: 'ngx-your-first-form-page',
-
   imports: [
     YourFirstFormComponent,
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,
     DisplayControlsCardComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
   ],
   template: `
-    <ngx-page-header
-      title="Your First Form with Toolkit"
-      subtitle="Contact form onboarding with automatic ARIA, strategy controls, and baseline-to-toolkit setup guidance"
-    />
-
-    <ngx-example-cards
-      [demonstrated]="demonstratedContent"
-      [learning]="learningContent"
-    >
+    <ng-template ngxPageControls>
       <ngx-display-controls-card
         title="Validation timing controls"
         description="Change when this first toolkit form reveals errors so you can compare the same contact flow under different timing strategies."
@@ -67,7 +41,17 @@ import { YourFirstFormComponent } from './your-first-form.form';
           class="block min-w-0"
         />
       </ngx-display-controls-card>
+    </ng-template>
 
+    <ngx-page-header
+      title="Your First Form with Toolkit"
+      subtitle="Contact form onboarding with automatic ARIA, strategy controls, and baseline-to-toolkit setup guidance"
+    />
+
+    <ngx-example-cards
+      [demonstrated]="demonstratedContent"
+      [learning]="learningContent"
+    >
       <ngx-split-layout>
         <ngx-your-first-form
           #formComponent
