@@ -18,6 +18,8 @@ export const GLOBAL_CONFIG_CONTENT = {
           '• <strong>autoAria:</strong> Enable/disable automatic ARIA attributes globally',
           '• <strong>provideNgxSignalFormControlPresets():</strong> Define app-level control-family defaults such as the inline switch preset used on this page',
           '• <strong>Form-level override:</strong> Use <code class="code-inline">ngxSignalForm</code> with <code class="code-inline">[formRoot]</code>, then bind <code class="code-inline">[errorStrategy]</code> when a single form needs different timing',
+          '• <strong>provideErrorMessages():</strong> Override validation messages at the component level — the "Email Address" required error on this form reads from a component-scoped registry, not from the global app config',
+          '• <strong>provideFieldLabels():</strong> Map raw field paths to human-readable display names; this form maps <code class="code-inline">userEmail → Email Address</code>, <code class="code-inline">userPhone → Phone Number</code>, etc.',
         ],
       },
       {
@@ -49,6 +51,7 @@ export const GLOBAL_CONFIG_CONTENT = {
           '• <strong>Field-level:</strong> Pass <code class="code-inline">[strategy]</code> to the wrapper or error component for individual fields',
           '• <strong>Control semantics:</strong> Use app-level presets for family defaults, then opt into one-off behavior with <code class="code-inline">ngxSignalFormControl</code>, <code class="code-inline">ngxSignalFormControlLayout</code>, or <code class="code-inline">ngxSignalFormControlAria</code>',
           '• <strong>Priority:</strong> Field > Form > Global configuration for timing, and explicit semantics > component presets > app presets > toolkit defaults for control families',
+          '• <strong>Message/label cascade:</strong> <code class="code-inline">provideErrorMessages()</code> and <code class="code-inline">provideFieldLabels()</code> follow the same DI cascade — root config sets the app baseline, component <code class="code-inline">providers: []</code> overrides it for a single form, no field-level API is needed',
         ],
       },
     ],

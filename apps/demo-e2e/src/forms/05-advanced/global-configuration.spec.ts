@@ -99,6 +99,26 @@ test.describe('Advanced - Global Configuration', () => {
     });
   });
 
+  test.describe('Message and Label Providers', () => {
+    test('should display the component-scoped required message override from provideErrorMessages', async ({
+      page: playwrightPage,
+    }) => {
+      await test.step('Touch the email field without entering a value', async () => {
+        const emailInput = playwrightPage.locator('#userEmail');
+        await emailInput.focus();
+        await emailInput.blur();
+      });
+
+      await test.step('Verify the overridden required message is shown', async () => {
+        const errors = playwrightPage.locator(ROLE_ALERT_SELECTOR);
+        await expect(errors.first()).toBeVisible({ timeout: 2000 });
+        await expect(errors.first()).toContainText(
+          'This field is required — we use it to personalise your experience.',
+        );
+      });
+    });
+  });
+
   test.describe('Control Presets', () => {
     test('should render accept-terms switch with preset data attributes', async ({
       page: playwrightPage,

@@ -4,6 +4,8 @@ import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
+  provideErrorMessages,
+  provideFieldLabels,
 } from '@ngx-signal-forms/toolkit';
 import {
   createOnInvalidHandler,
@@ -29,6 +31,27 @@ import { globalConfigSchema } from './global-configuration.validations';
 @Component({
   selector: 'ngx-global-configuration',
 
+  /**
+   * Component-scoped providers demonstrating the configuration cascade:
+   *   global (main.ts) → component (providers: [...]) → field
+   *
+   * provideErrorMessages() — override the toolkit's built-in required message
+   *   with a personalized variant for this form only.
+   * provideFieldLabels() — map internal field paths to human-readable display
+   *   names so the error summary renders "Email Address" instead of "userEmail".
+   */
+  providers: [
+    provideErrorMessages({
+      required:
+        'This field is required — we use it to personalise your experience.',
+    }),
+    provideFieldLabels({
+      userEmail: 'Email Address',
+      userPhone: 'Phone Number',
+      userWebsite: 'Website',
+      acceptTerms: 'Terms of service',
+    }),
+  ],
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form
