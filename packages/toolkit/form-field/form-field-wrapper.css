@@ -1108,6 +1108,11 @@
     )
     .ngx-signal-form-field-wrapper__content {
     border-color: Mark;
+
+    &:focus-within {
+      border-color: Mark;
+      box-shadow: none;
+    }
   }
 
   :host(
@@ -1115,11 +1120,21 @@
     )
     .ngx-signal-form-field-wrapper__content {
     border-color: CanvasText;
+
+    &:focus-within {
+      border-color: CanvasText;
+      box-shadow: none;
+    }
   }
 
+  /* Neutralize color-mix() box-shadow and border-color overrides from the */
+  /* normal focus rules — the outline: Highlight below is the sole focus */
+  /* signal in forced-colors mode. */
   :host(.ngx-signal-form-field-wrapper--textual)
     .ngx-signal-form-field-wrapper__content:focus-within {
     outline: 2px solid Highlight;
     outline-offset: 2px;
+    box-shadow: none;
+    border-color: Highlight;
   }
 }
