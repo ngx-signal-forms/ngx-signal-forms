@@ -7,11 +7,7 @@ import {
   type Signal,
   type WritableSignal,
 } from '@angular/core';
-import {
-  submit,
-  type FieldTree,
-  type ValidationError,
-} from '@angular/forms/signals';
+import { type FieldTree, type ValidationError } from '@angular/forms/signals';
 import type { SubmittedStatus } from '../types';
 import { isBlockingError } from './warning-error';
 import { isFieldTree } from './walk-field-tree';
@@ -164,6 +160,12 @@ export function getBlockingErrors(
   return errors.filter((error) => isBlockingError(error));
 }
 
+// Tracks form trees with a submitWithWarnings() call in flight. Native
+// submitting() cannot serve as this guard: the helper runs the user action
+// OUTSIDE any native submit, so submitting() is false during `await action()`
+// — exactly the window a double-click hits.
+const inFlightSubmits = new WeakSet<FieldTree<unknown>>();
+
 /**
  * Computed signal indicating whether a form can be submitted with warnings.
  *
@@ -185,9 +187,19 @@ export function canSubmitWithWarnings(
 /**
  * Submits a form, allowing warnings to pass through.
  *
- * Angular's native `submit()` now owns the "mark every field as touched"
- * side effect, so this helper delegates that step and keeps only the
- * warning-aware gate in toolkit land.
+ * Marks all form fields as touched (including all descendants), yields one
+ * microtask so that synchronously-resolving validation state propagates, then
+ * invokes `action` only when there are no blocking errors. Still-pending async
+ * validators are handled by the `pending()` guard that follows the yield.
+ * Warnings (errors whose `kind` starts with `'warn:'`) do not block submission.
+ *
+ * **Re-entrancy**: concurrent calls for the same `formTree` — from a
+ * double-click, Enter spam, or an overlapping native submit — are silently
+ * dropped. The in-flight guard is cleared in the `finally` block so the form
+ * is always re-submittable after the current call settles (even on rejection).
+ *
+ * @param formTree - The root `FieldTree` of the form to submit
+ * @param action - Async callback invoked only when no blocking errors remain
  *
  * @public
  */
@@ -195,26 +207,35 @@ export async function submitWithWarnings<TModel>(
   formTree: FieldTree<TModel>,
   action: () => Promise<void>,
 ): Promise<void> {
-  // This native submit call exists only for Angular's touch-all side effect.
-  // The warning-aware gate and the real user action still live below.
-  await submit(formTree, {
-    ignoreValidators: 'all',
-    action: () => Promise.resolve(undefined),
-  });
-
-  await waitForValidationSettlement();
-
-  // Mirrors the canSubmitWithWarnings() guard: async validators may still be
-  // settling after the microtask delay — skip action until they resolve.
-  if (formTree().pending()) {
+  // Re-entrant call (double-click, Enter spam) or overlapping native
+  // submission: bail out instead of running the action a second time.
+  if (formTree().submitting() || inFlightSubmits.has(formTree)) {
     return;
   }
 
-  if (getBlockingErrors(formTree().errorSummary()).length > 0) {
-    return;
-  }
+  inFlightSubmits.add(formTree);
+  try {
+    // Signal Forms (stable since Angular 22) exposes markAsTouched(), which
+    // marks the field AND all descendants touched — the only side effect the
+    // previous native-submit-with-noop-action delegation existed to trigger.
+    formTree().markAsTouched();
 
-  await action();
+    await waitForValidationSettlement();
+
+    // Mirrors the canSubmitWithWarnings() guard: async validators may still be
+    // settling after the microtask delay — skip action until they resolve.
+    if (formTree().pending()) {
+      return;
+    }
+
+    if (getBlockingErrors(formTree().errorSummary()).length > 0) {
+      return;
+    }
+
+    await action();
+  } finally {
+    inFlightSubmits.delete(formTree);
+  }
 }
 
 function assertFieldTree(value: unknown): asserts value is FieldTree<unknown> {
@@ -226,9 +247,8 @@ function assertFieldTree(value: unknown): asserts value is FieldTree<unknown> {
 }
 
 function waitForValidationSettlement(): Promise<void> {
-  // Preserve the existing blur-vs-submit safety gap: touched state is now
-  // delegated to Angular's native submit flow, but the error summary can still
-  // lag by one microtask when the active control is mid-blur as submit fires.
+  // Preserve the blur-vs-submit safety gap: the error summary can lag by one
+  // microtask when the active control is mid-blur as markAsTouched() fires.
   return new Promise((resolve) => {
     queueMicrotask(resolve);
   });

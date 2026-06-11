@@ -1,8 +1,8 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import type { FieldTree } from '@angular/forms/signals';
+import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import { describe, expect, it, vi } from 'vitest';
-import { hasSubmitted } from './submission-helpers';
+import { hasSubmitted, submitWithWarnings } from './submission-helpers';
 /**
  * Test suite for submission helper utilities.
  *
@@ -177,7 +177,104 @@ describe('Submission Helpers', () => {
       expect(hasSubmittedResult()).toBe(true);
     });
   });
+
+  describe('submitWithWarnings re-entrancy', () => {
+    it('deferred-action overlap: concurrent calls run action exactly once', async () => {
+      // Arrange: an action whose completion we can control manually.
+      let resolveAction!: () => void;
+      const actionPromise = new Promise<void>((res) => {
+        resolveAction = res;
+      });
+      const action = vi.fn(() => actionPromise);
+
+      const formTree = createMockFieldTreeForSubmit({
+        submitting: () => false,
+        pending: () => false,
+        errorSummary: () => [],
+      });
+
+      // Act: fire two concurrent submitWithWarnings calls before the action resolves.
+      const p1 = submitWithWarnings(formTree, action);
+      const p2 = submitWithWarnings(formTree, action);
+
+      // Resolve the deferred action.
+      resolveAction();
+      await Promise.all([p1, p2]);
+
+      // Assert: action was only invoked once — the second call was dropped.
+      expect(action).toHaveBeenCalledOnce();
+    });
+
+    it('native overlap: bails out without invoking action when submitting() is true', async () => {
+      const action = vi.fn(async () => {});
+
+      const formTree = createMockFieldTreeForSubmit({
+        submitting: () => true,
+        pending: () => false,
+        errorSummary: () => [],
+      });
+
+      await submitWithWarnings(formTree, action);
+
+      expect(action).not.toHaveBeenCalled();
+    });
+
+    it('recovery after rejection: form is re-submittable after action rejects', async () => {
+      const workingAction = vi.fn(async () => {});
+      let callCount = 0;
+      const rejectingAction = vi.fn(() => {
+        callCount++;
+        return Promise.reject(new Error('network error'));
+      });
+
+      const formTree = createMockFieldTreeForSubmit({
+        submitting: () => false,
+        pending: () => false,
+        errorSummary: () => [],
+      });
+
+      // First call: action rejects → helper rejects too.
+      await expect(
+        submitWithWarnings(formTree, rejectingAction),
+      ).rejects.toThrow('network error');
+      expect(callCount).toBe(1);
+
+      // Second call: form should be re-submittable after the rejection cleared
+      // the in-flight guard in the finally block.
+      await submitWithWarnings(formTree, workingAction);
+      expect(workingAction).toHaveBeenCalledOnce();
+    });
+  });
 });
+
+/**
+ * Helper: Create a minimal mock FieldTree suitable for submitWithWarnings tests.
+ *
+ * @param overrides - Overrideable state accessors
+ */
+function createMockFieldTreeForSubmit(overrides: {
+  submitting: () => boolean;
+  pending: () => boolean;
+  errorSummary: () => ValidationError[];
+}): FieldTree<unknown> {
+  return createMockFieldTree({
+    value: () => ({}),
+    valid: () => true,
+    invalid: () => false,
+    touched: () => false,
+    dirty: () => false,
+    errors: () => [],
+    disabled: () => false,
+    readonly: () => false,
+    hidden: () => false,
+    submittedStatus: () => 'unsubmitted' as const,
+    reset: createVoidSpy(),
+    markAsTouched: createVoidSpy(),
+    markAsDirty: createVoidSpy(),
+    resetSubmittedStatus: createVoidSpy(),
+    ...overrides,
+  });
+}
 
 /**
  * Helper: Create mock FieldTree with controllable submitting signal.
