@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { ExampleCardsComponent, PageHeaderComponent } from '../../ui';
 import { FIELDSET_APPEARANCE_CONTENT } from './fieldset-appearance.content';
 import { FieldsetAppearanceFormComponent } from './fieldset-appearance.form';

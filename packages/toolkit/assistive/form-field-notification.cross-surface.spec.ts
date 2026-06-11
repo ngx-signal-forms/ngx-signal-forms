@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  signal,
-} from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { NgxHeadlessNotification } from '@ngx-signal-forms/toolkit/headless';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';

@@ -452,9 +452,7 @@ export class AppComponent {
    * slide-over below.
    */
   protected reopenPanel(): void {
-    const wide =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(min-width: 1280px)').matches;
+    const wide = window?.matchMedia?.('(min-width: 1280px)')?.matches;
     if (wide) {
       this.#pageControls.expandRail();
     } else {

@@ -164,7 +164,7 @@ export function getBlockingErrors(
 // submitting() cannot serve as this guard: the helper runs the user action
 // OUTSIDE any native submit, so submitting() is false during `await action()`
 // — exactly the window a double-click hits.
-const inFlightSubmits = new WeakSet();
+const inFlightSubmits = new WeakSet<FieldTree<unknown>>();
 
 /**
  * Computed signal indicating whether a form can be submitted with warnings.
@@ -187,10 +187,11 @@ export function canSubmitWithWarnings(
 /**
  * Submits a form, allowing warnings to pass through.
  *
- * Marks all form fields as touched (including all descendants), waits one
- * microtask for any async validators to settle, then invokes `action` only
- * when there are no blocking errors. Warnings (errors whose `kind` starts
- * with `'warn:'`) do not block submission.
+ * Marks all form fields as touched (including all descendants), yields one
+ * microtask so that synchronously-resolving validation state propagates, then
+ * invokes `action` only when there are no blocking errors. Still-pending async
+ * validators are handled by the `pending()` guard that follows the yield.
+ * Warnings (errors whose `kind` starts with `'warn:'`) do not block submission.
  *
  * **Re-entrancy**: concurrent calls for the same `formTree` — from a
  * double-click, Enter spam, or an overlapping native submit — are silently
