@@ -489,18 +489,28 @@ const onSubmit = async () => {
 
 ### Warnings (Non-Blocking)
 
-```typescript
-const onSubmit = async () => {
-  if (form().invalid()) {
-    // Only check for actual errors, NOT warnings
-    console.log('Fix errors before submitting');
-    return;
-  }
+Warnings are `warn:`-prefixed errors, so they **do** count toward
+`form().invalid()` — a plain `invalid()` gate (like the blocking example above)
+would stop a warning-only submit. The warning-aware helpers let warnings through
+while still blocking on real errors.
 
-  // Warnings present but form is still valid
-  // User can submit with warnings
-  await api.save(form().value());
-};
+```typescript
+import {
+  submitWithWarnings,
+  canSubmitWithWarnings,
+} from '@ngx-signal-forms/toolkit';
+
+// submitWithWarnings() marks all fields touched, waits for async validators,
+// guards double-submits, then runs the action only when no *blocking* errors
+// remain. Warnings pass through.
+const onSubmit = () =>
+  submitWithWarnings(form, async () => {
+    await api.save(form().value());
+  });
+
+// For reactive gating (e.g. a submit button's [disabled]),
+// canSubmitWithWarnings(form) returns a Signal<boolean> — true when no blocking
+// errors are present.
 ```
 
 ### Checking for Warnings
