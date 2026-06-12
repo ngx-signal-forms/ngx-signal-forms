@@ -1,18 +1,33 @@
 import {
   Component,
   computed,
+  inject,
   input,
   model,
   output,
   signal,
 } from '@angular/core';
 import type { FormValueControl, ValidationError } from '@angular/forms/signals';
+import { NgxFieldIdentity } from '@ngx-signal-forms/toolkit';
 
 /**
  * Custom star rating control implementing Angular Signal Forms FormValueControl interface.
  *
  * This component demonstrates how to create a custom form control that integrates
  * seamlessly with Angular Signal Forms and @ngx-signal-forms/toolkit.
+ *
+ * ## NgxFieldIdentity integration (reference implementation)
+ *
+ * When placed inside `ngx-form-field-wrapper`, the control injects the
+ * wrapper-provided `NgxFieldIdentity` service (optionally, so it continues to
+ * work standalone). When present, the service drives the `aria-describedby`
+ * hint baseline — exactly as the toolkit README's custom-control recipe
+ * prescribes. It does NOT drive `aria-labelledby`: `NgxFieldIdentity` exposes
+ * the control's own id (`controlId()`), not the `<label>` element's id, so
+ * falling back to it would be self-referential and invalid ARIA. Label linkage
+ * requires an explicit `[labelledBy]` input. The explicit `[describedBy]` input
+ * takes precedence over the service so callers that manage ARIA themselves
+ * (e.g. manual ARIA mode) are unaffected.
  *
  * @example Basic usage with formField directive
  * ```html
@@ -33,13 +48,13 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
   host: {
     'data-ngx-signal-form-control': '',
     role: 'slider',
-    tabindex: '0',
-    '[attr.aria-labelledby]': 'labelledBy()',
+    '[attr.tabindex]': 'disabled() ? -1 : 0',
+    '[attr.aria-labelledby]': 'resolvedLabelledBy()',
     '[attr.aria-valuemin]': '0',
     '[attr.aria-valuemax]': 'maxRating()',
     '[attr.aria-valuenow]': 'currentValue()',
     '[attr.aria-valuetext]': 'valueText()',
-    '[attr.aria-describedby]': 'describedBy()',
+    '[attr.aria-describedby]': 'resolvedDescribedBy()',
     '[attr.aria-invalid]': 'invalid() ? "true" : "false"',
     '[attr.aria-disabled]': 'disabled() ? "true" : "false"',
     '[attr.aria-required]': 'required() ? "true" : null',
@@ -141,6 +156,14 @@ import type { FormValueControl, ValidationError } from '@angular/forms/signals';
 })
 export class RatingControlComponent implements FormValueControl<number> {
   /**
+   * Injected from the surrounding `ngx-form-field-wrapper` when present.
+   * Drives the aria-describedby hint baseline following the toolkit README's
+   * canonical custom-control recipe. Absent when the control is used standalone
+   * (outside a wrapper).
+   */
+  readonly #identity = inject(NgxFieldIdentity, { optional: true });
+
+  /**
    * Optional aria-labelledby source for visible labels projected outside
    * the custom control host.
    */
@@ -204,6 +227,29 @@ export class RatingControlComponent implements FormValueControl<number> {
    * Track focus state for styling.
    */
   protected readonly focused = signal(false);
+
+  /**
+   * Resolved aria-labelledby: explicit input wins, then null.
+   *
+   * `NgxFieldIdentity` does not carry the label-element id — it exposes the
+   * control's own id (`controlId()`), not the `<label>` element's id.
+   * Falling back to `controlId()` would make `aria-labelledby` point at the
+   * host element itself (self-referential, invalid ARIA). Callers that need
+   * label linkage must pass `[labelledBy]` explicitly, matching the toolkit
+   * README's canonical custom-control recipe.
+   */
+  protected readonly resolvedLabelledBy = computed(
+    () => this.labelledBy() ?? null,
+  );
+
+  /**
+   * Resolved aria-describedby: explicit input wins (manual ARIA mode), then
+   * falls back to the `NgxFieldIdentity`'s aggregated hint-id chain, then null.
+   * Auto-ARIA mode overrides this further at the directive level when active.
+   */
+  protected readonly resolvedDescribedBy = computed(
+    () => this.describedBy() ?? this.#identity?.describedBy() ?? null,
+  );
 
   /**
    * Array of star indices for template iteration.

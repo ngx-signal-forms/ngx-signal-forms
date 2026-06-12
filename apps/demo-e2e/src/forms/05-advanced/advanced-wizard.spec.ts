@@ -164,11 +164,8 @@ test.describe('Advanced Wizard Demo', () => {
       await page.getByLabel(/Expiry Date/i).fill('2026-12-01');
       await page.getByLabel(/Expiry Date/i).blur();
 
-      // Expect specific error message from Zod schema
-      await expect(
-        page.getByText('Passport must be valid 6 months after trip ends'),
-      ).toBeVisible();
-
+      // Expect specific error message from Zod schema, scoped to the alert
+      // live region — the same text appears in the page's "Try This" guide.
       const passportAlert = page
         .getByRole('alert')
         .filter({ hasText: 'Passport must be valid 6 months after trip ends' });
@@ -179,9 +176,7 @@ test.describe('Advanced Wizard Demo', () => {
       await page.getByLabel(/Expiry Date/i).blur();
 
       // Error should disappear
-      await expect(
-        page.getByText('Passport must be valid 6 months after trip ends'),
-      ).toBeHidden();
+      await expect(passportAlert).toBeHidden();
     });
 
     // ----------------------------------------------------------------
@@ -228,15 +223,16 @@ test.describe('Advanced Wizard Demo', () => {
       await dest1.getByLabel(/Departure Date/i).fill('2026-05-01'); // Before arrival
       await dest1.getByLabel(/Departure Date/i).blur();
 
-      await expect(
-        page.getByText('Departure date must be after arrival date'),
-      ).toBeVisible();
+      // Scoped to the alert live region — the same text appears in the
+      // page's "Try This" guide.
+      const departureAlert = page
+        .getByRole('alert')
+        .filter({ hasText: 'Departure date must be after arrival date' });
+      await expect(departureAlert).toBeVisible();
 
       // Fix
       await dest1.getByLabel(/Departure Date/i).fill('2026-05-20');
-      await expect(
-        page.getByText('Departure date must be after arrival date'),
-      ).toBeHidden();
+      await expect(departureAlert).toBeHidden();
     });
   });
 
@@ -266,18 +262,18 @@ test.describe('Advanced Wizard Demo', () => {
       await activity1.getByLabel('Date', { exact: true }).fill('2026-06-15');
       await activity1.getByLabel('Date', { exact: true }).blur();
 
-      // Expect specific custom validation error
-      await expect(
-        page.getByText('Activity date must be within destination date range'),
-      ).toBeVisible();
+      // Expect specific custom validation error, scoped to the alert live
+      // region — the same text appears in the page's "Try This" guide.
+      const activityAlert = page.getByRole('alert').filter({
+        hasText: 'Activity date must be within destination date range',
+      });
+      await expect(activityAlert).toBeVisible();
 
       // Fix: Inside range (June 5th)
       await activity1.getByLabel('Date', { exact: true }).fill('2026-06-05');
       await activity1.getByLabel('Date', { exact: true }).blur();
 
-      await expect(
-        page.getByText('Activity date must be within destination date range'),
-      ).toBeHidden();
+      await expect(activityAlert).toBeHidden();
     });
   });
 
@@ -298,15 +294,16 @@ test.describe('Advanced Wizard Demo', () => {
       await dest1.getByLabel(/Arrival Date/i).fill('2020-01-01');
       await dest1.getByLabel(/Arrival Date/i).blur();
 
-      await expect(
-        page.getByText('Arrival date cannot be in the past'),
-      ).toBeVisible();
+      // Scoped to the alert live region — the same text appears in the
+      // page's "Try This" guide.
+      const arrivalAlert = page
+        .getByRole('alert')
+        .filter({ hasText: 'Arrival date cannot be in the past' });
+      await expect(arrivalAlert).toBeVisible();
 
       // Fix
       await dest1.getByLabel(/Arrival Date/i).fill('2026-08-01');
-      await expect(
-        page.getByText('Arrival date cannot be in the past'),
-      ).toBeHidden();
+      await expect(arrivalAlert).toBeHidden();
     });
   });
 

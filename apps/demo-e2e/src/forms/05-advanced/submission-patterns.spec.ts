@@ -105,12 +105,11 @@ test.describe('Advanced - Submission Patterns', () => {
       // Submit
       await page.submit();
 
-      // Should show server error alert
-      const errorAlert = page.page
-        .locator('[role="alert"]')
-        .filter({ hasText: 'Submission Failed' });
-      await expect(errorAlert).toBeVisible({ timeout: 5000 });
-      await expect(errorAlert).toContainText('already taken');
+      // Server error is returned as a native TreeValidationResult attached to
+      // the username field — it renders through the field's error display and
+      // the error summary (no separate banner).
+      await expect(page.errorSummary).toBeVisible({ timeout: 5000 });
+      await expect(page.errorSummary).toContainText('already taken');
     });
   });
 

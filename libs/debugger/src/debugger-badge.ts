@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  Directive,
-  input,
-} from '@angular/core';
+import { Component, Directive, input } from '@angular/core';
 
 export type NgxSignalFormDebuggerBadgeVariant = 'solid' | 'outline' | 'ghost';
 export type NgxSignalFormDebuggerBadgeAppearance =
@@ -68,7 +63,7 @@ export class NgxSignalFormDebuggerBadgeIcon {}
  */
 @Component({
   selector: 'ngx-signal-form-debugger-badge',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   host: {
     class: 'ngx-debugger-badge',
     '[attr.data-variant]': 'variant()',

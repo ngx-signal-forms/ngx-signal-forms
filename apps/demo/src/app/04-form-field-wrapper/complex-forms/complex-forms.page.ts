@@ -1,15 +1,7 @@
-import {
-  Component,
-  computed,
-  effect,
-  linkedSignal,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import type {
   ErrorDisplayStrategy,
   FormFieldAppearance,
-  FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import type { NgxFormFieldErrorPlacement } from '@ngx-signal-forms/toolkit/form-field';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
@@ -29,8 +21,8 @@ import {
 } from '../../ui/error-display-mode-selector/error-display-mode-selector';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
+  createOrientationSelection,
   getOrientationLabel,
-  normalizeOrientationForAppearance,
 } from '../../ui/orientation-toggle';
 import { COMPLEX_FORMS_CONTENT } from './complex-forms.content';
 import { ComplexFormsComponent } from './complex-forms.form';
@@ -96,7 +88,7 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
           description="Switch between standard vertical labels and horizontal label columns for the non-outline wrappers. Outline remains vertical by design."
         >
           <ngx-orientation-toggle
-            [(value)]="selectedOrientationPreference"
+            [(value)]="selectedOrientation"
             [appearance]="selectedAppearance()"
           />
         </ngx-display-controls-section>
@@ -193,29 +185,9 @@ export class ComplexFormsPage {
     FIELDSET_ERROR_PLACEMENT_OPTIONS;
   protected readonly selectedFieldsetErrorPlacement =
     signal<NgxFormFieldErrorPlacement>('bottom');
-  protected readonly selectedOrientationPreference =
-    signal<FormFieldOrientation>('vertical');
-  protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
-    () => {
-      return normalizeOrientationForAppearance(
-        this.selectedAppearance(),
-        this.selectedOrientationPreference(),
-      );
-    },
+  protected readonly selectedOrientation = createOrientationSelection(
+    this.selectedAppearance,
   );
-  constructor() {
-    effect(() => {
-      const preferredOrientation = this.selectedOrientationPreference();
-      const normalizedOrientation = normalizeOrientationForAppearance(
-        this.selectedAppearance(),
-        preferredOrientation,
-      );
-
-      if (preferredOrientation !== normalizedOrientation) {
-        this.selectedOrientationPreference.set(normalizedOrientation);
-      }
-    });
-  }
 
   protected readonly currentControlChips = computed(() => [
     {

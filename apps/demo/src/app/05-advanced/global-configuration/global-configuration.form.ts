@@ -4,11 +4,14 @@ import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
+  provideErrorMessages,
+  provideFieldLabels,
 } from '@ngx-signal-forms/toolkit';
 import {
   createOnInvalidHandler,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
+import { NgxFormFieldErrorSummary } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import { globalConfigSchema } from './global-configuration.validations';
 
@@ -29,7 +32,33 @@ import { globalConfigSchema } from './global-configuration.validations';
 @Component({
   selector: 'ngx-global-configuration',
 
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
+  /**
+   * Component-scoped providers demonstrating the configuration cascade:
+   *   global (main.ts) → component (providers: [...]) → field
+   *
+   * provideErrorMessages() — override the toolkit's built-in required message
+   *   with a personalized variant for this form only.
+   * provideFieldLabels() — map internal field paths to human-readable display
+   *   names so the error summary renders "Email Address" instead of "userEmail".
+   */
+  providers: [
+    provideErrorMessages({
+      required:
+        'This field is required — we use it to personalise your experience.',
+    }),
+    provideFieldLabels({
+      userEmail: 'Email Address',
+      userPhone: 'Phone Number',
+      userWebsite: 'Website',
+      acceptTerms: 'Terms of service',
+    }),
+  ],
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxFormField,
+    NgxFormFieldErrorSummary,
+  ],
   template: `
     <form
       [formRoot]="configForm"
@@ -62,6 +91,21 @@ import { globalConfigSchema } from './global-configuration.validations';
           </div>
         </div>
       </div>
+
+      <!-- Form-level error summary (GOV.UK pattern) -->
+      <!-- provideFieldLabels() maps field paths to human-readable names so the
+           summary renders "Email Address" instead of the raw "userEmail" key. -->
+      <!--
+        [autoFocus]="false" prevents a focus race with createOnInvalidHandler(),
+        which focuses the first invalid field on submit. Keep field-level focus
+        as the primary landing point.
+      -->
+      <ngx-form-field-error-summary
+        [formTree]="configForm"
+        summaryLabel="Please fix the following errors before submitting:"
+        [autoFocus]="false"
+        data-testid="global-config-error-summary"
+      />
 
       <!-- Form fields -->
       <div class="space-y-6">

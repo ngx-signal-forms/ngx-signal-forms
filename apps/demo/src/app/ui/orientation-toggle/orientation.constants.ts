@@ -1,3 +1,5 @@
+import { linkedSignal } from '@angular/core';
+import type { Signal, WritableSignal } from '@angular/core';
 import type {
   FormFieldAppearance,
   FormFieldOrientation,
@@ -35,4 +37,29 @@ export function normalizeOrientationForAppearance(
   return isOrientationDisabledForAppearance(appearance, orientation)
     ? 'vertical'
     : orientation;
+}
+
+/**
+ * Writable orientation selection that snaps to a supported orientation
+ * whenever the appearance changes — the canonical linkedSignal
+ * previous-value pattern (replaces signal + effect write-back).
+ *
+ * **Direct-write contract:** re-normalization only fires when the appearance
+ * SOURCE signal changes. A direct `.set()` of an orientation that
+ * `isOrientationDisabledForAppearance` rejects for the current appearance is
+ * NOT corrected automatically. Callers must not write such values — the demo's
+ * `ngx-orientation-toggle` enforces this by disabling those options.
+ */
+export function createOrientationSelection(
+  appearance: Signal<FormFieldAppearance>,
+  initial: FormFieldOrientation = 'vertical',
+): WritableSignal<FormFieldOrientation> {
+  return linkedSignal<FormFieldAppearance, FormFieldOrientation>({
+    source: appearance,
+    computation: (currentAppearance, previous) =>
+      normalizeOrientationForAppearance(
+        currentAppearance,
+        previous?.value ?? initial,
+      ),
+  });
 }

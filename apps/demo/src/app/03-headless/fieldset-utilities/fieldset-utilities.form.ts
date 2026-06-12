@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import {
   email,
   form,
@@ -27,6 +21,7 @@ import {
   createFieldStateFlags,
   NgxHeadlessToolkit,
 } from '@ngx-signal-forms/toolkit/headless';
+import { NgxFormFieldCharacterCount } from '@ngx-signal-forms/toolkit/assistive';
 
 interface HeadlessDeliveryModel {
   contactEmail: string;
@@ -86,8 +81,14 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
 
 @Component({
   selector: 'ngx-headless-fieldset-utilities',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, FormRoot, NgxSignalForm, NgxHeadlessToolkit],
+
+  imports: [
+    FormField,
+    FormRoot,
+    NgxSignalForm,
+    NgxHeadlessToolkit,
+    NgxFormFieldCharacterCount,
+  ],
   templateUrl: './fieldset-utilities.form.html',
   styleUrl: './fieldset-utilities.form.scss',
 })
@@ -114,11 +115,11 @@ export class HeadlessFieldsetUtilitiesComponent {
   readonly #model = signal(this.#initialData);
   readonly deliveryForm = form(this.#model, deliverySchema, {
     submission: {
-      action: async (data) => {
+      action: async (field) => {
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 600);
         });
-        console.log('Delivery request submitted:', data());
+        console.log('Delivery request submitted:', field().value());
       },
       onInvalid: createOnInvalidHandler(),
     },

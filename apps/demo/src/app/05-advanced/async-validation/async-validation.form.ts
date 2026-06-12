@@ -15,6 +15,7 @@ import {
   type FormFieldOrientation,
   createOnInvalidHandler,
   NgxSignalFormToolkit,
+  warningError,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
@@ -52,7 +53,11 @@ const registrationSchema = schema<Registration>((path) => {
       }
       return null;
     },
-    onError: () => null,
+    onError: () =>
+      warningError(
+        'availabilityUnknown',
+        'Could not verify availability — you can still submit, but the name may be taken.',
+      ),
   });
 
   required(path.usernameOnBlur, { message: 'Username is required' });
@@ -78,7 +83,11 @@ const registrationSchema = schema<Registration>((path) => {
       }
       return null;
     },
-    onError: () => null,
+    onError: () =>
+      warningError(
+        'availabilityUnknown',
+        'Could not verify availability — you can still submit, but the name may be taken.',
+      ),
   });
 });
 
@@ -115,6 +124,12 @@ const registrationSchema = schema<Registration>((path) => {
           <li>
             <code>getError()</code> reads the latest async error without
             manually searching the error array.
+          </li>
+          <li>
+            <code>onError</code> returns a
+            <code>warningError()</code> instead of <code>null</code> — a
+            network failure surfaces as a non-blocking advisory (prefixed
+            <code>warn:</code>) so submission is never silently unblocked.
           </li>
         </ul>
       </div>
@@ -250,12 +265,12 @@ export class AsyncValidationComponent {
   readonly #model = signal({ username: '', usernameOnBlur: '' });
   readonly regForm = form(this.#model, registrationSchema, {
     submission: {
-      action: async (data) => {
+      action: async (field) => {
         // Simulate actual registration delay
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 1000);
         });
-        console.log('Registered:', data());
+        console.log('Registered:', field().value());
       },
       onInvalid: createOnInvalidHandler(),
     },

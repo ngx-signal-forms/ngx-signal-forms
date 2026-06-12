@@ -1,15 +1,7 @@
-import {
-  Component,
-  computed,
-  effect,
-  linkedSignal,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
-  type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
@@ -24,8 +16,8 @@ import {
 } from '../../ui';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
+  createOrientationSelection,
   getOrientationLabel,
-  normalizeOrientationForAppearance,
 } from '../../ui/orientation-toggle';
 import {
   ERROR_DISPLAY_MODE_LABELS,
@@ -82,7 +74,7 @@ import { SubmissionPatternsComponent } from './submission-patterns.form';
           description="Switch between vertical labels and horizontal label columns while checking pre-submit, submitting, and server-error states. Outline remains vertical only."
         >
           <ngx-orientation-toggle
-            [(value)]="selectedOrientationPreference"
+            [(value)]="selectedOrientation"
             [appearance]="selectedAppearance()"
           />
         </ngx-display-controls-section>
@@ -120,29 +112,9 @@ export class SubmissionPatternsPage {
     signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
-  protected readonly selectedOrientationPreference =
-    signal<FormFieldOrientation>('vertical');
-  protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
-    () => {
-      return normalizeOrientationForAppearance(
-        this.selectedAppearance(),
-        this.selectedOrientationPreference(),
-      );
-    },
+  protected readonly selectedOrientation = createOrientationSelection(
+    this.selectedAppearance,
   );
-  constructor() {
-    effect(() => {
-      const preferredOrientation = this.selectedOrientationPreference();
-      const normalizedOrientation = normalizeOrientationForAppearance(
-        this.selectedAppearance(),
-        preferredOrientation,
-      );
-
-      if (preferredOrientation !== normalizedOrientation) {
-        this.selectedOrientationPreference.set(normalizedOrientation);
-      }
-    });
-  }
 
   protected readonly currentControlChips = computed(() => [
     {

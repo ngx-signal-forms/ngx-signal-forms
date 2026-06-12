@@ -33,7 +33,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
 
       await test.step('Verify delivery notes section with utilities', async () => {
         await expect(page.getByLabel('Notes')).toBeVisible();
-        await expect(page.getByText(/0\s*\/\s*200/)).toBeVisible();
+        await expect(page.getByText(/0\s*\/\s*200/).first()).toBeVisible();
       });
 
       await test.step('Verify action buttons', async () => {
@@ -56,7 +56,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
       page,
     }) => {
       await test.step('Verify initial utility count', async () => {
-        await expect(page.getByText(/0\s*\/\s*200/)).toBeVisible();
+        await expect(page.getByText(/0\s*\/\s*200/).first()).toBeVisible();
       });
 
       await test.step('Update notes and verify utility count reacts', async () => {
@@ -64,7 +64,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
         await notesInput.fill('Enough detail for utility flags');
         await notesInput.blur();
 
-        await expect(page.getByText(/31\s*\/\s*200/)).toBeVisible();
+        await expect(page.getByText(/31\s*\/\s*200/).first()).toBeVisible();
       });
     });
   });
@@ -281,17 +281,57 @@ test.describe('Headless - Fieldset + Utilities', () => {
     });
   });
 
+  test.describe('Delivery Notes - NgxHeadlessCharacterCount', () => {
+    test('should update headless character count and reflect limit state', async ({
+      page,
+    }) => {
+      const notesInput = page.getByLabel('Notes');
+      const headlessCounter = page.getByTestId('headless-char-count');
+
+      await test.step('Initial state: 0/200, limitState=ok', async () => {
+        await expect(headlessCounter).toBeVisible();
+        await expect(headlessCounter).toContainText('0/200');
+        await expect(headlessCounter).toHaveAttribute('data-limit-state', 'ok');
+      });
+
+      await test.step('Type 160 chars: limitState transitions to warning (≥80%)', async () => {
+        await notesInput.fill('w'.repeat(160));
+        await expect(headlessCounter).toContainText('160/200');
+        await expect(headlessCounter).toHaveAttribute(
+          'data-limit-state',
+          'warning',
+        );
+      });
+
+      await test.step('Type 195 chars: limitState transitions to danger (≥95%)', async () => {
+        await notesInput.fill('d'.repeat(195));
+        await expect(headlessCounter).toContainText('195/200');
+        await expect(headlessCounter).toHaveAttribute(
+          'data-limit-state',
+          'danger',
+        );
+      });
+
+      await test.step('Assistive-tier counter also visible', async () => {
+        const assistiveCounter = page.getByTestId('assistive-char-count');
+        await expect(assistiveCounter).toBeVisible();
+        // The assistive component renders currentLength/maxLength
+        await expect(assistiveCounter).toContainText('195/200');
+      });
+    });
+  });
+
   test.describe('Delivery Notes - Utility Functions', () => {
     test('should update character count while typing', async ({ page }) => {
       const notesInput = page.getByLabel('Notes');
 
       await test.step('Initial count shows 0/200', async () => {
-        await expect(page.getByText(/0\s*\/\s*200/)).toBeVisible();
+        await expect(page.getByText(/0\s*\/\s*200/).first()).toBeVisible();
       });
 
       await test.step('Type some text', async () => {
         await notesInput.fill('Hello world');
-        await expect(page.getByText(/11\s*\/\s*200/)).toBeVisible();
+        await expect(page.getByText(/11\s*\/\s*200/).first()).toBeVisible();
       });
     });
 
@@ -330,7 +370,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
       });
 
       await test.step('Verify counter shows limit reached', async () => {
-        await expect(page.getByText(/200\s*\/\s*200/)).toBeVisible();
+        await expect(page.getByText(/200\s*\/\s*200/).first()).toBeVisible();
       });
     });
   });
@@ -367,7 +407,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
         await expect(page.getByLabel('Contact email *')).toHaveValue('');
         await expect(page.getByLabel('Street *')).toHaveValue('');
         await expect(page.getByLabel('Notes')).toHaveValue('');
-        await expect(page.getByText(/0\s*\/\s*200/)).toBeVisible();
+        await expect(page.getByText(/0\s*\/\s*200/).first()).toBeVisible();
       });
     });
   });

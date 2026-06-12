@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-} from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import {
   form,
   FormField,
@@ -74,7 +69,7 @@ function ariaDescribedBy(errors: readonly ResolvedFieldError[]): string | null {
 
 @Component({
   selector: 'ngx-error-message-signal',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [FormField, FormRoot],
   templateUrl: './error-message-signal.form.html',
   styleUrl: './error-message-signal.form.scss',
@@ -85,11 +80,11 @@ export class ErrorMessageSignalComponent {
 
   readonly passwordForm = form(this.#model, passwordSchema, {
     submission: {
-      action: async (data) => {
+      action: async (field) => {
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 400);
         });
-        console.log('Submitted:', data());
+        console.log('Submitted:', field().value());
       },
       onInvalid: createOnInvalidHandler(),
     },

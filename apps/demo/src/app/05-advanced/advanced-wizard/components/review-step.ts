@@ -217,8 +217,8 @@ export class ReviewStepComponent implements WizardStepInterface {
 
   // No effects needed - review step validation is computed from store data
 
-  validateAndFocus(): boolean {
-    return true;
+  validateAndFocus(): Promise<boolean> {
+    return Promise.resolve(true);
   }
 
   commitToStore(): void {

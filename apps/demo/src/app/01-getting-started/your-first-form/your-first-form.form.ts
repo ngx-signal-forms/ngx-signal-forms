@@ -1,8 +1,4 @@
-import {
-  Component,
-  input,
-  signal,
-} from '@angular/core';
+import {  Component, input, signal } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import {
@@ -19,6 +15,7 @@ import { contactFormSchema } from './your-first-form.validations';
  * Form context and features are documented in the page container.
  */
 @Component({
+
   selector: 'ngx-your-first-form',
   imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
   template: `

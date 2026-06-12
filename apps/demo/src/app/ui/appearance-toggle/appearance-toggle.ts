@@ -8,6 +8,8 @@ import { APPEARANCE_LABELS, APPEARANCE_OPTIONS } from './appearance.constants';
   template: `
     <div
       class="inline-flex max-w-full flex-wrap items-center gap-1 rounded-full border border-gray-200/80 bg-white/80 p-1 shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/90"
+      role="group"
+      aria-label="Field appearance"
     >
       @for (appearance of appearanceOptions; track appearance) {
         <button

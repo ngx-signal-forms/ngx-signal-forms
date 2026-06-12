@@ -27,7 +27,10 @@ import { SupportedLanguage, SupportedTheme } from './shiki-highlight.service';
  * </pre>
  *
  * <pre ngxShikiHighlight language="angular-ts" theme="github-dark">
- *   @Component({ selector: 'ngx-example' })
+ *   @Component({
+ *
+ *     selector: 'ngx-example',
+ *   })
  *   export class ExampleComponent {}
  * </pre>
  * ```
