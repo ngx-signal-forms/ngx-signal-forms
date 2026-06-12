@@ -17,33 +17,21 @@ Angular intentionally leaves to application and library authors:
 accessibility wiring, error-display timing, warning semantics, and reusable
 field UI.
 
-### Why `ngxSignalForm` is additive, not a replacement
+### When to reach for the toolkit
 
-`NgxSignalForm` (selector: `form[formRoot][ngxSignalForm]`) is an **enhancer**.
-It activates on `<form>` elements that already have `[formRoot]` when you also
-add the `ngxSignalForm` attribute. It adds:
+Reach for the toolkit when:
 
-1. **DI context** — child toolkit components (error display, field wrappers,
-   headless directives) access form state through `NGX_SIGNAL_FORM_CONTEXT`
-   without prop drilling.
-2. **Submitted status tracking** — derives
-   `'unsubmitted' → 'submitting' → 'submitted'` from Angular's native
-   `submitting()` signal, which Angular does not expose as a status.
-3. **Error display strategy** — the `[errorStrategy]` input controls when
-   validation feedback becomes visible (`'immediate'`, `'on-touch'`, or
-   `'on-submit'`).
+- you're writing the same `aria-invalid` / `aria-describedby` / error-timing
+  boilerplate around more than one field
+- you want errors gated by interaction (`'on-touch'`) or submission
+  (`'on-submit'`) instead of appearing immediately
+- you need non-blocking warnings alongside blocking errors
+- you want consistent field layout, hints, counters, and theming across an app
 
-`NgxSignalFormToolkit` is a convenience bundle that combines `FormRoot` +
-`NgxSignalForm` + `NgxSignalFormAutoAria` +
-`NgxSignalFormControlSemantics`. Import it instead of `FormRoot` separately.
-
-```typescript
-imports: [FormField, NgxSignalFormToolkit];
-```
-
-```html
-<form [formRoot]="myForm" ngxSignalForm errorStrategy="on-touch"></form>
-```
+Skip it (for now) when you're building a single tiny form with no accessibility
+or error-timing requirements — plain Signal Forms is enough, and the toolkit
+adds nothing you'd miss. Adopting it later requires no rewrites because your
+`form()` / `[formField]` code stays the same.
 
 ### Side-by-side: the same field, with and without the toolkit
 
@@ -89,6 +77,34 @@ The wrapper handles ARIA wiring, error timing, `role="alert"` vs
 `role="status"`, and hint/counter projection automatically. Angular still owns
 `form()`, `submit()`, validation, and field state — the toolkit removes the UX
 boilerplate around them.
+
+### Why `ngxSignalForm` is additive, not a replacement
+
+`NgxSignalForm` (selector: `form[formRoot][ngxSignalForm]`) is an **enhancer**.
+It activates on `<form>` elements that already have `[formRoot]` when you also
+add the `ngxSignalForm` attribute. It adds:
+
+1. **DI context** — child toolkit components (error display, field wrappers,
+   headless directives) access form state through `NGX_SIGNAL_FORM_CONTEXT`
+   without prop drilling.
+2. **Submitted status tracking** — derives
+   `'unsubmitted' → 'submitting' → 'submitted'` from Angular's native
+   `submitting()` signal, which Angular does not expose as a status.
+3. **Error display strategy** — the `[errorStrategy]` input controls when
+   validation feedback becomes visible (`'immediate'`, `'on-touch'`, or
+   `'on-submit'`).
+
+`NgxSignalFormToolkit` is a convenience bundle that combines `FormRoot` +
+`NgxSignalForm` + `NgxSignalFormAutoAria` +
+`NgxSignalFormControlSemantics`. Import it instead of `FormRoot` separately.
+
+```typescript
+imports: [FormField, NgxSignalFormToolkit];
+```
+
+```html
+<form [formRoot]="myForm" ngxSignalForm errorStrategy="on-touch"></form>
+```
 
 ---
 

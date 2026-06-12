@@ -6,7 +6,14 @@
 
 Most Angular Signal Forms projects need the same things around each field: a label, error messages that appear at the right time, hints, character counts, and proper ARIA linking. The form-field wrapper handles all of this in one component.
 
-If you need full control over markup, use [`/headless`](../headless/README.md) instead. If you only need standalone feedback components (error, grouped notification, hint, counter, summary) without wrapper layout, use [`/assistive`](../assistive/README.md).
+**Which surface do I need?**
+
+| You want…                                                      | Use                                         |
+| -------------------------------------------------------------- | ------------------------------------------- |
+| A styled single field: label, errors, hints, counts, ARIA      | `ngx-form-field-wrapper` (this entry point) |
+| Group-level rules or grouped summaries (cross-field, sections) | `ngx-form-fieldset` (this entry point)      |
+| Standalone feedback pieces in your own layout                  | [`/assistive`](../assistive/README.md)      |
+| Toolkit state with fully your own markup and design system     | [`/headless`](../headless/README.md)        |
 
 ## Import
 
@@ -107,6 +114,12 @@ export class ContactFormComponent {
 | `showMarkerWhen` | `'required' \| 'optional' \| 'none'`              | Config      | Which fields carry a visual marker             |
 | `requiredMarker` | `string`                                          | Config      | Marker text for required fields                |
 | `optionalMarker` | `string`                                          | Config      | Marker text for optional fields                |
+
+Only `formField` is required. Every "Inherited" / "Config" default resolves
+through the toolkit's settings cascade (field input → form context →
+component-scoped provider → app-wide provider → built-in default), so set
+these inputs only to override a specific field — see
+[how settings resolve](../README.md#how-settings-resolve-the-cascade).
 
 ### Appearances
 
