@@ -1,9 +1,4 @@
-import {
-  ApplicationRef,
-  ChangeDetectionStrategy,
-  Component,
-  signal,
-} from '@angular/core';
+import { ApplicationRef, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormField, form, required, schema } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
@@ -29,7 +24,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
   it('a labelled text field in its initial valid state has no violations', async () => {
     @Component({
       selector: 'ngx-test-a11y-valid',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [FormField, NgxSignalFormToolkit, NgxFormField],
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
@@ -68,7 +63,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
   it('a labelled text field showing a required error has no violations', async () => {
     @Component({
       selector: 'ngx-test-a11y-error',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [FormField, NgxSignalFormToolkit, NgxFormField],
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">

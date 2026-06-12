@@ -2,8 +2,8 @@ import {
   Component,
   computed,
   ElementRef,
-  input,
   inject,
+  input,
   viewChild,
 } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
@@ -202,7 +202,7 @@ export class TravelerStepComponent implements WizardStepInterface {
   }
 
   async validateAndFocus(): Promise<boolean> {
-    await submitWithWarnings(this.travelerForm, () => undefined);
+    await submitWithWarnings(this.travelerForm, () => Promise.resolve());
 
     if (this.travelerForm().invalid()) {
       focusFirstInvalid(this.travelerForm);

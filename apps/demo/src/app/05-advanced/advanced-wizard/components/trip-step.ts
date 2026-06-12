@@ -1,4 +1,4 @@
-import { Component, ElementRef, input, inject, viewChild } from '@angular/core';
+import { Component, ElementRef, inject, input, viewChild } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 
 import {
@@ -6,7 +6,6 @@ import {
   type FormFieldAppearance,
   type FormFieldOrientation,
   NgxSignalFormToolkit,
-  submitWithWarnings,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
@@ -448,18 +447,18 @@ export class TripStepComponent implements WizardStepInterface {
     this.store.setDestinations(this.#model().destinations);
   }
 
-  async validateAndFocus(): Promise<boolean> {
-    await submitWithWarnings(this.tripForm, async () => {});
+  validateAndFocus(): Promise<boolean> {
+    this.tripForm().markAsTouched();
 
     if (this.tripForm().invalid() || !this.hasDestinations()) {
       const focused = focusFirstInvalid(this.tripForm);
       if (!focused && !this.hasDestinations()) {
         this.addDestinationButton()?.nativeElement.focus();
       }
-      return false;
+      return Promise.resolve(false);
     }
 
-    return true;
+    return Promise.resolve(true);
   }
 
   focusHeading(): void {

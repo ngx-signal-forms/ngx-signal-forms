@@ -170,9 +170,8 @@ export class FieldsetFormComponent {
    */
   readonly fieldsetForm = form(this.#model, fieldsetDemoSchema, {
     submission: {
-      action: () => {
-        console.log('Fieldset form submitted:', this.#model());
-        return null;
+      action: async (field) => {
+        console.log('Fieldset form submitted:', field().value());
       },
       onInvalid: createOnInvalidHandler(),
     },

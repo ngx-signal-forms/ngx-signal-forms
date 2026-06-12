@@ -96,26 +96,6 @@ import { submissionSchema } from './submission-patterns.validations';
         </div>
       </div>
 
-      <!-- Server error display (if any) -->
-      @if (serverError()) {
-        <div
-          role="alert"
-          class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950"
-        >
-          <div class="flex items-start gap-3">
-            <span class="text-2xl">❌</span>
-            <div>
-              <h3 class="mb-1 font-semibold text-red-900 dark:text-red-100">
-                Submission Failed
-              </h3>
-              <p class="text-sm text-red-800 dark:text-red-200">
-                {{ serverError() }}
-              </p>
-            </div>
-          </div>
-        </div>
-      }
-
       <!-- Success message (if submission succeeded) -->
       @if (submissionSuccess()) {
         <div
@@ -319,8 +299,7 @@ export class SubmissionPatternsComponent {
   readonly registrationForm = form(this.#model, submissionSchema, {
     submission: {
       action: async (formData) => {
-        /// Clear previous states
-        this.serverError.set(null);
+        /// Clear previous state
         this.submissionSuccess.set(false);
 
         /// Simulate API delay (toolkit automatically shows 'submitting' state)
@@ -328,13 +307,15 @@ export class SubmissionPatternsComponent {
           setTimeout(resolve, 1500);
         });
 
-        /// Simulate server error if checkbox is checked
+        /// Simulate server error if checkbox is checked — return as a native
+        /// TreeValidationResult so Signal Forms attaches it to the username field
         if (formData().value().simulateServerError) {
           const username = formData().value().username;
-          this.serverError.set(
-            `Username "${username}" is already taken. Please choose another.`,
-          );
-          return;
+          return {
+            kind: 'usernameTaken',
+            message: `Username "${username}" is already taken. Please choose another.`,
+            fieldTree: formData.username,
+          };
         }
 
         /// Success - show success message and reset form
@@ -345,7 +326,8 @@ export class SubmissionPatternsComponent {
           confirmPassword: '',
           simulateServerError: false,
         });
-        this.registrationForm().reset();
+        formData().reset();
+        return;
       },
       onInvalid: createOnInvalidHandler(),
     },
@@ -360,8 +342,6 @@ export class SubmissionPatternsComponent {
     this.registrationForm().submitting(),
   );
 
-  /// Server error state for demonstration
-  protected readonly serverError = signal<string | null>(null);
   protected readonly submissionSuccess = signal(false);
 
   protected resetForm(): void {
@@ -375,7 +355,6 @@ export class SubmissionPatternsComponent {
     });
 
     /// Clear local state
-    this.serverError.set(null);
     this.submissionSuccess.set(false);
 
     /// Note: the derived submittedStatus returns to 'unsubmitted' after

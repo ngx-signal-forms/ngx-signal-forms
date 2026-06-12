@@ -1,14 +1,5 @@
-import {
-  Component,
-  computed,
-  effect,
-  linkedSignal,
-  signal,
-} from '@angular/core';
-import {
-  type FormFieldAppearance,
-  type FormFieldOrientation,
-} from '@ngx-signal-forms/toolkit';
+import { Component, computed, signal } from '@angular/core';
+import { type FormFieldAppearance } from '@ngx-signal-forms/toolkit';
 
 import {
   AppearanceToggleComponent,
@@ -20,8 +11,8 @@ import {
 } from '../../ui';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
+  createOrientationSelection,
   getOrientationLabel,
-  normalizeOrientationForAppearance,
 } from '../../ui/orientation-toggle';
 
 import { ADVANCED_WIZARD_CONTENT } from './advanced-wizard.content';
@@ -49,7 +40,7 @@ import { WizardContainerComponent } from './components/wizard-container';
         <div display-controls-primary class="grid gap-4">
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
           <ngx-orientation-toggle
-            [(value)]="selectedOrientationPreference"
+            [(value)]="selectedOrientation"
             [appearance]="selectedAppearance()"
           />
         </div>
@@ -91,31 +82,11 @@ import { WizardContainerComponent } from './components/wizard-container';
 export default class AdvancedWizardPage {
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
-  protected readonly selectedOrientationPreference =
-    signal<FormFieldOrientation>('vertical');
-  protected readonly selectedOrientation = linkedSignal<FormFieldOrientation>(
-    () => {
-      return normalizeOrientationForAppearance(
-        this.selectedAppearance(),
-        this.selectedOrientationPreference(),
-      );
-    },
+  protected readonly selectedOrientation = createOrientationSelection(
+    this.selectedAppearance,
   );
   protected readonly demonstratedContent = ADVANCED_WIZARD_CONTENT.demonstrated;
   protected readonly learningContent = ADVANCED_WIZARD_CONTENT.learning;
-  constructor() {
-    effect(() => {
-      const preferredOrientation = this.selectedOrientationPreference();
-      const normalizedOrientation = normalizeOrientationForAppearance(
-        this.selectedAppearance(),
-        preferredOrientation,
-      );
-
-      if (preferredOrientation !== normalizedOrientation) {
-        this.selectedOrientationPreference.set(normalizedOrientation);
-      }
-    });
-  }
 
   protected readonly currentControlChips = computed(() => [
     {

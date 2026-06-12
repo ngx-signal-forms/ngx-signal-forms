@@ -103,7 +103,7 @@ export class LabellessFieldsFormComponent {
 
   readonly labellessForm = form(this.#model, labellessFieldsSchema, {
     submission: {
-      action: () => null,
+      action: () => Promise.resolve(null),
       onInvalid: (formTree) => {
         this.#submitAttempted.set(true);
         this.#handleInvalidSubmission(formTree);

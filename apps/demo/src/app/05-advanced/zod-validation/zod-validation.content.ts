@@ -27,6 +27,17 @@ export const ZOD_VALIDATION_CONTENT = {
     title: 'When this baseline helps',
     sections: [
       {
+        title: '🧪 Try This (Schema-Driven Errors)',
+        items: [
+          '1. Click <strong>Save baseline form</strong> with everything empty → every field shows its Zod message at once ("First name is required", "Email is required", "Choose an account type", …)',
+          '2. Type <code>test</code> in <strong>Email</strong> → Tab away → error: "Enter a valid email address"',
+          '3. Type an 11-character <strong>Password</strong> like <code>abcdefghijk</code> → error: "Password must be at least 12 characters" → add one more character → error clears',
+          '4. Type only spaces in <strong>First name</strong> → Tab away → still "First name is required" (the schema trims input before checking)',
+          '5. Leave <strong>Account type</strong> or <strong>Country</strong> on "Choose one" and submit → "Choose an account type" / "Choose a country"',
+          '6. Fill every field validly and submit → success message; this page has no warnings — all feedback is blocking and comes from one Zod schema',
+        ],
+      },
+      {
         title: 'Use this pattern when',
         items: [
           '• You want a compact contract validator with clear required/format/length rules.',

@@ -34,6 +34,18 @@ export const LABELLESS_FIELDS_CONTENT: ExampleCardConfig = {
     title: 'Accessibility reminder',
     sections: [
       {
+        title: '🧪 Try This (On Touch mode)',
+        items: [
+          '1. Inspect the <strong>Search</strong> input (DevTools → Accessibility pane or a screen reader) → its accessible name "Search" comes from <code>aria-label</code>, not the placeholder, even though no &lt;label&gt; is rendered',
+          '2. Type <code>555</code> in the middle <strong>phone number</strong> field → Tab away → "Phone number must be at least 7 digits" renders under the labelless wrapper; leave the country code empty and Tab through it → "Country code is required"',
+          '3. Click the <strong>Amount</strong> input (initial value 0) → Tab away → "Amount must be greater than 0" appears below the currency input',
+          '4. Type <code>17</code> in <strong>Age</strong> → Tab → "Must be 18 or older"; type <code>121</code> → "Invalid age" — the error renders at full wrapper width even though the input is ~5 characters wide',
+          '5. Type <code>1234</code> in <strong>Zip</strong> → Tab → "Format: 12345 or 12345-6789" wraps wider than the narrow input',
+          '6. Type <code>12345</code> (5 digits) in the <strong>one-time passcode</strong> field → Tab → "Enter all six digits"',
+          '7. Switch <strong>orientation</strong> to horizontal in the page controls → the label column collapses for labelless fields; compare section 4\'s "with vs without label" pair across appearances',
+        ],
+      },
+      {
         title: 'Always provide an accessible name',
         items: [
           'Add <code>aria-label</code> to the input when no visible &lt;label&gt; is present',

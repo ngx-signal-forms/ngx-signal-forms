@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { CardComponent } from '../card/card';
 
 type DemonstratedCardConfig = {
@@ -31,7 +31,7 @@ type LearningCardConfig = {
  */
 @Component({
   selector: 'ngx-example-cards',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [CardComponent],
   templateUrl: './example-cards.html',
   styleUrl: './example-cards.scss',
