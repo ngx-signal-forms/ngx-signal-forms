@@ -164,6 +164,29 @@ provideNgxSignalFormsConfig({
 });
 ```
 
+This is the canonical list of configuration keys and their defaults.
+
+### How settings resolve (the cascade)
+
+Every presentation setting — error strategy, appearance, orientation, markers,
+control presets, renderers — resolves through **one precedence chain, most
+specific wins**:
+
+```
+field / component input
+  ?? form context (ngxSignalForm)
+  ?? component-scoped provider (…ForComponent)
+  ?? app-wide provider (provideNgxSignalForms…)
+  ?? built-in default
+```
+
+Inheritance merges with nullish `??` **per key**: override one key and the rest
+still inherit, and an explicit falsy value is respected (`requiredMarker: ''`
+clears the marker; omitting the key inherits it). Every "you can override this"
+in the sections below is a link in this chain — see the
+[root README](https://github.com/ngx-signal-forms/ngx-signal-forms#how-settings-resolve-the-cascade)
+for the adopter-level walkthrough.
+
 ### Field marking
 
 `showMarkerWhen` controls which fields carry a visual marker:
@@ -192,10 +215,11 @@ Per-field / per-legend overrides are available via the `showMarkerWhen`,
 `<ngx-form-field-wrapper>` and `<ngx-form-marking-legend>`.
 
 For component-scoped overrides: `provideNgxSignalFormsConfigForComponent()`.
-This provider merges with parent configuration property-by-property via
-`skipSelf` DI — child values win for keys they set, and every other key is
-inherited from the nearest ancestor `provideNgxSignalFormsConfig` call. The
-same inheritance contract applies to
+This is the component-scoped tier of the
+[cascade](#how-settings-resolve-the-cascade): the provider merges with parent
+configuration property-by-property via `skipSelf` DI — child values win for
+keys they set, and every other key is inherited from the nearest ancestor
+`provideNgxSignalFormsConfig` call. The same inheritance contract applies to
 `provideNgxSignalFormControlPresetsForComponent()`.
 
 ### Error messages
