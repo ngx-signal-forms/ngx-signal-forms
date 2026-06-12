@@ -19,13 +19,17 @@ The settings cascade resolves every presentation option — error strategy,
 appearance, orientation, markers, control presets, renderers — through one
 chain, most specific wins:
 
-```
+```text
 field / component input
   ?? form context (ngxSignalForm)
   ?? component-scoped provider (…ForComponent)
   ?? app-wide provider (provideNgxSignalForms…)
   ?? built-in default
 ```
+
+The `ngxSignalForm` tier carries only the form-owned settings — error strategy
+and submitted status. Appearance, orientation, markers, presets, and renderers
+skip it and resolve `input ?? provider config ?? default`.
 
 **Do**
 

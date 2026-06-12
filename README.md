@@ -197,13 +197,19 @@ These are the toolkit APIs most Angular apps reach for first. The rest of the pu
 Error strategy, appearance, orientation, markers, control presets, and renderers
 all resolve through **one precedence chain — most specific wins**:
 
-```
+```text
 field / component input
   ?? form context (ngxSignalForm)
   ?? component-scoped provider (…ForComponent)
   ?? app-wide provider (provideNgxSignalForms…)
   ?? built-in default
 ```
+
+The **form context (`ngxSignalForm`)** tier carries the settings a form owns
+centrally — **error strategy** and **submitted status**. Appearance, orientation,
+markers, control presets, and renderers have no form-context equivalent, so they
+skip that tier and resolve `input ?? provider config ?? default`. A setting only
+consults a tier that can supply it; missing tiers fall through.
 
 Inheritance merges with nullish `??`, not truthy coercion, so settings cascade
 **per key**: override one and the rest still inherit, and an explicit falsy value

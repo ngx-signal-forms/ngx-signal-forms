@@ -172,13 +172,19 @@ Every presentation setting — error strategy, appearance, orientation, markers,
 control presets, renderers — resolves through **one precedence chain, most
 specific wins**:
 
-```
+```text
 field / component input
   ?? form context (ngxSignalForm)
   ?? component-scoped provider (…ForComponent)
   ?? app-wide provider (provideNgxSignalForms…)
   ?? built-in default
 ```
+
+The **form context (`ngxSignalForm`)** tier carries only the form-owned settings
+— **error strategy** and **submitted status**. Appearance, orientation, markers,
+control presets, and renderers have no form-context equivalent, so they skip that
+tier and resolve `input ?? provider config ?? default`. A setting only consults a
+tier that can supply it; missing tiers fall through.
 
 Inheritance merges with nullish `??` **per key**: override one key and the rest
 still inherit, and an explicit falsy value is respected (`requiredMarker: ''`

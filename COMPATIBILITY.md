@@ -26,8 +26,9 @@ through an open peer range.
 
 Angular Signal Forms is **stable** as of Angular 22 — its core symbols carry
 `@publicApi 22.0` and follow Angular's normal semver guarantees within the major.
-(The only `@experimental` surface is the WebMCP tool integration, which the
-toolkit does not depend on.)
+(You may still see it called "experimental"; that reflected its pre-v22 preview,
+not the shipped v22 API — `form()`, validators, `markAsTouched()`, `submit()` —
+that the toolkit builds on.)
 
 That means:
 
