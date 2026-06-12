@@ -104,10 +104,17 @@ import {
         var(--ngx-signal-form-feedback-line-height, 1rem)
       );
       color: var(--ngx-form-field-hint-color, rgba(50, 65, 85, 0.75));
-      /* Align hint with input text start (no left padding offset) */
+      /*
+       * Hint shares the input's border-left edge (no padding offset) and reads
+       * from the start by default, vertically in line with the label above and
+       * the error below — the convention every accessible form guide follows
+       * (Gestalt proximity + LTR reading order). The assistive row still flips
+       * this to start-aligned when a right-slot (e.g. character count) is
+       * present; position="right" opts a single hint back to end-aligned.
+       */
       padding-inline-start: var(--ngx-form-field-hint-padding-inline-start, 0);
       padding-inline-end: var(--ngx-form-field-hint-padding-inline-end, 0);
-      text-align: var(--ngx-form-field-hint-align, right);
+      text-align: var(--ngx-form-field-hint-align, left);
     }
 
     :host([position='left']) {

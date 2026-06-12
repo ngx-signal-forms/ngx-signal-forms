@@ -59,7 +59,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
             type="text"
             [formField]="travelerForm.firstName"
           />
-          <ngx-form-field-hint position="left">
+          <ngx-form-field-hint>
             Enter your legal first name as shown on passport
           </ngx-form-field-hint>
         </ngx-form-field-wrapper>
@@ -88,7 +88,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
         >
           <label for="email"> Email <span class="text-red-500">*</span> </label>
           <input id="email" type="email" [formField]="travelerForm.email" />
-          <ngx-form-field-hint position="left">
+          <ngx-form-field-hint>
             We'll send booking confirmation to this address
           </ngx-form-field-hint>
         </ngx-form-field-wrapper>
@@ -143,7 +143,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
                 type="date"
                 [formField]="travelerForm.passportExpiry"
               />
-              <ngx-form-field-hint position="left">
+              <ngx-form-field-hint>
                 Must be valid 6 months after trip ends
               </ngx-form-field-hint>
             </ngx-form-field-wrapper>
@@ -190,6 +190,8 @@ export class TravelerStepComponent implements WizardStepInterface {
 
   // Expose form and computed signals to template
   readonly travelerForm = this.#travelerStepForm.form;
+  /** Surfaced for the wizard's live form-state debugger. */
+  readonly formTree = this.travelerForm;
   readonly #model = this.#travelerStepForm.model;
   readonly isValid = this.#travelerStepForm.isValid;
 

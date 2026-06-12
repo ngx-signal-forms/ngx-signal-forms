@@ -18,7 +18,7 @@
       [orientation]="orientation()"
       [formField]="reviewForm.productName"
     >
-      <label for="productName">Product Name *</label>
+      <label for="productName">Product Name</label>
       <input
         id="productName"
         type="text"
@@ -33,7 +33,7 @@
       [orientation]="orientation()"
       [formField]="reviewForm.rating"
     >
-      <label id="rating-label" for="rating">Product Rating *</label>
+      <label id="rating-label" for="rating">Product Rating</label>
       <ngx-rating-control
         id="rating"
         [labelledBy]="'rating-label'"
@@ -41,7 +41,7 @@
         [formField]="reviewForm.rating"
         [maxRating]="5"
       />
-      <ngx-form-field-hint position="left">
+      <ngx-form-field-hint>
         Use arrow keys or click to rate
       </ngx-form-field-hint>
     </ngx-form-field-wrapper>
@@ -53,7 +53,7 @@
       [formField]="reviewForm.serviceRating"
     >
       <label id="serviceRating-label" for="serviceRating"
-        >Service Quality *</label
+        >Service Quality</label
       >
       <ngx-rating-control
         id="serviceRating"
@@ -80,7 +80,7 @@
         [formField]="reviewForm.wouldRecommend"
         [maxRating]="2"
       />
-      <ngx-form-field-hint position="left">
+      <ngx-form-field-hint>
         ☆ = No, ★ = Maybe, ★★ = Definitely!
       </ngx-form-field-hint>
     </ngx-form-field-wrapper>
@@ -91,12 +91,12 @@
       fieldName="emailUpdates"
       [formField]="reviewForm.emailUpdates"
     >
-      <label for="emailUpdates">Email updates *</label>
+      <label for="emailUpdates">Email updates</label>
       <ngx-switch-control
         inputId="emailUpdates"
         [field]="reviewForm.emailUpdates"
       />
-      <ngx-form-field-hint position="left">
+      <ngx-form-field-hint>
         Stay in the loop with occasional product updates and release notes.
       </ngx-form-field-hint>
     </ngx-form-field-wrapper>
@@ -106,14 +106,14 @@
       [orientation]="orientation()"
       [formField]="reviewForm.shareReviewPublicly"
     >
-      <label for="shareReviewPublicly">Share this review publicly *</label>
+      <label for="shareReviewPublicly">Share this review publicly</label>
       <input
         id="shareReviewPublicly"
         type="checkbox"
         ngxSignalFormControl="checkbox"
         [formField]="reviewForm.shareReviewPublicly"
       />
-      <ngx-form-field-hint position="left">
+      <ngx-form-field-hint>
         Enable this to let us feature your review publicly.
       </ngx-form-field-hint>
     </ngx-form-field-wrapper>
@@ -125,7 +125,7 @@
       errorPlacement="top"
     >
       <label id="accessibilityAudit-label" for="accessibilityAudit"
-        >Accessibility Audit *</label
+        >Accessibility Audit</label
       >
       <ngx-rating-control
         id="accessibilityAudit"
@@ -135,7 +135,7 @@
         [formField]="reviewForm.accessibilityAudit"
         [maxRating]="5"
       />
-      <ngx-form-field-hint id="accessibilityAudit-hint" position="left">
+      <ngx-form-field-hint id="accessibilityAudit-hint">
         Rate how accessible and easy to navigate this experience felt.
       </ngx-form-field-hint>
     </ngx-form-field-wrapper>

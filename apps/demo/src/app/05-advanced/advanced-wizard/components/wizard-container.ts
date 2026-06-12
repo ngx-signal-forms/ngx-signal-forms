@@ -14,6 +14,7 @@ import {
   type FormFieldAppearance,
   type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 
 import {
   WizardComponent,
@@ -44,6 +45,7 @@ const MIN_DISPLAY_MS = 500;
     TravelerStepComponent,
     TripStepComponent,
     ReviewStepComponent,
+    NgxSignalFormDebugger,
   ],
   templateUrl: './wizard-container.html',
   styleUrl: './wizard-container.scss',
