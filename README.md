@@ -372,7 +372,7 @@ utilities. Always imported; all other entry points sit on top of it.
 
 Most-used exports: `NgxSignalFormToolkit`, `createOnInvalidHandler()`, `focusFirstInvalid()`, `warningError()`, `provideNgxSignalFormsConfig()`, `provideErrorMessages()`.
 
-Use the [core package docs](./packages/toolkit/README.md) for the full public API, including advanced providers, label/error registries, control presets, and manual ARIA helpers.
+Use the [core package docs](./packages/toolkit/README.md) for the full public API, including advanced providers, label/error registries, **control kinds and presets** (`ngxSignalFormControl`, `provideNgxSignalFormControlPresets` — see [`docs/CUSTOM_CONTROLS.md`](./docs/CUSTOM_CONTROLS.md) and [ADR-0001](./docs/decisions/0001-control-semantics-architecture.md)), and manual ARIA helpers.
 
 **[→ Core docs](./packages/toolkit/README.md)** ·
 **Demos:**
