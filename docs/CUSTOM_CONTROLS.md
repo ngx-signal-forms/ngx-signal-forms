@@ -30,6 +30,14 @@ Angular Signal Forms provides three interfaces for custom controls:
 | `FormUiControl`       | UI-only controls (no value, just focus/state/display)     |
 | `FormCheckboxControl` | Toggle/checkbox-like inputs                               |
 
+Pick in ten seconds:
+
+- The control **reads and writes a value** (text, number, selection, date) →
+  `FormValueControl<T>`. This is the right answer for almost every custom control.
+- The control is a **boolean toggle** with a checked state → `FormCheckboxControl`.
+- The control carries **no value at all** — it only needs focus, disabled, or
+  validation-state display (e.g. a composite's visual shell) → `FormUiControl`.
+
 ### FormValueControl\<T\>
 
 The primary interface for custom controls that read and write a value:
@@ -232,6 +240,56 @@ Rule of thumb:
 - if the widget already manages ARIA correctly, switch only the ARIA ownership to manual
 - if the widget also has its own visual treatment, `appearance="plain"` is often the right wrapper companion
 
+## Standalone imports are template-local (the most common gotcha)
+
+When a custom control renders the actual `[formField]` host element inside its
+own template, import the toolkit auto-ARIA support in that **same standalone
+component**. Getting this wrong fails silently: the form works, but the
+projected control gets no `aria-invalid` / `aria-describedby` wiring.
+
+Angular standalone imports are template-scoped:
+
+- imports on the parent form component apply to the parent template only
+- imports on the custom control component apply to the custom control template
+- parent imports do **not** flow automatically into child component templates
+
+That means this setup is correct for a switch-style custom control:
+
+```typescript
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { FormField, type FieldTree } from '@angular/forms/signals';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  selector: 'ngx-switch-control',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [FormField, NgxSignalFormToolkit],
+  template: `
+    <input
+      [id]="inputId()"
+      type="checkbox"
+      role="switch"
+      ngxSignalFormControl="switch"
+      [formField]="field()"
+    />
+  `,
+})
+export class SwitchControlComponent {
+  readonly field = input<FieldTree<boolean>>();
+  readonly inputId = input.required<string>();
+}
+```
+
+If you import `NgxSignalFormToolkit` only in the parent form component, the
+toolkit directives are available to the parent's `custom-controls.html`, but not
+to the `<input [formField]>` declared inside `SwitchControlComponent`.
+
+Use whichever import fits your component best:
+
+- `NgxSignalFormToolkit` when you want the bundle import
+- `NgxSignalFormAutoAria` when you only need auto-ARIA on the leaf
+  control
+
 ## FAQ
 
 ### Does RC2 switch alignment support break native switches?
@@ -277,55 +335,6 @@ No. The normal native switch case stays on the low-boilerplate path.
 
 The new APIs are there so custom and third-party controls can become more
 predictable without forcing extra ceremony onto native controls.
-
-### Standalone imports are template-local
-
-When a custom control renders the actual `[formField]` host element inside its
-own template, import the toolkit auto-ARIA support in that **same standalone
-component**.
-
-Angular standalone imports are template-scoped:
-
-- imports on the parent form component apply to the parent template only
-- imports on the custom control component apply to the custom control template
-- parent imports do **not** flow automatically into child component templates
-
-That means this setup is correct for a switch-style custom control:
-
-```typescript
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { FormField, type FieldTree } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-
-@Component({
-  selector: 'ngx-switch-control',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit],
-  template: `
-    <input
-      [id]="inputId()"
-      type="checkbox"
-      role="switch"
-      ngxSignalFormControl="switch"
-      [formField]="field()"
-    />
-  `,
-})
-export class SwitchControlComponent {
-  readonly field = input<FieldTree<boolean>>();
-  readonly inputId = input.required<string>();
-}
-```
-
-If you import `NgxSignalFormToolkit` only in the parent form component, the
-toolkit directives are available to the parent's `custom-controls.html`, but not
-to the `<input [formField]>` declared inside `SwitchControlComponent`.
-
-Use whichever import fits your component best:
-
-- `NgxSignalFormToolkit` when you want the bundle import
-- `NgxSignalFormAutoAria` when you only need auto-ARIA on the leaf
-  control
 
 ### focusBoundControl() and Focus
 

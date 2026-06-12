@@ -17,24 +17,29 @@ This document describes the compatibility contract for
 | ------------ | ------------------ | --------- | ------------------------------------------------------- |
 | `1.x`        | `>=22.0.0 <23.0.0` | Supported | Current peer dependency range for the published package |
 
-The `<23.0.0` ceiling is intentional. Angular Signal Forms is still experimental
-upstream, so major Angular releases may change the API in ways the toolkit must
-validate before republishing, rather than being silently allowed via an open peer
-range.
+The `<23.0.0` ceiling is intentional. Even though Signal Forms is stable within
+Angular 22, a new Angular **major** can still reshape the Signal Forms API, so the
+toolkit validates each major before republishing rather than allowing it silently
+through an open peer range.
 
 ## Angular Signal Forms status
 
-Angular currently marks Signal Forms as **experimental** upstream.
+Angular Signal Forms is **stable** as of Angular 22 — its core symbols carry
+`@publicApi 22.0` and follow Angular's normal semver guarantees within the major.
+(You may still see it called "experimental"; that reflected its pre-v22 preview,
+not the shipped v22 API — `form()`, validators, `markAsTouched()`, `submit()` —
+that the toolkit builds on.)
 
 That means:
 
-- Angular may still change the upstream Signal Forms API outside the normal
-  stability expectations that apply to stable Angular APIs.
-- Toolkit releases will treat upstream Angular Signal Forms changes as
-  compatibility constraints, even when the toolkit's own public API does not
-  change.
-- Consumers should pin Angular upgrades carefully and run their own validation
-  suite before adopting new Angular minors or majors.
+- Within `>=22.0.0 <23.0.0`, the upstream Signal Forms API is semver-protected;
+  the toolkit relies on stable APIs such as `markAsTouched()` and `submit()`.
+- A new Angular **major** can still change Signal Forms; toolkit releases treat
+  such changes as compatibility constraints, even when the toolkit's own public
+  API does not change.
+- Consumers should run their own validation suite before adopting a new Angular
+  **major**, but routine minors within v22 follow standard Angular stability
+  expectations.
 
 ## Vest compatibility
 

@@ -1,5 +1,10 @@
 # Package Architecture
 
+> **Audience:** contributors and the architecture-curious. If you're choosing
+> which entry point to import as a _user_ of the toolkit, start with the
+> [toolkit README](../packages/toolkit/README.md#entry-points) instead — this
+> document describes how the repository is organized, not how to pick an API.
+
 This document combines two documentation views:
 
 - **Explanation**: why the package is split into entry points.
@@ -24,17 +29,18 @@ while preserving tree-shaking and opt-in advanced surfaces.
 
 ### Role of each entry point
 
-- `@ngx-signal-forms/toolkit` — core directives, providers, and utilities.
-- `@ngx-signal-forms/toolkit/assistive` — styled feedback components.
-- `@ngx-signal-forms/toolkit/form-field` — wrapper + fieldset components.
-- `@ngx-signal-forms/toolkit/headless` — renderless state primitives.
-- `@ngx-signal-forms/toolkit/vest` — optional Vest convenience helpers.
+See the [toolkit README's entry-point table](../packages/toolkit/README.md#entry-points)
+for what each entry point is for and which one to pick — that table is the
+single maintained copy.
 
 ### Internal boundary
 
 `packages/toolkit/core` is intentionally **internal**. It powers public entry
-points but is stripped from the published exports map; consumers should import
-from documented public entry points only.
+points but is stripped from the published exports map. The practical
+consequence for consumers: `import … from '@ngx-signal-forms/toolkit/core'`
+fails to resolve against the published package, and anything reached that way
+in a source checkout carries no stability guarantee — import from the
+documented public entry points only.
 
 ---
 
@@ -59,41 +65,54 @@ packages/toolkit/
 │   ├── tokens.ts
 │   └── types.ts
 ├── assistive/
-│   ├── assistive-row.ts
 │   ├── character-count.ts
 │   ├── form-field-error.ts
-│   ├── form-field-notification.ts
 │   ├── form-field-error-summary.ts
+│   ├── form-field-notification.ts
+│   ├── form-marking-legend.ts
 │   ├── hint.ts
 │   ├── warning-error.ts
 │   └── index.ts
 ├── form-field/
 │   ├── form-field-wrapper.ts
+│   ├── form-field.utils.ts
 │   ├── form-fieldset.ts
 │   └── index.ts
 ├── headless/
 │   ├── src/
 │   │   ├── index.ts
 │   │   └── lib/
+│   │       ├── character-count.ts
+│   │       ├── create-error-message-signal.ts
 │   │       ├── error-state.ts
 │   │       ├── error-summary.ts
-│   │       ├── notification.ts
-│   │       ├── character-count.ts
-│   │       ├── fieldset.ts
 │   │       ├── field-name.ts
+│   │       ├── field-optionality.ts
+│   │       ├── fieldset.ts
+│   │       ├── notification.ts
 │   │       └── utilities.ts
 │   ├── ng-package.json
 │   └── README.md
 ├── vest/
 │   ├── src/
 │   │   ├── index.ts
-│   │   └── validate-vest.ts
+│   │   ├── validate-vest.ts
+│   │   └── vest-adapter.ts             # createVestAdapter() + VestSuiteAdapter contract
 │   ├── ng-package.json
 │   └── README.md
+├── scripts/
+│   └── strip-internal-exports.mjs      # post-build: hides /core from the exports map
+├── testing/
+│   └── a11y.ts                         # internal axe-core test helpers (not published)
 ├── index.ts
 ├── README.md
 └── package.json
 ```
+
+Only the five public entry points above ship to npm. `core/` exists in source
+but is not in the published exports map, and `docs/` (repo root) is not part
+of the package at all — which is why the package READMEs link to GitHub with
+absolute URLs.
 
 ### Import examples
 

@@ -89,7 +89,7 @@ No separate stylesheet import is required for the built-in wrapper and assistive
 
 **Supported browsers:** Last 2 major versions of Chrome, Edge, Firefox, and Safari (see [`.browserslistrc`](./.browserslistrc)). Accessibility behaviour is verified cross-engine (Chromium + Firefox) by automated axe-core scans in CI. The toolkit's styles ship as native CSS (no Sass) and use CSS nesting, `color-mix()`, and `:has()` for the outline appearance. The runtime floor for full visual fidelity is Chrome/Edge 112+, Firefox 121+, Safari 16.5+ — see the [theming guide](./packages/toolkit/form-field/THEMING.md#browser-support) for the per-feature breakdown.
 
-> Angular Signal Forms is still marked **experimental** upstream. The toolkit's own public API aims to stay stable — see [`COMPATIBILITY.md`](./COMPATIBILITY.md) before adopting a stable major in production.
+> Angular Signal Forms is **stable** as of Angular 22 (`@publicApi 22.0`). The toolkit's own public API also aims to stay stable; because each new Angular **major** can still reshape Signal Forms, the peer range is capped at `<23.0.0` until each major is validated — see [`COMPATIBILITY.md`](./COMPATIBILITY.md).
 
 ---
 
@@ -192,6 +192,31 @@ These are the toolkit APIs most Angular apps reach for first. The rest of the pu
 
 `'on-touch'` is the default path, which is why the first examples do not need `ngxSignalForm` yet.
 
+### How settings resolve (the cascade)
+
+Error strategy, appearance, orientation, markers, control presets, and renderers
+all resolve through **one precedence chain — most specific wins**:
+
+```text
+field / component input
+  ?? form context (ngxSignalForm)
+  ?? component-scoped provider (…ForComponent)
+  ?? app-wide provider (provideNgxSignalForms…)
+  ?? built-in default
+```
+
+The **form context (`ngxSignalForm`)** tier carries the settings a form owns
+centrally — **error strategy** and **submitted status**. Appearance, orientation,
+markers, control presets, and renderers have no form-context equivalent, so they
+skip that tier and resolve `input ?? provider config ?? default`. A setting only
+consults a tier that can supply it; missing tiers fall through.
+
+Inheritance merges with nullish `??`, not truthy coercion, so settings cascade
+**per key**: override one and the rest still inherit, and an explicit falsy value
+is respected (e.g. `requiredMarker: ''` clears the marker, while omitting the key
+inherits it). This is why the examples above need nothing but sensible defaults —
+and why every "you can override this" later in the doc points back to this order.
+
 ---
 
 ## Which part of the toolkit do I need?
@@ -215,6 +240,7 @@ advanced and specialized cases — pull them in when you hit that specific need.
 | Set app-wide defaults               | `provideNgxSignalFormsConfig`                                    | [`global-configuration`](./apps/demo/src/app/05-advanced/global-configuration)                                                                             |
 | Use with Angular Material           | Custom wrapper on `mat-form-field`                               | [`demo-material`](./apps/demo-material/README.md)                                                                                                          |
 | Use with Spartan Components         | Custom wrapper on `BrnField` + `helm`                            | [`demo-spartan`](./apps/demo-spartan/README.md)                                                                                                            |
+| Use with PrimeNG                    | Projected-control wrapper (`pInputText`, …)                      | [`demo-primeng`](./apps/demo-primeng/README.md)                                                                                                            |
 
 ---
 
@@ -290,6 +316,57 @@ With `ngxSignalForm`, auto-ARIA inherits the same form-level `errorStrategy` and
 
 ---
 
+## Warnings that don't block submit
+
+Warnings are first-class: non-blocking validation guidance that renders as
+`role="status"` and **lets submission through**. Create them with `warningError()`
+(it prefixes the `kind` with `warn:`), then submit past them with the
+warning-aware helpers — all exported from the package root.
+
+```typescript
+import { form, schema, minLength, validate } from '@angular/forms/signals';
+import {
+  warningError,
+  submitWithWarnings,
+  canSubmitWithWarnings,
+} from '@ngx-signal-forms/toolkit';
+
+protected readonly signupForm = form(
+  this.model,
+  schema((path) => {
+    minLength(path.password, 8, { message: 'Minimum 8 characters' }); // blocking
+    validate(path.password, (ctx) =>
+      ctx.value().length < 12
+        ? warningError('weak', 'Consider 12+ characters for better security')
+        : null,
+    ); // non-blocking
+  }),
+);
+
+// Runs the action only when no *blocking* errors remain; warnings pass through.
+// Touches all fields, waits for validation to settle, and guards double-submits.
+protected readonly submit = () =>
+  submitWithWarnings(this.signupForm, async () => {
+    await this.api.save(this.model());
+  });
+
+// Disable the button on blocking errors only — warnings stay submittable:
+protected readonly canSubmit = canSubmitWithWarnings(this.signupForm);
+```
+
+| Helper                               | Use it to…                                  |
+| ------------------------------------ | ------------------------------------------- |
+| `warningError(kind, message)`        | create a non-blocking `warn:` error         |
+| `isWarningError` / `isBlockingError` | classify a single error                     |
+| `splitByKind(errors)`                | split into `{ blocking, warnings }`         |
+| `hasOnlyWarnings(errors)`            | check no blocking errors remain             |
+| `canSubmitWithWarnings(form)`        | signal: safe to submit (ignores warnings)   |
+| `submitWithWarnings(form, action)`   | submit past warnings, double-submit guarded |
+
+**[→ Warnings support guide](./docs/WARNINGS_SUPPORT.md)**
+
+---
+
 ## Advanced entry points and guides
 
 The sections below are the next step after the common path above. If you only need accessible, themed field wrappers, you can stop at `NgxFormField` and come back here when a more advanced use case shows up.
@@ -301,7 +378,7 @@ utilities. Always imported; all other entry points sit on top of it.
 
 Most-used exports: `NgxSignalFormToolkit`, `createOnInvalidHandler()`, `focusFirstInvalid()`, `warningError()`, `provideNgxSignalFormsConfig()`, `provideErrorMessages()`.
 
-Use the [core package docs](./packages/toolkit/README.md) for the full public API, including advanced providers, label/error registries, control presets, and manual ARIA helpers.
+Use the [core package docs](./packages/toolkit/README.md) for the full public API, including advanced providers, label/error registries, **control kinds and presets** (`ngxSignalFormControl`, `provideNgxSignalFormControlPresets` — see [`docs/CUSTOM_CONTROLS.md`](./docs/CUSTOM_CONTROLS.md) and [ADR-0001](./docs/decisions/0001-control-semantics-architecture.md)), and manual ARIA helpers.
 
 **[→ Core docs](./packages/toolkit/README.md)** ·
 **Demos:**
@@ -327,7 +404,7 @@ Renderless directives and utility functions that give you toolkit-managed state 
 error visibility, aggregation, focus behavior, character counts — while you control
 every bit of markup and styling.
 
-Most-used exports: `NgxHeadlessToolkit`, `NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`, `NgxHeadlessFieldset`, `NgxHeadlessNotification`.
+Most-used exports: `NgxHeadlessToolkit`, `NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`, `NgxHeadlessFieldset`, `NgxHeadlessNotification`, `NgxHeadlessCharacterCount`, `NgxHeadlessFieldName`.
 
 Use the [headless package docs](./packages/toolkit/headless/README.md) for the lower-level factories and utility helpers such as `createErrorMessageSignal()` and `createFieldStateFlags()`.
 
@@ -418,7 +495,56 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
+### Per-component overrides
+
+Every `provide*` default can be overridden for a single component subtree with the
+`…ForComponent` variant. Thanks to the [cascade](#how-settings-resolve-the-cascade),
+you override one key and inherit the rest:
+
+```typescript
+import { provideNgxSignalFormsConfigForComponent } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  // Inherits defaultErrorStrategy, markers, etc. from the app — only flips appearance.
+  providers: [
+    provideNgxSignalFormsConfigForComponent({
+      defaultFormFieldAppearance: 'outline',
+    }),
+  ],
+})
+export class CheckoutForm {}
+```
+
+The same `…ForComponent` pattern exists for control presets
+(`provideNgxSignalFormControlPresetsForComponent`) and for swapping the error / hint
+UI (`provideFormFieldErrorRendererForComponent`,
+`provideFormFieldHintRendererForComponent`).
+
 **[→ Configuration reference](./packages/toolkit/README.md#configuration)** · **[→ CSS framework integration](./docs/CSS_FRAMEWORK_INTEGRATION.md)**
+
+---
+
+## Best practices
+
+The short version — each one is expanded with do/don't examples in the
+**[best practices guide](./docs/BEST_PRACTICES.md)**:
+
+1. **Configure at the highest tier that's true.** App-wide config for org
+   defaults, `…ForComponent` for feature exceptions, field inputs only for
+   one-offs — that's the [cascade](#how-settings-resolve-the-cascade) doing
+   the work.
+2. **Keep Angular as the single source of truth.** If removing a toolkit API
+   would change the submitted data, it's on the wrong side of the boundary.
+   Warnings are for ignorable advice; blocking rules stay errors.
+3. **Start native, zero API.** A stable `id` per control, DOM inference, and
+   auto-ARIA cover native fields; reach for `ngxSignalFormControl` and manual
+   ARIA only where inference can't go.
+4. **Pick the right surface — and one ARIA owner.** Wrapper for the 90% path,
+   fieldset for group rules, assistive/headless when you own the markup; never
+   two systems writing the same `aria-*` attributes.
+5. **Layer validation deliberately.** Angular validators for local rules,
+   Standard Schema for contracts, Vest for business policy — side by side in
+   one schema.
 
 ---
 
@@ -497,14 +623,15 @@ patterns.
 </details>
 
 <details>
-<summary><strong>Can I use this with Angular Material or Spartan Components?</strong></summary>
+<summary><strong>Can I use this with Angular Material, Spartan, or PrimeNG?</strong></summary>
 
-Yes — both have runnable reference wrappers in the repo:
+Yes — three runnable reference wrappers ship in the repo:
 
 - [`apps/demo-material`](./apps/demo-material/README.md) — wraps `<mat-form-field>` so Material keeps its `aria-describedby` ownership while the toolkit adds strategy + warnings + centralised DI.
 - [`apps/demo-spartan`](./apps/demo-spartan/README.md) — wraps Spartan's `BrnField` host directive and bridges `BrnFieldA11yService` so Brain's `aria-describedby` host binding consumes the toolkit's id composition.
+- [`apps/demo-primeng`](./apps/demo-primeng/README.md) — a projected-control wrapper where direct inputs (`pInputText`, …) use `NgxSignalFormAutoAria` like the canonical wrapper; host components such as `p-select` use a narrow compatibility shim until PrimeNG's own Signal Forms story matures.
 
-Both follow the four contracts in [`docs/CUSTOM_WRAPPERS.md`](./docs/CUSTOM_WRAPPERS.md) and mirror the surface of the future `@ngx-signal-forms/material` and `@ngx-signal-forms/spartan` packages (per [ADR-0002](./docs/decisions/0002-ngx-mat-forms-package-shape.md)).
+All three follow the four contracts in [`docs/CUSTOM_WRAPPERS.md`](./docs/CUSTOM_WRAPPERS.md); the Material and Spartan wrappers also mirror the surface of the future `@ngx-signal-forms/material` and `@ngx-signal-forms/spartan` packages (per [ADR-0002](./docs/decisions/0002-ngx-mat-forms-package-shape.md)).
 
 </details>
 
@@ -589,10 +716,11 @@ screen-reader testing) before claiming conformance.
 
 **Guides**
 
+- [Best practices](./docs/BEST_PRACTICES.md) — the five practices, with do/don't examples and a review checklist
 - [Angular vs toolkit](./docs/ANGULAR_VS_TOOLKIT.md) — what the toolkit adds, with a before/after example
 - [Validation strategies](./docs/VALIDATION_STRATEGY.md) — when to use Angular validators, Zod, or Vest
 - [Custom controls](./docs/CUSTOM_CONTROLS.md) — wrapping custom and third-party widgets
-- [Custom wrappers](./docs/CUSTOM_WRAPPERS.md) — DI contracts for third-party form-field wrappers (Material, PrimeNG, in-house) · runnable references: [`demo-material`](./apps/demo-material/README.md), [`demo-spartan`](./apps/demo-spartan/README.md)
+- [Custom wrappers](./docs/CUSTOM_WRAPPERS.md) — DI contracts for third-party form-field wrappers (Material, PrimeNG, in-house) · runnable references: [`demo-material`](./apps/demo-material/README.md), [`demo-spartan`](./apps/demo-spartan/README.md), [`demo-primeng`](./apps/demo-primeng/README.md)
 - [Complex and nested forms](./docs/COMPLEX_NESTED_FORMS.md) — fieldset aggregation, error summary, strategy inheritance
 - [Warnings support](./docs/WARNINGS_SUPPORT.md) — warning convention, error flow, message resolution
 - [CSS framework integration](./docs/CSS_FRAMEWORK_INTEGRATION.md) — Tailwind, Bootstrap, Material

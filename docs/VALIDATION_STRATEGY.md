@@ -34,7 +34,9 @@ For many real-world forms, the cleanest stack is:
 
 1. **Angular Signal Forms validators** for small local rules
 2. **Zod / OpenAPI Standard Schema** for contract-level validation
-3. **Vest** for higher-order business rules and `warn()` guidance
+3. **Vest** for higher-order business rules and `warn()` guidance — Vest's
+   `warn()` flows into the toolkit's non-blocking warning rendering; see
+   [`WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md)
 
 Examples:
 
