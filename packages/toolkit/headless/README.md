@@ -250,7 +250,33 @@ humanizeFieldPath('address.postalCode'); // 'Address / Postal code'
 
 // Unique ID generation
 createUniqueId('field'); // 'field-1', 'field-2', ...
+
+// Error-summary building blocks (what NgxHeadlessErrorSummary uses internally)
+toErrorSummaryEntry(data); // ErrorSummaryEntryData → entry with focus()
+focusBoundControlFromError(error); // focus the control bound to an error
+
+// Required/optional leaf summary for a form tree (drives marking legends)
+const summary = summarizeFieldOptionality(formTree); // { hasRequired, hasOptional }
+const reactive = createFieldOptionalitySummary(() => this.formTree()); // computed signals
 ```
+
+## Custom-wrapper ARIA factories (re-exported from core)
+
+This entry point also re-exports the pure factories that
+[`docs/CUSTOM_WRAPPERS.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_WRAPPERS.md)
+teaches for hosts that own their own ARIA instead of using
+`NgxSignalFormAutoAria`:
+
+| Factory                            | Produces                                                            |
+| ---------------------------------- | ------------------------------------------------------------------- |
+| `createAriaInvalidSignal(...)`     | Strategy-aware `aria-invalid` signal                                |
+| `createAriaRequiredSignal(...)`    | `aria-required` signal from field state                             |
+| `createAriaDescribedBySignal(...)` | Composed `aria-describedby` chain (errors, warnings, hints)         |
+| `createHintIdsSignal(...)`         | Hint-id collection for the described-by chain                       |
+| `createAriaDescribedByBridge(...)` | Bridge for hosts whose described-by attribute another library owns  |
+| `createFieldNameResolver(...)`     | Field-name cascade (explicit → label `for` (opt-in) → control `id`) |
+| `createErrorRendererInputs(...)`   | Input set for driving a custom error renderer                       |
+| `toHintDescriptors(...)`           | Normalize projected hints for registry registration                 |
 
 ## Related documentation
 
