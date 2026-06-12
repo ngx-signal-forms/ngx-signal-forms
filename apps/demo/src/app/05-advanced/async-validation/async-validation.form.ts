@@ -265,12 +265,12 @@ export class AsyncValidationComponent {
   readonly #model = signal({ username: '', usernameOnBlur: '' });
   readonly regForm = form(this.#model, registrationSchema, {
     submission: {
-      action: async (data) => {
+      action: async (field) => {
         // Simulate actual registration delay
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 1000);
         });
-        console.log('Registered:', data());
+        console.log('Registered:', field().value());
       },
       onInvalid: createOnInvalidHandler(),
     },

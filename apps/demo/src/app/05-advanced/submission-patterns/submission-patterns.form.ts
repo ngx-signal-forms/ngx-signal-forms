@@ -327,7 +327,7 @@ export class SubmissionPatternsComponent {
           simulateServerError: false,
         });
         formData().reset();
-        return null; // No server errors
+        return;
       },
       onInvalid: createOnInvalidHandler(),
     },

@@ -80,11 +80,11 @@ export class ErrorMessageSignalComponent {
 
   readonly passwordForm = form(this.#model, passwordSchema, {
     submission: {
-      action: async (data) => {
+      action: async (field) => {
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 400);
         });
-        console.log('Submitted:', data());
+        console.log('Submitted:', field().value());
       },
       onInvalid: createOnInvalidHandler(),
     },

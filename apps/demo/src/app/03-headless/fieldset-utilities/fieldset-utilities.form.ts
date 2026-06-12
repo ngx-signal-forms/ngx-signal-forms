@@ -115,11 +115,11 @@ export class HeadlessFieldsetUtilitiesComponent {
   readonly #model = signal(this.#initialData);
   readonly deliveryForm = form(this.#model, deliverySchema, {
     submission: {
-      action: async (data) => {
+      action: async (field) => {
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 600);
         });
-        console.log('Delivery request submitted:', data());
+        console.log('Delivery request submitted:', field().value());
       },
       onInvalid: createOnInvalidHandler(),
     },

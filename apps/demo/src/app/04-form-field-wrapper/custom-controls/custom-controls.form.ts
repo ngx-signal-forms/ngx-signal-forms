@@ -106,9 +106,8 @@ export class CustomControlsFormComponent {
    */
   readonly reviewForm = form(this.#model, customControlsSchema, {
     submission: {
-      action: () => {
-        console.log('Review submitted:', this.#model());
-        return Promise.resolve(null);
+      action: async (field) => {
+        console.log('Review submitted:', field().value());
       },
       onInvalid: (formTree) => {
         this.#submitAttempted.set(true);

@@ -436,10 +436,9 @@ export class ErrorDisplayModesFormComponent {
   /** Form instance using Signal Forms */
   readonly productForm = form(this.#model, productFeedbackSchema, {
     submission: {
-      action: () => {
+      action: async () => {
         this.#submissionAttempted.set(true);
         alert('Thank you for your feedback!');
-        return Promise.resolve(null); // No server errors
       },
       onInvalid: createOnInvalidHandler({
         afterInvalid: () => {

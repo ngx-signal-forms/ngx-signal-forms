@@ -205,12 +205,12 @@ export class ComplexFormsComponent {
   /** Create form with validation schema */
   readonly complexForm = form(this.#model, complexFormSchema, {
     submission: {
-      action: async () => {
+      action: async (field) => {
         // Simulate async operation
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 500);
         });
-        const submitted = this.#model();
+        const submitted = field().value();
         console.log('Complex form submitted:', {
           ...submitted,
           credentials: {
