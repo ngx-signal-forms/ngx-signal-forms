@@ -234,6 +234,7 @@ advanced and specialized cases — pull them in when you hit that specific need.
 | Set app-wide defaults               | `provideNgxSignalFormsConfig`                                    | [`global-configuration`](./apps/demo/src/app/05-advanced/global-configuration)                                                                             |
 | Use with Angular Material           | Custom wrapper on `mat-form-field`                               | [`demo-material`](./apps/demo-material/README.md)                                                                                                          |
 | Use with Spartan Components         | Custom wrapper on `BrnField` + `helm`                            | [`demo-spartan`](./apps/demo-spartan/README.md)                                                                                                            |
+| Use with PrimeNG                    | Projected-control wrapper (`pInputText`, …)                      | [`demo-primeng`](./apps/demo-primeng/README.md)                                                                                                            |
 
 ---
 
@@ -592,14 +593,15 @@ patterns.
 </details>
 
 <details>
-<summary><strong>Can I use this with Angular Material or Spartan Components?</strong></summary>
+<summary><strong>Can I use this with Angular Material, Spartan, or PrimeNG?</strong></summary>
 
-Yes — both have runnable reference wrappers in the repo:
+Yes — three runnable reference wrappers ship in the repo:
 
 - [`apps/demo-material`](./apps/demo-material/README.md) — wraps `<mat-form-field>` so Material keeps its `aria-describedby` ownership while the toolkit adds strategy + warnings + centralised DI.
 - [`apps/demo-spartan`](./apps/demo-spartan/README.md) — wraps Spartan's `BrnField` host directive and bridges `BrnFieldA11yService` so Brain's `aria-describedby` host binding consumes the toolkit's id composition.
+- [`apps/demo-primeng`](./apps/demo-primeng/README.md) — a projected-control wrapper where direct inputs (`pInputText`, …) use `NgxSignalFormAutoAria` like the canonical wrapper; host components such as `p-select` use a narrow compatibility shim until PrimeNG's own Signal Forms story matures.
 
-Both follow the four contracts in [`docs/CUSTOM_WRAPPERS.md`](./docs/CUSTOM_WRAPPERS.md) and mirror the surface of the future `@ngx-signal-forms/material` and `@ngx-signal-forms/spartan` packages (per [ADR-0002](./docs/decisions/0002-ngx-mat-forms-package-shape.md)).
+All three follow the four contracts in [`docs/CUSTOM_WRAPPERS.md`](./docs/CUSTOM_WRAPPERS.md); the Material and Spartan wrappers also mirror the surface of the future `@ngx-signal-forms/material` and `@ngx-signal-forms/spartan` packages (per [ADR-0002](./docs/decisions/0002-ngx-mat-forms-package-shape.md)).
 
 </details>
 
@@ -687,7 +689,7 @@ screen-reader testing) before claiming conformance.
 - [Angular vs toolkit](./docs/ANGULAR_VS_TOOLKIT.md) — what the toolkit adds, with a before/after example
 - [Validation strategies](./docs/VALIDATION_STRATEGY.md) — when to use Angular validators, Zod, or Vest
 - [Custom controls](./docs/CUSTOM_CONTROLS.md) — wrapping custom and third-party widgets
-- [Custom wrappers](./docs/CUSTOM_WRAPPERS.md) — DI contracts for third-party form-field wrappers (Material, PrimeNG, in-house) · runnable references: [`demo-material`](./apps/demo-material/README.md), [`demo-spartan`](./apps/demo-spartan/README.md)
+- [Custom wrappers](./docs/CUSTOM_WRAPPERS.md) — DI contracts for third-party form-field wrappers (Material, PrimeNG, in-house) · runnable references: [`demo-material`](./apps/demo-material/README.md), [`demo-spartan`](./apps/demo-spartan/README.md), [`demo-primeng`](./apps/demo-primeng/README.md)
 - [Complex and nested forms](./docs/COMPLEX_NESTED_FORMS.md) — fieldset aggregation, error summary, strategy inheritance
 - [Warnings support](./docs/WARNINGS_SUPPORT.md) — warning convention, error flow, message resolution
 - [CSS framework integration](./docs/CSS_FRAMEWORK_INTEGRATION.md) — Tailwind, Bootstrap, Material
