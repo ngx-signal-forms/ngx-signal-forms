@@ -45,7 +45,7 @@ pnpm add @ngx-signal-forms/toolkit vest@6.2.7
 > library. Use any `6.2.x` release or upgrade to `>=6.3.1`, where the
 > regression was fixed.
 
-If you are migrating from `ngx-vest-forms`, see [`docs/MIGRATING_FROM_NGX_VEST_FORMS.md`](../../docs/MIGRATING_FROM_NGX_VEST_FORMS.md) and the official [Vest 6 upgrade guide](https://vestjs.dev/docs/upgrade_guide).
+If you are migrating from `ngx-vest-forms`, see [`docs/MIGRATING_FROM_NGX_VEST_FORMS.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_FROM_NGX_VEST_FORMS.md) and the official [Vest 6 upgrade guide](https://vestjs.dev/docs/upgrade_guide).
 
 ## Import
 
@@ -410,10 +410,10 @@ Angular treats every `ValidationError` as blocking. For forms that should allow 
 ## Related documentation
 
 - [Toolkit core](../README.md) — error strategies, warning utilities
-- [Validation strategies](../../docs/VALIDATION_STRATEGY.md) — when to use Angular, Zod, or Vest
-- [Migrating from ngx-vest-forms](../../docs/MIGRATING_FROM_NGX_VEST_FORMS.md)
+- [Validation strategies](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/VALIDATION_STRATEGY.md) — when to use Angular, Zod, or Vest
+- [Migrating from ngx-vest-forms](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_FROM_NGX_VEST_FORMS.md)
 - [Vest 5.x → 6.x upgrade guide](https://vestjs.dev/docs/upgrade_guide) — official Vest migration docs
-- Demos: [vest-validation](../../apps/demo/src/app/05-advanced/vest-validation), [zod-vest-validation](../../apps/demo/src/app/05-advanced/zod-vest-validation)
+- Demos: [vest-validation](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/05-advanced/vest-validation), [zod-vest-validation](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/05-advanced/zod-vest-validation)
 
 ## License
 

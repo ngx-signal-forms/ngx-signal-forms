@@ -164,7 +164,7 @@ For non-native controls (sliders, date pickers, composites), declare control sem
 </ngx-form-field-wrapper>
 ```
 
-A native `input[type="checkbox"][role="switch"]` is recognized as a switch automatically — no extra directives needed. See [Custom Controls](../../docs/CUSTOM_CONTROLS.md) for detailed guidance.
+A native `input[type="checkbox"][role="switch"]` is recognized as a switch automatically — no extra directives needed. See [Custom Controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) for detailed guidance.
 
 ### Warning support
 
@@ -179,7 +179,7 @@ Warning **display timing** is independent from error timing. The projected
 `NgxFormFieldError` accepts a `warningStrategy` input (default
 `'immediate'`) so advisory messages stay visible even when errors are gated
 by `'on-touch'` or `'on-submit'`. See
-[`WARNINGS_SUPPORT.md`](../../docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy).
+[`WARNINGS_SUPPORT.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy).
 
 ## Fieldset component
 
@@ -422,8 +422,8 @@ Quick example:
 - [Toolkit core](../README.md) — error strategies, ARIA, configuration
 - [Assistive components](../assistive/README.md) — standalone error, grouped notification, hint, counter, and summary components
 - [Headless primitives](../headless/README.md) — renderless directives for full custom UI
-- [Custom controls](../../docs/CUSTOM_CONTROLS.md) — wrapping sliders, date pickers, and third-party widgets
-- [CSS framework integration](../../docs/CSS_FRAMEWORK_INTEGRATION.md) — Tailwind, Bootstrap, Material
+- [Custom controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) — wrapping sliders, date pickers, and third-party widgets
+- [CSS framework integration](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CSS_FRAMEWORK_INTEGRATION.md) — Tailwind, Bootstrap, Material
 
 ## License
 

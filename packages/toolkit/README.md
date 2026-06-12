@@ -2,6 +2,8 @@
 
 > Core directives, providers, and utilities for Angular Signal Forms — form-level context, error strategies, automatic ARIA, submission helpers, and warning support.
 
+**[🚀 Live demo](https://ngx-signal-forms.github.io/ngx-signal-forms/)** · **[📖 Full documentation (GitHub)](https://github.com/ngx-signal-forms/ngx-signal-forms#readme)**
+
 ## Why this entry point exists
 
 Angular Signal Forms provides the form model, validation, and field state. The core toolkit builds on top with three things Angular intentionally leaves to you:
@@ -144,7 +146,7 @@ The directive class keeps its `Directive` suffix to avoid colliding with the
 
 Built-in kinds: `input-like`, `standalone-field-like`, `switch`, `checkbox`, `radio-group`, `slider`, `composite`.
 
-See [Custom Controls](../../docs/CUSTOM_CONTROLS.md) for detailed guidance.
+See [Custom Controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) for detailed guidance.
 
 ## Configuration
 
@@ -324,7 +326,7 @@ provideFieldLabels(() => {
 > Warning **display timing** is controlled separately from error timing via the
 > `warningStrategy` input on `NgxFormFieldError` (default:
 > `'immediate'`). See
-> [`WARNINGS_SUPPORT.md`](../../docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy)
+> [`WARNINGS_SUPPORT.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy)
 > and the [assistive README](./assistive/README.md#ngxformfielderrorcomponent)
 > for usage.
 
@@ -446,14 +448,14 @@ warning elements, matching every other toolkit surface.
 
 ## Related documentation
 
-- [Root README](../../README.md) — overview, installation, quick start
+- [Root README](https://github.com/ngx-signal-forms/ngx-signal-forms#readme) — overview, installation, quick start
 - [Form field wrapper](./form-field/README.md) — pre-styled wrapper component
 - [Assistive components](./assistive/README.md) — standalone error, grouped notification, hint, counter, and summary components
 - [Headless primitives](./headless/README.md) — renderless directives for custom UI
 - [Vest integration](./vest/README.md) — Vest adapter
 - [Theming guide](./form-field/THEMING.md) — CSS custom properties
-- [Custom controls](../../docs/CUSTOM_CONTROLS.md) — wrapping custom and third-party widgets
-- [Warnings support](../../docs/WARNINGS_SUPPORT.md) — warning convention and flow
+- [Custom controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) — wrapping custom and third-party widgets
+- [Warnings support](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md) — warning convention and flow
 
 ## License
 
