@@ -65,37 +65,45 @@ packages/toolkit/
 │   ├── tokens.ts
 │   └── types.ts
 ├── assistive/
-│   ├── assistive-row.ts
 │   ├── character-count.ts
 │   ├── form-field-error.ts
-│   ├── form-field-notification.ts
 │   ├── form-field-error-summary.ts
+│   ├── form-field-notification.ts
+│   ├── form-marking-legend.ts
 │   ├── hint.ts
 │   ├── warning-error.ts
 │   └── index.ts
 ├── form-field/
 │   ├── form-field-wrapper.ts
+│   ├── form-field.utils.ts
 │   ├── form-fieldset.ts
 │   └── index.ts
 ├── headless/
 │   ├── src/
 │   │   ├── index.ts
 │   │   └── lib/
+│   │       ├── character-count.ts
+│   │       ├── create-error-message-signal.ts
 │   │       ├── error-state.ts
 │   │       ├── error-summary.ts
-│   │       ├── notification.ts
-│   │       ├── character-count.ts
-│   │       ├── fieldset.ts
 │   │       ├── field-name.ts
+│   │       ├── field-optionality.ts
+│   │       ├── fieldset.ts
+│   │       ├── notification.ts
 │   │       └── utilities.ts
 │   ├── ng-package.json
 │   └── README.md
 ├── vest/
 │   ├── src/
 │   │   ├── index.ts
-│   │   └── validate-vest.ts
+│   │   ├── validate-vest.ts
+│   │   └── vest-adapter.ts             # createVestAdapter() + VestSuiteAdapter contract
 │   ├── ng-package.json
 │   └── README.md
+├── scripts/
+│   └── strip-internal-exports.mjs      # post-build: hides /core from the exports map
+├── testing/
+│   └── a11y.ts                         # internal axe-core test helpers (not published)
 ├── index.ts
 ├── README.md
 └── package.json

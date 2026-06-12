@@ -211,6 +211,10 @@ const shared = sharedVestAdapter;
 | `runVestSuite(params)` | Run the suite once through the shared cache. Returns the cached run for an identical `(suite, fieldTree, value, focus)` tuple, or a fresh run when any of them change. |
 | `invalidate(suite)`    | Drop the shared run cache for a suite (the `resetOnDestroy` teardown hook calls this).                                                                                 |
 
+The companion option/shape types are also exported for typing your own
+integrations: `VestAdapterOptions` (for `createVestAdapter()`),
+`VestRegisterOptions`, `RunVestSuiteParams`, and `RunVestSuiteResult`.
+
 #### Example: a custom validator consuming the adapter
 
 Use `runVestSuite` inside your own `validateTree` callback when you want full

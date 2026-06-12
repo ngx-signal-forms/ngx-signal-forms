@@ -127,6 +127,10 @@ Helper text below inputs. Automatically linked to the input via `aria-describedb
 <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
 ```
 
+Optional `position` input (`'left' | 'right'`): alignment within the assistive
+row. When omitted, hints right-align — or left-align when a character count
+shares the row.
+
 ### NgxFormFieldCharacterCount
 
 Character counter with progressive color states (ok → warning → danger → exceeded).

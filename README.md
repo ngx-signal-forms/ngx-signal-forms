@@ -398,7 +398,7 @@ Renderless directives and utility functions that give you toolkit-managed state 
 error visibility, aggregation, focus behavior, character counts — while you control
 every bit of markup and styling.
 
-Most-used exports: `NgxHeadlessToolkit`, `NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`, `NgxHeadlessFieldset`, `NgxHeadlessNotification`.
+Most-used exports: `NgxHeadlessToolkit`, `NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`, `NgxHeadlessFieldset`, `NgxHeadlessNotification`, `NgxHeadlessCharacterCount`, `NgxHeadlessFieldName`.
 
 Use the [headless package docs](./packages/toolkit/headless/README.md) for the lower-level factories and utility helpers such as `createErrorMessageSignal()` and `createFieldStateFlags()`.
 
