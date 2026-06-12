@@ -159,7 +159,7 @@ Signals: `isValid()`, `isInvalid()`, `isTouched()`, `isDirty()`, `isPending()`, 
 
 ### NgxHeadlessNotification
 
-Selector: `[ngxHeadlessNotification]` · Export: `notification`
+Selector: `[ngxHeadlessNotification]` · Export: `notificationState`
 
 Tone-aware grouped validation state for custom notification cards and summary blocks.
 

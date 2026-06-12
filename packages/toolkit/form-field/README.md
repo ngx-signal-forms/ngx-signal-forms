@@ -104,16 +104,17 @@ export class ContactFormComponent {
 
 `ngx-form-field-wrapper` — wraps a form field with automatic error display, labels, hints, prefix/suffix slots, and ARIA.
 
-| Input            | Type                                              | Default     | Description                                    |
-| ---------------- | ------------------------------------------------- | ----------- | ---------------------------------------------- |
-| `formField`      | `FieldTree` (required)                            | —           | The form field to wrap                         |
-| `fieldName`      | `string`                                          | From `id`   | Explicit field name; derived from control `id` |
-| `appearance`     | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style variant                           |
-| `strategy`       | `ErrorDisplayStrategy`                            | Inherited   | Override error display strategy                |
-| `errorPlacement` | `'top' \| 'bottom'`                               | `'bottom'`  | Render errors above or below the control       |
-| `showMarkerWhen` | `'required' \| 'optional' \| 'none'`              | Config      | Which fields carry a visual marker             |
-| `requiredMarker` | `string`                                          | Config      | Marker text for required fields                |
-| `optionalMarker` | `string`                                          | Config      | Marker text for optional fields                |
+| Input            | Type                                              | Default     | Description                                      |
+| ---------------- | ------------------------------------------------- | ----------- | ------------------------------------------------ |
+| `formField`      | `FieldTree` (required)                            | —           | The form field to wrap                           |
+| `fieldName`      | `string`                                          | From `id`   | Explicit field name; derived from control `id`   |
+| `appearance`     | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style variant                             |
+| `orientation`    | `'vertical' \| 'horizontal' \| 'inherit'`         | `'inherit'` | Label position (see [Orientation](#orientation)) |
+| `strategy`       | `ErrorDisplayStrategy`                            | Inherited   | Override error display strategy                  |
+| `errorPlacement` | `'top' \| 'bottom'`                               | `'bottom'`  | Render errors above or below the control         |
+| `showMarkerWhen` | `'required' \| 'optional' \| 'none'`              | Config      | Which fields carry a visual marker               |
+| `requiredMarker` | `string`                                          | Config      | Marker text for required fields                  |
+| `optionalMarker` | `string`                                          | Config      | Marker text for optional fields                  |
 
 Only `formField` is required. Every "Inherited" / "Config" default resolves
 through the toolkit's settings cascade (field input → form context →
