@@ -518,6 +518,30 @@ UI (`provideFormFieldErrorRendererForComponent`,
 
 ---
 
+## Best practices
+
+The short version — each one is expanded with do/don't examples in the
+**[best practices guide](./docs/BEST_PRACTICES.md)**:
+
+1. **Configure at the highest tier that's true.** App-wide config for org
+   defaults, `…ForComponent` for feature exceptions, field inputs only for
+   one-offs — that's the [cascade](#how-settings-resolve-the-cascade) doing
+   the work.
+2. **Keep Angular as the single source of truth.** If removing a toolkit API
+   would change the submitted data, it's on the wrong side of the boundary.
+   Warnings are for ignorable advice; blocking rules stay errors.
+3. **Start native, zero API.** A stable `id` per control, DOM inference, and
+   auto-ARIA cover native fields; reach for `ngxSignalFormControl` and manual
+   ARIA only where inference can't go.
+4. **Pick the right surface — and one ARIA owner.** Wrapper for the 90% path,
+   fieldset for group rules, assistive/headless when you own the markup; never
+   two systems writing the same `aria-*` attributes.
+5. **Layer validation deliberately.** Angular validators for local rules,
+   Standard Schema for contracts, Vest for business policy — side by side in
+   one schema.
+
+---
+
 ## FAQ
 
 <details>
@@ -686,6 +710,7 @@ screen-reader testing) before claiming conformance.
 
 **Guides**
 
+- [Best practices](./docs/BEST_PRACTICES.md) — the five practices, with do/don't examples and a review checklist
 - [Angular vs toolkit](./docs/ANGULAR_VS_TOOLKIT.md) — what the toolkit adds, with a before/after example
 - [Validation strategies](./docs/VALIDATION_STRATEGY.md) — when to use Angular validators, Zod, or Vest
 - [Custom controls](./docs/CUSTOM_CONTROLS.md) — wrapping custom and third-party widgets
