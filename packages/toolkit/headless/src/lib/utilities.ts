@@ -617,11 +617,16 @@ export interface ErrorSummaryEntryData {
 }
 
 /**
- * Duck-typed access to `ValidationError.WithFieldTree` properties.
+ * Minimal structural view of the `fieldTree` members this module reads off an
+ * `errorSummary()` entry (`name()`, `focusBoundControl()`).
  *
- * Angular Signal Forms' `errorSummary()` returns errors with an optional
- * `fieldTree` reference, but the public `ValidationError` type doesn't
- * include it. This type bridges the gap via duck-typing.
+ * As of Angular 22.0.0 the framework *does* export `ValidationError.WithFieldTree`
+ * publicly (the Vest adapter consumes it directly), so this is no longer bridging
+ * a missing type. It is kept as a deliberately narrow, **all-optional** structural
+ * type because these helpers accept a bare `ValidationError`: errors emitted by
+ * custom validators / Vest need not carry a `fieldTree`, so every access stays
+ * guarded at runtime rather than asserting the framework's non-optional
+ * `WithFieldTree` shape.
  */
 type ValidationErrorWithFieldTree = ValidationError & {
   fieldTree?: () =>
