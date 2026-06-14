@@ -38,6 +38,10 @@
   --_fieldset-clr-warning-strong: #92400e;
 
   --_fieldset-bg-danger-soft: #fdebeb;
+  /* Expo surface/danger — the saturated tint for an invalid grouped *surface*
+     (the radio/checkbox group box), one step stronger than the danger-soft
+     (surface/danger-light) used by the grouped summary notification card. */
+  --_fieldset-bg-danger-surface: #fbdddd;
   --_fieldset-bg-warning-soft: #fff6e8;
   --_fieldset-border-danger-soft: rgb(219 24 24 / 0.18);
   --_fieldset-border-warning-soft: rgb(161 98 7 / 0.2);
@@ -250,7 +254,7 @@
   );
   --_fieldset-invalid-bg: var(
     --ngx-signal-form-fieldset-invalid-bg,
-    var(--_fieldset-notification-error-bg)
+    var(--_fieldset-bg-danger-surface)
   );
   --_fieldset-invalid-surface-bg: var(
     --ngx-signal-form-fieldset-invalid-surface-bg,

@@ -234,7 +234,11 @@
 :host {
   /* Layout */
   --_gap: var(--ngx-form-field-gap, var(--_field-space-3xs));
-  --_margin-bottom: var(--ngx-form-field-margin, 0);
+  /* Default bottom rhythm so a column of stacked fields breathes without the
+     consumer having to add a container gap. Override with
+     `--ngx-form-field-margin` (e.g. set to 0 when a grid/flex `gap` already
+     owns the spacing between fields). */
+  --_margin-bottom: var(--ngx-form-field-margin, 1rem);
 
   /* Prefix/Suffix */
   --_prefix-gap: var(--ngx-form-field-prefix-gap, var(--_field-space-md));

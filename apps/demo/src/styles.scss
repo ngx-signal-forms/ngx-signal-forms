@@ -209,6 +209,14 @@
     @apply space-y-2;
   }
 
+  /* Vertical rhythm between consecutive fields. `.form-container` already
+     spaces its direct children via `space-y-6`, but fields grouped inside a
+     `<fieldset>` had no inter-field gap, so a field's hint/error collided with
+     the next field's label. Matches the 1.5rem container rhythm. */
+  .form-field + .form-field {
+    @apply mt-6;
+  }
+
   .form-label {
     @apply block text-sm font-medium;
     color: var(--color-text);
@@ -219,8 +227,19 @@
     @apply mb-4 rounded-lg p-4;
   }
 
+  /* Grouped validation summary — Expo "Validatie fouten" card:
+     surface/danger-light fill, 50% danger border, danger text. Pairs with the
+     toolkit fieldset's grouped notification so raw and wrapped forms match. */
   .feedback-alert--error {
-    @apply bg-red-50 dark:bg-red-900/20;
+    background: #fdebeb;
+    border: 1px solid rgb(219 24 24 / 0.5);
+    color: #db1818;
+  }
+
+  :where(.dark) .feedback-alert--error {
+    background: rgb(127 29 29 / 0.2);
+    border-color: rgb(248 113 113 / 0.4);
+    color: #fca5a5;
   }
 
   .feedback-alert--pending {
@@ -301,6 +320,33 @@
     outline: none;
   }
 
+  /* Invalid state — solid danger border (Expo: interaction/danger/enabled
+     #db1818). Driven by `aria-invalid`, which Signal Forms sets once the field
+     has been touched or the form submitted, so the border never flashes on a
+     pristine field. Mirrors the toolkit wrapper's invalid treatment so raw
+     forms and wrapped forms read identically. */
+  .form-input[aria-invalid='true'],
+  .form-textarea[aria-invalid='true'],
+  .form-select[aria-invalid='true'] {
+    border-color: #db1818;
+  }
+
+  :where(.dark) .form-input[aria-invalid='true'],
+  :where(.dark) .form-textarea[aria-invalid='true'],
+  :where(.dark) .form-select[aria-invalid='true'] {
+    border-color: #fca5a5;
+  }
+
+  /* Keep the danger border on focus (the base rule clears it) and pair it with
+     a matching focus ring — a non-color-only cue for the invalid state. */
+  .form-input[aria-invalid='true']:focus-visible,
+  .form-textarea[aria-invalid='true']:focus-visible,
+  .form-select[aria-invalid='true']:focus-visible {
+    border-color: #db1818;
+    outline: 2px solid #db1818;
+    outline-offset: 1px;
+  }
+
   .form-textarea {
     @apply min-h-[100px] resize-y;
   }
@@ -323,8 +369,10 @@
   }
 
   .form-hint {
-    /* Align hint with input text start (input has px-3 = 12px horizontal padding) */
-    @apply mt-0.5 pl-3 text-sm;
+    /* Sits at the input's border-left edge, sharing one left edge with the
+       error text below — the eye tracks a single column down the field
+       (Expo: feedback aligns to the field start, not indented to input text). */
+    @apply mt-0.5 text-sm;
     color: var(--color-text-muted);
   }
 

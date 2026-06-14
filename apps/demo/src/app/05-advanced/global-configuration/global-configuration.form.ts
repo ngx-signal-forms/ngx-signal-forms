@@ -115,7 +115,7 @@ import { globalConfigSchema } from './global-configuration.validations';
           [appearance]="appearance()"
           [orientation]="orientation()"
         >
-          <label for="userEmail">Email Address *</label>
+          <label for="userEmail">Email Address</label>
           <input
             id="userEmail"
             type="email"
@@ -130,7 +130,7 @@ import { globalConfigSchema } from './global-configuration.validations';
           [appearance]="appearance()"
           [orientation]="orientation()"
         >
-          <label for="userPhone">Phone Number *</label>
+          <label for="userPhone">Phone Number</label>
           <input
             id="userPhone"
             type="tel"
@@ -164,7 +164,7 @@ import { globalConfigSchema } from './global-configuration.validations';
           [appearance]="appearance()"
           [orientation]="orientation()"
         >
-          <label for="acceptTerms">Accept terms of service *</label>
+          <label for="acceptTerms">Accept terms of service</label>
           <input
             id="acceptTerms"
             type="checkbox"

@@ -11,6 +11,7 @@ import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
+  NgxPageControlsDirective,
   SplitLayoutComponent,
 } from '../../ui';
 import {
@@ -105,6 +106,7 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
     FieldsetFormComponent,
+    NgxPageControlsDirective,
     NgxSignalFormDebugger,
     SplitLayoutComponent,
   ],
@@ -258,7 +260,10 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
   templateUrl: './fieldset-appearance.form.html',
 })
 export class FieldsetAppearanceFormComponent {
-  protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
+  // Defaults to 'immediate' so the validation sandbox shows its grouped errors
+  // on load (keeping the placement comparison meaningful), while switching to
+  // 'on-touch' / 'on-submit' visibly demonstrates the error-timing control.
+  protected readonly selectedMode = signal<ErrorDisplayStrategy>('immediate');
   protected readonly selectedFieldsetAppearance =
     signal<NgxFieldsetAppearance>('outline');
   protected readonly selectedFeedbackAppearance =
