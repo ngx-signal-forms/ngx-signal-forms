@@ -471,15 +471,15 @@ If the semantic colors aren't enough, you can override specific parts of the com
 
 **Applies to both standard and outline layouts.**
 
-| Property                              | Default                                                                           | Description                          |
-| :------------------------------------ | :-------------------------------------------------------------------------------- | :----------------------------------- |
-| `--ngx-form-field-padding-vertical`   | `0.25rem`                                                                         | Vertical padding inside the border   |
-| `--ngx-form-field-padding-horizontal` | `0.5rem`                                                                          | Horizontal padding inside the border |
-| `--ngx-form-field-input-padding`      | `var(--ngx-form-field-padding-vertical) var(--ngx-form-field-padding-horizontal)` | Combined input padding               |
-| `--ngx-form-field-radius`             | `0.25rem`                                                                         | Border radius                        |
-| `--ngx-form-field-min-height`         | `3.5rem`                                                                          | Height for outlined variant          |
-| `--ngx-form-field-gap`                | `0.125rem`                                                                        | Gap between label and input          |
-| `--ngx-form-field-margin`             | `0`                                                                               | Bottom margin for field wrapper      |
+| Property                              | Default                                                                           | Description                                                                               |
+| :------------------------------------ | :-------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------- |
+| `--ngx-form-field-padding-vertical`   | `0.25rem`                                                                         | Vertical padding inside the border                                                        |
+| `--ngx-form-field-padding-horizontal` | `0.5rem`                                                                          | Horizontal padding inside the border                                                      |
+| `--ngx-form-field-input-padding`      | `var(--ngx-form-field-padding-vertical) var(--ngx-form-field-padding-horizontal)` | Combined input padding                                                                    |
+| `--ngx-form-field-radius`             | `0.25rem`                                                                         | Border radius                                                                             |
+| `--ngx-form-field-min-height`         | `3.5rem`                                                                          | Height for outlined variant                                                               |
+| `--ngx-form-field-gap`                | `0.125rem`                                                                        | Gap between label and input                                                               |
+| `--ngx-form-field-margin`             | `1rem`                                                                            | Bottom margin for field wrapper (set to `0` when a grid/flex `gap` already spaces fields) |
 
 #### Prefix & Suffix
 

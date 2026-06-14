@@ -155,7 +155,9 @@ export class NgxFormFieldHint {
   /**
    * Text alignment position.
    *
-   * @default undefined (defaults to right-aligned, or left-aligned if character count is present)
+   * @default null (hint aligns to the start/left; pass `position="right"` to
+   * opt into end alignment. The assistive row also forces start alignment when
+   * a character count shares the row.)
    */
   readonly position = input<'left' | 'right' | null>(null);
 
