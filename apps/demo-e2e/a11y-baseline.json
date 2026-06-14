@@ -3,15 +3,6 @@
   "app": "demo-e2e",
   "violations": [
     {
-      "route": "/advanced-scenarios/global-configuration",
-      "ruleId": "color-contrast",
-      "target": ".example-cards__list.space-y-1.dark\\:text-gray-400 > li:nth-child(2) > .code-inline, .example-cards__section:nth-child(1) > .example-cards__list.space-y-1.dark\\:text-gray-400 > li:nth-child(1) > .code-inline, .example-cards__section:nth-child(2) > .example-cards__list.space-y-1.dark\\:text-gray-400 > li:nth-child(1) > .code-inline, li:nth-child(6) > .code-inline:nth-child(2), li:nth-child(6) > .code-inline:nth-child(3)",
-      "impact": "serious",
-      "help": "Elements must meet minimum color contrast ratio thresholds",
-      "helpUrl": "https://dequeuniversity.com/rules/axe/4.11/color-contrast?application=playwright",
-      "browsers": ["chromium"]
-    },
-    {
       "route": "/form-field-wrapper/field-marking",
       "ruleId": "color-contrast",
       "target": ".ngx-debugger__subtitle",
@@ -32,16 +23,7 @@
     {
       "route": "/headless/error-message-signal",
       "ruleId": "color-contrast",
-      "target": ".gap-3 > .text-gray-400.dark\\:text-gray-500.text-xs",
-      "impact": "serious",
-      "help": "Elements must meet minimum color contrast ratio thresholds",
-      "helpUrl": "https://dequeuniversity.com/rules/axe/4.11/color-contrast?application=playwright",
-      "browsers": ["chromium"]
-    },
-    {
-      "route": "/headless/fieldset-utilities",
-      "ruleId": "color-contrast",
-      "target": ".ngx-debugger__subtitle",
+      "target": ".gap-3 > .text-gray-400.dark\\:text-gray-500.text-xs, .ngx-debugger__subtitle",
       "impact": "serious",
       "help": "Elements must meet minimum color contrast ratio thresholds",
       "helpUrl": "https://dequeuniversity.com/rules/axe/4.11/color-contrast?application=playwright",

@@ -465,19 +465,19 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       // they are labels for sibling controls, not the group's own name.
       await expect(page.personalInfoFieldset).toMatchAriaSnapshot(`
         - group "👤 Personal Information":
-          - text: 👤 Personal Information First Name *
+          - text: 👤 Personal Information First Name
           - textbox "First Name"
           - alert:
             - paragraph: First name is required
-          - text: Last Name *
+          - text: Last Name
           - textbox "Last Name"
           - alert:
             - paragraph: Last name is required
-          - text: Email *
+          - text: Email
           - textbox "Email"
           - alert:
             - paragraph: Email is required
-          - text: Age *
+          - text: Age
           - spinbutton "Age": "0"
           - alert:
             - paragraph: Must be 18 or older
