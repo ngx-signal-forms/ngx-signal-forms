@@ -3,27 +3,9 @@
   "app": "demo-e2e",
   "violations": [
     {
-      "route": "/form-field-wrapper/field-marking",
-      "ruleId": "color-contrast",
-      "target": ".ngx-debugger__subtitle",
-      "impact": "serious",
-      "help": "Elements must meet minimum color contrast ratio thresholds",
-      "helpUrl": "https://dequeuniversity.com/rules/axe/4.11/color-contrast?application=playwright",
-      "browsers": ["chromium"]
-    },
-    {
-      "route": "/form-field-wrapper/labelless-fields",
-      "ruleId": "color-contrast",
-      "target": ".ngx-debugger__subtitle",
-      "impact": "serious",
-      "help": "Elements must meet minimum color contrast ratio thresholds",
-      "helpUrl": "https://dequeuniversity.com/rules/axe/4.11/color-contrast?application=playwright",
-      "browsers": ["chromium"]
-    },
-    {
       "route": "/headless/error-message-signal",
       "ruleId": "color-contrast",
-      "target": ".gap-3 > .text-gray-400.dark\\:text-gray-500.text-xs, .ngx-debugger__subtitle",
+      "target": ".gap-3 > .text-gray-400.dark\\:text-gray-500.text-xs",
       "impact": "serious",
       "help": "Elements must meet minimum color contrast ratio thresholds",
       "helpUrl": "https://dequeuniversity.com/rules/axe/4.11/color-contrast?application=playwright",

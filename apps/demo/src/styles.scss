@@ -347,6 +347,15 @@
     outline-offset: 1px;
   }
 
+  /* On dark surfaces the lighter danger tone keeps the border + ring readable;
+     the base #db1818 would sink into the dark background. */
+  :where(.dark) .form-input[aria-invalid='true']:focus-visible,
+  :where(.dark) .form-textarea[aria-invalid='true']:focus-visible,
+  :where(.dark) .form-select[aria-invalid='true']:focus-visible {
+    border-color: #fca5a5;
+    outline-color: #fca5a5;
+  }
+
   .form-textarea {
     @apply min-h-[100px] resize-y;
   }
