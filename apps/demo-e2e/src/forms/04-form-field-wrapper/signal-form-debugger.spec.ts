@@ -93,7 +93,7 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
     test('should show 1/total after touching one invalid field', async ({
       page,
     }) => {
-      const lastNameInput = page.getByRole('textbox', { name: 'Last Name *' });
+      const lastNameInput = page.getByRole('textbox', { name: 'Last Name' });
       await lastNameInput.focus();
       await lastNameInput.blur();
 
@@ -112,7 +112,7 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
     test('should show touched field error without "Hidden by strategy" badge in debugger', async ({
       page,
     }) => {
-      const lastNameInput = page.getByRole('textbox', { name: 'Last Name *' });
+      const lastNameInput = page.getByRole('textbox', { name: 'Last Name' });
       await lastNameInput.focus();
       await lastNameInput.blur();
 
@@ -132,7 +132,7 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
     test('should keep untouched field errors showing "Hidden by strategy"', async ({
       page,
     }) => {
-      const lastNameInput = page.getByRole('textbox', { name: 'Last Name *' });
+      const lastNameInput = page.getByRole('textbox', { name: 'Last Name' });
       await lastNameInput.focus();
       await lastNameInput.blur();
 
@@ -153,7 +153,7 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
       const debuggerPanel = getDebugger(page);
 
       // Touch Last Name
-      const lastNameInput = page.getByRole('textbox', { name: 'Last Name *' });
+      const lastNameInput = page.getByRole('textbox', { name: 'Last Name' });
       await lastNameInput.focus();
       await lastNameInput.blur();
 
@@ -164,7 +164,10 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
       expect(counts.visible).toBe(1);
 
       // Touch Email (using role to be specific)
-      const emailInput = page.getByRole('textbox', { name: 'Email *' });
+      const emailInput = page.getByRole('textbox', {
+        name: 'Email',
+        exact: true,
+      });
       await emailInput.focus();
       await emailInput.blur();
 
@@ -206,7 +209,7 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
     });
 
     test('should update message after field is touched', async ({ page }) => {
-      const lastNameInput = page.getByRole('textbox', { name: 'Last Name *' });
+      const lastNameInput = page.getByRole('textbox', { name: 'Last Name' });
       await lastNameInput.focus();
       await lastNameInput.blur();
 

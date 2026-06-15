@@ -3,8 +3,8 @@
 }
 
 .form-hint {
-  /* Align hint with input text start (input has px-3 = 12px horizontal padding) */
-  @apply mt-0.5 pl-3 text-sm;
+  /* Border-left edge — shares one left column with the error text below. */
+  @apply mt-0.5 text-sm;
   color: var(--color-text-muted);
 }
 

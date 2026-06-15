@@ -25,7 +25,9 @@
   --ngx-debugger-border-color: #e5e7eb;
   --ngx-debugger-text-color: #111827;
   --ngx-debugger-text-secondary: #6b7280;
-  --ngx-debugger-text-muted: #9ca3af;
+  /* #6b7280 is the lightest gray that still clears WCAG 2.2 AA (4.5:1) on the
+     light surfaces muted text sits on (#fff / #f9fafb header). */
+  --ngx-debugger-text-muted: #6b7280;
 
   /* Semantic colors */
   --ngx-debugger-color-success: #22c55e;
@@ -83,7 +85,9 @@
   --ngx-debugger-border-color: #374151;
   --ngx-debugger-text-color: #f3f4f6;
   --ngx-debugger-text-secondary: #d1d5db;
-  --ngx-debugger-text-muted: #9ca3af;
+  /* Lifted to clear WCAG 2.2 AA (4.5:1) on the dark surfaces muted text sits on
+     (#374151 header / #4b5563); #9ca3af only reached ~4:1 there. */
+  --ngx-debugger-text-muted: #d1d5db;
 
   --ngx-debugger-color-success-bg: rgba(34, 197, 94, 0.15);
   --ngx-debugger-color-success-text: #86efac;

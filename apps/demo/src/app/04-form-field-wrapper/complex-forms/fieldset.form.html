@@ -178,10 +178,11 @@
             Shared placement preview
           </h3>
           <p class="max-w-3xl text-sm text-gray-600 dark:text-gray-400">
-            This sandbox stays invalid on purpose. Use the page-level placement
-            control above to move every summary together, then compare the
-            grouped fieldset, radio-group, and single-field wrapper behavior
-            side by side.
+            This sandbox stays invalid on purpose, and it honors the Error
+            Display Mode control: in <strong>immediate</strong> every grouped
+            summary is visible (use the placement control above to move them),
+            while <strong>on touch</strong> / <strong>on submit</strong> reveal
+            how the same errors hold back until you interact or submit.
           </p>
         </div>
 
@@ -221,7 +222,7 @@
           [notificationTitle]="notificationTitle() ?? undefined"
           [surfaceTone]="surfaceTone()"
           [validationSurface]="validationSurface()"
-          strategy="immediate"
+          [strategy]="errorDisplayMode()"
           fieldsetId="placement-preview-address"
         >
           <legend class="fieldset-legend">Shipping Address</legend>
@@ -230,7 +231,7 @@
             appearance="outline"
             [formField]="placementPreviewForm.address.street"
           >
-            <label for="placementPreviewStreet">Street *</label>
+            <label for="placementPreviewStreet">Street</label>
             <input
               id="placementPreviewStreet"
               type="text"
@@ -243,7 +244,7 @@
             appearance="outline"
             [formField]="placementPreviewForm.address.city"
           >
-            <label for="placementPreviewCity">City *</label>
+            <label for="placementPreviewCity">City</label>
             <input
               id="placementPreviewCity"
               type="text"
@@ -272,7 +273,7 @@
           [notificationTitle]="notificationTitle() ?? undefined"
           [surfaceTone]="surfaceTone()"
           [validationSurface]="validationSurface()"
-          strategy="immediate"
+          [strategy]="errorDisplayMode()"
           fieldsetId="placement-preview-delivery"
         >
           <legend class="form-label">Delivery option *</legend>
@@ -323,9 +324,9 @@
           appearance="outline"
           [formField]="placementPreviewForm.email"
           [errorPlacement]="errorPlacement()"
-          strategy="immediate"
+          [strategy]="errorDisplayMode()"
         >
-          <label for="placementPreviewEmail">Email address *</label>
+          <label for="placementPreviewEmail">Email address</label>
           <input
             id="placementPreviewEmail"
             type="email"
@@ -374,7 +375,7 @@
         [formField]="fieldsetForm.shippingAddress.street"
         class="sm:col-span-2"
       >
-        <label for="shippingStreet">Street Address *</label>
+        <label for="shippingStreet">Street Address</label>
         <input
           id="shippingStreet"
           type="text"
@@ -388,7 +389,7 @@
         [orientation]="orientation()"
         [formField]="fieldsetForm.shippingAddress.city"
       >
-        <label for="shippingCity">City *</label>
+        <label for="shippingCity">City</label>
         <input
           id="shippingCity"
           type="text"
@@ -402,7 +403,7 @@
         [orientation]="orientation()"
         [formField]="fieldsetForm.shippingAddress.zipCode"
       >
-        <label for="shippingZipCode">ZIP Code *</label>
+        <label for="shippingZipCode">ZIP Code</label>
         <input
           id="shippingZipCode"
           type="text"
@@ -417,7 +418,7 @@
         [formField]="fieldsetForm.shippingAddress.country"
         class="sm:col-span-2"
       >
-        <label for="shippingCountry">Country *</label>
+        <label for="shippingCountry">Country</label>
         <select
           id="shippingCountry"
           [formField]="fieldsetForm.shippingAddress.country"
@@ -470,7 +471,7 @@
         [formField]="fieldsetForm.billingAddress.street"
         class="sm:col-span-2"
       >
-        <label for="billingStreet">Street Address *</label>
+        <label for="billingStreet">Street Address</label>
         <input
           id="billingStreet"
           type="text"
@@ -484,7 +485,7 @@
         [orientation]="orientation()"
         [formField]="fieldsetForm.billingAddress.city"
       >
-        <label for="billingCity">City *</label>
+        <label for="billingCity">City</label>
         <input
           id="billingCity"
           type="text"
@@ -498,7 +499,7 @@
         [orientation]="orientation()"
         [formField]="fieldsetForm.billingAddress.zipCode"
       >
-        <label for="billingZipCode">ZIP Code *</label>
+        <label for="billingZipCode">ZIP Code</label>
         <input
           id="billingZipCode"
           type="text"
@@ -513,7 +514,7 @@
         [formField]="fieldsetForm.billingAddress.country"
         class="sm:col-span-2"
       >
-        <label for="billingCountry">Country *</label>
+        <label for="billingCountry">Country</label>
         <select
           id="billingCountry"
           [formField]="fieldsetForm.billingAddress.country"
@@ -620,7 +621,7 @@
         [orientation]="orientation()"
         [formField]="fieldsetForm.credentials.password"
       >
-        <label for="password">Password *</label>
+        <label for="password">Password</label>
         <input
           id="password"
           type="password"
@@ -635,7 +636,7 @@
         [orientation]="orientation()"
         [formField]="fieldsetForm.credentials.confirmPassword"
       >
-        <label for="confirmPassword">Confirm Password *</label>
+        <label for="confirmPassword">Confirm Password</label>
         <input
           id="confirmPassword"
           type="password"

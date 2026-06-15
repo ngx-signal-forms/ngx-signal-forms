@@ -391,7 +391,7 @@ export class ErrorDisplayHelpersComponent {
             class="feedback-alert feedback-alert--error"
             role="alert"
           >
-            <div class="text-sm font-medium text-red-800 dark:text-red-200">
+            <div class="text-sm font-medium">
               Please fix the errors above before submitting.
             </div>
           </div>

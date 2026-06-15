@@ -143,7 +143,7 @@ import { submissionSchema } from './submission-patterns.validations';
           [appearance]="appearance()"
           [orientation]="orientation()"
         >
-          <label for="username">Username *</label>
+          <label for="username">Username</label>
           <input
             id="username"
             type="text"
@@ -161,7 +161,7 @@ import { submissionSchema } from './submission-patterns.validations';
           [appearance]="appearance()"
           [orientation]="orientation()"
         >
-          <label for="password">Password *</label>
+          <label for="password">Password</label>
           <input
             id="password"
             type="password"
@@ -177,7 +177,7 @@ import { submissionSchema } from './submission-patterns.validations';
           [appearance]="appearance()"
           [orientation]="orientation()"
         >
-          <label for="confirmPassword">Confirm Password *</label>
+          <label for="confirmPassword">Confirm Password</label>
           <input
             id="confirmPassword"
             type="password"

@@ -20,7 +20,7 @@
         [orientation]="orientation()"
         [formField]="complexForm.personalInfo.firstName"
       >
-        <label for="firstName">First Name *</label>
+        <label for="firstName">First Name</label>
         <input
           id="firstName"
           type="text"
@@ -33,7 +33,7 @@
         [orientation]="orientation()"
         [formField]="complexForm.personalInfo.lastName"
       >
-        <label for="lastName">Last Name *</label>
+        <label for="lastName">Last Name</label>
         <input
           id="lastName"
           type="text"
@@ -61,7 +61,7 @@
             d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
           />
         </svg>
-        <label for="email">Email *</label>
+        <label for="email">Email</label>
         <input
           id="email"
           type="email"
@@ -74,7 +74,7 @@
         [orientation]="orientation()"
         [formField]="complexForm.personalInfo.age"
       >
-        <label for="age">Age *</label>
+        <label for="age">Age</label>
         <input
           id="age"
           type="number"
@@ -125,7 +125,7 @@
             d="M12 12.75a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z"
           />
         </svg>
-        <label for="street">Street Address *</label>
+        <label for="street">Street Address</label>
         <input
           id="street"
           type="text"
@@ -139,7 +139,7 @@
           [orientation]="orientation()"
           [formField]="complexForm.addressInfo.city"
         >
-          <label for="city">City *</label>
+          <label for="city">City</label>
           <input
             id="city"
             type="text"
@@ -152,7 +152,7 @@
           [orientation]="orientation()"
           [formField]="complexForm.addressInfo.zipCode"
         >
-          <label for="zipCode">Zip Code *</label>
+          <label for="zipCode">Zip Code</label>
           <input
             id="zipCode"
             type="text"
@@ -167,7 +167,7 @@
         [orientation]="orientation()"
         [formField]="complexForm.addressInfo.country"
       >
-        <label for="country">Country *</label>
+        <label for="country">Country</label>
         <select id="country" [formField]="complexForm.addressInfo.country">
           <option value="">Select...</option>
           <option value="US">United States</option>
@@ -201,7 +201,7 @@
         [formField]="complexForm.skills[i].name"
         [fieldName]="'skill-' + i + '-name'"
       >
-        <label [for]="'skill-' + i + '-name'">Skill Name *</label>
+        <label [for]="'skill-' + i + '-name'">Skill Name</label>
         <input
           [id]="'skill-' + i + '-name'"
           type="text"
@@ -224,7 +224,7 @@
         [formField]="complexForm.skills[i].level"
         [fieldName]="'skill-' + i + '-level'"
       >
-        <label [for]="'skill-' + i + '-level'">Level (1-10) *</label>
+        <label [for]="'skill-' + i + '-level'">Level (1-10)</label>
         <input
           [id]="'skill-' + i + '-level'"
           type="number"
@@ -262,7 +262,7 @@
         [formField]="complexForm.contacts[i].type"
         [fieldName]="'contact-' + i + '-type'"
       >
-        <label [for]="'contact-' + i + '-type'">Type *</label>
+        <label [for]="'contact-' + i + '-type'">Type</label>
         <select
           [id]="'contact-' + i + '-type'"
           [formField]="complexForm.contacts[i].type"
@@ -313,7 +313,7 @@
           />
         </svg>
         }
-        <label [for]="'contact-' + i + '-value'">Value *</label>
+        <label [for]="'contact-' + i + '-value'">Value</label>
         <input
           [id]="'contact-' + i + '-value'"
           type="text"
@@ -364,7 +364,7 @@
         [orientation]="orientation()"
         [formField]="complexForm.credentials.password"
       >
-        <label for="credentialsPassword">Password *</label>
+        <label for="credentialsPassword">Password</label>
         <input
           id="credentialsPassword"
           type="password"
@@ -380,7 +380,7 @@
         [orientation]="orientation()"
         [formField]="complexForm.credentials.confirmPassword"
       >
-        <label for="credentialsConfirmPassword">Confirm Password *</label>
+        <label for="credentialsConfirmPassword">Confirm Password</label>
         <input
           id="credentialsConfirmPassword"
           type="password"

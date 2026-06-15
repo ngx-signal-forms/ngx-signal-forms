@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   ExampleCardsComponent,
   PageHeaderComponent,
@@ -20,6 +21,7 @@ import { ErrorMessageSignalComponent } from './error-message-signal.form';
   imports: [
     ExampleCardsComponent,
     ErrorMessageSignalComponent,
+    NgxSignalFormDebugger,
     PageHeaderComponent,
     SplitLayoutComponent,
   ],
@@ -34,7 +36,13 @@ import { ErrorMessageSignalComponent } from './error-message-signal.form';
       [learning]="content.learning"
     >
       <ngx-split-layout>
-        <ngx-error-message-signal left />
+        <ngx-error-message-signal #formRef left />
+
+        @if (formRef) {
+          <div right>
+            <ngx-signal-form-debugger [formTree]="formRef.passwordForm" />
+          </div>
+        }
       </ngx-split-layout>
     </ngx-example-cards>
   `,

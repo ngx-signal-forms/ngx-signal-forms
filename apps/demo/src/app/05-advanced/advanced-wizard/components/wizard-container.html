@@ -46,7 +46,14 @@
     </ng-template>
   </ngx-wizard>
 
-  @if (store.bookingConfirmation(); as confirmation) {
+  @if (currentStepRef()?.formTree; as formTree) {
+  <div class="wizard-debugger mt-6">
+    <ngx-signal-form-debugger
+      [formTree]="formTree"
+      title="Current Step State"
+    />
+  </div>
+  } @if (store.bookingConfirmation(); as confirmation) {
   <div
     class="success-message mt-6"
     role="status"
