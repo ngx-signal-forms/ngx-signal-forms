@@ -1,9 +1,9 @@
 packages:
-  - "apps/*"
-  - "packages/*"
+  - 'apps/*'
+  - 'packages/*'
 allowBuilds:
-  "@parcel/watcher": false
-  "@swc/core": true
+  '@parcel/watcher': false
+  '@swc/core': true
   esbuild: true
   less: false
   lmdb: false
@@ -12,139 +12,139 @@ allowBuilds:
   nx: true
   simple-git-hooks: true
 autoInstallPeers: true
-catalogMode: "prefer"
+catalogMode: 'prefer'
 catalogs:
   analogjs:
-    "@analogjs/vite-plugin-angular": "2.6.0"
-    "@analogjs/vitest-angular": "2.6.0"
+    '@analogjs/vite-plugin-angular': '2.6.0'
+    '@analogjs/vitest-angular': '2.6.0'
   axe:
-    "@axe-core/playwright": "^4.11.3"
-    axe-core: "^4.12.0"
+    '@axe-core/playwright': '^4.11.3'
+    axe-core: '^4.12.0'
   angular:
-    "@angular/animations": "22.0.0"
-    "@angular/aria": "22.0.0"
-    "@angular/cdk": "22.0.0"
-    "@angular/common": "22.0.0"
-    "@angular/compiler": "22.0.0"
-    "@angular/core": "22.0.1"
-    "@angular/forms": "22.0.0"
-    "@angular/platform-browser": "22.0.0"
-    "@angular/router": "22.0.0"
+    '@angular/animations': '22.0.0'
+    '@angular/aria': '22.0.0'
+    '@angular/cdk': '22.0.0'
+    '@angular/common': '22.0.0'
+    '@angular/compiler': '22.0.0'
+    '@angular/core': '22.0.1'
+    '@angular/forms': '22.0.0'
+    '@angular/platform-browser': '22.0.0'
+    '@angular/router': '22.0.0'
   angular-build:
-    "@angular-devkit/core": "22.0.0"
-    "@angular-devkit/schematics": "22.0.0"
-    "@angular/build": "22.0.0"
-    "@angular/cli": "22.0.0"
-    "@angular/compiler-cli": "22.0.0"
-    "@angular/language-service": "22.0.0"
-    "@schematics/angular": "22.0.0"
-    ng-packagr: "22.0.0"
+    '@angular-devkit/core': '22.0.0'
+    '@angular-devkit/schematics': '22.0.0'
+    '@angular/build': '22.0.0'
+    '@angular/cli': '22.0.0'
+    '@angular/compiler-cli': '22.0.0'
+    '@angular/language-service': '22.0.0'
+    '@schematics/angular': '22.0.0'
+    ng-packagr: '22.0.0'
   angular-eslint:
-    "@angular-eslint/eslint-plugin": "22.0.0"
-    "@angular-eslint/eslint-plugin-template": "22.0.0"
-    "@angular-eslint/template-parser": "22.0.0"
+    '@angular-eslint/eslint-plugin': '22.0.0'
+    '@angular-eslint/eslint-plugin-template': '22.0.0'
+    '@angular-eslint/template-parser': '22.0.0'
   angular-material:
-    "@angular/material": "22.0.0"
+    '@angular/material': '22.0.0'
   ngrx:
-    "@angular-architects/ngrx-toolkit": "21.0.1"
-    "@ngrx/signals": "21.1.1"
+    '@angular-architects/ngrx-toolkit': '21.0.1'
+    '@ngrx/signals': '21.1.1'
   nx:
-    "@nx/angular": "23.0.0"
-    "@nx/devkit": "23.0.0"
-    "@nx/eslint-plugin": "23.0.0"
-    "@nx/js": "23.0.0"
-    "@nx/playwright": "23.0.0"
-    "@nx/vite": "23.0.0"
-    "@nx/vitest": "23.0.0"
-    "@nx/web": "23.0.0"
-    "@nx/workspace": "23.0.0"
-    nx: "23.0.0"
+    '@nx/angular': '23.0.0'
+    '@nx/devkit': '23.0.0'
+    '@nx/eslint-plugin': '23.0.0'
+    '@nx/js': '23.0.0'
+    '@nx/playwright': '23.0.0'
+    '@nx/vite': '23.0.0'
+    '@nx/vitest': '23.0.0'
+    '@nx/web': '23.0.0'
+    '@nx/workspace': '23.0.0'
+    nx: '23.0.0'
   playwright:
-    "@playwright/test": "^1.60.0"
-    eslint-plugin-playwright: "^2.10.4"
+    '@playwright/test': '^1.60.0'
+    eslint-plugin-playwright: '^2.10.4'
   primeng:
-    "@primeuix/themes": "2.0.3"
-    primeicons: "7.0.0"
-    primeng: "21.1.8"
+    '@primeuix/themes': '2.0.3'
+    primeicons: '7.0.0'
+    primeng: '21.1.8'
   shiki:
-    "@shikijs/core": "^4.2.0"
-    "@shikijs/types": "^4.2.0"
-    shiki: "^4.2.0"
+    '@shikijs/core': '^4.2.0'
+    '@shikijs/types': '^4.2.0'
+    shiki: '^4.2.0'
   spartan:
-    "@ng-icons/core": "^33.2.3"
-    "@ng-icons/lucide": "^33.2.3"
-    "@spartan-ng/brain": "0.0.1-alpha.708"
-    "@spartan-ng/cli": "0.0.1-alpha.708"
-    class-variance-authority: "^0.7.1"
-    clsx: "^2.1.1"
-    tailwind-merge: "^3.6.0"
-    tw-animate-css: "^1.4.0"
+    '@ng-icons/core': '^33.2.3'
+    '@ng-icons/lucide': '^33.2.3'
+    '@spartan-ng/brain': '0.0.1-alpha.708'
+    '@spartan-ng/cli': '0.0.1-alpha.708'
+    class-variance-authority: '^0.7.1'
+    clsx: '^2.1.1'
+    tailwind-merge: '^3.6.0'
+    tw-animate-css: '^1.4.0'
   swc:
-    "@swc-node/register": "1.11.1"
-    "@swc/core": "1.15.41"
-    "@swc/helpers": "0.5.23"
+    '@swc-node/register': '1.11.1'
+    '@swc/core': '1.15.41'
+    '@swc/helpers': '0.5.23'
   tailwind:
-    "@tailwindcss/forms": "^0.5.11"
-    "@tailwindcss/postcss": "^4.3.0"
-    autoprefixer: "^10.5.0"
-    postcss: "^8.5.15"
-    postcss-url: "~10.1.3"
-    tailwindcss: "^4.3.0"
+    '@tailwindcss/forms': '^0.5.11'
+    '@tailwindcss/postcss': '^4.3.0'
+    autoprefixer: '^10.5.0'
+    postcss: '^8.5.15'
+    postcss-url: '~10.1.3'
+    tailwindcss: '^4.3.0'
   testing:
-    jsdom: "~29.1.1"
-    msw: "~2.14.6"
+    jsdom: '~29.1.1'
+    msw: '~2.14.6'
   testing-library:
-    "@testing-library/angular": "^19.4.1"
-    "@testing-library/dom": "^10.4.1"
-    "@testing-library/jest-dom": "^6.9.1"
-    "@testing-library/user-event": "^14.6.1"
+    '@testing-library/angular': '^19.4.1'
+    '@testing-library/dom': '^10.4.1'
+    '@testing-library/jest-dom': '^6.9.1'
+    '@testing-library/user-event': '^14.6.1'
   tooling:
-    "@oxc-project/runtime": "^0.135.0"
-    "@types/node": "25.9.2"
-    eslint: "^10.4.1"
-    jiti: "2.7.0"
-    lint-staged: "^17.0.7"
-    oxfmt: "^0.54.0"
-    oxlint: "^1.69.0"
-    oxlint-tsgolint: "^0.23.0"
-    simple-git-hooks: "^2.13.1"
-    typescript: "~6.0.3"
-    verdaccio: "^6.7.2"
-    vite: "^8.0.16"
+    '@oxc-project/runtime': '^0.135.0'
+    '@types/node': '25.9.2'
+    eslint: '^10.4.1'
+    jiti: '2.7.0'
+    lint-staged: '^17.0.7'
+    oxfmt: '^0.54.0'
+    oxlint: '^1.69.0'
+    oxlint-tsgolint: '^0.23.0'
+    simple-git-hooks: '^2.13.1'
+    typescript: '~6.0.3'
+    verdaccio: '^6.7.2'
+    vite: '^8.0.16'
   utilities:
-    rxjs: "~7.8.2"
-    tslib: "^2.8.1"
+    rxjs: '~7.8.2'
+    tslib: '^2.8.1'
   validation:
-    arktype: "^2.2.0"
-    vest: "6.3.2"
-    zod: "^4.4.3"
+    arktype: '^2.2.0'
+    vest: '6.3.2'
+    zod: '^4.4.3'
   vitest:
-    "@vitest/browser-playwright": "~4.1.8"
-    "@vitest/coverage-v8": "~4.1.8"
-    "@vitest/ui": "~4.1.8"
-    vitest: "~4.1.8"
+    '@vitest/browser-playwright': '~4.1.8'
+    '@vitest/coverage-v8': '~4.1.8'
+    '@vitest/ui': '~4.1.8'
+    vitest: '~4.1.8'
 overrides:
-  "@angular/common": "22.0.0"
-  "@angular/compiler": "22.0.0"
-  "@angular/core": "22.0.1"
-  "@angular/forms": "22.0.0"
-  "@angular/platform-browser": "22.0.0"
-  "@angular/router": "22.0.0"
-  "@babel/plugin-transform-modules-systemjs@>=7.12.0 <=7.29.3": "^7.29.4"
-  ajv@>=7.0.0-alpha.0 <8.18.0: "^8.18.0"
-  axios@>=1.0.0 <1.15.1: "^1.15.1"
-  axios@>=1.0.0 <1.15.2: "^1.15.2"
-  axios@>=1.0.0 <1.16.0: "^1.16.0"
-  brace-expansion@>=4.0.0 <5.0.5: "^5.0.5"
-  brace-expansion@>=5.0.0 <5.0.6: "^5.0.6"
-  fast-uri@<=3.1.1: "^3.1.2"
-  follow-redirects@<=1.15.11: "^1.15.12"
-  ip-address@<=10.1.0: "^10.1.1"
-  picomatch@>=4.0.0 <4.0.4: "^4.0.4"
-  qs@>=6.11.1 <=6.15.1: "^6.15.2"
-  tmp@<0.2.6: "^0.2.6"
-  uuid@<11.1.1: "^11.1.1"
-  webpack-dev-server@<=5.2.3: "^5.2.4"
-  ws@>=8.0.0 <8.20.1: "^8.20.1"
-  yaml@>=2.0.0 <2.8.3: "^2.8.3"
+  '@angular/common': '22.0.0'
+  '@angular/compiler': '22.0.0'
+  '@angular/core': '22.0.1'
+  '@angular/forms': '22.0.0'
+  '@angular/platform-browser': '22.0.0'
+  '@angular/router': '22.0.0'
+  '@babel/plugin-transform-modules-systemjs@>=7.12.0 <=7.29.3': '^7.29.4'
+  ajv@>=7.0.0-alpha.0 <8.18.0: '^8.18.0'
+  axios@>=1.0.0 <1.15.1: '^1.15.1'
+  axios@>=1.0.0 <1.15.2: '^1.15.2'
+  axios@>=1.0.0 <1.16.0: '^1.16.0'
+  brace-expansion@>=4.0.0 <5.0.5: '^5.0.5'
+  brace-expansion@>=5.0.0 <5.0.6: '^5.0.6'
+  fast-uri@<=3.1.1: '^3.1.2'
+  follow-redirects@<=1.15.11: '^1.15.12'
+  ip-address@<=10.1.0: '^10.1.1'
+  picomatch@>=4.0.0 <4.0.4: '^4.0.4'
+  qs@>=6.11.1 <=6.15.1: '^6.15.2'
+  tmp@<0.2.6: '^0.2.6'
+  uuid@<11.1.1: '^11.1.1'
+  webpack-dev-server@<=5.2.3: '^5.2.4'
+  ws@>=8.0.0 <8.20.1: '^8.20.1'
+  yaml@>=2.0.0 <2.8.3: '^2.8.3'
 strictPeerDependencies: false
