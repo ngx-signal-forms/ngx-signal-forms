@@ -4,11 +4,16 @@
   "projectType": "application",
   "prefix": "ngx",
   "sourceRoot": "apps/demo-primeng/src",
-  "tags": ["scope:demo", "type:app"],
+  "tags": [
+    "scope:demo",
+    "type:app"
+  ],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/apps/demo-primeng"],
+      "outputs": [
+        "{workspaceRoot}/dist/apps/demo-primeng"
+      ],
       "defaultConfiguration": "production",
       "options": {
         "cwd": "apps/demo-primeng"
@@ -38,8 +43,10 @@
       }
     },
     "test": {
-      "executor": "@nx/vite:test",
-      "outputs": ["{options.reportsDirectory}"],
+      "executor": "@nx/vitest:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
       "options": {
         "config": "apps/demo-primeng/vitest.config.mts",
         "reportsDirectory": "{workspaceRoot}/coverage/apps/demo-primeng"
