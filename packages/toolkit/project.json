@@ -10,11 +10,16 @@
       "fallbackCurrentVersionResolver": "disk"
     }
   },
-  "tags": ["scope:lib", "type:lib"],
+  "tags": [
+    "scope:lib",
+    "type:lib"
+  ],
   "targets": {
     "build": {
       "executor": "@nx/angular:package",
-      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/dist/{projectRoot}"
+      ],
       "options": {
         "project": "packages/toolkit/ng-package.json",
         "tsConfig": "packages/toolkit/tsconfig.lib.json"
@@ -29,7 +34,9 @@
     },
     "post-build": {
       "executor": "nx:run-commands",
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "options": {
         "commands": [
           "mkdir -p dist/packages/toolkit",
@@ -41,15 +48,22 @@
       }
     },
     "nx-release-publish": {
-      "dependsOn": ["build", "post-build"],
+      "dependsOn": [
+        "build",
+        "post-build"
+      ],
       "options": {
         "packageRoot": "dist/{projectRoot}",
-        "args": ["--json"]
+        "args": [
+          "--json"
+        ]
       }
     },
     "test": {
       "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
       "options": {
         "configFile": "packages/toolkit/vitest.jsdom.config.mts",
         "reportsDirectory": "{projectRoot}/../../coverage/packages/toolkit/jsdom"
@@ -57,7 +71,9 @@
     },
     "test-browser": {
       "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
       "options": {
         "configFile": "packages/toolkit/vitest.browser.config.mts",
         "reportsDirectory": "{projectRoot}/../../coverage/packages/toolkit/browser"
