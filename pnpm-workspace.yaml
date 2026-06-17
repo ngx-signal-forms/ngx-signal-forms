@@ -119,7 +119,6 @@ catalogs:
     vest: "6.3.2"
     zod: "^4.4.3"
   vitest:
-    "@vitest/browser": "~4.1.8"
     "@vitest/browser-playwright": "~4.1.8"
     "@vitest/coverage-v8": "~4.1.8"
     "@vitest/ui": "~4.1.8"
