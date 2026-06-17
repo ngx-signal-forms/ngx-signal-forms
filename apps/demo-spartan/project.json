@@ -4,16 +4,11 @@
   "projectType": "application",
   "prefix": "ngx",
   "sourceRoot": "apps/demo-spartan/src",
-  "tags": [
-    "scope:demo",
-    "type:app"
-  ],
+  "tags": ["scope:demo", "type:app"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": [
-        "{workspaceRoot}/dist/apps/demo-spartan"
-      ],
+      "outputs": ["{workspaceRoot}/dist/apps/demo-spartan"],
       "defaultConfiguration": "production",
       "options": {
         "cwd": "apps/demo-spartan"
@@ -50,9 +45,7 @@
     },
     "test": {
       "executor": "@nx/vitest:test",
-      "outputs": [
-        "{options.reportsDirectory}"
-      ],
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
         "configFile": "apps/demo-spartan/vitest.config.mts",
         "reportsDirectory": "../../coverage/apps/demo-spartan"

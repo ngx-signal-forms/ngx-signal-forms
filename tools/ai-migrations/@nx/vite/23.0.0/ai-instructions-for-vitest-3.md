@@ -316,7 +316,7 @@ test(
   () => {
     /* ... */
   },
-  { retry: 3 }
+  { retry: 3 },
 );
 
 // ✅ AFTER (Vitest 3.0)
