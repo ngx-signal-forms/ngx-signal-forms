@@ -65,3 +65,5 @@ build.log
 .playwright-mcp/
 
 .nx/self-healing.claude/
+
+.nx/migrate-runs
