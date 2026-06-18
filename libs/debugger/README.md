@@ -6,7 +6,7 @@
 
 When building forms, you need to see field state, validation errors, and submission status in real-time. The debugger panel shows all of this without sprinkling `console.log` calls or manually reading signals.
 
-It is a development-only tool — gate it behind `isDevMode()` so production builds skip it entirely.
+It is intended for an interactive demo and debugging workflow. The shipped demo keeps the panel visible in production so the deployed page matches the local experience.
 
 **Note:** This is an internal, non-publishable library for demo and development use only.
 
@@ -65,14 +65,12 @@ Selector: `ngx-signal-form-debugger`
 | `title`         | `string`                                               | `'Form State & Validation'`    | Panel header title                                                                                            |
 | `subtitle`      | `string`                                               | `'Live debugging information'` | Panel header subtitle                                                                                         |
 
-### Production tree-shaking
+### Production usage
 
-The component self-guards rendering with `isDevMode()`, so a production build
-still ships zero DOM when the element is placed unconditionally. **For true
-bundle tree-shaking** (dropping the ~13 KB JS + ~15 KB SCSS at build time),
-consumers MUST wrap the element in an `@if (isDevMode())` block as shown in
-the Quick start — otherwise the compiled bundle keeps the debugger code path
-even though the UI is hidden at runtime.
+The debugger renders whenever the supplied `formTree` is usable, which keeps the
+shipped demo page aligned with local development. If your application wants to
+hide the panel in production, add your own `@if (isDevMode())` guard around the
+component in the hosting template.
 
 ### NgxSignalFormDebuggerToolkit
 

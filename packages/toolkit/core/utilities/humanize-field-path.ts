@@ -55,7 +55,7 @@ export function humanizeFieldPath(fieldName: string): string {
  * @param rawName - Raw field name that may include Angular's `ng.form{n}.` prefix
  * @returns Field name with the Angular internal form prefix removed
  *
- * @internal
+ * @packageInternal Used only within `@ngx-signal-forms/toolkit` package entries.
  */
 export function stripAngularFormPrefix(rawName: string): string {
   return rawName.trim().replace(ANGULAR_FORM_NAME_PREFIX, '');
