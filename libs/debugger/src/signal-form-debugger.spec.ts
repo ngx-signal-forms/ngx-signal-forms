@@ -470,17 +470,11 @@ describe('NgxSignalFormDebugger', () => {
     });
   });
 
-  describe('Production render gate', () => {
-    it('keeps the debugger available when the render gate is disabled', () => {
+  describe('Production availability', () => {
+    it('renders when formTree is usable', () => {
       const localFixture = TestBed.createComponent(NgxSignalFormDebugger);
       const localEl: HTMLElement = localFixture.nativeElement;
       localFixture.componentRef.setInput('formTree', testForm);
-
-      (
-        localFixture.componentInstance as unknown as {
-          renderEnabled: boolean;
-        }
-      ).renderEnabled = false;
       localFixture.detectChanges();
 
       expect(localEl.querySelector('.ngx-debugger')).not.toBeNull();
