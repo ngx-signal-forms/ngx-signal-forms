@@ -53,7 +53,7 @@ export type FormFieldBindingsState = Pick<
  * - every registered binding element inside this host lacks an `id` (the native
  *   match would diverge from the CSS-selector fallback — see above).
  *
- * @internal
+ * @packageInternal Used only within `@ngx-signal-forms/toolkit` package entries.
  */
 export function resolveBoundControlFromBindings(
   fieldState: FormFieldBindingsState | null | undefined,

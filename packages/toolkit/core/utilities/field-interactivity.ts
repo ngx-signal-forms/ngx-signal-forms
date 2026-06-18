@@ -31,7 +31,7 @@ import type { FieldState } from '@angular/forms/signals';
  * structural `Pick` and relies on compile-time guarantees rather than
  * runtime probes.
  *
- * @internal
+ * @public
  */
 export function isFieldStateInteractive(fieldState: object): boolean {
   const hidden = (fieldState as { hidden?: () => boolean }).hidden;
@@ -57,7 +57,7 @@ export function isFieldStateInteractive(fieldState: object): boolean {
  * those mocks (via a shared factory) would let the body drop the guard and
  * is tracked as a follow-up.
  *
- * @internal
+ * @public
  */
 export function isFieldStateHidden(
   fieldState: Pick<FieldState<unknown>, 'hidden'>,

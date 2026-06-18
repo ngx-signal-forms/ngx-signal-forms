@@ -20,8 +20,8 @@ export type HintIdsSignal = Signal<readonly string[]>;
  * service: a reactive, pre-filtered list of hint IDs for the current field.
  *
  * Exposed as a public option type so consumers building bespoke wrappers can
- * type-import the factory's inputs without crossing into `@internal`
- * territory. Production code passes its `NgxFieldIdentity` instance in
+ * type-import the factory's inputs without using package-internal imports.
+ * Production code passes its `NgxFieldIdentity` instance in
  * directly via structural assignability.
  */
 export interface HintIdsIdentityLike {
@@ -38,8 +38,8 @@ export interface HintIdsIdentityLike {
  * **not** treated as unscoped).
  *
  * Exposed as a public option type so consumers building bespoke wrappers can
- * type-import the factory's inputs without crossing into `@internal`
- * territory. Production code passes its `NgxSignalFormHintRegistry` instance
+ * type-import the factory's inputs without using package-internal imports.
+ * Production code passes its `NgxSignalFormHintRegistry` instance
  * in directly via structural assignability.
  */
 export interface HintIdsRegistryLike {
