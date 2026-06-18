@@ -216,6 +216,16 @@ export default defineConfig({
       },
     },
     {
+      /// Tools work with external nx types (ChangelogChange, NxReleaseConfig)
+      /// whose array properties cannot be made deeply readonly without modifying
+      /// the upstream declarations. Disabling the rule here is intentional.
+      files: ['tools/**/*.ts'],
+      rules: {
+        '@typescript-eslint/prefer-readonly-parameter-types': 'off',
+        '@typescript-eslint/no-unsafe-type-assertion': 'off',
+      },
+    },
+    {
       files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
       jsPlugins: ['@nx/eslint-plugin'],
       rules: {
