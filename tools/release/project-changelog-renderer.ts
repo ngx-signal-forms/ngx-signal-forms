@@ -1,6 +1,14 @@
-import DefaultChangelogRenderer, {
+import _DefaultChangelogRendererImport, {
   type ChangelogChange,
 } from 'nx/release/changelog-renderer/index.js';
+
+type DefaultChangelogRendererClass = typeof _DefaultChangelogRendererImport;
+
+/// CJS/ESM interop: when this file is loaded as ESM, importing a CJS module
+/// yields the full module.exports as the default — unwrap .default if present.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DefaultChangelogRenderer = ((_DefaultChangelogRendererImport as any)
+  .default ?? _DefaultChangelogRendererImport) as DefaultChangelogRendererClass;
 
 type Area = 'toolkit' | 'demo' | 'shared' | 'other';
 
