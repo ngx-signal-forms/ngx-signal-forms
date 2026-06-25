@@ -58,18 +58,23 @@ jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Gate the release behind a protected environment. Store RELEASE_TOKEN as an
+    # *environment* secret (not a plain repo secret) with required reviewers, so
+    # a `workflow_dispatch` on an untrusted ref cannot reach the admin push token
+    # without human approval. GitHub auto-creates this environment on first run;
+    # add the protection rules in Settings > Environments > release.
+    environment: release
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           filter: tree:0
-          # nx release commits the version bump + changelog and pushes to main.
-          # The `main` ruleset blocks direct pushes for non-bypass actors, and
-          # github-actions[bot] (GITHUB_TOKEN) is not one. RELEASE_TOKEN is an
-          # admin PAT (Contents: read/write); pushing as that admin identity
-          # bypasses the ruleset via its Repository-admin bypass. Falls back to
-          # GITHUB_TOKEN when the secret is unset (e.g. before the ruleset lands).
-          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          # SECURITY: do not persist any credential into .git/config here. The
+          # install + `nx affected` steps below execute untrusted dependency
+          # code; a persisted admin token could be exfiltrated by a malicious
+          # package. The privileged push credential is bound late, only in the
+          # Release step, after all third-party code has finished running.
+          persist-credentials: false
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -213,9 +218,18 @@ jobs:
         # non-idempotent (version bump, changelog, tag, commit, push). If Nx
         # Cloud fails mid-sequence, retrying could create duplicate tags or a
         # corrupted release. Fail loudly and let a human re-run cleanly.
-        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish ${{ steps.first_release_flag.outputs.flag }}
+        #
+        # The push credential is bound here and nowhere earlier: RELEASE_TOKEN is
+        # an admin-scoped token (PAT with Contents:write, or a GitHub App token)
+        # that bypasses the `main` ruleset; GITHUB_TOKEN cannot push to protected
+        # main. The token comes from env (never inlined into the command, so it
+        # is not logged). Falls back to GITHUB_TOKEN when the secret is unset.
+        run: |
+          git remote set-url origin "https://x-access-token:${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish ${{ steps.first_release_flag.outputs.flag }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Resolve created release tag
         if: ${{ !inputs.dry_run }}
