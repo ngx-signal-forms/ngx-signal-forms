@@ -67,3 +67,6 @@ build.log
 .nx/self-healing.claude/
 
 .nx/migrate-runs
+
+# graphify knowledge graph output
+graphify-out/
