@@ -63,7 +63,13 @@ jobs:
         with:
           fetch-depth: 0
           filter: tree:0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # nx release commits the version bump + changelog and pushes to main.
+          # The `main` ruleset blocks direct pushes for non-bypass actors, and
+          # github-actions[bot] (GITHUB_TOKEN) is not one. RELEASE_TOKEN is an
+          # admin PAT (Contents: read/write); pushing as that admin identity
+          # bypasses the ruleset via its Repository-admin bypass. Falls back to
+          # GITHUB_TOKEN when the secret is unset (e.g. before the ruleset lands).
+          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
