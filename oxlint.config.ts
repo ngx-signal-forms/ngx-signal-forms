@@ -61,7 +61,6 @@ export default defineConfig({
     '.angular',
     '.nx',
     '.agents',
-    '.opencode',
     '.github/skills',
     '**/dist',
     '**/tmp',
