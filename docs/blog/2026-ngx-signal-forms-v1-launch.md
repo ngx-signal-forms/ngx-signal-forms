@@ -75,6 +75,8 @@ It's **not** a form library. Angular Signal Forms is the form library. The toolk
 
 There's a one-line test for using it right: **if deleting a toolkit API would change the data you submit, you're on the wrong side of the boundary.** Angular stays the single source of truth. The toolkit only changes how a form *looks* and how it *announces itself to assistive tech* — never what it *does*.
 
+That boundary is also a promise about the future: **the moment a piece of functionality lands in Angular itself, I deprecate the toolkit's version and/or ship a migration for it.** The toolkit is meant to fill the gaps Angular leaves today, not to compete with Angular tomorrow. As Signal Forms grows, the toolkit shrinks toward it — on purpose.
+
 ---
 
 ## 30-second quick start
@@ -203,11 +205,36 @@ form(model, (path) => {
 
 Vest support lives behind an optional `/vest` entry point — you only pull it in if you want it.
 
-**Pick your level of control.** Most apps only need the wrapper, but the toolkit ships layered entry points so you're never boxed in:
+---
+
+## Make it yours: theming, then your own wrappers
+
+Adopting the wrapper doesn't mean adopting my design taste. Styling is a graceful slope, and you get off wherever you want:
+
+**Start with theming.** The wrapper ships three appearances out of the box (`appearance="standard" | "outline" | "plain"`), and everything visual — colors, spacing, typography, borders, dark mode — is driven by **CSS custom properties**. No `::ng-deep`, no hacking internals, no rebuild to re-theme:
+
+```css
+:root {
+  --ngx-form-field-gap: 0.5rem;
+  --ngx-form-field-error-color: #c0392b;
+  --ngx-form-field-border-color: #cbd5e1;
+}
+
+/* Runtime theming — flip the whole toolkit to dark instantly */
+[data-theme='dark'] {
+  --ngx-form-field-border-color: #334155;
+}
+```
+
+Because it's just custom properties, mapping your existing Bootstrap / Tailwind / Material tokens onto the toolkit is a handful of lines. The wrapper also exposes stable `data-*` hooks (control kind, layout, ARIA mode) so you can style by control type without coupling to internal markup.
+
+**If theming isn't enough, build your own wrapper.** This is the part I'm proudest of: you can throw out my markup entirely and keep all the behavior. The `/headless` directives hand you the toolkit-managed *state* — strategy-aware error visibility, error aggregation, focus behavior, character counts, ARIA id generation — with **zero markup opinions**, and the `/assistive` components give you ready-made, WCAG-compliant error, hint, counter, and summary pieces to drop into your own layout. Compose those two and a bespoke field wrapper that matches your design system exactly is a small, pleasant component — not a fork.
+
+That's the whole ladder of ownership:
 
 - **`/form-field`** — the ready-made wrapper (the 90% path)
 - **`/assistive`** — standalone error, hint, counter, and summary components for when you already have a layout
-- **`/headless`** — renderless directives that give you toolkit-managed state (error visibility, aggregation, focus, counts) while **you own every element and class**
+- **`/headless`** — renderless directives that give you toolkit-managed state while **you own every element and class**
 - **`/vest`** — the optional Vest adapter
 
 ---
@@ -260,7 +287,7 @@ Requirements: Angular `22.x`, TypeScript 6.0+, modern browsers. Signal Forms is 
 - 📦 **[npm](https://www.npmjs.com/package/@ngx-signal-forms/toolkit)**
 - 📖 **[GitHub + full docs](https://github.com/ngx-signal-forms/ngx-signal-forms)**
 
-There's even an AI skill you can drop into your agent so it knows the toolkit's patterns:
+**Building with an AI agent?** I maintain and ship an official **`ngx-signal-forms` skill** alongside the library, so your agent gets the real patterns — entry points, ARIA automation, the config cascade, and demo references — instead of guessing. Drop it in with:
 
 ```bash
 npx skills add https://github.com/ngx-signal-forms/ngx-signal-forms --skill ngx-signal-forms
