@@ -215,18 +215,18 @@ Adopting the wrapper doesn't mean adopting my design taste. Styling is a gracefu
 
 ```css
 :root {
-  --ngx-form-field-gap: 0.5rem;
-  --ngx-form-field-error-color: #c0392b;
-  --ngx-form-field-border-color: #cbd5e1;
+  --ngx-form-field-color-primary: #6da305; /* focus & active borders     */
+  --ngx-form-field-color-error: #d93025; /* invalid states + markers    */
+  --ngx-form-field-gap: 0.5rem; /* space between label & input */
 }
 
 /* Runtime theming — flip the whole toolkit to dark instantly */
 [data-theme='dark'] {
-  --ngx-form-field-border-color: #334155;
+  --ngx-form-field-color-border: #334155;
 }
 ```
 
-Because it's just custom properties, mapping your existing Bootstrap / Tailwind / Material tokens onto the toolkit is a handful of lines. The wrapper also exposes stable `data-*` hooks (control kind, layout, ARIA mode) so you can style by control type without coupling to internal markup.
+Because it's just custom properties, mapping your existing Bootstrap / Tailwind / Material tokens onto the toolkit is a handful of lines — e.g. `--ngx-form-field-color-primary: var(--bs-primary);`. The wrapper also exposes stable `data-*` hooks (control kind, layout, ARIA mode) so you can style by control type without coupling to internal markup.
 
 **If theming isn't enough, build your own wrapper.** This is the part I'm proudest of: you can throw out my markup entirely and keep all the behavior. The `/headless` directives hand you the toolkit-managed *state* — strategy-aware error visibility, error aggregation, focus behavior, character counts, ARIA id generation — with **zero markup opinions**, and the `/assistive` components give you ready-made, WCAG-compliant error, hint, counter, and summary pieces to drop into your own layout. Compose those two and a bespoke field wrapper that matches your design system exactly is a small, pleasant component — not a fork.
 
