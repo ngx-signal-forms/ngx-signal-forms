@@ -3,7 +3,12 @@ import { nxE2EPreset } from '@nx/playwright/preset';
 import { defineConfig, devices } from '@playwright/test';
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] ?? 'http://localhost:4200';
+// Socket Firewall (sfw) and similar wrappers inject http_proxy into child
+// processes; without NO_PROXY the webServer availability poll to 127.0.0.1 is
+// routed through that proxy (which answers 405) and never sees the dev server.
+process.env['NO_PROXY'] ??= 'localhost,127.0.0.1';
+
+const baseURL = process.env['BASE_URL'] ?? 'http://127.0.0.1:4600';
 const isCI = Boolean(process.env['CI']);
 
 /**
@@ -69,7 +74,7 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: {
     command: 'pnpm nx serve demo',
-    url: 'http://localhost:4200',
+    url: 'http://127.0.0.1:4600',
     reuseExistingServer: !isCI,
     cwd: workspaceRoot,
     timeout: 240000,

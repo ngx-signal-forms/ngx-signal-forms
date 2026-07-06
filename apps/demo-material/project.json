@@ -30,10 +30,10 @@
       },
       "configurations": {
         "production": {
-          "command": "vite preview --port 4201 --strictPort"
+          "command": "vite preview --port 4701 --strictPort"
         },
         "development": {
-          "command": "vite --port 4201 --strictPort"
+          "command": "vite --port 4601 --strictPort"
         }
       }
     },
@@ -62,7 +62,7 @@
       "defaultConfiguration": "production",
       "options": {
         "buildTarget": "demo-material:build:production",
-        "port": 4201,
+        "port": 4601,
         "staticFilePath": "dist/apps/demo-material",
         "spa": true
       }

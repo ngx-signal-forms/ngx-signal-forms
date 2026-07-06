@@ -30,10 +30,10 @@
       },
       "configurations": {
         "production": {
-          "command": "vite preview --port 4200"
+          "command": "vite preview --port 4700"
         },
         "development": {
-          "command": "vite --port 4200"
+          "command": "vite --port 4600"
         }
       }
     },
@@ -48,7 +48,7 @@
       "defaultConfiguration": "production",
       "options": {
         "buildTarget": "demo:build:production",
-        "port": 4200,
+        "port": 4600,
         "staticFilePath": "dist/apps/demo",
         "spa": true
       }
