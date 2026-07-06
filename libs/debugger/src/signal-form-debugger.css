@@ -423,15 +423,15 @@ details[open] > .ngx-debugger__section-header .ngx-debugger__chevron {
 
 /* Visible errors - colored */
 .ngx-debugger__error-item--visible.ngx-debugger__error-item--root:not(
-    .ngx-debugger__error-item--warning
-  ) {
+  .ngx-debugger__error-item--warning
+) {
   border-left-color: var(--ngx-debugger-color-root);
   background-color: var(--ngx-debugger-color-root-bg);
 }
 
 .ngx-debugger__error-item--visible.ngx-debugger__error-item--field:not(
-    .ngx-debugger__error-item--warning
-  ) {
+  .ngx-debugger__error-item--warning
+) {
   border-color: var(--ngx-debugger-color-danger-bg);
   background-color: var(--ngx-debugger-color-danger-bg);
 }
