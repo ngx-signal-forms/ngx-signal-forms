@@ -214,6 +214,13 @@ export class NgxFormFieldset {
     this.#elementRef.nativeElement.getAttribute('aria-labelledby');
   readonly #initialAriaLabel =
     this.#elementRef.nativeElement.getAttribute('aria-label');
+  // Same preservation rule for `aria-describedby`: `describedByIds()` below
+  // used to return the managed error/warning id (or `null`) unconditionally,
+  // clobbering an author-supplied value (a common pattern:
+  // `<fieldset ngxFormFieldset aria-describedby="pw-rules">`). Capture it
+  // here and prepend it in `describedByIds()`.
+  readonly #initialAriaDescribedby =
+    this.#elementRef.nativeElement.getAttribute('aria-describedby');
   // `<fieldset>` natively implies role="group" and associates a child <legend>.
   // Any other host tag (custom element `<ngx-form-fieldset>` or a bare
   // `[ngxFormFieldset]` attribute target) needs an explicit group role so the
@@ -488,13 +495,18 @@ export class NgxFormFieldset {
   });
 
   protected readonly describedByIds = computed(() => {
+    // Preserve any author-supplied `aria-describedby` — same rule as
+    // `#initialAriaLabelledby` above. Every `return` below merges the
+    // managed id onto this instead of replacing it outright.
+    const initial = this.#initialAriaDescribedby;
+
     // The rendered notification/error component strips its `id` attribute
     // whenever `displayedMessagesSignal` is empty, which happens when the user
     // passes `showErrors="false"` even on an invalid fieldset. Mirror that
     // gating here so `aria-describedby` never points to an element without a
     // matching id in the DOM.
     if (!this.showMessages()) {
-      return null;
+      return initial;
     }
 
     const fieldsetId = this.fieldset.resolvedFieldsetId();
@@ -503,14 +515,16 @@ export class NgxFormFieldset {
     // `filteredErrorsSignal`), so only reference the id that is actually in
     // the DOM.
     if (this.fieldset.shouldShowErrors()) {
-      return `${fieldsetId}-error`;
+      return initial ? `${initial} ${fieldsetId}-error` : `${fieldsetId}-error`;
     }
 
     if (this.fieldset.shouldShowWarnings()) {
-      return `${fieldsetId}-warning`;
+      return initial
+        ? `${initial} ${fieldsetId}-warning`
+        : `${fieldsetId}-warning`;
     }
 
-    return null;
+    return initial;
   });
 
   constructor() {

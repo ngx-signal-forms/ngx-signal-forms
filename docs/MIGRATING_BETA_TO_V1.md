@@ -1054,3 +1054,124 @@ leaf is counted consistently whether it's `null` or populated.
   aggregation and error summary usage.
 - [`docs/WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md) — the warning
   convention and message resolution order.
+
+---
+
+## 9. `form-field` v1.0.0 audit blockers
+
+The `form-field` entry point (`NgxFormFieldWrapper`, `NgxFormFieldset`) and
+its `NgxFormFieldError` collaborator shipped several defects fixed as part
+of the v1.0.0 release audit. Most are non-breaking bug fixes; the ones with
+observable behavior changes are called out below.
+
+### New: `warningStrategy` input on `NgxFormFieldWrapper`
+
+The wrapper previously only mounted its projected error/warning renderer
+when the **blocking-error** strategy (`strategy`, default `'on-touch'`)
+said errors should show — so a warnings-only field never rendered anything
+until the field was touched (or submitted), even though `NgxFormFieldError`
+defaults its own warning timing to `'immediate'`. The wrapper now exposes a
+`warningStrategy` input (forwarded to the renderer) and mounts the renderer
+whenever errors **or** warnings should be visible, matching the
+already-documented "warning timing is independent of error timing"
+contract. Non-breaking / additive — no action required unless you want to
+override the new input.
+
+### Breaking (a11y fix): warnings no longer render alongside a visible blocking error
+
+`NgxFormFieldError`'s warning live region (`role="status"`) previously
+rendered even while the error live region (`role="alert"`) was also
+visible for the same field — assertive **and** polite announcements firing
+for one field at once. It now suppresses the warning region whenever a
+blocking error is visible, matching `NgxFormFieldset`'s existing
+"warnings hidden while errors present" behavior and the form-field
+`README`'s documented contract. The corresponding `${fieldName}-warning`
+id is also dropped from the composed `aria-describedby` in that state (see
+`createAriaDescribedBySignal`) so nothing dangles.
+
+- If a test asserted both a populated `role="alert"` and a populated
+  `role="status"` for the same mixed error+warning field, update it to
+  expect the `role="status"` container to be empty (it stays mounted per
+  WCAG 4.1.3, just without an `id` or content) while errors are visible.
+
+### Fix: dev-mode "could not resolve field name" diagnostics no longer fire spuriously
+
+Both `NgxFormFieldWrapper.resolvedFieldName` and `NgxFormFieldError`'s
+internal field-name resolution used to log their one-shot `console.error`
+from inside a `computed()`. Projected children (`NgxFormFieldHint`,
+`NgxFormFieldError` itself when nested in the wrapper) read that computed
+via `NGX_SIGNAL_FORM_FIELD_CONTEXT` during the wrapper's first
+change-detection pass — before `afterEveryRender` had populated the
+resolved name — so the diagnostic fired even for correctly configured
+fields (input with an `id`, no explicit `fieldName`). Both diagnostics now
+fire from `afterEveryRender` once the DOM state has settled instead.
+
+- If a unit test asserted `console.error` was called by reading
+  `resolvedFieldName()` (or rendering) without ever running change
+  detection, it now needs a render + `fixture.detectChanges()` /
+  `await fixture.whenStable()` pass before the diagnostic fires. (Any
+  test exercised through `@testing-library/angular`'s `render()` already
+  gets this for free.)
+
+### Fix: `[hidden]` on the wrapper host now actually hides the field
+
+`ngx-form-field-wrapper`'s `:host { display: flex }` rule is author-origin
+CSS, which beats the (non-`!important`) UA-stylesheet `[hidden] { display:
+none }` rule regardless of specificity — so a field marked `hidden()` by
+Angular Signal Forms kept rendering fully visible and focusable despite
+carrying the `hidden` attribute. `:host([hidden]) { display: none
+!important; }` has been added so the documented safety net actually works.
+If you were relying on the old (broken) behavior to keep a `hidden()`
+field visible, add your own `@if` instead of the `hidden()` schema logic.
+
+### Fix: bound-control discovery no longer misroutes to a `[prefix]`/label-slot decoy
+
+The wrapper's fallback DOM probe (used for plain controls without their
+own `[formField]` binding, mocked field states, and the pre-init render
+window) queried the whole wrapper host with one selector, which returns
+the first match in **document order** — not by resolution tier. An
+id-bearing `[prefix]`/label-slot element (e.g. a password-visibility
+toggle button) could therefore outrank the real control in the `__main`
+slot, silently misrouting `fieldName`, `data-signal-field`, semantics, and
+required-detection. The probe now checks `__main` first and only falls
+back to a whole-host scan when `__main` has no match (preserving the
+implicit-label pattern, `<label>Email <input id="email"></label>`).
+Non-breaking unless you had markup relying on the old mis-routing.
+
+### Fix: author-supplied `aria-labelledby` / `aria-describedby` preserved instead of clobbered
+
+`NgxFormFieldWrapper` (non-cluster mode) and `NgxFormFieldset` used to
+bind `[attr.aria-labelledby]` / `[attr.aria-describedby]` unconditionally
+to their internally-managed value (`null` in most cases), which silently
+removed any value an author bound directly on the host element (e.g.
+`<fieldset ngxFormFieldset aria-describedby="pw-rules">`). Both now merge
+with (rather than replace) any author-supplied value captured at
+construction — the same preservation rule auto-aria already applies to the
+bound control itself.
+
+### New: custom error-renderer `id` contract documented; `fieldName` passed through
+
+`NgxFormFieldErrorRenderer` (`core/tokens.ts`) now documents that a custom
+renderer **must** render `id="${fieldName}-error"` / `id="${fieldName}-warning"`
+on the elements displaying each kind — the composed `aria-describedby`
+references those ids regardless of which renderer is mounted, so a
+renderer that doesn't satisfy this produces dangling references (an axe
+`aria-valid-attr-value` violation). `NgxFormFieldWrapper` now also passes
+`fieldName` directly to the renderer (in addition to
+`{formField, strategy, submittedStatus, warningStrategy}`) so a custom
+renderer can satisfy the contract without injecting
+`NGX_SIGNAL_FORM_FIELD_CONTEXT` itself. See
+[`docs/CUSTOM_WRAPPERS.md`](./CUSTOM_WRAPPERS.md#the-id-contract).
+
+### New: `NgxFormField` bundle now includes `NgxSignalFormControlSemanticsDirective`
+
+The wrapper's own "could not infer a control kind" dev warning instructs
+authors to declare semantics via `ngxSignalFormControl="..."` — but that
+attribute was inert for consumers who imported only the `NgxFormField`
+convenience bundle (not the full `NgxSignalFormToolkit`), since the
+directive that reads it was never declared. Worse, `ngxSignalFormControlAria="manual"`
+was silently ignored while `NgxSignalFormAutoAria` (which the bundle does
+include) kept managing ARIA anyway via its CSS attribute selector — actively
+overriding what the author opted out of. `NgxFormField` now includes
+`NgxSignalFormControlSemanticsDirective`; it's selector-gated and inert for
+consumers who never add the attribute.
