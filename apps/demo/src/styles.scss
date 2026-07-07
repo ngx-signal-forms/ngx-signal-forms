@@ -80,6 +80,21 @@
   --spacing-12: 3rem;
 }
 
+/* Signal-forms error/warning colors.
+ *
+ * The toolkit drives its dark-mode error colors from `prefers-color-scheme`
+ * only; it no longer detects a `.dark` ancestor class (that relied on the
+ * non-standard `:host-context()`, unsupported in Firefox/Safari — see the
+ * v1.0.0 accessibility audit). Because this demo themes via a `.dark` class
+ * toggled independently of the OS preference, it must set the public
+ * `--ngx-signal-form-error-color` / `--ngx-signal-form-warning-color`
+ * custom properties per theme, otherwise an explicit-light UI on an
+ * OS-prefers-dark machine would show dark-mode error colors. */
+:root {
+  --ngx-signal-form-error-color: #db1818;
+  --ngx-signal-form-warning-color: #a16207;
+}
+
 /* Dark theme variable overrides (activated via .dark class) */
 .dark {
   --color-bg: var(--color-gray-900);
@@ -88,6 +103,8 @@
   --color-text-muted: var(--color-gray-400);
   --color-border: var(--color-gray-700);
   --color-border-focus: var(--color-brand-end);
+  --ngx-signal-form-error-color: #fca5a5;
+  --ngx-signal-form-warning-color: #fcd34d;
 }
 
 /* Base layer: global resets */
