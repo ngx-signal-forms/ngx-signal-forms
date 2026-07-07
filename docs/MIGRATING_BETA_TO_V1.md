@@ -43,6 +43,9 @@ releases will not include any of the renames below.
 - **BREAKING: `ErrorMessageRegistry` is now strongly typed per built-in kind** — factory params for built-in kinds (`minLength`, `min`, `pattern`, …) are typed; custom kinds stay `any` (see [§5b](#5b-error-message-registry-is-now-strongly-typed))
 - **A11y** — removed explicit `aria-live` / `aria-atomic`; role semantics now authoritative
 - **Behavior** — missing `fieldName` / `id` now logs (dev mode) instead of throwing
+- **A11y fix** — assistive live-region containers no longer toggle `aria-hidden`/`[hidden]` while empty, and `NgxFormFieldError`'s `id` binding no longer emits the literal string `"null"` (see [§6](#6-v100-audit-blockers-live-region-focus-and-dark-mode-fixes))
+- **A11y fix** — `NgxFormFieldErrorSummary`'s `autoFocus` now only fires under the resolved `'on-submit'` strategy, never `'on-touch'`/`'immediate'` (see [§6](#6-v100-audit-blockers-live-region-focus-and-dark-mode-fixes))
+- **BREAKING (a11y fix)** — dark mode no longer detects a `.dark` ancestor class via `:host-context()` (non-standard, unsupported in Firefox/Safari); class-based dark-mode apps must override the public `--ngx-signal-form-*` custom properties directly (see [§6](#6-v100-audit-blockers-live-region-focus-and-dark-mode-fixes))
 - **Compatibility** — Angular peer-dep is `>=22.0.0 <23.0.0`
 - **BREAKING: `@angular/common` is now a declared peer dependency** — it was always required at runtime (form-field wrapper/fieldset use `NgComponentOutlet`/`NgTemplateOutlet`) but was previously undeclared
 - **BREAKING: `canSubmitWithWarnings()` now reads `errorSummary()`** — child-path blocking errors now correctly disable submission (see [§5c](#5c-cansubmitwithwarnings-now-aggregates-descendant-errors))
@@ -616,6 +619,99 @@ import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
   `,
 })
 ```
+
+---
+
+## 6. v1.0.0 audit blockers: live-region, focus, and dark-mode fixes
+
+The `assistive` entry point (`NgxFormFieldError`, `NgxFormFieldNotification`,
+`NgxFormFieldErrorSummary`) shipped a handful of accessibility defects that
+were fixed as part of the v1.0.0 release audit. None of these rename or
+remove an input/output, but they change runtime DOM/behavior in ways some
+consumers (especially tests) may depend on.
+
+### `id` binding no longer emits the literal string `"null"`
+
+`NgxFormFieldError`'s error/warning containers used a **property** binding
+(`[id]`) for their generated id. Binding `null` to the DOM `id` property
+coerces to the string `"null"` (WebIDL `DOMString`), so every empty
+container in the document ended up with `id="null"` — a real duplicate-id
+bug. This is now an **attribute** binding (`[attr.id]`), matching
+`NgxFormFieldNotification`, so a `null`/unresolvable id removes the
+attribute entirely instead of emitting `"null"`.
+
+- **Before:** `id="null"` could appear on empty error/warning containers.
+- **After:** the `id` attribute is simply absent.
+- If any test asserted `element.getAttribute('id') === 'null'`, update it to
+  assert `element.hasAttribute('id') === false`.
+
+### Empty live regions no longer toggle `aria-hidden` / `[hidden]`
+
+`NgxFormFieldError`, `NgxFormFieldNotification`, and
+`NgxFormFieldErrorSummary` previously toggled `aria-hidden="true"` and
+`[hidden]` on their live-region containers while empty, removing them from
+the DOM once the first error/warning/entry arrived. Flipping `aria-hidden`
+off in the same change-detection pass that inserts the first message is
+functionally equivalent to inserting a brand-new live region — which
+reintroduces the exact NVDA + Chrome "missed first announcement" bug the
+always-mounted container pattern exists to avoid.
+
+The containers now stay mounted **and exposed** at all times; the `@if` in
+each template already guarantees zero content (including whitespace) while
+empty, and visual collapse is handled entirely by the existing `--empty`
+CSS class.
+
+- **Before:** `screen.queryByRole('alert')` (and `'status'`) returned `null`
+  while there were no errors/warnings/entries, because the empty container
+  carried `aria-hidden`/`[hidden]` and Testing Library's accessible-role
+  queries exclude hidden elements by default.
+- **After:** the container is always found by role; assert on its content
+  instead — e.g. `expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('')`.
+- `NgxFormFieldErrorSummary`'s `role="alert"` container is now also
+  rendered unconditionally (previously it was only added to the DOM once
+  there were entries, which risked the same missed-first-announcement
+  timing bug on the very first submit).
+
+### `NgxFormFieldErrorSummary` `autoFocus` no longer fires under `'on-touch'` / `'immediate'`
+
+`autoFocus` (default `true`) is documented as implementing the GOV.UK/WAI
+pattern of moving focus to the summary "after a failed submit." Previously
+it fired on _any_ 0 → N entries transition, including under the default
+`'on-touch'` strategy — so blurring the first invalid field mid-fill (or,
+under `'immediate'`, simply loading an already-invalid form) silently
+stole focus. This violated WCAG 3.2.1/3.2.2 and contradicted the documented
+contract.
+
+`autoFocus` now only moves focus when the resolved strategy (explicit
+`strategy` input → form context → `'on-touch'` default) is `'on-submit'`.
+Under `'on-touch'`/`'immediate'`, focus is never moved automatically,
+regardless of the `autoFocus` value.
+
+- If you depended on the old on-touch/immediate auto-focus behavior, move
+  focus yourself (e.g. in a submit handler) or switch the summary's
+  `strategy` to `'on-submit'`.
+- The new `resolvedStrategy` signal is exposed on the headless
+  `NgxHeadlessErrorSummary` directive if you need to replicate this gating
+  in a custom summary UI.
+
+### Dark mode: `:host-context(.dark)` heuristic removed
+
+`NgxFormFieldError` and `NgxFormFieldNotification` previously shipped a
+`:host-context(.dark)` / `:host-context(:root:not(.dark))` heuristic
+alongside their `prefers-color-scheme: dark` media query, intended to
+support class-based dark-mode toggling (e.g. Tailwind's `.dark` strategy).
+`:host-context()` is non-standard and unsupported in Firefox and Safari, so
+the three engines disagreed on the resulting colors — in some
+configurations this produced WCAG 1.4.3 contrast failures (as low as
+~1.8:1). The heuristic has been removed; built-in dark defaults are now
+driven by `prefers-color-scheme` only, consistently across all engines.
+
+- **Breaking for class-based dark-mode consumers:** if your app toggles a
+  `.dark` class instead of relying on the OS color scheme, the built-in
+  dark tokens will no longer activate. Override the public
+  `--ngx-signal-form-error-*` / `--ngx-signal-form-warning-*` /
+  `--ngx-signal-form-notification-*` custom properties yourself, scoped to
+  your `.dark` selector — see the [assistive README](../packages/toolkit/assistive/README.md#dark-mode).
 
 ---
 

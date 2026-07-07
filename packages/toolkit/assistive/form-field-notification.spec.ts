@@ -86,9 +86,10 @@ describe('NgxFormFieldNotification', () => {
       },
     );
 
-    // Mixed lists resolve to error: blocking wins over warnings.
+    // Mixed lists resolve to error: blocking wins over warnings. The
+    // status shell stays mounted (WCAG 4.1.3) but must be empty.
     expect(screen.getByRole('alert')).toBeTruthy();
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByRole('status')?.textContent?.trim() ?? '').toBe('');
     expect(container.querySelector('#mixed-group-error')).toBeTruthy();
     expect(container.querySelector('#mixed-group-warning')).toBeNull();
   });
@@ -112,7 +113,7 @@ describe('NgxFormFieldNotification', () => {
     );
 
     expect(screen.getByRole('status')).toBeTruthy();
-    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('');
   });
 
   it('keeps alert semantics for blocking errors even when tone="warning"', async () => {
@@ -134,7 +135,7 @@ describe('NgxFormFieldNotification', () => {
     );
 
     expect(screen.getByRole('alert')).toBeTruthy();
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByRole('status')?.textContent?.trim() ?? '').toBe('');
   });
 
   it('keeps the error container id while blocking errors exist, regardless of tone', async () => {
@@ -187,7 +188,7 @@ describe('NgxFormFieldNotification', () => {
     expect(container.querySelector('#static-field-error')).toBeTruthy();
   });
 
-  it('keeps an empty shell mounted with aria-hidden and no id when errors are undefined', async () => {
+  it('keeps an empty shell mounted with no id when errors are undefined', async () => {
     const { container } = await render(
       `<ngx-form-field-notification fieldName="empty-shell" />`,
       { imports: [NgxFormFieldNotification] },
@@ -198,12 +199,14 @@ describe('NgxFormFieldNotification', () => {
     expect(
       shell?.classList.contains('ngx-form-field-notification--empty'),
     ).toBe(true);
-    expect(shell?.getAttribute('aria-hidden')).toBe('true');
+    // `aria-hidden`/`[hidden]` are intentionally never toggled — see the
+    // class-level docs on the always-mounted live-region pattern.
+    expect(shell?.hasAttribute('aria-hidden')).toBe(false);
     expect(shell?.id).toBe('');
     expect(container.querySelector('#empty-shell-error')).toBeNull();
   });
 
-  it('keeps an empty shell mounted with aria-hidden when errors is an empty array', async () => {
+  it('keeps an empty shell mounted with no id when errors is an empty array', async () => {
     const errors = signal<readonly { kind: string; message: string }[]>([]);
 
     const { container } = await render(
@@ -221,7 +224,7 @@ describe('NgxFormFieldNotification', () => {
     expect(
       shell?.classList.contains('ngx-form-field-notification--empty'),
     ).toBe(true);
-    expect(shell?.getAttribute('aria-hidden')).toBe('true');
+    expect(shell?.hasAttribute('aria-hidden')).toBe(false);
     expect(shell?.id).toBe('');
   });
 

@@ -155,6 +155,15 @@
   display: block;
 }
 
+/* Dark-mode defaults are driven by `prefers-color-scheme` only. An earlier
+ * revision also tried to special-case a `.dark` class ancestor via
+ * `:host-context()`, but that selector is non-standard and unsupported in
+ * Firefox and Safari — the three engines disagreed on the resulting colors
+ * (see the v1.0.0 accessibility audit), risking WCAG 1.4.3 contrast
+ * failures. Class-based ("`.dark` on `<html>`/`<body>`") theming strategies
+ * are not detectable in plain CSS without `:host-context()`; apps using that
+ * strategy must override the public `--ngx-signal-form-notification-*`
+ * custom properties directly (see README). */
 @media (prefers-color-scheme: dark) {
   :host {
     --_notification-clr-danger: var(--_notification-clr-danger-dark);
@@ -162,24 +171,6 @@
     --_notification-clr-warning: var(--_notification-clr-warning-dark);
     --_notification-bg-warning-light: var(--_notification-bg-warning-dark);
   }
-
-  :host-context(:root:not(.dark)) {
-    --_notification-clr-danger: #db1818;
-    --_notification-clr-danger-soft: #fdebeb;
-    --_notification-clr-warning: #a16207;
-    --_notification-bg-warning-light: color-mix(
-      in srgb,
-      var(--_notification-clr-warning) 10%,
-      white
-    );
-  }
-}
-
-:host-context(.dark) {
-  --_notification-clr-danger: var(--_notification-clr-danger-dark);
-  --_notification-clr-danger-soft: var(--_notification-bg-danger-dark);
-  --_notification-clr-warning: var(--_notification-clr-warning-dark);
-  --_notification-bg-warning-light: var(--_notification-bg-warning-dark);
 }
 
 .ngx-form-field-notification {

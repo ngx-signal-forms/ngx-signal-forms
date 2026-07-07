@@ -2,8 +2,11 @@ import { computed, Directive, inject, input, type Signal } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createErrorVisibility,
+  injectFormContext,
+  resolveStrategyFromContext,
   splitByKind,
   type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -49,6 +52,14 @@ export interface ErrorSummarySignals {
    * on this signal instead of `shouldShow()`.
    */
   readonly shouldShowWarnings: Signal<boolean>;
+  /**
+   * The fully-resolved error display strategy: explicit `strategy` input →
+   * form context → `'on-touch'` default. Consumers that need to distinguish
+   * a submit-driven appearance (e.g. to decide whether to move focus) from
+   * an on-touch/immediate one should read this rather than the raw
+   * `strategy` input, which may be `undefined`.
+   */
+  readonly resolvedStrategy: Signal<ResolvedErrorDisplayStrategy>;
   /** Focus the control for the first error entry */
   readonly focusFirst: () => void;
 }
@@ -70,14 +81,19 @@ export interface ErrorSummarySignals {
  *
  * ## Usage
  *
+ * The `role="alert"` container should be rendered UNCONDITIONALLY (even
+ * while empty) rather than inserted together with its content — the same
+ * always-mounted live-region pattern `NgxFormFieldError` and
+ * `NgxFormFieldNotification` use. `role="alert"` only reliably fires on
+ * content insertion into a *pre-existing* live region; mounting the
+ * container and its content in the same tick risks the NVDA + Chrome
+ * missed-first-announcement bug. Gate only the inner content on
+ * `shouldShow()`/`hasErrors()`, not the container itself:
+ *
  * ```html
- * <div
- *   ngxHeadlessErrorSummary
- *   #summary="errorSummary"
- *   [formTree]="myForm"
- * >
- *   @if (summary.shouldShow() && summary.hasErrors()) {
- *     <ul role="alert">
+ * <div ngxHeadlessErrorSummary #summary="errorSummary" [formTree]="myForm">
+ *   <ul role="alert">
+ *     @if (summary.shouldShow() && summary.hasErrors()) {
  *       @for (entry of summary.entries(); track entry.kind + entry.fieldName) {
  *         <li>
  *           <button type="button" (click)="entry.focus()">
@@ -85,8 +101,8 @@ export interface ErrorSummarySignals {
  *           </button>
  *         </li>
  *       }
- *     </ul>
- *   }
+ *     }
+ *   </ul>
  * </div>
  * ```
  */
@@ -101,6 +117,7 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
   readonly #labelResolver = inject(NGX_FIELD_LABEL_RESOLVER, {
     optional: true,
   });
+  readonly #formContext = injectFormContext();
 
   /**
    * The root form FieldTree to aggregate errors from.
@@ -118,6 +135,10 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
    * If not provided, inherits from form context.
    */
   readonly submittedStatus = input<SubmittedStatus | undefined>();
+
+  readonly resolvedStrategy = computed(() =>
+    resolveStrategyFromContext(this.strategy(), this.#formContext),
+  );
 
   readonly #fieldState = computed(() => this.formTree()());
 

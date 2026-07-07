@@ -114,17 +114,21 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
       pre-existing live region — works the very first time an error appears.
       This satisfies WCAG 4.1.3 (Status Messages) and avoids the NVDA + Chrome
       timing edge case where a freshly-inserted live region misses its first
-      announcement. We mark the container as aria-hidden="true" while empty
-      so it is invisible to AT and contributes no whitespace text to the
-      accessibility tree, but never toggle the role attribute itself.
+      announcement. We intentionally do NOT toggle aria-hidden/[hidden]
+      while empty: the @if below already guarantees zero content (including
+      whitespace text) when empty, so an empty live region announces nothing
+      on its own — flipping aria-hidden off at the same tick the first
+      error is inserted would prune-then-immediately-expose the node, which
+      is functionally equivalent to inserting a brand-new live region and
+      reintroduces the very missed-first-announcement bug this pattern exists
+      to avoid. Visual collapse while empty is handled by the --empty CSS
+      class alone.
     -->
     <div
-      [id]="errorContainerVisible() ? errorId() : null"
+      [attr.id]="errorContainerVisible() ? errorId() : null"
       class="ngx-form-field-error ngx-form-field-error--error"
       [class.ngx-form-field-error--empty]="!errorContainerVisible()"
       role="alert"
-      [attr.aria-hidden]="errorContainerVisible() ? null : 'true'"
-      [hidden]="!errorContainerVisible()"
     >
       @if (errorContainerVisible()) {
         @if (usesBulletList()) {
@@ -159,15 +163,13 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
       Non-blocking Warnings: role="status" implies aria-live="polite" and
       aria-atomic="true"; the explicit attributes are intentionally omitted
       to avoid duplicate AT announcements. Same empty-live-region pattern as
-      the alert container above.
+      the alert container above (no aria-hidden/[hidden] toggling).
     -->
     <div
-      [id]="warningContainerVisible() ? warningId() : null"
+      [attr.id]="warningContainerVisible() ? warningId() : null"
       class="ngx-form-field-error ngx-form-field-error--warning"
       [class.ngx-form-field-error--empty]="!warningContainerVisible()"
       role="status"
-      [attr.aria-hidden]="warningContainerVisible() ? null : 'true'"
-      [hidden]="!warningContainerVisible()"
     >
       @if (warningContainerVisible()) {
         @if (usesBulletList()) {

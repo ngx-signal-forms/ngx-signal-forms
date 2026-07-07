@@ -83,7 +83,7 @@ describe('NgxFormFieldErrorSummary', () => {
 
     const { fixture } = await render(TestComponent);
 
-    expect(screen.queryByRole('alert')).toBeFalsy();
+    expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('');
 
     fixture.componentInstance.submittedStatus.set('submitted');
     fixture.detectChanges();
@@ -119,7 +119,7 @@ describe('NgxFormFieldErrorSummary', () => {
     const { fixture } = await render(TestComponent);
 
     // Default strategy is on-touch → no entries until a field is touched.
-    expect(screen.queryByRole('alert')).toBeFalsy();
+    expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('');
 
     fixture.componentInstance.contactForm.email().markAsTouched();
     fixture.detectChanges();
@@ -189,7 +189,7 @@ describe('NgxFormFieldErrorSummary', () => {
 
     await render(TestComponent);
 
-    expect(screen.queryByRole('alert')).toBeFalsy();
+    expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('');
     expect(screen.queryAllByRole('button').length).toBe(0);
   });
 
@@ -273,9 +273,10 @@ describe('NgxFormFieldErrorSummary', () => {
 
     const { fixture } = await render(TestComponent);
 
-    // Before submit there are no entries, so the summary is hidden and
-    // focus is wherever the test framework left it (typically <body>).
-    expect(screen.queryByRole('alert')).toBeFalsy();
+    // Before submit there are no entries, so the summary shell stays
+    // mounted (WCAG 4.1.3) but empty, and focus is wherever the test
+    // framework left it (typically <body>).
+    expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('');
 
     // Submit triggers the on-submit strategy → entries appear → host
     // should receive focus on the next render pass.
@@ -337,6 +338,56 @@ describe('NgxFormFieldErrorSummary', () => {
     // Summary is visible but focus must remain on the input.
     expect(await screen.findByRole('alert')).toBeTruthy();
     expect(document.activeElement).toBe(input);
+  });
+
+  it('does not steal focus under the default on-touch strategy (WCAG 3.2.1/3.2.2)', async () => {
+    // The GOV.UK/WAI error-summary pattern moves focus to the summary after
+    // a failed *submit*. `errorStrategy` defaults to `'on-touch'`, and the
+    // root FieldTree's `touched()` aggregates children — so merely blurring
+    // the first invalid field would surface the summary. Auto-focusing here
+    // would be an unexpected context change (WCAG 3.2.1/3.2.2) while the
+    // user is still filling out the form, not the documented "arrive after
+    // a failed submit" contract.
+    @Component({
+      selector: 'ngx-test-error-summary-on-touch-no-steal',
+      imports: [FormField, NgxFormFieldErrorSummary],
+
+      template: `
+        <input
+          id="email"
+          data-testid="email-input"
+          [formField]="contactForm.email"
+        />
+        <ngx-form-field-error-summary [formTree]="contactForm" />
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ email: '' });
+      readonly contactForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.email, { message: 'Email is required' });
+        }),
+      );
+    }
+
+    await render(TestComponent);
+
+    const input = screen.getByTestId('email-input');
+    await userEvent.click(input);
+    await userEvent.tab();
+
+    // The alert shell is always mounted (WCAG 4.1.3 live region), so
+    // `findByRole('alert')` resolves as soon as the element exists — not
+    // once it actually contains the error text. Wait for the text content
+    // itself to avoid racing the update.
+    const summaryAlert = await screen.findByRole('alert');
+    await vi.waitFor(() => {
+      expect(summaryAlert.textContent).toContain('Email is required');
+    });
+
+    const focusTarget = summaryAlert.closest('ngx-form-field-error-summary');
+    expect(document.activeElement).not.toBe(focusTarget);
   });
 
   describe('dev-mode focus-failure diagnostic', () => {
