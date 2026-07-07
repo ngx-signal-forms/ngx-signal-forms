@@ -45,7 +45,7 @@ import { NgxFormFieldError } from './form-field-error';
     },
   ],
   template: `
-    @if (headless.showErrors() && headless.hasErrors()) {
+    @if (headless.shouldShowErrors() && headless.hasErrors()) {
       <div data-testid="custom-error">
         @for (e of headless.resolvedErrors(); track e.kind) {
           <span>{{ e.message }}</span>

@@ -113,7 +113,7 @@ describe('NgxHeadlessErrorState', () => {
               fieldName="email"
               strategy="on-touch"
             >
-              @if (errorState.showErrors()) {
+              @if (errorState.shouldShowErrors()) {
                 <span data-testid="show-errors">Show Errors</span>
               } @else {
                 <span data-testid="hide-errors">Hide Errors</span>
@@ -264,8 +264,8 @@ describe('NgxHeadlessErrorState', () => {
       expect(isSignal(state.warnings)).toBe(true);
       expect(isSignal(state.resolvedErrors)).toBe(true);
       expect(isSignal(state.resolvedWarnings)).toBe(true);
-      expect(isSignal(state.showErrors)).toBe(true);
-      expect(isSignal(state.showWarnings)).toBe(true);
+      expect(isSignal(state.shouldShowErrors)).toBe(true);
+      expect(isSignal(state.shouldShowWarnings)).toBe(true);
       expect(isSignal(state.errorId)).toBe(true);
       expect(isSignal(state.warningId)).toBe(true);
     });
@@ -321,7 +321,7 @@ describe('NgxHeadlessErrorState', () => {
               fieldName="email"
               strategy="immediate"
             >
-              @if (errorState.showErrors()) {
+              @if (errorState.shouldShowErrors()) {
                 <span data-testid="show-errors">Show Errors</span>
               }
             </div>
@@ -360,7 +360,7 @@ describe('NgxHeadlessErrorState', () => {
               strategy="on-submit"
               [submittedStatus]="submittedStatus()"
             >
-              @if (errorState.showErrors()) {
+              @if (errorState.shouldShowErrors()) {
                 <span data-testid="show-errors">Show Errors</span>
               } @else {
                 <span data-testid="hide-errors">Hide Errors</span>
@@ -409,7 +409,7 @@ describe('NgxHeadlessErrorState', () => {
               fieldName="email"
               strategy="immediate"
             >
-              @if (errorState.showErrors() && errorState.hasErrors()) {
+              @if (errorState.shouldShowErrors() && errorState.hasErrors()) {
                 <div
                   class="custom-error-container"
                   role="alert"
@@ -465,7 +465,7 @@ describe('NgxHeadlessErrorState', () => {
               fieldName="email"
               strategy="on-touch"
             >
-              @if (errorState.showErrors()) {
+              @if (errorState.shouldShowErrors()) {
                 <span data-testid="show-errors">Show Errors</span>
               } @else {
                 <span data-testid="hide-errors">Hide Errors</span>
@@ -516,7 +516,7 @@ describe('NgxHeadlessErrorState', () => {
             @for (error of errorState.resolvedErrors(); track error.kind) {
               <span data-testid="override-error">{{ error.message }}</span>
             }
-            @if (errorState.showErrors()) {
+            @if (errorState.shouldShowErrors()) {
               <span data-testid="show">Show</span>
             }
           </div>
@@ -583,7 +583,7 @@ describe('NgxHeadlessErrorState', () => {
           { directive: NgxHeadlessErrorState, inputs: ['strategy'] },
         ],
         template: `
-          @if (headless.showErrors()) {
+          @if (headless.shouldShowErrors()) {
             <span data-testid="bridge-show">Show</span>
           } @else {
             <span data-testid="bridge-hide">Hide</span>

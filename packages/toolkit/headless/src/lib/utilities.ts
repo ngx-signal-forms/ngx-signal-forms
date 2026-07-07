@@ -370,7 +370,7 @@ export interface ErrorStateResult {
  *
  * // Use in templates
  * effect(() => {
- *   if (errorState.showErrors() && errorState.hasErrors()) {
+ *   if (errorState.shouldShowErrors() && errorState.hasErrors()) {
  *     console.log('Errors:', errorState.errors());
  *   }
  * });
