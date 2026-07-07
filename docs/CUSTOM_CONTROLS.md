@@ -391,7 +391,7 @@ Or with headless primitives:
 >
   <app-custom-field [formField]="form.password" />
 
-  @if (errorState.showWarnings() && errorState.hasWarnings()) {
+  @if (errorState.shouldShowWarnings() && errorState.hasWarnings()) {
   <div role="status" aria-live="polite">
     @for (warning of errorState.resolvedWarnings(); track warning.kind) {
     <span>{{ warning.message }}</span>
