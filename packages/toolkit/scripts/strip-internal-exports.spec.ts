@@ -20,10 +20,11 @@ import { afterEach, describe, expect, it } from 'vitest';
 const scriptPath = resolve(import.meta.dirname, './strip-internal-exports.mjs');
 
 describe('strip-internal-exports.mjs', () => {
-  let workDir: string;
+  let workDir: string | undefined;
 
   afterEach(() => {
-    if (workDir) rmSync(workDir, { recursive: true, force: true });
+    if (workDir !== undefined)
+      rmSync(workDir, { recursive: true, force: true });
   });
 
   it('rewrites .d.ts core specifiers to an extension-carrying relative path', async () => {

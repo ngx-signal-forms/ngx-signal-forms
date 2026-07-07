@@ -21,12 +21,18 @@ const projectJson = JSON.parse(
 };
 
 describe('packages/toolkit/package.json', () => {
-  it('declares @angular/common as a peer dependency', () => {
+  it('declares @angular/common as a peer dependency with the same range as @angular/core', () => {
     // form-field-wrapper.ts and form-fieldset.ts import NgComponentOutlet /
     // NgTemplateOutlet from '@angular/common' at runtime — the built fesm
     // bundle contains a genuine top-level import of it, so it must be a
-    // declared peer dependency, not just a devDependency.
+    // declared peer dependency, not just a devDependency. It must also track
+    // the same Angular major/minor range as @angular/core — a drifted range
+    // would let a consumer install a common/core version pair that the
+    // package was never validated against.
     expect(packageJson.peerDependencies).toHaveProperty('@angular/common');
+    expect(packageJson.peerDependencies?.['@angular/common']).toBe(
+      packageJson.peerDependencies?.['@angular/core'],
+    );
   });
 });
 
