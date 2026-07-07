@@ -12,8 +12,10 @@ import {
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
   showErrors,
+  unwrapValue,
   type ErrorDisplayStrategy,
   type ErrorReadableState,
+  type ReactiveOrStatic,
   type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
@@ -36,9 +38,9 @@ export interface ResolvedError {
  */
 export interface ErrorStateSignals {
   /** Whether to show errors based on the current strategy */
-  readonly showErrors: Signal<boolean>;
+  readonly shouldShowErrors: Signal<boolean>;
   /** Whether to show warnings based on the current strategy */
-  readonly showWarnings: Signal<boolean>;
+  readonly shouldShowWarnings: Signal<boolean>;
   /** Raw blocking errors from the field */
   readonly errors: Signal<readonly ValidationError[]>;
   /** Raw warning errors from the field */
@@ -80,7 +82,7 @@ export interface ErrorStateSignals {
  *   [field]="form.email"
  *   fieldName="email"
  * >
- *   @if (errorState.showErrors() && errorState.hasErrors()) {
+ *   @if (errorState.shouldShowErrors() && errorState.hasErrors()) {
  *     <my-custom-error-display [errors]="errorState.resolvedErrors()" />
  *   }
  * </div>
@@ -91,7 +93,7 @@ export interface ErrorStateSignals {
  * ```html
  * <form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">
  *   <div ngxHeadlessErrorState #errorState="errorState" [field]="form.email" fieldName="email">
- *     @if (errorState.showErrors()) {
+ *     @if (errorState.shouldShowErrors()) {
  *       @for (error of errorState.resolvedErrors(); track error.kind) {
  *         <span class="error">{{ error.message }}</span>
  *       }
@@ -152,7 +154,7 @@ export class NgxHeadlessErrorState<
    * Error display strategy override.
    * If undefined, inherits from form context or defaults to 'on-touch'.
    */
-  readonly strategy = input<ErrorDisplayStrategy | undefined>();
+  readonly errorStrategy = input<ErrorDisplayStrategy | undefined>();
 
   /**
    * Form submission status (optional).
@@ -161,15 +163,18 @@ export class NgxHeadlessErrorState<
   readonly submittedStatus = input<SubmittedStatus | undefined>();
 
   /**
-   * Pre-aggregated error signal that replaces field-based error extraction.
+   * Pre-aggregated errors that replace field-based error extraction.
    *
-   * When provided, errors and warnings are derived from this signal rather
-   * than from `field`. Useful for fieldsets or custom components that
-   * compute their own error lists (e.g. `NgxFormFieldset.filteredErrorsSignal`).
-   * In this mode `field` is not required and `showErrors` always returns
-   * `true` (the caller controls visibility through `hasErrors`/`hasWarnings`).
+   * Accepts a plain array or a reactive source (`Signal<…>` / `() => …`) —
+   * unwrapped internally via {@link unwrapValue}. When provided, errors and
+   * warnings are derived from this value rather than from `field`. Useful
+   * for fieldsets or custom components that compute their own error lists
+   * (e.g. `NgxFormFieldset.filteredErrorsSignal`). In this mode `field` is
+   * not required and `shouldShowErrors` always returns `true` (the caller
+   * controls visibility through `hasErrors`/`hasWarnings`).
    */
-  readonly errorsOverride = input<Signal<readonly ValidationError[]>>();
+  readonly errorsOverride =
+    input<ReactiveOrStatic<readonly ValidationError[]>>();
 
   /**
    * Bridges a host component's field input to this directive when the
@@ -198,7 +203,7 @@ export class NgxHeadlessErrorState<
   }
 
   readonly #resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() =>
-    resolveStrategyFromContext(this.strategy(), this.#injectedContext),
+    resolveStrategyFromContext(this.errorStrategy(), this.#injectedContext),
   );
 
   /**
@@ -225,7 +230,10 @@ export class NgxHeadlessErrorState<
   readonly #core = buildHeadlessErrorState(
     this.#fieldState,
     this.fieldName,
-    computed(() => this.errorsOverride()?.()),
+    computed(() => {
+      const override = this.errorsOverride();
+      return override === undefined ? undefined : unwrapValue(override);
+    }),
   );
 
   readonly errorId = this.#core.errorId;
@@ -260,7 +268,7 @@ export class NgxHeadlessErrorState<
    * `connectFieldState()` in their constructor, so the slot is non-null
    * even when the host's `[formField]` input is unbound.
    */
-  readonly showErrors = computed(() => {
+  readonly shouldShowErrors = computed(() => {
     if (this.errorsOverride()) return true;
     if (!this.field() && this.#bridgedFieldState()?.() == null) return true;
     return this.#strategyBasedShowErrors();
@@ -269,7 +277,7 @@ export class NgxHeadlessErrorState<
   /**
    * Whether warnings should be shown (same strategy logic as errors).
    */
-  readonly showWarnings = this.showErrors;
+  readonly shouldShowWarnings = this.shouldShowErrors;
 
   /**
    * Resolved error messages using 3-tier priority.

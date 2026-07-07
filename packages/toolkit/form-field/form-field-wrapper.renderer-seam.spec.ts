@@ -158,7 +158,7 @@ describe('form-fieldset renderer seam', () => {
       imports: [NgxFormFieldset, NgxFormFieldWrapper],
       template: `
         <ngx-form-fieldset
-          [fieldsetField]="addressForm"
+          [field]="addressForm"
           fieldsetId="address"
           feedbackAppearance="plain"
           listStyle="bullets"

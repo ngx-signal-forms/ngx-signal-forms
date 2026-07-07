@@ -23,7 +23,7 @@ describe('NgxHeadlessFieldset', () => {
         <fieldset
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
           includeNestedErrors
         >
           <span data-testid="error-count">
@@ -63,7 +63,7 @@ describe('NgxHeadlessFieldset', () => {
         <fieldset
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
         >
           <span data-testid="error-count">
             {{ fieldset.aggregatedErrors().length }}
@@ -98,7 +98,7 @@ describe('NgxHeadlessFieldset', () => {
         <fieldset
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
           [fields]="fields"
         >
           @for (error of fieldset.aggregatedErrors(); track error.kind) {
@@ -134,7 +134,7 @@ describe('NgxHeadlessFieldset', () => {
         <fieldset
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
           includeNestedErrors
         >
           <span data-testid="show-errors">
@@ -173,7 +173,7 @@ describe('NgxHeadlessFieldset', () => {
         <fieldset
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
           includeNestedErrors
         >
           <span data-testid="show-warnings">
@@ -229,7 +229,7 @@ describe('NgxHeadlessFieldset', () => {
         <fieldset
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
           fieldsetId="address"
         >
           <span data-testid="fieldset-id">
@@ -258,7 +258,7 @@ describe('NgxHeadlessFieldset', () => {
           <fieldset
             ngxHeadlessFieldset
             #fieldset="fieldset"
-            [fieldsetField]="addressForm.address"
+            [field]="addressForm.address"
             includeNestedErrors
           >
             <span data-testid="resolved-strategy">
@@ -300,7 +300,7 @@ describe('NgxHeadlessFieldset', () => {
         <fieldset
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
           submittedStatus="submitted"
         >
           <span data-testid="resolved-submitted-status">
@@ -331,7 +331,7 @@ describe('NgxHeadlessFieldset', () => {
           data-testid="fieldset-host"
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
           fieldsetId="address"
         >
           <span data-testid="fieldset-id">
@@ -366,7 +366,7 @@ describe('NgxHeadlessFieldset', () => {
         <fieldset
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
         >
           <span data-testid="fieldset-id">
             {{ fieldset.resolvedFieldsetId() }}

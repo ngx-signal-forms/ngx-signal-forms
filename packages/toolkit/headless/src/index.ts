@@ -25,6 +25,11 @@ export {
   type ResolvedFieldError,
 } from './lib/create-error-message-signal';
 
+// Re-exported from `/core` so `CreateErrorMessageSignalOptions.errorMessages`
+// (a `Signal<ErrorMessageRegistry>`) is fully resolvable without an extra
+// import from the root entrypoint.
+export { type ErrorMessageRegistry } from '@ngx-signal-forms/toolkit/core';
+
 // Directives
 export {
   NgxHeadlessErrorState,
@@ -55,7 +60,6 @@ export {
 
 export {
   NgxHeadlessNotification,
-  type NgxNotificationTone,
   type NotificationStateSignals,
   type ResolvedNotificationMessage,
 } from './lib/notification';

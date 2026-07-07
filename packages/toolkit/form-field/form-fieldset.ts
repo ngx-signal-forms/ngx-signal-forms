@@ -85,7 +85,7 @@ export type NgxFieldsetValidationSurface = 'never' | 'always';
  * @example Group-Only Mode (when nested fields show their own errors)
  * ```html
  * <ngx-form-fieldset
- *   [fieldsetField]="form.passwords"
+ *   [field]="form.passwords"
  *   [includeNestedErrors]="false"
  * >
  *   <ngx-form-field-wrapper [formField]="form.passwords.password">...</ngx-form-field-wrapper>
@@ -96,7 +96,7 @@ export type NgxFieldsetValidationSurface = 'never' | 'always';
  *
  * @example Aggregated Mode (when nested fields don't show errors)
  * ```html
- * <ngx-form-fieldset [fieldsetField]="form.address">
+ * <ngx-form-fieldset [field]="form.address">
  *   <input [formField]="form.address.street" />
  *   <input [formField]="form.address.city" />
  *   <!-- Fieldset shows all nested field errors -->
@@ -110,7 +110,7 @@ export type NgxFieldsetValidationSurface = 'never' | 'always';
     {
       directive: NgxHeadlessFieldset,
       inputs: [
-        'fieldsetField',
+        'field',
         'fields',
         'fieldsetId',
         'strategy',

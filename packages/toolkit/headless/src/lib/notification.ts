@@ -1,6 +1,10 @@
 import { computed, Directive, inject, input, type Signal } from '@angular/core';
 import type { ValidationError } from '@angular/forms/signals';
-import { isWarningError } from '@ngx-signal-forms/toolkit';
+import {
+  isWarningError,
+  unwrapValue,
+  type ReactiveOrStatic,
+} from '@ngx-signal-forms/toolkit';
 import {
   createFieldMessageIdSignals,
   NGX_ERROR_MESSAGES,
@@ -8,14 +12,6 @@ import {
 } from '@ngx-signal-forms/toolkit/core';
 
 import { resolveErrorMessage } from './utilities';
-
-/**
- * Visual / ARIA tone for grouped notifications.
- *
- * `auto` inspects the provided messages and routes an all-warning list to
- * the warning live region, mixed/blocking lists to the error live region.
- */
-export type NgxNotificationTone = 'auto' | 'error' | 'warning';
 
 /**
  * Resolved notification message with kind and human-facing message.
@@ -58,8 +54,8 @@ export interface NotificationStateSignals {
  *
  * ## Tone resolution rules
  *
- * Tone is content-driven; the `tone` input is currently a no-op retained
- * for API stability and future expansion. The resolved tone is:
+ * Tone is fully content-driven — there is no `tone` input. The resolved
+ * tone is:
  * - Any blocking (non-`warn:`) error → `'error'` (raises `role="alert"`).
  * - All-warning lists → `'warning'` (polite `role="status"`).
  * - Empty list → `'error'` (the container stays hidden anyway).
@@ -98,11 +94,11 @@ export class NgxHeadlessNotification implements NotificationStateSignals {
   /**
    * Grouped validation messages to present.
    *
-   * Accepts a signal so the directive composes naturally with `computed()`
-   * fieldset aggregations. Callers holding a static array should wrap it in
-   * `signal([…])` or `computed(() => […])`.
+   * Accepts a plain array or a reactive source (`Signal<…>` / `() => …`) —
+   * unwrapped internally via {@link unwrapValue}, so a `computed()` fieldset
+   * aggregation and a static array both work directly.
    */
-  readonly errors = input<Signal<readonly ValidationError[]>>();
+  readonly errors = input<ReactiveOrStatic<readonly ValidationError[]>>();
 
   /**
    * Optional field/group identifier used to produce deterministic ids for
@@ -110,20 +106,9 @@ export class NgxHeadlessNotification implements NotificationStateSignals {
    */
   readonly fieldName = input<string | null | undefined>();
 
-  /**
-   * Tone for the notification — see {@link NgxNotificationTone} and the
-   * directive-level "tone resolution rules" doc.
-   *
-   * Currently a no-op: tone is fully content-driven. Retained as a stable
-   * API surface for future expansion.
-   *
-   * @default 'auto'
-   */
-  readonly tone = input<NgxNotificationTone>('auto');
-
   readonly #resolvedErrors = computed<readonly ValidationError[]>(() => {
     const provided = this.errors();
-    return provided === undefined ? [] : provided();
+    return provided === undefined ? [] : unwrapValue(provided);
   });
 
   readonly #resolvedFieldName = computed(() =>

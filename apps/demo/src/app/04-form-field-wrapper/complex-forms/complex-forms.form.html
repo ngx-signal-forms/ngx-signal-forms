@@ -5,7 +5,7 @@
 >
   <!-- Personal Information Section -->
   <ngx-form-fieldset
-    [fieldsetField]="complexForm.personalInfo"
+    [field]="complexForm.personalInfo"
     [errorPlacement]="errorPlacement()"
     fieldsetId="personal-info"
     class="complex-form-fieldset"
@@ -90,7 +90,7 @@
 
   <!-- Address Information Section -->
   <ngx-form-fieldset
-    [fieldsetField]="complexForm.addressInfo"
+    [field]="complexForm.addressInfo"
     [errorPlacement]="errorPlacement()"
     fieldsetId="address-info"
     class="complex-form-fieldset mb-8"
@@ -182,7 +182,7 @@
 
   <!-- Skills Section (Dynamic Array) -->
   <ngx-form-fieldset
-    [fieldsetField]="complexForm.skills"
+    [field]="complexForm.skills"
     [errorPlacement]="errorPlacement()"
     fieldsetId="skills"
     class="complex-form-fieldset complex-array-fieldset mb-8"
@@ -243,7 +243,7 @@
 
   <!-- Contacts Section (Dynamic Array with Types) -->
   <ngx-form-fieldset
-    [fieldsetField]="complexForm.contacts"
+    [field]="complexForm.contacts"
     [errorPlacement]="errorPlacement()"
     fieldsetId="contacts"
     class="complex-form-fieldset complex-array-fieldset mb-8"
@@ -344,7 +344,7 @@
 
   <!-- Credentials Section -->
   <ngx-form-fieldset
-    [fieldsetField]="complexForm.credentials"
+    [field]="complexForm.credentials"
     [errorPlacement]="errorPlacement()"
     fieldsetId="credentials"
     class="complex-form-fieldset complex-form-fieldset--credentials-summary mb-8"
@@ -394,7 +394,7 @@
 
   <!-- Preferences Section -->
   <ngx-form-fieldset
-    [fieldsetField]="complexForm.preferences"
+    [field]="complexForm.preferences"
     [errorPlacement]="errorPlacement()"
     fieldsetId="preferences"
     class="complex-form-fieldset mb-8"
