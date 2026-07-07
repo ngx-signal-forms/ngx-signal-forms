@@ -70,8 +70,10 @@ export class HlmSelectTrigger {
     () => this._fieldControl?.spartanInvalid() ?? false,
   );
 
-  private readonly _triggerButton = viewChild.required('trigger', {
-    read: ElementRef<HTMLButtonElement>,
+  private readonly _triggerButton = viewChild.required<
+    ElementRef<HTMLButtonElement>
+  >('trigger', {
+    read: ElementRef,
   });
 
   constructor() {
