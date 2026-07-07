@@ -253,6 +253,22 @@ body {
   color: var(--app-ink);
 }
 
+/* The consent checkbox's `*ngxMatFeedback` block is declared before
+ * `<mat-checkbox>` in the markup (see contact-form.html for why) — `order`
+ * restores the checkbox-first, feedback-second visual arrangement. */
+.demo-form__row--agree {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.demo-form__row--agree > mat-checkbox {
+  order: 1;
+}
+
+.demo-form__row--agree > .demo-form__feedback {
+  order: 2;
+}
+
 .demo-form__hint {
   color: var(--app-muted);
   font-size: 0.8rem;
@@ -260,7 +276,7 @@ body {
 }
 
 .demo-form__feedback {
-  margin: -0.45rem 0 0 3rem;
+  margin: 0.35rem 0 0 3rem;
   color: var(--app-muted);
   font-size: 0.93rem;
   line-height: 1.45;

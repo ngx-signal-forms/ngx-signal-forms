@@ -87,38 +87,44 @@
     </mat-error>
   </mat-form-field>
 
-  <div class="demo-form__row">
+  <!-- `*ngxMatFeedback` is declared BEFORE `<mat-checkbox>` on purpose: the
+       checkbox's `[aria-describedby]` binding (below) reads this directive's
+       exported `describedByIds()` signal, and Angular evaluates a template's
+       property bindings in source order — a binding cannot forward-reference
+       an input that a later-declared directive hasn't been assigned yet.
+       `order: 1` / `order: 2` in styles.css restores the checkbox-then-error
+       visual arrangement despite the required DOM/source order. -->
+  <div class="demo-form__row demo-form__row--agree">
+    <ng-container
+      *ngxMatFeedback="
+        contactForm.agree;
+        fieldName: 'contact-agree';
+        let messages;
+        severity as severity;
+        id as id
+      "
+    >
+      <p
+        class="demo-form__feedback"
+        [class.demo-form__feedback--warning]="severity === 'warning'"
+        [attr.role]="severity === 'error' ? 'alert' : 'status'"
+        [id]="id"
+      >
+        @for (message of messages; track message) {
+        <ngx-mat-feedback-outlet [message]="message" [severity]="severity" />
+        }
+      </p>
+    </ng-container>
+
     <mat-checkbox
       id="contact-agree"
       [formField]="contactForm.agree"
       ngxMatCheckboxControl
+      [aria-describedby]="agreeFeedback()?.describedByIds() ?? null"
     >
       I agree to be contacted
     </mat-checkbox>
   </div>
-  <!-- Material's mat-checkbox does not project into mat-form-field, so
-       its errors render via the control-agnostic feedback slot. The
-       toolkit still owns visibility timing through the same DI seam. -->
-  <ng-container
-    *ngxMatFeedback="
-      contactForm.agree;
-      fieldName: 'contact-agree';
-      let messages;
-      severity as severity;
-      id as id
-    "
-  >
-    <p
-      class="demo-form__feedback"
-      [class.demo-form__feedback--warning]="severity === 'warning'"
-      [attr.role]="severity === 'error' ? 'alert' : 'status'"
-      [id]="id"
-    >
-      @for (message of messages; track message) {
-      <ngx-mat-feedback-outlet [message]="message" [severity]="severity" />
-      }
-    </p>
-  </ng-container>
 
   <div class="demo-form__actions">
     <button mat-stroked-button type="button" (click)="resetForm()">

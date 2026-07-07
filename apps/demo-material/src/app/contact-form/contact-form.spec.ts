@@ -4,6 +4,7 @@ import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 import { render, screen, waitFor } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
+import { provideNgxMatForms } from '../wrapper';
 import { ContactFormComponent } from './contact-form';
 
 /**
@@ -30,6 +31,9 @@ describe('ContactFormComponent (Material reference, smoke)', () => {
           defaultErrorStrategy: 'on-touch',
           autoAria: true,
         }),
+        // Matches main.ts — registers MaterialFeedbackRenderer/
+        // MaterialHintRenderer AND NgxMatWarningAwareErrorStateMatcher.
+        provideNgxMatForms(),
       ],
     });
     return result;
@@ -116,7 +120,7 @@ describe('ContactFormComponent (Material reference, smoke)', () => {
     expect(hasMatError).toBe(true);
   });
 
-  it('renders warning content inside mat-hint without surfacing as an error', async () => {
+  it('renders warning content inside mat-hint without surfacing as an error or invalid state', async () => {
     const user = userEvent.setup();
     await setup();
 
@@ -137,11 +141,96 @@ describe('ContactFormComponent (Material reference, smoke)', () => {
     expect(errorHost).toBeNull();
 
     // No `<mat-error>` should be visible on the field — there are no
-    // *blocking* errors at this point, only a warning. (Note that Material's
-    // matInput will still report aria-invalid="true" because Angular Signal
-    // Forms treats warnings as ValidationErrors that flip `invalid()` — see
-    // README "Warnings rendering" for the framework limitation.)
+    // *blocking* errors at this point, only a warning.
     const nameField = nameInput.closest('mat-form-field');
     expect(nameField?.querySelector('mat-error:not([hidden])')).toBeFalsy();
+
+    // Regression for the "warning-only state reports invalid" a11y bug:
+    // `NgxMatWarningAwareErrorStateMatcher` (registered via provideNgxMatForms)
+    // only counts non-warn:* kinds as an error state, so a warning-only field
+    // must NOT get aria-invalid="true" or Material's invalid styling — see
+    // README "Warnings and Material's ErrorStateMatcher".
+    await waitFor(() => {
+      expect(nameInput.getAttribute('aria-invalid')).toBe('false');
+    });
+    expect(nameField?.classList.contains('mat-form-field-invalid')).toBe(false);
+  });
+
+  it('wires aria-describedby from the consent checkbox to the rendered feedback block', async () => {
+    const user = userEvent.setup();
+    await setup();
+
+    const checkbox = screen.getByRole('checkbox', {
+      name: /i agree to be contacted/i,
+    });
+
+    // Focus and blur without checking — trips the agree-required validator
+    // and marks the field touched under the on-touch strategy, so the
+    // *ngxMatFeedback error block renders.
+    checkbox.focus();
+    await user.tab();
+
+    const feedback = await screen.findByText(/you need to agree/i);
+    const feedbackHost = feedback.closest('.demo-form__feedback');
+    expect(feedbackHost).not.toBeNull();
+    const feedbackId = feedbackHost?.getAttribute('id');
+    expect(feedbackId).toBeTruthy();
+
+    // Regression for the "no programmatic association" a11y blocker: the
+    // checkbox's aria-describedby must resolve to the rendered feedback
+    // block's id, not just rely on the transient role="alert" announcement.
+    await waitFor(() => {
+      expect(checkbox.getAttribute('aria-describedby')).toBe(feedbackId);
+    });
+
+    // Checking the box clears the error — aria-describedby must drop back
+    // to null rather than leaving a dangling IDREF.
+    await user.click(checkbox);
+    await waitFor(() => {
+      expect(checkbox.getAttribute('aria-describedby')).toBeNull();
+    });
+  });
+
+  it('does not block submission on a non-blocking warning (warn:short-name)', async () => {
+    const user = userEvent.setup();
+    await setup();
+
+    // 'Bob' passes minLength(2) but trips warn:short-name — a non-blocking
+    // warning per the schema and the form's own intro copy ("short-but-valid
+    // names surface as a gentle warning instead of a blocker").
+    const nameInput = screen.getByLabelText(/name/i) as HTMLInputElement;
+    await user.click(nameInput);
+    await user.type(nameInput, 'Bob');
+
+    const emailInput = screen.getByLabelText(/email/i) as HTMLInputElement;
+    await user.click(emailInput);
+    await user.type(emailInput, 'bob@example.com');
+
+    const topicSelect = screen.getByRole('combobox', { name: /topic/i });
+    await user.click(topicSelect);
+    const option = await screen.findByRole('option', {
+      name: /product support/i,
+    });
+    await user.click(option);
+
+    const checkbox = screen.getByRole('checkbox', {
+      name: /i agree to be contacted/i,
+    });
+    await user.click(checkbox);
+
+    // Regression for the submission-blocking bug: previously the declarative
+    // `submission.action` never ran because Angular's native submit() treats
+    // any ValidationError — including `warn:*` — as blocking.
+    const submit = screen.getByRole('button', { name: /send message/i });
+    await user.click(submit);
+
+    const banner = await screen.findByText(/thanks! we received your message/i);
+    expect(banner).toBeInTheDocument();
+
+    // The warning is still present — the fix must not "succeed" by silently
+    // dropping warn:short-name; it must let a warned-but-valid form through.
+    expect(
+      screen.getByText(/short names are easy to mis-type/i),
+    ).toBeInTheDocument();
   });
 });

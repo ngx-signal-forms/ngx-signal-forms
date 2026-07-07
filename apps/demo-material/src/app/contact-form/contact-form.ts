@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, viewChild } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -7,9 +7,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import {
   createOnInvalidHandler,
+  hasOnlyWarnings,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
-import { NgxMatFormBundle } from '../wrapper';
+import { NgxMatFeedback, NgxMatFormBundle } from '../wrapper';
 import {
   INITIAL_CONTACT_MODEL,
   type ContactFormModel,
@@ -60,19 +61,42 @@ export class ContactFormComponent {
   /** Reactive model — Angular Signal Forms drives the form from this signal. */
   protected readonly model = signal<ContactFormModel>(INITIAL_CONTACT_MODEL);
 
-  /** Toolkit-aware Signal Forms instance with the validation schema applied. */
+  readonly #onInvalid = createOnInvalidHandler();
+
+  /**
+   * Toolkit-aware Signal Forms instance with the validation schema applied.
+   *
+   * `ignoreValidators: 'all'` + the `hasOnlyWarnings()` guard inside `action`
+   * is the toolkit's documented warning-tolerant pattern for forms that use
+   * declarative `{ submission }` (see `apps/demo-primeng`'s profile form and
+   * README "Warnings under submission.action"). Without it, Angular Signal
+   * Forms' native `submit()` treats `warn:short-name` as blocking — even
+   * though it's a non-blocking warning by the toolkit's own convention —
+   * and the action never runs.
+   */
   readonly contactForm = form(this.model, contactFormSchema, {
     submission: {
+      ignoreValidators: 'all',
       action: async () => {
+        if (!hasOnlyWarnings(this.contactForm().errorSummary())) {
+          this.#onInvalid(this.contactForm);
+          return;
+        }
         // Stand-in for a real API call; the demo is intentionally lean.
         await new Promise((resolve) => setTimeout(resolve, 250));
         this.submitted.set(true);
       },
-      onInvalid: createOnInvalidHandler(),
     },
   });
 
   protected readonly submitted = signal(false);
+
+  /**
+   * Drives the consent checkbox's `[aria-describedby]` in the template —
+   * `<mat-checkbox>` doesn't project into `<mat-form-field>`, so nothing
+   * else associates its rendered `*ngxMatFeedback` block with the control.
+   */
+  protected readonly agreeFeedback = viewChild(NgxMatFeedback);
 
   protected resetForm(): void {
     this.model.set({ ...INITIAL_CONTACT_MODEL });
