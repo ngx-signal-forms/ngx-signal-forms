@@ -262,7 +262,7 @@ Verify in DevTools:
 
 ```bash
 pnpm nx serve demo-spartan
-# Open http://localhost:4221, focus + blur the empty Display name field.
+# Open http://127.0.0.1:4621, focus + blur the empty Display name field.
 # In DevTools, the <input id="display-name"> shows:
 #   aria-invalid="true"
 #   aria-describedby="display-name-hint display-name-error"
@@ -303,7 +303,7 @@ styling can target it without forking the wrapper.
 
 | Package             | Version               |
 | ------------------- | --------------------- |
-| `@spartan-ng/brain` | `0.0.1-alpha.682`     |
+| `@spartan-ng/brain` | `1.0.4`               |
 | `@spartan-ng/cli`   | (catalog: `spartan:`) |
 | `@ng-icons/core`    | `>=32.0.0 <34.0.0`    |
 | `@ng-icons/lucide`  | `>=32.0.0 <34.0.0`    |
@@ -315,7 +315,7 @@ alias (no `@spartan-ng/*` reaches `packages/toolkit/package.json`).
 ## Run it
 
 ```bash
-pnpm nx serve demo-spartan          # dev server on http://localhost:4221
+pnpm nx serve demo-spartan          # dev server on http://127.0.0.1:4621
 pnpm nx run demo-spartan:build      # production build
 pnpm nx run demo-spartan:test       # smoke spec (vitest)
 pnpm nx run demo-spartan-e2e:e2e    # Playwright spec

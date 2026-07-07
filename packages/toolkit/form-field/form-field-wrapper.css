@@ -1000,8 +1000,8 @@
 /* the CSS should not rely on that invariant). */
 :host(
   .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
-      .ngx-signal-forms-plain
-    )
+    .ngx-signal-forms-plain
+  )
 ):not(
   :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
 ) {
@@ -1013,8 +1013,8 @@
 
 :host(
   .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
-      .ngx-signal-forms-plain
-    )
+    .ngx-signal-forms-plain
+  )
 ):not(
   :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
 ) {
