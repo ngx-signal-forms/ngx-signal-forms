@@ -5,8 +5,15 @@ import { resolveFieldName } from './field-resolution';
 import { injectFormContext } from './inject-form-context';
 import { isFieldTree } from './walk-field-tree';
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+// Real `FieldTree` nodes are callable (`typeof` is `'function'`, not
+// `'object'`) — see `isFieldTree` in `walk-field-tree.ts`, which requires
+// every node to be invokable in order to read its `FieldState`. A guard that
+// only accepted `'object'` would reject `formInstance` itself on the very
+// first path segment for any real form, since the form root is a
+// `FieldTree`. Only plain-object mocks (not real `FieldTree`s) would ever
+// satisfy such a guard, which is why this bug shipped without failing tests.
+const isNavigable = (value: unknown): value is Record<string, unknown> =>
+  (typeof value === 'object' || typeof value === 'function') && value !== null;
 
 /**
  * Custom Inject Function (CIF) for retrieving a specific field control from the form.
@@ -86,7 +93,7 @@ export function injectFieldControl<TValue = unknown>(
     let control: unknown = formInstance;
 
     for (const part of pathParts) {
-      if (!isRecord(control) || !(part in control)) {
+      if (!isNavigable(control) || !(part in control)) {
         throw new Error(
           `[ngx-signal-forms] Field "${fieldName}" not found in form. ` +
             `Could not access property "${part}".`,

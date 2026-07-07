@@ -28,6 +28,42 @@ function createMockFieldTree<TValue>(value: TValue): FieldTree<TValue> {
   return fieldTree;
 }
 
+/**
+ * Callable `FieldTree`-shaped mock for a group node (e.g. `address`),
+ * matching real Angular Signal Forms more faithfully than
+ * `createMockFieldTree`'s plain-object test-fixture parents: in a real form
+ * *every* node — the form root and every intermediate group, not just
+ * leaves — is itself callable (`typeof node === 'function'`) and satisfies
+ * `isFieldTree()`. Child fields are exposed as properties directly on the
+ * callable function object (mirroring `formInstance.address.city`).
+ *
+ * This is the shape that exposed the pre-fix bug: `injectFieldControl`'s
+ * path-navigation guard only accepted `typeof value === 'object'`, so it
+ * rejected the (callable) `address` group on the second path segment of
+ * `"address.city"` — and would have rejected `formInstance` itself on the
+ * very first segment of any single-level path in a real, non-mocked form.
+ */
+function createGroupFieldTree<TValue extends Record<string, unknown>>(
+  value: TValue,
+  children: { [K in keyof TValue]: FieldTree<TValue[K]> },
+): FieldTree<TValue> {
+  let fieldTree!: FieldTree<TValue>;
+  const call = () => ({
+    value: () => value,
+    touched: () => false,
+    errors: () => [],
+    errorSummary: () => [],
+    submitting: () => false,
+    markAsTouched: () => {},
+    invalid: () => false,
+    get fieldTree() {
+      return fieldTree;
+    },
+  });
+  fieldTree = Object.assign(call, children) as unknown as FieldTree<TValue>;
+  return fieldTree;
+}
+
 describe('injectFieldControl', () => {
   it('should resolve field control from form using id attribute', () => {
     const emailControl = createMockFieldTree('');
@@ -51,6 +87,43 @@ describe('injectFieldControl', () => {
   it('should resolve nested field control using dot notation', () => {
     const cityControl = createMockFieldTree('');
     const mockForm = { address: { city: cityControl } };
+    const mockContext: NgxSignalFormContext = {
+      form: mockForm,
+      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
+      errorStrategy: () => 'on-touch',
+    };
+
+    const injector = Injector.create({
+      providers: [{ provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext }],
+    });
+
+    const element = document.createElement('input');
+    element.setAttribute('id', 'address.city');
+
+    const result = injectFieldControl(element, injector);
+    expect(result).toBe(cityControl);
+  });
+
+  it('should resolve nested field control when every ancestor node is a callable FieldTree (real form shape)', () => {
+    // Regression for a bug where path navigation's guard only accepted
+    // `typeof value === 'object'`, rejecting real (callable) FieldTree nodes
+    // at every level above the leaf — including `formInstance` itself. Only
+    // the plain-object mocks used elsewhere in this file (e.g. `{ address:
+    // { city } }`, where `address` is a non-callable plain object) ever
+    // passed. This test uses `createGroupFieldTree` so that both the form
+    // root and the `address` group are callable, matching how Angular's
+    // real Signal Forms `FieldTree` is shaped.
+    const cityControl = createMockFieldTree('');
+    const addressGroup = createGroupFieldTree(
+      { city: '' },
+      {
+        city: cityControl,
+      },
+    );
+    const mockForm = createGroupFieldTree(
+      { address: { city: '' } },
+      { address: addressGroup },
+    );
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
       submittedStatus: () => 'unsubmitted' as SubmittedStatus,

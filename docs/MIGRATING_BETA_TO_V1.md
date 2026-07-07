@@ -488,12 +488,14 @@ actual submit call was a no-op.
 `canSubmitWithWarnings()` now reads `formTree().errorSummary()`, matching
 `submitWithWarnings()`.
 
-**Action:** If you built a form whose only blocking validators live at the
-form root (uncommon) and were relying on child-path errors being ignored by
-`canSubmitWithWarnings()`, that form's submit button will now correctly stay
-disabled until the child error clears. This is the intended fix — no code
-changes are needed unless you were compensating for the bug elsewhere (e.g.
-manually re-checking `errorSummary()` before calling `submitWithWarnings()`).
+**Action:** This affects forms with blocking validators on descendant paths
+(the common case, e.g. `path.email`) — previously, `canSubmitWithWarnings()`
+ignored those child-path errors, so such a form's submit button could appear
+submittable even while a child field was invalid. After this fix, that
+button will now correctly stay disabled until the child error clears. This
+is the intended fix — no code changes are needed unless you were
+compensating for the bug elsewhere (e.g. manually re-checking
+`errorSummary()` before calling `submitWithWarnings()`).
 
 ## 5d. `injectFieldControl()` validates the resolved `FieldTree`
 
