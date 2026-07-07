@@ -3,6 +3,7 @@ import {
   type Provider,
   type Type,
 } from '@angular/core';
+import { ErrorStateMatcher } from '@angular/material/core';
 import {
   provideFormFieldErrorRendererForComponent,
   provideFormFieldHintRendererForComponent,
@@ -11,6 +12,7 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { MaterialFeedbackRenderer } from './material-error-renderer';
 import { MaterialHintRenderer } from './material-hint-renderer';
+import { NgxMatWarningAwareErrorStateMatcher } from './warning-aware-error-state-matcher';
 
 export {
   NgxMatBoundControl,
@@ -39,6 +41,7 @@ export {
   type NgxMatErrorSlotContext,
   type NgxMatHintSlotContext,
 } from './slot-directives';
+export { NgxMatWarningAwareErrorStateMatcher } from './warning-aware-error-state-matcher';
 
 /**
  * Optional override shape for `provideNgxMatForms*`. When omitted, the
@@ -89,7 +92,7 @@ export interface NgxMatFormsProviderOptions {
  */
 export function provideNgxMatForms(
   options?: NgxMatFormsProviderOptions,
-): EnvironmentProviders[] {
+): (EnvironmentProviders | Provider)[] {
   const errorComponent =
     options?.feedbackRenderer?.component ?? MaterialFeedbackRenderer;
   const hintComponent =
@@ -97,6 +100,12 @@ export function provideNgxMatForms(
   return [
     provideFormFieldErrorRenderer({ component: errorComponent }),
     provideFormFieldHintRenderer({ component: hintComponent }),
+    // Warning-only fields must not read as Material "invalid" — see the
+    // class doc on NgxMatWarningAwareErrorStateMatcher.
+    {
+      provide: ErrorStateMatcher,
+      useClass: NgxMatWarningAwareErrorStateMatcher,
+    },
   ];
 }
 
@@ -131,5 +140,11 @@ export function provideNgxMatFormsForComponent(
   return [
     ...provideFormFieldErrorRendererForComponent({ component: errorComponent }),
     ...provideFormFieldHintRendererForComponent({ component: hintComponent }),
+    // Warning-only fields must not read as Material "invalid" — see the
+    // class doc on NgxMatWarningAwareErrorStateMatcher.
+    {
+      provide: ErrorStateMatcher,
+      useClass: NgxMatWarningAwareErrorStateMatcher,
+    },
   ];
 }
