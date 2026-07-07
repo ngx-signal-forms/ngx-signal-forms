@@ -76,12 +76,14 @@ import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    // Configure CSS status classes via Angular's native API
+    // Configure CSS status classes via Angular's native API.
+    // `classes` is a flat map of class name -> predicate over the
+    // FormFieldBinding; it is NOT keyed by state name.
     provideSignalFormsConfig({
       classes: {
-        valid: { 'is-valid': () => true },
-        invalid: { 'is-invalid': () => true },
-        touched: { 'is-touched': () => true },
+        'is-valid': (f) => f.state().valid(),
+        'is-invalid': (f) => f.state().invalid() && f.state().touched(),
+        'is-touched': (f) => f.state().touched(),
       },
     }),
 
@@ -107,8 +109,9 @@ export const appConfig: ApplicationConfig = {
     />
     <!-- Bootstrap's invalid-feedback auto-shows when sibling has .is-invalid -->
     <div class="invalid-feedback">
-      @for (error of userForm.email().errors() | keyvalue; track error.key) { {{
-      error.value }} }
+      <!-- errors() is an array of ValidationError, not a kind-keyed object -->
+      @for (error of userForm.email().errors(); track error.kind) { {{
+      error.message }} }
     </div>
   </div>
 
@@ -230,12 +233,14 @@ If you prefer explicit classes for more control, use Angular's `provideSignalFor
 
 ```typescript
 // app.config.ts
+// `classes` is a flat map of class name -> predicate over the
+// FormFieldBinding; it is NOT keyed by state name.
 provideSignalFormsConfig({
   classes: {
-    invalid: { 'field-invalid': () => true },
-    valid: { 'field-valid': () => true },
-    touched: { 'field-touched': () => true },
-    dirty: { 'field-dirty': () => true },
+    'field-invalid': (f) => f.state().invalid(),
+    'field-valid': (f) => f.state().valid(),
+    'field-touched': (f) => f.state().touched(),
+    'field-dirty': (f) => f.state().dirty(),
   },
 }),
 ```
@@ -301,49 +306,40 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-### Custom ErrorStateMatcher
+### Why `ErrorStateMatcher` doesn't help here
 
-To align Material's error display with the toolkit's strategy:
+Material's `ErrorStateMatcher` reads `FormControl` / `NgForm` (Reactive Forms).
+A `matInput` bound via `[formField]` has no `NgControl` at all, so a custom
+`ErrorStateMatcher` is never consulted for it — the matcher silently has no
+effect on Signal Forms fields.
+
+To align Material's error timing with the toolkit's strategy, resolve
+visibility from the field itself instead. The toolkit's
+`createErrorMessageSignal` (from `@ngx-signal-forms/toolkit/headless`) is the
+same primitive the canonical form-field wrapper uses, so a structural
+directive built on it stays in sync with whatever `errorStrategy` the form
+declares:
 
 ```typescript
-// shared/error-state-matcher.ts
-import { Injectable } from '@angular/core';
-import { ErrorStateMatcher } from '@angular/material/core';
-import { FormControl, FormGroupDirective, NgForm } from '@angular/forms';
+import { Directive, computed, inject, input } from '@angular/core';
+import type { FieldTree } from '@angular/forms/signals';
+import { createErrorMessageSignal } from '@ngx-signal-forms/toolkit/headless';
 
-/**
- * ErrorStateMatcher that aligns with toolkit's 'on-touch' strategy.
- * Shows errors when field is invalid AND (touched OR form submitted).
- */
-@Injectable()
-export class OnTouchErrorStateMatcher implements ErrorStateMatcher {
-  isErrorState(
-    control: FormControl | null,
-    form: FormGroupDirective | NgForm | null,
-  ): boolean {
-    const isSubmitted = form?.submitted ?? false;
-    const isTouched = control?.touched ?? false;
-    const isInvalid = control?.invalid ?? false;
+@Directive({ selector: '[matError][ngxMatErrorFor]' })
+export class NgxMatErrorFor {
+  readonly field = input.required<FieldTree<unknown>>({
+    alias: 'ngxMatErrorFor',
+  });
 
-    return isInvalid && (isTouched || isSubmitted);
-  }
+  readonly #messages = createErrorMessageSignal(() => this.field()());
+  protected readonly message = computed(() => this.#messages()[0]?.message);
 }
 ```
 
-Provide globally:
-
-```typescript
-// app.config.ts
-import { ErrorStateMatcher } from '@angular/material/core';
-import { OnTouchErrorStateMatcher } from './shared/error-state-matcher';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    { provide: ErrorStateMatcher, useClass: OnTouchErrorStateMatcher },
-    // ... other providers
-  ],
-};
-```
+For a complete, tested reference implementation of this pattern — including
+warnings and grouped `mat-hint` output — see `apps/demo-material`'s
+`ngxMatErrorSlot` / `ngxMatHintSlot` directives
+(`apps/demo-material/src/app/wrapper/slot-directives.ts`).
 
 ### Template
 
@@ -353,8 +349,10 @@ export const appConfig: ApplicationConfig = {
     <mat-label>Email</mat-label>
     <input matInput type="email" [formField]="userForm.email" />
     <mat-error>
-      @if (userForm.email().errors()?.['required']) { Email is required } @else
-      if (userForm.email().errors()?.['email']) { Please enter a valid email }
+      <!-- errors() is an array of ValidationError — check `kind`, don't index it -->
+      @if (userForm.email().errors().some((e) => e.kind === 'required')) { Email
+      is required } @else if (userForm.email().errors().some((e) => e.kind ===
+      'email')) { Please enter a valid email }
     </mat-error>
   </mat-form-field>
 

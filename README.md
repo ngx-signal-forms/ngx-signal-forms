@@ -278,7 +278,7 @@ Default recommendation: **skip `ngxSignalForm` until you need it**.
 
 The examples above use the default `'on-touch'` strategy: errors appear after the
 user blurs a field or submits the form. This works because Angular's `submit()` calls
-`markAllAsTouched()` internally, so `touched()` becomes true for all fields.
+`markAsTouched()` internally, so `touched()` becomes true for all fields.
 
 When you need more control, add `ngxSignalForm` alongside `[formRoot]`:
 

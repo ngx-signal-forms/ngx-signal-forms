@@ -7,10 +7,10 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import { ButtonModule } from 'primeng/button';
-import { CheckboxModule } from 'primeng/checkbox';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
+import { PrimeCheckboxControlComponent } from '../controls/prime-checkbox-control';
 import { PrimeSelectControlComponent } from '../controls/prime-select-control';
 import { NgxPrimeFormBundle } from '../form-field';
 import {
@@ -32,7 +32,7 @@ import { profileFormSchema } from './profile-form.schema';
  *    errors render as PrimeNG's `<small class="p-error">` idiom.
  * 3. **`NgxSignalFormControlSemanticsDirective`** is declared on each control
  *    (text input via `pInputText`, the `prime-select-control` compatibility
- *    host, and `<p-checkbox>`)
+ *    host, and the `prime-checkbox-control` compatibility host)
  *    so the toolkit knows the control kind without DOM heuristics.
  * 4. **`NgxSignalFormAutoAria`** is in scope via `NgxSignalForm` / direct
  *    import so it can wire `aria-invalid` / `aria-describedby` on each
@@ -53,10 +53,10 @@ import { profileFormSchema } from './profile-form.schema';
   imports: [
     FormField,
     ButtonModule,
-    CheckboxModule,
     IconFieldModule,
     InputIconModule,
     InputTextModule,
+    PrimeCheckboxControlComponent,
     PrimeSelectControlComponent,
     NgxSignalFormToolkit,
     NgxFormFieldHint,
@@ -111,9 +111,10 @@ import { profileFormSchema } from './profile-form.schema';
           fieldName="profile-role"
           showRequiredMarker
         >
-          <label for="profile-role">Role</label>
+          <label id="profile-role-label" for="profile-role">Role</label>
           <prime-select-control
             inputId="profile-role"
+            ariaLabelledBy="profile-role-label"
             [options]="roleOptions"
             placeholder="Pick a role"
             ngxSignalFormControl="standalone-field-like"
@@ -131,9 +132,8 @@ import { profileFormSchema } from './profile-form.schema';
         fieldName="profile-newsletter"
       >
         <label for="profile-newsletter">Subscribe to the release notes</label>
-        <p-checkbox
+        <prime-checkbox-control
           inputId="profile-newsletter"
-          [binary]="true"
           ngxSignalFormControl="checkbox"
           [formField]="newsletterField"
         />

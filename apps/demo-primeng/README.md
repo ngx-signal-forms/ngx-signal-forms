@@ -36,6 +36,10 @@ specific.
   `[formField]` on `<p-select>` collides with PrimeNG's inherited
   Angular-forms-style inputs, so Signal Forms needs a clean
   `FormValueControl` host.
+- A matching **`PrimeCheckboxControlComponent`** compatibility shim for
+  PrimeNG's `<p-checkbox>`, bridging the toolkit's ARIA primitives onto the
+  real native `<input type="checkbox">` PrimeNG renders internally (see
+  "ARIA writes target the host element" below).
 - A custom **`PrimeFieldHintComponent`** registered through
   `provideFormFieldHintRenderer({ component: ... })` so the hint slot is
   ready for the toolkit's future dynamic-outlet hint mode without any
@@ -98,7 +102,10 @@ form:
 - text input with `p-iconfield` + `pInputText`
 - select via `<prime-select-control>` (a minimal compatibility shim around
   PrimeNG's current `<p-select>` primitive — see version pin below)
-- checkbox via `<p-checkbox>`
+- checkbox via `<prime-checkbox-control>` (the same shim pattern applied to
+  `<p-checkbox>`, since its native `<input type="checkbox">` needs the same
+  host-vs-inner-element ARIA bridging as `<p-select>` — see "ARIA writes
+  target the host element" below)
 - a non-blocking warning on the email field, exercising the warnings
   branch of the renderer
 
@@ -113,7 +120,7 @@ tier-3 field-name resolution and the dev-mode missing-control assertion.
 
 | Package            | Version pinned by this demo |
 | ------------------ | --------------------------- |
-| `primeng`          | `21.1.6`                    |
+| `primeng`          | `21.1.9`                    |
 | `@primeuix/themes` | `2.0.3`                     |
 | `primeicons`       | `7.0.0`                     |
 
@@ -141,7 +148,7 @@ The other floating-label modes are intentionally **out of scope** — they
 introduce their own ARIA wiring and styling tokens that are orthogonal
 to the toolkit seam.
 
-### Why the demo keeps a tiny wrapper for `p-select`
+### Why the demo keeps tiny wrappers for `p-select` and `p-checkbox`
 
 Tim Deschryver's directive-first pattern is the right default when you only
 need to configure or extend a third-party component. This demo follows that
@@ -149,16 +156,20 @@ spirit for the actual integration seam: the Prime field wrapper, renderer
 tokens, hint registry, and control semantics are all toolkit primitives
 composed around PrimeNG.
 
-`<p-select>` is the exception. PrimeNG already supports Angular's CVA-based
-forms APIs, but Angular Signal Forms generates a broader host contract on a
-direct `[formField]` binding (including inputs like `pattern`). PrimeNG's
-inherited input surface does not line up with that contract, so a plain
-directive on `<p-select>` still fails type-checking.
+`<p-select>` and `<p-checkbox>` are the exceptions. PrimeNG already supports
+Angular's CVA-based forms APIs, but Angular Signal Forms generates a broader
+host contract on a direct `[formField]` binding (including inputs like
+`pattern`). PrimeNG's inherited input surface does not line up with that
+contract, so a plain directive on either host still fails type-checking —
+and, independently, both hosts render their real focusable element as an
+_internal_ child rather than on the host itself (see "ARIA writes target
+the host element" below), so a plain directive on the host couldn't reach
+the right element even if it did type-check.
 
-That is why this demo keeps a tiny wrapper component for select only: it
-creates a clean `FormValueControl<string>` host for Signal Forms while still
-rendering the real PrimeNG control inside. The wrapper is a compatibility
-shim, not the main integration story.
+That is why this demo keeps tiny wrapper components for select and
+checkbox: each creates a clean `FormValueControl` host for Signal Forms
+while still rendering the real PrimeNG control inside. The wrappers are
+compatibility shims, not the main integration story.
 
 ### ARIA writes target the host element, not PrimeNG's inner input
 
@@ -181,26 +192,43 @@ combobox/checkbox. Left alone, that write would clobber anything
 `{fieldName}-error` and `{fieldName}-hint` IDs would never reach the
 focusable inner element AT actually reads.
 
-The select demo solves this with a per-control bridge directive
-(`PrimeSelectControlComponent` in `apps/demo-primeng/src/app/controls/`)
-that mirrors the Material reference's `NgxMatSelectControl` pattern. The
-shim provides `NGX_SIGNAL_FORM_ARIA_MODE: 'manual'` so auto-aria leaves
-the host alone, then binds the toolkit's `createAriaDescribedBySignal`
-output directly onto the inner `<p-select>`. The Playwright spec now
-asserts the result explicitly: the role combobox carries
-`aria-describedby` containing both `profile-role-hint` and
+The select and checkbox demos both solve this with a per-control bridge
+component (`PrimeSelectControlComponent` and `PrimeCheckboxControlComponent`
+in `apps/demo-primeng/src/app/controls/`) that mirrors the Material
+reference's `NgxMatSelectControl` pattern. Each shim provides
+`NGX_SIGNAL_FORM_ARIA_MODE: 'manual'` so auto-aria leaves the host alone,
+then binds the toolkit's `createAriaDescribedBySignal` /
+`createAriaInvalidSignal` / `createAriaRequiredSignal` outputs onto the real
+inner element:
+
+- `PrimeSelectControlComponent` binds directly onto the inner `<p-select>`
+  via `[attr.*]`, and forwards a caller-supplied `ariaLabelledBy` id through
+  `<p-select>`'s own `ariaLabelledBy` input so the combobox's accessible
+  name comes from the visible `<label>`, not the transient
+  placeholder/selected-value content.
+- `PrimeCheckboxControlComponent` writes the three ARIA attributes
+  imperatively onto the real native `<input type="checkbox">`, reached via
+  `Checkbox.inputViewChild` — PrimeNG doesn't forward `aria-describedby` /
+  `aria-invalid` / `aria-required` from the host the way it does
+  `ariaLabelledBy` / `ariaLabel`, so `[formField]`'s `id`-based `for`
+  association on the checkbox's `<label>` already works out of the box, but
+  the toolkit's error/hint wiring needs the explicit bridge.
+
+The Playwright spec asserts the select result explicitly: the role combobox
+carries `aria-describedby` containing both `profile-role-hint` and
 `profile-role-error` tokens (plus `aria-invalid="true"` and
 `aria-required="true"`) — the host-component ARIA boundary is verified
-end-to-end via `NgxSignalFormAutoAria` + the shim, not just inferred
-from the rendered error element's id.
+end-to-end via `NgxSignalFormAutoAria` + the shim, not just inferred from
+the rendered error element's id.
 
 For text inputs (`<input pInputText [formField]>`) the bound element is
 the focusable element, so no shim is needed — the smoke + Playwright
 specs cover that path end-to-end.
 
 If you build a first-class `@ngx-signal-forms/primeng` package, ship a
-matching bridge for every host component (checkbox, multiselect,
-calendar, …). The select shim in this demo is the reference pattern.
+matching bridge for every remaining host component (multiselect, calendar,
+…) that renders its focusable surface as an internal child. The select and
+checkbox shims in this demo are the reference pattern.
 
 ### Theme-token interplay
 
@@ -254,8 +282,9 @@ that the same wrapper can render under any Prime theme.
 - PrimeNG's filled / outlined `pInputText` variants. Pick whichever your
   product uses; the wrapper is variant-agnostic.
 - `p-multiselect`, `p-autocomplete`, `p-calendar`, `p-radiobutton`, etc.
-  The seam is similar; this demo uses one representative select path
-  (`p-select` through `PrimeSelectControlComponent`) to prove the current
+  The seam is similar; this demo uses two representative host-component
+  paths (`p-select` through `PrimeSelectControlComponent`, `p-checkbox`
+  through `PrimeCheckboxControlComponent`) to prove the current
   compatibility contract.
 - A submission backend. The form's submit handler logs the JSON payload
   inline so the integration is self-contained.

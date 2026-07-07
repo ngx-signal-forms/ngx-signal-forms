@@ -1,7 +1,18 @@
-import { Component, computed, input } from '@angular/core';
+import {
+  afterEveryRender,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  input,
+  viewChild,
+} from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronDown } from '@ng-icons/lucide';
-import { BrnFieldControlDescribedBy } from '@spartan-ng/brain/field';
+import {
+  BrnFieldControl,
+  BrnFieldControlDescribedBy,
+} from '@spartan-ng/brain/field';
 import { BrnSelectTrigger } from '@spartan-ng/brain/select';
 import { hlm } from '@spartan-ng/helm/utils';
 import type { ClassValue } from 'clsx';
@@ -13,6 +24,7 @@ import type { ClassValue } from 'clsx';
 
   template: `
     <button
+      #trigger
       brnSelectTrigger
       brnFieldControlDescribedBy
       [id]="buttonId()"
@@ -29,6 +41,49 @@ import type { ClassValue } from 'clsx';
   `,
 })
 export class HlmSelectTrigger {
+  /**
+   * `BrnSelectTrigger` host-binds `[attr.aria-invalid]` off the raw,
+   * ungated `controlState().invalid` — it has no concept of "touched" or
+   * any error-display strategy, so a required-and-empty select reports
+   * `aria-invalid="true"` on first paint, before the user has interacted
+   * with it. This is inconsistent with the same field's `data-matches-spartan-invalid`
+   * attribute (used for the destructive-ring styling below), which is
+   * correctly gated by Brain's `ErrorStateMatcher` (`invalid && touched`)
+   * via `BrnFieldControl.spartanInvalid()`.
+   *
+   * Rather than relying on directive-matching/host-binding-write-order
+   * (fragile and undocumented) to make a second `[attr.aria-invalid]`
+   * binding "win" against `BrnSelectTrigger`'s own, this writes the gated
+   * value imperatively in `afterEveryRender`, which is guaranteed to run
+   * after Angular's regular change-detection (and therefore after Brain's
+   * host binding) on every render — the same technique
+   * `NgxSignalFormAutoAria` uses to correct `BrnInput`'s identical ungated
+   * binding when `[formField]` sits on the same DOM node it writes to.
+   * Here `[formField]` sits on the ancestor `<hlm-select>`, one level above
+   * this trigger's real `role="combobox"` button, so that toolkit-side
+   * correction can't reach it — this fixes it at the source instead,
+   * using Brain's own touched-aware signal (no toolkit coupling needed).
+   */
+  private readonly _fieldControl = inject(BrnFieldControl, { optional: true });
+
+  private readonly _gatedInvalid = computed(
+    () => this._fieldControl?.spartanInvalid() ?? false,
+  );
+
+  private readonly _triggerButton =
+    viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
+
+  constructor() {
+    afterEveryRender(() => {
+      const button = this._triggerButton().nativeElement;
+      if (this._gatedInvalid()) {
+        button.setAttribute('aria-invalid', 'true');
+      } else {
+        button.removeAttribute('aria-invalid');
+      }
+    });
+  }
+
   private static _id = 0;
 
   public readonly userClass = input<ClassValue>('', { alias: 'class' });
