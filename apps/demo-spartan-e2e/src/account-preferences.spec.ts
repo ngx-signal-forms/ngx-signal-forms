@@ -8,11 +8,15 @@ import { expect, test } from '@playwright/test';
  * provider wiring (renderer-token registration, hint-registry projection,
  * auto-ARIA selector matching against `[hlmInput]`) surfaces here.
  *
- * Pre-interaction `aria-invalid` is not asserted. Helm's host directive stack
- * (`[hlmInput]` brings `BrnInput` + `BrnFieldControl` +
- * `BrnFieldControlDescribedBy`) interacts with focus on mount in real
- * browsers, which can mark the field touched before the test runs. The
- * post-interaction state is what the seam actually owns.
+ * Pre-interaction `aria-invalid` IS asserted for both the text input and the
+ * plan combobox (audit #148 finding 2). `BrnSelectTrigger` host-binds
+ * `aria-invalid` off the raw, ungated `FieldState.invalid` — with `plan`
+ * required and empty, that would fire `aria-invalid="true"` on first paint
+ * regardless of the demo's `on-touch` default, on a form nobody has touched
+ * yet. `HlmSelectTrigger` (`libs/spartan/ui/select`) now gates its own
+ * `aria-invalid` write off `BrnFieldControl.spartanInvalid()` — the same
+ * touched-aware signal driving the destructive-ring styling — so both
+ * controls agree on "no errors before touch".
  *
  * `aria-describedby` is the contract that the wrapper-scoped
  * `BrnFieldA11yService` factory in
@@ -51,6 +55,29 @@ test.describe('Spartan account preferences form', () => {
         page.getByRole('option', { name: 'Enterprise' }),
       ).toBeVisible();
     });
+  });
+
+  test('does not mark either required-and-empty control aria-invalid before it is touched', async ({
+    page,
+  }) => {
+    const displayName = page.getByLabel('Display name');
+    const plan = page.getByRole('combobox', { name: 'Plan' });
+
+    await expect(displayName).not.toHaveAttribute('aria-invalid', 'true');
+    await expect(plan).not.toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('threads the newsletter hint into the checkbox button, not its display:contents host', async ({
+    page,
+  }) => {
+    const checkbox = page.getByRole('checkbox', {
+      name: 'Send me product updates',
+    });
+
+    await expect(checkbox).toHaveAttribute(
+      'aria-describedby',
+      /\bnewsletter-hint\b/,
+    );
   });
 
   test('shows blocking errors and wires aria-describedby after touch', async ({

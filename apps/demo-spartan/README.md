@@ -105,7 +105,7 @@ src/app/
 - A custom wrapper component (`spartan-form-field`) that **composes**
   Spartan's `BrnField` host directive instead of re-skinning Spartan's
   internals.
-- Real `@spartan-ng/helm` components scaffolded into `libs/ui` via
+- Real `@spartan-ng/helm` components scaffolded into `libs/spartan/ui` via
   `@spartan-ng/cli` (`hlmInput`, `<hlm-select>`, `<hlm-checkbox>`,
   `[hlmLabel]`) — the demo exercises the actual Spartan toolchain rather
   than a CSS impersonation.
@@ -179,13 +179,25 @@ not the wrapper itself. Mixing the two scopes (e.g. attaching
 `[formField]` to the wrapper) double-binds Angular's submission tracker
 and breaks both surfaces.
 
-The wrapper deliberately does **not** compose `BrnFieldControl`. That
-host directive is `NgControl`-based (Reactive Forms / Template-driven),
-and Angular Signal Forms expose state through `[formField]` / `FieldState`
-instead. Layering both would attempt to register the same control twice
-and double-write `aria-describedby` (Spartan's `BrnFieldA11yService` chain
-plus the toolkit's auto-ARIA chain). The toolkit's auto-ARIA owns the
-ARIA writes — Spartan's a11y service stays out of the picture.
+The wrapper itself doesn't add a second `BrnFieldControl` — but that's
+not because `BrnFieldControl` is reactive-forms-only. **It isn't.**
+Angular signal forms' `FormField` directive provides an interop
+`NgControl` on every bound control, and Brain 1.0.4 detects it
+(`createStateTracker()` picks its `SignalStateTracker` branch over the
+reactive-forms `ReactiveStateTracker`) and tracks it live — this is
+exactly why `data-touched` / `data-dirty` / `data-matches-spartan-invalid`
+reflect real field state on every helm control in this demo, with no
+`FormControl` anywhere. The helm directives (`[hlmInput]`, `[brnSelect]`,
+`brn-checkbox`) each bring their own `BrnFieldControl` host directive
+already, so the wrapper doesn't need to add one.
+
+What the wrapper — and the toolkit's auto-ARIA in general — does _not_
+uniformly own is the ARIA writes. See "`aria-invalid` ownership varies
+per control" below: `BrnInput`, `BrnSelectTrigger`, and `BrnCheckbox`
+each host-bind their own `aria-invalid` straight off `BrnFieldControl`'s
+raw (ungated) `invalid` signal, independently of any strategy. Whether
+auto-ARIA's strategy-gated value wins depends on whether `[formField]`
+happens to sit on the exact DOM node Brain writes to.
 
 ### `aria-describedby` interop — wrapper-scoped `BrnFieldA11yService`
 
@@ -214,9 +226,78 @@ stays compatible. This is a reusable pattern for any Brain + toolkit
 interop — the bridge primitive is exposed from
 `@ngx-signal-forms/toolkit/headless`.
 
-`aria-invalid` and `aria-required` stay owned by the toolkit's
-auto-aria — Brain does not write either of those, so no bridge is
-needed there.
+This bridge works for the text input because `BrnFieldControlDescribedBy`
+writes onto `[hlmInput]`'s own host element — the same element that's in
+the accessibility tree. It does **not** by itself fix the checkbox: see
+"Checkbox: `aria-describedby` needs an explicit hookup" below.
+
+### Checkbox: `aria-describedby` needs an explicit hookup
+
+`<hlm-checkbox>`'s host is `class: 'contents peer'` — `display: contents`,
+invisible to the accessibility tree. `HlmCheckbox` also brings
+`BrnFieldControlDescribedBy` as a `hostDirective`, so both Brain's own
+write and auto-ARIA's write land on that invisible host; neither reaches
+the real `role="checkbox"` button rendered inside `<brn-checkbox>`.
+
+`HlmCheckbox` does expose `aria-describedby` as a genuine `@Input()`
+(separate from the host-directive one) that it forwards straight to
+`<brn-checkbox [aria-describedby]="ariaDescribedby()">` — and that
+binding _does_ land on the real button. The consumer template feeds this
+wrapper's composed `toolkitAriaDescribedBy` signal into it explicitly,
+via an exported template reference:
+
+```html
+<spartan-form-field
+  [ngxSpartanFormField]="form.newsletter"
+  #newsletterField="ngxSpartanFormField"
+>
+  <hlm-checkbox
+    ngxSignalFormControl="checkbox"
+    [formField]="form.newsletter"
+    [aria-describedby]="newsletterField.toolkitAriaDescribedBy()"
+  />
+  ...
+</spartan-form-field>
+```
+
+`NgxSpartanFormField` exports itself as `ngxSpartanFormField` for exactly
+this purpose. Brain's own describedby write onto the `display: contents`
+host still happens — it's harmless, just invisible to AT — so no opt-out
+is needed.
+
+### `aria-invalid` ownership varies per control
+
+Auto-ARIA does not uniformly own `aria-invalid` across every helm
+control — whether its strategy-gated write "wins" over Brain's own raw
+(ungated) host binding depends entirely on _where_ Brain's write lands
+relative to `[formField]`:
+
+- **Text input** — `[formField]` sits on the same `<input>` element
+  `BrnInput` host-binds `aria-invalid` to. Auto-ARIA's `afterEveryRender`
+  write runs after Brain's per-change-detection write and overwrites it
+  with the strategy-gated value every render. Effectively shared
+  ownership, with auto-ARIA writing last.
+- **Select** — `[formField]` sits on `<hlm-select>`, one level above the
+  real `role="combobox"` button rendered inside `<hlm-select-trigger>`'s
+  own template. Auto-ARIA can only reach the `hlm-select` host, never the
+  button an AT actually reads, so Brain's raw `aria-invalid` (from
+  `BrnSelectTrigger`) would otherwise show `"true"` on a pristine,
+  required-and-empty select before it's touched.
+  `libs/spartan/ui/select/src/lib/hlm-select-trigger.ts` fixes this at
+  the source instead: it reads `BrnFieldControl.spartanInvalid()` —
+  Brain's own touched-gated invalid signal, the same one driving the
+  `data-matches-spartan-invalid` destructive-ring styling — and writes
+  the gated `aria-invalid` onto the button in `afterEveryRender`,
+  deterministically after Brain's raw write. No toolkit coupling needed.
+- **Checkbox** — `newsletter` has no validators in this demo, so its
+  `aria-invalid` is always `false` regardless of gating; not fixed here
+  because there's nothing to observe. A required checkbox would hit the
+  same displaced-write problem as the select (`[formField]` on
+  `<hlm-checkbox>`, whose host is `display: contents`), and would need
+  the same kind of fix.
+
+`aria-required` stays owned by the toolkit's auto-aria — Brain does not
+write it.
 
 ### `hlm-select`: pin `fieldName` explicitly
 
@@ -233,9 +314,16 @@ split, so they can rely on label-`for=` resolution (tier-2).
 
 ## What's not shown
 
-- `BrnFieldControl` and Spartan's `ErrorStateMatcher`. See "Host-directive
-  ordering" above — the toolkit owns control state via `[formField]`,
-  and Brain's a11y service is replaced by the bridge.
+- Overriding Spartan's `ErrorStateMatcher` (`provideErrorStateMatcher`).
+  `HlmSelectTrigger`'s `aria-invalid` gating reads
+  `BrnFieldControl.spartanInvalid()`, which is driven by whichever
+  `ErrorStateMatcher` is registered (default: `invalid && touched` — the
+  same semantics as this demo's `on-touch` default). A demo configuring a
+  different `errorStrategy` and wanting the select's `aria-invalid` to
+  track it exactly (rather than Brain's own touched gate) would need to
+  provide a custom `ErrorStateMatcher`, or feed the wrapper's own
+  strategy-aware `ariaInvalidValue` into the trigger instead — out of
+  scope here since Brain's default already matches this demo's strategy.
 - Submission patterns (`submitWithWarnings`, async submission, server
   errors). Out of scope per the PRD; the existing `apps/demo`
   "Submission patterns" page covers those independently of the wrapper
@@ -284,7 +372,7 @@ build.
 
 Spartan's `helm` styled components are not distributed as a runtime npm
 package — they ship as a `@spartan-ng/cli` generator that copies source
-into the consumer's tree. This demo did exactly that: `libs/ui` was
+into the consumer's tree. This demo did exactly that: `libs/spartan/ui` was
 scaffolded via the workspace-root `components.json` config and exposes
 `@spartan-ng/helm/*` secondary entry points. The Spartan version is
 pinned via the `spartan:` pnpm catalog in `pnpm-workspace.yaml`.
@@ -295,9 +383,51 @@ tokens helm uses (`--background`, `--foreground`, `--destructive`,
 `--ring`, `--radius`, etc.) in `oklch`. Both light and dark palettes
 ship; theme flipping uses the `.dark` variant.
 
+`@source '../../../libs/spartan/ui'` is what makes Tailwind's JIT scan
+the vendored helm components for the utility classes embedded in their
+templates — Nx runs Vite with `cwd: apps/demo-spartan` (see
+`project.json`'s `build`/`serve` options), so Tailwind's own auto-detection
+never reaches `libs/`. If this glob ever points at the wrong path (it's
+resolved relative to the stylesheet, not the repo root), helm components
+render structurally correct but completely unstyled — no build error, no
+failing test, just a silently unstyled `dist/` bundle. Verify after
+touching this line by building and grepping the output CSS for a
+helm-only class that isn't used anywhere in this demo's own templates
+(e.g. `data-highlighted`, from `hlm-select-item`):
+
+```bash
+pnpm nx build demo-spartan
+grep -c 'data-highlighted' dist/apps/demo-spartan/assets/*.css   # must be > 0
+```
+
 The wrapper's `data-spartan-form-field` attribute is the join point
 between Spartan's `helm` selectors and the toolkit's chrome — bespoke
 styling can target it without forking the wrapper.
+
+### Error/warning color overrides for `.dark`
+
+The toolkit's own error/warning colors (`--ngx-signal-form-error-color` /
+`--ngx-signal-form-warning-color`, consumed by
+`packages/toolkit/assistive`) default to tracking `prefers-color-scheme`
+directly — they do **not** detect a `.dark` ancestor class. Since this
+demo themes via a `.dark` class toggled independently of the OS
+preference (see `:root` / `.dark` above), `styles.css` sets both custom
+properties explicitly per theme:
+
+```css
+:root {
+  --ngx-signal-form-error-color: #db1818;
+  --ngx-signal-form-warning-color: #a16207;
+}
+.dark {
+  --ngx-signal-form-error-color: #fca5a5;
+  --ngx-signal-form-warning-color: #fcd34d;
+}
+```
+
+Without this, an explicit-light UI on an OS-prefers-dark machine (or vice
+versa) would show the wrong theme's error colors. `apps/demo` follows the
+same convention for the same reason.
 
 ## Pinned versions
 
