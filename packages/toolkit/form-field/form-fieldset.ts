@@ -23,7 +23,10 @@ import {
   type NgxFormFieldErrorPlacement,
 } from '@ngx-signal-forms/toolkit';
 
-export type NgxFormFieldsetFeedbackAppearance = 'auto' | 'plain' | 'notification';
+export type NgxFormFieldsetFeedbackAppearance =
+  | 'auto'
+  | 'plain'
+  | 'notification';
 export type NgxFormFieldsetAppearance = 'outline' | 'plain';
 export type NgxFormFieldsetSurfaceTone =
   | 'default'
@@ -265,7 +268,8 @@ export class NgxFormFieldset {
    * - `plain`: always use the compact `ngx-form-field-error` presentation
    * - `notification`: always use the surfaced notification card
    */
-  readonly feedbackAppearance = input<NgxFormFieldsetFeedbackAppearance>('auto');
+  readonly feedbackAppearance =
+    input<NgxFormFieldsetFeedbackAppearance>('auto');
 
   /**
    * Optional title rendered inside the notification card.

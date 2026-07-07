@@ -114,7 +114,8 @@ export class FieldsetFormComponent {
   readonly orientation = input<FormFieldOrientation>('vertical');
   readonly errorPlacement = input<NgxFormFieldErrorPlacement>('bottom');
   readonly fieldsetAppearance = input<NgxFormFieldsetAppearance>('outline');
-  readonly feedbackAppearance = input<NgxFormFieldsetFeedbackAppearance>('auto');
+  readonly feedbackAppearance =
+    input<NgxFormFieldsetFeedbackAppearance>('auto');
   readonly listStyle = input<NgxFormFieldListStyle>('bullets');
   readonly surfaceTone = input<NgxFormFieldsetSurfaceTone>('default');
   readonly validationSurface = input<NgxFormFieldsetValidationSurface>('never');

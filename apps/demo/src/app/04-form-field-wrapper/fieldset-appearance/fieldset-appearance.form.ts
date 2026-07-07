@@ -20,11 +20,8 @@ import {
 } from '../../ui/error-display-mode-selector/error-display-mode-selector';
 import { FieldsetFormComponent } from '../complex-forms/fieldset.form';
 
-const FEEDBACK_APPEARANCE_OPTIONS: readonly NgxFormFieldsetFeedbackAppearance[] = [
-  'auto',
-  'plain',
-  'notification',
-];
+const FEEDBACK_APPEARANCE_OPTIONS: readonly NgxFormFieldsetFeedbackAppearance[] =
+  ['auto', 'plain', 'notification'];
 
 const FEEDBACK_APPEARANCE_LABELS: Record<
   NgxFormFieldsetFeedbackAppearance,
@@ -63,16 +60,16 @@ const SURFACE_TONE_LABELS: Record<NgxFormFieldsetSurfaceTone, string> = {
   danger: 'Danger',
 };
 
-const VALIDATION_SURFACE_OPTIONS: readonly NgxFormFieldsetValidationSurface[] = [
-  'never',
-  'always',
-];
+const VALIDATION_SURFACE_OPTIONS: readonly NgxFormFieldsetValidationSurface[] =
+  ['never', 'always'];
 
-const VALIDATION_SURFACE_LABELS: Record<NgxFormFieldsetValidationSurface, string> =
-  {
-    never: 'Message only',
-    always: 'Tint surface',
-  };
+const VALIDATION_SURFACE_LABELS: Record<
+  NgxFormFieldsetValidationSurface,
+  string
+> = {
+  never: 'Message only',
+  always: 'Tint surface',
+};
 
 type FieldsetListStyle = 'plain' | 'bullets';
 

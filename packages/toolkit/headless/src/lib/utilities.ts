@@ -322,9 +322,9 @@ export interface CreateErrorStateOptions<TValue = unknown> {
  */
 export interface ErrorStateResult {
   /** Whether to show errors */
-  readonly showErrors: Signal<boolean>;
+  readonly shouldShowErrors: Signal<boolean>;
   /** Whether to show warnings */
-  readonly showWarnings: Signal<boolean>;
+  readonly shouldShowWarnings: Signal<boolean>;
   /** Raw blocking errors */
   readonly errors: Signal<readonly ValidationError[]>;
   /** Raw warning errors */
@@ -432,8 +432,8 @@ export function createErrorState<TValue = unknown>(
   const core = buildHeadlessErrorState(fieldState, resolvedFieldName);
 
   return {
-    showErrors: showErrorsSignal,
-    showWarnings: showErrorsSignal,
+    shouldShowErrors: showErrorsSignal,
+    shouldShowWarnings: showErrorsSignal,
     ...core,
     fieldName: resolvedFieldName,
   };
