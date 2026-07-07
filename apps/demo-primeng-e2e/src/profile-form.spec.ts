@@ -10,7 +10,10 @@ import { expect, test, type Page } from '@playwright/test';
  */
 
 async function selectRole(page: Page, optionName: string): Promise<void> {
-  await page.getByRole('combobox', { name: /pick a role/i }).click();
+  // The combobox's accessible name is "Role" (from the visible <label> via
+  // aria-labelledby), not the transient "Pick a role" placeholder text —
+  // see the dedicated accessible-name regression test below.
+  await page.getByRole('combobox', { name: /^role$/i }).click();
   await page.getByRole('option', { name: optionName }).click();
 }
 
@@ -71,7 +74,7 @@ test.describe('demo-primeng — profile form', () => {
   test('select required error surfaces on blur and the combobox stays linked to its assistive text', async ({
     page,
   }) => {
-    const roleCombobox = page.getByRole('combobox', { name: /pick a role/i });
+    const roleCombobox = page.getByRole('combobox', { name: /^role$/i });
 
     await test.step('blur the untouched role control', async () => {
       await roleCombobox.focus();
@@ -102,11 +105,55 @@ test.describe('demo-primeng — profile form', () => {
     });
   });
 
+  test("the role combobox's accessible name comes from the visible label, not placeholder/selected-value content", async ({
+    page,
+  }) => {
+    // Regression test for the audit #147 blocker: PrimeSelectControlComponent
+    // put `inputId` on the non-labelable inner <span role="combobox">, so
+    // `<label for="profile-role">Role</label>` never established a
+    // programmatic label association and the accessible name fell back to
+    // the "Pick a role" placeholder (or the selected option's label once
+    // chosen). getByRole computing an accessible name of exactly "Role" in
+    // both states is the whole point of this assertion.
+    const roleCombobox = page.getByRole('combobox', { name: /^role$/i });
+    await expect(roleCombobox).toHaveAttribute(
+      'aria-labelledby',
+      'profile-role-label',
+    );
+
+    await selectRole(page, 'Designer');
+
+    // Even after a selection changes the visible content to "Designer", the
+    // accessible name (driven by aria-labelledby) must stay "Role".
+    await expect(
+      page.getByRole('combobox', { name: /^role$/i }),
+    ).toHaveAttribute('aria-labelledby', 'profile-role-label');
+  });
+
+  test('checkbox ARIA (describedby/invalid/required) is wired onto the real native input, not the <p-checkbox> host', async ({
+    page,
+  }) => {
+    // Regression test for the audit #147 blocker: NgxSignalFormAutoAria's
+    // selector catch-all wrote aria-describedby/aria-invalid/aria-required
+    // onto the <p-checkbox> host element instead of the real focusable
+    // native <input type="checkbox">, so the newsletter hint was never
+    // linked for assistive tech.
+    const newsletterCheckbox = page.getByRole('checkbox', {
+      name: /subscribe to the release notes/i,
+    });
+
+    await expect(newsletterCheckbox).toHaveJSProperty('tagName', 'INPUT');
+    await expect(newsletterCheckbox).toHaveAttribute(
+      'aria-describedby',
+      /profile-newsletter-hint/,
+    );
+  });
+
   test('submits a completed form and reset returns it to its initial state', async ({
     page,
   }) => {
     const emailInput = page.locator('#profile-email');
-    const roleCombobox = page.getByRole('combobox', { name: /pick a role/i });
+    const roleCombobox = page.getByRole('combobox', { name: /^role$/i });
     const newsletterCheckbox = page.getByRole('checkbox', {
       name: /subscribe to the release notes/i,
     });
