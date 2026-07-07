@@ -44,6 +44,7 @@ releases will not include any of the renames below.
 - **A11y** — removed explicit `aria-live` / `aria-atomic`; role semantics now authoritative
 - **Behavior** — missing `fieldName` / `id` now logs (dev mode) instead of throwing
 - **Compatibility** — Angular peer-dep is `>=22.0.0 <23.0.0`
+- **BREAKING: `@angular/common` is now a declared peer dependency** — it was always required at runtime (form-field wrapper/fieldset use `NgComponentOutlet`/`NgTemplateOutlet`) but was previously undeclared
 
 ---
 
@@ -693,6 +694,21 @@ queried the attributes in tests — switch tests to assert `role` instead.
 Peer dependencies now constrain `@angular/core` and `@angular/forms` to
 `>=22.0.0 <23.0.0`. See [`COMPATIBILITY.md`](../COMPATIBILITY.md) for the
 reasoning. If you are already on Angular 22, no migration action is required.
+
+### `@angular/common` is now a declared peer dependency
+
+`NgxFormFieldWrapper` and `NgxFormFieldset` have always imported
+`NgComponentOutlet` / `NgTemplateOutlet` from `@angular/common` at runtime,
+but the package previously declared `@angular/common` as a devDependency
+only, not a peer dependency. This worked by accident whenever a consuming
+app already depended on `@angular/common` (virtually all Angular apps do),
+but strict installers and dependency audits correctly flagged it as an
+undeclared dependency. `package.json` now lists
+`"@angular/common": ">=22.0.0 <23.0.0"` under `peerDependencies`, matching
+the `@angular/core` / `@angular/forms` range. No action is required for
+apps that already have `@angular/common` installed (every Angular app
+does); package managers with strict peer resolution will now correctly
+surface it instead of silently allowing the gap.
 
 ---
 

@@ -55,8 +55,9 @@ The Vest adapter is optional and only required when importing
 ## Runtime and tooling baseline
 
 The toolkit's `engines.node` matches the Angular 22 toolchain used in this repo:
-`^20.19.0 || ^22.12.0 || >=24.0.0`. Consumers should use an active LTS Node
-version compatible with Angular 22 and their package manager/tooling stack.
+`^22.22.3 || ^24.15.0 || >=26.0.0` (mirrors `@angular/core@22`'s own `engines`
+field). Consumers should use an active LTS Node version compatible with
+Angular 22 and their package manager/tooling stack.
 
 The repository currently validates and publishes with the following Node
 versions:
