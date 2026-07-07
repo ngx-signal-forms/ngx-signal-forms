@@ -91,8 +91,9 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
 
     await render(TestComponent);
 
-    // Before touch: neither surface should show errors
-    expect(screen.queryByRole('alert')).toBeFalsy();
+    // Before touch: neither surface should show errors. The alert shell
+    // stays mounted (WCAG 4.1.3) but must be empty.
+    expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('');
     expect(screen.queryByTestId('custom-error')).toBeFalsy();
 
     // Touch the field to trigger on-touch strategy
@@ -151,8 +152,9 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
     // Type a valid value
     await userEvent.type(screen.getByRole('textbox'), 'John');
 
-    // Both surfaces clear together
-    expect(screen.queryByRole('alert')).toBeFalsy();
+    // Both surfaces clear together. The alert shell stays mounted (WCAG
+    // 4.1.3) but must be empty.
+    expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('');
     expect(screen.queryByTestId('custom-error')).toBeFalsy();
   });
 
@@ -205,10 +207,10 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
 
     const { container } = await render(TestEmptyDirectErrorsComponent);
 
-    // Live region stays in DOM (WCAG 4.1.3) but is hidden + empty
+    // Live region stays in DOM (WCAG 4.1.3) but is empty
     const alertEl = container.querySelector('[role="alert"]');
     expect(alertEl).toBeTruthy();
-    expect(alertEl?.hasAttribute('hidden')).toBe(true);
+    expect(alertEl?.hasAttribute('hidden')).toBe(false);
     expect(alertEl?.textContent?.trim()).toBe('');
   });
 

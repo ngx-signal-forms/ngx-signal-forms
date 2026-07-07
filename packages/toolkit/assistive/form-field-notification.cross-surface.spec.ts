@@ -178,7 +178,7 @@ describe('cross-surface: NgxFormFieldNotification vs NgxHeadlessNotification', (
     expect(screen.queryByTestId('custom-warning')).toBeFalsy();
   });
 
-  it('empty error list keeps both live regions hidden but in DOM (WCAG 4.1.3)', async () => {
+  it('empty error list keeps both live regions empty but in DOM (WCAG 4.1.3)', async () => {
     @Component({
       selector: 'test-notification-cross-surface-empty',
       imports: [NgxFormFieldNotification],
@@ -197,7 +197,7 @@ describe('cross-surface: NgxFormFieldNotification vs NgxHeadlessNotification', (
     const statusEl = container.querySelector('[role="status"]');
     expect(alertEl).toBeTruthy();
     expect(statusEl).toBeTruthy();
-    expect(alertEl?.hasAttribute('hidden')).toBe(true);
-    expect(statusEl?.hasAttribute('hidden')).toBe(true);
+    expect(alertEl?.hasAttribute('hidden')).toBe(false);
+    expect(statusEl?.hasAttribute('hidden')).toBe(false);
   });
 });

@@ -155,9 +155,13 @@ describe('NgxFormFieldset', () => {
     expect(errors).toHaveLength(1);
     expect(errors[0]?.textContent).toContain('City required');
 
-    /// Warning should be suppressed when error is shown
+    /// Warning should be suppressed when error is shown. The status shell
+    /// stays mounted (WCAG 4.1.3, always-mounted live region) but must be
+    /// empty.
     const warnings = screen.queryAllByRole('status');
-    expect(warnings).toHaveLength(0);
+    for (const warning of warnings) {
+      expect(warning.textContent?.trim() ?? '').toBe('');
+    }
   });
 
   it('shows warnings when no blocking errors exist', async () => {
