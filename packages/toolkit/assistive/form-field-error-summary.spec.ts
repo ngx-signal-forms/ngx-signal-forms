@@ -377,8 +377,14 @@ describe('NgxFormFieldErrorSummary', () => {
     await userEvent.click(input);
     await userEvent.tab();
 
+    // The alert shell is always mounted (WCAG 4.1.3 live region), so
+    // `findByRole('alert')` resolves as soon as the element exists — not
+    // once it actually contains the error text. Wait for the text content
+    // itself to avoid racing the update.
     const summaryAlert = await screen.findByRole('alert');
-    expect(summaryAlert.textContent).toContain('Email is required');
+    await vi.waitFor(() => {
+      expect(summaryAlert.textContent).toContain('Email is required');
+    });
 
     const focusTarget = summaryAlert.closest('ngx-form-field-error-summary');
     expect(document.activeElement).not.toBe(focusTarget);

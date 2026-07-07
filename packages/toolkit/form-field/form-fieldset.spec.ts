@@ -159,6 +159,7 @@ describe('NgxFormFieldset', () => {
     /// stays mounted (WCAG 4.1.3, always-mounted live region) but must be
     /// empty.
     const warnings = screen.queryAllByRole('status');
+    expect(warnings).not.toHaveLength(0);
     for (const warning of warnings) {
       expect(warning.textContent?.trim() ?? '').toBe('');
     }
