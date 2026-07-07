@@ -6,6 +6,7 @@ import userEvent from '@testing-library/user-event';
 import { create, enforce, group, only, test, warn } from 'vest';
 import { describe, expect, it, vi } from 'vitest';
 import {
+  type VestResultLike,
   VEST_ERROR_KIND_PREFIX,
   VEST_WARNING_KIND_PREFIX,
   validateVest,
@@ -1085,8 +1086,9 @@ describe('validateVest', () => {
     // via a second `focusCurrentField` registration on a different field)
     // steals the first run's resolver. The first run's promise then never
     // settles. Without a settlement fallback that does not depend on the
-    // superseded run's own resolver, `password` would stay pending() forever
-    // even after its own async test body resolves.
+    // superseded run's own resolver, `email` (the earlier registration,
+    // whose resolver gets stolen by `password`'s later run) would stay
+    // pending() forever even after its own async test body resolves.
     const deferred = new Map<string, () => void>();
     const awaitField = (field: string) =>
       new Promise<void>((resolve) => {
@@ -1143,6 +1145,73 @@ describe('validateVest', () => {
 
     expect(fixture.componentInstance.f.email().pending()).toBe(false);
     expect(fixture.componentInstance.f.password().pending()).toBe(false);
+  });
+
+  it('does not throw a TDZ ReferenceError when suite.subscribe fires its callback synchronously', async () => {
+    // Regression: the settlement race in `awaitVestRunSettlement` captured
+    // `subscribe(...)`'s return value in a `const unsubscribe`, then called
+    // `unsubscribe()` from inside the subscribe callback itself. If a suite's
+    // `subscribe` implementation invokes that callback SYNCHRONOUSLY (before
+    // `subscribe()` returns — e.g. because nothing was left pending by the
+    // time this run's settlement race subscribed), `unsubscribe` was still in
+    // its temporal dead zone, throwing a `ReferenceError` and leaving the
+    // run — and the field — pending forever.
+    const baseSuite = create((data: { email: string }) => {
+      test('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+
+    const suite = {
+      ...baseSuite,
+      run(value: { email: string }) {
+        // Wrap in a genuinely fresh native Promise (rather than
+        // `Promise.resolve(...)`, which returns the SAME dual-shaped
+        // Vest result unchanged and would keep this on the synchronous
+        // path) so the adapter treats this as a raw thenable with no sync
+        // `SuiteResult` — forcing it through the async settlement race
+        // (and therefore through `suite.subscribe`) every time.
+        return new Promise<VestResultLike>((resolve, reject) => {
+          Promise.resolve(baseSuite.run(value)).then(resolve, reject);
+        });
+      },
+      subscribe(_event: 'ALL_RUNNING_TESTS_FINISHED', callback: () => void) {
+        // Real event buses typically isolate each listener's errors (so one
+        // bad subscriber cannot break the emit loop for the others), which
+        // is exactly what turns the TDZ `ReferenceError` into a silent,
+        // permanently-unsettled run rather than a visible crash. Swallow the
+        // exception here to reproduce that isolation faithfully — without
+        // the guard in `awaitVestRunSettlement`, this line hides the
+        // `ReferenceError` and the assertions below hang/fail.
+        try {
+          callback();
+        } catch {
+          // Intentionally swallowed — see comment above.
+        }
+        return () => {};
+      },
+    };
+
+    @Component({
+      selector: 'ngx-test-vest-sync-subscribe',
+      imports: [FormField],
+
+      template: `<input [formField]="signupForm.email" />`,
+    })
+    class TestComponent {
+      readonly model = signal({ email: '' });
+      readonly signupForm = form(this.model, (path) => {
+        validateVest(path, suite);
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(fixture.componentInstance.signupForm.email().pending()).toBe(false);
+    const errors = fixture.componentInstance.signupForm.email().errors();
+    expect(errors).toHaveLength(1);
+    expect(errors[0]?.message).toBe('Email is required');
   });
 
   it('does not cross-attach another field’s retained Vest failure onto a focusCurrentField-bound field', async () => {

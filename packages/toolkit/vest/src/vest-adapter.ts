@@ -427,13 +427,19 @@ function awaitVestRunSettlement<TValue>(
 
   return new Promise((resolve, reject) => {
     let settled = false;
+    // Declared as `let` (not `const subscribe(...)` return) and guarded with
+    // `?.()`: some suites invoke the `subscribe` callback SYNCHRONOUSLY (e.g.
+    // if all tests already finished before this call), which would otherwise
+    // try to read `unsubscribe` before its initializer has run — a TDZ
+    // `ReferenceError` that would leave this promise unsettled forever.
+    let unsubscribe: (() => void) | undefined;
 
     const settle = (fn: (value: unknown) => void, value: unknown): void => {
       if (settled) {
         return;
       }
       settled = true;
-      unsubscribe();
+      unsubscribe?.();
       fn(value);
     };
 
@@ -448,9 +454,17 @@ function awaitVestRunSettlement<TValue>(
       },
     );
 
-    const unsubscribe = subscribe('ALL_RUNNING_TESTS_FINISHED', () => {
+    unsubscribe = subscribe('ALL_RUNNING_TESTS_FINISHED', () => {
       settle(resolve, get());
     });
+
+    // If the callback above fired synchronously (during the `subscribe()`
+    // call itself), `settle()` ran before `unsubscribe` was assigned, so its
+    // `unsubscribe?.()` was a no-op. Clean up the now-stale subscription here
+    // instead, now that we hold a reference to it.
+    if (settled) {
+      unsubscribe();
+    }
   });
 }
 
