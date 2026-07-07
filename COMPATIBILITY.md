@@ -9,7 +9,7 @@ This document describes the compatibility contract for
 - Current peer dependencies:
   - `@angular/core >=22.0.0 <23.0.0`
   - `@angular/forms >=22.0.0 <23.0.0`
-  - `vest >=6.0.0 <6.3.0 || >=6.3.1` (optional)
+  - `vest >=6.0.0` (optional)
 
 ## Angular compatibility
 
@@ -46,11 +46,9 @@ That means:
 The Vest adapter is optional and only required when importing
 `@ngx-signal-forms/toolkit/vest`.
 
-| Vest version    | Status        | Notes                                           |
-| --------------- | ------------- | ----------------------------------------------- |
-| `6.0.0 - 6.2.x` | Supported     | Standard Schema-compatible                      |
-| `6.3.0`         | Not supported | Excluded because of an upstream packaging issue |
-| `>=6.3.1`       | Supported     | Supported by the current peer range             |
+| Vest version | Status    | Notes                       |
+| ------------ | --------- | --------------------------- |
+| `>=6.0.0`    | Supported | Standard Schema-compatible. |
 
 ## Runtime and tooling baseline
 

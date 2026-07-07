@@ -563,7 +563,7 @@ Public directives and helpers include:
 
 Use `@ngx-signal-forms/toolkit/vest` when validation logic reads more like business policy than field rules — eligibility, conditional rules, async server-backed checks, or reusable rule sets outside Angular forms.
 
-Requires `vest` `>=6.0.0 <6.3.0 || >=6.3.1` as an **optional** peer dependency. Prefer `vest@6.2.7` or `>=6.3.1`; `6.3.0` is excluded because of an upstream packaging break.
+Requires `vest` `>=6.0.0` as an **optional** peer dependency.
 
 Current public exports:
 

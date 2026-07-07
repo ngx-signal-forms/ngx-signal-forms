@@ -107,6 +107,22 @@ export interface VestRunnableSuite<TValue> {
   ): VestResultLike | PromiseLike<VestResultLike>;
   reset?: () => void;
   only?: (field: string | string[]) => Pick<VestRunnableSuite<TValue>, 'run'>;
+  /**
+   * Optional Vest bus subscription (`suite.subscribe`). Used alongside {@link
+   * get} to recover from a superseded run — see
+   * {@link awaitVestRunSettlement}. Suites created via Vest's `create()`
+   * expose this; hand-rolled suite shapes may omit it.
+   */
+  subscribe?: (
+    event: 'ALL_RUNNING_TESTS_FINISHED',
+    callback: () => void,
+  ) => () => void;
+  /**
+   * Optional synchronous accessor for the suite's current accumulated result
+   * (`suite.get`). Used alongside {@link subscribe} to recover from a
+   * superseded run — see {@link awaitVestRunSettlement}.
+   */
+  get?: () => VestResultLike;
 }
 
 /**
@@ -376,6 +392,83 @@ function executeVestRun<TValue>(
 }
 
 /**
+ * Awaits a Vest run's settlement, recovering from a superseded resolver.
+ *
+ * Vest 6's `suite.run()` promise resolves via a single resolver tracked per
+ * suite root isolate: `ALL_RUNNING_TESTS_FINISHED` fires `root.data.resolver()`
+ * once, and any LATER `suite.run()` call on the SAME suite instance replaces
+ * that resolver before the earlier call's promise ever settles. Two
+ * registrations of the same suite with different field trees (e.g. two
+ * `focusCurrentField` validators on different fields) each call `run()`
+ * independently, so the earlier one's promise can be superseded and never
+ * settle — leaving that field `pending()` forever.
+ *
+ * When the suite exposes `subscribe`/`get` (true for suites created via
+ * Vest's `create()`), race the run's own promise against the suite-wide
+ * `ALL_RUNNING_TESTS_FINISHED` bus event, which only fires once ALL pending
+ * tests — including this run's — have finished, regardless of which `run()`
+ * call's resolver ends up firing it. On that event, `suite.get()` returns the
+ * suite's current accumulated result, which by then reflects this run's
+ * outcome. Suites without `subscribe`/`get` fall back to the original
+ * (potentially superseded) promise unchanged.
+ */
+function awaitVestRunSettlement<TValue>(
+  runResult: VestResultLike | PromiseLike<VestResultLike>,
+  suite: Pick<VestRunnableSuite<TValue>, 'subscribe' | 'get'>,
+): PromiseLike<unknown> {
+  if (
+    typeof suite.subscribe !== 'function' ||
+    typeof suite.get !== 'function'
+  ) {
+    return Promise.resolve(runResult);
+  }
+  const subscribe = suite.subscribe;
+  const get = suite.get;
+
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    // Declared as `let` (not `const subscribe(...)` return) and guarded with
+    // `?.()`: some suites invoke the `subscribe` callback SYNCHRONOUSLY (e.g.
+    // if all tests already finished before this call), which would otherwise
+    // try to read `unsubscribe` before its initializer has run — a TDZ
+    // `ReferenceError` that would leave this promise unsettled forever.
+    let unsubscribe: (() => void) | undefined;
+
+    const settle = (fn: (value: unknown) => void, value: unknown): void => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      unsubscribe?.();
+      fn(value);
+    };
+
+    Promise.resolve(runResult).then(
+      (value) => {
+        settle(resolve, value);
+        return undefined;
+      },
+      (error: unknown) => {
+        settle(reject, error);
+        return undefined;
+      },
+    );
+
+    unsubscribe = subscribe('ALL_RUNNING_TESTS_FINISHED', () => {
+      settle(resolve, get());
+    });
+
+    // If the callback above fired synchronously (during the `subscribe()`
+    // call itself), `settle()` ran before `unsubscribe` was assigned, so its
+    // `unsubscribe?.()` was a no-op. Clean up the now-stale subscription here
+    // instead, now that we hold a reference to it.
+    if (settled) {
+      unsubscribe();
+    }
+  });
+}
+
+/**
  * Normalizes Vest selector output into a flat list of field-targeted messages.
  */
 function toVestValidationEntries(
@@ -420,6 +513,35 @@ function createVestEntriesForField(
       occurrence,
     };
   });
+}
+
+/**
+ * Restricts mapped Vest entries to the validator's own bound field when it is
+ * NOT root-bound.
+ *
+ * Vest field paths are root-relative and Vest is stateful: fields excluded by
+ * `only()` retain their previous failures, so a focused run's result can
+ * still contain OTHER fields' retained messages. For a root-bound validator
+ * every field is a legitimate target, so no filtering is needed. For a
+ * subfield-bound validator (e.g. `focusCurrentField`), only entries for the
+ * bound field itself or one of its descendants belong to this registration —
+ * entries for unrelated fields are dropped rather than mis-attributed via
+ * {@link resolveVestWarningFieldTree}'s bound-field fallback.
+ */
+function filterEntriesForBoundField(
+  entries: readonly VestValidationEntry[],
+  boundFieldPath: string | undefined,
+): readonly VestValidationEntry[] {
+  if (boundFieldPath === undefined) {
+    return entries;
+  }
+
+  const descendantPrefix = `${boundFieldPath}.`;
+  return entries.filter(
+    (entry) =>
+      entry.fieldPath === boundFieldPath ||
+      entry.fieldPath.startsWith(descendantPrefix),
+  );
 }
 
 /**
@@ -498,17 +620,26 @@ function createVestValidationSnapshot(
 /**
  * Converts a Vest result into Angular validation errors, optionally subtracting
  * the sync snapshot that was already surfaced on the initial pass.
+ *
+ * `boundFieldPath` is the validator's own dotted field name from
+ * `ctx.pathKeys()` (`undefined` for a root-bound validator). When defined,
+ * entries for other fields are dropped — see
+ * {@link filterEntriesForBoundField}.
  */
 function mapVestValidationResult(
   result: VestResultLike,
   fieldTree: ReadonlyFieldTree<unknown>,
   options: VestValidationRegistrationOptions<unknown>,
+  boundFieldPath: string | undefined,
   baseline?: VestValidationSnapshot,
 ): readonly ValidationError.WithFieldTree[] {
   const errors = options.includeErrors
     ? toVestValidationErrors(
         filterExistingVestEntries(
-          toVestValidationEntries(result.getErrors()),
+          filterEntriesForBoundField(
+            toVestValidationEntries(result.getErrors()),
+            boundFieldPath,
+          ),
           baseline?.errors ?? [],
         ),
         fieldTree,
@@ -519,7 +650,10 @@ function mapVestValidationResult(
   const warnings = options.includeWarnings
     ? toVestValidationErrors(
         filterExistingVestEntries(
-          toVestValidationEntries(result.getWarnings()),
+          filterEntriesForBoundField(
+            toVestValidationEntries(result.getWarnings()),
+            boundFieldPath,
+          ),
           baseline?.warnings ?? [],
         ),
         fieldTree,
@@ -528,6 +662,27 @@ function mapVestValidationResult(
     : [];
 
   return [...errors, ...warnings];
+}
+
+/**
+ * Reports whether sync warning surfacing should be deferred for this
+ * validation pass.
+ *
+ * Angular's `validateAsync` only schedules its resource when the bound
+ * node's `syncValid()` is true, and `syncValid()` requires zero sync errors
+ * across the ENTIRE bound subtree. Toolkit warnings are ordinary
+ * `ValidationError`s (`warn:vest:*`), so a sync warning surfaced while the
+ * suite still has pending async tests would make `syncValid()` false and
+ * permanently prevent the async phase — including blocking async Vest
+ * errors — from ever running. Defer warnings only while pending; once the
+ * suite settles, {@link mapVestValidationResult}'s async `onSuccess` mapping
+ * surfaces them together with the final result.
+ */
+function shouldDeferVestWarnings(
+  options: VestValidationRegistrationOptions<unknown>,
+  initialResult: VestResultLike,
+): boolean {
+  return options.includeWarnings && initialResult.isPending();
 }
 
 /**
@@ -857,10 +1012,21 @@ export function createVestAdapter(
         return [];
       }
 
+      const syncOptions = shouldDeferVestWarnings(
+        validationOptions as VestValidationRegistrationOptions<unknown>,
+        entry.initialResult,
+      )
+        ? {
+            ...validationOptions,
+            includeWarnings: false,
+          }
+        : validationOptions;
+
       return mapVestValidationResult(
         entry.initialResult,
         fieldTree,
-        validationOptions as VestValidationRegistrationOptions<unknown>,
+        syncOptions as VestValidationRegistrationOptions<unknown>,
+        deriveVestFieldNameFromContext(ctx),
       );
     });
 
@@ -892,11 +1058,26 @@ export function createVestAdapter(
           return undefined;
         }
 
+        // Match the sync `validateTree` pass above: while pending, warnings
+        // are deferred (not yet surfaced), so the baseline used to compute
+        // the async delta must NOT already count them as shown — otherwise
+        // `onSuccess`'s `filterExistingVestEntries` would treat them as
+        // already-emitted and drop them from the final, settled result.
+        const snapshotOptions = shouldDeferVestWarnings(
+          validationOptions as VestValidationRegistrationOptions<unknown>,
+          entry.initialResult,
+        )
+          ? {
+              ...validationOptions,
+              includeWarnings: false,
+            }
+          : validationOptions;
+
         return {
           runResult: entry.runResult,
           initialSnapshot: createVestValidationSnapshot(
             entry.initialResult,
-            validationOptions as VestValidationRegistrationOptions<unknown>,
+            snapshotOptions as VestValidationRegistrationOptions<unknown>,
           ),
         } satisfies PendingVestValidationPayload;
       },
@@ -904,7 +1085,10 @@ export function createVestAdapter(
         return resource({
           params: pendingValidation,
           loader: async ({ params }) => {
-            const result = await params.runResult;
+            const result = await awaitVestRunSettlement(
+              params.runResult,
+              suite,
+            );
             if (!isVestResultLike(result)) {
               // Throw so this lands in the validator's `onError` handler below,
               // which already encodes the right policy: blocking validators
@@ -926,11 +1110,12 @@ export function createVestAdapter(
           },
         });
       },
-      onSuccess: (pendingResult, { fieldTree }) => {
+      onSuccess: (pendingResult, ctx) => {
         return mapVestValidationResult(
           pendingResult.result,
-          fieldTree,
+          ctx.fieldTree,
           validationOptions as VestValidationRegistrationOptions<unknown>,
+          deriveVestFieldNameFromContext(ctx),
           pendingResult.initialSnapshot,
         );
       },
