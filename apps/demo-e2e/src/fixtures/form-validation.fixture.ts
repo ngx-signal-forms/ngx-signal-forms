@@ -7,6 +7,25 @@ import { ROLE_ALERT_SELECTOR } from './aria-selectors';
  */
 
 /**
+ * Starts collecting `console.error` messages on `page`. Must be called
+ * BEFORE navigating — attaching the listener after `page.goto()` misses
+ * everything logged during the initial render, which is exactly when a
+ * one-shot dev-mode diagnostic (like the toolkit's field-name-resolution
+ * warning) would fire.
+ *
+ * @returns the live array of collected messages (grows as the page runs)
+ */
+export function collectConsoleErrors(page: Page): string[] {
+  const errors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') {
+      errors.push(message.text());
+    }
+  });
+  return errors;
+}
+
+/**
  * Verifies that NO error messages are visible on initial page load.
  * This is critical for 'on-touch' error display strategy.
  *

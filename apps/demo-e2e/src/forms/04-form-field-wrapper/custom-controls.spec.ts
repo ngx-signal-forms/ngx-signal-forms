@@ -1,7 +1,10 @@
 import { expect, test } from '@playwright/test';
 
 import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
-import { verifyNoErrorsOnInitialLoad } from '../../fixtures/form-validation.fixture';
+import {
+  collectConsoleErrors,
+  verifyNoErrorsOnInitialLoad,
+} from '../../fixtures/form-validation.fixture';
 import { stabilizeLayoutSnapshotViewport } from '../../fixtures/layout-screenshot.fixture';
 import { CustomControlsPage } from '../../page-objects/custom-controls.page';
 
@@ -29,6 +32,35 @@ test.describe('Custom Signal Forms Controls', () => {
   }) => {
     await verifyNoErrorsOnInitialLoad(playwrightPage);
     await expect(page.form).toBeVisible();
+  });
+
+  // Regression test for #166 finding #1: this page follows the documented,
+  // recommended id-derivation path for every wrapper (explicit fieldName is
+  // never set) and projects ngx-form-field-hint under several of them —
+  // exactly the trigger condition audit #145 identified for a false-positive
+  // "Could not resolve a deterministic field name for ngx-form-field-wrapper"
+  // dev console.error firing on first render, one render before the id
+  // resolves. The toolkit's form-field-wrapper.ts (afterEveryRender write
+  // phase, see #warnedUnresolvedFieldName there) already gates this
+  // diagnostic on the post-render snapshot rather than the pre-render
+  // computed, so this should never fire — this test pins that down.
+  test('should not log the "could not resolve a deterministic field name" dev warning', async ({
+    page: playwrightPage,
+  }) => {
+    const consoleErrors = collectConsoleErrors(playwrightPage);
+    const freshPage = new CustomControlsPage(playwrightPage);
+    await freshPage.goto();
+    await expect(freshPage.form).toBeVisible();
+
+    // Interact with a couple of hint-bearing custom controls to exercise
+    // more than just the very first render pass.
+    await freshPage.ratingControl.focus();
+    await freshPage.ratingControl.blur();
+
+    const fieldNameWarnings = consoleErrors.filter((message) =>
+      message.includes('Could not resolve a deterministic field name'),
+    );
+    expect(fieldNameWarnings).toEqual([]);
   });
 
   test.describe('Rating Control Rendering', () => {
