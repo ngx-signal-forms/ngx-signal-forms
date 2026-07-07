@@ -3,6 +3,7 @@ import type { FieldTree } from '@angular/forms/signals';
 import { assertInjector } from './assert-injector';
 import { resolveFieldName } from './field-resolution';
 import { injectFormContext } from './inject-form-context';
+import { isFieldTree } from './walk-field-tree';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
@@ -17,7 +18,17 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
  * @param element - The HTML element or ElementRef to resolve the field name from
  * @param injector - Optional injector for use outside injection context
  * @returns The resolved `FieldTree<TValue>` from the form
- * @throws Error if field cannot be resolved or form context is not found
+ * @throws Error if field cannot be resolved, the resolved value does not
+ *   satisfy the runtime `FieldTree` contract (see `isFieldTree`), or form
+ *   context is not found
+ *
+ * @remarks
+ * Resolution is a **one-shot, non-reactive** lookup: the form instance and
+ * the element's `id` are both read once, at injection/call time. Swapping
+ * the underlying form instance or assigning the element's `id` after this
+ * call resolves will NOT be reflected — the returned `FieldTree` reference
+ * is fixed for the lifetime of the caller. Re-invoke this function (e.g. in
+ * a fresh `computed()`) if you need to track a form or id that can change.
  *
  * @example
  * ```typescript
@@ -82,6 +93,13 @@ export function injectFieldControl<TValue = unknown>(
         );
       }
       control = control[part];
+    }
+
+    if (!isFieldTree(control)) {
+      throw new Error(
+        `[ngx-signal-forms] Field "${fieldName}" not found in form. ` +
+          `Resolved value does not satisfy the FieldTree contract.`,
+      );
     }
 
     return control as FieldTree<TValue>;

@@ -180,7 +180,11 @@ export function canSubmitWithWarnings(
       return false;
     }
 
-    return getBlockingErrors(formState.errors()).length === 0;
+    // `errors()` only reports the field's OWN errors; validators placed on
+    // child paths (the common case) never surface here. `errorSummary()`
+    // aggregates descendant errors too, matching what `submitWithWarnings()`
+    // gates on — keeping the two helpers in agreement.
+    return getBlockingErrors(formState.errorSummary()).length === 0;
   });
 }
 

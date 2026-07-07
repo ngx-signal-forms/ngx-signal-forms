@@ -1,13 +1,36 @@
 import { ElementRef, Injector, signal } from '@angular/core';
+import type { FieldTree } from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
 import type { SubmittedStatus } from '../types';
 import type { NgxSignalFormContext } from '../directives/ngx-signal-form';
 import { NGX_SIGNAL_FORM_CONTEXT } from '../tokens';
 import { injectFieldControl } from './inject-field-control';
 
+/**
+ * Minimal `FieldTree`-shaped mock satisfying the runtime contract enforced by
+ * `isFieldTree()` (callable, backing `FieldState` with the required methods
+ * and a `.fieldTree` back-reference to itself).
+ */
+function createMockFieldTree<TValue>(value: TValue): FieldTree<TValue> {
+  let fieldTree!: FieldTree<TValue>;
+  fieldTree = (() => ({
+    value: () => value,
+    touched: () => false,
+    errors: () => [],
+    errorSummary: () => [],
+    submitting: () => false,
+    markAsTouched: () => {},
+    invalid: () => false,
+    get fieldTree() {
+      return fieldTree;
+    },
+  })) as FieldTree<TValue>;
+  return fieldTree;
+}
+
 describe('injectFieldControl', () => {
   it('should resolve field control from form using id attribute', () => {
-    const emailControl = signal({ value: '', invalid: () => false });
+    const emailControl = createMockFieldTree('');
     const mockForm = { email: emailControl };
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
@@ -26,7 +49,7 @@ describe('injectFieldControl', () => {
   });
 
   it('should resolve nested field control using dot notation', () => {
-    const cityControl = signal({ value: '', invalid: () => false });
+    const cityControl = createMockFieldTree('');
     const mockForm = { address: { city: cityControl } };
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
@@ -46,7 +69,7 @@ describe('injectFieldControl', () => {
   });
 
   it('should work with ElementRef', () => {
-    const emailControl = signal({ value: '', invalid: () => false });
+    const emailControl = createMockFieldTree('');
     const mockForm = { email: emailControl };
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
@@ -170,5 +193,51 @@ describe('injectFieldControl', () => {
     expect(() => {
       injectFieldControl(element, injector);
     }).toThrow(/requires form context/i);
+  });
+
+  it('should throw instead of returning an unsound cast when the resolved value is not a FieldTree', () => {
+    // Regression: an id can collide with a non-field property on the form
+    // object (e.g. plain metadata, not a control). Path navigation used to
+    // validate only `isRecord(control) && part in control`, then blindly
+    // cast the result to `FieldTree`, deferring the failure to a confusing
+    // downstream call site instead of throwing here with a clear message.
+    const mockForm = { metadata: { note: 'plain data, not a FieldTree' } };
+    const mockContext: NgxSignalFormContext = {
+      form: mockForm,
+      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
+      errorStrategy: () => 'on-touch',
+    };
+    const injector = Injector.create({
+      providers: [{ provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext }],
+    });
+
+    const element = document.createElement('input');
+    element.setAttribute('id', 'metadata');
+
+    expect(() => {
+      injectFieldControl(element, injector);
+    }).toThrow(/Field "metadata".*not.*(FieldTree|found)/is);
+  });
+
+  it('should throw when the resolved value is callable but does not satisfy the FieldState contract', () => {
+    // A callable property (e.g. a plain function living on the form object)
+    // passes a naive "is it a function" check but is not a real FieldTree —
+    // calling it does not produce a conforming FieldState.
+    const mockForm = { email: () => 'not a FieldState' };
+    const mockContext: NgxSignalFormContext = {
+      form: mockForm,
+      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
+      errorStrategy: () => 'on-touch',
+    };
+    const injector = Injector.create({
+      providers: [{ provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext }],
+    });
+
+    const element = document.createElement('input');
+    element.setAttribute('id', 'email');
+
+    expect(() => {
+      injectFieldControl(element, injector);
+    }).toThrow(/Field "email".*not.*(FieldTree|found)/is);
   });
 });

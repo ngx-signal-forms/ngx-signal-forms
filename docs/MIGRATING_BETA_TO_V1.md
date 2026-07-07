@@ -44,6 +44,8 @@ releases will not include any of the renames below.
 - **A11y** — removed explicit `aria-live` / `aria-atomic`; role semantics now authoritative
 - **Behavior** — missing `fieldName` / `id` now logs (dev mode) instead of throwing
 - **Compatibility** — Angular peer-dep is `>=22.0.0 <23.0.0`
+- **BREAKING: `canSubmitWithWarnings()` now reads `errorSummary()`** — child-path blocking errors now correctly disable submission (see [§5c](#5c-cansubmitwithwarnings-now-aggregates-descendant-errors))
+- **BREAKING: `injectFieldControl()` validates the resolved value against the runtime `FieldTree` contract** — an id resolving to a non-`FieldTree` property now throws instead of silently returning an unsound cast (see [§5d](#5d-injectfieldcontrol-validates-the-resolved-fieldtree))
 
 ---
 
@@ -470,6 +472,54 @@ What changed for migrators:
   string.
 - **No runtime behavior change** for existing string entries or correctly typed
   factories — this is a compile-time tightening only.
+
+## 5c. `canSubmitWithWarnings()` now aggregates descendant errors
+
+`canSubmitWithWarnings()` previously gated on `formTree().errors()`, which
+only reports the root field's **own** errors. Validators are almost always
+placed on child paths (`path.email`, not `path`), so a blocking `required`
+error on a child field left the root's `errors()` empty and
+`canSubmitWithWarnings()` returned `true` — while its sibling helper
+`submitWithWarnings()` already correctly gated on `errorSummary()` (which
+aggregates descendant errors) and silently refused to submit. That mismatch
+produced a dead click: the submit button computed "submittable" while the
+actual submit call was a no-op.
+
+`canSubmitWithWarnings()` now reads `formTree().errorSummary()`, matching
+`submitWithWarnings()`.
+
+**Action:** If you built a form whose only blocking validators live at the
+form root (uncommon) and were relying on child-path errors being ignored by
+`canSubmitWithWarnings()`, that form's submit button will now correctly stay
+disabled until the child error clears. This is the intended fix — no code
+changes are needed unless you were compensating for the bug elsewhere (e.g.
+manually re-checking `errorSummary()` before calling `submitWithWarnings()`).
+
+## 5d. `injectFieldControl()` validates the resolved `FieldTree`
+
+`injectFieldControl()` previously validated only `isRecord(control) && part
+in control` while walking the dotted id path, then cast the final value to
+`FieldTree<TValue>` unconditionally. Any property reachable by the path —
+including one that happens to collide with non-control data on the form
+object — passed silently and was returned as though it were a real
+`FieldTree`, deferring the failure to a confusing error at the first
+downstream call site.
+
+`injectFieldControl()` now validates the resolved value with the existing
+`isFieldTree()` runtime guard and throws the same descriptive
+`"Field "…" not found in form"` error immediately when it fails the check.
+
+**Action:** No change needed for real Angular `form()` trees — they always
+satisfy the `FieldTree` contract. If you were passing a hand-rolled mock form
+into toolkit-consuming code under test, make sure the mocked leaf values are
+callable and resolve to an object exposing `value`, `touched`, `errors`,
+`errorSummary`, `submitting`, and `markAsTouched` as functions, plus a
+`fieldTree` back-reference to the callable itself (mirrors what
+`walkFieldTreeEntries()` already requires).
+
+Resolution also remains a **one-shot, non-reactive** lookup — the form
+instance and the element's `id` are both read once, at call time. This was
+previously undocumented; see the updated `injectFieldControl()` JSDoc.
 
 ### Control semantics contract — `ngxSignalFormControl`
 
