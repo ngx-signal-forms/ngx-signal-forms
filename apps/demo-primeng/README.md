@@ -279,7 +279,7 @@ The smoke spec (`profile-form.smoke.spec.ts`) and the Playwright spec
 ## Scripts
 
 ```bash
-pnpm nx serve demo-primeng       # http://localhost:4220
+pnpm nx serve demo-primeng       # http://127.0.0.1:4620
 pnpm nx run demo-primeng:build   # production build
 pnpm nx run demo-primeng:test    # vitest smoke specs
 pnpm nx run demo-primeng-e2e:e2e # playwright spec

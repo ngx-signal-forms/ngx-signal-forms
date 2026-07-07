@@ -30,10 +30,10 @@
       },
       "configurations": {
         "production": {
-          "command": "vite preview --port 4700"
+          "command": "vite preview --port 4700 --strictPort"
         },
         "development": {
-          "command": "vite --port 4600"
+          "command": "vite --port 4600 --strictPort"
         }
       }
     },
@@ -48,7 +48,7 @@
       "defaultConfiguration": "production",
       "options": {
         "buildTarget": "demo:build:production",
-        "port": 4600,
+        "port": 4700,
         "staticFilePath": "dist/apps/demo",
         "spa": true
       }

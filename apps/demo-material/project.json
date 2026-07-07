@@ -62,7 +62,7 @@
       "defaultConfiguration": "production",
       "options": {
         "buildTarget": "demo-material:build:production",
-        "port": 4601,
+        "port": 4701,
         "staticFilePath": "dist/apps/demo-material",
         "spa": true
       }

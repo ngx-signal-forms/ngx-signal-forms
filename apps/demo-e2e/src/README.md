@@ -79,7 +79,7 @@ pnpm nx run demo-e2e:e2e-toolkit
 
 This lane excludes tests tagged with `@layout`, so large look-and-feel/layout
 refactors should not fail toolkit behavior coverage.
-The target includes a preflight port cleanup for `localhost:4200` before
+The target includes a preflight port cleanup for `127.0.0.1:4600` before
 starting Playwright.
 
 Run demo app UI/look-and-feel/content tests only:
@@ -140,7 +140,7 @@ For debugging and manual testing, you can use the `playwright-cli` tool:
 
 ```bash
 # Open browser and navigate
-playwright-cli open http://localhost:4200
+playwright-cli open http://127.0.0.1:4600
 playwright-cli goto /getting-started/your-first-form
 
 # Interact with elements
