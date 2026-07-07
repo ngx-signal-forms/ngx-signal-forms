@@ -82,8 +82,8 @@ export const DEFAULT_DANGER_THRESHOLD = 0.95;
  * The limit state transitions based on configurable thresholds:
  * - **ok**: Under warning threshold (default < 80%)
  * - **warning**: At/above warning, under danger (default 80-94%)
- * - **danger**: At/above danger, under exceeded (default 95-99%)
- * - **exceeded**: At or above 100%
+ * - **danger**: At/above danger, up to and including 100% (default 95-100%)
+ * - **exceeded**: Over 100%
  *
  * @example Custom thresholds
  * ```html

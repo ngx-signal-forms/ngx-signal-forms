@@ -102,12 +102,13 @@ Selector: `[ngxHeadlessErrorState]` · Export: `errorState`
 
 Exposes error state signals for custom error display.
 
-| Input             | Type                        | Description                                                                              |
-| ----------------- | --------------------------- | ---------------------------------------------------------------------------------------- |
-| `field`           | `FieldTree` (required)      | The field to track                                                                       |
-| `fieldName`       | `string \| null` (required) | Field name for ID generation. Pass `null` to disable id generation until a name resolves |
-| `strategy`        | `ErrorDisplayStrategy`      | Override (inherits from context)                                                         |
-| `submittedStatus` | `SubmittedStatus`           | Override for `'on-submit'` strategy                                                      |
+| Input             | Type                                            | Description                                                                                                                                                   |
+| ----------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `field`           | `FieldTree` (optional)                          | The field to track. Omit when using `errorsOverride` or the host `connectFieldState()` bridge                                                                 |
+| `fieldName`       | `string \| null` (optional, default `null`)     | Field name for ID generation. Pass `null` (or omit) to disable id generation until a name resolves                                                            |
+| `errorsOverride`  | `Signal<readonly ValidationError[]>` (optional) | Pre-aggregated errors that replace field-based extraction (e.g. for fieldsets). When provided, `field` is not required and `showErrors` always returns `true` |
+| `strategy`        | `ErrorDisplayStrategy`                          | Override (inherits from context)                                                                                                                              |
+| `submittedStatus` | `SubmittedStatus`                               | Override for `'on-submit'` strategy                                                                                                                           |
 
 Signals: `showErrors()`, `showWarnings()`, `hasErrors()`, `hasWarnings()`, `errors()`, `warnings()`, `resolvedErrors()`, `resolvedWarnings()`, `errorId` (nullable), `warningId` (nullable).
 
@@ -123,7 +124,9 @@ Aggregates all errors from a form tree. Each entry has a `focus()` method that c
 | `strategy`        | `ErrorDisplayStrategy` | Override (inherits from context)    |
 | `submittedStatus` | `SubmittedStatus`      | Override for `'on-submit'` strategy |
 
-Signals: `entries()`, `warningEntries()`, `hasErrors()`, `hasWarnings()`, `shouldShow()`, `focusFirst()`.
+Signals: `entries()`, `warningEntries()`, `hasErrors()`, `hasWarnings()`, `shouldShow()`, `shouldShowWarnings()`, `focusFirst()`.
+
+`shouldShow()` gates `entries()` (strategy && `hasErrors()`); `shouldShowWarnings()` gates `warningEntries()` (strategy && `hasWarnings()`) — a warnings-only form has no blocking errors, so `shouldShow()` alone can never reveal warnings.
 
 ### NgxHeadlessCharacterCount
 
@@ -131,12 +134,12 @@ Selector: `[ngxHeadlessCharacterCount]` · Export: `characterCount`
 
 Provides character count signals with progressive limit states.
 
-| Input              | Type                | Default  | Description     |
-| ------------------ | ------------------- | -------- | --------------- |
-| `field`            | `FieldTree<string>` | required | String field    |
-| `maxLength`        | `number`            | required | Character limit |
-| `warningThreshold` | `number`            | `0.8`    | Warning at 80%  |
-| `dangerThreshold`  | `number`            | `0.95`   | Danger at 95%   |
+| Input              | Type                             | Default  | Description                                              |
+| ------------------ | -------------------------------- | -------- | -------------------------------------------------------- |
+| `field`            | `FieldTree<CharacterCountValue>` | required | `string \| readonly string[] \| null \| undefined` field |
+| `maxLength`        | `number`                         | required | Character limit                                          |
+| `warningThreshold` | `number`                         | `0.8`    | Warning at 80%                                           |
+| `dangerThreshold`  | `number`                         | `0.95`   | Danger at 95%                                            |
 
 Signals: `currentLength()`, `resolvedMaxLength()`, `remaining()`, `limitState()` (`'ok' | 'warning' | 'danger' | 'exceeded'`), `hasLimit()`, `isExceeded()`, `percentUsed()`.
 
@@ -252,7 +255,7 @@ humanizeFieldPath('address.postalCode'); // 'Address / Postal code'
 createUniqueId('field'); // 'field-1', 'field-2', ...
 
 // Error-summary building blocks (what NgxHeadlessErrorSummary uses internally)
-toErrorSummaryEntry(data); // ErrorSummaryEntryData → entry with focus()
+toErrorSummaryEntry(error); // ValidationError → ErrorSummaryEntryData with focus()
 focusBoundControlFromError(error); // focus the control bound to an error
 
 // Required/optional leaf summary for a form tree (drives marking legends)

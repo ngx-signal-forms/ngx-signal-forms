@@ -1,10 +1,17 @@
 import {
+  Component,
   Injector,
   runInInjectionContext,
   signal,
   type Signal,
 } from '@angular/core';
-import type { ValidationError } from '@angular/forms/signals';
+import { TestBed } from '@angular/core/testing';
+import {
+  form,
+  required,
+  schema,
+  type ValidationError,
+} from '@angular/forms/signals';
 import {
   NGX_ERROR_MESSAGES,
   type ErrorMessageRegistry,
@@ -472,5 +479,40 @@ describe('createErrorMessageSignal — edge cases', () => {
     );
 
     expect(result()).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Real FieldTree name() fallback — no `fieldName` option supplied
+// ---------------------------------------------------------------------------
+
+describe('createErrorMessageSignal — name() fallback on a real field', () => {
+  it('strips the Angular-internal `ng.formN.` prefix from the field name fallback', () => {
+    // Angular's real `FieldState.name()` is `${APP_ID}.form${n}.path`, e.g.
+    // `ng.form0.email` — not the bare path segment the mocked specs above
+    // use. When `fieldName` is omitted, the per-error DOM id must still be
+    // derived from the bare path so it matches the ids the in-tree wrapper
+    // (and any other consumer deriving ids from the same field name) builds.
+    @Component({ template: '' })
+    class Host {
+      readonly form = form(
+        signal({ email: '' }),
+        schema<{ email: string }>((path) => {
+          required(path.email);
+        }),
+      );
+      readonly resolved = createErrorMessageSignal(() => this.form.email(), {
+        strategy: 'immediate',
+      });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    const { resolved, form: contactForm } = fixture.componentInstance;
+
+    // Sanity-check the assumption this regression test relies on: Angular's
+    // real field name is prefixed.
+    expect(contactForm.email().name()).toMatch(/^\w+\.form\d+\.email$/);
+
+    expect(resolved()[0]?.id).toBe('email-error-required');
   });
 });
