@@ -440,9 +440,11 @@ function awaitVestRunSettlement<TValue>(
     Promise.resolve(runResult).then(
       (value) => {
         settle(resolve, value);
+        return undefined;
       },
       (error: unknown) => {
         settle(reject, error);
+        return undefined;
       },
     );
 
