@@ -87,16 +87,20 @@ Grouped validation notification with an optional title.
 
 `errors` must be a signal, for example `signal<readonly ValidationError[]>([])`.
 
-| Input       | Type                                 | Description                                       |
-| ----------- | ------------------------------------ | ------------------------------------------------- |
-| `errors`    | `Signal<readonly ValidationError[]>` | Grouped validation messages to present            |
-| `fieldName` | `string`                             | Optional id base for `aria-describedby` linkage   |
-| `title`     | `string`                             | Optional title above the grouped messages         |
-| `listStyle` | `'plain' \| 'bullets'`               | Stacked paragraphs or bullet list                 |
-| `tone`      | `'auto' \| 'error' \| 'warning'`     | Resolve the card as an error/warning notification |
+| Input       | Type                                 | Description                                     |
+| ----------- | ------------------------------------ | ----------------------------------------------- |
+| `errors`    | `Signal<readonly ValidationError[]>` | Grouped validation messages to present          |
+| `fieldName` | `string`                             | Optional id base for `aria-describedby` linkage |
+| `title`     | `string`                             | Optional title above the grouped messages       |
+| `listStyle` | `'plain' \| 'bullets'`               | Stacked paragraphs or bullet list               |
+| `tone`      | `'auto' \| 'error' \| 'warning'`     | Currently a no-op — see below                   |
 
-- `tone="auto"` treats an all-warning list as a polite status notification
-- Blocking errors keep `role="alert"`
+- Tone is always **content-driven**, regardless of the `tone` value passed:
+  any blocking (non-`warn:`) error routes the group to `role="alert"`; an
+  all-warning list routes to the polite `role="status"` container.
+- The `tone` input does not currently force either outcome. It is retained
+  as a stable API surface for possible future expansion (e.g. explicit
+  tone forcing) — do not rely on it to change rendering today.
 - Intended for grouped fieldset summaries or custom headless summary cards
 
 ### NgxFormFieldErrorSummary
@@ -128,8 +132,8 @@ Helper text below inputs. Automatically linked to the input via `aria-describedb
 ```
 
 Optional `position` input (`'left' | 'right'`): alignment within the assistive
-row. When omitted, hints right-align — or left-align when a character count
-shares the row.
+row. When omitted, hints left-align by default; pass `position="right"` to
+opt into end alignment.
 
 ### NgxFormFieldCharacterCount
 
@@ -187,6 +191,16 @@ tokens when used inside `ngx-form-fieldset`.
 
 The default light-theme error surface now matches the Figma design token
 directly: `#fdebeb`.
+
+### Dark mode
+
+Built-in dark defaults are driven by the `prefers-color-scheme: dark` media
+query only — they do not detect a `.dark` class on an ancestor element.
+(`:host-context()`, which would be needed for that, is non-standard and
+unsupported in Firefox and Safari.) Apps using a class-based dark-mode
+strategy must override the public `--ngx-signal-form-error-*` /
+`--ngx-signal-form-warning-*` / `--ngx-signal-form-notification-*` custom
+properties themselves, scoped to their `.dark` selector.
 
 ## Related documentation
 

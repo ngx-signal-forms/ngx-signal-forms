@@ -1,14 +1,13 @@
 import { computed, Directive, inject, input, type Signal } from '@angular/core';
 import type { ValidationError } from '@angular/forms/signals';
-import {
-  isWarningError,
-  resolveValidationErrorMessage,
-} from '@ngx-signal-forms/toolkit';
+import { isWarningError } from '@ngx-signal-forms/toolkit';
 import {
   createFieldMessageIdSignals,
   NGX_ERROR_MESSAGES,
   normalizeFieldName,
 } from '@ngx-signal-forms/toolkit/core';
+
+import { resolveErrorMessage } from './utilities';
 
 /**
  * Visual / ARIA tone for grouped notifications.
@@ -165,10 +164,11 @@ export class NgxHeadlessNotification implements NotificationStateSignals {
     () =>
       this.#resolvedErrors().map((error) => ({
         kind: error.kind,
-        message: resolveValidationErrorMessage(
-          error,
-          this.#errorMessagesRegistry,
-        ),
+        // `stripWarningPrefix` defaults to `true` here (see `resolveErrorMessage`)
+        // because this directive is precisely the warning-tone surface — a
+        // message-less `warn:*` kind must never leak the internal `warn:`
+        // prefix into the rendered warning live region.
+        message: resolveErrorMessage(error, this.#errorMessagesRegistry),
       })),
   );
 }

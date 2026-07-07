@@ -533,7 +533,9 @@ A custom renderer is a component referenced through
 `*ngComponentOutlet` and binds inputs depending on the call site:
 
 - `NgxFormFieldWrapper` (and any wrapper following this guide) binds
-  `{ formField, strategy, submittedStatus }`.
+  `{ formField, strategy, submittedStatus, warningStrategy, fieldName }`.
+  `warningStrategy` and `fieldName` are extras beyond the minimal contract —
+  see the id contract below for why `fieldName` matters.
 - `NgxFormFieldset` binds
   `{ errors, fieldName, strategy, submittedStatus, listStyle }`.
 
@@ -541,6 +543,20 @@ Inputs the renderer doesn't declare are dropped silently by
 `*ngComponentOutlet`; extra inputs the renderer declares are unaffected.
 A renderer that targets both call sites must accept the union (or declare a
 generic `inputs` signature).
+
+### The id contract
+
+Independently of which renderer is mounted, both call sites compose the
+bound control's `aria-describedby` from `${fieldName}-error` /
+`${fieldName}-warning` whenever errors/warnings are visible. **Your renderer
+must render a matching element** — `id="${fieldName}-error"` whenever it
+displays blocking errors, `id="${fieldName}-warning"` whenever it displays
+warnings — or the composed `aria-describedby` dangles (an axe
+`aria-valid-attr-value` violation on every invalid field). Read `fieldName`
+from the input the wrapper passes rather than re-injecting
+`NGX_SIGNAL_FORM_FIELD_CONTEXT` yourself when it's available (`NgxFormFieldset`
+always passes it; `NgxFormFieldWrapper` passes it as of the input listed
+above). See `NgxFormFieldError` for the reference implementation.
 
 ## Checklist before shipping
 
@@ -558,7 +574,11 @@ generic `inputs` signature).
       `{ optional: true }`, falls back to `NgxFormFieldError`, and renders
       the resolved component via `*ngComponentOutlet`.
 - [ ] The computed feeding `*ngComponentOutlet` inputs binds
-      `{ formField, strategy, submittedStatus }` so any compliant renderer works.
+      `{ formField, strategy, submittedStatus }` (plus `fieldName`,
+      recommended — see the id contract above) so any compliant renderer works.
+- [ ] Custom error/warning renderers satisfy the
+      [id contract](#the-id-contract): `id="${fieldName}-error"` /
+      `id="${fieldName}-warning"` on the elements that display each kind.
 - [ ] Wrapper does **not** write `aria-invalid`, `aria-required`, or
       `aria-describedby` on its host element — those belong on the bound
       control and are owned by `NgxSignalFormAutoAria`.

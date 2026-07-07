@@ -1,4 +1,11 @@
-import { Component, computed, inject, input, isDevMode } from '@angular/core';
+import {
+  afterEveryRender,
+  Component,
+  computed,
+  inject,
+  input,
+  isDevMode,
+} from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   injectFormContext,
@@ -114,17 +121,21 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
       pre-existing live region — works the very first time an error appears.
       This satisfies WCAG 4.1.3 (Status Messages) and avoids the NVDA + Chrome
       timing edge case where a freshly-inserted live region misses its first
-      announcement. We mark the container as aria-hidden="true" while empty
-      so it is invisible to AT and contributes no whitespace text to the
-      accessibility tree, but never toggle the role attribute itself.
+      announcement. We intentionally do NOT toggle aria-hidden/[hidden]
+      while empty: the @if below already guarantees zero content (including
+      whitespace text) when empty, so an empty live region announces nothing
+      on its own — flipping aria-hidden off at the same tick the first
+      error is inserted would prune-then-immediately-expose the node, which
+      is functionally equivalent to inserting a brand-new live region and
+      reintroduces the very missed-first-announcement bug this pattern exists
+      to avoid. Visual collapse while empty is handled by the --empty CSS
+      class alone.
     -->
     <div
-      [id]="errorContainerVisible() ? errorId() : null"
+      [attr.id]="errorContainerVisible() ? errorId() : null"
       class="ngx-form-field-error ngx-form-field-error--error"
       [class.ngx-form-field-error--empty]="!errorContainerVisible()"
       role="alert"
-      [attr.aria-hidden]="errorContainerVisible() ? null : 'true'"
-      [hidden]="!errorContainerVisible()"
     >
       @if (errorContainerVisible()) {
         @if (usesBulletList()) {
@@ -159,15 +170,13 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
       Non-blocking Warnings: role="status" implies aria-live="polite" and
       aria-atomic="true"; the explicit attributes are intentionally omitted
       to avoid duplicate AT announcements. Same empty-live-region pattern as
-      the alert container above.
+      the alert container above (no aria-hidden/[hidden] toggling).
     -->
     <div
-      [id]="warningContainerVisible() ? warningId() : null"
+      [attr.id]="warningContainerVisible() ? warningId() : null"
       class="ngx-form-field-error ngx-form-field-error--warning"
       [class.ngx-form-field-error--empty]="!warningContainerVisible()"
       role="status"
-      [attr.aria-hidden]="warningContainerVisible() ? null : 'true'"
-      [hidden]="!warningContainerVisible()"
     >
       @if (warningContainerVisible()) {
         @if (usesBulletList()) {
@@ -265,15 +274,6 @@ export class NgxFormFieldError {
    */
   readonly listStyle = input<NgxFormFieldListStyle>('plain');
 
-  constructor() {
-    // Bridge the `formField` class input to the headless directive so it can
-    // compute strategy-based showErrors and split errors/warnings.
-    // Cannot use `hostDirectives` input forwarding for `formField` because
-    // Angular's FormField directive has selector `[formField]` and would try
-    // to apply to this component, losing the `passThroughInput` guard.
-    this.headless.connectFieldState(computed(() => this.formField()?.()));
-  }
-
   /**
    * Reactive accessor to the underlying field state, derived from the same
    * `[formField]` input the headless directive consumes. Used to drive the
@@ -305,24 +305,48 @@ export class NgxFormFieldError {
   });
 
   // ── Field name / ID resolution ────────────────────────────────────────
+  //
+  // Pure by design: when nested inside `ngx-form-field-wrapper`,
+  // `this.#fieldContext.fieldName()` is the wrapper's own `resolvedFieldName`
+  // signal, which starts out `null` and only picks up the bound control's
+  // `id` once the wrapper's `afterEveryRender` write phase runs (see
+  // form-field-wrapper.ts). This component's template (`errorId()` /
+  // `warningId()`, both derived from `#resolvedFieldName`) can render on
+  // that very first pass whenever errors are already visible (e.g.
+  // `strategy="immediate"`), which used to fire this component's own
+  // `console.error` purely because of the one-render race — even for a
+  // correctly configured field. The diagnostic is emitted from
+  // `afterEveryRender` below instead, once the wrapper (if any) has had a
+  // chance to settle.
   readonly #resolvedFieldName = computed<string | null>(() => {
-    const resolvedFieldName = resolveFieldNameFromCandidates(
+    return resolveFieldNameFromCandidates(
       this.fieldName(),
       this.#fieldContext?.fieldName(),
     );
-    if (resolvedFieldName !== null) {
-      return resolvedFieldName;
-    }
-
-    if (isDevMode() && !this.#warnedMissingName) {
-      this.#warnedMissingName = true;
-      // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-      console.error(
-        '[ngx-signal-forms] ngx-form-field-error requires an explicit `fieldName` input or a parent ngx-form-field-wrapper context. The component will render without id/aria-describedby linking until one is provided.',
-      );
-    }
-    return null;
   });
+
+  constructor() {
+    // Bridge the `formField` class input to the headless directive so it can
+    // compute strategy-based showErrors and split errors/warnings.
+    // Cannot use `hostDirectives` input forwarding for `formField` because
+    // Angular's FormField directive has selector `[formField]` and would try
+    // to apply to this component, losing the `passThroughInput` guard.
+    this.headless.connectFieldState(computed(() => this.formField()?.()));
+
+    afterEveryRender(() => {
+      if (
+        isDevMode() &&
+        !this.#warnedMissingName &&
+        this.#resolvedFieldName() === null
+      ) {
+        this.#warnedMissingName = true;
+        // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+        console.error(
+          '[ngx-signal-forms] ngx-form-field-error requires an explicit `fieldName` input or a parent ngx-form-field-wrapper context. The component will render without id/aria-describedby linking until one is provided.',
+        );
+      }
+    });
+  }
 
   /**
    * Computed error / warning IDs for aria-describedby linking. Both return
@@ -380,9 +404,23 @@ export class NgxFormFieldError {
 
   /**
    * Same as `errorContainerVisible` but for the warnings live region.
+   *
+   * Guarded by `!errorContainerVisible()` — the README's "Warning support"
+   * section documents "blocking errors present → warnings hidden", and
+   * `NgxFormFieldset` already enforces this ("UX best practice", see
+   * `filteredErrorsSignal`). Without the guard, a field with both blocking
+   * errors and warnings would render BOTH the `role="alert"` and
+   * `role="status"` containers at once — an assertive *and* a polite
+   * announcement for the same field — and `createAriaDescribedBySignal`
+   * would still compose `${fieldName}-warning` into a control's
+   * `aria-describedby` even while this container is visible, so the two
+   * are guarded in lockstep.
    */
   protected readonly warningContainerVisible = computed(
-    () => this.showWarnings() && this.headless.hasWarnings(),
+    () =>
+      this.showWarnings() &&
+      this.headless.hasWarnings() &&
+      !this.errorContainerVisible(),
   );
 
   // ── Resolved messages (delegate to the public createErrorMessageSignal) ──

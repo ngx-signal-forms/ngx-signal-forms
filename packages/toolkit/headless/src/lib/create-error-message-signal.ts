@@ -7,6 +7,7 @@ import {
   NGX_ERROR_MESSAGES,
   readDirectErrors,
   splitByKind,
+  stripAngularFormPrefix,
   type CreateErrorVisibilityOptions,
   type ErrorDisplayStrategy,
   type ErrorMessageRegistry,
@@ -296,5 +297,10 @@ function readNameFromField(accessor: FieldStateAccessor): string | null {
   const state = accessor();
   if (!state || typeof state !== 'object') return null;
   const name = state.name;
-  return typeof name === 'function' ? name() : null;
+  if (typeof name !== 'function') return null;
+  // Angular's real `FieldState.name()` is Angular-internal-prefixed
+  // (`${APP_ID}.form${n}.path`, e.g. `a.form0.email`) and varies per form
+  // instance. Strip it so the fallback ID matches the bare-path IDs the
+  // in-tree wrapper and other consumers derive from the same field name.
+  return stripAngularFormPrefix(name());
 }

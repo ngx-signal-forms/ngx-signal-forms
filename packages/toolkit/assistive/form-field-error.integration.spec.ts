@@ -43,8 +43,10 @@ describe('NgxFormFieldError (integration)', () => {
 
     await render(TestFormErrorComponent);
 
+    // The alert shell stays mounted (WCAG 4.1.3, always-mounted live
+    // region) but must render no error text.
     const alert = screen.queryByRole('alert');
-    expect(alert).toBeFalsy();
+    expect(alert?.textContent?.trim() ?? '').toBe('');
   });
 
   /**

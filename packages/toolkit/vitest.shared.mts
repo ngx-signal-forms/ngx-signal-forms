@@ -9,7 +9,7 @@ import { type UserWorkspaceConfig } from 'vitest/config';
 process.env.NX_DAEMON ??= 'false';
 
 export const toolkitSpecRoots =
-  '{src,core,form-field,headless,assistive,testing,vest}';
+  '{src,core,form-field,headless,assistive,testing,vest,scripts}';
 export const toolkitSpecFiles = `${toolkitSpecRoots}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}`;
 export const toolkitBrowserSpecFiles = `${toolkitSpecRoots}/**/*.browser.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}`;
 

@@ -29,6 +29,9 @@ describe('NgxHeadlessNotification', () => {
           [tone]="tone()"
         >
           <span data-testid="resolved-tone">{{ n.resolvedTone() }}</span>
+          <span data-testid="resolved-message">{{
+            n.resolvedMessages()[0]?.message
+          }}</span>
           @if (n.showErrorContainer()) {
             <div
               data-testid="error-container"
@@ -103,6 +106,23 @@ describe('NgxHeadlessNotification', () => {
       await setup({ errors: [], fieldName: 'address', tone: 'warning' });
 
       expect(screen.getByTestId('resolved-tone').textContent).toBe('error');
+    });
+  });
+
+  describe('resolvedMessages', () => {
+    it('strips the internal "warn:" prefix from a message-less warning kind', async () => {
+      // Angular's `ValidationError.message` is `undefined` by default. With
+      // no validator-supplied message and no registry entry for the kind,
+      // the fallback message is derived from the kind itself — the `warn:`
+      // marker prefix must never leak into the rendered warning text.
+      await setup({
+        errors: [{ kind: 'warn:weak_password' }],
+        fieldName: 'password',
+      });
+
+      const message = screen.getByTestId('resolved-message').textContent;
+      expect(message).not.toContain('warn:');
+      expect(message).toBe('weak password');
     });
   });
 

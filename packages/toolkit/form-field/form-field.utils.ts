@@ -89,6 +89,28 @@ export function readFormFieldWrapperDomSnapshot(
     cachedControl?.isConnected &&
     hostEl.contains(cachedControl) &&
     cachedControl.hasAttribute('id');
+  // `findBoundControl`'s selector is a single comma-separated `querySelector`,
+  // which returns the first match in *document order* across whatever root
+  // it's given, not by resolution tier. Scanning `hostEl` directly lets a
+  // `[prefix]`/label-slot element that happens to match the selector (a
+  // `<button prefix type="button" id="toggle">`, or a second, unrelated
+  // `<input id>` sitting in a projected label) win over the real control in
+  // `__main` — `__label` renders before `__content` in the template, and
+  // `__prefix` before `__main` inside it, so both slots are checked first in
+  // document order.
+  //
+  // Probe `__main` first — the region `selectionControlCount` below also
+  // scans — since that's where a wrapper's real control lives whenever it's
+  // projected as a standalone sibling. Only fall back to scanning the whole
+  // host when `__main` has no match: the implicit-label pattern
+  // (`<label>Email <input id="email"></label>`) projects the control AS PART
+  // OF the label into `__label`, not `__main`, so a real, singly-nested
+  // control legitimately has no `__main` match to find.
+  const mainSlot = hostEl.querySelector<HTMLElement>(
+    ':scope > .ngx-signal-form-field-wrapper__content > .ngx-signal-form-field-wrapper__main',
+  );
+  const probedControl =
+    (mainSlot && findBoundControl(mainSlot)) ?? findBoundControl(hostEl);
   // `nativeControl` wins when present. The native-vs-fallback invariant
   // (PR #92: native and CSS-selector paths must produce identical output) is
   // upheld upstream in `resolveBoundControlFromBindings`, which only returns a
@@ -96,8 +118,7 @@ export function readFormFieldWrapperDomSnapshot(
   // `findBoundControl` selector enforces. An id-less `[formField]` host
   // therefore arrives here as `nativeControl === null` and falls through to the
   // probe, which still finds the inner `<input id>`.
-  const inputEl =
-    nativeControl ?? (cacheHit ? cachedControl : findBoundControl(hostEl));
+  const inputEl = nativeControl ?? (cacheHit ? cachedControl : probedControl);
 
   return {
     inputEl,
@@ -109,13 +130,9 @@ export function readFormFieldWrapperDomSnapshot(
     // mode. The `__main` slot is always rendered by the wrapper template;
     // the `?? 0` is defense-in-depth against unexpected DOM trees.
     selectionControlCount:
-      hostEl
-        .querySelector(
-          ':scope > .ngx-signal-form-field-wrapper__content > .ngx-signal-form-field-wrapper__main',
-        )
-        ?.querySelectorAll(
-          "input[type='radio'], input[type='checkbox']:not([role='switch']), [role='radio'], [role='checkbox']",
-        ).length ?? 0,
+      mainSlot?.querySelectorAll(
+        "input[type='radio'], input[type='checkbox']:not([role='switch']), [role='radio'], [role='checkbox']",
+      ).length ?? 0,
     label: hostEl.querySelector(
       ':scope > .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])',
     ),

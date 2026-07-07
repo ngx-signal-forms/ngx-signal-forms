@@ -46,11 +46,12 @@ describe('NgxFormFieldError — WCAG 4.1.3 live-region first-insertion', () => {
     const { container } = await render(TestComponent);
 
     // Before any interaction: the alert region must exist (so the first
-    // announcement is delivered) but be hidden + empty.
+    // announcement is delivered) but be empty. `aria-hidden`/`[hidden]` are
+    // intentionally never toggled — see the class-level docs.
     const alertEl = container.querySelector('[role="alert"]');
     expect(alertEl).toBeTruthy();
-    expect(alertEl?.hasAttribute('hidden')).toBe(true);
-    expect(alertEl?.getAttribute('aria-hidden')).toBe('true');
+    expect(alertEl?.hasAttribute('hidden')).toBe(false);
+    expect(alertEl?.hasAttribute('aria-hidden')).toBe(false);
     expect(alertEl?.textContent?.trim()).toBe('');
   });
 
@@ -83,7 +84,7 @@ describe('NgxFormFieldError — WCAG 4.1.3 live-region first-insertion', () => {
 
     const alertBefore = container.querySelector('[role="alert"]');
     expect(alertBefore).toBeTruthy();
-    expect(alertBefore?.hasAttribute('hidden')).toBe(true);
+    expect(alertBefore?.hasAttribute('hidden')).toBe(false);
 
     // Touch + blur to satisfy the on-touch strategy.
     const input = container.querySelector<HTMLInputElement>('input#email')!;
@@ -133,11 +134,11 @@ describe('NgxFormFieldError — WCAG 4.1.3 live-region first-insertion', () => {
     const { container } = await render(TestComponent);
 
     // Before any value: status region must exist (so the first
-    // announcement is delivered) but be hidden + empty.
+    // announcement is delivered) but be empty.
     const statusBefore = container.querySelector('[role="status"]');
     expect(statusBefore).toBeTruthy();
-    expect(statusBefore?.hasAttribute('hidden')).toBe(true);
-    expect(statusBefore?.getAttribute('aria-hidden')).toBe('true');
+    expect(statusBefore?.hasAttribute('hidden')).toBe(false);
+    expect(statusBefore?.hasAttribute('aria-hidden')).toBe(false);
     expect(statusBefore?.textContent?.trim()).toBe('');
 
     // Type a short password to trigger the `warn:weak-password` warning.
