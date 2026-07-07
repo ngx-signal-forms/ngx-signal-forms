@@ -29,12 +29,12 @@ export default defineConfig({
   publicDir: join(appDir, 'public'),
   cacheDir: '../../node_modules/.vite/apps/demo',
   server: {
-    port: 4200,
-    host: 'localhost',
+    port: 4600,
+    host: '127.0.0.1',
   },
   preview: {
-    port: 4300,
-    host: 'localhost',
+    port: 4700,
+    host: '127.0.0.1',
   },
   build: {
     outDir: '../../../dist/apps/demo',
