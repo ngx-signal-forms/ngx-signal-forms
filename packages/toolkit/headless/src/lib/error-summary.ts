@@ -12,7 +12,7 @@ import {
 } from '@ngx-signal-forms/toolkit/core';
 
 import {
-  dedupeValidationErrors,
+  dedupeValidationErrorsByField,
   isErrorOnInteractiveField,
   readErrors,
   toErrorSummaryEntry,
@@ -40,6 +40,15 @@ export interface ErrorSummarySignals {
   readonly hasWarnings: Signal<boolean>;
   /** Whether the summary should be visible based on strategy */
   readonly shouldShow: Signal<boolean>;
+  /**
+   * Whether the warning list should be visible based on strategy.
+   *
+   * Independent of {@link shouldShow}: a warnings-only form (no blocking
+   * errors) has `hasErrors() === false`, so `shouldShow()` never gates
+   * `warningEntries()`. Consumers rendering `warningEntries()` should gate
+   * on this signal instead of `shouldShow()`.
+   */
+  readonly shouldShowWarnings: Signal<boolean>;
   /** Focus the control for the first error entry */
   readonly focusFirst: () => void;
 }
@@ -127,12 +136,17 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
    *
    * `readonly()` is intentionally **not** filtered: the field is visible and
    * focusable, and its error is usually still meaningful to the user.
+   *
+   * Deduplication is per-field (see {@link dedupeValidationErrorsByField}):
+   * unlike `NgxHeadlessFieldset`'s grouped-message dedupe, two different
+   * fields sharing the same kind/message (e.g. two `required()` fields with
+   * no custom message) must both keep their own summary entry.
    */
   readonly #split = computed(() => {
     const visibleErrors = readErrors(this.#fieldState()).filter(
       (error: ValidationError) => isErrorOnInteractiveField(error),
     );
-    return splitByKind(dedupeValidationErrors(visibleErrors));
+    return splitByKind(dedupeValidationErrorsByField(visibleErrors));
   });
 
   readonly entries = computed(() =>
@@ -162,6 +176,10 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
 
   readonly shouldShow = computed(
     () => this.#showErrorsSignal() && this.hasErrors(),
+  );
+
+  readonly shouldShowWarnings = computed(
+    () => this.#showErrorsSignal() && this.hasWarnings(),
   );
 
   readonly focusFirst = (): void => {

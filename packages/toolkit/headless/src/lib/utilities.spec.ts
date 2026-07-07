@@ -520,6 +520,16 @@ describe('Headless Utilities', () => {
       );
     });
 
+    it('should strip the form prefix regardless of the configured APP_ID', () => {
+      // Angular's real prefix is `${APP_ID}.form{n}.`, not hardcoded `ng.`.
+      // `BrowserTestingModule` (and any app with a custom `provideAppId`)
+      // uses a different APP_ID — e.g. `a.form0.email` in TestBed specs.
+      expect(humanizeFieldPath('a.form0.email')).toBe('Email');
+      expect(humanizeFieldPath('my-app.form3.address.city')).toBe(
+        'Address / City',
+      );
+    });
+
     it('should handle underscores and hyphens', () => {
       expect(humanizeFieldPath('first_name')).toBe('First name');
       expect(humanizeFieldPath('last-name')).toBe('Last name');

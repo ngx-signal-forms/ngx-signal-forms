@@ -44,6 +44,9 @@ releases will not include any of the renames below.
 - **A11y** — removed explicit `aria-live` / `aria-atomic`; role semantics now authoritative
 - **Behavior** — missing `fieldName` / `id` now logs (dev mode) instead of throwing
 - **Compatibility** — Angular peer-dep is `>=22.0.0 <23.0.0`
+- **BREAKING: `ErrorSummarySignals` gained `shouldShowWarnings`** — implementers of the interface must add this member (see [§9](#9-headless-audit-fixes-v100))
+- **BREAKING: `CharacterCountResult` members are now typed `Signal<T>`** (was the looser `ReadSignal<T>` alias); a new `hasLimit` member was added — compile-time tightening only, no runtime change
+- **Bug fix** — error summary no longer drops a second field's error when two different fields share the same kind + message-less default; `NgxHeadlessNotification` no longer leaks the internal `warn:` prefix; `createErrorMessageSignal`'s ID fallback strips Angular's internal `{appId}.form{n}.` prefix; required `Date`/`File`/`Map`-valued leaves no longer vanish from field-optionality summaries
 
 ---
 
@@ -693,6 +696,92 @@ queried the attributes in tests — switch tests to assert `role` instead.
 Peer dependencies now constrain `@angular/core` and `@angular/forms` to
 `>=22.0.0 <23.0.0`. See [`COMPATIBILITY.md`](../COMPATIBILITY.md) for the
 reasoning. If you are already on Angular 22, no migration action is required.
+
+---
+
+## 9. Headless audit fixes (v1.0.0)
+
+A pre-1.0 audit of `@ngx-signal-forms/toolkit/headless` found a handful of
+correctness and API-surface issues. Fixes shipped together; the API-affecting
+ones are called out here.
+
+### `ErrorSummarySignals.shouldShowWarnings` (new, breaking for interface implementers)
+
+`NgxHeadlessErrorSummary.shouldShow` gates `entries()` on `strategy &&
+hasErrors()`. That gate can never reveal `warningEntries()` on a warnings-only
+form, because `hasErrors()` is permanently `false` when there are no blocking
+errors. `ErrorSummarySignals` now declares a dedicated
+`shouldShowWarnings: Signal<boolean>` (`strategy && hasWarnings()`) — gate
+`warningEntries()` on this instead of `shouldShow()`:
+
+```html
+<!-- before — warnings could never render -->
+@if (summary.shouldShow()) { @for (e of summary.warningEntries(); track e.kind)
+{ … } }
+
+<!-- after -->
+@if (summary.shouldShowWarnings()) { @for (e of summary.warningEntries(); track
+e.kind) { … } }
+```
+
+If you implement `ErrorSummarySignals` yourself (e.g. a custom summary
+directive), add the new member.
+
+### `CharacterCountResult` — real `Signal<T>` typing + `hasLimit`
+
+`createCharacterCount()`'s return type previously typed every member as the
+looser `ReadSignal<T>` (`= () => T`) alias, even though every member was
+already a real `computed()` at runtime. Members are now typed `Signal<T>`,
+matching `NgxHeadlessCharacterCount`'s own `CharacterCountStateSignals`. A new
+`hasLimit: Signal<boolean>` member was added (always `true` — `maxLength` is
+required — kept for symmetry with the directive's `hasLimit`). This is a
+compile-time tightening with no runtime change; it only affects code that
+assigned the factory's return values to a hand-rolled `() => T`-shaped type
+that isn't a real `Signal`.
+
+### Error summary: per-field deduplication
+
+`NgxHeadlessErrorSummary` deduplicated entries by `kind + message` only. Two
+different fields both failing `required()` with no custom `message` (Angular's
+default `ValidationError.message` is `undefined`) shared the same dedupe key
+and the second field's error was silently dropped from the summary — a WCAG
+3.3.1 violation. Deduplication is now per-field. If your tests asserted the
+old (buggy) collapsed count for a summary with multiple message-less errors on
+distinct fields, update the expected entry count.
+
+`NgxHeadlessFieldset`'s grouped-message dedupe (a documented feature, not a
+bug) is unchanged.
+
+### `NgxHeadlessNotification` — warning messages no longer leak `warn:`
+
+Message-less warnings with an unknown kind (e.g. `warningError('weak_password')`)
+previously rendered as `warn:weak password` inside the notification's warning
+live region because the internal `warn:` prefix wasn't stripped. It now
+resolves to `weak password`, consistent with every other headless surface
+(`NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`,
+`createErrorMessageSignal`). Update any test/snapshot asserting the old
+`warn:`-prefixed text.
+
+### `createErrorMessageSignal` — ID fallback strips the Angular-internal prefix
+
+When `options.fieldName` is omitted, the per-error DOM id fallback previously
+used `FieldState.name()` raw — which is Angular-internal-prefixed
+(`${APP_ID}.form${n}.path`, e.g. `ng.form0.email`) and varies per form
+instance. IDs are now derived from the stripped path (`email-error-required`),
+matching the ids the in-tree wrapper and other consumers derive from the same
+field. This restores the documented "lockstep" ID guarantee; pass an explicit
+`fieldName` if you need to keep a specific id shape.
+
+### Field-optionality — `Date` / `File` / `Map`-valued required leaves
+
+`summarizeFieldOptionality()` / `createFieldOptionalitySummary()` walked the
+`FieldTree` using "is this node iterable?" as a container check. Angular gives
+any field whose _current_ value is a non-null object (including `Date`,
+`File`, `Map`) an iterator, so a required `Date | null` field flipped out of
+the walk — and lost its `hasRequired` contribution — the moment it was
+populated. The walk now distinguishes genuine structural containers (plain
+objects / arrays) from boxed leaf values, so a required `Date`/`File`/`Map`
+leaf is counted consistently whether it's `null` or populated.
 
 ---
 
