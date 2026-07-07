@@ -61,6 +61,17 @@ const MANUAL_ARIA_MODE: Signal<NgxSignalFormControlAriaMode | null> =
  * the toolkit's signals reach the focusable element in one Angular binding
  * hop. No MutationObserver, no host-attribute mirroring.
  *
+ * **Accessible name:** `[inputId]` places its id on `<p-select>`'s inner
+ * `<span role="combobox">`, which is not a labelable element — a sibling
+ * `<label for="…">` therefore never establishes a programmatic association,
+ * and the combobox's accessible name falls back to its transient
+ * placeholder / selected-value content instead. The shim accepts an
+ * `ariaLabelledBy` input (the id of the projected `<label>`) and binds it to
+ * `<p-select>`'s own `ariaLabelledBy` input, which PrimeNG forwards straight
+ * onto the inner combobox span (`[attr.aria-labelledby]="ariaLabelledBy"` in
+ * PrimeNG's compiled template) — no DOM querying needed for this one, unlike
+ * the describedby/invalid/required attributes below.
+ *
  * TODO: Revisit when PrimeNG v22's Signal Forms support is available in this
  * repo. At that point this shim may be removable in favour of direct binding.
  */
@@ -84,6 +95,7 @@ const MANUAL_ARIA_MODE: Signal<NgxSignalFormControlAriaMode | null> =
       [disabled]="disabled()"
       [invalid]="ariaInvalid() === 'true'"
       [required]="ariaRequired() === 'true'"
+      [ariaLabelledBy]="ariaLabelledBy()"
       [ngModel]="value()"
       [attr.aria-describedby]="ariaDescribedBy()"
       [attr.aria-invalid]="ariaInvalid()"
@@ -107,6 +119,13 @@ export class PrimeSelectControlComponent implements FormValueControl<string> {
   protected readonly selectControl = viewChild.required(Select);
 
   readonly inputId = input.required<string>();
+  /**
+   * The id of the projected `<label>` this control belongs to. Bound
+   * straight through to `<p-select>`'s own `ariaLabelledBy` input so the
+   * inner `[role="combobox"]` element's accessible name is the label text —
+   * see the class doc's "Accessible name" note.
+   */
+  readonly ariaLabelledBy = input.required<string>();
   readonly options = input<readonly RoleOption[]>([]);
   readonly optionLabel = input('label');
   readonly optionValue = input('value');
