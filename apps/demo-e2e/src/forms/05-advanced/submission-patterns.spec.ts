@@ -23,6 +23,46 @@ test.describe('Advanced - Submission Patterns', () => {
     });
   });
 
+  test.describe('Submission State Indicator', () => {
+    // Regression test for #166 finding #2: the indicator's badge used to be
+    // permanently stuck on the red "Unhandled submittedStatus: undefined"
+    // fallback because the page injected NGX_SIGNAL_FORM_CONTEXT at the
+    // wrong DI level (host component instead of a child rendered inside the
+    // ngxSignalForm-provided <form>). This asserts the badge actually
+    // reflects the live submission lifecycle instead.
+    test('should cycle through Ready to Submit -> Submitting -> back to Ready without ever showing the unhandled fallback', async () => {
+      await test.step('Initial state reads Ready to Submit', async () => {
+        await expect(page.stateBadge).toContainText('Ready to Submit');
+        await expect(page.stateBadge).not.toContainText(
+          'Unhandled submittedStatus',
+        );
+      });
+
+      await test.step('Fill valid data and submit', async () => {
+        await page.fillField('username', 'valid_user');
+        await page.fillField('password', 'password123');
+        await page.fillField('confirmPassword', 'password123');
+        await page.submitButton.click();
+      });
+
+      await test.step('Badge flips to Submitting while the action is pending', async () => {
+        await expect(page.stateBadge).toContainText('Submitting...');
+        await expect(page.stateBadge).not.toContainText(
+          'Unhandled submittedStatus',
+        );
+      });
+
+      await test.step('Badge settles back to a valid state once the action resolves', async () => {
+        await expect(page.stateBadge).not.toContainText('Submitting...', {
+          timeout: 5000,
+        });
+        await expect(page.stateBadge).not.toContainText(
+          'Unhandled submittedStatus',
+        );
+      });
+    });
+  });
+
   test.describe('Submission Failures', () => {
     test('should show validation errors on submit of empty form', async () => {
       // Trigger validation by trying to submit the empty form

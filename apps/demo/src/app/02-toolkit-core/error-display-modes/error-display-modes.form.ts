@@ -143,7 +143,7 @@ export class ErrorDisplayHelpersComponent {
       ngxSignalForm
       [errorStrategy]="errorDisplayMode()"
       class="form-container"
-      aria-labelledby="productFeedbackHeading"
+      aria-label="Product feedback"
     >
       <ngx-error-display-helpers
         [nameField]="productForm.name"
