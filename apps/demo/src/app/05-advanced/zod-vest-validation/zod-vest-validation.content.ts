@@ -27,6 +27,18 @@ export const ZOD_VEST_VALIDATION_CONTENT = {
     title: 'How to split responsibilities',
     sections: [
       {
+        title: '🧪 Try This (Zod Layer, Then Vest Layer)',
+        items: [
+          '1. Submit the empty form → the <strong>Zod</strong> layer fires first: "First name is required", "Enter a valid email address", "Password must be at least 12 characters", …',
+          '2. Set <strong>Account type</strong> to <code>Business</code> and <strong>Email</strong> to <code>you@gmail.com</code> (or <code>outlook.com</code>/<code>yahoo.com</code>) → blocking <strong>Vest</strong> error: "Business accounts must use a company email domain"',
+          '3. Enter <strong>First name</strong> <code>Alex</code> and <strong>Password</strong> <code>alexsupersecret</code> → blocking error: "Password must not include your first or last name" — even though it passes Zod’s 12-character rule',
+          '4. Use a 12+ character password without any of <code>!@#$%^&*</code> → non-blocking <strong>warning</strong>: "Add a symbol to make the password stronger"',
+          '5. With <code>Business</code> + <strong>Country</strong> <code>Germany</code>, leave <strong>VAT number</strong> empty → blocking error; then enter <code>123456789</code> → non-blocking <strong>warning</strong> to include the <code>DE</code> country prefix → <code>DE123456789</code> clears it',
+          '6. Switch to <code>Personal</code> while a VAT number is filled in → blocking error: "Personal accounts should leave VAT number empty"',
+          '7. Resolve all errors but keep a warning (e.g. password without a symbol) → submit → form still saves; warnings stay advisory',
+        ],
+      },
+      {
         title: 'A practical layering model',
         items: [
           '• Keep generated or shared contract rules in <strong>Zod</strong>.',
@@ -42,13 +54,14 @@ export const ZOD_VEST_VALIDATION_CONTENT = {
           '• OpenAPI-generated Zod schemas with extra frontend business policy.',
           '• Signup or checkout forms where backend shape validation is already defined elsewhere.',
           '• Teams that want to reuse business rules without duplicating basic schema logic.',
+          '• Teams that first validate the structural baseline in <code>Zod-Only Validation</code>, then add Vest as a focused policy layer.',
           '• Flows that want native Angular <code>submit()</code> while still teaching users through non-blocking warnings.',
         ],
       },
     ],
     nextStep: {
       text: 'Compare this with a pure Vest suite →',
-      link: '/advanced-scenarios/vest-validation',
+      link: '/validation/vest-validation',
       linkText: 'Vest-Only Validation',
     },
   },

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
 /**
@@ -14,11 +14,56 @@ test.describe('Advanced Scenarios - Async Validation', () => {
     await page.waitForLoadState('domcontentloaded');
   });
 
+  const typingUsernameInput = (page: Page) =>
+    page.getByRole('textbox', { name: /^Username$/ });
+  const blurUsernameInput = (page: Page) =>
+    page.getByRole('textbox', { name: /^Username \(blur debounce\)$/ });
+
   test('should display async validation form', async ({ page }) => {
     await expect(page.locator('form').first()).toBeVisible();
 
-    const usernameInput = page.getByRole('textbox', { name: /username/i });
-    await expect(usernameInput).toBeVisible();
+    await expect(typingUsernameInput(page)).toBeVisible();
+    await expect(blurUsernameInput(page)).toBeVisible();
+  });
+
+  test('should trigger typed debounce while typing and blur debounce only after blur', async ({
+    page,
+  }) => {
+    await page.route('**/fake-api/check-user/**', async (route) => {
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 300);
+      });
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ username: 'probe', available: true }),
+      });
+    });
+
+    await test.step('Typing-debounce field issues request without blur', async () => {
+      await typingUsernameInput(page).fill('probe');
+
+      await expect(
+        page.getByText('Typing-debounce pending: true'),
+      ).toBeVisible();
+      await expect(
+        page.getByText('Typing-debounce pending: false'),
+      ).toBeVisible();
+    });
+
+    await test.step('Blur-debounce field waits for blur before requesting', async () => {
+      await blurUsernameInput(page).fill('probe');
+
+      await expect(
+        page.getByText('Blur-debounce pending: false'),
+      ).toBeVisible();
+
+      await blurUsernameInput(page).blur();
+      await expect(page.getByText('Blur-debounce pending: true')).toBeVisible();
+      await expect(
+        page.getByText('Blur-debounce pending: false'),
+      ).toBeVisible();
+    });
   });
 
   test('should show loading state during async validation', async ({
@@ -36,25 +81,27 @@ test.describe('Advanced Scenarios - Async Validation', () => {
     });
 
     await test.step('Type in username field', async () => {
-      const usernameInput = page.getByRole('textbox', { name: /username/i });
       const checkingIndicator = page.getByText('Checking...', { exact: true });
 
-      await usernameInput.fill('testuser');
-      await usernameInput.blur();
+      await typingUsernameInput(page).fill('testuser');
 
       await expect(checkingIndicator).toBeVisible();
-      await expect(page.getByText('Pending: true')).toBeVisible();
+      await expect(
+        page.getByText('Typing-debounce pending: true'),
+      ).toBeVisible();
       await expect(
         page.getByRole('button', { name: /Validating/i }),
       ).toBeDisabled();
 
       await expect(checkingIndicator).toBeHidden({ timeout: 5000 });
-      await expect(page.getByText('Pending: false')).toBeVisible();
+      await expect(
+        page.getByText('Typing-debounce pending: false'),
+      ).toBeVisible();
     });
   });
 
   test('should show error for "admin" username', async ({ page }) => {
-    await page.route('**/fake-api/check-user/admin', async (route) => {
+    await page.route('**/fake-api/check-user/**', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -63,18 +110,22 @@ test.describe('Advanced Scenarios - Async Validation', () => {
     });
 
     await test.step('Type "admin" username', async () => {
-      const usernameInput = page.getByRole('textbox', { name: /username/i });
-      await usernameInput.fill('admin');
-      await usernameInput.blur();
+      await typingUsernameInput(page).fill('admin');
+      await typingUsernameInput(page).blur();
 
-      const errorMessage = page.locator('[role="alert"]', {
-        hasText: /username .* already taken/i,
+      const errorMessage = page.locator('[role="status"]', {
+        hasText: /already taken/i,
       });
       await expect(errorMessage).toContainText(
         'The username "admin" is already taken',
       );
-      await expect(usernameInput).toHaveAttribute('aria-invalid', 'true');
-      await expect(page.getByText(/Pending: false/)).toBeVisible();
+      await expect(typingUsernameInput(page)).toHaveAttribute(
+        'aria-invalid',
+        'true',
+      );
+      await expect(
+        page.getByText('Typing-debounce pending: false'),
+      ).toBeVisible();
     });
   });
 
@@ -88,18 +139,18 @@ test.describe('Advanced Scenarios - Async Validation', () => {
     });
 
     await test.step('Type unique username', async () => {
-      const usernameInput = page.getByRole('textbox', { name: /username/i });
-      await usernameInput.fill('uniqueUser123');
-      await usernameInput.blur();
+      await typingUsernameInput(page).fill('uniqueUser123');
 
       await expect(
         page.locator('[role="alert"]', {
           hasText: /already taken|unavailable/i,
         }),
       ).toHaveCount(0);
-      await expect(usernameInput).not.toHaveAttribute('aria-invalid', 'true');
-      await expect(page.getByText('Valid: true')).toBeVisible();
-      await expect(page.getByText('Errors: []')).toBeVisible();
+      await expect(typingUsernameInput(page)).not.toHaveAttribute(
+        'aria-invalid',
+        'true',
+      );
+      await expect(page.getByText('Typing-debounce errors: []')).toBeVisible();
     });
   });
 
@@ -115,7 +166,7 @@ test.describe('Advanced Scenarios - Async Validation', () => {
       });
     });
 
-    const usernameInput = page.getByRole('textbox', { name: /username/i });
+    const usernameInput = typingUsernameInput(page);
     const resetButton = page.getByRole('button', { name: /^Reset$/ });
 
     // Seed the field with a value that fails async validation.
@@ -127,7 +178,7 @@ test.describe('Advanced Scenarios - Async Validation', () => {
     });
     await expect(errorAlert).toBeVisible();
     await expect(usernameInput).toHaveAttribute('aria-invalid', 'true');
-    await expect(page.getByText('Valid: false')).toBeVisible();
+    await expect(page.locator('[role="alert"]')).toContainText('already taken');
 
     // Reset clears the model and the field tree state.
     await resetButton.click();
@@ -140,14 +191,16 @@ test.describe('Advanced Scenarios - Async Validation', () => {
     await expect(usernameInput).toHaveValue('');
     await expect(errorAlert).toHaveCount(0);
     await expect(usernameInput).not.toHaveAttribute('aria-invalid', 'true');
-    await expect(page.getByText('Pending: false')).toBeVisible();
+    await expect(
+      page.getByText('Typing-debounce pending: false'),
+    ).toBeVisible();
     await expect(page.getByText(/usernameTaken/)).toHaveCount(0);
   });
 
   test('should allow form submission after async validation passes', async ({
     page,
   }) => {
-    await page.route('**/fake-api/check-user/*', async (route) => {
+    await page.route('**/fake-api/check-user/**', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -156,17 +209,20 @@ test.describe('Advanced Scenarios - Async Validation', () => {
     });
 
     await test.step('Fill valid unique username', async () => {
-      const usernameInput = page.getByRole('textbox', { name: /username/i });
+      const usernameInput = typingUsernameInput(page);
+      const blurUsername = blurUsernameInput(page);
 
       await usernameInput.fill('user_approved');
       await usernameInput.blur();
+      await blurUsername.fill('user_approved_blur');
+      await blurUsername.blur();
 
       const submitButton = page.getByRole('button', { name: /register/i });
       await expect(submitButton).toBeEnabled();
       await submitButton.click();
 
       await expect(page.locator(ROLE_ALERT_SELECTOR)).toHaveCount(0);
-      await expect(page.getByText('Valid: true')).toBeVisible();
+      await expect(page.getByText('Typing-debounce errors: []')).toBeVisible();
     });
   });
 });

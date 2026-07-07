@@ -5,7 +5,9 @@
     "declaration": true,
     "declarationMap": true,
     "inlineSources": true,
-    "types": []
+    "types": [],
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true
   },
   "exclude": [
     "./**/*.spec.ts",
@@ -23,5 +25,13 @@
     "./**/*.test.jsx",
     "./**/*.spec.jsx"
   ],
-  "include": ["./**/*.ts"]
+  "include": ["./**/*.ts"],
+  "angularCompilerOptions": {
+    "extendedDiagnostics": {
+      "checks": {
+        "nullishCoalescingNotNullable": "suppress",
+        "optionalChainNotNullable": "suppress"
+      }
+    }
+  }
 }

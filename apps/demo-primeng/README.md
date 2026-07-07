@@ -211,10 +211,16 @@ exposes its own token namespace
 (`--ngx-form-field-*`, `--ngx-signal-form-*`); the two namespaces are
 _independent_, and either can be overridden without affecting the other.
 
-This reference pins **`@primeuix/themes/aura`** with no overrides
+This reference pins **`@primeuix/themes/aura`** with effectively no overrides
 (`prefix: 'p'`, `darkModeSelector: 'system'`, `cssLayer: false`). Theme
 customisation is intentionally out of scope — the goal is to show the
 toolkit seam, not to ship a styled showcase.
+
+The **one exception** is a WCAG 2.2 AA fix: Aura's default primary button
+renders a white label on emerald-500 (`#10b981` ≈ 2.5:1), below the 4.5:1
+contrast threshold. `src/styles.css` darkens the primary button surface to
+emerald-700/800 (light scheme only) so the label clears AA. This is the sole
+token override; everything else is stock Aura.
 
 ### Timing: ship now or wait for PrimeNG v22?
 
@@ -243,7 +249,8 @@ that the same wrapper can render under any Prime theme.
 
 - PrimeNG's `pFloatLabel`, `pFloatLabelInside`, or `<p-floatlabel>` modes —
   see the gotchas section above.
-- Theming or token customisation — the demo uses Aura unmodified.
+- Theming or token customisation — the demo uses Aura unmodified, save for a
+  single WCAG-AA primary-button contrast override (see "Theme-token interplay").
 - PrimeNG's filled / outlined `pInputText` variants. Pick whichever your
   product uses; the wrapper is variant-agnostic.
 - `p-multiselect`, `p-autocomplete`, `p-calendar`, `p-radiobutton`, etc.
@@ -272,7 +279,7 @@ The smoke spec (`profile-form.smoke.spec.ts`) and the Playwright spec
 ## Scripts
 
 ```bash
-pnpm nx serve demo-primeng       # http://localhost:4220
+pnpm nx serve demo-primeng       # http://127.0.0.1:4620
 pnpm nx run demo-primeng:build   # production build
 pnpm nx run demo-primeng:test    # vitest smoke specs
 pnpm nx run demo-primeng-e2e:e2e # playwright spec

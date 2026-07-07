@@ -1,9 +1,4 @@
-import {
-  ApplicationRef,
-  ChangeDetectionStrategy,
-  Component,
-  signal,
-} from '@angular/core';
+import { ApplicationRef, Component, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import { TestBed } from '@angular/core/testing';
 import { render, screen } from '@testing-library/angular';
@@ -38,7 +33,7 @@ describe('createVestAdapter', () => {
     @Component({
       selector: 'ngx-test-adapter-shared',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class TestComponent {
@@ -84,7 +79,7 @@ describe('createVestAdapter', () => {
     @Component({
       selector: 'ngx-test-adapter-delta',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class TestComponent {
@@ -128,7 +123,7 @@ describe('createVestAdapter', () => {
     @Component({
       selector: 'ngx-test-adapter-warn-reject',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.amount" />`,
     })
     class TestComponent {
@@ -181,7 +176,7 @@ describe('createVestAdapter', () => {
     @Component({
       selector: 'ngx-test-adapter-block-reject',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class TestComponent {
@@ -230,7 +225,7 @@ describe('createVestAdapter', () => {
     @Component({
       selector: 'ngx-test-adapter-runvestsuite',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class TestComponent {

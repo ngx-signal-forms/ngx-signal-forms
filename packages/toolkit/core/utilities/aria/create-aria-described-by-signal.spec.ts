@@ -116,7 +116,13 @@ describe('createAriaDescribedBySignal', () => {
     expect(ariaDescribedBy()).toBe('password-warning');
   });
 
-  it('appends both error and warning IDs when both kinds are present and visible', () => {
+  it('appends ONLY the error ID (not warning) when both kinds are present and visible', () => {
+    // The default `NgxFormFieldError` renderer suppresses its warning live
+    // region whenever a blocking error is also visible (mixed error+warning
+    // case) — matching README's documented "blocking errors present →
+    // warnings hidden" contract and `NgxFormFieldset`'s existing behavior.
+    // No `${fieldName}-warning` element exists in the DOM in that state, so
+    // composing it into `aria-describedby` here would dangle.
     const fieldState = fieldStateSignal([
       { kind: 'required', message: 'Required' },
       warningError('weak-password'),
@@ -132,10 +138,10 @@ describe('createAriaDescribedBySignal', () => {
       fieldName: () => 'password',
     });
 
-    expect(ariaDescribedBy()).toBe('password-error password-warning');
+    expect(ariaDescribedBy()).toBe('password-error');
   });
 
-  it('composes preserved + hint + error + warning IDs in that order', () => {
+  it('composes preserved + hint + error IDs (warning omitted) when a blocking error is also present', () => {
     const fieldState = fieldStateSignal([
       { kind: 'required', message: 'Required' },
       warningError('weak-password'),
@@ -152,7 +158,7 @@ describe('createAriaDescribedBySignal', () => {
     });
 
     expect(ariaDescribedBy()).toBe(
-      'password-description password-hint password-error password-warning',
+      'password-description password-hint password-error',
     );
   });
 

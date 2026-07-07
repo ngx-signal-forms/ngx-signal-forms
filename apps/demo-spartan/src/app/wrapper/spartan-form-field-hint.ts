@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 /**
  * Spartan-flavoured hint renderer.
@@ -15,7 +15,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  */
 @Component({
   selector: 'spartan-form-field-hint',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   host: {
     '[attr.data-position]': 'position() ?? null',
     class: 'block',

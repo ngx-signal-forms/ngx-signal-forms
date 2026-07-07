@@ -1,6 +1,5 @@
 import {
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   input,
@@ -116,7 +115,7 @@ export type NgxCharacterCountValue = CharacterCountValue;
  */
 @Component({
   selector: 'ngx-form-field-character-count',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   template: `
     <span class="ngx-signal-form-field-char-count__text">
       {{ characterCountText() }}

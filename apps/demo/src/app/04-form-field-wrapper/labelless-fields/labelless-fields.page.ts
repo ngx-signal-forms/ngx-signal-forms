@@ -1,15 +1,7 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import type {
   ErrorDisplayStrategy,
   FormFieldAppearance,
-  FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
@@ -17,6 +9,7 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
@@ -27,8 +20,8 @@ import {
 } from '../../ui/error-display-mode-selector/error-display-mode-selector';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
+  createOrientationSelection,
   getOrientationLabel,
-  isOrientationDisabledForAppearance,
 } from '../../ui/orientation-toggle';
 import { LABELLESS_FIELDS_CONTENT } from './labelless-fields.content';
 import { LabellessFieldsFormComponent } from './labelless-fields.form';
@@ -39,6 +32,7 @@ import { LabellessFieldsFormComponent } from './labelless-fields.form';
     LabellessFieldsFormComponent,
     ErrorDisplayModeSelectorComponent,
     ExampleCardsComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
@@ -47,17 +41,9 @@ import { LabellessFieldsFormComponent } from './labelless-fields.form';
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <ngx-page-header
-      title="Labelless Form Fields"
-      subtitle="Wrapper collapses reserved label space when no <label> is projected"
-    />
 
-    <ngx-example-cards
-      [demonstrated]="demonstratedContent"
-      [learning]="learningContent"
-    >
+  template: `
+    <ng-template ngxPageControls>
       <ngx-display-controls-card
         title="Appearance + orientation"
         description="Toggle to see the label-space collapse behavior across every layout the toolkit supports."
@@ -88,7 +74,17 @@ import { LabellessFieldsFormComponent } from './labelless-fields.form';
           />
         </ngx-display-controls-section>
       </ngx-display-controls-card>
+    </ng-template>
 
+    <ngx-page-header
+      title="Labelless Form Fields"
+      subtitle="Wrapper collapses reserved label space when no <label> is projected"
+    />
+
+    <ngx-example-cards
+      [demonstrated]="demonstratedContent"
+      [learning]="learningContent"
+    >
       <ngx-split-layout>
         <ngx-labelless-fields
           #formComponent
@@ -115,8 +111,10 @@ export class LabellessFieldsPage {
   protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('standard');
-  protected readonly selectedOrientation =
-    signal<FormFieldOrientation>('vertical');
+  protected readonly selectedOrientation = createOrientationSelection(
+    this.selectedAppearance,
+  );
+
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -135,17 +133,4 @@ export class LabellessFieldsPage {
   protected readonly demonstratedContent =
     LABELLESS_FIELDS_CONTENT.demonstrated;
   protected readonly learningContent = LABELLESS_FIELDS_CONTENT.learning;
-
-  constructor() {
-    effect(() => {
-      if (
-        isOrientationDisabledForAppearance(
-          this.selectedAppearance(),
-          this.selectedOrientation(),
-        )
-      ) {
-        this.selectedOrientation.set('vertical');
-      }
-    });
-  }
 }

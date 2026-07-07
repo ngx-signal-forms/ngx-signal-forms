@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-} from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { type FieldTree, form, FormField } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
@@ -54,7 +49,7 @@ import { profileFormSchema } from './profile-form.schema';
  */
 @Component({
   selector: 'demo-primeng-profile-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     FormField,
     ButtonModule,

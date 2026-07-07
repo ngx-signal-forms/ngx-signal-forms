@@ -33,13 +33,12 @@ test.describe('Headless - Fieldset + Utilities', () => {
 
       await test.step('Verify delivery notes section with utilities', async () => {
         await expect(page.getByLabel('Notes')).toBeVisible();
-        await expect(page.getByText(/0\s*\/\s*200/)).toBeVisible();
-        await expect(page.getByTestId('notes-utility-flags')).toBeVisible();
+        await expect(page.getByText(/0\s*\/\s*200/).first()).toBeVisible();
       });
 
       await test.step('Verify action buttons', async () => {
         await expect(
-          page.getByRole('button', { name: 'Submit request' }),
+          page.getByRole('button', { name: 'Submit' }),
         ).toBeVisible();
         await expect(page.getByRole('button', { name: 'Reset' })).toBeVisible();
       });
@@ -53,21 +52,19 @@ test.describe('Headless - Fieldset + Utilities', () => {
       await expect(fieldset.getByText('pending:')).toBeVisible();
     });
 
-    test('should render utility-derived notes flags', async ({ page }) => {
-      const notesFlags = page.getByTestId('notes-utility-flags');
-
-      await test.step('Verify initial utility flags', async () => {
-        await expect(notesFlags).toContainText('notes touched: false');
-        await expect(notesFlags).toContainText('notes dirty: false');
+    test('should render utility-derived notes counter updates', async ({
+      page,
+    }) => {
+      await test.step('Verify initial utility count', async () => {
+        await expect(page.getByText(/0\s*\/\s*200/).first()).toBeVisible();
       });
 
-      await test.step('Update notes and verify flags react', async () => {
+      await test.step('Update notes and verify utility count reacts', async () => {
         const notesInput = page.getByLabel('Notes');
         await notesInput.fill('Enough detail for utility flags');
         await notesInput.blur();
 
-        await expect(notesFlags).toContainText('notes touched: true');
-        await expect(notesFlags).toContainText('notes dirty: true');
+        await expect(page.getByText(/31\s*\/\s*200/).first()).toBeVisible();
       });
     });
   });
@@ -77,7 +74,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
       page,
     }) => {
       await test.step('Submit empty form', async () => {
-        await page.getByRole('button', { name: 'Submit request' }).click();
+        await page.getByRole('button', { name: 'Submit' }).click();
       });
 
       await test.step('Verify the headless summary is visible', async () => {
@@ -98,7 +95,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
       page,
     }) => {
       await test.step('Trigger summary entries', async () => {
-        await page.getByRole('button', { name: 'Submit request' }).click();
+        await page.getByRole('button', { name: 'Submit' }).click();
         await expect(page.getByTestId('delivery-form-summary')).toBeVisible();
       });
 
@@ -174,7 +171,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
       page,
     }) => {
       await test.step('Submit empty form', async () => {
-        await page.getByRole('button', { name: 'Submit request' }).click();
+        await page.getByRole('button', { name: 'Submit' }).click();
       });
 
       await test.step('Verify aggregated errors in fieldset', async () => {
@@ -266,7 +263,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
       const fieldset = page.getByRole('group', { name: 'Shipping address' });
 
       await test.step('Submit to trigger errors', async () => {
-        await page.getByRole('button', { name: 'Submit request' }).click();
+        await page.getByRole('button', { name: 'Submit' }).click();
         await expect(
           fieldset.locator(ROLE_ALERT_SELECTOR).first(),
         ).toBeVisible();
@@ -279,9 +276,47 @@ test.describe('Headless - Fieldset + Utilities', () => {
       });
 
       await test.step('Verify aggregated errors cleared', async () => {
-        await expect(
-          fieldset.locator(ROLE_ALERT_SELECTOR).first(),
-        ).toBeHidden();
+        await expect(fieldset.locator(ROLE_ALERT_SELECTOR)).toHaveCount(0);
+      });
+    });
+  });
+
+  test.describe('Delivery Notes - NgxHeadlessCharacterCount', () => {
+    test('should update headless character count and reflect limit state', async ({
+      page,
+    }) => {
+      const notesInput = page.getByLabel('Notes');
+      const headlessCounter = page.getByTestId('headless-char-count');
+
+      await test.step('Initial state: 0/200, limitState=ok', async () => {
+        await expect(headlessCounter).toBeVisible();
+        await expect(headlessCounter).toContainText('0/200');
+        await expect(headlessCounter).toHaveAttribute('data-limit-state', 'ok');
+      });
+
+      await test.step('Type 160 chars: limitState transitions to warning (≥80%)', async () => {
+        await notesInput.fill('w'.repeat(160));
+        await expect(headlessCounter).toContainText('160/200');
+        await expect(headlessCounter).toHaveAttribute(
+          'data-limit-state',
+          'warning',
+        );
+      });
+
+      await test.step('Type 195 chars: limitState transitions to danger (≥95%)', async () => {
+        await notesInput.fill('d'.repeat(195));
+        await expect(headlessCounter).toContainText('195/200');
+        await expect(headlessCounter).toHaveAttribute(
+          'data-limit-state',
+          'danger',
+        );
+      });
+
+      await test.step('Assistive-tier counter also visible', async () => {
+        const assistiveCounter = page.getByTestId('assistive-char-count');
+        await expect(assistiveCounter).toBeVisible();
+        // The assistive component renders currentLength/maxLength
+        await expect(assistiveCounter).toContainText('195/200');
       });
     });
   });
@@ -291,14 +326,12 @@ test.describe('Headless - Fieldset + Utilities', () => {
       const notesInput = page.getByLabel('Notes');
 
       await test.step('Initial count shows 0/200', async () => {
-        await expect(page.getByText(/0\s*\/\s*200/)).toBeVisible();
-        await expect(page.getByText('200 remaining')).toBeVisible();
+        await expect(page.getByText(/0\s*\/\s*200/).first()).toBeVisible();
       });
 
       await test.step('Type some text', async () => {
         await notesInput.fill('Hello world');
-        await expect(page.getByText(/11\s*\/\s*200/)).toBeVisible();
-        await expect(page.getByText('189 remaining')).toBeVisible();
+        await expect(page.getByText(/11\s*\/\s*200/).first()).toBeVisible();
       });
     });
 
@@ -337,8 +370,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
       });
 
       await test.step('Verify counter shows limit reached', async () => {
-        await expect(page.getByText(/200\s*\/\s*200/)).toBeVisible();
-        await expect(page.getByText('0 remaining')).toBeVisible();
+        await expect(page.getByText(/200\s*\/\s*200/).first()).toBeVisible();
       });
     });
   });
@@ -346,7 +378,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
   test.describe('Form Submission', () => {
     test('should validate all fields on submit', async ({ page }) => {
       await test.step('Submit empty form', async () => {
-        await page.getByRole('button', { name: 'Submit request' }).click();
+        await page.getByRole('button', { name: 'Submit' }).click();
       });
 
       await test.step('Verify all required errors shown', async () => {
@@ -375,7 +407,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
         await expect(page.getByLabel('Contact email *')).toHaveValue('');
         await expect(page.getByLabel('Street *')).toHaveValue('');
         await expect(page.getByLabel('Notes')).toHaveValue('');
-        await expect(page.getByText(/0\s*\/\s*200/)).toBeVisible();
+        await expect(page.getByText(/0\s*\/\s*200/).first()).toBeVisible();
       });
     });
   });

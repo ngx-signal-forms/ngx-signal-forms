@@ -155,7 +155,11 @@ picks up the same strategy via DI:
 ```
 
 You can still override at any level by passing `[strategy]` to a specific
-wrapper or fieldset — it only affects that subtree.
+wrapper or fieldset — it only affects that subtree. This is the settings
+cascade at work: field input ?? form context ?? component-scoped provider ??
+app-wide provider ?? built-in default — see
+[how settings resolve](../README.md#how-settings-resolve-the-cascade) in the
+root README.
 
 ---
 

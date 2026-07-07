@@ -6,7 +6,14 @@
 
 Most Angular Signal Forms projects need the same things around each field: a label, error messages that appear at the right time, hints, character counts, and proper ARIA linking. The form-field wrapper handles all of this in one component.
 
-If you need full control over markup, use [`/headless`](../headless/README.md) instead. If you only need standalone feedback components (error, grouped notification, hint, counter, summary) without wrapper layout, use [`/assistive`](../assistive/README.md).
+**Which surface do I need?**
+
+| You want…                                                      | Use                                         |
+| -------------------------------------------------------------- | ------------------------------------------- |
+| A styled single field: label, errors, hints, counts, ARIA      | `ngx-form-field-wrapper` (this entry point) |
+| Group-level rules or grouped summaries (cross-field, sections) | `ngx-form-fieldset` (this entry point)      |
+| Standalone feedback pieces in your own layout                  | [`/assistive`](../assistive/README.md)      |
+| Toolkit state with fully your own markup and design system     | [`/headless`](../headless/README.md)        |
 
 ## Import
 
@@ -43,7 +50,6 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="contactForm" ngxSignalForm>
@@ -98,16 +104,23 @@ export class ContactFormComponent {
 
 `ngx-form-field-wrapper` — wraps a form field with automatic error display, labels, hints, prefix/suffix slots, and ARIA.
 
-| Input            | Type                                              | Default     | Description                                    |
-| ---------------- | ------------------------------------------------- | ----------- | ---------------------------------------------- |
-| `formField`      | `FieldTree` (required)                            | —           | The form field to wrap                         |
-| `fieldName`      | `string`                                          | From `id`   | Explicit field name; derived from control `id` |
-| `appearance`     | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style variant                           |
-| `strategy`       | `ErrorDisplayStrategy`                            | Inherited   | Override error display strategy                |
-| `errorPlacement` | `'top' \| 'bottom'`                               | `'bottom'`  | Render errors above or below the control       |
-| `showMarkerWhen` | `'required' \| 'optional' \| 'none'`              | Config      | Which fields carry a visual marker             |
-| `requiredMarker` | `string`                                          | Config      | Marker text for required fields                |
-| `optionalMarker` | `string`                                          | Config      | Marker text for optional fields                |
+| Input            | Type                                              | Default     | Description                                      |
+| ---------------- | ------------------------------------------------- | ----------- | ------------------------------------------------ |
+| `formField`      | `FieldTree` (required)                            | —           | The form field to wrap                           |
+| `fieldName`      | `string`                                          | From `id`   | Explicit field name; derived from control `id`   |
+| `appearance`     | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style variant                             |
+| `orientation`    | `'vertical' \| 'horizontal' \| 'inherit'`         | `'inherit'` | Label position (see [Orientation](#orientation)) |
+| `strategy`       | `ErrorDisplayStrategy`                            | Inherited   | Override error display strategy                  |
+| `errorPlacement` | `'top' \| 'bottom'`                               | `'bottom'`  | Render errors above or below the control         |
+| `showMarkerWhen` | `'required' \| 'optional' \| 'none'`              | Config      | Which fields carry a visual marker               |
+| `requiredMarker` | `string`                                          | Config      | Marker text for required fields                  |
+| `optionalMarker` | `string`                                          | Config      | Marker text for optional fields                  |
+
+Only `formField` is required. Every "Inherited" / "Config" default resolves
+through the toolkit's settings cascade (field input → form context →
+component-scoped provider → app-wide provider → built-in default), so set
+these inputs only to override a specific field — see
+[how settings resolve](../README.md#how-settings-resolve-the-cascade).
 
 ### Appearances
 
@@ -165,7 +178,7 @@ For non-native controls (sliders, date pickers, composites), declare control sem
 </ngx-form-field-wrapper>
 ```
 
-A native `input[type="checkbox"][role="switch"]` is recognized as a switch automatically — no extra directives needed. See [Custom Controls](../../docs/CUSTOM_CONTROLS.md) for detailed guidance.
+A native `input[type="checkbox"][role="switch"]` is recognized as a switch automatically — no extra directives needed. See [Custom Controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) for detailed guidance.
 
 ### Warning support
 
@@ -176,11 +189,13 @@ Warnings (errors with `kind` starting with `warn:`) display automatically:
 - Errors use `role="alert"`, warnings use `role="status"` (relying on the
   implicit live-region semantics of those roles — no explicit `aria-live`)
 
-Warning **display timing** is independent from error timing. The projected
-`NgxFormFieldError` accepts a `warningStrategy` input (default
-`'immediate'`) so advisory messages stay visible even when errors are gated
-by `'on-touch'` or `'on-submit'`. See
-[`WARNINGS_SUPPORT.md`](../../docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy).
+Warning **display timing** is independent from error timing. The wrapper
+exposes a `warningStrategy` input (default `'immediate'`, forwarded to the
+projected `NgxFormFieldError`) so advisory messages stay visible even when
+errors are gated by `'on-touch'` or `'on-submit'` — the wrapper mounts its
+error/warning renderer whenever either should be visible, not just on the
+blocking-error timing. See
+[`WARNINGS_SUPPORT.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy).
 
 ## Fieldset component
 
@@ -423,8 +438,8 @@ Quick example:
 - [Toolkit core](../README.md) — error strategies, ARIA, configuration
 - [Assistive components](../assistive/README.md) — standalone error, grouped notification, hint, counter, and summary components
 - [Headless primitives](../headless/README.md) — renderless directives for full custom UI
-- [Custom controls](../../docs/CUSTOM_CONTROLS.md) — wrapping sliders, date pickers, and third-party widgets
-- [CSS framework integration](../../docs/CSS_FRAMEWORK_INTEGRATION.md) — Tailwind, Bootstrap, Material
+- [Custom controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) — wrapping sliders, date pickers, and third-party widgets
+- [CSS framework integration](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CSS_FRAMEWORK_INTEGRATION.md) — Tailwind, Bootstrap, Material
 
 ## License
 

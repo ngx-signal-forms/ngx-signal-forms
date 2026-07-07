@@ -12,8 +12,9 @@
 /* Modern theme tokens with brand gradient */
 @theme default {
   /* Brand colors (from logo gradient) */
-  --color-brand-start: #6366f1; /* Indigo */
+  --color-brand-start: #6366f1; /* Indigo 500 */
   --color-brand-end: #8b5cf6; /* Purple */
+  --color-brand-strong: #4f46e5; /* Indigo 600 — brand shade that clears WCAG AA (≥4.5:1) as text on light surfaces */
 
   /* Neutral colors (modern grays) */
   --color-gray-50: #f9fafb;
@@ -79,6 +80,21 @@
   --spacing-12: 3rem;
 }
 
+/* Signal-forms error/warning colors.
+ *
+ * The toolkit drives its dark-mode error colors from `prefers-color-scheme`
+ * only; it no longer detects a `.dark` ancestor class (that relied on the
+ * non-standard `:host-context()`, unsupported in Firefox/Safari — see the
+ * v1.0.0 accessibility audit). Because this demo themes via a `.dark` class
+ * toggled independently of the OS preference, it must set the public
+ * `--ngx-signal-form-error-color` / `--ngx-signal-form-warning-color`
+ * custom properties per theme, otherwise an explicit-light UI on an
+ * OS-prefers-dark machine would show dark-mode error colors. */
+:root {
+  --ngx-signal-form-error-color: #db1818;
+  --ngx-signal-form-warning-color: #a16207;
+}
+
 /* Dark theme variable overrides (activated via .dark class) */
 .dark {
   --color-bg: var(--color-gray-900);
@@ -87,6 +103,8 @@
   --color-text-muted: var(--color-gray-400);
   --color-border: var(--color-gray-700);
   --color-border-focus: var(--color-brand-end);
+  --ngx-signal-form-error-color: #fca5a5;
+  --ngx-signal-form-warning-color: #fcd34d;
 }
 
 /* Base layer: global resets */
@@ -208,6 +226,14 @@
     @apply space-y-2;
   }
 
+  /* Vertical rhythm between consecutive fields. `.form-container` already
+     spaces its direct children via `space-y-6`, but fields grouped inside a
+     `<fieldset>` had no inter-field gap, so a field's hint/error collided with
+     the next field's label. Matches the 1.5rem container rhythm. */
+  .form-field + .form-field {
+    @apply mt-6;
+  }
+
   .form-label {
     @apply block text-sm font-medium;
     color: var(--color-text);
@@ -218,8 +244,19 @@
     @apply mb-4 rounded-lg p-4;
   }
 
+  /* Grouped validation summary — Expo "Validatie fouten" card:
+     surface/danger-light fill, 50% danger border, danger text. Pairs with the
+     toolkit fieldset's grouped notification so raw and wrapped forms match. */
   .feedback-alert--error {
-    @apply bg-red-50 dark:bg-red-900/20;
+    background: #fdebeb;
+    border: 1px solid rgb(219 24 24 / 0.5);
+    color: #db1818;
+  }
+
+  :where(.dark) .feedback-alert--error {
+    background: rgb(127 29 29 / 0.2);
+    border-color: rgb(248 113 113 / 0.4);
+    color: #fca5a5;
   }
 
   .feedback-alert--pending {
@@ -300,6 +337,42 @@
     outline: none;
   }
 
+  /* Invalid state — solid danger border (Expo: interaction/danger/enabled
+     #db1818). Driven by `aria-invalid`, which Signal Forms sets once the field
+     has been touched or the form submitted, so the border never flashes on a
+     pristine field. Mirrors the toolkit wrapper's invalid treatment so raw
+     forms and wrapped forms read identically. */
+  .form-input[aria-invalid='true'],
+  .form-textarea[aria-invalid='true'],
+  .form-select[aria-invalid='true'] {
+    border-color: #db1818;
+  }
+
+  :where(.dark) .form-input[aria-invalid='true'],
+  :where(.dark) .form-textarea[aria-invalid='true'],
+  :where(.dark) .form-select[aria-invalid='true'] {
+    border-color: #fca5a5;
+  }
+
+  /* Keep the danger border on focus (the base rule clears it) and pair it with
+     a matching focus ring — a non-color-only cue for the invalid state. */
+  .form-input[aria-invalid='true']:focus-visible,
+  .form-textarea[aria-invalid='true']:focus-visible,
+  .form-select[aria-invalid='true']:focus-visible {
+    border-color: #db1818;
+    outline: 2px solid #db1818;
+    outline-offset: 1px;
+  }
+
+  /* On dark surfaces the lighter danger tone keeps the border + ring readable;
+     the base #db1818 would sink into the dark background. */
+  :where(.dark) .form-input[aria-invalid='true']:focus-visible,
+  :where(.dark) .form-textarea[aria-invalid='true']:focus-visible,
+  :where(.dark) .form-select[aria-invalid='true']:focus-visible {
+    border-color: #fca5a5;
+    outline-color: #fca5a5;
+  }
+
   .form-textarea {
     @apply min-h-[100px] resize-y;
   }
@@ -322,7 +395,10 @@
   }
 
   .form-hint {
-    @apply mt-1 text-sm;
+    /* Sits at the input's border-left edge, sharing one left edge with the
+       error text below — the eye tracks a single column down the field
+       (Expo: feedback aligns to the field start, not indented to input text). */
+    @apply mt-0.5 text-sm;
     color: var(--color-text-muted);
   }
 
@@ -482,7 +558,7 @@
   /* Inline code styling */
   .code-inline {
     @apply rounded bg-indigo-50 px-1.5 py-0.5 font-mono text-sm;
-    color: var(--color-brand-start);
+    color: var(--color-brand-strong);
   }
   .dark .code-inline {
     @apply bg-indigo-900/20;
@@ -700,5 +776,19 @@
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+  }
+}
+
+// WCAG 2.3.3 — honour the user's reduced-motion preference.
+// The global override is the pragmatic choice for a Tailwind app where
+// transition-* utilities are scattered through templates.
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

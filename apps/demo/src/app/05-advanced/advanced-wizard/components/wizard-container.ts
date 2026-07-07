@@ -1,12 +1,11 @@
 import { DatePipe } from '@angular/common';
 import {
   afterRenderEffect,
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
-  input,
   inject,
+  input,
   linkedSignal,
   signal,
   viewChild,
@@ -15,6 +14,7 @@ import {
   type FormFieldAppearance,
   type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 
 import {
   WizardComponent,
@@ -37,7 +37,7 @@ const MIN_DISPLAY_MS = 500;
 
 @Component({
   selector: 'ngx-wizard-container',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     DatePipe,
     WizardComponent,
@@ -45,6 +45,7 @@ const MIN_DISPLAY_MS = 500;
     TravelerStepComponent,
     TripStepComponent,
     ReviewStepComponent,
+    NgxSignalFormDebugger,
   ],
   templateUrl: './wizard-container.html',
   styleUrl: './wizard-container.scss',

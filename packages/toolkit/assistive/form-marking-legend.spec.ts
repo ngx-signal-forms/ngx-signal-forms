@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { form, FormRoot, required, schema } from '@angular/forms/signals';
 import {
   NgxSignalForm,
@@ -14,9 +14,8 @@ describe('NgxFormMarkingLegend', () => {
   describe("'required' mode (default)", () => {
     it('shows the default required legend with {marker} substituted', async () => {
       @Component({
-        changeDetection: ChangeDetectionStrategy.OnPush,
         imports: [NgxFormMarkingLegend],
-        template: `<ngx-form-marking-legend [formField]="f" />`,
+        template: `<ngx-form-marking-legend [formTree]="f" />`,
       })
       class Host {
         readonly f = form(
@@ -35,9 +34,8 @@ describe('NgxFormMarkingLegend', () => {
 
     it('hides when the form has no required field', async () => {
       @Component({
-        changeDetection: ChangeDetectionStrategy.OnPush,
         imports: [NgxFormMarkingLegend],
-        template: `<ngx-form-marking-legend [formField]="f" />`,
+        template: `<ngx-form-marking-legend [formTree]="f" />`,
       })
       class Host {
         readonly f = form(signal({ nickname: '' }));
@@ -49,10 +47,9 @@ describe('NgxFormMarkingLegend', () => {
 
     it('honours a per-instance requiredMarker for {marker}', async () => {
       @Component({
-        changeDetection: ChangeDetectionStrategy.OnPush,
         imports: [NgxFormMarkingLegend],
         template: `<ngx-form-marking-legend
-          [formField]="f"
+          [formTree]="f"
           requiredMarker=" †"
         />`,
       })
@@ -75,10 +72,9 @@ describe('NgxFormMarkingLegend', () => {
   describe("'optional' mode", () => {
     it('shows the optional legend and substitutes {marker}', async () => {
       @Component({
-        changeDetection: ChangeDetectionStrategy.OnPush,
         imports: [NgxFormMarkingLegend],
         template: `<ngx-form-marking-legend
-          [formField]="f"
+          [formTree]="f"
           showMarkerWhen="optional"
         />`,
       })
@@ -99,10 +95,9 @@ describe('NgxFormMarkingLegend', () => {
 
     it('hides when every field is required', async () => {
       @Component({
-        changeDetection: ChangeDetectionStrategy.OnPush,
         imports: [NgxFormMarkingLegend],
         template: `<ngx-form-marking-legend
-          [formField]="f"
+          [formTree]="f"
           showMarkerWhen="optional"
         />`,
       })
@@ -123,10 +118,9 @@ describe('NgxFormMarkingLegend', () => {
   describe("'none' mode", () => {
     it('renders nothing', async () => {
       @Component({
-        changeDetection: ChangeDetectionStrategy.OnPush,
         imports: [NgxFormMarkingLegend],
         template: `<ngx-form-marking-legend
-          [formField]="f"
+          [formTree]="f"
           showMarkerWhen="none"
         />`,
       })
@@ -148,10 +142,9 @@ describe('NgxFormMarkingLegend', () => {
       // while flipping the mode to 'none'. `none` must still render nothing —
       // resolvedText short-circuits on the mode before consulting text().
       @Component({
-        changeDetection: ChangeDetectionStrategy.OnPush,
         imports: [NgxFormMarkingLegend],
         template: `<ngx-form-marking-legend
-          [formField]="f"
+          [formTree]="f"
           showMarkerWhen="none"
           text="This should never show {marker}"
         />`,
@@ -173,10 +166,9 @@ describe('NgxFormMarkingLegend', () => {
   describe('text override', () => {
     it('uses [text] and still substitutes {marker}', async () => {
       @Component({
-        changeDetection: ChangeDetectionStrategy.OnPush,
         imports: [NgxFormMarkingLegend],
         template: `<ngx-form-marking-legend
-          [formField]="f"
+          [formTree]="f"
           text="Velden met {marker} zijn verplicht"
         />`,
       })
@@ -199,9 +191,8 @@ describe('NgxFormMarkingLegend', () => {
   describe('config default', () => {
     it('reads showMarkerWhen / text from the global config', async () => {
       @Component({
-        changeDetection: ChangeDetectionStrategy.OnPush,
         imports: [NgxFormMarkingLegend],
-        template: `<ngx-form-marking-legend [formField]="f" />`,
+        template: `<ngx-form-marking-legend [formTree]="f" />`,
       })
       class Host {
         readonly f = form(signal({ nickname: '' }));
@@ -224,9 +215,8 @@ describe('NgxFormMarkingLegend', () => {
   });
 
   describe('form-tree resolution', () => {
-    it('falls back to the ambient form context when [formField] is omitted', async () => {
+    it('falls back to the ambient form context when [formTree] is omitted', async () => {
       @Component({
-        changeDetection: ChangeDetectionStrategy.OnPush,
         imports: [NgxFormMarkingLegend, FormRoot, NgxSignalForm],
         template: `
           <form [formRoot]="f" ngxSignalForm>
@@ -255,7 +245,6 @@ describe('NgxFormMarkingLegend', () => {
         .mockImplementation(() => undefined);
 
       @Component({
-        changeDetection: ChangeDetectionStrategy.OnPush,
         imports: [NgxFormMarkingLegend],
         template: `<ngx-form-marking-legend />`,
       })
@@ -277,7 +266,6 @@ describe('NgxFormMarkingLegend', () => {
         .mockImplementation(() => undefined);
 
       @Component({
-        changeDetection: ChangeDetectionStrategy.OnPush,
         imports: [NgxFormMarkingLegend],
         template: `<ngx-form-marking-legend />`,
       })
@@ -303,9 +291,8 @@ describe('NgxFormMarkingLegend', () => {
       const wantsEmail = signal(false);
 
       @Component({
-        changeDetection: ChangeDetectionStrategy.OnPush,
         imports: [NgxFormMarkingLegend],
-        template: `<ngx-form-marking-legend [formField]="f" />`,
+        template: `<ngx-form-marking-legend [formTree]="f" />`,
       })
       class Host {
         readonly f = form(

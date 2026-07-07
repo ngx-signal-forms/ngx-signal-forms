@@ -82,7 +82,7 @@ export interface FieldsetStateSignals {
  * <fieldset
  *   ngxHeadlessFieldset
  *   #fieldset="fieldset"
- *   [fieldsetField]="form.address"
+ *   [field]="form.address"
  *   fieldsetId="address"
  * >
  *   <legend>Address</legend>
@@ -116,7 +116,7 @@ export class NgxHeadlessFieldset<
   /**
    * The primary fieldset field from Signal Forms.
    */
-  readonly fieldsetField = input.required<FieldTree<TFieldset>>();
+  readonly field = input.required<FieldTree<TFieldset>>();
 
   /**
    * Optional explicit list of fields to aggregate errors from.
@@ -165,7 +165,7 @@ export class NgxHeadlessFieldset<
   /**
    * Field state from the fieldset FieldTree.
    */
-  readonly #fieldsetState = computed(() => this.fieldsetField()());
+  readonly #fieldsetState = computed(() => this.field()());
 
   /**
    * Resolved error display strategy.

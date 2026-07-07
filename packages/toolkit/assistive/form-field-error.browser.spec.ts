@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import {
   FormField,
   form,
@@ -25,7 +25,7 @@ describe('NgxFormFieldError — WCAG 4.1.3 live-region first-insertion', () => {
     @Component({
       selector: 'test-empty-live-region',
       imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
           <input id="name" [formField]="testForm.name" />
@@ -46,11 +46,12 @@ describe('NgxFormFieldError — WCAG 4.1.3 live-region first-insertion', () => {
     const { container } = await render(TestComponent);
 
     // Before any interaction: the alert region must exist (so the first
-    // announcement is delivered) but be hidden + empty.
+    // announcement is delivered) but be empty. `aria-hidden`/`[hidden]` are
+    // intentionally never toggled — see the class-level docs.
     const alertEl = container.querySelector('[role="alert"]');
     expect(alertEl).toBeTruthy();
-    expect(alertEl?.hasAttribute('hidden')).toBe(true);
-    expect(alertEl?.getAttribute('aria-hidden')).toBe('true');
+    expect(alertEl?.hasAttribute('hidden')).toBe(false);
+    expect(alertEl?.hasAttribute('aria-hidden')).toBe(false);
     expect(alertEl?.textContent?.trim()).toBe('');
   });
 
@@ -58,7 +59,7 @@ describe('NgxFormFieldError — WCAG 4.1.3 live-region first-insertion', () => {
     @Component({
       selector: 'test-first-insertion',
       imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
           <input id="email" [formField]="testForm.email" />
@@ -83,7 +84,7 @@ describe('NgxFormFieldError — WCAG 4.1.3 live-region first-insertion', () => {
 
     const alertBefore = container.querySelector('[role="alert"]');
     expect(alertBefore).toBeTruthy();
-    expect(alertBefore?.hasAttribute('hidden')).toBe(true);
+    expect(alertBefore?.hasAttribute('hidden')).toBe(false);
 
     // Touch + blur to satisfy the on-touch strategy.
     const input = container.querySelector<HTMLInputElement>('input#email')!;
@@ -103,7 +104,7 @@ describe('NgxFormFieldError — WCAG 4.1.3 live-region first-insertion', () => {
     @Component({
       selector: 'test-status-region',
       imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
           <input id="pwd" [formField]="testForm.pwd" />
@@ -133,11 +134,11 @@ describe('NgxFormFieldError — WCAG 4.1.3 live-region first-insertion', () => {
     const { container } = await render(TestComponent);
 
     // Before any value: status region must exist (so the first
-    // announcement is delivered) but be hidden + empty.
+    // announcement is delivered) but be empty.
     const statusBefore = container.querySelector('[role="status"]');
     expect(statusBefore).toBeTruthy();
-    expect(statusBefore?.hasAttribute('hidden')).toBe(true);
-    expect(statusBefore?.getAttribute('aria-hidden')).toBe('true');
+    expect(statusBefore?.hasAttribute('hidden')).toBe(false);
+    expect(statusBefore?.hasAttribute('aria-hidden')).toBe(false);
     expect(statusBefore?.textContent?.trim()).toBe('');
 
     // Type a short password to trigger the `warn:weak-password` warning.

@@ -1,0 +1,19 @@
+<h2 class="dc__title">{{ title() }}</h2>
+@if (description() && help.showDetails()) {
+<p class="dc__description">{{ description() }}</p>
+} @if (chips().length) {
+<div class="dc__chips" aria-label="Current control settings">
+  @for (chip of chips(); track chip.label) {
+  <span class="control-chip">
+    <strong>{{ chip.label }}:</strong> {{ chip.value }}
+  </span>
+  }
+</div>
+}
+
+<div class="dc__controls">
+  <div class="dc__primary">
+    <ng-content select="[display-controls-primary]"></ng-content>
+  </div>
+  <ng-content select="ngx-display-controls-section"></ng-content>
+</div>

@@ -234,7 +234,11 @@
 :host {
   /* Layout */
   --_gap: var(--ngx-form-field-gap, var(--_field-space-3xs));
-  --_margin-bottom: var(--ngx-form-field-margin, 0);
+  /* Default bottom rhythm so a column of stacked fields breathes without the
+     consumer having to add a container gap. Override with
+     `--ngx-form-field-margin` (e.g. set to 0 when a grid/flex `gap` already
+     owns the spacing between fields). */
+  --_margin-bottom: var(--ngx-form-field-margin, 1rem);
 
   /* Prefix/Suffix */
   --_prefix-gap: var(--ngx-form-field-prefix-gap, var(--_field-space-md));
@@ -491,6 +495,21 @@
   block-size: fit-content; /* Prevent stretching in grid/flex rows */
 }
 
+/*
+ * `[attr.hidden]` is bound on the host as a defensive net (see
+ * `isFieldHidden()` in form-field-wrapper.ts) so a `hidden()` field stays
+ * out of the accessibility tree and off-screen even if the consumer forgets
+ * `@if`. The UA stylesheet's `[hidden] { display: none }` rule is *not*
+ * `!important` and author-origin styles beat UA-origin styles regardless of
+ * specificity, so the `:host { display: flex }` rule above silently wins
+ * and the "hidden" field stays fully visible. This rule restores the
+ * intended behavior for every appearance/layout variant (they all
+ * ultimately set `display` on `:host`).
+ */
+:host([hidden]) {
+  display: none !important;
+}
+
 :host(.ngx-signal-form-field-wrapper--selection-group) {
   --_gap: var(--_field-space-xs);
 }
@@ -572,13 +591,13 @@
 }
 
 .ngx-signal-form-field-wrapper__prefix {
-  padding-right: var(--_field-space-md);
+  padding-inline-end: var(--_field-space-md);
 }
 
 .ngx-signal-form-field-wrapper__suffix {
   color: var(--_suffix-color);
   gap: var(--_suffix-gap);
-  padding-left: var(--_field-space-md);
+  padding-inline-start: var(--_field-space-md);
 }
 
 /* Modern :has() based dynamic padding - adjust main content when prefix/suffix present */
@@ -805,7 +824,7 @@
     .ngx-signal-form-field-wrapper__prefix:not(:empty)
   ) {
   .ngx-signal-form-field-wrapper__prefix {
-    padding-right: var(--_field-space-sm);
+    padding-inline-end: var(--_field-space-sm);
   }
 }
 
@@ -815,7 +834,7 @@
     .ngx-signal-form-field-wrapper__suffix:not(:empty)
   ) {
   .ngx-signal-form-field-wrapper__suffix {
-    padding-left: var(--_field-space-sm);
+    padding-inline-start: var(--_field-space-sm);
   }
 }
 
@@ -996,8 +1015,8 @@
 /* the CSS should not rely on that invariant). */
 :host(
   .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
-      .ngx-signal-forms-plain
-    )
+    .ngx-signal-forms-plain
+  )
 ):not(
   :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
 ) {
@@ -1009,8 +1028,8 @@
 
 :host(
   .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
-      .ngx-signal-forms-plain
-    )
+    .ngx-signal-forms-plain
+  )
 ):not(
   :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
 ) {
@@ -1034,7 +1053,8 @@
   justify-content: space-between;
   gap: var(--ngx-form-field-assistive-gap, 0.5rem);
   min-height: var(--ngx-form-field-assistive-min-height, 1.25rem);
-  margin-top: var(--ngx-form-field-assistive-margin-top, 2px);
+  /* Increased from 2px to 4px (0.25rem) for better visual separation per modern web guidance */
+  margin-top: var(--ngx-form-field-assistive-margin-top, 0.25rem);
   margin-bottom: var(--ngx-form-field-assistive-margin-bottom, 0.25rem);
   width: 100%;
 }
@@ -1066,4 +1086,74 @@
   .ngx-signal-form-field-wrapper__assistive-right:not(:empty)
 ) {
   --ngx-form-field-hint-align: left;
+}
+
+/* ============================================================================ */
+/* HINT/ERROR VISIBILITY: Show either hint OR error (not both) */
+/* ============================================================================ */
+/* Per modern web guidance (required-field-feedback pattern), hints should
+ * disappear when errors appear to avoid visual clutter and focus user
+ * attention on the blocking error message.
+ *
+ * Implementation uses CSS custom properties (no ::ng-deep) so that
+ * ngx-form-field-hint reads --ngx-form-field-hint-display from its host
+ * context. This respects Angular's view encapsulation boundary.
+ */
+
+/* Hide hints when field has blocking errors or warnings */
+:host(
+  :is(
+    .ngx-signal-form-field-wrapper--invalid,
+    .ngx-signal-form-field-wrapper--warning
+  )
+) {
+  --ngx-form-field-hint-display: none;
+}
+
+/* Windows High Contrast (`forced-colors: active`): color-mix() borders and */
+/* soft state backgrounds flatten to system colors, erasing the invalid/ */
+/* warning distinction. Map states to explicit system colors instead. */
+@media (forced-colors: active) {
+  :host(.ngx-signal-form-field-wrapper--textual)
+    .ngx-signal-form-field-wrapper__content {
+    forced-color-adjust: none;
+    background: Field;
+    color: FieldText;
+    border: 2px solid FieldText;
+  }
+
+  :host(
+      .ngx-signal-form-field-wrapper--invalid.ngx-signal-form-field-wrapper--textual
+    )
+    .ngx-signal-form-field-wrapper__content {
+    border-color: Mark;
+
+    &:focus-within {
+      border-color: Mark;
+      box-shadow: none;
+    }
+  }
+
+  :host(
+      .ngx-signal-form-field-wrapper--warning.ngx-signal-form-field-wrapper--textual
+    )
+    .ngx-signal-form-field-wrapper__content {
+    border-color: CanvasText;
+
+    &:focus-within {
+      border-color: CanvasText;
+      box-shadow: none;
+    }
+  }
+
+  /* Neutralize color-mix() box-shadow and border-color overrides from the */
+  /* normal focus rules — the outline: Highlight below is the sole focus */
+  /* signal in forced-colors mode. */
+  :host(.ngx-signal-form-field-wrapper--textual)
+    .ngx-signal-form-field-wrapper__content:focus-within {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+    box-shadow: none;
+    border-color: Highlight;
+  }
 }

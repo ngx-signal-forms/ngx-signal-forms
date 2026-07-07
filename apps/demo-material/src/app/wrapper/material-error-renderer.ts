@@ -1,12 +1,5 @@
 import { NgComponentOutlet } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  input,
-  type Type,
-} from '@angular/core';
+import { Component, computed, inject, input, type Type } from '@angular/core';
 import { NGX_FORM_FIELD_ERROR_RENDERER } from '@ngx-signal-forms/toolkit';
 
 /**
@@ -44,7 +37,7 @@ export type NgxMatFeedbackSeverity = 'error' | 'warning';
  */
 @Component({
   selector: 'ngx-material-feedback-renderer',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   template: `
     <span
       class="ngx-mat-feedback"
@@ -116,7 +109,7 @@ export class MaterialFeedbackRenderer {
  */
 @Component({
   selector: 'ngx-mat-feedback-outlet',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [NgComponentOutlet],
   template: `
     <ng-container

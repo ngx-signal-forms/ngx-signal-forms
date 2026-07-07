@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ApplicationRef, Component, signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import {
   disabled,
   form,
@@ -6,6 +7,7 @@ import {
   hidden,
   required,
   schema,
+  validate,
 } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
@@ -18,7 +20,7 @@ describe('NgxHeadlessErrorSummary', () => {
       @Component({
         selector: 'ngx-test-summary-errors',
         imports: [FormField, NgxHeadlessErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -54,7 +56,7 @@ describe('NgxHeadlessErrorSummary', () => {
       @Component({
         selector: 'ngx-test-summary-valid',
         imports: [FormField, NgxHeadlessErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -92,7 +94,7 @@ describe('NgxHeadlessErrorSummary', () => {
       @Component({
         selector: 'ngx-test-summary-entries',
         imports: [FormField, NgxHeadlessErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -134,6 +136,56 @@ describe('NgxHeadlessErrorSummary', () => {
       const nameError = screen.getByText('Name is required');
       expect(nameError).toBeTruthy();
     });
+
+    it('keeps a separate entry per field when two fields share kind and the framework-default (message-less) error', async () => {
+      // Both fields fail `required()` with no custom `message`, so
+      // `ValidationError.message` is `undefined` for both — a message-blind
+      // dedupe key (`kind::message`) collapses them to a single entry and
+      // silently drops the second field from the summary (WCAG 3.3.1).
+      @Component({
+        selector: 'ngx-test-summary-shared-key',
+        imports: [FormField, NgxHeadlessErrorSummary],
+
+        template: `
+          <div>
+            <input id="email" [formField]="contactForm.email" />
+            <input id="name" [formField]="contactForm.name" />
+            <div
+              ngxHeadlessErrorSummary
+              #summary="errorSummary"
+              [formTree]="contactForm"
+              strategy="immediate"
+            >
+              <span data-testid="entry-count">{{
+                summary.entries().length
+              }}</span>
+              @for (
+                entry of summary.entries();
+                track entry.kind + entry.fieldName
+              ) {
+                <span [attr.data-testid]="'field-' + entry.fieldName"></span>
+              }
+            </div>
+          </div>
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '', name: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email);
+            required(path.name);
+          }),
+        );
+      }
+
+      await render(TestComponent);
+
+      expect(screen.getByTestId('entry-count')).toHaveTextContent('2');
+      expect(screen.queryByTestId('field-Email')).toBeTruthy();
+      expect(screen.queryByTestId('field-Name')).toBeTruthy();
+    });
   });
 
   describe('strategy-aware visibility', () => {
@@ -141,7 +193,7 @@ describe('NgxHeadlessErrorSummary', () => {
       @Component({
         selector: 'ngx-test-summary-on-touch',
         imports: [FormField, NgxHeadlessErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -179,7 +231,7 @@ describe('NgxHeadlessErrorSummary', () => {
       @Component({
         selector: 'ngx-test-summary-after-touch',
         imports: [FormField, NgxHeadlessErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input
@@ -223,12 +275,70 @@ describe('NgxHeadlessErrorSummary', () => {
     });
   });
 
+  describe('shouldShowWarnings', () => {
+    it('gates a warnings-only form independently of shouldShow', async () => {
+      // A warnings-only form never has blocking errors, so `hasErrors()` is
+      // permanently `false` and `shouldShow()` (strategy && hasErrors) can
+      // never gate `warningEntries()`. `shouldShowWarnings` (strategy &&
+      // hasWarnings) is the dedicated gate consumers must use instead.
+      @Component({
+        selector: 'ngx-test-summary-should-show-warnings',
+        imports: [FormField, NgxHeadlessErrorSummary],
+
+        template: `
+          <div>
+            <input id="street" [formField]="addressForm.street" />
+            <div
+              ngxHeadlessErrorSummary
+              #summary="errorSummary"
+              [formTree]="addressForm"
+              strategy="immediate"
+            >
+              <span data-testid="should-show">{{ summary.shouldShow() }}</span>
+              <span data-testid="should-show-warnings">{{
+                summary.shouldShowWarnings()
+              }}</span>
+              <span data-testid="warning-count">{{
+                summary.warningEntries().length
+              }}</span>
+            </div>
+          </div>
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ street: '' });
+        readonly addressForm = form(
+          this.#model,
+          schema((path) => {
+            validate(path.street, (ctx) =>
+              ctx.value()
+                ? null
+                : { kind: 'warn:street-optional', message: 'Optional' },
+            );
+          }),
+        );
+      }
+
+      const { fixture } = await render(TestComponent);
+
+      fixture.componentInstance.addressForm.street().markAsTouched();
+      fixture.detectChanges();
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(screen.getByTestId('warning-count')).toHaveTextContent('1');
+      expect(screen.getByTestId('should-show')).toHaveTextContent('false');
+      expect(screen.getByTestId('should-show-warnings')).toHaveTextContent(
+        'true',
+      );
+    });
+  });
+
   describe('focus capability', () => {
     it('should expose focus method on error entries', async () => {
       @Component({
         selector: 'ngx-test-summary-focus',
         imports: [FormField, NgxHeadlessErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input
@@ -284,7 +394,7 @@ describe('NgxHeadlessErrorSummary', () => {
       @Component({
         selector: 'ngx-test-summary-hidden',
         imports: [FormField, NgxHeadlessErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />
@@ -329,7 +439,7 @@ describe('NgxHeadlessErrorSummary', () => {
       @Component({
         selector: 'ngx-test-summary-disabled',
         imports: [FormField, NgxHeadlessErrorSummary],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <div>
             <input id="email" [formField]="contactForm.email" />

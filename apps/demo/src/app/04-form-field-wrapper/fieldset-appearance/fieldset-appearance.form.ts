@@ -1,21 +1,17 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-} from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import {
-  type NgxFieldsetAppearance,
-  type NgxFieldsetFeedbackAppearance,
-  type NgxFieldsetSurfaceTone,
-  type NgxFieldsetValidationSurface,
+  type NgxFormFieldsetAppearance,
+  type NgxFormFieldsetFeedbackAppearance,
+  type NgxFormFieldsetSurfaceTone,
+  type NgxFormFieldsetValidationSurface,
   type NgxFormFieldErrorPlacement,
 } from '@ngx-signal-forms/toolkit/form-field';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
+  NgxPageControlsDirective,
   SplitLayoutComponent,
 } from '../../ui';
 import {
@@ -24,14 +20,11 @@ import {
 } from '../../ui/error-display-mode-selector/error-display-mode-selector';
 import { FieldsetFormComponent } from '../complex-forms/fieldset.form';
 
-const FEEDBACK_APPEARANCE_OPTIONS: readonly NgxFieldsetFeedbackAppearance[] = [
-  'auto',
-  'plain',
-  'notification',
-];
+const FEEDBACK_APPEARANCE_OPTIONS: readonly NgxFormFieldsetFeedbackAppearance[] =
+  ['auto', 'plain', 'notification'];
 
 const FEEDBACK_APPEARANCE_LABELS: Record<
-  NgxFieldsetFeedbackAppearance,
+  NgxFormFieldsetFeedbackAppearance,
   string
 > = {
   auto: 'Auto',
@@ -39,17 +32,17 @@ const FEEDBACK_APPEARANCE_LABELS: Record<
   notification: 'Notification',
 };
 
-const FIELDSET_APPEARANCE_OPTIONS: readonly NgxFieldsetAppearance[] = [
+const FIELDSET_APPEARANCE_OPTIONS: readonly NgxFormFieldsetAppearance[] = [
   'outline',
   'plain',
 ];
 
-const FIELDSET_APPEARANCE_LABELS: Record<NgxFieldsetAppearance, string> = {
+const FIELDSET_APPEARANCE_LABELS: Record<NgxFormFieldsetAppearance, string> = {
   outline: 'Bordered',
   plain: 'Semantic only',
 };
 
-const SURFACE_TONE_OPTIONS: readonly NgxFieldsetSurfaceTone[] = [
+const SURFACE_TONE_OPTIONS: readonly NgxFormFieldsetSurfaceTone[] = [
   'default',
   'neutral',
   'info',
@@ -58,7 +51,7 @@ const SURFACE_TONE_OPTIONS: readonly NgxFieldsetSurfaceTone[] = [
   'danger',
 ];
 
-const SURFACE_TONE_LABELS: Record<NgxFieldsetSurfaceTone, string> = {
+const SURFACE_TONE_LABELS: Record<NgxFormFieldsetSurfaceTone, string> = {
   default: 'Default',
   neutral: 'Neutral',
   info: 'Info',
@@ -67,16 +60,16 @@ const SURFACE_TONE_LABELS: Record<NgxFieldsetSurfaceTone, string> = {
   danger: 'Danger',
 };
 
-const VALIDATION_SURFACE_OPTIONS: readonly NgxFieldsetValidationSurface[] = [
-  'never',
-  'always',
-];
+const VALIDATION_SURFACE_OPTIONS: readonly NgxFormFieldsetValidationSurface[] =
+  ['never', 'always'];
 
-const VALIDATION_SURFACE_LABELS: Record<NgxFieldsetValidationSurface, string> =
-  {
-    never: 'Message only',
-    always: 'Tint surface',
-  };
+const VALIDATION_SURFACE_LABELS: Record<
+  NgxFormFieldsetValidationSurface,
+  string
+> = {
+  never: 'Message only',
+  always: 'Tint surface',
+};
 
 type FieldsetListStyle = 'plain' | 'bullets';
 
@@ -105,11 +98,12 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
 
 @Component({
   selector: 'ngx-fieldset-appearance-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
     FieldsetFormComponent,
+    NgxPageControlsDirective,
     NgxSignalFormDebugger,
     SplitLayoutComponent,
   ],
@@ -263,15 +257,18 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
   templateUrl: './fieldset-appearance.form.html',
 })
 export class FieldsetAppearanceFormComponent {
-  protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
+  // Defaults to 'immediate' so the validation sandbox shows its grouped errors
+  // on load (keeping the placement comparison meaningful), while switching to
+  // 'on-touch' / 'on-submit' visibly demonstrates the error-timing control.
+  protected readonly selectedMode = signal<ErrorDisplayStrategy>('immediate');
   protected readonly selectedFieldsetAppearance =
-    signal<NgxFieldsetAppearance>('outline');
+    signal<NgxFormFieldsetAppearance>('outline');
   protected readonly selectedFeedbackAppearance =
-    signal<NgxFieldsetFeedbackAppearance>('auto');
+    signal<NgxFormFieldsetFeedbackAppearance>('auto');
   protected readonly selectedSurfaceTone =
-    signal<NgxFieldsetSurfaceTone>('default');
+    signal<NgxFormFieldsetSurfaceTone>('default');
   protected readonly selectedValidationSurface =
-    signal<NgxFieldsetValidationSurface>('never');
+    signal<NgxFormFieldsetValidationSurface>('never');
   protected readonly selectedListStyle = signal<FieldsetListStyle>('bullets');
   protected readonly selectedErrorPlacement =
     signal<NgxFormFieldErrorPlacement>('bottom');

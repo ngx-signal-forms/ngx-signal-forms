@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { CardComponent } from '../card/card';
 
 type DemonstratedCardConfig = {
@@ -31,103 +31,10 @@ type LearningCardConfig = {
  */
 @Component({
   selector: 'ngx-example-cards',
+
   imports: [CardComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: `
-    :host {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-      min-width: 0;
-    }
-
-    .example-cards__section {
-      min-width: 0;
-    }
-
-    .example-cards__list,
-    .example-cards__list li {
-      min-width: 0;
-    }
-
-    .example-cards__list li {
-      overflow-wrap: anywhere;
-    }
-
-    .example-cards__list code {
-      overflow-wrap: anywhere;
-      word-break: break-word;
-    }
-  `,
-  template: `
-    <!-- What You'll See Demonstrated Card -->
-    <ngx-card
-      variant="primary-outline"
-      [labelledBy]="demonstratedHeadingId"
-      class="text-left"
-    >
-      <div card-header>
-        <h2 [id]="demonstratedHeadingId" class="mb-4 text-lg font-semibold">
-          {{ demonstrated().icon }} {{ demonstrated().title }}
-        </h2>
-      </div>
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        @for (section of demonstrated().sections; track section.title) {
-          <div class="example-cards__section">
-            <h3 class="mb-2 font-medium text-gray-900 dark:text-gray-100">
-              {{ section.title }}
-            </h3>
-            <ul
-              class="example-cards__list space-y-1 text-sm text-gray-600 dark:text-gray-400"
-            >
-              @for (item of section.items; track item) {
-                <li [innerHTML]="item"></li>
-              }
-            </ul>
-          </div>
-        }
-      </div>
-    </ngx-card>
-
-    <!-- Form Content Slot -->
-    <ng-content></ng-content>
-
-    <!-- Learning Journey Card -->
-    <ngx-card variant="educational">
-      <div card-header>🎯 {{ learning().title }}</div>
-
-      <div class="grid gap-4 md:grid-cols-2">
-        @for (section of learning().sections; track section.title) {
-          <div class="example-cards__section">
-            <h3
-              class="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100"
-            >
-              {{ section.title }}
-            </h3>
-            <ul
-              class="example-cards__list space-y-1 text-xs text-gray-700 dark:text-gray-300"
-            >
-              @for (item of section.items; track item) {
-                <li [innerHTML]="item"></li>
-              }
-            </ul>
-          </div>
-        }
-      </div>
-
-      <div class="mt-4 border-t border-indigo-200 pt-4 dark:border-indigo-700">
-        <div class="text-xs text-gray-600 dark:text-gray-400">
-          {{ learning().nextStep.text }}
-          <a
-            [href]="learning().nextStep.link"
-            class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
-          >
-            {{ learning().nextStep.linkText }}
-          </a>
-        </div>
-      </div>
-    </ngx-card>
-  `,
+  templateUrl: './example-cards.html',
+  styleUrl: './example-cards.scss',
 })
 export class ExampleCardsComponent {
   demonstrated = input.required<DemonstratedCardConfig>();

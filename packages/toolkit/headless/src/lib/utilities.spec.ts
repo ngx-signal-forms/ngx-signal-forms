@@ -520,6 +520,16 @@ describe('Headless Utilities', () => {
       );
     });
 
+    it('should strip the form prefix regardless of the configured APP_ID', () => {
+      // Angular's real prefix is `${APP_ID}.form{n}.`, not hardcoded `ng.`.
+      // `BrowserTestingModule` (and any app with a custom `provideAppId`)
+      // uses a different APP_ID — e.g. `a.form0.email` in TestBed specs.
+      expect(humanizeFieldPath('a.form0.email')).toBe('Email');
+      expect(humanizeFieldPath('my-app.form3.address.city')).toBe(
+        'Address / City',
+      );
+    });
+
     it('should handle underscores and hyphens', () => {
       expect(humanizeFieldPath('first_name')).toBe('First name');
       expect(humanizeFieldPath('last-name')).toBe('Last name');
@@ -661,7 +671,7 @@ describe('Headless Utilities', () => {
   // ============================================================================
 
   describe('warning visibility coupling (createErrorState)', () => {
-    // The toolkit's `createErrorState()` aliases `showWarnings: showErrorsSignal`
+    // The toolkit's `createErrorState()` aliases `shouldShowWarnings: showErrorsSignal`
     // because warnings are regular `ValidationError`s that Angular still marks
     // as `invalid() === true` (they come from the same validator pipeline as
     // blocking errors; the toolkit only splits them later via `splitByKind`).
@@ -712,8 +722,8 @@ describe('Headless Utilities', () => {
       );
 
       // Before touch, on-touch strategy hides both errors and warnings.
-      expect(errorState.showErrors()).toBe(false);
-      expect(errorState.showWarnings()).toBe(false);
+      expect(errorState.shouldShowErrors()).toBe(false);
+      expect(errorState.shouldShowWarnings()).toBe(false);
 
       passwordForm.password().markAsTouched();
 
@@ -721,7 +731,7 @@ describe('Headless Utilities', () => {
       // the same visibility gate drives both showErrors and showWarnings.
       expect(errorState.hasWarnings()).toBe(true);
       expect(errorState.hasErrors()).toBe(false);
-      expect(errorState.showWarnings()).toBe(true);
+      expect(errorState.shouldShowWarnings()).toBe(true);
     });
   });
 
@@ -776,11 +786,11 @@ describe('Headless Utilities', () => {
       // until the form has been submitted.
       emailForm.email().markAsTouched();
       expect(errorState.hasErrors()).toBe(true);
-      expect(errorState.showErrors()).toBe(false);
+      expect(errorState.shouldShowErrors()).toBe(false);
 
       // After submission the errors become visible.
       submittedStatus.set('submitted');
-      expect(errorState.showErrors()).toBe(true);
+      expect(errorState.shouldShowErrors()).toBe(true);
     });
 
     it('falls back to on-touch when no form context is present', () => {
@@ -805,12 +815,12 @@ describe('Headless Utilities', () => {
       );
 
       // Before touch: hidden.
-      expect(errorState.showErrors()).toBe(false);
+      expect(errorState.shouldShowErrors()).toBe(false);
 
       // After touch: visible (on-touch fallback).
       emailForm.email().markAsTouched();
       expect(errorState.hasErrors()).toBe(true);
-      expect(errorState.showErrors()).toBe(true);
+      expect(errorState.shouldShowErrors()).toBe(true);
     });
   });
 });

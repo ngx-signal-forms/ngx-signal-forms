@@ -1,15 +1,7 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
-  type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
@@ -17,14 +9,15 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
+  createOrientationSelection,
   getOrientationLabel,
-  isOrientationDisabledForAppearance,
 } from '../../ui/orientation-toggle';
 import {
   ERROR_DISPLAY_MODE_LABELS,
@@ -35,7 +28,7 @@ import { VestValidationComponent } from './vest-validation.form';
 
 @Component({
   selector: 'ngx-vest-validation-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   styles: `
     :host {
       display: flex;
@@ -51,11 +44,43 @@ import { VestValidationComponent } from './vest-validation.form';
     OrientationToggleComponent,
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
   ],
   template: `
+    <ng-template ngxPageControls>
+      <ngx-display-controls-card
+        title="Business-rule visibility"
+        description="Compare how the same Vest-powered policy errors feel under different display timings and wrapper treatments without changing the validation suite itself."
+        [chips]="currentControlChips()"
+        layout="split"
+      >
+        <ngx-error-display-mode-selector
+          [(selectedMode)]="errorDisplayMode"
+          [embedded]="true"
+          display-controls-primary
+          class="block min-w-0"
+        />
+        <ngx-display-controls-section
+          title="🎨 Policy framing"
+          description="Switch the wrapper appearance to check whether conditional business errors stay clear when the surrounding visual hierarchy changes."
+        >
+          <ngx-appearance-toggle [(value)]="selectedAppearance" />
+        </ngx-display-controls-section>
+        <ngx-display-controls-section
+          title="↔️ Label orientation"
+          description="Compare policy-heavy forms with vertical labels and horizontal columns. Outline remains vertical because the floating-label treatment is intentionally preserved."
+        >
+          <ngx-orientation-toggle
+            [(value)]="selectedOrientation"
+            [appearance]="selectedAppearance()"
+          />
+        </ngx-display-controls-section>
+      </ngx-display-controls-card>
+    </ng-template>
+
     <ngx-page-header
       title="Vest-Only Validation"
       subtitle="Conditional business rules powered entirely by a Vest suite"
@@ -65,37 +90,6 @@ import { VestValidationComponent } from './vest-validation.form';
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
     />
-
-    <ngx-display-controls-card
-      title="Business-rule visibility"
-      description="Compare how the same Vest-powered policy errors feel under different display timings and wrapper treatments without changing the validation suite itself."
-      [chips]="currentControlChips()"
-      layout="split"
-    >
-      <ngx-error-display-mode-selector
-        [(selectedMode)]="errorDisplayMode"
-        [embedded]="true"
-        display-controls-primary
-        class="block min-w-0"
-      />
-
-      <ngx-display-controls-section
-        title="🎨 Policy framing"
-        description="Switch the wrapper appearance to check whether conditional business errors stay clear when the surrounding visual hierarchy changes."
-      >
-        <ngx-appearance-toggle [(value)]="selectedAppearance" />
-      </ngx-display-controls-section>
-
-      <ngx-display-controls-section
-        title="↔️ Label orientation"
-        description="Compare policy-heavy forms with vertical labels and horizontal columns. Outline remains vertical because the floating-label treatment is intentionally preserved."
-      >
-        <ngx-orientation-toggle
-          [(value)]="selectedOrientation"
-          [appearance]="selectedAppearance()"
-        />
-      </ngx-display-controls-section>
-    </ngx-display-controls-card>
 
     <ngx-split-layout>
       <ngx-vest-validation
@@ -118,8 +112,10 @@ export class VestValidationPage {
     signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
-  protected readonly selectedOrientation =
-    signal<FormFieldOrientation>('vertical');
+  protected readonly selectedOrientation = createOrientationSelection(
+    this.selectedAppearance,
+  );
+
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -136,17 +132,4 @@ export class VestValidationPage {
   ]);
   protected readonly content = VEST_VALIDATION_CONTENT;
   protected readonly formRef = viewChild(VestValidationComponent);
-
-  constructor() {
-    effect(() => {
-      if (
-        isOrientationDisabledForAppearance(
-          this.selectedAppearance(),
-          this.selectedOrientation(),
-        )
-      ) {
-        this.selectedOrientation.set('vertical');
-      }
-    });
-  }
 }

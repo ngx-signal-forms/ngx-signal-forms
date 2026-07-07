@@ -7,7 +7,7 @@ Real-world forms often need _non-blocking_ feedback — "weak password", "dispos
 ## Toolkit features showcased
 
 - `warn:*` error kinds — any `ValidationError` whose `kind` starts with `warn:` is treated as advisory.
-- `NgxFormFieldError` — renders blocking errors with `role="alert"` and warnings with `role="status"` / `aria-live="polite"`, plus distinct styling.
+- `NgxFormFieldError` — renders blocking errors with `role="alert"` and warnings with `role="status"`, relying on those roles' implicit live-region semantics, plus distinct styling.
 - `submitWithWarnings()` — warning-tolerant submit helper used with `<form novalidate>` instead of Angular's native `submit()` (which treats every validation result as blocking).
 - Separation of blocking errors from warnings at the form-state level.
 
@@ -54,5 +54,5 @@ Real-world forms often need _non-blocking_ feedback — "weak password", "dispos
 
 ## Related
 
-- [Vest-Only Validation](../../05-advanced/vest-validation/README.md) — warnings coming from a Vest suite.
-- [Zod + Vest Validation](../../05-advanced/zod-vest-validation/README.md) — layered errors + warnings.
+- [Vest-Only Validation](../../05-advanced/vest-validation/README.md) — warnings coming from a Vest suite in the dedicated Validation section.
+- [Zod + Vest Validation](../../05-advanced/zod-vest-validation/README.md) — layered errors + warnings in the dedicated Validation section.

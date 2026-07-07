@@ -58,19 +58,30 @@ jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Gate the release behind a protected environment. Store RELEASE_TOKEN as an
+    # *environment* secret (not a plain repo secret) with required reviewers, so
+    # a `workflow_dispatch` on an untrusted ref cannot reach the admin push token
+    # without human approval. GitHub auto-creates this environment on first run;
+    # add the protection rules in Settings > Environments > release.
+    environment: release
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: tree:0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # SECURITY: do not persist any credential into .git/config here. The
+          # install + `nx affected` steps below execute untrusted dependency
+          # code; a persisted admin token could be exfiltrated by a malicious
+          # package. The privileged push credential is bound late, only in the
+          # Release step, after all third-party code has finished running.
+          persist-credentials: false
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           node-version-file: '.node-version'
           cache: 'pnpm'
@@ -84,8 +95,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+
+      - name: Install Playwright system dependencies
+        run: pnpm exec playwright install-deps
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
 
       - name: Configure Nx Cloud access
         env:
@@ -106,7 +129,7 @@ jobs:
             echo "No Nx Cloud token configured. Running release workflow without Nx Cloud."
           fi
 
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
         continue-on-error: true
 
       - name: Nx Report
@@ -195,9 +218,18 @@ jobs:
         # non-idempotent (version bump, changelog, tag, commit, push). If Nx
         # Cloud fails mid-sequence, retrying could create duplicate tags or a
         # corrupted release. Fail loudly and let a human re-run cleanly.
-        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish ${{ steps.first_release_flag.outputs.flag }}
+        #
+        # The push credential is bound here and nowhere earlier: RELEASE_TOKEN is
+        # an admin-scoped token (PAT with Contents:write, or a GitHub App token)
+        # that bypasses the `main` ruleset; GITHUB_TOKEN cannot push to protected
+        # main. The token comes from env (never inlined into the command, so it
+        # is not logged). Falls back to GITHUB_TOKEN when the secret is unset.
+        run: |
+          git remote set-url origin "https://x-access-token:${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish ${{ steps.first_release_flag.outputs.flag }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Resolve created release tag
         if: ${{ !inputs.dry_run }}

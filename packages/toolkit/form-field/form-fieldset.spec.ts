@@ -40,7 +40,7 @@ describe('NgxFormFieldset', () => {
     const fieldset = createFieldsetState();
 
     const { container } = await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [field]="fieldset">
         <div class="content">Projected</div>
       </ngx-form-fieldset>`,
       {
@@ -58,7 +58,7 @@ describe('NgxFormFieldset', () => {
     const fieldset = createFieldsetState();
 
     const { container } = await render(
-      `<fieldset ngxFormFieldset [fieldsetField]="fieldset">
+      `<fieldset ngxFormFieldset [field]="fieldset">
         <legend>Shipping Address</legend>
         <div class="content">Projected</div>
       </fieldset>`,
@@ -80,7 +80,7 @@ describe('NgxFormFieldset', () => {
     const fieldset = createFieldsetState();
 
     const { container } = await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [field]="fieldset">
         <div class="content">Projected</div>
       </ngx-form-fieldset>`,
       {
@@ -101,7 +101,7 @@ describe('NgxFormFieldset', () => {
     expect(content?.querySelector('.content')?.textContent).toBe('Projected');
   });
 
-  it('aggregates errors from fieldsetField errorSummary', async () => {
+  it('aggregates errors from field errorSummary', async () => {
     const fieldset = createFieldsetState({
       errors: () => [{ kind: 'required', message: 'Street required' }],
       errorSummary: () => [
@@ -111,7 +111,7 @@ describe('NgxFormFieldset', () => {
     });
 
     const { container } = await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [field]="fieldset">
         <div>Content without nested form field</div>
       </ngx-form-fieldset>`,
       {
@@ -141,7 +141,7 @@ describe('NgxFormFieldset', () => {
     });
 
     await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [field]="fieldset">
         <div>Content without nested form field</div>
       </ngx-form-fieldset>`,
       {
@@ -155,9 +155,14 @@ describe('NgxFormFieldset', () => {
     expect(errors).toHaveLength(1);
     expect(errors[0]?.textContent).toContain('City required');
 
-    /// Warning should be suppressed when error is shown
+    /// Warning should be suppressed when error is shown. The status shell
+    /// stays mounted (WCAG 4.1.3, always-mounted live region) but must be
+    /// empty.
     const warnings = screen.queryAllByRole('status');
-    expect(warnings).toHaveLength(0);
+    expect(warnings).not.toHaveLength(0);
+    for (const warning of warnings) {
+      expect(warning.textContent?.trim() ?? '').toBe('');
+    }
   });
 
   it('shows warnings when no blocking errors exist', async () => {
@@ -169,7 +174,7 @@ describe('NgxFormFieldset', () => {
     });
 
     await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [field]="fieldset">
         <div>Content without nested form field</div>
       </ngx-form-fieldset>`,
       {
@@ -195,7 +200,7 @@ describe('NgxFormFieldset', () => {
     });
 
     await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset" [fields]="fields">
+      `<ngx-form-fieldset [field]="fieldset" [fields]="fields">
         <div>Content without nested form field</div>
       </ngx-form-fieldset>`,
       {
@@ -216,7 +221,7 @@ describe('NgxFormFieldset', () => {
     });
 
     const { container } = await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [field]="fieldset">
         <div>Content</div>
       </ngx-form-fieldset>`,
       {
@@ -238,7 +243,7 @@ describe('NgxFormFieldset', () => {
     });
 
     const { container } = await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset" fieldsetId="address">
+      `<ngx-form-fieldset [field]="fieldset" fieldsetId="address">
         <div>Content</div>
       </ngx-form-fieldset>`,
       {
@@ -254,6 +259,57 @@ describe('NgxFormFieldset', () => {
     expect(host).toHaveAttribute('aria-describedby', 'address-error');
   });
 
+  it('preserves an author-supplied aria-describedby instead of clobbering it', async () => {
+    // Regression guard: the `[attr.aria-describedby]` host binding used to
+    // return only the managed error/warning id (or `null`), which nulled
+    // out any author-supplied value — a common pattern being
+    // `<fieldset ngxFormFieldset aria-describedby="pw-rules">` pointing at a
+    // sibling hint element the fieldset doesn't own.
+    const fieldset = createFieldsetState({
+      errors: () => [{ kind: 'required', message: 'Required' }],
+      errorSummary: () => [{ kind: 'required', message: 'Required' }],
+    });
+
+    const { container } = await render(
+      `<ngx-form-fieldset
+        [field]="fieldset"
+        fieldsetId="address"
+        aria-describedby="pw-rules"
+      >
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-form-fieldset');
+    expect(host).toHaveAttribute('aria-describedby', 'pw-rules address-error');
+  });
+
+  it('falls back to the author-supplied aria-describedby alone when no messages are shown', async () => {
+    const fieldset = createFieldsetState({
+      invalid: () => false,
+      valid: () => true,
+      errors: () => [],
+      errorSummary: () => [],
+    });
+
+    const { container } = await render(
+      `<ngx-form-fieldset [field]="fieldset" aria-describedby="pw-rules">
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-form-fieldset');
+    expect(host).toHaveAttribute('aria-describedby', 'pw-rules');
+  });
+
   it('renders aggregated messages below content by default', async () => {
     const fieldset = createFieldsetState({
       errors: () => [{ kind: 'required', message: 'Required' }],
@@ -261,7 +317,7 @@ describe('NgxFormFieldset', () => {
     });
 
     const { container } = await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [field]="fieldset">
         <div class="content">Content</div>
       </ngx-form-fieldset>`,
       {
@@ -296,7 +352,7 @@ describe('NgxFormFieldset', () => {
     });
 
     const { container } = await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [field]="fieldset">
         <div>Content</div>
       </ngx-form-fieldset>`,
       {
@@ -319,7 +375,7 @@ describe('NgxFormFieldset', () => {
     });
 
     const { container } = await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset" fieldsetId="address">
+      `<ngx-form-fieldset [field]="fieldset" fieldsetId="address">
         <div class="content">Projected</div>
       </ngx-form-fieldset>`,
       {
@@ -352,7 +408,7 @@ describe('NgxFormFieldset', () => {
     const fieldset = createFieldsetState();
 
     const { container } = await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [field]="fieldset">
         <div>Content</div>
       </ngx-form-fieldset>`,
       {
@@ -371,7 +427,7 @@ describe('NgxFormFieldset', () => {
     const fieldset = createFieldsetState();
 
     const { container } = await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset" appearance="plain">
+      `<ngx-form-fieldset [field]="fieldset" appearance="plain">
         <div>Content</div>
       </ngx-form-fieldset>`,
       {
@@ -393,7 +449,7 @@ describe('NgxFormFieldset', () => {
     });
 
     const { container } = await render(
-      `<fieldset ngxFormFieldset [fieldsetField]="fieldset" fieldsetId="contact-method">
+      `<fieldset ngxFormFieldset [field]="fieldset" fieldsetId="contact-method">
         <legend>Preferred contact method</legend>
         <label><input type="radio" name="contact" />Email</label>
         <label><input type="radio" name="contact" />SMS</label>
@@ -422,7 +478,7 @@ describe('NgxFormFieldset', () => {
     });
 
     const { container } = await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [field]="fieldset">
         <div>Content</div>
       </ngx-form-fieldset>`,
       {
@@ -445,7 +501,7 @@ describe('NgxFormFieldset', () => {
 
     const { container } = await render(
       `<ngx-form-fieldset
-        [fieldsetField]="fieldset"
+        [field]="fieldset"
         [includeNestedErrors]="true"
       >
         <div>Content</div>
@@ -468,7 +524,7 @@ describe('NgxFormFieldset', () => {
     const fieldset = createFieldsetState();
 
     const { container } = await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset" fieldsetId="personal-info">
+      `<ngx-form-fieldset [field]="fieldset" fieldsetId="personal-info">
         <legend>Personal Information</legend>
         <div class="content">Projected</div>
       </ngx-form-fieldset>`,
@@ -490,7 +546,7 @@ describe('NgxFormFieldset', () => {
     const fieldset = createFieldsetState();
 
     const { container } = await render(
-      `<fieldset ngxFormFieldset [fieldsetField]="fieldset" fieldsetId="native">
+      `<fieldset ngxFormFieldset [field]="fieldset" fieldsetId="native">
         <legend>Shipping Address</legend>
         <div class="content">Projected</div>
       </fieldset>`,
@@ -513,7 +569,7 @@ describe('NgxFormFieldset', () => {
     });
 
     const { container } = await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset" errorPlacement="top">
+      `<ngx-form-fieldset [field]="fieldset" errorPlacement="top">
         <div class="content">Content</div>
       </ngx-form-fieldset>`,
       {
@@ -540,7 +596,7 @@ describe('NgxFormFieldset', () => {
     const fieldset = createFieldsetState();
 
     const { container } = await render(
-      `<ngx-form-fieldset [fieldsetField]="fieldset">
+      `<ngx-form-fieldset [field]="fieldset">
         <div>Content</div>
       </ngx-form-fieldset>`,
       {
@@ -566,7 +622,7 @@ describe('NgxFormFieldset', () => {
 
     const { container } = await render(
       `<ngx-form-fieldset
-        [fieldsetField]="fieldset"
+        [field]="fieldset"
         feedbackAppearance="plain"
       >
         <div>Content</div>
@@ -591,7 +647,7 @@ describe('NgxFormFieldset', () => {
 
     const { container } = await render(
       `<ngx-form-fieldset
-        [fieldsetField]="fieldset"
+        [field]="fieldset"
         feedbackAppearance="notification"
       >
         <div>Content</div>
@@ -616,7 +672,7 @@ describe('NgxFormFieldset', () => {
 
     const { container } = await render(
       `<ngx-form-fieldset
-        [fieldsetField]="fieldset"
+        [field]="fieldset"
         notificationTitle="Please review the following"
       >
         <div>Content</div>
@@ -647,7 +703,7 @@ describe('NgxFormFieldset', () => {
 
     const { container } = await render(
       `<ngx-form-fieldset
-        [fieldsetField]="fieldset"
+        [field]="fieldset"
         listStyle="plain"
       >
         <div>Content</div>
@@ -671,7 +727,7 @@ describe('NgxFormFieldset', () => {
 
     const { container } = await render(
       `<ngx-form-fieldset
-        [fieldsetField]="fieldset"
+        [field]="fieldset"
         surfaceTone="info"
       >
         <div>Content</div>
@@ -694,7 +750,7 @@ describe('NgxFormFieldset', () => {
 
     const { container } = await render(
       `<ngx-form-fieldset
-        [fieldsetField]="fieldset"
+        [field]="fieldset"
         validationSurface="always"
       >
         <div>Content</div>
@@ -720,7 +776,7 @@ describe('NgxFormFieldset', () => {
 
     const { container } = await render(
       `<ngx-form-fieldset
-        [fieldsetField]="fieldset"
+        [field]="fieldset"
         validationSurface="always"
       >
         <div>Content</div>
@@ -748,7 +804,7 @@ describe('NgxFormFieldset', () => {
 
     const { container } = await render(
       `<ngx-form-fieldset
-        [fieldsetField]="fieldset"
+        [field]="fieldset"
         validationSurface="never"
       >
         <div>Content</div>
@@ -779,7 +835,7 @@ describe('NgxFormFieldset', () => {
 
     const { container } = await render(
       `<ngx-form-fieldset
-        [fieldsetField]="fieldset"
+        [field]="fieldset"
         fieldsetId="no-announce"
         [showErrors]="false"
       >

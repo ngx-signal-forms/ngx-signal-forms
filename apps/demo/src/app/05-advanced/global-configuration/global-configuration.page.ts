@@ -1,15 +1,7 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
-  type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
@@ -17,14 +9,15 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
+  createOrientationSelection,
   getOrientationLabel,
-  isOrientationDisabledForAppearance,
 } from '../../ui/orientation-toggle';
 import {
   ERROR_DISPLAY_MODE_LABELS,
@@ -33,17 +26,9 @@ import {
 import { GLOBAL_CONFIG_CONTENT } from './global-configuration.content';
 import { GlobalConfigurationComponent } from './global-configuration.form';
 
-/**
- * Global Configuration Page
- *
- * Demonstrates global toolkit configuration via provideNgxSignalFormsConfig()
- * plus app-level control presets via provideNgxSignalFormControlPresets().
- * Shows how to set defaults for error strategies, ARIA attributes,
- * control-family semantics, and field resolution.
- */
 @Component({
   selector: 'ngx-global-configuration-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   styles: `
     :host {
       display: flex;
@@ -59,11 +44,43 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
     OrientationToggleComponent,
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
   ],
   template: `
+    <ng-template ngxPageControls>
+      <ngx-display-controls-card
+        title="Default-versus-override controls"
+        description="Use local overrides to pressure-test the global toolkit defaults and make the precedence chain visible: app config first, page override second, rendered form last."
+        [chips]="currentControlChips()"
+        layout="split"
+      >
+        <ngx-error-display-mode-selector
+          [(selectedMode)]="errorDisplayMode"
+          [embedded]="true"
+          display-controls-primary
+          class="block min-w-0"
+        />
+        <ngx-display-controls-section
+          title="🎨 Appearance override"
+          description="Swap the wrapper treatment to show that visual defaults can diverge from the globally configured baseline without changing the underlying validation rules."
+        >
+          <ngx-appearance-toggle [(value)]="selectedAppearance" />
+        </ngx-display-controls-section>
+        <ngx-display-controls-section
+          title="↔️ Label orientation"
+          description="Override the global layout locally so you can compare a vertical form against a horizontal label column without touching the app bootstrap config."
+        >
+          <ngx-orientation-toggle
+            [(value)]="selectedOrientation"
+            [appearance]="selectedAppearance()"
+          />
+        </ngx-display-controls-section>
+      </ngx-display-controls-card>
+    </ng-template>
+
     <ngx-page-header
       title="Global Toolkit Configuration"
       subtitle="Configure global toolkit defaults and app-level control presets from the demo bootstrap layer"
@@ -74,36 +91,6 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
       [learning]="content.learning"
     />
 
-    <ngx-display-controls-card
-      title="Default-versus-override controls"
-      description="Use local overrides to pressure-test the global toolkit defaults and make the precedence chain visible: app config first, page override second, rendered form last."
-      [chips]="currentControlChips()"
-      layout="split"
-    >
-      <ngx-error-display-mode-selector
-        [(selectedMode)]="errorDisplayMode"
-        [embedded]="true"
-        display-controls-primary
-        class="block min-w-0"
-      />
-
-      <ngx-display-controls-section
-        title="🎨 Appearance override"
-        description="Swap the wrapper treatment to show that visual defaults can diverge from the globally configured baseline without changing the underlying validation rules."
-      >
-        <ngx-appearance-toggle [(value)]="selectedAppearance" />
-      </ngx-display-controls-section>
-
-      <ngx-display-controls-section
-        title="↔️ Label orientation"
-        description="Override the global layout locally so you can compare a vertical form against a horizontal label column without touching the app bootstrap config."
-      >
-        <ngx-orientation-toggle
-          [(value)]="selectedOrientation"
-          [appearance]="selectedAppearance()"
-        />
-      </ngx-display-controls-section>
-    </ngx-display-controls-card>
     <ngx-split-layout>
       <ngx-global-configuration
         [errorDisplayMode]="errorDisplayMode()"
@@ -125,8 +112,10 @@ export class GlobalConfigurationPage {
     signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
-  protected readonly selectedOrientation =
-    signal<FormFieldOrientation>('vertical');
+  protected readonly selectedOrientation = createOrientationSelection(
+    this.selectedAppearance,
+  );
+
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -143,17 +132,4 @@ export class GlobalConfigurationPage {
   ]);
   protected readonly content = GLOBAL_CONFIG_CONTENT;
   protected readonly formRef = viewChild(GlobalConfigurationComponent);
-
-  constructor() {
-    effect(() => {
-      if (
-        isOrientationDisabledForAppearance(
-          this.selectedAppearance(),
-          this.selectedOrientation(),
-        )
-      ) {
-        this.selectedOrientation.set('vertical');
-      }
-    });
-  }
 }

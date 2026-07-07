@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Service, signal } from '@angular/core';
 
 // Import from shiki v1.x using the shorthand approach for better compatibility
 import { codeToHtml } from 'shiki';
@@ -26,9 +26,7 @@ export type SupportedTheme =
   | 'vitesse-light'
   | 'vitesse-dark';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Service()
 export class ShikiHighlightService {
   readonly #isReady = signal(false);
 

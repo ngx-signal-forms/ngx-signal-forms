@@ -114,9 +114,7 @@ export interface FieldStateFlags {
  * Eliminates the repeated pattern of 5 individual `readFieldFlag` computeds
  * found in fieldset directives and components.
  *
- * @remarks Must be called in an injection context (constructor, field
- * initializer, or `runInInjectionContext`) because it creates `computed`
- * signals internally.
+ * @remarks Does not require an injection context (only creates `computed`s).
  *
  * @param fieldState - A signal/computed that returns the field state object
  * @returns Object with computed signals for each boolean flag
@@ -324,9 +322,9 @@ export interface CreateErrorStateOptions<TValue = unknown> {
  */
 export interface ErrorStateResult {
   /** Whether to show errors */
-  readonly showErrors: Signal<boolean>;
+  readonly shouldShowErrors: Signal<boolean>;
   /** Whether to show warnings */
-  readonly showWarnings: Signal<boolean>;
+  readonly shouldShowWarnings: Signal<boolean>;
   /** Raw blocking errors */
   readonly errors: Signal<readonly ValidationError[]>;
   /** Raw warning errors */
@@ -357,16 +355,22 @@ export interface ErrorStateResult {
  *
  * ```typescript
  * const formData = signal({ email: '' });
- * const emailField = form(formData, { validators: [Validators.required, Validators.email] });
+ * const contactForm = form(
+ *   formData,
+ *   schema((path) => {
+ *     required(path.email);
+ *     email(path.email);
+ *   }),
+ * );
  *
  * const errorState = createErrorState({
- *   field: emailField,
+ *   field: contactForm.email,
  *   fieldName: 'email',
  * });
  *
  * // Use in templates
  * effect(() => {
- *   if (errorState.showErrors() && errorState.hasErrors()) {
+ *   if (errorState.shouldShowErrors() && errorState.hasErrors()) {
  *     console.log('Errors:', errorState.errors());
  *   }
  * });
@@ -428,8 +432,8 @@ export function createErrorState<TValue = unknown>(
   const core = buildHeadlessErrorState(fieldState, resolvedFieldName);
 
   return {
-    showErrors: showErrorsSignal,
-    showWarnings: showErrorsSignal,
+    shouldShowErrors: showErrorsSignal,
+    shouldShowWarnings: showErrorsSignal,
     ...core,
     fieldName: resolvedFieldName,
   };
@@ -466,17 +470,21 @@ export interface CreateCharacterCountOptions {
  */
 export interface CharacterCountResult {
   /** Current value length */
-  readonly currentLength: ReadSignal<number>;
+  readonly currentLength: Signal<number>;
   /** Resolved maximum length */
-  readonly resolvedMaxLength: ReadSignal<number>;
+  readonly resolvedMaxLength: Signal<number>;
   /** Remaining characters until limit */
-  readonly remaining: ReadSignal<number>;
+  readonly remaining: Signal<number>;
   /** Current limit state */
-  readonly limitState: ReadSignal<CharacterCountLimitState>;
+  readonly limitState: Signal<CharacterCountLimitState>;
+  /** Whether a limit is configured. `maxLength` is required, so this is
+   * always `true` — retained for API symmetry with
+   * `NgxHeadlessCharacterCount.hasLimit`. */
+  readonly hasLimit: Signal<boolean>;
   /** Whether the limit has been exceeded */
-  readonly isExceeded: ReadSignal<boolean>;
+  readonly isExceeded: Signal<boolean>;
   /** Percentage of limit used (0-100+) */
-  readonly percentUsed: ReadSignal<number>;
+  readonly percentUsed: Signal<number>;
 }
 
 /**
@@ -485,15 +493,14 @@ export interface CharacterCountResult {
  * This utility provides the same state management as NgxHeadlessCharacterCount
  * but as standalone signals for programmatic use.
  *
- * @remarks Must be called in an injection context (constructor, field
- * initializer, or `runInInjectionContext`) because it creates `computed()`
- * signals internally.
+ * @remarks Does not require an injection context (only creates `computed()`
+ * signals internally).
  *
  * ## Usage
  *
  * ```typescript
  * const formData = signal({ bio: '' });
- * const bioField = form(formData, { validators: [] });
+ * const bioField = form(formData).bio;
  *
  * const charCount = createCharacterCount({
  *   field: bioField,
@@ -592,11 +599,16 @@ export function createCharacterCount(
     return 'ok';
   });
 
+  // `maxLength` is a required option, so a limit is always configured.
+  // See the `hasLimit` doc above for why this member exists at all.
+  const hasLimit = computed(() => true);
+
   return {
     currentLength,
     resolvedMaxLength,
     remaining,
     limitState,
+    hasLimit,
     isExceeded,
     percentUsed,
   };
@@ -617,11 +629,16 @@ export interface ErrorSummaryEntryData {
 }
 
 /**
- * Duck-typed access to `ValidationError.WithFieldTree` properties.
+ * Minimal structural view of the `fieldTree` members this module reads off an
+ * `errorSummary()` entry (`name()`, `focusBoundControl()`).
  *
- * Angular Signal Forms' `errorSummary()` returns errors with an optional
- * `fieldTree` reference, but the public `ValidationError` type doesn't
- * include it. This type bridges the gap via duck-typing.
+ * As of Angular 22.0.0 the framework *does* export `ValidationError.WithFieldTree`
+ * publicly (the Vest adapter consumes it directly), so this is no longer bridging
+ * a missing type. It is kept as a deliberately narrow, **all-optional** structural
+ * type because these helpers accept a bare `ValidationError`: errors emitted by
+ * custom validators / Vest need not carry a `fieldTree`, so every access stays
+ * guarded at runtime rather than asserting the framework's non-optional
+ * `WithFieldTree` shape.
  */
 type ValidationErrorWithFieldTree = ValidationError & {
   fieldTree?: () =>
@@ -631,6 +648,58 @@ type ValidationErrorWithFieldTree = ValidationError & {
       }
     | undefined;
 };
+
+/**
+ * Deduplicate validation errors **per originating field** by kind + message
+ * + field identity.
+ *
+ * This is deliberately distinct from {@link dedupeValidationErrors}, which
+ * `NgxHeadlessFieldset` uses to collapse the *same* message repeated across
+ * a group into one grouped entry — a documented feature, not a bug. An
+ * error-summary entry, by contrast, represents one field's error; two
+ * different fields that both fail `required()` with no custom message
+ * (Angular's default `ValidationError.message` is `undefined`) share the
+ * key `'required::'` under a message-blind dedupe and one of them would be
+ * silently dropped from the summary, violating WCAG 3.3.1 (the dropped
+ * field's error is never listed and never reachable via `focus()`).
+ *
+ * Errors without a resolvable `fieldTree` (e.g. from custom validators)
+ * fall back to the field-blind key so they still dedupe sensibly among
+ * themselves.
+ *
+ * @param errors - Array of ValidationError to deduplicate
+ * @returns Deduplicated array preserving first occurrence order
+ *
+ * @internal
+ */
+export function dedupeValidationErrorsByField(
+  errors: readonly ValidationError[],
+): ValidationError[] {
+  const seen = new Set<string>();
+  const result: ValidationError[] = [];
+
+  for (const error of errors) {
+    const key = `${fieldIdentityKey(error)}::${error.kind}::${error.message ?? ''}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    result.push(error);
+  }
+
+  return result;
+}
+
+function fieldIdentityKey(error: ValidationError): string {
+  const e = error as ValidationErrorWithFieldTree;
+  if (typeof e.fieldTree === 'function') {
+    const fieldState = e.fieldTree();
+    if (fieldState && typeof fieldState.name === 'function') {
+      return fieldState.name();
+    }
+  }
+  return '';
+}
 
 /**
  * Resolve the field name from a `ValidationError` via duck-typed access

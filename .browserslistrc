@@ -1,0 +1,14 @@
+# Supported browsers for @ngx-signal-forms/toolkit
+#
+# Targets the last 2 major versions of the four main evergreen browsers,
+# matching Angular's own browser support policy.
+#
+# Runtime minimum for full visual fidelity (CSS nesting, color-mix, :has):
+#   Chrome/Edge 112+, Firefox 121+, Safari 16.5+
+#
+# Run `npx browserslist` to see the resolved list.
+last 2 Chrome versions
+last 2 Edge versions
+last 2 Firefox versions
+last 2 Safari versions
+not dead

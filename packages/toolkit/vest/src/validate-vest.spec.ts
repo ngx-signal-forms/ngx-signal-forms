@@ -1,16 +1,12 @@
-import {
-  ApplicationRef,
-  ChangeDetectionStrategy,
-  Component,
-  signal,
-} from '@angular/core';
+import { ApplicationRef, Component, signal } from '@angular/core';
 import { applyEach, form, FormField } from '@angular/forms/signals';
 import { TestBed } from '@angular/core/testing';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { create, enforce, group, only, test, warn } from 'vest';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
+  type VestResultLike,
   VEST_ERROR_KIND_PREFIX,
   VEST_WARNING_KIND_PREFIX,
   validateVest,
@@ -28,7 +24,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-error',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="email">Email</label>
@@ -67,7 +63,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-warning',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="password">Password</label>
@@ -119,7 +115,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-shared-run',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="password">Password</label>
@@ -171,7 +167,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-warning-error',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="amount">Amount</label>
@@ -234,7 +230,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-blocking-crash',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="crash-email">Email</label>
@@ -288,7 +284,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-rapid',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <input [formField]="signupForm.username" />
@@ -333,7 +329,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-nested',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="email">Email</label>
@@ -370,7 +366,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-array',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="sku0">SKU</label>
@@ -411,7 +407,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-mixed',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <input [formField]="signupForm.email" />
@@ -453,7 +449,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-group',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="email">Email</label>
@@ -495,7 +491,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-reset',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="email">Email</label>
@@ -529,7 +525,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-leak',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="email">Email</label>
@@ -579,7 +575,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-async-promise',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="email">Email</label>
@@ -616,7 +612,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-sync-initial',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="signupForm.email" />`,
     })
     class TestComponent {
@@ -668,7 +664,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-full',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class FullComponent {
@@ -681,7 +677,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-only',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class FocusedComponent {
@@ -737,7 +733,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-autofocus',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class TestComponent {
@@ -791,7 +787,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-autofocus-root',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class TestComponent {
@@ -844,7 +840,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-autofocus-nested',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.items[0].sku" />`,
     })
     class TestComponent {
@@ -897,7 +893,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-autofocus-override',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class TestComponent {
@@ -936,7 +932,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-reset-default',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class TestComponent {
@@ -973,7 +969,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-reset-optout',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class TestComponent {
@@ -1020,7 +1016,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-only-shorthand',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `<input [formField]="f.email" />`,
     })
     class TestComponent {
@@ -1061,7 +1057,7 @@ describe('validateVest', () => {
     @Component({
       selector: 'ngx-test-vest-collision',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <input [formField]="f.alpha" />
         <input [formField]="f.bravo" />
@@ -1082,5 +1078,256 @@ describe('validateVest', () => {
     expect(alphaErrors).toHaveLength(1);
     expect(bravoErrors).toHaveLength(1);
     expect(alphaErrors[0]?.kind).not.toBe(bravoErrors[0]?.kind);
+  });
+
+  it('does not leave an earlier focusCurrentField registration permanently pending when a later registration on the same suite supersedes its run', async () => {
+    // Regression: Vest 6 only tracks ONE resolver per suite root isolate, so
+    // calling `suite.run()` a second time for the SAME suite instance (here,
+    // via a second `focusCurrentField` registration on a different field)
+    // steals the first run's resolver. The first run's promise then never
+    // settles. Without a settlement fallback that does not depend on the
+    // superseded run's own resolver, `email` (the earlier registration,
+    // whose resolver gets stolen by `password`'s later run) would stay
+    // pending() forever even after its own async test body resolves.
+    const deferred = new Map<string, () => void>();
+    const awaitField = (field: string) =>
+      new Promise<void>((resolve) => {
+        deferred.set(field, resolve);
+      });
+
+    const suite = create(
+      (data: { email: string; password: string }, field?: string) => {
+        only(field);
+        test('email', 'Email check failed', async () => {
+          await awaitField('email');
+          enforce(data.email).isNotBlank();
+        });
+        test('password', 'Password check failed', async () => {
+          await awaitField('password');
+          enforce(data.password).isNotBlank();
+        });
+      },
+    );
+
+    @Component({
+      selector: 'ngx-test-vest-superseded-run',
+      imports: [FormField],
+
+      template: `
+        <input id="email" [formField]="f.email" />
+        <input id="password" [formField]="f.password" />
+      `,
+    })
+    class TestComponent {
+      readonly model = signal({ email: 'a', password: 'b' });
+      readonly f = form(this.model, (path) => {
+        // Two focusCurrentField registrations sharing ONE suite instance —
+        // the documented per-field pattern from the README.
+        validateVest(path.email, suite, { focusCurrentField: true });
+        validateVest(path.password, suite, { focusCurrentField: true });
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+
+    // Both focused runs are in-flight (their async test bodies are awaiting
+    // `awaitField`); the `password` run supersedes the `email` run's resolver.
+    // Do NOT await whenStable() here — that blocks forever while a resource
+    // is deliberately parked on the gate.
+    await vi.waitFor(() => {
+      expect(fixture.componentInstance.f.email().pending()).toBe(true);
+      expect(fixture.componentInstance.f.password().pending()).toBe(true);
+    });
+
+    deferred.get('email')?.();
+    deferred.get('password')?.();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(fixture.componentInstance.f.email().pending()).toBe(false);
+    expect(fixture.componentInstance.f.password().pending()).toBe(false);
+  });
+
+  it('does not throw a TDZ ReferenceError when suite.subscribe fires its callback synchronously', async () => {
+    // Regression: the settlement race in `awaitVestRunSettlement` captured
+    // `subscribe(...)`'s return value in a `const unsubscribe`, then called
+    // `unsubscribe()` from inside the subscribe callback itself. If a suite's
+    // `subscribe` implementation invokes that callback SYNCHRONOUSLY (before
+    // `subscribe()` returns — e.g. because nothing was left pending by the
+    // time this run's settlement race subscribed), `unsubscribe` was still in
+    // its temporal dead zone, throwing a `ReferenceError` and leaving the
+    // run — and the field — pending forever.
+    const baseSuite = create((data: { email: string }) => {
+      test('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+
+    const suite = {
+      ...baseSuite,
+      run(value: { email: string }) {
+        // Wrap in a genuinely fresh native Promise (rather than
+        // `Promise.resolve(...)`, which returns the SAME dual-shaped
+        // Vest result unchanged and would keep this on the synchronous
+        // path) so the adapter treats this as a raw thenable with no sync
+        // `SuiteResult` — forcing it through the async settlement race
+        // (and therefore through `suite.subscribe`) every time.
+        return new Promise<VestResultLike>((resolve, reject) => {
+          Promise.resolve(baseSuite.run(value)).then(resolve, reject);
+        });
+      },
+      subscribe(_event: 'ALL_RUNNING_TESTS_FINISHED', callback: () => void) {
+        // Real event buses typically isolate each listener's errors (so one
+        // bad subscriber cannot break the emit loop for the others), which
+        // is exactly what turns the TDZ `ReferenceError` into a silent,
+        // permanently-unsettled run rather than a visible crash. Swallow the
+        // exception here to reproduce that isolation faithfully — without
+        // the guard in `awaitVestRunSettlement`, this line hides the
+        // `ReferenceError` and the assertions below hang/fail.
+        try {
+          callback();
+        } catch {
+          // Intentionally swallowed — see comment above.
+        }
+        return () => {};
+      },
+    };
+
+    @Component({
+      selector: 'ngx-test-vest-sync-subscribe',
+      imports: [FormField],
+
+      template: `<input [formField]="signupForm.email" />`,
+    })
+    class TestComponent {
+      readonly model = signal({ email: '' });
+      readonly signupForm = form(this.model, (path) => {
+        validateVest(path, suite);
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(fixture.componentInstance.signupForm.email().pending()).toBe(false);
+    const errors = fixture.componentInstance.signupForm.email().errors();
+    expect(errors).toHaveLength(1);
+    expect(errors[0]?.message).toBe('Email is required');
+  });
+
+  it('does not cross-attach another field’s retained Vest failure onto a focusCurrentField-bound field', async () => {
+    // Regression: `mapVestValidationResult` used to map the WHOLE
+    // `getErrors()`/`getWarnings()` map regardless of which field the
+    // validator was bound to. Vest is stateful — fields excluded by `only()`
+    // retain their previous failures — so once BOTH fields have failed at
+    // least once, each focusCurrentField-bound validator's fallback
+    // resolution attached the OTHER field's retained message onto its own
+    // bound field.
+    const suite = create(
+      (data: { email: string; password: string }, field?: string) => {
+        only(field);
+        test('email', 'Email is required', () => {
+          enforce(data.email).isNotBlank();
+        });
+        test('password', 'Password is required', () => {
+          enforce(data.password).isNotBlank();
+        });
+      },
+    );
+
+    @Component({
+      selector: 'ngx-test-vest-no-cross-attach',
+      imports: [FormField],
+
+      template: `
+        <input id="email" [formField]="f.email" />
+        <input id="password" [formField]="f.password" />
+      `,
+    })
+    class TestComponent {
+      readonly model = signal({ email: '', password: '' });
+      readonly f = form(this.model, (path) => {
+        validateVest(path.email, suite, { focusCurrentField: true });
+        validateVest(path.password, suite, { focusCurrentField: true });
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    // Trigger the password field's focused run too, so both fields now have
+    // a retained failure in the suite's stateful result.
+    fixture.componentInstance.model.set({ email: '', password: '' });
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const emailErrors = fixture.componentInstance.f.email().errors();
+    const passwordErrors = fixture.componentInstance.f.password().errors();
+
+    expect(emailErrors.some((e) => e.message === 'Password is required')).toBe(
+      false,
+    );
+    expect(passwordErrors.some((e) => e.message === 'Email is required')).toBe(
+      false,
+    );
+    expect(emailErrors.some((e) => e.message === 'Email is required')).toBe(
+      true,
+    );
+    expect(
+      passwordErrors.some((e) => e.message === 'Password is required'),
+    ).toBe(true);
+  });
+
+  it('does not let a sync Vest warning suppress a blocking async Vest error on the same field', async () => {
+    // Regression: Angular skips a `validateAsync` resource whenever the
+    // bound node's `syncValid()` is false, and toolkit warnings are ordinary
+    // `ValidationError`s (`warn:vest:*`). A sync `warn()` result surfaced by
+    // the adapter's `validateTree` pass therefore made `syncValid()` false
+    // and silently prevented the async phase (and any blocking async Vest
+    // error, e.g. a "username already taken" check) from ever running.
+    let releaseAsyncCheck: (() => void) | undefined;
+    const asyncCheckGate = new Promise<void>((resolve) => {
+      releaseAsyncCheck = resolve;
+    });
+
+    const suite = create((data: { username: string }) => {
+      test('username', 'Usernames should be lowercase', () => {
+        warn();
+        enforce(data.username).matches(/^[a-z]+$/);
+      });
+      test('username', 'Username is already taken', async () => {
+        await asyncCheckGate;
+        enforce(data.username.toLowerCase() !== 'admin').isTruthy();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-vest-warning-does-not-block-async',
+      imports: [FormField],
+
+      template: `<input id="username" [formField]="f.username" />`,
+    })
+    class TestComponent {
+      readonly model = signal({ username: 'ADMIN' });
+      readonly f = form(this.model, (path) => {
+        validateVest(path, suite, { includeWarnings: true });
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+
+    // The sync warning (uppercase 'ADMIN' fails the lowercase check) must not
+    // prevent the async blocking check from being scheduled. Do NOT await
+    // whenStable() here — that blocks forever while the resource is
+    // deliberately parked on `asyncCheckGate`.
+    await vi.waitFor(() => {
+      expect(fixture.componentInstance.f.username().pending()).toBe(true);
+    });
+
+    releaseAsyncCheck?.();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const errors = fixture.componentInstance.f.username().errors();
+    expect(errors.some((e) => e.message === 'Username is already taken')).toBe(
+      true,
+    );
   });
 });

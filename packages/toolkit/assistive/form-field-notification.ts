@@ -1,14 +1,5 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  input,
-} from '@angular/core';
-import {
-  NgxHeadlessNotification,
-  type NgxNotificationTone,
-} from '@ngx-signal-forms/toolkit/headless';
+import { Component, computed, inject, input } from '@angular/core';
+import { NgxHeadlessNotification } from '@ngx-signal-forms/toolkit/headless';
 
 import type { NgxFormFieldListStyle } from './form-field-error';
 
@@ -19,13 +10,6 @@ import type { NgxFormFieldListStyle } from './form-field-error';
  */
 // oxlint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- alias kept as a deprecated named export for migration.
 export type NgxFormFieldNotificationListStyle = NgxFormFieldListStyle;
-
-/**
- * @deprecated Use {@link NgxNotificationTone} from
- * `@ngx-signal-forms/toolkit/headless` — the canonical tone type now lives
- * with the headless directive that owns the resolution logic.
- */
-export type NgxFormFieldNotificationTone = NgxNotificationTone;
 
 /**
  * Grouped validation notification for fieldsets and custom summary blocks.
@@ -48,11 +32,11 @@ export type NgxFormFieldNotificationTone = NgxNotificationTone;
  */
 @Component({
   selector: 'ngx-form-field-notification',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   hostDirectives: [
     {
       directive: NgxHeadlessNotification,
-      inputs: ['errors', 'fieldName', 'tone'],
+      inputs: ['errors', 'fieldName'],
     },
   ],
   styleUrls: [
@@ -65,7 +49,12 @@ export type NgxFormFieldNotificationTone = NgxNotificationTone;
       role is never re-assigned at the same tick as content insertion. Toggling
       role between alert and status when the first message arrives is the same
       bug class NgxFormFieldError works around (NVDA + Chrome miss the very
-      first announcement when role and content arrive together).
+      first announcement when role and content arrive together). We also do
+      NOT toggle aria-hidden/[hidden] while empty — the @if below already
+      guarantees zero content, and flipping aria-hidden off in the same tick
+      content is inserted is functionally equivalent to a fresh live-region
+      insertion, reintroducing the same missed-first-announcement bug. Visual
+      collapse while empty is handled by the --empty CSS class alone.
     -->
     <div
       class="ngx-form-field-notification ngx-form-field-notification--error"
@@ -76,8 +65,6 @@ export type NgxFormFieldNotificationTone = NgxNotificationTone;
         headless.showErrorContainer() ? headless.errorContainerId() : null
       "
       role="alert"
-      [attr.aria-hidden]="headless.showErrorContainer() ? null : 'true'"
-      [hidden]="!headless.showErrorContainer()"
     >
       @if (headless.showErrorContainer()) {
         @if (title()) {
@@ -119,8 +106,6 @@ export type NgxFormFieldNotificationTone = NgxNotificationTone;
         headless.showWarningContainer() ? headless.warningContainerId() : null
       "
       role="status"
-      [attr.aria-hidden]="headless.showWarningContainer() ? null : 'true'"
-      [hidden]="!headless.showWarningContainer()"
     >
       @if (headless.showWarningContainer()) {
         @if (title()) {

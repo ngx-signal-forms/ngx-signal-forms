@@ -320,6 +320,42 @@ describe('canSubmitWithWarnings', () => {
     expect(canSubmit()).toBe(false);
   });
 
+  it('returns false when a blocking error lives on a CHILD path, not the root', async () => {
+    // Regression for the root-vs-descendant mismatch: a validator on
+    // `path.email` (not `path` itself) puts the blocking error on the
+    // child FieldState's `errors()`. The root FieldState's own `errors()`
+    // stays empty — only `errorSummary()` aggregates descendant errors.
+    // `canSubmitWithWarnings` must agree with `submitWithWarnings` (which
+    // already reads `errorSummary()`) or the submit button computes
+    // "submittable" while the actual submit helper silently refuses.
+    const model = signal({ email: '' });
+    const f = TestBed.runInInjectionContext(() =>
+      form(
+        model,
+        schema<{ email: string }>((path) => {
+          validate(path.email, (ctx) => {
+            const value = ctx.value();
+            if (!value) {
+              return { kind: 'required', message: 'Email is required' };
+            }
+            return null;
+          });
+        }),
+      ),
+    );
+
+    // Root's own errors() stay empty; the blocking error only surfaces via
+    // errorSummary() on the root (or errors() on the child).
+    expect(f().errors()).toEqual([]);
+
+    const canSubmit = TestBed.runInInjectionContext(() =>
+      canSubmitWithWarnings(f),
+    );
+    await flush();
+
+    expect(canSubmit()).toBe(false);
+  });
+
   it('returns false while submitting()/pending() are true (mock form)', () => {
     // canSubmitWithWarnings reads `submitting()` and `pending()` on the
     // FieldState. Use a mock to drive both signals deterministically without

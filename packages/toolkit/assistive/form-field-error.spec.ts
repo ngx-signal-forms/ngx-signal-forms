@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import {
   email,
   form,
@@ -33,7 +33,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-initial-render',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -59,14 +59,14 @@ describe('NgxFormFieldError', () => {
 
       // Field is invalid but untouched, no error should be visible
       const alert = screen.queryByRole('alert');
-      expect(alert).toBeFalsy();
+      expect(alert?.textContent?.trim() ?? '').toBe('');
     });
 
     it('should NOT show errors when form is unsubmitted and field untouched (on-submit strategy)', async () => {
       @Component({
         selector: 'ngx-test-on-submit-untouched',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -91,7 +91,7 @@ describe('NgxFormFieldError', () => {
       await render(TestComponent);
 
       const alert = screen.queryByRole('alert');
-      expect(alert).toBeFalsy();
+      expect(alert?.textContent?.trim() ?? '').toBe('');
     });
   });
 
@@ -114,7 +114,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-touched-invalid',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -151,7 +151,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-valid-field',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -182,14 +182,14 @@ describe('NgxFormFieldError', () => {
       await user.tab();
 
       const alert = screen.queryByRole('alert');
-      expect(alert).toBeFalsy();
+      expect(alert?.textContent?.trim() ?? '').toBe('');
     });
 
     it('should not render errors when field is invalid but not touched (on-touch strategy)', async () => {
       @Component({
         selector: 'ngx-test-invalid-untouched',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -215,14 +215,14 @@ describe('NgxFormFieldError', () => {
 
       // Don't touch the field
       const alert = screen.queryByRole('alert');
-      expect(alert).toBeFalsy();
+      expect(alert?.textContent?.trim() ?? '').toBe('');
     });
 
     it('should render multiple errors', async () => {
       @Component({
         selector: 'ngx-test-multiple-errors',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -261,7 +261,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-default-paragraph-layout',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -295,7 +295,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-bullet-layout',
         imports: [NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <ngx-form-field-error
             fieldName="address"
@@ -317,6 +317,72 @@ describe('NgxFormFieldError', () => {
       expect(list?.tagName).toBe('UL');
       expect(list?.querySelectorAll('li')).toHaveLength(2);
     });
+
+    it('suppresses the warning live region while a blocking error is also visible', async () => {
+      // README's "Warning support" section documents "blocking errors
+      // present → warnings hidden", and NgxFormFieldset already enforces
+      // this. Without a guard, both the role="alert" and role="status"
+      // containers render at once for a field with mixed errors/warnings —
+      // an assertive AND a polite announcement for the same field.
+      @Component({
+        selector: 'ngx-test-mixed-error-warning',
+        imports: [NgxFormFieldError],
+
+        template: `
+          <ngx-form-field-error fieldName="password" [errors]="errors" />
+        `,
+      })
+      class TestComponent {
+        readonly errors = signal([
+          { kind: 'required', message: 'Password is required' },
+          { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
+        ]);
+      }
+
+      const { container } = await render(TestComponent);
+
+      const alert = screen.getByRole('alert');
+      expect(alert.textContent).toContain('Password is required');
+
+      // Query the container directly (not via `screen.getByRole`): the
+      // empty-container pattern also marks it `[hidden]`/`aria-hidden`,
+      // which testing-library's accessibility-tree-aware queries exclude.
+      // The status container stays mounted (WCAG 4.1.3 first-insertion
+      // semantics) but must not expose the `-warning` id or render the
+      // warning text — otherwise `aria-describedby="password-warning"`
+      // would dangle.
+      const status = container.querySelector('[role="status"]');
+      expect(status).toBeTruthy();
+      expect(status?.getAttribute('id')).not.toBe('password-warning');
+      expect(status?.textContent?.trim()).toBe('');
+      expect(container.textContent).not.toContain('Consider 8+ characters');
+    });
+
+    it('shows the warning live region when no blocking error is present', async () => {
+      @Component({
+        selector: 'ngx-test-warning-only',
+        imports: [NgxFormFieldError],
+
+        template: `
+          <ngx-form-field-error fieldName="password" [errors]="errors" />
+        `,
+      })
+      class TestComponent {
+        readonly errors = signal([
+          { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
+        ]);
+      }
+
+      const { container } = await render(TestComponent);
+
+      const status = screen.getByRole('status');
+      expect(status.getAttribute('id')).toBe('password-warning');
+      expect(status.textContent).toContain('Consider 8+ characters');
+
+      const alert = container.querySelector('[role="alert"]');
+      expect(alert?.getAttribute('id')).not.toBe('password-error');
+      expect(alert?.textContent?.trim()).toBe('');
+    });
   });
 
   describe('strategy switching', () => {
@@ -324,7 +390,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-immediate-strategy',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -358,7 +424,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-on-submit-strategy',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -390,7 +456,7 @@ describe('NgxFormFieldError', () => {
 
       // No error yet (on-submit strategy)
       let alert = screen.queryByRole('alert');
-      expect(alert).toBeFalsy();
+      expect(alert?.textContent?.trim() ?? '').toBe('');
 
       // After submission
       fixture.componentInstance.submittedStatus.set('submitted');
@@ -406,7 +472,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-submitted-untouched',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -432,7 +498,7 @@ describe('NgxFormFieldError', () => {
 
       // submittedStatus is ignored for on-touch - field must be touched
       const alert = screen.queryByRole('alert');
-      expect(alert).toBeFalsy();
+      expect(alert?.textContent?.trim() ?? '').toBe('');
     });
 
     it('should NOT show errors during async submission if not touched (on-touch strategy)', async () => {
@@ -441,7 +507,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-submitting-on-touch',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -467,14 +533,14 @@ describe('NgxFormFieldError', () => {
 
       // submittedStatus is ignored for on-touch - field must be touched
       const alert = screen.queryByRole('alert');
-      expect(alert).toBeFalsy();
+      expect(alert?.textContent?.trim() ?? '').toBe('');
     });
 
     it('should show errors during async submission (on-submit strategy)', async () => {
       @Component({
         selector: 'ngx-test-submitting-on-submit',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -507,7 +573,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-submission-lifecycle',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -533,7 +599,7 @@ describe('NgxFormFieldError', () => {
 
       // Initially no errors (not submitted)
       let alert = screen.queryByRole('alert');
-      expect(alert).toBeFalsy();
+      expect(alert?.textContent?.trim() ?? '').toBe('');
 
       // During submission - errors should appear
       fixture.componentInstance.submittedStatus.set('submitting');
@@ -556,7 +622,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-wcag-role',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -592,13 +658,18 @@ describe('NgxFormFieldError', () => {
        * region. If the alert container itself is added to the DOM at the
        * same moment as the first error, the very first announcement can be
        * silently dropped. v1 keeps the role="alert" container always
-       * mounted (and aria-hidden="true" while empty) so that timing
-       * edge case never trips screen readers.
+       * mounted so that timing edge case never trips screen readers. It
+       * does NOT toggle `aria-hidden`/`[hidden]` while empty — doing so
+       * would prune the node from the accessibility tree and then expose it
+       * at the same tick the first error is inserted, which is functionally
+       * equivalent to a fresh live-region insertion and reintroduces the
+       * same missed-first-announcement bug the always-mounted container
+       * exists to avoid.
        */
       @Component({
         selector: 'ngx-test-empty-live-region',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -626,23 +697,21 @@ describe('NgxFormFieldError', () => {
       // but the live-region container itself MUST already be in the DOM
       // with role="alert" so a future insertion fires the announcement.
       // The container carries the `--empty` marker class so CSS can
-      // collapse it visually; `aria-hidden="true"` keeps AT silent until
-      // content arrives, and `[hidden]` removes the empty shell from
-      // layout flow.
+      // collapse it visually. `aria-hidden`/`[hidden]` are intentionally
+      // absent — toggling them off at the same tick content is inserted
+      // would defeat the always-mounted pattern (see class-level docs).
       const alertContainer = container.querySelector('[role="alert"]');
       expect(alertContainer).toBeTruthy();
       expect(
         alertContainer?.classList.contains('ngx-form-field-error--empty'),
       ).toBe(true);
-      expect(alertContainer?.getAttribute('aria-hidden')).toBe('true');
-      expect(alertContainer?.hasAttribute('hidden')).toBe(true);
+      expect(alertContainer?.hasAttribute('aria-hidden')).toBe(false);
+      expect(alertContainer?.hasAttribute('hidden')).toBe(false);
       // No id leaks while empty — aria-describedby targets must not point
-      // at an element with no message text. Angular renders `null`
-      // bindings as either a missing attribute or the literal string
-      // "null" depending on the jsdom path; what matters here is that
-      // the auto-generated `*-error` id is not exposed.
-      const idAttr = alertContainer?.getAttribute('id') ?? null;
-      expect(idAttr === null || idAttr === '' || idAttr === 'null').toBe(true);
+      // at an element with no message text. `[attr.id]` removes the
+      // attribute entirely for a `null` binding (unlike the property
+      // binding `[id]`, which would coerce to the literal string "null").
+      expect(alertContainer?.hasAttribute('id')).toBe(false);
       // No error text either.
       expect(alertContainer?.textContent?.trim()).toBe('');
 
@@ -652,8 +721,8 @@ describe('NgxFormFieldError', () => {
       expect(
         statusContainer?.classList.contains('ngx-form-field-error--empty'),
       ).toBe(true);
-      expect(statusContainer?.getAttribute('aria-hidden')).toBe('true');
-      expect(statusContainer?.hasAttribute('hidden')).toBe(true);
+      expect(statusContainer?.hasAttribute('aria-hidden')).toBe(false);
+      expect(statusContainer?.hasAttribute('hidden')).toBe(false);
     });
 
     it('should rely on role="alert" implicit semantics (no redundant aria-live/aria-atomic)', async () => {
@@ -665,7 +734,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-aria-live',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -699,7 +768,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-error-id',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -731,7 +800,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-nested-field-id',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input
             id="user.profile.email"
@@ -768,7 +837,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-no-errors',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -794,14 +863,14 @@ describe('NgxFormFieldError', () => {
       await user.tab();
 
       const alert = screen.queryByRole('alert');
-      expect(alert).toBeFalsy();
+      expect(alert?.textContent?.trim() ?? '').toBe('');
     });
 
     it('should handle empty errors array', async () => {
       @Component({
         selector: 'ngx-test-empty-errors',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -827,7 +896,7 @@ describe('NgxFormFieldError', () => {
       await user.tab();
 
       const alert = screen.queryByRole('alert');
-      expect(alert).toBeFalsy();
+      expect(alert?.textContent?.trim() ?? '').toBe('');
     });
 
     // Regression: when both `[formField]` and `[errors]` are bound, the
@@ -840,7 +909,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-override-precedence',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -886,7 +955,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-override-on-submit-regression',
         imports: [NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <ngx-form-field-error
             fieldName="address"
@@ -923,7 +992,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-context-resolution',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         providers: [
           {
             provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
@@ -969,7 +1038,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-explicit-priority',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         providers: [
           {
             provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
@@ -1021,7 +1090,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-fallback',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         template: `
           <input id="email" [formField]="contactForm.email" />
           <ngx-form-field-error
@@ -1052,12 +1121,9 @@ describe('NgxFormFieldError', () => {
         // Without a field name the auto-generated id would look like
         // `-error` / `-warning`, which is a broken aria-describedby
         // target. The v1 contract is simply: no resolvable field name →
-        // no id chain exposed. We accept any "empty-ish" id value here
-        // (null, "", or literally "null" which some JSDOM pathways emit
-        // when binding null) — the important assertion is that no
-        // `*-error` id leaks into the DOM.
-        const idAttr = alert.getAttribute('id');
-        expect(idAttr?.endsWith('-error') ?? false).toBe(false);
+        // no id chain exposed. `[attr.id]` removes the attribute entirely
+        // for a `null` binding, so the id attribute must be absent.
+        expect(alert.hasAttribute('id')).toBe(false);
         expect(alert.textContent).toContain('Email is required');
 
         expect(errorSpy).toHaveBeenCalled();
@@ -1078,7 +1144,7 @@ describe('NgxFormFieldError', () => {
       @Component({
         selector: 'ngx-test-signal-reactivity',
         imports: [FormField, NgxFormFieldError],
-        changeDetection: ChangeDetectionStrategy.OnPush,
+
         providers: [
           {
             provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
@@ -1133,7 +1199,7 @@ describe('NgxFormFieldError', () => {
     @Component({
       selector: 'ngx-test-warning-strategy',
       imports: [FormField, NgxFormFieldError],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <input id="password" [formField]="contactForm.password" />
         <ngx-form-field-error
@@ -1180,7 +1246,7 @@ describe('NgxFormFieldError', () => {
       expect(status.textContent).toContain('Consider 8+ characters');
 
       // Errors stay hidden — only the warning is visible.
-      expect(screen.queryByRole('alert')).toBeFalsy();
+      expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('');
     });
 
     it('gates warnings behind touch when warningStrategy is on-touch', async () => {
@@ -1189,7 +1255,7 @@ describe('NgxFormFieldError', () => {
       fixture.detectChanges();
 
       // Untouched: warning hidden.
-      expect(screen.queryByRole('status')).toBeFalsy();
+      expect(screen.queryByRole('status')?.textContent?.trim() ?? '').toBe('');
 
       // Touching the field surfaces the warning.
       fixture.componentInstance.contactForm.password().markAsTouched();
@@ -1207,7 +1273,7 @@ describe('NgxFormFieldError', () => {
       // Unsubmitted: warning hidden even when touched.
       fixture.componentInstance.contactForm.password().markAsTouched();
       fixture.detectChanges();
-      expect(screen.queryByRole('status')).toBeFalsy();
+      expect(screen.queryByRole('status')?.textContent?.trim() ?? '').toBe('');
 
       // After submit, warning surfaces.
       fixture.componentInstance.submittedStatus.set('submitted');
@@ -1231,7 +1297,7 @@ describe('NgxFormFieldError', () => {
       expect(status.textContent).toContain('Consider 8+ characters');
 
       // Errors still gated by submit.
-      expect(screen.queryByRole('alert')).toBeFalsy();
+      expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('');
     });
   });
 });

@@ -1,15 +1,7 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import type {
   ErrorDisplayStrategy,
   FormFieldAppearance,
-  FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import type { NgxFormFieldErrorPlacement } from '@ngx-signal-forms/toolkit/form-field';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
@@ -18,6 +10,7 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
@@ -28,8 +21,8 @@ import {
 } from '../../ui/error-display-mode-selector/error-display-mode-selector';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
+  createOrientationSelection,
   getOrientationLabel,
-  isOrientationDisabledForAppearance,
 } from '../../ui/orientation-toggle';
 import { COMPLEX_FORMS_CONTENT } from './complex-forms.content';
 import { ComplexFormsComponent } from './complex-forms.form';
@@ -47,21 +40,9 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
   bottom: 'Bottom',
 };
 
-/**
- * Complex Forms Page
- *
- * Demonstrates NgxFormField with:
- * - Nested object validation (personalInfo, addressInfo)
- * - Dynamic arrays (skills, contacts)
- * - Add/remove array items
- * - Maximum code reduction (67% less boilerplate)
- *
- * Shows progression from manual implementation (Phase 1) to
- * maximum automation with form field wrapper.
- */
 @Component({
   selector: 'ngx-complex-forms-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   styles: `
     :host {
       display: flex;
@@ -72,6 +53,7 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
   imports: [
     ErrorDisplayModeSelectorComponent,
     ExampleCardsComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     ComplexFormsComponent,
     SplitLayoutComponent,
@@ -82,15 +64,7 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
     DisplayControlsSectionComponent,
   ],
   template: `
-    <ngx-page-header
-      title="Complex Forms with Form Field Wrapper"
-      subtitle="Nested objects, dynamic arrays, and maximum code reduction with NgxFormField"
-    />
-
-    <ngx-example-cards
-      [demonstrated]="content.demonstrated"
-      [learning]="content.learning"
-    >
+    <ng-template ngxPageControls>
       <ngx-display-controls-card
         title="Nested form behavior controls"
         description="Use the same long-form data model to study where wrapper timing and visual weight help most once nested groups and repeatable rows start stacking up."
@@ -103,14 +77,12 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
           display-controls-primary
           class="block min-w-0"
         />
-
         <ngx-display-controls-section
           title="🎨 Long-form styling"
           description="Compare whether the standard or outline wrapper does a better job of keeping long sections and array rows scannable."
         >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
         </ngx-display-controls-section>
-
         <ngx-display-controls-section
           title="↔️ Label orientation"
           description="Switch between standard vertical labels and horizontal label columns for the non-outline wrappers. Outline remains vertical by design."
@@ -120,7 +92,6 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
             [appearance]="selectedAppearance()"
           />
         </ngx-display-controls-section>
-
         <ngx-display-controls-section
           title="↕️ Grouped feedback placement"
           description="Move grouped feedback above or below each section to compare when a shared summary or grouped wrapper error should lead or follow the controls."
@@ -160,7 +131,17 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
           </div>
         </ngx-display-controls-section>
       </ngx-display-controls-card>
-    </ngx-example-cards>
+    </ng-template>
+
+    <ngx-page-header
+      title="Complex Forms with Form Field Wrapper"
+      subtitle="Nested objects, dynamic arrays, and maximum code reduction with NgxFormField"
+    />
+
+    <ngx-example-cards
+      [demonstrated]="content.demonstrated"
+      [learning]="content.learning"
+    />
 
     <ngx-split-layout>
       <div left class="flex flex-col gap-12">
@@ -204,8 +185,10 @@ export class ComplexFormsPage {
     FIELDSET_ERROR_PLACEMENT_OPTIONS;
   protected readonly selectedFieldsetErrorPlacement =
     signal<NgxFormFieldErrorPlacement>('bottom');
-  protected readonly selectedOrientation =
-    signal<FormFieldOrientation>('vertical');
+  protected readonly selectedOrientation = createOrientationSelection(
+    this.selectedAppearance,
+  );
+
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -231,17 +214,4 @@ export class ComplexFormsPage {
   protected readonly content = COMPLEX_FORMS_CONTENT;
   protected readonly complexFormRef =
     viewChild<ComplexFormsComponent>('complexFormRef');
-
-  constructor() {
-    effect(() => {
-      if (
-        isOrientationDisabledForAppearance(
-          this.selectedAppearance(),
-          this.selectedOrientation(),
-        )
-      ) {
-        this.selectedOrientation.set('vertical');
-      }
-    });
-  }
 }

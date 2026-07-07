@@ -48,7 +48,9 @@ test.describe('Form Field Wrapper - Fieldset Appearance', () => {
 
   test('should render the fieldset demo with the default grouped control state', async () => {
     await expect(page.form).toBeVisible();
-    await expect(page.errorAlerts).toHaveCount(3);
+    // The sandbox defaults to the 'immediate' error-display mode, so every
+    // invalid field surfaces its error on load (rather than waiting for touch).
+    await expect(page.errorAlerts).toHaveCount(12);
     await expect(page.borderedShellButton).toHaveAttribute(
       'aria-pressed',
       'true',

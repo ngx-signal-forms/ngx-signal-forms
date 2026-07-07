@@ -1,0 +1,15 @@
+{
+  "$comment": "Known WCAG 2.2 AA axe violations for this app, keyed by route::ruleId::target. Maintained by tools/scripts/a11y-report-violations.mjs: new violations open issues and are appended; resolved ones are dropped. Empty means zero known violations.",
+  "app": "demo-e2e",
+  "violations": [
+    {
+      "route": "/headless/error-message-signal",
+      "ruleId": "color-contrast",
+      "target": ".gap-3 > .text-gray-400.dark\\:text-gray-500.text-xs",
+      "impact": "serious",
+      "help": "Elements must meet minimum color contrast ratio thresholds",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.11/color-contrast?application=playwright",
+      "browsers": ["chromium"]
+    }
+  ]
+}

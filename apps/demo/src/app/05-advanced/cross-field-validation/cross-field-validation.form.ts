@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import {
   form,
   FormField,
@@ -67,7 +62,7 @@ const bookingSchema = schema<Booking>((path) => {
 
 @Component({
   selector: 'ngx-cross-field-validation',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <div class="px-6 pt-0 pb-6">
@@ -166,11 +161,11 @@ export class CrossFieldValidationComponent {
 
   readonly bookingForm = form(this.#model, bookingSchema, {
     submission: {
-      action: async (data) => {
+      action: async (field) => {
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 1000);
         });
-        console.log('Booking Confirmed:', data());
+        console.log('Booking Confirmed:', field().value());
       },
       onInvalid: createOnInvalidHandler(),
     },

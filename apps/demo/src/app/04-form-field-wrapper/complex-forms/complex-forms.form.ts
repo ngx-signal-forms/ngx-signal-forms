@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
@@ -61,7 +55,7 @@ function createInitialComplexFormModel(): ComplexFormModel {
  */
 @Component({
   selector: 'ngx-complex-forms',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     FormField,
     NgxSignalFormToolkit,
@@ -211,12 +205,12 @@ export class ComplexFormsComponent {
   /** Create form with validation schema */
   readonly complexForm = form(this.#model, complexFormSchema, {
     submission: {
-      action: async () => {
+      action: async (field) => {
         // Simulate async operation
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 500);
         });
-        const submitted = this.#model();
+        const submitted = field().value();
         console.log('Complex form submitted:', {
           ...submitted,
           credentials: {

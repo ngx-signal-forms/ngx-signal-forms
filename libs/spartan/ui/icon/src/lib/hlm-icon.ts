@@ -34,6 +34,9 @@ export class HlmIcon {
         return '32px';
       case 'xl':
         return '48px';
+      case 'none': {
+        return null;
+      }
       default: {
         return size;
       }

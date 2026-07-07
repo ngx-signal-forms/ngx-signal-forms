@@ -2,8 +2,11 @@ import { computed, Directive, inject, input, type Signal } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createErrorVisibility,
+  injectFormContext,
+  resolveStrategyFromContext,
   splitByKind,
   type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -12,7 +15,7 @@ import {
 } from '@ngx-signal-forms/toolkit/core';
 
 import {
-  dedupeValidationErrors,
+  dedupeValidationErrorsByField,
   isErrorOnInteractiveField,
   readErrors,
   toErrorSummaryEntry,
@@ -40,6 +43,23 @@ export interface ErrorSummarySignals {
   readonly hasWarnings: Signal<boolean>;
   /** Whether the summary should be visible based on strategy */
   readonly shouldShow: Signal<boolean>;
+  /**
+   * Whether the warning list should be visible based on strategy.
+   *
+   * Independent of {@link shouldShow}: a warnings-only form (no blocking
+   * errors) has `hasErrors() === false`, so `shouldShow()` never gates
+   * `warningEntries()`. Consumers rendering `warningEntries()` should gate
+   * on this signal instead of `shouldShow()`.
+   */
+  readonly shouldShowWarnings: Signal<boolean>;
+  /**
+   * The fully-resolved error display strategy: explicit `strategy` input →
+   * form context → `'on-touch'` default. Consumers that need to distinguish
+   * a submit-driven appearance (e.g. to decide whether to move focus) from
+   * an on-touch/immediate one should read this rather than the raw
+   * `strategy` input, which may be `undefined`.
+   */
+  readonly resolvedStrategy: Signal<ResolvedErrorDisplayStrategy>;
   /** Focus the control for the first error entry */
   readonly focusFirst: () => void;
 }
@@ -61,14 +81,19 @@ export interface ErrorSummarySignals {
  *
  * ## Usage
  *
+ * The `role="alert"` container should be rendered UNCONDITIONALLY (even
+ * while empty) rather than inserted together with its content — the same
+ * always-mounted live-region pattern `NgxFormFieldError` and
+ * `NgxFormFieldNotification` use. `role="alert"` only reliably fires on
+ * content insertion into a *pre-existing* live region; mounting the
+ * container and its content in the same tick risks the NVDA + Chrome
+ * missed-first-announcement bug. Gate only the inner content on
+ * `shouldShow()`/`hasErrors()`, not the container itself:
+ *
  * ```html
- * <div
- *   ngxHeadlessErrorSummary
- *   #summary="errorSummary"
- *   [formTree]="myForm"
- * >
- *   @if (summary.shouldShow() && summary.hasErrors()) {
- *     <ul role="alert">
+ * <div ngxHeadlessErrorSummary #summary="errorSummary" [formTree]="myForm">
+ *   <ul role="alert">
+ *     @if (summary.shouldShow() && summary.hasErrors()) {
  *       @for (entry of summary.entries(); track entry.kind + entry.fieldName) {
  *         <li>
  *           <button type="button" (click)="entry.focus()">
@@ -76,8 +101,8 @@ export interface ErrorSummarySignals {
  *           </button>
  *         </li>
  *       }
- *     </ul>
- *   }
+ *     }
+ *   </ul>
  * </div>
  * ```
  */
@@ -92,6 +117,7 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
   readonly #labelResolver = inject(NGX_FIELD_LABEL_RESOLVER, {
     optional: true,
   });
+  readonly #formContext = injectFormContext();
 
   /**
    * The root form FieldTree to aggregate errors from.
@@ -110,6 +136,10 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
    */
   readonly submittedStatus = input<SubmittedStatus | undefined>();
 
+  readonly resolvedStrategy = computed(() =>
+    resolveStrategyFromContext(this.strategy(), this.#formContext),
+  );
+
   readonly #fieldState = computed(() => this.formTree()());
 
   readonly #showErrorsSignal = createErrorVisibility(this.#fieldState, {
@@ -127,12 +157,17 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
    *
    * `readonly()` is intentionally **not** filtered: the field is visible and
    * focusable, and its error is usually still meaningful to the user.
+   *
+   * Deduplication is per-field (see {@link dedupeValidationErrorsByField}):
+   * unlike `NgxHeadlessFieldset`'s grouped-message dedupe, two different
+   * fields sharing the same kind/message (e.g. two `required()` fields with
+   * no custom message) must both keep their own summary entry.
    */
   readonly #split = computed(() => {
     const visibleErrors = readErrors(this.#fieldState()).filter(
       (error: ValidationError) => isErrorOnInteractiveField(error),
     );
-    return splitByKind(dedupeValidationErrors(visibleErrors));
+    return splitByKind(dedupeValidationErrorsByField(visibleErrors));
   });
 
   readonly entries = computed(() =>
@@ -162,6 +197,10 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
 
   readonly shouldShow = computed(
     () => this.#showErrorsSignal() && this.hasErrors(),
+  );
+
+  readonly shouldShowWarnings = computed(
+    () => this.#showErrorsSignal() && this.hasWarnings(),
   );
 
   readonly focusFirst = (): void => {

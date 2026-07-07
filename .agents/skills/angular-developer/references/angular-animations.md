@@ -161,6 +161,6 @@ import {
   template: `<div [@openClose]="isOpen() ? 'open' : 'closed'">...</div>`,
 })
 export class OpenClose {
-  isOpen = signal(true);
+  protected readonly isOpen = signal(true);
 }
 ```

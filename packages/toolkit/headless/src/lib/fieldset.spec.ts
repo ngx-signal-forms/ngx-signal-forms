@@ -1,9 +1,4 @@
-import {
-  ApplicationRef,
-  ChangeDetectionStrategy,
-  Component,
-  signal,
-} from '@angular/core';
+import { ApplicationRef, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   form,
@@ -22,13 +17,13 @@ describe('NgxHeadlessFieldset', () => {
   it('aggregates and deduplicates field errors from nested fields when includeNestedErrors is true', async () => {
     @Component({
       selector: 'ngx-test-fieldset-dedupe',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
           includeNestedErrors
         >
           <span data-testid="error-count">
@@ -62,13 +57,13 @@ describe('NgxHeadlessFieldset', () => {
   it('defaults to direct errors only (includeNestedErrors=false)', async () => {
     @Component({
       selector: 'ngx-test-fieldset-direct-default',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
         >
           <span data-testid="error-count">
             {{ fieldset.aggregatedErrors().length }}
@@ -97,13 +92,13 @@ describe('NgxHeadlessFieldset', () => {
   it('prefers explicit fields override for aggregation', async () => {
     @Component({
       selector: 'ngx-test-fieldset-override',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
           [fields]="fields"
         >
           @for (error of fieldset.aggregatedErrors(); track error.kind) {
@@ -133,13 +128,13 @@ describe('NgxHeadlessFieldset', () => {
   it('shows errors only after touch with default on-touch strategy', async () => {
     @Component({
       selector: 'ngx-test-fieldset-show-errors',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
           includeNestedErrors
         >
           <span data-testid="show-errors">
@@ -172,13 +167,13 @@ describe('NgxHeadlessFieldset', () => {
   it('shows warnings when no blocking errors exist', async () => {
     @Component({
       selector: 'ngx-test-fieldset-warnings',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
           includeNestedErrors
         >
           <span data-testid="show-warnings">
@@ -228,13 +223,13 @@ describe('NgxHeadlessFieldset', () => {
   it('uses provided fieldsetId or generates a fallback', async () => {
     @Component({
       selector: 'ngx-test-fieldset-id',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
           fieldsetId="address"
         >
           <span data-testid="fieldset-id">
@@ -256,14 +251,14 @@ describe('NgxHeadlessFieldset', () => {
   it('inherits the error-display strategy from the enclosing form context', async () => {
     @Component({
       selector: 'ngx-test-fieldset-inherit-strategy',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [FormRoot, NgxSignalForm, NgxHeadlessFieldset],
       template: `
         <form [formRoot]="addressForm" ngxSignalForm errorStrategy="immediate">
           <fieldset
             ngxHeadlessFieldset
             #fieldset="fieldset"
-            [fieldsetField]="addressForm.address"
+            [field]="addressForm.address"
             includeNestedErrors
           >
             <span data-testid="resolved-strategy">
@@ -299,13 +294,13 @@ describe('NgxHeadlessFieldset', () => {
   it('honours an explicit submittedStatus override regardless of form context', async () => {
     @Component({
       selector: 'ngx-test-fieldset-submitted-status',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
           submittedStatus="submitted"
         >
           <span data-testid="resolved-submitted-status">
@@ -329,14 +324,14 @@ describe('NgxHeadlessFieldset', () => {
   it('attaches to non-<fieldset> hosts via the attribute selector', async () => {
     @Component({
       selector: 'ngx-test-fieldset-attr-selector',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <div
           data-testid="fieldset-host"
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
           fieldsetId="address"
         >
           <span data-testid="fieldset-id">
@@ -365,13 +360,13 @@ describe('NgxHeadlessFieldset', () => {
   it('generates a fieldset id when none is provided', async () => {
     @Component({
       selector: 'ngx-test-fieldset-id-generated',
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       imports: [NgxHeadlessFieldset],
       template: `
         <fieldset
           ngxHeadlessFieldset
           #fieldset="fieldset"
-          [fieldsetField]="addressForm.address"
+          [field]="addressForm.address"
         >
           <span data-testid="fieldset-id">
             {{ fieldset.resolvedFieldsetId() }}

@@ -3,9 +3,17 @@ import type { FieldTree } from '@angular/forms/signals';
 import { assertInjector } from './assert-injector';
 import { resolveFieldName } from './field-resolution';
 import { injectFormContext } from './inject-form-context';
+import { isFieldTree } from './walk-field-tree';
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+// Real `FieldTree` nodes are callable (`typeof` is `'function'`, not
+// `'object'`) — see `isFieldTree` in `walk-field-tree.ts`, which requires
+// every node to be invokable in order to read its `FieldState`. A guard that
+// only accepted `'object'` would reject `formInstance` itself on the very
+// first path segment for any real form, since the form root is a
+// `FieldTree`. Only plain-object mocks (not real `FieldTree`s) would ever
+// satisfy such a guard, which is why this bug shipped without failing tests.
+const isNavigable = (value: unknown): value is Record<string, unknown> =>
+  (typeof value === 'object' || typeof value === 'function') && value !== null;
 
 /**
  * Custom Inject Function (CIF) for retrieving a specific field control from the form.
@@ -17,7 +25,17 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
  * @param element - The HTML element or ElementRef to resolve the field name from
  * @param injector - Optional injector for use outside injection context
  * @returns The resolved `FieldTree<TValue>` from the form
- * @throws Error if field cannot be resolved or form context is not found
+ * @throws Error if field cannot be resolved, the resolved value does not
+ *   satisfy the runtime `FieldTree` contract (see `isFieldTree`), or form
+ *   context is not found
+ *
+ * @remarks
+ * Resolution is a **one-shot, non-reactive** lookup: the form instance and
+ * the element's `id` are both read once, at injection/call time. Swapping
+ * the underlying form instance or assigning the element's `id` after this
+ * call resolves will NOT be reflected — the returned `FieldTree` reference
+ * is fixed for the lifetime of the caller. Re-invoke this function (e.g. in
+ * a fresh `computed()`) if you need to track a form or id that can change.
  *
  * @example
  * ```typescript
@@ -75,13 +93,20 @@ export function injectFieldControl<TValue = unknown>(
     let control: unknown = formInstance;
 
     for (const part of pathParts) {
-      if (!isRecord(control) || !(part in control)) {
+      if (!isNavigable(control) || !(part in control)) {
         throw new Error(
           `[ngx-signal-forms] Field "${fieldName}" not found in form. ` +
             `Could not access property "${part}".`,
         );
       }
       control = control[part];
+    }
+
+    if (!isFieldTree(control)) {
+      throw new Error(
+        `[ngx-signal-forms] Field "${fieldName}" not found in form. ` +
+          `Resolved value does not satisfy the FieldTree contract.`,
+      );
     }
 
     return control as FieldTree<TValue>;

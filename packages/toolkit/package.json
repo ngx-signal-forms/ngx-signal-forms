@@ -1,6 +1,6 @@
 {
   "name": "@ngx-signal-forms/toolkit",
-  "version": "1.0.0-rc.9",
+  "version": "1.0.0-rc.10",
   "description": "Zero-intrusive toolkit for Angular Signal Forms with automatic accessibility, error display strategies, and form field wrappers",
   "keywords": [
     "angular",
@@ -13,20 +13,22 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/ngx-signal-forms/ngx-signal-forms"
+    "url": "https://github.com/ngx-signal-forms/ngx-signal-forms",
+    "directory": "packages/toolkit"
   },
   "license": "MIT",
   "engines": {
-    "node": "^20.19.0 || ^22.12.0 || >=24.0.0"
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
   },
   "publishConfig": {
     "access": "public",
     "provenance": true
   },
   "peerDependencies": {
-    "@angular/core": ">=22.0.0-rc.0 <23.0.0",
-    "@angular/forms": ">=22.0.0-rc.0 <23.0.0",
-    "vest": ">=6.0.0 <6.3.0 || >=6.3.1"
+    "@angular/common": ">=22.0.0 <23.0.0",
+    "@angular/core": ">=22.0.0 <23.0.0",
+    "@angular/forms": ">=22.0.0 <23.0.0",
+    "vest": ">=6.0.0"
   },
   "peerDependenciesMeta": {
     "vest": {
@@ -39,7 +41,8 @@
     "@angular/compiler": "catalog:angular",
     "@angular/core": "catalog:angular",
     "@angular/forms": "catalog:angular",
-    "@angular/platform-browser": "catalog:angular"
+    "@angular/platform-browser": "catalog:angular",
+    "axe-core": "catalog:axe"
   },
   "sideEffects": false
 }

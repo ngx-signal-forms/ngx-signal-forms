@@ -1,6 +1,5 @@
 import {
   afterNextRender,
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -92,11 +91,10 @@ import {
  */
 @Component({
   selector: 'ngx-form-field-hint',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<ng-content />`,
   styles: `
     :host {
-      display: block;
+      display: var(--ngx-form-field-hint-display, block);
       font-size: var(
         --ngx-form-field-hint-font-size,
         var(--ngx-signal-form-feedback-font-size, 0.75rem)
@@ -106,15 +104,17 @@ import {
         var(--ngx-signal-form-feedback-line-height, 1rem)
       );
       color: var(--ngx-form-field-hint-color, rgba(50, 65, 85, 0.75));
-      padding-inline-start: var(
-        --ngx-form-field-hint-padding-inline-start,
-        var(--ngx-signal-form-feedback-padding-horizontal, 0.5rem)
-      );
-      padding-inline-end: var(
-        --ngx-form-field-hint-padding-inline-end,
-        var(--ngx-signal-form-feedback-padding-horizontal, 0.5rem)
-      );
-      text-align: var(--ngx-form-field-hint-align, right);
+      /*
+       * Hint shares the input's border-left edge (no padding offset) and reads
+       * from the start by default, vertically in line with the label above and
+       * the error below — the convention every accessible form guide follows
+       * (Gestalt proximity + LTR reading order). The assistive row still flips
+       * this to start-aligned when a right-slot (e.g. character count) is
+       * present; position="right" opts a single hint back to end-aligned.
+       */
+      padding-inline-start: var(--ngx-form-field-hint-padding-inline-start, 0);
+      padding-inline-end: var(--ngx-form-field-hint-padding-inline-end, 0);
+      text-align: var(--ngx-form-field-hint-align, left);
     }
 
     :host([position='left']) {
@@ -155,7 +155,9 @@ export class NgxFormFieldHint {
   /**
    * Text alignment position.
    *
-   * @default undefined (defaults to right-aligned, or left-aligned if character count is present)
+   * @default null (hint aligns to the start/left; pass `position="right"` to
+   * opt into end alignment. The assistive row also forces start alignment when
+   * a character count shares the row.)
    */
   readonly position = input<'left' | 'right' | null>(null);
 
@@ -173,6 +175,16 @@ export class NgxFormFieldHint {
    * it to auto-ARIA via the hint registry without reading the DOM.
    * An empty-string explicit id or fieldName is treated as "not set" and falls through to the generated id.
    */
+  /**
+   * Stable fallback id minted once in the injection context (field
+   * initializer), NOT lazily inside {@link resolvedId}'s computed. Minting
+   * inside the computed ran `createUniqueId()` outside an injection context
+   * (host-binding evaluation), forcing the SSR-unsafe module-counter fallback
+   * with a dev warning, and re-minted a fresh id whenever the computed
+   * re-evaluated — leaving `aria-describedby` consumers pointing at a stale id.
+   */
+  readonly #generatedId = createUniqueId('hint');
+
   readonly resolvedId = computed(() => {
     const explicit = this.#explicitId();
     // oxlint-disable-next-line @typescript-eslint/strict-boolean-expressions -- empty-string id/fieldName is intentionally treated as "not set"; freezing semantic for v1
@@ -182,7 +194,7 @@ export class NgxFormFieldHint {
     // oxlint-disable-next-line @typescript-eslint/strict-boolean-expressions -- empty-string id/fieldName is intentionally treated as "not set"; freezing semantic for v1
     if (fieldName) return `${fieldName}-hint`;
 
-    return createUniqueId('hint');
+    return this.#generatedId;
   });
 
   constructor() {

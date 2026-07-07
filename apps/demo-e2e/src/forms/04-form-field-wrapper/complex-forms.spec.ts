@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
+import { stabilizeLayoutSnapshotViewport } from '../../fixtures/layout-screenshot.fixture';
 import { FormFieldWrapperComplexPage } from '../../page-objects/form-field-wrapper-complex.page';
 
 const contactMethodFieldsetTopAriaSnapshot = `
@@ -464,26 +465,27 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       // they are labels for sibling controls, not the group's own name.
       await expect(page.personalInfoFieldset).toMatchAriaSnapshot(`
         - group "👤 Personal Information":
-          - text: 👤 Personal Information First Name *
-          - textbox "First Name *"
+          - text: 👤 Personal Information First Name
+          - textbox "First Name"
           - alert:
             - paragraph: First name is required
-          - text: Last Name *
-          - textbox "Last Name *"
+          - text: Last Name
+          - textbox "Last Name"
           - alert:
             - paragraph: Last name is required
-          - text: Email *
-          - textbox "Email *"
+          - text: Email
+          - textbox "Email"
           - alert:
             - paragraph: Email is required
-          - text: Age *
-          - spinbutton "Age *": "0"
+          - text: Age
+          - spinbutton "Age": "0"
           - alert:
             - paragraph: Must be 18 or older
       `);
     });
 
-    test('snapshot: contact-method grouped error with top placement', async () => {
+    test('snapshot: contact-method grouped error with top placement @layout', async () => {
+      await stabilizeLayoutSnapshotViewport(page.page);
       await page.showTopFieldsetSummaryPlacement();
       await triggerContactMethodFieldsetError(page);
       await page.contactMethodGroup.scrollIntoViewIfNeeded();
@@ -493,7 +495,8 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       );
     });
 
-    test('snapshot: contact-method grouped error with bottom placement', async () => {
+    test('snapshot: contact-method grouped error with bottom placement @layout', async () => {
+      await stabilizeLayoutSnapshotViewport(page.page);
       await page.showBottomFieldsetSummaryPlacement();
       await triggerContactMethodFieldsetError(page);
       await page.contactMethodGroup.scrollIntoViewIfNeeded();
@@ -503,7 +506,8 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       );
     });
 
-    test('snapshot: credentials grouped error uses bullets and reduced gap', async () => {
+    test('snapshot: credentials grouped error uses bullets and reduced gap @layout', async () => {
+      await stabilizeLayoutSnapshotViewport(page.page);
       await page.showTopFieldsetSummaryPlacement();
       await triggerCredentialsFieldsetError(page);
       await page.credentialsFieldset.scrollIntoViewIfNeeded();
@@ -513,7 +517,8 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       );
     });
 
-    test('snapshot: credentials grouped error with top placement', async () => {
+    test('snapshot: credentials grouped error with top placement @layout', async () => {
+      await stabilizeLayoutSnapshotViewport(page.page);
       await page.showTopFieldsetSummaryPlacement();
       await triggerCredentialsFieldsetError(page);
       await page.credentialsFieldset.scrollIntoViewIfNeeded();
@@ -523,7 +528,8 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       );
     });
 
-    test('snapshot: credentials grouped error with bottom placement', async () => {
+    test('snapshot: credentials grouped error with bottom placement @layout', async () => {
+      await stabilizeLayoutSnapshotViewport(page.page);
       await page.showBottomFieldsetSummaryPlacement();
       await triggerCredentialsFieldsetError(page);
       await page.credentialsFieldset.scrollIntoViewIfNeeded();

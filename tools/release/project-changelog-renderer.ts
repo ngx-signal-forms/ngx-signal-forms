@@ -1,6 +1,16 @@
-import DefaultChangelogRenderer, {
+import _DefaultChangelogRendererImport, {
   type ChangelogChange,
 } from 'nx/release/changelog-renderer/index.js';
+
+type DefaultChangelogRendererClass = typeof _DefaultChangelogRendererImport;
+
+/// CJS/ESM interop: when this file is loaded as ESM, importing a CJS module
+/// yields the full module.exports as the default — unwrap .default if present.
+const DefaultChangelogRenderer = (
+  _DefaultChangelogRendererImport as unknown as {
+    readonly default: DefaultChangelogRendererClass;
+  }
+).default;
 
 type Area = 'toolkit' | 'demo' | 'shared' | 'other';
 
@@ -35,7 +45,7 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
       return super.render();
     }
 
-    const sections: string[][] = [];
+    const sections: Array<readonly string[]> = [];
 
     this.preprocessChanges();
 
@@ -73,7 +83,7 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
     }
 
     return sections
-      .filter((section): section is string[] => section.length > 0)
+      .filter((section): section is readonly string[] => section.length > 0)
       .map((section) => section.join('\n').trim())
       .join('\n\n')
       .trim();
@@ -134,7 +144,7 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
 
       markdownLines.push('', `### ${this.renderAreaTitle(area)}`, '');
 
-      const changesByType = this.groupChangesByType(changesForArea);
+      const changesByType = this.groupAreaChangesByType(changesForArea);
       for (const type of orderedTypes) {
         const changesForType = changesByType[type] ?? [];
         if (changesForType.length === 0) {
@@ -164,7 +174,8 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
   }
 
   private getChangeTypeConfigs(): ChangeTypeConfigs {
-    return (this.conventionalCommitsConfig.types ?? {}) as ChangeTypeConfigs;
+    return (this.conventionalCommitsConfig.types ??
+      {}) as unknown as ChangeTypeConfigs;
   }
 
   private getOrderedChangeTypes(
@@ -182,7 +193,7 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
     changes: readonly ChangelogChange[],
     orderedTypes: readonly string[],
   ): string {
-    const changesByType = this.groupChangesByType(changes);
+    const changesByType = this.groupAreaChangesByType(changes);
     const orderedChanges: ChangelogChange[] = [];
 
     for (const type of orderedTypes) {
@@ -210,7 +221,7 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
     return text.split('\n')[0]?.trim() ?? '';
   }
 
-  private groupChangesByType(
+  private groupAreaChangesByType(
     changes: readonly ChangelogChange[],
   ): Record<string, ChangelogChange[]> {
     const typeGroups: Record<string, ChangelogChange[]> = {};

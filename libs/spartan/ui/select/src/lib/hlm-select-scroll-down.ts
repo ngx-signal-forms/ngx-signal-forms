@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronDown } from '@ng-icons/lucide';
 import { BrnSelectScrollDown } from '@spartan-ng/brain/select';
@@ -8,7 +8,7 @@ import { classes } from '@spartan-ng/helm/utils';
   selector: 'hlm-select-scroll-down',
   imports: [NgIcon],
   providers: [provideIcons({ lucideChevronDown })],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   hostDirectives: [BrnSelectScrollDown],
   template: ` <ng-icon name="lucideChevronDown" /> `,
 })

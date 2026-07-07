@@ -19,11 +19,52 @@
         "config": "{projectRoot}/playwright.config.ts"
       }
     },
+    "e2e-toolkit": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "bash -c 'PIDS=$(lsof -nP -iTCP:4600 -sTCP:LISTEN -t); [ -n \"$PIDS\" ] && kill $PIDS; echo e2e-preflight-port-cleared'",
+          "pnpm exec playwright test apps/demo-e2e/src/forms --grep-invert @layout --config apps/demo-e2e/playwright.config.ts --project=chromium"
+        ],
+        "parallel": false
+      }
+    },
+    "e2e-demo-app": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "bash -c 'PIDS=$(lsof -nP -iTCP:4600 -sTCP:LISTEN -t); [ -n \"$PIDS\" ] && kill $PIDS; echo e2e-preflight-port-cleared'",
+          "pnpm exec playwright test apps/demo-e2e/src/ui --config apps/demo-e2e/playwright.config.ts --project=chromium"
+        ],
+        "parallel": false
+      }
+    },
+    "e2e-layout": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "bash -c 'PIDS=$(lsof -nP -iTCP:4600 -sTCP:LISTEN -t); [ -n \"$PIDS\" ] && kill $PIDS; echo e2e-preflight-port-cleared'",
+          "pnpm exec playwright test apps/demo-e2e/src/ui --config apps/demo-e2e/playwright.config.ts --project=chromium",
+          "pnpm exec playwright test apps/demo-e2e/src/forms --grep @layout --config apps/demo-e2e/playwright.config.ts --project=chromium"
+        ],
+        "parallel": false
+      }
+    },
     "e2e-ci": {
       "executor": "@nx/playwright:playwright",
       "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-e2e"],
       "options": {
         "config": "{projectRoot}/playwright.config.ts"
+      }
+    },
+    "a11y": {
+      "executor": "@nx/playwright:playwright",
+      "outputs": [
+        "{workspaceRoot}/dist/.playwright/apps/demo-e2e-a11y",
+        "{workspaceRoot}/dist/.a11y/demo-e2e"
+      ],
+      "options": {
+        "config": "{projectRoot}/playwright.a11y.config.ts"
       }
     }
   }

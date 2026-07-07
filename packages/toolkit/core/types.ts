@@ -21,11 +21,13 @@ export type SubmittedStatus = 'unsubmitted' | 'submitting' | 'submitted';
 export type SignalLike<T> = Signal<T> | (() => T);
 
 /**
- * Accepts reactive (Signal/function) or static values.
+ * Accepts a reactive (Signal/function) or a plain static value.
  *
- * Used internally by toolkit utilities. Not part of the public API.
+ * Used by {@link unwrapValue}, {@link createErrorVisibility}, and related
+ * utilities to accept both signal-driven and constant inputs at a single
+ * call site.
  *
- * @internal
+ * @public
  * @template T The type of value when unwrapped
  */
 export type ReactiveOrStatic<T> = SignalLike<T> | T;

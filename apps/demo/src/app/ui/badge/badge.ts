@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 export type BadgeVariant = 'solid' | 'outline' | 'ghost';
 export type BadgeAppearance =
@@ -10,7 +10,7 @@ export type BadgeAppearance =
 
 @Component({
   selector: 'ngx-badge',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   host: {
     '[class]': 'badgeClasses()',
     '[attr.data-variant]': 'variant()',

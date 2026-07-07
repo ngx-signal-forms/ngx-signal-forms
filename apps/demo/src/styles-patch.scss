@@ -1,0 +1,19 @@
+.form-error {
+  @apply mt-1 text-sm text-red-600 dark:text-red-400;
+}
+
+.form-hint {
+  /* Border-left edge — shares one left column with the error text below. */
+  @apply mt-0.5 text-sm;
+  color: var(--color-text-muted);
+}
+
+/* Hide hint when error is visible (ngx-form-field-error has non-empty content) */
+.form-hint:has(+ ngx-form-field-error:not(:has(.ngx-form-field-error--empty))) {
+  display: none;
+}
+
+/* Headless demo shared styling */
+.headless-card {
+  @apply rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900;
+}

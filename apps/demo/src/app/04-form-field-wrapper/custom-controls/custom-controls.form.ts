@@ -1,11 +1,5 @@
 // Custom controls demo form - product review with rating, switch, checkbox controls
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import {
   buildAriaDescribedBy,
@@ -47,7 +41,7 @@ import { customControlsSchema } from './custom-controls.validations';
  */
 @Component({
   selector: 'ngx-custom-controls',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   providers: [
     ...provideNgxSignalFormControlPresetsForComponent({
       slider: {
@@ -112,9 +106,8 @@ export class CustomControlsFormComponent {
    */
   readonly reviewForm = form(this.#model, customControlsSchema, {
     submission: {
-      action: async () => {
-        console.log('Review submitted:', this.#model());
-        return null;
+      action: async (field) => {
+        console.log('Review submitted:', field().value());
       },
       onInvalid: (formTree) => {
         this.#submitAttempted.set(true);

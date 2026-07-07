@@ -9,7 +9,8 @@ import { getRouteTitle } from '@ngx-signal-forms/demo-shared';
  * 2. Toolkit Core - Error strategy and warning behavior
  * 3. Headless - Renderless primitives and utilities for custom UI systems
  * 4. Form Field Wrapper - Complex forms and custom control integration
- * 5. Advanced Scenarios - Configuration, submission patterns, and advanced validation
+ * 5. Validation - Standard Schema baselines and layered validation strategies
+ * 6. Advanced Scenarios - Configuration, submission patterns, async state, and orchestration
  */
 
 export const appRoutes: Routes = [
@@ -141,6 +142,40 @@ export const appRoutes: Routes = [
   },
 
   // ========================================
+  // VALIDATION
+  // ========================================
+  {
+    path: 'validation',
+    children: [
+      { path: '', redirectTo: 'zod-validation', pathMatch: 'full' },
+      {
+        path: 'zod-validation',
+        loadComponent: () =>
+          import('./05-advanced/zod-validation/zod-validation.page').then(
+            (m) => m.ZodValidationPage,
+          ),
+        title: getRouteTitle('/validation/zod-validation'),
+      },
+      {
+        path: 'vest-validation',
+        loadComponent: () =>
+          import('./05-advanced/vest-validation/vest-validation.page').then(
+            (m) => m.VestValidationPage,
+          ),
+        title: getRouteTitle('/validation/vest-validation'),
+      },
+      {
+        path: 'zod-vest-validation',
+        loadComponent: () =>
+          import('./05-advanced/zod-vest-validation/zod-vest-validation.page').then(
+            (m) => m.ZodVestValidationPage,
+          ),
+        title: getRouteTitle('/validation/zod-vest-validation'),
+      },
+    ],
+  },
+
+  // ========================================
   // ADVANCED SCENARIOS
   // ========================================
   {
@@ -178,28 +213,20 @@ export const appRoutes: Routes = [
         title: getRouteTitle('/advanced-scenarios/async-validation'),
       },
       {
+        path: 'field-state-patterns',
+        loadComponent: () =>
+          import('./05-advanced/field-state-patterns/field-state-patterns.page').then(
+            (m) => m.FieldStatePatternsPageComponent,
+          ),
+        title: getRouteTitle('/advanced-scenarios/field-state-patterns'),
+      },
+      {
         path: 'cross-field-validation',
         loadComponent: () =>
           import('./05-advanced/cross-field-validation/cross-field-validation.page').then(
             (m) => m.CrossFieldValidationPageComponent,
           ),
         title: getRouteTitle('/advanced-scenarios/cross-field-validation'),
-      },
-      {
-        path: 'vest-validation',
-        loadComponent: () =>
-          import('./05-advanced/vest-validation/vest-validation.page').then(
-            (m) => m.VestValidationPage,
-          ),
-        title: getRouteTitle('/advanced-scenarios/vest-validation'),
-      },
-      {
-        path: 'zod-vest-validation',
-        loadComponent: () =>
-          import('./05-advanced/zod-vest-validation/zod-vest-validation.page').then(
-            (m) => m.ZodVestValidationPage,
-          ),
-        title: getRouteTitle('/advanced-scenarios/zod-vest-validation'),
       },
       {
         path: 'store-binding',

@@ -7,8 +7,8 @@
 /* The content slot is effectively empty but still renders a border/height. */
 /* SOLUTION: Hide the main content wrapper entirely when the label contains a check/radio. */
 :host:not(.ngx-signal-form-field-wrapper--switch):has(
-    .ngx-signal-form-field-wrapper__label input[type='checkbox']
-  ),
+  .ngx-signal-form-field-wrapper__label input[type='checkbox']
+),
 :host:has(.ngx-signal-form-field-wrapper__label input[type='radio']) {
   .ngx-signal-form-field-wrapper__content {
     display: none;

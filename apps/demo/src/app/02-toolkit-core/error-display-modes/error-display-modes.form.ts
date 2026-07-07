@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { form, FormField } from '@angular/forms/signals';
 import {
@@ -36,7 +30,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
 
 @Component({
   selector: 'ngx-error-display-helpers',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   template: `
     <div
       class="rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900 dark:border-indigo-800 dark:bg-indigo-950 dark:text-indigo-100"
@@ -135,7 +129,7 @@ export class ErrorDisplayHelpersComponent {
  */
 @Component({
   selector: 'ngx-error-display-modes-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     ErrorDisplayHelpersComponent,
     FormField,
@@ -397,7 +391,7 @@ export class ErrorDisplayHelpersComponent {
             class="feedback-alert feedback-alert--error"
             role="alert"
           >
-            <div class="text-sm font-medium text-red-800 dark:text-red-200">
+            <div class="text-sm font-medium">
               Please fix the errors above before submitting.
             </div>
           </div>
@@ -445,7 +439,6 @@ export class ErrorDisplayModesFormComponent {
       action: async () => {
         this.#submissionAttempted.set(true);
         alert('Thank you for your feedback!');
-        return null; // No server errors
       },
       onInvalid: createOnInvalidHandler({
         afterInvalid: () => {

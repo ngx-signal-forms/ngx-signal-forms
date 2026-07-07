@@ -1,9 +1,9 @@
 import {
   assertInInjectionContext,
   inject,
-  Injectable,
   InjectionToken,
   isDevMode,
+  Service,
 } from '@angular/core';
 
 /**
@@ -37,7 +37,7 @@ import {
  *
  * @internal
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class NgxSignalFormIdCounter {
   #counter = 0;
 

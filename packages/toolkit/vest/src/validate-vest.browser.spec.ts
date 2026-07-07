@@ -1,9 +1,4 @@
-import {
-  ApplicationRef,
-  ChangeDetectionStrategy,
-  Component,
-  signal,
-} from '@angular/core';
+import { ApplicationRef, Component, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import { TestBed } from '@angular/core/testing';
 import { render, screen } from '@testing-library/angular';
@@ -23,7 +18,7 @@ describe('validateVest browser mode', () => {
     @Component({
       selector: 'ngx-test-vest-browser-mode',
       imports: [FormField],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form novalidate>
           <label for="email">Email</label>

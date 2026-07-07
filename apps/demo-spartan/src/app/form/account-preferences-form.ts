@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import {
   form,
   FormField,
@@ -75,7 +75,7 @@ const accountSchema = schema<AccountPreferences>((path) => {
  */
 @Component({
   selector: 'ngx-account-preferences-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     FormField,
     FormRoot,
@@ -188,7 +188,7 @@ export class AccountPreferencesForm {
     {
       submission: {
         ignoreValidators: 'all',
-        action: async () => {
+        action: () => {
           if (!hasOnlyWarnings(this.form().errorSummary())) {
             this.#onInvalid(this.form);
             return;

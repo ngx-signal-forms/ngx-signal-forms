@@ -5,8 +5,9 @@ import type { GlobalConfigModel } from './global-configuration.model';
  * Validation schema for global configuration example
  */
 export const globalConfigSchema = schema<GlobalConfigModel>((path) => {
-  // Email validation
-  required(path.userEmail, { message: 'Email is required' });
+  // Email validation — no explicit message so the component-scoped
+  // provideErrorMessages() registry override is visible in the demo.
+  required(path.userEmail);
   email(path.userEmail, { message: 'Invalid email format' });
 
   // Phone validation (US format)

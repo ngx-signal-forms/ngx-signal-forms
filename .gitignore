@@ -8,6 +8,11 @@ out-tsc
 # dependencies
 node_modules
 
+# local environment overrides
+.env
+.env.*
+!.env.example
+
 # IDEs and editors
 /.idea
 .project
@@ -60,3 +65,8 @@ build.log
 .playwright-mcp/
 
 .nx/self-healing.claude/
+
+.nx/migrate-runs
+
+# graphify knowledge graph output
+graphify-out/

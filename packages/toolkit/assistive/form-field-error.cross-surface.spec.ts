@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   inject,
@@ -38,7 +37,7 @@ import { NgxFormFieldError } from './form-field-error';
 /** Minimal custom error UI built directly on NgxHeadlessErrorState. */
 @Component({
   selector: 'custom-error',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   hostDirectives: [
     {
       directive: NgxHeadlessErrorState,
@@ -46,7 +45,7 @@ import { NgxFormFieldError } from './form-field-error';
     },
   ],
   template: `
-    @if (headless.showErrors() && headless.hasErrors()) {
+    @if (headless.shouldShowErrors() && headless.hasErrors()) {
       <div data-testid="custom-error">
         @for (e of headless.resolvedErrors(); track e.kind) {
           <span>{{ e.message }}</span>
@@ -69,7 +68,7 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
         NgxFormFieldError,
         CustomErrorComponent,
       ],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
           <input id="name" [formField]="testForm.name" />
@@ -92,8 +91,9 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
 
     await render(TestComponent);
 
-    // Before touch: neither surface should show errors
-    expect(screen.queryByRole('alert')).toBeFalsy();
+    // Before touch: neither surface should show errors. The alert shell
+    // stays mounted (WCAG 4.1.3) but must be empty.
+    expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('');
     expect(screen.queryByTestId('custom-error')).toBeFalsy();
 
     // Touch the field to trigger on-touch strategy
@@ -120,7 +120,7 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
         NgxFormFieldError,
         CustomErrorComponent,
       ],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="immediate">
           <input id="name" [formField]="testForm.name" />
@@ -152,8 +152,9 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
     // Type a valid value
     await userEvent.type(screen.getByRole('textbox'), 'John');
 
-    // Both surfaces clear together
-    expect(screen.queryByRole('alert')).toBeFalsy();
+    // Both surfaces clear together. The alert shell stays mounted (WCAG
+    // 4.1.3) but must be empty.
+    expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('');
     expect(screen.queryByTestId('custom-error')).toBeFalsy();
   });
 
@@ -167,7 +168,7 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
     @Component({
       selector: 'test-direct-errors',
       imports: [NgxFormFieldError],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <ngx-form-field-error [errors]="aggregatedErrors" fieldName="address" />
       `,
@@ -193,7 +194,7 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
     @Component({
       selector: 'test-direct-errors-empty',
       imports: [NgxFormFieldError],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <ngx-form-field-error [errors]="aggregatedErrors" fieldName="address" />
       `,
@@ -206,10 +207,10 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
 
     const { container } = await render(TestEmptyDirectErrorsComponent);
 
-    // Live region stays in DOM (WCAG 4.1.3) but is hidden + empty
+    // Live region stays in DOM (WCAG 4.1.3) but is empty
     const alertEl = container.querySelector('[role="alert"]');
     expect(alertEl).toBeTruthy();
-    expect(alertEl?.hasAttribute('hidden')).toBe(true);
+    expect(alertEl?.hasAttribute('hidden')).toBe(false);
     expect(alertEl?.textContent?.trim()).toBe('');
   });
 
@@ -217,7 +218,7 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
     @Component({
       selector: 'test-id-parity',
       imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
-      changeDetection: ChangeDetectionStrategy.OnPush,
+
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="immediate">
           <input id="email" [formField]="testForm.email" />

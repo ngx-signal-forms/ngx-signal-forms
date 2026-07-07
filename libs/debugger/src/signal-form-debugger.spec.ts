@@ -470,30 +470,14 @@ describe('NgxSignalFormDebugger', () => {
     });
   });
 
-  describe('Production render gate', () => {
-    it('renders no debugger DOM when renderEnabled is false', () => {
+  describe('Production availability', () => {
+    it('renders when formTree is usable', () => {
       const localFixture = TestBed.createComponent(NgxSignalFormDebugger);
       const localEl: HTMLElement = localFixture.nativeElement;
       localFixture.componentRef.setInput('formTree', testForm);
-
-      // Simulate a production bundle: flip the render gate off. This mirrors
-      // the behaviour of `isDevMode() === false` — the template wraps every
-      // branch in `@if (renderEnabled && inputUsable())`.
-      //
-      // Note: the ideal approach here would be `vi.spyOn(ngCore, 'isDevMode')`,
-      // but `@angular/core`'s ESM namespace is non-configurable
-      // (`TypeError: Cannot redefine property: isDevMode`). A hoisted
-      // `vi.mock('@angular/core', ...)` would leak into every other test in
-      // this file — including the component's own `#fieldTreeWarningEffect`
-      // initializer — so we opt for the minimal, explicit intrusion here.
-      (
-        localFixture.componentInstance as unknown as {
-          renderEnabled: boolean;
-        }
-      ).renderEnabled = false;
       localFixture.detectChanges();
 
-      expect(localEl.querySelector('.ngx-debugger')).toBeNull();
+      expect(localEl.querySelector('.ngx-debugger')).not.toBeNull();
     });
   });
 

@@ -33,19 +33,15 @@ The adapter reads Vest's full `run()` result, mapping blocking errors **and** `w
 
 ## Installation
 
-Vest is an optional peer dependency (`>=6.0.0 <6.3.0 || >=6.3.1`). Install it only when using this entry point.
+Vest is an optional peer dependency (`>=6.0.0`). Install it only when using this entry point.
 
 ```bash
-pnpm add @ngx-signal-forms/toolkit vest@6.2.7
+pnpm add @ngx-signal-forms/toolkit vest
 ```
 
 > **Vest v6+ required.** Standard Schema support was introduced in Vest 6.
-> `vest@6.3.0` is excluded because that release ships a broken `package.json`
-> `exports` map that prevents Angular's build tooling from resolving the
-> library. Use any `6.2.x` release or upgrade to `>=6.3.1`, where the
-> regression was fixed.
 
-If you are migrating from `ngx-vest-forms`, see [`docs/MIGRATING_FROM_NGX_VEST_FORMS.md`](../../docs/MIGRATING_FROM_NGX_VEST_FORMS.md) and the official [Vest 6 upgrade guide](https://vestjs.dev/docs/upgrade_guide).
+If you are migrating from `ngx-vest-forms`, see [`docs/MIGRATING_FROM_NGX_VEST_FORMS.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_FROM_NGX_VEST_FORMS.md) and the official [Vest 6 upgrade guide](https://vestjs.dev/docs/upgrade_guide).
 
 ## Import
 
@@ -88,7 +84,7 @@ const signupSuite = create((data: SignupModel) => {
 @Component({
   selector: 'ngx-signup-form',
   imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   template: `
     <form [formRoot]="signupForm" ngxSignalForm>
       <label for="email">Email</label>
@@ -210,6 +206,10 @@ const shared = sharedVestAdapter;
 | `register(path, …)`    | Wire the suite into Signal Forms (the `validateTree` + `validateAsync` pipeline). `validateVest`/`validateVestWarnings` delegate here.                                 |
 | `runVestSuite(params)` | Run the suite once through the shared cache. Returns the cached run for an identical `(suite, fieldTree, value, focus)` tuple, or a fresh run when any of them change. |
 | `invalidate(suite)`    | Drop the shared run cache for a suite (the `resetOnDestroy` teardown hook calls this).                                                                                 |
+
+The companion option/shape types are also exported for typing your own
+integrations: `VestAdapterOptions` (for `createVestAdapter()`),
+`VestRegisterOptions`, `RunVestSuiteParams`, and `RunVestSuiteResult`.
 
 #### Example: a custom validator consuming the adapter
 
@@ -355,6 +355,15 @@ validateVest(path, signupSuite, { resetOnDestroy: false }); // opt out of teardo
 - Only the **latest** run's result surfaces to Signal Forms. Rapid value
   changes cancel pending work via Angular's async validator contract; stale
   results never reach the field's `errors()` signal.
+- **Warnings vs. pending async tests.** Angular's `validateAsync` only
+  schedules its resource when the bound subtree has zero sync errors, and a
+  toolkit `warn:vest:*` result is an ordinary `ValidationError`. To avoid a
+  sync warning silently suppressing a blocking async check on the same field,
+  the adapter defers surfacing a warning while the suite still has pending
+  async tests, and re-surfaces it together with the settled result once they
+  finish. In practice this means a warning can appear one tick later than a
+  blocking sync error while async validation is in flight — it does not
+  change what surfaces once the field settles.
 
 ### Focused `only()` runs
 
@@ -410,10 +419,10 @@ Angular treats every `ValidationError` as blocking. For forms that should allow 
 ## Related documentation
 
 - [Toolkit core](../README.md) — error strategies, warning utilities
-- [Validation strategies](../../docs/VALIDATION_STRATEGY.md) — when to use Angular, Zod, or Vest
-- [Migrating from ngx-vest-forms](../../docs/MIGRATING_FROM_NGX_VEST_FORMS.md)
+- [Validation strategies](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/VALIDATION_STRATEGY.md) — when to use Angular, Zod, or Vest
+- [Migrating from ngx-vest-forms](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_FROM_NGX_VEST_FORMS.md)
 - [Vest 5.x → 6.x upgrade guide](https://vestjs.dev/docs/upgrade_guide) — official Vest migration docs
-- Demos: [vest-validation](../../apps/demo/src/app/05-advanced/vest-validation), [zod-vest-validation](../../apps/demo/src/app/05-advanced/zod-vest-validation)
+- Demos: [vest-validation](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/05-advanced/vest-validation), [zod-vest-validation](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/05-advanced/zod-vest-validation)
 
 ## License
 

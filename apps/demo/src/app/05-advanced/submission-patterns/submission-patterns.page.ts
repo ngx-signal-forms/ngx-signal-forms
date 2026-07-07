@@ -1,15 +1,7 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
-  type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
@@ -17,14 +9,15 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
+  createOrientationSelection,
   getOrientationLabel,
-  isOrientationDisabledForAppearance,
 } from '../../ui/orientation-toggle';
 import {
   ERROR_DISPLAY_MODE_LABELS,
@@ -33,14 +26,9 @@ import {
 import { SUBMISSION_PATTERNS_CONTENT } from './submission-patterns.content';
 import { SubmissionPatternsComponent } from './submission-patterns.form';
 
-/**
- * Submission Patterns Page
- *
- * Demonstrates form submission patterns with async operations and server errors.
- */
 @Component({
   selector: 'ngx-submission-patterns-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   styles: `
     :host {
       display: flex;
@@ -56,11 +44,43 @@ import { SubmissionPatternsComponent } from './submission-patterns.form';
     OrientationToggleComponent,
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
   ],
   template: `
+    <ng-template ngxPageControls>
+      <ngx-display-controls-card
+        title="Submission phase controls"
+        description="Use the same registration flow to compare three moments in the lifecycle: pre-submit guidance, the submit attempt itself, and the server response that follows."
+        [chips]="currentControlChips()"
+        layout="split"
+      >
+        <ngx-error-display-mode-selector
+          [(selectedMode)]="errorDisplayMode"
+          [embedded]="true"
+          display-controls-primary
+          class="block min-w-0"
+        />
+        <ngx-display-controls-section
+          title="🎨 Submission styling"
+          description="Stress-test loading, success, and server-error states under both wrapper treatments without changing the underlying submission contract."
+        >
+          <ngx-appearance-toggle [(value)]="selectedAppearance" />
+        </ngx-display-controls-section>
+        <ngx-display-controls-section
+          title="↔️ Label orientation"
+          description="Switch between vertical labels and horizontal label columns while checking pre-submit, submitting, and server-error states. Outline remains vertical only."
+        >
+          <ngx-orientation-toggle
+            [(value)]="selectedOrientation"
+            [appearance]="selectedAppearance()"
+          />
+        </ngx-display-controls-section>
+      </ngx-display-controls-card>
+    </ng-template>
+
     <ngx-page-header
       title="Form Submission Patterns"
       subtitle="Async operations, server errors, and WCAG 2.2 compliance"
@@ -70,37 +90,6 @@ import { SubmissionPatternsComponent } from './submission-patterns.form';
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
     />
-
-    <ngx-display-controls-card
-      title="Submission phase controls"
-      description="Use the same registration flow to compare three moments in the lifecycle: pre-submit guidance, the submit attempt itself, and the server response that follows."
-      [chips]="currentControlChips()"
-      layout="split"
-    >
-      <ngx-error-display-mode-selector
-        [(selectedMode)]="errorDisplayMode"
-        [embedded]="true"
-        display-controls-primary
-        class="block min-w-0"
-      />
-
-      <ngx-display-controls-section
-        title="🎨 Submission styling"
-        description="Stress-test loading, success, and server-error states under both wrapper treatments without changing the underlying submission contract."
-      >
-        <ngx-appearance-toggle [(value)]="selectedAppearance" />
-      </ngx-display-controls-section>
-
-      <ngx-display-controls-section
-        title="↔️ Label orientation"
-        description="Switch between vertical labels and horizontal label columns while checking pre-submit, submitting, and server-error states. Outline remains vertical only."
-      >
-        <ngx-orientation-toggle
-          [(value)]="selectedOrientation"
-          [appearance]="selectedAppearance()"
-        />
-      </ngx-display-controls-section>
-    </ngx-display-controls-card>
 
     <ngx-split-layout>
       <ngx-submission-patterns
@@ -123,8 +112,10 @@ export class SubmissionPatternsPage {
     signal<ErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
-  protected readonly selectedOrientation =
-    signal<FormFieldOrientation>('vertical');
+  protected readonly selectedOrientation = createOrientationSelection(
+    this.selectedAppearance,
+  );
+
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',
@@ -141,17 +132,4 @@ export class SubmissionPatternsPage {
   ]);
   protected readonly content = SUBMISSION_PATTERNS_CONTENT;
   protected readonly formRef = viewChild(SubmissionPatternsComponent);
-
-  constructor() {
-    effect(() => {
-      if (
-        isOrientationDisabledForAppearance(
-          this.selectedAppearance(),
-          this.selectedOrientation(),
-        )
-      ) {
-        this.selectedOrientation.set('vertical');
-      }
-    });
-  }
 }

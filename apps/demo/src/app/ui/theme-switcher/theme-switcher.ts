@@ -1,8 +1,7 @@
 import {
-  ChangeDetectionStrategy,
+  afterRenderEffect,
   Component,
   computed,
-  effect,
   OnDestroy,
   OnInit,
   signal,
@@ -10,7 +9,7 @@ import {
 
 @Component({
   selector: 'ngx-theme-switcher',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   host: { class: 'theme-toggle-wrapper' },
   imports: [],
   template: `
@@ -83,25 +82,25 @@ import {
 export class NgxThemeSwitcherComponent implements OnInit, OnDestroy {
   // User preference: 'system' | 'light' | 'dark'
   readonly preference = signal<'system' | 'light' | 'dark'>(
-    this.getInitialPreference(),
+    this.#getInitialPreference(),
   );
   // Derived effective theme (light/dark) respecting system when in system mode
-  private readonly systemDark = signal(
+  readonly #systemDark = signal(
     globalThis.matchMedia('(prefers-color-scheme: dark)').matches,
   );
   readonly effectiveTheme = computed<'light' | 'dark'>(() => {
     const pref = this.preference();
-    if (pref === 'system') return this.systemDark() ? 'dark' : 'light';
+    if (pref === 'system') return this.#systemDark() ? 'dark' : 'light';
     return pref; // pref is 'light' | 'dark'
   });
-  private mediaQuery?: MediaQueryList;
-  private mediaListener?: (event: MediaQueryListEvent) => void;
-  private storageListener?: (event: StorageEvent) => void;
+  #mediaQuery?: MediaQueryList;
+  #mediaListener?: (event: MediaQueryListEvent) => void;
+  #storageListener?: (event: StorageEvent) => void;
 
   // Apply theme classes reactively.
   // Named Angular effect fields are intentionally unread because Angular owns their lifecycle.
   // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
-  readonly #apply = effect(() => {
+  readonly #apply = afterRenderEffect(() => {
     const theme = this.effectiveTheme();
     const root = document.documentElement;
 
@@ -114,14 +113,14 @@ export class NgxThemeSwitcherComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Listen for system preference changes only if user hasn't explicitly chosen
-    this.mediaQuery = globalThis.matchMedia('(prefers-color-scheme: dark)');
-    this.mediaListener = (event) => {
-      this.systemDark.set(event.matches);
+    this.#mediaQuery = globalThis.matchMedia('(prefers-color-scheme: dark)');
+    this.#mediaListener = (event) => {
+      this.#systemDark.set(event.matches);
     };
-    this.mediaQuery.addEventListener('change', this.mediaListener);
+    this.#mediaQuery.addEventListener('change', this.#mediaListener);
 
     // Listen for storage changes from other tabs
-    this.storageListener = (event) => {
+    this.#storageListener = (event) => {
       if (event.key === 'color-theme') {
         if (event.newValue === 'light' || event.newValue === 'dark') {
           this.preference.set(event.newValue);
@@ -131,7 +130,7 @@ export class NgxThemeSwitcherComponent implements OnInit, OnDestroy {
         }
       }
     };
-    globalThis.addEventListener('storage', this.storageListener);
+    globalThis.addEventListener('storage', this.#storageListener);
 
     // Ensure component is synchronized with localStorage
     const stored = localStorage.getItem('color-theme');
@@ -141,11 +140,11 @@ export class NgxThemeSwitcherComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.mediaQuery && this.mediaListener) {
-      this.mediaQuery.removeEventListener('change', this.mediaListener);
+    if (this.#mediaQuery && this.#mediaListener) {
+      this.#mediaQuery.removeEventListener('change', this.#mediaListener);
     }
-    if (this.storageListener) {
-      globalThis.removeEventListener('storage', this.storageListener);
+    if (this.#storageListener) {
+      globalThis.removeEventListener('storage', this.#storageListener);
     }
   }
 
@@ -161,7 +160,7 @@ export class NgxThemeSwitcherComponent implements OnInit, OnDestroy {
     }
   }
 
-  private getInitialPreference(): 'system' | 'light' | 'dark' {
+  #getInitialPreference(): 'system' | 'light' | 'dark' {
     const stored = localStorage.getItem('color-theme');
     if (stored === 'light' || stored === 'dark') return stored;
     return 'system';

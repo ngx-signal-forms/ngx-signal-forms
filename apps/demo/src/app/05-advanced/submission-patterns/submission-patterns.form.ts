@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import {
   type ErrorDisplayStrategy,
@@ -35,7 +28,7 @@ import { submissionSchema } from './submission-patterns.validations';
  */
 @Component({
   selector: 'ngx-submission-patterns',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     FormField,
     NgxSignalFormToolkit,
@@ -88,6 +81,13 @@ import { submissionSchema } from './submission-patterns.validations';
                   Submitted
                 </span>
               }
+              @default {
+                <span class="text-xs text-red-700 dark:text-red-300">
+                  {{
+                    unreachableSubmittedStatus(formContext?.submittedStatus())
+                  }}
+                </span>
+              }
             }
             <span class="text-xs text-gray-500 dark:text-gray-400">
               (Automatically tracked by toolkit)
@@ -95,26 +95,6 @@ import { submissionSchema } from './submission-patterns.validations';
           </div>
         </div>
       </div>
-
-      <!-- Server error display (if any) -->
-      @if (serverError()) {
-        <div
-          role="alert"
-          class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950"
-        >
-          <div class="flex items-start gap-3">
-            <span class="text-2xl">❌</span>
-            <div>
-              <h3 class="mb-1 font-semibold text-red-900 dark:text-red-100">
-                Submission Failed
-              </h3>
-              <p class="text-sm text-red-800 dark:text-red-200">
-                {{ serverError() }}
-              </p>
-            </div>
-          </div>
-        </div>
-      }
 
       <!-- Success message (if submission succeeded) -->
       @if (submissionSuccess()) {
@@ -163,7 +143,7 @@ import { submissionSchema } from './submission-patterns.validations';
           [appearance]="appearance()"
           [orientation]="orientation()"
         >
-          <label for="username">Username *</label>
+          <label for="username">Username</label>
           <input
             id="username"
             type="text"
@@ -181,7 +161,7 @@ import { submissionSchema } from './submission-patterns.validations';
           [appearance]="appearance()"
           [orientation]="orientation()"
         >
-          <label for="password">Password *</label>
+          <label for="password">Password</label>
           <input
             id="password"
             type="password"
@@ -197,7 +177,7 @@ import { submissionSchema } from './submission-patterns.validations';
           [appearance]="appearance()"
           [orientation]="orientation()"
         >
-          <label for="confirmPassword">Confirm Password *</label>
+          <label for="confirmPassword">Confirm Password</label>
           <input
             id="confirmPassword"
             type="password"
@@ -319,8 +299,7 @@ export class SubmissionPatternsComponent {
   readonly registrationForm = form(this.#model, submissionSchema, {
     submission: {
       action: async (formData) => {
-        /// Clear previous states
-        this.serverError.set(null);
+        /// Clear previous state
         this.submissionSuccess.set(false);
 
         /// Simulate API delay (toolkit automatically shows 'submitting' state)
@@ -328,13 +307,15 @@ export class SubmissionPatternsComponent {
           setTimeout(resolve, 1500);
         });
 
-        /// Simulate server error if checkbox is checked
+        /// Simulate server error if checkbox is checked — return as a native
+        /// TreeValidationResult so Signal Forms attaches it to the username field
         if (formData().value().simulateServerError) {
           const username = formData().value().username;
-          this.serverError.set(
-            `Username "${username}" is already taken. Please choose another.`,
-          );
-          return;
+          return {
+            kind: 'usernameTaken',
+            message: `Username "${username}" is already taken. Please choose another.`,
+            fieldTree: formData.username,
+          };
         }
 
         /// Success - show success message and reset form
@@ -345,7 +326,8 @@ export class SubmissionPatternsComponent {
           confirmPassword: '',
           simulateServerError: false,
         });
-        this.registrationForm().reset();
+        formData().reset();
+        return;
       },
       onInvalid: createOnInvalidHandler(),
     },
@@ -360,8 +342,6 @@ export class SubmissionPatternsComponent {
     this.registrationForm().submitting(),
   );
 
-  /// Server error state for demonstration
-  protected readonly serverError = signal<string | null>(null);
   protected readonly submissionSuccess = signal(false);
 
   protected resetForm(): void {
@@ -375,10 +355,15 @@ export class SubmissionPatternsComponent {
     });
 
     /// Clear local state
-    this.serverError.set(null);
     this.submissionSuccess.set(false);
 
     /// Note: the derived submittedStatus returns to 'unsubmitted' after
     /// submitting() is false and the form has been reset (touched cleared)
+  }
+
+  protected unreachableSubmittedStatus(
+    status: SubmittedStatus | undefined,
+  ): string {
+    return `Unhandled submittedStatus: ${String(status)}`;
   }
 }

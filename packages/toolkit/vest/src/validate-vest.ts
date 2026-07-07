@@ -30,6 +30,10 @@ export interface ValidateVestOptions<TValue = unknown> {
    * objects with a `kind` prefixed by `warn:` so existing toolkit components
    * render them as non-blocking guidance.
    *
+   * While the suite has pending async tests, a sync warning is deferred (not
+   * yet surfaced) and re-emitted together with the settled result once they
+   * finish — see the vest README's "Async caveats" section for why.
+   *
    * @default false
    */
   includeWarnings?: boolean;
@@ -109,8 +113,10 @@ export function validateVestWarnings<TValue>(
     includeErrors: false,
     includeWarnings: true,
     resetOnDestroy: options.resetOnDestroy ?? true,
-    only: options.only,
-    focusCurrentField: options.focusCurrentField,
+    ...(options.only !== undefined && { only: options.only }),
+    ...(options.focusCurrentField !== undefined && {
+      focusCurrentField: options.focusCurrentField,
+    }),
   });
 }
 
@@ -177,7 +183,9 @@ export function validateVest<TValue>(
     includeErrors: true,
     includeWarnings: options.includeWarnings ?? false,
     resetOnDestroy: options.resetOnDestroy ?? true,
-    only: options.only,
-    focusCurrentField: options.focusCurrentField,
+    ...(options.only !== undefined && { only: options.only }),
+    ...(options.focusCurrentField !== undefined && {
+      focusCurrentField: options.focusCurrentField,
+    }),
   });
 }

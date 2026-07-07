@@ -2,6 +2,8 @@
 
 > Core directives, providers, and utilities for Angular Signal Forms — form-level context, error strategies, automatic ARIA, submission helpers, and warning support.
 
+**[🚀 Live demo](https://ngx-signal-forms.github.io/ngx-signal-forms/)** · **[📖 Full documentation (GitHub)](https://github.com/ngx-signal-forms/ngx-signal-forms#readme)**
+
 ## Why this entry point exists
 
 Angular Signal Forms provides the form model, validation, and field state. The core toolkit builds on top with three things Angular intentionally leaves to you:
@@ -144,7 +146,7 @@ The directive class keeps its `Directive` suffix to avoid colliding with the
 
 Built-in kinds: `input-like`, `standalone-field-like`, `switch`, `checkbox`, `radio-group`, `slider`, `composite`.
 
-See [Custom Controls](../../docs/CUSTOM_CONTROLS.md) for detailed guidance.
+See [Custom Controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) for detailed guidance.
 
 ## Configuration
 
@@ -161,6 +163,35 @@ provideNgxSignalFormsConfig({
   optionalLegendText: 'All fields are required unless marked {marker}',
 });
 ```
+
+This is the canonical list of configuration keys and their defaults.
+
+### How settings resolve (the cascade)
+
+Every presentation setting — error strategy, appearance, orientation, markers,
+control presets, renderers — resolves through **one precedence chain, most
+specific wins**:
+
+```text
+field / component input
+  ?? form context (ngxSignalForm)
+  ?? component-scoped provider (…ForComponent)
+  ?? app-wide provider (provideNgxSignalForms…)
+  ?? built-in default
+```
+
+The **form context (`ngxSignalForm`)** tier carries only the form-owned settings
+— **error strategy** and **submitted status**. Appearance, orientation, markers,
+control presets, and renderers have no form-context equivalent, so they skip that
+tier and resolve `input ?? provider config ?? default`. A setting only consults a
+tier that can supply it; missing tiers fall through.
+
+Inheritance merges with nullish `??` **per key**: override one key and the rest
+still inherit, and an explicit falsy value is respected (`requiredMarker: ''`
+clears the marker; omitting the key inherits it). Every "you can override this"
+in the sections below is a link in this chain — see the
+[root README](https://github.com/ngx-signal-forms/ngx-signal-forms#how-settings-resolve-the-cascade)
+for the adopter-level walkthrough.
 
 ### Field marking
 
@@ -190,10 +221,11 @@ Per-field / per-legend overrides are available via the `showMarkerWhen`,
 `<ngx-form-field-wrapper>` and `<ngx-form-marking-legend>`.
 
 For component-scoped overrides: `provideNgxSignalFormsConfigForComponent()`.
-This provider merges with parent configuration property-by-property via
-`skipSelf` DI — child values win for keys they set, and every other key is
-inherited from the nearest ancestor `provideNgxSignalFormsConfig` call. The
-same inheritance contract applies to
+This is the component-scoped tier of the
+[cascade](#how-settings-resolve-the-cascade): the provider merges with parent
+configuration property-by-property via `skipSelf` DI — child values win for
+keys they set, and every other key is inherited from the nearest ancestor
+`provideNgxSignalFormsConfig` call. The same inheritance contract applies to
 `provideNgxSignalFormControlPresetsForComponent()`.
 
 ### Error messages
@@ -207,6 +239,33 @@ provideErrorMessages({
 ```
 
 Priority: validator `error.message` → registry → default toolkit message.
+
+The same resolution is available programmatically for custom error UIs:
+`resolveValidationErrorMessage(error, registry?, options?)` runs the full
+three-tier cascade, and `getDefaultValidationMessage(error, options?)` returns
+just the built-in fallback text for a validator kind.
+
+### Custom error / hint renderers
+
+Swap the wrapper's error or hint UI for your own component app-wide or per
+subtree — the wrapper renders it via the `NGX_FORM_FIELD_ERROR_RENDERER` /
+`NGX_FORM_FIELD_HINT_RENDERER` tokens:
+
+```typescript
+import { provideFormFieldErrorRenderer } from '@ngx-signal-forms/toolkit';
+
+// App-wide (environment scope)
+provideFormFieldErrorRenderer({ component: MyErrorComponent });
+
+// One component subtree — the cascade's component-scoped tier
+provideFormFieldErrorRendererForComponent({ component: MyErrorComponent });
+```
+
+`provideFormFieldHintRenderer()` / `provideFormFieldHintRendererForComponent()`
+work the same way for hints. The renderer contracts are the
+`NgxFormFieldErrorRenderer` / `NgxFormFieldHintRenderer` types; see
+[`CUSTOM_WRAPPERS.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_WRAPPERS.md)
+for the full renderer contract and a worked example.
 
 ### Control presets
 
@@ -260,6 +319,20 @@ const next = registry.extend({ slider: { layout: 'custom' } });
 // next.slider.ariaMode is unchanged; next.switch, next.composite, ... all stay default
 ```
 
+#### Control semantics utilities
+
+The functions behind kind resolution, for custom wrappers that need the same
+answers as the built-in wrapper and auto-ARIA:
+
+| Symbol                                                   | Description                                                                         |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `inferNgxSignalFormControlKind(element)`                 | Heuristic kind from the DOM (`null` when no safe heuristic exists)                  |
+| `readNgxSignalFormControlSemantics(element)`             | Read semantics explicitly declared on a host (`data-ngx-signal-form-control-*`)     |
+| `resolveNgxSignalFormControlSemantics(el, p)`            | Full resolution — explicit → inferred → preset fallback — as used by wrapper + ARIA |
+| `DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS`                | The built-in per-kind defaults (the cascade's last tier)                            |
+| `isNgxSignalFormControlKind/Layout/AriaMode(v)`          | Runtime guards for validating kind/layout/aria values                               |
+| `isFormFieldAppearance(v)` / `isFormFieldOrientation(v)` | Runtime guards for appearance/orientation config values                             |
+
 ### Field labels
 
 Override how field paths appear in error summaries:
@@ -287,12 +360,27 @@ provideFieldLabels(() => {
 
 ### Error visibility
 
-| Function                                               | Description                                        |
-| ------------------------------------------------------ | -------------------------------------------------- |
-| `showErrors(field, strategy, status?)`                 | `Signal<boolean>` — whether errors should show now |
-| `shouldShowErrors(invalid, touched, strategy, status)` | Pure boolean strategy helper                       |
-| `combineShowErrors(...signals)`                        | Combines multiple visibility signals               |
-| `createShowErrorsComputed(field, strategy, status?)`   | Lower-level extraction for custom UIs              |
+| Function                                               | Description                                                                                |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `createErrorVisibility(field, opts?)`                  | One call: `Signal<boolean>` with strategy + submitted status auto-read from the DI context |
+| `showErrors(field, strategy, status?)`                 | `Signal<boolean>` — whether errors should show now                                         |
+| `shouldShowErrors(invalid, touched, strategy, status)` | Pure boolean strategy helper                                                               |
+| `combineShowErrors(...signals)`                        | Combines multiple visibility signals                                                       |
+| `createShowErrorsComputed(field, strategy, status?)`   | Lower-level extraction for custom UIs                                                      |
+| `readDirectErrors(state)`                              | Direct `errors()` of a field/group only — excludes nested-field errors                     |
+
+### Strategy & context resolution
+
+Building blocks for custom wrappers and headless UIs that want to join the
+[cascade](#how-settings-resolve-the-cascade) exactly like the built-in surfaces:
+
+| Function                                                       | Description                                                              |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `resolveErrorDisplayStrategy(input, context?, configDefault?)` | Pure resolution: input ?? context ?? config default ?? `'on-touch'`      |
+| `resolveStrategyFromContext(input)`                            | `Signal` resolution of a directive's strategy input against form context |
+| `resolveSubmittedStatusFromContext(input)`                     | Same cascade for `SubmittedStatus`                                       |
+| `injectFormContext()`                                          | Get the `ngxSignalForm` context, or `undefined`                          |
+| `injectFieldControl(element, injector?)`                       | Resolve the bound `FieldTree` for an element from the form context       |
 
 ### Focus management
 
@@ -324,7 +412,7 @@ provideFieldLabels(() => {
 > Warning **display timing** is controlled separately from error timing via the
 > `warningStrategy` input on `NgxFormFieldError` (default:
 > `'immediate'`). See
-> [`WARNINGS_SUPPORT.md`](../../docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy)
+> [`WARNINGS_SUPPORT.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy)
 > and the [assistive README](./assistive/README.md#ngxformfielderrorcomponent)
 > for usage.
 
@@ -346,7 +434,6 @@ provideFieldLabels(() => {
 | `generateErrorId(fieldName, kind?)`             | Derive `{fieldName}-error` (container) or `{fieldName}-error-{kind}` (per-error) element id |
 | `generateWarningId(fieldName)`                  | Derive the `{fieldName}-warning` element id used for `aria-describedby`                     |
 | `isElementCssVisible(element)`                  | CSS-visibility test (`Element.checkVisibility()` with `offsetParent` fallback)              |
-| `injectFormContext()`                           | Get `ngxSignalForm` context or `undefined`                                                  |
 
 ### Field identity service
 
@@ -438,22 +525,47 @@ warning elements, matching every other toolkit surface.
 
 ### Other
 
-| Function                                         | Description                           |
-| ------------------------------------------------ | ------------------------------------- |
-| `unwrapValue(signalOrValue)`                     | Extract value from `Signal` or static |
-| `updateAt(array, index, updater)`                | Immutable array item update           |
-| `updateNested(array, index, key, nestedIdx, fn)` | Immutable nested array update         |
+| Function                                         | Description                                          |
+| ------------------------------------------------ | ---------------------------------------------------- |
+| `unwrapValue(signalOrValue)`                     | Extract value from `Signal` or static                |
+| `updateAt(array, index, updater)`                | Immutable array item update                          |
+| `updateNested(array, index, key, nestedIdx, fn)` | Immutable nested array update                        |
+| `createUniqueId(prefix)`                         | Stable, monotonic DOM id (`prefix-1`, `prefix-2`, …) |
+
+## Advanced: public DI tokens
+
+These tokens are the integration points for custom wrappers and renderers.
+Most apps never touch them — they're what the `provide*` functions above write
+and what the toolkit's surfaces read. Documented in depth in
+[`CUSTOM_WRAPPERS.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_WRAPPERS.md).
+
+| Token                             | Carries                                                                                          |
+| --------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `NGX_SIGNAL_FORMS_CONFIG`         | Resolved app/component config (`NgxSignalFormsConfig`; user input is `NgxSignalFormsUserConfig`) |
+| `NGX_SIGNAL_FORM_CONTEXT`         | Form-level strategy + submitted status (provided by `ngxSignalForm`)                             |
+| `NGX_SIGNAL_FORM_FIELD_CONTEXT`   | Per-field identity a wrapper provides to its projected content                                   |
+| `NGX_SIGNAL_FORM_HINT_REGISTRY`   | Hint-id registration so auto-ARIA can compose `aria-describedby`                                 |
+| `NGX_SIGNAL_FORM_ARIA_MODE`       | Resolved ARIA ownership (`auto`/`manual`) — decouples semantics from auto-ARIA                   |
+| `NGX_SIGNAL_FORM_CONTROL_PRESETS` | Effective control presets (read via `NgxControlPresetRegistry`)                                  |
+| `NGX_FORM_FIELD_ERROR_RENDERER`   | Error-renderer override (see [Custom error / hint renderers](#custom-error--hint-renderers))     |
+| `NGX_FORM_FIELD_HINT_RENDERER`    | Hint-renderer override                                                                           |
+
+Each documented function and token also exports its companion option/state
+types from the package root (`CreateErrorVisibilityOptions`,
+`OnInvalidHandlerOptions`, `SplitErrors`, `NgxSignalFormControlPresetOverrides`,
+`NgxFormFieldErrorRendererOverride`, …) — the root `index.ts` is the
+authoritative enumeration of the public surface.
 
 ## Related documentation
 
-- [Root README](../../README.md) — overview, installation, quick start
+- [Root README](https://github.com/ngx-signal-forms/ngx-signal-forms#readme) — overview, installation, quick start
 - [Form field wrapper](./form-field/README.md) — pre-styled wrapper component
 - [Assistive components](./assistive/README.md) — standalone error, grouped notification, hint, counter, and summary components
 - [Headless primitives](./headless/README.md) — renderless directives for custom UI
 - [Vest integration](./vest/README.md) — Vest adapter
 - [Theming guide](./form-field/THEMING.md) — CSS custom properties
-- [Custom controls](../../docs/CUSTOM_CONTROLS.md) — wrapping custom and third-party widgets
-- [Warnings support](../../docs/WARNINGS_SUPPORT.md) — warning convention and flow
+- [Custom controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) — wrapping custom and third-party widgets
+- [Warnings support](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md) — warning convention and flow
 
 ## License
 

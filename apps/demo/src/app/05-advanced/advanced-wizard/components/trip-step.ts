@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  input,
-  inject,
-  viewChild,
-} from '@angular/core';
+import { Component, ElementRef, inject, input, viewChild } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 
 import {
@@ -13,7 +6,6 @@ import {
   type FormFieldAppearance,
   type FormFieldOrientation,
   NgxSignalFormToolkit,
-  submitWithWarnings,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
@@ -23,7 +15,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
 
 @Component({
   selector: 'ngx-trip-step',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <div class="trip-step">
@@ -133,7 +125,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
                 type="date"
                 [formField]="tripForm.destinations[destIdx].departureDate"
               />
-              <ngx-form-field-hint position="left">
+              <ngx-form-field-hint>
                 Must be after arrival date
               </ngx-form-field-hint>
             </ngx-form-field-wrapper>
@@ -152,7 +144,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
               type="text"
               [formField]="tripForm.destinations[destIdx].accommodation"
             />
-            <ngx-form-field-hint position="left">
+            <ngx-form-field-hint>
               Hotel name, Airbnb address, etc.
             </ngx-form-field-hint>
           </ngx-form-field-wrapper>
@@ -443,6 +435,8 @@ export class TripStepComponent implements WizardStepInterface {
 
   // Expose form and computed signals to template
   readonly tripForm = this.#tripStepForm.form;
+  /** Surfaced for the wizard's live form-state debugger. */
+  readonly formTree = this.tripForm;
   readonly #model = this.#tripStepForm.model;
   protected readonly hasDestinations = this.#tripStepForm.hasDestinations;
   readonly isValid = this.#tripStepForm.isValid;
@@ -455,18 +449,18 @@ export class TripStepComponent implements WizardStepInterface {
     this.store.setDestinations(this.#model().destinations);
   }
 
-  async validateAndFocus(): Promise<boolean> {
-    await submitWithWarnings(this.tripForm, async () => {});
+  validateAndFocus(): Promise<boolean> {
+    this.tripForm().markAsTouched();
 
     if (this.tripForm().invalid() || !this.hasDestinations()) {
       const focused = focusFirstInvalid(this.tripForm);
       if (!focused && !this.hasDestinations()) {
         this.addDestinationButton()?.nativeElement.focus();
       }
-      return false;
+      return Promise.resolve(false);
     }
 
-    return true;
+    return Promise.resolve(true);
   }
 
   focusHeading(): void {

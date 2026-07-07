@@ -1,0 +1,82 @@
+# Dependabot configuration.
+#
+# IMPORTANT — pnpm catalogs & transitive CVEs:
+# This workspace pins dependency versions through pnpm `catalog:` references
+# (pnpm-workspace.yaml). Dependabot's npm updater cannot rewrite a `catalog:`
+# specifier during a *security* update, which is why the default security-update
+# job failed with `vite | unknown_error` and opened zero PRs.
+#
+# The durable fix for TRANSITIVE advisories in this repo is the `overrides:`
+# block in pnpm-workspace.yaml — pin the patched range there and run
+# `pnpm install`. Dependabot below handles DIRECT dependency version bumps and
+# GitHub Actions; it is not relied on for transitive security patching.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    # Skip versions younger than pnpm's minimumReleaseAge supply-chain window,
+    # otherwise Dependabot commits lockfiles that pnpm rejects at install time
+    # (ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION, see PR #132).
+    cooldown:
+      default-days: 2
+    labels:
+      - dependencies
+    commit-message:
+      prefix: build(deps)
+      prefix-development: chore(deps-dev)
+    ignore:
+      # Angular peer-dep policy caps the toolkit at <23 (see COMPATIBILITY.md).
+      # New Angular majors are validated deliberately, never auto-bumped.
+      - dependency-name: '@angular/*'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@angular-devkit/*'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@schematics/angular'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'ng-packagr'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@angular-eslint/*'
+        update-types: ['version-update:semver-major']
+    # Each dependency joins the FIRST matching group, so the lockstep families
+    # (Angular, Nx) are listed before the catch-all dev/prod groups.
+    groups:
+      angular:
+        patterns:
+          - '@angular/*'
+          - '@angular-devkit/*'
+          - '@schematics/angular'
+          - 'ng-packagr'
+          - '@angular-eslint/*'
+      nx:
+        patterns:
+          - '@nx/*'
+          - 'nx'
+      dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      production-dependencies:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: ci(deps)
+    groups:
+      github-actions:
+        patterns:
+          - '*'

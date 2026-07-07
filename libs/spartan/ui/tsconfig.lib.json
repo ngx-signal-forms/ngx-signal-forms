@@ -266,5 +266,13 @@
     "checkbox/icon/select/label/utils/src/**/*.test.ts",
     "checkbox/icon/select/label/utils/input/src/**/*.spec.ts",
     "checkbox/icon/select/label/utils/input/src/**/*.test.ts"
-  ]
+  ],
+  "angularCompilerOptions": {
+    "extendedDiagnostics": {
+      "checks": {
+        "nullishCoalescingNotNullable": "suppress",
+        "optionalChainNotNullable": "suppress"
+      }
+    }
+  }
 }

@@ -1,15 +1,10 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   DisplayControlsCardComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   PageHeaderComponent,
   SplitLayoutComponent,
 } from '../../ui';
@@ -20,34 +15,21 @@ import {
 import { WARNING_SUPPORT_CONTENT } from './warning-support.content';
 import { WarningsSupportFormComponent } from './warning-support.form';
 
-/**
- * Warning Support Page
- *
- * Demonstrates the distinction between blocking errors and non-blocking warnings.
- * Shows WCAG 2.2 compliant messaging patterns for accessible validation.
- */
 @Component({
   selector: 'ngx-warning-support-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     ExampleCardsComponent,
     ErrorDisplayModeSelectorComponent,
     DisplayControlsCardComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     WarningsSupportFormComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
   ],
   template: `
-    <ngx-page-header
-      title="Warning Support"
-      subtitle="Distinguish between blocking errors (prevent submission) and non-blocking warnings (guidance only). WCAG 2.2 compliant messaging patterns."
-    />
-
-    <ngx-example-cards
-      [demonstrated]="content.demonstrated"
-      [learning]="content.learning"
-    >
+    <ng-template ngxPageControls>
       <ngx-display-controls-card
         title="Warning timing controls"
         description="Compare how blocking errors and non-blocking warnings appear when feedback is immediate versus delayed until the field has been touched."
@@ -61,7 +43,17 @@ import { WarningsSupportFormComponent } from './warning-support.form';
           class="block min-w-0"
         />
       </ngx-display-controls-card>
+    </ng-template>
 
+    <ngx-page-header
+      title="Warning Support"
+      subtitle="Distinguish between blocking errors (prevent submission) and non-blocking warnings (guidance only). WCAG 2.2 compliant messaging patterns."
+    />
+
+    <ngx-example-cards
+      [demonstrated]="content.demonstrated"
+      [learning]="content.learning"
+    >
       <ngx-split-layout>
         <ngx-warning-support-form
           #formComponent

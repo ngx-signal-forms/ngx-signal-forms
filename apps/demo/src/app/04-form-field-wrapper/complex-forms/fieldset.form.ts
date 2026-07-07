@@ -1,10 +1,4 @@
-import {
-  booleanAttribute,
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal,
-} from '@angular/core';
+import { booleanAttribute, Component, input, signal } from '@angular/core';
 import {
   email,
   FormField,
@@ -21,10 +15,10 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import type { NgxFormFieldListStyle } from '@ngx-signal-forms/toolkit/assistive';
 import {
-  type NgxFieldsetAppearance,
-  type NgxFieldsetFeedbackAppearance,
-  type NgxFieldsetSurfaceTone,
-  type NgxFieldsetValidationSurface,
+  type NgxFormFieldsetAppearance,
+  type NgxFormFieldsetFeedbackAppearance,
+  type NgxFormFieldsetSurfaceTone,
+  type NgxFormFieldsetValidationSurface,
   type NgxFormFieldErrorPlacement,
   NgxFormField,
 } from '@ngx-signal-forms/toolkit/form-field';
@@ -106,7 +100,7 @@ const placementDesignPreviewSchema = schema<PlacementDesignPreviewModel>(
  */
 @Component({
   selector: 'ngx-fieldset-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   templateUrl: './fieldset.form.html',
   styleUrls: ['./fieldset.form.scss'],
@@ -119,11 +113,12 @@ export class FieldsetFormComponent {
   readonly appearance = input<FormFieldAppearance>('standard');
   readonly orientation = input<FormFieldOrientation>('vertical');
   readonly errorPlacement = input<NgxFormFieldErrorPlacement>('bottom');
-  readonly fieldsetAppearance = input<NgxFieldsetAppearance>('outline');
-  readonly feedbackAppearance = input<NgxFieldsetFeedbackAppearance>('auto');
+  readonly fieldsetAppearance = input<NgxFormFieldsetAppearance>('outline');
+  readonly feedbackAppearance =
+    input<NgxFormFieldsetFeedbackAppearance>('auto');
   readonly listStyle = input<NgxFormFieldListStyle>('bullets');
-  readonly surfaceTone = input<NgxFieldsetSurfaceTone>('default');
-  readonly validationSurface = input<NgxFieldsetValidationSurface>('never');
+  readonly surfaceTone = input<NgxFormFieldsetSurfaceTone>('default');
+  readonly validationSurface = input<NgxFormFieldsetValidationSurface>('never');
   readonly notificationTitle = input<string | null | undefined>(null);
   readonly includeNestedErrors = input(false, {
     transform: booleanAttribute,
@@ -176,9 +171,8 @@ export class FieldsetFormComponent {
    */
   readonly fieldsetForm = form(this.#model, fieldsetDemoSchema, {
     submission: {
-      action: async () => {
-        console.log('Fieldset form submitted:', this.#model());
-        return null;
+      action: async (field) => {
+        console.log('Fieldset form submitted:', field().value());
       },
       onInvalid: createOnInvalidHandler(),
     },

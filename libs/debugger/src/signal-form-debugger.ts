@@ -1,6 +1,5 @@
 import { JsonPipe, NgTemplateOutlet } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -121,12 +120,11 @@ function isFieldStateLike(value: unknown): value is FieldState<unknown> {
  * - When `ngxSignalForm` is present, `errorStrategy` and `submittedStatus`
  *   are read from the form context automatically
  *
- * **Production tree-shaking**:
- * The component self-guards rendering with `isDevMode()`, so production
- * builds see an empty template. For true *bundle* tree-shaking (skipping
- * the ~13 KB JS + ~15 KB SCSS entirely), consumers should still wrap the
- * element with `@if (isDevMode())`. Expose the `isDevMode` function on the
- * hosting component so the template can invoke it:
+ * **Production use**:
+ * The debugger is rendered whenever the form tree is usable, which keeps the
+ * deployed demo aligned with local development. If your own app needs to
+ * hide the panel in production, wrap the element in an explicit
+ * `@if (isDevMode())` guard in the hosting template.
  *
  * ```typescript
  * import { Component, isDevMode } from '@angular/core';
@@ -184,7 +182,7 @@ function isFieldStateLike(value: unknown): value is FieldState<unknown> {
  */
 @Component({
   selector: 'ngx-signal-form-debugger',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   imports: [
     JsonPipe,
     NgTemplateOutlet,
@@ -220,19 +218,6 @@ export class NgxSignalFormDebugger {
 
   /** Subtitle shown below the header title. */
   readonly subtitle = input('Live debugging information');
-
-  // ============================================================================
-  // Render gate (production opt-out)
-  // ============================================================================
-
-  /**
-   * `true` in dev mode, `false` in prod. The template wraps every
-   * render branch in `@if (renderEnabled && inputUsable())`, so a
-   * production-built consumer that forgets the outer `@if (isDevMode())`
-   * still pays zero DOM cost. (Bundle cost still needs the outer guard —
-   * see the JSDoc on the class.)
-   */
-  protected readonly renderEnabled = isDevMode();
 
   // ============================================================================
   // Form context (DI)
