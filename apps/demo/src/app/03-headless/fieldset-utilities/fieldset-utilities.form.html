@@ -85,15 +85,15 @@
             autocomplete="email"
             [attr.aria-invalid]="emailState.hasErrors() ? 'true' : null"
             [attr.aria-describedby]="
-              emailState.showErrors() && emailState.hasErrors()
+              emailState.shouldShowErrors() && emailState.hasErrors()
                 ? emailState.errorId()
-                : emailState.showWarnings() && emailState.hasWarnings()
+                : emailState.shouldShowWarnings() && emailState.hasWarnings()
                   ? emailState.warningId()
                   : null
             "
           />
 
-          @if (emailState.showErrors() && emailState.hasErrors()) {
+          @if (emailState.shouldShowErrors() && emailState.hasErrors()) {
           <div
             [id]="emailState.errorId()"
             role="alert"
@@ -113,7 +113,7 @@
       <fieldset
         ngxHeadlessFieldset
         #addressFieldset="fieldset"
-        [fieldsetField]="deliveryForm.address"
+        [field]="deliveryForm.address"
         fieldsetId="address"
         [includeNestedErrors]="true"
         class="space-y-4"
@@ -194,16 +194,16 @@
                   streetState.hasErrors() ? 'true' : null
                 "
                 [attr.aria-describedby]="
-                  streetState.showErrors() && streetState.hasErrors()
+                  streetState.shouldShowErrors() && streetState.hasErrors()
                     ? streetState.errorId()
-                    : streetState.showWarnings() &&
+                    : streetState.shouldShowWarnings() &&
                         streetState.hasWarnings()
                       ? streetState.warningId()
                       : null
                 "
               />
 
-              @if (streetState.showErrors() && streetState.hasErrors()) {
+              @if (streetState.shouldShowErrors() && streetState.hasErrors()) {
               <div
                 [id]="streetState.errorId()"
                 role="alert"
@@ -214,7 +214,7 @@
                 <div>{{ error.message }}</div>
                 }
               </div>
-              } @else if ( streetState.showWarnings() &&
+              } @else if ( streetState.shouldShowWarnings() &&
               streetState.hasWarnings() ) {
               <div
                 [id]="streetState.warningId()"
@@ -258,15 +258,15 @@
                 placeholder="Springfield"
                 [attr.aria-invalid]="cityState.hasErrors() ? 'true' : null"
                 [attr.aria-describedby]="
-                  cityState.showErrors() && cityState.hasErrors()
+                  cityState.shouldShowErrors() && cityState.hasErrors()
                     ? cityState.errorId()
-                    : cityState.showWarnings() && cityState.hasWarnings()
+                    : cityState.shouldShowWarnings() && cityState.hasWarnings()
                       ? cityState.warningId()
                       : null
                 "
               />
 
-              @if (cityState.showErrors() && cityState.hasErrors()) {
+              @if (cityState.shouldShowErrors() && cityState.hasErrors()) {
               <div
                 [id]="cityState.errorId()"
                 role="alert"
@@ -310,16 +310,16 @@
                   postalState.hasErrors() ? 'true' : null
                 "
                 [attr.aria-describedby]="
-                  postalState.showErrors() && postalState.hasErrors()
+                  postalState.shouldShowErrors() && postalState.hasErrors()
                     ? postalState.errorId()
-                    : postalState.showWarnings() &&
+                    : postalState.shouldShowWarnings() &&
                         postalState.hasWarnings()
                       ? postalState.warningId()
                       : null
                 "
               />
 
-              @if (postalState.showErrors() && postalState.hasErrors()) {
+              @if (postalState.shouldShowErrors() && postalState.hasErrors()) {
               <div
                 [id]="postalState.errorId()"
                 role="alert"
@@ -330,7 +330,7 @@
                 <div>{{ error.message }}</div>
                 }
               </div>
-              } @else if ( postalState.showWarnings() &&
+              } @else if ( postalState.shouldShowWarnings() &&
               postalState.hasWarnings() ) {
               <div
                 [id]="postalState.warningId()"
@@ -432,15 +432,15 @@
                 placeholder="Special instructions…"
                 [attr.aria-invalid]="notesState.hasErrors() ? 'true' : null"
                 [attr.aria-describedby]="
-                  notesState.showErrors() && notesState.hasErrors()
+                  notesState.shouldShowErrors() && notesState.hasErrors()
                     ? notesState.errorId()
-                    : notesState.showWarnings() && notesState.hasWarnings()
+                    : notesState.shouldShowWarnings() && notesState.hasWarnings()
                       ? notesState.warningId()
                       : null
                 "
               ></textarea>
 
-              @if (notesState.showErrors() && notesState.hasErrors()) {
+              @if (notesState.shouldShowErrors() && notesState.hasErrors()) {
               <div
                 [id]="notesState.errorId()"
                 role="alert"
@@ -451,8 +451,8 @@
                 <div>{{ error.message }}</div>
                 }
               </div>
-              } @else if ( notesState.showWarnings() && notesState.hasWarnings()
-              ) {
+              } @else if ( notesState.shouldShowWarnings() &&
+              notesState.hasWarnings() ) {
               <div
                 [id]="notesState.warningId()"
                 role="status"

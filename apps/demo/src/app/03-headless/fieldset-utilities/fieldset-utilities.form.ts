@@ -144,11 +144,11 @@ export class HeadlessFieldsetUtilitiesComponent {
 
   protected readonly notesDescribedBy = computed(() => {
     const ids = [this.notesCounterId];
-    if (this.notesError.showErrors() && this.notesError.hasErrors()) {
+    if (this.notesError.shouldShowErrors() && this.notesError.hasErrors()) {
       const id = this.notesError.errorId();
       if (id !== null) ids.push(id);
     } else if (
-      this.notesError.showWarnings() &&
+      this.notesError.shouldShowWarnings() &&
       this.notesError.hasWarnings()
     ) {
       const id = this.notesError.warningId();

@@ -82,19 +82,21 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
       live region (WCAG 4.1.3, NVDA + Chrome edge case).
     -->
     <small
-      [id]="headless.showErrors() && headless.hasErrors() ? errorId() : null"
+      [id]="
+        headless.shouldShowErrors() && headless.hasErrors() ? errorId() : null
+      "
       class="p-error"
       [class.prime-feedback--empty]="
-        !(headless.showErrors() && headless.hasErrors())
+        !(headless.shouldShowErrors() && headless.hasErrors())
       "
       role="alert"
       [attr.aria-hidden]="
-        headless.showErrors() && headless.hasErrors() ? null : 'true'
+        headless.shouldShowErrors() && headless.hasErrors() ? null : 'true'
       "
-      [hidden]="!(headless.showErrors() && headless.hasErrors())"
+      [hidden]="!(headless.shouldShowErrors() && headless.hasErrors())"
       data-testid="prime-error"
     >
-      @if (headless.showErrors() && headless.hasErrors()) {
+      @if (headless.shouldShowErrors() && headless.hasErrors()) {
         @for (
           error of headless.resolvedErrors();
           track error.kind + ':' + error.message + ':' + $index

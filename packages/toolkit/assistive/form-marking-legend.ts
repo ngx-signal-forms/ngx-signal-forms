@@ -51,7 +51,7 @@ import { createFieldOptionalitySummary } from '@ngx-signal-forms/toolkit/headles
  * Outside a form host, pass the tree explicitly:
  *
  * ```html
- * <ngx-form-marking-legend [formField]="userForm" />
+ * <ngx-form-marking-legend [formTree]="userForm" />
  * ```
  */
 @Component({
@@ -83,7 +83,7 @@ export class NgxFormMarkingLegend {
    * form context (`NgxSignalForm` on `form[formRoot]`). When neither is
    * available the legend renders nothing and emits a dev-mode error.
    */
-  readonly formField = input<FieldTree<unknown>>();
+  readonly formTree = input<FieldTree<unknown>>();
 
   /** Override the marking mode. Falls back to config `showMarkerWhen`. */
   readonly showMarkerWhen = input<FieldMarkingMode>();
@@ -101,7 +101,7 @@ export class NgxFormMarkingLegend {
   readonly optionalMarker = input<string>();
 
   readonly #resolvedTree = computed<FieldTree<unknown> | undefined>(
-    () => this.formField() ?? this.#formContext?.form,
+    () => this.formTree() ?? this.#formContext?.form,
   );
 
   constructor() {
@@ -120,7 +120,7 @@ export class NgxFormMarkingLegend {
           // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
           console.error(
             '[ngx-signal-forms] NgxFormMarkingLegend: no form tree available. ' +
-              'Provide a `[formField]` input or place the legend inside a ' +
+              'Provide a `[formTree]` input or place the legend inside a ' +
               '`form[formRoot][ngxSignalForm]` host. The legend renders nothing ' +
               'until a form tree is resolvable.',
           );

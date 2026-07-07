@@ -14,7 +14,6 @@ describe('NgxHeadlessNotification', () => {
   function setup(initial: {
     errors: readonly ValidationError[];
     fieldName?: string | null;
-    tone?: 'auto' | 'error' | 'warning';
   }) {
     @Component({
       selector: 'ngx-test-notification',
@@ -26,7 +25,6 @@ describe('NgxHeadlessNotification', () => {
           #n="notificationState"
           [errors]="errors"
           [fieldName]="fieldName()"
-          [tone]="tone()"
         >
           <span data-testid="resolved-tone">{{ n.resolvedTone() }}</span>
           <span data-testid="resolved-message">{{
@@ -50,20 +48,18 @@ describe('NgxHeadlessNotification', () => {
     class TestComponent {
       readonly errors = signal(initial.errors);
       readonly fieldName = signal<string | null>(initial.fieldName ?? null);
-      readonly tone = signal<'auto' | 'error' | 'warning'>(
-        initial.tone ?? 'auto',
-      );
     }
 
     return render(TestComponent);
   }
 
   describe('tone resolution', () => {
-    it('routes blocking errors to the error container even with tone="warning"', async () => {
+    // Tone is fully content-driven — there is no `tone` input to override it
+    // (removed pre-1.0; see MIGRATING_BETA_TO_V1.md).
+    it('routes blocking errors to the error container', async () => {
       await setup({
         errors: [{ kind: 'required', message: 'Street is required' }],
         fieldName: 'address',
-        tone: 'warning',
       });
 
       expect(screen.getByTestId('resolved-tone').textContent).toBe('error');
@@ -82,16 +78,6 @@ describe('NgxHeadlessNotification', () => {
       expect(screen.queryByTestId('error-container')).toBeFalsy();
     });
 
-    it('honors explicit tone="warning" when no blocking error is present', async () => {
-      await setup({
-        errors: [{ kind: 'warn:optional', message: 'Phone is optional' }],
-        fieldName: 'address',
-        tone: 'warning',
-      });
-
-      expect(screen.getByTestId('resolved-tone').textContent).toBe('warning');
-    });
-
     it('defaults to "error" tone for an empty messages list', async () => {
       await setup({ errors: [], fieldName: 'address' });
 
@@ -100,12 +86,6 @@ describe('NgxHeadlessNotification', () => {
       expect(screen.getByTestId('resolved-tone').textContent).toBe('error');
       expect(screen.queryByTestId('error-container')).toBeFalsy();
       expect(screen.queryByTestId('warning-container')).toBeFalsy();
-    });
-
-    it('defaults to "error" tone for an empty list even with explicit tone="warning"', async () => {
-      await setup({ errors: [], fieldName: 'address', tone: 'warning' });
-
-      expect(screen.getByTestId('resolved-tone').textContent).toBe('error');
     });
   });
 

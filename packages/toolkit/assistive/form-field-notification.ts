@@ -1,8 +1,5 @@
 import { Component, computed, inject, input } from '@angular/core';
-import {
-  NgxHeadlessNotification,
-  type NgxNotificationTone,
-} from '@ngx-signal-forms/toolkit/headless';
+import { NgxHeadlessNotification } from '@ngx-signal-forms/toolkit/headless';
 
 import type { NgxFormFieldListStyle } from './form-field-error';
 
@@ -13,13 +10,6 @@ import type { NgxFormFieldListStyle } from './form-field-error';
  */
 // oxlint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- alias kept as a deprecated named export for migration.
 export type NgxFormFieldNotificationListStyle = NgxFormFieldListStyle;
-
-/**
- * @deprecated Use {@link NgxNotificationTone} from
- * `@ngx-signal-forms/toolkit/headless` — the canonical tone type now lives
- * with the headless directive that owns the resolution logic.
- */
-export type NgxFormFieldNotificationTone = NgxNotificationTone;
 
 /**
  * Grouped validation notification for fieldsets and custom summary blocks.
@@ -46,7 +36,7 @@ export type NgxFormFieldNotificationTone = NgxNotificationTone;
   hostDirectives: [
     {
       directive: NgxHeadlessNotification,
-      inputs: ['errors', 'fieldName', 'tone'],
+      inputs: ['errors', 'fieldName'],
     },
   ],
   styleUrls: [

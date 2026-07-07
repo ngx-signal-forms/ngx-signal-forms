@@ -193,7 +193,7 @@ import {
           (hints are persistent help text, not replaced on validation).
         - The error renderer outlet below renders PrimeFieldErrorComponent
           (the registered NGX_FORM_FIELD_ERROR_RENDERER), which itself
-          gates visibility via showErrors() / showWarnings() from the
+          gates visibility via shouldShowErrors() / shouldShowWarnings() from the
           composed NgxHeadlessErrorState directive.
       -->
       <ng-content select="ngx-form-field-hint" />
