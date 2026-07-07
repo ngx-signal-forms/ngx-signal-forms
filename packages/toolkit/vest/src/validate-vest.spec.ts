@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { create, enforce, group, only, test, warn } from 'vest';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   VEST_ERROR_KIND_PREFIX,
   VEST_WARNING_KIND_PREFIX,
@@ -1077,5 +1077,188 @@ describe('validateVest', () => {
     expect(alphaErrors).toHaveLength(1);
     expect(bravoErrors).toHaveLength(1);
     expect(alphaErrors[0]?.kind).not.toBe(bravoErrors[0]?.kind);
+  });
+
+  it('does not leave an earlier focusCurrentField registration permanently pending when a later registration on the same suite supersedes its run', async () => {
+    // Regression: Vest 6 only tracks ONE resolver per suite root isolate, so
+    // calling `suite.run()` a second time for the SAME suite instance (here,
+    // via a second `focusCurrentField` registration on a different field)
+    // steals the first run's resolver. The first run's promise then never
+    // settles. Without a settlement fallback that does not depend on the
+    // superseded run's own resolver, `password` would stay pending() forever
+    // even after its own async test body resolves.
+    const deferred = new Map<string, () => void>();
+    const awaitField = (field: string) =>
+      new Promise<void>((resolve) => {
+        deferred.set(field, resolve);
+      });
+
+    const suite = create(
+      (data: { email: string; password: string }, field?: string) => {
+        only(field);
+        test('email', 'Email check failed', async () => {
+          await awaitField('email');
+          enforce(data.email).isNotBlank();
+        });
+        test('password', 'Password check failed', async () => {
+          await awaitField('password');
+          enforce(data.password).isNotBlank();
+        });
+      },
+    );
+
+    @Component({
+      selector: 'ngx-test-vest-superseded-run',
+      imports: [FormField],
+
+      template: `
+        <input id="email" [formField]="f.email" />
+        <input id="password" [formField]="f.password" />
+      `,
+    })
+    class TestComponent {
+      readonly model = signal({ email: 'a', password: 'b' });
+      readonly f = form(this.model, (path) => {
+        // Two focusCurrentField registrations sharing ONE suite instance —
+        // the documented per-field pattern from the README.
+        validateVest(path.email, suite, { focusCurrentField: true });
+        validateVest(path.password, suite, { focusCurrentField: true });
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+
+    // Both focused runs are in-flight (their async test bodies are awaiting
+    // `awaitField`); the `password` run supersedes the `email` run's resolver.
+    // Do NOT await whenStable() here — that blocks forever while a resource
+    // is deliberately parked on the gate.
+    await vi.waitFor(() => {
+      expect(fixture.componentInstance.f.email().pending()).toBe(true);
+      expect(fixture.componentInstance.f.password().pending()).toBe(true);
+    });
+
+    deferred.get('email')?.();
+    deferred.get('password')?.();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(fixture.componentInstance.f.email().pending()).toBe(false);
+    expect(fixture.componentInstance.f.password().pending()).toBe(false);
+  });
+
+  it('does not cross-attach another field’s retained Vest failure onto a focusCurrentField-bound field', async () => {
+    // Regression: `mapVestValidationResult` used to map the WHOLE
+    // `getErrors()`/`getWarnings()` map regardless of which field the
+    // validator was bound to. Vest is stateful — fields excluded by `only()`
+    // retain their previous failures — so once BOTH fields have failed at
+    // least once, each focusCurrentField-bound validator's fallback
+    // resolution attached the OTHER field's retained message onto its own
+    // bound field.
+    const suite = create(
+      (data: { email: string; password: string }, field?: string) => {
+        only(field);
+        test('email', 'Email is required', () => {
+          enforce(data.email).isNotBlank();
+        });
+        test('password', 'Password is required', () => {
+          enforce(data.password).isNotBlank();
+        });
+      },
+    );
+
+    @Component({
+      selector: 'ngx-test-vest-no-cross-attach',
+      imports: [FormField],
+
+      template: `
+        <input id="email" [formField]="f.email" />
+        <input id="password" [formField]="f.password" />
+      `,
+    })
+    class TestComponent {
+      readonly model = signal({ email: '', password: '' });
+      readonly f = form(this.model, (path) => {
+        validateVest(path.email, suite, { focusCurrentField: true });
+        validateVest(path.password, suite, { focusCurrentField: true });
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    // Trigger the password field's focused run too, so both fields now have
+    // a retained failure in the suite's stateful result.
+    fixture.componentInstance.model.set({ email: '', password: '' });
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const emailErrors = fixture.componentInstance.f.email().errors();
+    const passwordErrors = fixture.componentInstance.f.password().errors();
+
+    expect(emailErrors.some((e) => e.message === 'Password is required')).toBe(
+      false,
+    );
+    expect(passwordErrors.some((e) => e.message === 'Email is required')).toBe(
+      false,
+    );
+    expect(emailErrors.some((e) => e.message === 'Email is required')).toBe(
+      true,
+    );
+    expect(
+      passwordErrors.some((e) => e.message === 'Password is required'),
+    ).toBe(true);
+  });
+
+  it('does not let a sync Vest warning suppress a blocking async Vest error on the same field', async () => {
+    // Regression: Angular skips a `validateAsync` resource whenever the
+    // bound node's `syncValid()` is false, and toolkit warnings are ordinary
+    // `ValidationError`s (`warn:vest:*`). A sync `warn()` result surfaced by
+    // the adapter's `validateTree` pass therefore made `syncValid()` false
+    // and silently prevented the async phase (and any blocking async Vest
+    // error, e.g. a "username already taken" check) from ever running.
+    let releaseAsyncCheck: (() => void) | undefined;
+    const asyncCheckGate = new Promise<void>((resolve) => {
+      releaseAsyncCheck = resolve;
+    });
+
+    const suite = create((data: { username: string }) => {
+      test('username', 'Usernames should be lowercase', () => {
+        warn();
+        enforce(data.username).matches(/^[a-z]+$/);
+      });
+      test('username', 'Username is already taken', async () => {
+        await asyncCheckGate;
+        enforce(data.username.toLowerCase() !== 'admin').isTruthy();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-vest-warning-does-not-block-async',
+      imports: [FormField],
+
+      template: `<input id="username" [formField]="f.username" />`,
+    })
+    class TestComponent {
+      readonly model = signal({ username: 'ADMIN' });
+      readonly f = form(this.model, (path) => {
+        validateVest(path, suite, { includeWarnings: true });
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+
+    // The sync warning (uppercase 'ADMIN' fails the lowercase check) must not
+    // prevent the async blocking check from being scheduled. Do NOT await
+    // whenStable() here — that blocks forever while the resource is
+    // deliberately parked on `asyncCheckGate`.
+    await vi.waitFor(() => {
+      expect(fixture.componentInstance.f.username().pending()).toBe(true);
+    });
+
+    releaseAsyncCheck?.();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const errors = fixture.componentInstance.f.username().errors();
+    expect(errors.some((e) => e.message === 'Username is already taken')).toBe(
+      true,
+    );
   });
 });

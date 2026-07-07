@@ -27,7 +27,7 @@
   "peerDependencies": {
     "@angular/core": ">=22.0.0 <23.0.0",
     "@angular/forms": ">=22.0.0 <23.0.0",
-    "vest": ">=6.0.0 <6.3.0 || >=6.3.1"
+    "vest": ">=6.0.0"
   },
   "peerDependenciesMeta": {
     "vest": {

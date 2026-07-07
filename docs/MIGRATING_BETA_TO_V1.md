@@ -667,6 +667,49 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 See [`packages/toolkit/vest/README.md`](../packages/toolkit/vest/README.md#suite-lifecycle)
 for the full suite-lifecycle discussion.
 
+### Vest v1.0.0 audit fixes (non-breaking)
+
+These are bug fixes, not public API changes — no consumer code changes are
+required. Listed here because they change previously-broken observable
+behavior:
+
+- **Fixed: a superseded focused run could leave a field permanently
+  `pending()`.** Vest 6 tracks a single resolver per suite instance, so two
+  registrations of the same suite on different fields (e.g. two
+  `focusCurrentField` validators) could steal each other's resolver, leaving
+  the earlier field's async validation stuck pending forever. The adapter now
+  falls back to the suite's `subscribe`/`get` API (when available) to detect
+  settlement independently of the stolen resolver. `VestRunnableSuite` gained
+  two new **optional** members, `subscribe` and `get`, to support this —
+  existing suite shapes that omit them keep working unchanged.
+- **Fixed: cross-field error mis-attribution for subfield-bound validators.**
+  A `focusCurrentField`-bound validator (e.g. bound to `path.email`) could
+  surface an unrelated field's retained Vest failure (e.g. `password`) as if
+  it belonged to its own bound field, because Vest's `only()` mode retains
+  other fields' previous failures in the same result. Validators bound to a
+  specific field now only map entries for that field (or its descendants).
+- **Fixed: a sync Vest warning could permanently suppress a blocking async
+  Vest error on the same field.** Angular's `validateAsync` only schedules its
+  resource when the bound subtree has zero sync errors, and toolkit warnings
+  are ordinary `ValidationError`s. A sync `warn()` result therefore silently
+  prevented the async phase (and any blocking async check, e.g. a
+  "username already taken" check) from ever running. The adapter now defers
+  surfacing a sync warning only while the suite has pending async tests, and
+  re-surfaces it together with the settled result — so an advisory warning
+  can no longer hide a blocking async error. If you inspect warnings
+  synchronously (without waiting for `whenStable()`/the async result), a
+  warning may now appear one tick later than before while async tests are
+  in flight.
+
+### Vest peer dependency range widened
+
+`vest@6.3.0` was previously excluded from the `vest` peer range
+(`>=6.0.0 <6.3.0 || >=6.3.1`) over an unverified packaging-defect claim, and
+the `>=6.3.1` half of that range pointed at a version that was never
+published as stable (only `6.3.2` was). The peer range is now simply
+`>=6.0.0` — see [`COMPATIBILITY.md`](../COMPATIBILITY.md#vest-compatibility).
+This is a relaxation, not a breaking change.
+
 ### Null-safe field-name resolution
 
 The wrapper, error, and headless field-name directives previously threw when

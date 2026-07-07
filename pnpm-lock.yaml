@@ -598,7 +598,7 @@ importers:
   packages/toolkit:
     dependencies:
       vest:
-        specifier: '>=6.0.0 <6.3.0 || >=6.3.1'
+        specifier: '>=6.0.0'
         version: 6.3.2
     devDependencies:
       '@angular/common':

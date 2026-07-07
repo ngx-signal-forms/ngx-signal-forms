@@ -30,6 +30,10 @@ export interface ValidateVestOptions<TValue = unknown> {
    * objects with a `kind` prefixed by `warn:` so existing toolkit components
    * render them as non-blocking guidance.
    *
+   * While the suite has pending async tests, a sync warning is deferred (not
+   * yet surfaced) and re-emitted together with the settled result once they
+   * finish — see the vest README's "Async caveats" section for why.
+   *
    * @default false
    */
   includeWarnings?: boolean;
