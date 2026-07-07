@@ -1175,3 +1175,23 @@ include) kept managing ARIA anyway via its CSS attribute selector — actively
 overriding what the author opted out of. `NgxFormField` now includes
 `NgxSignalFormControlSemanticsDirective`; it's selector-gated and inert for
 consumers who never add the attribute.
+
+## Public API consistency pass (v1.0.0 audit #165)
+
+A pre-freeze sweep of the public surface. Breaking changes are listed first; the last two entries are deliberate design decisions recorded for clarity.
+
+| Area | Before | After |
+| --- | --- | --- |
+| Missing type exports | `ErrorMessageRegistry`, `FieldLabelResolver` referenced by public signatures but unexported | both now exported from `@ngx-signal-forms/toolkit` (and `ErrorMessageRegistry` re-exported from `/headless`) |
+| Whole-tree input name | `NgxFormMarkingLegend` took `[formField]` for a whole form root | now `[formTree]` (aligns with `NgxHeadlessErrorSummary`/`NgxFormFieldErrorSummary`) |
+| Direct-errors input | `[errors]` required a `Signal<ValidationError[]>` (`[errors]="sig"`) | now accepts a plain array **or** a signal (unwrapped internally); pass `[errors]="sig()"` or `[errors]="array"` |
+| Fieldset option types | `NgxFieldsetAppearance`, `NgxFieldsetSurfaceTone`, `NgxFieldsetValidationSurface`, `NgxFieldsetFeedbackAppearance` | renamed `NgxFormFieldset*` (matches the `NgxFormFieldset` component) |
+| Dead input | `NgxHeadlessNotification`/`NgxFormFieldNotification` shipped a no-op `tone` input (+ `NgxNotificationTone`/`NgxFormFieldNotificationTone` types) | removed (tone is fully content-driven; re-adding later is non-breaking) |
+
+Bug fix (no API change): `NgxFormFieldHint` now mints its fallback id once in an injection context instead of lazily inside a computed — this removes the SSR-unsafe module-counter fallback + dev warning and stops `aria-describedby` from pointing at a stale id when the field name resolves and later clears.
+
+Docs fix: removed phantom `@template TForm` / `@template TFieldset` JSDoc tags from `NGX_SIGNAL_FORM_CONTEXT` and `NgxFormFieldset` (neither declaration is generic).
+
+**Intentional, documented decisions (not renamed):**
+- **`strategy` (field-level) vs `errorStrategy` (form-level).** The form-level `NgxSignalForm` directive sets the workspace default via `[errorStrategy]`; individual field-level components (`NgxFormFieldWrapper`, `NgxFormFieldError`, `NgxFormFieldset`, `NgxHeadlessErrorState`, `NgxHeadlessFieldset`) override it per-field via `[strategy]`, paired with `[warningStrategy]` where warnings are configurable. This split is deliberate and preserved to avoid a churny rename of the most widely-used input. Visibility signals are uniform: `shouldShowErrors()` / `shouldShowWarnings()`.
+- **`provideErrorMessages()` / `provideFieldLabels()` return `Provider` (not `EnvironmentProviders`).** These register level-agnostic registries usable in either environment or component providers — intentionally, so no `…ForComponent` variant is needed.

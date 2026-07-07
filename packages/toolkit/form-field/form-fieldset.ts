@@ -23,16 +23,16 @@ import {
   type NgxFormFieldErrorPlacement,
 } from '@ngx-signal-forms/toolkit';
 
-export type NgxFieldsetFeedbackAppearance = 'auto' | 'plain' | 'notification';
-export type NgxFieldsetAppearance = 'outline' | 'plain';
-export type NgxFieldsetSurfaceTone =
+export type NgxFormFieldsetFeedbackAppearance = 'auto' | 'plain' | 'notification';
+export type NgxFormFieldsetAppearance = 'outline' | 'plain';
+export type NgxFormFieldsetSurfaceTone =
   | 'default'
   | 'neutral'
   | 'info'
   | 'success'
   | 'warning'
   | 'danger';
-export type NgxFieldsetValidationSurface = 'never' | 'always';
+export type NgxFormFieldsetValidationSurface = 'never' | 'always';
 
 /**
  * Form fieldset component for grouping related form fields with aggregated error/warning display.
@@ -79,8 +79,6 @@ export type NgxFieldsetValidationSurface = 'never' | 'always';
  * Use `includeNestedErrors` to control which errors are shown:
  * - `false` (default): Shows ONLY direct group-level errors (use when fields show their own errors)
  * - `true`: Shows ALL errors including nested field errors via `errorSummary()`
- *
- * @template TFieldset The type of the fieldset field value
  *
  * @example Group-Only Mode (when nested fields show their own errors)
  * ```html
@@ -258,7 +256,7 @@ export class NgxFormFieldset {
    * - `outline` (default): bordered grouped section with inner padding
    * - `plain`: semantic-only grouping with no border, no padding, and no surfaced background
    */
-  readonly appearance = input<NgxFieldsetAppearance>('outline');
+  readonly appearance = input<NgxFormFieldsetAppearance>('outline');
 
   /**
    * Presentation style for grouped feedback.
@@ -267,7 +265,7 @@ export class NgxFormFieldset {
    * - `plain`: always use the compact `ngx-form-field-error` presentation
    * - `notification`: always use the surfaced notification card
    */
-  readonly feedbackAppearance = input<NgxFieldsetFeedbackAppearance>('auto');
+  readonly feedbackAppearance = input<NgxFormFieldsetFeedbackAppearance>('auto');
 
   /**
    * Optional title rendered inside the notification card.
@@ -282,7 +280,7 @@ export class NgxFormFieldset {
   /**
    * Base surface tint for the fieldset content area.
    */
-  readonly surfaceTone = input<NgxFieldsetSurfaceTone>('default');
+  readonly surfaceTone = input<NgxFormFieldsetSurfaceTone>('default');
 
   /**
    * Whether validation state should tint the fieldset surface.
@@ -290,7 +288,7 @@ export class NgxFormFieldset {
    * - `never` (default): keep the surface neutral and rely on the grouped message only
    * - `always`: tint every invalid/warning fieldset surface
    */
-  readonly validationSurface = input<NgxFieldsetValidationSurface>('never');
+  readonly validationSurface = input<NgxFormFieldsetValidationSurface>('never');
 
   protected readonly isTopPlacement = computed(() => {
     return this.errorPlacement() === 'top';
@@ -309,7 +307,7 @@ export class NgxFormFieldset {
   #warnedInvalidValidationSurface = false;
   #warnedTitleIgnoredOnPlain = false;
 
-  protected readonly resolvedAppearance = computed<NgxFieldsetAppearance>(
+  protected readonly resolvedAppearance = computed<NgxFormFieldsetAppearance>(
     () => {
       const appearance = this.appearance();
 
@@ -331,7 +329,7 @@ export class NgxFormFieldset {
   );
 
   protected readonly resolvedFeedbackAppearance = computed<
-    Exclude<NgxFieldsetFeedbackAppearance, 'auto'>
+    Exclude<NgxFormFieldsetFeedbackAppearance, 'auto'>
   >(() => {
     const appearance = this.feedbackAppearance();
 
@@ -413,7 +411,7 @@ export class NgxFormFieldset {
   );
 
   protected readonly resolvedValidationSurface =
-    computed<NgxFieldsetValidationSurface>(() => {
+    computed<NgxFormFieldsetValidationSurface>(() => {
       const value = this.validationSurface();
       if (value === 'never' || value === 'always') {
         return value;
@@ -429,7 +427,7 @@ export class NgxFormFieldset {
       return 'never';
     });
 
-  protected readonly resolvedSurfaceTone = computed<NgxFieldsetSurfaceTone>(
+  protected readonly resolvedSurfaceTone = computed<NgxFormFieldsetSurfaceTone>(
     () => {
       const value = this.surfaceTone();
       if (

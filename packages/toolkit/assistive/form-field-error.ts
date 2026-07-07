@@ -12,6 +12,7 @@ import {
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   resolveStrategyFromContext,
   showErrors,
+  unwrapValue,
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
@@ -291,7 +292,9 @@ export class NgxFormFieldError {
    * `formField` instead.
    */
   readonly #fieldStateAccessor = computed(() => {
-    const override = this.headless.errorsOverride()?.();
+    const rawOverride = this.headless.errorsOverride();
+    const override =
+      rawOverride === undefined ? undefined : unwrapValue(rawOverride);
     if (override !== undefined) {
       // Synthesised field-state surface: only the three accessors the primitive
       // reads (`errors`, `invalid`, `touched`).
@@ -399,7 +402,7 @@ export class NgxFormFieldError {
    * first-insertion semantics.
    */
   protected readonly errorContainerVisible = computed(
-    () => this.headless.showErrors() && this.headless.hasErrors(),
+    () => this.headless.shouldShowErrors() && this.headless.hasErrors(),
   );
 
   /**

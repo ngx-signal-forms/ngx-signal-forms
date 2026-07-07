@@ -110,8 +110,6 @@ export const NGX_SIGNAL_FORM_CONTROL_PRESETS =
 /**
  * Injection token for the form context (provided by `NgxSignalForm`
  * when `ngxSignalForm` is present alongside Angular's `[formRoot]`).
- *
- * @template TForm - The Signal Forms instance type
  */
 export const NGX_SIGNAL_FORM_CONTEXT = new InjectionToken<NgxSignalFormContext>(
   'NGX_SIGNAL_FORM_CONTEXT',

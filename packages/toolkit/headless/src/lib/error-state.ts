@@ -154,7 +154,7 @@ export class NgxHeadlessErrorState<
    * Error display strategy override.
    * If undefined, inherits from form context or defaults to 'on-touch'.
    */
-  readonly errorStrategy = input<ErrorDisplayStrategy | undefined>();
+  readonly strategy = input<ErrorDisplayStrategy | undefined>();
 
   /**
    * Form submission status (optional).
@@ -203,7 +203,7 @@ export class NgxHeadlessErrorState<
   }
 
   readonly #resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() =>
-    resolveStrategyFromContext(this.errorStrategy(), this.#injectedContext),
+    resolveStrategyFromContext(this.strategy(), this.#injectedContext),
   );
 
   /**

@@ -15,10 +15,10 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import type { NgxFormFieldListStyle } from '@ngx-signal-forms/toolkit/assistive';
 import {
-  type NgxFieldsetAppearance,
-  type NgxFieldsetFeedbackAppearance,
-  type NgxFieldsetSurfaceTone,
-  type NgxFieldsetValidationSurface,
+  type NgxFormFieldsetAppearance,
+  type NgxFormFieldsetFeedbackAppearance,
+  type NgxFormFieldsetSurfaceTone,
+  type NgxFormFieldsetValidationSurface,
   type NgxFormFieldErrorPlacement,
   NgxFormField,
 } from '@ngx-signal-forms/toolkit/form-field';
@@ -113,11 +113,11 @@ export class FieldsetFormComponent {
   readonly appearance = input<FormFieldAppearance>('standard');
   readonly orientation = input<FormFieldOrientation>('vertical');
   readonly errorPlacement = input<NgxFormFieldErrorPlacement>('bottom');
-  readonly fieldsetAppearance = input<NgxFieldsetAppearance>('outline');
-  readonly feedbackAppearance = input<NgxFieldsetFeedbackAppearance>('auto');
+  readonly fieldsetAppearance = input<NgxFormFieldsetAppearance>('outline');
+  readonly feedbackAppearance = input<NgxFormFieldsetFeedbackAppearance>('auto');
   readonly listStyle = input<NgxFormFieldListStyle>('bullets');
-  readonly surfaceTone = input<NgxFieldsetSurfaceTone>('default');
-  readonly validationSurface = input<NgxFieldsetValidationSurface>('never');
+  readonly surfaceTone = input<NgxFormFieldsetSurfaceTone>('default');
+  readonly validationSurface = input<NgxFormFieldsetValidationSurface>('never');
   readonly notificationTitle = input<string | null | undefined>(null);
   readonly includeNestedErrors = input(false, {
     transform: booleanAttribute,
