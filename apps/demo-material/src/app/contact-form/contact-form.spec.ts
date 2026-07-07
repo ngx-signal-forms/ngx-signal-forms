@@ -4,6 +4,7 @@ import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 import { render, screen, waitFor } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
+import { provideNgxMatForms } from '../wrapper';
 import { ContactFormComponent } from './contact-form';
 
 /**
@@ -30,6 +31,9 @@ describe('ContactFormComponent (Material reference, smoke)', () => {
           defaultErrorStrategy: 'on-touch',
           autoAria: true,
         }),
+        // Matches main.ts — registers MaterialFeedbackRenderer/
+        // MaterialHintRenderer AND NgxMatWarningAwareErrorStateMatcher.
+        provideNgxMatForms(),
       ],
     });
     return result;
@@ -116,7 +120,7 @@ describe('ContactFormComponent (Material reference, smoke)', () => {
     expect(hasMatError).toBe(true);
   });
 
-  it('renders warning content inside mat-hint without surfacing as an error', async () => {
+  it('renders warning content inside mat-hint without surfacing as an error or invalid state', async () => {
     const user = userEvent.setup();
     await setup();
 
@@ -137,12 +141,19 @@ describe('ContactFormComponent (Material reference, smoke)', () => {
     expect(errorHost).toBeNull();
 
     // No `<mat-error>` should be visible on the field — there are no
-    // *blocking* errors at this point, only a warning. (Note that Material's
-    // matInput will still report aria-invalid="true" because Angular Signal
-    // Forms treats warnings as ValidationErrors that flip `invalid()` — see
-    // README "Warnings rendering" for the framework limitation.)
+    // *blocking* errors at this point, only a warning.
     const nameField = nameInput.closest('mat-form-field');
     expect(nameField?.querySelector('mat-error:not([hidden])')).toBeFalsy();
+
+    // Regression for the "warning-only state reports invalid" a11y bug:
+    // `NgxMatWarningAwareErrorStateMatcher` (registered via provideNgxMatForms)
+    // only counts non-warn:* kinds as an error state, so a warning-only field
+    // must NOT get aria-invalid="true" or Material's invalid styling — see
+    // README "Warnings and Material's ErrorStateMatcher".
+    await waitFor(() => {
+      expect(nameInput.getAttribute('aria-invalid')).toBe('false');
+    });
+    expect(nameField?.classList.contains('mat-form-field-invalid')).toBe(false);
   });
 
   it('wires aria-describedby from the consent checkbox to the rendered feedback block', async () => {
