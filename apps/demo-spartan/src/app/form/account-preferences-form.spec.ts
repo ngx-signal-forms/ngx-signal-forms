@@ -118,6 +118,50 @@ describe('Spartan reference wrapper — smoke', () => {
     expect(describedBy.split(/\s+/)).toContain(hintElement.id);
   });
 
+  it('does not mark the pristine plan combobox aria-invalid before it is touched', async () => {
+    // Regression for audit #148 finding 2: Brain's `BrnSelectTrigger` host-binds
+    // `aria-invalid` off the raw, ungated `FieldState.invalid` — with `plan`
+    // required and empty, that fires from first paint regardless of the
+    // configured `on-touch` strategy. `HlmSelectTrigger` gates its own
+    // `aria-invalid` write off `BrnFieldControl.spartanInvalid()` (Brain's own
+    // touched-aware invalid signal, the same one driving the destructive-ring
+    // styling) to match the text input's on-touch behavior.
+    await render(AccountPreferencesForm);
+
+    const plan = screen.getByRole('combobox', { name: /plan/i });
+    expect(plan.getAttribute('aria-invalid')).not.toBe('true');
+  });
+
+  it('marks the plan combobox aria-invalid once it has been touched and left empty', async () => {
+    const user = userEvent.setup();
+
+    await render(AccountPreferencesForm);
+
+    const plan = screen.getByRole('combobox', { name: /plan/i });
+    await user.click(plan);
+    await user.keyboard('{Escape}');
+    await user.tab();
+
+    expect(plan.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it("threads the wrapper's aria-describedby onto the checkbox's role=checkbox button, not its display:contents host", async () => {
+    // Regression for audit #148 finding 3: the toolkit-managed describedby
+    // chain (hint id) is only visible to AT when it lands on the actual
+    // `role="checkbox"` button rendered inside `<brn-checkbox>` — `hlm-checkbox`
+    // itself is `display: contents` and invisible to the accessibility tree.
+    await render(AccountPreferencesForm);
+
+    const checkbox = screen.getByRole('checkbox', {
+      name: /send me product updates/i,
+    });
+    const hint = screen.getByText(/you can unsubscribe at any time/i);
+    expect(hint.id).toBeTruthy();
+
+    const describedBy = checkbox.getAttribute('aria-describedby') ?? '';
+    expect(describedBy.split(/\s+/)).toContain(hint.id);
+  });
+
   it('submits when only warnings remain', async () => {
     const user = userEvent.setup();
 

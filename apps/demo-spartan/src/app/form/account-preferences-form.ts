@@ -142,13 +142,28 @@ const accountSchema = schema<AccountPreferences>((path) => {
         </hlm-select>
       </spartan-form-field>
 
-      <!-- Checkbox -->
-      <spartan-form-field [ngxSpartanFormField]="form.newsletter">
+      <!--
+        Checkbox. hlm-checkbox's host is display:contents (invisible to
+        the accessibility tree) — the real role="checkbox" button lives
+        inside <brn-checkbox>. The toolkit-managed describedby chain (hint
+        + error/warning ids) only reaches that button through hlm-checkbox's
+        own [aria-describedby] *input*, so it's fed explicitly here from
+        the wrapper's toolkitAriaDescribedBy signal via the template
+        reference (#newsletterField="ngxSpartanFormField"). Brain's
+        BrnFieldControlDescribedBy host directive on <hlm-checkbox> writes
+        the same chain onto the display:contents host too, which is
+        harmless (AT never sees it) but not sufficient on its own.
+      -->
+      <spartan-form-field
+        [ngxSpartanFormField]="form.newsletter"
+        #newsletterField="ngxSpartanFormField"
+      >
         <div class="flex items-start gap-3">
           <hlm-checkbox
             ngxSignalFormControl="checkbox"
             inputId="newsletter"
             [formField]="form.newsletter"
+            [aria-describedby]="newsletterField.toolkitAriaDescribedBy()"
           />
           <div class="flex flex-col gap-1">
             <label hlmLabel for="newsletter">Send me product updates</label>
