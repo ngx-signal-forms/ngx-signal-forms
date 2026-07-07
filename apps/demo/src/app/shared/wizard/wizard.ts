@@ -31,6 +31,22 @@ export interface WizardNavigationEvent {
 }
 
 /**
+ * Async-aware guard invoked before the wizard commits navigation to a new
+ * step. Return `false` (or resolve to `false`) to block the navigation.
+ *
+ * Prefer this over {@link WizardNavigationEvent.preventDefault} for guards
+ * that need to `await` something (e.g. step validation) — `preventDefault`
+ * is only checked *synchronously*, immediately after `stepChange` is
+ * emitted, so a decision made after an `await` is already too late: the
+ * wizard has moved on by the time it runs. `canNavigate` is awaited by
+ * `goToStep` before `currentStep` is ever written, so it's safe to perform
+ * async validation here.
+ */
+export type WizardCanNavigate = (
+  event: WizardNavigationEvent,
+) => boolean | Promise<boolean>;
+
+/**
  * Event emitted when the wizard is submitted.
  */
 export interface WizardSubmitEvent {
@@ -111,11 +127,23 @@ export class WizardComponent {
   /** Whether users can navigate to any visited step by clicking. */
   readonly allowStepClick = input(true, { transform: booleanAttribute });
 
+  /**
+   * Optional async-aware navigation guard, checked by `goToStep` (and, in
+   * turn, `next()`/`previous()`) for every attempted transition — including
+   * progress-header step clicks. See {@link WizardCanNavigate}.
+   */
+  readonly canNavigate = input<WizardCanNavigate | null>(null);
+
   // ══════════════════════════════════════════════════════════════════════════
   // Outputs
   // ══════════════════════════════════════════════════════════════════════════
 
-  /** Emitted before navigating to a different step. Can be prevented. */
+  /**
+   * Emitted before navigating to a different step. Can be prevented via
+   * `event.preventDefault()`, but only for *synchronous* guards — the check
+   * happens immediately after this emits, before any `canNavigate` promise
+   * has settled. Async guards must use the `canNavigate` input instead.
+   */
   readonly stepChange = output<WizardNavigationEvent>();
 
   /** Emitted when the submit button is clicked on the last step. */
@@ -178,8 +206,17 @@ export class WizardComponent {
   // Public Methods
   // ══════════════════════════════════════════════════════════════════════════
 
-  /** Navigate to a specific step by ID. */
-  goToStep(stepId: string): void {
+  /**
+   * Navigate to a specific step by ID.
+   *
+   * Async by design: after the synchronous `stepChange`/`preventDefault`
+   * check, this awaits the `canNavigate` guard (if one is bound) BEFORE
+   * writing `currentStep` — so a consumer performing async validation there
+   * can reliably block the transition. Callers that only need the
+   * synchronous guard (e.g. a simple "booking already confirmed" check) can
+   * ignore the returned promise, same as before.
+   */
+  async goToStep(stepId: string): Promise<void> {
     if (!this.canNavigateToStep(stepId)) {
       return;
     }
@@ -200,27 +237,34 @@ export class WizardComponent {
     );
     this.stepChange.emit(event);
 
-    if (!event.defaultPrevented) {
-      this.#visitedSteps.update((visited) => new Set([...visited, stepId]));
-      this.currentStep.set(stepId);
+    if (event.defaultPrevented) {
+      return;
     }
+
+    const guard = this.canNavigate();
+    if (guard && !(await guard(event))) {
+      return;
+    }
+
+    this.#visitedSteps.update((visited) => new Set([...visited, stepId]));
+    this.currentStep.set(stepId);
   }
 
   /** Navigate to the next step. */
-  next(): void {
+  async next(): Promise<void> {
     const allSteps = this.steps();
     const nextIndex = this.currentStepIndex() + 1;
     if (nextIndex < allSteps.length) {
-      this.goToStep(allSteps[nextIndex].stepId());
+      await this.goToStep(allSteps[nextIndex].stepId());
     }
   }
 
   /** Navigate to the previous step. */
-  previous(): void {
+  async previous(): Promise<void> {
     const allSteps = this.steps();
     const prevIndex = this.currentStepIndex() - 1;
     if (prevIndex >= 0) {
-      this.goToStep(allSteps[prevIndex].stepId());
+      await this.goToStep(allSteps[prevIndex].stepId());
     }
   }
 
