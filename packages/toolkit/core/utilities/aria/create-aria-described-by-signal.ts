@@ -122,15 +122,22 @@ export function createAriaDescribedBySignal(
 
     if (state && isVisible) {
       const errors = state.errors();
+      const hasBlockingError = errors.some(isBlockingError);
 
-      if (errors.some(isBlockingError)) {
+      if (hasBlockingError) {
         const errorId = generateErrorId(resolvedFieldName);
         if (!parts.includes(errorId)) {
           parts.push(errorId);
         }
       }
 
-      if (errors.some(isWarningError)) {
+      // Blocking errors take visual AND announcement priority: the default
+      // `NgxFormFieldError` renderer suppresses its warning live region
+      // whenever a blocking error is also visible (mixed error+warning
+      // case), so no `${fieldName}-warning` element exists in the DOM at
+      // that point. Compose the id here too or `aria-describedby` dangles —
+      // an axe `aria-valid-attr-value` violation.
+      if (!hasBlockingError && errors.some(isWarningError)) {
         const warningId = generateWarningId(resolvedFieldName);
         if (!parts.includes(warningId)) {
           parts.push(warningId);

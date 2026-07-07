@@ -7,7 +7,10 @@ export * from './form-fieldset';
 // moved to the core barrel during v1 hardening.
 export type { NgxFormFieldErrorPlacement } from '@ngx-signal-forms/toolkit';
 
-import { NgxSignalFormAutoAria } from '@ngx-signal-forms/toolkit';
+import {
+  NgxSignalFormAutoAria,
+  NgxSignalFormControlSemanticsDirective,
+} from '@ngx-signal-forms/toolkit';
 import {
   NgxFormFieldCharacterCount,
   NgxFormFieldError,
@@ -24,6 +27,19 @@ import { NgxFormFieldset } from './form-fieldset';
  * `aria-describedby` even when consumers don't separately import
  * `NgxSignalFormToolkit`. The directive is idempotent — importing it twice
  * (e.g. via both bundles) is safe.
+ *
+ * Also includes `NgxSignalFormControlSemanticsDirective` so the
+ * `ngxSignalFormControl="..."` / `ngxSignalFormControlAria="manual"`
+ * attributes the wrapper's own dev-mode warning instructs authors to add
+ * (see the "unresolved control kind" diagnostic in `NgxFormFieldWrapper`)
+ * actually do something when a consumer imports only this bundle. Without
+ * it, `ngxSignalFormControl` was inert — the control's kind stayed
+ * unresolved (the warning kept firing) and, worse, `ariaMode="manual"` was
+ * silently ignored while `NgxSignalFormAutoAria` kept managing ARIA via its
+ * CSS attribute selector, actively overriding what the author opted out of.
+ * The directive is selector-gated (`[ngxSignalFormControl]`) and inert when
+ * unused, so including it here is a no-op for consumers who never add the
+ * attribute.
  *
  * @example
  * ```typescript
@@ -46,6 +62,7 @@ import { NgxFormFieldset } from './form-fieldset';
  */
 export const NgxFormField = [
   NgxSignalFormAutoAria,
+  NgxSignalFormControlSemanticsDirective,
   NgxFormFieldWrapper,
   NgxFormFieldHint,
   NgxFormFieldCharacterCount,

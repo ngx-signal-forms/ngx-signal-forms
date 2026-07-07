@@ -254,6 +254,57 @@ describe('NgxFormFieldset', () => {
     expect(host).toHaveAttribute('aria-describedby', 'address-error');
   });
 
+  it('preserves an author-supplied aria-describedby instead of clobbering it', async () => {
+    // Regression guard: the `[attr.aria-describedby]` host binding used to
+    // return only the managed error/warning id (or `null`), which nulled
+    // out any author-supplied value — a common pattern being
+    // `<fieldset ngxFormFieldset aria-describedby="pw-rules">` pointing at a
+    // sibling hint element the fieldset doesn't own.
+    const fieldset = createFieldsetState({
+      errors: () => [{ kind: 'required', message: 'Required' }],
+      errorSummary: () => [{ kind: 'required', message: 'Required' }],
+    });
+
+    const { container } = await render(
+      `<ngx-form-fieldset
+        [fieldsetField]="fieldset"
+        fieldsetId="address"
+        aria-describedby="pw-rules"
+      >
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-form-fieldset');
+    expect(host).toHaveAttribute('aria-describedby', 'pw-rules address-error');
+  });
+
+  it('falls back to the author-supplied aria-describedby alone when no messages are shown', async () => {
+    const fieldset = createFieldsetState({
+      invalid: () => false,
+      valid: () => true,
+      errors: () => [],
+      errorSummary: () => [],
+    });
+
+    const { container } = await render(
+      `<ngx-form-fieldset [fieldsetField]="fieldset" aria-describedby="pw-rules">
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-form-fieldset');
+    expect(host).toHaveAttribute('aria-describedby', 'pw-rules');
+  });
+
   it('renders aggregated messages below content by default', async () => {
     const fieldset = createFieldsetState({
       errors: () => [{ kind: 'required', message: 'Required' }],

@@ -317,6 +317,72 @@ describe('NgxFormFieldError', () => {
       expect(list?.tagName).toBe('UL');
       expect(list?.querySelectorAll('li')).toHaveLength(2);
     });
+
+    it('suppresses the warning live region while a blocking error is also visible', async () => {
+      // README's "Warning support" section documents "blocking errors
+      // present → warnings hidden", and NgxFormFieldset already enforces
+      // this. Without a guard, both the role="alert" and role="status"
+      // containers render at once for a field with mixed errors/warnings —
+      // an assertive AND a polite announcement for the same field.
+      @Component({
+        selector: 'ngx-test-mixed-error-warning',
+        imports: [NgxFormFieldError],
+
+        template: `
+          <ngx-form-field-error fieldName="password" [errors]="errors" />
+        `,
+      })
+      class TestComponent {
+        readonly errors = signal([
+          { kind: 'required', message: 'Password is required' },
+          { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
+        ]);
+      }
+
+      const { container } = await render(TestComponent);
+
+      const alert = screen.getByRole('alert');
+      expect(alert.textContent).toContain('Password is required');
+
+      // Query the container directly (not via `screen.getByRole`): the
+      // empty-container pattern also marks it `[hidden]`/`aria-hidden`,
+      // which testing-library's accessibility-tree-aware queries exclude.
+      // The status container stays mounted (WCAG 4.1.3 first-insertion
+      // semantics) but must not expose the `-warning` id or render the
+      // warning text — otherwise `aria-describedby="password-warning"`
+      // would dangle.
+      const status = container.querySelector('[role="status"]');
+      expect(status).toBeTruthy();
+      expect(status?.getAttribute('id')).not.toBe('password-warning');
+      expect(status?.textContent?.trim()).toBe('');
+      expect(container.textContent).not.toContain('Consider 8+ characters');
+    });
+
+    it('shows the warning live region when no blocking error is present', async () => {
+      @Component({
+        selector: 'ngx-test-warning-only',
+        imports: [NgxFormFieldError],
+
+        template: `
+          <ngx-form-field-error fieldName="password" [errors]="errors" />
+        `,
+      })
+      class TestComponent {
+        readonly errors = signal([
+          { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
+        ]);
+      }
+
+      const { container } = await render(TestComponent);
+
+      const status = screen.getByRole('status');
+      expect(status.getAttribute('id')).toBe('password-warning');
+      expect(status.textContent).toContain('Consider 8+ characters');
+
+      const alert = container.querySelector('[role="alert"]');
+      expect(alert?.getAttribute('id')).not.toBe('password-error');
+      expect(alert?.textContent?.trim()).toBe('');
+    });
   });
 
   describe('strategy switching', () => {
