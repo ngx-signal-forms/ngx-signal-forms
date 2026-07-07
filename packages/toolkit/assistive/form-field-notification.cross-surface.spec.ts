@@ -19,7 +19,7 @@ import { NgxFormFieldNotification } from './form-field-notification';
   hostDirectives: [
     {
       directive: NgxHeadlessNotification,
-      inputs: ['errors', 'fieldName', 'tone'],
+      inputs: ['errors', 'fieldName'],
     },
   ],
   template: `
@@ -115,52 +115,16 @@ describe('cross-surface: NgxFormFieldNotification vs NgxHeadlessNotification', (
     expect(screen.queryByTestId('custom-error')).toBeFalsy();
   });
 
-  it('explicit tone="warning" is honored by both surfaces when no blocking error is present', async () => {
+  it('a mixed list resolves to the alert region on both surfaces (content-driven tone)', async () => {
+    // Tone is fully content-driven — there is no `tone` input on either
+    // surface (removed pre-1.0; see MIGRATING_BETA_TO_V1.md).
     @Component({
-      selector: 'test-notification-cross-surface-tone',
+      selector: 'test-notification-cross-surface-mixed',
       imports: [NgxFormFieldNotification, CustomNotificationComponent],
 
       template: `
-        <ngx-form-field-notification
-          [errors]="warnings"
-          fieldName="address"
-          tone="warning"
-        />
-        <custom-notification
-          [errors]="warnings"
-          fieldName="address"
-          tone="warning"
-        />
-      `,
-    })
-    class TestComponent {
-      readonly warnings = signal([
-        { kind: 'warn:optional', message: 'Phone is optional' },
-      ]);
-    }
-
-    await render(TestComponent);
-
-    expect(screen.queryByRole('status')).toBeTruthy();
-    expect(screen.queryByTestId('custom-warning')).toBeTruthy();
-  });
-
-  it('blocking errors override caller tone="warning" on both surfaces', async () => {
-    @Component({
-      selector: 'test-notification-cross-surface-override',
-      imports: [NgxFormFieldNotification, CustomNotificationComponent],
-
-      template: `
-        <ngx-form-field-notification
-          [errors]="mixed"
-          fieldName="address"
-          tone="warning"
-        />
-        <custom-notification
-          [errors]="mixed"
-          fieldName="address"
-          tone="warning"
-        />
+        <ngx-form-field-notification [errors]="mixed" fieldName="address" />
+        <custom-notification [errors]="mixed" fieldName="address" />
       `,
     })
     class TestComponent {
@@ -178,7 +142,7 @@ describe('cross-surface: NgxFormFieldNotification vs NgxHeadlessNotification', (
     expect(screen.queryByTestId('custom-warning')).toBeFalsy();
   });
 
-  it('empty error list keeps both live regions hidden but in DOM (WCAG 4.1.3)', async () => {
+  it('empty error list keeps both live regions empty but in DOM (WCAG 4.1.3)', async () => {
     @Component({
       selector: 'test-notification-cross-surface-empty',
       imports: [NgxFormFieldNotification],
@@ -197,7 +161,7 @@ describe('cross-surface: NgxFormFieldNotification vs NgxHeadlessNotification', (
     const statusEl = container.querySelector('[role="status"]');
     expect(alertEl).toBeTruthy();
     expect(statusEl).toBeTruthy();
-    expect(alertEl?.hasAttribute('hidden')).toBe(true);
-    expect(statusEl?.hasAttribute('hidden')).toBe(true);
+    expect(alertEl?.hasAttribute('hidden')).toBe(false);
+    expect(statusEl?.hasAttribute('hidden')).toBe(false);
   });
 });

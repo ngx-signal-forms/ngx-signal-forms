@@ -186,6 +186,53 @@ describe('readFormFieldWrapperDomSnapshot — native-vs-fallback precedence', ()
     expect(snapshot.inputEl).toBe(probeMatch);
     expect(snapshot.inputId).toBe('probe-match');
   });
+
+  it('does not let an id-bearing [prefix]/label-slot element outrank the real control in __main', () => {
+    // Regression guard: `findBoundControl`'s selector is one comma-separated
+    // `querySelector`, which returns the first match in *document order*
+    // across the whole host, not "the real control" specifically. An
+    // `id`-bearing element projected before `__main` (label slot, [prefix]
+    // slot) used to win the fallback probe purely by being earlier in the
+    // DOM — even though it isn't a form control at all. The probe must be
+    // scoped to `__main` so only the real control can match.
+    const host = document.createElement('div');
+
+    const label = document.createElement('div');
+    label.className = 'ngx-signal-form-field-wrapper__label';
+    // A native <button type="button"> with an id satisfies
+    // BOUND_CONTROL_SELECTOR and sits before `__main` in document order.
+    const decoyToggle = document.createElement('button');
+    decoyToggle.type = 'button';
+    decoyToggle.id = 'decoy-toggle';
+    label.append(decoyToggle);
+
+    const content = document.createElement('div');
+    content.className = 'ngx-signal-form-field-wrapper__content';
+    const prefix = document.createElement('div');
+    prefix.className = 'ngx-signal-form-field-wrapper__prefix';
+    const decoyPrefixInput = document.createElement('input');
+    decoyPrefixInput.id = 'decoy-prefix';
+    prefix.append(decoyPrefixInput);
+
+    const main = document.createElement('div');
+    main.className = 'ngx-signal-form-field-wrapper__main';
+    const realControl = document.createElement('input');
+    realControl.id = 'real-control';
+    main.append(realControl);
+
+    content.append(prefix, main);
+    host.append(label, content);
+
+    const snapshot = readFormFieldWrapperDomSnapshot(
+      host,
+      null,
+      DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS,
+      null,
+    );
+
+    expect(snapshot.inputEl).toBe(realControl);
+    expect(snapshot.inputId).toBe('real-control');
+  });
 });
 
 describe('null (unresolved) control kind fallback', () => {

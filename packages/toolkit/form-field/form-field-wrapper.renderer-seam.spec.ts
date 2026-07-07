@@ -27,7 +27,13 @@ const addressSchema = schema<AddressModel>((path) => {
  */
 @Component({
   selector: 'stub-error-renderer',
-  template: `<span data-testid="stub-error">STUB-ERR:{{ errorCount() }}</span>`,
+  template: `
+    <span data-testid="stub-error">STUB-ERR:{{ errorCount() }}</span>
+    <span data-testid="stub-field-name">{{ fieldName() ?? 'null' }}</span>
+    <span data-testid="stub-warning-strategy">{{
+      warningStrategy() ?? 'unset'
+    }}</span>
+  `,
   standalone: true,
 })
 class StubErrorRenderer {
@@ -39,6 +45,13 @@ class StubErrorRenderer {
   readonly listStyle = input<unknown>();
   readonly strategy = input<unknown>();
   readonly submittedStatus = input<unknown>();
+  /**
+   * `NgxFormFieldWrapper` forwards its `warningStrategy` input here — an
+   * extra beyond the minimal `{formField, strategy, submittedStatus}`
+   * contract — so a custom renderer can honor independent warning timing
+   * without its own DI lookup.
+   */
+  readonly warningStrategy = input<unknown>();
 
   protected readonly errorCount = computed(() => {
     const errorsSignal = this.errors();
@@ -90,6 +103,51 @@ describe('form-field wrapper renderer seam', () => {
     const stub = await screen.findByTestId('stub-error');
     expect(stub.textContent?.trim()).toBe('STUB-ERR:1');
   });
+
+  it('forwards fieldName and warningStrategy to a custom renderer without requiring DI context lookups', async () => {
+    // Regression coverage: a custom error-renderer contract previously only
+    // documented `{formField, strategy, submittedStatus}`. A renderer that
+    // needs to satisfy the `${fieldName}-error`/`-warning` id contract (see
+    // NgxFormFieldErrorRenderer in core/tokens.ts) had to inject
+    // NGX_SIGNAL_FORM_FIELD_CONTEXT itself to learn the field name — the
+    // wrapper now passes it (and `warningStrategy`) directly as inputs.
+    @Component({
+      selector: 'host-component-fieldname-passthrough',
+      standalone: true,
+      imports: [NgxFormFieldWrapper],
+      template: `
+        <ngx-form-field-wrapper
+          [formField]="contactForm.email"
+          fieldName="email"
+          strategy="immediate"
+          warningStrategy="on-touch"
+        >
+          <label for="email">Email</label>
+          <input id="email" type="email" [formField]="contactForm.email" />
+        </ngx-form-field-wrapper>
+      `,
+    })
+    class HostComponent {
+      readonly contactForm = form(
+        signal<ContactModel>({ email: '' }),
+        contactSchema,
+      );
+    }
+
+    await render(HostComponent, {
+      providers: [
+        provideFormFieldErrorRenderer({ component: StubErrorRenderer }),
+      ],
+    });
+
+    const fieldNameEl = await screen.findByTestId('stub-field-name');
+    expect(fieldNameEl.textContent?.trim()).toBe('email');
+
+    const warningStrategyEl = await screen.findByTestId(
+      'stub-warning-strategy',
+    );
+    expect(warningStrategyEl.textContent?.trim()).toBe('on-touch');
+  });
 });
 
 describe('form-fieldset renderer seam', () => {
@@ -100,7 +158,7 @@ describe('form-fieldset renderer seam', () => {
       imports: [NgxFormFieldset, NgxFormFieldWrapper],
       template: `
         <ngx-form-fieldset
-          [fieldsetField]="addressForm"
+          [field]="addressForm"
           fieldsetId="address"
           feedbackAppearance="plain"
           listStyle="bullets"

@@ -30,10 +30,10 @@
       },
       "configurations": {
         "production": {
-          "command": "vite preview --port 4221"
+          "command": "vite preview --port 4721 --strictPort"
         },
         "development": {
-          "command": "vite --port 4221"
+          "command": "vite --port 4621 --strictPort"
         }
       }
     },
@@ -56,7 +56,7 @@
       "defaultConfiguration": "production",
       "options": {
         "buildTarget": "demo-spartan:build:production",
-        "port": 4221,
+        "port": 4721,
         "staticFilePath": "dist/apps/demo-spartan",
         "spa": true
       }

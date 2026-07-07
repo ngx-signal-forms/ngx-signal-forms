@@ -175,6 +175,16 @@ export class NgxFormFieldHint {
    * it to auto-ARIA via the hint registry without reading the DOM.
    * An empty-string explicit id or fieldName is treated as "not set" and falls through to the generated id.
    */
+  /**
+   * Stable fallback id minted once in the injection context (field
+   * initializer), NOT lazily inside {@link resolvedId}'s computed. Minting
+   * inside the computed ran `createUniqueId()` outside an injection context
+   * (host-binding evaluation), forcing the SSR-unsafe module-counter fallback
+   * with a dev warning, and re-minted a fresh id whenever the computed
+   * re-evaluated — leaving `aria-describedby` consumers pointing at a stale id.
+   */
+  readonly #generatedId = createUniqueId('hint');
+
   readonly resolvedId = computed(() => {
     const explicit = this.#explicitId();
     // oxlint-disable-next-line @typescript-eslint/strict-boolean-expressions -- empty-string id/fieldName is intentionally treated as "not set"; freezing semantic for v1
@@ -184,7 +194,7 @@ export class NgxFormFieldHint {
     // oxlint-disable-next-line @typescript-eslint/strict-boolean-expressions -- empty-string id/fieldName is intentionally treated as "not set"; freezing semantic for v1
     if (fieldName) return `${fieldName}-hint`;
 
-    return createUniqueId('hint');
+    return this.#generatedId;
   });
 
   constructor() {

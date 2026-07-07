@@ -15,7 +15,7 @@ describe('NgxFormMarkingLegend', () => {
     it('shows the default required legend with {marker} substituted', async () => {
       @Component({
         imports: [NgxFormMarkingLegend],
-        template: `<ngx-form-marking-legend [formField]="f" />`,
+        template: `<ngx-form-marking-legend [formTree]="f" />`,
       })
       class Host {
         readonly f = form(
@@ -35,7 +35,7 @@ describe('NgxFormMarkingLegend', () => {
     it('hides when the form has no required field', async () => {
       @Component({
         imports: [NgxFormMarkingLegend],
-        template: `<ngx-form-marking-legend [formField]="f" />`,
+        template: `<ngx-form-marking-legend [formTree]="f" />`,
       })
       class Host {
         readonly f = form(signal({ nickname: '' }));
@@ -49,7 +49,7 @@ describe('NgxFormMarkingLegend', () => {
       @Component({
         imports: [NgxFormMarkingLegend],
         template: `<ngx-form-marking-legend
-          [formField]="f"
+          [formTree]="f"
           requiredMarker=" †"
         />`,
       })
@@ -74,7 +74,7 @@ describe('NgxFormMarkingLegend', () => {
       @Component({
         imports: [NgxFormMarkingLegend],
         template: `<ngx-form-marking-legend
-          [formField]="f"
+          [formTree]="f"
           showMarkerWhen="optional"
         />`,
       })
@@ -97,7 +97,7 @@ describe('NgxFormMarkingLegend', () => {
       @Component({
         imports: [NgxFormMarkingLegend],
         template: `<ngx-form-marking-legend
-          [formField]="f"
+          [formTree]="f"
           showMarkerWhen="optional"
         />`,
       })
@@ -120,7 +120,7 @@ describe('NgxFormMarkingLegend', () => {
       @Component({
         imports: [NgxFormMarkingLegend],
         template: `<ngx-form-marking-legend
-          [formField]="f"
+          [formTree]="f"
           showMarkerWhen="none"
         />`,
       })
@@ -144,7 +144,7 @@ describe('NgxFormMarkingLegend', () => {
       @Component({
         imports: [NgxFormMarkingLegend],
         template: `<ngx-form-marking-legend
-          [formField]="f"
+          [formTree]="f"
           showMarkerWhen="none"
           text="This should never show {marker}"
         />`,
@@ -168,7 +168,7 @@ describe('NgxFormMarkingLegend', () => {
       @Component({
         imports: [NgxFormMarkingLegend],
         template: `<ngx-form-marking-legend
-          [formField]="f"
+          [formTree]="f"
           text="Velden met {marker} zijn verplicht"
         />`,
       })
@@ -192,7 +192,7 @@ describe('NgxFormMarkingLegend', () => {
     it('reads showMarkerWhen / text from the global config', async () => {
       @Component({
         imports: [NgxFormMarkingLegend],
-        template: `<ngx-form-marking-legend [formField]="f" />`,
+        template: `<ngx-form-marking-legend [formTree]="f" />`,
       })
       class Host {
         readonly f = form(signal({ nickname: '' }));
@@ -215,7 +215,7 @@ describe('NgxFormMarkingLegend', () => {
   });
 
   describe('form-tree resolution', () => {
-    it('falls back to the ambient form context when [formField] is omitted', async () => {
+    it('falls back to the ambient form context when [formTree] is omitted', async () => {
       @Component({
         imports: [NgxFormMarkingLegend, FormRoot, NgxSignalForm],
         template: `
@@ -292,7 +292,7 @@ describe('NgxFormMarkingLegend', () => {
 
       @Component({
         imports: [NgxFormMarkingLegend],
-        template: `<ngx-form-marking-legend [formField]="f" />`,
+        template: `<ngx-form-marking-legend [formTree]="f" />`,
       })
       class Host {
         readonly f = form(

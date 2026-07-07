@@ -306,7 +306,7 @@ issue jsdom doesn't surface.
 ## Running
 
 ```bash
-pnpm nx serve demo-material           # dev server on http://localhost:4201
+pnpm nx serve demo-material           # dev server on http://127.0.0.1:4601
 pnpm nx run demo-material:build       # production build (emits dist/apps/demo-material)
 pnpm nx run demo-material:test        # smoke spec (jsdom + Vitest)
 pnpm nx run demo-material-e2e:e2e     # Playwright spec

@@ -37,7 +37,10 @@ const pkgJsonPath = join(distRoot, 'package.json');
 
 const PACKAGE_CORE_SPECIFIER = '@ngx-signal-forms/toolkit/core';
 const RELATIVE_MJS_SPECIFIER = './ngx-signal-forms-toolkit-core.mjs';
-const RELATIVE_DTS_SPECIFIER = './ngx-signal-forms-toolkit-core';
+// TypeScript's node16/nodenext module resolution requires an explicit
+// extension on relative ESM specifiers in declaration files; `.js` maps to
+// the sibling `.d.ts` file.
+const RELATIVE_DTS_SPECIFIER = './ngx-signal-forms-toolkit-core.js';
 const CORE_FESM_BASENAME = 'ngx-signal-forms-toolkit-core.mjs';
 const CORE_DTS_BASENAME = 'ngx-signal-forms-toolkit-core.d.ts';
 

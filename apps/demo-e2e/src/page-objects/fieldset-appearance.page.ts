@@ -149,7 +149,13 @@ export class FieldsetAppearancePage extends BaseFormPage {
   }
 
   getGroupedAlert(fieldset: Locator): Locator {
-    return this.getGroupedMessages(fieldset).getByRole('alert').first();
+    // The role="alert" live-region shell is now always mounted (empty) so AT
+    // reliably announces on first content insertion; filter to a contentful
+    // alert so "no grouped error" still reads as zero matches.
+    return this.getGroupedMessages(fieldset)
+      .getByRole('alert')
+      .filter({ hasText: /\S/ })
+      .first();
   }
 
   getNotificationTitle(fieldset: Locator): Locator {

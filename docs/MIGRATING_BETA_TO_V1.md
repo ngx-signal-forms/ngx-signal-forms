@@ -43,7 +43,16 @@ releases will not include any of the renames below.
 - **BREAKING: `ErrorMessageRegistry` is now strongly typed per built-in kind** — factory params for built-in kinds (`minLength`, `min`, `pattern`, …) are typed; custom kinds stay `any` (see [§5b](#5b-error-message-registry-is-now-strongly-typed))
 - **A11y** — removed explicit `aria-live` / `aria-atomic`; role semantics now authoritative
 - **Behavior** — missing `fieldName` / `id` now logs (dev mode) instead of throwing
+- **A11y fix** — assistive live-region containers no longer toggle `aria-hidden`/`[hidden]` while empty, and `NgxFormFieldError`'s `id` binding no longer emits the literal string `"null"` (see [§6](#6-v100-audit-blockers-live-region-focus-and-dark-mode-fixes))
+- **A11y fix** — `NgxFormFieldErrorSummary`'s `autoFocus` now only fires under the resolved `'on-submit'` strategy, never `'on-touch'`/`'immediate'` (see [§6](#6-v100-audit-blockers-live-region-focus-and-dark-mode-fixes))
+- **BREAKING (a11y fix)** — dark mode no longer detects a `.dark` ancestor class via `:host-context()` (non-standard, unsupported in Firefox/Safari); class-based dark-mode apps must override the public `--ngx-signal-form-*` custom properties directly (see [§6](#6-v100-audit-blockers-live-region-focus-and-dark-mode-fixes))
 - **Compatibility** — Angular peer-dep is `>=22.0.0 <23.0.0`
+- **BREAKING: `@angular/common` is now a declared peer dependency** — it was always required at runtime (form-field wrapper/fieldset use `NgComponentOutlet`/`NgTemplateOutlet`) but was previously undeclared
+- **BREAKING: `canSubmitWithWarnings()` now reads `errorSummary()`** — child-path blocking errors now correctly disable submission (see [§5c](#5c-cansubmitwithwarnings-now-aggregates-descendant-errors))
+- **BREAKING: `injectFieldControl()` validates the resolved value against the runtime `FieldTree` contract** — an id resolving to a non-`FieldTree` property now throws instead of silently returning an unsound cast (see [§5d](#5d-injectfieldcontrol-validates-the-resolved-fieldtree))
+- **BREAKING: `ErrorSummarySignals` gained `shouldShowWarnings`** — implementers of the interface must add this member (see [§9](#9-headless-audit-fixes-v100))
+- **BREAKING: `CharacterCountResult` members are now typed `Signal<T>`** (was the looser `ReadSignal<T>` alias); a new `hasLimit` member was added — compile-time tightening only, no runtime change
+- **Bug fix** — error summary no longer drops a second field's error when two different fields share the same kind + message-less default; `NgxHeadlessNotification` no longer leaks the internal `warn:` prefix; `createErrorMessageSignal`'s ID fallback strips Angular's internal `{appId}.form{n}.` prefix; required `Date`/`File`/`Map`-valued leaves no longer vanish from field-optionality summaries
 
 ---
 
@@ -471,6 +480,56 @@ What changed for migrators:
 - **No runtime behavior change** for existing string entries or correctly typed
   factories — this is a compile-time tightening only.
 
+## 5c. `canSubmitWithWarnings()` now aggregates descendant errors
+
+`canSubmitWithWarnings()` previously gated on `formTree().errors()`, which
+only reports the root field's **own** errors. Validators are almost always
+placed on child paths (`path.email`, not `path`), so a blocking `required`
+error on a child field left the root's `errors()` empty and
+`canSubmitWithWarnings()` returned `true` — while its sibling helper
+`submitWithWarnings()` already correctly gated on `errorSummary()` (which
+aggregates descendant errors) and silently refused to submit. That mismatch
+produced a dead click: the submit button computed "submittable" while the
+actual submit call was a no-op.
+
+`canSubmitWithWarnings()` now reads `formTree().errorSummary()`, matching
+`submitWithWarnings()`.
+
+**Action:** This affects forms with blocking validators on descendant paths
+(the common case, e.g. `path.email`) — previously, `canSubmitWithWarnings()`
+ignored those child-path errors, so such a form's submit button could appear
+submittable even while a child field was invalid. After this fix, that
+button will now correctly stay disabled until the child error clears. This
+is the intended fix — no code changes are needed unless you were
+compensating for the bug elsewhere (e.g. manually re-checking
+`errorSummary()` before calling `submitWithWarnings()`).
+
+## 5d. `injectFieldControl()` validates the resolved `FieldTree`
+
+`injectFieldControl()` previously validated only `isRecord(control) && part
+in control` while walking the dotted id path, then cast the final value to
+`FieldTree<TValue>` unconditionally. Any property reachable by the path —
+including one that happens to collide with non-control data on the form
+object — passed silently and was returned as though it were a real
+`FieldTree`, deferring the failure to a confusing error at the first
+downstream call site.
+
+`injectFieldControl()` now validates the resolved value with the existing
+`isFieldTree()` runtime guard and throws the same descriptive
+`"Field "…" not found in form"` error immediately when it fails the check.
+
+**Action:** No change needed for real Angular `form()` trees — they always
+satisfy the `FieldTree` contract. If you were passing a hand-rolled mock form
+into toolkit-consuming code under test, make sure the mocked leaf values are
+callable and resolve to an object exposing `value`, `touched`, `errors`,
+`errorSummary`, `submitting`, and `markAsTouched` as functions, plus a
+`fieldTree` back-reference to the callable itself (mirrors what
+`walkFieldTreeEntries()` already requires).
+
+Resolution also remains a **one-shot, non-reactive** lookup — the form
+instance and the element's `id` are both read once, at call time. This was
+previously undocumented; see the updated `injectFieldControl()` JSDoc.
+
 ### Control semantics contract — `ngxSignalFormControl`
 
 A small, directive-first API for telling the toolkit how a control
@@ -560,6 +619,99 @@ import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
   `,
 })
 ```
+
+---
+
+## 6. v1.0.0 audit blockers: live-region, focus, and dark-mode fixes
+
+The `assistive` entry point (`NgxFormFieldError`, `NgxFormFieldNotification`,
+`NgxFormFieldErrorSummary`) shipped a handful of accessibility defects that
+were fixed as part of the v1.0.0 release audit. None of these rename or
+remove an input/output, but they change runtime DOM/behavior in ways some
+consumers (especially tests) may depend on.
+
+### `id` binding no longer emits the literal string `"null"`
+
+`NgxFormFieldError`'s error/warning containers used a **property** binding
+(`[id]`) for their generated id. Binding `null` to the DOM `id` property
+coerces to the string `"null"` (WebIDL `DOMString`), so every empty
+container in the document ended up with `id="null"` — a real duplicate-id
+bug. This is now an **attribute** binding (`[attr.id]`), matching
+`NgxFormFieldNotification`, so a `null`/unresolvable id removes the
+attribute entirely instead of emitting `"null"`.
+
+- **Before:** `id="null"` could appear on empty error/warning containers.
+- **After:** the `id` attribute is simply absent.
+- If any test asserted `element.getAttribute('id') === 'null'`, update it to
+  assert `element.hasAttribute('id') === false`.
+
+### Empty live regions no longer toggle `aria-hidden` / `[hidden]`
+
+`NgxFormFieldError`, `NgxFormFieldNotification`, and
+`NgxFormFieldErrorSummary` previously toggled `aria-hidden="true"` and
+`[hidden]` on their live-region containers while empty, removing them from
+the DOM once the first error/warning/entry arrived. Flipping `aria-hidden`
+off in the same change-detection pass that inserts the first message is
+functionally equivalent to inserting a brand-new live region — which
+reintroduces the exact NVDA + Chrome "missed first announcement" bug the
+always-mounted container pattern exists to avoid.
+
+The containers now stay mounted **and exposed** at all times; the `@if` in
+each template already guarantees zero content (including whitespace) while
+empty, and visual collapse is handled entirely by the existing `--empty`
+CSS class.
+
+- **Before:** `screen.queryByRole('alert')` (and `'status'`) returned `null`
+  while there were no errors/warnings/entries, because the empty container
+  carried `aria-hidden`/`[hidden]` and Testing Library's accessible-role
+  queries exclude hidden elements by default.
+- **After:** the container is always found by role; assert on its content
+  instead — e.g. `expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('')`.
+- `NgxFormFieldErrorSummary`'s `role="alert"` container is now also
+  rendered unconditionally (previously it was only added to the DOM once
+  there were entries, which risked the same missed-first-announcement
+  timing bug on the very first submit).
+
+### `NgxFormFieldErrorSummary` `autoFocus` no longer fires under `'on-touch'` / `'immediate'`
+
+`autoFocus` (default `true`) is documented as implementing the GOV.UK/WAI
+pattern of moving focus to the summary "after a failed submit." Previously
+it fired on _any_ 0 → N entries transition, including under the default
+`'on-touch'` strategy — so blurring the first invalid field mid-fill (or,
+under `'immediate'`, simply loading an already-invalid form) silently
+stole focus. This violated WCAG 3.2.1/3.2.2 and contradicted the documented
+contract.
+
+`autoFocus` now only moves focus when the resolved strategy (explicit
+`strategy` input → form context → `'on-touch'` default) is `'on-submit'`.
+Under `'on-touch'`/`'immediate'`, focus is never moved automatically,
+regardless of the `autoFocus` value.
+
+- If you depended on the old on-touch/immediate auto-focus behavior, move
+  focus yourself (e.g. in a submit handler) or switch the summary's
+  `strategy` to `'on-submit'`.
+- The new `resolvedStrategy` signal is exposed on the headless
+  `NgxHeadlessErrorSummary` directive if you need to replicate this gating
+  in a custom summary UI.
+
+### Dark mode: `:host-context(.dark)` heuristic removed
+
+`NgxFormFieldError` and `NgxFormFieldNotification` previously shipped a
+`:host-context(.dark)` / `:host-context(:root:not(.dark))` heuristic
+alongside their `prefers-color-scheme: dark` media query, intended to
+support class-based dark-mode toggling (e.g. Tailwind's `.dark` strategy).
+`:host-context()` is non-standard and unsupported in Firefox and Safari, so
+the three engines disagreed on the resulting colors — in some
+configurations this produced WCAG 1.4.3 contrast failures (as low as
+~1.8:1). The heuristic has been removed; built-in dark defaults are now
+driven by `prefers-color-scheme` only, consistently across all engines.
+
+- **Breaking for class-based dark-mode consumers:** if your app toggles a
+  `.dark` class instead of relying on the OS color scheme, the built-in
+  dark tokens will no longer activate. Override the public
+  `--ngx-signal-form-error-*` / `--ngx-signal-form-warning-*` /
+  `--ngx-signal-form-notification-*` custom properties yourself, scoped to
+  your `.dark` selector — see the [assistive README](../packages/toolkit/assistive/README.md#dark-mode).
 
 ---
 
@@ -667,6 +819,49 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 See [`packages/toolkit/vest/README.md`](../packages/toolkit/vest/README.md#suite-lifecycle)
 for the full suite-lifecycle discussion.
 
+### Vest v1.0.0 audit fixes (non-breaking)
+
+These are bug fixes, not public API changes — no consumer code changes are
+required. Listed here because they change previously-broken observable
+behavior:
+
+- **Fixed: a superseded focused run could leave a field permanently
+  `pending()`.** Vest 6 tracks a single resolver per suite instance, so two
+  registrations of the same suite on different fields (e.g. two
+  `focusCurrentField` validators) could steal each other's resolver, leaving
+  the earlier field's async validation stuck pending forever. The adapter now
+  falls back to the suite's `subscribe`/`get` API (when available) to detect
+  settlement independently of the stolen resolver. `VestRunnableSuite` gained
+  two new **optional** members, `subscribe` and `get`, to support this —
+  existing suite shapes that omit them keep working unchanged.
+- **Fixed: cross-field error mis-attribution for subfield-bound validators.**
+  A `focusCurrentField`-bound validator (e.g. bound to `path.email`) could
+  surface an unrelated field's retained Vest failure (e.g. `password`) as if
+  it belonged to its own bound field, because Vest's `only()` mode retains
+  other fields' previous failures in the same result. Validators bound to a
+  specific field now only map entries for that field (or its descendants).
+- **Fixed: a sync Vest warning could permanently suppress a blocking async
+  Vest error on the same field.** Angular's `validateAsync` only schedules its
+  resource when the bound subtree has zero sync errors, and toolkit warnings
+  are ordinary `ValidationError`s. A sync `warn()` result therefore silently
+  prevented the async phase (and any blocking async check, e.g. a
+  "username already taken" check) from ever running. The adapter now defers
+  surfacing a sync warning only while the suite has pending async tests, and
+  re-surfaces it together with the settled result — so an advisory warning
+  can no longer hide a blocking async error. If you inspect warnings
+  synchronously (without waiting for `whenStable()`/the async result), a
+  warning may now appear one tick later than before while async tests are
+  in flight.
+
+### Vest peer dependency range widened
+
+`vest@6.3.0` was previously excluded from the `vest` peer range
+(`>=6.0.0 <6.3.0 || >=6.3.1`) over an unverified packaging-defect claim, and
+the `>=6.3.1` half of that range pointed at a version that was never
+published as stable (only `6.3.2` was). The peer range is now simply
+`>=6.0.0` — see [`COMPATIBILITY.md`](../COMPATIBILITY.md#vest-compatibility).
+This is a relaxation, not a breaking change.
+
 ### Null-safe field-name resolution
 
 The wrapper, error, and headless field-name directives previously threw when
@@ -693,6 +888,107 @@ queried the attributes in tests — switch tests to assert `role` instead.
 Peer dependencies now constrain `@angular/core` and `@angular/forms` to
 `>=22.0.0 <23.0.0`. See [`COMPATIBILITY.md`](../COMPATIBILITY.md) for the
 reasoning. If you are already on Angular 22, no migration action is required.
+
+### `@angular/common` is now a declared peer dependency
+
+`NgxFormFieldWrapper` and `NgxFormFieldset` have always imported
+`NgComponentOutlet` / `NgTemplateOutlet` from `@angular/common` at runtime,
+but the package previously declared `@angular/common` as a devDependency
+only, not a peer dependency. This worked by accident whenever a consuming
+app already depended on `@angular/common` (virtually all Angular apps do),
+but strict installers and dependency audits correctly flagged it as an
+undeclared dependency. `package.json` now lists
+`"@angular/common": ">=22.0.0 <23.0.0"` under `peerDependencies`, matching
+the `@angular/core` / `@angular/forms` range. No action is required for
+apps that already have `@angular/common` installed (every Angular app
+does); package managers with strict peer resolution will now correctly
+surface it instead of silently allowing the gap.
+
+---
+
+## 9. Headless audit fixes (v1.0.0)
+
+A pre-1.0 audit of `@ngx-signal-forms/toolkit/headless` found a handful of
+correctness and API-surface issues. Fixes shipped together; the API-affecting
+ones are called out here.
+
+### `ErrorSummarySignals.shouldShowWarnings` (new, breaking for interface implementers)
+
+`NgxHeadlessErrorSummary.shouldShow` gates `entries()` on `strategy &&
+hasErrors()`. That gate can never reveal `warningEntries()` on a warnings-only
+form, because `hasErrors()` is permanently `false` when there are no blocking
+errors. `ErrorSummarySignals` now declares a dedicated
+`shouldShowWarnings: Signal<boolean>` (`strategy && hasWarnings()`) — gate
+`warningEntries()` on this instead of `shouldShow()`:
+
+```html
+<!-- before — warnings could never render -->
+@if (summary.shouldShow()) { @for (e of summary.warningEntries(); track e.kind)
+{ … } }
+
+<!-- after -->
+@if (summary.shouldShowWarnings()) { @for (e of summary.warningEntries(); track
+e.kind) { … } }
+```
+
+If you implement `ErrorSummarySignals` yourself (e.g. a custom summary
+directive), add the new member.
+
+### `CharacterCountResult` — real `Signal<T>` typing + `hasLimit`
+
+`createCharacterCount()`'s return type previously typed every member as the
+looser `ReadSignal<T>` (`= () => T`) alias, even though every member was
+already a real `computed()` at runtime. Members are now typed `Signal<T>`,
+matching `NgxHeadlessCharacterCount`'s own `CharacterCountStateSignals`. A new
+`hasLimit: Signal<boolean>` member was added (always `true` — `maxLength` is
+required — kept for symmetry with the directive's `hasLimit`). This is a
+compile-time tightening with no runtime change; it only affects code that
+assigned the factory's return values to a hand-rolled `() => T`-shaped type
+that isn't a real `Signal`.
+
+### Error summary: per-field deduplication
+
+`NgxHeadlessErrorSummary` deduplicated entries by `kind + message` only. Two
+different fields both failing `required()` with no custom `message` (Angular's
+default `ValidationError.message` is `undefined`) shared the same dedupe key
+and the second field's error was silently dropped from the summary — a WCAG
+3.3.1 violation. Deduplication is now per-field. If your tests asserted the
+old (buggy) collapsed count for a summary with multiple message-less errors on
+distinct fields, update the expected entry count.
+
+`NgxHeadlessFieldset`'s grouped-message dedupe (a documented feature, not a
+bug) is unchanged.
+
+### `NgxHeadlessNotification` — warning messages no longer leak `warn:`
+
+Message-less warnings with an unknown kind (e.g. `warningError('weak_password')`)
+previously rendered as `warn:weak password` inside the notification's warning
+live region because the internal `warn:` prefix wasn't stripped. It now
+resolves to `weak password`, consistent with every other headless surface
+(`NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`,
+`createErrorMessageSignal`). Update any test/snapshot asserting the old
+`warn:`-prefixed text.
+
+### `createErrorMessageSignal` — ID fallback strips the Angular-internal prefix
+
+When `options.fieldName` is omitted, the per-error DOM id fallback previously
+used `FieldState.name()` raw — which is Angular-internal-prefixed
+(`${APP_ID}.form${n}.path`, e.g. `ng.form0.email`) and varies per form
+instance. IDs are now derived from the stripped path (`email-error-required`),
+matching the ids the in-tree wrapper and other consumers derive from the same
+field. This restores the documented "lockstep" ID guarantee; pass an explicit
+`fieldName` if you need to keep a specific id shape.
+
+### Field-optionality — `Date` / `File` / `Map`-valued required leaves
+
+`summarizeFieldOptionality()` / `createFieldOptionalitySummary()` walked the
+`FieldTree` using "is this node iterable?" as a container check. Angular gives
+any field whose _current_ value is a non-null object (including `Date`,
+`File`, `Map`) an iterator, so a required `Date | null` field flipped out of
+the walk — and lost its `hasRequired` contribution — the moment it was
+populated. The walk now distinguishes genuine structural containers (plain
+objects / arrays) from boxed leaf values, so a required `Date`/`File`/`Map`
+leaf is counted consistently whether it's `null` or populated.
 
 ---
 
@@ -758,3 +1054,146 @@ reasoning. If you are already on Angular 22, no migration action is required.
   aggregation and error summary usage.
 - [`docs/WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md) — the warning
   convention and message resolution order.
+
+---
+
+## 9. `form-field` v1.0.0 audit blockers
+
+The `form-field` entry point (`NgxFormFieldWrapper`, `NgxFormFieldset`) and
+its `NgxFormFieldError` collaborator shipped several defects fixed as part
+of the v1.0.0 release audit. Most are non-breaking bug fixes; the ones with
+observable behavior changes are called out below.
+
+### New: `warningStrategy` input on `NgxFormFieldWrapper`
+
+The wrapper previously only mounted its projected error/warning renderer
+when the **blocking-error** strategy (`strategy`, default `'on-touch'`)
+said errors should show — so a warnings-only field never rendered anything
+until the field was touched (or submitted), even though `NgxFormFieldError`
+defaults its own warning timing to `'immediate'`. The wrapper now exposes a
+`warningStrategy` input (forwarded to the renderer) and mounts the renderer
+whenever errors **or** warnings should be visible, matching the
+already-documented "warning timing is independent of error timing"
+contract. Non-breaking / additive — no action required unless you want to
+override the new input.
+
+### Breaking (a11y fix): warnings no longer render alongside a visible blocking error
+
+`NgxFormFieldError`'s warning live region (`role="status"`) previously
+rendered even while the error live region (`role="alert"`) was also
+visible for the same field — assertive **and** polite announcements firing
+for one field at once. It now suppresses the warning region whenever a
+blocking error is visible, matching `NgxFormFieldset`'s existing
+"warnings hidden while errors present" behavior and the form-field
+`README`'s documented contract. The corresponding `${fieldName}-warning`
+id is also dropped from the composed `aria-describedby` in that state (see
+`createAriaDescribedBySignal`) so nothing dangles.
+
+- If a test asserted both a populated `role="alert"` and a populated
+  `role="status"` for the same mixed error+warning field, update it to
+  expect the `role="status"` container to be empty (it stays mounted per
+  WCAG 4.1.3, just without an `id` or content) while errors are visible.
+
+### Fix: dev-mode "could not resolve field name" diagnostics no longer fire spuriously
+
+Both `NgxFormFieldWrapper.resolvedFieldName` and `NgxFormFieldError`'s
+internal field-name resolution used to log their one-shot `console.error`
+from inside a `computed()`. Projected children (`NgxFormFieldHint`,
+`NgxFormFieldError` itself when nested in the wrapper) read that computed
+via `NGX_SIGNAL_FORM_FIELD_CONTEXT` during the wrapper's first
+change-detection pass — before `afterEveryRender` had populated the
+resolved name — so the diagnostic fired even for correctly configured
+fields (input with an `id`, no explicit `fieldName`). Both diagnostics now
+fire from `afterEveryRender` once the DOM state has settled instead.
+
+- If a unit test asserted `console.error` was called by reading
+  `resolvedFieldName()` (or rendering) without ever running change
+  detection, it now needs a render + `fixture.detectChanges()` /
+  `await fixture.whenStable()` pass before the diagnostic fires. (Any
+  test exercised through `@testing-library/angular`'s `render()` already
+  gets this for free.)
+
+### Fix: `[hidden]` on the wrapper host now actually hides the field
+
+`ngx-form-field-wrapper`'s `:host { display: flex }` rule is author-origin
+CSS, which beats the (non-`!important`) UA-stylesheet `[hidden] { display:
+none }` rule regardless of specificity — so a field marked `hidden()` by
+Angular Signal Forms kept rendering fully visible and focusable despite
+carrying the `hidden` attribute. `:host([hidden]) { display: none
+!important; }` has been added so the documented safety net actually works.
+If you were relying on the old (broken) behavior to keep a `hidden()`
+field visible, add your own `@if` instead of the `hidden()` schema logic.
+
+### Fix: bound-control discovery no longer misroutes to a `[prefix]`/label-slot decoy
+
+The wrapper's fallback DOM probe (used for plain controls without their
+own `[formField]` binding, mocked field states, and the pre-init render
+window) queried the whole wrapper host with one selector, which returns
+the first match in **document order** — not by resolution tier. An
+id-bearing `[prefix]`/label-slot element (e.g. a password-visibility
+toggle button) could therefore outrank the real control in the `__main`
+slot, silently misrouting `fieldName`, `data-signal-field`, semantics, and
+required-detection. The probe now checks `__main` first and only falls
+back to a whole-host scan when `__main` has no match (preserving the
+implicit-label pattern, `<label>Email <input id="email"></label>`).
+Non-breaking unless you had markup relying on the old mis-routing.
+
+### Fix: author-supplied `aria-labelledby` / `aria-describedby` preserved instead of clobbered
+
+`NgxFormFieldWrapper` (non-cluster mode) and `NgxFormFieldset` used to
+bind `[attr.aria-labelledby]` / `[attr.aria-describedby]` unconditionally
+to their internally-managed value (`null` in most cases), which silently
+removed any value an author bound directly on the host element (e.g.
+`<fieldset ngxFormFieldset aria-describedby="pw-rules">`). Both now merge
+with (rather than replace) any author-supplied value captured at
+construction — the same preservation rule auto-aria already applies to the
+bound control itself.
+
+### New: custom error-renderer `id` contract documented; `fieldName` passed through
+
+`NgxFormFieldErrorRenderer` (`core/tokens.ts`) now documents that a custom
+renderer **must** render `id="${fieldName}-error"` / `id="${fieldName}-warning"`
+on the elements displaying each kind — the composed `aria-describedby`
+references those ids regardless of which renderer is mounted, so a
+renderer that doesn't satisfy this produces dangling references (an axe
+`aria-valid-attr-value` violation). `NgxFormFieldWrapper` now also passes
+`fieldName` directly to the renderer (in addition to
+`{formField, strategy, submittedStatus, warningStrategy}`) so a custom
+renderer can satisfy the contract without injecting
+`NGX_SIGNAL_FORM_FIELD_CONTEXT` itself. See
+[`docs/CUSTOM_WRAPPERS.md`](./CUSTOM_WRAPPERS.md#the-id-contract).
+
+### New: `NgxFormField` bundle now includes `NgxSignalFormControlSemanticsDirective`
+
+The wrapper's own "could not infer a control kind" dev warning instructs
+authors to declare semantics via `ngxSignalFormControl="..."` — but that
+attribute was inert for consumers who imported only the `NgxFormField`
+convenience bundle (not the full `NgxSignalFormToolkit`), since the
+directive that reads it was never declared. Worse, `ngxSignalFormControlAria="manual"`
+was silently ignored while `NgxSignalFormAutoAria` (which the bundle does
+include) kept managing ARIA anyway via its CSS attribute selector — actively
+overriding what the author opted out of. `NgxFormField` now includes
+`NgxSignalFormControlSemanticsDirective`; it's selector-gated and inert for
+consumers who never add the attribute.
+
+## Public API consistency pass (v1.0.0 audit #165)
+
+A pre-freeze sweep of the public surface. Breaking changes are listed first; the last two entries are deliberate design decisions recorded for clarity.
+
+| Area                        | Before                                                                                                                                           | After                                                                                                           |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| Missing type exports        | `ErrorMessageRegistry`, `FieldLabelResolver` referenced by public signatures but unexported                                                      | both now exported from `@ngx-signal-forms/toolkit` (and `ErrorMessageRegistry` re-exported from `/headless`)    |
+| Whole-tree input name       | `NgxFormMarkingLegend` took `[formField]` for a whole form root                                                                                  | now `[formTree]` (aligns with `NgxHeadlessErrorSummary`/`NgxFormFieldErrorSummary`)                             |
+| Direct-errors input         | `[errors]` required a `Signal<ValidationError[]>` (`[errors]="sig"`)                                                                             | now accepts a plain array **or** a signal (unwrapped internally); pass `[errors]="sig()"` or `[errors]="array"` |
+| Fieldset option types       | `NgxFieldsetAppearance`, `NgxFieldsetSurfaceTone`, `NgxFieldsetValidationSurface`, `NgxFieldsetFeedbackAppearance`                               | renamed `NgxFormFieldset*` (matches the `NgxFormFieldset` component)                                            |
+| Dead input                  | `NgxHeadlessNotification`/`NgxFormFieldNotification` shipped a no-op `tone` input (+ `NgxNotificationTone`/`NgxFormFieldNotificationTone` types) | removed (tone is fully content-driven; re-adding later is non-breaking)                                         |
+| Headless visibility signals | `NgxHeadlessErrorState` exposed `showErrors`/`showWarnings`; `createErrorState()` returned `showErrors`/`showWarnings`                           | both now `shouldShowErrors`/`shouldShowWarnings`, uniform with `NgxHeadlessFieldset`                            |
+
+Bug fix (no API change): `NgxFormFieldHint` now mints its fallback id once in an injection context instead of lazily inside a computed — this removes the SSR-unsafe module-counter fallback + dev warning and stops `aria-describedby` from pointing at a stale id when the field name resolves and later clears.
+
+Docs fix: removed phantom `@template TForm` / `@template TFieldset` JSDoc tags from `NGX_SIGNAL_FORM_CONTEXT` and `NgxFormFieldset` (neither declaration is generic).
+
+**Intentional, documented decisions (not renamed):**
+
+- **`strategy` (field-level) vs `errorStrategy` (form-level).** The form-level `NgxSignalForm` directive sets the workspace default via `[errorStrategy]`; individual field-level components (`NgxFormFieldWrapper`, `NgxFormFieldError`, `NgxFormFieldset`, `NgxHeadlessErrorState`, `NgxHeadlessFieldset`) override it per-field via `[strategy]`, paired with `[warningStrategy]` where warnings are configurable. This split is deliberate and preserved to avoid a churny rename of the most widely-used input. Visibility signals are uniform: `shouldShowErrors()` / `shouldShowWarnings()`.
+- **`provideErrorMessages()` / `provideFieldLabels()` return `Provider` (not `EnvironmentProviders`).** These register level-agnostic registries usable in either environment or component providers — intentionally, so no `…ForComponent` variant is needed.

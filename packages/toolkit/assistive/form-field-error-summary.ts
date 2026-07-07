@@ -27,10 +27,16 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
  * - Error links are focusable buttons for keyboard navigation
  * - Each entry identifies the field and the error message
  * - The summary host has `tabindex="-1"` and is **programmatically focused**
- *   the first time it appears with non-zero entries (GOV.UK / WAI tutorial
- *   pattern for WCAG 2.4.3 + 3.3.1). This guarantees screen reader users
- *   land on the summary after submit instead of being left where they were.
- *   Opt out with `[autoFocus]="false"`.
+ *   the first time it appears with non-zero entries under the resolved
+ *   `'on-submit'` strategy (GOV.UK / WAI tutorial pattern for WCAG 2.4.3 +
+ *   3.3.1). This guarantees screen reader users land on the summary after a
+ *   failed submit instead of being left where they were. Auto-focus is
+ *   intentionally skipped for `'on-touch'` / `'immediate'` strategies: the
+ *   root FieldTree's `touched()` aggregates children, so the summary can
+ *   appear the moment the user blurs the first invalid field — focusing it
+ *   then would be an unexpected mid-fill context change (WCAG 3.2.1/3.2.2),
+ *   not the documented "arrive after a failed submit" contract. Opt out of
+ *   the on-submit auto-focus with `[autoFocus]="false"`.
  *
  * ## Usage
  *
@@ -67,8 +73,24 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
     },
   ],
   template: `
-    @if (summary.shouldShow() && summary.hasErrors()) {
-      <div class="ngx-form-field-error-summary" role="alert">
+    <!--
+      The role="alert" container is rendered UNCONDITIONALLY (even when
+      empty), the same always-mounted live-region pattern NgxFormFieldError
+      and NgxFormFieldNotification use: role="alert" only fires reliably on
+      content insertion into a pre-existing live region, so inserting the
+      container and its content in the same tick risks the NVDA + Chrome
+      missed-first-announcement bug. aria-hidden/[hidden] are intentionally
+      never toggled — the @if below already guarantees zero content while
+      empty, so an empty live region announces nothing on its own.
+    -->
+    <div
+      class="ngx-form-field-error-summary"
+      [class.ngx-form-field-error-summary--empty]="
+        !(summary.shouldShow() && summary.hasErrors())
+      "
+      role="alert"
+    >
+      @if (summary.shouldShow() && summary.hasErrors()) {
         @if (summaryLabel()) {
           <p class="ngx-form-field-error-summary__label">
             {{ summaryLabel() }}
@@ -94,8 +116,8 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
             </li>
           }
         </ul>
-      </div>
-    }
+      }
+    </div>
   `,
   styles: `
     .ngx-form-field-error-summary {
@@ -104,6 +126,16 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
       padding: 1rem;
       margin-block: 1rem;
       background: var(--ngx-error-summary-bg, #fef2f2);
+    }
+
+    /* Empty live-region shell: the @if in the template guarantees zero
+     * content while empty, so we additionally zero the box model to
+     * collapse it visually — mirrors the --empty pattern in
+     * NgxFormFieldError / NgxFormFieldNotification. */
+    .ngx-form-field-error-summary--empty {
+      border-width: 0;
+      padding: 0;
+      margin-block: 0;
     }
 
     .ngx-form-field-error-summary__label {
@@ -165,13 +197,21 @@ export class NgxFormFieldErrorSummary {
 
   /**
    * Whether to programmatically focus the summary host the first time it
-   * appears with non-zero entries.
+   * appears with non-zero entries **under the resolved `'on-submit'`
+   * strategy**.
    *
    * The default (`true`) follows the GOV.UK / WAI error-summary pattern so
    * screen-reader users hear the announcement and arrive at the summary
    * after a failed submit. Set to `false` if your flow already moves focus
    * elsewhere (e.g. straight to the first invalid field) or if focus
    * theft is undesirable in your design.
+   *
+   * This input has no effect under `'on-touch'` or `'immediate'` strategies
+   * — auto-focus is always skipped for those, regardless of this value,
+   * because the summary can appear mid-fill (e.g. on blurring the first
+   * invalid field) and stealing focus then would be an unexpected context
+   * change (WCAG 3.2.1/3.2.2), not the documented "arrive after a failed
+   * submit" contract.
    *
    * @default true
    */
@@ -205,6 +245,13 @@ export class NgxFormFieldErrorSummary {
         untracked(() => {
           if (hasFocused) return;
           if (!this.autoFocus()) return;
+          // Only the resolved 'on-submit' strategy matches the documented
+          // GOV.UK/WAI "arrive at the summary after a failed submit"
+          // contract. Under 'on-touch'/'immediate' the summary can appear
+          // mid-fill (e.g. blurring the first invalid field, or on initial
+          // render for an already-invalid form) — auto-focusing there would
+          // be an unexpected context change (WCAG 3.2.1/3.2.2).
+          if (this.summary.resolvedStrategy() !== 'on-submit') return;
 
           const host = this.#host.nativeElement;
           // Defensive: in jsdom-based test environments `focus()` is

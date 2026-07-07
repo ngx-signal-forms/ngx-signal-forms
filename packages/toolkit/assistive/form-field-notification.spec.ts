@@ -86,24 +86,23 @@ describe('NgxFormFieldNotification', () => {
       },
     );
 
-    // Mixed lists resolve to error: blocking wins over warnings.
+    // Mixed lists resolve to error: blocking wins over warnings. The
+    // status shell stays mounted (WCAG 4.1.3) but must be empty.
     expect(screen.getByRole('alert')).toBeTruthy();
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByRole('status')?.textContent?.trim() ?? '').toBe('');
     expect(container.querySelector('#mixed-group-error')).toBeTruthy();
     expect(container.querySelector('#mixed-group-warning')).toBeNull();
   });
 
-  it('downgrades an explicit error tone to warning when every message is a warning', async () => {
-    // Raising `role='alert'` over non-urgent warning text announces with
-    // greater urgency than the content warrants. Content wins over explicit
-    // tone only in this direction — see resolvedTone docs on the component.
+  it('renders warning-only messages via the polite status region', async () => {
+    // Tone is fully content-driven — there is no `tone` input to override it
+    // (removed pre-1.0; see MIGRATING_BETA_TO_V1.md).
     const warnings = signal([{ kind: 'warn:soft', message: 'Soft warning' }]);
 
     await render(
       `<ngx-form-field-notification
         [errors]="warnings"
         fieldName="forced-error"
-        tone="error"
       />`,
       {
         imports: [NgxFormFieldNotification],
@@ -112,20 +111,18 @@ describe('NgxFormFieldNotification', () => {
     );
 
     expect(screen.getByRole('status')).toBeTruthy();
-    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('');
   });
 
-  it('keeps alert semantics for blocking errors even when tone="warning"', async () => {
-    // Downgrading a real blocking error to role="status" would bury the alert
-    // in a polite live region. Content wins over explicit tone in both
-    // directions — see resolvedTone docs on the component.
+  it('keeps alert semantics for blocking errors', async () => {
+    // Downgrading a real blocking error to role="status" would bury the
+    // alert in a polite live region.
     const errors = signal([{ kind: 'required', message: 'Required' }]);
 
     await render(
       `<ngx-form-field-notification
         [errors]="errors"
         fieldName="forced-warning"
-        tone="warning"
       />`,
       {
         imports: [NgxFormFieldNotification],
@@ -134,29 +131,26 @@ describe('NgxFormFieldNotification', () => {
     );
 
     expect(screen.getByRole('alert')).toBeTruthy();
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByRole('status')?.textContent?.trim() ?? '').toBe('');
   });
 
-  it('keeps the error container id while blocking errors exist, regardless of tone', async () => {
-    const tone = signal<'error' | 'warning'>('error');
+  it('keeps the error container id while blocking errors exist', async () => {
     const errors = signal([{ kind: 'required', message: 'Required' }]);
 
     const { container, fixture } = await render(
       `<ngx-form-field-notification
         [errors]="errors"
         fieldName="switch-tone"
-        [tone]="tone()"
       />`,
       {
         imports: [NgxFormFieldNotification],
-        componentProperties: { errors, tone },
+        componentProperties: { errors },
       },
     );
 
     expect(container.querySelector('#switch-tone-error')).toBeTruthy();
     expect(container.querySelector('#switch-tone-warning')).toBeNull();
 
-    tone.set('warning');
     await fixture.whenStable();
 
     // Blocking error still present → stays on the error id and role='alert'.
@@ -187,7 +181,7 @@ describe('NgxFormFieldNotification', () => {
     expect(container.querySelector('#static-field-error')).toBeTruthy();
   });
 
-  it('keeps an empty shell mounted with aria-hidden and no id when errors are undefined', async () => {
+  it('keeps an empty shell mounted with no id when errors are undefined', async () => {
     const { container } = await render(
       `<ngx-form-field-notification fieldName="empty-shell" />`,
       { imports: [NgxFormFieldNotification] },
@@ -198,12 +192,14 @@ describe('NgxFormFieldNotification', () => {
     expect(
       shell?.classList.contains('ngx-form-field-notification--empty'),
     ).toBe(true);
-    expect(shell?.getAttribute('aria-hidden')).toBe('true');
+    // `aria-hidden`/`[hidden]` are intentionally never toggled — see the
+    // class-level docs on the always-mounted live-region pattern.
+    expect(shell?.hasAttribute('aria-hidden')).toBe(false);
     expect(shell?.id).toBe('');
     expect(container.querySelector('#empty-shell-error')).toBeNull();
   });
 
-  it('keeps an empty shell mounted with aria-hidden when errors is an empty array', async () => {
+  it('keeps an empty shell mounted with no id when errors is an empty array', async () => {
     const errors = signal<readonly { kind: string; message: string }[]>([]);
 
     const { container } = await render(
@@ -221,7 +217,7 @@ describe('NgxFormFieldNotification', () => {
     expect(
       shell?.classList.contains('ngx-form-field-notification--empty'),
     ).toBe(true);
-    expect(shell?.getAttribute('aria-hidden')).toBe('true');
+    expect(shell?.hasAttribute('aria-hidden')).toBe(false);
     expect(shell?.id).toBe('');
   });
 

@@ -78,7 +78,7 @@
 
         <fieldset
           ngxFormFieldset
-          [fieldsetField]="placementDesignPreviewForm.address"
+          [field]="placementDesignPreviewForm.address"
           [feedbackAppearance]="feedbackAppearance()"
           [listStyle]="listStyle()"
           [notificationTitle]="notificationTitle() ?? undefined"
@@ -125,7 +125,7 @@
 
         <fieldset
           ngxFormFieldset
-          [fieldsetField]="placementDesignPreviewForm.deliveryMethod"
+          [field]="placementDesignPreviewForm.deliveryMethod"
           [feedbackAppearance]="feedbackAppearance()"
           [listStyle]="listStyle()"
           [notificationTitle]="notificationTitle() ?? undefined"
@@ -214,7 +214,7 @@
 
         <fieldset
           ngxFormFieldset
-          [fieldsetField]="placementPreviewForm.address"
+          [field]="placementPreviewForm.address"
           [errorPlacement]="errorPlacement()"
           [feedbackAppearance]="feedbackAppearance()"
           [includeNestedErrors]="includeNestedErrors()"
@@ -266,7 +266,7 @@
 
         <fieldset
           ngxFormFieldset
-          [fieldsetField]="placementPreviewForm.deliveryMethod"
+          [field]="placementPreviewForm.deliveryMethod"
           [errorPlacement]="errorPlacement()"
           [feedbackAppearance]="feedbackAppearance()"
           [listStyle]="listStyle()"
@@ -349,7 +349,7 @@
   <!-- Shipping Address Fieldset -->
   <fieldset
     ngxFormFieldset
-    [fieldsetField]="fieldsetForm.shippingAddress"
+    [field]="fieldsetForm.shippingAddress"
     [appearance]="fieldsetAppearance()"
     [errorPlacement]="errorPlacement()"
     [feedbackAppearance]="feedbackAppearance()"
@@ -447,7 +447,7 @@
   @if (!fieldsetForm.billingSameAsShipping().value()) {
   <fieldset
     ngxFormFieldset
-    [fieldsetField]="fieldsetForm.billingAddress"
+    [field]="fieldsetForm.billingAddress"
     [appearance]="fieldsetAppearance()"
     [errorPlacement]="errorPlacement()"
     [feedbackAppearance]="feedbackAppearance()"
@@ -531,7 +531,7 @@
   <!-- Delivery Method Fieldset -->
   <fieldset
     ngxFormFieldset
-    [fieldsetField]="fieldsetForm.delivery"
+    [field]="fieldsetForm.delivery"
     [appearance]="fieldsetAppearance()"
     [errorPlacement]="errorPlacement()"
     [feedbackAppearance]="feedbackAppearance()"
@@ -550,7 +550,7 @@
 
     <fieldset
       ngxFormFieldset
-      [fieldsetField]="fieldsetForm.delivery.method"
+      [field]="fieldsetForm.delivery.method"
       [appearance]="fieldsetAppearance()"
       [feedbackAppearance]="feedbackAppearance()"
       fieldsetId="delivery-method-options"
@@ -598,7 +598,7 @@
   <!-- Credentials Fieldset -->
   <fieldset
     ngxFormFieldset
-    [fieldsetField]="fieldsetForm.credentials"
+    [field]="fieldsetForm.credentials"
     [appearance]="fieldsetAppearance()"
     [errorPlacement]="errorPlacement()"
     [feedbackAppearance]="feedbackAppearance()"

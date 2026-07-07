@@ -9,7 +9,7 @@ This document describes the compatibility contract for
 - Current peer dependencies:
   - `@angular/core >=22.0.0 <23.0.0`
   - `@angular/forms >=22.0.0 <23.0.0`
-  - `vest >=6.0.0 <6.3.0 || >=6.3.1` (optional)
+  - `vest >=6.0.0` (optional)
 
 ## Angular compatibility
 
@@ -46,17 +46,16 @@ That means:
 The Vest adapter is optional and only required when importing
 `@ngx-signal-forms/toolkit/vest`.
 
-| Vest version    | Status        | Notes                                           |
-| --------------- | ------------- | ----------------------------------------------- |
-| `6.0.0 - 6.2.x` | Supported     | Standard Schema-compatible                      |
-| `6.3.0`         | Not supported | Excluded because of an upstream packaging issue |
-| `>=6.3.1`       | Supported     | Supported by the current peer range             |
+| Vest version | Status    | Notes                       |
+| ------------ | --------- | --------------------------- |
+| `>=6.0.0`    | Supported | Standard Schema-compatible. |
 
 ## Runtime and tooling baseline
 
 The toolkit's `engines.node` matches the Angular 22 toolchain used in this repo:
-`^20.19.0 || ^22.12.0 || >=24.0.0`. Consumers should use an active LTS Node
-version compatible with Angular 22 and their package manager/tooling stack.
+`^22.22.3 || ^24.15.0 || >=26.0.0` (mirrors `@angular/core@22`'s own `engines`
+field). Consumers should use an active LTS Node version compatible with
+Angular 22 and their package manager/tooling stack.
 
 The repository currently validates and publishes with the following Node
 versions:

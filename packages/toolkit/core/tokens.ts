@@ -110,8 +110,6 @@ export const NGX_SIGNAL_FORM_CONTROL_PRESETS =
 /**
  * Injection token for the form context (provided by `NgxSignalForm`
  * when `ngxSignalForm` is present alongside Angular's `[formRoot]`).
- *
- * @template TForm - The Signal Forms instance type
  */
 export const NGX_SIGNAL_FORM_CONTEXT = new InjectionToken<NgxSignalFormContext>(
   'NGX_SIGNAL_FORM_CONTEXT',
@@ -194,7 +192,8 @@ export const NGX_SIGNAL_FORM_HINT_REGISTRY =
  * Renderer contract for the form-field error slot. Two consumers bind this
  * renderer:
  *
- * - `NgxFormFieldWrapper` binds inputs `{formField, strategy, submittedStatus}`.
+ * - `NgxFormFieldWrapper` binds inputs
+ *   `{formField, strategy, submittedStatus, warningStrategy, fieldName}`.
  * - `NgxFormFieldset` binds inputs `{errors, fieldName, strategy, submittedStatus, listStyle}`.
  *
  * The wrapper instantiates the configured component via `*ngComponentOutlet`
@@ -210,6 +209,23 @@ export const NGX_SIGNAL_FORM_HINT_REGISTRY =
  * fieldset instantiate it via `*ngComponentOutlet` without supplying
  * `ngComponentOutletNgModule`, so module-declared components are not
  * supported.
+ *
+ * ## id contract (required for valid `aria-describedby`)
+ *
+ * Both call sites compose the bound control's `aria-describedby` from
+ * `${fieldName}-error` / `${fieldName}-warning` whenever errors/warnings are
+ * visible (see `createAriaDescribedBySignal` and the wrapper's
+ * selection-cluster host binding) — this composition happens independently
+ * of which renderer is mounted. A custom renderer **must** render an element
+ * with `id="${fieldName}-error"` whenever it displays blocking errors, and
+ * `id="${fieldName}-warning"` whenever it displays warnings (using the
+ * `fieldName` input above, or by injecting `NGX_SIGNAL_FORM_FIELD_CONTEXT`
+ * itself when the wrapper doesn't pass it — e.g. `NgxFormFieldset`'s
+ * contract predates the `fieldName` addition here but already binds it
+ * explicitly). A renderer that doesn't satisfy this produces dangling
+ * `aria-describedby` references — an axe `aria-valid-attr-value` violation
+ * on every invalid field. See `NgxFormFieldError` for the reference
+ * implementation and `docs/CUSTOM_WRAPPERS.md` for the full checklist.
  *
  * @public
  */

@@ -23,16 +23,19 @@ import {
   type NgxFormFieldErrorPlacement,
 } from '@ngx-signal-forms/toolkit';
 
-export type NgxFieldsetFeedbackAppearance = 'auto' | 'plain' | 'notification';
-export type NgxFieldsetAppearance = 'outline' | 'plain';
-export type NgxFieldsetSurfaceTone =
+export type NgxFormFieldsetFeedbackAppearance =
+  | 'auto'
+  | 'plain'
+  | 'notification';
+export type NgxFormFieldsetAppearance = 'outline' | 'plain';
+export type NgxFormFieldsetSurfaceTone =
   | 'default'
   | 'neutral'
   | 'info'
   | 'success'
   | 'warning'
   | 'danger';
-export type NgxFieldsetValidationSurface = 'never' | 'always';
+export type NgxFormFieldsetValidationSurface = 'never' | 'always';
 
 /**
  * Form fieldset component for grouping related form fields with aggregated error/warning display.
@@ -80,12 +83,10 @@ export type NgxFieldsetValidationSurface = 'never' | 'always';
  * - `false` (default): Shows ONLY direct group-level errors (use when fields show their own errors)
  * - `true`: Shows ALL errors including nested field errors via `errorSummary()`
  *
- * @template TFieldset The type of the fieldset field value
- *
  * @example Group-Only Mode (when nested fields show their own errors)
  * ```html
  * <ngx-form-fieldset
- *   [fieldsetField]="form.passwords"
+ *   [field]="form.passwords"
  *   [includeNestedErrors]="false"
  * >
  *   <ngx-form-field-wrapper [formField]="form.passwords.password">...</ngx-form-field-wrapper>
@@ -96,7 +97,7 @@ export type NgxFieldsetValidationSurface = 'never' | 'always';
  *
  * @example Aggregated Mode (when nested fields don't show errors)
  * ```html
- * <ngx-form-fieldset [fieldsetField]="form.address">
+ * <ngx-form-fieldset [field]="form.address">
  *   <input [formField]="form.address.street" />
  *   <input [formField]="form.address.city" />
  *   <!-- Fieldset shows all nested field errors -->
@@ -110,7 +111,7 @@ export type NgxFieldsetValidationSurface = 'never' | 'always';
     {
       directive: NgxHeadlessFieldset,
       inputs: [
-        'fieldsetField',
+        'field',
         'fields',
         'fieldsetId',
         'strategy',
@@ -214,6 +215,13 @@ export class NgxFormFieldset {
     this.#elementRef.nativeElement.getAttribute('aria-labelledby');
   readonly #initialAriaLabel =
     this.#elementRef.nativeElement.getAttribute('aria-label');
+  // Same preservation rule for `aria-describedby`: `describedByIds()` below
+  // used to return the managed error/warning id (or `null`) unconditionally,
+  // clobbering an author-supplied value (a common pattern:
+  // `<fieldset ngxFormFieldset aria-describedby="pw-rules">`). Capture it
+  // here and prepend it in `describedByIds()`.
+  readonly #initialAriaDescribedby =
+    this.#elementRef.nativeElement.getAttribute('aria-describedby');
   // `<fieldset>` natively implies role="group" and associates a child <legend>.
   // Any other host tag (custom element `<ngx-form-fieldset>` or a bare
   // `[ngxFormFieldset]` attribute target) needs an explicit group role so the
@@ -251,7 +259,7 @@ export class NgxFormFieldset {
    * - `outline` (default): bordered grouped section with inner padding
    * - `plain`: semantic-only grouping with no border, no padding, and no surfaced background
    */
-  readonly appearance = input<NgxFieldsetAppearance>('outline');
+  readonly appearance = input<NgxFormFieldsetAppearance>('outline');
 
   /**
    * Presentation style for grouped feedback.
@@ -260,7 +268,8 @@ export class NgxFormFieldset {
    * - `plain`: always use the compact `ngx-form-field-error` presentation
    * - `notification`: always use the surfaced notification card
    */
-  readonly feedbackAppearance = input<NgxFieldsetFeedbackAppearance>('auto');
+  readonly feedbackAppearance =
+    input<NgxFormFieldsetFeedbackAppearance>('auto');
 
   /**
    * Optional title rendered inside the notification card.
@@ -275,7 +284,7 @@ export class NgxFormFieldset {
   /**
    * Base surface tint for the fieldset content area.
    */
-  readonly surfaceTone = input<NgxFieldsetSurfaceTone>('default');
+  readonly surfaceTone = input<NgxFormFieldsetSurfaceTone>('default');
 
   /**
    * Whether validation state should tint the fieldset surface.
@@ -283,7 +292,7 @@ export class NgxFormFieldset {
    * - `never` (default): keep the surface neutral and rely on the grouped message only
    * - `always`: tint every invalid/warning fieldset surface
    */
-  readonly validationSurface = input<NgxFieldsetValidationSurface>('never');
+  readonly validationSurface = input<NgxFormFieldsetValidationSurface>('never');
 
   protected readonly isTopPlacement = computed(() => {
     return this.errorPlacement() === 'top';
@@ -302,7 +311,7 @@ export class NgxFormFieldset {
   #warnedInvalidValidationSurface = false;
   #warnedTitleIgnoredOnPlain = false;
 
-  protected readonly resolvedAppearance = computed<NgxFieldsetAppearance>(
+  protected readonly resolvedAppearance = computed<NgxFormFieldsetAppearance>(
     () => {
       const appearance = this.appearance();
 
@@ -324,7 +333,7 @@ export class NgxFormFieldset {
   );
 
   protected readonly resolvedFeedbackAppearance = computed<
-    Exclude<NgxFieldsetFeedbackAppearance, 'auto'>
+    Exclude<NgxFormFieldsetFeedbackAppearance, 'auto'>
   >(() => {
     const appearance = this.feedbackAppearance();
 
@@ -406,7 +415,7 @@ export class NgxFormFieldset {
   );
 
   protected readonly resolvedValidationSurface =
-    computed<NgxFieldsetValidationSurface>(() => {
+    computed<NgxFormFieldsetValidationSurface>(() => {
       const value = this.validationSurface();
       if (value === 'never' || value === 'always') {
         return value;
@@ -422,7 +431,7 @@ export class NgxFormFieldset {
       return 'never';
     });
 
-  protected readonly resolvedSurfaceTone = computed<NgxFieldsetSurfaceTone>(
+  protected readonly resolvedSurfaceTone = computed<NgxFormFieldsetSurfaceTone>(
     () => {
       const value = this.surfaceTone();
       if (
@@ -488,13 +497,18 @@ export class NgxFormFieldset {
   });
 
   protected readonly describedByIds = computed(() => {
+    // Preserve any author-supplied `aria-describedby` — same rule as
+    // `#initialAriaLabelledby` above. Every `return` below merges the
+    // managed id onto this instead of replacing it outright.
+    const initial = this.#initialAriaDescribedby;
+
     // The rendered notification/error component strips its `id` attribute
     // whenever `displayedMessagesSignal` is empty, which happens when the user
     // passes `showErrors="false"` even on an invalid fieldset. Mirror that
     // gating here so `aria-describedby` never points to an element without a
     // matching id in the DOM.
     if (!this.showMessages()) {
-      return null;
+      return initial;
     }
 
     const fieldsetId = this.fieldset.resolvedFieldsetId();
@@ -503,14 +517,16 @@ export class NgxFormFieldset {
     // `filteredErrorsSignal`), so only reference the id that is actually in
     // the DOM.
     if (this.fieldset.shouldShowErrors()) {
-      return `${fieldsetId}-error`;
+      return initial ? `${initial} ${fieldsetId}-error` : `${fieldsetId}-error`;
     }
 
     if (this.fieldset.shouldShowWarnings()) {
-      return `${fieldsetId}-warning`;
+      return initial
+        ? `${initial} ${fieldsetId}-warning`
+        : `${fieldsetId}-warning`;
     }
 
-    return null;
+    return initial;
   });
 
   constructor() {

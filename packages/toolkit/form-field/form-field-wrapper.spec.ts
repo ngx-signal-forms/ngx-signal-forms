@@ -63,10 +63,19 @@ const createMockFieldState = () =>
     errors: () => [],
   });
 
-const createWrapperComponent = (
+/**
+ * Renders a bare `NgxFormFieldWrapper` and lets its `afterEveryRender` write
+ * phase settle before returning the instance. The unresolved-field-name
+ * diagnostic fires from that write phase (not synchronously from the
+ * `resolvedFieldName` computed — see the class-level doc comment), so
+ * callers asserting on `console.error` must await a real render here rather
+ * than reading `resolvedFieldName()` off a freshly constructed, never
+ * change-detected fixture.
+ */
+const createWrapperComponent = async (
   field: ReturnType<typeof createMockFieldState> = createMockFieldState(),
   fieldName?: string,
-): NgxSignalFormWrapperComponent => {
+): Promise<NgxSignalFormWrapperComponent> => {
   const bindings = [inputBinding('formField', () => field)];
 
   if (fieldName !== undefined) {
@@ -76,6 +85,9 @@ const createWrapperComponent = (
   const fixture = TestBed.createComponent(NgxSignalFormWrapperComponent, {
     bindings,
   });
+
+  fixture.detectChanges();
+  await fixture.whenStable();
 
   return fixture.componentInstance;
 };
@@ -113,7 +125,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(errorContainer).toBeTruthy();
     });
 
-    it('should return null and log a dev-mode error when neither fieldName nor bound control id is provided', () => {
+    it('should return null and log a dev-mode error when neither fieldName nor bound control id is provided', async () => {
       const invalidField = signal({
         invalid: () => true,
         touched: () => true,
@@ -124,7 +136,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         .spyOn(console, 'error')
         .mockImplementation(() => undefined);
 
-      const component = createWrapperComponent(invalidField);
+      const component = await createWrapperComponent(invalidField);
 
       expect(component.resolvedFieldName()).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalled();
@@ -217,7 +229,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(container.querySelector('[id="password-error"]')).toBeTruthy();
     });
 
-    it('should handle empty string fieldName by returning null and logging in dev mode', () => {
+    it('should handle empty string fieldName by returning null and logging in dev mode', async () => {
       const invalidField = signal({
         invalid: () => true,
         touched: () => true,
@@ -228,7 +240,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         .spyOn(console, 'error')
         .mockImplementation(() => undefined);
 
-      const component = createWrapperComponent(invalidField, '');
+      const component = await createWrapperComponent(invalidField, '');
 
       expect(component.resolvedFieldName()).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalled();
@@ -1413,6 +1425,110 @@ describe('NgxSignalFormWrapperComponent', () => {
       ).toBeTruthy();
     });
 
+    it('merges an author-supplied aria-describedby with the cluster-managed error id instead of clobbering it', async () => {
+      // Regression guard: `[attr.aria-describedby]` on the host is always
+      // active (Angular host bindings can't be conditionally applied at
+      // runtime), so an author-supplied value on
+      // `<ngx-form-field-wrapper aria-describedby="…">` used to be nulled
+      // out whenever the wrapper wasn't in selection-cluster mode, and
+      // replaced outright (not merged) when it was.
+      const invalidField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [
+          { kind: 'required', message: 'Preferred contact method is required' },
+        ],
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper
+          [formField]="field"
+          fieldName="delivery-method"
+          aria-describedby="delivery-hint"
+        >
+          <span ngxFormFieldLabel>Delivery option *</span>
+          <div>
+            <label>
+              <input id="delivery-standard" type="radio" value="standard" />
+              Standard
+            </label>
+            <label>
+              <input id="delivery-express" type="radio" value="express" />
+              Express
+            </label>
+          </div>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: invalidField,
+          },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      expect(wrapper).toHaveAttribute(
+        'aria-describedby',
+        'delivery-hint delivery-method-error',
+      );
+    });
+
+    it('preserves an author-supplied aria-describedby on a non-cluster wrapper instead of nulling it out', async () => {
+      const invalidField = signal({
+        invalid: () => false,
+        touched: () => false,
+        errors: () => [],
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper
+          [formField]="field"
+          fieldName="email"
+          aria-describedby="email-hint"
+        >
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: invalidField,
+          },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      expect(wrapper).toHaveAttribute('aria-describedby', 'email-hint');
+    });
+
+    it('preserves an author-supplied aria-labelledby on a non-cluster wrapper instead of nulling it out', async () => {
+      const invalidField = signal({
+        invalid: () => false,
+        touched: () => false,
+        errors: () => [],
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper
+          [formField]="field"
+          fieldName="email"
+          aria-labelledby="email-label"
+        >
+          <label for="email">Email</label>
+          <input id="email" type="email" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: invalidField,
+          },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      expect(wrapper).toHaveAttribute('aria-labelledby', 'email-label');
+    });
+
     it('should keep explicit labels associated to single controls while using neutral headings for grouped controls', async () => {
       const invalidField = signal({
         invalid: () => true,
@@ -2095,6 +2211,19 @@ describe('NgxSignalFormWrapperComponent', () => {
       const errorContainer = container.querySelector('[role="alert"]');
       expect(errorContainer).toBeTruthy();
       expect(errorContainer?.textContent).toContain('Password is required');
+
+      // Warnings are suppressed while a blocking error is visible — README's
+      // "Warning support" section documents this, and `NgxFormFieldset`
+      // already enforces it. Rendering both would double-announce the same
+      // field (an assertive role="alert" AND a polite role="status" at
+      // once). The role="status" container stays mounted (WCAG 4.1.3
+      // first-insertion semantics) but must not expose an id or content.
+      const warningContainer = container.querySelector('[role="status"]');
+      expect(warningContainer?.getAttribute('id')).not.toBe('password-warning');
+      expect(warningContainer?.textContent?.trim()).toBe('');
+      expect(container.textContent).not.toContain(
+        'Consider a stronger password',
+      );
     });
 
     it('should handle multiple warnings', async () => {
@@ -2261,6 +2390,119 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(
         formField?.classList.contains('ngx-signal-form-field-wrapper--warning'),
       ).toBe(false);
+    });
+  });
+
+  describe('Warning-only fields render independently of the blocking-error strategy', () => {
+    // Regression coverage: the wrapper used to gate mounting the projected
+    // error renderer entirely on `shouldShowErrors()`, which runs the
+    // blocking-error strategy (default 'on-touch') even when the field's
+    // only messages are warnings. A warnings-only, UNTOUCHED field would
+    // therefore never mount `NgxFormFieldError` at all, so its own
+    // `warningStrategy` default of 'immediate' never got a chance to run —
+    // the README's documented "warning timing is independent of error
+    // timing" was unreachable through the wrapper. `shouldRenderErrorSlot`
+    // now mounts the renderer whenever errors OR warnings should show.
+    it('renders the warning immediately on an untouched field under the default on-touch error strategy', async () => {
+      const untouchedWarningField = signal({
+        invalid: () => true,
+        touched: () => false,
+        errors: () => [
+          { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
+        ],
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" fieldName="password">
+          <label for="password">Password</label>
+          <input id="password" type="password" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field: untouchedWarningField },
+        },
+      );
+
+      const status = container.querySelector('[role="status"]');
+      expect(status?.getAttribute('id')).toBe('password-warning');
+      expect(status?.textContent).toContain('Consider 8+ characters');
+      // No blocking error, so the alert container stays empty/unlinked.
+      const alert = container.querySelector('[role="alert"]');
+      expect(alert?.getAttribute('id')).not.toBe('password-error');
+    });
+
+    it('respects an explicit strategy="on-submit" for a warnings-only field with the immediate warningStrategy default', async () => {
+      const unsubmittedWarningField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [
+          { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
+        ],
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper
+          [formField]="field"
+          fieldName="password"
+          strategy="on-submit"
+        >
+          <label for="password">Password</label>
+          <input id="password" type="password" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field: unsubmittedWarningField },
+        },
+      );
+
+      // Warning is visible immediately even though the field hasn't been
+      // submitted — 'immediate' is the warningStrategy default, and it is
+      // NOT the same signal as the wrapper's own (on-submit) `strategy`.
+      const status = container.querySelector('[role="status"]');
+      expect(status?.getAttribute('id')).toBe('password-warning');
+      expect(status?.textContent).toContain('Consider 8+ characters');
+    });
+
+    it('gates the warning behind on-touch when an explicit warningStrategy is bound through the wrapper', async () => {
+      const untouchedWarningField = signal({
+        invalid: () => true,
+        touched: () => false,
+        errors: () => [
+          { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
+        ],
+      });
+
+      const { container, fixture } = await render(
+        `<ngx-form-field-wrapper
+          [formField]="field"
+          fieldName="password"
+          warningStrategy="on-touch"
+        >
+          <label for="password">Password</label>
+          <input id="password" type="password" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field: untouchedWarningField },
+        },
+      );
+
+      // Untouched: warningStrategy="on-touch" keeps the warning hidden, and
+      // no renderer should even mount (no errors, no visible warnings).
+      expect(container.querySelector('ngx-form-field-error')).toBeNull();
+
+      untouchedWarningField.set({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [
+          { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
+        ],
+      });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const status = container.querySelector('[role="status"]');
+      expect(status?.textContent).toContain('Consider 8+ characters');
     });
   });
 
@@ -2566,7 +2808,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(customError).toBeFalsy();
     });
 
-    it('should return null and log a dev-mode error when custom control has no id', () => {
+    it('should return null and log a dev-mode error when custom control has no id', async () => {
       const invalidField = signal({
         invalid: () => true,
         touched: () => true,
@@ -2577,7 +2819,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         .spyOn(console, 'error')
         .mockImplementation(() => undefined);
 
-      const component = createWrapperComponent(invalidField);
+      const component = await createWrapperComponent(invalidField);
 
       expect(component.resolvedFieldName()).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalled();
@@ -2675,7 +2917,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(container.querySelector('[id="first-error"]')).toBeTruthy();
     });
 
-    it('should return null and log a dev-mode error when no input has id attribute and no fieldName is provided', () => {
+    it('should return null and log a dev-mode error when no input has id attribute and no fieldName is provided', async () => {
       const invalidField = signal({
         invalid: () => true,
         touched: () => true,
@@ -2686,7 +2928,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         .spyOn(console, 'error')
         .mockImplementation(() => undefined);
 
-      const component = createWrapperComponent(invalidField);
+      const component = await createWrapperComponent(invalidField);
 
       expect(component.resolvedFieldName()).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalled();
@@ -3569,6 +3811,91 @@ describe('NgxSignalFormWrapperComponent', () => {
       const wrapper = container.querySelector('ngx-form-field-wrapper');
       expect(wrapper).not.toHaveAttribute('hidden');
       expect(container.querySelector('ngx-form-field-error')).toBeTruthy();
+    });
+  });
+
+  describe('Field-name resolution race (spurious console.error)', () => {
+    // Regression coverage for the bug where `resolvedFieldName()` logged a
+    // one-shot `console.error` from *inside* a `computed()`. Projected
+    // children (`NgxFormFieldHint`, `NgxFormFieldError`) read that computed
+    // via `NGX_SIGNAL_FORM_FIELD_CONTEXT` during the wrapper's FIRST
+    // change-detection pass — before `afterEveryRender`'s write phase has
+    // ever populated `#inputElementId` — so the diagnostic fired even for
+    // correctly configured fields (input WITH an id). See
+    // form-field-wrapper.ts `resolvedFieldName` for the fix (diagnostic
+    // moved to the write phase).
+    let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+        // Swallow dev-mode diagnostics; assertions inspect the spy directly.
+      });
+    });
+
+    afterEach(() => {
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('does not log when a projected hint reads the field name on first render', async () => {
+      const field = createMockFieldState();
+
+      await render(
+        `<ngx-form-field-wrapper [formField]="field">
+          <label for="username">Username</label>
+          <input id="username" type="text" />
+          <ngx-form-field-hint>Pick something memorable</ngx-form-field-hint>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent, NgxFormFieldHint],
+          componentProperties: { field },
+        },
+      );
+
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+    });
+
+    it('does not log when the error renderer is visible on first render (strategy="immediate")', async () => {
+      const invalidField = signal({
+        invalid: () => true,
+        touched: () => false,
+        errors: () => [{ kind: 'required', message: 'Username is required' }],
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" strategy="immediate">
+          <label for="username2">Username</label>
+          <input id="username2" type="text" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field: invalidField },
+        },
+      );
+
+      // Sanity: the error renderer really did mount on the first pass.
+      expect(container.querySelector('[id="username2-error"]')).toBeTruthy();
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+    });
+
+    it('still logs exactly once when the field genuinely has no id and no fieldName', async () => {
+      const field = createMockFieldState();
+
+      const { fixture } = await render(
+        `<ngx-form-field-wrapper [formField]="field">
+          <input type="text" />
+          <ngx-form-field-hint>No id on this control</ngx-form-field-hint>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent, NgxFormFieldHint],
+          componentProperties: { field },
+        },
+      );
+      await fixture.whenStable();
+
+      expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+      expect(consoleErrorSpy.mock.calls[0]?.[0]).toMatch(
+        /Could not resolve a deterministic field name/u,
+      );
     });
   });
 

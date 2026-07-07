@@ -32,6 +32,51 @@ function isIterableNode(node: unknown): node is Iterable<unknown> {
 }
 
 /**
+ * Whether `value` is a plain data object — `{ ... }` object-literal shape or
+ * `null`-prototype object — as opposed to a boxed/branded value (`Date`,
+ * `File`, `Map`, a custom class instance, ...).
+ */
+function isPlainObject(value: unknown): boolean {
+  if (value === null || typeof value !== 'object') return false;
+  const proto: unknown = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
+/**
+ * Whether a `FieldTree` node should be descended into as a structural
+ * container, rather than read as a leaf.
+ *
+ * Angular's `FieldTree` proxy grows a `[Symbol.iterator]` whenever the
+ * field's *current* value is any non-null object — this includes genuine
+ * schema containers (object subfields, arrays) but also boxed leaf values
+ * like `Date`, `File`, or `Map`, whose iteration yields zero entries. Relying
+ * on iterability alone would treat a populated `Date | null` leaf as an
+ * "empty container" the moment it gets a value, silently dropping its
+ * `required()` state from the walk. Genuine containers always hold a plain
+ * object or array (that's what the schema's object/array shape lowers to),
+ * so checking the value's prototype disambiguates the two.
+ *
+ * Known caveat: a leaf whose value is itself a custom class instance
+ * declared as an object-shaped model field (rather than a scalar) would be
+ * misread as a leaf here — the same class of edge case as the documented
+ * `string[]`-as-container caveat below.
+ */
+function isContainerNode(
+  node: AnyFieldTree,
+): node is AnyFieldTree & Iterable<unknown> {
+  if (!isIterableNode(node)) return false;
+
+  const state = node() as { value?: () => unknown } | null | undefined;
+  if (!state || typeof state.value !== 'function') return true;
+
+  const value = state.value();
+  if (Array.isArray(value)) return true;
+  if (value !== null && typeof value === 'object') return isPlainObject(value);
+
+  return true;
+}
+
+/**
  * Yield every leaf (control) `FieldTree` reachable from `node`, depth-first.
  *
  * Container nodes are descended into and never yielded themselves; only leaves
@@ -46,12 +91,12 @@ function isIterableNode(node: unknown): node is Iterable<unknown> {
  * @yields Each leaf (control) `FieldTree` in depth-first order.
  */
 function* walkLeaves(node: AnyFieldTree): Generator<AnyFieldTree> {
-  if (!isIterableNode(node)) {
+  if (!isContainerNode(node)) {
     yield node;
     return;
   }
 
-  for (const entry of node as Iterable<unknown>) {
+  for (const entry of node) {
     // Array-like nodes yield the child FieldTree (a callable) directly; object
     // subfields yield `[key, childTree]` tuples.
     const child: AnyFieldTree | undefined =

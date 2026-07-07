@@ -115,6 +115,41 @@ describe('summarizeFieldOptionality', () => {
       hasOptional: false,
     });
   });
+
+  it('treats a Date-valued leaf as a control leaf, not a container, across a null → Date transition', () => {
+    // Angular's FieldTree proxy grows a Symbol.iterator whenever the field's
+    // *current* value is any non-null object (Date/File/Map included) — for
+    // a Date that iterator yields zero entries. A naive "is it iterable?"
+    // container check would treat the populated field as an empty container
+    // and silently drop its `required()` state from the walk.
+    @Component({ template: '' })
+    class Host {
+      readonly model = signal<{ birthDate: Date | null }>({ birthDate: null });
+      readonly tree = form(
+        this.model,
+        schema<{ birthDate: Date | null }>((path) => {
+          required(path.birthDate);
+        }),
+      );
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    const { tree, model } = fixture.componentInstance;
+
+    // While null, the leaf is unambiguous — required is read normally.
+    expect(summarizeFieldOptionality(tree)).toEqual({
+      hasRequired: true,
+      hasOptional: false,
+    });
+
+    // Once populated with a real Date, the field must still count as the
+    // same required leaf, not vanish from the walk.
+    model.set({ birthDate: new Date('2000-01-01') });
+    expect(summarizeFieldOptionality(tree)).toEqual({
+      hasRequired: true,
+      hasOptional: false,
+    });
+  });
 });
 
 describe('createFieldOptionalitySummary', () => {
@@ -151,6 +186,28 @@ describe('createFieldOptionalitySummary', () => {
 
     // Flip the predicate → the field becomes required and the summary updates.
     wantsEmail.set(true);
+    expect(summary.hasRequired()).toBe(true);
+  });
+
+  it('does not flip hasRequired to false when a required Date leaf gains a value', () => {
+    @Component({ template: '' })
+    class Host {
+      readonly model = signal<{ birthDate: Date | null }>({ birthDate: null });
+      readonly tree = form(
+        this.model,
+        schema<{ birthDate: Date | null }>((path) => {
+          required(path.birthDate);
+        }),
+      );
+      readonly summary = createFieldOptionalitySummary(() => this.tree);
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    const { summary, model } = fixture.componentInstance;
+
+    expect(summary.hasRequired()).toBe(true);
+
+    model.set({ birthDate: new Date('2000-01-01') });
     expect(summary.hasRequired()).toBe(true);
   });
 

@@ -27,7 +27,6 @@ export {
 export {
   NgxFormFieldNotification,
   type NgxFormFieldNotificationListStyle,
-  type NgxFormFieldNotificationTone,
 } from './form-field-notification';
 export { NgxFormFieldErrorSummary } from './form-field-error-summary';
 export { NgxFormMarkingLegend } from './form-marking-legend';

@@ -10,12 +10,12 @@ export default defineConfig({
   publicDir: join(appDir, 'public'),
   cacheDir: '../../node_modules/.vite/apps/demo-primeng',
   server: {
-    port: 4220,
-    host: 'localhost',
+    port: 4620,
+    host: '127.0.0.1',
   },
   preview: {
-    port: 4320,
-    host: 'localhost',
+    port: 4720,
+    host: '127.0.0.1',
   },
   build: {
     outDir: '../../../dist/apps/demo-primeng',
