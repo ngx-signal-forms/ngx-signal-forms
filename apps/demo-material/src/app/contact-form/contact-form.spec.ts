@@ -144,4 +144,82 @@ describe('ContactFormComponent (Material reference, smoke)', () => {
     const nameField = nameInput.closest('mat-form-field');
     expect(nameField?.querySelector('mat-error:not([hidden])')).toBeFalsy();
   });
+
+  it('wires aria-describedby from the consent checkbox to the rendered feedback block', async () => {
+    const user = userEvent.setup();
+    await setup();
+
+    const checkbox = screen.getByRole('checkbox', {
+      name: /i agree to be contacted/i,
+    });
+
+    // Focus and blur without checking — trips the agree-required validator
+    // and marks the field touched under the on-touch strategy, so the
+    // *ngxMatFeedback error block renders.
+    checkbox.focus();
+    await user.tab();
+
+    const feedback = await screen.findByText(/you need to agree/i);
+    const feedbackHost = feedback.closest('.demo-form__feedback');
+    expect(feedbackHost).not.toBeNull();
+    const feedbackId = feedbackHost?.getAttribute('id');
+    expect(feedbackId).toBeTruthy();
+
+    // Regression for the "no programmatic association" a11y blocker: the
+    // checkbox's aria-describedby must resolve to the rendered feedback
+    // block's id, not just rely on the transient role="alert" announcement.
+    await waitFor(() => {
+      expect(checkbox.getAttribute('aria-describedby')).toBe(feedbackId);
+    });
+
+    // Checking the box clears the error — aria-describedby must drop back
+    // to null rather than leaving a dangling IDREF.
+    await user.click(checkbox);
+    await waitFor(() => {
+      expect(checkbox.getAttribute('aria-describedby')).toBeNull();
+    });
+  });
+
+  it('does not block submission on a non-blocking warning (warn:short-name)', async () => {
+    const user = userEvent.setup();
+    await setup();
+
+    // 'Bob' passes minLength(2) but trips warn:short-name — a non-blocking
+    // warning per the schema and the form's own intro copy ("short-but-valid
+    // names surface as a gentle warning instead of a blocker").
+    const nameInput = screen.getByLabelText(/name/i) as HTMLInputElement;
+    await user.click(nameInput);
+    await user.type(nameInput, 'Bob');
+
+    const emailInput = screen.getByLabelText(/email/i) as HTMLInputElement;
+    await user.click(emailInput);
+    await user.type(emailInput, 'bob@example.com');
+
+    const topicSelect = screen.getByRole('combobox', { name: /topic/i });
+    await user.click(topicSelect);
+    const option = await screen.findByRole('option', {
+      name: /product support/i,
+    });
+    await user.click(option);
+
+    const checkbox = screen.getByRole('checkbox', {
+      name: /i agree to be contacted/i,
+    });
+    await user.click(checkbox);
+
+    // Regression for the submission-blocking bug: previously the declarative
+    // `submission.action` never ran because Angular's native submit() treats
+    // any ValidationError — including `warn:*` — as blocking.
+    const submit = screen.getByRole('button', { name: /send message/i });
+    await user.click(submit);
+
+    const banner = await screen.findByText(/thanks! we received your message/i);
+    expect(banner).toBeInTheDocument();
+
+    // The warning is still present — the fix must not "succeed" by silently
+    // dropping warn:short-name; it must let a warned-but-valid form through.
+    expect(
+      screen.getByText(/short names are easy to mis-type/i),
+    ).toBeInTheDocument();
+  });
 });
