@@ -51,11 +51,11 @@ Apply a headless directive, export it via `exportAs`, and bind to its signals:
     [formField]="form.email"
     [attr.aria-invalid]="errorState.hasErrors() ? 'true' : null"
     [attr.aria-describedby]="
-      errorState.showErrors() ? errorState.errorId() : null
+      errorState.shouldShowErrors() ? errorState.errorId() : null
     "
   />
 
-  @if (errorState.showErrors() && errorState.hasErrors()) {
+  @if (errorState.shouldShowErrors() && errorState.hasErrors()) {
   <div [id]="errorState.errorId()" role="alert" class="my-error">
     @for (error of errorState.resolvedErrors(); track error.kind) {
     <span>{{ error.message }}</span>
@@ -80,7 +80,7 @@ Headless directives work as Angular [host directives](https://angular.dev/guide/
   ],
   template: `
     <ng-content />
-    @if (errorState.showErrors()) {
+    @if (errorState.shouldShowErrors()) {
       <div class="error-container">
         @for (error of errorState.resolvedErrors(); track error.kind) {
           <span class="error">{{ error.message }}</span>
@@ -110,7 +110,7 @@ Exposes error state signals for custom error display.
 | `strategy`        | `ErrorDisplayStrategy`                          | Override (inherits from context)                                                                                                                              |
 | `submittedStatus` | `SubmittedStatus`                               | Override for `'on-submit'` strategy                                                                                                                           |
 
-Signals: `showErrors()`, `showWarnings()`, `hasErrors()`, `hasWarnings()`, `errors()`, `warnings()`, `resolvedErrors()`, `resolvedWarnings()`, `errorId` (nullable), `warningId` (nullable).
+Signals: `shouldShowErrors()`, `shouldShowWarnings()`, `hasErrors()`, `hasWarnings()`, `errors()`, `warnings()`, `resolvedErrors()`, `resolvedWarnings()`, `errorId` (nullable), `warningId` (nullable).
 
 ### NgxHeadlessErrorSummary
 

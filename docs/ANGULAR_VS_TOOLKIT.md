@@ -96,7 +96,7 @@ add the `ngxSignalForm` attribute. It adds:
 
 `NgxSignalFormToolkit` is a convenience bundle that combines `FormRoot` +
 `NgxSignalForm` + `NgxSignalFormAutoAria` +
-`NgxSignalFormControlSemantics`. Import it instead of `FormRoot` separately.
+`NgxSignalFormControlSemanticsDirective`. Import it instead of `FormRoot` separately.
 
 ```typescript
 imports: [FormField, NgxSignalFormToolkit];

@@ -32,7 +32,7 @@ If you are coming from `ngx-vest-forms` with **Vest 5.x**, the first migration s
 
 You cannot keep Vest 5.x and migrate directly to `@ngx-signal-forms/toolkit/vest`.
 
-- `@ngx-signal-forms/toolkit` declares `vest` as an optional peer dependency at `^6.0.0`
+- `@ngx-signal-forms/toolkit` declares `vest` as an optional peer dependency at `>=6.0.0` (see `packages/toolkit/package.json`)
 - current toolkit docs and demos assume **Vest 6**
 - `@ngx-signal-forms/toolkit/vest` will **not work on Vest 5.x**
 - your existing suite logic will often still look familiar, but you should verify any usage of `only()`, `skip()`, `omitWhen()`, async warnings, and focused updates against Vest 6 docs
@@ -300,7 +300,7 @@ Typical migration layering:
 See also:
 
 - [`apps/demo/src/app/05-advanced/zod-vest-validation/README.md`](../apps/demo/src/app/05-advanced/zod-vest-validation/README.md)
-- [`packages/toolkit/vest/README.md`](../packages/toolkit/vest/README.md#using-vest-together-with-zod-or-openapi-generated-schemas)
+- [`packages/toolkit/vest/README.md`](../packages/toolkit/vest/README.md#combining-with-zod--standard-schema)
 
 ### Remove framework-specific `field` plumbing first
 
