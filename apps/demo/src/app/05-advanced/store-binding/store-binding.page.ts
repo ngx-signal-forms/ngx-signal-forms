@@ -55,11 +55,6 @@ import { StoreBindingFormComponent } from './store-binding.form';
       subtitle="Live two-way binding between a Signal Form and an @ngrx/signals store"
     />
 
-    <ngx-example-cards
-      [demonstrated]="content.demonstrated"
-      [learning]="content.learning"
-    />
-
     <ngx-display-controls-card
       title="Binding seam framing"
       description="Change the wrapper appearance and label orientation to confirm the live-binding form renders like any other toolkit form. The binding itself is unaffected by these controls."
@@ -85,19 +80,24 @@ import { StoreBindingFormComponent } from './store-binding.form';
       </ngx-display-controls-section>
     </ngx-display-controls-card>
 
-    <ngx-split-layout>
-      <ngx-store-binding-form
-        [appearance]="selectedAppearance()"
-        [orientation]="selectedOrientation()"
-        left
-      />
+    <ngx-example-cards
+      [demonstrated]="content.demonstrated"
+      [learning]="content.learning"
+    >
+      <ngx-split-layout>
+        <ngx-store-binding-form
+          [appearance]="selectedAppearance()"
+          [orientation]="selectedOrientation()"
+          left
+        />
 
-      @if (formRef(); as form) {
-        <div right>
-          <ngx-signal-form-debugger [formTree]="form.settingsForm" />
-        </div>
-      }
-    </ngx-split-layout>
+        @if (formRef(); as form) {
+          <div right>
+            <ngx-signal-form-debugger [formTree]="form.settingsForm" />
+          </div>
+        }
+      </ngx-split-layout>
+    </ngx-example-cards>
   `,
 })
 export class StoreBindingPage {

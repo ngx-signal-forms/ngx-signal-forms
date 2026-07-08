@@ -96,7 +96,22 @@ import { ZodVestValidationComponent } from './zod-vest-validation.form';
     <ngx-example-cards
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
-    />
+    >
+      <ngx-split-layout>
+        <ngx-zod-vest-validation
+          [errorDisplayMode]="errorDisplayMode()"
+          [appearance]="selectedAppearance()"
+          [orientation]="selectedOrientation()"
+          left
+        />
+
+        @if (formRef(); as form) {
+          <div right>
+            <ngx-signal-form-debugger [formTree]="form.accountForm" />
+          </div>
+        }
+      </ngx-split-layout>
+    </ngx-example-cards>
 
     <section
       class="rounded-xl border border-indigo-200 bg-indigo-50 p-5 text-indigo-950 dark:border-indigo-900/60 dark:bg-indigo-950/30 dark:text-indigo-100"
@@ -142,21 +157,6 @@ import { ZodVestValidationComponent } from './zod-vest-validation.form';
         </article>
       </div>
     </section>
-
-    <ngx-split-layout>
-      <ngx-zod-vest-validation
-        [errorDisplayMode]="errorDisplayMode()"
-        [appearance]="selectedAppearance()"
-        [orientation]="selectedOrientation()"
-        left
-      />
-
-      @if (formRef(); as form) {
-        <div right>
-          <ngx-signal-form-debugger [formTree]="form.accountForm" />
-        </div>
-      }
-    </ngx-split-layout>
   `,
 })
 export class ZodVestValidationPage {

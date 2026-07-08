@@ -5,6 +5,26 @@
   min-width: 0;
 }
 
+.example-cards__overview-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+}
+
+.example-cards__overview-summary h2 {
+  margin: 0;
+}
+
+.example-cards__overview-hint {
+  font-size: 0.8rem;
+  color: #4b5563;
+}
+
+:host-context(.dark) .example-cards__overview-hint {
+  color: #cbd5e1;
+}
+
 .example-cards__section {
   min-width: 0;
 }

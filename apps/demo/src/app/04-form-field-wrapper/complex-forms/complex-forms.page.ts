@@ -148,37 +148,39 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
     <ngx-example-cards
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
-    />
+    >
+      <ngx-split-layout>
+        <div left class="flex flex-col gap-12">
+          <section>
+            <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">
+              Nested & Arrays
+            </h2>
+            <ngx-complex-forms
+              #complexFormRef
+              [errorDisplayMode]="errorDisplayMode()"
+              [appearance]="selectedAppearance()"
+              [orientation]="selectedOrientation()"
+              [errorPlacement]="selectedFieldsetErrorPlacement()"
+            />
+          </section>
+        </div>
 
-    <ngx-split-layout>
-      <div left class="flex flex-col gap-12">
-        <section>
-          <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-            Nested & Arrays
-          </h2>
-          <ngx-complex-forms
-            #complexFormRef
-            [errorDisplayMode]="errorDisplayMode()"
-            [appearance]="selectedAppearance()"
-            [orientation]="selectedOrientation()"
-            [errorPlacement]="selectedFieldsetErrorPlacement()"
-          />
-        </section>
-      </div>
-
-      <div right class="flex flex-col gap-8">
-        @if (complexFormRef) {
-          <div>
-            <h3
-              class="mb-2 text-sm font-semibold tracking-wider text-gray-500 uppercase"
-            >
-              Complex Form State
-            </h3>
-            <ngx-signal-form-debugger [formTree]="complexFormRef.complexForm" />
-          </div>
-        }
-      </div>
-    </ngx-split-layout>
+        <div right class="flex flex-col gap-8">
+          @if (complexFormRef) {
+            <div>
+              <h3
+                class="mb-2 text-sm font-semibold tracking-wider text-gray-500 uppercase"
+              >
+                Complex Form State
+              </h3>
+              <ngx-signal-form-debugger
+                [formTree]="complexFormRef.complexForm"
+              />
+            </div>
+          }
+        </div>
+      </ngx-split-layout>
+    </ngx-example-cards>
   `,
 })
 export class ComplexFormsPage {

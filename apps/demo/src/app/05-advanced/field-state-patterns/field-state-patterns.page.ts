@@ -96,22 +96,22 @@ import { FieldStatePatternsComponent } from './field-state-patterns.form';
     <ngx-example-cards
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
-    />
+    >
+      <ngx-split-layout>
+        <ngx-field-state-patterns
+          [errorDisplayMode]="errorDisplayMode()"
+          [appearance]="selectedAppearance()"
+          [orientation]="selectedOrientation()"
+          left
+        />
 
-    <ngx-split-layout>
-      <ngx-field-state-patterns
-        [errorDisplayMode]="errorDisplayMode()"
-        [appearance]="selectedAppearance()"
-        [orientation]="selectedOrientation()"
-        left
-      />
-
-      @if (formRef(); as form) {
-        <div right>
-          <ngx-signal-form-debugger [formTree]="form.stateForm" />
-        </div>
-      }
-    </ngx-split-layout>
+        @if (formRef(); as form) {
+          <div right>
+            <ngx-signal-form-debugger [formTree]="form.stateForm" />
+          </div>
+        }
+      </ngx-split-layout>
+    </ngx-example-cards>
   `,
 })
 export class FieldStatePatternsPageComponent {

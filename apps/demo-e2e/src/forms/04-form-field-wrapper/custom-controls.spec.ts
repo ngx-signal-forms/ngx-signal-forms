@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import type { Locator } from '@playwright/test';
 
 import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
 import {
@@ -7,6 +8,25 @@ import {
 } from '../../fixtures/form-validation.fixture';
 import { stabilizeLayoutSnapshotViewport } from '../../fixtures/layout-screenshot.fixture';
 import { CustomControlsPage } from '../../page-objects/custom-controls.page';
+
+/**
+ * Read an element's *visible* border color.
+ *
+ * A border painted with `border-style: none` or `border-width: 0` renders
+ * nothing, so its `border-color` is inert and not observable. Normalizing those
+ * to a sentinel keeps border comparisons focused on what the user actually sees
+ * (the outline chrome) rather than an invisible color value that can differ
+ * without any visual effect.
+ */
+async function readVisibleBorderColor(content: Locator): Promise<string> {
+  return content.evaluate((element) => {
+    const styles = window.getComputedStyle(element);
+    if (styles.borderStyle === 'none' || styles.borderWidth === '0px') {
+      return 'none';
+    }
+    return styles.borderColor;
+  });
+}
 
 /**
  * Tests for Custom Controls demo page.
@@ -605,6 +625,10 @@ test.describe('Custom Signal Forms Controls', () => {
 
       await test.step('Switch to outline mode and submit the empty form', async () => {
         await page.showOutlineAppearance();
+        await expect(page.outlineAppearanceButton).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        );
 
         for (const controlId of [
           ...outlinedControlIds,
@@ -614,9 +638,7 @@ test.describe('Custom Signal Forms Controls', () => {
           const content = page.getWrapperContentByControlId(controlId);
           initialBorderColors.set(
             controlId,
-            await content.evaluate(
-              (element) => window.getComputedStyle(element).borderColor,
-            ),
+            await readVisibleBorderColor(content),
           );
         }
 
@@ -635,11 +657,7 @@ test.describe('Custom Signal Forms Controls', () => {
           expect(initialBorderColor).toBeDefined();
 
           await expect
-            .poll(() =>
-              content.evaluate(
-                (element) => window.getComputedStyle(element).borderColor,
-              ),
-            )
+            .poll(() => readVisibleBorderColor(content))
             .not.toBe(initialBorderColor);
         }
       });
@@ -658,11 +676,7 @@ test.describe('Custom Signal Forms Controls', () => {
           expect(initialBorderColor).toBeDefined();
 
           await expect
-            .poll(() =>
-              content.evaluate(
-                (element) => window.getComputedStyle(element).borderColor,
-              ),
-            )
+            .poll(() => readVisibleBorderColor(content))
             .toBe(initialBorderColor);
         }
       });
@@ -681,11 +695,7 @@ test.describe('Custom Signal Forms Controls', () => {
           expect(initialBorderColor).toBeDefined();
 
           await expect
-            .poll(() =>
-              content.evaluate(
-                (element) => window.getComputedStyle(element).borderColor,
-              ),
-            )
+            .poll(() => readVisibleBorderColor(content))
             .toBe(initialBorderColor);
         }
       });
