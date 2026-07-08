@@ -1308,3 +1308,63 @@ point:
 ## Form-level `errorStrategy` no longer accepts `'inherit'` (#178)
 
 `NgxSignalForm`'s `[errorStrategy]` input is now typed `ResolvedErrorDisplayStrategy` (`'immediate' | 'on-touch' | 'on-submit'`) instead of `ErrorDisplayStrategy`. `'inherit'` is a field-level-only value — there is nothing above the form root to inherit from — and was already silently treated as "use the default", so binding `[errorStrategy]="'inherit'"` on a `<form ngxSignalForm>` is now a compile-time error. **Fix:** remove the binding (the default already applies) or pass a concrete strategy. Field-level `[strategy]` still accepts `'inherit'`.
+
+## New API: `requiredFromStandardSchema()` — `aria-required` for Standard Schema (Zod, etc.) fields (#118)
+
+**Root cause:** `validateStandardSchema()` (from `@angular/forms/signals`) only
+registers tree-level validation errors — it never touches Angular's
+`REQUIRED` metadata, because the Standard Schema spec has no runtime way to
+ask "is this key required?" (no shape/keys introspection, only
+`~standard.validate(value)`). Without `REQUIRED` metadata,
+`FieldState.required()` stayed `false` for every Zod/Valibot/ArkType-validated
+field, so `NgxSignalFormAutoAria` never wrote `aria-required`, and
+`ngx-form-field-wrapper`'s `showMarkerWhen: 'required'` auto-marker never
+fired for them — only hand-written `required()` fields got the marker. The
+`advanced-wizard` demo had worked around this with a hardcoded `*` span in
+the label (kept intentionally pending this fix, see #117).
+
+**New public API:** `requiredFromStandardSchema(path, schema)`, exported from
+`@ngx-signal-forms/toolkit` (and `/core`). It closes the gap with the only
+library-agnostic technique available: probing the schema with the field's own
+key set to `undefined` (via `~standard.validate({ [key]: undefined })`) and
+registering the result as `REQUIRED` metadata via Angular's own `metadata()` +
+`REQUIRED` key. `REQUIRED` is an OR-reducing metadata key, so this composes
+safely alongside `required()`/other `metadata(path, REQUIRED, …)`
+registrations on the same field.
+
+Call it once per field, bound directly to that field's own path, next to the
+`validateStandardSchema()` call that validates the object owning it —
+Standard Schema doesn't expose an object's keys at runtime, so there is no
+way to derive every required field from a single root-level call:
+
+```typescript
+import { form, validateStandardSchema } from '@angular/forms/signals';
+import { requiredFromStandardSchema } from '@ngx-signal-forms/toolkit';
+
+const travelerForm = form(model, (path) => {
+  validateStandardSchema(path, TravelerSchema);
+  requiredFromStandardSchema(path.firstName, TravelerSchema);
+  requiredFromStandardSchema(path.lastName, TravelerSchema);
+});
+```
+
+**Known limitations** (documented on the function's JSDoc, not silently
+papered over):
+
+- Async validators (`~standard.validate` returning a `Promise`) can't be
+  resolved synchronously, so the probe reports "not required" rather than
+  block the reactive metadata graph on an async result.
+- A schema that throws while being probed (e.g. a `.refine()` that assumes
+  other fields are present) is treated as "not required" rather than
+  propagating the exception into form compilation.
+- Required-ness that only exists via cross-field refinement (e.g. "email is
+  required only when phone is empty") isn't captured — only the field's
+  unconditional base-schema requiredness is.
+
+**Demo fix:** `apps/demo/src/app/05-advanced/advanced-wizard`'s
+`traveler-step.form.ts` / `trip-step.form.ts` now call
+`requiredFromStandardSchema()` for their Zod-required fields, and the
+hardcoded `<span class="text-red-500">*</span>` markers have been removed
+from `traveler-step.ts` / `trip-step.ts` — the wrapper's auto-marker now
+covers them, consistent with every other demo. Purely additive; no existing
+API changed.

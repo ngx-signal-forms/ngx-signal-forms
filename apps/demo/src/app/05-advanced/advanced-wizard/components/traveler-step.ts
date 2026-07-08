@@ -53,9 +53,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
           [appearance]="appearance()"
           [orientation]="orientation()"
         >
-          <label for="firstName">
-            First Name <span class="text-red-500">*</span>
-          </label>
+          <label for="firstName">First Name</label>
           <input
             id="firstName"
             type="text"
@@ -72,9 +70,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
           [appearance]="appearance()"
           [orientation]="orientation()"
         >
-          <label for="lastName">
-            Last Name <span class="text-red-500">*</span>
-          </label>
+          <label for="lastName">Last Name</label>
           <input
             id="lastName"
             type="text"
@@ -88,7 +84,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
           [appearance]="appearance()"
           [orientation]="orientation()"
         >
-          <label for="email"> Email <span class="text-red-500">*</span> </label>
+          <label for="email">Email</label>
           <input id="email" type="email" [formField]="travelerForm.email" />
           <ngx-form-field-hint>
             We'll send booking confirmation to this address
@@ -101,9 +97,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
           [appearance]="appearance()"
           [orientation]="orientation()"
         >
-          <label for="nationality">
-            Nationality <span class="text-red-500">*</span>
-          </label>
+          <label for="nationality">Nationality</label>
           <input
             id="nationality"
             type="text"
@@ -121,9 +115,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
               [appearance]="appearance()"
               [orientation]="orientation()"
             >
-              <label for="passportNumber">
-                Passport Number <span class="text-red-500">*</span>
-              </label>
+              <label for="passportNumber">Passport Number</label>
               <input
                 id="passportNumber"
                 type="text"
@@ -137,9 +129,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
               [appearance]="appearance()"
               [orientation]="orientation()"
             >
-              <label for="passportExpiry">
-                Expiry Date <span class="text-red-500">*</span>
-              </label>
+              <label for="passportExpiry">Expiry Date</label>
               <input
                 id="passportExpiry"
                 type="date"

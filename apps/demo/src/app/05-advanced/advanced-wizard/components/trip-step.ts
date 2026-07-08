@@ -75,9 +75,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
               [appearance]="appearance()"
               [orientation]="orientation()"
             >
-              <label [for]="'dest-country-' + destIdx">
-                Country <span class="text-red-500">*</span>
-              </label>
+              <label [for]="'dest-country-' + destIdx">Country</label>
               <input
                 [id]="'dest-country-' + destIdx"
                 type="text"
@@ -91,9 +89,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
               [appearance]="appearance()"
               [orientation]="orientation()"
             >
-              <label [for]="'dest-city-' + destIdx">
-                City <span class="text-red-500">*</span>
-              </label>
+              <label [for]="'dest-city-' + destIdx">City</label>
               <input
                 [id]="'dest-city-' + destIdx"
                 type="text"
@@ -109,9 +105,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
               [appearance]="appearance()"
               [orientation]="orientation()"
             >
-              <label [for]="'dest-arrival-' + destIdx">
-                Arrival Date <span class="text-red-500">*</span>
-              </label>
+              <label [for]="'dest-arrival-' + destIdx">Arrival Date</label>
               <input
                 [id]="'dest-arrival-' + destIdx"
                 type="date"
@@ -126,7 +120,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
               [orientation]="orientation()"
             >
               <label [for]="'dest-departure-' + destIdx">
-                Departure Date <span class="text-red-500">*</span>
+                Departure Date
               </label>
               <input
                 [id]="'dest-departure-' + destIdx"
