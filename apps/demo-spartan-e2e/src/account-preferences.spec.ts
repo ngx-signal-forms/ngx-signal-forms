@@ -137,4 +137,121 @@ test.describe('Spartan account preferences form', () => {
       );
     });
   });
+
+  // Regression coverage for #194 (a): no test previously submitted/touched
+  // the plan select empty and asserted the required error, or that its id
+  // chains into the trigger button's aria-describedby the same way the text
+  // input's error does.
+  test('shows the plan required error on blur and chains it into the trigger button aria-describedby', async ({
+    page,
+  }) => {
+    const plan = page.getByRole('combobox', { name: 'Plan' });
+
+    await test.step('Open and close the select without choosing an option, then blur', async () => {
+      await plan.focus();
+      await plan.press('ArrowDown');
+      await expect(page.getByRole('option', { name: 'Starter' })).toBeVisible();
+      await plan.press('Escape');
+      await plan.press('Tab');
+    });
+
+    await test.step('The required error renders at #plan-error and is wired to the trigger', async () => {
+      const error = page.locator('#plan-error');
+      await expect(error).toContainText(/choose a plan/i);
+
+      await expect(plan).toHaveAttribute('aria-describedby', /\bplan-error\b/);
+      await expect(plan).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    await test.step('Choosing a plan clears the error', async () => {
+      await plan.press('ArrowDown');
+      await page.getByRole('option', { name: 'Starter' }).click();
+
+      await expect(page.locator('#plan-error')).toBeHidden();
+      await expect(plan).not.toHaveAttribute('aria-invalid', 'true');
+    });
+  });
+
+  // Regression coverage for #194 (b): the existing describedby test only
+  // asserts the static attribute after page load. This exercises the
+  // checkbox from the keyboard (a real <button role="checkbox">, so Space
+  // toggles it natively) and confirms the hint stays wired across state
+  // changes rather than only on first render.
+  test('the newsletter checkbox is keyboard-toggleable and keeps its describedby link while doing so', async ({
+    page,
+  }) => {
+    const checkbox = page.getByRole('checkbox', {
+      name: 'Send me product updates',
+    });
+
+    await checkbox.focus();
+    await expect(checkbox).not.toBeChecked();
+    await expect(checkbox).toHaveAttribute(
+      'aria-describedby',
+      /\bnewsletter-hint\b/,
+    );
+
+    await test.step('Space checks it', async () => {
+      await page.keyboard.press('Space');
+      await expect(checkbox).toBeChecked();
+      await expect(checkbox).toHaveAttribute(
+        'aria-describedby',
+        /\bnewsletter-hint\b/,
+      );
+    });
+
+    await test.step('Space again unchecks it', async () => {
+      await page.keyboard.press('Space');
+      await expect(checkbox).not.toBeChecked();
+      await expect(checkbox).toHaveAttribute(
+        'aria-describedby',
+        /\bnewsletter-hint\b/,
+      );
+    });
+  });
+
+  // Regression coverage for #194 (c): every existing interaction with the
+  // plan select ends in a mouse `.click()` on the option. `BrnSelectTrigger`
+  // hosts a real listbox `ActiveDescendantKeyManager` (arrow keys +
+  // Enter-to-select) — this drives the whole flow without ever clicking.
+  //
+  // Kept to a single open/close cycle: reopening the select re-highlights
+  // whichever item currently matches `value()` via an internal effect, which
+  // races any manually-pressed arrow key right before a second `Enter` — so
+  // this asserts one full open → navigate → commit pass instead of chaining
+  // a reopen. Each ArrowDown press also waits for `[data-highlighted]` (the
+  // keyManager's active-descendant marker, `BrnSelectItem`) to land on the
+  // expected option before sending the next key — the highlight update is
+  // driven by an effect, not synchronous with the keydown itself.
+  test('the plan select is fully operable from the keyboard, never clicking an option', async ({
+    page,
+  }) => {
+    const plan = page.getByRole('combobox', { name: 'Plan' });
+    const starter = page.getByRole('option', { name: 'Starter' });
+    const pro = page.getByRole('option', { name: 'Pro' });
+    const enterprise = page.getByRole('option', { name: 'Enterprise' });
+
+    await test.step('Open with ArrowDown — opening auto-highlights the first item (Starter)', async () => {
+      await plan.focus();
+      await plan.press('ArrowDown');
+      await expect(starter).toHaveAttribute('data-highlighted', '');
+    });
+
+    await test.step('Arrow down twice more to Enterprise and commit with Enter', async () => {
+      await plan.press('ArrowDown'); // Starter -> Pro
+      await expect(pro).toHaveAttribute('data-highlighted', '');
+
+      await plan.press('ArrowDown'); // Pro -> Enterprise
+      await expect(enterprise).toHaveAttribute('data-highlighted', '');
+
+      await plan.press('Enter');
+
+      // BrnSelectValue's default itemToString renders the raw option value
+      // (not the item's projected "Enterprise" label content) when no
+      // custom itemToString is configured — the same value shown in the
+      // submitted JSON payload elsewhere in this spec.
+      await expect(plan).toHaveText('enterprise');
+      await expect(page.getByRole('option')).toHaveCount(0);
+    });
+  });
 });

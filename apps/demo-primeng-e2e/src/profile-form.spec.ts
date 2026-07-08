@@ -185,4 +185,100 @@ test.describe('demo-primeng — profile form', () => {
       await expect(page.locator('#profile-role-error')).toBeHidden();
     });
   });
+
+  // Regression coverage for #194: ProfileFormComponent's own docblock lists
+  // createOnInvalidHandler's submit-time focus behaviour as one of five
+  // contracts this reference exercises, but nothing asserted it end-to-end —
+  // schema declaration order is email, then role (profile-form.schema.ts),
+  // so an empty submit should focus email first, and a submit with only
+  // email fixed should move focus on to the role combobox.
+  test('createOnInvalidHandler focuses the first invalid control on submit, then the next', async ({
+    page,
+  }) => {
+    const emailInput = page.locator('#profile-email');
+    const roleCombobox = page.getByRole('combobox', { name: /^role$/i });
+    const submitButton = page.getByTestId('submit-button');
+
+    await test.step('submitting the empty form focuses email (first in schema order)', async () => {
+      await submitButton.click();
+      await expect(emailInput).toBeFocused({ timeout: 3000 });
+    });
+
+    await test.step('fixing email and resubmitting focuses role next', async () => {
+      await emailInput.fill('team@company.com');
+      await submitButton.click();
+      await expect(roleCombobox).toBeFocused({ timeout: 3000 });
+    });
+
+    await test.step('a fully valid form does not steal focus on submit', async () => {
+      await selectRole(page, 'Designer');
+      const newsletterCheckbox = page.getByRole('checkbox', {
+        name: /subscribe to the release notes/i,
+      });
+
+      await submitButton.click();
+      await expect(page.getByTestId('submission-summary')).toBeVisible();
+      await expect(emailInput).not.toBeFocused();
+      await expect(roleCombobox).not.toBeFocused();
+      await expect(newsletterCheckbox).not.toBeFocused();
+    });
+  });
+
+  // Regression coverage for #194: PrimeSelectControlComponent exists
+  // specifically to bridge a bespoke ARIA combobox onto Signal Forms, but the
+  // suite never drove it with anything but mouse clicks (selectRole() above).
+  // p-select supports the standard listbox keyboard contract — this exercises
+  // that surface without ever calling .click() on the trigger or an option.
+  test('the role combobox is fully operable from the keyboard', async ({
+    page,
+  }) => {
+    const roleCombobox = page.getByRole('combobox', { name: /^role$/i });
+
+    await test.step('Tab onto the combobox and open it with the keyboard', async () => {
+      await page.locator('#profile-email').focus();
+      await page.keyboard.press('Tab');
+      await expect(roleCombobox).toBeFocused();
+
+      await roleCombobox.press('Enter');
+      await expect(
+        page.getByRole('option', { name: 'Frontend developer' }),
+      ).toBeVisible();
+    });
+
+    await test.step('arrow down to a later option and select it with Enter', async () => {
+      // Opening highlights nothing yet — the first ArrowDown highlights
+      // "Frontend developer" (index 0), so three presses land on
+      // "Designer" (index 2).
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('Enter');
+
+      await expect(roleCombobox).toHaveText('Designer');
+      await expect(page.getByRole('option')).toHaveCount(0);
+    });
+
+    await test.step('reopen and select the first option with Home + Enter', async () => {
+      await roleCombobox.press('Enter');
+      await expect(
+        page.getByRole('option', { name: 'Frontend developer' }),
+      ).toBeVisible();
+
+      await page.keyboard.press('Home');
+      await page.keyboard.press('Enter');
+
+      await expect(roleCombobox).toHaveText('Frontend developer');
+    });
+
+    await test.step('Escape closes the overlay without changing the selection', async () => {
+      await roleCombobox.press('Enter');
+      await expect(
+        page.getByRole('option', { name: 'Designer' }),
+      ).toBeVisible();
+
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('option')).toHaveCount(0);
+      await expect(roleCombobox).toHaveText('Frontend developer');
+    });
+  });
 });

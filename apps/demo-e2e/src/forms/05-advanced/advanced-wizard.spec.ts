@@ -546,4 +546,82 @@ test.describe('Advanced Wizard Demo', () => {
       );
     });
   });
+
+  // Regression coverage for #194: the only existing header-click spec proves
+  // navigation is *blocked* from an invalid current step. Nothing asserted
+  // the "happy path" contract in wizard.ts's `canNavigateToStep` — that
+  // unvisited future steps are disabled, and that a click on an already
+  // visited step (forward OR backward) actually jumps there directly,
+  // without going through Next/Previous.
+  test('disables header buttons for unvisited future steps', async ({
+    page,
+  }) => {
+    const tripStep = page
+      .locator('.wizard-step-button')
+      .filter({ hasText: 'Trip Details' });
+    const reviewStep = page
+      .locator('.wizard-step-button')
+      .filter({ hasText: 'Review' });
+
+    await expect(tripStep).toBeDisabled();
+    await expect(reviewStep).toBeDisabled();
+
+    await test.step('Advancing to Trip marks it visited and enables its header button', async () => {
+      await fillTravelerStep(page);
+      await page.getByRole('button', { name: 'Next' }).click();
+      await expect(
+        page.getByRole('heading', { name: 'Trip Details', exact: true }),
+      ).toBeVisible();
+
+      await expect(tripStep).toBeEnabled();
+      // Review has still never been visited.
+      await expect(reviewStep).toBeDisabled();
+    });
+  });
+
+  test('header-click navigates directly between already-visited steps, forward and backward', async ({
+    page,
+  }) => {
+    await test.step('Walk forward to Review via Next so every step is visited', async () => {
+      await fillTravelerStep(page);
+      await page.getByRole('button', { name: 'Next' }).click();
+      await fillTripStepMinimal(page);
+      await page.getByRole('button', { name: 'Next' }).click();
+      await expect(
+        page.getByRole('heading', { name: 'Review Your Booking' }),
+      ).toBeVisible();
+    });
+
+    const travelerStep = page
+      .locator('.wizard-step-button')
+      .filter({ hasText: 'Traveler Info' });
+    const tripStep = page
+      .locator('.wizard-step-button')
+      .filter({ hasText: 'Trip Details' });
+    const reviewStep = page
+      .locator('.wizard-step-button')
+      .filter({ hasText: 'Review' });
+
+    await test.step('Header-click jumps backward two steps, straight to Traveler', async () => {
+      await travelerStep.click();
+      await expect(
+        page.getByRole('heading', { name: 'Traveler Information' }),
+      ).toBeVisible();
+      await expect(travelerStep).toHaveAttribute('aria-current', 'step');
+    });
+
+    await test.step('Header-click jumps forward two steps, straight to Review, skipping Trip', async () => {
+      await reviewStep.click();
+      await expect(
+        page.getByRole('heading', { name: 'Review Your Booking' }),
+      ).toBeVisible();
+      await expect(reviewStep).toHaveAttribute('aria-current', 'step');
+      await expect(tripStep).not.toHaveAttribute('aria-current', 'step');
+    });
+
+    await test.step('Trip stays enabled and marked completed after being skipped over', async () => {
+      await expect(tripStep).toBeEnabled();
+      await expect(tripStep).toHaveClass(/completed/);
+    });
+  });
 });
