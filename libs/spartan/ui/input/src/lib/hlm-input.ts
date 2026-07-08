@@ -23,9 +23,10 @@ type InputVariants = VariantProps<typeof inputVariants>;
 @Directive({
   selector: '[hlmInput]',
   hostDirectives: [
-    { directive: BrnInput, inputs: ['id'] },
+    { directive: BrnInput, inputs: ['id', 'forceInvalid'] },
     BrnFieldControlDescribedBy,
   ],
+  host: { 'data-slot': 'input' },
 })
 export class HlmInput {
   /** Controls the error visual state of the input.

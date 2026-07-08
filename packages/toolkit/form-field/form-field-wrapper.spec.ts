@@ -2391,6 +2391,85 @@ describe('NgxSignalFormWrapperComponent', () => {
         formField?.classList.contains('ngx-signal-form-field-wrapper--warning'),
       ).toBe(false);
     });
+
+    describe('strategy="on-submit" without a form context', () => {
+      // Regression: `createShowErrorsComputed` (core/utilities/show-errors.ts)
+      // emits a one-shot dev warning when 'on-submit' is used without an
+      // explicit submittedStatus, since errors will otherwise never surface.
+      // The wrapper used to always supply a status signal that fell back to
+      // 'unsubmitted' when there was no [formRoot]/ngxSignalForm context, so
+      // `resolvedStatus === undefined` was never true through the wrapper
+      // and the diagnostic never fired — silently defeating the strategy
+      // with no signal why. The wrapper must let the primitive's warning
+      // fire (by passing `undefined` through, not a manufactured default)
+      // when it has no form context to source a real status from.
+      let warnSpy: ReturnType<typeof vi.spyOn>;
+
+      beforeEach(() => {
+        warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      });
+
+      afterEach(() => {
+        warnSpy.mockRestore();
+      });
+
+      it('emits the dev-mode miswiring warning', async () => {
+        const invalidField = signal({
+          invalid: () => true,
+          touched: () => true,
+          errors: () => [{ kind: 'required', message: 'Required' }],
+        });
+
+        await render(
+          `<ngx-form-field-wrapper
+            [formField]="field"
+            fieldName="test-field"
+            strategy="on-submit"
+          >
+            <label for="test">Test</label>
+            <input id="test" type="text" />
+          </ngx-form-field-wrapper>`,
+          {
+            imports: [NgxSignalFormWrapperComponent],
+            componentProperties: { field: invalidField },
+          },
+        );
+
+        expect(warnSpy).toHaveBeenCalled();
+        const message = warnSpy.mock.calls
+          .map((call) => String(call[0]))
+          .find((text) => text.includes('on-submit'));
+        expect(message).toBeDefined();
+        expect(message).toContain('submittedStatus');
+      });
+
+      it('still never shows errors, matching the always-unsubmitted fallback behavior', async () => {
+        const invalidField = signal({
+          invalid: () => true,
+          touched: () => true,
+          errors: () => [{ kind: 'required', message: 'Required' }],
+        });
+
+        const { container } = await render(
+          `<ngx-form-field-wrapper
+            [formField]="field"
+            fieldName="test-field"
+            strategy="on-submit"
+          >
+            <label for="test">Test</label>
+            <input id="test" type="text" />
+          </ngx-form-field-wrapper>`,
+          {
+            imports: [NgxSignalFormWrapperComponent],
+            componentProperties: { field: invalidField },
+          },
+        );
+
+        // The strategy still resolves to 'unsubmitted' internally, so
+        // behavior is unchanged — only the dev diagnostic is new.
+        expect(container.querySelector('ngx-form-field-error')).toBeNull();
+      });
+    });
   });
 
   describe('Warning-only fields render independently of the blocking-error strategy', () => {

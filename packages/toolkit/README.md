@@ -23,6 +23,7 @@ You always import the core entry point. The other entry points add UI components
 | `@ngx-signal-forms/toolkit/form-field` | Form field wrapper and fieldset components                         |
 | `@ngx-signal-forms/toolkit/headless`   | Renderless primitives for custom UI                                |
 | `@ngx-signal-forms/toolkit/vest`       | Optional Vest adapter (requires `vest@6`)                          |
+| `@ngx-signal-forms/toolkit/testing`    | WCAG 2.2 AA test harness (requires `axe-core`)                     |
 
 **Which one do I pick?**
 
@@ -30,6 +31,7 @@ You always import the core entry point. The other entry points add UI components
 - **Custom markup, reuse toolkit error/notification/hint/count/summary components** → [`/assistive`](./assistive/README.md)
 - **Signals-only, fully custom markup** → [`/headless`](./headless/README.md)
 - **Vest business rules** → [`/vest`](./vest/README.md)
+- **Assert your own components/fixtures are WCAG 2.2 AA clean** → [`/testing`](#accessibility-testing-harness)
 
 ## Import
 
@@ -413,7 +415,7 @@ Building blocks for custom wrappers and headless UIs that want to join the
 > `warningStrategy` input on `NgxFormFieldError` (default:
 > `'immediate'`). See
 > [`WARNINGS_SUPPORT.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy)
-> and the [assistive README](./assistive/README.md#ngxformfielderrorcomponent)
+> and the [assistive README](./assistive/README.md#ngxformfielderror)
 > for usage.
 
 ### Field interactivity
@@ -532,6 +534,30 @@ warning elements, matching every other toolkit surface.
 | `updateNested(array, index, key, nestedIdx, fn)` | Immutable nested array update                        |
 | `createUniqueId(prefix)`                         | Stable, monotonic DOM id (`prefix-1`, `prefix-2`, …) |
 
+## Accessibility testing harness
+
+`@ngx-signal-forms/toolkit/testing` asserts that a rendered fixture has no
+WCAG 2.2 AA axe-core violations. It's a **hard fail** by design — toolkit
+components are published primitives, so accessibility regressions in them are
+bugs, not baseline drift to track.
+
+```typescript
+import { expectNoA11yViolations } from '@ngx-signal-forms/toolkit/testing';
+
+// Inside a Vitest browser-mode spec, after rendering a fixture:
+await expectNoA11yViolations();
+```
+
+| Export                                       | Description                                                                                                        |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `expectNoA11yViolations(context?, options?)` | Runs axe against `context` (default: `document.body`) and throws on any WCAG 2.2 AA violation                      |
+| `WCAG_22_AA_TAGS`                            | The axe tag set (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`) that adds up to full WCAG 2.2 AA coverage |
+
+This entry point requires `axe-core` (an optional peer dependency — install it
+yourself, e.g. `npm i -D axe-core`). Note that axe-core has no automated rules
+for the two WCAG 2.2 Level A criteria (Consistent Help, Redundant Entry); like
+the rest of WCAG 2.2 AA automated coverage, those must be verified manually.
+
 ## Advanced: public DI tokens
 
 These tokens are the integration points for custom wrappers and renderers.
@@ -563,6 +589,7 @@ authoritative enumeration of the public surface.
 - [Assistive components](./assistive/README.md) — standalone error, grouped notification, hint, counter, and summary components
 - [Headless primitives](./headless/README.md) — renderless directives for custom UI
 - [Vest integration](./vest/README.md) — Vest adapter
+- [Accessibility testing harness](#accessibility-testing-harness) — WCAG 2.2 AA axe-core assertions
 - [Theming guide](./form-field/THEMING.md) — CSS custom properties
 - [Custom controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) — wrapping custom and third-party widgets
 - [Warnings support](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md) — warning convention and flow

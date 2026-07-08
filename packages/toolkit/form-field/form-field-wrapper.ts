@@ -879,13 +879,22 @@ export class NgxFormFieldWrapper<TValue = unknown> {
 
   /**
    * Computed signal for submission status.
-   * Gets Angular's SubmittedStatus from the form provider context if available,
-   * otherwise defaults to 'unsubmitted'.
+   * Gets Angular's SubmittedStatus from the form provider context if available.
+   *
+   * Returns `undefined` (rather than manufacturing an `'unsubmitted'`
+   * default) when there is no form context. `createShowErrorsComputed`
+   * already falls back to `'unsubmitted'` internally when it sees
+   * `undefined`, so behavior is unchanged — but passing `undefined` through
+   * lets its one-shot dev-mode warning fire for `strategy="on-submit"`
+   * without a form context. A manufactured `'unsubmitted'` default here
+   * would mask that miswiring: the primitive would see a defined status and
+   * never suspect the field can't possibly know when the form was
+   * submitted, silently defeating the strategy with no diagnostic.
    */
   protected readonly submittedStatus = computed(() => {
     const formContext = this.#formContext;
 
-    return formContext ? formContext.submittedStatus() : 'unsubmitted';
+    return formContext ? formContext.submittedStatus() : undefined;
   });
 
   /**

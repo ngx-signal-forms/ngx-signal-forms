@@ -111,7 +111,13 @@ export function resolveValidationErrorMessage(
     return error.message;
   }
 
-  if (registry) {
+  // `Object.hasOwn` guards against inherited `Object.prototype` members
+  // (e.g. an error kind of 'constructor' or 'toString' resolving the
+  // inherited function instead of being treated as "no registry entry").
+  // `provideErrorMessages` spreads consumer input into a plain `{}`, so
+  // without this guard a developer-authored (but attacker-shaped) kind
+  // string could silently violate the string-return contract.
+  if (registry && Object.hasOwn(registry, error.kind)) {
     const registryMessage = registry[error.kind];
     if (registryMessage !== undefined) {
       return typeof registryMessage === 'function'
