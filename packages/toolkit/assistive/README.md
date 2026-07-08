@@ -17,6 +17,7 @@ import {
   NgxFormFieldErrorSummary,
   NgxFormFieldHint,
   NgxFormFieldCharacterCount,
+  NgxFormMarkingLegend,
   warningError,
   isWarningError,
   isBlockingError,
@@ -144,6 +145,46 @@ Character counter with progressive color states (ok → warning → danger → e
 ```
 
 When a matching max-length validator is present, `maxLength` can be omitted and detected automatically. Add `liveAnnounce` for polite screen reader announcements.
+
+The built-in announcement strings ("Approaching limit: N characters remaining.", etc.) are English-only. Bind `[announcementFormatter]` to a `(state, { current, max, remaining, over }) => string` function to localize them:
+
+```typescript
+formatter = (state: 'warning' | 'danger' | 'exceeded', info: { remaining: number; over: number }) => {
+  switch (state) {
+    case 'warning':
+    case 'danger':
+      return `Plus que ${info.remaining} caractères.`;
+    case 'exceeded':
+      return `Limite dépassée de ${info.over} caractères.`;
+  }
+};
+```
+
+### NgxFormMarkingLegend
+
+Form-level legend that explains the field marker (e.g. "* indicates a required field"). Place it once wherever it reads well — there is no automatic injection.
+
+```html
+<form [formRoot]="userForm" ngxSignalForm>
+  <ngx-form-marking-legend />
+  <!-- fields… -->
+</form>
+```
+
+Outside a form host, pass the tree explicitly: `<ngx-form-marking-legend [formTree]="userForm" />`.
+
+| Input             | Type                | Description                                                                          |
+| ----------------- | ------------------- | ------------------------------------------------------------------------------------- |
+| `formTree`        | `FieldTree`         | The form tree to reflect. Falls back to the ambient `ngxSignalForm` context.           |
+| `showMarkerWhen`  | `FieldMarkingMode`  | Override the marking mode (`'required' \| 'optional' \| 'none'`). Falls back to config. |
+| `text`            | `string`            | Override the legend text. `{marker}` is substituted with the resolved marker.         |
+| `requiredMarker`  | `string`            | Override the required marker used for `{marker}`. Falls back to config.               |
+| `optionalMarker`  | `string`            | Override the optional marker used for `{marker}`. Falls back to config.               |
+
+- In `'required'` mode, shows the required legend and hides when the form has no required fields.
+- In `'optional'` mode, shows the optional legend and hides when the form has no optional fields.
+- In `'none'` mode, renders nothing.
+- Renders visible, non-`aria-hidden` text — it is supplementary explanation, not a live-region status update; each control's `aria-required` already carries the required state to assistive tech.
 
 ## Warning utilities
 

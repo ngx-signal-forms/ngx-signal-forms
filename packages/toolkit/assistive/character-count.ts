@@ -32,6 +32,53 @@ import {
 export type NgxCharacterCountValue = CharacterCountValue;
 
 /**
+ * Non-`'ok'` limit states that ever produce a live-announcement string.
+ * `'ok'` is intentionally excluded — no announcement is emitted for it, so
+ * an {@link NgxCharacterCountAnnouncementFormatter} is never invoked with it.
+ */
+export type NgxCharacterCountAnnouncementState = Exclude<
+  CharacterCountLimitState,
+  'ok'
+>;
+
+/**
+ * Details passed to a custom {@link NgxCharacterCountAnnouncementFormatter}.
+ */
+export interface NgxCharacterCountAnnouncementInfo {
+  /** Current character/token count. */
+  readonly current: number;
+  /** The resolved maximum length. */
+  readonly max: number;
+  /** Characters remaining before the limit (`0` once at or past it). */
+  readonly remaining: number;
+  /** Characters over the limit (`0` unless `state === 'exceeded'`). */
+  readonly over: number;
+}
+
+/**
+ * Formats the polite live-announcement text for a given limit-state
+ * transition. Bind `[announcementFormatter]` to localize the built-in
+ * English strings ("Approaching limit: N characters remaining.", etc.) —
+ * the component has no other i18n hook, so non-English apps otherwise
+ * cannot translate what screen readers announce without forking it.
+ *
+ * @example
+ * ```typescript
+ * announcementFormatter = (state, { remaining, over }) => {
+ *   switch (state) {
+ *     case 'warning': return `Plus que ${remaining} caractères.`;
+ *     case 'danger': return `Attention, plus que ${remaining} caractères.`;
+ *     case 'exceeded': return `Limite dépassée de ${over} caractères.`;
+ *   }
+ * };
+ * ```
+ */
+export type NgxCharacterCountAnnouncementFormatter = (
+  state: NgxCharacterCountAnnouncementState,
+  info: NgxCharacterCountAnnouncementInfo,
+) => string;
+
+/**
  * Form field character count component with progressive color states.
  *
  * This styled wrapper uses the headless `createCharacterCount()` utility internally,
@@ -282,6 +329,16 @@ export class NgxFormFieldCharacterCount {
   });
 
   /**
+   * Optional formatter for the polite live-announcement text, for
+   * localizing the built-in English strings. See
+   * {@link NgxCharacterCountAnnouncementFormatter}.
+   *
+   * @default undefined — falls back to the built-in English strings.
+   */
+  readonly announcementFormatter =
+    input<NgxCharacterCountAnnouncementFormatter>();
+
+  /**
    * Percentage thresholds for color state changes.
    *
    * - `warning`: Percentage at which color changes to warning (default: 80%)
@@ -446,6 +503,11 @@ export class NgxFormFieldCharacterCount {
     const current = untracked(() => this.currentLength());
     const remaining = Math.max(0, max - current);
     const over = Math.max(0, current - max);
+
+    const formatter = this.announcementFormatter();
+    if (formatter) {
+      return formatter(state, { current, max, remaining, over });
+    }
 
     switch (state) {
       case 'warning':
