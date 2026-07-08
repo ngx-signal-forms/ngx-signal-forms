@@ -3,7 +3,7 @@
 A runnable end-to-end example showing how to integrate
 [`@ngx-signal-forms/toolkit`](../../packages/toolkit/README.md) on top of
 **Angular Material 22+**. Pinned to the workspace's Angular 22 catalog,
-currently `@angular/material@22.0.0` and `@angular/cdk@22.0.0`.
+currently `@angular/material@22.0.3` and `@angular/cdk@22.0.3`.
 
 ## Why use this on Material?
 
@@ -163,7 +163,6 @@ the in-tree `NgxFormFieldError`.
 bootstrapApplication(AppComponent, {
   providers: [
     provideZonelessChangeDetection(),
-    provideAnimationsAsync('noop'),
     provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-touch' }),
     provideNgxMatForms(), // MaterialFeedbackRenderer/MaterialHintRenderer + NgxMatWarningAwareErrorStateMatcher
   ],
@@ -427,14 +426,13 @@ pnpm nx run demo-material:test        # smoke spec (jsdom + Vitest)
 pnpm nx run demo-material-e2e:e2e     # Playwright spec
 ```
 
-The smoke spec depends on a publish-ready toolkit build (`pnpm nx run toolkit:post-build`),
-which Nx schedules automatically via the `dependsOn` in
+The smoke spec depends on a built toolkit (`pnpm nx run toolkit:build`),
+which Nx schedules automatically via the `test` target's `dependsOn` in
 `project.json`.
 
 ## Pinned versions
 
-| Package               | Version  |
-| --------------------- | -------- |
-| `@angular/material`   | `22.0.0` |
-| `@angular/cdk`        | `22.0.0` |
-| `@angular/animations` | `22.0.0` |
+| Package             | Version  |
+| ------------------- | -------- |
+| `@angular/material` | `22.0.3` |
+| `@angular/cdk`      | `22.0.3` |

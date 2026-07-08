@@ -4,7 +4,6 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import {
   FormField,
   form,
@@ -123,7 +122,6 @@ describe('MatFormFieldWrapper.toolkitAriaDescribedBy', () => {
     return render(TestHostComponent, {
       providers: [
         provideZonelessChangeDetection(),
-        provideAnimationsAsync('noop'),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
           autoAria: true,
@@ -199,7 +197,6 @@ describe('MatFormFieldWrapper dev-mode missing-control assertion', () => {
     await render(BareControlHostComponent, {
       providers: [
         provideZonelessChangeDetection(),
-        provideAnimationsAsync('noop'),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
           autoAria: true,
