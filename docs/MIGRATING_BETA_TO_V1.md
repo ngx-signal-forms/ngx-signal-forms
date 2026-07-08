@@ -1206,6 +1206,53 @@ Docs fix: removed phantom `@template TForm` / `@template TFieldset` JSDoc tags f
 - **`strategy` (field-level) vs `errorStrategy` (form-level).** The form-level `NgxSignalForm` directive sets the workspace default via `[errorStrategy]`; individual field-level components (`NgxFormFieldWrapper`, `NgxFormFieldError`, `NgxFormFieldset`, `NgxHeadlessErrorState`, `NgxHeadlessFieldset`) override it per-field via `[strategy]`, paired with `[warningStrategy]` where warnings are configurable. This split is deliberate and preserved to avoid a churny rename of the most widely-used input. Visibility signals are uniform: `shouldShowErrors()` / `shouldShowWarnings()`.
 - **`provideErrorMessages()` / `provideFieldLabels()` return `Provider` (not `EnvironmentProviders`).** These register level-agnostic registries usable in either environment or component providers — intentionally, so no `…ForComponent` variant is needed.
 
+## Headless surfaces consistency pass (ticket #173)
+
+Four promoted pre-1.0 findings from audit #139 (headless), all additive or
+behavior-only fixes — no renames.
+
+- **`NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy` now honored by every
+  standalone headless error surface, not just `NgxHeadlessFieldset`.**
+  `NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`, `createErrorState()`,
+  and `createErrorMessageSignal()` previously hard-fell-back to `'on-touch'`
+  when used outside an `[ngxSignalForm]` host, ignoring
+  `provideNgxSignalFormsConfig({ defaultErrorStrategy: 'immediate' })`.
+  All headless surfaces now apply the same cascade `NgxHeadlessFieldset`
+  already used: explicit `strategy` → form context →
+  `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy` → `'on-touch'`. If your
+  standalone (no form host) headless usage relied on the old hard-coded
+  `'on-touch'` behavior while also configuring a non-default
+  `defaultErrorStrategy` globally, it now picks up that global default —
+  scope the config with `provideNgxSignalFormsConfigForComponent()` if you
+  need per-usage isolation. As a building block, `createErrorVisibility()`
+  (core) gained a new opt-in `configDefault` option to support this; it is
+  not auto-injected there, so existing core consumers (e.g.
+  `NgxSignalFormAutoAria`) are unaffected.
+- **`NgxHeadlessFieldset` gained `resolvedErrors` / `resolvedWarnings`
+  signals.** The directive previously exposed only raw `aggregatedErrors`/
+  `aggregatedWarnings`, whose `ValidationError.message` is `undefined` for
+  framework-default errors (e.g. `required(path.x)` with no `message`
+  option) — the documented usage example rendered empty spans for the most
+  common validator usage. `resolvedErrors()`/`resolvedWarnings()` apply the
+  same 3-tier message priority (validator message → `NGX_ERROR_MESSAGES`
+  registry → default) as `NgxHeadlessErrorState.resolvedErrors`. Purely
+  additive; existing `aggregatedErrors()`/`aggregatedWarnings()` consumers
+  are unaffected.
+- **`NgxHeadlessFieldset.fields` now distinguishes `null` ("not provided")
+  from an explicitly bound `[]` ("provided but empty").** Previously both
+  fell back to aggregating the fieldset's own (nested) errors, so a
+  consumer dynamically computing the field list got surprising fallback
+  errors when that list legitimately became empty. `[]` now aggregates
+  nothing. Also retyped from `FieldTree<unknown>[] | null` to
+  `readonly FieldTree<unknown>[] | null` for consistency with the rest of
+  the toolkit — passing a mutable array still works (arrays are assignable
+  to their readonly form).
+- **`createErrorState()` gained an optional `injector` option**, routed
+  through `assertInjector` like the sibling factories
+  `createErrorVisibility()` and `createErrorMessageSignal()`. Callers no
+  longer must wrap every call in `runInInjectionContext()`. Purely
+  additive.
+
 ## 12. `@ngx-signal-forms/toolkit/testing` restored as a real secondary entry point (audit #142/#176)
 
 `packages/toolkit/testing/` previously contained only an internal spec helper

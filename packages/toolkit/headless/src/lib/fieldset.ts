@@ -19,12 +19,15 @@ import {
   type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
+import { NGX_ERROR_MESSAGES } from '@ngx-signal-forms/toolkit/core';
 
+import type { ResolvedError } from './error-state';
 import {
   createFieldStateFlags,
   createUniqueId,
   dedupeValidationErrors,
   readErrors,
+  resolveErrorMessage,
 } from './utilities';
 
 /**
@@ -35,6 +38,17 @@ export interface FieldsetStateSignals {
   readonly aggregatedErrors: Signal<readonly ValidationError[]>;
   /** Aggregated and deduplicated warnings from all fields */
   readonly aggregatedWarnings: Signal<readonly ValidationError[]>;
+  /**
+   * {@link aggregatedErrors}, resolved to display messages via the same
+   * 3-tier priority (validator message → `NGX_ERROR_MESSAGES` registry →
+   * default) as `NgxHeadlessErrorState.resolvedErrors`. Framework-default
+   * errors (e.g. `required(path.x)` with no `message` option) have an
+   * `undefined` `ValidationError.message` — reach for this instead of
+   * rendering `error.message` directly.
+   */
+  readonly resolvedErrors: Signal<readonly ResolvedError[]>;
+  /** {@link aggregatedWarnings}, resolved the same way as {@link resolvedErrors}. */
+  readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
   /** Whether the fieldset has blocking errors */
   readonly hasErrors: Signal<boolean>;
   /** Whether the fieldset has warnings */
@@ -92,13 +106,21 @@ export interface FieldsetStateSignals {
  *
  *   @if (fieldset.shouldShowErrors() && fieldset.hasErrors()) {
  *     <div class="errors">
- *       @for (error of fieldset.aggregatedErrors(); track error.kind) {
+ *       @for (error of fieldset.resolvedErrors(); track error.kind) {
  *         <span>{{ error.message }}</span>
  *       }
  *     </div>
  *   }
  * </fieldset>
  * ```
+ *
+ * Use {@link resolvedErrors} / {@link resolvedWarnings} (not
+ * `aggregatedErrors()[i].message`) when rendering — `ValidationError.message`
+ * is `undefined` for framework-default errors (e.g. `required(path.x)` with
+ * no `message` option), so reading it directly renders an empty string for
+ * the most common validator usage. `resolvedErrors`/`resolvedWarnings` apply
+ * the same 3-tier message priority (validator message → `NGX_ERROR_MESSAGES`
+ * registry → default) as `NgxHeadlessErrorState`.
  *
  * @template TFieldset The type of the fieldset field value
  */
@@ -111,6 +133,9 @@ export class NgxHeadlessFieldset<
 > implements FieldsetStateSignals {
   readonly #formContext = injectFormContext();
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
+  readonly #errorMessagesRegistry = inject(NGX_ERROR_MESSAGES, {
+    optional: true,
+  });
   readonly #generatedFieldsetId = createUniqueId('fieldset');
 
   /**
@@ -120,8 +145,15 @@ export class NgxHeadlessFieldset<
 
   /**
    * Optional explicit list of fields to aggregate errors from.
+   *
+   * `null` (default/unbound) means "not provided" — the fieldset aggregates
+   * its own field's errors (via `errorSummary()`/`errors()`, gated by
+   * {@link includeNestedErrors}). An explicitly bound empty array (`[]`) is
+   * a distinct, intentional state — "aggregate nothing" — for consumers that
+   * dynamically compute the field list and it can legitimately become
+   * empty; it does not fall back to the fieldset's own errors.
    */
-  readonly fields = input<FieldTree<unknown>[] | null>(null);
+  readonly fields = input<readonly FieldTree<unknown>[] | null>(null);
 
   /**
    * Unique identifier for the fieldset.
@@ -214,7 +246,13 @@ export class NgxHeadlessFieldset<
     const override = this.fields();
     const readFn = this.includeNestedErrors() ? readErrors : readDirectErrors;
 
-    if (override && override.length > 0) {
+    // `null` means "not provided" → aggregate the fieldset's own errors.
+    // An explicitly bound `[]` means "provided but empty" → aggregate
+    // nothing. Distinguishing these (instead of `override.length > 0`)
+    // keeps a dynamically-computed field list that becomes empty from
+    // silently falling back to the fieldset's own (possibly unrelated)
+    // errors.
+    if (override !== null) {
       const messages = override.flatMap((field) => readFn(field()));
       return dedupeValidationErrors(messages);
     }
@@ -228,6 +266,27 @@ export class NgxHeadlessFieldset<
   readonly aggregatedWarnings = computed(() => this.#split().warnings);
   readonly hasErrors = computed(() => this.#split().blocking.length > 0);
   readonly hasWarnings = computed(() => this.#split().warnings.length > 0);
+
+  /**
+   * {@link aggregatedErrors}, resolved to display messages. See the class
+   * doc's usage note for why this (not `error.message`) is the recommended
+   * rendering surface.
+   */
+  readonly resolvedErrors: Signal<readonly ResolvedError[]> = computed(() =>
+    this.aggregatedErrors().map((error) => this.#toResolvedError(error)),
+  );
+
+  /** {@link aggregatedWarnings}, resolved the same way as {@link resolvedErrors}. */
+  readonly resolvedWarnings: Signal<readonly ResolvedError[]> = computed(() =>
+    this.aggregatedWarnings().map((error) => this.#toResolvedError(error)),
+  );
+
+  #toResolvedError(error: ValidationError): ResolvedError {
+    return {
+      kind: error.kind,
+      message: resolveErrorMessage(error, this.#errorMessagesRegistry),
+    };
+  }
 
   /**
    * Whether to show errors based on strategy.
