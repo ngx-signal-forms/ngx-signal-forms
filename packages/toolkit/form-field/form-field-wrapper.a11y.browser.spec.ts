@@ -6,7 +6,7 @@ import { render } from '@testing-library/angular';
 import { page, userEvent } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
 import { NgxFormField } from './index';
-import { expectNoA11yViolations } from '../testing/a11y';
+import { expectNoA11yViolations } from '@ngx-signal-forms/toolkit/testing';
 
 /**
  * WCAG 2.2 AA conformance gate for the form-field wrapper composition.

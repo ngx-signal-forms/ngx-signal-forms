@@ -36,6 +36,9 @@
       "@ngx-signal-forms/toolkit/headless": [
         "./packages/toolkit/headless/src/index.ts"
       ],
+      "@ngx-signal-forms/toolkit/testing": [
+        "./packages/toolkit/testing/index.ts"
+      ],
       "@ngx-signal-forms/demo-shared": ["./packages/demo-shared/src/index.ts"],
       "@ngx-signal-forms/a11y-testing": ["./tools/a11y/scan.ts"],
       "@ngx-signal-forms/debugger": ["./libs/debugger/src/index.ts"],

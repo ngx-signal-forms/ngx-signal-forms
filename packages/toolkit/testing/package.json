@@ -1,0 +1,6 @@
+{
+  "name": "testing",
+  "description": "WCAG 2.2 AA accessibility test harness for @ngx-signal-forms/toolkit",
+  "sideEffects": false,
+  "ngPackage": {}
+}
