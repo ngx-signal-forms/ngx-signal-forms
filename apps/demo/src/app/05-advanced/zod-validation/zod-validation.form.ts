@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   input,
   signal,
 } from '@angular/core';
@@ -220,11 +221,10 @@ export class ZodValidationComponent {
   validateStandardSchema(path, zodBaselineAccountSchema);
 });`;
 
-  protected useSingleColumnFieldRows(): boolean {
-    return (
-      this.appearance() === 'standard' && this.orientation() === 'horizontal'
-    );
-  }
+  protected readonly useSingleColumnFieldRows = computed(
+    () =>
+      this.appearance() === 'standard' && this.orientation() === 'horizontal',
+  );
 
   protected resetForm(): void {
     this.accountForm().reset();
