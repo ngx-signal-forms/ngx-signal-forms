@@ -5,9 +5,11 @@ import axe from 'axe-core';
  *
  * WCAG is additive across versions: 2.2 AA requires every Level A and AA
  * success criterion from 2.0, 2.1, and 2.2. axe-core exposes one tag per
- * version/level, so the full 2.2 AA surface is the union below. (axe groups
- * the two new 2.2 Level A criteria — Consistent Help, Redundant Entry — under
- * the `wcag22aa` tag, so no separate `wcag22a` tag is needed.)
+ * version/level, so the full 2.2 AA surface is the union below. There is no
+ * separate `wcag22a` tag because axe-core has no automated rule for either
+ * new 2.2 Level A criterion (Consistent Help, Redundant Entry) — both are
+ * non-automatable and must be verified manually. Automated scanning with this
+ * tag set therefore covers only a subset of full WCAG 2.2 AA conformance.
  *
  * @see https://www.w3.org/TR/WCAG22/
  * @see https://github.com/dequelabs/axe-core/blob/develop/doc/API.md#axe-core-tags
@@ -19,6 +21,8 @@ export const WCAG_22_AA_TAGS = [
   'wcag21aa',
   'wcag22aa',
 ] as const;
+
+export type WCAG_22_AA_TAG = (typeof WCAG_22_AA_TAGS)[number];
 
 /**
  * Runs an axe-core audit against `context` and throws when any WCAG 2.2 AA
