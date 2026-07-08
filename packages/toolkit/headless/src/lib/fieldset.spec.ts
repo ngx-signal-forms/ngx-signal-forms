@@ -203,6 +203,45 @@ describe('NgxHeadlessFieldset', () => {
     expect(screen.getByTestId('show-errors')).toHaveTextContent('true');
   });
 
+  it('exposes resolvedErrors/resolvedWarnings with resolved messages, even when the validator supplies no message (framework default)', async () => {
+    @Component({
+      selector: 'ngx-test-fieldset-resolved-errors',
+
+      imports: [NgxHeadlessFieldset],
+      template: `
+        <fieldset
+          ngxHeadlessFieldset
+          #fieldset="fieldset"
+          [field]="addressForm.address"
+          includeNestedErrors
+        >
+          @for (error of fieldset.resolvedErrors(); track error.kind) {
+            <span data-testid="resolved-error-message">{{
+              error.message
+            }}</span>
+          }
+        </fieldset>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ address: { street: '', city: '' } });
+      readonly addressForm = form(
+        this.#model,
+        schema((path) => {
+          // No `message` option — Angular's default ValidationError.message
+          // is `undefined` for this case. `error.message` in a template
+          // would render an empty span; `resolvedErrors()` must not.
+          required(path.address.street);
+        }),
+      );
+    }
+
+    await render(TestComponent);
+
+    const message = screen.getByTestId('resolved-error-message');
+    expect(message.textContent?.trim().length).toBeGreaterThan(0);
+  });
+
   it('shows warnings when no blocking errors exist', async () => {
     @Component({
       selector: 'ngx-test-fieldset-warnings',
