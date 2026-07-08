@@ -3,6 +3,7 @@ import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createErrorVisibility,
   injectFormContext,
+  NGX_SIGNAL_FORMS_CONFIG,
   resolveStrategyFromContext,
   splitByKind,
   type ErrorDisplayStrategy,
@@ -118,6 +119,7 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
     optional: true,
   });
   readonly #formContext = injectFormContext();
+  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
 
   /**
    * The root form FieldTree to aggregate errors from.
@@ -136,8 +138,19 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
    */
   readonly submittedStatus = input<SubmittedStatus | undefined>();
 
+  /**
+   * Resolution order: `strategy` input (when not `'inherit'`) → ambient
+   * form context → the global `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`
+   * → `'on-touch'`. Mirrors `NgxHeadlessFieldset.resolvedStrategy`'s cascade
+   * so standalone usage (no `[ngxSignalForm]` host) behaves consistently
+   * regardless of which headless surface a consumer reaches for.
+   */
   readonly resolvedStrategy = computed(() =>
-    resolveStrategyFromContext(this.strategy(), this.#formContext),
+    resolveStrategyFromContext(
+      this.strategy(),
+      this.#formContext,
+      this.#config?.defaultErrorStrategy,
+    ),
   );
 
   readonly #fieldState = computed(() => this.formTree()());
@@ -145,6 +158,7 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
   readonly #showErrorsSignal = createErrorVisibility(this.#fieldState, {
     strategy: this.strategy,
     submittedStatus: this.submittedStatus,
+    configDefault: this.#config?.defaultErrorStrategy,
   });
 
   /**

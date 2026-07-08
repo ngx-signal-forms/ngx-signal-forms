@@ -2,6 +2,7 @@ import { type Injector, type Signal } from '@angular/core';
 import type {
   ErrorDisplayStrategy,
   ReactiveOrStatic,
+  ResolvedErrorDisplayStrategy,
   SubmittedStatus,
 } from '../types';
 import { assertInjector } from './assert-injector';
@@ -48,6 +49,22 @@ export interface CreateErrorVisibilityOptions {
     | Signal<SubmittedStatus | undefined>;
 
   /**
+   * Fallback strategy consulted when both `strategy` and the ambient form
+   * context resolve to nothing (i.e. no `[ngxSignalForm]` host is present).
+   * Typically the caller's own `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`.
+   *
+   * Deliberately opt-in rather than auto-injected: most callers of this
+   * generic primitive (e.g. `NgxSignalFormAutoAria`) already run inside a
+   * form context and never observe the difference, and forcing every call
+   * site to consult the global config would be an unannounced behavior
+   * change for the handful that don't. Callers that need config-default
+   * parity with `NgxHeadlessFieldset.resolvedStrategy` (e.g. the headless
+   * package's standalone factories) inject the config themselves and pass
+   * it through here.
+   */
+  readonly configDefault?: ResolvedErrorDisplayStrategy | null;
+
+  /**
    * Optional injector for use outside an Angular injection context (e.g.
    * unit tests, `runInInjectionContext` wrappers). When omitted the function
    * must be called inside a DI context.
@@ -67,7 +84,8 @@ export interface CreateErrorVisibilityOptions {
  * ## What it does
  *
  * 1. Reads the nearest `[ngxSignalForm]` context via `inject()` (optional).
- * 2. Resolves the error display strategy: explicit opt → context → `'on-touch'`.
+ * 2. Resolves the error display strategy: explicit opt → context →
+ *    `opts.configDefault` (when supplied) → `'on-touch'`.
  * 3. Resolves the submission status: explicit opt → context → `undefined`.
  * 4. Delegates to {@link createShowErrorsComputed} and returns the resulting
  *    `Signal<boolean>`.
@@ -83,9 +101,9 @@ export interface CreateErrorVisibilityOptions {
  *
  * ## When NOT to use
  *
- * If you need to compose the strategy and/or submission status with
- * additional logic (e.g. a config-default cascade, a component preset
- * registry) reach for the individual building blocks instead.
+ * If you need to compose the strategy and/or submission status with logic
+ * beyond a flat config-default fallback (e.g. a component preset registry,
+ * a multi-tier cascade) reach for the individual building blocks instead.
  *
  * @param field Reactive or static field state. `null`/`undefined` values
  *   short-circuit the result to `false` — this is handled by the underlying
@@ -161,7 +179,11 @@ export function createErrorVisibility(
         opts?.strategy !== undefined
           ? unwrapValue<ErrorDisplayStrategy | undefined>(opts.strategy)
           : undefined;
-      return resolveStrategyFromContext(strategyValue, formContext);
+      return resolveStrategyFromContext(
+        strategyValue,
+        formContext,
+        opts?.configDefault,
+      );
     };
 
     // Same pattern for submitted status.

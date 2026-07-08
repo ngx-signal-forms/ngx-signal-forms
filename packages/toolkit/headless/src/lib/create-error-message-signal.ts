@@ -1,5 +1,6 @@
 import { computed, inject, type Injector, type Signal } from '@angular/core';
 import type { ValidationError } from '@angular/forms/signals';
+import { NGX_SIGNAL_FORMS_CONFIG } from '@ngx-signal-forms/toolkit';
 import {
   assertInjector,
   createErrorVisibility,
@@ -156,7 +157,8 @@ type FieldStateAccessor = () => FieldStateInput;
  * consumers to compose by hand:
  *
  * 1. {@link createErrorVisibility} — gate by the error display strategy
- *    cascade (DI context → `'on-touch'` default).
+ *    cascade (explicit `strategy` option → form context → the global
+ *    `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy` → `'on-touch'`).
  * 2. {@link resolveValidationErrorMessage} — apply the 3-tier message
  *    cascade (validator message → registry → default).
  * 3. {@link generateErrorId} — produce per-error DOM IDs that match the
@@ -230,10 +232,19 @@ export function createErrorMessageSignal(
         ? inject(NGX_ERROR_MESSAGES, { optional: true })
         : null;
 
+    // Falls back to the global `defaultErrorStrategy` config (same cascade
+    // `NgxHeadlessFieldset` applies) when neither an explicit `strategy` nor
+    // a form context is present, keeping standalone usage consistent
+    // regardless of which headless surface a consumer reaches for.
+    const config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
+
     const visibilityOptions: CreateErrorVisibilityOptions = {
       ...(options?.strategy !== undefined && { strategy: options.strategy }),
       ...(options?.submittedStatus !== undefined && {
         submittedStatus: options.submittedStatus,
+      }),
+      ...(config?.defaultErrorStrategy !== undefined && {
+        configDefault: config.defaultErrorStrategy,
       }),
     };
     // `createErrorVisibility` is typed against Angular's `Partial<ErrorVisibilityState>`

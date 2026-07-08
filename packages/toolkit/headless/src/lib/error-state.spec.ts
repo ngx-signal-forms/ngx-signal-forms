@@ -14,7 +14,10 @@ import {
   schema,
   type ValidationError,
 } from '@angular/forms/signals';
-import type { SubmittedStatus } from '@ngx-signal-forms/toolkit';
+import {
+  provideNgxSignalFormsConfig,
+  type SubmittedStatus,
+} from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -389,6 +392,50 @@ describe('NgxHeadlessErrorState', () => {
       fixture.componentInstance.submittedStatus.set('submitted');
       fixture.detectChanges();
 
+      expect(screen.getByTestId('show-errors')).toBeTruthy();
+    });
+
+    it('honors NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy outside a form context, matching NgxHeadlessFieldset', async () => {
+      @Component({
+        selector: 'ngx-test-config-default-strategy',
+        imports: [FormField, NgxHeadlessErrorState],
+
+        template: `
+          <div>
+            <input id="email" [formField]="contactForm.email" />
+            <div
+              ngxHeadlessErrorState
+              #errorState="errorState"
+              [field]="contactForm.email"
+              fieldName="email"
+            >
+              @if (errorState.shouldShowErrors()) {
+                <span data-testid="show-errors">Show Errors</span>
+              }
+            </div>
+          </div>
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'Email is required' });
+          }),
+        );
+      }
+
+      await render(TestComponent, {
+        providers: [
+          provideNgxSignalFormsConfig({ defaultErrorStrategy: 'immediate' }),
+        ],
+      });
+
+      // No [ngxSignalForm] host and no explicit `strategy` input — the
+      // component-provided global config default ('immediate') should
+      // still surface errors without touch, the same way
+      // NgxHeadlessFieldset.resolvedStrategy already does.
       expect(screen.getByTestId('show-errors')).toBeTruthy();
     });
   });
