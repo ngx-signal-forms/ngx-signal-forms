@@ -1,6 +1,7 @@
 <form [formRoot]="markingForm" ngxSignalForm class="field-marking-stack">
   <!-- The legend, placed wherever it reads best in the form. It mirrors the
        active mode + markers and hides itself when there is no relevant field. -->
+  @if (showLegendSlot()) {
   <div class="field-marking-legend-slot">
     <ngx-form-marking-legend
       [formTree]="markingForm"
@@ -10,6 +11,7 @@
       [text]="legendTextOrUndefined()"
     />
   </div>
+  }
 
   <ngx-form-field-wrapper
     [appearance]="appearance()"

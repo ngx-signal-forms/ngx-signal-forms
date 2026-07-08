@@ -96,4 +96,6 @@ export class FieldMarkingFormComponent {
   /** `[text]` expects `undefined` (not `''`) to fall back to the mode default. */
   protected readonly legendTextOrUndefined = () =>
     this.legendText().length > 0 ? this.legendText() : undefined;
+
+  protected readonly showLegendSlot = () => this.markingMode() !== 'none';
 }
