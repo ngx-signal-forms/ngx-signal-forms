@@ -860,6 +860,27 @@ behavior:
   synchronously (without waiting for `whenStable()`/the async result), a
   warning may now appear one tick later than before while async tests are
   in flight.
+- **Fixed (#214): a suite instance shared across two concurrently-mounted,
+  independent field trees could cross-contaminate their results.** Vest
+  suites created via `create()` hold exactly ONE canonical accumulated result
+  per suite _object_. When the SAME suite instance backed two unrelated,
+  simultaneously-live `form()` trees (e.g. a module-scope suite reused by
+  repeated form rows) with overlapping in-flight async validation, one tree
+  could observe the OTHER tree's outcome instead of its own once both runs
+  settled. The adapter now detects this exact overlap — two different field
+  trees with a concurrently pending, unfocused run against the same suite —
+  and defers the later-arriving tree's actual `suite.run()` call until the
+  suite is idle, so the two runs never overlap. This is scoped to unfocused
+  (whole-suite) runs only: the wave-3 pattern of several `focusCurrentField`/
+  `only` registrations for different fields of the SAME form intentionally
+  keeps sharing the suite's retained state and is unaffected. The only
+  observable change is a small added latency for the rare case of two
+  independent, concurrently-validating trees sharing one suite instance — the
+  later one's validation now genuinely waits for the earlier one's async work
+  to finish before its own starts, rather than racing it (and getting
+  intermittently-wrong results). Consumers who give each field tree its own
+  suite instance (or who don't share a suite across concurrently-mounted
+  forms at all) see no behavior change.
 
 ### Vest peer dependency range widened
 
