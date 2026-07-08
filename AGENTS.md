@@ -19,10 +19,19 @@
 ## When to use nx_docs
 
 - USE for: advanced config options, unfamiliar flags, migration guides, plugin configuration, edge cases
-- DON'T USE for: basic generator syntax (`nx g @nx/react:app`), standard commands, things you already know
+- DON'T USE for: basic generator syntax (`nx g @nx/angular:app`), standard commands, things you already know
 - The `nx-generate` skill handles generator discovery internally - don't call nx_docs just to look up generator syntax
 
 <!-- nx configuration end-->
+
+## Repo Conventions
+
+Canonical repo rules (stack, structure, commands, testing/snapshot policy) live in `.github/copilot-instructions.md`. Domain-specific rules:
+
+- Toolkit usage: `.github/instructions/ngx-signal-forms-toolkit.instructions.md` + the `ngx-signal-forms` skill (`.agents/skills/ngx-signal-forms/SKILL.md`)
+- Angular / Signal Forms: `angular-developer` skill (`references/signal-forms.md`)
+- A11y: `.github/instructions/a11y.instructions.md` (WCAG 2.2 AA)
+- Commits: `.github/instructions/commit.instructions.md` (Conventional Commits, drives nx release)
 
 ## Agent skills
 
