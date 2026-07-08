@@ -1,5 +1,5 @@
 ---
-description: Sub-skill of ngx-signal-forms for the core @ngx-signal-forms/toolkit entry point — form[formRoot] vs ngxSignalForm decision, auto-ARIA, control semantics, preset providers, error visibility strategies, submittedStatus/showErrors wiring, global config, error-message registries, warning helpers, submission helpers, and immutable array utilities. Not independently invocable; the hub SKILL.md routes here.
+description: Sub-skill of ngx-signal-forms for the core @ngx-signal-forms/toolkit entry point — form[formRoot] vs ngxSignalForm decision, auto-ARIA, control semantics, preset providers, error visibility strategies, submittedStatus/showErrors wiring, global config, error-message registries, warning helpers, submission helpers, immutable array utilities, required-marker config, Standard Schema (Zod) aria-required, and error/hint renderer overrides. Not independently invocable; the hub SKILL.md routes here.
 ---
 
 # Toolkit Core
@@ -67,14 +67,13 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 ## Core Pattern
 
 ```typescript
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { form, FormField, required, email } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
   selector: 'app-example',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="userForm" ngxSignalForm errorStrategy="on-submit">
@@ -154,6 +153,12 @@ patchState(store, (s) => ({
   ),
 }));
 ```
+
+## Required Markers, Standard Schema & Renderer Overrides
+
+- **Configure required/optional markers.** Global config takes `showMarkerWhen: FieldMarkingMode` (`'required' | 'optional' | 'none'`) plus `requiredMarker` / `optionalMarker` / `requiredLegendText` / `optionalLegendText`. `MarkerKind` is the non-`none` subset (`'required' | 'optional'`) and `ResolvedMarker` is the resolved shape. Render the form-level marker explanation with `NgxFormMarkingLegend` (`<ngx-form-marking-legend>`) from `@ngx-signal-forms/toolkit/assistive`.
+- **Surface `aria-required` for Standard Schema (Zod) fields.** Fields validated only through `validateStandardSchema()` (Zod, Valibot, ArkType, …) never register Angular's `required()` metadata, so `FieldState.required()` stays `false` and neither auto-ARIA's `aria-required` nor the `'required'` auto-marker fires. Call `requiredFromStandardSchema(path.field, Schema)` once per field, next to the `validateStandardSchema()` call, to close that gap. Types: `StandardSchemaLike`, `StandardSchemaLikeIssue`, `StandardSchemaLikeResult`.
+- **Swap error/hint rendering.** `provideFormFieldErrorRenderer()` / `provideFormFieldHintRenderer()` (and their `*ForComponent` variants) replace how the wrapper renders error and hint content, injected through the `NGX_FORM_FIELD_ERROR_RENDERER` / `NGX_FORM_FIELD_HINT_RENDERER` tokens. See `../references/api.md` for the override signatures (`NgxFormFieldErrorRendererOverride`, `NgxFormFieldHintRendererOverride`, `NgxFormFieldErrorPlacement`).
 
 ## Error Handling
 

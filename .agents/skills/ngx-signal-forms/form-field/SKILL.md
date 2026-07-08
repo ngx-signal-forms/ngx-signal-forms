@@ -25,10 +25,10 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 
 3. **Error placement:**
    - Default for wrapper: `errorPlacement="bottom"`
-   - Default for fieldset: `errorPlacement="top"`
+   - Default for fieldset: `errorPlacement="bottom"` — set `errorPlacement="top"` when the group summary should sit directly below the legend.
    - Override per wrapper or per fieldset as needed — these are independent controls.
 
-4. **Field marking:** Use `showMarkerWhen` (`'required' | 'optional' | 'none'`) on the wrapper or globally via `provideNgxSignalFormsConfig({ showMarkerWhen: 'required' })`. Add `<ngx-form-marking-legend>` to explain the marker.
+4. **Field marking:** Use `showMarkerWhen` (`'required' | 'optional' | 'none'`), plus optional `requiredMarker` / `optionalMarker`, on the wrapper or globally via `provideNgxSignalFormsConfig({ showMarkerWhen: 'required' })`. Markers render in every appearance and don't affect `aria-required`. Add the form-level `<ngx-form-marking-legend>` (from `@ngx-signal-forms/toolkit/assistive`) once per form to explain what the marker means.
 
 5. **Use `NgxFormFieldset` for grouped sections:**
    - Pass the **parent field tree** to `[fieldsetField]`.
@@ -102,14 +102,13 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 ## Basic Usage
 
 ```typescript
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { form, FormField, required, email } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
   selector: 'app-profile-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="profileForm" ngxSignalForm errorStrategy="on-submit">
@@ -152,7 +151,7 @@ export class ProfileFormComponent {
 ## Grouped Fieldset
 
 ```html
-<!-- Group-level error summary at the top (fieldset default) -->
+<!-- Group-level error summary (add errorPlacement="top" to move it above the fields) -->
 <ngx-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
   <legend>Address</legend>
 

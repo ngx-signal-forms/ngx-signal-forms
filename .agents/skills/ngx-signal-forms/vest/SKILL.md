@@ -115,6 +115,14 @@ persist across mounts:
 validateVest(path, signupSuite, { resetOnDestroy: false });
 ```
 
+**Concurrent mounts are safe.** Registrations against the same suite are
+reference-counted, so mounting a module-scope suite in two forms at once (a
+list/detail view, a wizard step beside a summary, two open tabs) does not reset
+one mount out from under the other — the suite only resets when the **last**
+surviving registration tears down. Concurrently-pending field trees that share
+one suite are isolated per run, so an in-flight async run or retained `only()`
+state on a sibling mount stays untouched.
+
 ### Focused runs with `only`
 
 When the suite callback uses `only(fieldName)` (or `suite.only(field).run(...)`),

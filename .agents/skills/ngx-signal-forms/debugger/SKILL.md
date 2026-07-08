@@ -41,19 +41,13 @@ The debugger is a **development-only** tool that makes invisible form state visi
 ## Usage
 
 ```typescript
-import {
-  Component,
-  ChangeDetectionStrategy,
-  signal,
-  isDevMode,
-} from '@angular/core';
+import { Component, signal, isDevMode } from '@angular/core';
 import { form, FormField, required } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebuggerToolkit } from '@ngx-signal-forms/debugger';
 
 @Component({
   selector: 'app-debug-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxSignalFormDebuggerToolkit],
   template: `
     <div class="split-layout">
@@ -83,8 +77,9 @@ export class DebugFormComponent {
 standalone status chips the panel composes internally. Use them directly when
 you want a compact inline indicator (e.g., next to a submit button) without
 the full panel. They're included in `NgxSignalFormDebuggerToolkit` — import the
-bundle and drop the directives into your template. Badge appearance options:
-`'solid' | 'outline'`; variants: `'neutral' | 'success' | 'warning' | 'danger'`.
+bundle and drop the directives into your template. Badge inputs: `variant`
+(`'solid' | 'outline' | 'ghost'`, default `'solid'`) and `appearance`
+(`'neutral' | 'info' | 'success' | 'warning' | 'danger'`, default `'neutral'`).
 
 ## What the Debugger Shows
 
