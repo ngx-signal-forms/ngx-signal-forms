@@ -412,13 +412,13 @@ import {
 
 Selector: `ngx-form-marking-legend`
 
-| Input            | Type                                 | Notes                                                                        |
-| ---------------- | ------------------------------------ | ---------------------------------------------------------------------------- |
-| `formTree`       | `FieldTree<unknown>`                 | Optional — falls back to ambient `ngxSignalForm` form context                |
-| `showMarkerWhen` | `FieldMarkingMode`                   | Override marking mode; falls back to config `showMarkerWhen`                  |
-| `text`           | string                               | Override legend text entirely (`{marker}` is substituted)                    |
-| `requiredMarker` | string                               | Override the required marker used for `{marker}`; falls back to config       |
-| `optionalMarker` | string                               | Override the optional marker used for `{marker}`; falls back to config       |
+| Input            | Type                 | Notes                                                                  |
+| ---------------- | -------------------- | ---------------------------------------------------------------------- |
+| `formTree`       | `FieldTree<unknown>` | Optional — falls back to ambient `ngxSignalForm` form context          |
+| `showMarkerWhen` | `FieldMarkingMode`   | Override marking mode; falls back to config `showMarkerWhen`           |
+| `text`           | string               | Override legend text entirely (`{marker}` is substituted)              |
+| `requiredMarker` | string               | Override the required marker used for `{marker}`; falls back to config |
+| `optionalMarker` | string               | Override the optional marker used for `{marker}`; falls back to config |
 
 Renders the form-level legend explaining what the required/optional markers mean. Mode-aware: hides when the form has no field of the relevant kind, and renders nothing in `'none'` mode. Plain visible text — no `role` or live region (required state still reaches AT via each control's `aria-required`).
 
@@ -426,12 +426,12 @@ Renders the form-level legend explaining what the required/optional markers mean
 
 Selector: `ngx-form-field-notification`
 
-| Input       | Type                                       | Default     | Notes                                                             |
-| ----------- | ------------------------------------------ | ----------- | ----------------------------------------------------------------- |
+| Input       | Type                                           | Default     | Notes                                                                                |
+| ----------- | ---------------------------------------------- | ----------- | ------------------------------------------------------------------------------------ |
 | `errors`    | `ReactiveOrStatic<readonly ValidationError[]>` | required    | Grouped validation messages (plain array or signal/getter); bound via host directive |
-| `fieldName` | string                                     | optional    | Generates deterministic error/warning container ids when provided |
-| `title`     | string                                     | optional    | Optional heading rendered above the messages                      |
-| `listStyle` | `NgxFormFieldListStyle` (`plain`/`bullets`) | `'bullets'`  | Bullet list or stacked paragraph rendering                        |
+| `fieldName` | string                                         | optional    | Generates deterministic error/warning container ids when provided                    |
+| `title`     | string                                         | optional    | Optional heading rendered above the messages                                         |
+| `listStyle` | `NgxFormFieldListStyle` (`plain`/`bullets`)    | `'bullets'` | Bullet list or stacked paragraph rendering                                           |
 
 `errors` and `fieldName` are forwarded to the composed `NgxHeadlessNotification` host directive. There is **no `tone` input** — the routing is content-driven: any blocking error renders the `role="alert"` container, a warning-only list renders the `role="status"` container, and an empty list keeps both hidden. Uses dual stable live regions so the role is never re-assigned at the same tick content is inserted.
 

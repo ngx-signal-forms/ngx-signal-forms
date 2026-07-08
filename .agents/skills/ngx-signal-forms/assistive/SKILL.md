@@ -47,7 +47,7 @@ The assistive entry point provides accessible feedback rendering that sits betwe
 
 - Uses `role="alert"` and relies on the role's implicit live-region semantics (no explicit `aria-live` / `aria-atomic`).
 
-7. **`NgxFormMarkingLegend`** (`<ngx-form-marking-legend>`) — form-level legend that explains the required/optional marker (e.g. "* indicates a required field"), the companion to the per-field markers rendered by the `form-field` wrapper:
+7. **`NgxFormMarkingLegend`** (`<ngx-form-marking-legend>`) — form-level legend that explains the required/optional marker (e.g. "\* indicates a required field"), the companion to the per-field markers rendered by the `form-field` wrapper:
    - Place it once wherever it reads well; there is no automatic injection.
    - `[formTree]` is optional — it falls back to the ambient `form[formRoot][ngxSignalForm]` context. Pass it explicitly when used outside a form host.
    - `showMarkerWhen` (`'required' | 'optional' | 'none'`), `text`, `requiredMarker`, and `optionalMarker` all fall back to `NgxSignalFormsConfig`, so by default the legend matches whatever the fields render.
