@@ -98,6 +98,17 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
 @Component({
   selector: 'ngx-form-field-error',
 
+  host: {
+    // The role="alert"/role="status" containers stay mounted (see the
+    // template docs), and each collapses visually while empty via its own
+    // `--empty` class — but that leaves `:host`'s own `margin-top`
+    // (form-field-error.css) contributing stray vertical whitespace above
+    // every field with no visible errors *or* warnings. This class lets the
+    // CSS zero that margin too, without touching `[hidden]`/`aria-hidden`
+    // (which stay off the inner containers for the WCAG 4.1.3 reasons
+    // documented on the template).
+    '[class.ngx-form-field-error-host--empty]': 'hostEmpty()',
+  },
   hostDirectives: [
     {
       directive: NgxHeadlessErrorState,
@@ -424,6 +435,17 @@ export class NgxFormFieldError {
       this.showWarnings() &&
       this.headless.hasWarnings() &&
       !this.errorContainerVisible(),
+  );
+
+  /**
+   * True when neither the alert nor the status container has visible
+   * content. Drives the `ngx-form-field-error-host--empty` host class so
+   * the CSS can zero `:host`'s own `margin-top` — see the `host` binding
+   * above for why that margin needs a separate collapse from the inner
+   * containers' `--empty` class.
+   */
+  protected readonly hostEmpty = computed(
+    () => !this.errorContainerVisible() && !this.warningContainerVisible(),
   );
 
   // ── Resolved messages (delegate to the public createErrorMessageSignal) ──
