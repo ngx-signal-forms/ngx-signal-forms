@@ -137,6 +137,20 @@ describe('Submission Helpers', () => {
         expect(result()).toBe(false);
       });
     });
+
+    describe('Injection Context', () => {
+      it('should throw NG0203 attributed to hasSubmitted when called outside an injection context', () => {
+        const submittingState = signal(false);
+        const mockForm = createMockFormWithSubmitting(() => submittingState());
+
+        // Calling directly (no TestBed.runInInjectionContext /
+        // constructor / field initializer) must throw, and the thrown
+        // error must name `hasSubmitted` — not the internal
+        // `createSubmittedStatusTracker` delegate — so a caller sees the
+        // public API surface they actually called in the error message.
+        expect(() => hasSubmitted(mockForm)).toThrowError(/hasSubmitted/u);
+      });
+    });
   });
 
   describe('Integration - Combined Usage', () => {
