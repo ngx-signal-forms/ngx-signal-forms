@@ -280,4 +280,87 @@ describe('createVestAdapter', () => {
     });
     expect(sixth.fromCache).toBe(true);
   });
+
+  it('attaches errors for a Vest field literally named "root" to that child field, not the validator-bound root', async () => {
+    const adapter = createVestAdapter();
+    const suite = create((data: { root: string }) => {
+      vestTest('root', 'Root is required', () => {
+        enforce(data.root).isNotBlank();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-adapter-root-field',
+      imports: [FormField],
+
+      template: `<input [formField]="f.root" />`,
+    })
+    class TestComponent {
+      readonly model = signal({ root: '' });
+      // Register against the whole-form path, so the validator's own bound
+      // field IS the form root -- the same shape the reported bug relies on.
+      readonly f = form(this.model, (path) => {
+        adapter.register(path, suite);
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const rootFieldErrors = fixture.componentInstance.f.root().errors();
+    const formRootErrors = fixture.componentInstance.f().errors();
+
+    // The model's `root` field failure must land on that child field...
+    expect(
+      rootFieldErrors.some((error) => error.message === 'Root is required'),
+    ).toBe(true);
+    // ...and must NOT be mis-attached to the validator-bound form root just
+    // because the Vest field name happens to be the literal string "root".
+    expect(
+      formRootErrors.some((error) => error.message === 'Root is required'),
+    ).toBe(false);
+  });
+
+  it('does not reset a shared suite while another registration is still mounted (concurrent mounts)', () => {
+    const adapter = createVestAdapter();
+    const baseSuite = create((data: { email: string }) => {
+      vestTest('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+
+    let resetCount = 0;
+    const suite = {
+      ...baseSuite,
+      reset: () => {
+        resetCount += 1;
+        baseSuite.reset();
+      },
+    };
+
+    // No template/inputs needed: `form()` (and the adapter registration it
+    // triggers) runs during construction, before any change detection pass.
+    @Component({ template: '' })
+    class TestComponent {
+      readonly model = signal({ email: '' });
+      readonly f = form(this.model, (path) => {
+        adapter.register(path, suite);
+      });
+    }
+
+    // Two independently mounted forms sharing the SAME module-scope suite --
+    // the README-recommended pattern.
+    const first = TestBed.createComponent(TestComponent);
+    const second = TestBed.createComponent(TestComponent);
+
+    first.destroy();
+    // The second mount is still alive and relying on this suite -- resetting
+    // now would wipe its retained only()-run state and any in-flight async
+    // run out from under it.
+    expect(resetCount).toBe(0);
+
+    second.destroy();
+    // Only the LAST surviving registration's teardown actually resets.
+    expect(resetCount).toBe(1);
+  });
 });
