@@ -1236,3 +1236,7 @@ point:
   (`runInAngular`) had zero importers and a `@example` calling functions that
   don't exist anywhere in this repo. Deleted rather than published, since
   promoting it would have required writing a truthful example from scratch.
+
+## Form-level `errorStrategy` no longer accepts `'inherit'` (#178)
+
+`NgxSignalForm`'s `[errorStrategy]` input is now typed `ResolvedErrorDisplayStrategy` (`'immediate' | 'on-touch' | 'on-submit'`) instead of `ErrorDisplayStrategy`. `'inherit'` is a field-level-only value — there is nothing above the form root to inherit from — and was already silently treated as "use the default", so binding `[errorStrategy]="'inherit'"` on a `<form ngxSignalForm>` is now a compile-time error. **Fix:** remove the binding (the default already applies) or pass a concrete strategy. Field-level `[strategy]` still accepts `'inherit'`.
