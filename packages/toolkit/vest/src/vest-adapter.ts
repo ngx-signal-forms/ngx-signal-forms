@@ -186,6 +186,19 @@ const VEST_KIND_SEGMENT_MAX_LEN = 48;
 const VEST_KEY_SEPARATOR = '\u0000';
 
 /**
+ * Internal sentinel `fieldPath` meaning "attach directly to the validator's
+ * own bound field tree" rather than resolving a child field by name.
+ *
+ * Composed from the same NUL-based separator as {@link VEST_KEY_SEPARATOR} so
+ * it can never collide with a REAL Vest field name -- including a field
+ * literally named `root`. Using the bare string `'root'` as this sentinel
+ * previously meant that a suite with a test registered against a field named
+ * `root` (e.g. model shape `{ root: ... }`) had its failures mis-attached to
+ * the validator-bound field instead of resolved to the `root` child field.
+ */
+const VEST_ROOT_FIELD_SENTINEL = `${VEST_KEY_SEPARATOR}root${VEST_KEY_SEPARATOR}`;
+
+/**
  * Runtime guard for the subset of Vest's public result object that the adapter
  * consumes.
  */
@@ -485,7 +498,7 @@ function toVestValidationEntries(
   }
 
   if (Array.isArray(messages)) {
-    return createVestEntriesForField('root', messages);
+    return createVestEntriesForField(VEST_ROOT_FIELD_SENTINEL, messages);
   }
 
   return Object.entries(messages).flatMap(([fieldPath, fieldMessages]) => {
@@ -587,7 +600,7 @@ function toVestValidationErrors(
 ): readonly ValidationError.WithFieldTree[] {
   return entries.map(({ fieldPath, message, occurrence }) => {
     const targetFieldTree =
-      fieldPath === 'root'
+      fieldPath === VEST_ROOT_FIELD_SENTINEL
         ? fieldTree
         : resolveVestWarningFieldTree(fieldTree, fieldPath);
 
@@ -843,6 +856,11 @@ export function createVestAdapter(
 ): VestSuiteAdapter {
   const defaultResetOnDestroy = options.resetOnDestroy ?? true;
   const runCache = new WeakMap<object, VestRunCache>();
+  // Tracks how many live `resetOnDestroy`-enabled registrations currently
+  // reference each suite, so a suite shared across concurrently mounted forms
+  // (the README-recommended module-scope pattern) is only reset once the
+  // LAST registration tears down -- see `maybeRegisterResetOnDestroy`.
+  const resetOnDestroyRefCounts = new WeakMap<object, number>();
 
   /**
    * Retrieves the per-suite validation cache, creating it on first access.
@@ -952,6 +970,14 @@ export function createVestAdapter(
    * the current injection context is torn down. No-op when `resetOnDestroy` is
    * false or when the suite does not expose a `reset` callable. The hook clears
    * the SAME shared run cache so a subsequent mount re-executes `run()`.
+   *
+   * Registrations are reference-counted per suite: a module-scope suite
+   * shared by multiple concurrently mounted forms (the README-recommended
+   * pattern) increments this count on each opted-in registration and only
+   * actually resets once the LAST one tears down. Without this, destroying
+   * any one mount would reset (and drop the run cache for) a suite that a
+   * SURVIVING mount is still relying on -- wiping its retained `only()`-run
+   * state and, for an in-flight async run, orphaning its promise.
    */
   function maybeRegisterResetOnDestroy<TValue>(
     suite: VestRunnableSuite<TValue>,
@@ -966,10 +992,25 @@ export function createVestAdapter(
       return;
     }
 
+    const suiteKey = suite as object;
+    resetOnDestroyRefCounts.set(
+      suiteKey,
+      (resetOnDestroyRefCounts.get(suiteKey) ?? 0) + 1,
+    );
+
     inject(DestroyRef).onDestroy(() => {
+      const remaining = (resetOnDestroyRefCounts.get(suiteKey) ?? 1) - 1;
+      if (remaining > 0) {
+        // Another registration is still relying on this suite -- leave its
+        // state (and run cache) alone.
+        resetOnDestroyRefCounts.set(suiteKey, remaining);
+        return;
+      }
+
+      resetOnDestroyRefCounts.delete(suiteKey);
       // Also clear the per-suite run cache so a subsequent mount re-executes
       // `run()` even when the field tree reference happens to be reused.
-      invalidate(suite as object);
+      invalidate(suiteKey);
       (suite as { reset: () => void }).reset();
     });
   }
