@@ -336,6 +336,48 @@ describe('NgxSignalFormAutoAria', () => {
       expect(input?.getAttribute('aria-required')).toBe('false');
     });
 
+    it('should clear toolkit-written aria-invalid/aria-required when switching from auto to manual mode', async () => {
+      @Component({
+        template:
+          '<input type="checkbox" role="switch" id="emailUpdates" ngxSignalFormControl="switch" [ngxSignalFormControlAria]="ariaMode()" [formField]="switchControl()" />',
+        imports: [
+          MockFormFieldDirective,
+          NgxSignalFormAutoAria,
+          NgxSignalFormControlSemanticsDirective,
+        ],
+      })
+      class TestComponent {
+        readonly ariaMode = signal<'auto' | 'manual' | null>(null);
+        switchControl = signal(() => ({
+          invalid: signal(true),
+          touched: signal(true),
+          errors: signal([{ kind: 'required', message: 'Switch is required' }]),
+          valid: signal(false),
+          dirty: signal(true),
+          value: signal(''),
+          required: signal(true),
+          focusBoundControl: vi.fn(),
+        }));
+      }
+
+      const { container, fixture } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const input = container.querySelector('input');
+      // Auto mode: toolkit writes aria-invalid/aria-required unconditionally.
+      expect(input?.getAttribute('aria-invalid')).toBe('true');
+      expect(input?.getAttribute('aria-required')).toBe('true');
+
+      fixture.componentInstance.ariaMode.set('manual');
+      fixture.detectChanges();
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      // Ownership transferred to the consumer, who hasn't written anything
+      // yet — the stale toolkit-written values must not linger.
+      expect(input?.hasAttribute('aria-invalid')).toBe(false);
+      expect(input?.hasAttribute('aria-required')).toBe(false);
+    });
+
     it('should apply switch ARIA when both role="switch" and ngxSignalFormControl="switch" are present', async () => {
       @Component({
         template:
