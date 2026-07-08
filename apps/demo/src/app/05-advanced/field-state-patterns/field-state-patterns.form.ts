@@ -1,4 +1,9 @@
-import { Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
 import {
   disabled,
   email,
@@ -66,6 +71,7 @@ const fieldStatePatternsSchema = schema<FieldStatePatternsModel>((path) => {
 
 @Component({
   selector: 'ngx-field-state-patterns',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `

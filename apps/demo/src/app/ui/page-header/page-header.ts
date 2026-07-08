@@ -1,7 +1,8 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 @Component({
   selector: 'ngx-page-header',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   template: `
     <header class="mb-8 text-center">

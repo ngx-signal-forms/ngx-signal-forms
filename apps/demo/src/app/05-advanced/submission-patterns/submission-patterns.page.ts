@@ -1,4 +1,10 @@
-import { Component, computed, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+  viewChild,
+} from '@angular/core';
 import {
   type ErrorDisplayStrategy,
   type FormFieldAppearance,
@@ -28,6 +34,7 @@ import { SubmissionPatternsComponent } from './submission-patterns.form';
 
 @Component({
   selector: 'ngx-submission-patterns-page',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   styles: `
     :host {

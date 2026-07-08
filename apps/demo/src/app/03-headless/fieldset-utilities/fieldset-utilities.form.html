@@ -353,13 +353,16 @@
             #notesName="fieldName"
             class="space-y-2 sm:col-span-2"
           >
-            <div
-              ngxHeadlessErrorState
-              #notesState="errorState"
-              [field]="deliveryForm.deliveryNotes"
-              [fieldName]="notesName.resolvedFieldName()"
-              class="space-y-2"
-            >
+            <!--
+              Delivery notes intentionally skips ngxHeadlessErrorState /
+              ngxHeadlessCharacterCount and wires createErrorState(),
+              createCharacterCount(), createFieldStateFlags(), and the
+              notesDescribedBy() composition below directly — the "build
+              fully custom UI from plain functions" path this page's
+              utilities exist for, contrasted with the directive-driven
+              fields above (contact email, address).
+            -->
+            <div class="space-y-2">
               <div class="flex items-end justify-between gap-2">
                 <label
                   [for]="notesName.resolvedFieldName()"
@@ -369,59 +372,50 @@
                 </label>
 
                 <!--
-                  Headless character count — NgxHeadlessCharacterCount
-                  Provides all count signals (currentLength, remaining,
-                  limitState, percentUsed…) for fully custom markup.
+                  Headless character count — createCharacterCount()
+                  Same count signals as NgxHeadlessCharacterCount
+                  (currentLength, remaining, limitState, percentUsed…),
+                  composed as a plain class field instead of a directive.
+                  Carries `notesCounterId` so notesDescribedBy() below
+                  resolves to a real DOM node.
                   States: ok → warning (≥80 %) → danger (≥95 %) → exceeded.
-
-                  The directive is attached to an ng-container so the
-                  exported template reference (#notesCharCount) is read by
-                  child elements only — this avoids NG0950 (required input
-                  not available during the creation pass of the same element).
                 -->
-                <ng-container
-                  ngxHeadlessCharacterCount
-                  #notesCharCount="characterCount"
-                  [field]="deliveryForm.deliveryNotes"
-                  [maxLength]="200"
+                <span
+                  [id]="notesCounterId"
+                  aria-live="polite"
+                  aria-atomic="true"
+                  [attr.data-limit-state]="notesCount.limitState()"
+                  [attr.data-testid]="'headless-char-count'"
+                  class="text-xs"
+                  [class.text-gray-500]="notesCount.limitState() === 'ok'"
+                  [class.dark:text-gray-400]="notesCount.limitState() === 'ok'"
+                  [class.text-amber-700]="
+                    notesCount.limitState() === 'warning'
+                  "
+                  [class.dark:text-amber-400]="
+                    notesCount.limitState() === 'warning'
+                  "
+                  [class.text-red-600]="notesCount.limitState() === 'danger'"
+                  [class.dark:text-red-400]="notesCount.limitState() === 'danger'"
+                  [class.font-semibold]="
+                    notesCount.limitState() === 'exceeded'
+                  "
+                  [class.text-red-800]="
+                    notesCount.limitState() === 'exceeded'
+                  "
+                  [class.dark:text-red-400]="
+                    notesCount.limitState() === 'exceeded'
+                  "
                 >
-                  <span
-                    aria-live="polite"
-                    aria-atomic="true"
-                    [attr.data-limit-state]="notesCharCount.limitState()"
-                    [attr.data-testid]="'headless-char-count'"
-                    class="text-xs"
-                    [class.text-gray-500]="notesCharCount.limitState() === 'ok'"
-                    [class.dark:text-gray-400]="notesCharCount.limitState() === 'ok'"
-                    [class.text-amber-700]="
-                      notesCharCount.limitState() === 'warning'
-                    "
-                    [class.dark:text-amber-400]="
-                      notesCharCount.limitState() === 'warning'
-                    "
-                    [class.text-red-600]="notesCharCount.limitState() === 'danger'"
-                    [class.dark:text-red-400]="notesCharCount.limitState() === 'danger'"
-                    [class.font-semibold]="
-                      notesCharCount.limitState() === 'exceeded'
-                    "
-                    [class.text-red-800]="
-                      notesCharCount.limitState() === 'exceeded'
-                    "
-                    [class.dark:text-red-400]="
-                      notesCharCount.limitState() === 'exceeded'
-                    "
+                  {{ notesCount.currentLength() }}/{{
+                  notesCount.resolvedMaxLength() }} @if (notesCount.limitState()
+                  !== 'ok') {
+                  <span class="ml-1"
+                    >({{ notesCount.remaining() >= 0 ? notesCount.remaining() +
+                    ' left' : notesCount.remaining() * -1 + ' over' }})</span
                   >
-                    {{ notesCharCount.currentLength() }}/{{
-                    notesCharCount.resolvedMaxLength() }} @if
-                    (notesCharCount.limitState() !== 'ok') {
-                    <span class="ml-1"
-                      >({{ notesCharCount.remaining() >= 0 ?
-                      notesCharCount.remaining() + ' left' :
-                      notesCharCount.remaining() * -1 + ' over' }})</span
-                    >
-                    }
-                  </span>
-                </ng-container>
+                  }
+                </span>
               </div>
 
               <textarea
@@ -430,41 +424,55 @@
                 rows="3"
                 [formField]="deliveryForm.deliveryNotes"
                 placeholder="Special instructions…"
-                [attr.aria-invalid]="notesState.hasErrors() ? 'true' : null"
-                [attr.aria-describedby]="
-                  notesState.shouldShowErrors() && notesState.hasErrors()
-                    ? notesState.errorId()
-                    : notesState.shouldShowWarnings() && notesState.hasWarnings()
-                      ? notesState.warningId()
-                      : null
-                "
+                [attr.aria-invalid]="notesError.hasErrors() ? 'true' : null"
+                [attr.aria-describedby]="notesDescribedBy()"
               ></textarea>
 
-              @if (notesState.shouldShowErrors() && notesState.hasErrors()) {
+              @if (notesError.shouldShowErrors() && notesError.hasErrors()) {
               <div
-                [id]="notesState.errorId()"
+                [id]="notesError.errorId()"
                 role="alert"
                 class="headless-alert-error text-xs"
               >
-                @for ( error of notesState.resolvedErrors(); track error.kind +
-                ':' + error.message + ':' + $index ) {
+                @for ( error of notesError.errors(); track error.kind + ':' +
+                error.message + ':' + $index ) {
                 <div>{{ error.message }}</div>
                 }
               </div>
-              } @else if ( notesState.shouldShowWarnings() &&
-              notesState.hasWarnings() ) {
+              } @else if ( notesError.shouldShowWarnings() &&
+              notesError.hasWarnings() ) {
               <div
-                [id]="notesState.warningId()"
+                [id]="notesError.warningId()"
                 role="status"
                 aria-live="polite"
                 class="headless-alert-warning text-xs"
               >
-                @for ( warning of notesState.resolvedWarnings(); track
-                warning.kind + ':' + warning.message + ':' + $index ) {
+                @for ( warning of notesError.warnings(); track warning.kind +
+                ':' + warning.message + ':' + $index ) {
                 <div>{{ warning.message }}</div>
                 }
               </div>
               }
+
+              <!--
+                Field-state flags — createFieldStateFlags()
+                Same touched/dirty/invalid/pending booleans as the
+                shipping-address fieldset's debug strip above, composed
+                here as plain computed signals instead of a directive.
+                Labeled "notes X = …" (not "X: …") so this strip's text
+                can't collide with the address fieldset's "touched:" /
+                "dirty:" / "invalid:" / "pending:" locators above — both
+                live inside the same visual <fieldset>.
+              -->
+              <div
+                class="flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-400"
+                data-testid="notes-utility-flags"
+              >
+                <span>notes touched = {{ notesFlags.isTouched() }}</span>
+                <span>notes dirty = {{ notesFlags.isDirty() }}</span>
+                <span>notes invalid = {{ notesFlags.isInvalid() }}</span>
+                <span>notes pending = {{ notesFlags.isPending() }}</span>
+              </div>
 
               <!--
                 Assistive-tier alternative — NgxFormFieldCharacterCount

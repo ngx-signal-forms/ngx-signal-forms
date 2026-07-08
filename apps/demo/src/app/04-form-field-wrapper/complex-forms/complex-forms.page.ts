@@ -1,4 +1,10 @@
-import { Component, computed, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+  viewChild,
+} from '@angular/core';
 import type {
   ErrorDisplayStrategy,
   FormFieldAppearance,
@@ -42,6 +48,7 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
 
 @Component({
   selector: 'ngx-complex-forms-page',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   styles: `
     :host {

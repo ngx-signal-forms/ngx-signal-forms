@@ -1,4 +1,9 @@
-import { Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import {
   type ErrorDisplayStrategy,
@@ -31,6 +36,7 @@ import { globalConfigSchema } from './global-configuration.validations';
  */
 @Component({
   selector: 'ngx-global-configuration',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   /**
    * Component-scoped providers demonstrating the configuration cascade:

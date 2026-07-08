@@ -1,4 +1,10 @@
-import { Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 import {
   form,
   FormField,
@@ -30,6 +36,7 @@ const zodValidationSchema: SchemaFn<Readonly<ZodValidationModel>> = (
 
 @Component({
   selector: 'ngx-zod-validation',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   styles: `
@@ -214,11 +221,10 @@ export class ZodValidationComponent {
   validateStandardSchema(path, zodBaselineAccountSchema);
 });`;
 
-  protected useSingleColumnFieldRows(): boolean {
-    return (
-      this.appearance() === 'standard' && this.orientation() === 'horizontal'
-    );
-  }
+  protected readonly useSingleColumnFieldRows = computed(
+    () =>
+      this.appearance() === 'standard' && this.orientation() === 'horizontal',
+  );
 
   protected resetForm(): void {
     this.accountForm().reset();

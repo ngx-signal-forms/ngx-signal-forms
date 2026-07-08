@@ -1,4 +1,9 @@
-import { Component, computed, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type {
   FieldMarkingMode,
@@ -26,6 +31,7 @@ const MODE_OPTIONS: readonly { value: FieldMarkingMode; label: string }[] = [
 
 @Component({
   selector: 'ngx-field-marking-page',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     FormsModule,

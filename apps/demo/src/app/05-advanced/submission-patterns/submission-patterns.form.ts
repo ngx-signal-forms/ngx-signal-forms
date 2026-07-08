@@ -1,4 +1,10 @@
-import { Component, computed, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import {
   type ErrorDisplayStrategy,
@@ -36,6 +42,7 @@ import { submissionSchema } from './submission-patterns.validations';
  */
 @Component({
   selector: 'ngx-submission-state-indicator',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
       class="mb-6 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
@@ -114,6 +121,7 @@ export class SubmissionStateIndicatorComponent {
  */
 @Component({
   selector: 'ngx-submission-patterns',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     FormField,

@@ -1,4 +1,9 @@
-import { Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
@@ -24,6 +29,7 @@ import { labellessFieldsSchema } from './labelless-fields.validations';
  */
 @Component({
   selector: 'ngx-labelless-fields',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   templateUrl: './labelless-fields.html',
