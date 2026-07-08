@@ -125,6 +125,45 @@ describe('NgxHeadlessFieldset', () => {
     expect(screen.queryByText('City required')).toBeNull();
   });
 
+  it('treats an explicitly bound empty `fields` array as "aggregate nothing", not "not provided"', async () => {
+    @Component({
+      selector: 'ngx-test-fieldset-empty-override',
+
+      imports: [NgxHeadlessFieldset],
+      template: `
+        <fieldset
+          ngxHeadlessFieldset
+          #fieldset="fieldset"
+          [field]="addressForm.address"
+          [fields]="fields"
+          includeNestedErrors
+        >
+          <span data-testid="error-count">
+            {{ fieldset.aggregatedErrors().length }}
+          </span>
+        </fieldset>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ address: { street: '', city: '' } });
+      readonly addressForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.address.street, { message: 'Street required' });
+          required(path.address.city, { message: 'City required' });
+        }),
+      );
+      // Explicitly bound empty array — a dynamically computed field list that
+      // legitimately became empty. Must NOT fall back to the fieldset's own
+      // (nested) errors the way an unbound (`null`) `fields` input would.
+      readonly fields: readonly FieldTree<unknown>[] = [];
+    }
+
+    await render(TestComponent);
+
+    expect(screen.getByTestId('error-count')).toHaveTextContent('0');
+  });
+
   it('shows errors only after touch with default on-touch strategy', async () => {
     @Component({
       selector: 'ngx-test-fieldset-show-errors',

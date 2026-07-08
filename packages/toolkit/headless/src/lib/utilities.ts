@@ -1,9 +1,10 @@
-import { computed, isDevMode, type Signal } from '@angular/core';
+import { computed, inject, isDevMode, type Injector, type Signal } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createUniqueId,
   injectFormContext,
   isFieldStateInteractive,
+  NGX_SIGNAL_FORMS_CONFIG,
   readDirectErrors,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
@@ -17,6 +18,7 @@ import {
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import {
+  assertInjector,
   createFieldMessageIdSignals,
   humanizeFieldPath,
   stripAngularFormPrefix,
@@ -305,7 +307,11 @@ export interface CreateErrorStateOptions<TValue = unknown> {
    * Error display strategy override.
    *
    * Resolution order: this option (when not `'inherit'`) → ambient
-   * `NGX_SIGNAL_FORM_CONTEXT.errorStrategy` → `'on-touch'`.
+   * `NGX_SIGNAL_FORM_CONTEXT.errorStrategy` → the global
+   * `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy` → `'on-touch'`. This
+   * mirrors `NgxHeadlessFieldset.resolvedStrategy`'s cascade so config-level
+   * defaults apply consistently across headless surfaces even outside a
+   * form context.
    */
   readonly strategy?: ReactiveOrStatic<ErrorDisplayStrategy>;
   /**
@@ -315,6 +321,16 @@ export interface CreateErrorStateOptions<TValue = unknown> {
    * `NGX_SIGNAL_FORM_CONTEXT.submittedStatus` → `undefined`.
    */
   readonly submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>;
+  /**
+   * Optional injector for use outside an Angular injection context (e.g.
+   * unit tests, `runInInjectionContext` wrappers). When omitted the
+   * function must be called inside a DI context. Mirrors the `injector`
+   * escape hatch on the sibling factories `createErrorVisibility()` and
+   * `createErrorMessageSignal()`.
+   */
+  // Angular's Injector is inherently mutable; Readonly<Injector> is not practical here.
+  // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- Angular's Injector is mutable by design
+  readonly injector?: Injector;
 }
 
 /**
@@ -377,9 +393,12 @@ export interface ErrorStateResult {
  * ```
  *
  * @remarks
- * **Injection context required.** This factory creates `computed()` signals
- * internally, so it must be called inside an injection context (constructor,
- * field initializer, or `runInInjectionContext`). Calling it outside throws.
+ * **Injection context required, unless `options.injector` is passed.** This
+ * factory creates `computed()` signals internally, so by default it must be
+ * called inside an injection context (constructor, field initializer, or
+ * `runInInjectionContext`). Pass `options.injector` to call it imperatively
+ * outside one (tests, services) — mirrors the `injector` escape hatch on
+ * `createErrorVisibility()` / `createErrorMessageSignal()`.
  *
  * @remarks
  * **Why `showWarnings` aliases `showErrors`:** toolkit warnings are
@@ -400,12 +419,27 @@ export interface ErrorStateResult {
 export function createErrorState<TValue = unknown>(
   options: Readonly<CreateErrorStateOptions<TValue>>,
 ): ErrorStateResult {
+  return assertInjector(createErrorState, options.injector, () =>
+    createErrorStateInternal(options),
+  );
+}
+
+function createErrorStateInternal<TValue = unknown>(
+  options: Readonly<CreateErrorStateOptions<TValue>>,
+): ErrorStateResult {
   const { field, fieldName, strategy, submittedStatus } = options;
 
   // Capture form context at factory call time (inside injection context).
   // Optional: callers outside a form boundary (tests, standalone components)
-  // get undefined and fall through to 'on-touch', matching the directive.
+  // get undefined and fall through to the config default, matching the
+  // directive surfaces.
   const formContext = injectFormContext();
+
+  // Falls back to the global `defaultErrorStrategy` config (same cascade
+  // `NgxHeadlessFieldset` applies) when neither an explicit `strategy` nor a
+  // form context is present, keeping standalone usage consistent regardless
+  // of which headless surface a consumer reaches for.
+  const config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
 
   const fieldState = computed(() => field());
 
@@ -414,7 +448,11 @@ export function createErrorState<TValue = unknown>(
   const resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() => {
     const strategyValue =
       strategy !== undefined ? unwrapValue(strategy) : undefined;
-    return resolveStrategyFromContext(strategyValue, formContext);
+    return resolveStrategyFromContext(
+      strategyValue,
+      formContext,
+      config?.defaultErrorStrategy,
+    );
   });
 
   const resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(() => {

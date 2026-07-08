@@ -120,8 +120,15 @@ export class NgxHeadlessFieldset<
 
   /**
    * Optional explicit list of fields to aggregate errors from.
+   *
+   * `null` (default/unbound) means "not provided" — the fieldset aggregates
+   * its own field's errors (via `errorSummary()`/`errors()`, gated by
+   * {@link includeNestedErrors}). An explicitly bound empty array (`[]`) is
+   * a distinct, intentional state — "aggregate nothing" — for consumers that
+   * dynamically compute the field list and it can legitimately become
+   * empty; it does not fall back to the fieldset's own errors.
    */
-  readonly fields = input<FieldTree<unknown>[] | null>(null);
+  readonly fields = input<readonly FieldTree<unknown>[] | null>(null);
 
   /**
    * Unique identifier for the fieldset.
@@ -214,7 +221,13 @@ export class NgxHeadlessFieldset<
     const override = this.fields();
     const readFn = this.includeNestedErrors() ? readErrors : readDirectErrors;
 
-    if (override && override.length > 0) {
+    // `null` means "not provided" → aggregate the fieldset's own errors.
+    // An explicitly bound `[]` means "provided but empty" → aggregate
+    // nothing. Distinguishing these (instead of `override.length > 0`)
+    // keeps a dynamically-computed field list that becomes empty from
+    // silently falling back to the fieldset's own (possibly unrelated)
+    // errors.
+    if (override !== null) {
       const messages = override.flatMap((field) => readFn(field()));
       return dedupeValidationErrors(messages);
     }
