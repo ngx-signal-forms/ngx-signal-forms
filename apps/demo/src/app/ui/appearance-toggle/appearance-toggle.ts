@@ -1,9 +1,10 @@
-import { Component, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, model } from '@angular/core';
 import type { FormFieldAppearance } from '@ngx-signal-forms/toolkit';
 import { APPEARANCE_LABELS, APPEARANCE_OPTIONS } from './appearance.constants';
 
 @Component({
   selector: 'ngx-appearance-toggle',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   template: `
     <div

@@ -1,4 +1,11 @@
-import { Component, computed, inject, input, model } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  model,
+} from '@angular/core';
 import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { PanelHelpService } from '../display-controls-card/panel-help.service';
 
@@ -70,6 +77,7 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
  */
 @Component({
   selector: 'ngx-error-display-mode-selector',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   styles: `
     .error-mode-wrapper--embedded {

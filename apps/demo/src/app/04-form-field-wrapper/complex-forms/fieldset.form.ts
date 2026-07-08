@@ -1,4 +1,10 @@
-import { booleanAttribute, Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  booleanAttribute,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
 import {
   email,
   FormField,
@@ -100,6 +106,7 @@ const placementDesignPreviewSchema = schema<PlacementDesignPreviewModel>(
  */
 @Component({
   selector: 'ngx-fieldset-form',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   templateUrl: './fieldset.form.html',

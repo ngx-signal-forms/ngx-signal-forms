@@ -1,5 +1,11 @@
 // Custom controls demo form - product review with rating, switch, checkbox controls
-import { Component, computed, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import {
   buildAriaDescribedBy,
@@ -41,6 +47,7 @@ import { customControlsSchema } from './custom-controls.validations';
  */
 @Component({
   selector: 'ngx-custom-controls',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   providers: [
     ...provideNgxSignalFormControlPresetsForComponent({

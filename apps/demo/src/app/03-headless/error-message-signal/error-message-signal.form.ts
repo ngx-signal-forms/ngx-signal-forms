@@ -1,4 +1,9 @@
-import { Component, computed, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+} from '@angular/core';
 import {
   form,
   FormField,
@@ -69,6 +74,7 @@ function ariaDescribedBy(errors: readonly ResolvedFieldError[]): string | null {
 
 @Component({
   selector: 'ngx-error-message-signal',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, FormRoot],
   templateUrl: './error-message-signal.form.html',

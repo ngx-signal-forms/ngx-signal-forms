@@ -1,4 +1,10 @@
-import { Component, computed, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+  viewChild,
+} from '@angular/core';
 import type {
   ErrorDisplayStrategy,
   FormFieldAppearance,
@@ -28,6 +34,7 @@ import { LabellessFieldsFormComponent } from './labelless-fields.form';
 
 @Component({
   selector: 'ngx-labelless-fields-page',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     LabellessFieldsFormComponent,
     ErrorDisplayModeSelectorComponent,

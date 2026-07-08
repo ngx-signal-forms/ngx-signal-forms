@@ -1,4 +1,4 @@
-import {  Component, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy,  Component, input, signal } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import {
@@ -17,6 +17,7 @@ import { contactFormSchema } from './your-first-form.validations';
 @Component({
 
   selector: 'ngx-your-first-form',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
   template: `
     <form

@@ -1,4 +1,10 @@
-import { Component, computed, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+  viewChild,
+} from '@angular/core';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
@@ -17,6 +23,7 @@ import { YourFirstFormComponent } from './your-first-form.form';
 
 @Component({
   selector: 'ngx-your-first-form-page',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     YourFirstFormComponent,
     ExampleCardsComponent,
