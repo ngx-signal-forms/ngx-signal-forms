@@ -1252,3 +1252,33 @@ behavior-only fixes — no renames.
   `createErrorVisibility()` and `createErrorMessageSignal()`. Callers no
   longer must wrap every call in `runInInjectionContext()`. Purely
   additive.
+## 12. `@ngx-signal-forms/toolkit/testing` restored as a real secondary entry point (audit #142/#176)
+
+`packages/toolkit/testing/` previously contained only an internal spec helper
+(`a11y.ts`) with no `ng-package.json`/`package.json` — unlike every other
+secondary entry point, it could not actually be imported as
+`@ngx-signal-forms/toolkit/testing`. This is now a real, published entry
+point:
+
+- **New public API:** `expectNoA11yViolations(context?, options?)` and
+  `WCAG_22_AA_TAGS` (+ `WCAG_22_AA_TAG` type) are importable from
+  `@ngx-signal-forms/toolkit/testing`. See the
+  [Accessibility testing harness](../packages/toolkit/README.md#accessibility-testing-harness)
+  section of the toolkit README.
+- **New optional peer dependency:** `axe-core` is now listed under
+  `peerDependencies`/`peerDependenciesMeta` (optional) on
+  `@ngx-signal-forms/toolkit`. Install it yourself if you use the `/testing`
+  entry point; nothing else in the toolkit requires it.
+- **Docs fix:** the JSDoc on `WCAG_22_AA_TAGS` incorrectly claimed axe-core's
+  `wcag22aa` tag covers the two new WCAG 2.2 Level A criteria (Consistent
+  Help, Redundant Entry). It does not — axe-core has no automated rule for
+  either; there is no `wcag22a` tag because there is nothing for it to
+  contain. Both criteria must be verified manually. The identical wrong claim
+  in `tools/a11y/scan.ts` (the demo apps' Playwright baseline-scan helper) is
+  fixed the same way, and that file now imports `WCAG_22_AA_TAGS` from
+  `@ngx-signal-forms/toolkit/testing` instead of keeping its own
+  comment-only-lockstep copy.
+- **Dead code removed:** `packages/toolkit/test.utilities.ts`
+  (`runInAngular`) had zero importers and a `@example` calling functions that
+  don't exist anywhere in this repo. Deleted rather than published, since
+  promoting it would have required writing a truthful example from scratch.

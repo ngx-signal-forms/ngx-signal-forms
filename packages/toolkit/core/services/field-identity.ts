@@ -101,7 +101,7 @@ export class NgxFieldIdentity {
 
   /**
    * Resolved field name. Null when no field name can be determined.
-   * Updated by `NgxFormFieldWrapper` via `_setFieldName`.
+   * Updated by `NgxFormFieldWrapper` via `setFieldName`.
    */
   readonly fieldName = this.#fieldName.asReadonly();
 
@@ -206,7 +206,7 @@ export class NgxFieldIdentity {
     return this.#controlElement();
   }
 
-  // -- Package-internal setters. Prefixed with `_` to signal non-public intent --
+  // -- Package-internal setters. `@internal`-tagged to signal non-public intent --
 
   /**
    * Updates the resolved field name.
@@ -224,7 +224,7 @@ export class NgxFieldIdentity {
    * Updates the bound control element reference.
    *
    * Called by `NgxFormFieldWrapper` in its `afterEveryRender` write phase.
-   * Callers should set `_setFieldName` first so dev-only diagnostics evaluate
+   * Callers should call `setFieldName` first so dev-only diagnostics evaluate
    * the latest explicit name state before checking id-less controls.
    * Emits a dev-mode warning when the element has no `id` attribute and no
    * explicit `fieldName` override is present — the a11y gap is surfaced once

@@ -61,6 +61,13 @@ const MANUAL_ARIA_MODE: Signal<NgxSignalFormControlAriaMode | null> =
  * the toolkit's signals reach the focusable element in one Angular binding
  * hop. No MutationObserver, no host-attribute mirroring.
  *
+ * `aria-required` is the one exception: PrimeNG's own compiled `<p-select>`
+ * template already writes `[attr.aria-required]="required()"` on the inner
+ * combobox span, fed by this shim's `[required]="ariaRequired() === 'true'"`
+ * input. The shim relies on that existing binding instead of also writing
+ * the attribute itself — duplicating it would just be two writers racing to
+ * set the same value.
+ *
  * **Accessible name:** `[inputId]` places its id on `<p-select>`'s inner
  * `<span role="combobox">`, which is not a labelable element — a sibling
  * `<label for="…">` therefore never establishes a programmatic association,
@@ -196,11 +203,6 @@ export class PrimeSelectControlComponent implements FormValueControl<string> {
             combobox,
             'aria-invalid',
             this.ariaInvalid(),
-          );
-          this.#setOrRemoveAttribute(
-            combobox,
-            'aria-required',
-            this.ariaRequired(),
           );
         },
       },

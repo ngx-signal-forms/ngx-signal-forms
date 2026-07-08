@@ -105,7 +105,10 @@ export function provideFieldLabels(
 function createMapResolver(map: FieldLabelMap): FieldLabelResolver {
   return (fieldPath) =>
     createCascadingResolver({
-      input: map[fieldPath],
+      // `Object.hasOwn` guards against inherited `Object.prototype` members
+      // (e.g. a field path of 'constructor' or 'toString' resolving the
+      // inherited function instead of falling back to `humanizeFieldPath`).
+      input: Object.hasOwn(map, fieldPath) ? map[fieldPath] : undefined,
       fallback: humanizeFieldPath(fieldPath),
     });
 }
