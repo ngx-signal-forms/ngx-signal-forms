@@ -1252,6 +1252,7 @@ behavior-only fixes — no renames.
   `createErrorVisibility()` and `createErrorMessageSignal()`. Callers no
   longer must wrap every call in `runInInjectionContext()`. Purely
   additive.
+
 ## 12. `@ngx-signal-forms/toolkit/testing` restored as a real secondary entry point (audit #142/#176)
 
 `packages/toolkit/testing/` previously contained only an internal spec helper

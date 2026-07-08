@@ -149,14 +149,14 @@ Selector: `[ngxHeadlessFieldset]` · Export: `fieldset`
 
 Aggregates error state across multiple fields for group validation.
 
-| Input                 | Type                            | Description                                    |
-| --------------------- | ------------------------------- | ----------------------------------------------- |
-| `field`               | `FieldTree` (required)          | Primary field group                             |
-| `fields`              | `readonly FieldTree[] \| null`  | Optional explicit field list — see note below   |
-| `fieldsetId`          | `string`                        | For ARIA linking                                |
-| `strategy`            | `ErrorDisplayStrategy`          | Override strategy                               |
-| `submittedStatus`     | `SubmittedStatus`               | Override for `'on-submit'` strategy             |
-| `includeNestedErrors` | `boolean`                       | Include child errors (default: `false`)         |
+| Input                 | Type                           | Description                                   |
+| --------------------- | ------------------------------ | --------------------------------------------- |
+| `field`               | `FieldTree` (required)         | Primary field group                           |
+| `fields`              | `readonly FieldTree[] \| null` | Optional explicit field list — see note below |
+| `fieldsetId`          | `string`                       | For ARIA linking                              |
+| `strategy`            | `ErrorDisplayStrategy`         | Override strategy                             |
+| `submittedStatus`     | `SubmittedStatus`              | Override for `'on-submit'` strategy           |
+| `includeNestedErrors` | `boolean`                      | Include child errors (default: `false`)       |
 
 > `fields` distinguishes "not provided" from "provided but empty": `null`/unbound (default) aggregates the fieldset's own errors; an explicitly bound `[]` aggregates nothing rather than falling back — useful when a dynamically computed field list legitimately becomes empty.
 
@@ -167,11 +167,11 @@ Render `resolvedErrors()` / `resolvedWarnings()` (not `aggregatedErrors()[i].mes
 ```html
 <fieldset ngxHeadlessFieldset #fieldset="fieldset" [field]="form.address">
   @if (fieldset.shouldShowErrors() && fieldset.hasErrors()) {
-    <div class="errors">
-      @for (error of fieldset.resolvedErrors(); track error.kind) {
-        <span>{{ error.message }}</span>
-      }
-    </div>
+  <div class="errors">
+    @for (error of fieldset.resolvedErrors(); track error.kind) {
+    <span>{{ error.message }}</span>
+    }
+  </div>
   }
 </fieldset>
 ```
