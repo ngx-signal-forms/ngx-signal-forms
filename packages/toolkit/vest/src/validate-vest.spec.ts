@@ -1330,4 +1330,226 @@ describe('validateVest', () => {
       true,
     );
   });
+
+  it('resolves a genuine async Vest test() body to an error and then to valid once the value clears', async () => {
+    // A plain, non-regression example of Vest's real async test support
+    // (a `test(name, message, async () => {...})` body, not a consumer
+    // Promise wrapped around `suite.run()`). Simulates a debounced
+    // "is this username taken?" lookup.
+    const takenUsernames = new Set(['admin', 'root']);
+    let releaseLookup: (() => void) | undefined;
+    let lookupGate = new Promise<void>((resolve) => {
+      releaseLookup = resolve;
+    });
+
+    const suite = create((data: { username: string }) => {
+      test('username', 'Username is taken', async () => {
+        await lookupGate;
+        enforce(takenUsernames.has(data.username.toLowerCase())).isFalsy();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-vest-real-async',
+      imports: [FormField],
+
+      template: `<input id="username" [formField]="f.username" />`,
+    })
+    class TestComponent {
+      readonly model = signal({ username: 'admin' });
+      readonly f = form(this.model, (path) => {
+        validateVest(path, suite);
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+
+    // Do NOT await whenStable() here — that blocks forever while the async
+    // test body is parked on `lookupGate`.
+    await vi.waitFor(() => {
+      expect(fixture.componentInstance.f.username().pending()).toBe(true);
+    });
+
+    releaseLookup?.();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(fixture.componentInstance.f.username().pending()).toBe(false);
+    const takenErrors = fixture.componentInstance.f.username().errors();
+    expect(takenErrors).toHaveLength(1);
+    expect(takenErrors[0]?.message).toBe('Username is taken');
+
+    // Re-arm the gate for the second (available-username) run.
+    lookupGate = new Promise<void>((resolve) => {
+      releaseLookup = resolve;
+    });
+    fixture.componentInstance.model.set({ username: 'available-name' });
+
+    await vi.waitFor(() => {
+      expect(fixture.componentInstance.f.username().pending()).toBe(true);
+    });
+
+    releaseLookup?.();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(fixture.componentInstance.f.username().pending()).toBe(false);
+    expect(fixture.componentInstance.f.username().errors()).toHaveLength(0);
+  });
+
+  it('registers the same suite instance on two concurrently-pending field trees without either one hanging forever', async () => {
+    // Multi-registration coverage for a different angle than the
+    // focusCurrentField superseded-run tests above: here ONE suite constant
+    // (the documented module-scope pattern) backs TWO completely separate
+    // `form()` field trees — as if two independent components each imported
+    // the same shared suite constant — with both runs in flight at the same
+    // time.
+    //
+    // KNOWN LIMITATION (discovered by this test, not fixed here — this is a
+    // test-hardening pass, not a behavior change): Vest suites created via
+    // `create()` hold exactly ONE canonical accumulated result per suite
+    // *object*, not one per caller/data payload (see `awaitVestRunSettlement`
+    // above — `suite.get()` returns "the suite's current accumulated
+    // result", singular). When the same suite instance validates two
+    // unrelated field trees concurrently, both trees' `validateAsync` settle
+    // off that single shared result, so one tree can observe the OTHER
+    // tree's outcome instead of its own. Concretely: formA's email
+    // ('first@example.com', valid) ends up reporting formB's "Email is
+    // required" failure once both runs settle. The only guarantee the
+    // adapter actually makes here (and the one this test asserts) is that
+    // neither registration is left permanently `pending()` — the specific
+    // regression `awaitVestRunSettlement`'s doc comment describes. Result
+    // *content* isolation across concurrent unrelated field trees sharing
+    // one suite instance is NOT currently guaranteed; consumers should give
+    // each independently-validated field tree its own suite instance (or
+    // rely on the per-field `only`/`focusCurrentField` pattern used
+    // elsewhere in this file, which scopes concurrent runs to fields of the
+    // SAME tree, not unrelated trees).
+    let releaseFirst: (() => void) | undefined;
+    const firstGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    let releaseSecond: (() => void) | undefined;
+    const secondGate = new Promise<void>((resolve) => {
+      releaseSecond = resolve;
+    });
+
+    const sharedSuite = create((data: { email: string }) => {
+      test('email', 'Email is required', async () => {
+        // Route each run to its own gate by value so the two concurrent
+        // field trees settle independently rather than racing one shared
+        // gate.
+        await (data.email === 'first@example.com' ? firstGate : secondGate);
+        enforce(data.email).isNotBlank();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-vest-shared-suite-two-trees',
+      imports: [FormField],
+
+      template: `
+        <input id="email-a" [formField]="formA.email" />
+        <input id="email-b" [formField]="formB.email" />
+      `,
+    })
+    class TestComponent {
+      readonly modelA = signal({ email: 'first@example.com' });
+      readonly formA = form(this.modelA, (path) => {
+        validateVest(path, sharedSuite);
+      });
+
+      readonly modelB = signal({ email: '' });
+      readonly formB = form(this.modelB, (path) => {
+        validateVest(path, sharedSuite);
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+
+    await vi.waitFor(() => {
+      expect(fixture.componentInstance.formA.email().pending()).toBe(true);
+      expect(fixture.componentInstance.formB.email().pending()).toBe(true);
+    });
+
+    // Settle the second tree first to prove resolution order doesn't affect
+    // whether BOTH registrations eventually settle.
+    releaseSecond?.();
+    releaseFirst?.();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    // The guaranteed contract: neither registration is left pending forever
+    // (the exact failure mode `awaitVestRunSettlement`'s settlement race
+    // exists to prevent).
+    expect(fixture.componentInstance.formA.email().pending()).toBe(false);
+    expect(fixture.componentInstance.formB.email().pending()).toBe(false);
+
+    // formB's blank email always reports its own failure correctly.
+    const formBErrors = fixture.componentInstance.formB.email().errors();
+    expect(formBErrors).toHaveLength(1);
+    expect(formBErrors[0]?.message).toBe('Email is required');
+  });
+
+  it('defers a sync Vest warning while an async blocking test is pending, then surfaces it together with the settled result', async () => {
+    // Per the `includeWarnings` doc: "While the suite has pending async
+    // tests, a sync warning is deferred (not yet surfaced) and re-emitted
+    // together with the settled result once they finish." No existing spec
+    // asserted this deferral-then-reemission contract directly.
+    let releaseCheck: (() => void) | undefined;
+    const checkGate = new Promise<void>((resolve) => {
+      releaseCheck = resolve;
+    });
+
+    const suite = create((data: { email: string; bio: string }) => {
+      test('email', 'Email availability check failed', async () => {
+        await checkGate;
+        enforce(data.email).isNotBlank();
+      });
+      test('bio', 'Consider adding more detail', () => {
+        warn();
+        enforce(data.bio.length >= 20).isTruthy();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-vest-warning-deferred-async',
+      imports: [FormField],
+
+      template: `
+        <input id="email" [formField]="f.email" />
+        <input id="bio" [formField]="f.bio" />
+      `,
+    })
+    class TestComponent {
+      // `email` is blank (fails once the async check settles); `bio` is
+      // short enough to fail the sync warning test immediately.
+      readonly model = signal({ email: '', bio: 'short' });
+      readonly f = form(this.model, (path) => {
+        validateVest(path, suite, { includeWarnings: true });
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+
+    // While the suite is still pending, the sync `bio` warning must NOT be
+    // surfaced yet even though its own test body already completed —
+    // `shouldDeferVestWarnings` withholds it until the whole run settles.
+    await vi.waitFor(() => {
+      expect(fixture.componentInstance.f.email().pending()).toBe(true);
+    });
+    expect(fixture.componentInstance.f.bio().errors()).toHaveLength(0);
+
+    releaseCheck?.();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    // Once settled, the deferred warning and the blocking async error both
+    // surface together.
+    expect(fixture.componentInstance.f.email().pending()).toBe(false);
+    const emailErrors = fixture.componentInstance.f.email().errors();
+    expect(emailErrors).toHaveLength(1);
+    expect(emailErrors[0]?.message).toBe('Email availability check failed');
+
+    const bioErrors = fixture.componentInstance.f.bio().errors();
+    expect(bioErrors).toHaveLength(1);
+    expect(bioErrors[0]?.message).toBe('Consider adding more detail');
+    expect(bioErrors[0]?.kind).toMatch(/^warn:vest:/);
+  });
 });
