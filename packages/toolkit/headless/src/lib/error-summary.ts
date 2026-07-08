@@ -158,7 +158,12 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
   readonly #showErrorsSignal = createErrorVisibility(this.#fieldState, {
     strategy: this.strategy,
     submittedStatus: this.submittedStatus,
-    configDefault: this.#config?.defaultErrorStrategy,
+    // `exactOptionalPropertyTypes` forbids assigning `undefined` to an
+    // optional `ResolvedErrorDisplayStrategy | null` property, so the key
+    // is omitted entirely rather than set to `undefined`.
+    ...(this.#config?.defaultErrorStrategy !== undefined && {
+      configDefault: this.#config.defaultErrorStrategy,
+    }),
   });
 
   /**
