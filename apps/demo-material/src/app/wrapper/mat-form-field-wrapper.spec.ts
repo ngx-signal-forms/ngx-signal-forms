@@ -178,6 +178,45 @@ describe('MatFormFieldWrapper.toolkitAriaDescribedBy', () => {
     expect(ids).not.toContain('contact-email-error');
     expect(ids).not.toContain('contact-email-warning');
   });
+
+  /**
+   * Pins the promoted pre-1.0 finding: the `preservedIds` reader must track
+   * Material's `aria-describedby` rewrites reactively, not just incidentally
+   * whenever some *other* tracked signal (visibility, hint IDs, field name)
+   * happens to change at the same time. This test mutates the bound
+   * control's `aria-describedby` attribute directly — the way Material
+   * rewrites it on its own CD cycle, outside the toolkit's signal graph —
+   * without touching any other reactive input, and asserts the composed
+   * signal still picks up the change.
+   */
+  it('reacts to the bound control’s aria-describedby changing outside the signal graph', async () => {
+    const view = await setup();
+    const emailInput = view.getByLabelText(/email/i) as HTMLInputElement;
+    const wrapper = view.fixture.componentInstance.wrapper();
+
+    // Let the bound-control content query settle so `preservedIds` has a
+    // real element to read from.
+    await waitFor(() => {
+      expect(wrapper.toolkitAriaDescribedBy()).toContain(
+        'contact-email-custom-hint',
+      );
+    });
+
+    // Simulate Material writing a fresh `aria-describedby` value on its own
+    // CD cycle (e.g. a newly rendered `<mat-error>` ID) with no other
+    // toolkit-tracked signal changing in the same tick.
+    emailInput.setAttribute(
+      'aria-describedby',
+      'mat-mdc-error-simulated-0 contact-email-custom-hint',
+    );
+
+    await waitFor(() => {
+      const ids = (wrapper.toolkitAriaDescribedBy() ?? '')
+        .split(/\s+/)
+        .filter(Boolean);
+      expect(ids).toContain('mat-mdc-error-simulated-0');
+    });
+  });
 });
 
 describe('MatFormFieldWrapper dev-mode missing-control assertion', () => {

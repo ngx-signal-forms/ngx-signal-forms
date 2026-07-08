@@ -232,6 +232,22 @@ export class MatFormFieldWrapper<TValue = unknown> {
   );
 
   /**
+   * Reactive mirror of the bound control's `aria-describedby` attribute.
+   *
+   * Material rewrites this attribute on its own CD cycle (whenever
+   * `<mat-error>`/`<mat-hint>` children change) — entirely outside the
+   * toolkit's signal graph. A plain `getAttribute()` read inside
+   * `toolkitAriaDescribedBy`'s `preservedIds` reader would only produce a
+   * fresh composed value when some *other* tracked dependency (visibility,
+   * hint IDs, field name) happens to change in the same tick; otherwise the
+   * composed signal serves a stale cached value. A `MutationObserver`
+   * on the resolved element keeps this signal — and therefore
+   * `toolkitAriaDescribedBy`, which reads it — reactive to Material's
+   * out-of-band writes.
+   */
+  readonly #preservedAriaDescribedBy = signal<string | null>(null);
+
+  /**
    * Resolved field name. Built via the toolkit's
    * {@link createFieldNameResolver} so the priority cascade
    * (explicit → bound-control `id` → `null` + dev warning) stays in
@@ -298,10 +314,12 @@ export class MatFormFieldWrapper<TValue = unknown> {
    * Material has already written.
    *
    * The `preservedIds` reader returns Material's current
-   * `aria-describedby` value verbatim — that's what makes this the
-   * **escape hatch for Material's ARIA ownership**. The factory preserves
-   * everything Material owns, appends projected `<ngx-form-field-hint>`
-   * IDs (which Material does not know about), and stops there.
+   * `aria-describedby` value verbatim (via the `#preservedAriaDescribedBy`
+   * signal, kept fresh by a `MutationObserver` on the bound control — see
+   * that field's doc comment) — that's what makes this the **escape hatch
+   * for Material's ARIA ownership**. The factory preserves everything
+   * Material owns, appends projected `<ngx-form-field-hint>` IDs (which
+   * Material does not know about), and stops there.
    *
    * **Why we pass `null` for `fieldState`**: in the unmodified factory, a
    * real `fieldState` causes the composed string to suffix
@@ -323,8 +341,7 @@ export class MatFormFieldWrapper<TValue = unknown> {
     fieldState: computed<FieldState<unknown> | null>(() => null),
     hintIds: this.#hintIds,
     visibility: this.#showByStrategy,
-    preservedIds: () =>
-      this.#boundControlElement()?.getAttribute('aria-describedby') ?? null,
+    preservedIds: () => this.#preservedAriaDescribedBy(),
     fieldName: () => this.resolvedFieldName(),
   });
 
@@ -339,6 +356,41 @@ export class MatFormFieldWrapper<TValue = unknown> {
   readonly #hasWarned = signal(false);
 
   constructor() {
+    // Keeps `#preservedAriaDescribedBy` — and therefore
+    // `toolkitAriaDescribedBy` — reactive to Material rewriting the bound
+    // control's `aria-describedby` on its own CD cycle (see the field's
+    // doc comment above).
+    effect((onCleanup) => {
+      const element = this.#boundControlElement();
+      if (!element) {
+        this.#preservedAriaDescribedBy.set(null);
+        return;
+      }
+
+      this.#preservedAriaDescribedBy.set(
+        element.getAttribute('aria-describedby'),
+      );
+
+      if (typeof MutationObserver === 'undefined') {
+        // No MutationObserver available (non-DOM environment) — the signal
+        // still reflects the value at bind time.
+        return;
+      }
+
+      const observer = new MutationObserver(() => {
+        this.#preservedAriaDescribedBy.set(
+          element.getAttribute('aria-describedby'),
+        );
+      });
+      observer.observe(element, {
+        attributes: true,
+        attributeFilter: ['aria-describedby'],
+      });
+      onCleanup(() => {
+        observer.disconnect();
+      });
+    });
+
     if (isDevMode()) {
       effect(() => {
         if (this.#hasWarned()) {
