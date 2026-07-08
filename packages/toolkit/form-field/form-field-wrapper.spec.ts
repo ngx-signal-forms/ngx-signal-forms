@@ -1,7 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Component, inputBinding, signal } from '@angular/core';
-import { FormField, form, required, schema } from '@angular/forms/signals';
+import {
+  FormField,
+  form,
+  required,
+  schema,
+  validateStandardSchema,
+} from '@angular/forms/signals';
 import { TestBed } from '@angular/core/testing';
 import {
   NGX_SIGNAL_FORMS_CONFIG,
@@ -9,6 +15,7 @@ import {
   NgxSignalFormToolkit,
   provideNgxSignalFormControlPresets,
   provideNgxSignalFormControlPresetsForComponent,
+  requiredFromStandardSchema,
 } from '@ngx-signal-forms/toolkit';
 import { DEFAULT_NGX_SIGNAL_FORMS_CONFIG } from '@ngx-signal-forms/toolkit/core';
 import {
@@ -1068,6 +1075,76 @@ describe('NgxSignalFormWrapperComponent', () => {
       ).toBeNull();
       // …but required state is still exposed programmatically.
       expect(input).toHaveAttribute('aria-required', 'true');
+    });
+
+    it('marks a Standard Schema (Zod-style) required field via requiredFromStandardSchema (regression #118)', async () => {
+      // `validateStandardSchema` alone never surfaces required-ness (Standard
+      // Schema has no runtime shape introspection), so the wrapper's
+      // auto-marker never fired for Zod-validated fields and demos resorted
+      // to a hardcoded `*` in the label. `requiredFromStandardSchema` closes
+      // that gap by probing the schema; this reproduces the wrapper's
+      // acceptance criteria straight from the GitHub issue: aria-required on
+      // the control, a single auto-marker, and a clean accessible name.
+      const fakeZodLikeSchema = {
+        '~standard': {
+          validate: (value: unknown) => {
+            const record = (value ?? {}) as { firstName?: unknown };
+            return record.firstName === undefined
+              ? {
+                  issues: [
+                    { message: 'First name required', path: ['firstName'] },
+                  ],
+                }
+              : { value: record };
+          },
+        },
+      };
+
+      @Component({
+        selector: 'ngx-test-standard-schema-marker',
+        imports: [
+          NgxSignalFormWrapperComponent,
+          NgxSignalFormToolkit,
+          FormField,
+        ],
+        template: `
+          <ngx-form-field-wrapper [formField]="testForm.firstName">
+            <label for="firstName">First Name</label>
+            <input
+              id="firstName"
+              type="text"
+              [formField]="testForm.firstName"
+            />
+          </ngx-form-field-wrapper>
+        `,
+      })
+      class Host {
+        protected readonly testForm = form(
+          signal({ firstName: '' }),
+          schema<{ firstName: string }>((p) => {
+            validateStandardSchema(p, fakeZodLikeSchema);
+            requiredFromStandardSchema(p.firstName, fakeZodLikeSchema);
+          }),
+        );
+      }
+
+      const { container } = await render(Host);
+
+      const input = container.querySelector('#firstName');
+      const formField = container.querySelector('ngx-form-field-wrapper');
+      const markers = formField?.querySelectorAll(
+        '.ngx-signal-form-field-wrapper__marker',
+      );
+
+      expect(input).toHaveAttribute('aria-required', 'true');
+      expect(formField).toHaveAttribute('data-marker', 'required');
+      expect(markers).toHaveLength(1);
+      // The marker text lives outside the label's accessible name (it's
+      // `aria-hidden`), so the control's accessible name stays "First Name",
+      // never "First Name *".
+      expect(container.querySelector('label')?.textContent?.trim()).toBe(
+        'First Name',
+      );
     });
 
     it('honours a global showMarkerWhen config (provider fallback, no input)', async () => {

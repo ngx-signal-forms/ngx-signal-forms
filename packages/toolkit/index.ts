@@ -70,6 +70,7 @@ export {
   provideNgxSignalFormsConfigForComponent,
   readDirectErrors,
   readNgxSignalFormControlSemantics,
+  requiredFromStandardSchema,
   resolveErrorDisplayStrategy,
   resolveFieldName,
   resolveFieldNameFromCandidates,
@@ -128,5 +129,8 @@ export type {
   ResolvedNgxSignalFormControlSemantics,
   SignalLike,
   SplitErrors,
+  StandardSchemaLike,
+  StandardSchemaLikeIssue,
+  StandardSchemaLikeResult,
   SubmittedStatus,
 } from '@ngx-signal-forms/toolkit/core';

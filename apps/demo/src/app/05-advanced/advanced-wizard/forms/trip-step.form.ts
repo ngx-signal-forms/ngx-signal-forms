@@ -6,6 +6,7 @@ import {
   validate,
   validateStandardSchema,
 } from '@angular/forms/signals';
+import { requiredFromStandardSchema } from '@ngx-signal-forms/toolkit';
 
 import {
   ActivitySchema,
@@ -62,6 +63,14 @@ export function createTripStepForm(store: InstanceType<typeof WizardStore>): {
   const tripForm = form(model, (path) => {
     applyEach(path.destinations, (destPath) => {
       validateStandardSchema(destPath, DestinationSchema);
+
+      // See traveler-step.form.ts / issue #118: `validateStandardSchema`
+      // never surfaces required-ness on its own, so wire it explicitly for
+      // the fields that carry a required marker in the destination card.
+      requiredFromStandardSchema(destPath.country, DestinationSchema);
+      requiredFromStandardSchema(destPath.city, DestinationSchema);
+      requiredFromStandardSchema(destPath.arrivalDate, DestinationSchema);
+      requiredFromStandardSchema(destPath.departureDate, DestinationSchema);
 
       applyEach(destPath.activities, (actPath) => {
         validateStandardSchema(actPath, ActivitySchema);
