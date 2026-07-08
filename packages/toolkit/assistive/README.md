@@ -149,7 +149,10 @@ When a matching max-length validator is present, `maxLength` can be omitted and 
 The built-in announcement strings ("Approaching limit: N characters remaining.", etc.) are English-only. Bind `[announcementFormatter]` to a `(state, { current, max, remaining, over }) => string` function to localize them:
 
 ```typescript
-formatter = (state: 'warning' | 'danger' | 'exceeded', info: { remaining: number; over: number }) => {
+formatter = (
+  state: 'warning' | 'danger' | 'exceeded',
+  info: { remaining: number; over: number },
+) => {
   switch (state) {
     case 'warning':
     case 'danger':
@@ -162,7 +165,7 @@ formatter = (state: 'warning' | 'danger' | 'exceeded', info: { remaining: number
 
 ### NgxFormMarkingLegend
 
-Form-level legend that explains the field marker (e.g. "* indicates a required field"). Place it once wherever it reads well — there is no automatic injection.
+Form-level legend that explains the field marker (e.g. "\* indicates a required field"). Place it once wherever it reads well — there is no automatic injection.
 
 ```html
 <form [formRoot]="userForm" ngxSignalForm>
@@ -173,13 +176,13 @@ Form-level legend that explains the field marker (e.g. "* indicates a required f
 
 Outside a form host, pass the tree explicitly: `<ngx-form-marking-legend [formTree]="userForm" />`.
 
-| Input             | Type                | Description                                                                          |
-| ----------------- | ------------------- | ------------------------------------------------------------------------------------- |
-| `formTree`        | `FieldTree`         | The form tree to reflect. Falls back to the ambient `ngxSignalForm` context.           |
-| `showMarkerWhen`  | `FieldMarkingMode`  | Override the marking mode (`'required' \| 'optional' \| 'none'`). Falls back to config. |
-| `text`            | `string`            | Override the legend text. `{marker}` is substituted with the resolved marker.         |
-| `requiredMarker`  | `string`            | Override the required marker used for `{marker}`. Falls back to config.               |
-| `optionalMarker`  | `string`            | Override the optional marker used for `{marker}`. Falls back to config.               |
+| Input            | Type               | Description                                                                             |
+| ---------------- | ------------------ | --------------------------------------------------------------------------------------- |
+| `formTree`       | `FieldTree`        | The form tree to reflect. Falls back to the ambient `ngxSignalForm` context.            |
+| `showMarkerWhen` | `FieldMarkingMode` | Override the marking mode (`'required' \| 'optional' \| 'none'`). Falls back to config. |
+| `text`           | `string`           | Override the legend text. `{marker}` is substituted with the resolved marker.           |
+| `requiredMarker` | `string`           | Override the required marker used for `{marker}`. Falls back to config.                 |
+| `optionalMarker` | `string`           | Override the optional marker used for `{marker}`. Falls back to config.                 |
 
 - In `'required'` mode, shows the required legend and hides when the form has no required fields.
 - In `'optional'` mode, shows the optional legend and hides when the form has no optional fields.

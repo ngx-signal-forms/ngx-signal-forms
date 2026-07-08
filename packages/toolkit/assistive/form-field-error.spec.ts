@@ -769,9 +769,9 @@ describe('NgxFormFieldError', () => {
       input.blur();
       fixture.detectChanges();
 
-      expect(
-        host.classList.contains('ngx-form-field-error-host--empty'),
-      ).toBe(false);
+      expect(host.classList.contains('ngx-form-field-error-host--empty')).toBe(
+        false,
+      );
     });
 
     it('should rely on role="alert" implicit semantics (no redundant aria-live/aria-atomic)', async () => {
