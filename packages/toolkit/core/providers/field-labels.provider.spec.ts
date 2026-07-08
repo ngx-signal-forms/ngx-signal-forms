@@ -50,6 +50,27 @@ describe('Field Label Provider', () => {
       const resolver = TestBed.inject(NGX_FIELD_LABEL_RESOLVER);
       expect(resolver('address.postalCode')).toBe('Postcode');
     });
+
+    it('should not resolve inherited Object.prototype members as map entries', () => {
+      // 'constructor'/'toString'/etc. are not own properties of the map
+      // object, but plain-object property access resolves them anyway via
+      // the prototype chain. Object.hasOwn must gate the lookup so these
+      // paths fall through to humanizeFieldPath instead of returning a
+      // non-string inherited function/value.
+      TestBed.configureTestingModule({
+        providers: [
+          provideFieldLabels({
+            contactEmail: 'E-mailadres',
+          }),
+        ],
+      });
+
+      const resolver = TestBed.inject(NGX_FIELD_LABEL_RESOLVER);
+      expect(resolver('constructor')).toBe('Constructor');
+      expect(resolver('constructor')).not.toBe(Object);
+      expect(resolver('toString')).toBe('To string');
+      expect(resolver('hasOwnProperty')).toBe('Has own property');
+    });
   });
 
   describe('provideFieldLabels with factory function', () => {
