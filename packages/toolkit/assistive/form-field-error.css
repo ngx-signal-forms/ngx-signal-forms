@@ -97,6 +97,19 @@
   margin-top: var(--_error-margin-top);
 }
 
+/* Zeroes the host's own top margin while both the alert and status
+ * containers are empty. The `--empty` class on each inner container
+ * already collapses *its own* box model to nothing, but `:host`'s
+ * `margin-top` above is unconditional — without this rule a field with no
+ * visible errors or warnings still contributed stray vertical whitespace.
+ * `ngx-form-field-error-host--empty` is set via a host class binding (see
+ * form-field-error.ts) rather than `[hidden]`/`aria-hidden`, which stay off
+ * the live-region containers for the WCAG 4.1.3 first-insertion reasons
+ * documented on the template. */
+:host(.ngx-form-field-error-host--empty) {
+  margin-top: 0;
+}
+
 /* Dark-mode defaults are driven by `prefers-color-scheme` only. An earlier
  * revision also tried to special-case a `.dark` class ancestor via
  * `:host-context()`, but that selector is non-standard and unsupported in
