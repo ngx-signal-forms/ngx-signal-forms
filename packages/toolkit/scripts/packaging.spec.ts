@@ -34,6 +34,17 @@ describe('packages/toolkit/package.json', () => {
       packageJson.peerDependencies?.['@angular/core'],
     );
   });
+
+  it('caps the vest peer dependency range below vest 7', () => {
+    // The adapter only imports vest types at runtime (`import type { SuiteResult }`),
+    // but an unbounded-above range (e.g. ">=6.0.0") would let a future vest 7.x/8.x
+    // with breaking SuiteResult/typing changes silently satisfy the peer contract,
+    // contradicting the deliberate upper-bound-cap philosophy applied to Angular
+    // (see COMPATIBILITY.md) and the /vest README's "requires vest@6" wording.
+    const vestRange = packageJson.peerDependencies?.vest;
+    expect(vestRange).toBeTruthy();
+    expect(vestRange).toMatch(/<7\.0\.0/);
+  });
 });
 
 describe('packages/toolkit/project.json post-build target', () => {
