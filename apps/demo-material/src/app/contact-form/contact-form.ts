@@ -20,7 +20,7 @@ import { contactFormSchema } from './contact-form.validations';
 /**
  * Material reference contact form.
  *
- * Demonstrates the four toolkit contracts on top of Angular Material 21+
+ * Demonstrates the four toolkit contracts on top of Angular Material 22+
  * with the lean ergonomic surface from ADR-0002:
  *
  * 1. **Renderer registration** — `provideNgxMatForms()` (in `main.ts`)

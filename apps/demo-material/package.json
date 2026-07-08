@@ -2,9 +2,8 @@
   "name": "@ngx-signal-forms/demo-material",
   "private": true,
   "version": "0.0.0",
-  "description": "Reference wrapper demo: Angular Material 21+ on top of @ngx-signal-forms/toolkit",
+  "description": "Reference wrapper demo: Angular Material 22+ on top of @ngx-signal-forms/toolkit",
   "dependencies": {
-    "@angular/animations": "catalog:angular",
     "@angular/cdk": "catalog:angular",
     "@angular/material": "catalog:angular-material"
   }

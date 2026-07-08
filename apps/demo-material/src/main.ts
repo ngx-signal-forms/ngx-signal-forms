@@ -1,6 +1,5 @@
 import { isDevMode, provideZonelessChangeDetection } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 import { AppComponent } from './app/app';
 import { provideNgxMatForms } from './app/wrapper';
@@ -20,10 +19,9 @@ void (async () => {
   await bootstrapApplication(AppComponent, {
     providers: [
       provideZonelessChangeDetection(),
-      // Material's animation hooks. `noop` keeps the demo zoneless-friendly
-      // (no animations module pulled in) while still satisfying Material's
-      // animation provider contract.
-      provideAnimationsAsync('noop'),
+      // Angular Material 22's animations are CSS-based — no
+      // `@angular/animations` peer dependency and no animation provider
+      // required (unlike Material 21 and earlier).
       provideNgxSignalFormsConfig({
         defaultErrorStrategy: 'on-touch',
         autoAria: true,

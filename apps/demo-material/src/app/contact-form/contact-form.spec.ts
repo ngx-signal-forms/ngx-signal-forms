@@ -1,5 +1,4 @@
 import { provideZonelessChangeDetection } from '@angular/core';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 import { render, screen, waitFor } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
@@ -26,7 +25,6 @@ describe('ContactFormComponent (Material reference, smoke)', () => {
     const result = await render(ContactFormComponent, {
       providers: [
         provideZonelessChangeDetection(),
-        provideAnimationsAsync('noop'),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
           autoAria: true,

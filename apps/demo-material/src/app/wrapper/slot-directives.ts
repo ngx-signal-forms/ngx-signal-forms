@@ -45,6 +45,13 @@ export interface NgxMatHintSlotContext {
  * <mat-error *ngxMatErrorSlot="form.email; let message">{{ message }}</mat-error>
  * ```
  *
+ * Per-slot strategy override via structural microsyntax:
+ * ```html
+ * <mat-error
+ *   *ngxMatErrorSlot="form.email; strategy: 'immediate'; let message"
+ * >{{ message }}</mat-error>
+ * ```
+ *
  * Message resolution + visibility timing delegate to the public
  * {@link createErrorMessageSignal} primitive — the same primitive that
  * powers the canonical wrapper and the Spartan reference, so the
@@ -63,7 +70,9 @@ export class NgxMatErrorSlot<TValue = unknown> {
   });
 
   /** Optional per-slot strategy override; mirrors the wrapper's input. */
-  readonly strategy = input<ErrorDisplayStrategy | null>(null);
+  readonly strategy = input<ErrorDisplayStrategy | null>(null, {
+    alias: 'ngxMatErrorSlotStrategy',
+  });
 
   readonly #templateRef = inject(TemplateRef<NgxMatErrorSlotContext>);
   readonly #viewContainerRef = inject(ViewContainerRef);
@@ -118,6 +127,17 @@ export class NgxMatErrorSlot<TValue = unknown> {
  * </mat-hint>
  * ```
  *
+ * Per-slot strategy override via structural microsyntax:
+ * ```html
+ * <mat-hint *ngxMatHintSlot="form.name; strategy: 'on-submit'; let warning">
+ *   @if (warning) {
+ *     <span class="warning">{{ warning }}</span>
+ *   } @else {
+ *     What should we call you?
+ *   }
+ * </mat-hint>
+ * ```
+ *
  * @see ADR-0002 §3 for the "one `<mat-hint>`, never two" decision.
  */
 @Directive({
@@ -128,7 +148,9 @@ export class NgxMatHintSlot<TValue = unknown> {
     alias: 'ngxMatHintSlot',
   });
 
-  readonly strategy = input<ErrorDisplayStrategy | null>(null);
+  readonly strategy = input<ErrorDisplayStrategy | null>(null, {
+    alias: 'ngxMatHintSlotStrategy',
+  });
 
   readonly #templateRef = inject(TemplateRef<NgxMatHintSlotContext>);
   readonly #viewContainerRef = inject(ViewContainerRef);

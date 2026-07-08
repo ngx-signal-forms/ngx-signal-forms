@@ -163,7 +163,6 @@ the in-tree `NgxFormFieldError`.
 bootstrapApplication(AppComponent, {
   providers: [
     provideZonelessChangeDetection(),
-    provideAnimationsAsync('noop'),
     provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-touch' }),
     provideNgxMatForms(), // MaterialFeedbackRenderer/MaterialHintRenderer + NgxMatWarningAwareErrorStateMatcher
   ],
@@ -427,8 +426,8 @@ pnpm nx run demo-material:test        # smoke spec (jsdom + Vitest)
 pnpm nx run demo-material-e2e:e2e     # Playwright spec
 ```
 
-The smoke spec depends on a publish-ready toolkit build (`pnpm nx run toolkit:post-build`),
-which Nx schedules automatically via the `dependsOn` in
+The smoke spec depends on a built toolkit (`pnpm nx run toolkit:build`),
+which Nx schedules automatically via the `test` target's `dependsOn` in
 `project.json`.
 
 ## Pinned versions
