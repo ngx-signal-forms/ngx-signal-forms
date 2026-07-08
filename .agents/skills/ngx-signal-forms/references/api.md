@@ -62,6 +62,14 @@ provideNgxSignalFormControlPresets(presets: NgxSignalFormControlPresetOverrides)
 provideNgxSignalFormControlPresetsForComponent(presets: NgxSignalFormControlPresetOverrides): Provider[]
 provideErrorMessages(configOrFactory: ErrorMessageRegistry | (() => ErrorMessageRegistry)): Provider
 provideFieldLabels(configOrFactory: FieldLabelMap | (() => (rawFieldPath: string) => string)): Provider
+
+// Swap how the wrapper / fieldset renders the error and hint slots. Pass
+// `{ component }` to set a standalone renderer component; pass `{}` to inherit
+// a parent scope's renderer. See `docs/CUSTOM_WRAPPERS.md`.
+provideFormFieldErrorRenderer(override: NgxFormFieldErrorRendererOverride): EnvironmentProviders
+provideFormFieldErrorRendererForComponent(override: NgxFormFieldErrorRendererOverride): Provider[]
+provideFormFieldHintRenderer(override: NgxFormFieldHintRendererOverride): EnvironmentProviders
+provideFormFieldHintRendererForComponent(override: NgxFormFieldHintRendererOverride): Provider[]
 ```
 
 **Control semantics preset providers:**
@@ -149,6 +157,7 @@ Migration note for `defaultFormFieldAppearance`:
 
 ```typescript
 type SignalLike<T> = Signal<T> | (() => T);
+type ReactiveOrStatic<T> = SignalLike<T> | T; // a plain value or a reactive source
 type ResolvedErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit';
 type ErrorDisplayStrategy = ResolvedErrorDisplayStrategy | 'inherit';
 type FormFieldAppearance = 'standard' | 'outline' | 'plain';
@@ -156,6 +165,12 @@ type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
 type FormFieldOrientation = 'vertical' | 'horizontal';
 type FormFieldOrientationInput = FormFieldOrientation | 'inherit';
 type SubmittedStatus = 'unsubmitted' | 'submitting' | 'submitted';
+type FieldMarkingMode = 'required' | 'optional' | 'none';
+type MarkerKind = Exclude<FieldMarkingMode, 'none'>; // 'required' | 'optional'
+interface ResolvedMarker {
+  readonly kind: MarkerKind;
+  readonly text: string;
+}
 type ErrorVisibilityState = Pick<FieldState<unknown>, 'invalid' | 'touched'>;
 type ErrorReadableState = Pick<
   FieldState<unknown>,
@@ -189,6 +204,26 @@ const NGX_SIGNAL_FORMS_CONFIG: InjectionToken<NgxSignalFormsConfig>;
 const NGX_SIGNAL_FORM_CONTROL_PRESETS: InjectionToken<NgxSignalFormControlPresetRegistry>;
 const NGX_SIGNAL_FORM_CONTEXT: InjectionToken<NgxSignalFormContext>;
 const NGX_SIGNAL_FORM_FIELD_CONTEXT: InjectionToken<NgxSignalFormFieldContext>;
+const NGX_FORM_FIELD_ERROR_RENDERER: InjectionToken<NgxFormFieldErrorRenderer | null>;
+const NGX_FORM_FIELD_HINT_RENDERER: InjectionToken<NgxFormFieldHintRenderer | null>;
+```
+
+**Renderer-override types** (for the providers/tokens above — a renderer is a `{ component }` wrapper around a standalone component that owns the error/hint slot markup):
+
+```typescript
+interface NgxFormFieldErrorRenderer {
+  readonly component: Type<unknown>;
+}
+interface NgxFormFieldHintRenderer {
+  readonly component: Type<unknown>;
+}
+interface NgxFormFieldErrorRendererOverride {
+  readonly component?: Type<unknown>; // omit `component` to inherit a parent scope
+}
+interface NgxFormFieldHintRendererOverride {
+  readonly component?: Type<unknown>;
+}
+type NgxFormFieldErrorPlacement = 'top' | 'bottom';
 ```
 
 > `NGX_ERROR_MESSAGES` and `NGX_FIELD_LABEL_RESOLVER` are internal tokens used by sibling entry points inside the toolkit package. Use `provideErrorMessages()` and `provideFieldLabels()` instead.
@@ -234,6 +269,13 @@ inferNgxSignalFormControlKind(element): NgxSignalFormControlKind | null
 isNgxSignalFormControlKind(value): value is NgxSignalFormControlKind
 isNgxSignalFormControlLayout(value): value is NgxSignalFormControlLayout
 isNgxSignalFormControlAriaMode(value): value is NgxSignalFormControlAriaMode
+isFormFieldAppearance(value): value is FormFieldAppearance
+isFormFieldOrientation(value): value is FormFieldOrientation
+
+// Field-name normalization
+normalizeFieldName(fieldName): string | null // trim; empty/whitespace/nullish → null
+resolveFieldNameFromCandidates(...candidates): string | null // first non-null normalized candidate wins
+isElementCssVisible(element): boolean // used by field identity / focus management
 
 interface AriaDescribedByChainOptions {
   readonly baseIds?: readonly string[];     // hint or helper IDs to prepend
@@ -282,6 +324,55 @@ updateNested(array, index, nestedKey, nestedIndex, updater): array
 unwrapValue(signalOrValue): value
 ```
 
+### Standard Schema required markers
+
+Surfaces `aria-required` for fields validated by a Standard Schema (Zod, Valibot, etc.) instead of Angular's `required()`. Call it inside a schema definition, like `required()`:
+
+```typescript
+requiredFromStandardSchema(field, schema): void
+// e.g. within a form schema:
+//   requiredFromStandardSchema(path.firstName, TravelerSchema);
+
+// Narrowed structural contract — only reads `~standard.validate`:
+interface StandardSchemaLike<TInput = unknown> {
+  readonly '~standard': {
+    readonly validate: (value: unknown) =>
+      | StandardSchemaLikeResult<TInput>
+      | PromiseLike<StandardSchemaLikeResult<TInput>>;
+  };
+}
+interface StandardSchemaLikeIssue {
+  readonly message: string;
+  readonly path?: ReadonlyArray<PropertyKey | { readonly key: PropertyKey }>;
+}
+interface StandardSchemaLikeResult<TInput> {
+  readonly issues?: ReadonlyArray<StandardSchemaLikeIssue>;
+  readonly value?: TInput;
+}
+```
+
+### Advanced / custom-wrapper exports
+
+These are public but only needed when building custom wrappers or low-level primitives — most consumers never touch them.
+
+```typescript
+// Low-level error-visibility factory (backs NgxSignalFormAutoAria and headless
+// factories). Reach for it when hand-rolling a directive that needs the same
+// strategy/submittedStatus resolution.
+createErrorVisibility(options: CreateErrorVisibilityOptions): ControlVisibilitySignal
+// CreateErrorVisibilityOptions: { strategy?, submittedStatus?, configDefault?, injector? }
+
+// Services
+NgxFieldIdentity        // resolves/tracks a control's field identity
+NgxControlPresetRegistry // resolves control-semantics preset defaults
+
+// Third-party wrapper hint-registry contract (link projected hints into
+// aria-describedby without auto-ARIA querying the DOM). See docs/CUSTOM_WRAPPERS.md.
+const NGX_SIGNAL_FORM_HINT_REGISTRY: InjectionToken<NgxSignalFormHintRegistry>;
+interface NgxSignalFormHintDescriptor { readonly id: string; readonly fieldName: string | null }
+interface NgxSignalFormHintRegistry { readonly hints: Signal<readonly NgxSignalFormHintDescriptor[]> }
+```
+
 ---
 
 ## Entry Point: `@ngx-signal-forms/toolkit/assistive`
@@ -293,7 +384,7 @@ import {
   NgxFormFieldNotification, // <ngx-form-field-notification>
   NgxFormFieldHint, // <ngx-form-field-hint>
   NgxFormFieldCharacterCount, // <ngx-form-field-character-count>
-  NgxFormFieldAssistiveRow, // <ngx-form-field-assistive-row>
+  NgxFormMarkingLegend, // <ngx-form-marking-legend>
   warningError,
   isWarningError,
   isBlockingError,
@@ -314,26 +405,35 @@ import {
 ### Other assistive exports
 
 - `NgxFormFieldHint` — static descriptive hint content
-- `NgxFormFieldAssistiveRow` — stable row container for hint + character count
+- `NgxFormFieldListStyle` (`'plain' | 'bullets'`) — shared list-style union. `NgxFormFieldErrorListStyle` and `NgxFormFieldNotificationListStyle` are `@deprecated` aliases of it.
+- `NgxCharacterCountValue` + `NgxCharacterCountAnnouncement*` types — character-count announcement formatting hooks.
+
+### NgxFormMarkingLegend inputs
+
+Selector: `ngx-form-marking-legend`
+
+| Input            | Type                                 | Notes                                                                        |
+| ---------------- | ------------------------------------ | ---------------------------------------------------------------------------- |
+| `formTree`       | `FieldTree<unknown>`                 | Optional — falls back to ambient `ngxSignalForm` form context                |
+| `showMarkerWhen` | `FieldMarkingMode`                   | Override marking mode; falls back to config `showMarkerWhen`                  |
+| `text`           | string                               | Override legend text entirely (`{marker}` is substituted)                    |
+| `requiredMarker` | string                               | Override the required marker used for `{marker}`; falls back to config       |
+| `optionalMarker` | string                               | Override the optional marker used for `{marker}`; falls back to config       |
+
+Renders the form-level legend explaining what the required/optional markers mean. Mode-aware: hides when the form has no field of the relevant kind, and renders nothing in `'none'` mode. Plain visible text — no `role` or live region (required state still reaches AT via each control's `aria-required`).
 
 ### NgxFormFieldNotification inputs
 
 Selector: `ngx-form-field-notification`
 
-| Input       | Type                        | Default     | Notes                                                                |
-| ----------- | --------------------------- | ----------- | -------------------------------------------------------------------- |
-| `errors`    | `Signal<ValidationError[]>` | required    | Grouped validation messages to render                                |
-| `fieldName` | string                      | optional    | Generates deterministic error/warning container ids when provided    |
-| `tone`      | `NgxNotificationTone`       | `'auto'`    | `'auto'` routes blocking lists to alert, all-warning lists to status |
-| `title`     | string                      | optional    | Optional heading rendered above the messages                         |
-| `listStyle` | `plain` or `bullets`        | `'bullets'` | Bullet list or stacked paragraph rendering                           |
+| Input       | Type                                       | Default     | Notes                                                             |
+| ----------- | ------------------------------------------ | ----------- | ----------------------------------------------------------------- |
+| `errors`    | `Signal<readonly ValidationError[]>`       | required    | Grouped validation messages to render (bound via host directive)  |
+| `fieldName` | string                                     | optional    | Generates deterministic error/warning container ids when provided |
+| `title`     | string                                     | optional    | Optional heading rendered above the messages                      |
+| `listStyle` | `NgxFormFieldListStyle` (`plain`/`bullets`) | `'bullets'`  | Bullet list or stacked paragraph rendering                        |
 
-Thin styled shell over `NgxHeadlessNotification`. Uses dual stable live regions: `role="alert"` for blocking content, `role="status"` for warning-only content.
-
-Migration aliases still exist for compatibility, but prefer the shared names:
-
-- `NgxFormFieldNotificationListStyle` → prefer `NgxFormFieldListStyle`
-- `NgxFormFieldNotificationTone` → prefer `NgxNotificationTone` from `@ngx-signal-forms/toolkit/headless`
+`errors` and `fieldName` are forwarded to the composed `NgxHeadlessNotification` host directive. There is **no `tone` input** — the routing is content-driven: any blocking error renders the `role="alert"` container, a warning-only list renders the `role="status"` container, and an empty list keeps both hidden. Uses dual stable live regions so the role is never re-assigned at the same tick content is inserted.
 
 ### NgxFormFieldErrorSummary inputs
 
@@ -376,11 +476,11 @@ For full DOM control over the error summary (incl. warning entries), use `NgxHea
 
 ```typescript
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-// Bundle: [NgxFormFieldWrapper,
-//          NgxSignalFormAutoAria,
+// Bundle: [NgxSignalFormAutoAria,
+//          NgxSignalFormControlSemanticsDirective,
+//          NgxFormFieldWrapper,
 //          NgxFormFieldHint, NgxFormFieldCharacterCount,
-//          NgxFormFieldAssistiveRow, NgxFormFieldError,
-//          NgxFormFieldset]
+//          NgxFormFieldError, NgxFormFieldset]
 
 import {
   NgxFormFieldWrapper,
@@ -412,7 +512,7 @@ import {
 | `strategy`            | ErrorDisplayStrategy | Inherited                 |
 | `showErrors`          | boolean              | `true`                    |
 | `includeNestedErrors` | boolean              | `false`                   |
-| `errorPlacement`      | `'top' \| 'bottom'`  | `'top'`                   |
+| `errorPlacement`      | `'top' \| 'bottom'`  | `'bottom'`                |
 
 ---
 
@@ -429,13 +529,14 @@ import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
 
 Directive-level types and constants also available from this entry point:
 
+- `createErrorMessageSignal(field, options?): Signal<readonly ResolvedFieldError[]>` — reactive primitive that resolves a field's errors (with the 3-tier message cascade + stable IDs) for custom rendering. Options: `CreateErrorMessageSignalOptions`; `IncludeWarningsOption` (`false` blocking-only \| `true` blocking then warnings \| `'only'` warnings) selects the subset; `ResolvedFieldError` is `{ kind, message, id, error }`.
 - `ErrorStateSignals`, `ResolvedError` — from `NgxHeadlessErrorState`
 - `FieldsetStateSignals` — from `NgxHeadlessFieldset`
 - `CharacterCountStateSignals`, `CharacterCountLimitState` — from `NgxHeadlessCharacterCount`
 - `DEFAULT_WARNING_THRESHOLD` (80), `DEFAULT_DANGER_THRESHOLD` (95) — default thresholds
 - `ErrorSummaryEntry`, `ErrorSummarySignals` — from `NgxHeadlessErrorSummary`
 - `FieldNameStateSignals` — from `NgxHeadlessFieldName`
-- `NgxNotificationTone`, `NotificationStateSignals`, `ResolvedNotificationMessage` — from `NgxHeadlessNotification`
+- `NotificationStateSignals`, `ResolvedNotificationMessage` — from `NgxHeadlessNotification`
 
 ### NgxHeadlessErrorState
 
@@ -505,11 +606,10 @@ Signals: `resolvedFieldName()` (`string | null`), `errorId` (`Signal<string | nu
 
 Selector: `[ngxHeadlessNotification]` | Export: `#notification="notificationState"`
 
-Inputs:
+Inputs (no `tone` — routing is content-driven):
 
-- `errors` (required) — `Signal<readonly ValidationError[]>`
+- `errors` (required) — `ReactiveOrStatic<readonly ValidationError[]>` (plain array or signal/getter; unwrapped internally)
 - `fieldName` — `string | null | undefined`
-- `tone` — `'auto' | 'error' | 'warning'` (default `'auto'`)
 
 Signals/methods (implements `NotificationStateSignals`):
 
@@ -540,6 +640,16 @@ humanizeFieldPath(fieldName: string): string
 resolveFieldNameFromError(error, resolver?): string
 focusBoundControlFromError(error): void
 toErrorSummaryEntry(error, registry?, options?, labelResolver?): ErrorSummaryEntryData
+
+// Field optionality — does a form tree have any required / any optional leaf?
+summarizeFieldOptionality(tree): FieldOptionality // synchronous; reactive when read inside a computed()
+createFieldOptionalitySummary(treeSource: () => FieldTree | null | undefined): {
+  readonly hasRequired: Signal<boolean>;
+  readonly hasOptional: Signal<boolean>;
+}
+// FieldOptionality: { readonly hasRequired: boolean; readonly hasOptional: boolean }
+// Both flags can be true (mixed form); an empty / leaf-less form reports false for both.
+// Backs NgxFormMarkingLegend's mode-aware show/hide.
 ```
 
 ### Headless utility/result types
@@ -645,6 +755,42 @@ const isVestWarning = (kind: string) =>
 See `packages/toolkit/vest/README.md` for the full suite-lifecycle rationale
 (why `resetOnDestroy` matters for module-scope suites, async thenable handling,
 `only()` selector patterns).
+
+---
+
+## Entry Point: `@ngx-signal-forms/toolkit/testing`
+
+A small consumer-facing accessibility test harness. `axe-core` is an **optional peer dependency** of the toolkit — it is only required if you import from this entry point (intended for Vitest browser-mode specs after rendering a component fixture).
+
+```typescript
+import {
+  expectNoA11yViolations,
+  WCAG_22_AA_TAGS,
+  type WCAG_22_AA_TAG,
+} from '@ngx-signal-forms/toolkit/testing';
+```
+
+```typescript
+// Runs an axe-core audit and HARD-FAILS (throws) on any WCAG 2.2 AA violation.
+// One call per rendered fixture scans the whole subtree.
+expectNoA11yViolations(
+  context?: axe.ElementContext,   // default: document.body
+  options?: axe.RunOptions,       // merged over the WCAG 2.2 AA defaults
+): Promise<void>
+
+// axe-core tag set mapping to WCAG 2.2 AA (additive across versions):
+WCAG_22_AA_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] as const
+// No `wcag22a`: the two new 2.2 Level A criteria (Consistent Help, Redundant
+// Entry) are non-automatable, so automated scans cover only a subset of full
+// 2.2 AA conformance.
+type WCAG_22_AA_TAG = (typeof WCAG_22_AA_TAGS)[number]
+```
+
+```typescript
+// Example (Vitest browser mode)
+await render(MyFormComponent);
+await expectNoA11yViolations(); // throws with a formatted report on any violation
+```
 
 ---
 

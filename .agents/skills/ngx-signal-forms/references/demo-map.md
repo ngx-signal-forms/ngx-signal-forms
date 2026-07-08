@@ -15,12 +15,16 @@ Repository paths in `apps/demo/src/app/` organized by the current live demo. Use
 
 - `03-headless/fieldset-utilities/fieldset-utilities.form.ts` — Aggregated group state, summary utilities, and state flags for custom markup
 - `03-headless/fieldset-utilities/fieldset-utilities.page.ts` — Headless UI patterns and grouped-state explanation
+- `03-headless/error-message-signal/` — `createErrorMessageSignal` with a swappable `errorMessages` registry that re-resolves blocking/warning messages reactively
 
 ## 04 — Form Field Wrapper
 
 - `04-form-field-wrapper/complex-forms/` — Production-style nested objects, arrays, and dense layouts
   - Includes a dedicated fieldset example (`fieldset.form.ts` / `fieldset.model.ts` / `fieldset.validations.ts`) demonstrating `NgxFormFieldset` grouped summaries
 - `04-form-field-wrapper/custom-controls/` — Wrapper integration with custom `FormValueControl` components, checkbox opt-in via `ngxSignalFormControl`, slider with manual ARIA and `buildAriaDescribedBy`, and component-scoped control presets via `provideNgxSignalFormControlPresetsForComponent`
+- `04-form-field-wrapper/field-marking/` — Required/optional marker config (`showMarkerWhen`, `requiredMarker`, `optionalMarker`) plus the `NgxFormMarkingLegend` form-level legend explaining the markers
+- `04-form-field-wrapper/fieldset-appearance/` — `NgxFormFieldset` appearance controls: `NgxFormFieldsetAppearance`, `NgxFormFieldsetFeedbackAppearance`, `NgxFormFieldsetSurfaceTone`, `NgxFormFieldsetValidationSurface`
+- `04-form-field-wrapper/labelless-fields/` — Wrappers for controls with no redundant `<label>` (accessible name via `aria-label` / `aria-labelledby`), compared with vs without label across appearances
 
 Horizontal `FormFieldOrientation` is exercised via the shared `ui/orientation-toggle` component wired into multiple 05-advanced demos — there's no dedicated page yet. `provideNgxSignalFormsConfig({ defaultFormFieldOrientation: 'horizontal' })` drives the default; per-wrapper `orientation="horizontal"` overrides it.
 
@@ -31,6 +35,9 @@ Horizontal `FormFieldOrientation` is exercised via the shared `ui/orientation-to
 - `05-advanced/advanced-wizard/` — Multi-step flow with NgRx Signals + Zod
 - `05-advanced/async-validation/` — Remote/pending validation flows
 - `05-advanced/cross-field-validation/` — Dependent sibling validation rules
+- `05-advanced/field-state-patterns/` — Choosing between `dirty`/`touched`/`pristine` and other field-state signals
+- `05-advanced/store-binding/` — Binding a form to an NgRx SignalStore (`delegatedStoreField`)
+- `05-advanced/zod-validation/` — Zod-only baseline validation via `validateStandardSchema(path, schema)` (Standard Schema)
 - `05-advanced/vest-validation/` — Vest-only business validation
 - `05-advanced/zod-vest-validation/` — Structural validation plus business rules
 

@@ -39,7 +39,9 @@ For ready-to-render components with built-in markup, use `assistive/SKILL.md` or
 
 5. **Use `NgxHeadlessFieldset`** for aggregated group state — validity, errors, and warnings across a field tree without rebuilding the traversal.
 
-6. **Use `NgxHeadlessNotification`** when you already have aggregated `ValidationError[]` and need a grouped live-region surface that can route to either assertive or polite announcement semantics without giving up DOM control.
+6. **Use `NgxHeadlessNotification`** when you already have aggregated `ValidationError[]` and need a grouped live-region surface. Tone is content-driven (no `tone` input): any blocking error raises the assertive `role="alert"` container, a warning-only list raises the polite `role="status"` container — you keep full DOM control.
+
+7. **Reach for the field-optionality helpers** (`createFieldOptionalitySummary`, `summarizeFieldOptionality`, type `FieldOptionality`) when a custom component needs to know whether a field is required/optional to render a marker or legend. See `../references/api.md` for signatures.
 
 ## Error Summary Directive Pattern
 
@@ -74,7 +76,7 @@ For a styled out-of-the-box error summary without warnings, use `NgxFormFieldErr
 
 ## Grouped Notification Directive Pattern
 
-Use `ngxHeadlessNotification` when a fieldset, summary card, or custom block already owns the grouped `ValidationError[]` list and only needs tone resolution, message lookup, and deterministic IDs.
+Use `ngxHeadlessNotification` when a fieldset, summary card, or custom block already owns the grouped `ValidationError[]` list and only needs content-driven tone routing, message lookup, and deterministic IDs. It exposes only `errors` (required) and `fieldName` — there is no `tone` input.
 
 ```html
 <section
@@ -101,7 +103,7 @@ Use `ngxHeadlessNotification` when a fieldset, summary card, or custom block alr
 </section>
 ```
 
-`tone="auto"` is the safe default. Any blocking error forces the assertive container; all-warning lists use the polite container. This preserves urgency semantics even when callers pass a mismatched tone.
+Tone is fully content-driven — there is no input to set. `resolvedTone()` returns `'error'` whenever any blocking error is present (raising the assertive `role="alert"` container) and `'warning'` for an all-warning list (raising the polite `role="status"` container); an empty list hides both. This preserves urgency semantics automatically.
 
 ## Template Directive Pattern
 
@@ -133,12 +135,11 @@ Use `ngxHeadlessNotification` when a fieldset, summary card, or custom block alr
 ## Host Directive Pattern (Reusable Design-System Component)
 
 ```typescript
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
 
 @Component({
   selector: 'ds-form-field',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   hostDirectives: [
     {
       directive: NgxHeadlessErrorState,
@@ -236,5 +237,5 @@ createUniqueId('my-field'); // 'my-field-1', 'my-field-2', ...
 
 - If IDs are inconsistent: add explicit `fieldName` instead of relying on implicit host `id` detection.
 - If `'on-submit'` errors don't appear: ensure the form uses `form[formRoot][ngxSignalForm]` so submitted status and toolkit context are available.
-- If a grouped notification resolves to the wrong live region: check whether the error list includes any blocking errors — `tone="auto"` intentionally prefers `role="alert"` whenever one is present.
+- If a grouped notification resolves to the wrong live region: check whether the error list includes any blocking errors — tone is content-driven, so `role="alert"` is used whenever any blocking error is present, regardless of intent.
 - If the component is recreating the full wrapper layout: stop and use `form-field/SKILL.md` instead.
