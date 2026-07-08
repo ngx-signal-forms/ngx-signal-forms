@@ -127,10 +127,10 @@
   </div>
 
   <div class="demo-form__actions">
-    <button mat-stroked-button type="button" (click)="resetForm()">
+    <button matButton="outlined" type="button" (click)="resetForm()">
       Reset
     </button>
-    <button mat-flat-button color="primary" type="submit">Send message</button>
+    <button matButton="filled" type="submit">Send message</button>
   </div>
 
   @if (submitted()) {
