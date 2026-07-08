@@ -451,10 +451,8 @@ test.describe('Headless - Fieldset + Utilities', () => {
     }) => {
       const emailInput = page.getByLabel('Contact email *');
 
-      await test.step('Field starts with aria-invalid (required)', async () => {
-        // NgxHeadlessErrorState applies aria-invalid based on field state
-        // Required fields may show as invalid immediately
-        await expect(emailInput).toHaveAttribute('aria-invalid', 'true');
+      await test.step('Field does not start with aria-invalid=true before interaction', async () => {
+        await expect(emailInput).not.toHaveAttribute('aria-invalid', 'true');
       });
 
       await test.step('aria-invalid cleared when valid email entered', async () => {
